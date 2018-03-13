@@ -77,7 +77,7 @@ class PartnerSynchronizer(VisionDataSynchronizer):
                 return False
             return True
 
-        return filter(bad_record, records)
+        return [rec for rec in records if bad_record(rec)]
 
     def _get_json(self, data):
         return [] if data == VISION_NO_DATA_MESSAGE else data

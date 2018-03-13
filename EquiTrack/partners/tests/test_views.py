@@ -5,7 +5,6 @@ import datetime
 from decimal import Decimal
 import json
 from unittest import skip, TestCase
-from urlparse import urlparse
 
 from django.conf import settings
 from django.contrib.auth.models import Group
@@ -13,6 +12,7 @@ from django.core.files.uploadedfile import SimpleUploadedFile
 from django.core.urlresolvers import reverse, resolve
 from django.db import connection
 from django.utils import six, timezone
+from six.moves.urllib_parse import urlparse
 
 from model_utils import Choices
 from rest_framework import status
@@ -348,13 +348,15 @@ class TestPartnerOrganizationListViewForCSV(BaseTenantTestCase):
         # but I want to make sure the response looks CSV-ish.
         self.assertEqual(response.get('Content-Disposition'), 'attachment;filename=partner.csv')
 
-        self.assertIsInstance(response.rendered_content, six.string_types)
+        response_content = response.rendered_content.decode('utf-8')
+
+        self.assertIsInstance(response_content, six.text_type)
 
         # The response should *not* look like JSON.
         with self.assertRaises(ValueError):
-            json.loads(response.rendered_content)
+            json.loads(response_content)
 
-        lines = response.rendered_content.replace('\r\n', '\n').split('\n')
+        lines = response_content.replace('\r\n', '\n').split('\n')
         # Try to read it with Python's CSV reader.
         reader = csv.DictReader(lines)
 

@@ -1530,7 +1530,7 @@ class TestStrUnicode(TestCase):
         self.assertEqual(six.text_type(instance), u'R\xe4dda Barnen')
 
     def test_partner_staff_member(self):
-        partner = PartnerFactory.build(name=b'partner')
+        partner = PartnerFactory.build(name='partner')
 
         instance = PartnerStaffFactory.build(first_name='xyz', partner=partner)
         self.assertTrue(six.text_type(instance).startswith(u'xyz'))
@@ -1548,7 +1548,7 @@ class TestStrUnicode(TestCase):
         self.assertIn(u'R\xe4dda Barnen', six.text_type(instance))
 
     def test_intervention(self):
-        instance = InterventionFactory.build(number=b'two')
+        instance = InterventionFactory.build(number='two')
         self.assertEqual(u'two', six.text_type(instance))
 
         instance = InterventionFactory.build(number=u'tv\xe5')
@@ -1561,7 +1561,7 @@ class TestStrUnicode(TestCase):
         six.text_type(instance)
 
     def test_intervention_result_link(self):
-        intervention = InterventionFactory.build(number=b'two')
+        intervention = InterventionFactory.build(number='two')
         instance = InterventionResultLinkFactory.build(intervention=intervention)
         self.assertTrue(six.text_type(instance).startswith(u'two'))
 
@@ -1570,7 +1570,7 @@ class TestStrUnicode(TestCase):
         self.assertTrue(six.text_type(instance).startswith(u'tv\xe5'))
 
     def test_intervention_budget(self):
-        intervention = InterventionFactory.build(number=b'two')
+        intervention = InterventionFactory.build(number='two')
         instance = InterventionBudgetFactory.build(intervention=intervention)
         self.assertTrue(six.text_type(instance).startswith(u'two'))
 
@@ -1585,7 +1585,7 @@ class TestStrUnicode(TestCase):
         six.text_type(instance)
 
     def test_intervention_attachment(self):
-        attachment = SimpleUploadedFile(b'two.txt', u'hello world!'.encode('utf-8'))
+        attachment = SimpleUploadedFile(name='two.txt', content='hello world!'.encode('utf-8'))
         instance = InterventionAttachmentFactory.build(attachment=attachment)
         self.assertEqual(six.text_type(instance), u'two.txt')
 
@@ -1594,9 +1594,11 @@ class TestStrUnicode(TestCase):
         self.assertEqual(six.text_type(instance), u'tv\xe5.txt')
 
     def test_intervention_reporting_period(self):
-        intervention = InterventionFactory.build(number=b'two')
+        intervention = InterventionFactory.build(number='two')
+        six.text_type(intervention)
         instance = InterventionReportingPeriodFactory.build(intervention=intervention)
-        self.assertTrue(six.text_type(instance).startswith(b'two'))
+        six.text_type(instance)
+        self.assertTrue(six.text_type(instance).startswith('two'))
 
         intervention = InterventionFactory.build(number=u'tv\xe5')
         instance = InterventionReportingPeriodFactory.build(intervention=intervention)

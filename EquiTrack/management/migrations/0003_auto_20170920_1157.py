@@ -20,7 +20,7 @@ class Migration(migrations.Migration):
         migrations.AlterField(
             model_name='flaggedissue',
             name='issue_id',
-            field=models.CharField(db_index=True, help_text=b'A readable ID associated with the specific issue, e.g. "pca-no-attachment"', max_length=100),
+            field=models.CharField(db_index=True, help_text='A readable ID associated with the specific issue, e.g. "pca-no-attachment"', max_length=100),
         ),
         migrations.AlterField(
             model_name='flaggedissue',

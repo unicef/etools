@@ -13,11 +13,12 @@ from django.db.models import Q
 
 def myprint(*args):
     print(*args)
-    file_name = 'migration_reports_0015.txt'
-    args_list = [six.text_type(arg) for arg in args]
-    with open(file_name, 'ab') as f:
-        f.write(', '.join(args_list))
-        f.write('\n')
+    # Do we really still need the following?
+    # file_name = 'migration_reports_0015.txt'
+    # args_list = [six.text_type(arg) for arg in args]
+    # with open(file_name, 'a') as f:
+    #     f.write(', '.join(args_list))
+    #     f.write('\n')
 
 def initiate_migrations(apps, schema_editor):
     myprint(' ########################  ', connection.schema_name)

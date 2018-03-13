@@ -81,7 +81,10 @@ class Attachment(TimeStampedModel, models.Model):
 
     @property
     def url(self):
-        return six.text_type(self.file.url if self.file else self.hyperlink)
+        if self.file:
+            return six.text_type(self.file.url)
+        else:
+            return self.hyperlink
 
     @property
     def filename(self):

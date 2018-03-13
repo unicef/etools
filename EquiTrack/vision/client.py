@@ -1,15 +1,13 @@
 #!/usr/bin/env python
 # coding=utf-8
 
-from __future__ import absolute_import, division, print_function, unicode_literals
-
 import argparse
 import json
 import logging
 import os
-from urlparse import urljoin
 
-from django.utils import six
+from django.utils.six.moves.urllib_parse import urljoin
+
 import requests
 from requests.auth import HTTPDigestAuth
 
@@ -106,7 +104,7 @@ def main():
         logger.info(client.get_business_areas())
 
     except Exception as exp:
-        logger.exception(six.text_type(exp))
+        logger.exception(str(exp))
 
 
 if __name__ == '__main__':
