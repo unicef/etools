@@ -5,9 +5,9 @@ from django.test import TestCase
 
 from rest_framework import serializers
 
-from firms.factories import UserFactory
 from firms.serializers import BaseStaffMemberSerializer
 from firms.tests.models import StaffMember
+from users.tests.factories import UserFactory
 
 
 class StaffMemberSerializer(BaseStaffMemberSerializer):
