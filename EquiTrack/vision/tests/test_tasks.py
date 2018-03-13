@@ -264,11 +264,11 @@ class TestSyncHandlerTask(TestCase):
         self.assertEqual(mock_logger_info.call_args[0], (expected_msg,))
         self.assertEqual(mock_logger_info.call_args[1], {})
 
-        expected_msg = '{} sync failed, Reason: {}, Country: {}'.format(
-            'programme', 'banana', 'Country My'
+        expected_msg = '{} sync failed, Country: {}'.format(
+            'programme', 'Country My'
         )
         self.assertEqual(mock_logger_error.call_args[0], (expected_msg,))
-        self.assertEqual(mock_logger_error.call_args[1], {})
+        self.assertEqual(mock_logger_error.call_args[1], {'exc_info': True})
 
     @mock.patch('vision.tasks.logger.error')
     @override_settings(CELERY_ALWAYS_EAGER=True, CELERY_EAGER_PROPAGATES_EXCEPTIONS=True)
