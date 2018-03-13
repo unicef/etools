@@ -163,6 +163,8 @@ urlpatterns = (
         view=InterventionReportingPeriodDetailView.as_view(http_method_names=['get', 'patch', 'delete']),
         name='intervention-reporting-periods-detail'),
 
+    # TODO: figure this out
+    # url(r'^partners/interventions/$', view=InterventionsView.as_view()),
     url(r'^dropdowns/static/$',
         view=PMPStaticDropdownsListAPIView.as_view(http_method_names=['get']),
         name='dropdown-static-list'),
