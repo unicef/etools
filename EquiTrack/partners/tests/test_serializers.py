@@ -6,38 +6,46 @@ import datetime
 from django.utils import six
 from rest_framework import serializers
 
-from EquiTrack.factories import (
-    AgreementAmendmentFactory, AgreementFactory, CountryProgrammeFactory, InterventionFactory, PartnerFactory,
-    PartnerStaffFactory, PlannedEngagementFactory, UserFactory,)
+# Project imports
 from EquiTrack.tests.cases import EToolsTenantTestCase
 from partners.models import Agreement, PartnerType
 from partners.serializers.agreements_v2 import AgreementCreateUpdateSerializer
 from partners.serializers.partner_organization_v2 import PartnerOrganizationDetailSerializer
-
+from partners.tests.factories import (
+    AgreementAmendmentFactory,
+    AgreementFactory,
+    InterventionFactory,
+    PartnerFactory,
+    PartnerStaffFactory,
+    PlannedEngagementFactory,
+)
+from reports.tests.factories import CountryProgrammeFactory
+from users.tests.factories import UserFactory
 
 _ALL_AGREEMENT_TYPES = [agreement_type[0] for agreement_type in Agreement.AGREEMENT_TYPES]
 
 
 class AgreementCreateUpdateSerializerBase(EToolsTenantTestCase):
-    """Base class for testing AgreementCreateUpdateSerializer"""
-    def setUp(self):
-        self.user = UserFactory()
+    '''Base class for testing AgreementCreateUpdateSerializer'''
+    @classmethod
+    def setUpTestData(cls):
+        cls.user = UserFactory()
 
-        self.partner = PartnerFactory(partner_type=PartnerType.CIVIL_SOCIETY_ORGANIZATION)
+        cls.partner = PartnerFactory(partner_type=PartnerType.CIVIL_SOCIETY_ORGANIZATION)
 
-        self.today = datetime.date.today()
+        cls.today = datetime.date.today()
 
-        this_year = self.today.year
-        self.country_programme = CountryProgrammeFactory(from_date=datetime.date(this_year - 1, 1, 1),
-                                                         to_date=datetime.date(this_year + 1, 1, 1))
+        this_year = cls.today.year
+        cls.country_programme = CountryProgrammeFactory(from_date=datetime.date(this_year - 1, 1, 1),
+                                                        to_date=datetime.date(this_year + 1, 1, 1))
 
         # The serializer examines context['request'].user during the course of its operation. If that's not set, the
         # serializer will fail. It doesn't need a real request object, just something with a .user attribute, so
         # that's what I create here.
         class Stub(object):
             pass
-        self.fake_request = Stub()
-        self.fake_request.user = self.user
+        cls.fake_request = Stub()
+        cls.fake_request.user = cls.user
 
     def assertSimpleExceptionFundamentals(self, context_manager, expected_message):
         """Given the context manager produced by self.assertRaises(), checks the exception it contains for

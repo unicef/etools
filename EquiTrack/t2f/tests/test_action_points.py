@@ -10,23 +10,23 @@ from django.core.urlresolvers import reverse
 from freezegun import freeze_time
 from pytz import UTC
 
-from EquiTrack.factories import UserFactory
 from EquiTrack.tests.mixins import APITenantTestCase, URLAssertionMixin
 from t2f.models import ActionPoint
 from t2f.tests.factories import ActionPointFactory, TravelFactory
+from users.tests.factories import UserFactory
 
 
 class ActionPoints(URLAssertionMixin, APITenantTestCase):
-    def setUp(self):
-        super(ActionPoints, self).setUp()
-        self.traveler = UserFactory(first_name='John',
-                                    last_name='Doe')
-        self.unicef_staff = UserFactory(first_name='Max',
-                                        last_name='Mustermann',
-                                        is_staff=True)
-        self.travel = TravelFactory(traveler=self.traveler,
-                                    supervisor=self.unicef_staff)
-        self.due_date = (datetime.now() + timedelta(days=1)).isoformat()
+    @classmethod
+    def setUpTestData(cls):
+        cls.traveler = UserFactory(first_name='John',
+                                   last_name='Doe')
+        cls.unicef_staff = UserFactory(first_name='Max',
+                                       last_name='Mustermann',
+                                       is_staff=True)
+        cls.travel = TravelFactory(traveler=cls.traveler,
+                                   supervisor=cls.unicef_staff)
+        cls.due_date = (datetime.now() + timedelta(days=1)).isoformat()
         mail.outbox = []
 
     def test_urls(self):
