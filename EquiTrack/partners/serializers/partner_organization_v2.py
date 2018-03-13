@@ -135,7 +135,8 @@ class PartnerStaffMemberDetailSerializer(serializers.ModelSerializer):
 
 class AssessmentDetailSerializer(serializers.ModelSerializer):
 
-    report_file = serializers.FileField(source='report', required=True)
+    report_file = serializers.FileField(source='report', read_only=True)
+    report = serializers.FileField(required=True)
     completed_date = serializers.DateField(required=True)
 
     class Meta:
@@ -335,6 +336,7 @@ class PartnerOrganizationHactSerializer(serializers.ModelSerializer):
         fields = (
             "id",
             "name",
+            "vendor_number",
             "short_name",
             "type_of_assessment",
             "partner_type",
