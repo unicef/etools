@@ -27,7 +27,7 @@ class TestCheckView(EToolsTenantTestCase):
         with patch("monitoring.service_checks.Celery", mock_celery):
             response = self.client.get(self.url)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(response.content, "all is well (checked: celery, db)")
+        self.assertEqual(response.content.decode('utf-8'), "all is well (checked: celery, db)")
 
     def test_get_fail(self):
         mock_ping = Mock()
@@ -35,11 +35,8 @@ class TestCheckView(EToolsTenantTestCase):
         mock_celery = Mock(return_value=mock_ping)
         with patch("monitoring.service_checks.Celery", mock_celery):
             response = self.client.get(self.url)
-        self.assertEqual(
-            response.status_code,
-            status.HTTP_500_INTERNAL_SERVER_ERROR
-        )
-        self.assertIn(
+        self.assertContains(
+            response,
             "No running Celery workers were found.",
-            response.content
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR
         )

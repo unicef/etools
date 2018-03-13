@@ -1,6 +1,7 @@
+from __future__ import absolute_import, division, print_function, unicode_literals
 from django.conf.urls import url
 
-from views_v3 import (
+from .views_v3 import (
     ChangeUserCountryView,
     CountryView,
     MyProfileAPIView,

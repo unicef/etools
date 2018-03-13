@@ -12,7 +12,7 @@ from django.contrib.auth.models import Group
 from django.core.files.uploadedfile import SimpleUploadedFile
 from django.core.urlresolvers import reverse, resolve
 from django.db import connection
-from django.utils import timezone
+from django.utils import six, timezone
 
 from model_utils import Choices
 from rest_framework import status
@@ -321,7 +321,7 @@ class TestPartnerOrganizationListViewForCSV(APITenantTestCase):
         # but I want to make sure the response looks CSV-ish.
         self.assertEqual(response.get('Content-Disposition'), 'attachment;filename=partner.csv')
 
-        self.assertIsInstance(response.rendered_content, basestring)
+        self.assertIsInstance(response.rendered_content, six.string_types)
 
         # The response should *not* look like JSON.
         with self.assertRaises(ValueError):
