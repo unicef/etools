@@ -251,6 +251,7 @@ def _notify_interventions_ending_soon(country_name):
 
 @app.task
 def pmp_indicator_report():
+    base_url = 'https://etools.unicef.org'
     countries = Country.objects.exclude(schema_name__in=['public', 'uat', 'frg'])
     fieldnames = [
         'Country',
@@ -266,13 +267,15 @@ def pmp_indicator_report():
         'FR numbers against PD / SSFA',
         'Sum of all FR planned amount',
         'Core value attached',
+        'Partner Link',
+        'Intervention Link',
     ]
     csvfile = StringIO()
     writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
     writer.writeheader()
 
     for country in countries:
-        print(country.name)
+        logger.info(country.name)
         set_country(country.name)
         for partner in PartnerOrganization.objects.all():
             for intervention in Intervention.objects.filter(agreement__partner=partner):
@@ -291,10 +294,11 @@ def pmp_indicator_report():
                         (fh.fr_number.encode('utf-8')) for fh in intervention.frs.all()]),
                     'Sum of all FR planned amount': intervention.frs.aggregate(
                         total=Coalesce(Sum('intervention_amt'), 0))['total'],
-                    'Core value attached': True if partner.core_values_assessment else False
+                    'Core value attached': True if partner.core_values_assessment else False,
+                    'Partner Link': '{}/pmp/partners/{}/details'.format(base_url, partner.pk),
+                    'Intervention Link': '{}/pmp/interventions/{}/details'.format(base_url, intervention.pk),
                 })
 
-    mail = EmailMessage('PMP Indicator Report', 'Report generated', 'etools-reports@unicef.org',
-                        ['ddinicola@unicef.org'])
+    mail = EmailMessage('PMP Indicator Report', 'Report generated', 'etools-reports@unicef.org', settings.REPORT_EMAILS)
     mail.attach('pmp_indicators.csv', csvfile.getvalue(), 'text/csv')
     mail.send()
