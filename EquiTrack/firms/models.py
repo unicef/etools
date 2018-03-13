@@ -1,17 +1,11 @@
 from __future__ import absolute_import, division, print_function, unicode_literals
 
 from django.conf import settings
-from django.contrib.auth.tokens import default_token_generator
-from django.core.urlresolvers import reverse
 from django.db import models
 from django.utils.encoding import python_2_unicode_compatible
 from django.utils.translation import ugettext_lazy as _
 
-from allauth.account.utils import user_pk_to_url_str
 from model_utils.models import TimeStampedModel
-from post_office import mail
-
-from EquiTrack.utils import get_current_site, get_environment
 
 
 class BaseFirmManager(models.Manager):
@@ -65,8 +59,10 @@ class BaseFirm(TimeStampedModel, models.Model):
         blank=True, null=True
     )
 
-    blocked = models.BooleanField(verbose_name=_('Blocked'), default=False)
+    vision_synced = models.BooleanField(verbose_name=_('Synced from VISION'), default=False)
+    blocked = models.BooleanField(verbose_name=_('Blocked in VISION'), default=False)
     hidden = models.BooleanField(verbose_name=_('Hidden'), default=False)
+    deleted_flag = models.BooleanField(default=False, verbose_name=_('Marked For Deletion in VISION'))
 
     objects = BaseFirmManager()
 
@@ -100,23 +96,3 @@ class BaseStaffMember(models.Model):
 
     def __str__(self):
         return self.get_full_name()
-
-    def send_invite_email(self):
-        token = default_token_generator.make_token(self.user)
-
-        # TODO: Use special endpoint for this. Don't use "reset password" url.
-        set_password_url = reverse("account_reset_password_from_key",
-                                   kwargs=dict(uidb36=user_pk_to_url_str(self.user), key=token))
-
-        context = {
-            'environment': get_environment(),
-            'staff_member': self,
-            'set_password_url': 'https://{}{}'.format(get_current_site().domain, set_password_url),
-        }
-
-        mail.send(
-            self.user.email,
-            settings.DEFAULT_FROM_EMAIL,
-            template='organisations/staff_member/set_password',
-            context=context,
-        )

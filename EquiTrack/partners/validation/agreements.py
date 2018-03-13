@@ -16,7 +16,7 @@ def agreement_transition_to_signed_valid(agreement):
     TransitionErrors are raised under 3 circumstances --
       - If the agreement is of type PCA and matches certain criteria (see code)
       - If the start date is empty or in the future
-      - If the end date is empty or in the past
+      - If the end date is empty
     '''
     today = date.today()
     if agreement.agreement_type == agreement.PCA and \
@@ -31,8 +31,8 @@ def agreement_transition_to_signed_valid(agreement):
     if not agreement.start or agreement.start > today:
         raise TransitionError(['Agreement cannot transition to signed until '
                                'the start date is less than or equal to today'])
-    if not agreement.end or agreement.end < today:
-        raise TransitionError(['Agreement cannot transition to signed unless the end date is today or after'])
+    if not agreement.end:
+        raise TransitionError(['Agreement cannot transition to signed unless the end date is defined'])
 
     return True
 
@@ -50,7 +50,9 @@ def agreements_illegal_transition(agreement):
 
 
 def agreements_illegal_transition_permissions(agreement, user):
+    assert hasattr(agreement, "old_instance")
     logging.debug(agreement.old_instance)
+    logging.debug(agreement)
     logging.debug(user)
     # The type of validation that can be done on the user:
     # if user.first_name != 'Rob':

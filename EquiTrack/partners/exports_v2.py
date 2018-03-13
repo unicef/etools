@@ -1,7 +1,7 @@
 from rest_framework_csv import renderers as r
 
 
-class PartnerOrganizationCsvRenderer(r.CSVRenderer):
+class PartnerOrganizationCSVRenderer(r.CSVRenderer):
     header = ['vendor_number', 'organization_full_name',
               'short_name', 'alternate_name', 'partner_type', 'shared_with', 'address',
               'phone_number', 'email_address', 'risk_rating', 'date_last_assessment_against_core_values',
@@ -36,18 +36,18 @@ class PartnerOrganizationHactCsvRenderer(r.CSVRenderer):
 
     header = [
         'name',
+        'vendor_number',
         'partner_type',
-        'shared_partner',
         'shared_with',
         'type_of_assessment',
         # 'total_ct_cp',
         'total_ct_cy',
-        # 'cash_transfer',
-        # 'liquidation',
+        'net_ct_cy',
+        'reported_cy',
+        'total_ct_ytd',
         'rating',
         'expiring_assessment_flag',
         'approaching_threshold_flag',
-        # TODO change with q1 after prp-refactoring
         'hact_values.programmatic_visits.planned.q1',
         'hact_values.programmatic_visits.planned.q2',
         'hact_values.programmatic_visits.planned.q3',
@@ -69,19 +69,20 @@ class PartnerOrganizationHactCsvRenderer(r.CSVRenderer):
         'hact_values.spot_checks.completed.q4',
         'hact_values.audits.minimum_requirements',
         'hact_values.audits.completed',
-        'outstanding_findings',
+        'hact_values.outstanding_findings',
     ]
 
     labels = {
         'name': 'Implementing Partner',
+        'vendor_number': 'Vendor Number',
         'partner_type': 'Partner Type',
-        'shared_partner': 'Shared',
         'shared_with': 'Shared IP',
         'type_of_assessment': 'Assessment Type',
         # 'total_ct_cp': 'TOTAL for current CP cycle',
         'total_ct_cy': 'Cash Transfer 1 OCT - 30 SEP',
-        # 'cash_transfer': 'Cash Transfer 1 JAN - 31 DEC',
-        # 'liquidation': 'Liquidations 1 OCT - 30 SEP',
+        'net_ct_cy': 'Net Cash Transferred per Current Year',
+        'reported_cy': 'Liquidations 1 OCT - 30 SEP',
+        'total_ct_ytd': 'Cash Transfers Jan - Dec',
         'rating': 'Risk Rating',
         'expiring_assessment_flag': 'Expiring Threshold',
         'approaching_threshold_flag': 'Approach Threshold',
@@ -107,11 +108,11 @@ class PartnerOrganizationHactCsvRenderer(r.CSVRenderer):
         'hact_values.spot_checks.completed.q4': 'Q4',
         'hact_values.audits.minimum_requirements': 'Audits M.R',
         'hact_values.audits.completed': 'Audit Completed',
-        'outstanding_findings': 'Audits Outstanding Findings',
+        'hact_values.outstanding_findings': 'Audits Outstanding Findings',
     }
 
 
-class AgreementCvsRenderer(r.CSVRenderer):
+class AgreementCSVRenderer(r.CSVRenderer):
     header = [
         "agreement_number",
         "status",
@@ -145,23 +146,24 @@ class AgreementCvsRenderer(r.CSVRenderer):
     }
 
 
-class InterventionCvsRenderer(r.CSVRenderer):
+class InterventionCSVRenderer(r.CSVRenderer):
     header = [
-        "status", "partner_name", "partner_type", "agreement_name", "country_programme", "document_type", "number",
-        "title", "start", "end", "offices", "sectors", "locations", "unicef_focal_points",
-        "partner_focal_points", "population_focus", "cp_outputs", "ram_indicators", "fr_numbers",
-        "planned_budget_local", "unicef_budget", "cso_contribution",
-        "partner_contribution_local", "planned_visits", "spot_checks", "audit", "submission_date",
+        "partner_name", "vendor_number", "status", "partner_type", "agreement_number", "country_programme",
+        "document_type", "number", "title", "start", "end", "offices", "sectors", "locations", "contingency_pd",
+        "intervention_clusters", "unicef_focal_points", "partner_focal_points", "budget_currency", "cso_contribution",
+        "unicef_budget", "unicef_supply", "total_planned_budget", "fr_numbers", "fr_currency", "fr_posting_date",
+        "fr_amount", "fr_actual_amount", "fr_outstanding_amt", "planned_visits", "submission_date",
         "submission_date_prc", "review_date_prc", "partner_authorized_officer_signatory", "signed_by_partner_date",
         "unicef_signatory", "signed_by_unicef_date", "days_from_submission_to_signed", "days_from_review_to_signed",
-        "url", "migration_error_msg"
+        "amendment_sum", "last_amendment_date", "attachment_type", "total_attachments", "cp_outputs", "url",
     ]
 
     labels = {
-        "status": "Status",
         "partner_name": "Partner",
+        "vendor_number": "Vendor no.",
+        "status": "Status",
         "partner_type": "Partner Type",
-        "agreement_name": "Agreement",
+        "agreement_number": "Agreement",
         "country_programme": "Country Programme",
         "document_type": "Document Type",
         "number": "Reference Number",
@@ -169,18 +171,23 @@ class InterventionCvsRenderer(r.CSVRenderer):
         "start": "Start Date",
         "end": "End Date",
         "offices": "UNICEF Office",
-        "sectors": "Sectors",
+        "sectors": "Sections",
         "locations": "Locations",
+        "contingency_pd": "Contingency PD?",
+        "intervention_clusters": "Cluster",
         "unicef_focal_points": "UNICEF Focal Points",
         "partner_focal_points": "CSO Authorized Officials",
-        "population_focus": "Population Focus",
-        "cp_outputs": "CP Outputs",
-        "ram_indicators": "RAM Indicators",
-        "fr_numbers": "FR Number(s)",
-        "planned_budget_local": "Total UNICEF Budget (Local)",
-        "unicef_budget": "Total UNICEF Budget (USD)",
+        "budget_currency": "Budget Currency",
         "cso_contribution": "Total CSO Budget (USD)",
-        "partner_contribution_local": "Total CSO Budget (Local)",
+        "unicef_budget": "UNICEF Cash (USD)",
+        "unicef_supply": "UNICEF Supply (USD)",
+        "total_planned_budget": "Total PD/SSFA Budget (USD)",
+        "fr_numbers": "FR Number(s)",
+        "fr_currency": "FR Currency",
+        "fr_posting_date": "FR Posting Date",
+        "fr_amount": "FR Amount",
+        "fr_actual_amount": "FR Actual CT",
+        "fr_outstanding_amt": "Outstanding DCT",
         "planned_visits": "Planned Programmatic Visits",
         "spot_checks": "Planned Spot Checks",
         "audit": "Planned Audits",
@@ -193,30 +200,59 @@ class InterventionCvsRenderer(r.CSVRenderer):
         "signed_by_unicef_date": "Signed by UNICEF Date",
         "days_from_submission_to_signed": "Days from Submission to Signed",
         "days_from_review_to_signed": "Days from Review to Signed",
+        "amendment_sum": "Total no. of amendments",
+        "last_amendment_date": "Last amendment date",
+        "attachment_type": "Attachment Type",
+        "total_attachments": "# of attachments",
+        "cp_outputs": "CP Outputs",
         "url": "URL",
-        "migration_error_msg": "Migration messages"
     }
 
 
-class PartnershipDashCsvRenderer(r.CSVRenderer):
+class PartnershipDashCSVRenderer(r.CSVRenderer):
     header = [
-        'partner_name', 'number', 'status', 'start', 'end', 'sectors', 'offices_names', 'total_budget',
-        'cso_contribution', 'unicef_cash', 'unicef_supplies', 'disbursement', 'disbursement_percent', 'days_last_pv'
+        'partner_name', 'partner_vendor_number',
+        'number',
+        'sections',
+        'offices_names',
+        'status',
+        'start',
+        'end',
+        'budget_currency',
+        'cso_contribution',
+        'unicef_supplies',
+        'unicef_cash',
+        'fr_currency',
+        'frs_total_frs_amt',
+        'disbursement',
+        'outstanding_dct',
+        'frs_total_frs_amt_usd',
+        'disbursement_usd',
+        'outstanding_dct_usd',
+        'disbursement_percent',
+        'days_last_pv'
     ]
 
     labels = {
         "partner_name": "IP Name",
+        "partner_vendor_number": "Vendor Number",
         "number": "PD/SSFA Ref #",
-        "sectors": "Section",
+        "sections": "Section",
         "offices_names": "Field Office",
         "status": "Status",
         "start": "Start Date",
         "end": "End Date",
-        "unicef_cash": "Total UNICEF Cash ($)",
-        "unicef_supplies": "Total UNICEF Supplies ($)",
-        "cso_contribution": "CSO Contr. ($)",
-        "total_budget": "Total Budget ($)",
-        "disbursement": "Disbursement To Date ($)",
+        "budget_currency": "PD Currency",
+        "cso_contribution": "CSO Contribution (PD Currency)",
+        "unicef_supplies": "Total UNICEF Supplies (PD Currency)",
+        "unicef_cash": "Total UNICEF Cash (PD Currency)",
+        "fr_currency": "FR Currency",
+        "frs_total_frs_amt": "FR Grand Total",
+        "disbursement": "Actual Disbursements",
+        "outstanding_dct": "Outstanding DCT",
+        "frs_total_frs_amt_usd": "FR Grand Total (USD)",
+        "disbursement_usd": "Actual Disbursement (USD)",
+        "outstanding_dct_usd": "Outstanding DCT (USD)",
         "disbursement_percent": "Disbursement To Date (%)",
         "days_last_pv": "Days Since Last PV",
     }

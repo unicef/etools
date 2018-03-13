@@ -51,4 +51,4 @@ ENV PDF_API_URL etoolsinfra_proxy:80
 WORKDIR /code/
 
 ENV DJANGO_SETTINGS_MODULE EquiTrack.settings.production
-RUN SECRET_KEY=not-so-secret-key-just-for-collectstatic python manage.py collectstatic --noinput
+RUN SECRET_KEY=not-so-secret-key-just-for-collectstatic DISABLE_JWT_LOGIN=1 python manage.py collectstatic --noinput
