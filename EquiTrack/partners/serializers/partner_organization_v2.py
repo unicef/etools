@@ -136,16 +136,17 @@ class PartnerStaffMemberDetailSerializer(serializers.ModelSerializer):
 class AssessmentDetailSerializer(serializers.ModelSerializer):
 
     report_attachment = AttachmentSingleFileField(read_only=True)
+    completed_date = serializers.DateField(required=True)
 
     class Meta:
         model = Assessment
         fields = "__all__"
 
-    def validate(self, data):
+    def validate_completed_date(self, completed_date):
         today = timezone.now().date()
-        if data["completed_date"] > today:
-            raise serializers.ValidationError({'completed_date': ['The Date of Report cannot be in the future']})
-        return data
+        if completed_date > today:
+            raise serializers.ValidationError('The Date of Report cannot be in the future')
+        return completed_date
 
 
 class PartnerOrganizationListSerializer(serializers.ModelSerializer):

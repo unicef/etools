@@ -1737,17 +1737,23 @@ class Intervention(TimeStampedModel):
     def total_frs(self):
         r = {
             'total_frs_amt': 0,
+            'total_frs_amt_usd': 0,
             'total_outstanding_amt': 0,
+            'total_outstanding_amt_usd': 0,
             'total_intervention_amt': 0,
             'total_actual_amt': 0,
+            'total_actual_amt_usd': 0,
             'earliest_start_date': None,
             'latest_end_date': None
         }
         for fr in self.frs.all():
-            r['total_frs_amt'] += fr.total_amt
-            r['total_outstanding_amt'] += fr.outstanding_amt
+            r['total_frs_amt'] += fr.total_amt_local
+            r['total_frs_amt_usd'] += fr.total_amt
+            r['total_outstanding_amt'] += fr.outstanding_amt_local
+            r['total_outstanding_amt_usd'] += fr.outstanding_amt
             r['total_intervention_amt'] += fr.intervention_amt
-            r['total_actual_amt'] += fr.actual_amt
+            r['total_actual_amt'] += fr.actual_amt_local
+            r['total_actual_amt_usd'] += fr.actual_amt
             if r['earliest_start_date'] is None:
                 r['earliest_start_date'] = fr.start_date
             elif r['earliest_start_date'] > fr.start_date:
