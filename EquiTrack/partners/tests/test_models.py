@@ -926,10 +926,13 @@ class TestInterventionModel(EToolsTenantTestCase):
         intervention = InterventionFactory()
         FundsReservationHeaderFactory(
             intervention=intervention,
-            total_amt=10.00,
-            outstanding_amt=20.00,
+            total_amt=0.00,
+            total_amt_local=10.00,
+            outstanding_amt=0.00,
+            outstanding_amt_local=20.00,
             intervention_amt=30.00,
-            actual_amt=40.00,
+            actual_amt=0.00,
+            actual_amt_local=40.00,
             start_date=datetime.date(2001, 1, 1),
             end_date=datetime.date(2002, 1, 1),
         )
@@ -953,28 +956,37 @@ class TestInterventionModel(EToolsTenantTestCase):
         intervention = InterventionFactory()
         FundsReservationHeaderFactory(
             intervention=intervention,
-            total_amt=10.00,
-            outstanding_amt=20.00,
+            total_amt=0.00,
+            total_amt_local=10.00,
+            outstanding_amt=0.00,
+            outstanding_amt_local=20.00,
             intervention_amt=30.00,
-            actual_amt=40.00,
+            actual_amt=0.00,
+            actual_amt_local=40.00,
             start_date=datetime.date(2010, 1, 1),
             end_date=datetime.date(2002, 1, 1),
         )
         FundsReservationHeaderFactory(
             intervention=intervention,
-            total_amt=10.00,
-            outstanding_amt=20.00,
+            total_amt=0.00,
+            total_amt_local=10.00,
+            outstanding_amt=0.00,
+            outstanding_amt_local=20.00,
             intervention_amt=30.00,
-            actual_amt=40.00,
+            actual_amt=0.00,
+            actual_amt_local=40.00,
             start_date=datetime.date(2001, 1, 1),
             end_date=datetime.date(2020, 1, 1),
         )
         FundsReservationHeaderFactory(
             intervention=intervention,
-            total_amt=10.00,
-            outstanding_amt=20.00,
+            total_amt=0.00,
+            total_amt_local=10.00,
+            outstanding_amt=0.00,
+            outstanding_amt_local=20.00,
             intervention_amt=30.00,
-            actual_amt=40.00,
+            actual_amt=0.00,
+            actual_amt_local=40.00,
             start_date=datetime.date(2005, 1, 1),
             end_date=datetime.date(2010, 1, 1),
         )
