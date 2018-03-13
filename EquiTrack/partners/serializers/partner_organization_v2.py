@@ -333,6 +333,7 @@ class PartnerOrganizationHactSerializer(serializers.ModelSerializer):
         fields = (
             "id",
             "name",
+            "vendor_number",
             "short_name",
             "type_of_assessment",
             "partner_type",
