@@ -40,7 +40,7 @@ def update_aggregate_hact_values():
         aggregate_hact, _ = AggregateHact.objects.get_or_create(year=datetime.today().year)
         try:
             aggregate_hact.update()
-        except Exception as e:
-            logger.error(country, e.args[0])
+        except Exception:
+            logger.exception(country)
 
     logger.info('Hact Aggregator Task process finished')

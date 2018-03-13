@@ -178,8 +178,8 @@ class PartnerSynchronizer(VisionDataSynchronizer):
 
                 processed += 1
 
-            except Exception as exp:
-                logger.exception(u'Exception occurred during Partner Sync: {}'.format(exp.args[0]))
+            except Exception:
+                logger.exception(u'Exception occurred during Partner Sync')
             return processed
 
         processed = 0

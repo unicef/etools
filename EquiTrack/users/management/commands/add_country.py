@@ -22,4 +22,4 @@ class Command(BaseCommand):
                 local_currency=usd,
             )
         except Exception as exp:
-            raise CommandError(exp.args[0])
+            raise CommandError(*exp.args)
