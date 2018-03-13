@@ -5,6 +5,7 @@ from datetime import datetime
 from StringIO import StringIO
 
 from django.core.urlresolvers import reverse
+from django.utils import six
 import factory
 from freezegun import freeze_time
 from pytz import UTC
@@ -438,7 +439,7 @@ class TravelDetails(URLAssertionMixin, APITenantTestCase):
                                         data=data, user=self.traveler)
         response_json = json.loads(response.rendered_content)
 
-        self.assertItemsEqual(response_json['activities'][0]['locations'], [location.id, location_2.id])
+        six.assertCountEqual(self, response_json['activities'][0]['locations'], [location.id, location_2.id])
         self.assertEqual(response_json['activities'][1]['locations'], [location_3.id])
 
     def test_activity_results(self):
