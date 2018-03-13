@@ -29,8 +29,7 @@ def collect_child_models(model, levels=None):
 
     related_objects = [
         f for f in model._meta.get_fields()
-        if (f.one_to_many or f.one_to_one)
-           and f.auto_created and not f.concrete
+        if (f.one_to_many or f.one_to_one) and f.auto_created and not f.concrete
     ]
     related_objects = [
         rel for rel in related_objects
