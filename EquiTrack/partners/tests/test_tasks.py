@@ -9,12 +9,13 @@ from django.utils import timezone
 
 import mock
 
-import partners.tasks
-from EquiTrack.factories import (
-    AgreementFactory, CountryFactory, FundsReservationHeaderFactory, InterventionFactory, UserFactory,)
 from EquiTrack.tests.cases import EToolsTenantTestCase
+from funds.tests.factories import FundsReservationHeaderFactory
 from partners.models import Agreement, Intervention
+import partners.tasks
+from partners.tests.factories import AgreementFactory, InterventionFactory
 from users.models import User
+from users.tests.factories import CountryFactory, UserFactory
 
 
 def _build_country(name):
@@ -43,6 +44,7 @@ def _make_past_datetime(n_days):
 class TestGetInterventionContext(EToolsTenantTestCase):
     '''Exercise the tasks' helper function get_intervention_context()'''
     def setUp(self):
+        super(TestGetInterventionContext, self).setUp()
         self.intervention = InterventionFactory()
 
     def test_simple_intervention(self):
@@ -105,17 +107,18 @@ class PartnersTestBaseClass(EToolsTenantTestCase):
         MockCountry.objects.exclude.return_value = mock_country_objects_exclude_queryset
         mock_country_objects_exclude_queryset.all = mock.Mock(return_value=self.tenant_countries)
 
-    def setUp(self):
+    @classmethod
+    def setUpTestData(cls):
         try:
-            self.admin_user = User.objects.get(username=settings.TASK_ADMIN_USER)
+            cls.admin_user = User.objects.get(username=settings.TASK_ADMIN_USER)
         except User.DoesNotExist:
-            self.admin_user = UserFactory(username=settings.TASK_ADMIN_USER)
+            cls.admin_user = UserFactory(username=settings.TASK_ADMIN_USER)
 
         # The global "country" should be excluded from processing. Create it to ensure it's ignored during this test.
-        self.global_country = _build_country('Global')
-        self.tenant_countries = [_build_country('test{}'.format(i)) for i in range(3)]
+        cls.global_country = _build_country('Global')
+        cls.tenant_countries = [_build_country('test{}'.format(i)) for i in range(3)]
 
-        self.country_name = self.tenant_countries[0].name
+        cls.country_name = cls.tenant_countries[0].name
 
 
 @mock.patch('partners.tasks.logger', spec=['info', 'error'])
@@ -608,21 +611,21 @@ class TestNotifyOfMismatchedEndedInterventionsTask(PartnersTestBaseClass):
         for intervention in interventions:
             for i in range(3):
                 FundsReservationHeaderFactory(intervention=intervention,
-                                              actual_amt=_make_decimal(i + 1),
-                                              total_amt=_make_decimal(i))
+                                              actual_amt_local=_make_decimal(i + 1),
+                                              total_amt_local=_make_decimal(i))
 
         # Create a few items that should be ignored. If they're not ignored, this test will fail.
         # Should be ignored because of status even though FRS values are mismatched
         intervention = InterventionFactory(status=Intervention.DRAFT)
         for i in range(3):
-            FundsReservationHeaderFactory(intervention=intervention, actual_amt=_make_decimal(i + 1),
-                                          total_amt=_make_decimal(i))
+            FundsReservationHeaderFactory(intervention=intervention, actual_amt_local=_make_decimal(i + 1),
+                                          total_amt_local=_make_decimal(i))
 
         # Should be ignored because FRS values are not mismatched
         intervention = InterventionFactory(status=Intervention.ENDED)
         for i in range(3):
-            FundsReservationHeaderFactory(intervention=intervention, actual_amt=_make_decimal(i),
-                                          total_amt=_make_decimal(i))
+            FundsReservationHeaderFactory(intervention=intervention, actual_amt_local=_make_decimal(i),
+                                          total_amt_local=_make_decimal(i))
 
         # Mock Notifications.objects.create() to return a Mock. In order to *truly* mimic create(), my
         # mock_notification_objects.create() should return a new (mock) object every time, but the lazy way or
