@@ -2,7 +2,7 @@ from __future__ import absolute_import, division, print_function, unicode_litera
 
 from django.contrib.auth import get_user_model
 from rest_framework import serializers
-from .serializers import GroupSerializer, SimpleCountrySerializer
+from users.serializers import GroupSerializer, SimpleCountrySerializer
 
 from t2f.serializers.user_data import T2FUserDataSerializer
 from users.models import Country, UserProfile
