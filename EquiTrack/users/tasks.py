@@ -6,7 +6,8 @@ from django.conf import settings
 from django.contrib.auth.models import Group
 from django.core.exceptions import ObjectDoesNotExist
 from django.db import IntegrityError, transaction
-from django.db.models import Q, force_text
+from django.db.models import Q
+from django.utils.encoding import force_text
 
 import requests
 from celery.utils.log import get_task_logger
