@@ -8,7 +8,7 @@ from reports.models import ResultType
 
 class TestResultTypeCommand(EToolsTenantTestCase):
 
-    def test_cash_transfers_amounts(self):
+    def test_command(self):
         self.assertEqual(ResultType.objects.count(), 0)
         call_command('init-result-type')
         self.assertEqual(ResultType.objects.count(), 3)
