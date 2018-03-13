@@ -187,6 +187,7 @@ SHARED_APPS = (
     'utils.permissions',
     'waffle',
     'email_auth',
+    'permissions2',
 )
 TENANT_APPS = (
     'django_fsm',
