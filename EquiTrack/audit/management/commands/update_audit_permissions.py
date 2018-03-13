@@ -53,6 +53,7 @@ class Command(BaseCommand):
         'engagement.active_pd',
         'engagement.joint_audit',
         'engagement.shared_ip_with',
+        'engagement.exchange_rate',
     ]
 
     partner_block = [

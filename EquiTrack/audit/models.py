@@ -103,6 +103,9 @@ class Engagement(TimeStampedModel, models.Model):
     total_value = models.DecimalField(
         verbose_name=_('Total value of selected FACE form(s)'), blank=True, null=True, decimal_places=2, max_digits=20
     )
+    exchange_rate = models.DecimalField(
+        verbose_name=_('Exchange Rate'), blank=True, null=True, decimal_places=2, max_digits=20
+    )
 
     engagement_attachments = CodedGenericRelation(
         Attachment, verbose_name=_('Related Documents'), code='audit_engagement', blank=True

@@ -199,7 +199,7 @@ class EngagementSerializer(EngagementDatesValidation,
             'total_value', 'staff_members', 'active_pd',
             'authorized_officers', 'action_points',
 
-            'joint_audit', 'shared_ip_with',
+            'joint_audit', 'shared_ip_with', 'exchange_rate',
 
             'start_date', 'end_date',
             'partner_contacted_at', 'date_of_field_visit',
@@ -212,6 +212,7 @@ class EngagementSerializer(EngagementDatesValidation,
             field: {'required': True} for field in [
                 'po_item',
                 'start_date', 'end_date', 'total_value',
+                'exchange_rate',
 
                 'partner_contacted_at',
                 'date_of_field_visit',
@@ -362,6 +363,7 @@ class MicroAssessmentSerializer(ActivePDValidationMixin, RiskCategoriesUpdateMix
             'findings', 'questionnaire', 'test_subject_areas', 'overall_risk_assessment',
         ]
         fields.remove('specific_procedures')
+        fields.remove('exchange_rate')
         extra_kwargs = EngagementSerializer.Meta.extra_kwargs.copy()
         extra_kwargs.update({
             'engagement_type': {'read_only': True},
@@ -441,6 +443,7 @@ class SpecialAuditSerializer(EngagementSerializer):
         fields = EngagementSerializer.Meta.fields + [
             'other_recommendations',
         ]
+        fields.remove('exchange_rate')
         extra_kwargs = EngagementSerializer.Meta.extra_kwargs.copy()
         extra_kwargs.update({
             'start_date': {'required': False},
