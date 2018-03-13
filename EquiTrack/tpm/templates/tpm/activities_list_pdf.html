@@ -1,0 +1,227 @@
+{% extends "easy_pdf/base.html" %}
+{% load humanize %}
+
+{% block style_base %}
+  {% comment %}
+    See DEFAULT_CSS in https://github.com/chrisglass/xhtml2pdf/blob/master/xhtml2pdf/default.py
+    for base style.
+  {% endcomment %}
+
+  {% block layout_style %}
+    <style type="text/css">
+      @page {
+        size: letter;
+        margin-left: 2.0cm;
+        margin-right: 2.0cm;
+        margin-top: 1.8cm;
+        margin-bottom: 1.8cm;
+
+        @frame header {
+          -pdf-frame-content: page-header;
+          margin-top: 0cm;
+          margin-right: 0mm;
+          margin-bottom: 0.3cm;
+          margin-left: 0cm;
+          background-color: #0099ff;
+          height: 2cm;
+        }
+
+        @frame footer_frame {
+          /* Static frame */
+          -pdf-frame-content:footer_content;
+          left: 50pt; width: 512pt; top: 772pt; height: 20pt;
+        }
+      }
+
+      @page landscape {
+        size: letter landscape;
+        margin-left: 2.0cm;
+        margin-right: 2.0cm;
+        margin-top: 1.8cm;
+        margin-bottom: 1.8cm;
+
+        @frame header {
+          -pdf-frame-content: page-header;
+          margin-top: 0cm;
+          margin-right: 0mm;
+          margin-bottom: 0.3cm;
+          margin-left: 0cm;
+          background-color: #0099ff;
+          height: 2cm;
+        }
+
+        @frame footer_frame {
+          /* Static frame */
+          -pdf-frame-content:footer_content;
+          left: 50pt; width: 680pt; top: 590pt; height: 20pt;
+        }
+      }
+    </style>
+  {% endblock %}
+  {% block extra_style %}
+    <style type="text/css">
+      ul {
+        list-style-type: none;
+      }
+
+      #content {
+        font-family: "Helvetica";
+        font-size: 12pt;
+        background-color: #ffffff;
+      }
+
+      #title {
+        font-size: 14pt;
+      }
+
+      #title.main-title {
+        font-size: 20pt;
+      }
+
+      .text-blue {
+        color: #0070c0;
+      }
+
+      .page-break {
+        page-break-after: always;
+      }
+
+      .text-left {
+        text-align: left;
+      }
+
+      .text-center {
+        text-align: center;
+      }
+
+      .text-right {
+        text-align: right;
+      }
+
+      .text-justify {
+        text-align: justify;
+      }
+
+      .text-bordered {
+        border: 1pt solid #0070c0;
+      }
+
+      .head_table {
+        border: 1pt solid #0070c0;
+        background-color: rgb(210, 217, 229);
+      }
+
+      .head_table td {
+        padding: 3pt;
+        line-height: 1;
+      }
+
+      .common_table {
+        border: 1pt solid #75b2dd;
+        text-align: center;
+      }
+
+      .common_table td {
+        padding: 3pt;
+        line-height: 1;
+        min-width: 20pt;
+      }
+
+      .common_table td.head {
+        background-color: #0070c0;
+        color: white;
+        padding: 5pt 3pt;
+        font-weight: bold;
+      }
+
+      pdftoc {
+        color: #0070c0;
+      }
+
+      pdftoc.pdftoclevel0 {
+        font-weight: bold;
+        margin-top: 0.5em;
+      }
+
+      pdftoc.pdftoclevel1 {
+        margin-left: 1em;
+      }
+
+    </style>
+  {% endblock %}
+{% endblock %}
+
+{% block content %}
+  {% if error %}
+    PDF could not be generated properly: <br> {{ error }}
+  {% else %}
+    <div id="content">
+      <div id="title" class="text-blue">
+        <div class="text-center">
+          <p class="main-title" style="margin-top: 50pt;">
+            <b>UNICEF</b>
+          </p>
+        </div>
+      </div>
+      <div>
+        <p class="text-justify text-bordered" style="margin: 0; padding: 5pt 3pt;">
+          This report is established by request of UNICEF. The views expressed in this report are those of the
+          external auditor and in no way reflect the official opinion of UNICEF. It may be disclosed to 
+          those official authorities having regulatory right of access to it.
+          This report should not be used by any other party or for other than its intended purpose.
+        </p>
+      </div>
+      <div class="page-break"></div>
+
+      <div>
+        <h1>Contents</h1>
+        <pdf:toc />
+      </div>
+
+      <pdf:nexttemplate name="landscape"/>
+      <div class="page-break"></div>
+
+
+      <h1 class="main-title text-blue">TPM Visit Activities</h1>
+      <table class="common_table">
+        <tr>
+          <td class="head">Visit Ref. #</td>
+          <td class="head">Visit</td>
+          <td class="head">Activity</td>
+          <td class="head">Date</td>
+          <td class="head">Locations</td>
+          <td class="head">UNICEF Focal Points</td>
+        </tr>
+        {% for activity in activities %}
+          <tr>
+            <td class="text-left">{{ activity.tpm_visit.reference_number|default_if_none:"-" }}</td>
+            <td class="text-right">{{ activity.tpm_visit|default_if_none:"-" }}</td>
+            <td class="text-right">{{ activity|default_if_none:"-" }}</td>
+            <td class="text-right">{{ activity.date|default_if_none:"-" }}</td>
+            <td>
+              {% for location in activity.locations.all %}
+                  {{location.name}}{% if not forloop.last %}, {% endif %}
+              {% empty %}
+                  -
+              {% endfor %}
+            </td>
+            <td>
+              {% for focal_point in activity.tpm_visit.unicef_focal_points.all %}
+                  {{focal_point}}{% if not forloop.last %}, {% endif %}
+              {% empty %}
+                  -
+              {% endfor %}
+            </td>
+          </tr>
+        {% endfor %}
+      </table>
+
+      <pdf:nexttemplate/>
+      <div class="page-break"></div>
+    </div>
+    <div id="footer_content" style="text-align: right">
+    <pdf:pagenumber> of
+    <pdf:pagecount>
+    <div>
+  {% endif %}
+{% endblock %}

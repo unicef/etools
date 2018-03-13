@@ -5,38 +5,46 @@ import datetime
 
 from rest_framework import serializers
 
-from EquiTrack.factories import (
-    AgreementAmendmentFactory, AgreementFactory, CountryProgrammeFactory, InterventionFactory, PartnerFactory,
-    PartnerStaffFactory, PlannedEngagementFactory, UserFactory,)
+# Project imports
 from EquiTrack.tests.cases import EToolsTenantTestCase
 from partners.models import Agreement, PartnerType
 from partners.serializers.agreements_v2 import AgreementCreateUpdateSerializer
 from partners.serializers.partner_organization_v2 import PartnerOrganizationDetailSerializer
-
+from partners.tests.factories import (
+    AgreementAmendmentFactory,
+    AgreementFactory,
+    InterventionFactory,
+    PartnerFactory,
+    PartnerStaffFactory,
+    PlannedEngagementFactory,
+)
+from reports.tests.factories import CountryProgrammeFactory
+from users.tests.factories import UserFactory
 
 _ALL_AGREEMENT_TYPES = [agreement_type[0] for agreement_type in Agreement.AGREEMENT_TYPES]
 
 
 class AgreementCreateUpdateSerializerBase(EToolsTenantTestCase):
-    """Base class for testing AgreementCreateUpdateSerializer"""
-    def setUp(self):
-        self.user = UserFactory()
+    '''Base class for testing AgreementCreateUpdateSerializer'''
+    @classmethod
+    def setUpTestData(cls):
+        cls.user = UserFactory()
 
-        self.partner = PartnerFactory(partner_type=PartnerType.CIVIL_SOCIETY_ORGANIZATION)
+        cls.partner = PartnerFactory(partner_type=PartnerType.CIVIL_SOCIETY_ORGANIZATION)
 
-        self.today = datetime.date.today()
+        cls.today = datetime.date.today()
 
-        this_year = self.today.year
-        self.country_programme = CountryProgrammeFactory(from_date=datetime.date(this_year - 1, 1, 1),
-                                                         to_date=datetime.date(this_year + 1, 1, 1))
+        this_year = cls.today.year
+        cls.country_programme = CountryProgrammeFactory(from_date=datetime.date(this_year - 1, 1, 1),
+                                                        to_date=datetime.date(this_year + 1, 1, 1))
 
         # The serializer examines context['request'].user during the course of its operation. If that's not set, the
         # serializer will fail. It doesn't need a real request object, just something with a .user attribute, so
         # that's what I create here.
         class Stub(object):
             pass
-        self.fake_request = Stub()
-        self.fake_request.user = self.user
+        cls.fake_request = Stub()
+        cls.fake_request.user = cls.user
 
     def assertSimpleExceptionFundamentals(self, context_manager, expected_message):
         """Given the context manager produced by self.assertRaises(), checks the exception it contains for
@@ -621,18 +629,12 @@ class TestAgreementSerializerTransitions(AgreementCreateUpdateSerializerBase):
 
         self.assertSimpleExceptionFundamentals(
             context_manager,
-            'Agreement cannot transition to signed unless the end date is today or after'
+            'Agreement cannot transition to signed unless the end date is defined'
         )
 
-        # Populate end date, but with an invalid date.
+        # Populate end date with a date in the past - should pass validation for MOU's
         agreement.end = self.today - datetime.timedelta(days=3)
-        with self.assertRaises(serializers.ValidationError) as context_manager:
-            serializer.validate(data=data)
-
-        self.assertSimpleExceptionFundamentals(
-            context_manager,
-            'Agreement cannot transition to signed unless the end date is today or after'
-        )
+        self.assertTrue(serializer.validate(data=data))
 
         # Fix end date
         agreement.end = self.today
@@ -720,7 +722,7 @@ class TestPartnerOrganizationDetailSerializer(EToolsTenantTestCase):
         ])
 
         self.assertItemsEqual(data['planned_engagement'].keys(), [
-            'id', 'partner', 'scheduled_audit', 'special_audit', 'spot_check_follow_up_q1', 'spot_check_follow_up_q2',
+            'id', 'scheduled_audit', 'special_audit', 'spot_check_follow_up_q1', 'spot_check_follow_up_q2',
             'spot_check_follow_up_q3', 'spot_check_follow_up_q4', 'spot_check_mr',
             'total_spot_check_follow_up_required', 'spot_check_required', 'required_audit'
         ])
