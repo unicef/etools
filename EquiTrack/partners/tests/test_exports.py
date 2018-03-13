@@ -5,20 +5,27 @@ import tempfile
 from rest_framework import status
 from tablib.core import Dataset
 
-from EquiTrack.factories import (
-    UserFactory, PartnerFactory, AgreementFactory, InterventionFactory, CountryProgrammeFactory, ResultFactory,
-    InterventionBudgetFactory, PartnerStaffFactory, InterventionPlannedVisitsFactory
-)
 from EquiTrack.tests.mixins import APITenantTestCase
 from partners.models import PartnerOrganization
+from partners.tests.factories import (
+    AgreementFactory,
+    CountryProgrammeFactory,
+    InterventionBudgetFactory,
+    InterventionFactory,
+    InterventionPlannedVisitsFactory,
+    PartnerFactory,
+    PartnerStaffFactory,
+)
 from reports.models import ResultType
+from reports.tests.factories import ResultFactory
+from users.tests.factories import UserFactory
 
 
 class TestModelExport(APITenantTestCase):
-    def setUp(self):
-        super(TestModelExport, self).setUp()
-        self.unicef_staff = UserFactory(is_staff=True)
-        self.partner = PartnerFactory(
+    @classmethod
+    def setUpTestData(cls):
+        cls.unicef_staff = UserFactory(is_staff=True)
+        cls.partner = PartnerFactory(
             partner_type='Government',
             vendor_number='Vendor No',
             short_name="Short Name",
@@ -39,24 +46,24 @@ class TestModelExport(APITenantTestCase):
             type_of_assessment="Type of Assessment",
             last_assessment_date=datetime.date.today(),
         )
-        self.partnerstaff = PartnerStaffFactory(partner=self.partner)
+        cls.partnerstaff = PartnerStaffFactory(partner=cls.partner)
         attachment = tempfile.NamedTemporaryFile(suffix=".pdf").name
-        self.agreement = AgreementFactory(
-            partner=self.partner,
+        cls.agreement = AgreementFactory(
+            partner=cls.partner,
             country_programme=CountryProgrammeFactory(wbs="random WBS"),
             attached_agreement=attachment,
             start=datetime.date.today(),
             end=datetime.date.today(),
             signed_by_unicef_date=datetime.date.today(),
-            signed_by=self.unicef_staff,
+            signed_by=cls.unicef_staff,
             signed_by_partner_date=datetime.date.today()
         )
-        self.agreement.authorized_officers.add(self.partnerstaff)
-        self.agreement.save()
+        cls.agreement.authorized_officers.add(cls.partnerstaff)
+        cls.agreement.save()
         # This is here to test partner scoping
         AgreementFactory(signed_by_unicef_date=datetime.date.today())
-        self.intervention = InterventionFactory(
-            agreement=self.agreement,
+        cls.intervention = InterventionFactory(
+            agreement=cls.agreement,
             document_type='SHPD',
             status='draft',
             start=datetime.date.today(),
@@ -66,17 +73,17 @@ class TestModelExport(APITenantTestCase):
             review_date_prc=datetime.date.today(),
             signed_by_unicef_date=datetime.date.today(),
             signed_by_partner_date=datetime.date.today(),
-            unicef_signatory=self.unicef_staff,
+            unicef_signatory=cls.unicef_staff,
             population_focus="Population focus",
-            partner_authorized_officer_signatory=self.partnerstaff,
+            partner_authorized_officer_signatory=cls.partnerstaff,
         )
-        self.ib = InterventionBudgetFactory(intervention=self.intervention, currency='USD')
+        cls.ib = InterventionBudgetFactory(intervention=cls.intervention, currency="USD")
 
         output_res_type, _ = ResultType.objects.get_or_create(name='Output')
-        self.result = ResultFactory(result_type=output_res_type)
+        cls.result = ResultFactory(result_type=output_res_type)
 
-        self.planned_visit = InterventionPlannedVisitsFactory(
-            intervention=self.intervention,
+        cls.planned_visit = InterventionPlannedVisitsFactory(
+            intervention=cls.intervention,
         )
 
     def test_intervention_export_api(self):
