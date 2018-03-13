@@ -11,26 +11,26 @@ from tenant_schemas.utils import schema_context
 
 from django.conf import settings
 
-from EquiTrack.factories import (
-    CountryFactory,
-    GroupFactory,
-    SectionFactory,
-    ProfileFactory,
-    UserFactory,
-)
 from EquiTrack.tests.cases import SCHEMA_NAME, EToolsTenantTestCase
 from users import tasks
-from users.models import Section, User, UserProfile
+from users.models import Group, Section, User, UserProfile
+from users.tests.factories import (
+    CountryFactory,
+    GroupFactory,
+    ProfileFactory,
+    SectionFactory,
+    UserFactory,
+)
 from vision.vision_data_synchronizer import VisionException, VISION_NO_DATA_MESSAGE
 
 
 class TestUserMapper(EToolsTenantTestCase):
-    @classmethod
-    def setUpTestData(cls):
-        cls.group = GroupFactory(name="UNICEF User")
-
     def setUp(self):
         super(TestUserMapper, self).setUp()
+        try:
+            self.group = Group.objects.get(name="UNICEF User")
+        except Group.DoesNotExist:
+            self.group = GroupFactory(name="UNICEF User")
         self.mapper = tasks.UserMapper()
 
     def test_init(self):
@@ -392,9 +392,9 @@ class TestUserMapper(EToolsTenantTestCase):
 
 @skip("Issues with using public schema")
 class TestSyncUsers(EToolsTenantTestCase):
-    def setUp(self):
-        super(TestSyncUsers, self).setUp()
-        self.mock_log = Mock()
+    @classmethod
+    def setUpTestData(cls):
+        cls.mock_log = Mock()
 
     def test_sync(self):
         mock_sync = Mock()
@@ -417,9 +417,9 @@ class TestSyncUsers(EToolsTenantTestCase):
 
 @skip("Issues with using public schema")
 class TestMapUsers(EToolsTenantTestCase):
-    def setUp(self):
-        super(TestMapUsers, self).setUp()
-        self.mock_log = Mock()
+    @classmethod
+    def setUpTestMethod(cls):
+        cls.mock_log = Mock()
 
     def test_map(self):
         profile = ProfileFactory()
@@ -455,12 +455,15 @@ class TestMapUsers(EToolsTenantTestCase):
 
 
 class TestUserSynchronizer(EToolsTenantTestCase):
-    def setUp(self):
-        super(TestUserSynchronizer, self).setUp()
-        self.synchronizer = tasks.UserSynchronizer(
+    @classmethod
+    def setUpTestData(cls):
+        cls.synchronizer = tasks.UserSynchronizer(
             "GetOrgChartUnitsInfo_JSON",
             "end"
         )
+
+    def setUp(self):
+        super(TestUserSynchronizer, self).setUp()
         self.record = {
             "ORG_UNIT_NAME": "UNICEF",
             "STAFF_ID": "123",

@@ -8,16 +8,38 @@ import json
 from django.core.urlresolvers import reverse
 from rest_framework import status
 
-from EquiTrack.factories import GroupFactory, UserFactory
 from EquiTrack.tests.mixins import APITenantTestCase
 from users.models import UserProfile
 from users.serializers_v3 import AP_ALLOWED_COUNTRIES
+from users.tests.factories import GroupFactory, UserFactory
+
+
+class TestCountryView(APITenantTestCase):
+    def test_get(self):
+        user = UserFactory(is_staff=True)
+        response = self.forced_auth_req(
+            "get",
+            reverse("users_v3:country-detail"),
+            user=user
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data[0]["id"], user.profile.country.pk)
+
+    def test_get_no_result(self):
+        user = UserFactory(is_staff=True, profile__country=None)
+        response = self.forced_auth_req(
+            "get",
+            reverse("users_v3:country-detail"),
+            user=user
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(response.data), 0)
 
 
 class TestUsersDetailAPIView(APITenantTestCase):
-    def setUp(self):
-        super(TestUsersDetailAPIView, self).setUp()
-        self.unicef_staff = UserFactory(is_staff=True)
+    @classmethod
+    def setUpTestData(cls):
+        cls.unicef_staff = UserFactory(is_staff=True)
 
     def test_get_not_staff(self):
         user = UserFactory()
