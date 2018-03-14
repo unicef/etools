@@ -1,5 +1,6 @@
 from __future__ import unicode_literals
 
+from datetime import date
 from django.core.exceptions import ValidationError
 from django.db import transaction
 from rest_framework import serializers
@@ -54,10 +55,19 @@ class InterventionAmendmentCUSerializer(serializers.ModelSerializer):
         model = InterventionAmendment
         fields = "__all__"
 
+    def validate(self, data):
+        data = super(InterventionAmendmentCUSerializer, self).validate(data)
+
+        if 'signed_date' in data and data['signed_date'] > date.today():
+            raise ValidationError("Date cannot be in the future!")
+
+        if 'intervention' in data and data['intervention'].in_amendment is True:
+            raise ValidationError("Cannot add a new amendment while another amendment is in progress.")
+
+        return data
+
 
 class PlannedVisitsCUSerializer(serializers.ModelSerializer):
-    spot_checks = serializers.IntegerField(read_only=True)
-    audit = serializers.IntegerField(read_only=True)
 
     class Meta:
         model = InterventionPlannedVisits
@@ -71,9 +81,10 @@ class PlannedVisitsNestedSerializer(serializers.ModelSerializer):
         fields = (
             "id",
             "year",
-            "programmatic",
-            "spot_checks",
-            "audit",
+            "programmatic_q1",
+            "programmatic_q2",
+            "programmatic_q3",
+            "programmatic_q4",
         )
 
 
@@ -96,7 +107,7 @@ class BaseInterventionListSerializer(serializers.ModelSerializer):
     frs_earliest_start_date = serializers.DateField(source='frs__start_date__min', read_only=True)
     frs_latest_end_date = serializers.DateField(source='frs__end_date__max', read_only=True)
     frs_total_frs_amt = serializers.DecimalField(
-        source='frs__total_amt__sum',
+        source='frs__total_amt_local__sum',
         read_only=True,
         max_digits=20,
         decimal_places=2
@@ -108,13 +119,13 @@ class BaseInterventionListSerializer(serializers.ModelSerializer):
         decimal_places=2
     )
     frs_total_outstanding_amt = serializers.DecimalField(
-        source='frs__outstanding_amt__sum',
+        source='frs__outstanding_amt_local__sum',
         read_only=True,
         max_digits=20,
         decimal_places=2
     )
     actual_amount = serializers.DecimalField(
-        source='frs__actual_amt__sum',
+        source='frs__actual_amt_local__sum',
         read_only=True,
         max_digits=20,
         decimal_places=2
@@ -198,10 +209,8 @@ class InterventionListSerializer(BaseInterventionListSerializer):
         return obj.max_fr_currency if self.fr_currencies_ok(obj) else None
 
     class Meta(BaseInterventionListSerializer.Meta):
-        fields = BaseInterventionListSerializer.Meta.fields + \
-                 ('fr_currencies_are_consistent',
-                  'all_currencies_are_consistent',
-                  'fr_currency')
+        fields = BaseInterventionListSerializer.Meta.fields + (
+            'fr_currencies_are_consistent', 'all_currencies_are_consistent', 'fr_currency')
 
 
 class MinimalInterventionListSerializer(serializers.ModelSerializer):
@@ -523,57 +532,6 @@ class InterventionDetailSerializer(serializers.ModelSerializer):
             "planned_visits", "attachments", 'permissions', 'partner_id', "sections",
             "locations", "location_names", "cluster_names", "flat_locations", "flagged_sections", "section_names",
             "in_amendment"
-        )
-
-
-class InterventionSummaryListSerializer(serializers.ModelSerializer):
-
-    partner_name = serializers.CharField(source='agreement.partner.name')
-    unicef_cash = serializers.DecimalField(source='total_unicef_cash', read_only=True, max_digits=20, decimal_places=2)
-    cso_contribution = serializers.DecimalField(source='total_partner_contribution', read_only=True, max_digits=20,
-                                                decimal_places=2)
-    total_unicef_budget = serializers.DecimalField(read_only=True, max_digits=20, decimal_places=2)
-    total_budget = serializers.DecimalField(read_only=True, max_digits=20, decimal_places=2)
-
-    section_names = serializers.SerializerMethodField()
-    flagged_sections = serializers.SerializerMethodField()
-    cp_outputs = serializers.SerializerMethodField()
-    offices_names = serializers.SerializerMethodField()
-    frs_earliest_start_date = serializers.DateField(source='total_frs.earliest_start_date', read_only=True)
-    frs_latest_end_date = serializers.DateField(source='total_frs.latest_end_date', read_only=True)
-    frs_total_frs_amt = serializers.DecimalField(source='total_frs.total_frs_amt', read_only=True,
-                                                 max_digits=20,
-                                                 decimal_places=2)
-    frs_total_intervention_amt = serializers.DecimalField(source='total_frs.total_intervention_amt', read_only=True,
-                                                          max_digits=20,
-                                                          decimal_places=2)
-    frs_total_outstanding_amt = serializers.DecimalField(source='total_frs.total_outstanding_amt', read_only=True,
-                                                         max_digits=20,
-                                                         decimal_places=2)
-    actual_amount = serializers.DecimalField(source='total_frs.total_actual_amt', read_only=True,
-                                                    max_digits=20,
-                                                    decimal_places=2)
-
-    def get_offices_names(self, obj):
-        return [o.name for o in obj.offices.all()]
-
-    def get_cp_outputs(self, obj):
-        return [rl.cp_output.id for rl in obj.result_links.all()]
-
-    def get_section_names(self, obj):
-        return [l.name for l in obj.flagged_sections]
-
-    def get_flagged_sections(self, obj):
-        return [l.id for l in obj.flagged_sections]
-
-    class Meta:
-        model = Intervention
-        fields = (
-            'id', 'number', 'partner_name', 'status', 'title', 'start', 'end', 'unicef_cash', 'cso_contribution',
-            'total_unicef_budget', 'total_budget', 'sections', 'section_names',
-            'cp_outputs', 'offices_names', 'frs_earliest_start_date', 'frs_latest_end_date',
-            'frs_total_frs_amt', 'frs_total_intervention_amt', 'frs_total_outstanding_amt', 'actual_amount',
-            'flagged_sections'
         )
 
 

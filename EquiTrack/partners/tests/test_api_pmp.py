@@ -10,13 +10,9 @@ from django.core.urlresolvers import reverse
 from rest_framework import status
 from tenant_schemas.test.client import TenantClient
 
-from EquiTrack.factories import (
-    CurrencyFactory,
-    GatewayTypeFactory,
-    PartnerFactory,
-    UserFactory,
-    )
 from EquiTrack.fields import CURRENCY_LIST
+from EquiTrack.tests.mixins import APITenantTestCase, URLAssertionMixin
+from locations.tests.factories import GatewayTypeFactory
 from partners.models import (
     Agreement,
     AgreementAmendment,
@@ -25,8 +21,10 @@ from partners.models import (
     InterventionAmendment,
     PartnerOrganization,
     PartnerType,
-    )
-from EquiTrack.tests.mixins import APITenantTestCase, URLAssertionMixin
+)
+from partners.tests.factories import PartnerFactory
+from publics.tests.factories import PublicsCurrencyFactory
+from users.tests.factories import UserFactory
 
 
 class URLsTestCase(URLAssertionMixin, TestCase):
@@ -47,9 +45,12 @@ class URLsTestCase(URLAssertionMixin, TestCase):
 
 class TestPMPStaticDropdownsListApiView(APITenantTestCase):
     '''exercise PmpStaticDropdownsListApiView'''
+    @classmethod
+    def setUpTestData(cls):
+        cls.user = UserFactory(is_staff=True)
+        cls.url = reverse("partners_api:dropdown-static-list")
+
     def setUp(self):
-        self.user = UserFactory(is_staff=True)
-        self.url = reverse("partners_api:dropdown-static-list")
         self.expected_keys = sorted(('cso_types',
                                      'partner_types',
                                      'agency_choices',
@@ -208,7 +209,7 @@ class TestPMPStaticDropdownsListApiView(APITenantTestCase):
         self.assertIsNone(d['local_currency'])
 
         # Associate a currency with the test user's country and ensure it's returned.
-        currency = CurrencyFactory()
+        currency = PublicsCurrencyFactory()
         self.user.profile.country.local_currency = currency
         self.user.profile.country.save()
 
@@ -219,12 +220,14 @@ class TestPMPStaticDropdownsListApiView(APITenantTestCase):
 
 
 class TestPMPDropdownsListApiView(APITenantTestCase):
+    @classmethod
+    def setUpTestData(cls):
+        cls.unicef_staff = UserFactory(is_staff=True)
+        cls.url = reverse("partners_api:dropdown-pmp-list")
+        cls.client = TenantClient(cls.tenant)
+
     def setUp(self):
         super(TestPMPDropdownsListApiView, self).setUp()
-        self.unicef_staff = UserFactory(is_staff=True)
-        self.url = reverse("partners_api:dropdown-pmp-list")
-        self.client = TenantClient(self.tenant)
-
         self.expected_keys = sorted((
             u'signed_by_unicef_users',
             u'cp_outputs',

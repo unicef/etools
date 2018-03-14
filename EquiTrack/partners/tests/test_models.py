@@ -9,16 +9,21 @@ from freezegun import freeze_time
 
 from mock import patch, Mock
 
-from EquiTrack.factories import (
-    AgreementAmendmentFactory,
-    AgreementFactory,
-    AppliedIndicatorFactory,
-    AssessmentFactory,
-    CountryProgrammeFactory,
+from audit.models import Engagement
+from audit.tests.factories import SpotCheckFactory, AuditFactory, SpecialAuditFactory
+from EquiTrack.tests.cases import EToolsTenantTestCase
+from funds.tests.factories import (
     DonorFactory,
-    FileTypeFactory,
     FundsReservationHeaderFactory,
     GrantFactory,
+)
+from locations.tests.factories import LocationFactory
+from partners import models
+from partners.tests.factories import (
+    AgreementAmendmentFactory,
+    AgreementFactory,
+    AssessmentFactory,
+    FileTypeFactory,
     InterventionAmendmentFactory,
     InterventionAttachmentFactory,
     InterventionBudgetFactory,
@@ -27,24 +32,21 @@ from EquiTrack.factories import (
     InterventionReportingPeriodFactory,
     InterventionResultLinkFactory,
     InterventionSectorLocationLinkFactory,
-    LocationFactory,
-    LowerResultFactory,
     PartnerFactory,
     PartnerStaffFactory,
-    ResultFactory,
-    SectorFactory,
-    TravelFactory,
-    TravelActivityFactory,
-    UserFactory,
-)
-from EquiTrack.tests.cases import EToolsTenantTestCase
-from audit.models import Engagement
-from audit.tests.factories import SpotCheckFactory, AuditFactory, SpecialAuditFactory
-from partners import models
-from partners.tests.factories import (
+    PlannedEngagementFactory,
     WorkspaceFileTypeFactory,
 )
+from reports.tests.factories import (
+    AppliedIndicatorFactory,
+    CountryProgrammeFactory,
+    LowerResultFactory,
+    ResultFactory,
+    SectorFactory,
+)
 from t2f.models import Travel, TravelType
+from t2f.tests.factories import TravelActivityFactory, TravelFactory
+from users.tests.factories import UserFactory
 
 
 def get_date_from_prior_year():
@@ -54,13 +56,11 @@ def get_date_from_prior_year():
 
 class TestAgreementNumberGeneration(EToolsTenantTestCase):
     '''Test that agreements have the expected base and reference numbers for all types of agreements'''
-
-    fixtures = ['initial_data.json']
-
-    def setUp(self):
-        self.date = datetime.date.today()
-        self.tenant.country_short_code = 'LEBA'
-        self.tenant.save()
+    @classmethod
+    def setUpTestData(cls):
+        cls.date = datetime.date.today()
+        cls.tenant.country_short_code = 'LEBA'
+        cls.tenant.save()
 
     def test_reference_number_pca(self):
         '''Thoroughly exercise agreement reference numbers for PCA'''
@@ -159,11 +159,10 @@ class TestAgreementNumberGeneration(EToolsTenantTestCase):
 
 
 class TestHACTCalculations(EToolsTenantTestCase):
-    fixtures = ['initial_data.json']
-
-    def setUp(self):
+    @classmethod
+    def setUpTestData(cls):
         year = datetime.date.today().year
-        self.intervention = InterventionFactory(
+        cls.intervention = InterventionFactory(
             status=u'active'
         )
         current_cp = CountryProgrammeFactory(
@@ -176,7 +175,7 @@ class TestHACTCalculations(EToolsTenantTestCase):
             name='SM12345678'
         )
         InterventionBudgetFactory(
-            intervention=self.intervention,
+            intervention=cls.intervention,
             partner_contribution=10000,
             unicef_cash=60000,
             in_kind_amount=5000
@@ -212,9 +211,8 @@ class TestHACTCalculations(EToolsTenantTestCase):
 
 
 class TestPartnerOrganizationModel(EToolsTenantTestCase):
-    fixtures = ['initial_data.json']
-
     def setUp(self):
+        super(TestPartnerOrganizationModel, self).setUp()
         self.partner_organization = PartnerFactory(
             name="Partner Org 1",
             total_ct_ytd=models.PartnerOrganization.CT_CP_AUDIT_TRIGGER_LEVEL + 1,
@@ -389,12 +387,12 @@ class TestPartnerOrganizationModel(EToolsTenantTestCase):
         InterventionPlannedVisitsFactory(
             intervention=intervention,
             year=year,
-            programmatic=3
+            programmatic_q1=3
         )
         InterventionPlannedVisitsFactory(
             intervention=intervention,
             year=year - 1,
-            programmatic=2
+            programmatic_q3=2
         )
         self.assertEqual(self.partner_organization.hact_values['programmatic_visits']['planned']['total'], 0)
 
@@ -409,17 +407,18 @@ class TestPartnerOrganizationModel(EToolsTenantTestCase):
         InterventionPlannedVisitsFactory(
             intervention=intervention,
             year=year,
-            programmatic=3
+            programmatic_q1=3,
+            programmatic_q4=4,
         )
         InterventionPlannedVisitsFactory(
             intervention=intervention,
             year=year - 1,
-            programmatic=2
+            programmatic_q2=2
         )
         models.PartnerOrganization.planned_visits(
             self.partner_organization
         )
-        self.assertEqual(self.partner_organization.hact_values['programmatic_visits']['planned']['total'], 3)
+        self.assertEqual(self.partner_organization.hact_values['programmatic_visits']['planned']['total'], 7)
 
     def test_planned_visits_non_gov_no_pv_intervention(self):
         self.partner_organization.partner_type = models.PartnerType.UN_AGENCY
@@ -436,19 +435,20 @@ class TestPartnerOrganizationModel(EToolsTenantTestCase):
         InterventionPlannedVisitsFactory(
             intervention=intervention1,
             year=year,
-            programmatic=3
+            programmatic_q1=1,
+            programmatic_q3=3,
         )
         InterventionPlannedVisitsFactory(
             intervention=intervention2,
             year=year - 1,
-            programmatic=2
+            programmatic_q4=2
         )
         models.PartnerOrganization.planned_visits(
             self.partner_organization
         )
         self.assertEqual(
             self.partner_organization.hact_values['programmatic_visits']['planned']['total'],
-            3
+            4
         )
 
     @freeze_time("2013-05-26")
@@ -565,10 +565,9 @@ class TestPartnerOrganizationModel(EToolsTenantTestCase):
 
 
 class TestAgreementModel(EToolsTenantTestCase):
-    fixtures = ['initial_data.json']
-
-    def setUp(self):
-        self.partner_organization = models.PartnerOrganization.objects.create(
+    @classmethod
+    def setUpTestData(cls):
+        cls.partner_organization = models.PartnerOrganization.objects.create(
             name="Partner Org 1",
         )
         cp = CountryProgrammeFactory(
@@ -577,9 +576,9 @@ class TestAgreementModel(EToolsTenantTestCase):
             from_date=datetime.date(datetime.date.today().year - 1, 1, 1),
             to_date=datetime.date(datetime.date.today().year + 1, 1, 1),
         )
-        self.agreement = models.Agreement.objects.create(
+        cls.agreement = models.Agreement.objects.create(
             agreement_type=models.Agreement.PCA,
-            partner=self.partner_organization,
+            partner=cls.partner_organization,
             country_programme=cp
         )
 
@@ -588,9 +587,8 @@ class TestAgreementModel(EToolsTenantTestCase):
 
 
 class TestInterventionModel(EToolsTenantTestCase):
-    fixtures = ['initial_data.json']
-
     def setUp(self):
+        super(TestInterventionModel, self).setUp()
         self.partner_organization = PartnerFactory(name="Partner Org 1")
         cp = CountryProgrammeFactory(
             name="CP 1",
@@ -620,11 +618,8 @@ class TestInterventionModel(EToolsTenantTestCase):
             'edit': {
                 'true': [
                     {'status': 'draft', 'group': 'Partnership Manager', 'condition': ''},
-                    {'status': 'signed', 'group': 'Partnership Manager', 'condition': ''},
-                    {'status': 'active', 'group': 'Partnership Manager', 'condition': ''},
-                    {'status': 'draft', 'group': 'Partnership Manager', 'condition': ''},
-                    {'status': 'signed', 'group': 'Partnership Manager', 'condition': ''},
-                    {'status': 'active', 'group': 'Partnership Manager', 'condition': ''}
+                    {'status': 'signed', 'group': 'Partnership Manager', 'condition': 'not_in_amendment_mode'},
+                    {'status': 'active', 'group': 'Partnership Manager', 'condition': 'not_in_amendment_mode'},
                 ]
             }
         })
@@ -729,6 +724,15 @@ class TestInterventionModel(EToolsTenantTestCase):
 
     def test_sector_names_empty(self):
         self.assertEqual(self.intervention.sector_names, "")
+
+    @skip("fr_currency property on intervention is being deprecated")
+    def test_default_budget_currency(self):
+        intervention = InterventionFactory()
+        InterventionBudgetFactory(
+            currency="USD",
+            intervention=intervention
+        )
+        self.assertEqual(intervention.default_budget_currency, "USD")
 
     @skip("fr_currency property on intervention is being deprecated")
     def test_fr_currency_empty(self):
@@ -926,10 +930,13 @@ class TestInterventionModel(EToolsTenantTestCase):
         intervention = InterventionFactory()
         FundsReservationHeaderFactory(
             intervention=intervention,
-            total_amt=10.00,
-            outstanding_amt=20.00,
+            total_amt=0.00,
+            total_amt_local=10.00,
+            outstanding_amt=0.00,
+            outstanding_amt_local=20.00,
             intervention_amt=30.00,
-            actual_amt=40.00,
+            actual_amt=0.00,
+            actual_amt_local=40.00,
             start_date=datetime.date(2001, 1, 1),
             end_date=datetime.date(2002, 1, 1),
         )
@@ -953,28 +960,37 @@ class TestInterventionModel(EToolsTenantTestCase):
         intervention = InterventionFactory()
         FundsReservationHeaderFactory(
             intervention=intervention,
-            total_amt=10.00,
-            outstanding_amt=20.00,
+            total_amt=0.00,
+            total_amt_local=10.00,
+            outstanding_amt=0.00,
+            outstanding_amt_local=20.00,
             intervention_amt=30.00,
-            actual_amt=40.00,
+            actual_amt=0.00,
+            actual_amt_local=40.00,
             start_date=datetime.date(2010, 1, 1),
             end_date=datetime.date(2002, 1, 1),
         )
         FundsReservationHeaderFactory(
             intervention=intervention,
-            total_amt=10.00,
-            outstanding_amt=20.00,
+            total_amt=0.00,
+            total_amt_local=10.00,
+            outstanding_amt=0.00,
+            outstanding_amt_local=20.00,
             intervention_amt=30.00,
-            actual_amt=40.00,
+            actual_amt=0.00,
+            actual_amt_local=40.00,
             start_date=datetime.date(2001, 1, 1),
             end_date=datetime.date(2020, 1, 1),
         )
         FundsReservationHeaderFactory(
             intervention=intervention,
-            total_amt=10.00,
-            outstanding_amt=20.00,
+            total_amt=0.00,
+            total_amt_local=10.00,
+            outstanding_amt=0.00,
+            outstanding_amt_local=20.00,
             intervention_amt=30.00,
-            actual_amt=40.00,
+            actual_amt=0.00,
+            actual_amt_local=40.00,
             start_date=datetime.date(2005, 1, 1),
             end_date=datetime.date(2010, 1, 1),
         )
@@ -1589,3 +1605,24 @@ class TestStrUnicode(TestCase):
         instance = InterventionReportingPeriodFactory.build(intervention=intervention)
         self.assertTrue(str(instance).startswith(b'tv\xc3\xa5'))
         self.assertTrue(unicode(instance).startswith(u'tv\xe5'))
+
+
+class TestPlannedEngagement(EToolsTenantTestCase):
+    @classmethod
+    def setUpTestData(cls):
+        cls.user = UserFactory()
+
+        cls.engagement = PlannedEngagementFactory(
+            spot_check_mr='q1',
+            spot_check_follow_up_q1=2,
+            spot_check_follow_up_q2=1,
+            spot_check_follow_up_q3=0,
+            spot_check_follow_up_q4=0,
+            scheduled_audit=True,
+            special_audit=False
+        )
+
+    def test_properties(self):
+        self.assertEquals(self.engagement.total_spot_check_follow_up_required, 3)
+        self.assertEquals(self.engagement.spot_check_required, 4)
+        self.assertEquals(self.engagement.required_audit, 1)
