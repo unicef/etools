@@ -9,7 +9,7 @@ from django.core.urlresolvers import reverse
 from django.test import TestCase, RequestFactory, override_settings
 
 from EquiTrack.middleware import EToolsTenantMiddleware
-from EquiTrack.factories import CountryFactory, UserFactory
+from users.tests.factories import CountryFactory, UserFactory
 
 
 class EToolsTenantMiddlewareTest(TestCase):
