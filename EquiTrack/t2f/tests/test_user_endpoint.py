@@ -4,12 +4,12 @@ import json
 
 from django.core.urlresolvers import reverse
 
-from EquiTrack.tests.cases import APITenantTestCase
+from EquiTrack.tests.cases import BaseTenantTestCase
 from t2f.tests.factories import TravelFactory
 from users.tests.factories import UserFactory
 
 
-class UserT2FData(APITenantTestCase):
+class UserT2FData(BaseTenantTestCase):
     @classmethod
     def setUpTestData(cls):
         cls.unicef_staff = UserFactory(is_staff=True)

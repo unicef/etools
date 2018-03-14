@@ -13,7 +13,7 @@ TENANT_DOMAIN = 'tenant.test.com'
 SCHEMA_NAME = 'test'
 
 
-class APITenantTestCase(TenantTestCase):
+class BaseTenantTestCase(TenantTestCase):
     """
     Faster version of TenantTestCase.  (Based on FastTenantTestCase
     provided by django-tenant-schemas.)

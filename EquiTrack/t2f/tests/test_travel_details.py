@@ -9,7 +9,7 @@ import factory
 from freezegun import freeze_time
 from pytz import UTC
 
-from EquiTrack.tests.cases import APITenantTestCase
+from EquiTrack.tests.cases import BaseTenantTestCase
 from EquiTrack.tests.mixins import URLAssertionMixin
 from locations.tests.factories import LocationFactory
 from partners.models import PartnerType
@@ -32,7 +32,7 @@ from t2f.tests.factories import (
 from users.tests.factories import UserFactory
 
 
-class TravelDetails(URLAssertionMixin, APITenantTestCase):
+class TravelDetails(URLAssertionMixin, BaseTenantTestCase):
     def setUp(self):
         super(TravelDetails, self).setUp()
         self.traveler = UserFactory(is_staff=True)

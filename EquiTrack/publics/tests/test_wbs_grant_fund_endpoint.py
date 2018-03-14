@@ -5,13 +5,13 @@ import json
 from django.core.cache import cache
 from django.core.urlresolvers import reverse
 
-from EquiTrack.tests.cases import APITenantTestCase
+from EquiTrack.tests.cases import BaseTenantTestCase
 from publics.tests.factories import PublicsBusinessAreaFactory, PublicsWBSFactory
 from publics.views import WBSGrantFundView
 from users.tests.factories import UserFactory
 
 
-class WBSGrantFundEndpoint(APITenantTestCase):
+class WBSGrantFundEndpoint(BaseTenantTestCase):
     @classmethod
     def setUpTestData(cls):
         cls.unicef_staff = UserFactory(is_staff=True)

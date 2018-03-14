@@ -5,7 +5,7 @@ import datetime
 from django.core.urlresolvers import reverse
 from rest_framework import status
 
-from EquiTrack.tests.cases import APITenantTestCase
+from EquiTrack.tests.cases import BaseTenantTestCase
 from EquiTrack.tests.mixins import URLAssertionMixin
 from partners.models import (
     PartnerType,
@@ -38,7 +38,7 @@ class URLsTestCase(URLAssertionMixin, TestCase):
         self.assertIntParamRegexes(names_and_paths, 'partners_api:')
 
 
-class TestAgreementsAPI(APITenantTestCase):
+class TestAgreementsAPI(BaseTenantTestCase):
     @classmethod
     def setUpTestData(cls):
         cls.unicef_staff = UserFactory(is_staff=True)

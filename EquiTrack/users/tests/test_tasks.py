@@ -11,7 +11,7 @@ from tenant_schemas.utils import schema_context
 
 from django.conf import settings
 
-from EquiTrack.tests.cases import SCHEMA_NAME, APITenantTestCase
+from EquiTrack.tests.cases import SCHEMA_NAME, BaseTenantTestCase
 from users import tasks
 from users.models import Section, User, UserProfile
 from users.tests.factories import (
@@ -24,7 +24,7 @@ from users.tests.factories import (
 from vision.vision_data_synchronizer import VisionException, VISION_NO_DATA_MESSAGE
 
 
-class TestUserMapper(APITenantTestCase):
+class TestUserMapper(BaseTenantTestCase):
     @classmethod
     def setUpTestData(cls):
         cls.group = GroupFactory(name="UNICEF User")
@@ -390,7 +390,7 @@ class TestUserMapper(APITenantTestCase):
 
 
 @skip("Issues with using public schema")
-class TestSyncUsers(APITenantTestCase):
+class TestSyncUsers(BaseTenantTestCase):
     @classmethod
     def setUpTestData(cls):
         cls.mock_log = Mock()
@@ -415,7 +415,7 @@ class TestSyncUsers(APITenantTestCase):
 
 
 @skip("Issues with using public schema")
-class TestMapUsers(APITenantTestCase):
+class TestMapUsers(BaseTenantTestCase):
     @classmethod
     def setUpTestMethod(cls):
         cls.mock_log = Mock()
@@ -453,7 +453,7 @@ class TestMapUsers(APITenantTestCase):
         self.assertTrue(self.mock_log.save.call_count(), 1)
 
 
-class TestUserSynchronizer(APITenantTestCase):
+class TestUserSynchronizer(BaseTenantTestCase):
     @classmethod
     def setUpTestData(cls):
         cls.synchronizer = tasks.UserSynchronizer(

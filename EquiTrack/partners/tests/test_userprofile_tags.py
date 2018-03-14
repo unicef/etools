@@ -5,12 +5,12 @@ from __future__ import unicode_literals
 
 from mock import Mock
 
-from EquiTrack.tests.cases import APITenantTestCase
+from EquiTrack.tests.cases import BaseTenantTestCase
 from partners.templatetags import userprofile_tags as tags
 from users.tests.factories import CountryFactory, ProfileFactory
 
 
-class TestShowCountrySelect(APITenantTestCase):
+class TestShowCountrySelect(BaseTenantTestCase):
     @classmethod
     def setUpTestData(cls):
         cls.country = CountryFactory()

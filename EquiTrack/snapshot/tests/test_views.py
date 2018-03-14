@@ -9,13 +9,13 @@ import json
 from django.core.urlresolvers import reverse
 from rest_framework import status
 
-from EquiTrack.tests.cases import APITenantTestCase
+from EquiTrack.tests.cases import BaseTenantTestCase
 from snapshot.models import Activity
 from snapshot.tests.factories import ActivityFactory
 from users.tests.factories import UserFactory
 
 
-class TestActivityListView(APITenantTestCase):
+class TestActivityListView(BaseTenantTestCase):
     @classmethod
     def setUpTestData(cls):
         cls.url = reverse("snapshot_api:activity-list")

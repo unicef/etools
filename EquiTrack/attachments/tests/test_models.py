@@ -4,10 +4,10 @@ from django.core.exceptions import ValidationError
 from django.core.files.uploadedfile import SimpleUploadedFile
 
 from attachments.tests.factories import AttachmentFactory, FileTypeFactory
-from EquiTrack.tests.cases import APITenantTestCase
+from EquiTrack.tests.cases import BaseTenantTestCase
 
 
-class TestAttachmentsModels(APITenantTestCase):
+class TestAttachmentsModels(BaseTenantTestCase):
     @classmethod
     def setUpTestData(cls):
         cls.simple_object = FileTypeFactory()

@@ -76,7 +76,7 @@ class URLAssertionMixin(object):
 
 class WorkspaceRequiredAPITestMixIn(object):
     """
-    For APITenantTestCases that have a required workspace param, just automatically
+    For BaseTenantTestCases that have a required workspace param, just automatically
     set the current tenant.
     """
     def forced_auth_req(self, method, url, user=None, data=None, request_format='json', **kwargs):

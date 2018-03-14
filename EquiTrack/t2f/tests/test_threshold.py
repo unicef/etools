@@ -6,7 +6,7 @@ import mock
 from django.core.urlresolvers import reverse
 from django.test.utils import override_settings
 
-from EquiTrack.tests.cases import APITenantTestCase
+from EquiTrack.tests.cases import BaseTenantTestCase
 from publics.tests.factories import (
     PublicsAirlineCompanyFactory,
     PublicsCurrencyFactory,
@@ -17,7 +17,7 @@ from t2f.models import ModeOfTravel, Travel
 from users.tests.factories import UserFactory
 
 
-class ThresholdTest(APITenantTestCase):
+class ThresholdTest(BaseTenantTestCase):
     @classmethod
     def setUpTestData(cls):
         cls.traveler = UserFactory(is_staff=True)

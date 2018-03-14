@@ -4,13 +4,13 @@ import json
 
 from django.core.urlresolvers import reverse
 
-from EquiTrack.tests.cases import APITenantTestCase
+from EquiTrack.tests.cases import BaseTenantTestCase
 from publics.models import EPOCH_ZERO, TravelExpenseType
 from publics.tests.factories import PublicsAirlineCompanyFactory, PublicsTravelExpenseTypeFactory
 from users.tests.factories import UserFactory
 
 
-class GhostData(APITenantTestCase):
+class GhostData(BaseTenantTestCase):
     @classmethod
     def setUpTestData(cls):
         cls.unicef_staff = UserFactory(is_staff=True)

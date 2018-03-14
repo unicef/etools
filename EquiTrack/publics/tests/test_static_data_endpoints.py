@@ -5,7 +5,7 @@ import json
 from django.core.urlresolvers import reverse
 import factory
 
-from EquiTrack.tests.cases import APITenantTestCase
+from EquiTrack.tests.cases import BaseTenantTestCase
 from publics.models import TravelExpenseType
 from publics.tests.factories import (
     PublicsAirlineCompanyFactory,
@@ -23,7 +23,7 @@ from publics.tests.factories import (
 from users.tests.factories import UserFactory
 
 
-class StaticDataEndpoints(APITenantTestCase):
+class StaticDataEndpoints(BaseTenantTestCase):
     @classmethod
     def setUpTestData(cls):
         cls.unicef_staff = UserFactory(is_staff=True)

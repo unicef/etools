@@ -4,11 +4,11 @@ from datetime import datetime
 
 from hact.serializers import AggregateHactSerializer, HactHistorySerializer
 
-from EquiTrack.tests.cases import APITenantTestCase
+from EquiTrack.tests.cases import BaseTenantTestCase
 from partners.models import hact_default
 
 
-class TestAggregateHactSerializer(APITenantTestCase):
+class TestAggregateHactSerializer(BaseTenantTestCase):
 
     def test_valid(self):
 
@@ -31,7 +31,7 @@ class TestAggregateHactSerializer(APITenantTestCase):
         self.assertFalse(valid_serializer.is_valid())
 
 
-class TestHactHistorySerializer(APITenantTestCase):
+class TestHactHistorySerializer(BaseTenantTestCase):
     def test_valid(self):
 
         valid_serializer = HactHistorySerializer(data={

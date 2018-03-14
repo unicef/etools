@@ -9,7 +9,7 @@ from decimal import Decimal
 from django.core.urlresolvers import reverse
 from pytz import UTC
 
-from EquiTrack.tests.cases import APITenantTestCase
+from EquiTrack.tests.cases import BaseTenantTestCase
 from locations.tests.factories import LocationFactory
 from partners.tests.factories import InterventionFactory
 from publics.tests.factories import (
@@ -36,7 +36,7 @@ from users.tests.factories import OfficeFactory, UserFactory
 log = logging.getLogger('__name__')
 
 
-class TravelExports(APITenantTestCase):
+class TravelExports(BaseTenantTestCase):
     @classmethod
     def setUpTestData(cls):
         cls.traveler = UserFactory(first_name='John', last_name='Doe')

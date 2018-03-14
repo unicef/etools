@@ -8,7 +8,7 @@ from unittest import skip
 
 from mock import patch, Mock
 
-from EquiTrack.tests.cases import APITenantTestCase
+from EquiTrack.tests.cases import BaseTenantTestCase
 from EquiTrack.validation_mixins import (
     BasicValidationError,
     StateValidError,
@@ -43,7 +43,7 @@ from partners.validation.interventions import (
 from users.tests.factories import GroupFactory, UserFactory
 
 
-class TestPartnershipManagerOnly(APITenantTestCase):
+class TestPartnershipManagerOnly(BaseTenantTestCase):
     def test_manager_no_groups(self):
         user = UserFactory()
         with self.assertRaises(TransitionError):
@@ -55,12 +55,12 @@ class TestPartnershipManagerOnly(APITenantTestCase):
         self.assertTrue(partnership_manager_only(None, user))
 
 
-class TestTransitionOk(APITenantTestCase):
+class TestTransitionOk(BaseTenantTestCase):
     def test_ok(self):
         self.assertTrue(transition_ok(None))
 
 
-class TestTransitionToClosed(APITenantTestCase):
+class TestTransitionToClosed(BaseTenantTestCase):
     @classmethod
     def setUpTestData(cls):
         cls.intervention = InterventionFactory(
@@ -290,7 +290,7 @@ class TestTransitionToClosed(APITenantTestCase):
         self.assertFundamentals(self.intervention.total_frs)
 
 
-class TestTransitionToSigned(APITenantTestCase):
+class TestTransitionToSigned(BaseTenantTestCase):
     def test_type_status_invalid(self):
         """Certain document types with agreement in certain status
         cannot be signed
@@ -316,7 +316,7 @@ class TestTransitionToSigned(APITenantTestCase):
         self.assertTrue(transition_to_signed(intervention))
 
 
-class TestTransitionToActive(APITenantTestCase):
+class TestTransitionToActive(BaseTenantTestCase):
     def test_type_status_invalid(self):
         """Certain document types with agreement not in signed status
         cannot be made active
@@ -340,7 +340,7 @@ class TestTransitionToActive(APITenantTestCase):
         self.assertTrue(transition_to_active(intervention))
 
 
-class TestStateDateSignedValid(APITenantTestCase):
+class TestStateDateSignedValid(BaseTenantTestCase):
     def test_start_date_before_signed_date(self):
         """Start date before max signed date is invalid"""
         intervention = InterventionFactory(
@@ -362,7 +362,7 @@ class TestStateDateSignedValid(APITenantTestCase):
         self.assertTrue(start_date_signed_valid(intervention))
 
 
-class TestStateDateRelatedAgreementValid(APITenantTestCase):
+class TestStateDateRelatedAgreementValid(BaseTenantTestCase):
     def test_start_date_before_agreement_start(self):
         """Start date before agreement start date is invalid
         If not contingency_pd, and certain document_type
@@ -395,7 +395,7 @@ class TestStateDateRelatedAgreementValid(APITenantTestCase):
         self.assertTrue(start_date_related_agreement_valid(intervention))
 
 
-class TestSignedDateValid(APITenantTestCase):
+class TestSignedDateValid(BaseTenantTestCase):
     @classmethod
     def setUpTestData(cls):
         cls.unicef_user = UserFactory()
@@ -496,7 +496,7 @@ class TestSignedDateValid(APITenantTestCase):
         self.assertFalse(signed_date_valid(intervention))
 
 
-class TestAmendmentsInvalid(APITenantTestCase):
+class TestAmendmentsInvalid(BaseTenantTestCase):
     def setUp(self):
         super(TestAmendmentsInvalid, self).setUp()
         self.intervention = InterventionFactory(
@@ -574,7 +574,7 @@ class TestAmendmentsInvalid(APITenantTestCase):
         # self.assertFalse(amendments_valid(self.intervention))
 
 
-class TestSSFAgreementHasNoOtherIntervention(APITenantTestCase):
+class TestSSFAgreementHasNoOtherIntervention(BaseTenantTestCase):
     def setUp(self):
         super(TestSSFAgreementHasNoOtherIntervention, self).setUp()
         self.agreement = AgreementFactory(
@@ -619,7 +619,7 @@ class TestSSFAgreementHasNoOtherIntervention(APITenantTestCase):
             ssfa_agreement_has_no_other_intervention(self.intervention)
 
 
-class TestInterventionValid(APITenantTestCase):
+class TestInterventionValid(BaseTenantTestCase):
     @classmethod
     def setUpTestData(cls):
         cls.unicef_staff = UserFactory(is_staff=True)

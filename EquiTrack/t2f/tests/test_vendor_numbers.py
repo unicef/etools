@@ -5,12 +5,12 @@ import json
 from django.core.urlresolvers import reverse
 from factory.fuzzy import FuzzyText
 
-from EquiTrack.tests.cases import APITenantTestCase
+from EquiTrack.tests.cases import BaseTenantTestCase
 from publics.tests.factories import TravelAgentFactory
 from users.tests.factories import UserFactory
 
 
-class VendorNumbers(APITenantTestCase):
+class VendorNumbers(BaseTenantTestCase):
     @classmethod
     def setUpTestData(cls):
         cls.unicef_staff = UserFactory(is_staff=True)

@@ -5,7 +5,7 @@ import datetime
 
 from rest_framework import serializers
 
-from EquiTrack.tests.cases import APITenantTestCase
+from EquiTrack.tests.cases import BaseTenantTestCase
 from partners.models import Agreement, PartnerType
 from partners.serializers.agreements_v2 import AgreementCreateUpdateSerializer
 from partners.serializers.partner_organization_v2 import PartnerOrganizationDetailSerializer
@@ -23,7 +23,7 @@ from users.tests.factories import UserFactory
 _ALL_AGREEMENT_TYPES = [agreement_type[0] for agreement_type in Agreement.AGREEMENT_TYPES]
 
 
-class AgreementCreateUpdateSerializerBase(APITenantTestCase):
+class AgreementCreateUpdateSerializerBase(BaseTenantTestCase):
     '''Base class for testing AgreementCreateUpdateSerializer'''
     @classmethod
     def setUpTestData(cls):
@@ -701,7 +701,7 @@ class TestAgreementSerializerTransitions(AgreementCreateUpdateSerializerBase):
             self.assertEqual(field.read_only, expected_read_only)
 
 
-class TestPartnerOrganizationDetailSerializer(APITenantTestCase):
+class TestPartnerOrganizationDetailSerializer(BaseTenantTestCase):
     @classmethod
     def setUpTestData(cls):
         cls.user = UserFactory()

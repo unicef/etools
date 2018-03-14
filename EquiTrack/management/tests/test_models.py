@@ -6,14 +6,14 @@ from __future__ import unicode_literals
 import sys
 from unittest import skipIf
 
-from EquiTrack.tests.cases import APITenantTestCase
+from EquiTrack.tests.cases import BaseTenantTestCase
 from management.models import FlaggedIssue
 from management.tests.factories import FlaggedIssueFactory
 from partners.tests.factories import PartnerFactory
 
 
 @skipIf(sys.version_info.major == 3, "This test can be deleted under Python 3")
-class TestStrUnicode(APITenantTestCase):
+class TestStrUnicode(BaseTenantTestCase):
     def test_flagged_issue(self):
         partner = PartnerFactory()
         issue = FlaggedIssueFactory(
@@ -33,7 +33,7 @@ class TestStrUnicode(APITenantTestCase):
         self.assertEqual(unicode(issue), u"R\xe4dda Barnen")
 
 
-class FlaggedIssueTest(APITenantTestCase):
+class FlaggedIssueTest(BaseTenantTestCase):
 
     @classmethod
     def tearDownClass(cls):

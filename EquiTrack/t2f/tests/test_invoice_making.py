@@ -5,7 +5,7 @@ from datetime import datetime
 from django.core.urlresolvers import reverse
 from pytz import UTC
 
-from EquiTrack.tests.cases import APITenantTestCase
+from EquiTrack.tests.cases import BaseTenantTestCase
 from publics.models import TravelExpenseType
 from publics.tests.factories import (
     PublicsCurrencyFactory,
@@ -28,7 +28,7 @@ except ImportError:
     import xml.etree.ElementTree as ET
 
 
-class InvoiceMaking(APITenantTestCase):
+class InvoiceMaking(BaseTenantTestCase):
     def setUp(self):
         super(InvoiceMaking, self).setUp()
         self.unicef_staff = UserFactory(is_staff=True)

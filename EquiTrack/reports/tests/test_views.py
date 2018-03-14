@@ -7,7 +7,7 @@ from rest_framework import status
 from partners.tests.test_utils import setup_intervention_test_data
 from tablib.core import Dataset
 
-from EquiTrack.tests.cases import APITenantTestCase
+from EquiTrack.tests.cases import BaseTenantTestCase
 from EquiTrack.tests.mixins import URLAssertionMixin
 from partners.tests.factories import InterventionResultLinkFactory
 from reports.models import ResultType, CountryProgramme, Disaggregation, DisaggregationValue
@@ -25,7 +25,7 @@ from reports.tests.factories import (
 from users.tests.factories import UserFactory
 
 
-class TestReportViews(APITenantTestCase):
+class TestReportViews(BaseTenantTestCase):
     @classmethod
     def setUpTestData(cls):
         for name, _ in ResultType.NAME_CHOICES:
@@ -146,7 +146,7 @@ class TestReportViews(APITenantTestCase):
         self.assertIn(self.result1.id, [int(i["id"]) for i in response.data])
 
 
-class TestDisaggregationListCreateViews(APITenantTestCase):
+class TestDisaggregationListCreateViews(BaseTenantTestCase):
     """
     Very minimal testing, just to make sure things work.
     """
@@ -195,7 +195,7 @@ class TestDisaggregationListCreateViews(APITenantTestCase):
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
 
-class TestDisaggregationRetrieveUpdateViews(APITenantTestCase):
+class TestDisaggregationRetrieveUpdateViews(BaseTenantTestCase):
     """
     Very minimal testing, just to make sure things work.
     """
@@ -362,7 +362,7 @@ class UrlsTestCase(URLAssertionMixin, TestCase):
         self.assertReversal(names_and_paths, '', '/api/v2/reports/')
 
 
-class TestLowerResultExportList(APITenantTestCase):
+class TestLowerResultExportList(BaseTenantTestCase):
     @classmethod
     def setUpTestData(cls):
         cls.unicef_staff = UserFactory(is_staff=True)
@@ -409,7 +409,7 @@ class TestLowerResultExportList(APITenantTestCase):
         self.assertEqual(len(dataset[0]), 6)
 
 
-class TestAppliedIndicatorExportList(APITenantTestCase):
+class TestAppliedIndicatorExportList(BaseTenantTestCase):
     @classmethod
     def setUpTestData(cls):
         cls.unicef_staff = UserFactory(is_staff=True)

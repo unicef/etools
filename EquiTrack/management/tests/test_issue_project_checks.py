@@ -7,7 +7,7 @@ import datetime
 
 from django.test import override_settings
 
-from EquiTrack.tests.cases import APITenantTestCase
+from EquiTrack.tests.cases import BaseTenantTestCase
 from management.issues import checks
 from management.models import FlaggedIssue
 from partners.models import Agreement, Intervention, InterventionResultLink
@@ -23,7 +23,7 @@ from reports.tests.factories import ResultFactory
 from users.tests.factories import UserFactory
 
 
-class TestActivePCANoSignedDocCheck(APITenantTestCase):
+class TestActivePCANoSignedDocCheck(BaseTenantTestCase):
     def setUp(self):
         super(TestActivePCANoSignedDocCheck, self).setUp()
         UserFactory(username="etools_task_admin")
@@ -60,7 +60,7 @@ class TestActivePCANoSignedDocCheck(APITenantTestCase):
         self.assertFalse(qs_issue.exists())
 
 
-class TestPdOutputsWrongCheck(APITenantTestCase):
+class TestPdOutputsWrongCheck(BaseTenantTestCase):
     def setUp(self):
         super(TestPdOutputsWrongCheck, self).setUp()
         UserFactory(username="etools_task_admin")
@@ -189,7 +189,7 @@ class TestPdOutputsWrongCheck(APITenantTestCase):
         self.assertFalse(qs_issue.exists())
 
 
-class TestInterventionsAssociatedSSFACheck(APITenantTestCase):
+class TestInterventionsAssociatedSSFACheck(BaseTenantTestCase):
     def setUp(self):
         super(TestInterventionsAssociatedSSFACheck, self).setUp()
         self.qs_issue = FlaggedIssue.objects.filter(
@@ -261,7 +261,7 @@ class TestInterventionsAssociatedSSFACheck(APITenantTestCase):
         self.assertFalse(self.qs_issue.exists())
 
 
-class TestInterventionsAreValidCheck(APITenantTestCase):
+class TestInterventionsAreValidCheck(BaseTenantTestCase):
     def setUp(self):
         super(TestInterventionsAreValidCheck, self).setUp()
         self.master_user = UserFactory(username="etools_task_admin")
@@ -297,7 +297,7 @@ class TestInterventionsAreValidCheck(APITenantTestCase):
         self.assertFalse(self.qs_issue.exists())
 
 
-class TestPDAmendmentsMissingFilesCheck(APITenantTestCase):
+class TestPDAmendmentsMissingFilesCheck(BaseTenantTestCase):
     def setUp(self):
         super(TestPDAmendmentsMissingFilesCheck, self).setUp()
         self.master_user = UserFactory(username="etools_task_admin")
@@ -326,7 +326,7 @@ class TestPDAmendmentsMissingFilesCheck(APITenantTestCase):
         self.assertFalse(self.qs_issue.exists())
 
 
-class TestPCAAmendmentsMissingFilesCheck(APITenantTestCase):
+class TestPCAAmendmentsMissingFilesCheck(BaseTenantTestCase):
     def setUp(self):
         super(TestPCAAmendmentsMissingFilesCheck, self).setUp()
         self.master_user = UserFactory(username="etools_task_admin")

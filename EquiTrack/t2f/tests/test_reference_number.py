@@ -5,11 +5,11 @@ import json
 from django.core.urlresolvers import reverse
 from freezegun import freeze_time
 
-from EquiTrack.tests.cases import APITenantTestCase
+from EquiTrack.tests.cases import BaseTenantTestCase
 from users.tests.factories import UserFactory
 
 
-class TestReferenceNumber(APITenantTestCase):
+class TestReferenceNumber(BaseTenantTestCase):
     @classmethod
     def setUpTestData(cls):
         cls.unicef_staff = UserFactory(is_staff=True)
