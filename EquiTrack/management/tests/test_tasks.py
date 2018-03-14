@@ -3,7 +3,6 @@ from __future__ import division
 from __future__ import print_function
 from __future__ import unicode_literals
 
-from EquiTrack.factories import UserFactory
 from EquiTrack.tests.cases import EToolsTenantTestCase
 from management import tasks
 from management.issues import checks
@@ -12,10 +11,9 @@ from management.models import (
     ISSUE_STATUS_NEW,
     ISSUE_STATUS_RESOLVED,
 )
-from management.tests.factories import (
-    FlaggedIssueFactory,
-    InterventionAmendmentFactory,
-)
+from management.tests.factories import FlaggedIssueFactory
+from partners.tests.factories import InterventionAmendmentFactory
+from users.tests.factories import UserFactory
 
 
 class TestRunAllChecksTask(EToolsTenantTestCase):
