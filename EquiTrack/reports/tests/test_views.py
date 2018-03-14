@@ -1,4 +1,5 @@
 import datetime
+from operator import itemgetter
 
 from unittest import TestCase
 
@@ -68,7 +69,8 @@ class TestReportViews(APITenantTestCase):
         url = reverse('results-list')
         response = self.forced_auth_req('get', url)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(int(response.data[0]["id"]), self.result1.id)
+        response_data = sorted(response.data, key=itemgetter('id'))
+        self.assertEqual(int(response_data[0]["id"]), self.result1.id)
 
     def test_api_results_patch(self):
         url = reverse('results-detail', args=[self.result1.id])
@@ -86,7 +88,8 @@ class TestReportViews(APITenantTestCase):
     def test_apiv2_results_list(self):
         response = self.forced_auth_req('get', self.v2_results_url)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(int(response.data[0]["id"]), self.result1.id)
+        response_data = sorted(response.data, key=itemgetter('id'))
+        self.assertEqual(int(response_data[0]["id"]), self.result1.id)
 
     def test_apiv2_results_list_minimal(self):
         data = {"verbosity": "minimal"}
@@ -115,13 +118,15 @@ class TestReportViews(APITenantTestCase):
         data = {"country_programme": self.result1.country_programme.id}
         response = self.forced_auth_req('get', self.v2_results_url, data=data)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(int(response.data[0]["id"]), self.result1.id)
+        response_data = sorted(response.data, key=itemgetter('id'))
+        self.assertEqual(int(response_data[0]["id"]), self.result1.id)
 
     def test_apiv2_results_list_filter_result_type(self):
         data = {"result_type": self.result_type.name}
         response = self.forced_auth_req('get', self.v2_results_url, data=data)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(int(response.data[0]["id"]), self.result1.id)
+        response_data = sorted(response.data, key=itemgetter('id'))
+        self.assertEqual(int(response_data[0]["id"]), self.result1.id)
 
     def test_apiv2_results_list_filter_values(self):
         data = {"values": '{},{}'.format(self.result1.id, self.result2.id)}

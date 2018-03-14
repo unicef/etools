@@ -201,8 +201,6 @@ class TestInterventionModelExport(BaseInterventionModelExportTestCase):
             '{}'.format(self.intervention.signed_by_unicef_date),
             self.unicef_staff.get_full_name(),
             '{}'.format(self.intervention.signed_by_partner_date),
-            u'',
-            '{}'.format(self.intervention.signed_by_unicef_date),
             '{}'.format(self.intervention.days_from_submission_to_signed),
             '{}'.format(self.intervention.days_from_review_to_signed),
             unicode(self.intervention.amendments.count()),

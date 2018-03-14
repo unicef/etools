@@ -75,7 +75,7 @@ class Migration(migrations.Migration):
         migrations.AlterField(
             model_name='notification',
             name='template_name',
-            field=models.CharField(blank=True, max_length=255, validators=[notification.models.validate_template_name]),
+            field=models.CharField(blank=True, default='', max_length=255, validators=[notification.models.validate_template_name]),
         ),
         migrations.AlterField(
             model_name='notification',
