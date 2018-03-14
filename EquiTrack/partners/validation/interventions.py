@@ -290,8 +290,6 @@ class InterventionValid(CompleteValidation):
     def state_suspended_valid(self, intervention, user=None):
         self.check_required_fields(intervention)
         self.check_rigid_fields(intervention, related=True)
-        if intervention.in_amendment is True:
-            raise StateValidError([_('Cannot suspend an intervention while in amnedment.')])
         return True
 
     def state_active_valid(self, intervention, user=None):
@@ -312,9 +310,4 @@ class InterventionValid(CompleteValidation):
         today = date.today()
         if not today > intervention.end:
             raise StateValidError([_('Today is not after the end date')])
-        return True
-
-    def state_terminated_valid(self, intervention, user=None):
-        if intervention.in_amendment is True:
-            raise StateValidError([_('Cannot terminate an intervention while in amnedment.')])
         return True
