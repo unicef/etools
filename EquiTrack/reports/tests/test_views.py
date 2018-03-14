@@ -54,7 +54,7 @@ class TestReportViews(APITenantTestCase):
         for name, _ in ResultType.NAME_CHOICES:
             ResultTypeFactory(name=name)
         cls.user = UserFactory(is_staff=True)  # UNICEF staff user
-        cls.result_type = ResultTypeFactory(name=ResultType.OUTPUT)
+        cls.result_type = ResultType.objects.get(name=ResultType.OUTPUT)
 
         today = datetime.date.today()
         cls.country_programme = CountryProgrammeFactory(
