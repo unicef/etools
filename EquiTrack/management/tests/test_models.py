@@ -6,10 +6,10 @@ from __future__ import unicode_literals
 import sys
 from unittest import skipIf
 
-from EquiTrack.factories import PartnerFactory
 from EquiTrack.tests.cases import EToolsTenantTestCase
 from management.models import FlaggedIssue
 from management.tests.factories import FlaggedIssueFactory
+from partners.tests.factories import PartnerFactory
 
 
 @skipIf(sys.version_info.major == 3, "This test can be deleted under Python 3")

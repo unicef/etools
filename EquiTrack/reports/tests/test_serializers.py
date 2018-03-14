@@ -2,24 +2,26 @@ from __future__ import unicode_literals
 
 from rest_framework.exceptions import ValidationError
 
-from EquiTrack.factories import (
-    AppliedIndicatorFactory,
-    DisaggregationFactory,
-    DisaggregationValueFactory,
-    IndicatorBlueprintFactory,
+from EquiTrack.tests.cases import EToolsTenantTestCase
+from locations.tests.factories import LocationFactory
+from partners.tests.factories import (
     InterventionFactory,
     InterventionResultLinkFactory,
-    LocationFactory,
-    LowerResultFactory,
-    SectorFactory,
 )
-from EquiTrack.tests.cases import EToolsTenantTestCase
 from reports.models import AppliedIndicator, IndicatorBlueprint, LowerResult
 from reports.serializers.v2 import (
     AppliedIndicatorSerializer,
     DisaggregationSerializer,
     LowerResultCUSerializer,
     LowerResultSimpleCUSerializer,
+)
+from reports.tests.factories import (
+    AppliedIndicatorFactory,
+    DisaggregationFactory,
+    DisaggregationValueFactory,
+    IndicatorBlueprintFactory,
+    LowerResultFactory,
+    SectorFactory,
 )
 
 

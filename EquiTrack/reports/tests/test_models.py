@@ -5,8 +5,15 @@ import sys
 from unittest import skipIf, TestCase
 
 from EquiTrack.tests.cases import EToolsTenantTestCase
-from EquiTrack.factories import (
-    AgreementFactory,
+from partners.models import Agreement
+from partners.tests.factories import AgreementFactory
+from reports.models import (
+    CountryProgramme,
+    Indicator,
+    IndicatorBlueprint,
+    Quarter,
+)
+from reports.tests.factories import (
     CountryProgrammeFactory,
     IndicatorBlueprintFactory,
     IndicatorFactory,
@@ -15,13 +22,6 @@ from EquiTrack.factories import (
     ResultTypeFactory,
     SectorFactory,
     UnitFactory,
-)
-from partners.models import Agreement
-from reports.models import (
-    CountryProgramme,
-    Indicator,
-    IndicatorBlueprint,
-    Quarter,
 )
 from reports.tests.factories import QuarterFactory
 

@@ -1,8 +1,16 @@
 import datetime
-from EquiTrack.factories import UserFactory, GroupFactory, PartnerFactory, AgreementFactory, InterventionFactory, \
-    ResultFactory, FundsReservationHeaderFactory, LocationFactory, GatewayTypeFactory
+
+from funds.tests.factories import FundsReservationHeaderFactory
+from locations.tests.factories import GatewayTypeFactory, LocationFactory
 from partners.models import Intervention, InterventionBudget, InterventionResultLink
+from partners.tests.factories import (
+    AgreementFactory,
+    InterventionFactory,
+    PartnerFactory,
+)
 from reports.models import ResultType, LowerResult, IndicatorBlueprint, AppliedIndicator
+from reports.tests.factories import ResultFactory
+from users.tests.factories import GroupFactory, UserFactory
 
 
 def setup_intervention_test_data(test_case, include_results_and_indicators=False):
@@ -10,7 +18,7 @@ def setup_intervention_test_data(test_case, include_results_and_indicators=False
     test_case.unicef_staff = UserFactory(is_staff=True)
     test_case.partnership_manager_user = UserFactory(is_staff=True)
     test_case.partnership_manager_user.groups.add(GroupFactory())
-    test_case.partner = PartnerFactory(name='Partner 1')
+    test_case.partner = PartnerFactory(name='Partner 1', vendor_number="VP1")
     test_case.partner1 = PartnerFactory(name='Partner 2')
     test_case.agreement = AgreementFactory(partner=test_case.partner, signed_by_unicef_date=datetime.date.today())
 
@@ -22,8 +30,11 @@ def setup_intervention_test_data(test_case, include_results_and_indicators=False
     )
 
     test_case.intervention = InterventionFactory(agreement=test_case.agreement, title='Intervention 1')
-    test_case.intervention_2 = InterventionFactory(agreement=test_case.agreement, title='Intervention 2',
-                                                   document_type=Intervention.PD)
+    test_case.intervention_2 = InterventionFactory(
+        agreement=test_case.agreement,
+        title='Intervention 2',
+        document_type=Intervention.PD,
+    )
     test_case.active_intervention = InterventionFactory(
         agreement=test_case.active_agreement,
         title='Active Intervention',

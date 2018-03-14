@@ -16,7 +16,7 @@ from environment.tests.factories import (
     TenantFlagFactory,
     TenantSwitchFactory,
 )
-from EquiTrack.factories import CountryFactory, UserFactory, GroupFactory
+from users.tests.factories import CountryFactory, GroupFactory, UserFactory
 
 
 class IssueCheckConfigTest(TestCase):

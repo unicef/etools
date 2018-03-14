@@ -7,22 +7,12 @@ from rest_framework import status
 from partners.tests.test_utils import setup_intervention_test_data
 from tablib.core import Dataset
 
-from EquiTrack.factories import (
-    AppliedIndicatorFactory,
-    CountryProgrammeFactory,
-    DisaggregationFactory,
-    DisaggregationValueFactory,
-    IndicatorBlueprintFactory,
-    IndicatorFactory,
-    InterventionFactory,
-    InterventionResultLinkFactory,
-    LowerResultFactory,
-    UserFactory,
-    ResultFactory,
-    ResultTypeFactory,
-)
 from EquiTrack.tests.mixins import APITenantTestCase, URLAssertionMixin
 from partners.models import Intervention
+from partners.tests.factories import (
+    InterventionFactory,
+    InterventionResultLinkFactory,
+)
 from reports.models import (
     CountryProgramme,
     Disaggregation,
@@ -31,6 +21,18 @@ from reports.models import (
     ResultType,
 )
 from reports.serializers.v2 import DisaggregationSerializer
+from reports.tests.factories import (
+    AppliedIndicatorFactory,
+    CountryProgrammeFactory,
+    DisaggregationFactory,
+    DisaggregationValueFactory,
+    IndicatorBlueprintFactory,
+    IndicatorFactory,
+    LowerResultFactory,
+    ResultFactory,
+    ResultTypeFactory,
+)
+from users.tests.factories import UserFactory
 
 
 class UrlsTestCase(URLAssertionMixin, TestCase):
@@ -49,6 +51,8 @@ class UrlsTestCase(URLAssertionMixin, TestCase):
 class TestReportViews(APITenantTestCase):
     @classmethod
     def setUpTestData(cls):
+        for name, _ in ResultType.NAME_CHOICES:
+            ResultTypeFactory(name=name)
         cls.user = UserFactory(is_staff=True)  # UNICEF staff user
         cls.result_type = ResultTypeFactory(name=ResultType.OUTPUT)
 
@@ -569,12 +573,12 @@ class TestLowerResultDeleteView(APITenantTestCase):
 
 
 class TestLowerResultExportList(APITenantTestCase):
-    def setUp(self):
-        super(TestLowerResultExportList, self).setUp()
-        self.unicef_staff = UserFactory(is_staff=True)
-        self.result_link = InterventionResultLinkFactory()
-        self.lower_result = LowerResultFactory(
-            result_link=self.result_link
+    @classmethod
+    def setUpTestData(cls):
+        cls.unicef_staff = UserFactory(is_staff=True)
+        cls.result_link = InterventionResultLinkFactory()
+        cls.lower_result = LowerResultFactory(
+            result_link=cls.result_link
         )
 
     def test_invalid_format_export_api(self):
@@ -684,17 +688,17 @@ class TestAppliedIndicatorListAPIView(APITenantTestCase):
 
 
 class TestAppliedIndicatorExportList(APITenantTestCase):
-    def setUp(self):
-        super(TestAppliedIndicatorExportList, self).setUp()
-        self.unicef_staff = UserFactory(is_staff=True)
-        self.result_link = InterventionResultLinkFactory()
-        self.lower_result = LowerResultFactory(
-            result_link=self.result_link
+    @classmethod
+    def setUpTestData(cls):
+        cls.unicef_staff = UserFactory(is_staff=True)
+        cls.result_link = InterventionResultLinkFactory()
+        cls.lower_result = LowerResultFactory(
+            result_link=cls.result_link
         )
-        self.indicator = IndicatorBlueprintFactory()
-        self.applied = AppliedIndicatorFactory(
-            indicator=self.indicator,
-            lower_result=self.lower_result
+        cls.indicator = IndicatorBlueprintFactory()
+        cls.applied = AppliedIndicatorFactory(
+            indicator=cls.indicator,
+            lower_result=cls.lower_result
         )
 
     def test_invalid_format_export_api(self):
