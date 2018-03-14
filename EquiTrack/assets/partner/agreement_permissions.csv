@@ -23,4 +23,4 @@ Field no,Verbose Name,Field Name,Group,Condition,Status,Action,Allowed
 2.2.8,Signed By UNICEF,signed_by,Partnership Manager,,Signed,Required,TRUE
 2.2.9,Signed By UNICEF Date,signed_by_unicef_date,Partnership Manager,,Signed,Required,TRUE
 2.2.10,Signed Agreement (Attachment),attached_agreement,Partnership Manager,,Signed,Required,TRUE
-2.3.1,Authorized Officer,authorized_officers,Partnership Manager,,Signed,Required,TRUE
+2.3.1,Authorized Officer,authorized_officers,Partnership Manager,is type PCA or SSFA,Signed,Required,TRUE

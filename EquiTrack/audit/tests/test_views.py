@@ -237,9 +237,9 @@ class TestAuditRisksViewSet(BaseTestCategoryRisksViewSet, APITenantTestCase):
 class TestEngagementsListViewSet(EngagementTransitionsTestCaseMixin, APITenantTestCase):
     engagement_factory = MicroAssessmentFactory
 
-    def setUp(self):
-        super(TestEngagementsListViewSet, self).setUp()
-        self.second_engagement = self.engagement_factory()
+    @classmethod
+    def setUpTestData(cls):
+        cls.second_engagement = cls.engagement_factory()
 
     def _test_list(self, user, engagements, params=""):
         response = self.forced_auth_req(
@@ -251,9 +251,9 @@ class TestEngagementsListViewSet(EngagementTransitionsTestCaseMixin, APITenantTe
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertIn('results', response.data)
         self.assertIsInstance(response.data['results'], list)
-        self.assertListEqual(
-            sorted(map(lambda x: x['id'], response.data['results'])),
-            sorted(map(lambda x: x.id, engagements))
+        self.assertItemsEqual(
+            map(lambda x: x['id'], response.data['results']),
+            map(lambda x: x.id, engagements)
         )
 
     def test_focal_point_list(self):

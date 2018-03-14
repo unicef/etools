@@ -8,23 +8,18 @@ from django.core.urlresolvers import reverse, resolve
 from rest_framework import status
 from rest_framework.test import APIRequestFactory
 
-from EquiTrack.factories import (
-    GatewayTypeFactory,
-    InterventionFactory,
-    LocationFactory,
-    ResultFactory,
-    UserFactory,
-)
 from EquiTrack.tests.mixins import APITenantTestCase, WorkspaceRequiredAPITestMixIn
+from locations.tests.factories import GatewayTypeFactory, LocationFactory
 from partners.models import InterventionResultLink
 from partners.permissions import READ_ONLY_API_GROUP_NAME
+from partners.tests.factories import InterventionFactory
 from partners.tests.test_utils import setup_intervention_test_data
 from reports.models import LowerResult, AppliedIndicator, IndicatorBlueprint
+from reports.tests.factories import ResultFactory
+from users.tests.factories import UserFactory
 
 
 class TestInterventionsAPI(WorkspaceRequiredAPITestMixIn, APITenantTestCase):
-    fixtures = ['initial_data.json']
-
     def setUp(self):
         super(TestInterventionsAPI, self).setUp()
         setup_intervention_test_data(self, include_results_and_indicators=True)
@@ -105,7 +100,7 @@ class TestInterventionsAPI(WorkspaceRequiredAPITestMixIn, APITenantTestCase):
             self.assertEqual(expected_results, len(response['results']))
 
     def test_prp_api_performance(self):
-        EXPECTED_QUERIES = 21
+        EXPECTED_QUERIES = 23
         with self.assertNumQueries(EXPECTED_QUERIES):
             self.run_prp_v1(
                 user=self.unicef_staff, method='get'

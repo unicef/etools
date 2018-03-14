@@ -5,10 +5,10 @@ from datetime import datetime
 from audit.models import Audit, Engagement
 from audit.tests.factories import (
     AuditFactory, MicroAssessmentFactory, RiskFactory, SpecialAuditFactory, SpotCheckFactory,)
-from EquiTrack.factories import PartnerFactory
 from EquiTrack.tests.cases import EToolsTenantTestCase
 from hact.tests.factories import AggregateHactFactory
 from partners.models import PartnerOrganization, PartnerType
+from partners.tests.factories import PartnerFactory
 
 
 class TestAggregateHact(EToolsTenantTestCase):
@@ -22,7 +22,6 @@ class TestAggregateHact(EToolsTenantTestCase):
         cls.partner = PartnerFactory(
             name="Partner Name",
             partner_type=PartnerType.CIVIL_SOCIETY_ORGANIZATION,
-            shared_partner="with UNFPA",
             shared_with=[PartnerOrganization.AGENCY_CHOICES.UN],
             rating=PartnerOrganization.RATING_HIGH,
             total_ct_cp=200.0,

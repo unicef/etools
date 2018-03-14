@@ -6,9 +6,9 @@ from django.contrib.auth.models import User
 from django.core.urlresolvers import reverse
 from rest_framework import status
 
-from EquiTrack.factories import GroupFactory, UserFactory
 from EquiTrack.tests.mixins import APITenantTestCase
 from users.models import UserProfile
+from users.tests.factories import GroupFactory, UserFactory
 
 
 class TestMyProfileAPIView(APITenantTestCase):

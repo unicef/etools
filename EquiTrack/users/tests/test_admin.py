@@ -7,7 +7,6 @@ from django.contrib.admin.sites import AdminSite
 from mock import Mock
 from unittest import skip
 
-from EquiTrack.factories import ProfileFactory, UserFactory
 from EquiTrack.tests.cases import EToolsTenantTestCase
 from users.admin import (
     CountryAdmin,
@@ -16,6 +15,7 @@ from users.admin import (
     UserAdminPlus,
 )
 from users.models import Country, User, UserProfile
+from users.tests.factories import ProfileFactory, UserFactory
 
 
 class MockRequest:
@@ -23,12 +23,12 @@ class MockRequest:
 
 
 class TestProfileInline(EToolsTenantTestCase):
-    def setUp(self):
-        super(TestProfileInline, self).setUp()
+    @classmethod
+    def setUpTestData(cls):
         site = AdminSite()
-        self.admin = ProfileInline(UserProfile, site)
-        self.request = MockRequest()
-        self.user = UserFactory()
+        cls.admin = ProfileInline(UserProfile, site)
+        cls.request = MockRequest()
+        cls.user = UserFactory()
 
     def test_get_fields(self):
         """If not superuser then remove country_override"""
@@ -47,13 +47,13 @@ class TestProfileInline(EToolsTenantTestCase):
 
 
 class TestProfileAdmin(EToolsTenantTestCase):
-    def setUp(self):
-        super(TestProfileAdmin, self).setUp()
+    @classmethod
+    def setUpTestData(cls):
         site = AdminSite()
-        self.admin = ProfileAdmin(UserProfile, site)
-        self.request = MockRequest()
-        self.superuser = UserFactory(is_superuser=True)
-        self.user = UserFactory()
+        cls.admin = ProfileAdmin(UserProfile, site)
+        cls.request = MockRequest()
+        cls.superuser = UserFactory(is_superuser=True)
+        cls.user = UserFactory()
 
     def test_has_add_permission(self):
         self.assertFalse(self.admin.has_add_permission(self.request))
@@ -105,13 +105,13 @@ class TestProfileAdmin(EToolsTenantTestCase):
 
 
 class TestUserAdminPlus(EToolsTenantTestCase):
-    def setUp(self):
-        super(TestUserAdminPlus, self).setUp()
+    @classmethod
+    def setUpTestData(cls):
         site = AdminSite()
-        self.admin = UserAdminPlus(User, site)
-        self.request = MockRequest()
-        self.superuser = UserFactory(is_superuser=True)
-        self.user = UserFactory()
+        cls.admin = UserAdminPlus(User, site)
+        cls.request = MockRequest()
+        cls.superuser = UserFactory(is_superuser=True)
+        cls.user = UserFactory()
 
     def test_office(self):
         self.assertEqual(
@@ -140,11 +140,11 @@ class TestUserAdminPlus(EToolsTenantTestCase):
 
 
 class TestCountryAdmin(EToolsTenantTestCase):
-    def setUp(self):
-        super(TestCountryAdmin, self).setUp()
+    @classmethod
+    def setUpTestData(cls):
         site = AdminSite()
-        self.admin = CountryAdmin(Country, site)
-        self.request = MockRequest()
+        cls.admin = CountryAdmin(Country, site)
+        cls.request = MockRequest()
 
     def test_has_add_permission(self):
         self.assertFalse(self.admin.has_add_permission(self.request))

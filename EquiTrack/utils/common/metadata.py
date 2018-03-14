@@ -3,6 +3,7 @@ from __future__ import absolute_import, division, print_function, unicode_litera
 from django.core.exceptions import PermissionDenied
 from django.http import Http404
 from django.shortcuts import get_object_or_404
+from django.utils import six
 from django.utils.encoding import force_text
 
 from rest_framework import exceptions
@@ -53,18 +54,30 @@ class FSMTransitionActionMetadataMixin(object):
         if not instance:
             return actions
 
-        model_transitions = []
+        allowed_FSM_transitions = []
         for action in self._collect_actions(instance):
             meta = action._django_fsm
             im_self = getattr(action, 'im_self', getattr(action, '__self__'))
             current_state = meta.field.get_state(im_self)
 
             if meta.has_transition(current_state) and meta.has_transition_perm(im_self, current_state, request.user):
-                model_transitions.append(action)
+                field_name = meta.field if isinstance(meta.field, six.string_types) else meta.field.name
+                transition = meta.get_transition(getattr(instance, field_name))
 
-        actions["allowed_FSM_transitions"] = map(lambda t: t.__name__, model_transitions)
+                name = transition.custom.get('name', transition.name)
+                if callable(name):
+                    name = name(instance)
+
+                allowed_FSM_transitions.append({
+                    'code': action.__name__,
+                    'display_name': name
+                })
+
         # Move cancel to the end.
-        actions["allowed_FSM_transitions"].sort(key=lambda action: action == 'cancel')
+        actions["allowed_FSM_transitions"] = sorted(
+            allowed_FSM_transitions, key=lambda a: a['code'] == 'cancel'
+        )
+
         return actions
 
 
@@ -72,6 +85,13 @@ class CRUActionsMetadataMixin(object):
     """
     Return "GET" with readable fields as allowed method.
     """
+
+    actions = {
+        'PUT': 'update',
+        'POST': 'create',
+        'GET': 'retrieve'
+    }
+
     def determine_actions(self, request, view):
         """
         For generic class based views we return information about
@@ -80,6 +100,7 @@ class CRUActionsMetadataMixin(object):
         actions = {}
         for method in {'PUT', 'POST', 'GET'} & set(view.allowed_methods):
             view.request = clone_request(request, method)
+            view.action = self.actions[method]
             instance = None
             try:
                 # Test global permissions

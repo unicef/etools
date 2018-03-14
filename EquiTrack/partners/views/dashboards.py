@@ -1,7 +1,8 @@
 from __future__ import unicode_literals
 
 from datetime import datetime
-from django.db.models import Case, When, F, Max, DateTimeField, DurationField, ExpressionWrapper
+from django.db.models import Case, When, F, Max, DateTimeField, DurationField, ExpressionWrapper, Min, Sum, Count, \
+    CharField
 
 from rest_framework_csv import renderers as r
 from rest_framework.permissions import IsAdminUser
@@ -40,6 +41,19 @@ class InterventionPartnershipDashView(ListCreateAPIView):
                                             output_field=DateTimeField())))
 
         qs = qs.annotate(days_since_last_pv=delta)
+        qs = qs.annotate(
+            Max("frs__end_date"),
+            Min("frs__start_date"),
+            Sum("frs__total_amt"),
+            Sum("frs__total_amt_local"),
+            Sum("frs__intervention_amt"),
+            Sum("frs__outstanding_amt_local"),
+            Sum("frs__outstanding_amt"),
+            Sum("frs__actual_amt"),
+            Sum("frs__actual_amt_local"),
+            Count("frs__currency", distinct=True),
+            max_fr_currency=Max("frs__currency", output_field=CharField(), distinct=True)
+        )
         return qs.order_by('agreement__partner__name')
 
     def list(self, request):
