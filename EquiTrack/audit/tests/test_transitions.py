@@ -87,7 +87,11 @@ class SCTransitionsTestCaseMixin(EngagementTransitionsTestCaseMixin):
         self._fill_sc_specified_fields()
 
 
-class TestMATransitionsTestCase(EngagementCheckTransitionsTestCaseMixin, MATransitionsTestCaseMixin, BaseTenantTestCase):
+class TestMATransitionsTestCase(
+        EngagementCheckTransitionsTestCaseMixin,
+        MATransitionsTestCaseMixin,
+        BaseTenantTestCase
+):
     def test_submit_for_dummy_object(self):
         errors_fields = EngagementSubmitReportRequiredFieldsCheck.fields
         self._test_submit(self.auditor, status.HTTP_400_BAD_REQUEST, errors=errors_fields)
