@@ -5,14 +5,14 @@ import json
 from django.core.urlresolvers import reverse
 from freezegun import freeze_time
 
-from EquiTrack.factories import UserFactory
 from EquiTrack.tests.cases import APITenantTestCase
+from users.tests.factories import UserFactory
 
 
 class TestReferenceNumber(APITenantTestCase):
-    def setUp(self):
-        super(TestReferenceNumber, self).setUp()
-        self.unicef_staff = UserFactory(is_staff=True)
+    @classmethod
+    def setUpTestData(cls):
+        cls.unicef_staff = UserFactory(is_staff=True)
 
     def _create_travel(self):
         data = {'traveler': self.unicef_staff.id}

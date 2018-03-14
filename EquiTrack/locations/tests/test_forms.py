@@ -6,9 +6,9 @@ from __future__ import unicode_literals
 from carto.exceptions import CartoException
 from mock import patch, Mock
 
-from EquiTrack.factories import GatewayTypeFactory
 from EquiTrack.tests.cases import APITenantTestCase
 from locations import forms
+from locations.tests.factories import GatewayTypeFactory
 
 
 class TestCartoDBTableForm(APITenantTestCase):

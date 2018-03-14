@@ -9,17 +9,17 @@ from django.core.urlresolvers import reverse
 from rest_framework import status
 from tablib.core import Dataset
 
-from EquiTrack.factories import (
+from EquiTrack.tests.cases import APITenantTestCase
+from EquiTrack.tests.mixins import URLAssertionMixin
+from funds.tests.factories import (
     DonorFactory,
-    FundsCommitmentHeaderFactory,
     FundsCommitmentItemFactory,
     FundsReservationHeaderFactory,
     FundsReservationItemFactory,
+    FundsCommitmentHeaderFactory,
     GrantFactory,
-    UserFactory,
 )
-from EquiTrack.tests.cases import APITenantTestCase
-from EquiTrack.tests.mixins import URLAssertionMixin
+from users.tests.factories import UserFactory
 
 
 class UrlsTestCase(URLAssertionMixin, TestCase):
@@ -39,10 +39,10 @@ class UrlsTestCase(URLAssertionMixin, TestCase):
 
 
 class TestFundsReservationHeaderExportList(APITenantTestCase):
-    def setUp(self):
-        super(TestFundsReservationHeaderExportList, self).setUp()
-        self.unicef_staff = UserFactory(is_staff=True)
-        self.frs = FundsReservationHeaderFactory()
+    @classmethod
+    def setUpTestData(cls):
+        cls.unicef_staff = UserFactory(is_staff=True)
+        cls.frs = FundsReservationHeaderFactory()
 
     def test_invalid_format_export_api(self):
         response = self.forced_auth_req(

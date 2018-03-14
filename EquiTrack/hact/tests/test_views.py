@@ -5,10 +5,11 @@ from django.core.urlresolvers import reverse
 from rest_framework import status
 from tablib.core import Dataset
 
-from EquiTrack.factories import PartnerFactory, UserFactory
 from EquiTrack.tests.cases import APITenantTestCase
 from hact.tests.factories import HactHistoryFactory
 from partners.models import PartnerOrganization, PartnerType
+from partners.tests.factories import PartnerFactory
+from users.tests.factories import UserFactory
 
 
 class TestHactHistoryAPIView(APITenantTestCase):

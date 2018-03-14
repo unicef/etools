@@ -5,9 +5,9 @@ import json
 from django.core.urlresolvers import reverse
 from rest_framework import status
 
-from EquiTrack.factories import GroupFactory, UserFactory
 from EquiTrack.tests.cases import APITenantTestCase
 from users.models import UserProfile
+from users.tests.factories import GroupFactory, UserFactory
 
 
 class TestMyProfileAPIView(APITenantTestCase):

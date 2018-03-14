@@ -4,30 +4,34 @@ import json
 
 from django.core.urlresolvers import reverse
 
-from EquiTrack.factories import UserFactory
 from EquiTrack.tests.cases import APITenantTestCase
 from partners.models import PartnerOrganization
-from publics.tests.factories import BusinessAreaFactory, DSARegionFactory, WBSFactory
+from publics.tests.factories import (
+    PublicsBusinessAreaFactory,
+    PublicsCurrencyFactory,
+    PublicsDSARegionFactory,
+    PublicsTravelExpenseTypeFactory,
+    PublicsWBSFactory,
+)
 from t2f.models import make_travel_reference_number, ModeOfTravel, Travel, TravelType
-
-from .factories import CurrencyFactory, ExpenseTypeFactory, TravelActivityFactory, TravelFactory
+from t2f.tests.factories import TravelActivityFactory, TravelFactory
+from users.tests.factories import UserFactory
 
 
 class TravelActivityList(APITenantTestCase):
+    @classmethod
+    def setUpTestData(cls):
+        cls.unicef_staff = UserFactory(is_staff=True)
+        cls.traveler1 = UserFactory()
+        cls.traveler2 = UserFactory()
 
-    def setUp(self):
-        super(TravelActivityList, self).setUp()
-        self.unicef_staff = UserFactory(is_staff=True)
-        self.traveler1 = UserFactory()
-        self.traveler2 = UserFactory()
-
-        self.travel = TravelFactory(reference_number=make_travel_reference_number(),
-                                    traveler=self.traveler1,
-                                    status=Travel.APPROVED,
-                                    supervisor=self.unicef_staff)
+        cls.travel = TravelFactory(reference_number=make_travel_reference_number(),
+                                   traveler=cls.traveler1,
+                                   status=Travel.APPROVED,
+                                   supervisor=cls.unicef_staff)
         # to filter against
-        self.travel_activity = TravelActivityFactory(primary_traveler=self.traveler1)
-        self.travel_activity.travels.add(self.travel)
+        cls.travel_activity = TravelActivityFactory(primary_traveler=cls.traveler1)
+        cls.travel_activity.travels.add(cls.travel)
 
     def test_list_view(self):
         partner = self.travel.activities.first().partner
@@ -63,12 +67,12 @@ class TravelActivityList(APITenantTestCase):
         self.assertEqual(len(response_json), 2)
 
     def test_completed_counts(self):
-        currency = CurrencyFactory()
-        expense_type = ExpenseTypeFactory()
-        business_area = BusinessAreaFactory()
-        dsa_region = DSARegionFactory()
+        currency = PublicsCurrencyFactory()
+        expense_type = PublicsTravelExpenseTypeFactory()
+        business_area = PublicsBusinessAreaFactory()
+        dsa_region = PublicsDSARegionFactory()
 
-        wbs = WBSFactory(business_area=business_area)
+        wbs = PublicsWBSFactory(business_area=business_area)
         grant = wbs.grants.first()
         fund = grant.funds.first()
         traveler = UserFactory(is_staff=True)

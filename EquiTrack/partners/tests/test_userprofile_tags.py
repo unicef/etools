@@ -5,9 +5,9 @@ from __future__ import unicode_literals
 
 from mock import Mock
 
-from EquiTrack.factories import CountryFactory, ProfileFactory
 from EquiTrack.tests.cases import APITenantTestCase
 from partners.templatetags import userprofile_tags as tags
+from users.tests.factories import CountryFactory, ProfileFactory
 
 
 class TestShowCountrySelect(APITenantTestCase):

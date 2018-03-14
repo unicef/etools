@@ -3,17 +3,18 @@ from __future__ import division
 from __future__ import print_function
 from __future__ import unicode_literals
 
+from django.forms import model_to_dict
+
 from EquiTrack.tests.cases import APITenantTestCase
-from EquiTrack.factories import (
+from funds.tests.factories import FundsReservationHeaderFactory
+from partners.tests.factories import (
     AgreementFactory,
-    FundsReservationHeaderFactory,
     InterventionFactory,
     PartnerFactory,
     PartnerStaffFactory,
-    UserFactory,
 )
-from django.forms import model_to_dict
 from snapshot import utils
+from users.tests.factories import UserFactory
 
 
 class TestJsonify(APITenantTestCase):

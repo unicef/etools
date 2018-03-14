@@ -5,16 +5,23 @@ from datetime import datetime
 from django.core.urlresolvers import reverse
 from pytz import UTC
 
-from EquiTrack.factories import UserFactory
 from EquiTrack.tests.cases import APITenantTestCase
 from EquiTrack.tests.mixins import URLAssertionMixin
 from publics.models import TravelExpenseType
-from publics.tests.factories import DSARateFactory, DSARegionFactory
+from publics.tests.factories import (
+    PublicsCurrencyFactory,
+    PublicsDSARateFactory,
+    PublicsDSARegionFactory,
+    PublicsFundFactory,
+    PublicsGrantFactory,
+    PublicsTravelExpenseTypeFactory,
+    PublicsWBSFactory,
+)
 from t2f.helpers.invoice_maker import InvoiceMaker
 from t2f.models import CostAssignment, Expense, Invoice, Travel
-from t2f.tests.factories import (
-    CurrencyFactory, ExpenseTypeFactory, FundFactory, GrantFactory, ItineraryItemFactory, WBSFactory,)
+from t2f.tests.factories import ItineraryItemFactory
 from t2f.vision import InvoiceUpdater
+from users.tests.factories import UserFactory
 
 try:
     import xml.etree.cElementTree as ET
@@ -23,12 +30,12 @@ except ImportError:
 
 
 class VisionXML(URLAssertionMixin, APITenantTestCase):
-    def setUp(self):
-        super(VisionXML, self).setUp()
-        self.unicef_staff = UserFactory(is_staff=True)
-        self.traveler = UserFactory()
+    @classmethod
+    def setUpTestData(cls):
+        cls.unicef_staff = UserFactory(is_staff=True)
+        cls.traveler = UserFactory()
 
-        profile = self.traveler.profile
+        profile = cls.traveler.profile
         profile.vendor_number = 'user0001'
         profile.staff_id = 'staff001'
         profile.save()
@@ -62,21 +69,23 @@ class VisionXML(URLAssertionMixin, APITenantTestCase):
 
     def prepare_travel(self):
         # Currencies
-        huf = CurrencyFactory(name='HUF',
-                              code='huf')
+        huf = PublicsCurrencyFactory(name='HUF', code='huf')
 
         # Add wbs/grant/fund
-        wbs_1 = WBSFactory(name='WBS #1')
-        grant_1 = GrantFactory(name='Grant #1')
+        wbs_1 = PublicsWBSFactory(name='WBS #1')
+        grant_1 = PublicsGrantFactory(name='Grant #1')
         wbs_1.grants.add(grant_1)
-        fund_1 = FundFactory(name='Fund #1')
+        fund_1 = PublicsFundFactory(name='Fund #1')
         grant_1.funds.add(fund_1)
 
-        dsa_region = DSARegionFactory()
-        DSARateFactory(region=dsa_region)
+        dsa_region = PublicsDSARegionFactory()
+        PublicsDSARateFactory(region=dsa_region)
 
         # Expense types
-        et_t_food = ExpenseTypeFactory(title='Food', vendor_number=TravelExpenseType.USER_VENDOR_NUMBER_PLACEHOLDER)
+        et_t_food = PublicsTravelExpenseTypeFactory(
+            title='Food',
+            vendor_number=TravelExpenseType.USER_VENDOR_NUMBER_PLACEHOLDER
+        )
 
         # Make a travel
         travel = Travel.objects.create(traveler=self.traveler,
@@ -151,10 +160,12 @@ class VisionXML(URLAssertionMixin, APITenantTestCase):
     def test_personal_number_usage(self):
         travel = self.prepare_travel()
 
-        travel_agent_expense_type = ExpenseTypeFactory(title='Travel Agent', vendor_number='trav01')
+        travel_agent_expense_type = PublicsTravelExpenseTypeFactory(
+            title='Travel Agent',
+            vendor_number='trav01'
+        )
 
-        eur = CurrencyFactory(name='EUR',
-                              code='eur')
+        eur = PublicsCurrencyFactory(name='EUR', code='eur')
 
         # Add expenses
         Expense.objects.create(travel=travel,

@@ -4,23 +4,14 @@ import datetime
 
 from django.contrib.auth import get_user_model
 from django.db.models.signals import post_save
-
 import factory
 
 from firms.utils import generate_username
-from users.models import UserProfile
-
-
-class UserProfileFactory(factory.DjangoModelFactory):
-    class Meta:
-        model = UserProfile
-
-    phone_number = factory.Faker('phone_number')
-    job_title = 'Tester'
+from users.tests.factories import ProfileFactory
 
 
 @factory.django.mute_signals(post_save)
-class UserFactory(factory.DjangoModelFactory):
+class BaseUserFactory(factory.DjangoModelFactory):
     class Meta:
         model = get_user_model()
 
@@ -28,14 +19,14 @@ class UserFactory(factory.DjangoModelFactory):
     first_name = factory.Faker('first_name')
     last_name = factory.Faker('last_name')
     email = factory.Faker('email')
-    profile = factory.RelatedFactory(UserProfileFactory, 'user')
+    profile = factory.RelatedFactory(ProfileFactory, 'user')
 
 
 class BaseStaffMemberFactory(factory.DjangoModelFactory):
     class Meta:
         abstract = True
 
-    user = factory.SubFactory(UserFactory)
+    user = factory.SubFactory(BaseUserFactory)
 
 
 class BaseFirmFactory(factory.DjangoModelFactory):

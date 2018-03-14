@@ -6,16 +6,7 @@ from __future__ import unicode_literals
 from django.contrib.admin.sites import AdminSite
 
 from EquiTrack.tests.cases import APITenantTestCase
-from EquiTrack.factories import (
-    AgreementFactory,
-    CountryProgrammeFactory,
-    FundingCommitmentFactory,
-    GrantFactory,
-    InterventionFactory,
-    PartnerFactory,
-    PartnerStaffFactory,
-    UserFactory,
-)
+from funds.tests.factories import GrantFactory
 from partners.admin import (
     AgreementAdmin,
     FundingCommitmentAdmin,
@@ -28,7 +19,16 @@ from partners.models import (
     Intervention,
     PartnerStaffMember,
 )
+from partners.tests.factories import (
+    AgreementFactory,
+    FundingCommitmentFactory,
+    InterventionFactory,
+    PartnerFactory,
+    PartnerStaffFactory,
+)
+from reports.tests.factories import CountryProgrammeFactory
 from snapshot.models import Activity
+from users.tests.factories import UserFactory
 
 
 class MockRequest:
@@ -37,6 +37,7 @@ class MockRequest:
 
 class TestAdminCase(APITenantTestCase):
     def setUp(self):
+        super(TestAdminCase, self).setUp()
         self.site = AdminSite()
         self.user = UserFactory()
         self.request = MockRequest()
@@ -80,9 +81,9 @@ class TestInterventionAdmin(TestAdminCase):
 
 
 class TestPartnerStaffMemberAdmin(TestAdminCase):
-    def setUp(self):
-        super(TestPartnerStaffMemberAdmin, self).setUp()
-        self.partner = PartnerFactory()
+    @classmethod
+    def setUpTestData(cls):
+        cls.partner = PartnerFactory()
 
     def test_save_model_create(self):
         self.assertFalse(Activity.objects.exists())
@@ -122,9 +123,9 @@ class TestPartnerStaffMemberAdmin(TestAdminCase):
 
 
 class TestAgreementAdmin(TestAdminCase):
-    def setUp(self):
-        super(TestAgreementAdmin, self).setUp()
-        self.partner = PartnerFactory()
+    @classmethod
+    def setUpTestData(cls):
+        cls.partner = PartnerFactory()
 
     def test_save_model_create(self):
         self.assertFalse(Activity.objects.exists())
@@ -165,9 +166,9 @@ class TestAgreementAdmin(TestAdminCase):
 
 
 class TestFundingCommitmentAdmin(TestAdminCase):
-    def setUp(self):
-        super(TestFundingCommitmentAdmin, self).setUp()
-        self.grant = GrantFactory()
+    @classmethod
+    def setUpTestData(cls):
+        cls.grant = GrantFactory()
 
     def test_save_model_create(self):
         self.assertFalse(Activity.objects.exists())

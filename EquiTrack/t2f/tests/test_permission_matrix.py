@@ -6,20 +6,25 @@ import mock
 from django.contrib.auth.models import Group
 from django.core.urlresolvers import reverse
 
-from EquiTrack.factories import LocationFactory, UserFactory
 from EquiTrack.tests.cases import APITenantTestCase
-from publics.tests.factories import CurrencyFactory, DSARegionFactory, WBSFactory
+from locations.tests.factories import LocationFactory
+from publics.tests.factories import (
+    PublicsDSARegionFactory,
+    PublicsCurrencyFactory,
+    PublicsWBSFactory,
+)
 from t2f import UserTypes
 from t2f.helpers.permission_matrix import get_user_role_list, PermissionMatrix
 from t2f.models import ModeOfTravel, Travel, TravelType
 from t2f.tests.factories import TravelFactory
+from users.tests.factories import UserFactory
 
 
 class TestPermissionMatrix(APITenantTestCase):
-    def setUp(self):
-        super(TestPermissionMatrix, self).setUp()
-        self.traveler = UserFactory(is_staff=True)
-        self.unicef_staff = UserFactory(is_staff=True)
+    @classmethod
+    def setUpTestData(cls):
+        cls.traveler = UserFactory(is_staff=True)
+        cls.unicef_staff = UserFactory(is_staff=True)
 
     def test_urls(self):
         list_url = reverse('t2f:permission_matrix')
@@ -142,9 +147,9 @@ class TestPermissionMatrix(APITenantTestCase):
                           ('view', 'travel', 'ta_required'): True})
 
     def test_travel_creation(self):
-        dsa_region = DSARegionFactory()
-        currency = CurrencyFactory()
-        wbs = WBSFactory()
+        dsa_region = PublicsDSARegionFactory()
+        currency = PublicsCurrencyFactory()
+        wbs = PublicsWBSFactory()
         grant = wbs.grants.first()
         fund = grant.funds.first()
         location = LocationFactory()

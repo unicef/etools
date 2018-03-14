@@ -11,16 +11,16 @@ from tenant_schemas.utils import schema_context
 
 from django.conf import settings
 
-from EquiTrack.factories import (
-    CountryFactory,
-    GroupFactory,
-    SectionFactory,
-    ProfileFactory,
-    UserFactory,
-)
 from EquiTrack.tests.cases import SCHEMA_NAME, APITenantTestCase
 from users import tasks
 from users.models import Section, User, UserProfile
+from users.tests.factories import (
+    CountryFactory,
+    GroupFactory,
+    ProfileFactory,
+    SectionFactory,
+    UserFactory,
+)
 from vision.vision_data_synchronizer import VisionException, VISION_NO_DATA_MESSAGE
 
 
@@ -30,7 +30,6 @@ class TestUserMapper(APITenantTestCase):
         cls.group = GroupFactory(name="UNICEF User")
 
     def setUp(self):
-        super(TestUserMapper, self).setUp()
         self.mapper = tasks.UserMapper()
 
     def test_init(self):
@@ -392,9 +391,9 @@ class TestUserMapper(APITenantTestCase):
 
 @skip("Issues with using public schema")
 class TestSyncUsers(APITenantTestCase):
-    def setUp(self):
-        super(TestSyncUsers, self).setUp()
-        self.mock_log = Mock()
+    @classmethod
+    def setUpTestData(cls):
+        cls.mock_log = Mock()
 
     def test_sync(self):
         mock_sync = Mock()
@@ -417,9 +416,9 @@ class TestSyncUsers(APITenantTestCase):
 
 @skip("Issues with using public schema")
 class TestMapUsers(APITenantTestCase):
-    def setUp(self):
-        super(TestMapUsers, self).setUp()
-        self.mock_log = Mock()
+    @classmethod
+    def setUpTestMethod(cls):
+        cls.mock_log = Mock()
 
     def test_map(self):
         profile = ProfileFactory()
@@ -455,12 +454,15 @@ class TestMapUsers(APITenantTestCase):
 
 
 class TestUserSynchronizer(APITenantTestCase):
-    def setUp(self):
-        super(TestUserSynchronizer, self).setUp()
-        self.synchronizer = tasks.UserSynchronizer(
+    @classmethod
+    def setUpTestData(cls):
+        cls.synchronizer = tasks.UserSynchronizer(
             "GetOrgChartUnitsInfo_JSON",
             "end"
         )
+
+    def setUp(self):
+        super(TestUserSynchronizer, self).setUp()
         self.record = {
             "ORG_UNIT_NAME": "UNICEF",
             "STAFF_ID": "123",

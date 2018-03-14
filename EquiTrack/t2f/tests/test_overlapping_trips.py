@@ -9,47 +9,54 @@ from django.core.urlresolvers import reverse
 from freezegun import freeze_time
 from pytz import UTC
 
-from EquiTrack.factories import UserFactory
 from EquiTrack.tests.cases import APITenantTestCase
-from publics.tests.factories import BusinessAreaFactory, DSARateFactory, DSARegionFactory, ExpenseTypeFactory
+from publics.tests.factories import (
+    PublicsBusinessAreaFactory,
+    PublicsCurrencyFactory,
+    PublicsDSARateFactory,
+    PublicsDSARegionFactory,
+    PublicsTravelExpenseTypeFactory,
+)
 from t2f.models import make_travel_reference_number, ModeOfTravel, Travel
-from t2f.tests.factories import CurrencyFactory, ItineraryItemFactory
-
-from .factories import TravelFactory
+from t2f.tests.factories import (
+    ItineraryItemFactory,
+    TravelFactory,
+)
+from users.tests.factories import UserFactory
 
 log = logging.getLogger('__name__')
 
 
 class OverlappingTravelsTest(APITenantTestCase):
-    def setUp(self):
-        super(OverlappingTravelsTest, self).setUp()
-        business_area = BusinessAreaFactory()
+    @classmethod
+    def setUpTestData(cls):
+        business_area = PublicsBusinessAreaFactory()
 
-        self.traveler = UserFactory(is_staff=True)
-        self.traveler.profile.vendor_number = 'usrvnd'
-        self.traveler.profile.save()
+        cls.traveler = UserFactory(is_staff=True)
+        cls.traveler.profile.vendor_number = 'usrvnd'
+        cls.traveler.profile.save()
 
-        workspace = self.traveler.profile.country
+        workspace = cls.traveler.profile.country
         workspace.business_area_code = business_area.code
         workspace.save()
 
-        self.unicef_staff = UserFactory(is_staff=True)
-        self.travel = TravelFactory(reference_number=make_travel_reference_number(),
-                                    traveler=self.traveler,
-                                    supervisor=self.unicef_staff,
-                                    start_date=datetime(2017, 4, 4, 12, 00, tzinfo=UTC),
-                                    end_date=datetime(2017, 4, 14, 16, 00, tzinfo=UTC))
-        self.travel.expenses.all().delete()
-        ItineraryItemFactory(travel=self.travel)
-        ItineraryItemFactory(travel=self.travel)
-        self.travel.submit_for_approval()
-        self.travel.approve()
-        self.travel.send_for_payment()
-        self.travel.save()
+        cls.unicef_staff = UserFactory(is_staff=True)
+        cls.travel = TravelFactory(reference_number=make_travel_reference_number(),
+                                   traveler=cls.traveler,
+                                   supervisor=cls.unicef_staff,
+                                   start_date=datetime(2017, 4, 4, 12, 00, tzinfo=UTC),
+                                   end_date=datetime(2017, 4, 14, 16, 00, tzinfo=UTC))
+        cls.travel.expenses.all().delete()
+        ItineraryItemFactory(travel=cls.travel)
+        ItineraryItemFactory(travel=cls.travel)
+        cls.travel.submit_for_approval()
+        cls.travel.approve()
+        cls.travel.send_for_payment()
+        cls.travel.save()
 
     def test_overlapping_trips(self):
-        currency = CurrencyFactory()
-        dsa_region = DSARegionFactory()
+        currency = PublicsCurrencyFactory()
+        dsa_region = PublicsDSARegionFactory()
 
         data = {'deductions': [],
                 'itinerary': [{'origin': 'Berlin',
@@ -101,9 +108,9 @@ class OverlappingTravelsTest(APITenantTestCase):
                                                'Please adjust your trip accordingly.']})
 
     def test_almost_overlapping_trips(self):
-        currency = CurrencyFactory()
-        expense_type = ExpenseTypeFactory()
-        dsa_rate = DSARateFactory(effective_from_date=datetime(2017, 4, 10, 16, 00, tzinfo=UTC))
+        currency = PublicsCurrencyFactory()
+        expense_type = PublicsTravelExpenseTypeFactory()
+        dsa_rate = PublicsDSARateFactory(effective_from_date=datetime(2017, 4, 10, 16, 00, tzinfo=UTC))
         dsa_region = dsa_rate.region
 
         data = {'deductions': [],
@@ -168,8 +175,8 @@ class OverlappingTravelsTest(APITenantTestCase):
         self.assertEqual(response.status_code, 200)
 
     def test_edit_to_overlap(self):
-        currency = CurrencyFactory()
-        dsa_region = DSARegionFactory()
+        currency = PublicsCurrencyFactory()
+        dsa_region = PublicsDSARegionFactory()
 
         data = {'deductions': [],
                 'itinerary': [{'origin': 'Berlin',
@@ -262,8 +269,8 @@ class OverlappingTravelsTest(APITenantTestCase):
         # Same date as the previous, but it's already after daylight saving
         start_date = budapest_tz.localize(datetime(2017, 10, 29, 2, 0), is_dst=False).isoformat()
 
-        currency = CurrencyFactory()
-        dsa_region = DSARegionFactory()
+        currency = PublicsCurrencyFactory()
+        dsa_region = PublicsDSARegionFactory()
 
         data = {'deductions': [],
                 'itinerary': [{'origin': 'Berlin',

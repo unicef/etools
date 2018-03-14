@@ -6,16 +6,16 @@ from __future__ import unicode_literals
 import sys
 from unittest import skipIf
 
-from EquiTrack.factories import (
+from EquiTrack.tests.cases import APITenantTestCase
+from funds.models import FundsReservationItem, FundsCommitmentItem
+from funds.tests.factories import (
     DonorFactory,
-    FundsCommitmentHeaderFactory,
     FundsCommitmentItemFactory,
     FundsReservationHeaderFactory,
     FundsReservationItemFactory,
+    FundsCommitmentHeaderFactory,
     GrantFactory,
 )
-from EquiTrack.tests.cases import APITenantTestCase
-from funds.models import FundsReservationItem, FundsCommitmentItem
 
 
 @skipIf(sys.version_info.major == 3, "This test can be deleted under Python 3")
@@ -64,9 +64,9 @@ class TestStrUnicode(APITenantTestCase):
 
 
 class TestFundsReservationItem(APITenantTestCase):
-
-    def setUp(self):
-        self.fr_header = FundsReservationHeaderFactory(fr_number='23')
+    @classmethod
+    def setUpTestData(cls):
+        cls.fr_header = FundsReservationHeaderFactory(fr_number='23')
 
     def test_fr_ref_number_gets_generated_if_not_provided(self):
         "fr_ref_number should be generated if not provided."
@@ -90,9 +90,9 @@ class TestFundsReservationItem(APITenantTestCase):
 
 
 class TestFundsCommitmentItem(APITenantTestCase):
-
-    def setUp(self):
-        self.fc_header = FundsCommitmentHeaderFactory(fc_number='23')
+    @classmethod
+    def setUpTestData(cls):
+        cls.fc_header = FundsCommitmentHeaderFactory(fc_number='23')
 
     def test_fc_ref_number_gets_generated_if_not_provided(self):
         "fc_ref_number should be generated if not provided."

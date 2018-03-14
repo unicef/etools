@@ -5,19 +5,21 @@ from django.db import connection
 from rest_framework import status
 from tenant_schemas.test.client import TenantClient
 
-from EquiTrack.factories import LocationFactory, UserFactory
 from EquiTrack.tests.cases import APITenantTestCase
 from locations.models import Location
+from locations.tests.factories import LocationFactory
+from users.tests.factories import UserFactory
 
 
 class TestLocationViews(APITenantTestCase):
-
-    def setUp(self):
-        self.unicef_staff = UserFactory(is_staff=True)
-        self.locations = [LocationFactory() for x in range(5)]
+    @classmethod
+    def setUpTestData(cls):
+        cls.unicef_staff = UserFactory(is_staff=True)
+        cls.locations = [LocationFactory() for x in range(5)]
         # heavy_detail_expected_keys are the keys that should be in response.data.keys()
-        self.heavy_detail_expected_keys = sorted(('id', 'name', 'p_code', 'location_type',
-                                                  'location_type_admin_level', 'parent', 'geo_point'))
+        cls.heavy_detail_expected_keys = sorted(
+            ('id', 'name', 'p_code', 'location_type', 'location_type_admin_level', 'parent', 'geo_point')
+        )
 
     def test_api_locationtypes_list(self):
         response = self.forced_auth_req('get', reverse('locationtypes-list'), user=self.unicef_staff)

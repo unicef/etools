@@ -5,7 +5,6 @@ from __future__ import unicode_literals
 
 from django.core.management import call_command
 
-from EquiTrack.factories import UserFactory
 from EquiTrack.tests.cases import APITenantTestCase
 from management.issues import checks
 from management.models import (
@@ -13,10 +12,9 @@ from management.models import (
     ISSUE_STATUS_NEW,
     ISSUE_STATUS_RESOLVED,
 )
-from management.tests.factories import (
-    FlaggedIssueFactory,
-    InterventionAmendmentFactory,
-)
+from management.tests.factories import FlaggedIssueFactory
+from partners.tests.factories import InterventionAmendmentFactory
+from users.tests.factories import UserFactory
 
 
 class TestCheckIssuesCommand(APITenantTestCase):

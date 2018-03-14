@@ -8,15 +8,26 @@ from django.utils import timezone
 from rest_framework import status
 
 from EquiTrack.tests.cases import APITenantTestCase
-from EquiTrack.factories import FundsReservationHeaderFactory, UserFactory, InterventionFactory
+from funds.tests.factories import FundsReservationHeaderFactory
+from partners.tests.factories import (
+    AgreementFactory,
+    InterventionFactory,
+    PartnerFactory,
+)
+from users.tests.factories import UserFactory
 
 
 class TestFRHeaderView(APITenantTestCase):
-    fixtures = ['initial_data.json']
+    @classmethod
+    def setUpTestData(cls):
+        cls.unicef_staff = UserFactory(is_staff=True)
+        cls.intervention = InterventionFactory()
 
     def setUp(self):
         self.unicef_staff = UserFactory(is_staff=True)
-        self.intervention = InterventionFactory()
+        partner = PartnerFactory(vendor_number="PVN")
+        agreement = AgreementFactory(partner=partner)
+        self.intervention = InterventionFactory(agreement=agreement)
         vendor_code = self.intervention.agreement.partner.vendor_number
         self.fr_1 = FundsReservationHeaderFactory(intervention=None, currency="USD", vendor_code=vendor_code)
         self.fr_2 = FundsReservationHeaderFactory(intervention=None, currency="USD", vendor_code=vendor_code)

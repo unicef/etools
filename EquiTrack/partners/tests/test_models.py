@@ -9,16 +9,21 @@ from freezegun import freeze_time
 
 from mock import patch, Mock
 
-from EquiTrack.factories import (
-    AgreementAmendmentFactory,
-    AgreementFactory,
-    AppliedIndicatorFactory,
-    AssessmentFactory,
-    CountryProgrammeFactory,
+from audit.models import Engagement
+from audit.tests.factories import SpotCheckFactory, AuditFactory, SpecialAuditFactory
+from EquiTrack.tests.cases import APITenantTestCase
+from funds.tests.factories import (
     DonorFactory,
-    FileTypeFactory,
     FundsReservationHeaderFactory,
     GrantFactory,
+)
+from locations.tests.factories import LocationFactory
+from partners import models
+from partners.tests.factories import (
+    AgreementAmendmentFactory,
+    AgreementFactory,
+    AssessmentFactory,
+    FileTypeFactory,
     InterventionAmendmentFactory,
     InterventionAttachmentFactory,
     InterventionBudgetFactory,
@@ -27,25 +32,21 @@ from EquiTrack.factories import (
     InterventionReportingPeriodFactory,
     InterventionResultLinkFactory,
     InterventionSectorLocationLinkFactory,
-    LocationFactory,
-    LowerResultFactory,
     PartnerFactory,
     PartnerStaffFactory,
-    ResultFactory,
-    SectorFactory,
-    TravelFactory,
-    TravelActivityFactory,
-    UserFactory,
-    PlannedEngagementFactory
-)
-from EquiTrack.tests.cases import APITenantTestCase
-from audit.models import Engagement
-from audit.tests.factories import SpotCheckFactory, AuditFactory, SpecialAuditFactory
-from partners import models
-from partners.tests.factories import (
+    PlannedEngagementFactory,
     WorkspaceFileTypeFactory,
 )
+from reports.tests.factories import (
+    AppliedIndicatorFactory,
+    CountryProgrammeFactory,
+    LowerResultFactory,
+    ResultFactory,
+    SectorFactory,
+)
 from t2f.models import Travel, TravelType
+from t2f.tests.factories import TravelActivityFactory, TravelFactory
+from users.tests.factories import UserFactory
 
 
 def get_date_from_prior_year():
@@ -55,13 +56,11 @@ def get_date_from_prior_year():
 
 class TestAgreementNumberGeneration(APITenantTestCase):
     '''Test that agreements have the expected base and reference numbers for all types of agreements'''
-
-    fixtures = ['initial_data.json']
-
-    def setUp(self):
-        self.date = datetime.date.today()
-        self.tenant.country_short_code = 'LEBA'
-        self.tenant.save()
+    @classmethod
+    def setUpTestData(cls):
+        cls.date = datetime.date.today()
+        cls.tenant.country_short_code = 'LEBA'
+        cls.tenant.save()
 
     def test_reference_number_pca(self):
         '''Thoroughly exercise agreement reference numbers for PCA'''
@@ -160,11 +159,10 @@ class TestAgreementNumberGeneration(APITenantTestCase):
 
 
 class TestHACTCalculations(APITenantTestCase):
-    fixtures = ['initial_data.json']
-
-    def setUp(self):
+    @classmethod
+    def setUpTestData(cls):
         year = datetime.date.today().year
-        self.intervention = InterventionFactory(
+        cls.intervention = InterventionFactory(
             status=u'active'
         )
         current_cp = CountryProgrammeFactory(
@@ -177,7 +175,7 @@ class TestHACTCalculations(APITenantTestCase):
             name='SM12345678'
         )
         InterventionBudgetFactory(
-            intervention=self.intervention,
+            intervention=cls.intervention,
             partner_contribution=10000,
             unicef_cash=60000,
             in_kind_amount=5000
@@ -213,9 +211,8 @@ class TestHACTCalculations(APITenantTestCase):
 
 
 class TestPartnerOrganizationModel(APITenantTestCase):
-    fixtures = ['initial_data.json']
-
     def setUp(self):
+        super(TestPartnerOrganizationModel, self).setUp()
         self.partner_organization = PartnerFactory(
             name="Partner Org 1",
             total_ct_ytd=models.PartnerOrganization.CT_CP_AUDIT_TRIGGER_LEVEL + 1,
@@ -568,10 +565,9 @@ class TestPartnerOrganizationModel(APITenantTestCase):
 
 
 class TestAgreementModel(APITenantTestCase):
-    fixtures = ['initial_data.json']
-
-    def setUp(self):
-        self.partner_organization = models.PartnerOrganization.objects.create(
+    @classmethod
+    def setUpTestData(cls):
+        cls.partner_organization = models.PartnerOrganization.objects.create(
             name="Partner Org 1",
         )
         cp = CountryProgrammeFactory(
@@ -580,9 +576,9 @@ class TestAgreementModel(APITenantTestCase):
             from_date=datetime.date(datetime.date.today().year - 1, 1, 1),
             to_date=datetime.date(datetime.date.today().year + 1, 1, 1),
         )
-        self.agreement = models.Agreement.objects.create(
+        cls.agreement = models.Agreement.objects.create(
             agreement_type=models.Agreement.PCA,
-            partner=self.partner_organization,
+            partner=cls.partner_organization,
             country_programme=cp
         )
 
@@ -591,9 +587,8 @@ class TestAgreementModel(APITenantTestCase):
 
 
 class TestInterventionModel(APITenantTestCase):
-    fixtures = ['initial_data.json']
-
     def setUp(self):
+        super(TestInterventionModel, self).setUp()
         self.partner_organization = PartnerFactory(name="Partner Org 1")
         cp = CountryProgrammeFactory(
             name="CP 1",
@@ -729,6 +724,15 @@ class TestInterventionModel(APITenantTestCase):
 
     def test_sector_names_empty(self):
         self.assertEqual(self.intervention.sector_names, "")
+
+    @skip("fr_currency property on intervention is being deprecated")
+    def test_default_budget_currency(self):
+        intervention = InterventionFactory()
+        InterventionBudgetFactory(
+            currency="USD",
+            intervention=intervention
+        )
+        self.assertEqual(intervention.default_budget_currency, "USD")
 
     @skip("fr_currency property on intervention is being deprecated")
     def test_fr_currency_empty(self):
@@ -926,10 +930,13 @@ class TestInterventionModel(APITenantTestCase):
         intervention = InterventionFactory()
         FundsReservationHeaderFactory(
             intervention=intervention,
-            total_amt=10.00,
-            outstanding_amt=20.00,
+            total_amt=0.00,
+            total_amt_local=10.00,
+            outstanding_amt=0.00,
+            outstanding_amt_local=20.00,
             intervention_amt=30.00,
-            actual_amt=40.00,
+            actual_amt=0.00,
+            actual_amt_local=40.00,
             start_date=datetime.date(2001, 1, 1),
             end_date=datetime.date(2002, 1, 1),
         )
@@ -953,28 +960,37 @@ class TestInterventionModel(APITenantTestCase):
         intervention = InterventionFactory()
         FundsReservationHeaderFactory(
             intervention=intervention,
-            total_amt=10.00,
-            outstanding_amt=20.00,
+            total_amt=0.00,
+            total_amt_local=10.00,
+            outstanding_amt=0.00,
+            outstanding_amt_local=20.00,
             intervention_amt=30.00,
-            actual_amt=40.00,
+            actual_amt=0.00,
+            actual_amt_local=40.00,
             start_date=datetime.date(2010, 1, 1),
             end_date=datetime.date(2002, 1, 1),
         )
         FundsReservationHeaderFactory(
             intervention=intervention,
-            total_amt=10.00,
-            outstanding_amt=20.00,
+            total_amt=0.00,
+            total_amt_local=10.00,
+            outstanding_amt=0.00,
+            outstanding_amt_local=20.00,
             intervention_amt=30.00,
-            actual_amt=40.00,
+            actual_amt=0.00,
+            actual_amt_local=40.00,
             start_date=datetime.date(2001, 1, 1),
             end_date=datetime.date(2020, 1, 1),
         )
         FundsReservationHeaderFactory(
             intervention=intervention,
-            total_amt=10.00,
-            outstanding_amt=20.00,
+            total_amt=0.00,
+            total_amt_local=10.00,
+            outstanding_amt=0.00,
+            outstanding_amt_local=20.00,
             intervention_amt=30.00,
-            actual_amt=40.00,
+            actual_amt=0.00,
+            actual_amt_local=40.00,
             start_date=datetime.date(2005, 1, 1),
             end_date=datetime.date(2010, 1, 1),
         )

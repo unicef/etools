@@ -8,28 +8,28 @@ from django.db import connection
 from freezegun import freeze_time
 from rest_framework import status
 
-from EquiTrack.factories import LocationFactory, ResultFactory, UserFactory
 from EquiTrack.tests.cases import APITenantTestCase
 from EquiTrack.tests.mixins import URLAssertionMixin
+from locations.tests.factories import LocationFactory
 from publics.models import DSARegion
-from publics.tests.factories import WBSFactory
+from publics.tests.factories import PublicsCurrencyFactory, PublicsWBSFactory
+from reports.tests.factories import ResultFactory
 from t2f.models import make_travel_reference_number, ModeOfTravel, Travel, TravelType
-from t2f.tests.factories import CurrencyFactory, TravelActivityFactory
-
-from .factories import TravelFactory
+from t2f.tests.factories import TravelActivityFactory, TravelFactory
+from users.tests.factories import UserFactory
 
 log = logging.getLogger('__name__')
 
 
 class TravelList(URLAssertionMixin, APITenantTestCase):
-    def setUp(self):
-        super(TravelList, self).setUp()
-        self.traveler = UserFactory()
-        self.unicef_staff = UserFactory(is_staff=True)
-        self.travel = TravelFactory(reference_number=make_travel_reference_number(),
-                                    traveler=self.traveler,
-                                    supervisor=self.unicef_staff,
-                                    section=None)
+    @classmethod
+    def setUpTestData(cls):
+        cls.traveler = UserFactory()
+        cls.unicef_staff = UserFactory(is_staff=True)
+        cls.travel = TravelFactory(reference_number=make_travel_reference_number(),
+                                   traveler=cls.traveler,
+                                   supervisor=cls.unicef_staff,
+                                   section=None)
 
     def test_urls(self):
         '''Verify URL pattern names generate the URLs we expect them to.'''
@@ -294,8 +294,8 @@ class TravelList(URLAssertionMixin, APITenantTestCase):
 
     def test_travel_creation(self):
         dsaregion = DSARegion.objects.first()
-        currency = CurrencyFactory()
-        wbs = WBSFactory()
+        currency = PublicsCurrencyFactory()
+        wbs = PublicsWBSFactory()
         grant = wbs.grants.first()
         fund = grant.funds.first()
         location = LocationFactory()

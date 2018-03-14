@@ -1,24 +1,25 @@
 from __future__ import unicode_literals
+
 import sys
 from unittest import skipIf, TestCase
 
 from django.contrib.auth import get_user_model
 
-from EquiTrack.factories import (
+from EquiTrack.tests.cases import APITenantTestCase
+from users import models
+from users.tests.factories import (
     CountryFactory,
     OfficeFactory,
     ProfileFactory,
     SectionFactory,
     UserFactory,
 )
-from EquiTrack.tests.cases import APITenantTestCase
-from users import models
 
 
 class TestWorkspaceCounter(APITenantTestCase):
-    def setUp(self):
-        super(TestWorkspaceCounter, self).setUp()
-        self.counter = models.WorkspaceCounter.objects.first()
+    @classmethod
+    def setUpTestData(cls):
+        cls.counter = models.WorkspaceCounter.objects.first()
 
     def test_unicode(self):
         self.assertEqual(unicode(self.counter), self.counter.workspace.name)
@@ -49,9 +50,9 @@ class TestSection(APITenantTestCase):
 
 
 class TestUserProfileModel(APITenantTestCase):
-    def setUp(self):
-        super(TestUserProfileModel, self).setUp()
-        self.user = UserFactory(
+    @classmethod
+    def setUpTestData(cls):
+        cls.user = UserFactory(
             email="user@example.com",
             first_name="First",
             last_name="Last",

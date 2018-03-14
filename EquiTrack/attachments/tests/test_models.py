@@ -8,8 +8,9 @@ from EquiTrack.tests.cases import APITenantTestCase
 
 
 class TestAttachmentsModels(APITenantTestCase):
-    def setUp(self):
-        self.simple_object = FileTypeFactory()
+    @classmethod
+    def setUpTestData(cls):
+        cls.simple_object = FileTypeFactory()
 
     def test_valid_file(self):
         valid_file_attachment = AttachmentFactory(

@@ -1,17 +1,17 @@
 import datetime
 
-from EquiTrack.factories import (
-    AgreementAmendmentFactory,
-    AgreementFactory,
-    CountryProgrammeFactory,
-    PartnerFactory,
-    PartnerStaffFactory,
-    UserFactory,
-)
 from EquiTrack.tests.cases import APITenantTestCase
 from EquiTrack.validation_mixins import BasicValidationError, TransitionError
 from partners.models import Agreement
+from partners.tests.factories import (
+    AgreementAmendmentFactory,
+    AgreementFactory,
+    PartnerFactory,
+    PartnerStaffFactory,
+)
 from partners.validation import agreements
+from reports.tests.factories import CountryProgrammeFactory
+from users.tests.factories import UserFactory
 
 
 class TestAgreementTransitionToSignedValid(APITenantTestCase):
