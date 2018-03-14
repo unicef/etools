@@ -4,13 +4,13 @@ import datetime
 import json
 
 from EquiTrack.tests.cases import EToolsTenantTestCase
-from EquiTrack.factories import (
+from reports.models import CountryProgramme, Indicator, Result, ResultType
+from reports.tests.factories import (
     CountryProgrammeFactory,
     IndicatorFactory,
     ResultFactory,
     ResultTypeFactory,
 )
-from reports.models import CountryProgramme, Indicator, Result, ResultType
 from users.models import Country
 from vision.adapters import programme as adapter
 

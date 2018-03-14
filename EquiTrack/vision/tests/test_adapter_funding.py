@@ -4,19 +4,19 @@ import datetime
 from decimal import Decimal
 import json
 
-from EquiTrack.factories import (
-    FundsCommitmentHeaderFactory,
-    FundsCommitmentItemFactory,
-    FundsReservationHeaderFactory,
-    FundsReservationItemFactory,
-)
-from EquiTrack.tests.cases import EToolsTenantTestCase
 from funds.models import (
     FundsCommitmentHeader,
     FundsCommitmentItem,
     FundsReservationHeader,
     FundsReservationItem,
 )
+from funds.tests.factories import (
+    FundsCommitmentHeaderFactory,
+    FundsCommitmentItemFactory,
+    FundsReservationHeaderFactory,
+    FundsReservationItemFactory,
+)
+from EquiTrack.tests.cases import EToolsTenantTestCase
 from users.models import Country
 from vision.adapters import funding as adapter
 

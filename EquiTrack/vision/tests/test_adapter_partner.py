@@ -3,9 +3,9 @@ from __future__ import absolute_import, division, print_function, unicode_litera
 import datetime
 import json
 
-from EquiTrack.factories import PartnerFactory
 from EquiTrack.tests.cases import EToolsTenantTestCase
 from partners.models import PartnerOrganization
+from partners.tests.factories import PartnerFactory
 from users.models import Country
 from vision.adapters import partner as adapter
 

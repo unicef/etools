@@ -2,14 +2,14 @@ from __future__ import absolute_import, division, print_function, unicode_litera
 
 import json
 
-from EquiTrack.factories import (
-    BusinessAreaFactory,
-    FundFactory,
+from EquiTrack.tests.cases import EToolsTenantTestCase
+from publics.tests.factories import (
+    PublicsBusinessAreaFactory,
+    PublicsFundFactory,
     PublicsCountryFactory,
     PublicsGrantFactory,
+    TravelAgentFactory,
 )
-from EquiTrack.tests.cases import EToolsTenantTestCase
-from publics.tests.factories import TravelAgentFactory
 from publics.models import (
     Country as PublicsCountry,
     Currency,
@@ -28,11 +28,11 @@ class TestCostAssignmentSynch(EToolsTenantTestCase):
     @classmethod
     def setUpTestData(cls):
         cls.country = Country.objects.first()
-        cls.business = BusinessAreaFactory(code="666")
+        cls.business = PublicsBusinessAreaFactory(code="666")
 
     def setUp(self):
         self.grant = PublicsGrantFactory()
-        self.fund = FundFactory()
+        self.fund = PublicsFundFactory()
         self.data = {
             "WBS_ELEMENT_EX": "666/987",
             "FUND": {"FUND_ROW": [
@@ -80,21 +80,19 @@ class TestCostAssignmentSynch(EToolsTenantTestCase):
         name = "New Fund"
         fund_qs = Fund.objects.filter(name=name)
         self.assertFalse(fund_qs.exists())
-        self.assertEqual(self.adapter.funds, {self.fund.name: self.fund})
+        funds_pre = self.adapter.funds
         response = self.adapter.local_get_or_create_fund(name)
         self.assertIsInstance(response, Fund)
         self.assertTrue(fund_qs.exists())
-        self.assertEqual(self.adapter.funds, {
-            name: response,
-            self.fund.name: self.fund
-        })
+        funds_pre[name] = response
+        self.assertEqual(self.adapter.funds, funds_pre)
 
     def test_local_get_or_create_fund(self):
         """If fund exists, then just return the fund"""
-        self.assertEqual(self.adapter.funds, {self.fund.name: self.fund})
+        funds_pre = self.adapter.funds
         response = self.adapter.local_get_or_create_fund(self.fund.name)
         self.assertEqual(response, self.fund)
-        self.assertEqual(self.adapter.funds, {self.fund.name: self.fund})
+        self.assertEqual(self.adapter.funds, funds_pre)
 
     def test_local_get_or_create_wbs_create(self):
         """Check WBS is created"""

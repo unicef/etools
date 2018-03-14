@@ -328,10 +328,18 @@ class RAMSynchronizer(VisionDataSynchronizer):
         return json.loads(records)
 
     def _save_records(self, records):
-
         processed = self.process_indicators(records)
-
         return processed
+
+    def _filter_records(self, records):
+        def is_valid_record(record):
+            for key in self.REQUIRED_KEYS:
+                if key not in record:
+                    return False
+            if record['INDICATOR_DESCRIPTION'] in ['', None] or record["INDICATOR_CODE"] in ['undefined', '', None]:
+                return False
+            return True
+        return filter(is_valid_record, records)
 
     def _clean_records(self, records):
         records = self._filter_records(records)
