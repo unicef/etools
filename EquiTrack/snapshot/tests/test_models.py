@@ -3,14 +3,12 @@ from __future__ import division
 from __future__ import print_function
 from __future__ import unicode_literals
 
-from EquiTrack.factories import (
-    ActivityFactory,
-    InterventionFactory,
-    UserFactory,
-)
 from EquiTrack.tests.cases import EToolsTenantTestCase
-from snapshot.models import Activity
 from partners.models import WorkspaceFileType
+from partners.tests.factories import InterventionFactory
+from snapshot.models import Activity
+from snapshot.tests.factories import ActivityFactory
+from users.tests.factories import UserFactory
 
 
 class TestActivity(EToolsTenantTestCase):

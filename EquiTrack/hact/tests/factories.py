@@ -4,8 +4,8 @@ import datetime
 
 import factory
 
-from EquiTrack.factories import PartnerFactory
 from hact import models
+from partners.tests.factories import PartnerFactory
 
 
 class HactHistoryFactory(factory.django.DjangoModelFactory):
