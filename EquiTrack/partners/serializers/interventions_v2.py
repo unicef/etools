@@ -246,13 +246,13 @@ class InterventionSectorLocationCUSerializer(serializers.ModelSerializer):
         )
 
 
-class InterventionAttachmentSerializer(serializers.ModelSerializer):
-    attachment_file = serializers.FileField(source="attachment", read_only=True)
+class InterventionAttachmentSerializer(AttachmentSerializerMixin, serializers.ModelSerializer):
+    attachment_file = AttachmentSingleFileField(read_only=True)
 
     class Meta:
         model = InterventionAttachment
         fields = (
-            'id', 'intervention', 'created', 'type', 'attachment', "attachment_file"
+            'id', 'intervention', 'created', 'type', 'attachment_file'
         )
 
 

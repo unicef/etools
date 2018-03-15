@@ -1,10 +1,12 @@
 import datetime
 
+from attachments.tests.factories import FileTypeFactory as AttachmentFileTypeFactory
 from funds.tests.factories import FundsReservationHeaderFactory
 from locations.tests.factories import GatewayTypeFactory, LocationFactory
 from partners.models import Intervention, InterventionBudget, InterventionResultLink
 from partners.tests.factories import (
     AgreementFactory,
+    FileTypeFactory,
     InterventionFactory,
     PartnerFactory,
 )
@@ -84,3 +86,9 @@ def setup_intervention_test_data(test_case, include_results_and_indicators=False
             p_code='a-p-code')
         )
         test_case.disaggregation = test_case.applied_indicator.disaggregation.create(name='A Disaggregation')
+
+    test_case.file_type = FileTypeFactory()
+    intervention_attachment_code = "partners_intervention_attachment"
+    AttachmentFileTypeFactory(
+        code=intervention_attachment_code
+    )

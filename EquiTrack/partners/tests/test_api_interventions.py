@@ -191,6 +191,20 @@ class TestInterventionsAPI(APITenantTestCase):
 
         self.assertEqual(status_code, status.HTTP_201_CREATED)
 
+    def test_add_attachments(self):
+        data = {
+            "document_type": Intervention.PD,
+            "title": "My test intervention1",
+            "contingency_pd": True,
+            "agreement": self.agreement.id,
+            "attachments": [{"type": self.file_type.pk}]
+        }
+        status_code, response = self.run_request_list_ep(data, user=self.partnership_manager_user)
+        self.assertEqual(status_code, status.HTTP_201_CREATED)
+        self.assertTrue(response["attachments"])
+        for attachment in response["attachments"]:
+            self.assertTrue(attachment["attachment_file_upload_link"])
+
     def test_add_one_valid_fr_on_create_pd(self):
         self.assertFalse(Activity.objects.exists())
         frs_data = [self.fr_1.id]
