@@ -39,6 +39,8 @@ from partners.validation.interventions import (
     transition_to_active,
     transition_to_closed,
     transition_to_signed,
+    transition_to_suspended,
+    transition_to_terminated,
 )
 from users.tests.factories import GroupFactory, UserFactory
 
@@ -338,6 +340,34 @@ class TestTransitionToActive(EToolsTenantTestCase):
         agreement = AgreementFactory(status=Agreement.SIGNED)
         intervention = InterventionFactory(agreement=agreement)
         self.assertTrue(transition_to_active(intervention))
+
+
+class TestTransitionToSuspended(EToolsTenantTestCase):
+    def test_intervention_in_amendment(self):
+        """Interventions in amendment cannot be suspended"""
+        suspendable_statuses = [Intervention.SIGNED, Intervention.ACTIVE]
+
+        for suspendable_status in suspendable_statuses:
+            intervention = InterventionFactory(
+                status=suspendable_status,
+                in_amendment=True,
+            )
+            with self.assertRaises(TransitionError):
+                transition_to_suspended(intervention)
+
+
+class TestTransitionToTerminated(EToolsTenantTestCase):
+    def test_intervention_in_amendment(self):
+        """Interventions in amendment cannot be terminated"""
+        terminable_statuses = [Intervention.SIGNED, Intervention.ACTIVE]
+
+        for terminable_status in terminable_statuses:
+            intervention = InterventionFactory(
+                status=terminable_status,
+                in_amendment = True,
+            )
+            with self.assertRaises(TransitionError):
+                transition_to_terminated(intervention)
 
 
 class TestStateDateSignedValid(EToolsTenantTestCase):
