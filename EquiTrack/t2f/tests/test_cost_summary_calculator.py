@@ -3,6 +3,7 @@ from __future__ import unicode_literals
 from datetime import date, datetime
 from decimal import Decimal
 
+from django.utils import six
 from pytz import UTC
 
 from EquiTrack.tests.mixins import APITenantTestCase
@@ -416,7 +417,7 @@ class CostSummaryTest(APITenantTestCase):
             "total_amount": total,
             "deduction": Decimal("0.0000"),
         }])
-        self.assertItemsEqual(cost_summary["expenses_total"], [
+        six.assertCountEqual(self, cost_summary["expenses_total"], [
             {"currency": self.currency_huf, "amount": expense_huf.amount},
             {"currency": self.currency_usd, "amount": expense_usd.amount},
         ])
