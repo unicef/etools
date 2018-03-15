@@ -41,7 +41,7 @@ class TestInterventionsAPI(WorkspaceRequiredAPITestMixIn, APITenantTestCase):
         response = response['results']
 
         # uncomment if you need to see the response json / regenerate the test file
-        # print json.dumps(response, indent=2)
+        # print(json.dumps(response, indent=2))
         # TODO: think of how to improve this test without having to dig through the object to delete ids
         json_filename = os.path.join(os.path.dirname(__file__), 'data', 'prp-intervention-list.json')
         with open(json_filename) as f:
