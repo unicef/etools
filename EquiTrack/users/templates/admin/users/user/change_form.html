@@ -1,6 +1,6 @@
 {% extends "admin/change_form.html" %}{% load i18n %}
 {% block object-tools-items %}
     {{ block.super }}
-    <li><a href="{% url 'admin:users_sync_user' original.id %}" class=''>{% trans "Sync User" %}</a></li>
+    <li><a href="{% url 'admin:users_sync_user' original.id %}">{% trans "Sync User" %}</a></li>
 
 {% endblock object-tools-items %}
