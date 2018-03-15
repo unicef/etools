@@ -567,7 +567,7 @@ class TestPartnerOrganizationModel(EToolsTenantTestCase):
 class TestAgreementModel(EToolsTenantTestCase):
     @classmethod
     def setUpTestData(cls):
-        cls.partner_organization = models.PartnerOrganization.objects.create(
+        cls.partner_organization = PartnerFactory(
             name="Partner Org 1",
         )
         cp = CountryProgrammeFactory(
@@ -576,7 +576,7 @@ class TestAgreementModel(EToolsTenantTestCase):
             from_date=datetime.date(datetime.date.today().year - 1, 1, 1),
             to_date=datetime.date(datetime.date.today().year + 1, 1, 1),
         )
-        cls.agreement = models.Agreement.objects.create(
+        cls.agreement = AgreementFactory(
             agreement_type=models.Agreement.PCA,
             partner=cls.partner_organization,
             country_programme=cp
