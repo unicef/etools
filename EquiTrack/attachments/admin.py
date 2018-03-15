@@ -30,6 +30,7 @@ class AttachmentInline(ct_admin.GenericTabularInline):
     model = app_models.Attachment
     extra = 0
     fields = ('file', 'hyperlink', 'modified', 'uploaded_by', )
+    readonly_fields = ('modified', )
 
 
 class AttachmentSingleInline(AttachmentInline):
