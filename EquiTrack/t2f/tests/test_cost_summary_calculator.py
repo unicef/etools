@@ -5,15 +5,14 @@ from decimal import Decimal
 
 from pytz import UTC
 
-from EquiTrack.factories import UserFactory
 from EquiTrack.tests.mixins import APITenantTestCase
 from publics.models import TravelExpenseType
 from publics.tests.factories import (
-    CountryFactory,
-    CurrencyFactory,
-    DSARateFactory,
-    DSARegionFactory,
-    ExpenseTypeFactory,
+    PublicsCountryFactory,
+    PublicsCurrencyFactory,
+    PublicsDSARateFactory,
+    PublicsDSARegionFactory,
+    PublicsTravelExpenseTypeFactory,
 )
 from t2f.helpers.cost_summary_calculator import (
     CostSummaryCalculator,
@@ -21,13 +20,14 @@ from t2f.helpers.cost_summary_calculator import (
     ExpenseDTO,
 )
 from t2f.tests.factories import ExpenseFactory, ItineraryItemFactory, TravelFactory
+from users.tests.factories import UserFactory
 
 
 class TestExpenseDTO(APITenantTestCase):
     def test_init(self):
-        currency_usd = CurrencyFactory(code='USD')
+        currency_usd = PublicsCurrencyFactory(code='USD')
         travel = TravelFactory(currency=currency_usd)
-        expense_type = ExpenseTypeFactory(
+        expense_type = PublicsTravelExpenseTypeFactory(
             title='Train cost',
             vendor_number=TravelExpenseType.USER_VENDOR_NUMBER_PLACEHOLDER
         )
@@ -45,57 +45,77 @@ class TestExpenseDTO(APITenantTestCase):
 
 
 class CostSummaryTest(APITenantTestCase):
-    def setUp(self):
-        super(CostSummaryTest, self).setUp()
-        self.unicef_staff = UserFactory(is_staff=True)
+    @classmethod
+    def setUpTestData(cls):
+        cls.unicef_staff = UserFactory(is_staff=True)
 
-        self.currency_usd = CurrencyFactory(code='USD')
-        self.currency_huf = CurrencyFactory(name='Hungarian Forint', code='HUF')
+        cls.currency_usd = PublicsCurrencyFactory(code='USD')
+        cls.currency_huf = PublicsCurrencyFactory(name='Hungarian Forint', code='HUF')
 
-        self.user_et_1 = ExpenseTypeFactory(title='Train cost',
-                                            vendor_number=TravelExpenseType.USER_VENDOR_NUMBER_PLACEHOLDER)
-        self.user_et_2 = ExpenseTypeFactory(title='Other expenses',
-                                            vendor_number=TravelExpenseType.USER_VENDOR_NUMBER_PLACEHOLDER)
-        self.ta_et = ExpenseTypeFactory(title='Travel agent')
+        cls.user_et_1 = PublicsTravelExpenseTypeFactory(
+            title='Train cost',
+            vendor_number=TravelExpenseType.USER_VENDOR_NUMBER_PLACEHOLDER
+        )
+        cls.user_et_2 = PublicsTravelExpenseTypeFactory(
+            title='Other expenses',
+            vendor_number=TravelExpenseType.USER_VENDOR_NUMBER_PLACEHOLDER
+        )
+        cls.ta_et = PublicsTravelExpenseTypeFactory(title='Travel agent')
 
-        netherlands = CountryFactory(name='Netherlands', long_name='Netherlands')
-        hungary = CountryFactory(name='Hungary', long_name='Hungary')
-        denmark = CountryFactory(name='Denmark', long_name='Denmark')
-        germany = CountryFactory(name='Germany', long_name='Germany')
+        netherlands = PublicsCountryFactory(name='Netherlands', long_name='Netherlands')
+        hungary = PublicsCountryFactory(name='Hungary', long_name='Hungary')
+        denmark = PublicsCountryFactory(name='Denmark', long_name='Denmark')
+        germany = PublicsCountryFactory(name='Germany', long_name='Germany')
 
-        self.amsterdam = DSARegionFactory(country=netherlands,
-                                          area_name='Amsterdam',
-                                          area_code='ds1')
-        DSARateFactory(region=self.amsterdam,
-                       dsa_amount_usd=100,
-                       dsa_amount_60plus_usd=60)
+        cls.amsterdam = PublicsDSARegionFactory(
+            country=netherlands,
+            area_name='Amsterdam',
+            area_code='ds1'
+        )
+        PublicsDSARateFactory(
+            region=cls.amsterdam,
+            dsa_amount_usd=100,
+            dsa_amount_60plus_usd=60
+        )
 
-        self.budapest = DSARegionFactory(country=hungary,
-                                         area_name='Budapest',
-                                         area_code='ds2')
-        DSARateFactory(region=self.budapest,
-                       dsa_amount_usd=200,
-                       dsa_amount_60plus_usd=120)
+        cls.budapest = PublicsDSARegionFactory(
+            country=hungary,
+            area_name='Budapest',
+            area_code='ds2'
+        )
+        PublicsDSARateFactory(
+            region=cls.budapest,
+            dsa_amount_usd=200,
+            dsa_amount_60plus_usd=120
+        )
 
-        self.copenhagen = DSARegionFactory(country=denmark,
-                                           area_name='Copenhagen',
-                                           area_code='ds3')
-        DSARateFactory(region=self.copenhagen,
-                       dsa_amount_usd=300,
-                       dsa_amount_60plus_usd=180)
+        cls.copenhagen = PublicsDSARegionFactory(
+            country=denmark,
+            area_name='Copenhagen',
+            area_code='ds3'
+        )
+        PublicsDSARateFactory(
+            region=cls.copenhagen,
+            dsa_amount_usd=300,
+            dsa_amount_60plus_usd=180
+        )
 
-        self.dusseldorf = DSARegionFactory(country=germany,
-                                           area_name='Duesseldorf',
-                                           area_code='ds4')
-        DSARateFactory(region=self.dusseldorf,
-                       dsa_amount_usd=400,
-                       dsa_amount_60plus_usd=240)
+        cls.dusseldorf = PublicsDSARegionFactory(
+            country=germany,
+            area_name='Duesseldorf',
+            area_code='ds4'
+        )
+        PublicsDSARateFactory(
+            region=cls.dusseldorf,
+            dsa_amount_usd=400,
+            dsa_amount_60plus_usd=240
+        )
 
         # Delete default items created by factory
-        self.travel = TravelFactory(currency=self.currency_huf)
-        self.travel.itinerary.all().delete()
-        self.travel.expenses.all().delete()
-        self.travel.deductions.all().delete()
+        cls.travel = TravelFactory(currency=cls.currency_huf)
+        cls.travel.itinerary.all().delete()
+        cls.travel.expenses.all().delete()
+        cls.travel.deductions.all().delete()
 
     def test_init(self):
         calc = CostSummaryCalculator(self.travel)
@@ -216,7 +236,7 @@ class CostSummaryTest(APITenantTestCase):
 
     # TODO: confirm that this is correct
     # should a single itinerary result in a zero dsa total?
-    def test_test_cost_calculation_single(self):
+    def test_cost_calculation_single(self):
         """Check calculations for a single itinerary"""
         ItineraryItemFactory(
             travel=self.travel,
@@ -230,7 +250,7 @@ class CostSummaryTest(APITenantTestCase):
 
         self.assertEqual(cost_summary["dsa"], [])
         self.assertEqual(cost_summary["expenses_total"], [])
-        self.assertEqual(cost_summary["preserved_expenses"], None)
+        self.assertEqual(cost_summary["preserved_expenses"], Decimal("150"))
         self.assertEqual(cost_summary["dsa_total"], Decimal("0"))
         self.assertEqual(cost_summary["paid_to_traveler"], Decimal("0"))
         self.assertEqual(cost_summary["traveler_dsa"], Decimal("0"))
@@ -312,7 +332,7 @@ class CostSummaryTest(APITenantTestCase):
             departure_date=datetime(2017, 1, 4, 4, 0, tzinfo=UTC),
             dsa_region=self.budapest
         )
-        parking_money_type = ExpenseTypeFactory(
+        parking_money_type = PublicsTravelExpenseTypeFactory(
             title='Parking money',
             vendor_number="",
         )
@@ -343,7 +363,7 @@ class CostSummaryTest(APITenantTestCase):
         self.assertEqual(cost_summary["expenses_total"], [
             {"currency": self.currency_usd, "amount": Decimal("100.0")}
         ])
-        self.assertEqual(cost_summary["preserved_expenses"], None)
+        self.assertEqual(cost_summary["preserved_expenses"], Decimal("150"))
         self.assertEqual(cost_summary["dsa_total"], total)
         self.assertEqual(cost_summary["paid_to_traveler"], total)
         self.assertEqual(cost_summary["traveler_dsa"], total)
