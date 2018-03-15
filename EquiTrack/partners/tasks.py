@@ -264,6 +264,13 @@ def pmp_indicator_report():
         'PD / SSFA end date',
         'UNICEF US$ Cash contribution',
         'UNICEF US$ Supply contribution',
+        'Total Budget',
+        'UNICEF Budget',
+        'Currency',
+        'Partner Contribution',
+        'Unicef Cash',
+        'In kind Amount',
+        'Total',
         'FR numbers against PD / SSFA',
         'Sum of all FR planned amount',
         'Core value attached',
@@ -275,13 +282,15 @@ def pmp_indicator_report():
     writer.writeheader()
 
     for country in countries:
-        logger.info(country.name)
         set_country(country.name)
-        for partner in PartnerOrganization.objects.all():
-            for intervention in Intervention.objects.filter(agreement__partner=partner):
+        logger.info(u'Running on %s' % country.name)
+        for partner in PartnerOrganization.objects.filter():
+            for intervention in Intervention.objects.filter(
+                    agreement__partner=partner).select_related('planned_budget'):
+                planned_budget = getattr(intervention, 'planned_budget', None)
                 writer.writerow({
                     'Country': country,
-                    'Partner Name': unicode(partner).encode('utf-8').replace(',', '-'),
+                    'Partner Name': str(partner).decode('unicode_escape').encode('ascii', 'ignore'),
                     'Partner Type': partner.cso_type,
                     'PD / SSFA ref': intervention.number.encode('utf-8').replace(',', '-'),
                     'PD / SSFA status': intervention.get_status_display(),
@@ -290,6 +299,13 @@ def pmp_indicator_report():
                     'PD / SSFA end date': intervention.end,
                     'UNICEF US$ Cash contribution': intervention.total_unicef_cash,
                     'UNICEF US$ Supply contribution': intervention.total_in_kind_amount,
+                    'Total Budget': intervention.total_budget,
+                    'UNICEF Budget': intervention.total_unicef_budget,
+                    'Currency': intervention.planned_budget.currency if planned_budget else '-',
+                    'Partner Contribution': intervention.planned_budget.partner_contribution if planned_budget else '-',
+                    'Unicef Cash': intervention.planned_budget.unicef_cash if planned_budget else '-',
+                    'In kind Amount': intervention.planned_budget.in_kind_amount if planned_budget else '-',
+                    'Total': intervention.planned_budget.total if planned_budget else '-',
                     'FR numbers against PD / SSFA': u' - '.join([
                         (fh.fr_number.encode('utf-8')) for fh in intervention.frs.all()]),
                     'Sum of all FR planned amount': intervention.frs.aggregate(
