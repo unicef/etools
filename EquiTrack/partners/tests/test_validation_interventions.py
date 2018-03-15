@@ -670,23 +670,6 @@ class TestInterventionValid(EToolsTenantTestCase):
     def test_state_suspended_valid(self):
         self.assertTrue(self.validator.state_suspended_valid(self.intervention))
 
-    def test_state_suspended_invalid(self):
-        """Cannot suspend interventions while in amendment"""
-        self.intervention.in_amendment = True
-        self.intervention.save()
-        with self.assertRaises(StateValidError):
-            self.validator.state_suspended_valid(self.intervention)
-
-    def test_state_terminated_valid(self):
-        self.assertTrue(self.validator.state_terminated_valid(self.intervention))
-
-    def test_state_terminated_invalid(self):
-        """Cannot terminate interventions while in amendment"""
-        self.intervention.in_amendment = True
-        self.intervention.save()
-        with self.assertRaises(StateValidError):
-            self.validator.state_terminated_valid(self.intervention)
-
     def test_state_active_valid_invalid_start(self):
         """Invalid if start is after today"""
         self.intervention.total_unicef_budget = 10
