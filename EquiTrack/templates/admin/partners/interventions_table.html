@@ -13,8 +13,8 @@
         {{ i.end }}
     </td>
     <td>
-        {% for s in i.sector_locations.all %}
-            {{ s.sector.name }},
+        {% for s in i.sections.all %}
+            {{ s.section.name }},
         {% endfor %}
     </td>
     <td>

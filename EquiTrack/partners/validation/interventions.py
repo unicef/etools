@@ -4,17 +4,17 @@ import logging
 
 from django.utils.translation import ugettext as _
 
-
-from EquiTrack.validation_mixins import TransitionError, CompleteValidation, StateValidError, check_rigid_related, \
+from EquiTrack.validation_mixins import TransitionError, CompleteValidation, StateValidError, \
     BasicValidationError, check_rigid_fields, check_required_fields
 
 from partners.permissions import InterventionPermissions
+from reports.models import AppliedIndicator
 
 logger = logging.getLogger('partners.interventions.validation')
 
 
 def partnership_manager_only(i, user):
-    # Transition cannot happen by a user that';s not a Partnership Manager
+    # Transition cannot happen by a user that's not a Partnership Manager
     if not user.groups.filter(name__in=['Partnership Manager']).count():
         raise TransitionError(['Only Partnership Managers can execute this transition'])
     return True
@@ -30,24 +30,30 @@ def transition_to_closed(i):
     # TODO: find a sol for invalidating the cache on related .all() -has to do with prefetch_related in the validator
     r = {
         'total_frs_amt': 0,
+        'total_frs_amt_usd': 0,
         'total_outstanding_amt': 0,
+        'total_outstanding_amt_usd': 0,
         'total_intervention_amt': 0,
         'total_actual_amt': 0,
+        'total_actual_amt_usd': 0,
         'earliest_start_date': None,
         'latest_end_date': None
     }
     for fr in i.frs.filter():
-        r['total_frs_amt'] += fr.total_amt
-        r['total_outstanding_amt'] += fr.outstanding_amt
+        r['total_frs_amt'] += fr.total_amt_local
+        r['total_frs_amt_usd'] += fr.total_amt
+        r['total_outstanding_amt'] += fr.outstanding_amt_local
+        r['total_outstanding_amt_usd'] += fr.outstanding_amt
         r['total_intervention_amt'] += fr.intervention_amt
-        r['total_actual_amt'] += fr.actual_amt
+        r['total_actual_amt'] += fr.actual_amt_local
+        r['total_actual_amt_usd'] += fr.actual_amt
         if r['earliest_start_date'] is None:
             r['earliest_start_date'] = fr.start_date
-        elif r['earliest_start_date'] < fr.start_date:
+        elif r['earliest_start_date'] > fr.start_date:
             r['earliest_start_date'] = fr.start_date
         if r['latest_end_date'] is None:
             r['latest_end_date'] = fr.end_date
-        elif r['latest_end_date'] > fr.end_date:
+        elif r['latest_end_date'] < fr.end_date:
             r['latest_end_date'] = fr.end_date
     # hack
     i.total_frs = r
@@ -57,29 +63,58 @@ def transition_to_closed(i):
     if i.end > today:
         raise TransitionError([_('End date is in the future')])
 
-    if i.total_frs['total_intervention_amt'] != i.total_frs['total_actual_amt'] or \
+    if i.total_frs['total_frs_amt'] != i.total_frs['total_actual_amt'] or \
             i.total_frs['total_outstanding_amt'] != 0:
-        raise TransitionError([_('Total FR amount needs to equal total actual amount, and'
+        raise TransitionError([_('Total FR amount needs to equal total actual amount, and '
                                  'Total Outstanding DCTs need to equal to 0')])
 
-    # If total_actual_amt >100,000 then attachments has to include
+    # If total_actual_amt_usd >100,000 then attachments has to include
     # at least 1 record with type: "Final Partnership Review"
-    if i.total_frs['total_actual_amt'] >= 100000:
+    if i.total_frs['total_actual_amt_usd'] >= 100000:
         if i.attachments.filter(type__name='Final Partnership Review').count() < 1:
             raise TransitionError([_('Total amount transferred greater than 100,000 and no Final Partnership Review '
                                      'was attached')])
 
     # TODO: figure out Action Point Validation once the spec is completed
 
+    if i.in_amendment is True:
+        raise TransitionError([_('Cannot Transition status while adding an amendment')])
     return True
 
 
-def transtion_to_signed(i):
+def transition_to_terminated(i):
+    if i.in_amendment is True:
+        raise TransitionError([_('Cannot Transition status while adding an amendment')])
+
+    return True
+
+
+def transition_to_ended(i):
+    if i.in_amendment is True:
+        raise TransitionError([_('Cannot Transition status while adding an amendment')])
+
+    return True
+
+
+def transition_to_suspended(i):
+    if i.in_amendment is True:
+        raise TransitionError([_('Cannot Transition status while adding an amendment')])
+
+    return True
+
+
+def transition_to_signed(i):
     from partners.models import Agreement
+    if i.in_amendment is True:
+        raise TransitionError([_('Cannot Transition status while adding an amendment')])
     if i.document_type in [i.PD, i.SHPD] and i.agreement.status in [Agreement.SUSPENDED, Agreement.TERMINATED]:
         raise TransitionError([_('The PCA related to this record is Suspended or Terminated. '
                                  'This Programme Document will not change status until the related PCA '
                                  'is in Signed status')])
+
+    if i.in_amendment is True:
+        raise TransitionError([_('Cannot Transition status while adding an amendment')])
+
     return True
 
 
@@ -112,8 +147,8 @@ def start_date_signed_valid(i):
 
 def start_date_related_agreement_valid(i):
     # i = intervention
-    if i.document_type in [i.PD, i.SHPD] and not i.contingency_pd and i.start and i.agreement.start and\
-                    i.signed_pd_document and i.start < i.agreement.start:
+    if i.document_type in [i.PD, i.SHPD] and not i.contingency_pd and i.start and i.agreement.start and \
+            i.signed_pd_document and i.start < i.agreement.start:
         return False
     return True
 
@@ -140,21 +175,6 @@ def document_type_pca_valid(i):
     return True
 
 
-def amendments_valid(i):
-    if i.status not in [i.ACTIVE, i.SIGNED] and i.amendments.exists():
-        # this prevents any changes in amendments if the status is not in Signed or Active
-        if not check_rigid_related(i, 'amendments'):
-            return False
-    for a in i.amendments.all():
-        if a.OTHER in a.types and a.other_description is None:
-            return False
-        if not a.signed_date:
-            return False
-        if not getattr(a.signed_amendment, 'name'):
-            return False
-    return True
-
-
 # validation id 2
 def ssfa_agreement_has_no_other_intervention(i):
     '''
@@ -168,6 +188,42 @@ def ssfa_agreement_has_no_other_intervention(i):
     return True
 
 
+def rigid_in_amendment_flag(i):
+    if i.old_instance and i.in_amendment is True and i.old_instance.in_amendment is False:
+        return False
+    return True
+
+
+def sections_valid(i):
+    ainds = AppliedIndicator.objects.filter(lower_result__result_link__intervention__pk=i.pk).all()
+    ind_sections = set()
+    for ind in ainds:
+        ind_sections.add(ind.section)
+    intervention_sections = set(s for s in i.sections.all())
+    if not ind_sections.issubset(intervention_sections):
+        draft_status_err = ' without deleting the indicators first' if i.status == i.DRAFT else ''
+        raise BasicValidationError(_('The following sections have been selected on '
+                                     'the PD/SSFA indicators and cannot be removed{}: '.format(draft_status_err)) +
+                                   ', '.join([s.name for s in ind_sections - intervention_sections]))
+        # return False
+    return True
+
+
+def locations_valid(i):
+    ainds = AppliedIndicator.objects.filter(lower_result__result_link__intervention__pk=i.pk).all()
+    ind_locations = set()
+    for ind in ainds:
+        for l in ind.locations.all():
+            ind_locations.add(l)
+    intervention_locations = set(i.flat_locations.all())
+    if not ind_locations.issubset(intervention_locations):
+        raise BasicValidationError(_('The following locations have been selected on '
+                                     'the PD/SSFA indicators and cannot be removed'
+                                     ' without removing them from the indicators first: ') +
+                                   ', '.join([str(l) for l in ind_locations - intervention_locations]))
+    return True
+
+
 class InterventionValid(CompleteValidation):
     VALIDATION_CLASS = 'partners.Intervention'
     # validations that will be checked on every object... these functions only take the new instance
@@ -178,7 +234,9 @@ class InterventionValid(CompleteValidation):
         start_date_signed_valid,
         start_date_related_agreement_valid,
         document_type_pca_valid,
-        amendments_valid,
+        rigid_in_amendment_flag,
+        sections_valid,
+        locations_valid
     ]
 
     VALID_ERRORS = {
@@ -188,12 +246,15 @@ class InterventionValid(CompleteValidation):
         'signed_date_valid': 'Unicef signatory and partner signatory as well as dates required, '
                              'signatures cannot be dated in the future',
         'document_type_pca_valid': 'Document type PD or SHPD can only be associated with a PCA agreement.',
-        'amendments_valid': 'Type, signed date, and signed amendment are required in Amendments. '
-                            'If you seleced Other as an amendment type, please add the description',
         'ssfa_agreement_has_no_other_intervention': 'The agreement selected has at least one '
                                                     'other SSFA Document connected',
         'start_date_signed_valid': 'The start date cannot be before the later of signature dates.',
-        'start_date_related_agreement_valid': 'PD start date cannot be earlier than the Start Date of the related PCA'
+        'start_date_related_agreement_valid': 'PD start date cannot be earlier than the Start Date of the related PCA',
+        'rigid_in_amendment_flag': 'Amendment Flag cannot be turned on without adding an amendment',
+        'sections_valid': "The sections selected on the PD/SSFA are not a subset of all sections selected "
+                          "for this PD/SSFA's indicators",
+        'locations_valid': "The locations selected on the PD/SSFA are not a subset of all locations selected "
+                          "for this PD/SSFA's indicators"
     }
 
     PERMISSIONS_CLASS = InterventionPermissions

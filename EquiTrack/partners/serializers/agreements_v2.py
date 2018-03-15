@@ -2,15 +2,16 @@ from __future__ import unicode_literals
 from rest_framework import serializers
 from rest_framework.serializers import ValidationError
 
+from EquiTrack.serializers import SnapshotModelSerializer
 from partners.permissions import AgreementPermissions
 from partners.serializers.partner_organization_v2 import PartnerStaffMemberNestedSerializer, SimpleStaffMemberSerializer
-from users.serializers import SimpleUserSerializer
 from partners.validation.agreements import AgreementValid
 from partners.models import (
     Agreement,
     AgreementAmendment,
 )
 from reports.models import CountryProgramme
+from users.serializers import SimpleUserSerializer
 
 
 class AgreementAmendmentCreateUpdateSerializer(serializers.ModelSerializer):
@@ -18,6 +19,13 @@ class AgreementAmendmentCreateUpdateSerializer(serializers.ModelSerializer):
     created = serializers.DateTimeField(read_only=True)
     modified = serializers.DateTimeField(read_only=True)
     signed_amendment_file = serializers.FileField(source="signed_amendment", read_only=True)
+
+    class Meta:
+        model = AgreementAmendment
+        fields = "__all__"
+
+
+class AgreementAmendmentListSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = AgreementAmendment
@@ -45,43 +53,6 @@ class AgreementListSerializer(serializers.ModelSerializer):
         )
 
 
-class AgreementExportSerializer(serializers.ModelSerializer):
-
-    staff_members = serializers.SerializerMethodField()
-    partner_name = serializers.CharField(source='partner.name', read_only=True)
-    partner_manager_name = serializers.CharField(source='partner_manager.get_full_name')
-    signed_by_name = serializers.CharField(source='signed_by.get_full_name')
-    amendments = serializers.SerializerMethodField()
-    url = serializers.SerializerMethodField()
-
-    class Meta:
-        model = Agreement
-        fields = (
-            "agreement_number",
-            "status",
-            "partner_name",
-            "agreement_type",
-            "start",
-            "end",
-            "partner_manager_name",
-            "signed_by_partner_date",
-            "signed_by_name",
-            "signed_by_unicef_date",
-            "staff_members",
-            "amendments",
-            "url",
-        )
-
-    def get_staff_members(self, obj):
-        return ', '.join([sm.get_full_name() for sm in obj.authorized_officers.all()])
-
-    def get_amendments(self, obj):
-        return ', '.join(['{} ({})'.format(am.number, am.signed_date) for am in obj.amendments.all()])
-
-    def get_url(self, obj):
-        return 'https://{}/pmp/agreements/{}/details/'.format(self.context['request'].get_host(), obj.id)
-
-
 class AgreementDetailSerializer(serializers.ModelSerializer):
 
     partner_name = serializers.CharField(source='partner.name', read_only=True)
@@ -104,7 +75,7 @@ class AgreementDetailSerializer(serializers.ModelSerializer):
         fields = "__all__"
 
 
-class AgreementCreateUpdateSerializer(serializers.ModelSerializer):
+class AgreementCreateUpdateSerializer(SnapshotModelSerializer):
 
     partner_name = serializers.CharField(source='partner.name', read_only=True)
     agreement_type = serializers.CharField(required=True)

@@ -5,7 +5,7 @@ from EquiTrack.settings.base import *  # noqa: F403
 
 ALLOWED_HOSTS = ['*']
 DEBUG = True
-CELERY_ALWAYS_EAGER = True
+CELERY_TASK_ALWAYS_EAGER = True
 
 POST_OFFICE = {
     'DEFAULT_PRIORITY': 'now',
@@ -14,6 +14,13 @@ POST_OFFICE = {
         'default': 'django.core.mail.backends.console.EmailBackend'
     }
 }
+
+
+# change config to remove CSRF verification in localhost in order to enable testing from postman.
+REST_FRAMEWORK['DEFAULT_AUTHENTICATION_CLASSES'] = (
+    # this setting fixes the bug where user can be logged in as AnonymousUser
+    'EquiTrack.mixins.CsrfExemptSessionAuthentication',
+) + REST_FRAMEWORK['DEFAULT_AUTHENTICATION_CLASSES']
 
 # No SAML for local dev
 AUTHENTICATION_BACKENDS = (
@@ -54,8 +61,8 @@ if 'test' in sys.argv:
 
     # Disable logging output during tests
     logging.disable(logging.CRITICAL)
-else:
-    # Settings which should NOT be active during automated tests
+elif 'runserver' in sys.argv:
+    # Settings which should only be active when running a local server
 
     # django-debug-toolbar: https://django-debug-toolbar.readthedocs.io/en/stable/configuration.html
     INSTALLED_APPS += (  # noqa

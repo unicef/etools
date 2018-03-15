@@ -1,13 +1,12 @@
 from __future__ import absolute_import, division, print_function, unicode_literals
 
 from django.contrib import admin
-
 from ordered_model.admin import OrderedModelAdmin
 
 from audit.models import (
-    Audit, AuditorFirm, AuditorStaffMember, AuditPermission, Engagement, FinancialFinding, Finding, MicroAssessment,
-    PurchaseOrder, PurchaseOrderItem, Risk, RiskBluePrint, RiskCategory, SpecialAuditRecommendation, SpecificProcedure,
-    SpotCheck,)
+    Audit, AuditPermission, Engagement, FinancialFinding, Finding, MicroAssessment,
+    Risk, RiskBluePrint, RiskCategory, SpecialAuditRecommendation, SpecificProcedure,
+    SpotCheck, )
 
 
 @admin.register(AuditPermission)
@@ -15,42 +14,6 @@ class AuditPermissionAdmin(admin.ModelAdmin):
     list_display = ['target', 'user_type', 'permission_type', 'permission', 'instance_status']
     list_filter = ['user_type', 'permission_type', 'permission', 'instance_status']
     search_fields = ['target']
-
-
-class AuditorStaffMemberInlineAdmin(admin.StackedInline):
-    model = AuditorStaffMember
-    extra = 1
-
-
-@admin.register(AuditorFirm)
-class AuditorFirmAdmin(admin.ModelAdmin):
-    list_display = [
-        'vendor_number', 'name', 'email', 'phone_number', 'blocked', 'hidden',
-        'country',
-    ]
-    list_filter = ['blocked', 'hidden', 'country', ]
-    search_fields = ['vendor_number', 'name', ]
-    inlines = [
-        AuditorStaffMemberInlineAdmin,
-    ]
-
-
-class PurchaseOrderItemAdmin(admin.TabularInline):
-    model = PurchaseOrderItem
-    extra = 0
-
-
-@admin.register(PurchaseOrder)
-class PurchaseOrderAdmin(admin.ModelAdmin):
-    list_display = [
-        'order_number', 'auditor_firm', 'contract_start_date',
-        'contract_end_date',
-    ]
-    list_filter = [
-        'auditor_firm', 'contract_start_date', 'contract_end_date',
-    ]
-    search_fields = ['order_number', 'auditor_firm__name', ]
-    inlines = [PurchaseOrderItemAdmin]
 
 
 @admin.register(Engagement)

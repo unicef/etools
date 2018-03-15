@@ -9,16 +9,12 @@ from environment.models import TenantFlag, TenantSwitch
 
 
 class TenantFlagSerializer(serializers.ModelSerializer):
-    name = serializers.CharField(source='flag.name')
-
     class Meta:
         model = TenantFlag
         fields = ('name', 'countries', )
 
 
 class TenantSwitchSerializer(serializers.ModelSerializer):
-    name = serializers.CharField(source='switch.name')
-
     class Meta:
         model = TenantSwitch
         fields = ('name', 'countries', )
