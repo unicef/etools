@@ -8,9 +8,19 @@ from rest_framework import status
 from partners.tests.test_utils import setup_intervention_test_data
 from tablib.core import Dataset
 
-from reports.models import ResultType, CountryProgramme, Disaggregation, DisaggregationValue
 from EquiTrack.tests.mixins import APITenantTestCase, URLAssertionMixin
-from partners.tests.factories import InterventionResultLinkFactory
+from partners.models import Intervention
+from partners.tests.factories import (
+    InterventionFactory,
+    InterventionResultLinkFactory,
+)
+from reports.models import (
+    CountryProgramme,
+    Disaggregation,
+    DisaggregationValue,
+    LowerResult,
+    ResultType,
+)
 from reports.serializers.v2 import DisaggregationSerializer
 from reports.tests.factories import (
     AppliedIndicatorFactory,
@@ -18,11 +28,25 @@ from reports.tests.factories import (
     DisaggregationFactory,
     DisaggregationValueFactory,
     IndicatorBlueprintFactory,
+    IndicatorFactory,
     LowerResultFactory,
     ResultFactory,
     ResultTypeFactory,
 )
 from users.tests.factories import UserFactory
+
+
+class UrlsTestCase(URLAssertionMixin, TestCase):
+    '''Simple test case to verify URL reversal'''
+    def test_urls(self):
+        '''Verify URL pattern names generate the URLs we expect them to.'''
+        names_and_paths = (
+            ('applied-indicator', 'applied-indicators/', {}),
+            ('country-programme-list', 'countryprogramme/', {}),
+            ('lower-results', 'lower_results/', {}),
+            ('report-result-list', 'results/', {}),
+        )
+        self.assertReversal(names_and_paths, '', '/api/v2/reports/')
 
 
 class TestReportViews(APITenantTestCase):
@@ -84,71 +108,134 @@ class TestReportViews(APITenantTestCase):
         response = self.forced_auth_req('get', url)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
 
-    # V2 URLs
-    def test_apiv2_results_list(self):
-        response = self.forced_auth_req('get', self.v2_results_url)
+
+class TestOutputListAPIView(APITenantTestCase):
+    @classmethod
+    def setUpTestData(cls):
+        cls.user = UserFactory(is_staff=True)  # UNICEF staff user
+        cls.result_type = ResultTypeFactory(name=ResultType.OUTPUT)
+
+        today = datetime.date.today()
+        cls.country_programme = CountryProgrammeFactory(
+            wbs='0000/A0/01',
+            from_date=datetime.date(today.year - 1, 1, 1),
+            to_date=datetime.date(today.year + 1, 1, 1))
+
+        cls.result1 = ResultFactory(
+            result_type=cls.result_type,
+            country_programme=cls.country_programme,
+        )
+
+        cls.result2 = ResultFactory(
+            result_type=cls.result_type,
+            country_programme=cls.country_programme
+        )
+        cls.url = reverse('report-result-list')
+
+    def test_get(self):
+        response = self.forced_auth_req('get', self.url)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(int(sorted(response.data, key=itemgetter("id"))[0]["id"]), self.result1.id)
 
-    def test_apiv2_results_list_minimal(self):
+    def test_minimal(self):
         data = {"verbosity": "minimal"}
-        response = self.forced_auth_req('get', self.v2_results_url, data=data)
+        response = self.forced_auth_req('get', self.url, data=data)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         first_response = sorted(response.data, key=itemgetter("id"))[0]
         keys = sorted(first_response.keys())
         self.assertEqual(keys, ["id", "name"])
 
-    def test_apiv2_results_retrieve(self):
-        detail_url = reverse('report-result-detail', args=[self.result1.id])
-        response = self.forced_auth_req('get', detail_url)
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(int(response.data["id"]), self.result1.id)
-
-    def test_apiv2_results_list_current_cp(self):
-        response = self.forced_auth_req('get', self.v2_results_url)
+    def test_current_cp(self):
+        response = self.forced_auth_req('get', self.url)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(
             int(sorted(response.data, key=itemgetter("id"))[0]["country_programme"]),
             CountryProgramme.objects.all_active.first().id)
 
-    def test_apiv2_results_list_filter_year(self):
+    def test_filter_year(self):
         data = {"year": datetime.date.today().year}
-        response = self.forced_auth_req('get', self.v2_results_url, data=data)
+        response = self.forced_auth_req('get', self.url, data=data)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(len(response.data), 2)
 
-    def test_apiv2_results_list_filter_cp(self):
+    def test_filter_cp(self):
         data = {"country_programme": self.result1.country_programme.id}
-        response = self.forced_auth_req('get', self.v2_results_url, data=data)
+        response = self.forced_auth_req('get', self.url, data=data)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(int(sorted(response.data, key=itemgetter("id"))[0]["id"]), self.result1.id)
 
-    def test_apiv2_results_list_filter_result_type(self):
+    def test_filter_result_type(self):
         data = {"result_type": self.result_type.name}
-        response = self.forced_auth_req('get', self.v2_results_url, data=data)
+        response = self.forced_auth_req('get', self.url, data=data)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(int(sorted(response.data, key=itemgetter("id"))[0]["id"]), self.result1.id)
 
-    def test_apiv2_results_list_filter_values(self):
+    def test_filter_values(self):
         data = {"values": '{},{}'.format(self.result1.id, self.result2.id)}
-        response = self.forced_auth_req('get', self.v2_results_url, data=data)
+        response = self.forced_auth_req('get', self.url, data=data)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(len(response.data), 2)
 
-    def test_apiv2_results_list_filter_values_bad(self):
+    def test_filter_values_bad(self):
         data = {"values": '{},{}'.format('23fg', 'aasd67')}
-        response = self.forced_auth_req('get', self.v2_results_url, data=data)
+        response = self.forced_auth_req('get', self.url, data=data)
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertEqual(response.data, ['ID values must be integers'])
 
-    def test_apiv2_results_list_filter_combined(self):
+    def test_filter_combined(self):
         data = {
             "result_type": self.result_type.name,
             "year": datetime.date.today().year,
         }
-        response = self.forced_auth_req('get', self.v2_results_url, data=data)
+        response = self.forced_auth_req('get', self.url, data=data)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertIn(self.result1.id, [int(i["id"]) for i in response.data])
+
+    def test_dropdown(self):
+        data = {"dropdown": "true"}
+        response = self.forced_auth_req('get', self.url, data=data)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertItemsEqual(response.data, [
+            {
+                "wbs": self.result1.wbs,
+                "id": self.result1.pk,
+                "name": self.result1.name
+            },
+            {
+                "wbs": self.result2.wbs,
+                "id": self.result2.pk,
+                "name": self.result2.name
+            },
+        ])
+
+
+class TestOutputDetailAPIView(APITenantTestCase):
+    @classmethod
+    def setUpTestData(cls):
+        cls.user = UserFactory(is_staff=True)  # UNICEF staff user
+        cls.result_type = ResultTypeFactory(name=ResultType.OUTPUT)
+
+        today = datetime.date.today()
+        cls.country_programme = CountryProgrammeFactory(
+            wbs='0000/A0/01',
+            from_date=datetime.date(today.year - 1, 1, 1),
+            to_date=datetime.date(today.year + 1, 1, 1))
+
+        cls.result1 = ResultFactory(
+            result_type=cls.result_type,
+            country_programme=cls.country_programme,
+        )
+
+        cls.result2 = ResultFactory(
+            result_type=cls.result_type,
+            country_programme=cls.country_programme
+        )
+        cls.url = reverse('report-result-detail', args=[cls.result1.pk])
+
+    def test_results_retrieve(self):
+        response = self.forced_auth_req('get', self.url)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(int(response.data["id"]), self.result1.id)
 
 
 class TestDisaggregationListCreateViews(APITenantTestCase):
@@ -356,15 +443,139 @@ class TestDisaggregationRetrieveUpdateViews(APITenantTestCase):
         self.assertTrue(Disaggregation.objects.filter(pk=disaggregation.pk).exists())
 
 
-class UrlsTestCase(URLAssertionMixin, TestCase):
-    '''Simple test case to verify URL reversal'''
-    def test_urls(self):
-        '''Verify URL pattern names generate the URLs we expect them to.'''
-        names_and_paths = (
-            ('applied-indicator', 'applied-indicators/', {}),
-            ('lower-results', 'lower_results/', {}),
+class TestResultIndicatorListAPIView(APITenantTestCase):
+    @classmethod
+    def setUpTestData(cls):
+        cls.unicef_staff = UserFactory(is_staff=True)
+        cls.result = ResultFactory()
+        cls.indicator = IndicatorFactory(result=cls.result)
+        cls.url = reverse("result-indicator-list", args=[cls.result.pk])
+
+    def test_get(self):
+        response = self.forced_auth_req(
+            "get",
+            self.url,
+            user=self.unicef_staff
         )
-        self.assertReversal(names_and_paths, '', '/api/v2/reports/')
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(
+            [int(x["id"]) for x in response.data],
+            [self.indicator.pk]
+        )
+
+    def test_get_empty(self):
+        response = self.forced_auth_req(
+            "get",
+            reverse("result-indicator-list", args=[404]),
+            user=self.unicef_staff
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual([int(x["id"]) for x in response.data], [])
+
+
+class TestLowerResultListAPIView(APITenantTestCase):
+    @classmethod
+    def setUpTestData(cls):
+        cls.unicef_staff = UserFactory(is_staff=True)
+        cls.url = reverse("lower-results")
+        cls.intervention = InterventionFactory()
+        cls.result_link = InterventionResultLinkFactory(
+            intervention=cls.intervention,
+        )
+        cls.lower_result = LowerResultFactory(
+            name="LL Name",
+            result_link=cls.result_link,
+        )
+
+    def test_search_number(self):
+        response = self.forced_auth_req(
+            "get",
+            self.url,
+            user=self.unicef_staff,
+            data={"search": self.intervention.number[:4]}
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertIn(
+            self.lower_result.pk,
+            [int(x["id"]) for x in response.data]
+         )
+
+    def test_search_name(self):
+        response = self.forced_auth_req(
+            "get",
+            self.url,
+            user=self.unicef_staff,
+            data={"search": "LL Name"}
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertIn(
+            self.lower_result.pk,
+            [int(x["id"]) for x in response.data]
+         )
+
+    def test_search_empty(self):
+        response = self.forced_auth_req(
+            "get",
+            self.url,
+            user=self.unicef_staff,
+            data={"search": "wrong"}
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data, [])
+
+
+class TestLowerResultDeleteView(APITenantTestCase):
+    @classmethod
+    def setUpTestData(cls):
+        cls.unicef_staff = UserFactory(is_staff=True)
+        cls.intervention = InterventionFactory()
+        cls.result_link = InterventionResultLinkFactory(
+            intervention=cls.intervention,
+        )
+
+    def setUp(self):
+        self.lower_result = LowerResultFactory(
+            result_link=self.result_link,
+        )
+        self.url = reverse("lower-results-del", args=[self.lower_result.pk])
+
+    def test_delete(self):
+        self.intervention.unicef_focal_points.add(self.unicef_staff)
+        response = self.forced_auth_req(
+            "delete",
+            self.url,
+            user=self.unicef_staff
+        )
+        self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
+        self.assertFalse(
+            LowerResult.objects.filter(pk=self.lower_result.pk).exists()
+        )
+
+    def test_delete_not_found(self):
+        response = self.forced_auth_req(
+            "delete",
+            reverse("lower-results-del", args=[404]),
+            user=self.unicef_staff
+        )
+        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
+        self.assertTrue(
+            LowerResult.objects.filter(pk=self.lower_result.pk).exists()
+        )
+
+    def test_delete_bad_request(self):
+        """If user does not have permissions, expect 400 response"""
+        user = UserFactory()
+        self.intervention.status = Intervention.ENDED
+        self.intervention.save()
+        response = self.forced_auth_req(
+            "delete",
+            self.url,
+            user=user
+        )
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertTrue(
+            LowerResult.objects.filter(pk=self.lower_result.pk).exists()
+        )
 
 
 class TestLowerResultExportList(APITenantTestCase):
@@ -412,6 +623,74 @@ class TestLowerResultExportList(APITenantTestCase):
         self.assertEqual(dataset.height, 1)
         self.assertEqual(len(dataset._get_headers()), 6)
         self.assertEqual(len(dataset[0]), 6)
+
+
+class TestAppliedIndicatorListAPIView(APITenantTestCase):
+    @classmethod
+    def setUpTestData(cls):
+        cls.unicef_staff = UserFactory(is_staff=True)
+        cls.intervention = InterventionFactory()
+        cls.result_link = InterventionResultLinkFactory()
+        cls.lower_result = LowerResultFactory(
+            name="LL Name",
+            result_link=cls.result_link,
+        )
+        cls.indicator = IndicatorBlueprintFactory()
+        cls.applied = AppliedIndicatorFactory(
+            context_code="CC321",
+            indicator=cls.indicator,
+            lower_result=cls.lower_result
+        )
+        cls.url = reverse("applied-indicator")
+
+    def test_search_number(self):
+        response = self.forced_auth_req(
+            "get",
+            self.url,
+            user=self.unicef_staff,
+            data={"search": self.intervention.number[:4]}
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(
+            [int(x["id"]) for x in response.data],
+            [self.applied.pk]
+        )
+
+    def test_search_name(self):
+        response = self.forced_auth_req(
+            "get",
+            self.url,
+            user=self.unicef_staff,
+            data={"search": "LL Name"}
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(
+            [int(x["id"]) for x in response.data],
+            [self.applied.pk]
+        )
+
+    def test_search_context_code(self):
+        response = self.forced_auth_req(
+            "get",
+            self.url,
+            user=self.unicef_staff,
+            data={"search": "CC321"}
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(
+            [int(x["id"]) for x in response.data],
+            [self.applied.pk]
+        )
+
+    def test_search_empty(self):
+        response = self.forced_auth_req(
+            "get",
+            self.url,
+            user=self.unicef_staff,
+            data={"search": "wrong"}
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data, [])
 
 
 class TestAppliedIndicatorExportList(APITenantTestCase):
