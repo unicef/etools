@@ -364,7 +364,7 @@ class TestTransitionToTerminated(EToolsTenantTestCase):
         for terminable_status in terminable_statuses:
             intervention = InterventionFactory(
                 status=terminable_status,
-                in_amendment = True,
+                in_amendment=True,
             )
             with self.assertRaises(TransitionError):
                 transition_to_terminated(intervention)
