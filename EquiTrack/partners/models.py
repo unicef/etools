@@ -2125,6 +2125,13 @@ class InterventionAttachment(TimeStampedModel):
         max_length=1024,
         upload_to=get_intervention_attachments_file_path
     )
+    attachment_file = CodedGenericRelation(
+        Attachment,
+        verbose_name=_('Intervention Attachment'),
+        code='intervention_attachment',
+        blank=True,
+        null=True,
+    )
 
     tracker = FieldTracker()
 
