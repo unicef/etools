@@ -95,7 +95,7 @@ class AttachmentSerializerMixin(object):
     def __init__(self, *args, **kwargs):
         super(AttachmentSerializerMixin, self).__init__(*args, **kwargs)
         if self.instance:
-            self.add_upload_links()
+            self.handle_upload_links()
 
     def get_upload_field_name(self, field_name):
         """Ensure we get valid field name
@@ -108,32 +108,50 @@ class AttachmentSerializerMixin(object):
                 return upload_name
         return None
 
-    def add_upload_links(self):
+    def handle_upload_links(self):
         # if request is post, put, or patch
         # check if attachment field types exist
         # ensure attachment record exists for instance
         # set upload link value
         if self.context["request"].method in ["PATCH", "POST", "PUT"]:
             for field_name, field in self.fields.items():
-                if isinstance(field, AttachmentSingleFileField):
-                    upload_field_name = self.get_upload_field_name(field_name)
-                    if upload_field_name is not None:
-                        attachments = getattr(self.instance, field.source)
-                        if not attachments.exists():
-                            file_type = FileType.objects.get(
-                                code=attachments.core_filters["code"]
-                            )
-                            Attachment.objects.create(
-                                file_type=file_type,
-                                file=None,
-                                code=attachments.core_filters["code"],
-                                content_object=self.instance
-                            )
-                        self.fields[upload_field_name] = AttachmentUploadLinkField(
-                            source=field.source
+                if isinstance(field, serializers.ListSerializer):
+                    for child_name, child in field.child.fields.items():
+                        self.add_upload_links(
+                            self.fields[field_name].child.fields,
+                            field.child.instance,
+                            child,
+                            child_name
                         )
+                else:
+                    self.add_upload_links(
+                        self.fields,
+                        self.instance,
+                        field,
+                        field_name
+                    )
+
+    def add_upload_links(self, fields, instance, field, field_name):
+        if isinstance(field, AttachmentSingleFileField):
+            upload_field_name = self.get_upload_field_name(field_name)
+            if upload_field_name is not None:
+                if instance is not None:
+                    attachments = getattr(instance, field.source)
+                    if not attachments.exists():
+                        file_type = FileType.objects.get(
+                            code=attachments.core_filters["code"]
+                        )
+                        Attachment.objects.create(
+                            file_type=file_type,
+                            file=None,
+                            code=attachments.core_filters["code"],
+                            content_object=instance
+                        )
+                fields[upload_field_name] = AttachmentUploadLinkField(
+                    source=field.source
+                )
 
     def save(self, *args, **kwargs):
         super(AttachmentSerializerMixin, self).save(*args, **kwargs)
-        self.add_upload_links()
+        self.handle_upload_links()
         return self.instance
