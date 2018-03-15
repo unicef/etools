@@ -5,12 +5,16 @@ from __future__ import unicode_literals
 
 from django.db import models
 from django.contrib import admin
+from django.contrib.contenttypes.models import ContentType
+from django.core.urlresolvers import reverse
+from django.utils.safestring import mark_safe
 from django.utils.translation import ugettext_lazy as _
 from django.forms import SelectMultiple
 
 from import_export.admin import ExportMixin
 
 from attachments.admin import AttachmentSingleInline
+from attachments.models import Attachment
 from EquiTrack.admin import SnapshotModelAdmin, ActivityInline
 from EquiTrack.mixins import CountryUsersAdminMixin
 from partners.exports import PartnerExport
@@ -121,6 +125,35 @@ class InterventionPlannedVisitsAdmin(admin.ModelAdmin):
     )
 
 
+class AttachmentFileInline(AttachmentSingleInline):
+    verbose_name_plural = "Attachment"
+
+
+class InterventionAttachmentAdmin(admin.ModelAdmin):
+    model = InterventionAttachment
+    list_display = (
+        'attachment_file',
+        'type',
+    )
+    list_filter = (
+        'intervention',
+    )
+    fields = (
+        'type',
+        'attachment',
+    )
+    inlines = [
+        AttachmentFileInline,
+    ]
+
+    def attachment_file(self, obj):
+        content_type = ContentType.objects.get_for_model(obj)
+        return Attachment.objects.get(
+            object_id=obj.pk,
+            content_type=content_type
+        )
+
+
 class InterventionAttachmentsInline(admin.TabularInline):
     model = InterventionAttachment
     fields = (
@@ -200,6 +233,7 @@ class InterventionAdmin(CountryUsersAdminMixin, HiddenPartnerMixin, SnapshotMode
         'title',
         'total_unicef_cash',
         'total_budget',
+        'attachments_link',
     )
     list_filter = (
         'number',
@@ -213,6 +247,7 @@ class InterventionAdmin(CountryUsersAdminMixin, HiddenPartnerMixin, SnapshotMode
     )
     readonly_fields = (
         'total_budget',
+        'attachments_link',
     )
     filter_horizontal = (
         'sections',
@@ -254,7 +289,7 @@ class InterventionAdmin(CountryUsersAdminMixin, HiddenPartnerMixin, SnapshotMode
         # PlannedVisitsInline,
         # ResultsLinkInline,
         # SectorLocationInline,
-        InterventionAttachmentsInline,
+        # InterventionAttachmentsInline,
         ActivityInline,
         PRCReviewAttachmentInline,
         SignedPDAttachmentInline,
@@ -273,6 +308,17 @@ class InterventionAdmin(CountryUsersAdminMixin, HiddenPartnerMixin, SnapshotMode
     def has_module_permission(self, request):
         return request.user.is_superuser
 
+    def attachments_link(self, obj):
+        url = "{}?intervention__id__exact={}".format(
+            reverse("admin:partners_interventionattachment_changelist"),
+            obj.pk
+        )
+        return mark_safe("<a href='{}'>{}</a>".format(
+            url,
+            "Attachments"
+        ))
+
+    attachments_link.short_description = 'attachments'
 
 class AssessmentReportInline(AttachmentSingleInline):
     verbose_name_plural = "Report"
@@ -620,12 +666,12 @@ admin.site.register(PlannedEngagement, PlannedEngagementAdmin)
 admin.site.register(Agreement, AgreementAdmin)
 admin.site.register(AgreementAmendment, AgreementAmendmentAdmin)
 
-
 admin.site.register(Intervention, InterventionAdmin)
 admin.site.register(InterventionAmendment, InterventionAmendmentsAdmin)
 admin.site.register(InterventionResultLink, InterventionResultsLinkAdmin)
 admin.site.register(InterventionBudget, InterventionBudgetAdmin)
 admin.site.register(InterventionPlannedVisits, InterventionPlannedVisitsAdmin)
+admin.site.register(InterventionAttachment, InterventionAttachmentAdmin)
 # TODO intervention sector locations cleanup
 admin.site.register(InterventionSectorLocationLink, InterventionSectorLocationAdmin)
 
