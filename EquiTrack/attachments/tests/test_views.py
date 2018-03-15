@@ -8,8 +8,8 @@ from rest_framework import status
 
 from attachments.models import Attachment
 from attachments.tests.factories import AttachmentFactory, FileTypeFactory
-from EquiTrack.factories import UserFactory
 from EquiTrack.tests.mixins import APITenantTestCase
+from users.tests.factories import UserFactory
 
 
 class TestFileUploadView(APITenantTestCase):

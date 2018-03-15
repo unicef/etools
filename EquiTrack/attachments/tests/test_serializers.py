@@ -13,16 +13,17 @@ from attachments.serializers import (
     Base64AttachmentSerializer,
 )
 from attachments.tests.factories import AttachmentFactory, FileTypeFactory
-from EquiTrack.factories import UserFactory
 from EquiTrack.tests.cases import EToolsTenantTestCase
+from users.tests.factories import UserFactory
 
 
 class TestAttachmentsModels(EToolsTenantTestCase):
-    def setUp(self):
-        self.file_type = FileTypeFactory()
-        self.file_name = 'simple_file.txt'
+    @classmethod
+    def setUpTestData(cls):
+        cls.file_type = FileTypeFactory()
+        cls.file_name = 'simple_file.txt'
         file_content = 'these are the file contents!'
-        self.base64_file = 'data:text/plain;base64,{}'.format(base64.b64encode(file_content))
+        cls.base64_file = 'data:text/plain;base64,{}'.format(base64.b64encode(file_content))
 
     def test_invalid(self):
         invalid_serializer = Base64AttachmentSerializer(data={

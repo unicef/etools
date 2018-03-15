@@ -7,15 +7,15 @@ from rest_framework import status
 from tablib.core import Dataset
 
 from attachments.tests.factories import AttachmentFactory, FileTypeFactory
-from EquiTrack.factories import (
+from EquiTrack.tests.mixins import APITenantTestCase
+from partners.tests.factories import (
     AgreementAmendmentFactory,
     AgreementFactory,
-    CountryProgrammeFactory,
     PartnerFactory,
     PartnerStaffFactory,
-    UserFactory,
 )
-from EquiTrack.tests.mixins import APITenantTestCase
+from reports.tests.factories import CountryProgrammeFactory
+from users.tests.factories import UserFactory
 
 
 class BaseAgreementModelExportTestCase(APITenantTestCase):
@@ -26,9 +26,7 @@ class BaseAgreementModelExportTestCase(APITenantTestCase):
         cls.amendment_code = "partners_agreement_amendment"
         cls.amendment_file_type = FileTypeFactory(code=cls.amendment_code)
 
-    def setUp(self):
-        super(BaseAgreementModelExportTestCase, self).setUp()
-        self.unicef_staff = UserFactory(is_staff=True)
+        cls.unicef_staff = UserFactory(is_staff=True)
         partner = PartnerFactory(
             partner_type='Government',
             vendor_number='Vendor No',
@@ -48,23 +46,23 @@ class BaseAgreementModelExportTestCase(APITenantTestCase):
             last_assessment_date=datetime.date.today(),
         )
         partnerstaff = PartnerStaffFactory(partner=partner)
-        self.agreement = AgreementFactory(
+        cls.agreement = AgreementFactory(
             partner=partner,
             country_programme=CountryProgrammeFactory(wbs="random WBS"),
             attached_agreement="fake_attachment.pdf",
             start=datetime.date.today(),
             end=datetime.date.today(),
             signed_by_unicef_date=datetime.date.today(),
-            signed_by=self.unicef_staff,
+            signed_by=cls.unicef_staff,
             signed_by_partner_date=datetime.date.today()
         )
-        self.agreement.authorized_officers.add(partnerstaff)
-        self.agreement.save()
+        cls.agreement.authorized_officers.add(partnerstaff)
+        cls.agreement.save()
         AttachmentFactory(
             file="fake_attachment.pdf",
-            content_object=self.agreement,
-            file_type=self.agreement_file_type,
-            code=self.agreement_code,
+            content_object=cls.agreement,
+            file_type=cls.agreement_file_type,
+            code=cls.agreement_code,
         )
 
 

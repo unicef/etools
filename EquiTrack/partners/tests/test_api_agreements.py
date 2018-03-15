@@ -6,12 +6,6 @@ from django.core.urlresolvers import reverse
 from rest_framework import status
 
 from attachments.tests.factories import AttachmentFactory, FileTypeFactory
-from EquiTrack.factories import (
-    PartnerFactory,
-    UserFactory,
-    AgreementFactory,
-    InterventionFactory,
-    CountryProgrammeFactory, GroupFactory)
 from EquiTrack.tests.mixins import APITenantTestCase, URLAssertionMixin
 from partners.models import (
     PartnerType,
@@ -19,7 +13,14 @@ from partners.models import (
     Intervention,
     AgreementAmendment
 )
+from partners.tests.factories import (
+    AgreementFactory,
+    InterventionFactory,
+    PartnerFactory,
+)
+from reports.tests.factories import CountryProgrammeFactory
 from snapshot.models import Activity
+from users.tests.factories import GroupFactory, UserFactory
 
 
 class URLsTestCase(URLAssertionMixin, TestCase):
@@ -38,34 +39,31 @@ class URLsTestCase(URLAssertionMixin, TestCase):
 
 
 class TestAgreementsAPI(APITenantTestCase):
-    fixtures = ['initial_data.json']
-
     @classmethod
     def setUpTestData(cls):
         cls.amendment_code = "partners_agreement_amendment"
         cls.amendment_file_type = FileTypeFactory(code=cls.amendment_code)
 
-    def setUp(self):
-        self.unicef_staff = UserFactory(is_staff=True)
-        self.partnership_manager_user = UserFactory(is_staff=True)
-        self.partnership_manager_user.groups.add(GroupFactory())
+        cls.unicef_staff = UserFactory(is_staff=True)
+        cls.partnership_manager_user = UserFactory(is_staff=True)
+        cls.partnership_manager_user.groups.add(GroupFactory())
 
-        self.partner1 = PartnerFactory(partner_type=PartnerType.CIVIL_SOCIETY_ORGANIZATION)
-        self.country_programme = CountryProgrammeFactory()
-        self.agreement1 = AgreementFactory(partner=self.partner1, signed_by_unicef_date=datetime.date.today())
-        self.intervention = InterventionFactory(agreement=self.agreement1)
-        self.intervention_2 = InterventionFactory(agreement=self.agreement1, document_type=Intervention.PD)
-        self.amendment = AgreementAmendment.objects.create(agreement=self.agreement1,
-                                                           types=[AgreementAmendment.IP_NAME,
-                                                                  AgreementAmendment.CLAUSE],
-                                                           number="001",
-                                                           signed_amendment=None,
-                                                           signed_date=datetime.date.today())
+        cls.partner1 = PartnerFactory(partner_type=PartnerType.CIVIL_SOCIETY_ORGANIZATION)
+        cls.country_programme = CountryProgrammeFactory()
+        cls.agreement1 = AgreementFactory(partner=cls.partner1, signed_by_unicef_date=datetime.date.today())
+        cls.intervention = InterventionFactory(agreement=cls.agreement1)
+        cls.intervention_2 = InterventionFactory(agreement=cls.agreement1, document_type=Intervention.PD)
+        cls.amendment = AgreementAmendment.objects.create(agreement=cls.agreement1,
+                                                          types=[AgreementAmendment.IP_NAME,
+                                                                 AgreementAmendment.CLAUSE],
+                                                          number="001",
+                                                          signed_amendment="application/pdf",
+                                                          signed_date=datetime.date.today())
         AttachmentFactory(
             file="application/pdf",
-            file_type=self.amendment_file_type,
-            code=self.amendment_code,
-            content_object=self.amendment,
+            file_type=cls.amendment_file_type,
+            code=cls.amendment_code,
+            content_object=cls.amendment,
         )
 
     def run_request_list_ep(self, data={}, user=None, method='post'):

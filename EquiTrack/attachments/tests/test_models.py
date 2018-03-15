@@ -6,7 +6,8 @@ from django.db import connection
 
 from attachments import models
 from attachments.tests.factories import AttachmentFactory, FileTypeFactory
-from EquiTrack.factories import (
+from EquiTrack.tests.cases import EToolsTenantTestCase
+from partners.tests.factories import (
     AgreementAmendmentFactory,
     AgreementFactory,
     AssessmentFactory,
@@ -15,7 +16,6 @@ from EquiTrack.factories import (
     InterventionFactory,
     PartnerFactory,
 )
-from EquiTrack.tests.cases import EToolsTenantTestCase
 from partners import models as partner_models
 
 
@@ -191,8 +191,9 @@ class TestFileType(EToolsTenantTestCase):
 
 
 class TestAttachments(EToolsTenantTestCase):
-    def setUp(self):
-        self.simple_object = FileTypeFactory()
+    @classmethod
+    def setUpTestData(cls):
+        cls.simple_object = FileTypeFactory()
 
     def test_str(self):
         instance = AttachmentFactory(

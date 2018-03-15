@@ -8,20 +8,20 @@ import datetime
 from django.test import override_settings
 
 from attachments.tests.factories import AttachmentFactory, FileTypeFactory
-from EquiTrack.factories import (
+from EquiTrack.tests.cases import EToolsTenantTestCase
+from management.issues import checks
+from management.models import FlaggedIssue
+from partners.models import Agreement, Intervention, InterventionResultLink
+from partners.tests.factories import (
     AgreementAmendmentFactory,
     AgreementFactory,
     CountryProgrammeFactory,
     InterventionFactory,
-    ResultFactory,
-    UserFactory,
+    InterventionAmendmentFactory,
 )
-from EquiTrack.tests.cases import EToolsTenantTestCase
-from management.issues import checks
-from management.models import FlaggedIssue
-from management.tests.factories import InterventionAmendmentFactory
-from partners.models import Agreement, Intervention, InterventionResultLink
 from partners.validation.interventions import InterventionValid
+from reports.tests.factories import ResultFactory
+from users.tests.factories import UserFactory
 
 
 class TestActivePCANoSignedDocCheck(EToolsTenantTestCase):
