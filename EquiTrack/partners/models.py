@@ -2128,7 +2128,7 @@ class InterventionAttachment(TimeStampedModel):
     attachment_file = CodedGenericRelation(
         Attachment,
         verbose_name=_('Intervention Attachment'),
-        code='intervention_attachment',
+        code='partners_intervention_attachment',
         blank=True,
         null=True,
     )
