@@ -763,7 +763,8 @@ class TestPartnershipViews(APITenantTestCase):
                                      partner_manager=cls.partner_staff_member)
         cls.intervention = InterventionFactory(agreement=agreement)
 
-        cls.result = ResultFactory()
+        cls.result_type = ResultTypeFactory()
+        cls.result = ResultFactory(result_type=cls.result_type)
         cls.partnership_budget = InterventionBudget.objects.create(
             intervention=cls.intervention,
             unicef_cash=100,
