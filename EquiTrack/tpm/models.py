@@ -16,7 +16,7 @@ from activities.models import Activity
 from attachments.models import Attachment
 from EquiTrack.urlresolvers import build_frontend_url
 from EquiTrack.utils import get_environment
-from EquiTrack.utils.wrappers import GroupWrapper
+from EquiTrack.wrappers import GroupWrapper
 from generics.fields import CodedGenericRelation
 from notification.models import Notification
 from permissions.models.models import StatusBasePermission

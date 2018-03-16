@@ -28,7 +28,7 @@ from audit.transitions.conditions import (
 from audit.transitions.serializers import EngagementCancelSerializer
 from EquiTrack.urlresolvers import build_frontend_url
 from EquiTrack.utils import get_environment
-from EquiTrack.utils.wrappers import GroupWrapper
+from EquiTrack.wrappers import GroupWrapper
 from generics.fields import CodedGenericRelation
 from notification.models import Notification
 from partners.models import PartnerStaffMember, PartnerOrganization
