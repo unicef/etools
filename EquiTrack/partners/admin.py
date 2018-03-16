@@ -320,6 +320,7 @@ class InterventionAdmin(CountryUsersAdminMixin, HiddenPartnerMixin, SnapshotMode
 
     attachments_link.short_description = 'attachments'
 
+
 class AssessmentReportInline(AttachmentSingleInline):
     verbose_name_plural = "Report"
 
