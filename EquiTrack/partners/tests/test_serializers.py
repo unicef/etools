@@ -703,7 +703,7 @@ class TestAgreementSerializerTransitions(AgreementCreateUpdateSerializerBase):
     def test_ensure_field_read_write_status(self):
         """Ensure that the fields I expect to be read-only are read-only; also confirm the converse"""
         expected_read_only_fields = ('id', 'created', 'modified', 'partner_name', 'amendments', 'unicef_signatory',
-                                     'partner_signatory', 'agreement_number', 'attachment')
+                                     'partner_signatory', 'agreement_number', 'attachment', 'attached_agreement_file')
 
         serializer = AgreementCreateUpdateSerializer()
 
@@ -731,7 +731,7 @@ class TestPartnerOrganizationDetailSerializer(EToolsTenantTestCase):
             'hidden', u'id', 'interventions', 'last_assessment_date', 'modified', 'name', 'net_ct_cy', 'partner_type',
             'phone_number', 'planned_engagement', 'postal_code', 'rating', 'reported_cy', 'shared_with', 'short_name',
             'staff_members', 'street_address', 'total_ct_cp', 'total_ct_cy', 'total_ct_ytd', 'type_of_assessment',
-            'vendor_number', 'vision_synced'
+            'vendor_number', 'vision_synced', 'core_values_assessment_file',
         ])
 
         six.assertCountEqual(self, data['planned_engagement'].keys(), [

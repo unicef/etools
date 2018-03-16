@@ -276,6 +276,7 @@ class PartnerOrganizationDetailSerializer(serializers.ModelSerializer):
     assessments = AssessmentDetailSerializer(many=True, read_only=True)
     planned_engagement = PlannedEngagementSerializer(read_only=True)
     hact_values = serializers.SerializerMethodField(read_only=True)
+    core_values_assessment_file = serializers.FileField(source='core_values_assessment', read_only=True)
     core_values_assessment_attachment = AttachmentSingleFileField(read_only=True)
     interventions = serializers.SerializerMethodField(read_only=True)
     hact_min_requirements = serializers.JSONField(read_only=True)
@@ -304,6 +305,7 @@ class PartnerOrganizationCreateUpdateSerializer(AttachmentSerializerMixin, Snaps
     staff_members = PartnerStaffMemberNestedSerializer(many=True, read_only=True)
     planned_engagement = PlannedEngagementNestedSerializer(read_only=True)
     hact_values = serializers.SerializerMethodField(read_only=True)
+    core_values_assessment_file = serializers.FileField(source='core_values_assessment', read_only=True)
     core_values_assessment_attachment = AttachmentSingleFileField(read_only=True)
     hidden = serializers.BooleanField(read_only=True)
 

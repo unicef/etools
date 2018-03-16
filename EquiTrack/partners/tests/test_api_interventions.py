@@ -207,7 +207,7 @@ class TestInterventionsAPI(APITenantTestCase):
         self.assertEqual(status_code, status.HTTP_201_CREATED)
         self.assertTrue(response["attachments"])
         for attachment in response["attachments"]:
-            self.assertTrue(attachment["attachment_file_upload_link"])
+            self.assertTrue(attachment["attachment_document_upload_link"])
 
     def test_add_one_valid_fr_on_create_pd(self):
         self.assertFalse(Activity.objects.exists())
@@ -1249,7 +1249,7 @@ class TestInterventionAttachmentListView(APITenantTestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(len(response.data), 1)
         self.assertTrue(
-            response.data[0]["attachment_file"].endswith(
+            response.data[0]["attachment_document"].endswith(
                 self.attachment_1.filename
             )
         )
@@ -1296,7 +1296,7 @@ class TestInterventionAttachmentListView(APITenantTestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(len(response.data), 1)
         self.assertTrue(
-            response.data[0]["attachment_file"].endswith(
+            response.data[0]["attachment_document"].endswith(
                 self.attachment_1.filename
             )
         )
@@ -1321,7 +1321,7 @@ class TestInterventionAttachmentListView(APITenantTestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(len(response.data), 1)
         self.assertTrue(
-            response.data[0]["attachment_file"].endswith(
+            response.data[0]["attachment_document"].endswith(
                 self.attachment_1.filename
             )
         )

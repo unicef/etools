@@ -24,7 +24,11 @@ class AgreementAmendmentExportSerializer(serializers.ModelSerializer):
 
 
 class AgreementAmendmentExportFlatSerializer(AgreementAmendmentExportSerializer):
-    signed_amendment_attachment = AttachmentSingleFileField(read_only=True)
+    signed_amendment_file = serializers.FileField(
+        source="signed_amendment",
+        read_only=True
+    )
+    # signed_amendment_attachment = AttachmentSingleFileField(read_only=True)
 
 
 class AgreementExportSerializer(serializers.ModelSerializer):
@@ -84,10 +88,15 @@ class AgreementExportSerializer(serializers.ModelSerializer):
 
 
 class AgreementExportFlatSerializer(AgreementExportSerializer):
-    attachment = AttachmentSingleFileField(
+    attached_agreement_file = serializers.FileField(
         label=_("Attached Agreement"),
+        source="attached_agreement",
         read_only=True
     )
+    # attachment = AttachmentSingleFileField(
+    #     label=_("Attached Agreement"),
+    #     read_only=True
+    # )
     country_programme_name = serializers.CharField(
         label=_("Country Programme"),
         source='country_programme.name',

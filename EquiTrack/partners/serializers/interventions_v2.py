@@ -51,6 +51,7 @@ class InterventionBudgetCUSerializer(serializers.ModelSerializer):
 
 class InterventionAmendmentCUSerializer(AttachmentSerializerMixin, serializers.ModelSerializer):
     amendment_number = serializers.CharField(read_only=True)
+    signed_amendment_file = serializers.FileField(source="signed_amendment", read_only=True)
     signed_amendment_attachment = AttachmentSingleFileField(read_only=True)
 
     class Meta:
@@ -252,7 +253,8 @@ class InterventionAttachmentSerializer(AttachmentSerializerMixin, serializers.Mo
         read_only=True
     )
     type_name = serializers.CharField(source="type.name", read_only=True)
-    attachment_file = AttachmentSingleFileField(read_only=True)
+    attachment_file = serializers.FileField(source="attachment", read_only=True)
+    attachment_document = AttachmentSingleFileField(source="attachment_file", read_only=True)
 
     class Meta:
         model = InterventionAttachment
@@ -264,6 +266,7 @@ class InterventionAttachmentSerializer(AttachmentSerializerMixin, serializers.Mo
             'type',
             'type_name',
             'attachment_file',
+            'attachment_document',
         )
 
 
@@ -451,7 +454,9 @@ class InterventionCreateUpdateSerializer(AttachmentSerializerMixin, SnapshotMode
 
     planned_budget = InterventionBudgetCUSerializer(read_only=True)
     partner = serializers.CharField(source='agreement.partner.name', read_only=True)
+    prc_review_document_file = serializers.FileField(source='prc_review_document', read_only=True)
     prc_review_attachment = AttachmentSingleFileField(read_only=True)
+    signed_pd_document_file = serializers.FileField(source='signed_pd_document', read_only=True)
     signed_pd_attachment = AttachmentSingleFileField(read_only=True)
     planned_visits = PlannedVisitsNestedSerializer(many=True, read_only=True, required=False)
     attachments = InterventionAttachmentSerializer(many=True, read_only=True, required=False)
@@ -497,7 +502,9 @@ class InterventionDetailSerializer(AttachmentSerializerMixin, serializers.ModelS
     planned_budget = InterventionBudgetCUSerializer(read_only=True)
     partner = serializers.CharField(source='agreement.partner.name')
     partner_id = serializers.CharField(source='agreement.partner.id', read_only=True)
+    prc_review_document_file = serializers.FileField(source='prc_review_document', read_only=True)
     prc_review_attachment = AttachmentSingleFileField(read_only=True)
+    signed_pd_document_file = serializers.FileField(source='signed_pd_document', read_only=True)
     signed_pd_attachment = AttachmentSingleFileField(read_only=True)
     amendments = InterventionAmendmentCUSerializer(many=True, read_only=True, required=False)
     planned_visits = PlannedVisitsNestedSerializer(many=True, read_only=True, required=False)
@@ -536,9 +543,11 @@ class InterventionDetailSerializer(AttachmentSerializerMixin, serializers.ModelS
     class Meta:
         model = Intervention
         fields = (
-            "id", 'frs', "partner", "agreement", "document_type", "number", "prc_review_attachment", "frs_details",
-            "signed_pd_attachment", "title", "status", "start", "end", "submission_date_prc", "review_date_prc",
-            "submission_date", "submitted_to_prc", "signed_by_unicef_date",
+            "id", 'frs', "partner", "agreement", "document_type", "number", "prc_review_document_file",
+            "prc_review_attachment", "frs_details",
+            "signed_pd_document_file", "signed_pd_attachment", "title", "status", "start", "end", "submission_date_prc",
+            "review_date_prc",
+            "submission_date", "prc_review_document", "submitted_to_prc", "signed_pd_document", "signed_by_unicef_date",
             "unicef_signatory", "unicef_focal_points", "partner_focal_points", "partner_authorized_officer_signatory",
             "offices", "planned_visits", "population_focus", "signed_by_partner_date", "created", "modified",
             "planned_budget", "result_links", 'country_programme', 'metadata', 'contingency_pd', "amendments",

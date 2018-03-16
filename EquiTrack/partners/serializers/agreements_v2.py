@@ -20,6 +20,7 @@ class AgreementAmendmentCreateUpdateSerializer(AttachmentSerializerMixin, serial
     number = serializers.CharField(read_only=True)
     created = serializers.DateTimeField(read_only=True)
     modified = serializers.DateTimeField(read_only=True)
+    signed_amendment_file = serializers.FileField(source="signed_amendment", read_only=True)
     signed_amendment_attachment = AttachmentSingleFileField(read_only=True)
 
     class Meta:
@@ -62,6 +63,7 @@ class AgreementDetailSerializer(AttachmentSerializerMixin, serializers.ModelSeri
     amendments = AgreementAmendmentCreateUpdateSerializer(many=True, read_only=True)
     unicef_signatory = SimpleUserSerializer(source='signed_by')
     partner_signatory = SimpleStaffMemberSerializer(source='partner_manager')
+    attached_agreement_file = serializers.FileField(source="attached_agreement", read_only=True)
     attachment = AttachmentSingleFileField(read_only=True)
     permissions = serializers.SerializerMethodField(read_only=True)
 
@@ -86,6 +88,7 @@ class AgreementCreateUpdateSerializer(AttachmentSerializerMixin, SnapshotModelSe
     unicef_signatory = SimpleUserSerializer(source='signed_by', read_only=True)
     partner_signatory = SimpleStaffMemberSerializer(source='partner_manager', read_only=True)
     agreement_number = serializers.CharField(read_only=True)
+    attached_agreement_file = serializers.FileField(source="attached_agreement", read_only=True)
     attachment = AttachmentSingleFileField(read_only=True)
 
     class Meta:
