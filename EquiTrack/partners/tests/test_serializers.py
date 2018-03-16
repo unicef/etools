@@ -3,6 +3,7 @@ from __future__ import absolute_import, division, print_function, unicode_litera
 
 import datetime
 
+from django.utils import six
 from rest_framework import serializers
 
 from attachments.tests.factories import AttachmentFactory, FileTypeFactory
@@ -723,7 +724,7 @@ class TestPartnerOrganizationDetailSerializer(EToolsTenantTestCase):
         serializer = PartnerOrganizationDetailSerializer(instance=self.partner)
 
         data = serializer.data
-        self.assertItemsEqual(data.keys(), [
+        six.assertCountEqual(self, data.keys(), [
             'address', 'alternate_id', 'alternate_name', 'assessments', 'basis_for_risk_rating', 'blocked', 'city',
             'core_values_assessment', 'core_values_assessment_date', 'core_values_assessment_attachment', 'country',
             'created', 'cso_type', 'deleted_flag', 'description', 'email', 'hact_min_requirements', 'hact_values',
@@ -733,12 +734,12 @@ class TestPartnerOrganizationDetailSerializer(EToolsTenantTestCase):
             'vendor_number', 'vision_synced'
         ])
 
-        self.assertItemsEqual(data['planned_engagement'].keys(), [
+        six.assertCountEqual(self, data['planned_engagement'].keys(), [
             'id', 'scheduled_audit', 'special_audit', 'spot_check_follow_up_q1', 'spot_check_follow_up_q2',
             'spot_check_follow_up_q3', 'spot_check_follow_up_q4', 'spot_check_mr',
             'total_spot_check_follow_up_required', 'spot_check_required', 'required_audit'
         ])
 
         self.assertEquals(len(data['staff_members']), 1)
-        self.assertItemsEqual(data['staff_members'][0].keys(), [
+        six.assertCountEqual(self, data['staff_members'][0].keys(), [
             'active', 'created', 'email', 'first_name', u'id', 'last_name', 'modified', 'partner', 'phone', 'title'])
