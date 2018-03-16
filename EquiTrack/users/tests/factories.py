@@ -15,6 +15,7 @@ from users import models
 class GroupFactory(factory.django.DjangoModelFactory):
     class Meta:
         model = Group
+        django_get_or_create = ('name',)
 
     name = "Partnership Manager"
 
