@@ -10,6 +10,7 @@ from mock import patch, Mock
 from tenant_schemas.utils import schema_context
 
 from django.conf import settings
+from django.utils import six
 
 from EquiTrack.tests.cases import SCHEMA_NAME, BaseTenantTestCase
 from users import tasks
@@ -56,7 +57,7 @@ class TestUserMapper(BaseTenantTestCase):
             country = CountryFactory(business_area_code=area_code)
             res = self.mapper._get_country(area_code)
         self.assertEqual(res, country)
-        self.assertItemsEqual(self.mapper.countries, {
+        six.assertCountEqual(self, self.mapper.countries, {
             area_code: country,
             "UAT": country_uat
         })
@@ -72,7 +73,7 @@ class TestUserMapper(BaseTenantTestCase):
         }
         res = self.mapper._get_country(area_code)
         self.assertEqual(res, country)
-        self.assertItemsEqual(self.mapper.countries, {
+        six.assertCountEqual(self, self.mapper.countries, {
             "UAT": country_uat,
             area_code: country,
         })

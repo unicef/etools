@@ -8,7 +8,7 @@ from django.contrib.auth.models import Group
 from django.core.cache import cache
 from django.core.urlresolvers import reverse, resolve
 from django.db import connection
-from django.utils import timezone
+from django.utils import six, timezone
 from django.core.files.uploadedfile import SimpleUploadedFile
 
 from rest_framework import status
@@ -205,7 +205,7 @@ class TestInterventionsAPI(BaseTenantTestCase):
         status_code, response = self.run_request_list_ep(data, user=self.partnership_manager_user)
 
         self.assertEqual(status_code, status.HTTP_201_CREATED)
-        self.assertItemsEqual(response['frs'], frs_data)
+        six.assertCountEqual(self, response['frs'], frs_data)
         self.assertEqual(
             Activity.objects.filter(action=Activity.CREATE).count(),
             1
@@ -225,7 +225,7 @@ class TestInterventionsAPI(BaseTenantTestCase):
         status_code, response = self.run_request_list_ep(data, user=self.partnership_manager_user)
 
         self.assertEqual(status_code, status.HTTP_201_CREATED)
-        self.assertItemsEqual(response['frs'], frs_data)
+        six.assertCountEqual(self, response['frs'], frs_data)
         self.assertEqual(
             Activity.objects.filter(action=Activity.CREATE).count(),
             1
@@ -249,7 +249,7 @@ class TestInterventionsAPI(BaseTenantTestCase):
         status_code, response = self.run_request_list_ep(data, user=self.partnership_manager_user)
 
         self.assertEqual(status_code, status.HTTP_201_CREATED)
-        self.assertItemsEqual(response['frs'], frs_data)
+        six.assertCountEqual(self, response['frs'], frs_data)
         self.assertEqual(response['frs_details']['total_actual_amt'],
                          float(sum([self.fr_1.actual_amt_local, self.fr_2.actual_amt_local])))
         self.assertEqual(response['frs_details']['total_outstanding_amt'],
@@ -276,7 +276,7 @@ class TestInterventionsAPI(BaseTenantTestCase):
         status_code, response = self.run_request(self.intervention_2.id, data, method='patch')
 
         self.assertEqual(status_code, status.HTTP_200_OK)
-        self.assertItemsEqual(response['frs'], frs_data)
+        six.assertCountEqual(self, response['frs'], frs_data)
         self.assertEqual(response['frs_details']['total_actual_amt'],
                          float(sum([self.fr_1.actual_amt_local, self.fr_2.actual_amt_local])))
         self.assertEqual(response['frs_details']['total_outstanding_amt'],
@@ -292,7 +292,7 @@ class TestInterventionsAPI(BaseTenantTestCase):
         self.assertIn("frs", activity.change)
         frs = activity.change["frs"]
         self.assertEqual(frs["before"], [])
-        self.assertItemsEqual(frs["after"], [self.fr_1.pk, self.fr_2.pk])
+        six.assertCountEqual(self, frs["after"], [self.fr_1.pk, self.fr_2.pk])
         self.assertEqual(activity.by_user, self.partnership_manager_user)
 
     def test_remove_an_fr_from_pd(self):
@@ -304,7 +304,7 @@ class TestInterventionsAPI(BaseTenantTestCase):
         status_code, response = self.run_request(self.intervention_2.id, data, method='patch')
 
         self.assertEqual(status_code, status.HTTP_200_OK)
-        self.assertItemsEqual(response['frs'], frs_data)
+        six.assertCountEqual(self, response['frs'], frs_data)
         self.assertEqual(
             Activity.objects.filter(action=Activity.UPDATE).count(),
             1
@@ -318,7 +318,7 @@ class TestInterventionsAPI(BaseTenantTestCase):
         status_code, response = self.run_request(self.intervention_2.id, data, method='patch')
 
         self.assertEqual(status_code, status.HTTP_200_OK)
-        self.assertItemsEqual(response['frs'], frs_data)
+        six.assertCountEqual(self, response['frs'], frs_data)
         self.assertEqual(
             Activity.objects.filter(action=Activity.UPDATE).count(),
             2
@@ -337,7 +337,7 @@ class TestInterventionsAPI(BaseTenantTestCase):
                                                  user=self.partnership_manager_user)
 
         self.assertEqual(status_code, status.HTTP_200_OK)
-        self.assertItemsEqual(response['frs'], frs_data)
+        six.assertCountEqual(self, response['frs'], frs_data)
         self.assertTrue(Activity.objects.exists())
 
     def test_fail_add_used_fr_on_pd(self):
@@ -365,12 +365,12 @@ class TestInterventionsAPI(BaseTenantTestCase):
         }
         status_code, response = self.run_request(self.intervention_2.id, data, method='patch')
         self.assertEqual(status_code, status.HTTP_200_OK)
-        self.assertItemsEqual(response['frs'], frs_data)
+        six.assertCountEqual(self, response['frs'], frs_data)
         self.assertTrue(Activity.objects.exists())
 
         status_code, response = self.run_request(self.intervention_2.id, data, method='patch')
         self.assertEqual(status_code, status.HTTP_200_OK)
-        self.assertItemsEqual(response['frs'], frs_data)
+        six.assertCountEqual(self, response['frs'], frs_data)
         self.assertEqual(Activity.objects.all().count(), 2)
 
     def test_patch_title_fail_as_unicef_user(self):
@@ -394,7 +394,7 @@ class TestInterventionsAPI(BaseTenantTestCase):
         self.assertEqual(status_code, status.HTTP_200_OK)
 
         # all fields are there
-        self.assertItemsEqual(self.ALL_FIELDS, response['permissions']['edit'].keys())
+        six.assertCountEqual(self, self.ALL_FIELDS, response['permissions']['edit'].keys())
         edit_permissions = response['permissions']['edit']
         required_permissions = response['permissions']['required']
 
@@ -403,10 +403,10 @@ class TestInterventionsAPI(BaseTenantTestCase):
         del edit_permissions["sector_locations"]
         del required_permissions["sector_locations"]
 
-        self.assertItemsEqual(self.EDITABLE_FIELDS['draft'],
-                              [perm for perm in edit_permissions if edit_permissions[perm]])
-        self.assertItemsEqual(self.REQUIRED_FIELDS['draft'],
-                              [perm for perm in required_permissions if required_permissions[perm]])
+        six.assertCountEqual(self, self.EDITABLE_FIELDS['draft'],
+                             [perm for perm in edit_permissions if edit_permissions[perm]])
+        six.assertCountEqual(self, self.REQUIRED_FIELDS['draft'],
+                             [perm for perm in required_permissions if required_permissions[perm]])
 
     @skip('add test after permissions file is ready')
     def test_permissions_for_intervention_status_active(self):
@@ -418,13 +418,13 @@ class TestInterventionsAPI(BaseTenantTestCase):
         self.assertEqual(status_code, status.HTTP_200_OK)
 
         # all fields are there
-        self.assertItemsEqual(self.ALL_FIELDS, response['permissions']['edit'].keys())
+        six.assertCountEqual(self, self.ALL_FIELDS, response['permissions']['edit'].keys())
         edit_permissions = response['permissions']['edit']
         required_permissions = response['permissions']['required']
-        self.assertItemsEqual(self.EDITABLE_FIELDS['signed'],
-                              [perm for perm in edit_permissions if edit_permissions[perm]])
-        self.assertItemsEqual(self.REQUIRED_FIELDS['signed'],
-                              [perm for perm in required_permissions if required_permissions[perm]])
+        six.assertCountEqual(self, self.EDITABLE_FIELDS['signed'],
+                             [perm for perm in edit_permissions if edit_permissions[perm]])
+        six.assertCountEqual(self, self.REQUIRED_FIELDS['signed'],
+                             [perm for perm in required_permissions if required_permissions[perm]])
 
     def test_list_interventions(self):
         EXPECTED_QUERIES = 10

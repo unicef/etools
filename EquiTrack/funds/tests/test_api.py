@@ -6,6 +6,7 @@ from __future__ import unicode_literals
 from unittest import TestCase
 
 from django.core.urlresolvers import reverse
+from django.utils import six
 from rest_framework import status
 from tablib.core import Dataset
 
@@ -246,7 +247,7 @@ class TestGrantExportList(BaseTenantTestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         dataset = Dataset().load(response.content, 'csv')
         self.assertEqual(dataset.height, 1)
-        self.assertItemsEqual(dataset._get_headers(), [
+        six.assertCountEqual(self, dataset._get_headers(), [
             "Description",
             "Donor",
             "Expiry",
@@ -268,7 +269,7 @@ class TestGrantExportList(BaseTenantTestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         dataset = Dataset().load(response.content, 'csv')
         self.assertEqual(dataset.height, 1)
-        self.assertItemsEqual(dataset._get_headers(), [
+        six.assertCountEqual(self, dataset._get_headers(), [
             "Description",
             "Donor",
             "Expiry",
@@ -309,7 +310,7 @@ class TestDonorExportList(BaseTenantTestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         dataset = Dataset().load(response.content, 'csv')
         self.assertEqual(dataset.height, 1)
-        self.assertItemsEqual(dataset._get_headers(), [
+        six.assertCountEqual(self, dataset._get_headers(), [
             "Grant",
             "ID",
             "Name",
@@ -329,7 +330,7 @@ class TestDonorExportList(BaseTenantTestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         dataset = Dataset().load(response.content, 'csv')
         self.assertEqual(dataset.height, 1)
-        self.assertItemsEqual(dataset._get_headers(), [
+        six.assertCountEqual(self, dataset._get_headers(), [
             "Grant",
             "ID",
             "Name",
