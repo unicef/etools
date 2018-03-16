@@ -18,11 +18,12 @@ from attachments.tests.factories import (
     AttachmentFactory,
     FileTypeFactory as AttachmentFileTypeFactory
 )
-from EquiTrack.tests.mixins import APITenantTestCase, URLAssertionMixin
-from locations.tests.factories import LocationFactory
 from environment.helpers import tenant_switch_is_active
 from environment.models import TenantSwitch
 from environment.tests.factories import TenantSwitchFactory
+from EquiTrack.tests.cases import BaseTenantTestCase
+from EquiTrack.tests.mixins import URLAssertionMixin
+from locations.tests.factories import LocationFactory
 from partners.tests.test_utils import setup_intervention_test_data
 from partners.models import (
     Intervention,
@@ -81,7 +82,7 @@ class URLsTestCase(URLAssertionMixin, TestCase):
         self.assertIntParamRegexes(names_and_paths, 'partners_api:')
 
 
-class TestInterventionsAPI(APITenantTestCase):
+class TestInterventionsAPI(BaseTenantTestCase):
     EDITABLE_FIELDS = {
         'draft': ["status", "attachments", "prc_review_document", 'travel_activities',
                   "partner_authorized_officer_signatory", "partner_focal_points", "id",
@@ -508,7 +509,7 @@ class TestInterventionsAPI(APITenantTestCase):
         self.assertEqual(len(response), 4 + EXTRA_INTERVENTIONS)
 
 
-class TestAPIInterventionResultLinkListView(APITenantTestCase):
+class TestAPIInterventionResultLinkListView(BaseTenantTestCase):
     '''Exercise the list view for InterventionResultLinkListCreateView'''
     @classmethod
     def setUpTestData(cls):
@@ -589,7 +590,7 @@ class TestAPIInterventionResultLinkListView(APITenantTestCase):
         self.assertResponseFundamentals(response)
 
 
-class TestAPIInterventionResultLinkCreateView(APITenantTestCase):
+class TestAPIInterventionResultLinkCreateView(BaseTenantTestCase):
     '''Exercise the create view for InterventionResultLinkListCreateView'''
     @classmethod
     def setUpTestData(cls):
@@ -641,7 +642,7 @@ class TestAPIInterventionResultLinkCreateView(APITenantTestCase):
         self.assertResponseFundamentals(response)
 
 
-class TestAPIInterventionResultLinkRetrieveView(APITenantTestCase):
+class TestAPIInterventionResultLinkRetrieveView(BaseTenantTestCase):
     '''Exercise the retrieve view for InterventionResultLinkUpdateView'''
     @classmethod
     def setUpTestData(cls):
@@ -703,7 +704,7 @@ class TestAPIInterventionResultLinkRetrieveView(APITenantTestCase):
         self.assertResponseFundamentals(response)
 
 
-class TestAPIInterventionResultLinkUpdateView(APITenantTestCase):
+class TestAPIInterventionResultLinkUpdateView(BaseTenantTestCase):
     '''Exercise the update view for InterventionResultLinkUpdateView'''
     @classmethod
     def setUpTestData(cls):
@@ -756,7 +757,7 @@ class TestAPIInterventionResultLinkUpdateView(APITenantTestCase):
         self.assertResponseFundamentals(response)
 
 
-class TestAPIInterventionResultLinkDeleteView(APITenantTestCase):
+class TestAPIInterventionResultLinkDeleteView(BaseTenantTestCase):
     '''Exercise the delete view for InterventionResultLinkUpdateView'''
     @classmethod
     def setUpTestData(cls):
@@ -804,7 +805,7 @@ class TestAPIInterventionResultLinkDeleteView(APITenantTestCase):
         self.assertResponseFundamentals(response)
 
 
-class TestAPIInterventionLowerResultListView(APITenantTestCase):
+class TestAPIInterventionLowerResultListView(BaseTenantTestCase):
     '''Exercise the list view for InterventionLowerResultListCreateView'''
     @classmethod
     def setUpClass(cls):
@@ -881,7 +882,7 @@ class TestAPIInterventionLowerResultListView(APITenantTestCase):
         self.assertResponseFundamentals(response)
 
 
-class TestAPIInterventionLowerResultCreateView(APITenantTestCase):
+class TestAPIInterventionLowerResultCreateView(BaseTenantTestCase):
     '''Exercise the create view for InterventionLowerResultListCreateView'''
     @classmethod
     def setUpClass(cls):
@@ -952,7 +953,7 @@ class TestAPIInterventionLowerResultCreateView(APITenantTestCase):
         self.assertNotEqual(response_json.get('code'), 'ZZZ')
 
 
-class TestAPIInterventionIndicatorsListView(APITenantTestCase):
+class TestAPIInterventionIndicatorsListView(BaseTenantTestCase):
     '''Exercise the list view for InterventionIndicatorsListView (these are AppliedIndicator instances)'''
     @classmethod
     def setUpClass(cls):
@@ -1035,7 +1036,7 @@ class TestAPIInterventionIndicatorsListView(APITenantTestCase):
         self.assertResponseFundamentals(response)
 
 
-class TestAPInterventionIndicatorsCreateView(APITenantTestCase):
+class TestAPInterventionIndicatorsCreateView(BaseTenantTestCase):
     '''Exercise the create view for InterventionIndicatorsListView (these are AppliedIndicator instances)'''
     @classmethod
     def setUpClass(cls):
@@ -1130,7 +1131,7 @@ class TestAPInterventionIndicatorsCreateView(APITenantTestCase):
                          ['This indicator is already being monitored for this Result'])
 
 
-class TestInterventionPlannedVisitsDeleteView(APITenantTestCase):
+class TestInterventionPlannedVisitsDeleteView(BaseTenantTestCase):
     @classmethod
     def setUpTestData(cls):
         cls.unicef_staff = UserFactory(is_staff=True)
@@ -1171,7 +1172,7 @@ class TestInterventionPlannedVisitsDeleteView(APITenantTestCase):
         self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
 
 
-class TestInterventionAttachmentListView(APITenantTestCase):
+class TestInterventionAttachmentListView(BaseTenantTestCase):
     @classmethod
     def setUpTestData(cls):
         cls.unicef_staff = UserFactory(is_staff=True)
@@ -1341,7 +1342,7 @@ class TestInterventionAttachmentListView(APITenantTestCase):
         self.assertEqual(len(response.data), 2)
 
 
-class TestInterventionAttachmentDeleteView(APITenantTestCase):
+class TestInterventionAttachmentDeleteView(BaseTenantTestCase):
     @classmethod
     def setUpTestData(cls):
         cls.unicef_staff = UserFactory(is_staff=True)
@@ -1383,7 +1384,7 @@ class TestInterventionAttachmentDeleteView(APITenantTestCase):
         self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
 
 
-class TestInterventionResultListAPIView(APITenantTestCase):
+class TestInterventionResultListAPIView(BaseTenantTestCase):
     @classmethod
     def setUpTestData(cls):
         cls.unicef_staff = UserFactory(is_staff=True)
@@ -1452,7 +1453,7 @@ class TestInterventionResultListAPIView(APITenantTestCase):
         self.assertEqual(first["id"], self.link.pk)
 
 
-class TestInterventionIndicatorListAPIView(APITenantTestCase):
+class TestInterventionIndicatorListAPIView(BaseTenantTestCase):
     @classmethod
     def setUpTestData(cls):
         cls.unicef_staff = UserFactory(is_staff=True)
@@ -1498,7 +1499,7 @@ class TestInterventionIndicatorListAPIView(APITenantTestCase):
         self.assertFalse(response_json)
 
 
-class TestInterventionResultLinkDeleteView(APITenantTestCase):
+class TestInterventionResultLinkDeleteView(BaseTenantTestCase):
     @classmethod
     def setUpTestData(cls):
         cls.unicef_staff = UserFactory(is_staff=True)
@@ -1540,7 +1541,7 @@ class TestInterventionResultLinkDeleteView(APITenantTestCase):
         self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
 
 
-class TestInterventionAmendmentListAPIView(APITenantTestCase):
+class TestInterventionAmendmentListAPIView(BaseTenantTestCase):
     @classmethod
     def setUpTestData(cls):
         cls.unicef_staff = UserFactory(is_staff=True)
@@ -1596,7 +1597,7 @@ class TestInterventionAmendmentListAPIView(APITenantTestCase):
         self.assertFalse(response_json)
 
 
-class TestInterventionAmendmentCreateAPIView(APITenantTestCase):
+class TestInterventionAmendmentCreateAPIView(BaseTenantTestCase):
     def setUp(self):
         super(TestInterventionAmendmentCreateAPIView, self).setUp()
 
@@ -1717,7 +1718,7 @@ class TestInterventionAmendmentCreateAPIView(APITenantTestCase):
         return self.forced_auth_req('post', self.url, user=user, data=data, request_format=request_format, **kwargs)
 
 
-class TestInterventionAmendmentDeleteView(APITenantTestCase):
+class TestInterventionAmendmentDeleteView(BaseTenantTestCase):
     @classmethod
     def setUpTestData(cls):
         cls.unicef_staff = UserFactory(is_staff=True)
@@ -1768,7 +1769,7 @@ class TestInterventionAmendmentDeleteView(APITenantTestCase):
         self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
 
 
-class TestInterventionSectorLocationLinkListAPIView(APITenantTestCase):
+class TestInterventionSectorLocationLinkListAPIView(BaseTenantTestCase):
     @classmethod
     def setUpTestData(cls):
         cls.unicef_staff = UserFactory(is_staff=True)
@@ -1827,7 +1828,7 @@ class TestInterventionSectorLocationLinkListAPIView(APITenantTestCase):
         self.assertFalse(response_json)
 
 
-class TestInterventionListMapView(APITenantTestCase):
+class TestInterventionListMapView(BaseTenantTestCase):
     @classmethod
     def setUpTestData(cls):
         cls.unicef_staff = UserFactory(is_staff=True)

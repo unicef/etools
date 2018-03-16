@@ -13,11 +13,11 @@ from attachments.serializers import (
     Base64AttachmentSerializer,
 )
 from attachments.tests.factories import AttachmentFactory, FileTypeFactory
-from EquiTrack.tests.cases import EToolsTenantTestCase
+from EquiTrack.tests.cases import BaseTenantTestCase
 from users.tests.factories import UserFactory
 
 
-class TestAttachmentsModels(EToolsTenantTestCase):
+class TestAttachmentsModels(BaseTenantTestCase):
     @classmethod
     def setUpTestData(cls):
         cls.file_type = FileTypeFactory()
@@ -48,7 +48,7 @@ class TestAttachmentsModels(EToolsTenantTestCase):
         )
 
 
-class TestAttachmentFileUploadSerializer(EToolsTenantTestCase):
+class TestAttachmentFileUploadSerializer(BaseTenantTestCase):
     @classmethod
     def setUpTestData(cls):
         cls.code = "test_code"

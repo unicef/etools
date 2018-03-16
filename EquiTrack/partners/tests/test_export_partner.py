@@ -7,7 +7,7 @@ from rest_framework import status
 from tablib.core import Dataset
 
 from attachments.tests.factories import AttachmentFactory, FileTypeFactory
-from EquiTrack.tests.mixins import APITenantTestCase
+from EquiTrack.tests.cases import BaseTenantTestCase
 from partners.tests.factories import (
     AssessmentFactory,
     PartnerFactory,
@@ -16,7 +16,7 @@ from partners.tests.factories import (
 from users.tests.factories import UserFactory
 
 
-class PartnerModelExportTestCase(APITenantTestCase):
+class PartnerModelExportTestCase(BaseTenantTestCase):
     @classmethod
     def setUpTestData(cls):
         cls.unicef_staff = UserFactory(is_staff=True)
@@ -247,7 +247,7 @@ class TestPartnerOrganizationAssessmentModelExport(PartnerModelExportTestCase):
         self.assertEqual(len(dataset[0]), 14)
 
 
-class TestPartnerOrganizationHactExport(APITenantTestCase):
+class TestPartnerOrganizationHactExport(BaseTenantTestCase):
     @classmethod
     def setUpTestData(cls):
         cls.url = reverse("partners_api:partner-hact")

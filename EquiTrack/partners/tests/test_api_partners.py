@@ -8,7 +8,8 @@ from mock import patch, Mock
 from rest_framework import status
 from unittest import TestCase, skip
 
-from EquiTrack.tests.mixins import APITenantTestCase, URLAssertionMixin
+from EquiTrack.tests.cases import BaseTenantTestCase
+from EquiTrack.tests.mixins import URLAssertionMixin
 from partners.models import PartnerOrganization, PartnerType
 from partners.views.partner_organization_v2 import PartnerOrganizationAddView
 from partners.tests.factories import (
@@ -33,7 +34,7 @@ class URLsTestCase(URLAssertionMixin, TestCase):
         self.assertIntParamRegexes(names_and_paths, 'partners_api:')
 
 
-class TestPartnerOrganizationDetailAPIView(APITenantTestCase):
+class TestPartnerOrganizationDetailAPIView(BaseTenantTestCase):
     def setUp(self):
         super(TestPartnerOrganizationDetailAPIView, self).setUp()
         self.unicef_staff = UserFactory(is_staff=True)
@@ -62,7 +63,7 @@ class TestPartnerOrganizationDetailAPIView(APITenantTestCase):
         self.assertEqual(self.intervention.id, response_json.get("interventions")[0].id)
 
 
-class TestPartnerOrganizationHactAPIView(APITenantTestCase):
+class TestPartnerOrganizationHactAPIView(BaseTenantTestCase):
     @classmethod
     def setUpTestData(cls):
         cls.url = reverse("partners_api:partner-hact")
@@ -86,7 +87,7 @@ class TestPartnerOrganizationHactAPIView(APITenantTestCase):
         self.assertEqual(response_json[0]['id'], self.partner.pk)
 
 
-class TestPartnerOrganizationAddView(APITenantTestCase):
+class TestPartnerOrganizationAddView(BaseTenantTestCase):
     @classmethod
     def setUpTestData(cls):
         cls.url = reverse("partners_api:partner-add")
@@ -185,7 +186,7 @@ class TestPartnerOrganizationAddView(APITenantTestCase):
         )
 
 
-class TestPartnerOrganizationDeleteView(APITenantTestCase):
+class TestPartnerOrganizationDeleteView(BaseTenantTestCase):
     @classmethod
     def setUpTestData(cls):
         cls.unicef_staff = UserFactory(is_staff=True)

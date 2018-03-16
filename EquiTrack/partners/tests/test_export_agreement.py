@@ -7,7 +7,7 @@ from rest_framework import status
 from tablib.core import Dataset
 
 from attachments.tests.factories import AttachmentFactory, FileTypeFactory
-from EquiTrack.tests.mixins import APITenantTestCase
+from EquiTrack.tests.cases import BaseTenantTestCase
 from partners.tests.factories import (
     AgreementAmendmentFactory,
     AgreementFactory,
@@ -18,7 +18,7 @@ from reports.tests.factories import CountryProgrammeFactory
 from users.tests.factories import UserFactory
 
 
-class BaseAgreementModelExportTestCase(APITenantTestCase):
+class BaseAgreementModelExportTestCase(BaseTenantTestCase):
     @classmethod
     def setUpTestData(cls):
         cls.agreement_code = "partners_agreement"

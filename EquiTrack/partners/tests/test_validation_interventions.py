@@ -9,7 +9,7 @@ from unittest import skip
 from mock import patch, Mock
 
 from attachments.tests.factories import AttachmentFactory, FileTypeFactory
-from EquiTrack.tests.cases import EToolsTenantTestCase
+from EquiTrack.tests.cases import BaseTenantTestCase
 from EquiTrack.validation_mixins import (
     BasicValidationError,
     StateValidError,
@@ -44,7 +44,7 @@ from partners.validation.interventions import (
 from users.tests.factories import GroupFactory, UserFactory
 
 
-class TestPartnershipManagerOnly(EToolsTenantTestCase):
+class TestPartnershipManagerOnly(BaseTenantTestCase):
     def test_manager_no_groups(self):
         user = UserFactory()
         with self.assertRaises(TransitionError):
@@ -56,12 +56,12 @@ class TestPartnershipManagerOnly(EToolsTenantTestCase):
         self.assertTrue(partnership_manager_only(None, user))
 
 
-class TestTransitionOk(EToolsTenantTestCase):
+class TestTransitionOk(BaseTenantTestCase):
     def test_ok(self):
         self.assertTrue(transition_ok(None))
 
 
-class TestTransitionToClosed(EToolsTenantTestCase):
+class TestTransitionToClosed(BaseTenantTestCase):
     @classmethod
     def setUpTestData(cls):
         cls.intervention = InterventionFactory(
@@ -291,7 +291,7 @@ class TestTransitionToClosed(EToolsTenantTestCase):
         self.assertFundamentals(self.intervention.total_frs)
 
 
-class TestTransitionToSigned(EToolsTenantTestCase):
+class TestTransitionToSigned(BaseTenantTestCase):
     def test_type_status_invalid(self):
         """Certain document types with agreement in certain status
         cannot be signed
@@ -317,7 +317,7 @@ class TestTransitionToSigned(EToolsTenantTestCase):
         self.assertTrue(transition_to_signed(intervention))
 
 
-class TestTransitionToActive(EToolsTenantTestCase):
+class TestTransitionToActive(BaseTenantTestCase):
     def test_type_status_invalid(self):
         """Certain document types with agreement not in signed status
         cannot be made active
@@ -341,7 +341,7 @@ class TestTransitionToActive(EToolsTenantTestCase):
         self.assertTrue(transition_to_active(intervention))
 
 
-class TestStateDateSignedValid(EToolsTenantTestCase):
+class TestStateDateSignedValid(BaseTenantTestCase):
     @classmethod
     def setUpTestData(cls):
         cls.signed_pd_code = "partners_intervention_signed_pd"
@@ -380,7 +380,7 @@ class TestStateDateSignedValid(EToolsTenantTestCase):
         self.assertTrue(start_date_signed_valid(intervention))
 
 
-class TestStateDateRelatedAgreementValid(EToolsTenantTestCase):
+class TestStateDateRelatedAgreementValid(BaseTenantTestCase):
     @classmethod
     def setUpTestData(cls):
         cls.signed_pd_code = "partners_intervention_signed_pd"
@@ -430,7 +430,7 @@ class TestStateDateRelatedAgreementValid(EToolsTenantTestCase):
         self.assertTrue(start_date_related_agreement_valid(intervention))
 
 
-class TestSignedDateValid(EToolsTenantTestCase):
+class TestSignedDateValid(BaseTenantTestCase):
     @classmethod
     def setUpTestData(cls):
         cls.unicef_user = UserFactory()
@@ -531,7 +531,7 @@ class TestSignedDateValid(EToolsTenantTestCase):
         self.assertFalse(signed_date_valid(intervention))
 
 
-class TestAmendmentsInvalid(EToolsTenantTestCase):
+class TestAmendmentsInvalid(BaseTenantTestCase):
     def setUp(self):
         super(TestAmendmentsInvalid, self).setUp()
         self.intervention = InterventionFactory(
@@ -617,7 +617,7 @@ class TestAmendmentsInvalid(EToolsTenantTestCase):
         # self.assertFalse(amendments_valid(self.intervention))
 
 
-class TestSSFAgreementHasNoOtherIntervention(EToolsTenantTestCase):
+class TestSSFAgreementHasNoOtherIntervention(BaseTenantTestCase):
     def setUp(self):
         super(TestSSFAgreementHasNoOtherIntervention, self).setUp()
         self.agreement = AgreementFactory(
@@ -662,7 +662,7 @@ class TestSSFAgreementHasNoOtherIntervention(EToolsTenantTestCase):
             ssfa_agreement_has_no_other_intervention(self.intervention)
 
 
-class TestInterventionValid(EToolsTenantTestCase):
+class TestInterventionValid(BaseTenantTestCase):
     @classmethod
     def setUpTestData(cls):
         cls.unicef_staff = UserFactory(is_staff=True)

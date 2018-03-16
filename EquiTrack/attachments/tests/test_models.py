@@ -6,7 +6,7 @@ from django.db import connection
 
 from attachments import models
 from attachments.tests.factories import AttachmentFactory, FileTypeFactory
-from EquiTrack.tests.cases import EToolsTenantTestCase
+from EquiTrack.tests.cases import BaseTenantTestCase
 from partners.tests.factories import (
     AgreementAmendmentFactory,
     AgreementFactory,
@@ -19,7 +19,7 @@ from partners.tests.factories import (
 from partners import models as partner_models
 
 
-class TestGenerateFilePath(EToolsTenantTestCase):
+class TestGenerateFilePath(BaseTenantTestCase):
     @classmethod
     def setUpTestData(cls):
         cls.partner = PartnerFactory()
@@ -179,7 +179,7 @@ class TestGenerateFilePath(EToolsTenantTestCase):
             models.generate_file_path(attachment, "test.pdf")
 
 
-class TestFileType(EToolsTenantTestCase):
+class TestFileType(BaseTenantTestCase):
     def test_str(self):
         instance = FileTypeFactory(label=b'xyz')
         self.assertIn(b'xyz', str(instance))
@@ -190,7 +190,7 @@ class TestFileType(EToolsTenantTestCase):
         self.assertIn(u'R\xe4dda Barnen', unicode(instance))
 
 
-class TestAttachments(EToolsTenantTestCase):
+class TestAttachmentsModels(BaseTenantTestCase):
     @classmethod
     def setUpTestData(cls):
         cls.simple_object = FileTypeFactory()

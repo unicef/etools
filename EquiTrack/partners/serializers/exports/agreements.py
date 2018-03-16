@@ -3,7 +3,6 @@ from __future__ import unicode_literals
 from django.utils.translation import ugettext as _
 from rest_framework import serializers
 
-from attachments.serializers_fields import AttachmentSingleFileField
 from partners.serializers.fields import TypeArrayField
 from partners.models import (
     Agreement,

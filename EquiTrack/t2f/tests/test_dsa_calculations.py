@@ -6,7 +6,7 @@ from unittest import skip
 
 from pytz import UTC
 
-from EquiTrack.tests.mixins import APITenantTestCase
+from EquiTrack.tests.cases import BaseTenantTestCase
 from publics.tests.factories import (
     PublicsCountryFactory,
     PublicsCurrencyFactory,
@@ -18,7 +18,7 @@ from t2f.tests.factories import DeductionFactory, ItineraryItemFactory, TravelFa
 from users.tests.factories import UserFactory
 
 
-class TestDASdto(APITenantTestCase):
+class TestDASdto(BaseTenantTestCase):
     @classmethod
     def setUpTestData(cls):
         netherlands = PublicsCountryFactory(
@@ -113,7 +113,7 @@ class TestDASdto(APITenantTestCase):
         self.assertEqual(str(self.dsa), res)
 
 
-class TestDSACalculator(APITenantTestCase):
+class TestDSACalculator(BaseTenantTestCase):
     @classmethod
     def setUpTestData(cls):
         cls.unicef_staff = UserFactory(is_staff=True)

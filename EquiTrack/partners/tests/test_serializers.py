@@ -7,7 +7,7 @@ from django.utils import six
 from rest_framework import serializers
 
 from attachments.tests.factories import AttachmentFactory, FileTypeFactory
-from EquiTrack.tests.cases import EToolsTenantTestCase
+from EquiTrack.tests.cases import BaseTenantTestCase
 from partners.models import Agreement, PartnerType
 from partners.serializers.agreements_v2 import AgreementCreateUpdateSerializer
 from partners.serializers.partner_organization_v2 import PartnerOrganizationDetailSerializer
@@ -25,7 +25,7 @@ from users.tests.factories import UserFactory
 _ALL_AGREEMENT_TYPES = [agreement_type[0] for agreement_type in Agreement.AGREEMENT_TYPES]
 
 
-class AgreementCreateUpdateSerializerBase(EToolsTenantTestCase):
+class AgreementCreateUpdateSerializerBase(BaseTenantTestCase):
     '''Base class for testing AgreementCreateUpdateSerializer'''
     @classmethod
     def setUpTestData(cls):
@@ -48,6 +48,13 @@ class AgreementCreateUpdateSerializerBase(EToolsTenantTestCase):
 
         cls.fake_request = Stub()
         cls.fake_request.user = cls.user
+
+    def setUp(self):
+        this_year = self.today.year
+        self.country_programme = CountryProgrammeFactory(
+            from_date=datetime.date(this_year - 1, 1, 1),
+            to_date=datetime.date(this_year + 1, 1, 1)
+        )
 
     def assertSimpleExceptionFundamentals(self, context_manager, expected_message):
         """Given the context manager produced by self.assertRaises(), checks the exception it contains for
@@ -717,7 +724,7 @@ class TestAgreementSerializerTransitions(AgreementCreateUpdateSerializerBase):
             self.assertEqual(field.read_only, expected_read_only)
 
 
-class TestPartnerOrganizationDetailSerializer(EToolsTenantTestCase):
+class TestPartnerOrganizationDetailSerializer(BaseTenantTestCase):
     @classmethod
     def setUpTestData(cls):
         cls.user = UserFactory()

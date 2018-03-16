@@ -6,7 +6,8 @@ from django.core.urlresolvers import reverse
 from rest_framework import status
 
 from attachments.tests.factories import AttachmentFactory, FileTypeFactory
-from EquiTrack.tests.mixins import APITenantTestCase, URLAssertionMixin
+from EquiTrack.tests.cases import BaseTenantTestCase
+from EquiTrack.tests.mixins import URLAssertionMixin
 from partners.models import (
     PartnerType,
     Agreement,
@@ -38,7 +39,7 @@ class URLsTestCase(URLAssertionMixin, TestCase):
         self.assertIntParamRegexes(names_and_paths, 'partners_api:')
 
 
-class TestAgreementsAPI(APITenantTestCase):
+class TestAgreementsAPI(BaseTenantTestCase):
     @classmethod
     def setUpTestData(cls):
         cls.amendment_code = "partners_agreement_amendment"
