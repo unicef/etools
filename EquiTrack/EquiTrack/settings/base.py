@@ -231,7 +231,7 @@ TEMPLATES = [
             'loaders': [
                 'django.template.loaders.filesystem.Loader',
                 'django.template.loaders.app_directories.Loader',
-                'EquiTrack.utils.mail.loaders.EmailTemplateLoader',
+                'EquiTrack.loaders.EmailTemplateLoader',
             ],
             'context_processors': [
                 # Already defined Django-related contexts here
