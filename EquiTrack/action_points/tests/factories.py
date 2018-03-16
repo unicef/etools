@@ -26,9 +26,16 @@ class ActionPointFactory(factory.DjangoModelFactory):
     assigned_to = factory.SubFactory(UserFactory)
 
     class Params:
-        draft = factory.Trait()
+        open = factory.Trait()
 
-        assigned = factory.Trait(
+        completed = factory.Trait(
             status=ActionPoint.STATUSES.completed,
             action_taken=factory.fuzzy.FuzzyText()
         )
+
+    @classmethod
+    def attributes(cls, create=False, extra=None):
+        if extra and 'status' in extra:
+            status = extra.pop('status')
+            extra[status] = True
+        return super(ActionPointFactory, cls).attributes(create, extra)
