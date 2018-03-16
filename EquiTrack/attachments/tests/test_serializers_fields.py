@@ -10,10 +10,10 @@ from attachments import serializers_fields as fields
 from attachments.metadata import ModelChoiceFieldMixin
 from attachments.models import Attachment, FileType
 from attachments.tests.factories import AttachmentFactory, FileTypeFactory
-from EquiTrack.tests.cases import EToolsTenantTestCase
+from EquiTrack.tests.cases import BaseTenantTestCase
 
 
-class TestBase64FileField(EToolsTenantTestCase):
+class TestBase64FileField(BaseTenantTestCase):
     def setUp(self):
         self.test_file_content = 'these are the file contents!'
 
@@ -39,7 +39,7 @@ class TestMetadata(ModelChoiceFieldMixin, SimpleMetadata):
     pass
 
 
-class TestModelChoiceFileField(EToolsTenantTestCase):
+class TestModelChoiceFileField(BaseTenantTestCase):
     def setUp(self):
         self.code1_obj = FileTypeFactory(code='code1')
         self.code2_obj = FileTypeFactory(code='code2')
@@ -66,7 +66,7 @@ class TestModelChoiceFileField(EToolsTenantTestCase):
         self.assertNotIn(self.code2_obj.pk, file_type_choices)
 
 
-class TestAttachmentSingleFileField(EToolsTenantTestCase):
+class TestAttachmentSingleFileField(BaseTenantTestCase):
     @classmethod
     def setUpTestData(cls):
         cls.code = "code1"

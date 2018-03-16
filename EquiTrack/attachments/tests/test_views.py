@@ -8,11 +8,11 @@ from rest_framework import status
 
 from attachments.models import Attachment
 from attachments.tests.factories import AttachmentFactory, FileTypeFactory
-from EquiTrack.tests.mixins import APITenantTestCase
+from EquiTrack.tests.cases import BaseTenantTestCase
 from users.tests.factories import UserFactory
 
 
-class TestFileUploadView(APITenantTestCase):
+class TestFileUploadView(BaseTenantTestCase):
     @classmethod
     def setUpTestData(cls):
         cls.code = "test_code"
@@ -125,7 +125,7 @@ class TestFileUploadView(APITenantTestCase):
         self.assertFalse(other_attachment_update.file)
 
 
-class TestAttachmentListView(APITenantTestCase):
+class TestAttachmentListView(BaseTenantTestCase):
     @classmethod
     def setUpTestData(cls):
         cls.code_1 = "test_code_1"
