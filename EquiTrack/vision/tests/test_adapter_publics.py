@@ -2,7 +2,7 @@ from __future__ import absolute_import, division, print_function, unicode_litera
 
 import json
 
-from EquiTrack.tests.cases import EToolsTenantTestCase
+from EquiTrack.tests.cases import BaseTenantTestCase
 from publics.tests.factories import (
     PublicsBusinessAreaFactory,
     PublicsFundFactory,
@@ -24,7 +24,7 @@ from users.models import Country
 from vision.adapters import publics_adapter as adapter
 
 
-class TestCostAssignmentSynch(EToolsTenantTestCase):
+class TestCostAssignmentSynch(BaseTenantTestCase):
     @classmethod
     def setUpTestData(cls):
         cls.country = Country.objects.first()
@@ -146,7 +146,7 @@ class TestCostAssignmentSynch(EToolsTenantTestCase):
         self.assertEqual(response, 1)
 
 
-class TestCurrencySynchronizer(EToolsTenantTestCase):
+class TestCurrencySynchronizer(BaseTenantTestCase):
     @classmethod
     def setUpTestData(cls):
         cls.country = Country.objects.first()
@@ -178,7 +178,7 @@ class TestCurrencySynchronizer(EToolsTenantTestCase):
         self.assertTrue(exchange_qs.exists())
 
 
-class TestTravelAgenciesSynchronizer(EToolsTenantTestCase):
+class TestTravelAgenciesSynchronizer(BaseTenantTestCase):
     @classmethod
     def setUpTestData(cls):
         cls.country = Country.objects.first()

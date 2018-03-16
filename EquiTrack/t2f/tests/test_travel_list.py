@@ -8,7 +8,8 @@ from django.db import connection
 from freezegun import freeze_time
 from rest_framework import status
 
-from EquiTrack.tests.mixins import APITenantTestCase, URLAssertionMixin
+from EquiTrack.tests.cases import BaseTenantTestCase
+from EquiTrack.tests.mixins import URLAssertionMixin
 from locations.tests.factories import LocationFactory
 from publics.models import DSARegion
 from publics.tests.factories import PublicsCurrencyFactory, PublicsWBSFactory
@@ -20,7 +21,7 @@ from users.tests.factories import UserFactory
 log = logging.getLogger('__name__')
 
 
-class TravelList(URLAssertionMixin, APITenantTestCase):
+class TravelList(URLAssertionMixin, BaseTenantTestCase):
     @classmethod
     def setUpTestData(cls):
         cls.traveler = UserFactory()

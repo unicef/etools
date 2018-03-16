@@ -16,12 +16,12 @@ from funds.tests.factories import (
     FundsReservationHeaderFactory,
     FundsReservationItemFactory,
 )
-from EquiTrack.tests.cases import EToolsTenantTestCase
+from EquiTrack.tests.cases import BaseTenantTestCase
 from users.models import Country
 from vision.adapters import funding as adapter
 
 
-class TestFundReservationsSynchronizer(EToolsTenantTestCase):
+class TestFundReservationsSynchronizer(BaseTenantTestCase):
     maxDiff = None
 
     @classmethod
@@ -288,7 +288,7 @@ class TestFundReservationsSynchronizer(EToolsTenantTestCase):
         self.assertEqual(response, 1)
 
 
-class TestFundCommitmentSynchronizer(EToolsTenantTestCase):
+class TestFundCommitmentSynchronizer(BaseTenantTestCase):
     @classmethod
     def setUpTestData(cls):
         cls.country = Country.objects.first()
