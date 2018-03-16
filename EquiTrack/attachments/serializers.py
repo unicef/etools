@@ -66,7 +66,7 @@ class Base64AttachmentSerializer(BaseAttachmentsSerializer):
 
 class AttachmentSerializer(BaseAttachmentsSerializer):
     created = serializers.DateTimeField(format='%d %b %Y')
-    file_type = serializers.CharField(source='file_type.name')
+    file_type = serializers.CharField(source='file_type.label')
     url = serializers.SerializerMethodField()
     filename = serializers.CharField()
 
