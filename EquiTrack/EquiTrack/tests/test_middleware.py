@@ -8,7 +8,7 @@ from django.contrib.auth.models import AnonymousUser
 from django.core.urlresolvers import reverse
 from django.test import TestCase, RequestFactory, override_settings
 
-from EquiTrack.middleware import EToolsTenantMiddleware
+from EquiTrack.middleware import EToolsTenantMiddleware, ANONYMOUS_ALLOWED_URL_FRAGMENTS
 from users.tests.factories import CountryFactory, UserFactory
 
 
@@ -39,7 +39,7 @@ class EToolsTenantMiddlewareTest(TestCase):
 
     def test_anonymous_user_allowed_urls(self):
         "If AnonymousUser tries to access these URLs, middleware returns None, allowing them to pass."
-        allowed_url_paths = ['api', 'login', 'saml', 'accounts', 'monitoring']
+        allowed_url_paths = ANONYMOUS_ALLOWED_URL_FRAGMENTS
         self.request.user = AnonymousUser()
         for path in allowed_url_paths:
             self.request.path = '/{}'.format(path)
