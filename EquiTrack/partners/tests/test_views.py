@@ -279,7 +279,7 @@ class TestAPIPartnerOrganizationListView(APITenantTestCase):
             self.assertIsInstance(list_element, dict)
             ids_in_response.append(list_element.get('id'))
 
-        self.assertItemsEqual(ids_in_response, (p1.id, p2.id))
+        six.assertCountEqual(self, ids_in_response, (p1.id, p2.id))
 
     def test_values_negative(self):
         '''Ensure that garbage values are handled properly'''
@@ -675,7 +675,8 @@ class TestPartnerOrganizationRetrieveUpdateDeleteViews(APITenantTestCase):
         self.assertEqual(['programme_visits', 'spot_checks'], response.data['hact_min_requirements'].keys())
         self.assertEqual(['outstanding_findings', 'audits', 'programmatic_visits', 'spot_checks'],
                          response.data['hact_values'].keys())
-        self.assertItemsEqual(
+        six.assertCountEqual(
+            self,
             ['completed', 'minimum_requirements'],
             response.data['hact_values']['audits'].keys()
         )
@@ -1555,7 +1556,7 @@ class TestInterventionViews(APITenantTestCase):
         r_data = json.loads(response.rendered_content)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(len(r_data["frs_details"]['frs']), 2)
-        self.assertItemsEqual(r_data["frs"], [self.fr_header_2.id, self.fr_header_1.id])
+        six.assertCountEqual(self, r_data["frs"], [self.fr_header_2.id, self.fr_header_1.id])
 
     def test_intervention_active_update_population_focus(self):
         intervention_obj = Intervention.objects.get(id=self.intervention_data["id"])
