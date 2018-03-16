@@ -4,12 +4,12 @@ import base64
 
 from rest_framework import serializers
 
-from EquiTrack.tests.cases import EToolsTenantTestCase
+from EquiTrack.tests.cases import BaseTenantTestCase
 
 from attachments.serializers_fields import Base64FileField
 
 
-class TestBase64FileField(EToolsTenantTestCase):
+class TestBase64FileField(BaseTenantTestCase):
     def setUp(self):
         self.test_file_content = 'these are the file contents!'
 

@@ -11,11 +11,11 @@ from django.core.urlresolvers import reverse
 from rest_framework import status
 
 from environment.tests.factories import TenantFlagFactory, TenantSwitchFactory
-from EquiTrack.tests.mixins import APITenantTestCase
+from EquiTrack.tests.cases import BaseTenantTestCase
 from users.tests.factories import CountryFactory, UserFactory
 
 
-class TestActiveFlagAPIView(APITenantTestCase):
+class TestActiveFlagAPIView(BaseTenantTestCase):
 
     @classmethod
     def setUpTestData(cls):
