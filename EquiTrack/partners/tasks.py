@@ -14,7 +14,6 @@ from celery.utils.log import get_task_logger
 from django.db.models.functions import Coalesce
 
 from EquiTrack.celery import app
-from EquiTrack.util_scripts import set_country
 from notification.models import Notification
 from partners.models import Agreement, Intervention, PartnerOrganization
 from partners.validation.agreements import AgreementValid
@@ -282,7 +281,7 @@ def pmp_indicator_report():
     writer.writeheader()
 
     for country in countries:
-        set_country(country.name)
+        connection.set_tenant(Country.objects.get(name=country.name))
         logger.info(u'Running on %s' % country.name)
         for partner in PartnerOrganization.objects.filter():
             for intervention in Intervention.objects.filter(
