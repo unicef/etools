@@ -22,6 +22,7 @@ from partners.views.agreements_v2 import (
 )
 from partners.views.interventions_v2 import (
     InterventionAmendmentListAPIView,
+    InterventionAttachmentListView,
     InterventionListAPIView,
     InterventionListDashView,
     InterventionDetailAPIView,
@@ -114,7 +115,6 @@ urlpatterns = (
         view=InterventionResultLinkUpdateView.as_view(http_method_names=['get', 'patch', 'delete']),
         name='intervention-result-links-update'),
 
-
     url(r'^interventions/lower-results/(?P<pk>\d+)/$',
         view=InterventionLowerResultUpdateView.as_view(http_method_names=['get', 'patch', 'delete']),
         name='intervention-lower-results-update'),
@@ -127,7 +127,6 @@ urlpatterns = (
         view=InterventionIndicatorsUpdateView.as_view(http_method_names=['get', 'patch', 'delete']),
         name='intervention-indicators-update'),
 
-
     url(r'^interventions/dash/$',
         view=InterventionListDashView.as_view(http_method_names=['get', 'post']),
         name='intervention-list-dash'),
@@ -138,6 +137,9 @@ urlpatterns = (
     url(r'^interventions/planned-visits/(?P<pk>\d+)/$',
         view=InterventionPlannedVisitsDeleteView.as_view(http_method_names=['delete', ]),
         name='intervention-visits-del'),
+    url(r'^interventions/attachments/$',
+        view=InterventionAttachmentListView.as_view(http_method_names=['get', ]),
+        name='intervention-attachments'),
     url(r'^interventions/attachments/(?P<pk>\d+)/$',
         view=InterventionAttachmentDeleteView.as_view(http_method_names=['delete', ]),
         name='intervention-attachments-del'),

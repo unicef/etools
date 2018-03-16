@@ -247,12 +247,23 @@ class InterventionSectorLocationCUSerializer(serializers.ModelSerializer):
 
 
 class InterventionAttachmentSerializer(AttachmentSerializerMixin, serializers.ModelSerializer):
+    partner = serializers.CharField(
+        source='intervention.agreement.partner.name',
+        read_only=True
+    )
+    type_name = serializers.CharField(source="type.name", read_only=True)
     attachment_file = AttachmentSingleFileField(read_only=True)
 
     class Meta:
         model = InterventionAttachment
         fields = (
-            'id', 'intervention', 'created', 'type', 'attachment_file'
+            'id',
+            'intervention',
+            'partner',
+            'created',
+            'type',
+            'type_name',
+            'attachment_file',
         )
 
 
