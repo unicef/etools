@@ -19,9 +19,9 @@ def copy_pca_fr_number_to_intervention(apps, schema_editor):
             fr_numbers = re.split(', |;|/', pca.fr_number)
             intervention.fr_numbers = fr_numbers
             intervention.save()
-            print intervention.fr_numbers
+            print(intervention.fr_numbers)
         except Intervention.DoesNotExist:
-            print 'intervention type {} does not exist'.format(pca.partnership_type)
+            print('intervention type {} does not exist'.format(pca.partnership_type))
 
 
 class Migration(migrations.Migration):
