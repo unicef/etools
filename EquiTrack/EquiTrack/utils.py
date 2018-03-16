@@ -1,5 +1,8 @@
 """
-Project wide base classes and utility functions for apps
+Generic classes/functions that don't fit anywhere specifically
+and not enough to make into a library
+
+Used throughout the eTools project
 """
 import datetime
 from functools import wraps
