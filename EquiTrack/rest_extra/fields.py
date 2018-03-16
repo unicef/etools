@@ -7,7 +7,7 @@ from rest_framework_recursive.fields import RecursiveField
 from rest_extra.serializers import WritableListSerializer
 
 
-class builtin_field:
+class BuiltinField:
     pass
 
 
@@ -15,7 +15,7 @@ class SeparatedReadWriteField(Field):
     read_field = None
     write_field = None
 
-    def __init__(self, read_field, write_field=builtin_field, *args, **kwargs):
+    def __init__(self, read_field, write_field=BuiltinField, *args, **kwargs):
         super(SeparatedReadWriteField, self).__init__(*args, **kwargs)
 
         self.read_field = read_field
@@ -93,7 +93,7 @@ class SeparatedReadWriteField(Field):
 
         self.read_field.bind(field_name, parent)
 
-        if self.write_field is builtin_field:
+        if self.write_field is BuiltinField:
             self.write_field = self._build_field()
         self.write_field.bind(field_name, parent)
 
