@@ -6,7 +6,7 @@ from datetime import datetime
 from django.core.management import BaseCommand
 from django.db import transaction
 
-from EquiTrack.scripts import set_country
+from EquiTrack.utils import set_country_by_name
 from hact.models import HactEncoder, HactHistory
 from partners.models import hact_default, PartnerOrganization
 from users.models import Country
@@ -65,7 +65,7 @@ class Command(BaseCommand):
         self.stdout.write('Freeze HACT data for {}'.format(year))
 
         for country in countries:
-            set_country(country.name)
+            set_country_by_name(country.name)
             self.stdout.write('Freezing data for {}'.format(country.name))
             for partner in PartnerOrganization.objects.all():
                 if partner.reported_cy > 0 or partner.total_ct_cy > 0:

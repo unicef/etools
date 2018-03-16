@@ -4,6 +4,7 @@ Project wide base classes and utility functions for apps
 import datetime
 from functools import wraps
 from itertools import chain
+import logging
 import uuid
 
 from django.conf import settings
@@ -17,6 +18,8 @@ from rest_framework import status
 from rest_framework.response import Response
 
 from users.models import Country
+
+logger = logging.getLogger(__name__)
 
 
 def get_environment():
@@ -57,9 +60,13 @@ def run_on_all_tenants(function):
 
 
 def set_country(user, request):
-
     request.tenant = user.profile.country or user.profile.country_override
     connection.set_tenant(request.tenant)
+
+
+def set_country_by_name(name):
+    connection.set_tenant(Country.objects.get(name=name))
+    logger.info(u'Set in {} workspace'.format(name))
 
 
 def etag_cached(cache_key, public_cache=False):

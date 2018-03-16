@@ -7,11 +7,10 @@ import time
 from datetime import datetime, timedelta
 
 from django.contrib.auth.models import Group
-from django.db import connection
 from django.db.models import Count
 from django.contrib.auth import get_user_model
 
-from EquiTrack.utils import run_on_all_tenants
+from EquiTrack.utils import run_on_all_tenants, set_country_by_name
 from partners.models import (
     Agreement, Assessment, FundingCommitment, Intervention, InterventionPlannedVisits, PartnerOrganization,
     PartnerStaffMember,)
@@ -29,11 +28,6 @@ def printtf(*args):
     with open(file_name, 'ab') as f:
         f.write(', '.join(args_list))
         f.write('\n')
-
-
-def set_country_by_name(name):
-    connection.set_tenant(Country.objects.get(name=name))
-    logger.info(u'Set in {} workspace'.format(name))
 
 
 def fix_duplicate_indicators(country_name):
