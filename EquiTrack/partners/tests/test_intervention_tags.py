@@ -3,7 +3,7 @@ from __future__ import division
 from __future__ import print_function
 from __future__ import unicode_literals
 
-from EquiTrack.tests.cases import EToolsTenantTestCase
+from EquiTrack.tests.cases import BaseTenantTestCase
 from partners.templatetags import intervention_tags as tags
 from partners.tests.factories import (
     AgreementFactory,
@@ -12,7 +12,7 @@ from partners.tests.factories import (
 )
 
 
-class TestGetInterventions(EToolsTenantTestCase):
+class TestGetInterventions(BaseTenantTestCase):
     def test_get(self):
         partner = PartnerFactory()
         agreement = AgreementFactory(partner=partner)
