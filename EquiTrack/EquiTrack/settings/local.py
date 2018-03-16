@@ -97,5 +97,5 @@ LOGGING['handlers']['console']['filters'] = ['tenant_context']
 LOGGING['handlers']['console']['formatter'] = 'tenant_context'
 
 SHELL_PLUS_PRE_IMPORTS = (
-    ('EquiTrack.utils.scripts', '*'),
+    ('EquiTrack.scripts', '*'),
 )
