@@ -4,12 +4,12 @@ from django.contrib.auth import get_user_model
 
 from mock import patch
 
+from EquiTrack.tests.cases import BaseTenantTestCase
 from azure_graph_api.utils import handle_record, handle_records
-from EquiTrack.tests.cases import EToolsTenantTestCase
 from users.tests.factories import GroupFactory, UserFactory
 
 
-class TestClient(EToolsTenantTestCase):
+class TestClient(BaseTenantTestCase):
 
     @classmethod
     def setUpTestData(cls):
