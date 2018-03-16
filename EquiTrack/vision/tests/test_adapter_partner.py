@@ -3,14 +3,14 @@ from __future__ import absolute_import, division, print_function, unicode_litera
 import datetime
 import json
 
-from EquiTrack.tests.cases import EToolsTenantTestCase
+from EquiTrack.tests.cases import BaseTenantTestCase
 from partners.models import PartnerOrganization
 from partners.tests.factories import PartnerFactory
 from users.models import Country
 from vision.adapters import partner as adapter
 
 
-class TestPartnerSynchronizer(EToolsTenantTestCase):
+class TestPartnerSynchronizer(BaseTenantTestCase):
     @classmethod
     def setUpTestData(cls):
         cls.country = Country.objects.first()
