@@ -9,7 +9,7 @@ from django.utils import timezone
 
 import mock
 
-from EquiTrack.tests.cases import EToolsTenantTestCase
+from EquiTrack.tests.cases import BaseTenantTestCase
 from partners.tests.factories import PartnerFactory
 from users.models import Country
 from users.tests.factories import CountryFactory
@@ -286,7 +286,7 @@ class TestSyncHandlerTask(TestCase):
         self.assertEqual(mock_logger.call_args[1], {})
 
 
-class TestUpdateAllPartners(EToolsTenantTestCase):
+class TestUpdateAllPartners(BaseTenantTestCase):
     @classmethod
     def setUpTestData(cls):
         cls.country = Country.objects.first()
@@ -311,7 +311,7 @@ class TestUpdateAllPartners(EToolsTenantTestCase):
         self.assertEqual(mock_logger_exception.call_count, 0)
 
 
-class TestUpdatePurchaseOrders(EToolsTenantTestCase):
+class TestUpdatePurchaseOrders(BaseTenantTestCase):
     @classmethod
     def setUpTestData(cls):
         cls.country = Country.objects.first()

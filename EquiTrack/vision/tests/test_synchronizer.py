@@ -6,7 +6,7 @@ from django.utils.timezone import now as django_now
 
 import mock
 
-from EquiTrack.tests.cases import EToolsTenantTestCase
+from EquiTrack.tests.cases import BaseTenantTestCase
 from users.models import Country
 from vision.exceptions import VisionException
 from vision.models import VisionSyncLog
@@ -30,7 +30,7 @@ class _MySynchronizer(VisionDataSynchronizer):
         pass
 
 
-class TestVisionDataLoader(EToolsTenantTestCase):
+class TestVisionDataLoader(BaseTenantTestCase):
     '''Exercise VisionDataLoader class'''
     # Note - I don't understand why, but @override_settings(VISION_URL=FAUX_VISION_URL) doesn't work when I apply
     # it at the TestCase class level instead of each individual test case.
@@ -131,7 +131,7 @@ class TestVisionDataLoader(EToolsTenantTestCase):
                                                           'verify': False})
 
 
-class TestVisionDataSynchronizerInit(EToolsTenantTestCase):
+class TestVisionDataSynchronizerInit(BaseTenantTestCase):
     '''Exercise initialization of VisionDataSynchronizer class'''
     def test_instantiation_no_country(self):
         '''Ensure I can't create a synchronizer without specifying a country'''
@@ -179,7 +179,7 @@ class TestVisionDataSynchronizerInit(EToolsTenantTestCase):
         self.assertEqual(mock_logger_info.call_args_list[1][1], {})
 
 
-class TestVisionDataSynchronizerSync(EToolsTenantTestCase):
+class TestVisionDataSynchronizerSync(BaseTenantTestCase):
     '''Exercise the sync() method of VisionDataSynchronizer class'''
     def _assertVisionSyncLogFundamentals(self, total_records, total_processed, details='', exception_message='',
                                          successful=True):

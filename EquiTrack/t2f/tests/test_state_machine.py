@@ -9,7 +9,7 @@ from django.core import mail
 from django.core.urlresolvers import reverse
 from django.test.utils import override_settings
 
-from EquiTrack.tests.mixins import APITenantTestCase
+from EquiTrack.tests.cases import BaseTenantTestCase
 from publics.tests.factories import (
     PublicsBusinessAreaFactory,
     PublicsCurrencyFactory,
@@ -22,7 +22,7 @@ from t2f.tests.factories import TravelFactory
 from users.tests.factories import UserFactory
 
 
-class StateMachineTest(APITenantTestCase):
+class StateMachineTest(BaseTenantTestCase):
     @classmethod
     def setUpTestData(cls):
         cls.traveler = UserFactory(is_staff=True)
