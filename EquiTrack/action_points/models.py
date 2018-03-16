@@ -1,7 +1,7 @@
 from __future__ import absolute_import, division, print_function, unicode_literals
 
 from django.conf import settings
-from django.contrib.contenttypes.fields import GenericForeignKey
+from django.contrib.contenttypes.fields import GenericForeignKey, GenericRelation
 from django.contrib.contenttypes.models import ContentType
 from django.db import models
 from django.utils.translation import ugettext_lazy as _
@@ -63,6 +63,18 @@ class ActionPoint(TimeStampedModel, models.Model):
 
     date_of_complete = MonitorField(verbose_name=_('Date Action Point Completed'), null=True, blank=True,
                                     monitor='status', when=[STATUSES.completed])
+
+    history = GenericRelation('snapshot.Activity', object_id_field='target_object_id',
+                              content_type_field='target_content_type')
+
+    def get_additional_data(self, diff):
+        key_events = []
+        if 'status' in diff:
+            key_events.append('status_update')
+        if 'assigned_to' in diff:
+            key_events.append('reassign')
+
+        return {'key_events': key_events}
 
     def get_related_module(self):
         if self.related_module:
