@@ -1,6 +1,7 @@
-from rest_framework.exceptions import ValidationError
+from __future__ import absolute_import, division, print_function, unicode_literals
 
 import factory.fuzzy
+from rest_framework.exceptions import ValidationError
 
 from EquiTrack.tests.cases import EToolsTenantTestCase
 from action_points.tests.factories import ActionPointFactory

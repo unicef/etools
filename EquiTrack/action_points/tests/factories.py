@@ -1,10 +1,14 @@
+from __future__ import absolute_import, division, print_function, unicode_literals
+
 from datetime import timedelta
 
-import factory.fuzzy
 from django.utils import timezone
 
-from EquiTrack.factories import InterventionFactory, ResultFactory, LocationFactory, UserFactory
+import factory.fuzzy
+
 from action_points.models import ActionPoint
+from locations.tests.factories import LocationFactory
+from partners.tests.factories import InterventionFactory, ResultFactory, UserFactory
 
 
 class ActionPointFactory(factory.DjangoModelFactory):
@@ -17,7 +21,8 @@ class ActionPointFactory(factory.DjangoModelFactory):
     cp_output = factory.SubFactory(ResultFactory)
     location = factory.SubFactory(LocationFactory)
     description = factory.fuzzy.FuzzyText()
-    due_date = factory.fuzzy.FuzzyDate(timezone.now() + timedelta(days=1))
+    due_date = factory.fuzzy.FuzzyDate(timezone.now().date() + timedelta(days=1),
+                                       timezone.now().date() + timedelta(days=10))
 
     author = factory.SubFactory(UserFactory)
     section = factory.SelfAttribute('author.profile.section')
