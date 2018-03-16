@@ -4,6 +4,7 @@ from django.conf import settings
 from django.contrib.contenttypes.fields import GenericForeignKey, GenericRelation
 from django.contrib.contenttypes.models import ContentType
 from django.db import models
+from django.utils.six import python_2_unicode_compatible
 from django.utils.translation import ugettext_lazy as _
 
 from django_fsm import FSMField, transition
@@ -11,12 +12,14 @@ from model_utils import Choices
 from model_utils.fields import MonitorField
 from model_utils.models import TimeStampedModel
 
+from action_points.conditions import ActionPointCompleteRequiredFieldsCheck
 from locations.models import Location
 from partners.models import PartnerOrganization, Intervention
 from reports.models import Result
 from users.models import Section, Office
 
 
+@python_2_unicode_compatible
 class ActionPoint(TimeStampedModel, models.Model):
     MODULE_CHOICES = Choices(
         ('t2f', 'Trip Management'),
@@ -72,6 +75,16 @@ class ActionPoint(TimeStampedModel, models.Model):
     class Meta:
         ordering = ('related_module', 'related_content_type', 'related_object_id')
 
+    @property
+    def reference_number(self):
+        return '{0}/{1}/ACTP'.format(
+            self.created.year,
+            self.id,
+        )
+
+    def __str__(self):
+        return self.reference_number
+
     def get_additional_data(self, diff):
         key_events = []
         if 'status' in diff:
@@ -90,7 +103,9 @@ class ActionPoint(TimeStampedModel, models.Model):
 
         return self.MODULES_MAPPING.get(self.related_content_type.app_label)
 
-    @transition(status, source=STATUSES.open, target=STATUSES.completed)
+    @transition(status, source=STATUSES.open, target=STATUSES.completed,
+                conditions=[
+                    ActionPointCompleteRequiredFieldsCheck.as_condition()
+                ])
     def complete(self):
-        # todo: action_taken required
         pass

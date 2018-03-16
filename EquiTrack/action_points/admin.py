@@ -26,6 +26,7 @@ class ActionPointAdmin(SnapshotModelAdmin):
     list_filter = ('status', )
     search_fields = ('author__email', 'assigned_to__email')
     inlines = (CommentInline, ActivityInline, )
+    readonly_fields = ('status', )
 
     def get_related_module(self, obj):
         return obj.get_related_module()
