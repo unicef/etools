@@ -139,7 +139,7 @@ class TestAmendmentsValid(EToolsTenantTestCase):
         agreement = AgreementFactory()
         amendment = AgreementAmendmentFactory(
             agreement=agreement,
-            signed_amendment=None
+            signed_amendment="fake.pdf"
         )
         AttachmentFactory(
             file='fake.pdf',
@@ -153,7 +153,7 @@ class TestAmendmentsValid(EToolsTenantTestCase):
         agreement = AgreementFactory()
         amendment = AgreementAmendmentFactory(
             agreement=agreement,
-            signed_amendment=None,
+            signed_amendment="fake.pdf",
             signed_date=datetime.date.today(),
         )
         AttachmentFactory(

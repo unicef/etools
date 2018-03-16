@@ -932,6 +932,7 @@ class TestAgreementAPIFileAttachments(APITenantTestCase):
         '''
         # The agreement starts with no attachment.
         response_json = self._get_and_assert_response()
+        self.assertIsNone(response_json['attached_agreement_file'])
         self.assertIsNone(response_json['attachment'])
 
         # Now add an attachment. Note that in Python 2, the content must be str, in Python 3 the content must be
@@ -944,6 +945,7 @@ class TestAgreementAPIFileAttachments(APITenantTestCase):
         )
 
         response_json = self._get_and_assert_response()
+        self.assertIn('attached_agreement_file', response_json)
         self.assertIn('attachment', response_json)
 
         url = response_json['attachment']
@@ -990,6 +992,7 @@ class TestAgreementAPIFileAttachments(APITenantTestCase):
 
         self.assertIsInstance(response_amendment, dict)
 
+        self.assertIn('signed_amendment_file', response_amendment)
         self.assertIn('signed_amendment_attachment', response_amendment)
 
         url = response_amendment['signed_amendment_attachment']
@@ -1068,7 +1071,7 @@ class TestAgreementAPIView(APITenantTestCase):
         cls.amendment1 = AgreementAmendment.objects.create(
             number="001",
             agreement=cls.agreement,
-            signed_amendment=None,
+            signed_amendment="random.pdf",
             signed_date=datetime.date.today(),
             types=[AgreementAmendment.IP_NAME]
         )
@@ -1081,7 +1084,7 @@ class TestAgreementAPIView(APITenantTestCase):
         cls.amendment2 = AgreementAmendment.objects.create(
             number="002",
             agreement=cls.agreement,
-            signed_amendment=None,
+            signed_amendment="random.pdf",
             signed_date=datetime.date.today(),
             types=[AgreementAmendment.BANKING_INFO]
         )
@@ -1513,6 +1516,7 @@ class TestInterventionViews(APITenantTestCase):
             "submission_date_prc": "2016-10-31",
             "review_date_prc": "2016-10-28",
             "submission_date": "2016-10-28",
+            "prc_review_document": None,
             "prc_review_attachment": None,
             "signed_by_unicef_date": "2016-10-28",
             "signed_by_partner_date": "2016-10-20",
@@ -2160,6 +2164,7 @@ class TestPartnershipDashboardView(APITenantTestCase):
             "submission_date_prc": "2017-01-31",
             "review_date_prc": "2017-01-28",
             "submission_date": "2017-01-28",
+            "prc_review_document": None,
             "prc_review_attachment": None,
             "signed_by_unicef_date": "2017-01-28",
             "signed_by_partner_date": "2017-01-20",

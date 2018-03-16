@@ -87,9 +87,12 @@ class AgreementCreateUpdateSerializerBase(EToolsTenantTestCase):
         self.assertEqual(len(exception.detail['errors']), 1)
         the_error = exception.detail['errors'][0]
         self.assertIsInstance(the_error, dict)
-        self.assertEqual(the_error.keys(), ['signed_amendment_attachment'])
-        self.assertIsInstance(the_error['signed_amendment_attachment'], list)
-        self.assertEqual(the_error['signed_amendment_attachment'], [expected_message])
+        self.assertEqual(the_error.keys(), ['signed_amendment'])
+        self.assertIsInstance(the_error['signed_amendment'], list)
+        self.assertEqual(the_error['signed_amendment'], [expected_message])
+        # self.assertEqual(the_error.keys(), ['signed_amendment_attachment'])
+        # self.assertIsInstance(the_error['signed_amendment_attachment'], list)
+        # self.assertEqual(the_error['signed_amendment_attachment'], [expected_message])
 
 
 class TestAgreementCreateUpdateSerializer(AgreementCreateUpdateSerializerBase):
@@ -549,6 +552,8 @@ class TestAgreementCreateUpdateSerializer(AgreementCreateUpdateSerializerBase):
                                      signed_by_partner_date=None)
 
         amendment = AgreementAmendmentFactory(agreement=agreement)
+        amendment.signed_amendment.name = 'fake_amendment.pdf'
+        amendment.save()
         # I need to add attachment to exercise the date part of the amendment validator.
         AttachmentFactory(
             file='fake_amendment.pdf',

@@ -308,7 +308,8 @@ class TestPDAmendmentsMissingFilesCheck(EToolsTenantTestCase):
 
     def test_no_amendment_file(self):
         """Check that if no amendment file, then issue is raised"""
-        amendment = InterventionAmendmentFactory()
+        amendment = InterventionAmendmentFactory(signed_amendment=None)
+        self.assertFalse(amendment.signed_amendment)
         self.assertFalse(amendment.signed_amendment_attachment.exists())
         self.assertFalse(self.qs_issue.exists())
         checks.bootstrap_checks(default_is_active=True)
@@ -327,6 +328,7 @@ class TestPDAmendmentsMissingFilesCheck(EToolsTenantTestCase):
             content_object=amendment,
             code=code
         )
+        self.assertTrue(amendment.signed_amendment)
         self.assertTrue(amendment.signed_amendment_attachment.exists())
         self.assertFalse(self.qs_issue.exists())
         checks.bootstrap_checks(default_is_active=True)
@@ -361,7 +363,7 @@ class TestPCAAmendmentsMissingFilesCheck(EToolsTenantTestCase):
         """Check that if agreement has signed amendment
         then issue is NOT raised
         """
-        amendment = AgreementAmendmentFactory(signed_amendment=None)
+        amendment = AgreementAmendmentFactory(signed_amendment="random.pdf")
         code = "partners_agreement_amendment"
         AttachmentFactory(
             file="random.pdf",
@@ -369,6 +371,7 @@ class TestPCAAmendmentsMissingFilesCheck(EToolsTenantTestCase):
             content_object=amendment,
             code=code
         )
+        self.assertTrue(amendment.signed_amendment)
         self.assertTrue(amendment.signed_amendment_attachment.exists())
         self.assertFalse(self.qs_issue.exists())
         checks.bootstrap_checks(default_is_active=True)

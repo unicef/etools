@@ -142,7 +142,7 @@ class TestAgreementAmendmentModelExport(BaseAgreementModelExportTestCase):
         super(TestAgreementAmendmentModelExport, self).setUp()
         self.amendment = AgreementAmendmentFactory(
             agreement=self.agreement,
-            signed_amendment=None,
+            signed_amendment="fake_attachment.pdf",
             signed_date=datetime.date.today(),
         )
         AttachmentFactory(

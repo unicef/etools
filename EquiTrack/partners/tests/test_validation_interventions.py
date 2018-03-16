@@ -352,7 +352,7 @@ class TestStateDateSignedValid(EToolsTenantTestCase):
         intervention = InterventionFactory(
             signed_by_unicef_date=datetime.date(2001, 2, 1),
             signed_by_partner_date=datetime.date(2001, 3, 1),
-            signed_pd_document=None,
+            signed_pd_document="random.pdf",
             start=datetime.date(2001, 1, 1)
         )
         AttachmentFactory(
@@ -368,7 +368,7 @@ class TestStateDateSignedValid(EToolsTenantTestCase):
         intervention = InterventionFactory(
             signed_by_unicef_date=datetime.date(2001, 2, 1),
             signed_by_partner_date=datetime.date(2001, 3, 1),
-            signed_pd_document=None,
+            signed_pd_document="random.pdf",
             start=datetime.date(2001, 4, 1)
         )
         AttachmentFactory(
@@ -396,7 +396,7 @@ class TestStateDateRelatedAgreementValid(EToolsTenantTestCase):
         for document_type in [Intervention.PD, Intervention.SHPD]:
             intervention = InterventionFactory(
                 agreement=agreement,
-                signed_pd_document=None,
+                signed_pd_document="random.pdf",
                 start=datetime.date(2001, 1, 1),
                 contingency_pd=False,
                 document_type=document_type,
@@ -416,7 +416,7 @@ class TestStateDateRelatedAgreementValid(EToolsTenantTestCase):
         agreement = AgreementFactory()
         intervention = InterventionFactory(
             agreement=agreement,
-            signed_pd_document=None,
+            signed_pd_document="random.pdf",
             start=datetime.date.today() + datetime.timedelta(days=2),
             contingency_pd=False,
             document_type=Intervention.PD,
@@ -541,7 +541,7 @@ class TestAmendmentsInvalid(EToolsTenantTestCase):
         self.amendment = InterventionAmendmentFactory(
             intervention=self.intervention,
             signed_date=datetime.date(2001, 1, 1),
-            signed_amendment=None,
+            signed_amendment="random.pdf",
         )
         code = "partners_intervention_amendment_signed"
         AttachmentFactory(

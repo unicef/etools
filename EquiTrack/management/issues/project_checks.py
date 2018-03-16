@@ -138,10 +138,10 @@ class PDAmendmentsMissingFilesCheck(BaseIssueCheck):
     check_id = 'interventions_amendments_no_file'
 
     def get_queryset(self):
-        return InterventionAmendment.objects.all().prefetch_related('intervention')
+        return InterventionAmendment.objects.filter(signed_amendment='').prefetch_related('intervention')
 
     def run_check(self, model_instance, metadata):
-        if not model_instance.signed_amendment_attachment.exists():
+        if not model_instance.signed_amendment:
             raise IssueFoundException(
                 'intervention {} type {} status {} has missing amendment file'.format(
                     model_instance.intervention.id,
@@ -155,10 +155,10 @@ class PCAAmendmentsMissingFilesCheck(BaseIssueCheck):
     check_id = 'agreement_amendments_no_file'
 
     def get_queryset(self):
-        return AgreementAmendment.objects.all()
+        return AgreementAmendment.objects.filter(signed_amendment='')
 
     def run_check(self, model_instance, metadata):
-        if not model_instance.signed_amendment_attachment.exists():
+        if not model_instance.signed_amendment:
             raise IssueFoundException(
                 'agreement {} type {} status {} has missing amendment file'.format(
                     model_instance.agreement.id,

@@ -1296,8 +1296,8 @@ class AgreementAmendment(TimeStampedModel):
     def save(self, **kwargs):
         update_agreement_number_needed = False
         oldself = AgreementAmendment.objects.get(id=self.pk) if self.pk else None
-        if self.signed_amendment_attachment.exists():
-            if not oldself or not oldself.signed_amendment_attachment.exists():
+        if self.signed_amendment:
+            if not oldself or not oldself.signed_amendment:
                 self.number = self.compute_reference_number()
                 update_agreement_number_needed = True
         else:
