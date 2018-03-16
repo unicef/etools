@@ -6,9 +6,13 @@ import mock
 from django.contrib.auth.models import Group
 from django.core.urlresolvers import reverse
 
-from EquiTrack.tests.mixins import APITenantTestCase
+from EquiTrack.tests.cases import BaseTenantTestCase
 from locations.tests.factories import LocationFactory
-from publics.tests.factories import PublicsDSARegionFactory, PublicsCurrencyFactory, PublicsWBSFactory
+from publics.tests.factories import (
+    PublicsDSARegionFactory,
+    PublicsCurrencyFactory,
+    PublicsWBSFactory,
+)
 from t2f import UserTypes
 from t2f.helpers.permission_matrix import get_user_role_list, PermissionMatrix
 from t2f.models import ModeOfTravel, Travel, TravelType
@@ -16,7 +20,7 @@ from t2f.tests.factories import TravelFactory
 from users.tests.factories import UserFactory
 
 
-class TestPermissionMatrix(APITenantTestCase):
+class TestPermissionMatrix(BaseTenantTestCase):
     @classmethod
     def setUpTestData(cls):
         cls.traveler = UserFactory(is_staff=True)

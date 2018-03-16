@@ -9,7 +9,7 @@ from django.core.urlresolvers import reverse
 from freezegun import freeze_time
 from pytz import UTC
 
-from EquiTrack.tests.mixins import APITenantTestCase
+from EquiTrack.tests.cases import BaseTenantTestCase
 from publics.tests.factories import (
     PublicsBusinessAreaFactory,
     PublicsCurrencyFactory,
@@ -27,7 +27,7 @@ from users.tests.factories import UserFactory
 log = logging.getLogger('__name__')
 
 
-class OverlappingTravelsTest(APITenantTestCase):
+class OverlappingTravelsTest(BaseTenantTestCase):
     @classmethod
     def setUpTestData(cls):
         business_area = PublicsBusinessAreaFactory()
