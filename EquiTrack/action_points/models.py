@@ -64,6 +64,8 @@ class ActionPoint(TimeStampedModel, models.Model):
     date_of_complete = MonitorField(verbose_name=_('Date Action Point Completed'), null=True, blank=True,
                                     monitor='status', when=[STATUSES.completed])
 
+    comments = GenericRelation('django_comments.Comment', object_id_field='object_pk')
+
     history = GenericRelation('snapshot.Activity', object_id_field='target_object_id',
                               content_type_field='target_content_type')
 
