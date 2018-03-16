@@ -38,6 +38,11 @@ class ActionPoint(TimeStampedModel, models.Model):
         ('completed', _('Completed')),
     )
 
+    KEY_EVENTS = Choices((
+        ('status_update', 'Status Update'),
+        ('reassign', 'Reassign'),
+    ))
+
     related_module = models.CharField(max_length=20, choices=MODULE_CHOICES, blank=True, null=True)
 
     # todo: implement list of allowed content_types by app_labels/model_names/etc?
@@ -88,9 +93,9 @@ class ActionPoint(TimeStampedModel, models.Model):
     def get_additional_data(self, diff):
         key_events = []
         if 'status' in diff:
-            key_events.append('status_update')
+            key_events.append(self.KEY_EVENTS.status_update)
         if 'assigned_to' in diff:
-            key_events.append('reassign')
+            key_events.append(self.KEY_EVENTS.reassign)
 
         return {'key_events': key_events}
 
