@@ -273,6 +273,8 @@ class InterventionAdmin(CountryUsersAdminMixin, HiddenPartnerMixin, SnapshotMode
             'fields':
                 (('submission_date_prc',),
                  'review_date_prc',
+                 'prc_review_document',
+                 'signed_pd_document',
                  ('partner_authorized_officer_signatory', 'signed_by_partner_date',),
                  ('unicef_signatory', 'signed_by_unicef_date',),
                  'partner_focal_points',
@@ -289,7 +291,7 @@ class InterventionAdmin(CountryUsersAdminMixin, HiddenPartnerMixin, SnapshotMode
         # PlannedVisitsInline,
         # ResultsLinkInline,
         # SectorLocationInline,
-        # InterventionAttachmentsInline,
+        InterventionAttachmentsInline,
         ActivityInline,
         PRCReviewAttachmentInline,
         SignedPDAttachmentInline,
@@ -332,6 +334,7 @@ class AssessmentAdmin(admin.ModelAdmin):
         u'type',
         u'completed_date',
         u'current',
+        u'report',
     )
     list_filter = (
         u'partner',
@@ -542,6 +545,7 @@ class AgreementAmendmentAdmin(admin.ModelAdmin):
     verbose_name = u'Amendment'
     model = AgreementAmendment
     fields = (
+        'signed_amendment',
         'signed_date',
         'number',
         'types',
@@ -550,6 +554,7 @@ class AgreementAmendmentAdmin(admin.ModelAdmin):
         u'agreement',
         u'number',
         u'signed_date',
+        u'signed_amendment',
     )
     list_filter = (
         u'agreement',
