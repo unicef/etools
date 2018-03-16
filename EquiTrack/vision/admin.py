@@ -8,6 +8,8 @@ class VisionSyncLogAdmin(admin.ModelAdmin):
     def has_add_permission(self, request):
         return False
 
+    change_form_template = 'admin/vision/vision_log/change_form.html'
+
     list_filter = (
         'country',
         'handler_name',
