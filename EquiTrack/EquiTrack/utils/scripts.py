@@ -11,7 +11,7 @@ from django.db import connection
 from django.db.models import Count
 from django.contrib.auth import get_user_model
 
-from EquiTrack.utils import every_country
+from EquiTrack.utils import run_on_all_tenants
 from partners.models import (
     Agreement, Assessment, FundingCommitment, Intervention, InterventionPlannedVisits, PartnerOrganization,
     PartnerStaffMember,)
@@ -510,10 +510,7 @@ def create_test_user(email, password):
 
 
 def run(function):
-    with every_country() as c:
-        for country in c:
-            logger.info(country.name)
-            function()
+    run_on_all_tenants(function)
 
 
 def remediation_intervention_migration():

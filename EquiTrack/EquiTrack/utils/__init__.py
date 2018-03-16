@@ -27,13 +27,13 @@ def get_current_site():
     return Site.objects.get_current()
 
 
-class every_country:
+class EveryCountry:
     """
     Loop through every available available tenant/country, then revert back to whatever was set before.
 
     Example usage:
 
-    with every_country() as c:
+    with EveryCountry() as c:
         for country in c:
             print(country.name)
             function()
@@ -51,7 +51,7 @@ class every_country:
 
 
 def run_on_all_tenants(function):
-    with every_country() as c:
+    with EveryCountry() as c:
         for country in c:
             function()
 
