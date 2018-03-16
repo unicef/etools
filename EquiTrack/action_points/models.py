@@ -69,6 +69,9 @@ class ActionPoint(TimeStampedModel, models.Model):
     history = GenericRelation('snapshot.Activity', object_id_field='target_object_id',
                               content_type_field='target_content_type')
 
+    class Meta:
+        ordering = ('related_module', 'related_content_type', 'related_object_id')
+
     def get_additional_data(self, diff):
         key_events = []
         if 'status' in diff:

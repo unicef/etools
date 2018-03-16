@@ -50,6 +50,7 @@ class Migration(migrations.Migration):
             ],
             options={
                 'abstract': False,
+                'ordering': ('related_module', 'related_content_type', 'related_object_id'),
             },
         ),
     ]
