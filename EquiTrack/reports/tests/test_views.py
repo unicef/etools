@@ -1,4 +1,5 @@
 import datetime
+from operator import itemgetter
 
 from unittest import TestCase
 
@@ -149,12 +150,16 @@ class TestOutputListAPIView(BaseTenantTestCase):
         data = {"verbosity": "minimal"}
         response = self.forced_auth_req('get', self.url, data=data)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(response.data[0].keys(), ["id", "name"])
+        first_response = sorted(response.data, key=itemgetter("id"))[0]
+        keys = sorted(first_response.keys())
+        self.assertEqual(keys, ["id", "name"])
 
     def test_current_cp(self):
         response = self.forced_auth_req('get', self.url)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(int(response.data[0]["country_programme"]), CountryProgramme.objects.all_active.first().id)
+        self.assertEqual(
+            int(sorted(response.data, key=itemgetter("id"))[0]["country_programme"]),
+            CountryProgramme.objects.all_active.first().id)
 
     def test_filter_year(self):
         data = {"year": datetime.date.today().year}
@@ -617,7 +622,7 @@ class TestLowerResultExportList(BaseTenantTestCase):
         )
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        dataset = Dataset().load(response.content, 'csv')
+        dataset = Dataset().load(response.content.decode('utf-8'), 'csv')
         self.assertEqual(dataset.height, 1)
         self.assertEqual(len(dataset._get_headers()), 6)
         self.assertEqual(len(dataset[0]), 6)
@@ -631,7 +636,7 @@ class TestLowerResultExportList(BaseTenantTestCase):
         )
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        dataset = Dataset().load(response.content, 'csv')
+        dataset = Dataset().load(response.content.decode('utf-8'), 'csv')
         self.assertEqual(dataset.height, 1)
         self.assertEqual(len(dataset._get_headers()), 6)
         self.assertEqual(len(dataset[0]), 6)
@@ -737,7 +742,7 @@ class TestAppliedIndicatorExportList(BaseTenantTestCase):
         )
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        dataset = Dataset().load(response.content, 'csv')
+        dataset = Dataset().load(response.content.decode('utf-8'), 'csv')
         self.assertEqual(dataset.height, 1)
         self.assertEqual(len(dataset._get_headers()), 24)
         self.assertEqual(len(dataset[0]), 24)
@@ -751,7 +756,7 @@ class TestAppliedIndicatorExportList(BaseTenantTestCase):
         )
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        dataset = Dataset().load(response.content, 'csv')
+        dataset = Dataset().load(response.content.decode('utf-8'), 'csv')
         self.assertEqual(dataset.height, 1)
         self.assertEqual(len(dataset._get_headers()), 24)
         self.assertEqual(len(dataset[0]), 24)
