@@ -1772,7 +1772,7 @@ class Intervention(TimeStampedModel):
         pass
 
     @transition(field=status,
-                source=[ACTIVE],
+                source=[ACTIVE, SIGNED],
                 target=[SUSPENDED],
                 conditions=[intervention_validation.transition_to_suspended],
                 permission=intervention_validation.partnership_manager_only)
@@ -1780,7 +1780,7 @@ class Intervention(TimeStampedModel):
         pass
 
     @transition(field=status,
-                source=[ACTIVE, SUSPENDED],
+                source=[ACTIVE, SUSPENDED, SIGNED],
                 target=[TERMINATED],
                 conditions=[intervention_validation.transition_to_terminated],
                 permission=intervention_validation.partnership_manager_only)
