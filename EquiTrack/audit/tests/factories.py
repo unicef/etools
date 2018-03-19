@@ -16,6 +16,7 @@ from audit.models import (
     Engagement,
     EngagementActionPoint,
     Finding,
+    KeyInternalControl,
     MicroAssessment,
     Risk,
     RiskBluePrint,
@@ -23,15 +24,20 @@ from audit.models import (
     SpecialAudit,
     SpotCheck,
     SpecificProcedure,
-    KeyInternalControl)
-from audit.purchase_order.models import AuditorFirm, AuditorStaffMember, PurchaseOrder, PurchaseOrderItem
-from EquiTrack.factories import (
+)
+from audit.purchase_order.models import (
+    AuditorFirm,
+    AuditorStaffMember,
+    PurchaseOrder,
+    PurchaseOrderItem,
+)
+from firms.tests.factories import BaseFirmFactory, BaseStaffMemberFactory
+from partners.models import PartnerOrganization
+from partners.tests.factories import (
     AgreementFactory,
     InterventionFactory,
     PartnerFactory,
 )
-from firms.factories import BaseFirmFactory, BaseStaffMemberFactory
-from partners.models import PartnerOrganization
 
 
 class FuzzyBooleanField(fuzzy.BaseFuzzyAttribute):

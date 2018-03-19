@@ -1,23 +1,24 @@
 from __future__ import unicode_literals
 
 from django.conf import settings
-
+from django.utils import six
 from mock import patch
 from post_office.models import Email, EmailTemplate
 
-from EquiTrack.factories import NotificationFactory, UserFactory
 from EquiTrack.tests.cases import EToolsTenantTestCase
 from notification.models import Notification
+from notification.tests.factories import NotificationFactory
+from users.tests.factories import UserFactory
 
 
 class TestEmailNotification(EToolsTenantTestCase):
-
-    def setUp(self):
-        self.tenant.country_short_code = 'LEBA'
-        self.tenant.save()
+    @classmethod
+    def setUpTestData(cls):
+        cls.tenant.country_short_code = 'LEBA'
+        cls.tenant.save()
 
         if EmailTemplate.objects.count() == 0:
-            self.fail("No EmailTemplate instances found. Is the migration run?")
+            cls.fail("No EmailTemplate instances found. Is the migration run?")
 
     def test_email_template_html_content_lookup(self):
         non_existing_template_content = Notification.get_template_html_content('random/template/name')
@@ -42,7 +43,7 @@ class TestEmailNotification(EToolsTenantTestCase):
         valid_notification = NotificationFactory()
         valid_notification.send_notification()
 
-        self.assertItemsEqual(valid_notification.recipients, valid_notification.sent_recipients)
+        six.assertCountEqual(self, valid_notification.recipients, valid_notification.sent_recipients)
         self.assertEqual(Email.objects.count(), old_email_count + 1)
 
 

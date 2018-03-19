@@ -3,31 +3,29 @@ from __future__ import unicode_literals
 from django.core import mail
 from django.test.utils import override_settings
 
-from EquiTrack.factories import UserFactory
 from EquiTrack.tests.mixins import APITenantTestCase
-from publics.tests.factories import BusinessAreaFactory
+from publics.tests.factories import PublicsBusinessAreaFactory
 from t2f.models import Invoice
 from t2f.serializers.mailing import TravelMailSerializer
-from t2f.tests.factories import ItineraryItemFactory
-
-from .factories import TravelFactory
+from t2f.tests.factories import ItineraryItemFactory, TravelFactory
+from users.tests.factories import UserFactory
 
 
 class MailingTest(APITenantTestCase):
-    def setUp(self):
-        super(MailingTest, self).setUp()
-        self.traveler = UserFactory(first_name='Jane',
-                                    last_name='Doe')
-        self.traveler.profile.vendor_number = 'usrvnd'
-        self.traveler.profile.save()
+    @classmethod
+    def setUpTestData(cls):
+        cls.traveler = UserFactory(first_name='Jane',
+                                   last_name='Doe')
+        cls.traveler.profile.vendor_number = 'usrvnd'
+        cls.traveler.profile.save()
 
-        self.unicef_staff = UserFactory(is_staff=True,
-                                        first_name='John',
-                                        last_name='Doe')
-        self.travel = TravelFactory(traveler=self.traveler,
-                                    supervisor=self.unicef_staff)
-        ItineraryItemFactory(travel=self.travel)
-        ItineraryItemFactory(travel=self.travel)
+        cls.unicef_staff = UserFactory(is_staff=True,
+                                       first_name='John',
+                                       last_name='Doe')
+        cls.travel = TravelFactory(traveler=cls.traveler,
+                                   supervisor=cls.unicef_staff)
+        ItineraryItemFactory(travel=cls.travel)
+        ItineraryItemFactory(travel=cls.travel)
         mail.outbox = []
 
     @override_settings(DISABLE_INVOICING=False)
@@ -35,7 +33,7 @@ class MailingTest(APITenantTestCase):
         tenant_country = self.travel.traveler.profile.country
         tenant_country.business_area_code = '0'
         tenant_country.save()
-        BusinessAreaFactory(code=self.travel.traveler.profile.country.business_area_code)
+        PublicsBusinessAreaFactory(code=self.travel.traveler.profile.country.business_area_code)
 
         self.travel.submit_for_approval()
         self.travel.approve()
