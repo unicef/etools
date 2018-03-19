@@ -13,6 +13,15 @@ from attachments.serializers_fields import (
     AttachmentUploadLinkField,
     Base64FileField,
 )
+from partners.models import (
+    Agreement,
+    AgreementAmendment,
+    Assessment,
+    Intervention,
+    InterventionAmendment,
+    InterventionAttachment,
+    PartnerOrganization,
+)
 from utils.common.urlresolvers import site_url
 
 
@@ -69,14 +78,77 @@ class AttachmentSerializer(BaseAttachmentsSerializer):
     file_type = serializers.CharField(source='file_type.label')
     url = serializers.SerializerMethodField()
     filename = serializers.CharField()
+    partner = serializers.SerializerMethodField()
+    partner_type = serializers.SerializerMethodField()
+    vendor_number = serializers.SerializerMethodField()
+    pd_ssfa_number = serializers.SerializerMethodField()
 
     class Meta(BaseAttachmentsSerializer.Meta):
         fields = [
-            'created', 'file_type', 'url', 'filename', 'uploaded_by'
+            'partner',
+            'vendor_number',
+            'partner_type',
+            'pd_ssfa_number',
+            'created',
+            'file_type',
+            'url',
+            'filename',
+            'uploaded_by'
         ]
 
     def get_url(self, obj):
         return urllib_parse.urljoin(site_url(), obj.url)
+
+    def get_partner_obj(self, obj):
+        """Try and get partner value"""
+        if isinstance(obj.content_object, PartnerOrganization):
+            return obj.content_object
+        elif isinstance(obj.content_object, (AgreementAmendment, Intervention)):
+            return obj.content_object.agreement.partner
+        elif isinstance(obj.content_object, (InterventionAmendment, InterventionAttachment)):
+            return obj.content_object.intervention.agreement.partner
+        elif isinstance(obj.content_object, (Agreement, Assessment)):
+            return obj.content_object.partner
+        return None
+
+    def get_partner(self, obj):
+        partner = self.get_partner_obj(obj)
+        if partner is not None:
+            return partner.name
+        return None
+
+    def get_vendor_number(self, obj):
+        """Try and get partner value, from there get vendor number"""
+        partner = self.get_partner_obj(obj)
+        if partner is not None:
+            return partner.vendor_number
+        return None
+
+    def get_partner_type(self, obj):
+        partner = self.get_partner_obj(obj)
+        if partner is not None:
+            return partner.partner_type
+        return None
+
+    def get_pd_ssfa_number(self, obj):
+        """Only certain models will have this value available
+        Intervention
+        InterventionAttachment
+        Agreement
+        """
+        if isinstance(obj.content_object, Intervention):
+            return obj.content_object.reference_number
+        elif isinstance(obj.content_object, (InterventionAmendment, InterventionAttachment)):
+            return obj.content_object.intervention.reference_number
+        elif isinstance(obj.content_object, Agreement):
+            intervention = obj.content_object.interventions.last()
+            if intervention:
+                return intervention.reference_number
+        elif isinstance(obj.content_object, AgreementAmendment):
+            intervention = obj.content_object.agreement.interventions.last()
+            if intervention:
+                return intervention.reference_number
+        return None
 
 
 class AttachmentFileUploadSerializer(serializers.ModelSerializer):

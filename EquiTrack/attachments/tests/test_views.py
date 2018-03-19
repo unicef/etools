@@ -4,11 +4,22 @@ import datetime
 
 from django.core.files.uploadedfile import SimpleUploadedFile
 from django.core.urlresolvers import reverse
+from django.utils import six
 from rest_framework import status
 
 from attachments.models import Attachment
 from attachments.tests.factories import AttachmentFactory, FileTypeFactory
 from EquiTrack.tests.cases import BaseTenantTestCase
+from partners.models import PartnerType
+from partners.tests.factories import (
+    AgreementFactory,
+    AgreementAmendmentFactory,
+    AssessmentFactory,
+    InterventionAmendmentFactory,
+    InterventionAttachmentFactory,
+    InterventionFactory,
+    PartnerFactory,
+)
 from users.tests.factories import UserFactory
 
 
@@ -150,6 +161,28 @@ class TestAttachmentListView(BaseTenantTestCase):
             uploaded_by=cls.user
         )
 
+        cls.partner = PartnerFactory(
+            partner_type=PartnerType.UN_AGENCY,
+            vendor_number="V123",
+        )
+        cls.agreement = AgreementFactory(partner=cls.partner)
+        cls.assessment = AssessmentFactory(partner=cls.partner)
+        cls.amendment = AgreementAmendmentFactory(agreement=cls.agreement)
+        cls.intervention = InterventionFactory(agreement=cls.agreement)
+        cls.intervention_amendment = InterventionAmendmentFactory(
+            intervention=cls.intervention
+        )
+        cls.intervention_attachment = InterventionAttachmentFactory(
+            intervention=cls.intervention
+        )
+
+        cls.default_partner_response = [{
+            "partner": None,
+            "partner_type": None,
+            "vendor_number": None,
+            "pd_ssfa_number": None,
+        }] * 2
+
     def test_get_no_file(self):
         attachment = AttachmentFactory(
             file_type=self.file_type_1,
@@ -282,3 +315,156 @@ class TestAttachmentListView(BaseTenantTestCase):
         )
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(len(response.data), 2)
+
+    def assert_values(self, response, expected):
+        received = [{
+            "partner": x["partner"],
+            "partner_type": x["partner_type"],
+            "vendor_number": x["vendor_number"],
+            "pd_ssfa_number": x["pd_ssfa_number"],
+        } for x in response.data]
+        six.assertCountEqual(self, received, expected)
+
+    def test_partner(self):
+        code = "partners_partner_assessment"
+        file_type = FileTypeFactory(code=code)
+        AttachmentFactory(
+            file_type=file_type,
+            code=code,
+            file="sample1.pdf",
+            content_object=self.partner,
+            uploaded_by=self.user
+        )
+        response = self.forced_auth_req(
+            "get",
+            self.url,
+            user=self.unicef_staff,
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(response.data), 3)
+        self.assert_values(response, self.default_partner_response + [{
+            "partner": self.partner.name,
+            "partner_type": self.partner.partner_type,
+            "vendor_number": self.partner.vendor_number,
+            "pd_ssfa_number": None,
+        }])
+
+    def test_assessment(self):
+        code = "partners_assessment_report"
+        file_type = FileTypeFactory(code=code)
+        AttachmentFactory(
+            file_type=file_type,
+            code=code,
+            file="sample1.pdf",
+            content_object=self.assessment,
+            uploaded_by=self.user
+        )
+        response = self.forced_auth_req(
+            "get",
+            self.url,
+            user=self.unicef_staff,
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(response.data), 3)
+        self.assert_values(response, self.default_partner_response + [{
+            "partner": self.partner.name,
+            "partner_type": self.partner.partner_type,
+            "vendor_number": self.partner.vendor_number,
+            "pd_ssfa_number": None,
+        }])
+
+    def test_agreement(self):
+        code = "partners_agreement"
+        file_type = FileTypeFactory(code=code)
+        AttachmentFactory(
+            file_type=file_type,
+            code=code,
+            file="sample1.pdf",
+            content_object=self.agreement,
+            uploaded_by=self.user
+        )
+        response = self.forced_auth_req(
+            "get",
+            self.url,
+            user=self.unicef_staff,
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(response.data), 3)
+        self.assert_values(response, self.default_partner_response + [{
+            "partner": self.partner.name,
+            "partner_type": self.partner.partner_type,
+            "vendor_number": self.partner.vendor_number,
+            "pd_ssfa_number": self.intervention.reference_number,
+        }])
+
+    def test_agreement_amendment(self):
+        code = "partners_agreement_amendment"
+        file_type = FileTypeFactory(code=code)
+        AttachmentFactory(
+            file_type=file_type,
+            code=code,
+            file="sample1.pdf",
+            content_object=self.amendment,
+            uploaded_by=self.user
+        )
+        response = self.forced_auth_req(
+            "get",
+            self.url,
+            user=self.unicef_staff,
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(response.data), 3)
+        self.assert_values(response, self.default_partner_response + [{
+            "partner": self.partner.name,
+            "partner_type": self.partner.partner_type,
+            "vendor_number": self.partner.vendor_number,
+            "pd_ssfa_number": self.intervention.reference_number,
+        }])
+
+    def test_intervention_amendment(self):
+        code = "partners_intervention_amendment_signed"
+        file_type = FileTypeFactory(code=code)
+        AttachmentFactory(
+            file_type=file_type,
+            code=code,
+            file="sample1.pdf",
+            content_object=self.intervention_amendment,
+            uploaded_by=self.user
+        )
+        response = self.forced_auth_req(
+            "get",
+            self.url,
+            user=self.unicef_staff,
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(response.data), 3)
+        self.assert_values(response, self.default_partner_response + [{
+            "partner": self.partner.name,
+            "partner_type": self.partner.partner_type,
+            "vendor_number": self.partner.vendor_number,
+            "pd_ssfa_number": self.intervention.reference_number,
+        }])
+
+    def test_intervention_attachment(self):
+        code = "partners_intervention_attachment"
+        file_type = FileTypeFactory(code=code)
+        AttachmentFactory(
+            file_type=file_type,
+            code=code,
+            file="sample1.pdf",
+            content_object=self.intervention_attachment,
+            uploaded_by=self.user
+        )
+        response = self.forced_auth_req(
+            "get",
+            self.url,
+            user=self.unicef_staff,
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(response.data), 3)
+        self.assert_values(response, self.default_partner_response + [{
+            "partner": self.partner.name,
+            "partner_type": self.partner.partner_type,
+            "vendor_number": self.partner.vendor_number,
+            "pd_ssfa_number": self.intervention.reference_number,
+        }])
