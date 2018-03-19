@@ -77,7 +77,7 @@ class TestStrUnicode(TestCase):
 
         # Ost (East)
         instance = PublicsWBSFactory.build(name=u'\xd6st')
-        self.assertEqual(str(instance), '\xc3\x96st')
+        self.assertEqual(str(instance), b'\xc3\x96st')
         self.assertEqual(unicode(instance), u'\xd6st')
 
     def test_fund(self):
