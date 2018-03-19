@@ -25,8 +25,8 @@ def migrate_interventions_by_valid_status(apps, schema_editor):
         update(status='draft', metadata={'old_status': 'cancelled',
                                          'migrated': True})
 
-    print 'Interventions Updated to implemented from closed: {}'.format(closed_interventions)
-    print 'Interventions moved to Draft from cancelled: {}'.format(cancelled)
+    print('Interventions Updated to implemented from closed: {}'.format(closed_interventions))
+    print('Interventions moved to Draft from cancelled: {}'.format(cancelled))
 
 
 
@@ -36,7 +36,7 @@ def remove_old_agreements(apps, schema_editor):
     AWP = 'AWP'
     Agreement = apps.get_model('partners', 'Agreement')
     deleted = Agreement.objects.filter(agreement_type__in=[IC, AWP]).delete()
-    print 'IC and AWP Agreements deleted: {}'.format(deleted)
+    print('IC and AWP Agreements deleted: {}'.format(deleted))
 
 
 def migrate_agreements_by_status(apps, schema_editor):
@@ -44,8 +44,8 @@ def migrate_agreements_by_status(apps, schema_editor):
     agreements_migrated = Agreement.objects.filter(status='active').update(status='signed')
     agreements_draft = Agreement.objects.filter(status='cancelled').update(status='draft')
 
-    print 'Agreements Updated to signed from active: {}'.format(agreements_migrated)
-    print 'Agreements moved to Draft from cancelled: {}'.format(agreements_draft)
+    print('Agreements Updated to signed from active: {}'.format(agreements_migrated))
+    print('Agreements moved to Draft from cancelled: {}'.format(agreements_draft))
 
 
 class Migration(migrations.Migration):

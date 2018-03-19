@@ -8,17 +8,18 @@ import json
 from django.core.urlresolvers import reverse
 from rest_framework import status
 
-from EquiTrack.factories import InterventionFactory, UserFactory
-from EquiTrack.tests.mixins import APITenantTestCase
+from EquiTrack.tests.cases import BaseTenantTestCase
 from partners.models import Intervention
+from partners.tests.factories import InterventionFactory
+from users.tests.factories import UserFactory
 
 
-class TestInterventionPartnershipDashView(APITenantTestCase):
-    def setUp(self):
-        super(TestInterventionPartnershipDashView, self).setUp()
-        self.unicef_staff = UserFactory(is_staff=True)
-        self.url = reverse("partners_api:interventions-partnership-dash")
-        self.intervention = InterventionFactory(status=Intervention.SIGNED)
+class TestInterventionPartnershipDashView(BaseTenantTestCase):
+    @classmethod
+    def setUpTestData(cls):
+        cls.unicef_staff = UserFactory(is_staff=True)
+        cls.url = reverse("partners_api:interventions-partnership-dash")
+        cls.intervention = InterventionFactory(status=Intervention.SIGNED)
         InterventionFactory(status=Intervention.DRAFT)
 
     def test_get(self):

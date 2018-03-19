@@ -9,18 +9,17 @@ import json
 from django.core.urlresolvers import reverse
 from rest_framework import status
 
-from EquiTrack.factories import (
-    ActivityFactory,
-    UserFactory,
-)
-from EquiTrack.tests.mixins import APITenantTestCase as TenantTestCase
+from EquiTrack.tests.cases import BaseTenantTestCase
 from snapshot.models import Activity
+from snapshot.tests.factories import ActivityFactory
+from users.tests.factories import UserFactory
 
 
-class TestActivityListView(TenantTestCase):
-    def setUp(self):
-        self.url = reverse("snapshot_api:activity-list")
-        self.user = UserFactory(is_staff=True)
+class TestActivityListView(BaseTenantTestCase):
+    @classmethod
+    def setUpTestData(cls):
+        cls.url = reverse("snapshot_api:activity-list")
+        cls.user = UserFactory(is_staff=True)
 
     def assert_data(self, activity, response):
         self.assertEqual(response["id"], activity.pk)

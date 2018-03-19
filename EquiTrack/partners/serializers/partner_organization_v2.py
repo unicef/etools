@@ -134,16 +134,18 @@ class PartnerStaffMemberDetailSerializer(serializers.ModelSerializer):
 class AssessmentDetailSerializer(serializers.ModelSerializer):
 
     report_file = serializers.FileField(source='report', read_only=True)
+    report = serializers.FileField(required=True)
+    completed_date = serializers.DateField(required=True)
 
     class Meta:
         model = Assessment
         fields = "__all__"
 
-    def validate(self, data):
+    def validate_completed_date(self, completed_date):
         today = timezone.now().date()
-        if data["completed_date"] > today:
-            raise serializers.ValidationError({'completed_date': ['The Date of Report cannot be in the future']})
-        return data
+        if completed_date > today:
+            raise serializers.ValidationError('The Date of Report cannot be in the future')
+        return completed_date
 
 
 class PartnerOrganizationListSerializer(serializers.ModelSerializer):
@@ -244,8 +246,15 @@ class PlannedEngagementNestedSerializer(serializers.ModelSerializer):
     def validate_spot_check_mr(self, attrs):
         quarters = []
         for key, value in attrs.items():
-            if value:
-                quarters.append(key)
+            try:
+                value = int(value)
+            except ValueError:
+                raise ValidationError("You can select only MR in one quarter")
+            else:
+                if value:
+                    if value != 1:
+                        raise ValidationError("If selected, the value has to be 1")
+                    quarters.append(key)
         if len(quarters) > 1:
             raise ValidationError("You can select only MR in one quarter")
         elif len(quarters) == 1:
@@ -325,6 +334,7 @@ class PartnerOrganizationHactSerializer(serializers.ModelSerializer):
         fields = (
             "id",
             "name",
+            "vendor_number",
             "short_name",
             "type_of_assessment",
             "partner_type",
@@ -340,6 +350,5 @@ class PartnerOrganizationHactSerializer(serializers.ModelSerializer):
             "hact_values",
             "hact_min_requirements",
             "flags",
-            "outstanding_findings",
             "planned_engagement"
         )
