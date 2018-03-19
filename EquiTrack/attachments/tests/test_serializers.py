@@ -7,15 +7,15 @@ from django.utils.translation import ugettext as _
 
 from attachments.serializers import Base64AttachmentSerializer
 from attachments.tests.factories import FileTypeFactory
-from EquiTrack.tests.cases import EToolsTenantTestCase
+from EquiTrack.tests.cases import BaseTenantTestCase
 
 
-class TestAttachmentsModels(EToolsTenantTestCase):
+class TestAttachmentsModels(BaseTenantTestCase):
     @classmethod
     def setUpTestData(cls):
         cls.file_type = FileTypeFactory()
         cls.file_name = 'simple_file.txt'
-        file_content = 'these are the file contents!'
+        file_content = 'these are the file contents!'.encode('utf-8')
         cls.base64_file = 'data:text/plain;base64,{}'.format(base64.b64encode(file_content))
 
     def test_invalid(self):

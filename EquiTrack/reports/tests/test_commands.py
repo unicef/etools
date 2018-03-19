@@ -2,11 +2,11 @@ from __future__ import absolute_import, division, print_function, unicode_litera
 
 from django.core.management import call_command
 
-from EquiTrack.tests.cases import EToolsTenantTestCase
+from EquiTrack.tests.cases import BaseTenantTestCase
 from reports.models import ResultType
 
 
-class TestResultTypeCommand(EToolsTenantTestCase):
+class TestResultTypeCommand(BaseTenantTestCase):
 
     def test_command(self):
         self.assertEqual(ResultType.objects.count(), 0)

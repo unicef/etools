@@ -2,11 +2,11 @@ from __future__ import absolute_import, division, print_function, unicode_litera
 
 from django.conf import settings
 
-from EquiTrack.tests.cases import EToolsTenantTestCase
+from EquiTrack.tests.cases import BaseTenantTestCase
 from vision.adapters import manual as adapter
 
 
-class TestManualDataLoader(EToolsTenantTestCase):
+class TestManualDataLoader(BaseTenantTestCase):
     def test_init_no_endpoint_no_object_number(self):
         with self.assertRaisesRegexp(
                 adapter.VisionException,

@@ -2,7 +2,7 @@ from __future__ import unicode_literals
 
 from rest_framework.exceptions import ValidationError
 
-from EquiTrack.tests.cases import EToolsTenantTestCase
+from EquiTrack.tests.cases import BaseTenantTestCase
 from locations.tests.factories import LocationFactory
 from partners.tests.factories import (
     InterventionFactory,
@@ -25,7 +25,7 @@ from reports.tests.factories import (
 )
 
 
-class DisaggregationTest(EToolsTenantTestCase):
+class DisaggregationTest(BaseTenantTestCase):
 
     @classmethod
     def setUpTestData(cls):
@@ -95,7 +95,7 @@ class DisaggregationTest(EToolsTenantTestCase):
         self.assertEqual(serializer.errors['disaggregation_values'], ['This field is required.'])
 
 
-class TestAppliedIndicatorSerializer(EToolsTenantTestCase):
+class TestAppliedIndicatorSerializer(BaseTenantTestCase):
     @classmethod
     def setUpTestData(cls):
         cls.section = SectorFactory()
@@ -198,7 +198,7 @@ class TestAppliedIndicatorSerializer(EToolsTenantTestCase):
         self.assertEqual(applied_qs.count(), count + 1)
 
 
-class TestLowerResultSimpleCUSerializer(EToolsTenantTestCase):
+class TestLowerResultSimpleCUSerializer(BaseTenantTestCase):
     @classmethod
     def setUpTestData(cls):
         cls.result_link = InterventionResultLinkFactory()
@@ -233,7 +233,7 @@ class TestLowerResultSimpleCUSerializer(EToolsTenantTestCase):
         self.assertIsInstance(lower_result, LowerResult)
 
 
-class TestLowerResultCUSerializer(EToolsTenantTestCase):
+class TestLowerResultCUSerializer(BaseTenantTestCase):
     @classmethod
     def setUpTestData(cls):
         cls.result_link = InterventionResultLinkFactory()

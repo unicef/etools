@@ -6,7 +6,7 @@ from django.core.urlresolvers import reverse
 from rest_framework import status
 from tablib.core import Dataset
 
-from EquiTrack.tests.mixins import APITenantTestCase
+from EquiTrack.tests.cases import BaseTenantTestCase
 from partners.tests.factories import (
     AgreementAmendmentFactory,
     AgreementFactory,
@@ -17,7 +17,7 @@ from reports.tests.factories import CountryProgrammeFactory
 from users.tests.factories import UserFactory
 
 
-class BaseAgreementModelExportTestCase(APITenantTestCase):
+class BaseAgreementModelExportTestCase(BaseTenantTestCase):
     @classmethod
     def setUpTestData(cls):
         cls.unicef_staff = UserFactory(is_staff=True)
@@ -65,7 +65,7 @@ class TestAgreementModelExport(BaseAgreementModelExportTestCase):
         )
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        dataset = Dataset().load(response.content, 'csv')
+        dataset = Dataset().load(response.content.decode('utf-8'), 'csv')
         self.assertEqual(dataset.height, 1)
         self.assertEqual(dataset._get_headers(), [
             'Reference Number',
@@ -109,7 +109,7 @@ class TestAgreementModelExport(BaseAgreementModelExportTestCase):
         )
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        dataset = Dataset().load(response.content, 'csv')
+        dataset = Dataset().load(response.content.decode('utf-8'), 'csv')
         self.assertEqual(dataset.height, 1)
         self.assertEqual(len(dataset._get_headers()), 24)
         self.assertEqual(len(dataset[0]), 24)
@@ -153,7 +153,7 @@ class TestAgreementAmendmentModelExport(BaseAgreementModelExportTestCase):
         )
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        dataset = Dataset().load(response.content, 'csv')
+        dataset = Dataset().load(response.content.decode('utf-8'), 'csv')
         self.assertEqual(dataset.height, 1)
         self.assertEqual(len(dataset._get_headers()), 9)
         self.assertEqual(len(dataset[0]), 9)
@@ -167,7 +167,7 @@ class TestAgreementAmendmentModelExport(BaseAgreementModelExportTestCase):
         )
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        dataset = Dataset().load(response.content, 'csv')
+        dataset = Dataset().load(response.content.decode('utf-8'), 'csv')
         self.assertEqual(dataset.height, 1)
         self.assertEqual(len(dataset._get_headers()), 10)
         self.assertEqual(len(dataset[0]), 10)
