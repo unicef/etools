@@ -107,17 +107,17 @@ class MultiModelDataSynchronizer(VisionDataSynchronizer):
                         field: mapped_item[field] for field in unique_fields
                     }
 
-                    defaults = dict(
-                        [(field_name, value) for field_name, value in mapped_item.items()
-                         if field_name not in kwargs.keys()]
-                    )
-                    defaults.update(self.DEFAULTS.get(model, {}))
-                    model.objects.update_or_create(
-                        defaults=defaults, **kwargs
-                    )
-            except Exception:
-                logger.warning('Exception processing record in MultiModelDataSynchronizer',
-                               exc_info=True)
+                defaults = dict(
+                    [(field_name, value) for field_name, value in mapped_item.items()
+                     if field_name not in kwargs.keys()]
+                )
+                defaults.update(self.DEFAULTS.get(model, {}))
+                model.objects.update_or_create(
+                    defaults=defaults, **kwargs
+                )
+        except Exception:
+            logger.warning('Exception processing record in MultiModelDataSynchronizer',
+                           exc_info=True)
 
     def _save_records(self, records):
         processed = 0

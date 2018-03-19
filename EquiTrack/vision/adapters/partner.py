@@ -188,9 +188,10 @@ class PartnerSynchronizer(VisionDataSynchronizer):
 
             processed = 1
 
-            except Exception:
-                logger.exception(u'Exception occurred during Partner Sync')
-            return processed
+        except Exception:
+            logger.exception(u'Exception occurred during Partner Sync')
+
+        return processed
 
     def _save_records(self, records):
         processed = 0
