@@ -6,7 +6,7 @@ from django.core.urlresolvers import reverse
 from rest_framework import status
 from tablib.core import Dataset
 
-from EquiTrack.tests.mixins import APITenantTestCase
+from EquiTrack.tests.cases import BaseTenantTestCase
 from partners.tests.factories import (
     AgreementAmendmentFactory,
     AgreementFactory,
@@ -17,7 +17,7 @@ from reports.tests.factories import CountryProgrammeFactory
 from users.tests.factories import UserFactory
 
 
-class BaseAgreementModelExportTestCase(APITenantTestCase):
+class BaseAgreementModelExportTestCase(BaseTenantTestCase):
     @classmethod
     def setUpTestData(cls):
         cls.unicef_staff = UserFactory(is_staff=True)

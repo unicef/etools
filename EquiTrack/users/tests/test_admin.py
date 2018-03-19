@@ -7,7 +7,7 @@ from django.contrib.admin.sites import AdminSite
 from mock import Mock
 from unittest import skip
 
-from EquiTrack.tests.cases import EToolsTenantTestCase
+from EquiTrack.tests.cases import BaseTenantTestCase
 from users.admin import (
     CountryAdmin,
     ProfileAdmin,
@@ -22,7 +22,7 @@ class MockRequest:
     pass
 
 
-class TestProfileInline(EToolsTenantTestCase):
+class TestProfileInline(BaseTenantTestCase):
     @classmethod
     def setUpTestData(cls):
         site = AdminSite()
@@ -46,7 +46,7 @@ class TestProfileInline(EToolsTenantTestCase):
         self.assertIn("country_override", fields)
 
 
-class TestProfileAdmin(EToolsTenantTestCase):
+class TestProfileAdmin(BaseTenantTestCase):
     @classmethod
     def setUpTestData(cls):
         site = AdminSite()
@@ -104,7 +104,7 @@ class TestProfileAdmin(EToolsTenantTestCase):
         self.assertEqual(profile_updated.oic, self.superuser)
 
 
-class TestUserAdminPlus(EToolsTenantTestCase):
+class TestUserAdminPlus(BaseTenantTestCase):
     @classmethod
     def setUpTestData(cls):
         site = AdminSite()
@@ -139,7 +139,7 @@ class TestUserAdminPlus(EToolsTenantTestCase):
         self.assertNotIn("is_superuser", readonly_fields)
 
 
-class TestCountryAdmin(EToolsTenantTestCase):
+class TestCountryAdmin(BaseTenantTestCase):
     @classmethod
     def setUpTestData(cls):
         site = AdminSite()

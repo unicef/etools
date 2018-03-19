@@ -9,11 +9,11 @@ from django.core.urlresolvers import reverse
 from django.test import Client
 from rest_framework import status
 
-from EquiTrack.tests.cases import EToolsTenantTestCase
+from EquiTrack.tests.cases import BaseTenantTestCase
 from users.tests.factories import UserFactory
 
 
-class TestCheckView(EToolsTenantTestCase):
+class TestCheckView(BaseTenantTestCase):
     def setUp(self):
         super(TestCheckView, self).setUp()
         self.client = Client()
