@@ -283,7 +283,7 @@ class PartnerOrganization(AdminURLMixin, TimeStampedModel):
         max_length=50,
         choices=CSO_TYPES,
         blank=True,
-        default='',
+        null=True,
     )
     name = models.CharField(
         verbose_name=_('Name'),

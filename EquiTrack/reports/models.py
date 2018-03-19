@@ -239,7 +239,7 @@ class Result(MPTTModel):
     wbs = models.CharField(
         verbose_name=_("WBS"),
         max_length=50,
-        default='',
+        null=True,
         blank=True,
     )
     vision_id = models.CharField(
@@ -338,7 +338,7 @@ class Result(MPTTModel):
     def save(self, *args, **kwargs):
         # TODO add a validator that makes sure that the current result wbs fits within the countryProgramme wbs
         if not self.wbs:
-            self.wbs = ''
+            self.wbs = None
         super(Result, self).save(*args, **kwargs)
         nodes = self.get_descendants()
         for node in nodes:
@@ -749,5 +749,5 @@ class Indicator(TimeStampedModel):
     def save(self, *args, **kwargs):
         # Prevent from saving empty strings as code because of the unique together constraint
         if not self.code:
-            self.code = None
+            self.code = ''
         super(Indicator, self).save(*args, **kwargs)

@@ -45,7 +45,6 @@ def fix_nulls(apps, schema):
             'sic_code',
             'sic_name',
             'vision_id',
-            'wbs',
         ]
     )
     fix_null_values(

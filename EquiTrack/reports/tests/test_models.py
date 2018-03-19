@@ -263,10 +263,10 @@ class TestIndicatorBlueprint(BaseTenantTestCase):
 
 class TestIndicator(BaseTenantTestCase):
     def test_save_empty(self):
-        """If code is empty ensure it is set to None"""
+        """If code is empty ensure it is set to the empty string"""
         indicator = Indicator(name="Indicator", code="")
         indicator.save()
-        self.assertIsNone(indicator.code)
+        self.assertEqual('', indicator.code)
 
     def test_save(self):
         """If code is NOT empty ensure it is not changed"""

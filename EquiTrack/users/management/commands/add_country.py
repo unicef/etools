@@ -14,7 +14,7 @@ class Command(BaseCommand):
         try:
             name = options['country_name']
             slug = name.lower().replace(' ', '-').strip()
-            usd, _ = Currency.objects.get_or_create(code='USD', defaults=dict(name="US Dollar", decimal_places=2))
+            usd = Currency.objects.get(code='USD')
             Country.objects.create(
                 domain_url='{}.etools.unicef.org'.format(slug),
                 schema_name=name.lower().replace(' ', '_').strip(),
@@ -22,4 +22,4 @@ class Command(BaseCommand):
                 local_currency=usd,
             )
         except Exception as exp:
-            raise CommandError(exp.message)
+            raise CommandError(*exp.args)

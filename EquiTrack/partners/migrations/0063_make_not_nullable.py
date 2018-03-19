@@ -64,11 +64,6 @@ class Migration(migrations.Migration):
         ),
         migrations.AlterField(
             model_name='partnerorganization',
-            name='cso_type',
-            field=models.CharField(blank=True, choices=[('International', 'International'), ('National', 'National'), ('Community Based Organization', 'Community Based Organization'), ('Academic Institution', 'Academic Institution')], default='', max_length=50, verbose_name='CSO Type'),
-        ),
-        migrations.AlterField(
-            model_name='partnerorganization',
             name='email',
             field=models.CharField(blank=True, default='', max_length=255, verbose_name='Email Address'),
         ),
