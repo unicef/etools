@@ -254,7 +254,7 @@ class InterventionValid(CompleteValidation):
         'sections_valid': "The sections selected on the PD/SSFA are not a subset of all sections selected "
                           "for this PD/SSFA's indicators",
         'locations_valid': "The locations selected on the PD/SSFA are not a subset of all locations selected "
-                          "for this PD/SSFA's indicators"
+                          "for this PD/SSFA's indicators",
     }
 
     PERMISSIONS_CLASS = InterventionPermissions
