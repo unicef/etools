@@ -8,13 +8,13 @@ import json
 from django.core.urlresolvers import reverse
 from rest_framework import status
 
-from EquiTrack.tests.mixins import APITenantTestCase
+from EquiTrack.tests.cases import BaseTenantTestCase
 from partners.models import Intervention
 from partners.tests.factories import InterventionFactory
 from users.tests.factories import UserFactory
 
 
-class TestInterventionPartnershipDashView(APITenantTestCase):
+class TestInterventionPartnershipDashView(BaseTenantTestCase):
     @classmethod
     def setUpTestData(cls):
         cls.unicef_staff = UserFactory(is_staff=True)

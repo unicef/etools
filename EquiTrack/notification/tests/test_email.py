@@ -3,15 +3,17 @@ from __future__ import unicode_literals
 from django.conf import settings
 
 from mock import patch, mock
+from django.utils import six
+from mock import patch
 from post_office.models import Email, EmailTemplate
 
-from EquiTrack.tests.cases import EToolsTenantTestCase
+from EquiTrack.tests.cases import BaseTenantTestCase
 from notification.models import Notification
 from notification.tests.factories import NotificationFactory
 from users.tests.factories import UserFactory
 
 
-class TestEmailNotification(EToolsTenantTestCase):
+class TestEmailNotification(BaseTenantTestCase):
     @classmethod
     def setUpTestData(cls):
         cls.tenant.country_short_code = 'LEBA'
@@ -25,11 +27,11 @@ class TestEmailNotification(EToolsTenantTestCase):
         valid_notification = NotificationFactory()
         valid_notification.send_notification()
 
-        self.assertItemsEqual(valid_notification.recipients, valid_notification.sent_recipients)
+        six.assertCountEqual(self, valid_notification.recipients, valid_notification.sent_recipients)
         self.assertEqual(Email.objects.count(), old_email_count + 1)
 
 
-class TestSendNotification(EToolsTenantTestCase):
+class TestSendNotification(BaseTenantTestCase):
     """
     Test General Notification sending. We currently only have email set up, so
     this only tests that if a non-email type is created, it's an error
@@ -47,7 +49,7 @@ class TestSendNotification(EToolsTenantTestCase):
 
 
 @patch('notification.models.mail')
-class TestSendEmail(EToolsTenantTestCase):
+class TestSendEmail(BaseTenantTestCase):
 
     def test_success(self, mock_mail):
         "On successful notification, sent_recipients should be populated."

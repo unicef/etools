@@ -5,7 +5,7 @@ import tempfile
 from rest_framework import status
 from tablib.core import Dataset
 
-from EquiTrack.tests.mixins import APITenantTestCase
+from EquiTrack.tests.cases import BaseTenantTestCase
 from partners.models import PartnerOrganization
 from partners.tests.factories import (
     AgreementFactory,
@@ -21,7 +21,7 @@ from reports.tests.factories import ResultFactory
 from users.tests.factories import UserFactory
 
 
-class TestModelExport(APITenantTestCase):
+class TestModelExport(BaseTenantTestCase):
     @classmethod
     def setUpTestData(cls):
         cls.unicef_staff = UserFactory(is_staff=True)

@@ -6,12 +6,12 @@ from django.contrib.auth.models import User
 from django.core.urlresolvers import reverse
 from rest_framework import status
 
-from EquiTrack.tests.mixins import APITenantTestCase
+from EquiTrack.tests.cases import BaseTenantTestCase
 from users.models import UserProfile
 from users.tests.factories import GroupFactory, UserFactory
 
 
-class TestMyProfileAPIView(APITenantTestCase):
+class TestMyProfileAPIView(BaseTenantTestCase):
     def setUp(self):
         self.unicef_staff = UserFactory(is_staff=True)
         self.unicef_superuser = UserFactory(is_superuser=True)
@@ -83,7 +83,7 @@ class TestMyProfileAPIView(APITenantTestCase):
         self.assertEqual(response.data["oic"], self.unicef_superuser.id)
 
 
-class TestCountryView(APITenantTestCase):
+class TestCountryView(BaseTenantTestCase):
     def test_get(self):
         user = UserFactory(is_staff=True)
         response = self.forced_auth_req(
@@ -106,7 +106,7 @@ class TestCountryView(APITenantTestCase):
         self.assertEqual(len(response.data), 0)
 
 
-class TestCountriesViewSet(APITenantTestCase):
+class TestCountriesViewSet(BaseTenantTestCase):
     def setUp(self):
         self.unicef_superuser = UserFactory(is_superuser=True)
         self.partnership_manager_user = UserFactory(is_staff=True)

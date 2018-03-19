@@ -9,13 +9,13 @@ from django.contrib.auth.models import User
 from django.core.urlresolvers import reverse
 from rest_framework import status
 
-from EquiTrack.tests.mixins import APITenantTestCase
+from EquiTrack.tests.cases import BaseTenantTestCase
 from users.models import UserProfile
 from users.serializers_v3 import AP_ALLOWED_COUNTRIES
 from users.tests.factories import GroupFactory, UserFactory
 
 
-class TestCountryView(APITenantTestCase):
+class TestCountryView(BaseTenantTestCase):
     def test_get(self):
         user = UserFactory(is_staff=True)
         response = self.forced_auth_req(
@@ -37,7 +37,7 @@ class TestCountryView(APITenantTestCase):
         self.assertEqual(len(response.data), 0)
 
 
-class TestUsersDetailAPIView(APITenantTestCase):
+class TestUsersDetailAPIView(BaseTenantTestCase):
     @classmethod
     def setUpTestData(cls):
         cls.unicef_staff = UserFactory(is_staff=True)
@@ -72,7 +72,7 @@ class TestUsersDetailAPIView(APITenantTestCase):
         self.assertEqual(response.data, {})
 
 
-class TestUsersListAPIView(APITenantTestCase):
+class TestUsersListAPIView(BaseTenantTestCase):
     def setUp(self):
         self.unicef_staff = UserFactory(is_staff=True)
         self.unicef_superuser = UserFactory(is_superuser=True)
@@ -164,7 +164,7 @@ class TestUsersListAPIView(APITenantTestCase):
         self.assertEqual(len(response_json), 2)
 
 
-class TestMyProfileAPIView(APITenantTestCase):
+class TestMyProfileAPIView(BaseTenantTestCase):
     def setUp(self):
         super(TestMyProfileAPIView, self).setUp()
         self.unicef_staff = UserFactory(is_staff=True)
