@@ -68,6 +68,7 @@ def choices_to_json_ready(choices):
     else:
         choice_list = choices
 
+    choice_list = sorted(choice_list, key=lambda tup: tup[1])
     return [{'label': choice[1], 'value': choice[0]} for choice in choice_list]
 
 

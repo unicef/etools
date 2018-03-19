@@ -110,10 +110,26 @@ class TestChoicesToJSONReady(BaseTenantTestCase):
             {"label": "Two", "value": 2}
         ])
 
+    def test_list_of_tuples_sorted(self):
+        """Make list of tuples JSON ready"""
+        ready = v2.choices_to_json_ready([(1, "Uno"), (2, "Due")])
+        self.assertEqual(ready, [
+            {"label": "Due", "value": 2},
+            {"label": "Uno", "value": 1}
+        ])
+
     def test_dict(self):
         """Make dict JSON ready"""
         ready = v2.choices_to_json_ready({"k": "v"})
         self.assertEqual(ready, [{"label": "v", "value": "k"}])
+
+    def test_dict_sorted(self):
+        """Make dict JSON ready"""
+        ready = v2.choices_to_json_ready({"k": "v", "a": "b"})
+        self.assertEqual(ready, [
+            {"label": "b", "value": "a"},
+            {"label": "v", "value": "k"}
+        ])
 
     def test_choices(self):
         """Make model_utils.Choices JSON ready"""
