@@ -2,6 +2,7 @@ from __future__ import absolute_import, division, print_function, unicode_litera
 
 import random
 
+from django.utils import six
 from factory import fuzzy
 from rest_framework import status
 
@@ -11,7 +12,7 @@ from audit.tests.factories import AuditFactory, MicroAssessmentFactory, SpecialA
     KeyInternalControlFactory
 from audit.transitions.conditions import (
     AuditSubmitReportRequiredFieldsCheck, EngagementSubmitReportRequiredFieldsCheck, SPSubmitReportRequiredFieldsCheck,)
-from EquiTrack.tests.mixins import APITenantTestCase
+from EquiTrack.tests.cases import BaseTenantTestCase
 
 
 class EngagementCheckTransitionsTestCaseMixin(object):
@@ -24,7 +25,7 @@ class EngagementCheckTransitionsTestCaseMixin(object):
 
         self.assertEqual(response.status_code, expected_response)
         if errors:
-            self.assertItemsEqual(response.data.keys(), errors or [])
+            six.assertCountEqual(self, response.data.keys(), errors or [])
 
     def _test_submit(self, user, expected_response, errors=None, data=None):
         return self._test_transition(user, 'submit', expected_response, errors=errors, data=data)
@@ -87,7 +88,11 @@ class SCTransitionsTestCaseMixin(EngagementTransitionsTestCaseMixin):
         self._fill_sc_specified_fields()
 
 
-class TestMATransitionsTestCase(EngagementCheckTransitionsTestCaseMixin, MATransitionsTestCaseMixin, APITenantTestCase):
+class TestMATransitionsTestCase(
+        EngagementCheckTransitionsTestCaseMixin,
+        MATransitionsTestCaseMixin,
+        BaseTenantTestCase
+):
     def test_submit_for_dummy_object(self):
         errors_fields = EngagementSubmitReportRequiredFieldsCheck.fields
         self._test_submit(self.auditor, status.HTTP_400_BAD_REQUEST, errors=errors_fields)
@@ -118,7 +123,7 @@ class TestMATransitionsTestCase(EngagementCheckTransitionsTestCaseMixin, MATrans
 
 
 class TestAuditTransitionsTestCase(
-    EngagementCheckTransitionsTestCaseMixin, AuditTransitionsTestCaseMixin, APITenantTestCase
+    EngagementCheckTransitionsTestCaseMixin, AuditTransitionsTestCaseMixin, BaseTenantTestCase
 ):
     def test_submit_for_dummy_object(self):
         errors_fields = AuditSubmitReportRequiredFieldsCheck.fields
@@ -141,7 +146,7 @@ class TestAuditTransitionsTestCase(
 
 
 class TestSATransitionsTestCase(
-    EngagementCheckTransitionsTestCaseMixin, SpecialAuditTransitionsTestCaseMixin, APITenantTestCase
+    EngagementCheckTransitionsTestCaseMixin, SpecialAuditTransitionsTestCaseMixin, BaseTenantTestCase
 ):
     def test_submit_without_finding_object(self):
         self._fill_specific_procedure()
@@ -160,7 +165,7 @@ class TestSATransitionsTestCase(
 
 
 class TestSCTransitionsTestCase(
-    EngagementCheckTransitionsTestCaseMixin, SCTransitionsTestCaseMixin, APITenantTestCase
+    EngagementCheckTransitionsTestCaseMixin, SCTransitionsTestCaseMixin, BaseTenantTestCase
 ):
     def test_submit_for_dummy_object(self):
         errors_fields = SPSubmitReportRequiredFieldsCheck.fields
@@ -217,11 +222,11 @@ class EngagementCheckTransitionsMetadataTestCaseMixin(object):
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         action_codes = map(lambda action: action['code'], response.data['actions']['allowed_FSM_transitions'])
-        self.assertItemsEqual(action_codes, actions)
+        six.assertCountEqual(self, action_codes, actions)
 
 
 class TestSCTransitionsMetadataTestCase(
-    EngagementCheckTransitionsMetadataTestCaseMixin, SCTransitionsTestCaseMixin, APITenantTestCase
+    EngagementCheckTransitionsMetadataTestCaseMixin, SCTransitionsTestCaseMixin, BaseTenantTestCase
 ):
     def test_created_auditor(self):
         self._test_allowed_actions(self.auditor, ['submit'])

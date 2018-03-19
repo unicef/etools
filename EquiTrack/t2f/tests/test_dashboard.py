@@ -4,7 +4,7 @@ import json
 
 from django.core.urlresolvers import reverse
 
-from EquiTrack.tests.mixins import APITenantTestCase
+from EquiTrack.tests.cases import BaseTenantTestCase
 from partners.models import PartnerOrganization
 from publics.tests.factories import (
     PublicsBusinessAreaFactory,
@@ -18,7 +18,7 @@ from t2f.tests.factories import TravelActivityFactory, TravelFactory
 from users.tests.factories import UserFactory
 
 
-class TravelActivityList(APITenantTestCase):
+class TravelActivityList(BaseTenantTestCase):
     @classmethod
     def setUpTestData(cls):
         cls.unicef_staff = UserFactory(is_staff=True)
