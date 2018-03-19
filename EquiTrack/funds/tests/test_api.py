@@ -10,7 +10,8 @@ from django.utils import six
 from rest_framework import status
 from tablib.core import Dataset
 
-from EquiTrack.tests.mixins import APITenantTestCase, URLAssertionMixin
+from EquiTrack.tests.cases import BaseTenantTestCase
+from EquiTrack.tests.mixins import URLAssertionMixin
 from funds.tests.factories import (
     DonorFactory,
     FundsCommitmentItemFactory,
@@ -38,7 +39,7 @@ class UrlsTestCase(URLAssertionMixin, TestCase):
         self.assertReversal(names_and_paths, 'funds:', '/api/v2/funds/')
 
 
-class TestFundsReservationHeaderExportList(APITenantTestCase):
+class TestFundsReservationHeaderExportList(BaseTenantTestCase):
     @classmethod
     def setUpTestData(cls):
         cls.unicef_staff = UserFactory(is_staff=True)
@@ -82,7 +83,7 @@ class TestFundsReservationHeaderExportList(APITenantTestCase):
         self.assertEqual(len(dataset[0]), 19)
 
 
-class TestFundsReservationItemExportList(APITenantTestCase):
+class TestFundsReservationItemExportList(BaseTenantTestCase):
     def setUp(self):
         super(TestFundsReservationItemExportList, self).setUp()
         self.unicef_staff = UserFactory(is_staff=True)
@@ -129,7 +130,7 @@ class TestFundsReservationItemExportList(APITenantTestCase):
         self.assertEqual(len(dataset[0]), 14)
 
 
-class TestFundsCommitmentHeaderExportList(APITenantTestCase):
+class TestFundsCommitmentHeaderExportList(BaseTenantTestCase):
     def setUp(self):
         super(TestFundsCommitmentHeaderExportList, self).setUp()
         self.unicef_staff = UserFactory(is_staff=True)
@@ -176,7 +177,7 @@ class TestFundsCommitmentHeaderExportList(APITenantTestCase):
         self.assertEqual(len(dataset[0]), 11)
 
 
-class TestFundsCommitmentItemExportList(APITenantTestCase):
+class TestFundsCommitmentItemExportList(BaseTenantTestCase):
     def setUp(self):
         super(TestFundsCommitmentItemExportList, self).setUp()
         self.unicef_staff = UserFactory(is_staff=True)
@@ -220,7 +221,7 @@ class TestFundsCommitmentItemExportList(APITenantTestCase):
         self.assertEqual(len(dataset[0]), 16)
 
 
-class TestGrantExportList(APITenantTestCase):
+class TestGrantExportList(BaseTenantTestCase):
     def setUp(self):
         super(TestGrantExportList, self).setUp()
         self.unicef_staff = UserFactory(is_staff=True)
@@ -280,7 +281,7 @@ class TestGrantExportList(APITenantTestCase):
         self.assertEqual(len(dataset[0]), 7)
 
 
-class TestDonorExportList(APITenantTestCase):
+class TestDonorExportList(BaseTenantTestCase):
     def setUp(self):
         super(TestDonorExportList, self).setUp()
         self.unicef_staff = UserFactory(is_staff=True)

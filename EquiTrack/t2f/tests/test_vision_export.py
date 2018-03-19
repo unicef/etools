@@ -5,7 +5,8 @@ from datetime import datetime
 from django.core.urlresolvers import reverse
 from pytz import UTC
 
-from EquiTrack.tests.mixins import APITenantTestCase, URLAssertionMixin
+from EquiTrack.tests.cases import BaseTenantTestCase
+from EquiTrack.tests.mixins import URLAssertionMixin
 from publics.models import TravelExpenseType
 from publics.tests.factories import (
     PublicsCurrencyFactory,
@@ -28,7 +29,7 @@ except ImportError:
     import xml.etree.ElementTree as ET
 
 
-class VisionXML(URLAssertionMixin, APITenantTestCase):
+class VisionXML(URLAssertionMixin, BaseTenantTestCase):
     @classmethod
     def setUpTestData(cls):
         cls.unicef_staff = UserFactory(is_staff=True)

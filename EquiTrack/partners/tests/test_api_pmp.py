@@ -11,7 +11,8 @@ from rest_framework import status
 from tenant_schemas.test.client import TenantClient
 
 from EquiTrack.fields import CURRENCY_LIST
-from EquiTrack.tests.mixins import APITenantTestCase, URLAssertionMixin
+from EquiTrack.tests.cases import BaseTenantTestCase
+from EquiTrack.tests.mixins import URLAssertionMixin
 from locations.tests.factories import GatewayTypeFactory
 from partners.models import (
     Agreement,
@@ -43,7 +44,7 @@ class URLsTestCase(URLAssertionMixin, TestCase):
         self.assertIntParamRegexes(names_and_paths, 'partners_api:')
 
 
-class TestPMPStaticDropdownsListApiView(APITenantTestCase):
+class TestPMPStaticDropdownsListApiView(BaseTenantTestCase):
     '''exercise PmpStaticDropdownsListApiView'''
     @classmethod
     def setUpTestData(cls):
@@ -219,7 +220,7 @@ class TestPMPStaticDropdownsListApiView(APITenantTestCase):
         self.assertEqual(d['local_currency'], currency.id)
 
 
-class TestPMPDropdownsListApiView(APITenantTestCase):
+class TestPMPDropdownsListApiView(BaseTenantTestCase):
     @classmethod
     def setUpTestData(cls):
         cls.unicef_staff = UserFactory(is_staff=True)
