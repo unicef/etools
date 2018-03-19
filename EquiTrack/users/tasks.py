@@ -6,6 +6,7 @@ from django.contrib.auth.models import Group
 from django.core.exceptions import ObjectDoesNotExist
 from django.db import IntegrityError, transaction
 from django.db.models import Q
+from django.utils import six
 
 import requests
 from celery.utils.log import get_task_logger
@@ -156,7 +157,7 @@ class UserMapper(object):
                 logger.info(u'Group added to user {}'.format(user))
 
             # most attributes are direct maps.
-            for attr, attr_val in ad_user.iteritems():
+            for attr, attr_val in six.iteritems(ad_user):
                 mapped_attribute = self.ATTR_MAP.get(attr, 'unusable_attr')
                 value = ad_user[attr]
 
@@ -265,7 +266,7 @@ def sync_users_remote():
     with storage.open('saml/etools.dat') as csvfile:
         reader = csv.DictReader(csvfile, delimiter='|')
         for row in reader:
-            uni_row = {unicode(key, 'latin-1'): unicode(value, 'latin-1') for key, value in row.iteritems()}
+            uni_row = {unicode(key, 'latin-1'): unicode(value, 'latin-1') for key, value in six.iteritems(row)}
             user_sync.create_or_update_user(uni_row)
 
 
@@ -309,7 +310,7 @@ def sync_users_local(n=20):
             i += 1
             if i == n:
                 break
-            uni_row = {unicode(key, 'latin-1'): unicode(value, 'latin-1') for key, value in row.iteritems()}
+            uni_row = {unicode(key, 'latin-1'): unicode(value, 'latin-1') for key, value in six.iteritems(row)}
             user_sync.create_or_update_user(uni_row)
 
 
