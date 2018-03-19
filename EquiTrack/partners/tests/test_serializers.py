@@ -6,6 +6,7 @@ import datetime
 from django.utils import six
 from rest_framework import serializers
 
+from attachments.tests.factories import AttachmentFactory, FileTypeFactory
 from EquiTrack.tests.cases import BaseTenantTestCase
 from partners.models import Agreement, PartnerType
 from partners.serializers.agreements_v2 import AgreementCreateUpdateSerializer
@@ -33,12 +34,18 @@ class AgreementCreateUpdateSerializerBase(BaseTenantTestCase):
         cls.partner = PartnerFactory(partner_type=PartnerType.CIVIL_SOCIETY_ORGANIZATION)
 
         cls.today = datetime.date.today()
+        this_year = cls.today.year
+        cls.country_programme = CountryProgrammeFactory(
+            from_date=datetime.date(this_year - 1, 1, 1),
+            to_date=datetime.date(this_year + 1, 1, 1)
+        )
 
         # The serializer examines context['request'].user during the course of its operation. If that's not set, the
         # serializer will fail. It doesn't need a real request object, just something with a .user attribute, so
         # that's what I create here.
         class Stub(object):
             pass
+
         cls.fake_request = Stub()
         cls.fake_request.user = cls.user
 
@@ -90,10 +97,19 @@ class AgreementCreateUpdateSerializerBase(BaseTenantTestCase):
         self.assertEqual(the_error.keys(), ['signed_amendment'])
         self.assertIsInstance(the_error['signed_amendment'], list)
         self.assertEqual(the_error['signed_amendment'], [expected_message])
+        # self.assertEqual(the_error.keys(), ['signed_amendment_attachment'])
+        # self.assertIsInstance(the_error['signed_amendment_attachment'], list)
+        # self.assertEqual(the_error['signed_amendment_attachment'], [expected_message])
 
 
 class TestAgreementCreateUpdateSerializer(AgreementCreateUpdateSerializerBase):
-    """Exercise the AgreementCreateUpdateSerializer."""
+    '''Exercise the AgreementCreateUpdateSerializer.'''
+    @classmethod
+    def setUpTestData(cls):
+        super(TestAgreementCreateUpdateSerializer, cls).setUpTestData()
+        cls.amendment_code = "partners_agreement_amendment"
+        cls.amendment_file_type = FileTypeFactory(code=cls.amendment_code)
+
     def test_simple_create(self):
         data = {
             "agreement_type": Agreement.MOU,
@@ -543,9 +559,15 @@ class TestAgreementCreateUpdateSerializer(AgreementCreateUpdateSerializerBase):
                                      signed_by_partner_date=None)
 
         amendment = AgreementAmendmentFactory(agreement=agreement)
-        # I need to give amendment.signed_amendment a name to exercise the date part of the amendment validator.
         amendment.signed_amendment.name = 'fake_amendment.pdf'
         amendment.save()
+        # I need to add attachment to exercise the date part of the amendment validator.
+        AttachmentFactory(
+            file='fake_amendment.pdf',
+            file_type=self.amendment_file_type,
+            code=self.amendment_code,
+            content_object=amendment,
+        )
         data = {
             'agreement': agreement,
             'amendments': [amendment],
@@ -693,7 +715,7 @@ class TestAgreementSerializerTransitions(AgreementCreateUpdateSerializerBase):
     def test_ensure_field_read_write_status(self):
         """Ensure that the fields I expect to be read-only are read-only; also confirm the converse"""
         expected_read_only_fields = ('id', 'created', 'modified', 'partner_name', 'amendments', 'unicef_signatory',
-                                     'partner_signatory', 'agreement_number', 'attached_agreement_file')
+                                     'partner_signatory', 'agreement_number', 'attachment', 'attached_agreement_file')
 
         serializer = AgreementCreateUpdateSerializer()
 
@@ -716,12 +738,12 @@ class TestPartnerOrganizationDetailSerializer(BaseTenantTestCase):
         data = serializer.data
         six.assertCountEqual(self, data.keys(), [
             'address', 'alternate_id', 'alternate_name', 'assessments', 'basis_for_risk_rating', 'blocked', 'city',
-            'core_values_assessment', 'core_values_assessment_date', 'core_values_assessment_file', 'country',
+            'core_values_assessment', 'core_values_assessment_date', 'core_values_assessment_attachment', 'country',
             'created', 'cso_type', 'deleted_flag', 'description', 'email', 'hact_min_requirements', 'hact_values',
             'hidden', u'id', 'interventions', 'last_assessment_date', 'modified', 'name', 'net_ct_cy', 'partner_type',
             'phone_number', 'planned_engagement', 'postal_code', 'rating', 'reported_cy', 'shared_with', 'short_name',
             'staff_members', 'street_address', 'total_ct_cp', 'total_ct_cy', 'total_ct_ytd', 'type_of_assessment',
-            'vendor_number', 'vision_synced'
+            'vendor_number', 'vision_synced', 'core_values_assessment_file',
         ])
 
         six.assertCountEqual(self, data['planned_engagement'].keys(), [

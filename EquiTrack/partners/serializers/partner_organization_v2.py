@@ -7,6 +7,8 @@ from django.contrib.auth import get_user_model
 from django.utils import timezone
 from rest_framework import serializers
 
+from attachments.serializers import AttachmentSerializerMixin
+from attachments.serializers_fields import AttachmentSingleFileField
 from EquiTrack.serializers import SnapshotModelSerializer
 from partners.serializers.interventions_v2 import InterventionListSerializer
 
@@ -133,6 +135,7 @@ class PartnerStaffMemberDetailSerializer(serializers.ModelSerializer):
 
 class AssessmentDetailSerializer(serializers.ModelSerializer):
 
+    report_attachment = AttachmentSingleFileField(read_only=True)
     report_file = serializers.FileField(source='report', read_only=True)
     report = serializers.FileField(required=True)
     completed_date = serializers.DateField(required=True)
@@ -274,6 +277,7 @@ class PartnerOrganizationDetailSerializer(serializers.ModelSerializer):
     planned_engagement = PlannedEngagementSerializer(read_only=True)
     hact_values = serializers.SerializerMethodField(read_only=True)
     core_values_assessment_file = serializers.FileField(source='core_values_assessment', read_only=True)
+    core_values_assessment_attachment = AttachmentSingleFileField(read_only=True)
     interventions = serializers.SerializerMethodField(read_only=True)
     hact_min_requirements = serializers.JSONField(read_only=True)
     hidden = serializers.BooleanField(read_only=True)
@@ -296,12 +300,13 @@ class PartnerOrganizationDetailSerializer(serializers.ModelSerializer):
         fields = "__all__"
 
 
-class PartnerOrganizationCreateUpdateSerializer(SnapshotModelSerializer):
+class PartnerOrganizationCreateUpdateSerializer(AttachmentSerializerMixin, SnapshotModelSerializer):
 
     staff_members = PartnerStaffMemberNestedSerializer(many=True, read_only=True)
     planned_engagement = PlannedEngagementNestedSerializer(read_only=True)
     hact_values = serializers.SerializerMethodField(read_only=True)
     core_values_assessment_file = serializers.FileField(source='core_values_assessment', read_only=True)
+    core_values_assessment_attachment = AttachmentSingleFileField(read_only=True)
     hidden = serializers.BooleanField(read_only=True)
 
     def get_hact_values(self, obj):

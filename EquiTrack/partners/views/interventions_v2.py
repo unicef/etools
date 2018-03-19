@@ -19,6 +19,7 @@ from rest_framework.generics import (
     DestroyAPIView,
 )
 
+from attachments.models import Attachment
 from EquiTrack.mixins import ExportModelMixin
 from EquiTrack.renderers import CSVFlatRenderer
 from EquiTrack.validation_mixins import ValidatorViewMixin
@@ -325,6 +326,50 @@ class InterventionAttachmentDeleteView(DestroyAPIView):
             return Response(status=status.HTTP_204_NO_CONTENT)
         else:
             raise ValidationError("You do not have permissions to delete an attachment")
+
+
+class InterventionAttachmentListView(ListAPIView):
+    queryset = InterventionAttachment.objects.all()
+    serializer_class = InterventionAttachmentSerializer
+    permission_classes = (PartnershipManagerPermission,)
+
+    def get_queryset(self):
+        # filter on InterventionAttachment
+        partner = self.request.query_params.getlist("partner")
+        if partner:
+            self.queryset = self.queryset.filter(
+                intervention__agreement__partner__pk__in=partner
+            )
+        file_type = self.request.query_params.getlist("file_type")
+        if file_type:
+            self.queryset = self.queryset.filter(type__pk__in=file_type)
+
+        # filter on Attachments
+        attachments_qs = Attachment.objects.filter(
+            code="partners_intervention_attachment",
+        ).exclude(
+            Q(file__isnull=True) | Q(file__exact=""),
+            Q(hyperlink__isnull=True) | Q(hyperlink__exact="")
+        )
+
+        before = self.request.query_params.get("before")
+        if before:
+            attachments_qs = attachments_qs.filter(modified__lte=before)
+        after = self.request.query_params.get("after")
+        if after:
+            attachments_qs = attachments_qs.filter(modified__gte=after)
+        uploaded_by = self.request.query_params.getlist("uploaded_by")
+        if uploaded_by:
+            attachments_qs = attachments_qs.filter(
+                uploaded_by__pk__in=uploaded_by
+            )
+
+        # merge Attachments filtering with queryset
+        self.queryset = self.queryset.filter(pk__in=attachments_qs.values_list(
+            "object_id",
+            flat=True
+        ).all())
+        return self.queryset.all()
 
 
 class InterventionResultListAPIView(ExportModelMixin, ListAPIView):

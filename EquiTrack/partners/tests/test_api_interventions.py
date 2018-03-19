@@ -14,11 +14,15 @@ from django.core.files.uploadedfile import SimpleUploadedFile
 from rest_framework import status
 from rest_framework.test import APIRequestFactory
 
-from EquiTrack.tests.cases import BaseTenantTestCase
-from EquiTrack.tests.mixins import URLAssertionMixin
+from attachments.tests.factories import (
+    AttachmentFactory,
+    FileTypeFactory as AttachmentFileTypeFactory
+)
 from environment.helpers import tenant_switch_is_active
 from environment.models import TenantSwitch
 from environment.tests.factories import TenantSwitchFactory
+from EquiTrack.tests.cases import BaseTenantTestCase
+from EquiTrack.tests.mixins import URLAssertionMixin
 from locations.tests.factories import LocationFactory
 from partners.tests.test_utils import setup_intervention_test_data
 from partners.models import (
@@ -28,6 +32,7 @@ from partners.models import (
 )
 from partners.tests.factories import (
     AgreementFactory,
+    FileTypeFactory,
     InterventionAmendmentFactory,
     InterventionAttachmentFactory,
     InterventionFactory,
@@ -88,7 +93,8 @@ class TestInterventionsAPI(BaseTenantTestCase):
                   "partner_authorized_officer_signatory_id", "created", "planned_visits",
                   "planned_budget", "modified", "signed_pd_document", "submission_date_prc", "document_type",
                   "offices", "population_focus", "country_programme_id", "engagement", "sections",
-                  "sections_present", "flat_locations", "reporting_periods", "activity", ],
+                  "sections_present", "flat_locations", "reporting_periods", "activity",
+                  "prc_review_attachment", "signed_pd_attachment"],
         'signed': [],
         'active': ['']
     }
@@ -190,6 +196,20 @@ class TestInterventionsAPI(BaseTenantTestCase):
         status_code, response = self.run_request_list_ep(data, user=self.partnership_manager_user)
 
         self.assertEqual(status_code, status.HTTP_201_CREATED)
+
+    def test_add_attachments(self):
+        data = {
+            "document_type": Intervention.PD,
+            "title": "My test intervention1",
+            "contingency_pd": True,
+            "agreement": self.agreement.id,
+            "attachments": [{"type": self.file_type.pk}]
+        }
+        status_code, response = self.run_request_list_ep(data, user=self.partnership_manager_user)
+        self.assertEqual(status_code, status.HTTP_201_CREATED)
+        self.assertTrue(response["attachments"])
+        for attachment in response["attachments"]:
+            self.assertTrue(attachment["attachment_document_upload_link"])
 
     def test_add_one_valid_fr_on_create_pd(self):
         self.assertFalse(Activity.objects.exists())
@@ -1152,6 +1172,176 @@ class TestInterventionPlannedVisitsDeleteView(BaseTenantTestCase):
         self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
 
 
+class TestInterventionAttachmentListView(BaseTenantTestCase):
+    @classmethod
+    def setUpTestData(cls):
+        cls.unicef_staff = UserFactory(is_staff=True)
+        cls.user = UserFactory()
+        cls.intervention_1 = InterventionFactory()
+        cls.intervention_2 = InterventionFactory()
+        cls.file_type_1 = FileTypeFactory(name='Progress Report')
+        cls.file_type_2 = FileTypeFactory(name='Partnership Review')
+        cls.intervention_attachment_1 = InterventionAttachmentFactory(
+            intervention=cls.intervention_1,
+            type=cls.file_type_1
+        )
+        cls.intervention_attachment_2 = InterventionAttachmentFactory(
+            intervention=cls.intervention_2,
+            type=cls.file_type_2
+        )
+        cls.attachment_code = "partners_intervention_attachment"
+        cls.attachment_file_type = AttachmentFileTypeFactory(
+            code=cls.attachment_code
+        )
+        cls.attachment_1 = AttachmentFactory(
+            code=cls.attachment_code,
+            file="random_attachment_1.pdf",
+            file_type=cls.attachment_file_type,
+            content_object=cls.intervention_attachment_1,
+            uploaded_by=cls.unicef_staff,
+        )
+        cls.attachment_2 = AttachmentFactory(
+            code=cls.attachment_code,
+            file="random_attachment_2.pdf",
+            file_type=cls.attachment_file_type,
+            content_object=cls.intervention_attachment_2,
+            uploaded_by=cls.user,
+        )
+        cls.url = reverse("partners_api:intervention-attachments")
+
+    def test_get(self):
+        response = self.forced_auth_req(
+            "get",
+            self.url,
+            user=self.unicef_staff,
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(response.data), 2)
+
+    def test_filter_not_found(self):
+        response = self.forced_auth_req(
+            "get",
+            self.url,
+            user=self.unicef_staff,
+            data={"file_type": 404}
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertFalse(response.data)
+
+    def test_filter_invalid(self):
+        """If invalid filter param provided, then all attachments
+        are provided
+        """
+        response = self.forced_auth_req(
+            "get",
+            self.url,
+            user=self.unicef_staff,
+            data={"wrong": self.file_type_1.pk}
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(response.data), 2)
+
+    def test_filter_file_type(self):
+        response = self.forced_auth_req(
+            "get",
+            self.url,
+            user=self.unicef_staff,
+            data={"file_type": self.file_type_1.pk}
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(response.data), 1)
+        self.assertTrue(
+            response.data[0]["attachment_document"].endswith(
+                self.attachment_1.filename
+            )
+        )
+
+    def test_filter_file_type_list(self):
+        response = self.forced_auth_req(
+            "get",
+            self.url,
+            user=self.unicef_staff,
+            data={"file_type": [self.file_type_1.pk, self.file_type_2.pk]}
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(response.data), 2)
+
+    def test_filter_before(self):
+        before = self.attachment_1.modified + datetime.timedelta(days=1)
+        response = self.forced_auth_req(
+            "get",
+            self.url,
+            user=self.unicef_staff,
+            data={"before": before.strftime("%Y-%m-%d")}
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(response.data), 2)
+
+    def test_filter_after(self):
+        after = self.attachment_1.modified - datetime.timedelta(days=1)
+        response = self.forced_auth_req(
+            "get",
+            self.url,
+            user=self.unicef_staff,
+            data={"after": after.strftime("%Y-%m-%d")}
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(response.data), 2)
+
+    def test_filter_uploaded_by(self):
+        response = self.forced_auth_req(
+            "get",
+            self.url,
+            user=self.unicef_staff,
+            data={"uploaded_by": self.unicef_staff.pk}
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(response.data), 1)
+        self.assertTrue(
+            response.data[0]["attachment_document"].endswith(
+                self.attachment_1.filename
+            )
+        )
+
+    def test_filter_uploaded_by_list(self):
+        response = self.forced_auth_req(
+            "get",
+            self.url,
+            user=self.unicef_staff,
+            data={"uploaded_by": [self.unicef_staff.pk, self.user.pk]}
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(response.data), 2)
+
+    def test_filter_partner(self):
+        response = self.forced_auth_req(
+            "get",
+            self.url,
+            user=self.unicef_staff,
+            data={"partner": self.intervention_1.agreement.partner.pk}
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(response.data), 1)
+        self.assertTrue(
+            response.data[0]["attachment_document"].endswith(
+                self.attachment_1.filename
+            )
+        )
+
+    def test_filter_partner_list(self):
+        response = self.forced_auth_req(
+            "get",
+            self.url,
+            user=self.unicef_staff,
+            data={"partner": [
+                self.intervention_1.agreement.partner.pk,
+                self.intervention_2.agreement.partner.pk
+            ]}
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(response.data), 2)
+
+
 class TestInterventionAttachmentDeleteView(BaseTenantTestCase):
     @classmethod
     def setUpTestData(cls):
@@ -1538,6 +1728,13 @@ class TestInterventionAmendmentDeleteView(BaseTenantTestCase):
             types=[InterventionAmendment.RESULTS],
             signed_date=datetime.date.today(),
             signed_amendment="random_amendment.pdf"
+        )
+        code = "partners_intervention_amendment_signed"
+        AttachmentFactory(
+            file="random_amendment.pdf",
+            file_type=AttachmentFileTypeFactory(code=code),
+            content_object=cls.amendment,
+            code=code
         )
         cls.url = reverse(
             "partners_api:intervention-amendments-del",

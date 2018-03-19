@@ -15,7 +15,7 @@ from partners.models import Agreement, Intervention
 import partners.tasks
 from partners.tests.factories import AgreementFactory, InterventionFactory
 from users.models import User
-from users.tests.factories import CountryFactory, UserFactory
+from users.tests.factories import CountryFactory
 
 
 def _build_country(name):
@@ -109,10 +109,7 @@ class PartnersTestBaseClass(BaseTenantTestCase):
 
     @classmethod
     def setUpTestData(cls):
-        try:
-            cls.admin_user = User.objects.get(username=settings.TASK_ADMIN_USER)
-        except User.DoesNotExist:
-            cls.admin_user = UserFactory(username=settings.TASK_ADMIN_USER)
+        cls.admin_user, _ = User.objects.get_or_create(username=settings.TASK_ADMIN_USER)
 
         # The global "country" should be excluded from processing. Create it to ensure it's ignored during this test.
         cls.global_country = _build_country('Global')

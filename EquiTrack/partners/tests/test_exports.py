@@ -5,6 +5,7 @@ import tempfile
 from rest_framework import status
 from tablib.core import Dataset
 
+from attachments.tests.factories import AttachmentFactory, FileTypeFactory
 from EquiTrack.tests.cases import BaseTenantTestCase
 from partners.models import PartnerOrganization
 from partners.tests.factories import (
@@ -60,6 +61,13 @@ class TestModelExport(BaseTenantTestCase):
         )
         cls.agreement.authorized_officers.add(cls.partnerstaff)
         cls.agreement.save()
+        file_type = FileTypeFactory(code="partners_agreement")
+        AttachmentFactory(
+            file=attachment,
+            content_object=cls.agreement,
+            file_type=file_type,
+            code="partners_agreement",
+        )
         # This is here to test partner scoping
         AgreementFactory(signed_by_unicef_date=datetime.date.today())
         cls.intervention = InterventionFactory(

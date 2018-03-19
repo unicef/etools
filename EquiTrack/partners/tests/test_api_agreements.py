@@ -5,6 +5,7 @@ import datetime
 from django.core.urlresolvers import reverse
 from rest_framework import status
 
+from attachments.tests.factories import AttachmentFactory, FileTypeFactory
 from EquiTrack.tests.cases import BaseTenantTestCase
 from EquiTrack.tests.mixins import URLAssertionMixin
 from partners.models import (
@@ -41,6 +42,9 @@ class URLsTestCase(URLAssertionMixin, TestCase):
 class TestAgreementsAPI(BaseTenantTestCase):
     @classmethod
     def setUpTestData(cls):
+        cls.amendment_code = "partners_agreement_amendment"
+        cls.amendment_file_type = FileTypeFactory(code=cls.amendment_code)
+
         cls.unicef_staff = UserFactory(is_staff=True)
         cls.partnership_manager_user = UserFactory(is_staff=True)
         cls.partnership_manager_user.groups.add(GroupFactory())
@@ -56,6 +60,12 @@ class TestAgreementsAPI(BaseTenantTestCase):
                                                           number="001",
                                                           signed_amendment="application/pdf",
                                                           signed_date=datetime.date.today())
+        AttachmentFactory(
+            file="application/pdf",
+            file_type=cls.amendment_file_type,
+            code=cls.amendment_code,
+            content_object=cls.amendment,
+        )
 
     def run_request_list_ep(self, data={}, user=None, method='post'):
         response = self.forced_auth_req(
@@ -90,6 +100,7 @@ class TestAgreementsAPI(BaseTenantTestCase):
             Activity.objects.filter(action=Activity.CREATE).count(),
             1
         )
+        self.assertTrue(response["attachment_upload_link"])
 
     def test_fail_add_new_PCA_without_agreement_type(self):
         self.assertFalse(Activity.objects.exists())
@@ -129,6 +140,7 @@ class TestAgreementsAPI(BaseTenantTestCase):
             Activity.objects.filter(action=Activity.CREATE).count(),
             1
         )
+        self.assertTrue(response["attachment_upload_link"])
 
     def test_add_new_SSFA_with_country_programme_null(self):
         self.assertFalse(Activity.objects.exists())
@@ -145,6 +157,7 @@ class TestAgreementsAPI(BaseTenantTestCase):
             Activity.objects.filter(action=Activity.CREATE).count(),
             1
         )
+        self.assertTrue(response["attachment_upload_link"])
 
     def test_fail_patch_PCA_without_country_programme(self):
         # create new agreement

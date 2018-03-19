@@ -5,6 +5,8 @@ from django.core.exceptions import ValidationError
 from django.db import transaction
 from rest_framework import serializers
 
+from attachments.serializers import AttachmentSerializerMixin
+from attachments.serializers_fields import AttachmentSingleFileField
 from EquiTrack.serializers import SnapshotModelSerializer
 from funds.models import FundsCommitmentItem, FundsReservationHeader
 from funds.serializers import FRsSerializer
@@ -47,9 +49,10 @@ class InterventionBudgetCUSerializer(serializers.ModelSerializer):
         )
 
 
-class InterventionAmendmentCUSerializer(serializers.ModelSerializer):
+class InterventionAmendmentCUSerializer(AttachmentSerializerMixin, serializers.ModelSerializer):
     amendment_number = serializers.CharField(read_only=True)
     signed_amendment_file = serializers.FileField(source="signed_amendment", read_only=True)
+    signed_amendment_attachment = AttachmentSingleFileField(read_only=True)
 
     class Meta:
         model = InterventionAmendment
@@ -244,13 +247,26 @@ class InterventionSectorLocationCUSerializer(serializers.ModelSerializer):
         )
 
 
-class InterventionAttachmentSerializer(serializers.ModelSerializer):
+class InterventionAttachmentSerializer(AttachmentSerializerMixin, serializers.ModelSerializer):
+    partner = serializers.CharField(
+        source='intervention.agreement.partner.name',
+        read_only=True
+    )
+    type_name = serializers.CharField(source="type.name", read_only=True)
     attachment_file = serializers.FileField(source="attachment", read_only=True)
+    attachment_document = AttachmentSingleFileField(source="attachment_file", read_only=True)
 
     class Meta:
         model = InterventionAttachment
         fields = (
-            'id', 'intervention', 'created', 'type', 'attachment', "attachment_file"
+            'id',
+            'intervention',
+            'partner',
+            'created',
+            'type',
+            'type_name',
+            'attachment_file',
+            'attachment_document',
         )
 
 
@@ -434,12 +450,14 @@ class FundingCommitmentNestedSerializer(serializers.ModelSerializer):
         )
 
 
-class InterventionCreateUpdateSerializer(SnapshotModelSerializer):
+class InterventionCreateUpdateSerializer(AttachmentSerializerMixin, SnapshotModelSerializer):
 
     planned_budget = InterventionBudgetCUSerializer(read_only=True)
     partner = serializers.CharField(source='agreement.partner.name', read_only=True)
     prc_review_document_file = serializers.FileField(source='prc_review_document', read_only=True)
+    prc_review_attachment = AttachmentSingleFileField(read_only=True)
     signed_pd_document_file = serializers.FileField(source='signed_pd_document', read_only=True)
+    signed_pd_attachment = AttachmentSingleFileField(read_only=True)
     planned_visits = PlannedVisitsNestedSerializer(many=True, read_only=True, required=False)
     attachments = InterventionAttachmentSerializer(many=True, read_only=True, required=False)
     result_links = InterventionResultCUSerializer(many=True, read_only=True, required=False)
@@ -480,12 +498,14 @@ class InterventionCreateUpdateSerializer(SnapshotModelSerializer):
         return updated
 
 
-class InterventionDetailSerializer(serializers.ModelSerializer):
+class InterventionDetailSerializer(AttachmentSerializerMixin, serializers.ModelSerializer):
     planned_budget = InterventionBudgetCUSerializer(read_only=True)
     partner = serializers.CharField(source='agreement.partner.name')
     partner_id = serializers.CharField(source='agreement.partner.id', read_only=True)
     prc_review_document_file = serializers.FileField(source='prc_review_document', read_only=True)
+    prc_review_attachment = AttachmentSingleFileField(read_only=True)
     signed_pd_document_file = serializers.FileField(source='signed_pd_document', read_only=True)
+    signed_pd_attachment = AttachmentSingleFileField(read_only=True)
     amendments = InterventionAmendmentCUSerializer(many=True, read_only=True, required=False)
     planned_visits = PlannedVisitsNestedSerializer(many=True, read_only=True, required=False)
     attachments = InterventionAttachmentSerializer(many=True, read_only=True, required=False)
@@ -523,8 +543,10 @@ class InterventionDetailSerializer(serializers.ModelSerializer):
     class Meta:
         model = Intervention
         fields = (
-            "id", 'frs', "partner", "agreement", "document_type", "number", "prc_review_document_file", "frs_details",
-            "signed_pd_document_file", "title", "status", "start", "end", "submission_date_prc", "review_date_prc",
+            "id", 'frs', "partner", "agreement", "document_type", "number", "prc_review_document_file",
+            "prc_review_attachment", "frs_details",
+            "signed_pd_document_file", "signed_pd_attachment", "title", "status", "start", "end", "submission_date_prc",
+            "review_date_prc",
             "submission_date", "prc_review_document", "submitted_to_prc", "signed_pd_document", "signed_by_unicef_date",
             "unicef_signatory", "unicef_focal_points", "partner_focal_points", "partner_authorized_officer_signatory",
             "offices", "planned_visits", "population_focus", "signed_by_partner_date", "created", "modified",

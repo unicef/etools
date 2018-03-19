@@ -6,6 +6,7 @@ from django.core.urlresolvers import reverse
 from rest_framework import status
 from tablib.core import Dataset
 
+from attachments.tests.factories import AttachmentFactory, FileTypeFactory
 from EquiTrack.tests.cases import BaseTenantTestCase
 from partners.tests.factories import (
     AgreementAmendmentFactory,
@@ -20,6 +21,11 @@ from users.tests.factories import UserFactory
 class BaseAgreementModelExportTestCase(BaseTenantTestCase):
     @classmethod
     def setUpTestData(cls):
+        cls.agreement_code = "partners_agreement"
+        cls.agreement_file_type = FileTypeFactory(code=cls.agreement_code)
+        cls.amendment_code = "partners_agreement_amendment"
+        cls.amendment_file_type = FileTypeFactory(code=cls.amendment_code)
+
         cls.unicef_staff = UserFactory(is_staff=True)
         partner = PartnerFactory(
             partner_type='Government',
@@ -52,6 +58,12 @@ class BaseAgreementModelExportTestCase(BaseTenantTestCase):
         )
         cls.agreement.authorized_officers.add(partnerstaff)
         cls.agreement.save()
+        AttachmentFactory(
+            file="fake_attachment.pdf",
+            content_object=cls.agreement,
+            file_type=cls.agreement_file_type,
+            code=cls.agreement_code,
+        )
 
 
 class TestAgreementModelExport(BaseAgreementModelExportTestCase):
@@ -132,6 +144,12 @@ class TestAgreementAmendmentModelExport(BaseAgreementModelExportTestCase):
             agreement=self.agreement,
             signed_amendment="fake_attachment.pdf",
             signed_date=datetime.date.today(),
+        )
+        AttachmentFactory(
+            file="fake_attachment.pdf",
+            file_type=self.amendment_file_type,
+            code=self.amendment_code,
+            content_object=self.amendment,
         )
 
     def test_invalid_format_export_api(self):

@@ -1,5 +1,6 @@
 import datetime
 
+from attachments.tests.factories import AttachmentFactory, FileTypeFactory
 from EquiTrack.tests.cases import BaseTenantTestCase
 from EquiTrack.validation_mixins import BasicValidationError, TransitionError
 from partners.models import Agreement
@@ -122,6 +123,11 @@ class TestAgreementsIllegalTransitionPermissions(BaseTenantTestCase):
 
 
 class TestAmendmentsValid(BaseTenantTestCase):
+    @classmethod
+    def setUpTestData(cls):
+        cls.amendment_code = "partners_agreement_amendment"
+        cls.amendment_file_type = FileTypeFactory(code=cls.amendment_code)
+
     def test_invalid_name(self):
         agreement = AgreementFactory()
         AgreementAmendmentFactory(
@@ -131,18 +137,30 @@ class TestAmendmentsValid(BaseTenantTestCase):
 
     def test_invalid_date(self):
         agreement = AgreementFactory()
-        AgreementAmendmentFactory(
+        amendment = AgreementAmendmentFactory(
             agreement=agreement,
-            signed_amendment='fake.pdf'
+            signed_amendment="fake.pdf"
+        )
+        AttachmentFactory(
+            file='fake.pdf',
+            file_type=self.amendment_file_type,
+            code=self.amendment_code,
+            content_object=amendment,
         )
         self.assertFalse(agreements.amendments_valid(agreement))
 
     def test_valid(self):
         agreement = AgreementFactory()
-        AgreementAmendmentFactory(
+        amendment = AgreementAmendmentFactory(
             agreement=agreement,
-            signed_amendment='fake.pdf',
+            signed_amendment="fake.pdf",
             signed_date=datetime.date.today(),
+        )
+        AttachmentFactory(
+            file='fake.pdf',
+            file_type=self.amendment_file_type,
+            code=self.amendment_code,
+            content_object=amendment,
         )
         self.assertTrue(agreements.amendments_valid(agreement))
 

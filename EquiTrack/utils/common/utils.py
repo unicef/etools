@@ -2,6 +2,7 @@ from __future__ import absolute_import, division, print_function, unicode_litera
 
 from collections import Iterable, Mapping
 from itertools import chain
+import logging
 
 from django.contrib.contenttypes.fields import GenericForeignKey
 from django.db import connection
@@ -11,6 +12,8 @@ from django.utils import six
 from rest_framework.fields import get_attribute
 
 from users.models import Country
+
+logger = logging.getLogger(__name__)
 
 
 def get_all_field_names(TheModel):
@@ -42,6 +45,7 @@ def pop_keys(d, keys):
 def run_on_all_tenants(function):
     with every_country() as c:
         for country in c:
+            logger.info("country: {}".format(country))
             function()
 
 

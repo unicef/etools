@@ -1,5 +1,6 @@
 from __future__ import unicode_literals
 
+import base64
 import csv
 import datetime
 from decimal import Decimal
@@ -18,6 +19,7 @@ from model_utils import Choices
 from rest_framework import status
 from rest_framework.test import APIRequestFactory
 
+from attachments.tests.factories import AttachmentFactory, FileTypeFactory
 from EquiTrack.tests.cases import BaseTenantTestCase
 from EquiTrack.tests.mixins import URLAssertionMixin
 from funds.models import FundsCommitmentItem, FundsCommitmentHeader
@@ -431,6 +433,11 @@ class TestPartnerOrganizationRetrieveUpdateDeleteViews(BaseTenantTestCase):
         cls.cp = CountryProgrammeFactory(__sequence=10)
         cls.cp_output = ResultFactory(result_type=cls.output_res_type)
 
+        file_content = 'these are the file contents!'
+        cls.base64_file = 'data:text/plain;base64,{}'.format(
+            base64.b64encode(file_content)
+        )
+
     def test_api_partners_delete_asssessment_valid(self):
         response = self.forced_auth_req(
             'delete',
@@ -461,7 +468,7 @@ class TestPartnerOrganizationRetrieveUpdateDeleteViews(BaseTenantTestCase):
             'delete',
             reverse(
                 'partners_api:partner-assessment-del',
-                args=[404]
+                args=[4404]
             ),
             user=self.unicef_staff,
         )
@@ -749,6 +756,29 @@ class TestPartnerOrganizationRetrieveUpdateDeleteViews(BaseTenantTestCase):
             1
         )
 
+    def test_api_partners_update_core_values_assessment(self):
+        self.assertFalse(
+            self.partner.core_values_assessment_attachment.exists()
+        )
+        data = {
+            "core_values_assessment_attachment": self.base64_file
+        }
+        response = self.forced_auth_req(
+            'patch',
+            reverse('partners_api:partner-detail', args=[self.partner.pk]),
+            user=self.unicef_staff,
+            data=data
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertTrue(
+            self.partner.core_values_assessment_attachment.exists()
+        )
+        # attachment = self.partner.core_values_assessment_attachment.last()
+        # self.assertEqual(
+        #     response.data["core_values_assessment_upload_link"],
+        #     reverse("attachments:upload", args=[attachment.pk])
+        # )
+
 
 class TestPartnershipViews(BaseTenantTestCase):
     @classmethod
@@ -872,6 +902,8 @@ class TestAgreementAPIFileAttachments(BaseTenantTestCase):
     '''
     @classmethod
     def setUpTestData(cls):
+        cls.code = "partners_agreement_amendment"
+        cls.file_type = FileTypeFactory(code=cls.code)
         cls.partner = PartnerFactory(partner_type=PartnerType.CIVIL_SOCIETY_ORGANIZATION)
         cls.partnership_manager_user = UserFactory(is_staff=True)
         cls.agreement = AgreementFactory(
@@ -879,6 +911,7 @@ class TestAgreementAPIFileAttachments(BaseTenantTestCase):
             partner=cls.partner,
             attached_agreement=None,
         )
+        cls.file_type = FileTypeFactory(code="partners_agreement")
 
     def _get_and_assert_response(self):
         '''Helper method to get the agreement and verify some basic about the response JSON (which it returns).'''
@@ -901,16 +934,22 @@ class TestAgreementAPIFileAttachments(BaseTenantTestCase):
         # The agreement starts with no attachment.
         response_json = self._get_and_assert_response()
         self.assertIsNone(response_json['attached_agreement_file'])
+        self.assertIsNone(response_json['attachment'])
 
         # Now add an attachment. Note that in Python 2, the content must be str, in Python 3 the content must be
         # bytes. I think the existing code is compatible with both.
-        self.agreement.attached_agreement = SimpleUploadedFile('hello_world.txt', u'hello world!'.encode('utf-8'))
-        self.agreement.save()
+        AttachmentFactory(
+            file=SimpleUploadedFile('hello_world.txt', u'hello world!'.encode('utf-8')),
+            content_object=self.agreement,
+            file_type=self.file_type,
+            code="partners_agreement",
+        )
 
         response_json = self._get_and_assert_response()
         self.assertIn('attached_agreement_file', response_json)
+        self.assertIn('attachment', response_json)
 
-        url = response_json['attached_agreement_file']
+        url = response_json['attachment']
 
         # url is a URL like this one --
         # http://testserver/media/test/file_attachments/partner_organization/934/agreements/PCA2017841/foo.txt
@@ -939,8 +978,13 @@ class TestAgreementAPIFileAttachments(BaseTenantTestCase):
 
         # Now add an amendment.
         amendment = AgreementAmendmentFactory(agreement=self.agreement, signed_amendment=None)
-        amendment.signed_amendment = SimpleUploadedFile('goodbye_world.txt', u'goodbye world!'.encode('utf-8'))
-        amendment.save()
+        signed_amendment = SimpleUploadedFile('goodbye_world.txt', u'goodbye world!'.encode('utf-8'))
+        AttachmentFactory(
+            file=signed_amendment,
+            file_type=self.file_type,
+            code=self.code,
+            content_object=amendment,
+        )
 
         response_json = self._get_and_assert_response()
         self.assertIn('amendments', response_json)
@@ -950,8 +994,9 @@ class TestAgreementAPIFileAttachments(BaseTenantTestCase):
         self.assertIsInstance(response_amendment, dict)
 
         self.assertIn('signed_amendment_file', response_amendment)
+        self.assertIn('signed_amendment_attachment', response_amendment)
 
-        url = response_amendment['signed_amendment_file']
+        url = response_amendment['signed_amendment_attachment']
 
         # url looks something like this --
         # http://testserver/media/test/file_attachments/partner_org/1658/agreements/MOU20171421/amendments/tmp02/goodbye_world.txt
@@ -978,6 +1023,11 @@ class TestAgreementAPIFileAttachments(BaseTenantTestCase):
 class TestAgreementAPIView(BaseTenantTestCase):
     @classmethod
     def setUpTestData(cls):
+        cls.agreement_code = "partners_agreement"
+        cls.agreement_file_type = FileTypeFactory(code=cls.agreement_code)
+        cls.amendment_code = "partners_agreement_amendment"
+        cls.amendment_file_type = FileTypeFactory(code=cls.amendment_code)
+
         cls.unicef_staff = UserFactory(is_staff=True)
         cls.partner = PartnerFactory(partner_type=PartnerType.CIVIL_SOCIETY_ORGANIZATION)
         cls.partner_staff = PartnerStaffFactory(partner=cls.partner)
@@ -1012,19 +1062,38 @@ class TestAgreementAPIView(BaseTenantTestCase):
         cls.agreement.authorized_officers.add(cls.partner_staff)
         cls.agreement.save()
 
+        AttachmentFactory(
+            file=attached_agreement,
+            content_object=cls.agreement,
+            file_type=cls.agreement_file_type,
+            code=cls.agreement_code,
+        )
+
         cls.amendment1 = AgreementAmendment.objects.create(
             number="001",
             agreement=cls.agreement,
-            signed_amendment="application/pdf",
+            signed_amendment="random.pdf",
             signed_date=datetime.date.today(),
             types=[AgreementAmendment.IP_NAME]
+        )
+        AttachmentFactory(
+            file="application/pdf",
+            file_type=cls.amendment_file_type,
+            code=cls.amendment_code,
+            content_object=cls.amendment1
         )
         cls.amendment2 = AgreementAmendment.objects.create(
             number="002",
             agreement=cls.agreement,
-            signed_amendment="application/pdf",
+            signed_amendment="random.pdf",
             signed_date=datetime.date.today(),
             types=[AgreementAmendment.BANKING_INFO]
+        )
+        AttachmentFactory(
+            file="application/pdf",
+            file_type=cls.amendment_file_type,
+            code=cls.amendment_code,
+            content_object=cls.amendment2
         )
         cls.agreement2 = AgreementFactory(
             partner=cls.partner,
@@ -1086,6 +1155,13 @@ class TestAgreementAPIView(BaseTenantTestCase):
             data=data
         )
         self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(
+            response.data["attachment_upload_link"],
+            reverse(
+                "attachments:upload",
+                args=[self.agreement.attachment.last().pk]
+            )
+        )
 
     def test_agreements_retrieve(self):
         response = self.forced_auth_req(
@@ -1129,6 +1205,13 @@ class TestAgreementAPIView(BaseTenantTestCase):
         self.assertEqual(
             Activity.objects.filter(action=Activity.UPDATE).count(),
             1
+        )
+        self.assertEqual(
+            response.data["attachment_upload_link"],
+            reverse(
+                "attachments:upload",
+                args=[self.agreement.attachment.last().pk]
+            )
         )
 
     def test_agreements_delete(self):
@@ -1237,6 +1320,13 @@ class TestAgreementAPIView(BaseTenantTestCase):
         )
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response.data["status"], Agreement.SIGNED)
+        self.assertEqual(
+            response.data["attachment_upload_link"],
+            reverse(
+                "attachments:upload",
+                args=[agreement.attachment.last().pk]
+            )
+        )
 
     def test_partner_agreements_update_suspend(self):
         '''Ensure that interventions related to an agreement are suspended when the agreement is suspended'''
@@ -1257,6 +1347,13 @@ class TestAgreementAPIView(BaseTenantTestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response.data["status"], Agreement.SUSPENDED)
         self.assertEqual(Intervention.objects.get(agreement=self.agreement).status, Intervention.SUSPENDED)
+        self.assertEqual(
+            response.data["attachment_upload_link"],
+            reverse(
+                "attachments:upload",
+                args=[self.agreement.attachment.last().pk]
+            )
+        )
 
     def test_agreement_amendment_delete_error(self):
         response = self.forced_auth_req(
@@ -1312,6 +1409,13 @@ class TestAgreementAPIView(BaseTenantTestCase):
         )
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(len(response.data["amendments"][1]["types"]), 2)
+        self.assertEqual(
+            response.data["attachment_upload_link"],
+            reverse(
+                "attachments:upload",
+                args=[self.agreement.attachment.last().pk]
+            )
+        )
 
 
 class TestPartnerStaffMemberAPIView(BaseTenantTestCase):
@@ -1414,6 +1518,7 @@ class TestInterventionViews(BaseTenantTestCase):
             "review_date_prc": "2016-10-28",
             "submission_date": "2016-10-28",
             "prc_review_document": None,
+            "prc_review_attachment": None,
             "signed_by_unicef_date": "2016-10-28",
             "signed_by_partner_date": "2016-10-20",
             "unicef_signatory": self.unicef_staff.id,
@@ -1475,7 +1580,15 @@ class TestInterventionViews(BaseTenantTestCase):
             intervention=self.intervention_obj,
             types=[InterventionAmendment.RESULTS],
             signed_date=datetime.date.today(),
-            signed_amendment=amendment
+            signed_amendment=None
+        )
+        self.code = "partners_intervention_amendment_signed"
+        self.file_type = FileTypeFactory(code=self.code)
+        AttachmentFactory(
+            file=amendment,
+            file_type=self.file_type,
+            content_object=self.amendment,
+            code=self.code
         )
 
         self.intervention_obj.status = Intervention.DRAFT
@@ -2053,6 +2166,7 @@ class TestPartnershipDashboardView(BaseTenantTestCase):
             "review_date_prc": "2017-01-28",
             "submission_date": "2017-01-28",
             "prc_review_document": None,
+            "prc_review_attachment": None,
             "signed_by_unicef_date": "2017-01-28",
             "signed_by_partner_date": "2017-01-20",
             "unicef_signatory": self.unicef_staff.id,

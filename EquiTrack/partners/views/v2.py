@@ -12,8 +12,8 @@ from rest_framework.generics import RetrieveUpdateDestroyAPIView
 from rest_framework.permissions import IsAdminUser
 from rest_framework.views import APIView
 
+from attachments.models import FileType as AttachmentFileType
 from EquiTrack.fields import CURRENCIES
-
 from reports.models import (
     CountryProgramme,
     Result,
@@ -95,6 +95,10 @@ class PMPStaticDropdownsListAPIView(APIView):
         intervention_amendment_types = choices_to_json_ready(InterventionAmendment.AMENDMENT_TYPES)
         location_types = GatewayType.objects.values('id', 'name', 'admin_level').order_by('id')
         currencies = choices_to_json_ready(CURRENCIES)
+        attachment_types = AttachmentFileType.objects.values_list(
+            'label',
+            flat=True
+        )
 
         local_currency = local_workspace.local_currency.id if local_workspace.local_currency else None
 
@@ -112,7 +116,8 @@ class PMPStaticDropdownsListAPIView(APIView):
                 'intervention_amendment_types': intervention_amendment_types,
                 'currencies': currencies,
                 'local_currency': local_currency,
-                'location_types': location_types
+                'location_types': location_types,
+                'attachment_types': attachment_types,
             },
             status=status.HTTP_200_OK
         )

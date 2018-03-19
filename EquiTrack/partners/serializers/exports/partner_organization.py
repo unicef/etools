@@ -126,6 +126,7 @@ class AssessmentExportSerializer(serializers.ModelSerializer):
     approving_officer = serializers.CharField(source="approving_officer.email")
     current = serializers.SerializerMethodField()
     report_file = serializers.FileField(source='report', read_only=True)
+    # report_attachment = AttachmentSingleFileField(read_only=True)
 
     class Meta:
         model = Assessment
@@ -152,5 +153,6 @@ class AssessmentExportFlatSerializer(AssessmentExportSerializer):
             "completed_date",
             "rating",
             "report_file",
+            # "report_attachment",
             "current",
         )

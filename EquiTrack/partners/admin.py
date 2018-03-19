@@ -5,14 +5,18 @@ from __future__ import unicode_literals
 
 from django.db import models
 from django.contrib import admin
+from django.contrib.contenttypes.models import ContentType
+from django.core.urlresolvers import reverse
+from django.utils.safestring import mark_safe
 from django.utils.translation import ugettext_lazy as _
 from django.forms import SelectMultiple
 
 from import_export.admin import ExportMixin
 
+from attachments.admin import AttachmentSingleInline
+from attachments.models import Attachment
 from EquiTrack.admin import SnapshotModelAdmin, ActivityInline
 from EquiTrack.mixins import CountryUsersAdminMixin
-
 from partners.exports import PartnerExport
 from partners.models import (
     FileType,
@@ -121,6 +125,35 @@ class InterventionPlannedVisitsAdmin(admin.ModelAdmin):
     )
 
 
+class AttachmentFileInline(AttachmentSingleInline):
+    verbose_name_plural = "Attachment"
+
+
+class InterventionAttachmentAdmin(admin.ModelAdmin):
+    model = InterventionAttachment
+    list_display = (
+        'attachment_file',
+        'type',
+    )
+    list_filter = (
+        'intervention',
+    )
+    fields = (
+        'type',
+        'attachment',
+    )
+    inlines = [
+        AttachmentFileInline,
+    ]
+
+    def attachment_file(self, obj):
+        content_type = ContentType.objects.get_for_model(obj)
+        return Attachment.objects.get(
+            object_id=obj.pk,
+            content_type=content_type
+        )
+
+
 class InterventionAttachmentsInline(admin.TabularInline):
     model = InterventionAttachment
     fields = (
@@ -176,6 +209,14 @@ class InterventionSectorLocationAdmin(admin.ModelAdmin):
     )
 
 
+class PRCReviewAttachmentInline(AttachmentSingleInline):
+    verbose_name_plural = "Review Document by PRC"
+
+
+class SignedPDAttachmentInline(AttachmentSingleInline):
+    verbose_name_plural = "Signed PD Document"
+
+
 class InterventionAdmin(CountryUsersAdminMixin, HiddenPartnerMixin, SnapshotModelAdmin):
     model = Intervention
 
@@ -192,6 +233,7 @@ class InterventionAdmin(CountryUsersAdminMixin, HiddenPartnerMixin, SnapshotMode
         'title',
         'total_unicef_cash',
         'total_budget',
+        'attachments_link',
     )
     list_filter = (
         'number',
@@ -205,6 +247,7 @@ class InterventionAdmin(CountryUsersAdminMixin, HiddenPartnerMixin, SnapshotMode
     )
     readonly_fields = (
         'total_budget',
+        'attachments_link',
     )
     filter_horizontal = (
         'sections',
@@ -250,6 +293,8 @@ class InterventionAdmin(CountryUsersAdminMixin, HiddenPartnerMixin, SnapshotMode
         # SectorLocationInline,
         InterventionAttachmentsInline,
         ActivityInline,
+        PRCReviewAttachmentInline,
+        SignedPDAttachmentInline,
     )
 
     def created_date(self, obj):
@@ -265,6 +310,22 @@ class InterventionAdmin(CountryUsersAdminMixin, HiddenPartnerMixin, SnapshotMode
     def has_module_permission(self, request):
         return request.user.is_superuser
 
+    def attachments_link(self, obj):
+        url = "{}?intervention__id__exact={}".format(
+            reverse("admin:partners_interventionattachment_changelist"),
+            obj.pk
+        )
+        return mark_safe("<a href='{}'>{}</a>".format(
+            url,
+            "Attachments"
+        ))
+
+    attachments_link.short_description = 'attachments'
+
+
+class AssessmentReportInline(AttachmentSingleInline):
+    verbose_name_plural = "Report"
+
 
 class AssessmentAdmin(admin.ModelAdmin):
     model = Assessment
@@ -279,6 +340,9 @@ class AssessmentAdmin(admin.ModelAdmin):
         u'partner',
         u'type'
     )
+    inlines = [
+        AssessmentReportInline,
+    ]
     verbose_name = u'Assessment'
     verbose_name_plural = u'Assessments'
 
@@ -332,6 +396,10 @@ class HiddenPartnerFilter(admin.SimpleListFilter):
         if value == 'True':
             return queryset.filter(hidden=True)
         return queryset.filter(hidden=False)
+
+
+class CoreValueAssessmentInline(AttachmentSingleInline):
+    verbose_name_plural = "Core Value Assessment Attachment"
 
 
 class PartnerAdmin(ExportMixin, admin.ModelAdmin):
@@ -405,6 +473,9 @@ class PartnerAdmin(ExportMixin, admin.ModelAdmin):
         'hide_partners',
         'show_partners'
     )
+    inlines = [
+        CoreValueAssessmentInline,
+    ]
     readonly_fields = (
         u'hact_values',
         u'total_ct_cp',
@@ -466,6 +537,10 @@ class PlannedEngagementAdmin(admin.ModelAdmin):
     ]
 
 
+class SignedAmendmentInline(AttachmentSingleInline):
+    verbose_name_plural = "Signed Amendment"
+
+
 class AgreementAmendmentAdmin(admin.ModelAdmin):
     verbose_name = u'Amendment'
     model = AgreementAmendment
@@ -478,8 +553,8 @@ class AgreementAmendmentAdmin(admin.ModelAdmin):
     list_display = (
         u'agreement',
         u'number',
-        u'signed_amendment',
         u'signed_date',
+        u'signed_amendment',
     )
     list_filter = (
         u'agreement',
@@ -487,6 +562,9 @@ class AgreementAmendmentAdmin(admin.ModelAdmin):
     )
     readonly_fields = [
         'number',
+    ]
+    inlines = [
+        SignedAmendmentInline,
     ]
 
     def get_max_num(self, request, obj=None, **kwargs):
@@ -536,6 +614,7 @@ class AgreementAdmin(ExportMixin, HiddenPartnerMixin, CountryUsersAdminMixin, Sn
     )
     inlines = [
         ActivityInline,
+        AttachmentSingleInline,
     ]
 
     def has_module_permission(self, request):
@@ -593,12 +672,12 @@ admin.site.register(PlannedEngagement, PlannedEngagementAdmin)
 admin.site.register(Agreement, AgreementAdmin)
 admin.site.register(AgreementAmendment, AgreementAmendmentAdmin)
 
-
 admin.site.register(Intervention, InterventionAdmin)
 admin.site.register(InterventionAmendment, InterventionAmendmentsAdmin)
 admin.site.register(InterventionResultLink, InterventionResultsLinkAdmin)
 admin.site.register(InterventionBudget, InterventionBudgetAdmin)
 admin.site.register(InterventionPlannedVisits, InterventionPlannedVisitsAdmin)
+admin.site.register(InterventionAttachment, InterventionAttachmentAdmin)
 # TODO intervention sector locations cleanup
 admin.site.register(InterventionSectorLocationLink, InterventionSectorLocationAdmin)
 
