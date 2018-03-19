@@ -98,6 +98,7 @@ MIDDLEWARE = (
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.contrib.auth.middleware.SessionAuthenticationMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
+    'email_auth.middleware.TokenAuthenticationMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
@@ -562,3 +563,7 @@ PASSWORDLESS_AUTH = {
 REPORT_EMAILS = os.getenv('REPORT_EMAILS', ['etools@unicef.org', ])
 
 USERVOICE_WIDGET_KEY = 'defaultVoiceKey'
+
+
+# email auth settings
+EMAIL_AUTH_TOKEN_NAME = os.getenv('EMAIL_AUTH_TOKEN_NAME', 'url_auth_token')
