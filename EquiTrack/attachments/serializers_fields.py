@@ -49,3 +49,36 @@ class Base64FileField(serializers.FileField):
             raise serializers.ValidationError(_('Incorrect base64 format.'))
 
         return content_file
+
+
+class AttachmentSingleFileField(serializers.RelatedField):
+    def __init__(self, *args, **kwargs):
+        # force attachment field to be read only
+        # create/updates happen with separate api call request
+        # we return the create/update link as part of the response
+        kwargs["read_only"] = True
+        super(AttachmentSingleFileField, self).__init__(*args, **kwargs)
+
+    def get_attachment(self, instance):
+        if hasattr(instance, self.source):
+            attachment = getattr(instance, self.source)
+            if attachment and attachment.last():
+                return attachment.last()
+        return None
+
+    def get_attribute(self, instance):
+        attachment = self.get_attachment(instance)
+        return attachment.file if attachment is not None else None
+
+    def to_representation(self, value):
+        if not value:
+            return None
+
+        if not getattr(value, "url", None):
+            return None
+
+        url = value.url
+        request = self.context.get('request', None)
+        if request is not None:
+            return request.build_absolute_uri(url)
+        return url
