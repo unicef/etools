@@ -224,6 +224,15 @@ def locations_valid(i):
     return True
 
 
+def cp_structure_valid(i):
+    if i.country_programme and i.agreement.agreement_type == i.agreement.PCA \
+            and i.country_programme != i.agreement.country_programme:
+        raise BasicValidationError(_('The Country Programme selected on this PD is not the same as the '
+                                     'Country Programme selected on the Agreement, '
+                                     'please select "{}"'.format(i.agreement.country_programme)))
+    return True
+
+
 class InterventionValid(CompleteValidation):
     VALIDATION_CLASS = 'partners.Intervention'
     # validations that will be checked on every object... these functions only take the new instance
@@ -236,7 +245,8 @@ class InterventionValid(CompleteValidation):
         document_type_pca_valid,
         rigid_in_amendment_flag,
         sections_valid,
-        locations_valid
+        locations_valid,
+        cp_structure_valid,
     ]
 
     VALID_ERRORS = {
