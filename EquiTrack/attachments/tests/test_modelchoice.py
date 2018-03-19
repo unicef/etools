@@ -9,7 +9,7 @@ from attachments.metadata import ModelChoiceFieldMixin
 from attachments.models import FileType
 from attachments.serializers_fields import FileTypeModelChoiceField
 from attachments.tests.factories import FileTypeFactory
-from EquiTrack.tests.cases import EToolsTenantTestCase
+from EquiTrack.tests.cases import BaseTenantTestCase
 
 
 class TestSerializer(serializers.Serializer):
@@ -20,10 +20,11 @@ class TestMetadata(ModelChoiceFieldMixin, SimpleMetadata):
     pass
 
 
-class TestModelChoiceFileField(EToolsTenantTestCase):
-    def setUp(self):
-        self.code1_obj = FileTypeFactory(code='code1')
-        self.code2_obj = FileTypeFactory(code='code2')
+class TestModelChoiceFileField(BaseTenantTestCase):
+    @classmethod
+    def setUpTestData(cls):
+        cls.code1_obj = FileTypeFactory(code='code1')
+        cls.code2_obj = FileTypeFactory(code='code2')
 
     def test_valid_serializer(self):
         valid_serializer = TestSerializer(data={'file_type': self.code1_obj.pk})

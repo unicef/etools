@@ -6,7 +6,11 @@ from __future__ import unicode_literals
 import sys
 from unittest import skipIf, TestCase
 
-from EquiTrack.factories import CartoDBTableFactory, GatewayTypeFactory, LocationFactory
+from locations.tests.factories import (
+    CartoDBTableFactory,
+    GatewayTypeFactory,
+    LocationFactory,
+)
 
 
 @skipIf(sys.version_info.major == 3, "This test can be deleted under Python 3")

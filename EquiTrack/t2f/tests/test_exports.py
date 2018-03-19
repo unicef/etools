@@ -9,25 +9,38 @@ from decimal import Decimal
 from django.core.urlresolvers import reverse
 from pytz import UTC
 
-from EquiTrack.factories import (
-    InterventionFactory, LocationFactory, OfficeFactory, ResultFactory, SectorFactory, UserFactory,)
-from EquiTrack.tests.mixins import APITenantTestCase
+from EquiTrack.tests.cases import BaseTenantTestCase
+from locations.tests.factories import LocationFactory
+from partners.tests.factories import InterventionFactory
 from publics.tests.factories import (
-    AirlineCompanyFactory, CurrencyFactory, DSARateFactory, DSARegionFactory, FundFactory, GrantFactory, WBSFactory,)
+    PublicsDSARateFactory,
+    PublicsDSARegionFactory,
+    PublicsGrantFactory,
+    PublicsFundFactory,
+    PublicsAirlineCompanyFactory,
+    PublicsCurrencyFactory,
+    PublicsWBSFactory,
+)
+from reports.tests.factories import ResultFactory, SectorFactory
 from t2f.models import Invoice, ModeOfTravel, TravelActivity, TravelType
 from t2f.tests.factories import (
-    ExpenseFactory, InvoiceFactory, InvoiceItemFactory, ItineraryItemFactory, TravelActivityFactory,)
-
-from .factories import TravelFactory
+    ExpenseFactory,
+    InvoiceFactory,
+    InvoiceItemFactory,
+    ItineraryItemFactory,
+    TravelActivityFactory,
+    TravelFactory,
+)
+from users.tests.factories import OfficeFactory, UserFactory
 
 log = logging.getLogger('__name__')
 
 
-class TravelExports(APITenantTestCase):
-    def setUp(self):
-        super(TravelExports, self).setUp()
-        self.traveler = UserFactory(first_name='John', last_name='Doe')
-        self.unicef_staff = UserFactory(first_name='Jakab', last_name='Gipsz', is_staff=True)
+class TravelExports(BaseTenantTestCase):
+    @classmethod
+    def setUpTestData(cls):
+        cls.traveler = UserFactory(first_name='John', last_name='Doe')
+        cls.unicef_staff = UserFactory(first_name='Jakab', last_name='Gipsz', is_staff=True)
 
     def test_urls(self):
         export_url = reverse('t2f:travels:list:activity_export')
@@ -230,13 +243,14 @@ class TravelExports(APITenantTestCase):
                           ''])
 
     def test_finance_export(self):
+        currency_usd = PublicsCurrencyFactory(code="USD")
         travel = TravelFactory(traveler=self.traveler,
                                supervisor=self.unicef_staff,
                                start_date=datetime(2016, 11, 20, tzinfo=UTC),
                                end_date=datetime(2016, 12, 5, tzinfo=UTC),
                                mode_of_travel=[ModeOfTravel.PLANE, ModeOfTravel.CAR, ModeOfTravel.RAIL])
         travel.expenses.all().delete()
-        ExpenseFactory(travel=travel, amount=Decimal('500'))
+        ExpenseFactory(travel=travel, amount=Decimal('500'), currency=currency_usd)
 
         travel_2 = TravelFactory(traveler=self.traveler,
                                  supervisor=self.unicef_staff,
@@ -244,7 +258,7 @@ class TravelExports(APITenantTestCase):
                                  end_date=datetime(2016, 12, 5, tzinfo=UTC),
                                  mode_of_travel=None)
         travel_2.expenses.all().delete()
-        ExpenseFactory(travel=travel_2, amount=Decimal('200'))
+        ExpenseFactory(travel=travel_2, amount=Decimal('200'), currency=currency_usd)
         ExpenseFactory(travel=travel_2, amount=Decimal('100'), currency=None)
 
         with self.assertNumQueries(27):
@@ -308,13 +322,13 @@ class TravelExports(APITenantTestCase):
                           '0.00'])
 
     def test_travel_admin_export(self):
-        dsa_brd = DSARegionFactory(area_code='BRD')
-        DSARateFactory(region=dsa_brd)
-        dsa_lan = DSARegionFactory(area_code='LAN')
-        DSARateFactory(region=dsa_lan)
+        dsa_brd = PublicsDSARegionFactory(area_code='BRD')
+        PublicsDSARateFactory(region=dsa_brd)
+        dsa_lan = PublicsDSARegionFactory(area_code='LAN')
+        PublicsDSARateFactory(region=dsa_lan)
 
-        airline_jetstar = AirlineCompanyFactory(name='JetStar')
-        airline_spiceair = AirlineCompanyFactory(name='SpiceAir')
+        airline_jetstar = PublicsAirlineCompanyFactory(name='JetStar')
+        airline_spiceair = PublicsAirlineCompanyFactory(name='SpiceAir')
 
         # First travel setup
         travel_1 = TravelFactory(traveler=self.traveler, supervisor=self.unicef_staff)
@@ -475,14 +489,14 @@ class TravelExports(APITenantTestCase):
 
     def test_invoice_export(self):
         # Setting up initial data
-        wbs_1 = WBSFactory(name='2060/A0/12/1222')
-        wbs_2 = WBSFactory(name='2060/A0/12/1214')
+        wbs_1 = PublicsWBSFactory(name='2060/A0/12/1222')
+        wbs_2 = PublicsWBSFactory(name='2060/A0/12/1214')
 
-        grant_1 = GrantFactory(name='SM130147')
-        grant_2 = GrantFactory(name='SM130952')
+        grant_1 = PublicsGrantFactory(name='SM130147')
+        grant_2 = PublicsGrantFactory(name='SM130952')
 
-        fund_1 = FundFactory(name='BMA')
-        fund_2 = FundFactory(name='NON-GRANT')
+        fund_1 = PublicsFundFactory(name='BMA')
+        fund_2 = PublicsFundFactory(name='NON-GRANT')
 
         wbs_1.grants.add(grant_1)
         wbs_2.grants.add(grant_2)
@@ -490,7 +504,7 @@ class TravelExports(APITenantTestCase):
         grant_1.funds.add(fund_1)
         grant_2.funds.add(fund_2)
 
-        usd = CurrencyFactory(name='USD', code='usd')
+        usd = PublicsCurrencyFactory(name='USD', code='usd')
 
         # Setting up test data
         travel_1 = TravelFactory(traveler=self.traveler, supervisor=self.unicef_staff)

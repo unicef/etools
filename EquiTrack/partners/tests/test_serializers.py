@@ -3,40 +3,51 @@ from __future__ import absolute_import, division, print_function, unicode_litera
 
 import datetime
 
+from django.utils import six
 from rest_framework import serializers
 
-from EquiTrack.factories import (
-    AgreementAmendmentFactory, AgreementFactory, CountryProgrammeFactory, InterventionFactory, PartnerFactory,
-    PartnerStaffFactory, PlannedEngagementFactory, UserFactory,)
-from EquiTrack.tests.cases import EToolsTenantTestCase
+from EquiTrack.tests.cases import BaseTenantTestCase
 from partners.models import Agreement, PartnerType
 from partners.serializers.agreements_v2 import AgreementCreateUpdateSerializer
 from partners.serializers.partner_organization_v2 import PartnerOrganizationDetailSerializer
-
+from partners.tests.factories import (
+    AgreementAmendmentFactory,
+    AgreementFactory,
+    InterventionFactory,
+    PartnerFactory,
+    PartnerStaffFactory,
+    PlannedEngagementFactory,
+)
+from reports.tests.factories import CountryProgrammeFactory
+from users.tests.factories import UserFactory
 
 _ALL_AGREEMENT_TYPES = [agreement_type[0] for agreement_type in Agreement.AGREEMENT_TYPES]
 
 
-class AgreementCreateUpdateSerializerBase(EToolsTenantTestCase):
-    """Base class for testing AgreementCreateUpdateSerializer"""
-    def setUp(self):
-        self.user = UserFactory()
+class AgreementCreateUpdateSerializerBase(BaseTenantTestCase):
+    '''Base class for testing AgreementCreateUpdateSerializer'''
+    @classmethod
+    def setUpTestData(cls):
+        cls.user = UserFactory()
 
-        self.partner = PartnerFactory(partner_type=PartnerType.CIVIL_SOCIETY_ORGANIZATION)
+        cls.partner = PartnerFactory(partner_type=PartnerType.CIVIL_SOCIETY_ORGANIZATION)
 
-        self.today = datetime.date.today()
-
-        this_year = self.today.year
-        self.country_programme = CountryProgrammeFactory(from_date=datetime.date(this_year - 1, 1, 1),
-                                                         to_date=datetime.date(this_year + 1, 1, 1))
+        cls.today = datetime.date.today()
 
         # The serializer examines context['request'].user during the course of its operation. If that's not set, the
         # serializer will fail. It doesn't need a real request object, just something with a .user attribute, so
         # that's what I create here.
         class Stub(object):
             pass
-        self.fake_request = Stub()
-        self.fake_request.user = self.user
+        cls.fake_request = Stub()
+        cls.fake_request.user = cls.user
+
+    def setUp(self):
+        this_year = self.today.year
+        self.country_programme = CountryProgrammeFactory(
+            from_date=datetime.date(this_year - 1, 1, 1),
+            to_date=datetime.date(this_year + 1, 1, 1)
+        )
 
     def assertSimpleExceptionFundamentals(self, context_manager, expected_message):
         """Given the context manager produced by self.assertRaises(), checks the exception it contains for
@@ -691,7 +702,7 @@ class TestAgreementSerializerTransitions(AgreementCreateUpdateSerializerBase):
             self.assertEqual(field.read_only, expected_read_only)
 
 
-class TestPartnerOrganizationDetailSerializer(EToolsTenantTestCase):
+class TestPartnerOrganizationDetailSerializer(BaseTenantTestCase):
     @classmethod
     def setUpTestData(cls):
         cls.user = UserFactory()
@@ -703,7 +714,7 @@ class TestPartnerOrganizationDetailSerializer(EToolsTenantTestCase):
         serializer = PartnerOrganizationDetailSerializer(instance=self.partner)
 
         data = serializer.data
-        self.assertItemsEqual(data.keys(), [
+        six.assertCountEqual(self, data.keys(), [
             'address', 'alternate_id', 'alternate_name', 'assessments', 'basis_for_risk_rating', 'blocked', 'city',
             'core_values_assessment', 'core_values_assessment_date', 'core_values_assessment_file', 'country',
             'created', 'cso_type', 'deleted_flag', 'description', 'email', 'hact_min_requirements', 'hact_values',
@@ -713,12 +724,12 @@ class TestPartnerOrganizationDetailSerializer(EToolsTenantTestCase):
             'vendor_number', 'vision_synced'
         ])
 
-        self.assertItemsEqual(data['planned_engagement'].keys(), [
+        six.assertCountEqual(self, data['planned_engagement'].keys(), [
             'id', 'scheduled_audit', 'special_audit', 'spot_check_follow_up_q1', 'spot_check_follow_up_q2',
             'spot_check_follow_up_q3', 'spot_check_follow_up_q4', 'spot_check_mr',
             'total_spot_check_follow_up_required', 'spot_check_required', 'required_audit'
         ])
 
         self.assertEquals(len(data['staff_members']), 1)
-        self.assertItemsEqual(data['staff_members'][0].keys(), [
+        six.assertCountEqual(self, data['staff_members'][0].keys(), [
             'active', 'created', 'email', 'first_name', u'id', 'last_name', 'modified', 'partner', 'phone', 'title'])

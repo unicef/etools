@@ -5,13 +5,13 @@ from datetime import datetime
 from audit.models import Audit, Engagement
 from audit.tests.factories import (
     AuditFactory, MicroAssessmentFactory, RiskFactory, SpecialAuditFactory, SpotCheckFactory,)
-from EquiTrack.factories import PartnerFactory
-from EquiTrack.tests.cases import EToolsTenantTestCase
+from EquiTrack.tests.cases import BaseTenantTestCase
 from hact.tests.factories import AggregateHactFactory
 from partners.models import PartnerOrganization, PartnerType
+from partners.tests.factories import PartnerFactory
 
 
-class TestAggregateHact(EToolsTenantTestCase):
+class TestAggregateHact(BaseTenantTestCase):
     """
     Test for model
     """

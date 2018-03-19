@@ -8,27 +8,25 @@ from unittest import skip
 
 from mock import patch, Mock
 
-from EquiTrack.factories import (
-    AgreementFactory,
-    InterventionAmendmentFactory,
-    FundsReservationHeaderFactory,
-    GroupFactory,
-    InterventionAttachmentFactory,
-    InterventionFactory,
-    PartnerStaffFactory,
-    UserFactory,
-)
-from EquiTrack.tests.cases import EToolsTenantTestCase
+from EquiTrack.tests.cases import BaseTenantTestCase
 from EquiTrack.validation_mixins import (
     BasicValidationError,
     StateValidError,
     TransitionError,
 )
+from funds.tests.factories import FundsReservationHeaderFactory
 from partners.models import (
     Agreement,
     FileType,
     Intervention,
     InterventionAmendment,
+)
+from partners.tests.factories import (
+    AgreementFactory,
+    InterventionAmendmentFactory,
+    InterventionAttachmentFactory,
+    InterventionFactory,
+    PartnerStaffFactory,
 )
 from partners.validation.interventions import (
     InterventionValid,
@@ -42,9 +40,10 @@ from partners.validation.interventions import (
     transition_to_closed,
     transition_to_signed,
 )
+from users.tests.factories import GroupFactory, UserFactory
 
 
-class TestPartnershipManagerOnly(EToolsTenantTestCase):
+class TestPartnershipManagerOnly(BaseTenantTestCase):
     def test_manager_no_groups(self):
         user = UserFactory()
         with self.assertRaises(TransitionError):
@@ -56,24 +55,30 @@ class TestPartnershipManagerOnly(EToolsTenantTestCase):
         self.assertTrue(partnership_manager_only(None, user))
 
 
-class TestTransitionOk(EToolsTenantTestCase):
+class TestTransitionOk(BaseTenantTestCase):
     def test_ok(self):
         self.assertTrue(transition_ok(None))
 
 
-class TestTransitionToClosed(EToolsTenantTestCase):
-    def setUp(self):
-        super(TestTransitionToClosed, self).setUp()
-        self.intervention = InterventionFactory(
+class TestTransitionToClosed(BaseTenantTestCase):
+    @classmethod
+    def setUpTestData(cls):
+        cls.intervention = InterventionFactory(
             end=datetime.date(2001, 1, 1),
         )
+
+    def setUp(self):
+        super(TestTransitionToClosed, self).setUp()
         self.expected = {
             'total_frs_amt': 0,
+            'total_frs_amt_usd': 0,
             'total_outstanding_amt': 0,
+            'total_outstanding_amt_usd': 0,
             'total_intervention_amt': 0,
             'total_actual_amt': 0,
+            'total_actual_amt_usd': 0,
             'earliest_start_date': None,
-            'latest_end_date': None
+            'latest_end_date': None,
         }
 
     def assertFundamentals(self, data):
@@ -98,9 +103,12 @@ class TestTransitionToClosed(EToolsTenantTestCase):
         frs = FundsReservationHeaderFactory(
             intervention=self.intervention,
             total_amt=0.00,
+            total_amt_local=0.00,
             intervention_amt=10.00,
-            actual_amt=10.00,
-            outstanding_amt=5.00
+            actual_amt=0.00,
+            actual_amt_local=10.00,
+            outstanding_amt_local=5.00,
+            outstanding_amt=0.00
         )
         with self.assertRaisesRegexp(
                 TransitionError,
@@ -120,8 +128,11 @@ class TestTransitionToClosed(EToolsTenantTestCase):
         frs = FundsReservationHeaderFactory(
             intervention=self.intervention,
             total_amt=0.00,
+            total_amt_local=0.00,
             intervention_amt=10.00,
-            actual_amt=20.00,
+            actual_amt_local=20.00,
+            actual_amt=0.00,
+            outstanding_amt_local=0.00,
             outstanding_amt=0.00
         )
         with self.assertRaisesRegexp(
@@ -141,12 +152,15 @@ class TestTransitionToClosed(EToolsTenantTestCase):
         frs = FundsReservationHeaderFactory(
             intervention=self.intervention,
             total_amt=0.00,
-            intervention_amt=10.00,
-            actual_amt=10.00,
-            outstanding_amt=0.00
+            total_amt_local=10.00,
+            intervention_amt=0.00,
+            actual_amt=0.00,
+            actual_amt_local=10.00,
+            outstanding_amt=0.00,
+            outstanding_amt_local=0.00
         )
         self.assertTrue(transition_to_closed(self.intervention))
-        self.expected["total_intervention_amt"] = 10.00
+        self.expected["total_frs_amt"] = 10.00
         self.expected["total_actual_amt"] = 10.00
         self.expected["earliest_start_date"] = frs.start_date
         self.expected["latest_end_date"] = frs.end_date
@@ -159,10 +173,14 @@ class TestTransitionToClosed(EToolsTenantTestCase):
         frs = FundsReservationHeaderFactory(
             intervention=self.intervention,
             total_amt=0.00,
+            total_amt_local=120000.00,
+            actual_amt_local=120000.00,
             actual_amt=120000.00,
-            intervention_amt=120000.00,
+            outstanding_amt_local=0.00,
             outstanding_amt=0.00,
+            intervention_amt=0.00,
         )
+
         with self.assertRaisesRegexp(
                 TransitionError,
                 'Total amount transferred greater than 100,000 and no '
@@ -170,7 +188,8 @@ class TestTransitionToClosed(EToolsTenantTestCase):
         ):
             transition_to_closed(self.intervention)
         self.expected["total_actual_amt"] = 120000.00
-        self.expected["total_intervention_amt"] = 120000.00
+        self.expected["total_actual_amt_usd"] = 120000.00
+        self.expected["total_frs_amt"] = 120000.00
         self.expected["earliest_start_date"] = frs.start_date
         self.expected["latest_end_date"] = frs.end_date
         self.assertFundamentals(self.intervention.total_frs)
@@ -189,13 +208,16 @@ class TestTransitionToClosed(EToolsTenantTestCase):
         frs = FundsReservationHeaderFactory(
             intervention=self.intervention,
             total_amt=0.00,
-            actual_amt=120000.00,
-            intervention_amt=120000.00,
+            total_amt_local=120000.00,
+            actual_amt_local=120000.00,
+            actual_amt=0,
+            outstanding_amt_local=0.00,
             outstanding_amt=0.00,
+            intervention_amt=0.00,
         )
         self.assertTrue(transition_to_closed(self.intervention))
         self.expected["total_actual_amt"] = 120000.00
-        self.expected["total_intervention_amt"] = 120000.00
+        self.expected["total_frs_amt"] = 120000.00
         self.expected["earliest_start_date"] = frs.start_date
         self.expected["latest_end_date"] = frs.end_date
         self.assertFundamentals(self.intervention.total_frs)
@@ -204,15 +226,17 @@ class TestTransitionToClosed(EToolsTenantTestCase):
         """Ensure total_frs_amt set correctly"""
         frs = FundsReservationHeaderFactory(
             intervention=self.intervention,
-            total_amt=200.00,
-            actual_amt=100.00,
-            intervention_amt=100.00,
+            total_amt=0.00,
+            total_amt_local=100.00,
+            actual_amt=0.00,
+            actual_amt_local=100.00,
+            intervention_amt=0.00,
             outstanding_amt=0.00,
+            outstanding_amt_local=0.00,
         )
         self.assertTrue(transition_to_closed(self.intervention))
-        self.expected["total_frs_amt"] = 200.00
+        self.expected["total_frs_amt"] = 100.00
         self.expected["total_actual_amt"] = 100.00
-        self.expected["total_intervention_amt"] = 100.00
         self.expected["earliest_start_date"] = frs.start_date
         self.expected["latest_end_date"] = frs.end_date
         self.assertFundamentals(self.intervention.total_frs)
@@ -223,41 +247,50 @@ class TestTransitionToClosed(EToolsTenantTestCase):
             intervention=self.intervention,
             fr_number=1,
             total_amt=0.00,
+            total_amt_local=100.00,
             start_date=datetime.date(2001, 1, 1),
             end_date=datetime.date(2001, 2, 1),
-            actual_amt=100.00,
-            intervention_amt=100.00,
+            actual_amt=0.00,
+            actual_amt_local=100.00,
+            intervention_amt=0.00,
+            outstanding_amt_local=0.00,
             outstanding_amt=0.00,
         )
         FundsReservationHeaderFactory(
             intervention=self.intervention,
             fr_number=2,
             total_amt=0.00,
+            total_amt_local=100.00,
             start_date=datetime.date(2000, 1, 1),
             end_date=datetime.date(2000, 2, 1),
-            actual_amt=100.00,
-            intervention_amt=100.00,
+            actual_amt=0.00,
+            actual_amt_local=100.00,
+            intervention_amt=0.00,
+            outstanding_amt_local=0.00,
             outstanding_amt=0.00,
         )
         FundsReservationHeaderFactory(
             intervention=self.intervention,
             fr_number=3,
             total_amt=0.00,
+            total_amt_local=100.00,
             start_date=datetime.date(2002, 1, 1),
             end_date=datetime.date(2002, 2, 1),
-            actual_amt=100.00,
-            intervention_amt=100.00,
+            actual_amt_local=100.00,
+            actual_amt=0.00,
+            intervention_amt=0.00,
+            outstanding_amt_local=0.00,
             outstanding_amt=0.00,
         )
         self.assertTrue(transition_to_closed(self.intervention))
-        self.expected["earliest_start_date"] = datetime.date(2002, 1, 1)
-        self.expected["latest_end_date"] = datetime.date(2000, 2, 1)
+        self.expected["earliest_start_date"] = datetime.date(2000, 1, 1)
+        self.expected["latest_end_date"] = datetime.date(2002, 2, 1)
         self.expected["total_actual_amt"] = 300.00
-        self.expected["total_intervention_amt"] = 300.00
+        self.expected["total_frs_amt"] = 300.00
         self.assertFundamentals(self.intervention.total_frs)
 
 
-class TestTransitionToSigned(EToolsTenantTestCase):
+class TestTransitionToSigned(BaseTenantTestCase):
     def test_type_status_invalid(self):
         """Certain document types with agreement in certain status
         cannot be signed
@@ -283,7 +316,7 @@ class TestTransitionToSigned(EToolsTenantTestCase):
         self.assertTrue(transition_to_signed(intervention))
 
 
-class TestTransitionToActive(EToolsTenantTestCase):
+class TestTransitionToActive(BaseTenantTestCase):
     def test_type_status_invalid(self):
         """Certain document types with agreement not in signed status
         cannot be made active
@@ -307,7 +340,7 @@ class TestTransitionToActive(EToolsTenantTestCase):
         self.assertTrue(transition_to_active(intervention))
 
 
-class TestStateDateSignedValid(EToolsTenantTestCase):
+class TestStateDateSignedValid(BaseTenantTestCase):
     def test_start_date_before_signed_date(self):
         """Start date before max signed date is invalid"""
         intervention = InterventionFactory(
@@ -329,7 +362,7 @@ class TestStateDateSignedValid(EToolsTenantTestCase):
         self.assertTrue(start_date_signed_valid(intervention))
 
 
-class TestStateDateRelatedAgreementValid(EToolsTenantTestCase):
+class TestStateDateRelatedAgreementValid(BaseTenantTestCase):
     def test_start_date_before_agreement_start(self):
         """Start date before agreement start date is invalid
         If not contingency_pd, and certain document_type
@@ -362,12 +395,12 @@ class TestStateDateRelatedAgreementValid(EToolsTenantTestCase):
         self.assertTrue(start_date_related_agreement_valid(intervention))
 
 
-class TestSignedDateValid(EToolsTenantTestCase):
-    def setUp(self):
-        super(TestSignedDateValid, self).setUp()
-        self.unicef_user = UserFactory()
-        self.partner_user = PartnerStaffFactory()
-        self.future_date = datetime.date.today() + datetime.timedelta(days=2)
+class TestSignedDateValid(BaseTenantTestCase):
+    @classmethod
+    def setUpTestData(cls):
+        cls.unicef_user = UserFactory()
+        cls.partner_user = PartnerStaffFactory()
+        cls.future_date = datetime.date.today() + datetime.timedelta(days=2)
 
     def test_valid(self):
         """Valid if nothing signed"""
@@ -463,7 +496,7 @@ class TestSignedDateValid(EToolsTenantTestCase):
         self.assertFalse(signed_date_valid(intervention))
 
 
-class TestAmendmentsInvalid(EToolsTenantTestCase):
+class TestAmendmentsInvalid(BaseTenantTestCase):
     def setUp(self):
         super(TestAmendmentsInvalid, self).setUp()
         self.intervention = InterventionFactory(
@@ -541,7 +574,7 @@ class TestAmendmentsInvalid(EToolsTenantTestCase):
         # self.assertFalse(amendments_valid(self.intervention))
 
 
-class TestSSFAgreementHasNoOtherIntervention(EToolsTenantTestCase):
+class TestSSFAgreementHasNoOtherIntervention(BaseTenantTestCase):
     def setUp(self):
         super(TestSSFAgreementHasNoOtherIntervention, self).setUp()
         self.agreement = AgreementFactory(
@@ -586,21 +619,21 @@ class TestSSFAgreementHasNoOtherIntervention(EToolsTenantTestCase):
             ssfa_agreement_has_no_other_intervention(self.intervention)
 
 
-class TestInterventionValid(EToolsTenantTestCase):
-    def setUp(self):
-        super(TestInterventionValid, self).setUp()
-        self.unicef_staff = UserFactory(is_staff=True)
-        self.intervention = InterventionFactory()
-        self.intervention.old_instance = self.intervention
-        self.validator = InterventionValid(
-            self.intervention,
-            user=self.unicef_staff,
+class TestInterventionValid(BaseTenantTestCase):
+    @classmethod
+    def setUpTestData(cls):
+        cls.unicef_staff = UserFactory(is_staff=True)
+        cls.intervention = InterventionFactory()
+        cls.intervention.old_instance = cls.intervention
+        cls.validator = InterventionValid(
+            cls.intervention,
+            user=cls.unicef_staff,
             disable_rigid_check=True,
         )
-        self.validator.permissions = self.validator.get_permissions(
-            self.intervention
+        cls.validator.permissions = cls.validator.get_permissions(
+            cls.intervention
         )
-        self.future_date = datetime.date.today() + datetime.timedelta(days=2)
+        cls.future_date = datetime.date.today() + datetime.timedelta(days=2)
 
     def test_check_rigid_fields_disabled_rigid_check(self):
         """If disabled rigid check return None"""

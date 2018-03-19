@@ -1,24 +1,25 @@
 from __future__ import unicode_literals
+
 import sys
 from unittest import skipIf, TestCase
 
 from django.contrib.auth import get_user_model
 
-from EquiTrack.factories import (
+from EquiTrack.tests.cases import BaseTenantTestCase
+from users import models
+from users.tests.factories import (
     CountryFactory,
     OfficeFactory,
     ProfileFactory,
     SectionFactory,
     UserFactory,
 )
-from EquiTrack.tests.cases import EToolsTenantTestCase
-from users import models
 
 
-class TestWorkspaceCounter(EToolsTenantTestCase):
-    def setUp(self):
-        super(TestWorkspaceCounter, self).setUp()
-        self.counter = models.WorkspaceCounter.objects.first()
+class TestWorkspaceCounter(BaseTenantTestCase):
+    @classmethod
+    def setUpTestData(cls):
+        cls.counter = models.WorkspaceCounter.objects.first()
 
     def test_unicode(self):
         self.assertEqual(unicode(self.counter), self.counter.workspace.name)
@@ -36,22 +37,22 @@ class TestWorkspaceCounter(EToolsTenantTestCase):
         self.assertEqual(counter_update.travel_reference_number_counter, 2)
 
 
-class TestOffice(EToolsTenantTestCase):
+class TestOffice(BaseTenantTestCase):
     def test_unicode(self):
         o = models.Office(name="office")
         self.assertEqual(unicode(o), "office")
 
 
-class TestSection(EToolsTenantTestCase):
+class TestSection(BaseTenantTestCase):
     def test_unicode(self):
         s = models.Section(name="section")
         self.assertEqual(unicode(s), "section")
 
 
-class TestUserProfileModel(EToolsTenantTestCase):
-    def setUp(self):
-        super(TestUserProfileModel, self).setUp()
-        self.user = UserFactory(
+class TestUserProfileModel(BaseTenantTestCase):
+    @classmethod
+    def setUpTestData(cls):
+        cls.user = UserFactory(
             email="user@example.com",
             first_name="First",
             last_name="Last",
@@ -99,7 +100,7 @@ class TestUserProfileModel(EToolsTenantTestCase):
         self.assertIsNone(profile.vendor_number)
 
 
-class TestUserModel(EToolsTenantTestCase):
+class TestUserModel(BaseTenantTestCase):
 
     def test_create_user(self):
         user = UserFactory(
@@ -116,7 +117,7 @@ class TestUserModel(EToolsTenantTestCase):
         self.assertEqual(unicode(user), 'Pel\xe9 Arantes do Nascimento')
 
 
-class TestCreatePartnerUser(EToolsTenantTestCase):
+class TestCreatePartnerUser(BaseTenantTestCase):
     def test_created_false(self):
         """If 'created' param passed in is False then do nothing"""
         user = models.User(email="new@example.com")
@@ -151,7 +152,7 @@ class TestCreatePartnerUser(EToolsTenantTestCase):
         ).exists())
 
 
-class TestDeletePartnerRelationship(EToolsTenantTestCase):
+class TestDeletePartnerRelationship(BaseTenantTestCase):
     def test_delete(self):
         profile = ProfileFactory()
         profile.partner_staff_member = profile.user.pk

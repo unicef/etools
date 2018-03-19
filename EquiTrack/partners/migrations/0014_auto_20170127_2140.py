@@ -14,7 +14,7 @@ def agr_copy_type_tmp(apps, schema_editor):
     for amd in AgreementAmendment.objects.all():
         amd.tmp_type = amd.type
         amd.save()
-        print 'saved amd {}'.format(amd.id)
+        print('saved amd {}'.format(amd.id))
 
 def agr_copy_tmp_arr_type(apps, schema_editor):
     AgreementAmendment = apps.get_model('partners', 'AgreementAmendment')
@@ -22,7 +22,7 @@ def agr_copy_tmp_arr_type(apps, schema_editor):
     for amd in amendments:
         amd.type = [amd.tmp_type]
         amd.save()
-        print 'saved amd {}'.format(amd.id)
+        print('saved amd {}'.format(amd.id))
 
 
 class Migration(migrations.Migration):
