@@ -8,7 +8,8 @@ from django.core.urlresolvers import reverse, resolve
 from rest_framework import status
 from rest_framework.test import APIRequestFactory
 
-from EquiTrack.tests.mixins import APITenantTestCase, WorkspaceRequiredAPITestMixIn
+from EquiTrack.tests.cases import BaseTenantTestCase
+from EquiTrack.tests.mixins import WorkspaceRequiredAPITestMixIn
 from locations.tests.factories import GatewayTypeFactory, LocationFactory
 from partners.models import InterventionResultLink
 from partners.permissions import READ_ONLY_API_GROUP_NAME
@@ -19,7 +20,7 @@ from reports.tests.factories import ResultFactory
 from users.tests.factories import UserFactory
 
 
-class TestInterventionsAPI(WorkspaceRequiredAPITestMixIn, APITenantTestCase):
+class TestInterventionsAPI(WorkspaceRequiredAPITestMixIn, BaseTenantTestCase):
     def setUp(self):
         super(TestInterventionsAPI, self).setUp()
         setup_intervention_test_data(self, include_results_and_indicators=True)
@@ -41,7 +42,7 @@ class TestInterventionsAPI(WorkspaceRequiredAPITestMixIn, APITenantTestCase):
         response = response['results']
 
         # uncomment if you need to see the response json / regenerate the test file
-        # print json.dumps(response, indent=2)
+        # print(json.dumps(response, indent=2))
         # TODO: think of how to improve this test without having to dig through the object to delete ids
         json_filename = os.path.join(os.path.dirname(__file__), 'data', 'prp-intervention-list.json')
         with open(json_filename) as f:
@@ -128,7 +129,7 @@ class TestInterventionsAPI(WorkspaceRequiredAPITestMixIn, APITenantTestCase):
             )
 
 
-class TestInterventionsAPIListPermissions(APITenantTestCase):
+class TestInterventionsAPIListPermissions(BaseTenantTestCase):
     '''Exercise permissions on the PRPIntervention list view'''
     def setUp(self):
         self.url = reverse('prp_api_v1:prp-intervention-list')

@@ -3,12 +3,12 @@ from __future__ import absolute_import, division, print_function, unicode_litera
 from django.contrib.auth.models import User
 from django.core import mail
 
-from EquiTrack.tests.mixins import EToolsTenantTestCase
+from EquiTrack.tests.cases import BaseTenantTestCase
 from tpm.models import ThirdPartyMonitor
 from tpm.tests.factories import TPMVisitFactory, TPMPartnerFactory, TPMPartnerStaffMemberFactory
 
 
-class TestTPMVisit(EToolsTenantTestCase):
+class TestTPMVisit(BaseTenantTestCase):
     def test_attachments_pv_applicable(self):
         visit = TPMVisitFactory(status='tpm_reported', tpm_activities__count=3)
         visit.tpm_activities.first().report_attachments.all().delete()
@@ -33,7 +33,7 @@ class TestTPMVisit(EToolsTenantTestCase):
         )
 
 
-class TPMStaffMemberTestCase(EToolsTenantTestCase):
+class TPMStaffMemberTestCase(BaseTenantTestCase):
     @classmethod
     def setUpTestData(cls):
         cls.firm = TPMPartnerFactory()

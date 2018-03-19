@@ -25,7 +25,7 @@ def migrate_amendment_types(apps, schema_editor):
         agr.types = [MAP.get(t.type, t.type) for t in agr.amendment_types.all()]
         agr.save()
 
-    print 'Updated Agreements Amendments: {}'.format(no)
+    print('Updated Agreements Amendments: {}'.format(no))
 
 
 class Migration(migrations.Migration):

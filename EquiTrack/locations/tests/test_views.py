@@ -5,14 +5,13 @@ from django.db import connection
 from rest_framework import status
 from tenant_schemas.test.client import TenantClient
 
-from EquiTrack.tests.cases import EToolsTenantTestCase
-from EquiTrack.tests.mixins import APITenantTestCase
+from EquiTrack.tests.cases import BaseTenantTestCase
 from locations.models import Location
 from locations.tests.factories import LocationFactory
 from users.tests.factories import UserFactory
 
 
-class TestLocationViews(APITenantTestCase):
+class TestLocationViews(BaseTenantTestCase):
     @classmethod
     def setUpTestData(cls):
         cls.unicef_staff = UserFactory(is_staff=True)
@@ -116,7 +115,7 @@ class TestLocationViews(APITenantTestCase):
         self.assertIn("Loc", response.data[0]["name"])
 
 
-class TestLocationAutocompleteView(EToolsTenantTestCase):
+class TestLocationAutocompleteView(BaseTenantTestCase):
     def setUp(self):
         super(TestLocationAutocompleteView, self).setUp()
         self.unicef_staff = UserFactory(is_staff=True)

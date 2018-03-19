@@ -6,7 +6,7 @@ from __future__ import unicode_literals
 import sys
 from unittest import skipIf
 
-from EquiTrack.tests.cases import EToolsTenantTestCase
+from EquiTrack.tests.cases import BaseTenantTestCase
 from t2f.tests.factories import (
     InvoiceFactory,
     ItineraryItemFactory,
@@ -15,7 +15,7 @@ from t2f.tests.factories import (
 
 
 @skipIf(sys.version_info.major == 3, "This test can be deleted under Python 3")
-class TestStrUnicode(EToolsTenantTestCase):
+class TestStrUnicode(BaseTenantTestCase):
     '''Ensure calling str() on model instances returns UTF8-encoded text and unicode() returns unicode.'''
     def test_travel(self):
         instance = TravelFactory(reference_number=b'two')
