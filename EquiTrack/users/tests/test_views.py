@@ -1,6 +1,7 @@
 from __future__ import unicode_literals
 
 import json
+from operator import itemgetter
 
 from django.core.urlresolvers import reverse
 from django.contrib.auth import get_user_model
@@ -377,14 +378,15 @@ class TestGroupViewSet(BaseTenantTestCase):
         self.url = "/api/groups/"
 
     def test_get(self):
-        group = Group.objects.first()
+        group = Group.objects.order_by('id').first()
         response = self.forced_auth_req(
             "get",
             self.url,
             user=self.unicef_staff,
         )
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(response.data[0]["id"], str(group.pk))
+        groups = sorted(response.data, key=itemgetter('id'))
+        self.assertEqual(groups[0].pk, str(group.pk))
 
     def test_api_groups_list(self):
         response = self.forced_auth_req(
