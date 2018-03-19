@@ -7,13 +7,13 @@ from django.utils.translation import ugettext as _
 
 from rest_framework import status
 
-from EquiTrack.tests.mixins import APITenantTestCase
+from EquiTrack.tests.cases import BaseTenantTestCase
 from tpm.models import TPMVisit
 from tpm.tests.base import TPMTestCaseMixin
 from tpm.tests.factories import TPMVisitFactory, UserFactory
 
 
-class TPMTransitionTestCase(TPMTestCaseMixin, APITenantTestCase):
+class TPMTransitionTestCase(TPMTestCaseMixin, BaseTenantTestCase):
     @classmethod
     def setUpTestData(cls):
         call_command('update_tpm_permissions', verbosity=0)

@@ -12,13 +12,14 @@ from django.contrib.auth.models import Group
 from django.core.files.uploadedfile import SimpleUploadedFile
 from django.core.urlresolvers import reverse, resolve
 from django.db import connection
-from django.utils import timezone
+from django.utils import six, timezone
 
 from model_utils import Choices
 from rest_framework import status
 from rest_framework.test import APIRequestFactory
 
-from EquiTrack.tests.mixins import APITenantTestCase, URLAssertionMixin
+from EquiTrack.tests.cases import BaseTenantTestCase
+from EquiTrack.tests.mixins import URLAssertionMixin
 from funds.models import FundsCommitmentItem, FundsCommitmentHeader
 from funds.tests.factories import FundsReservationHeaderFactory
 from partners.models import (
@@ -83,7 +84,7 @@ class URLsTestCase(URLAssertionMixin, TestCase):
         self.assertIntParamRegexes(names_and_paths, 'partners_api:')
 
 
-class TestChoicesToJSONReady(APITenantTestCase):
+class TestChoicesToJSONReady(BaseTenantTestCase):
     def test_tuple(self):
         """Make tuple JSON ready"""
         ready = v2.choices_to_json_ready(((1, "One"), (2, "Two")))
@@ -123,7 +124,7 @@ class TestChoicesToJSONReady(APITenantTestCase):
         ])
 
 
-class TestAPIPartnerOrganizationListView(APITenantTestCase):
+class TestAPIPartnerOrganizationListView(BaseTenantTestCase):
     '''Exercise the list view for PartnerOrganization'''
     @classmethod
     def setUpTestData(cls):
@@ -279,7 +280,7 @@ class TestAPIPartnerOrganizationListView(APITenantTestCase):
             self.assertIsInstance(list_element, dict)
             ids_in_response.append(list_element.get('id'))
 
-        self.assertItemsEqual(ids_in_response, (p1.id, p2.id))
+        six.assertCountEqual(self, ids_in_response, (p1.id, p2.id))
 
     def test_values_negative(self):
         '''Ensure that garbage values are handled properly'''
@@ -287,7 +288,7 @@ class TestAPIPartnerOrganizationListView(APITenantTestCase):
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
 
-class TestPartnerOrganizationListViewForCSV(APITenantTestCase):
+class TestPartnerOrganizationListViewForCSV(BaseTenantTestCase):
     '''Exercise the CSV-generating portion of the list view for PartnerOrganization.
 
     This is a separate test case from TestPartnerOrganizationListView because it does some monkey patching in
@@ -353,7 +354,7 @@ class TestPartnerOrganizationListViewForCSV(APITenantTestCase):
         self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
 
 
-class TestPartnerOrganizationCreateView(APITenantTestCase):
+class TestPartnerOrganizationCreateView(BaseTenantTestCase):
     '''Exercise the create view for PartnerOrganization'''
     @classmethod
     def setUpTestData(cls):
@@ -377,7 +378,7 @@ class TestPartnerOrganizationCreateView(APITenantTestCase):
         return response_json['id']
 
 
-class TestPartnerOrganizationRetrieveUpdateDeleteViews(APITenantTestCase):
+class TestPartnerOrganizationRetrieveUpdateDeleteViews(BaseTenantTestCase):
     '''Exercise the retrieve, update, and delete views for PartnerOrganization'''
     @classmethod
     def setUpTestData(cls):
@@ -676,12 +677,10 @@ class TestPartnerOrganizationRetrieveUpdateDeleteViews(APITenantTestCase):
                          sorted(response.data['hact_min_requirements'].keys()))
         self.assertEqual(['audits', 'outstanding_findings', 'programmatic_visits', 'spot_checks'],
                          sorted(response.data['hact_values'].keys()))
-        self.assertItemsEqual(
+        six.assertCountEqual(
+            self,
             ['completed', 'minimum_requirements'],
-            response.data['hact_values']['audits'].keys()
-        )
-        self.assertEqual(['audits', 'outstanding_findings', 'programmatic_visits', 'spot_checks'],
-                         sorted(response.data['hact_values'].keys()))
+            response.data['hact_values']['audits'].keys())
         self.assertEqual(response.data['interventions'], [])
 
     def test_api_partners_retreive_actual_fr_amounts(self):
@@ -749,7 +748,7 @@ class TestPartnerOrganizationRetrieveUpdateDeleteViews(APITenantTestCase):
         )
 
 
-class TestPartnershipViews(APITenantTestCase):
+class TestPartnershipViews(BaseTenantTestCase):
     @classmethod
     def setUpTestData(cls):
         cls.unicef_staff = UserFactory(is_staff=True)
@@ -808,7 +807,7 @@ class TestPartnershipViews(APITenantTestCase):
         self.assertIn("PCA", response.data[0]["agreement_type"])
 
 
-class TestAgreementCreateAPIView(APITenantTestCase):
+class TestAgreementCreateAPIView(BaseTenantTestCase):
     '''Exercise the create portion of the API.'''
     @classmethod
     def setUpTestData(cls):
@@ -865,7 +864,7 @@ class TestAgreementCreateAPIView(APITenantTestCase):
         self.assertFalse(Activity.objects.exists())
 
 
-class TestAgreementAPIFileAttachments(APITenantTestCase):
+class TestAgreementAPIFileAttachments(BaseTenantTestCase):
     '''Test retrieving attachments to agreements and agreement amendments. The file-specific fields are read-only
     on the relevant serializers, so they can't be edited through the API.
     '''
@@ -974,7 +973,7 @@ class TestAgreementAPIFileAttachments(APITenantTestCase):
         self.assertEqual(expected_path_components, url.path.split('/')[:-1])
 
 
-class TestAgreementAPIView(APITenantTestCase):
+class TestAgreementAPIView(BaseTenantTestCase):
     @classmethod
     def setUpTestData(cls):
         cls.unicef_staff = UserFactory(is_staff=True)
@@ -1313,7 +1312,7 @@ class TestAgreementAPIView(APITenantTestCase):
         self.assertEqual(len(response.data["amendments"][1]["types"]), 2)
 
 
-class TestPartnerStaffMemberAPIView(APITenantTestCase):
+class TestPartnerStaffMemberAPIView(BaseTenantTestCase):
     @classmethod
     def setUpTestData(cls):
         cls.unicef_staff = UserFactory(is_staff=True)
@@ -1341,7 +1340,7 @@ class TestPartnerStaffMemberAPIView(APITenantTestCase):
         self.assertIn(data[0]["last_name"], self.partner_staff.last_name)
 
 
-class TestInterventionViews(APITenantTestCase):
+class TestInterventionViews(BaseTenantTestCase):
     @classmethod
     def setUpTestData(cls):
         cls.unicef_staff = UserFactory(is_staff=True)
@@ -1556,7 +1555,7 @@ class TestInterventionViews(APITenantTestCase):
         r_data = json.loads(response.rendered_content)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(len(r_data["frs_details"]['frs']), 2)
-        self.assertItemsEqual(r_data["frs"], [self.fr_header_2.id, self.fr_header_1.id])
+        six.assertCountEqual(self, r_data["frs"], [self.fr_header_2.id, self.fr_header_1.id])
 
     def test_intervention_active_update_population_focus(self):
         intervention_obj = Intervention.objects.get(id=self.intervention_data["id"])
@@ -1795,7 +1794,7 @@ class TestInterventionViews(APITenantTestCase):
         self.assertEqual(response.data[0]["id"], self.intervention["id"])
 
 
-class TestInterventionReportingPeriodViews(APITenantTestCase):
+class TestInterventionReportingPeriodViews(BaseTenantTestCase):
 
     @classmethod
     def setUpTestData(cls):
@@ -2013,7 +2012,7 @@ class TestInterventionReportingPeriodViews(APITenantTestCase):
         self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
 
 
-class TestPartnershipDashboardView(APITenantTestCase):
+class TestPartnershipDashboardView(BaseTenantTestCase):
 
     def setUp(self):
         self.unicef_staff = UserFactory(is_staff=True)

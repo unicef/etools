@@ -3,11 +3,13 @@ import datetime
 from unittest import TestCase
 
 from django.core.urlresolvers import reverse
+from django.utils import six
 from rest_framework import status
 from partners.tests.test_utils import setup_intervention_test_data
 from tablib.core import Dataset
 
-from EquiTrack.tests.mixins import APITenantTestCase, URLAssertionMixin
+from EquiTrack.tests.cases import BaseTenantTestCase
+from EquiTrack.tests.mixins import URLAssertionMixin
 from partners.models import Intervention
 from partners.tests.factories import (
     InterventionFactory,
@@ -48,7 +50,7 @@ class UrlsTestCase(URLAssertionMixin, TestCase):
         self.assertReversal(names_and_paths, '', '/api/v2/reports/')
 
 
-class TestReportViews(APITenantTestCase):
+class TestReportViews(BaseTenantTestCase):
     @classmethod
     def setUpTestData(cls):
         for name, _ in ResultType.NAME_CHOICES:
@@ -92,9 +94,11 @@ class TestReportViews(APITenantTestCase):
         url = reverse('results-list')
         response = self.forced_auth_req('get', url)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        response_ids = [int(item['id']) for item in response.data]
-        result_ids = [self.result1.id, self.result2.id]
-        self.assertEqual(sorted(response_ids), sorted(result_ids))
+        six.assertCountEqual(
+            self,
+            [int(r["id"]) for r in response.data],
+            [self.result1.pk, self.result2.pk]
+        )
 
     def test_api_results_patch(self):
         url = reverse('results-detail', args=[self.result1.id])
@@ -109,7 +113,7 @@ class TestReportViews(APITenantTestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
 
 
-class TestOutputListAPIView(APITenantTestCase):
+class TestOutputListAPIView(BaseTenantTestCase):
     @classmethod
     def setUpTestData(cls):
         cls.user = UserFactory(is_staff=True)  # UNICEF staff user
@@ -135,9 +139,11 @@ class TestOutputListAPIView(APITenantTestCase):
     def test_get(self):
         response = self.forced_auth_req('get', self.url)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        response_ids = [int(item['id']) for item in response.data]
-        result_ids = [self.result1.id, self.result2.id]
-        self.assertEqual(sorted(response_ids), sorted(result_ids))
+        six.assertCountEqual(
+            self,
+            [int(r["id"]) for r in response.data],
+            [self.result1.pk, self.result2.pk]
+        )
 
     def test_minimal(self):
         data = {"verbosity": "minimal"}
@@ -160,17 +166,21 @@ class TestOutputListAPIView(APITenantTestCase):
         data = {"country_programme": self.result1.country_programme.id}
         response = self.forced_auth_req('get', self.url, data=data)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        response_ids = [int(item['id']) for item in response.data]
-        result_ids = [self.result1.id, self.result2.id]
-        self.assertEqual(sorted(response_ids), sorted(result_ids))
+        six.assertCountEqual(
+            self,
+            [int(r["id"]) for r in response.data],
+            [self.result1.pk, self.result2.pk]
+        )
 
     def test_filter_result_type(self):
         data = {"result_type": self.result_type.name}
         response = self.forced_auth_req('get', self.url, data=data)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        response_ids = [int(item['id']) for item in response.data]
-        result_ids = [self.result1.id, self.result2.id]
-        self.assertEqual(sorted(response_ids), sorted(result_ids))
+        six.assertCountEqual(
+            self,
+            [int(r["id"]) for r in response.data],
+            [self.result1.pk, self.result2.pk]
+        )
 
     def test_filter_values(self):
         data = {"values": '{},{}'.format(self.result1.id, self.result2.id)}
@@ -213,7 +223,7 @@ class TestOutputListAPIView(APITenantTestCase):
         ])
 
 
-class TestOutputDetailAPIView(APITenantTestCase):
+class TestOutputDetailAPIView(BaseTenantTestCase):
     @classmethod
     def setUpTestData(cls):
         cls.user = UserFactory(is_staff=True)  # UNICEF staff user
@@ -242,7 +252,7 @@ class TestOutputDetailAPIView(APITenantTestCase):
         self.assertEqual(int(response.data["id"]), self.result1.id)
 
 
-class TestDisaggregationListCreateViews(APITenantTestCase):
+class TestDisaggregationListCreateViews(BaseTenantTestCase):
     """
     Very minimal testing, just to make sure things work.
     """
@@ -291,7 +301,7 @@ class TestDisaggregationListCreateViews(APITenantTestCase):
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
 
-class TestDisaggregationRetrieveUpdateViews(APITenantTestCase):
+class TestDisaggregationRetrieveUpdateViews(BaseTenantTestCase):
     """
     Very minimal testing, just to make sure things work.
     """
@@ -447,7 +457,7 @@ class TestDisaggregationRetrieveUpdateViews(APITenantTestCase):
         self.assertTrue(Disaggregation.objects.filter(pk=disaggregation.pk).exists())
 
 
-class TestResultIndicatorListAPIView(APITenantTestCase):
+class TestResultIndicatorListAPIView(BaseTenantTestCase):
     @classmethod
     def setUpTestData(cls):
         cls.unicef_staff = UserFactory(is_staff=True)
@@ -477,7 +487,7 @@ class TestResultIndicatorListAPIView(APITenantTestCase):
         self.assertEqual([int(x["id"]) for x in response.data], [])
 
 
-class TestLowerResultListAPIView(APITenantTestCase):
+class TestLowerResultListAPIView(BaseTenantTestCase):
     @classmethod
     def setUpTestData(cls):
         cls.unicef_staff = UserFactory(is_staff=True)
@@ -528,7 +538,7 @@ class TestLowerResultListAPIView(APITenantTestCase):
         self.assertEqual(response.data, [])
 
 
-class TestLowerResultDeleteView(APITenantTestCase):
+class TestLowerResultDeleteView(BaseTenantTestCase):
     @classmethod
     def setUpTestData(cls):
         cls.unicef_staff = UserFactory(is_staff=True)
@@ -582,7 +592,7 @@ class TestLowerResultDeleteView(APITenantTestCase):
         )
 
 
-class TestLowerResultExportList(APITenantTestCase):
+class TestLowerResultExportList(BaseTenantTestCase):
     @classmethod
     def setUpTestData(cls):
         cls.unicef_staff = UserFactory(is_staff=True)
@@ -629,7 +639,7 @@ class TestLowerResultExportList(APITenantTestCase):
         self.assertEqual(len(dataset[0]), 6)
 
 
-class TestAppliedIndicatorListAPIView(APITenantTestCase):
+class TestAppliedIndicatorListAPIView(BaseTenantTestCase):
     @classmethod
     def setUpTestData(cls):
         cls.unicef_staff = UserFactory(is_staff=True)
@@ -697,7 +707,7 @@ class TestAppliedIndicatorListAPIView(APITenantTestCase):
         self.assertEqual(response.data, [])
 
 
-class TestAppliedIndicatorExportList(APITenantTestCase):
+class TestAppliedIndicatorExportList(BaseTenantTestCase):
     @classmethod
     def setUpTestData(cls):
         cls.unicef_staff = UserFactory(is_staff=True)

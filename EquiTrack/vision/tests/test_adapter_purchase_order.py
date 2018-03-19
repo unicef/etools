@@ -7,13 +7,13 @@ from audit.purchase_order.models import (
     PurchaseOrder,
     PurchaseOrderItem,
 )
-from EquiTrack.tests.cases import EToolsTenantTestCase
+from EquiTrack.tests.cases import BaseTenantTestCase
 from funds.models import Donor, Grant
 from users.models import Country
 from vision.adapters import purchase_order as adapter
 
 
-class TestPSynchronizer(EToolsTenantTestCase):
+class TestPSynchronizer(BaseTenantTestCase):
     @classmethod
     def setUpTestData(cls):
         cls.country = Country.objects.first()

@@ -5,14 +5,14 @@ from decimal import getcontext
 
 from django.core.urlresolvers import reverse
 
-from EquiTrack.tests.mixins import APITenantTestCase
+from EquiTrack.tests.cases import BaseTenantTestCase
 from t2f.helpers.invoice_maker import InvoiceMaker
 from t2f.models import Invoice
 from t2f.tests.factories import TravelFactory
 from users.tests.factories import UserFactory
 
 
-class InvoiceEndpoints(APITenantTestCase):
+class InvoiceEndpoints(BaseTenantTestCase):
     @classmethod
     def setUpTestData(cls):
         cls.unicef_staff = UserFactory(is_staff=True)
