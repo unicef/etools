@@ -1,9 +1,15 @@
+from six.moves import urllib_parse
+
 from django.db.models import Q
+from django.http import HttpResponseNotFound, HttpResponseRedirect
+from django.utils.translation import ugettext as _
+from django.views.generic.detail import DetailView
 from rest_framework.generics import ListAPIView
 from rest_framework.permissions import IsAdminUser
 
 from attachments.models import Attachment
 from attachments.serializers import AttachmentSerializer
+from utils.common.urlresolvers import site_url
 
 
 class AttachmentListView(ListAPIView):
@@ -30,3 +36,21 @@ class AttachmentListView(ListAPIView):
                 uploaded_by__pk__in=uploaded_by
             )
         return self.queryset.all()
+
+
+class AttachmentFileView(DetailView):
+    model = Attachment
+
+    def get(self, *args, **kwargs):
+        try:
+            attachment = Attachment.objects.get(pk=kwargs["pk"])
+        except Attachment.DoesNotExist:
+            return HttpResponseNotFound(
+                _("No Attachment matches the given query.")
+            )
+        if attachment.url == "None":
+            return HttpResponseNotFound(
+                _("Attachment has no file or hyperlink")
+            )
+        url = urllib_parse.urljoin(site_url(), attachment.url)
+        return HttpResponseRedirect(url)

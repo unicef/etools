@@ -1,7 +1,5 @@
 from __future__ import absolute_import, division, print_function, unicode_literals
 
-from six.moves import urllib_parse
-
 from django.utils.translation import ugettext as _
 
 from rest_framework import serializers
@@ -20,8 +18,6 @@ from partners.models import (
     InterventionAttachment,
     PartnerOrganization,
 )
-from utils.common.urlresolvers import site_url
-
 
 
 class BaseAttachmentsSerializer(serializers.ModelSerializer):
@@ -75,7 +71,7 @@ class Base64AttachmentSerializer(BaseAttachmentsSerializer):
 class AttachmentSerializer(BaseAttachmentsSerializer):
     created = serializers.DateTimeField(format='%d %b %Y')
     file_type = serializers.CharField(source='file_type.label')
-    url = serializers.SerializerMethodField()
+    file_link = serializers.CharField()
     filename = serializers.CharField()
     partner = serializers.SerializerMethodField()
     partner_type = serializers.SerializerMethodField()
@@ -91,13 +87,10 @@ class AttachmentSerializer(BaseAttachmentsSerializer):
             'pd_ssfa_number',
             'created',
             'file_type',
-            'url',
+            'file_link',
             'filename',
             'uploaded_by'
         ]
-
-    def get_url(self, obj):
-        return urllib_parse.urljoin(site_url(), obj.url)
 
     def get_partner_obj(self, obj):
         """Try and get partner value"""

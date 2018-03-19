@@ -356,3 +356,52 @@ class TestAttachmentListView(BaseTenantTestCase):
             "vendor_number": self.partner.vendor_number,
             "pd_ssfa_number": self.intervention.reference_number,
         }])
+
+
+class TestAttachmentFileView(BaseTenantTestCase):
+    @classmethod
+    def setUpTestData(cls):
+        cls.code = "test_code_1"
+        cls.file_type = AttachmentFileTypeFactory(code=cls.code)
+        cls.unicef_staff = UserFactory(is_staff=True)
+        cls.attachment = AttachmentFactory(
+            file_type=cls.file_type,
+            code=cls.code,
+            file="sample1.pdf",
+            content_object=cls.file_type,
+            uploaded_by=cls.unicef_staff
+        )
+        cls.url = reverse("attachments:file", args=[cls.attachment.pk])
+
+    def test_not_found(self):
+        response = self.forced_auth_req(
+            "get",
+            reverse("attachments:file", args=[404]),
+            user=self.unicef_staff,
+        )
+        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
+        self.assertIn("No Attachment matches the given query", response.content)
+
+    def test_no_url(self):
+        attachment = AttachmentFactory(
+            file_type=self.file_type,
+            code=self.code,
+            file=None,
+            content_object=self.file_type,
+            uploaded_by=self.unicef_staff
+        )
+        response = self.forced_auth_req(
+            "get",
+            reverse("attachments:file", args=[attachment.pk]),
+            user=self.unicef_staff,
+        )
+        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
+        self.assertIn("Attachment has no file or hyperlink", response.content)
+
+    def test_redirect(self):
+        response = self.forced_auth_req(
+            "get",
+            self.url,
+            user=self.unicef_staff,
+        )
+        self.assertEqual(response.status_code, status.HTTP_302_FOUND)

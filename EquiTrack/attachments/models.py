@@ -6,6 +6,7 @@ from django.conf import settings
 from django.contrib.contenttypes.fields import GenericForeignKey
 from django.contrib.contenttypes.models import ContentType
 from django.core.exceptions import ValidationError
+from django.core.urlresolvers import reverse
 from django.db import models
 from django.utils import six
 from django.utils.encoding import python_2_unicode_compatible
@@ -85,3 +86,7 @@ class Attachment(TimeStampedModel, models.Model):
     @property
     def filename(self):
         return os.path.basename(self.file.name if self.file else urlsplit(self.hyperlink).path)
+
+    @property
+    def file_link(self):
+        return reverse("attachments:file", args=[self.pk])
