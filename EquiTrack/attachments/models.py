@@ -109,7 +109,9 @@ def generate_file_path(attachment, filename):
                 str(obj.number),
             ]
         else:
-            raise Exception("Unknown file path")
+            raise ValueError("Unhandled model ({}) in generation of file path".format(
+                model_name
+            ))
     else:
         file_path = [
             connection.schema_name,
