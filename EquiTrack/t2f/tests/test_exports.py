@@ -156,7 +156,7 @@ class TravelExports(BaseTenantTestCase):
         with self.assertNumQueries(6):
             response = self.forced_auth_req('get', reverse('t2f:travels:list:activity_export'),
                                             user=self.unicef_staff)
-        export_csv = csv.reader(StringIO(response.content))
+        export_csv = csv.reader(StringIO(response.content.decode('utf-8')))
         rows = [r for r in export_csv]
 
         self.assertEqual(len(rows), 5)
@@ -264,7 +264,7 @@ class TravelExports(BaseTenantTestCase):
         with self.assertNumQueries(27):
             response = self.forced_auth_req('get', reverse('t2f:travels:list:finance_export'),
                                             user=self.unicef_staff)
-        export_csv = csv.reader(StringIO(response.content))
+        export_csv = csv.reader(StringIO(response.content.decode('utf-8')))
         rows = [r for r in export_csv]
 
         self.assertEqual(len(rows), 3)
@@ -391,7 +391,7 @@ class TravelExports(BaseTenantTestCase):
         with self.assertNumQueries(6):
             response = self.forced_auth_req('get', reverse('t2f:travels:list:travel_admin_export'),
                                             user=self.unicef_staff)
-        export_csv = csv.reader(StringIO(response.content))
+        export_csv = csv.reader(StringIO(response.content.decode('utf-8')))
         rows = [r for r in export_csv]
 
         self.assertEqual(len(rows), 6)
@@ -564,7 +564,7 @@ class TravelExports(BaseTenantTestCase):
         with self.assertNumQueries(1):
             response = self.forced_auth_req('get', reverse('t2f:travels:list:invoice_export'),
                                             user=self.unicef_staff)
-        export_csv = csv.reader(StringIO(response.content))
+        export_csv = csv.reader(StringIO(response.content.decode('utf-8')))
         rows = [r for r in export_csv]
 
         self.assertEqual(len(rows), 5)

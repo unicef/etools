@@ -60,7 +60,7 @@ class TestPartnerOrganizationModelExport(PartnerModelExportTestCase):
         )
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        dataset = Dataset().load(response.content, 'csv')
+        dataset = Dataset().load(response.content.decode('utf-8'), 'csv')
         self.assertEqual(dataset.height, 1)
         self.assertEqual(dataset._get_headers(), [
             'Vendor Number',
@@ -127,7 +127,7 @@ class TestPartnerOrganizationModelExport(PartnerModelExportTestCase):
         )
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        dataset = Dataset().load(response.content, 'csv')
+        dataset = Dataset().load(response.content.decode('utf-8'), 'csv')
         self.assertEqual(dataset.height, 1)
         self.assertEqual(len(dataset._get_headers()), 46)
         self.assertEqual(len(dataset[0]), 46)
@@ -141,7 +141,7 @@ class TestPartnerOrganizationModelExport(PartnerModelExportTestCase):
         )
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        dataset = Dataset().load(response.content, 'csv')
+        dataset = Dataset().load(response.content.decode('utf-8'), 'csv')
         self.assertEqual(dataset.height, 1)
         self.assertEqual(len(dataset._get_headers()), 46)
         self.assertEqual(len(dataset[0]), 46)
@@ -167,7 +167,7 @@ class TestPartnerStaffMemberModelExport(PartnerModelExportTestCase):
         )
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        dataset = Dataset().load(response.content, 'csv')
+        dataset = Dataset().load(response.content.decode('utf-8'), 'csv')
         self.assertEqual(dataset.height, 2)
         self.assertEqual(len(dataset._get_headers()), 10)
         self.assertEqual(len(dataset[0]), 10)
@@ -181,7 +181,7 @@ class TestPartnerStaffMemberModelExport(PartnerModelExportTestCase):
         )
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        dataset = Dataset().load(response.content, 'csv')
+        dataset = Dataset().load(response.content.decode('utf-8'), 'csv')
         self.assertEqual(dataset.height, 2)
         self.assertEqual(len(dataset._get_headers()), 11)
         self.assertEqual(len(dataset[0]), 11)
@@ -214,7 +214,7 @@ class TestPartnerOrganizationAssessmentModelExport(PartnerModelExportTestCase):
         )
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        dataset = Dataset().load(response.content, 'csv')
+        dataset = Dataset().load(response.content.decode('utf-8'), 'csv')
         self.assertEqual(dataset.height, 1)
         self.assertEqual(len(dataset._get_headers()), 17)
         self.assertEqual(len(dataset[0]), 17)
@@ -228,7 +228,7 @@ class TestPartnerOrganizationAssessmentModelExport(PartnerModelExportTestCase):
         )
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        dataset = Dataset().load(response.content, 'csv')
+        dataset = Dataset().load(response.content.decode('utf-8'), 'csv')
         self.assertEqual(dataset.height, 1)
         self.assertEqual(len(dataset._get_headers()), 14)
         self.assertEqual(len(dataset[0]), 14)
@@ -252,7 +252,7 @@ class TestPartnerOrganizationHactExport(BaseTenantTestCase):
             data={"format": "csv"}
         )
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        dataset = Dataset().load(response.content, 'csv')
+        dataset = Dataset().load(response.content.decode('utf-8'), 'csv')
         self.assertEqual(dataset.height, 1)
         self.assertEqual(len(dataset._get_headers()), 34)
         self.assertEqual(len(dataset[0]), 34)

@@ -15,7 +15,7 @@ class TestAttachmentsModels(BaseTenantTestCase):
     def setUpTestData(cls):
         cls.file_type = FileTypeFactory()
         cls.file_name = 'simple_file.txt'
-        file_content = 'these are the file contents!'
+        file_content = 'these are the file contents!'.encode('utf-8')
         cls.base64_file = 'data:text/plain;base64,{}'.format(base64.b64encode(file_content))
 
     def test_invalid(self):
