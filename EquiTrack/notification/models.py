@@ -44,6 +44,7 @@ class Notification(models.Model):
         ('partners/partnership/created/updated', 'partners/partnership/created/updated'),
         ('partners/partnership/signed/frs', 'partners/partnership/signed/frs'),
         ('organisations/staff_member/invite', 'organisations/staff_member/invite',),
+        ('audit/staff_member/invite', 'audit/staff_member/invite',),
         ('audit/engagement/submit_to_auditor', 'audit/engagement/submit_to_auditor',),
         ('audit/engagement/reported_by_auditor', 'audit/engagement/reported_by_auditor',),
         ('audit/engagement/action_point_assigned', 'audit/engagement/action_point_assigned',),

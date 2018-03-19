@@ -96,6 +96,7 @@ MIDDLEWARE_CLASSES = (
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.contrib.auth.middleware.SessionAuthenticationMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
+    'email_auth.middleware.TokenAuthenticationMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
@@ -570,3 +571,7 @@ PASSWORDLESS_AUTH = {
     # username is better choice as it can be only 30 symbols max and unique.
     'PASSWORDLESS_USER_EMAIL_FIELD_NAME': 'username'
 }
+
+
+# email auth settings
+EMAIL_AUTH_TOKEN_NAME = os.getenv('EMAIL_AUTH_TOKEN_NAME', 'url_auth_token')
