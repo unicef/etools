@@ -332,7 +332,7 @@ class TestPartnerOrganizationListViewForCSV(BaseTenantTestCase):
         # but I want to make sure the response looks CSV-ish.
         self.assertEqual(response.get('Content-Disposition'), 'attachment;filename=partner.csv')
 
-        self.assertIsInstance(response.rendered_content, basestring)
+        self.assertIsInstance(response.rendered_content, six.string_types)
 
         # The response should *not* look like JSON.
         with self.assertRaises(ValueError):
