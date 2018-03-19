@@ -3,6 +3,7 @@ import functools
 import logging
 import copy
 
+from django.contrib.contenttypes.models import ContentType
 from django.db import transaction
 from django.db.models import Q
 
@@ -72,6 +73,7 @@ from partners.validation.interventions import InterventionValid
 from partners.permissions import PartnershipManagerRepPermission, PartnershipManagerPermission
 from reports.models import LowerResult, AppliedIndicator
 from reports.serializers.v2 import LowerResultSimpleCUSerializer, AppliedIndicatorSerializer
+from snapshot.models import Activity
 
 
 class InterventionListBaseView(ValidatorViewMixin, ListCreateAPIView):
@@ -712,3 +714,31 @@ class InterventionIndicatorsUpdateView(RetrieveUpdateDestroyAPIView):
         if not intervention.status == Intervention.DRAFT:
             raise ValidationError(u'Deleting an indicator is only possible in status Draft.')
         return super(InterventionIndicatorsUpdateView, self).delete(request, *args, **kwargs)
+
+
+class InterventionDeleteView(DestroyAPIView):
+    permission_classes = (PartnershipManagerRepPermission,)
+
+    def delete(self, request, *args, **kwargs):
+        try:
+            intervention = Intervention.objects.get(id=int(kwargs['pk']))
+        except Intervention.DoesNotExist:
+            return Response(status=status.HTTP_404_NOT_FOUND)
+
+        if intervention.status != Intervention.DRAFT:
+            raise ValidationError("Cannot delete a PD or SSFA that is not Draft")
+
+        if intervention.travel_activities.count():
+            raise ValidationError("Cannot delete a PD or SSFA that has Planned Trips")
+
+        else:
+            # get the history of this PD and make sure it wasn't manually moved back to draft before allowing deletion
+            act = Activity.objects.filter(target_object_id=intervention.id,
+                                    target_content_type=ContentType.objects.get_for_model(intervention))
+            historical_statuses = set(a.data.get('status', Intervention.DRAFT) for a in act.all())
+            if len(historical_statuses) > 1 or \
+                    (len(historical_statuses) == 1 and historical_statuses.pop() != Intervention.DRAFT):
+                raise ValidationError("Cannot delete a PD or SSFA that was manually moved back to Draft")
+            else:
+                intervention.delete()
+                return Response(status=status.HTTP_204_NO_CONTENT)
