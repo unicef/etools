@@ -171,7 +171,7 @@ class AttachmentSerializerMixin(object):
 
     def get_upload_field_name(self, field_name):
         """Ensure we get valid field name
-        Need to prevent field being added mutliple times with
+        Need to prevent field being added multiple times with
         suffix appended each time
         """
         if not field_name.endswith(self.ATTACHMENT_SUFFIX):
