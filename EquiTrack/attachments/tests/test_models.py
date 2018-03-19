@@ -175,7 +175,7 @@ class TestGenerateFilePath(BaseTenantTestCase):
 
     def test_exception(self):
         attachment = AttachmentFactory(content_object=self.partner)
-        with self.assertRaisesRegexp(Exception, "Unknown file path"):
+        with self.assertRaisesRegexp(ValueError, "Unhandled model"):
             models.generate_file_path(attachment, "test.pdf")
 
 
