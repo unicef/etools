@@ -85,6 +85,7 @@ class AttachmentSerializer(BaseAttachmentsSerializer):
 
     class Meta(BaseAttachmentsSerializer.Meta):
         fields = [
+            'id',
             'partner',
             'vendor_number',
             'partner_type',
