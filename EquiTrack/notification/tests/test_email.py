@@ -2,7 +2,7 @@ from __future__ import unicode_literals
 
 from django.conf import settings
 
-from mock import patch, mock
+from mock import mock
 from django.utils import six
 from mock import patch
 from post_office.models import Email, EmailTemplate

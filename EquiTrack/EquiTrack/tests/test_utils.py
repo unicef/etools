@@ -11,7 +11,7 @@ from django.contrib.auth.models import Group, Permission
 from django.core.serializers.json import DjangoJSONEncoder
 from freezegun import freeze_time
 
-from EquiTrack.tests.cases import EToolsTenantTestCase
+from EquiTrack.tests.cases import BaseTenantTestCase
 from EquiTrack.utils import get_current_year, get_quarter, model_instance_to_dictionary, make_dictionary_serializable
 
 
@@ -40,7 +40,7 @@ class TestUtils(TestCase):
         self.assertEqual(quarter, 'q4')
 
 
-class TestSerialization(EToolsTenantTestCase):
+class TestSerialization(BaseTenantTestCase):
     def setUp(self):
         user = get_user_model().objects.create(username='user001', email='fred@example.com', is_superuser=True)
         grp = Group.objects.create(name='Group 2')
