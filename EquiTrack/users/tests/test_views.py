@@ -386,7 +386,7 @@ class TestGroupViewSet(BaseTenantTestCase):
         )
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         groups = sorted(response.data, key=itemgetter('id'))
-        self.assertEqual(groups[0].pk, str(group.pk))
+        self.assertEqual(groups[0]['id'], str(group.pk))
 
     def test_api_groups_list(self):
         response = self.forced_auth_req(
