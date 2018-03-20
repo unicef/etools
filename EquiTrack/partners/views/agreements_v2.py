@@ -86,19 +86,16 @@ class AgreementListAPIView(QueryStringFilterMixin, ExportModelMixin, ValidatorVi
         if query_params:
             queries = []
 
-            if "agreement_type" in query_params.keys():
-                queries.append(Q(agreement_type__in=query_params.get("agreement_type").split(',')))
-            if "status" in query_params.keys():
-                queries.append(Q(status__in=query_params.get("status").split(',')))
-            if "partner_name" in query_params.keys():
-                queries.append(Q(partner__name=query_params.get("partner_name")))
-            if "start" in query_params.keys():
-                queries.append(Q(start__gt=query_params.get("start")))
-            if "end" in query_params.keys():
-                queries.append(Q(end__lte=query_params.get("end")))
-
-            queries.append(self.search_params(query_params,
-                                              ['partner__name__icontains', 'agreement_number__icontains']))
+            filters = (
+                ('agreement_type', 'agreement_type__in'),
+                ('status', 'status__in'),
+                ('partner_name', 'partner__name'),
+                ('start', 'start__gt'),
+                ('end', 'end__lte'),
+            )
+            search_terms = ['partner__name__icontains', 'agreement_number__icontains']
+            queries.extend(self.filter_params(query_params, filters))
+            queries.append(self.search_params(query_params, search_terms))
 
             if queries:
                 expression = functools.reduce(operator.and_, queries)

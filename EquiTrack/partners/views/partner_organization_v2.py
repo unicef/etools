@@ -97,8 +97,6 @@ class PartnerOrganizationListAPIView(QueryStringFilterMixin, ExportModelMixin, L
             set_tenant_or_fail(workspace)
 
         if query_params:
-            queries = []
-
             if "values" in query_params.keys():
                 # Used for ghost data - filter in all(), and return straight away.
                 try:
@@ -107,10 +105,15 @@ class PartnerOrganizationListAPIView(QueryStringFilterMixin, ExportModelMixin, L
                     raise ValidationError("ID values must be integers")
                 else:
                     return PartnerOrganization.objects.filter(id__in=ids)
-            if "partner_type" in query_params.keys():
-                queries.append(Q(partner_type__in=query_params.get("partner_type").split(',')))
-            if "cso_type" in query_params.keys():
-                queries.append(Q(cso_type__in=query_params.get("cso_type").split(',')))
+            queries = []
+            filters = (
+                ('partner_type', 'partner_type__in'),
+                ('cso_type', 'cso_type__in'),
+            )
+            search_terms = ['name__icontains', 'vendor_number__icontains', 'short_name__icontains']
+            queries.extend(self.filter_params(query_params, filters))
+            queries.append(self.search_params(query_params, search_terms))
+
             if "hidden" in query_params.keys():
                 hidden = None
                 if query_params.get("hidden").lower() == "true":
@@ -122,9 +125,6 @@ class PartnerOrganizationListAPIView(QueryStringFilterMixin, ExportModelMixin, L
                     hidden = False
                 if hidden is not None:
                     queries.append(Q(hidden=hidden))
-
-            queries.append(self.search_params(query_params,
-                                              ['name__icontains', 'vendor_number__icontains', 'short_name__icontains']))
 
             if queries:
                 expression = functools.reduce(operator.and_, queries)
