@@ -43,7 +43,7 @@ def copy_attached_agreements():
     file_type, _ = FileType.objects.get_or_create(
         code="partners_agreement",
         defaults={
-            "label": "Attached Agreement",
+            "label": "Signed Agreement",
             "name": "attached_agreement",
             "order": 0,
         }
@@ -116,7 +116,7 @@ def copy_signed_amendments():
     file_type, _ = FileType.objects.get_or_create(
         code="partners_agreement_amendment",
         defaults={
-            "label": "Agreement Signed Amendment",
+            "label": "Agreement Amendment",
             "name": "agreement_signed_amendment",
             "order": 0,
         }
@@ -140,7 +140,7 @@ def copy_interventions():
     prc_file_type, _ = FileType.objects.get_or_create(
         code="partners_intervention_prc_review",
         defaults={
-            "label": "Intervention PRC Review",
+            "label": "PRC Review",
             "name": "intervention_prc_review",
             "order": 0,
         }
@@ -148,7 +148,7 @@ def copy_interventions():
     pd_file_type, _ = FileType.objects.get_or_create(
         code="partners_intervention_signed_pd",
         defaults={
-            "label": "Intervention Signed PD",
+            "label": "Signed PD/SSFA",
             "name": "intervention_signed_pd",
             "order": 0,
         }
@@ -181,7 +181,7 @@ def copy_intervention_amendments():
     file_type, _ = FileType.objects.get_or_create(
         code="partners_intervention_amendment_signed",
         defaults={
-            "label": "Intervention Amendment Signed",
+            "label": "PD/SSFA Amendment",
             "name": "intervention_amendment_signed",
             "order": 0,
         }
