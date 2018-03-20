@@ -565,25 +565,42 @@ class TestPartnerOrganizationModel(BaseTenantTestCase):
 
 
 class TestAgreementModel(BaseTenantTestCase):
-    @classmethod
-    def setUpTestData(cls):
-        cls.partner_organization = PartnerFactory(
+    def setUp(self):
+        super(TestAgreementModel, self).setUp()
+
+        self.partner_organization = PartnerFactory(
             name="Partner Org 1",
         )
-        cp = CountryProgrammeFactory(
+        self.cp = CountryProgrammeFactory(
             name="CP 1",
             wbs="0001/A0/01",
             from_date=datetime.date(datetime.date.today().year - 1, 1, 1),
             to_date=datetime.date(datetime.date.today().year + 1, 1, 1),
         )
-        cls.agreement = AgreementFactory(
+        self.agreement = AgreementFactory(
             agreement_type=models.Agreement.PCA,
-            partner=cls.partner_organization,
-            country_programme=cp
+            partner=self.partner_organization,
+            country_programme=self.cp,
+            signed_by_unicef_date=datetime.date(datetime.date.today().year - 1, 5, 1),
+            signed_by_partner_date=datetime.date(datetime.date.today().year - 1, 4, 1),
         )
 
     def test_reference_number(self):
         self.assertIn("PCA", self.agreement.reference_number)
+
+    def test_start_date_unicef_date(self):
+        self.assertEqual(self.agreement.start, self.agreement.signed_by_unicef_date)
+
+    def test_start_date_partner_date(self):
+        self.agreement.signed_by_partner_date = datetime.date(datetime.date.today().year - 1, 7, 1)
+        self.agreement.save()
+        self.assertEqual(self.agreement.start, self.agreement.signed_by_partner_date)
+
+    def test_start_date_programme_date(self):
+        self.agreement.signed_by_unicef_date = datetime.date(datetime.date.today().year - 2, 1, 1)
+        self.agreement.signed_by_partner_date = datetime.date(datetime.date.today().year - 2, 1, 1)
+        self.agreement.save()
+        self.assertEqual(self.agreement.start, self.cp.from_date)
 
 
 class TestInterventionModel(BaseTenantTestCase):
