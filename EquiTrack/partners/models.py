@@ -1191,13 +1191,15 @@ class Agreement(TimeStampedModel):
             self.update_reference_number(amendment_number)
 
         if self.agreement_type == self.PCA:
+            assert self.country_programme is not None, 'Country Programme is required'
             # set start date
             if self.signed_by_partner_date and self.signed_by_unicef_date:
-                self.start = self.signed_by_unicef_date \
-                    if self.signed_by_unicef_date > self.signed_by_partner_date else self.signed_by_partner_date
+                self.start = max(self.signed_by_unicef_date,
+                                 self.signed_by_partner_date,
+                                 self.country_programme.from_date
+                                 )
 
             # set end date
-            assert self.country_programme is not None, 'Country Programme is required'
             self.end = self.country_programme.to_date
 
         return super(Agreement, self).save()
@@ -1770,7 +1772,7 @@ class Intervention(TimeStampedModel):
         pass
 
     @transition(field=status,
-                source=[ACTIVE],
+                source=[ACTIVE, SIGNED],
                 target=[SUSPENDED],
                 conditions=[intervention_validation.transition_to_suspended],
                 permission=intervention_validation.partnership_manager_only)
@@ -1778,7 +1780,7 @@ class Intervention(TimeStampedModel):
         pass
 
     @transition(field=status,
-                source=[ACTIVE, SUSPENDED],
+                source=[ACTIVE, SUSPENDED, SIGNED],
                 target=[TERMINATED],
                 conditions=[intervention_validation.transition_to_terminated],
                 permission=intervention_validation.partnership_manager_only)

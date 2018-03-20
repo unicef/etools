@@ -122,7 +122,7 @@ class Migration(migrations.Migration):
         migrations.AlterField(
             model_name='interventionamendment',
             name='type',
-            field=models.CharField(choices=[('CPR', b'Change in Programme Result'), ('CPF', b'Change in Population Focus'), ('CGC', b'Change in Georgraphical Coverage'), ('CTBGT20', b'Change in Total Budget >20%'), ('CTBLT20', b'Change in Total Budget <=20%'), ('CABLT20', b'Changes in Activity Budget <=20% - No Change in Total Budget'), ('CABGT20', b'Changes in Activity Budget >20% - No Change in Total Budget - Prior approval in authorized FACE'), ('CABGT20FACE', b'Changes in Activity Budget >20% - No Change in Total Budget - Reporting at FACE')], max_length=50),
+            field=models.CharField(choices=[('CPR', 'Change in Programme Result'), ('CPF', 'Change in Population Focus'), ('CGC', 'Change in Georgraphical Coverage'), ('CTBGT20', 'Change in Total Budget >20%'), ('CTBLT20', 'Change in Total Budget <=20%'), ('CABLT20', 'Changes in Activity Budget <=20% - No Change in Total Budget'), ('CABGT20', 'Changes in Activity Budget >20% - No Change in Total Budget - Prior approval in authorized FACE'), ('CABGT20FACE', 'Changes in Activity Budget >20% - No Change in Total Budget - Reporting at FACE')], max_length=50),
         ),
         migrations.AlterField(
             model_name='interventionattachment',
@@ -132,7 +132,7 @@ class Migration(migrations.Migration):
         migrations.AlterField(
             model_name='interventionbudget',
             name='in_kind_amount_local',
-            field=models.DecimalField(decimal_places=2, default=0, max_digits=20, verbose_name=b'UNICEF Supplies Local'),
+            field=models.DecimalField(decimal_places=2, default=0, max_digits=20, verbose_name='UNICEF Supplies Local'),
         ),
         migrations.AlterField(
             model_name='interventionbudget',
