@@ -127,18 +127,10 @@ class AttachmentSerializer(BaseAttachmentsSerializer):
         """Only certain models will have this value available
         Intervention
         InterventionAttachment
-        Agreement
+        InterventionAmendment
         """
         if isinstance(obj.content_object, Intervention):
-            return obj.content_object.reference_number
+            return obj.content_object.number
         elif isinstance(obj.content_object, (InterventionAmendment, InterventionAttachment)):
-            return obj.content_object.intervention.reference_number
-        elif isinstance(obj.content_object, Agreement):
-            intervention = obj.content_object.interventions.last()
-            if intervention:
-                return intervention.reference_number
-        elif isinstance(obj.content_object, AgreementAmendment):
-            intervention = obj.content_object.agreement.interventions.last()
-            if intervention:
-                return intervention.reference_number
+            return obj.content_object.intervention.number
         return None
