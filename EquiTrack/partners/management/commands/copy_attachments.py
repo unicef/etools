@@ -21,6 +21,22 @@ from utils.common.utils import run_on_all_tenants
 logger = logging.getLogger(__name__)
 
 
+def update_or_create_attachment(file_type, content_type, object_id, filename):
+    logger.info("code: {}".format(file_type.code))
+    logger.info("content type: {}".format(content_type))
+    logger.info("object_id: {}".format(object_id))
+    attachment, created = Attachment.objects.get_or_create(
+        code=file_type.code,
+        content_type=content_type,
+        object_id=object_id,
+        file_type=file_type,
+        defaults={"file": filename}
+    )
+    if not created and attachment.file != filename:
+        attachment.file = filename
+        attachment.save()
+
+
 def copy_attached_agreements():
     # Copy attached_agreement field content to
     # attachments model
@@ -38,15 +54,11 @@ def copy_attached_agreements():
     for agreement in Agreement.view_objects.filter(
         attached_agreement__isnull=False
     ).all():
-        logger.info("code: {}".format(file_type.code))
-        logger.info("content type: {}".format(content_type))
-        logger.info("agreement: {}".format(agreement.pk))
-        attachment, created = Attachment.objects.get_or_create(
-            code=file_type.code,
-            content_type=content_type,
-            object_id=agreement.pk,
-            file_type=file_type,
-            defaults={"file": agreement.attached_agreement}
+        update_or_create_attachment(
+            file_type,
+            content_type,
+            agreement.pk,
+            agreement.attached_agreement,
         )
 
 
@@ -67,12 +79,11 @@ def copy_core_values_assessments():
     for partner in PartnerOrganization.objects.filter(
         core_values_assessment__isnull=False
     ).all():
-        attachment, _ = Attachment.objects.get_or_create(
-            content_type=content_type,
-            object_id=partner.pk,
-            file_type=file_type,
-            code=file_type.code,
-            defaults={"file": partner.core_values_assessment}
+        update_or_create_attachment(
+            file_type,
+            content_type,
+            partner.pk,
+            partner.core_values_assessment,
         )
 
 
@@ -92,12 +103,11 @@ def copy_reports():
     for assessment in Assessment.objects.filter(
         report__isnull=False
     ).all():
-        attachment, _ = Attachment.objects.get_or_create(
-            content_type=content_type,
-            object_id=assessment.pk,
-            file_type=file_type,
-            code=file_type.code,
-            defaults={"file": assessment.report}
+        update_or_create_attachment(
+            file_type,
+            content_type,
+            assessment.pk,
+            assessment.report,
         )
 
 
@@ -117,12 +127,11 @@ def copy_signed_amendments():
     for amendment in AgreementAmendment.view_objects.filter(
         signed_amendment__isnull=False
     ).all():
-        attachment, _ = Attachment.objects.get_or_create(
-            content_type=content_type,
-            object_id=amendment.pk,
-            file_type=file_type,
-            code=file_type.code,
-            defaults={"file": amendment.signed_amendment}
+        update_or_create_attachment(
+            file_type,
+            content_type,
+            amendment.pk,
+            amendment.signed_amendment,
         )
 
 
@@ -152,20 +161,18 @@ def copy_interventions():
             Q(signed_pd_document__isnull=False)
     ).all():
         if intervention.prc_review_document:
-            attachment, _ = Attachment.objects.get_or_create(
-                content_type=content_type,
-                object_id=intervention.pk,
-                file_type=prc_file_type,
-                code=prc_file_type.code,
-                defaults={"file": intervention.prc_review_document}
+            update_or_create_attachment(
+                prc_file_type,
+                content_type,
+                intervention.pk,
+                intervention.prc_review_document,
             )
         if intervention.signed_pd_document:
-            attachment, _ = Attachment.objects.get_or_create(
-                content_type=content_type,
-                object_id=intervention.pk,
-                file_type=pd_file_type,
-                code=pd_file_type.code,
-                defaults={"file": intervention.signed_pd_document}
+            update_or_create_attachment(
+                pd_file_type,
+                content_type,
+                intervention.pk,
+                intervention.signed_pd_document,
             )
 
 
@@ -186,12 +193,11 @@ def copy_intervention_amendments():
             signed_amendment__isnull=False
     ).all():
         if amendment.signed_amendment:
-            attachment, _ = Attachment.objects.get_or_create(
-                content_type=content_type,
-                object_id=amendment.pk,
-                file_type=file_type,
-                code=file_type.code,
-                defaults={"file": amendment.signed_amendment}
+            update_or_create_attachment(
+                file_type,
+                content_type,
+                amendment.pk,
+                amendment.signed_amendment,
             )
 
 
@@ -212,12 +218,11 @@ def copy_intervention_attachments():
             attachment__isnull=False
     ).all():
         if attachment.attachment:
-            a, _ = Attachment.objects.get_or_create(
-                content_type=content_type,
-                object_id=attachment.pk,
-                file_type=file_type,
-                code=file_type.code,
-                defaults={"file": attachment.attachment}
+            update_or_create_attachment(
+                file_type,
+                content_type,
+                attachment.pk,
+                attachment.attachment,
             )
 
 
