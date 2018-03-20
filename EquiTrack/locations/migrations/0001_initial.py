@@ -28,8 +28,8 @@ class Migration(migrations.Migration):
                 ('api_key', models.CharField(max_length=254)),
                 ('table_name', models.CharField(max_length=254)),
                 ('display_name', models.CharField(blank=True, max_length=254, null=True)),
-                ('name_col', models.CharField(default=b'name', max_length=254)),
-                ('pcode_col', models.CharField(default=b'pcode', max_length=254)),
+                ('name_col', models.CharField(default='name', max_length=254)),
+                ('pcode_col', models.CharField(default='pcode', max_length=254)),
                 ('parent_code_col', models.CharField(blank=True, max_length=254, null=True)),
                 ('color', models.CharField(blank=True, default=locations.models.get_random_color, max_length=7, null=True)),
                 ('lft', models.PositiveIntegerField(db_index=True, editable=False)),
@@ -63,7 +63,7 @@ class Migration(migrations.Migration):
                 ('p_code', models.CharField(blank=True, max_length=32L, null=True)),
                 ('color', models.CharField(blank=True, default=locations.models.get_random_color, max_length=7, null=True)),
                 ('geom', django.contrib.gis.db.models.fields.MultiPolygonField(blank=True, null=True, srid=4326)),
-                ('gateway', models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.CASCADE, to='locations.GatewayType', verbose_name=b'Admin type')),
+                ('gateway', models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.CASCADE, to='locations.GatewayType', verbose_name='Admin type')),
             ],
             options={
                 'ordering': ['name'],
@@ -90,7 +90,7 @@ class Migration(migrations.Migration):
                 ('p_code', models.CharField(blank=True, max_length=32L, null=True)),
                 ('color', models.CharField(blank=True, default=locations.models.get_random_color, max_length=7, null=True)),
                 ('geom', django.contrib.gis.db.models.fields.MultiPolygonField(blank=True, null=True, srid=4326)),
-                ('gateway', models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.CASCADE, to='locations.GatewayType', verbose_name=b'Admin type')),
+                ('gateway', models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.CASCADE, to='locations.GatewayType', verbose_name='Admin type')),
             ],
             options={
                 'ordering': ['name'],
@@ -111,7 +111,7 @@ class Migration(migrations.Migration):
                 ('rght', models.PositiveIntegerField(db_index=True, editable=False)),
                 ('tree_id', models.PositiveIntegerField(db_index=True, editable=False)),
                 ('level', models.PositiveIntegerField(db_index=True, editable=False)),
-                ('gateway', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to='locations.GatewayType', verbose_name=b'Location Type')),
+                ('gateway', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to='locations.GatewayType', verbose_name='Location Type')),
                 ('locality', models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.CASCADE, to='locations.Locality')),
                 ('parent', mptt.fields.TreeForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.CASCADE, related_name='children', to='locations.Location')),
             ],
@@ -127,7 +127,7 @@ class Migration(migrations.Migration):
                 ('p_code', models.CharField(blank=True, max_length=32L, null=True)),
                 ('color', models.CharField(blank=True, default=locations.models.get_random_color, max_length=7, null=True)),
                 ('geom', django.contrib.gis.db.models.fields.MultiPolygonField(blank=True, null=True, srid=4326)),
-                ('gateway', models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.CASCADE, to='locations.GatewayType', verbose_name=b'Admin type')),
+                ('gateway', models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.CASCADE, to='locations.GatewayType', verbose_name='Admin type')),
                 ('governorate', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to='locations.Governorate')),
             ],
             options={
@@ -143,17 +143,17 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name='linkedlocation',
             name='locality',
-            field=smart_selects.db_fields.ChainedForeignKey(auto_choose=True, blank=True, chained_field=b'region', chained_model_field=b'region', null=True, on_delete=django.db.models.deletion.CASCADE, to='locations.Locality'),
+            field=smart_selects.db_fields.ChainedForeignKey(auto_choose=True, blank=True, chained_field='region', chained_model_field='region', null=True, on_delete=django.db.models.deletion.CASCADE, to='locations.Locality'),
         ),
         migrations.AddField(
             model_name='linkedlocation',
             name='location',
-            field=smart_selects.db_fields.ChainedForeignKey(blank=True, chained_field=b'locality', chained_model_field=b'locality', null=True, on_delete=django.db.models.deletion.CASCADE, to='locations.Location'),
+            field=smart_selects.db_fields.ChainedForeignKey(blank=True, chained_field='locality', chained_model_field='locality', null=True, on_delete=django.db.models.deletion.CASCADE, to='locations.Location'),
         ),
         migrations.AddField(
             model_name='linkedlocation',
             name='region',
-            field=smart_selects.db_fields.ChainedForeignKey(auto_choose=True, chained_field=b'governorate', chained_model_field=b'governorate', on_delete=django.db.models.deletion.CASCADE, to='locations.Region'),
+            field=smart_selects.db_fields.ChainedForeignKey(auto_choose=True, chained_field='governorate', chained_model_field='governorate', on_delete=django.db.models.deletion.CASCADE, to='locations.Region'),
         ),
         migrations.AddField(
             model_name='cartodbtable',
