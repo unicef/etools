@@ -117,8 +117,7 @@ class MultiModelDataSynchronizer(VisionDataSynchronizer):
                     defaults=defaults, **kwargs
                 )
         except Exception:
-            logger.warning('Exception processing record in MultiModelDataSynchronizer',
-                           exc_info=True)
+            logger.warning('Exception processing record', exc_info=True)
 
     def _save_records(self, records):
         processed = 0
