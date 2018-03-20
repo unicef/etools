@@ -53,7 +53,8 @@ class PartnerStaffMemberDetailAPIView(RetrieveUpdateDestroyAPIView):
         return super(PartnerStaffMemberDetailAPIView, self).get_serializer_class()
 
 
-def choices_to_json_ready(choices):
+# TODO move in EquiTrack (after utils package has been merged in EquiTrack)
+def choices_to_json_ready(choices, sort_choices=True):
     if isinstance(choices, dict):
         choice_list = [(k, v) for k, v in choices.items()]
     elif isinstance(choices, Choices):
@@ -68,7 +69,8 @@ def choices_to_json_ready(choices):
     else:
         choice_list = choices
 
-    choice_list = sorted(choice_list, key=lambda tup: tup[1])
+    if sort_choices:
+        choice_list = sorted(choice_list, key=lambda tup: tup[1])
     return [{'label': choice[1], 'value': choice[0]} for choice in choice_list]
 
 
@@ -89,7 +91,7 @@ class PMPStaticDropdownsListAPIView(APIView):
         agency_choices = choices_to_json_ready(PartnerOrganization.AGENCY_CHOICES)
         assessment_types = choices_to_json_ready(Assessment.ASSESSMENT_TYPES)
         agreement_types = choices_to_json_ready(Agreement.AGREEMENT_TYPES)
-        agreement_status = choices_to_json_ready(Agreement.STATUS_CHOICES)
+        agreement_status = choices_to_json_ready(Agreement.STATUS_CHOICES, sort_choices=False)
         agreement_amendment_types = choices_to_json_ready(AgreementAmendment.AMENDMENT_TYPES)
         intervention_doc_type = choices_to_json_ready(Intervention.INTERVENTION_TYPES)
         intervention_status = choices_to_json_ready(Intervention.INTERVENTION_STATUS)

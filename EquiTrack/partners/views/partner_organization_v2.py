@@ -89,10 +89,6 @@ class PartnerOrganizationListAPIView(ExportModelMixin, ListCreateAPIView):
                 return MinimalPartnerOrganizationListSerializer
         return super(PartnerOrganizationListAPIView, self).get_serializer_class()
 
-    @staticmethod
-    def analyse_queryparam(query_params, partner_type):
-        values = query_params.get(partner_type)
-        return values.split(',')
 
     def get_queryset(self, format=None):
         q = PartnerOrganization.objects.all()
@@ -113,9 +109,9 @@ class PartnerOrganizationListAPIView(ExportModelMixin, ListCreateAPIView):
                 else:
                     return PartnerOrganization.objects.filter(id__in=ids)
             if "partner_type" in query_params.keys():
-                queries.append(Q(partner_type__in=self.analyse_queryparam(query_params, "partner_type")))
+                queries.append(Q(partner_type__in=query_params.get("partner_type").split(',')))
             if "cso_type" in query_params.keys():
-                queries.append(Q(cso_type__in=self.analyse_queryparam(query_params, "cso_type")))
+                queries.append(Q(cso_type__in=query_params.get("cso_type").split(',')))
             if "hidden" in query_params.keys():
                 hidden = None
                 if query_params.get("hidden").lower() == "true":

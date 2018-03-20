@@ -65,7 +65,7 @@ class AgreementListAPIView(ExportModelMixin, ValidatorViewMixin, ListCreateAPIVi
 
     def get_serializer_class(self, format=None):
         """
-        Use restriceted field set for listing
+        Use restricted field set for listing
         """
         if self.request.method == "GET":
             query_params = self.request.query_params
@@ -87,9 +87,9 @@ class AgreementListAPIView(ExportModelMixin, ValidatorViewMixin, ListCreateAPIVi
             queries = []
 
             if "agreement_type" in query_params.keys():
-                queries.append(Q(agreement_type=query_params.get("agreement_type")))
+                queries.append(Q(agreement_type__in=query_params.get("agreement_type").split(',')))
             if "status" in query_params.keys():
-                queries.append(Q(status=query_params.get("status")))
+                queries.append(Q(status__in=query_params.get("status").split(',')))
             if "partner_name" in query_params.keys():
                 queries.append(Q(partner__name=query_params.get("partner_name")))
             if "start" in query_params.keys():

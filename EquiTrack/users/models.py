@@ -150,6 +150,9 @@ class Office(models.Model):
     def __str__(self):
         return self.name
 
+    class Meta:
+        ordering = ('name', )
+
 
 class CountrySectionManager(models.Manager):
     def get_queryset(self):

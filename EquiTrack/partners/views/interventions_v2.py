@@ -173,11 +173,11 @@ class InterventionListAPIView(ExportModelMixin, InterventionListBaseView):
                 queries.append(Q(unicef_focal_points__in=[self.request.user.id]) |
                                Q(unicef_signatory=self.request.user))
             if "document_type" in query_params.keys():
-                queries.append(Q(document_type=query_params.get("document_type")))
+                queries.append(Q(document_type__in=query_params.get("document_type").split(',')))
             if "country_programme" in query_params.keys():
                 queries.append(Q(agreement__country_programme=query_params.get("country_programme")))
             if "section" in query_params.keys():
-                queries.append(Q(sections__pk=query_params.get("section")))
+                queries.append(Q(sections__in=query_params.get("section").split(',')))
             if "cluster" in query_params.keys():
                 queries.append(Q(
                     result_links__ll_results__applied_indicators__cluster_indicator_title__icontains=query_params
@@ -185,13 +185,13 @@ class InterventionListAPIView(ExportModelMixin, InterventionListBaseView):
             if "status" in query_params.keys():
                 queries.append(Q(status__in=query_params.get("status").split(',')))
             if "unicef_focal_points" in query_params.keys():
-                queries.append(Q(unicef_focal_points__in=[query_params.get("unicef_focal_points")]))
+                queries.append(Q(unicef_focal_points__in=query_params.get("unicef_focal_points").split(',')))
             if "start" in query_params.keys():
                 queries.append(Q(start__gte=query_params.get("start")))
             if "end" in query_params.keys():
                 queries.append(Q(end__lte=query_params.get("end")))
             if "office" in query_params.keys():
-                queries.append(Q(offices__in=[query_params.get("office")]))
+                queries.append(Q(offices__in=query_params.get("office").split(',')))
             if "location" in query_params.keys():
                 queries.append(Q(result_links__ll_results__applied_indicators__locations__name__icontains=query_params
                                  .get("location")))
