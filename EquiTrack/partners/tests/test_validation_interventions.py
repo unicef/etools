@@ -39,6 +39,8 @@ from partners.validation.interventions import (
     transition_to_active,
     transition_to_closed,
     transition_to_signed,
+    transition_to_suspended,
+    transition_to_terminated,
 )
 from users.tests.factories import GroupFactory, UserFactory
 
@@ -338,6 +340,70 @@ class TestTransitionToActive(BaseTenantTestCase):
         agreement = AgreementFactory(status=Agreement.SIGNED)
         intervention = InterventionFactory(agreement=agreement)
         self.assertTrue(transition_to_active(intervention))
+
+
+class TestTransitionToSuspended(BaseTenantTestCase):
+    def test_intervention_suspendable_statuses(self):
+        """Interventions in amendment cannot be suspended"""
+        suspendable_statuses = [Intervention.SIGNED, Intervention.ACTIVE]
+
+        for suspendable_status in suspendable_statuses:
+            intervention = InterventionFactory(
+                status=suspendable_status,
+            )
+            self.assertTrue(transition_to_suspended(intervention))
+
+            intervention.in_amendment = True
+            with self.assertRaises(TransitionError):
+                transition_to_suspended(intervention)
+
+    @skip("TODO: enable if the respective transitional validations are implemented")
+    def test_intervention_nonsuspendable_statuses(self):
+        non_suspendable_statuses = [
+            Intervention.DRAFT,
+            Intervention.ENDED,
+            Intervention.IMPLEMENTED,
+            Intervention.CLOSED,
+            Intervention.TERMINATED,
+        ]
+
+        for non_suspendable_status in non_suspendable_statuses:
+            intervention = InterventionFactory(
+                status=non_suspendable_status,
+            )
+            self.assertFalse(transition_to_suspended(intervention))
+
+
+class TestTransitionToTerminated(BaseTenantTestCase):
+    def test_intervention_terminable_statuses(self):
+        """Interventions in amendment cannot be terminated"""
+        terminable_statuses = [Intervention.SIGNED, Intervention.ACTIVE]
+
+        for terminable_status in terminable_statuses:
+            intervention = InterventionFactory(
+                status=terminable_status,
+            )
+            self.assertTrue(transition_to_terminated(intervention))
+
+            intervention.in_amendment = True
+            with self.assertRaises(TransitionError):
+                transition_to_terminated(intervention)
+
+    @skip("TODO: enable if respective transitional validations are implemented")
+    def test_intervention_nonterminable_statuses(self):
+        non_terminable_statuses = [
+            Intervention.DRAFT,
+            Intervention.ENDED,
+            Intervention.IMPLEMENTED,
+            Intervention.CLOSED,
+            Intervention.SUSPENDED,
+        ]
+
+        for non_terminable_status in non_terminable_statuses:
+            intervention = InterventionFactory(
+                status=non_terminable_status,
+            )
+            self.assertFalse(transition_to_terminated(intervention))
 
 
 class TestStateDateSignedValid(BaseTenantTestCase):
