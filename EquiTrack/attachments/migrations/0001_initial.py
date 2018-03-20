@@ -23,7 +23,7 @@ class Migration(migrations.Migration):
                 ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
                 ('created', model_utils.fields.AutoCreatedField(default=django.utils.timezone.now, editable=False, verbose_name='created')),
                 ('modified', model_utils.fields.AutoLastModifiedField(default=django.utils.timezone.now, editable=False, verbose_name='modified')),
-                ('file', models.FileField(blank=True, null=True, upload_to=b'files')),
+                ('file', models.FileField(blank=True, null=True, upload_to='files')),
                 ('hyperlink', models.CharField(blank=True, max_length=255, null=True)),
                 ('object_id', models.IntegerField()),
                 ('code', models.CharField(blank=True, max_length=20)),
@@ -39,7 +39,7 @@ class Migration(migrations.Migration):
                 ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
                 ('order', models.PositiveIntegerField(db_index=True, editable=False)),
                 ('name', models.CharField(max_length=64)),
-                ('code', models.CharField(default=b'', max_length=64)),
+                ('code', models.CharField(default='', max_length=64)),
             ],
             options={
                 'ordering': ('code', 'order'),

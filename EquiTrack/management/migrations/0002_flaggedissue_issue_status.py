@@ -15,6 +15,6 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name='flaggedissue',
             name='issue_status',
-            field=models.CharField(choices=[(b'new', b'New (untriaged)'), (b'pending', b'Pending (triaged, not resolved)'), (b'resolved', b'Resolved')], default=b'new', max_length=32),
+            field=models.CharField(choices=[('new', 'New (untriaged)'), ('pending', 'Pending (triaged, not resolved)'), ('resolved', 'Resolved')], default='new', max_length=32),
         ),
     ]

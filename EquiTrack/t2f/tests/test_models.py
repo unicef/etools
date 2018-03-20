@@ -18,8 +18,8 @@ from t2f.tests.factories import (
 class TestStrUnicode(BaseTenantTestCase):
     '''Ensure calling str() on model instances returns UTF8-encoded text and unicode() returns unicode.'''
     def test_travel(self):
-        instance = TravelFactory(reference_number=b'two')
-        self.assertEqual(str(instance), b'two')
+        instance = TravelFactory(reference_number='two')
+        self.assertEqual(str(instance), 'two')
         self.assertEqual(unicode(instance), u'two')
 
         instance = TravelFactory(reference_number=u'tv\xe5')
@@ -28,11 +28,11 @@ class TestStrUnicode(BaseTenantTestCase):
 
     def test_itinerary_item(self):
         travel = TravelFactory()
-        instance = ItineraryItemFactory(origin=b'here', destination=b'there', travel=travel)
-        self.assertTrue(str(instance).endswith(b'here - there'))
+        instance = ItineraryItemFactory(origin='here', destination='there', travel=travel)
+        self.assertTrue(str(instance).endswith('here - there'))
         self.assertTrue(unicode(instance).endswith(u'here - there'))
 
-        instance = ItineraryItemFactory(origin=b'here', destination=u'G\xf6teborg', travel=travel)
+        instance = ItineraryItemFactory(origin='here', destination=u'G\xf6teborg', travel=travel)
         self.assertTrue(str(instance).endswith(b'here - G\xc3\xb6teborg'))
         self.assertTrue(unicode(instance).endswith(u'here - G\xf6teborg'))
 
@@ -41,8 +41,8 @@ class TestStrUnicode(BaseTenantTestCase):
         self.assertTrue(unicode(instance).endswith(u'Przemy\u015bl - G\xf6teborg'))
 
     def test_invoice(self):
-        instance = InvoiceFactory(business_area=b'xyz')
-        self.assertTrue(str(instance).startswith(b'xyz/'))
+        instance = InvoiceFactory(business_area='xyz')
+        self.assertTrue(str(instance).startswith('xyz/'))
         self.assertTrue(unicode(instance).startswith(u'xyz/'))
 
         instance = InvoiceFactory(business_area=u'G\xf6teborg')
