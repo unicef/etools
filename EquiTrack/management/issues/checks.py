@@ -6,6 +6,7 @@ from django.conf import settings
 from django.core.exceptions import ImproperlyConfigured
 from django.db.models import Model
 from django.utils.module_loading import import_string
+from django.utils import six
 
 from environment.models import IssueCheckConfig
 from management.issues.exceptions import IssueCheckNotFoundException, IssueFoundException
@@ -15,11 +16,11 @@ from EquiTrack.utils import run_on_all_tenants
 ModelCheckData = namedtuple('ModelCheckData', 'object metadata')
 
 
+@six.add_metaclass(ABCMeta)
 class BaseIssueCheck(object):
     """
     Base class for all Issue Checks
     """
-    __metaclass__ = ABCMeta
     model = None  # the model class that this check runs against.
     check_id = None  # a unique id for the issue check type.
 
