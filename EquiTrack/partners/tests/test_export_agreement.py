@@ -6,21 +6,21 @@ from django.core.urlresolvers import reverse
 from rest_framework import status
 from tablib.core import Dataset
 
-from EquiTrack.factories import (
+from EquiTrack.tests.cases import BaseTenantTestCase
+from partners.tests.factories import (
     AgreementAmendmentFactory,
     AgreementFactory,
-    CountryProgrammeFactory,
     PartnerFactory,
     PartnerStaffFactory,
-    UserFactory,
 )
-from EquiTrack.tests.mixins import APITenantTestCase
+from reports.tests.factories import CountryProgrammeFactory
+from users.tests.factories import UserFactory
 
 
-class BaseAgreementModelExportTestCase(APITenantTestCase):
-    def setUp(self):
-        super(BaseAgreementModelExportTestCase, self).setUp()
-        self.unicef_staff = UserFactory(is_staff=True)
+class BaseAgreementModelExportTestCase(BaseTenantTestCase):
+    @classmethod
+    def setUpTestData(cls):
+        cls.unicef_staff = UserFactory(is_staff=True)
         partner = PartnerFactory(
             partner_type='Government',
             vendor_number='Vendor No',
@@ -40,18 +40,18 @@ class BaseAgreementModelExportTestCase(APITenantTestCase):
             last_assessment_date=datetime.date.today(),
         )
         partnerstaff = PartnerStaffFactory(partner=partner)
-        self.agreement = AgreementFactory(
+        cls.agreement = AgreementFactory(
             partner=partner,
             country_programme=CountryProgrammeFactory(wbs="random WBS"),
             attached_agreement="fake_attachment.pdf",
             start=datetime.date.today(),
             end=datetime.date.today(),
             signed_by_unicef_date=datetime.date.today(),
-            signed_by=self.unicef_staff,
+            signed_by=cls.unicef_staff,
             signed_by_partner_date=datetime.date.today()
         )
-        self.agreement.authorized_officers.add(partnerstaff)
-        self.agreement.save()
+        cls.agreement.authorized_officers.add(partnerstaff)
+        cls.agreement.save()
 
 
 class TestAgreementModelExport(BaseAgreementModelExportTestCase):
@@ -65,7 +65,7 @@ class TestAgreementModelExport(BaseAgreementModelExportTestCase):
         )
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        dataset = Dataset().load(response.content, 'csv')
+        dataset = Dataset().load(response.content.decode('utf-8'), 'csv')
         self.assertEqual(dataset.height, 1)
         self.assertEqual(dataset._get_headers(), [
             'Reference Number',
@@ -109,7 +109,7 @@ class TestAgreementModelExport(BaseAgreementModelExportTestCase):
         )
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        dataset = Dataset().load(response.content, 'csv')
+        dataset = Dataset().load(response.content.decode('utf-8'), 'csv')
         self.assertEqual(dataset.height, 1)
         self.assertEqual(len(dataset._get_headers()), 24)
         self.assertEqual(len(dataset[0]), 24)
@@ -153,7 +153,7 @@ class TestAgreementAmendmentModelExport(BaseAgreementModelExportTestCase):
         )
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        dataset = Dataset().load(response.content, 'csv')
+        dataset = Dataset().load(response.content.decode('utf-8'), 'csv')
         self.assertEqual(dataset.height, 1)
         self.assertEqual(len(dataset._get_headers()), 9)
         self.assertEqual(len(dataset[0]), 9)
@@ -167,7 +167,7 @@ class TestAgreementAmendmentModelExport(BaseAgreementModelExportTestCase):
         )
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        dataset = Dataset().load(response.content, 'csv')
+        dataset = Dataset().load(response.content.decode('utf-8'), 'csv')
         self.assertEqual(dataset.height, 1)
         self.assertEqual(len(dataset._get_headers()), 10)
         self.assertEqual(len(dataset[0]), 10)

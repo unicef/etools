@@ -6,12 +6,12 @@ from __future__ import unicode_literals
 from carto.exceptions import CartoException
 from mock import patch, Mock
 
-from EquiTrack.factories import GatewayTypeFactory
-from EquiTrack.tests.cases import EToolsTenantTestCase
+from EquiTrack.tests.cases import BaseTenantTestCase
 from locations import forms
+from locations.tests.factories import GatewayTypeFactory
 
 
-class TestCartoDBTableForm(EToolsTenantTestCase):
+class TestCartoDBTableForm(BaseTenantTestCase):
     def setUp(self):
         super(TestCartoDBTableForm, self).setUp()
         self.mock_sql = Mock()

@@ -6,6 +6,7 @@ import logging
 from decimal import Decimal
 
 from django.db.models import Sum
+from django.utils import six
 
 from funds.models import FundsCommitmentHeader, FundsCommitmentItem, FundsReservationHeader, FundsReservationItem
 from vision.utils import comp_decimals
@@ -55,7 +56,7 @@ class FundReservationsSynchronizer(VisionDataSynchronizer):
         "fund": "FUND",
         "overall_amount": "OVERALL_AMOUNT",
         "overall_amount_dc": "OVERALL_AMOUNT_DC",
-        "line_item_text": "FC_LINE_ITEM_TEXT",
+        "line_item_text": "FR_LINE_ITEM_TEXT",
         "due_date": "DUE_DATE",
         "intervention_amt": "CURRENT_FR_AMOUNT",
         "total_amt": "FR_OVERALL_AMOUNT",
@@ -72,13 +73,13 @@ class FundReservationsSynchronizer(VisionDataSynchronizer):
 
     LINE_ITEM_FIELDS = ['LINE_ITEM', 'FR_NUMBER', 'WBS_ELEMENT', 'GRANT_NBR',
                         'FUND', 'OVERALL_AMOUNT', 'OVERALL_AMOUNT_DC',
-                        'DUE_DATE', 'FC_LINE_ITEM_TEXT']
+                        'DUE_DATE', 'FR_LINE_ITEM_TEXT']
 
     def __init__(self, *args, **kwargs):
         self.header_records = {}
         self.item_records = {}
         self.fr_headers = {}
-        self.REVERSE_MAPPING = {v: k for k, v in self.MAPPING.iteritems()}
+        self.REVERSE_MAPPING = {v: k for k, v in six.iteritems(self.MAPPING)}
         self.REVERSE_HEADER_FIELDS = [self.REVERSE_MAPPING[v] for v in self.HEADER_FIELDS]
         self.REVERSE_ITEM_FIELDS = [self.REVERSE_MAPPING[v] for v in self.LINE_ITEM_FIELDS]
         super(FundReservationsSynchronizer, self).__init__(*args, **kwargs)
@@ -151,7 +152,7 @@ class FundReservationsSynchronizer(VisionDataSynchronizer):
 
         to_update = []
 
-        fr_numbers_from_records = {k for k in self.header_records.iterkeys()}
+        fr_numbers_from_records = {k for k in six.iterkeys(self.header_records)}
 
         list_of_headers = FundsReservationHeader.objects.filter(fr_number__in=fr_numbers_from_records)
         for h in list_of_headers:
@@ -181,7 +182,7 @@ class FundReservationsSynchronizer(VisionDataSynchronizer):
 
         to_update = []
 
-        fr_line_item_keys = {k for k in self.item_records.iterkeys()}
+        fr_line_item_keys = {k for k in six.iterkeys(self.item_records)}
 
         list_of_line_items = FundsReservationItem.objects.filter(fr_ref_number__in=fr_line_item_keys)
 
@@ -297,7 +298,7 @@ class FundCommitmentSynchronizer(VisionDataSynchronizer):
         self.header_records = {}
         self.item_records = {}
         self.fc_headers = {}
-        self.REVERSE_MAPPING = {v: k for k, v in self.MAPPING.iteritems()}
+        self.REVERSE_MAPPING = {v: k for k, v in six.iteritems(self.MAPPING)}
         self.REVERSE_HEADER_FIELDS = [self.REVERSE_MAPPING[v] for v in self.HEADER_FIELDS]
         self.REVERSE_ITEM_FIELDS = [self.REVERSE_MAPPING[v] for v in self.LINE_ITEM_FIELDS]
         super(FundCommitmentSynchronizer, self).__init__(*args, **kwargs)
@@ -372,7 +373,7 @@ class FundCommitmentSynchronizer(VisionDataSynchronizer):
 
         to_update = []
 
-        fc_numbers_from_records = {k for k in self.header_records.iterkeys()}
+        fc_numbers_from_records = {k for k in six.iterkeys(self.header_records)}
 
         list_of_headers = FundsCommitmentHeader.objects.filter(fc_number__in=fc_numbers_from_records)
         for h in list_of_headers:
@@ -403,7 +404,7 @@ class FundCommitmentSynchronizer(VisionDataSynchronizer):
 
         to_update = []
 
-        fc_line_item_keys = {k for k in self.item_records.iterkeys()}
+        fc_line_item_keys = {k for k in six.iterkeys(self.item_records)}
 
         list_of_line_items = FundsCommitmentItem.objects.filter(fc_ref_number__in=fc_line_item_keys)
 

@@ -9,9 +9,12 @@ from django.utils import timezone
 
 import mock
 
-import vision.tasks
-from EquiTrack.factories import CountryFactory
+from EquiTrack.tests.cases import BaseTenantTestCase
+from partners.tests.factories import PartnerFactory
+from users.models import Country
+from users.tests.factories import CountryFactory
 from vision.exceptions import VisionException
+import vision.tasks
 
 
 def _build_country(name):
@@ -38,6 +41,7 @@ def _build_country(name):
 class TestVisionSyncTask(TestCase):
     """Exercises the vision_sync_task() task which requires a lot of mocking and some monkey patching."""
     def setUp(self):
+        super(TestVisionSyncTask, self).setUp()
         self.public_country = _build_country('Global')
         # Vision_sync_enabled is not set on the public country.
         self.public_country.vision_sync_enabled = False
@@ -225,7 +229,6 @@ class TestVisionSyncTask(TestCase):
 
 class TestSyncHandlerTask(TestCase):
     """Exercises the sync_handler()"""
-
     def setUp(self):
         self.country = _build_country('My')
 
@@ -281,3 +284,48 @@ class TestSyncHandlerTask(TestCase):
         )
         self.assertEqual(mock_logger.call_args[0], (expected_msg,))
         self.assertEqual(mock_logger.call_args[1], {})
+
+
+class TestUpdateAllPartners(BaseTenantTestCase):
+    @classmethod
+    def setUpTestData(cls):
+        cls.country = Country.objects.first()
+
+    @mock.patch('vision.tasks.logger.exception')
+    def test_update_no_partners(self, mock_logger_exception):
+        """Ensure no exceptions if no partners exist"""
+        vision.tasks.update_all_partners()
+        self.assertEqual(mock_logger_exception.call_count, 0)
+
+    @mock.patch('vision.tasks.logger.exception')
+    def test_update_country_name(self, mock_logger_exception):
+        """Ensure no exceptions if country name provided"""
+        vision.tasks.update_all_partners(self.country.name)
+        self.assertEqual(mock_logger_exception.call_count, 0)
+
+    @mock.patch('vision.tasks.logger.exception')
+    def test_update(self, mock_logger_exception):
+        """Ensure no exceptions if partners exist"""
+        PartnerFactory()
+        vision.tasks.update_all_partners(self.country.name)
+        self.assertEqual(mock_logger_exception.call_count, 0)
+
+
+class TestUpdatePurchaseOrders(BaseTenantTestCase):
+    @classmethod
+    def setUpTestData(cls):
+        cls.country = Country.objects.first()
+
+    @mock.patch("vision.tasks.logger.exception")
+    def test_update_purchase_orders_no_country(self, mock_logger_exception):
+        """Ensure no exceptions if no countries"""
+        vision.tasks.update_purchase_orders(country_name="Wrong")
+        self.assertEqual(mock_logger_exception.call_count, 0)
+
+    @mock.patch("vision.tasks.logger.exception")
+    @mock.patch("vision.tasks.POSynchronizer")
+    def test_update_purchase_orders(self, synchronizer, mock_logger_exception):
+        """Ensure no exceptions if no countries"""
+        vision.tasks.update_purchase_orders()
+        self.assertEqual(mock_logger_exception.call_count, 0)
+        self.assertEqual(synchronizer.call_count, 1)

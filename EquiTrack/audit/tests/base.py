@@ -12,7 +12,7 @@ from django.utils import timezone
 from attachments.models import Attachment, FileType
 from audit.models import RiskBluePrint, UNICEFAuditFocalPoint, UNICEFUser
 from audit.tests.factories import AuditorStaffMemberFactory, AuditPartnerFactory, RiskFactory
-from EquiTrack.factories import UserFactory
+from users.tests.factories import UserFactory
 from utils.groups.wrappers import GroupWrapper
 
 

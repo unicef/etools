@@ -9,14 +9,19 @@ from rest_framework import status
 from tenant_schemas.test.client import TenantClient
 from unittest import skip
 
-from EquiTrack.factories import CountryFactory, GroupFactory, OfficeFactory, SectionFactory, UserFactory
-from EquiTrack.tests.mixins import APITenantTestCase
-from EquiTrack.tests.cases import EToolsTenantTestCase
-from publics.tests.factories import BusinessAreaFactory
+from EquiTrack.tests.cases import BaseTenantTestCase
+from publics.tests.factories import PublicsBusinessAreaFactory
 from users.models import Group, User, UserProfile
+from users.tests.factories import (
+    CountryFactory,
+    GroupFactory,
+    OfficeFactory,
+    SectionFactory,
+    UserFactory,
+)
 
 
-class TestUserAuthAPIView(APITenantTestCase):
+class TestUserAuthAPIView(BaseTenantTestCase):
     def test_get(self):
         self.user = UserFactory()
         response = self.forced_auth_req(
@@ -28,10 +33,13 @@ class TestUserAuthAPIView(APITenantTestCase):
         self.assertEqual(response.data["id"], self.user.pk)
 
 
-class TestChangeUserCountry(APITenantTestCase):
+class TestChangeUserCountry(BaseTenantTestCase):
+    @classmethod
+    def setUpTestData(cls):
+        cls.unicef_staff = UserFactory(is_staff=True)
+
     def setUp(self):
         super(TestChangeUserCountry, self).setUp()
-        self.unicef_staff = UserFactory(is_staff=True)
         self.url = reverse("country-change")
 
     def test_post(self):
@@ -66,10 +74,11 @@ class TestChangeUserCountry(APITenantTestCase):
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
 
 
-class TestSectionViews(APITenantTestCase):
-    def setUp(self):
-        self.unicef_staff = UserFactory(is_staff=True)
-        self.url = '/api/sections/'
+class TestSectionViews(BaseTenantTestCase):
+    @classmethod
+    def setUpTestData(cls):
+        cls.unicef_staff = UserFactory(is_staff=True)
+        cls.url = '/api/sections/'
 
     def test_api_section_list_values(self):
         s1 = SectionFactory()
@@ -92,10 +101,11 @@ class TestSectionViews(APITenantTestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
 
 
-class TestOfficeViews(APITenantTestCase):
-    def setUp(self):
-        self.unicef_staff = UserFactory(is_staff=True)
-        self.url = '/api/offices/'
+class TestOfficeViews(BaseTenantTestCase):
+    @classmethod
+    def setUpTestData(cls):
+        cls.unicef_staff = UserFactory(is_staff=True)
+        cls.url = '/api/offices/'
 
     def test_api_office_list_values(self):
         o1 = OfficeFactory()
@@ -118,13 +128,14 @@ class TestOfficeViews(APITenantTestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
 
 
-class TestStaffUsersView(APITenantTestCase):
-    def setUp(self):
-        self.unicef_staff = UserFactory(is_staff=True)
-        self.unicef_superuser = UserFactory(is_superuser=True)
-        self.partnership_manager_user = UserFactory(is_staff=True)
-        self.group = GroupFactory()
-        self.partnership_manager_user.groups.add(self.group)
+class TestUserViews(BaseTenantTestCase):
+    @classmethod
+    def setUpTestData(cls):
+        cls.unicef_staff = UserFactory(is_staff=True)
+        cls.unicef_superuser = UserFactory(is_superuser=True)
+        cls.partnership_manager_user = UserFactory(is_staff=True)
+        cls.group = GroupFactory()
+        cls.partnership_manager_user.groups.add(cls.group)
 
     def test_api_users_list(self):
         response = self.forced_auth_req('get', '/api/users/', user=self.unicef_staff)
@@ -168,8 +179,8 @@ class TestStaffUsersView(APITenantTestCase):
         workspace_override = CountryFactory(schema_name='test2', business_area_code='0002')
         workspace_invalid_business_area = CountryFactory(schema_name='test3', business_area_code='0003')
 
-        business_area_0001 = BusinessAreaFactory(code='0001')
-        business_area_0002 = BusinessAreaFactory(code='0002')
+        business_area_0001 = PublicsBusinessAreaFactory(code='0001')
+        business_area_0002 = PublicsBusinessAreaFactory(code='0002')
 
         profile = self.unicef_staff.profile
 
@@ -204,7 +215,7 @@ class TestStaffUsersView(APITenantTestCase):
         self.assertEqual(response_json['t2f']['business_area'], None)
 
 
-class TestMyProfileAPIView(APITenantTestCase):
+class TestMyProfileAPIView(BaseTenantTestCase):
     def setUp(self):
         super(TestMyProfileAPIView, self).setUp()
         self.unicef_staff = UserFactory(is_staff=True)
@@ -265,10 +276,10 @@ class TestMyProfileAPIView(APITenantTestCase):
         self.assertEqual(response.data["oic"], self.unicef_superuser.id)
 
 
-class TestUsersDetailAPIView(APITenantTestCase):
-    def setUp(self):
-        super(TestUsersDetailAPIView, self).setUp()
-        self.unicef_staff = UserFactory(is_staff=True)
+class TestUsersDetailAPIView(BaseTenantTestCase):
+    @classmethod
+    def setUpTestData(cls):
+        cls.unicef_staff = UserFactory(is_staff=True)
 
     def test_get_not_staff(self):
         user = UserFactory()
@@ -300,10 +311,13 @@ class TestUsersDetailAPIView(APITenantTestCase):
         self.assertEqual(response.data, {})
 
 
-class TestProfileEdit(EToolsTenantTestCase):
+class TestProfileEdit(BaseTenantTestCase):
+    @classmethod
+    def setUpTestData(cls):
+        cls.client = TenantClient(cls.tenant)
+
     def setUp(self):
         super(TestProfileEdit, self).setUp()
-        self.client = TenantClient(self.tenant)
         self.url = reverse("user_profile")
 
     def test_get_non_staff(self):
@@ -341,10 +355,13 @@ class TestProfileEdit(EToolsTenantTestCase):
         self.assertEqual(profile.phone_number, "123-546-7890")
 
 
-class TestGroupViewSet(APITenantTestCase):
+class TestGroupViewSet(BaseTenantTestCase):
+    @classmethod
+    def setUpTestData(cls):
+        cls.unicef_staff = UserFactory(is_staff=True)
+
     def setUp(self):
         super(TestGroupViewSet, self).setUp()
-        self.unicef_staff = UserFactory(is_staff=True)
         self.url = "/api/groups/"
 
     def test_get(self):
@@ -398,14 +415,17 @@ class TestGroupViewSet(APITenantTestCase):
         self.assertIn(permission, group.permissions.all())
 
 
-class TestUserViewSet(APITenantTestCase):
+class TestUserViewSet(BaseTenantTestCase):
+    @classmethod
+    def setUpTestData(cls):
+        cls.unicef_staff = UserFactory(is_staff=True)
+        cls.unicef_superuser = UserFactory(is_superuser=True)
+        cls.partnership_manager_user = UserFactory(is_staff=True)
+        cls.group = GroupFactory()
+        cls.partnership_manager_user.groups.add(cls.group)
+
     def setUp(self):
         super(TestUserViewSet, self).setUp()
-        self.unicef_staff = UserFactory(is_staff=True)
-        self.unicef_superuser = UserFactory(is_superuser=True)
-        self.partnership_manager_user = UserFactory(is_staff=True)
-        self.group = GroupFactory()
-        self.partnership_manager_user.groups.add(self.group)
         self.url = "/api/users/"
 
     def test_api_users_list(self):

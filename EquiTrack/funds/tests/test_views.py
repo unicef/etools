@@ -7,26 +7,30 @@ from django.core.urlresolvers import reverse
 from django.utils import timezone
 from rest_framework import status
 
-from EquiTrack.tests.mixins import APITenantTestCase
-from EquiTrack.factories import (
+from EquiTrack.tests.cases import BaseTenantTestCase
+from funds.tests.factories import (
     DonorFactory,
     FundsReservationHeaderFactory,
     FundsReservationItemFactory,
     GrantFactory,
-    InterventionFactory,
-    UserFactory,
 )
+from partners.tests.factories import (
+    AgreementFactory,
+    InterventionFactory,
+    PartnerFactory,
+)
+from users.tests.factories import UserFactory
 
 
-class TestFRHeaderView(APITenantTestCase):
+class TestFRHeaderView(BaseTenantTestCase):
     @classmethod
     def setUpTestData(cls):
         cls.unicef_staff = UserFactory(is_staff=True)
-        cls.intervention = InterventionFactory()
+        partner = PartnerFactory(vendor_number="PVN")
+        agreement = AgreementFactory(partner=partner)
+        cls.intervention = InterventionFactory(agreement=agreement)
 
     def setUp(self):
-        self.unicef_staff = UserFactory(is_staff=True)
-        self.intervention = InterventionFactory()
         vendor_code = self.intervention.agreement.partner.vendor_number
         self.fr_1 = FundsReservationHeaderFactory(intervention=None, currency="USD", vendor_code=vendor_code)
         self.fr_2 = FundsReservationHeaderFactory(intervention=None, currency="USD", vendor_code=vendor_code)

@@ -9,8 +9,8 @@ from unittest import TestCase
 from django.conf import settings
 from django.contrib.auth import get_user_model
 
-from EquiTrack.factories import UserFactory
 from monitoring.service_checks import check_celery, check_db
+from users.tests.factories import UserFactory
 
 
 class TestCheckDB(TestCase):

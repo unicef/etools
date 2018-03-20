@@ -30,24 +30,30 @@ def transition_to_closed(i):
     # TODO: find a sol for invalidating the cache on related .all() -has to do with prefetch_related in the validator
     r = {
         'total_frs_amt': 0,
+        'total_frs_amt_usd': 0,
         'total_outstanding_amt': 0,
+        'total_outstanding_amt_usd': 0,
         'total_intervention_amt': 0,
         'total_actual_amt': 0,
+        'total_actual_amt_usd': 0,
         'earliest_start_date': None,
         'latest_end_date': None
     }
     for fr in i.frs.filter():
-        r['total_frs_amt'] += fr.total_amt
-        r['total_outstanding_amt'] += fr.outstanding_amt
+        r['total_frs_amt'] += fr.total_amt_local
+        r['total_frs_amt_usd'] += fr.total_amt
+        r['total_outstanding_amt'] += fr.outstanding_amt_local
+        r['total_outstanding_amt_usd'] += fr.outstanding_amt
         r['total_intervention_amt'] += fr.intervention_amt
-        r['total_actual_amt'] += fr.actual_amt
+        r['total_actual_amt'] += fr.actual_amt_local
+        r['total_actual_amt_usd'] += fr.actual_amt
         if r['earliest_start_date'] is None:
             r['earliest_start_date'] = fr.start_date
-        elif r['earliest_start_date'] < fr.start_date:
+        elif r['earliest_start_date'] > fr.start_date:
             r['earliest_start_date'] = fr.start_date
         if r['latest_end_date'] is None:
             r['latest_end_date'] = fr.end_date
-        elif r['latest_end_date'] > fr.end_date:
+        elif r['latest_end_date'] < fr.end_date:
             r['latest_end_date'] = fr.end_date
     # hack
     i.total_frs = r
@@ -57,14 +63,14 @@ def transition_to_closed(i):
     if i.end > today:
         raise TransitionError([_('End date is in the future')])
 
-    if i.total_frs['total_intervention_amt'] != i.total_frs['total_actual_amt'] or \
+    if i.total_frs['total_frs_amt'] != i.total_frs['total_actual_amt'] or \
             i.total_frs['total_outstanding_amt'] != 0:
         raise TransitionError([_('Total FR amount needs to equal total actual amount, and '
                                  'Total Outstanding DCTs need to equal to 0')])
 
-    # If total_actual_amt >100,000 then attachments has to include
+    # If total_actual_amt_usd >100,000 then attachments has to include
     # at least 1 record with type: "Final Partnership Review"
-    if i.total_frs['total_actual_amt'] >= 100000:
+    if i.total_frs['total_actual_amt_usd'] >= 100000:
         if i.attachments.filter(type__name='Final Partnership Review').count() < 1:
             raise TransitionError([_('Total amount transferred greater than 100,000 and no Final Partnership Review '
                                      'was attached')])
@@ -248,7 +254,7 @@ class InterventionValid(CompleteValidation):
         'sections_valid': "The sections selected on the PD/SSFA are not a subset of all sections selected "
                           "for this PD/SSFA's indicators",
         'locations_valid': "The locations selected on the PD/SSFA are not a subset of all locations selected "
-                          "for this PD/SSFA's indicators"
+                          "for this PD/SSFA's indicators",
     }
 
     PERMISSIONS_CLASS = InterventionPermissions

@@ -6,10 +6,10 @@ from django.core.urlresolvers import reverse
 from rest_framework import status
 from tablib.core import Dataset
 
-from EquiTrack.factories import (
+from EquiTrack.tests.cases import BaseTenantTestCase
+from locations.tests.factories import LocationFactory
+from partners.tests.factories import (
     AgreementFactory,
-    CountryProgrammeFactory,
-    IndicatorFactory,
     InterventionFactory,
     InterventionAmendmentFactory,
     InterventionAttachmentFactory,
@@ -17,18 +17,20 @@ from EquiTrack.factories import (
     InterventionPlannedVisitsFactory,
     InterventionResultLinkFactory,
     InterventionSectorLocationLinkFactory,
-    LocationFactory,
     PartnerFactory,
     PartnerStaffFactory,
-    UserFactory,
 )
-from EquiTrack.tests.mixins import APITenantTestCase
+from reports.tests.factories import (
+    CountryProgrammeFactory,
+    IndicatorFactory,
+)
+from users.tests.factories import UserFactory
 
 
-class BaseInterventionModelExportTestCase(APITenantTestCase):
-    def setUp(self):
-        super(BaseInterventionModelExportTestCase, self).setUp()
-        self.unicef_staff = UserFactory(is_staff=True)
+class BaseInterventionModelExportTestCase(BaseTenantTestCase):
+    @classmethod
+    def setUpTestData(cls):
+        cls.unicef_staff = UserFactory(is_staff=True)
         partner = PartnerFactory(
             partner_type='Government',
             vendor_number='Vendor No',
@@ -55,13 +57,13 @@ class BaseInterventionModelExportTestCase(APITenantTestCase):
             start=datetime.date.today(),
             end=datetime.date.today(),
             signed_by_unicef_date=datetime.date.today(),
-            signed_by=self.unicef_staff,
+            signed_by=cls.unicef_staff,
             signed_by_partner_date=datetime.date.today()
         )
         agreement.authorized_officers.add(partnerstaff)
         agreement.save()
         AgreementFactory(signed_by_unicef_date=datetime.date.today())
-        self.intervention = InterventionFactory(
+        cls.intervention = InterventionFactory(
             agreement=agreement,
             document_type='SHPD',
             status='draft',
@@ -72,19 +74,19 @@ class BaseInterventionModelExportTestCase(APITenantTestCase):
             review_date_prc=datetime.date.today(),
             signed_by_unicef_date=datetime.date.today(),
             signed_by_partner_date=datetime.date.today(),
-            unicef_signatory=self.unicef_staff,
+            unicef_signatory=cls.unicef_staff,
             population_focus="Population focus",
             partner_authorized_officer_signatory=partnerstaff,
         )
-        self.ib = InterventionBudgetFactory(
-            intervention=self.intervention,
+        cls.ib = InterventionBudgetFactory(
+            intervention=cls.intervention,
             currency="USD"
         )
-        self.planned_visit = InterventionPlannedVisitsFactory(
-            intervention=self.intervention,
+        cls.planned_visit = InterventionPlannedVisitsFactory(
+            intervention=cls.intervention,
         )
-        self.attachment = InterventionAttachmentFactory(
-            intervention=self.intervention,
+        cls.attachment = InterventionAttachmentFactory(
+            intervention=cls.intervention,
         )
 
 
@@ -107,7 +109,7 @@ class TestInterventionModelExport(BaseInterventionModelExportTestCase):
         )
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        dataset = Dataset().load(response.content, 'csv')
+        dataset = Dataset().load(response.content.decode('utf-8'), 'csv')
         self.assertEqual(dataset.height, 1)
         self.assertEqual(dataset._get_headers(), [
             "Partner",
@@ -218,7 +220,7 @@ class TestInterventionModelExport(BaseInterventionModelExportTestCase):
         )
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        dataset = Dataset().load(response.content, 'csv')
+        dataset = Dataset().load(response.content.decode('utf-8'), 'csv')
         self.assertEqual(dataset.height, 1)
         self.assertEqual(len(dataset._get_headers()), 61)
         self.assertEqual(len(dataset[0]), 61)
@@ -249,7 +251,7 @@ class TestInterventionAmendmentModelExport(BaseInterventionModelExportTestCase):
         )
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        dataset = Dataset().load(response.content, 'csv')
+        dataset = Dataset().load(response.content.decode('utf-8'), 'csv')
         self.assertEqual(dataset.height, 1)
         self.assertEqual(len(dataset._get_headers()), 10)
         self.assertEqual(len(dataset[0]), 10)
@@ -263,7 +265,7 @@ class TestInterventionAmendmentModelExport(BaseInterventionModelExportTestCase):
         )
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        dataset = Dataset().load(response.content, 'csv')
+        dataset = Dataset().load(response.content.decode('utf-8'), 'csv')
         self.assertEqual(dataset.height, 1)
         self.assertEqual(len(dataset._get_headers()), 10)
         self.assertEqual(len(dataset[0]), 10)
@@ -296,7 +298,7 @@ class TestInterventionResultModelExport(BaseInterventionModelExportTestCase):
         )
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        dataset = Dataset().load(response.content, 'csv')
+        dataset = Dataset().load(response.content.decode('utf-8'), 'csv')
         self.assertEqual(dataset.height, 1)
         self.assertEqual(len(dataset._get_headers()), 42)
         self.assertEqual(len(dataset[0]), 42)
@@ -310,7 +312,7 @@ class TestInterventionResultModelExport(BaseInterventionModelExportTestCase):
         )
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        dataset = Dataset().load(response.content, 'csv')
+        dataset = Dataset().load(response.content.decode('utf-8'), 'csv')
         self.assertEqual(dataset.height, 1)
         self.assertEqual(len(dataset._get_headers()), 42)
         self.assertEqual(len(dataset[0]), 42)
@@ -346,7 +348,7 @@ class TestInterventionIndicatorModelExport(BaseInterventionModelExportTestCase):
         )
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        dataset = Dataset().load(response.content, 'csv')
+        dataset = Dataset().load(response.content.decode('utf-8'), 'csv')
         self.assertEqual(dataset.height, 1)
         self.assertEqual(len(dataset._get_headers()), 19)
         self.assertEqual(len(dataset[0]), 19)
@@ -360,7 +362,7 @@ class TestInterventionIndicatorModelExport(BaseInterventionModelExportTestCase):
         )
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        dataset = Dataset().load(response.content, 'csv')
+        dataset = Dataset().load(response.content.decode('utf-8'), 'csv')
         self.assertEqual(dataset.height, 1)
         self.assertEqual(len(dataset._get_headers()), 19)
         self.assertEqual(len(dataset[0]), 19)
@@ -395,7 +397,7 @@ class TestInterventionSectorLocationLinkModelExport(BaseInterventionModelExportT
         )
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        dataset = Dataset().load(response.content, 'csv')
+        dataset = Dataset().load(response.content.decode('utf-8'), 'csv')
         self.assertEqual(dataset.height, 1)
         self.assertEqual(len(dataset._get_headers()), 19)
         self.assertEqual(len(dataset[0]), 19)
@@ -409,7 +411,7 @@ class TestInterventionSectorLocationLinkModelExport(BaseInterventionModelExportT
         )
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        dataset = Dataset().load(response.content, 'csv')
+        dataset = Dataset().load(response.content.decode('utf-8'), 'csv')
         self.assertEqual(dataset.height, 1)
         self.assertEqual(len(dataset._get_headers()), 18)
         self.assertEqual(len(dataset[0]), 18)

@@ -514,7 +514,7 @@ class PartnerOrganization(AdminURLMixin, TimeStampedModel):
     @cached_property
     def min_req_programme_visits(self):
         programme_visits = 0
-        ct = self.net_ct_cy
+        ct = self.net_ct_cy or 0  # Must be integer, but net_ct_cy could be None
 
         if ct <= PartnerOrganization.CT_MR_AUDIT_TRIGGER_LEVEL:
             programme_visits = 0
@@ -538,7 +538,9 @@ class PartnerOrganization(AdminURLMixin, TimeStampedModel):
 
     @cached_property
     def min_req_spot_checks(self):
-        return 1 if self.reported_cy > PartnerOrganization.CT_CP_AUDIT_TRIGGER_LEVEL else 0
+        # reported_cy can be None
+        reported_cy = self.reported_cy or 0
+        return 1 if reported_cy > PartnerOrganization.CT_CP_AUDIT_TRIGGER_LEVEL else 0
 
     @cached_property
     def hact_min_requirements(self):
@@ -1189,13 +1191,15 @@ class Agreement(TimeStampedModel):
             self.update_reference_number(amendment_number)
 
         if self.agreement_type == self.PCA:
+            assert self.country_programme is not None, 'Country Programme is required'
             # set start date
             if self.signed_by_partner_date and self.signed_by_unicef_date:
-                self.start = self.signed_by_unicef_date \
-                    if self.signed_by_unicef_date > self.signed_by_partner_date else self.signed_by_partner_date
+                self.start = max(self.signed_by_unicef_date,
+                                 self.signed_by_partner_date,
+                                 self.country_programme.from_date
+                                 )
 
             # set end date
-            assert self.country_programme is not None, 'Country Programme is required'
             self.end = self.country_programme.to_date
 
         return super(Agreement, self).save()
@@ -1689,17 +1693,23 @@ class Intervention(TimeStampedModel):
     def total_frs(self):
         r = {
             'total_frs_amt': 0,
+            'total_frs_amt_usd': 0,
             'total_outstanding_amt': 0,
+            'total_outstanding_amt_usd': 0,
             'total_intervention_amt': 0,
             'total_actual_amt': 0,
+            'total_actual_amt_usd': 0,
             'earliest_start_date': None,
             'latest_end_date': None
         }
         for fr in self.frs.all():
-            r['total_frs_amt'] += fr.total_amt
-            r['total_outstanding_amt'] += fr.outstanding_amt
+            r['total_frs_amt'] += fr.total_amt_local
+            r['total_frs_amt_usd'] += fr.total_amt
+            r['total_outstanding_amt'] += fr.outstanding_amt_local
+            r['total_outstanding_amt_usd'] += fr.outstanding_amt
             r['total_intervention_amt'] += fr.intervention_amt
-            r['total_actual_amt'] += fr.actual_amt
+            r['total_actual_amt'] += fr.actual_amt_local
+            r['total_actual_amt_usd'] += fr.actual_amt
             if r['earliest_start_date'] is None:
                 r['earliest_start_date'] = fr.start_date
             elif r['earliest_start_date'] > fr.start_date:
@@ -1762,7 +1772,7 @@ class Intervention(TimeStampedModel):
         pass
 
     @transition(field=status,
-                source=[ACTIVE],
+                source=[ACTIVE, SIGNED],
                 target=[SUSPENDED],
                 conditions=[intervention_validation.transition_to_suspended],
                 permission=intervention_validation.partnership_manager_only)
@@ -1770,7 +1780,7 @@ class Intervention(TimeStampedModel):
         pass
 
     @transition(field=status,
-                source=[ACTIVE, SUSPENDED],
+                source=[ACTIVE, SUSPENDED, SIGNED],
                 target=[TERMINATED],
                 conditions=[intervention_validation.transition_to_terminated],
                 permission=intervention_validation.partnership_manager_only)
