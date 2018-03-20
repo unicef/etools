@@ -70,7 +70,7 @@ class Base64AttachmentSerializer(BaseAttachmentsSerializer):
 
 class AttachmentSerializer(BaseAttachmentsSerializer):
     created = serializers.DateTimeField(format='%d %b %Y')
-    file_type = serializers.CharField(source='file_type.label')
+    file_type = serializers.SerializerMethodField(source='file_type.label')
     file_link = serializers.CharField()
     filename = serializers.CharField()
     partner = serializers.SerializerMethodField()
@@ -91,6 +91,14 @@ class AttachmentSerializer(BaseAttachmentsSerializer):
             'filename',
             'uploaded_by'
         ]
+
+    def get_file_type(self, obj):
+        """If dealing with intervention attachment then use
+        partner file type instead of attachement file type
+        """
+        if isinstance(obj.content_object, InterventionAttachment):
+            return obj.content_object.type.name
+        return obj.file_type.label
 
     def get_partner_obj(self, obj):
         """Try and get partner value"""

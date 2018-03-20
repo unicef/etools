@@ -356,6 +356,11 @@ class TestAttachmentListView(BaseTenantTestCase):
             "vendor_number": self.partner.vendor_number,
             "pd_ssfa_number": self.intervention.number,
         }])
+        six.assertCountEqual([x["file_type"] for x in response.data], [
+            self.file_type_1.label,
+            self.file_type_2.label,
+            self.intervention_attachment.type.name
+        ])
 
     def test_intervention(self):
         code_prc = "partners_intervention_prc_review"
