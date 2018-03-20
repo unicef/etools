@@ -6,30 +6,34 @@ import mock
 from django.core.urlresolvers import reverse
 from django.test.utils import override_settings
 
-from EquiTrack.factories import UserFactory
-from EquiTrack.tests.mixins import APITenantTestCase
-from publics.tests.factories import AirlineCompanyFactory, DSARegionFactory
+from EquiTrack.tests.cases import BaseTenantTestCase
+from publics.tests.factories import (
+    PublicsAirlineCompanyFactory,
+    PublicsCurrencyFactory,
+    PublicsDSARegionFactory,
+    PublicsTravelExpenseTypeFactory,
+)
 from t2f.models import ModeOfTravel, Travel
-from t2f.tests.factories import CurrencyFactory, ExpenseTypeFactory
+from users.tests.factories import UserFactory
 
 
-class ThresholdTest(APITenantTestCase):
-    def setUp(self):
-        super(ThresholdTest, self).setUp()
-        self.traveler = UserFactory(is_staff=True)
-        self.unicef_staff = UserFactory(is_staff=True)
-        # self.travel = TravelFactory(traveler=self.traveler,
-        #                             supervisor=self.unicef_staff)
-        workspace = self.unicef_staff.profile.country
+class ThresholdTest(BaseTenantTestCase):
+    @classmethod
+    def setUpTestData(cls):
+        cls.traveler = UserFactory(is_staff=True)
+        cls.unicef_staff = UserFactory(is_staff=True)
+        # cls.travel = TravelFactory(traveler=cls.traveler,
+        #                            supervisor=cls.unicef_staff)
+        workspace = cls.unicef_staff.profile.country
         workspace.threshold_tae_usd = 100
         workspace.threshold_tre_usd = 100
         workspace.save()
 
     def _prepare_test(self):
-        currency = CurrencyFactory()
-        expense_type = ExpenseTypeFactory()
-        dsaregion = DSARegionFactory()
-        airlines = AirlineCompanyFactory()
+        currency = PublicsCurrencyFactory()
+        expense_type = PublicsTravelExpenseTypeFactory()
+        dsaregion = PublicsDSARegionFactory()
+        airlines = PublicsAirlineCompanyFactory()
 
         data = {'cost_assignments': [],
                 'deductions': [{'date': '2016-11-03',
@@ -198,10 +202,10 @@ class ThresholdTest(APITenantTestCase):
         self.assertEqual(travel.approved_cost_travel_agencies, 120)
 
         # Threshold reached. Send for approval
-        currency = CurrencyFactory()
+        currency = PublicsCurrencyFactory()
         # If vendor number is empty, considered as estimated travel cost
         # and should be included while calculating the threshold
-        expense_type = ExpenseTypeFactory(vendor_number='')
+        expense_type = PublicsTravelExpenseTypeFactory(vendor_number='')
 
         data = response_json
         data['expenses'].append({'amount': '41',

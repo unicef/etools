@@ -4,15 +4,14 @@ import json
 
 from django.core.urlresolvers import reverse
 
-from EquiTrack.factories import UserFactory
-from EquiTrack.tests.mixins import APITenantTestCase
+from EquiTrack.tests.cases import BaseTenantTestCase
+from users.tests.factories import UserFactory
 
 
-class StaticDataEndpointTest(APITenantTestCase):
-
-    def setUp(self):
-        super(StaticDataEndpointTest, self).setUp()
-        self.unicef_staff = UserFactory(is_staff=True)
+class StaticDataEndpointTest(BaseTenantTestCase):
+    @classmethod
+    def setUpTestData(cls):
+        cls.unicef_staff = UserFactory(is_staff=True)
 
     def test_urls(self):
         '''Verify URL pattern names generate the URLs we expect them to.'''

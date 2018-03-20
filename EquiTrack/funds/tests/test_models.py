@@ -6,20 +6,20 @@ from __future__ import unicode_literals
 import sys
 from unittest import skipIf
 
-from EquiTrack.factories import (
+from EquiTrack.tests.cases import BaseTenantTestCase
+from funds.models import FundsReservationItem, FundsCommitmentItem
+from funds.tests.factories import (
     DonorFactory,
-    FundsCommitmentHeaderFactory,
     FundsCommitmentItemFactory,
     FundsReservationHeaderFactory,
     FundsReservationItemFactory,
+    FundsCommitmentHeaderFactory,
     GrantFactory,
 )
-from EquiTrack.tests.cases import EToolsTenantTestCase
-from funds.models import FundsReservationItem, FundsCommitmentItem
 
 
 @skipIf(sys.version_info.major == 3, "This test can be deleted under Python 3")
-class TestStrUnicode(EToolsTenantTestCase):
+class TestStrUnicode(BaseTenantTestCase):
     '''Ensure calling str() on model instances returns UTF8-encoded text and unicode() returns unicode.'''
     def test_donor(self):
         donor = DonorFactory.build(name=u'R\xe4dda Barnen')
@@ -27,7 +27,7 @@ class TestStrUnicode(EToolsTenantTestCase):
         self.assertEqual(unicode(donor), u'R\xe4dda Barnen')
 
     def test_grant(self):
-        donor = DonorFactory.build(name=b'xyz')
+        donor = DonorFactory.build(name='xyz')
         grant = GrantFactory.build(donor=donor, name=u'R\xe4dda Barnen')
         self.assertEqual(str(grant), b'xyz: R\xc3\xa4dda Barnen')
         self.assertEqual(unicode(grant), u'xyz: R\xe4dda Barnen')
@@ -38,7 +38,7 @@ class TestStrUnicode(EToolsTenantTestCase):
         self.assertEqual(unicode(grant), u'xyz: R\xe4dda Barnen')
 
         donor = DonorFactory.build(name=u'R\xe4dda Barnen')
-        grant = GrantFactory.build(donor=donor, name=b'xyz')
+        grant = GrantFactory.build(donor=donor, name='xyz')
         self.assertEqual(str(grant), b'R\xc3\xa4dda Barnen: xyz')
         self.assertEqual(unicode(grant), u'R\xe4dda Barnen: xyz')
 
@@ -63,10 +63,10 @@ class TestStrUnicode(EToolsTenantTestCase):
         self.assertEqual(unicode(funds_commitment_item), u'R\xe4dda Barnen')
 
 
-class TestFundsReservationItem(EToolsTenantTestCase):
-
-    def setUp(self):
-        self.fr_header = FundsReservationHeaderFactory(fr_number='23')
+class TestFundsReservationItem(BaseTenantTestCase):
+    @classmethod
+    def setUpTestData(cls):
+        cls.fr_header = FundsReservationHeaderFactory(fr_number='23')
 
     def test_fr_ref_number_gets_generated_if_not_provided(self):
         "fr_ref_number should be generated if not provided."
@@ -89,10 +89,10 @@ class TestFundsReservationItem(EToolsTenantTestCase):
         self.assertEqual(fr_item.fr_ref_number, 'use-this-value')
 
 
-class TestFundsCommitmentItem(EToolsTenantTestCase):
-
-    def setUp(self):
-        self.fc_header = FundsCommitmentHeaderFactory(fc_number='23')
+class TestFundsCommitmentItem(BaseTenantTestCase):
+    @classmethod
+    def setUpTestData(cls):
+        cls.fc_header = FundsCommitmentHeaderFactory(fc_number='23')
 
     def test_fc_ref_number_gets_generated_if_not_provided(self):
         "fc_ref_number should be generated if not provided."

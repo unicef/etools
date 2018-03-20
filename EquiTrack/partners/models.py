@@ -22,6 +22,7 @@ from model_utils.models import (
 from model_utils import Choices, FieldTracker
 from dateutil.relativedelta import relativedelta
 
+from attachments.models import Attachment
 from EquiTrack.fields import CurrencyField, QuarterField
 from EquiTrack.utils import import_permissions, get_quarter, get_current_year
 from EquiTrack.mixins import AdminURLMixin
@@ -41,6 +42,7 @@ from partners.validation.agreements import (
     agreements_illegal_transition,
     agreement_transition_to_signed_valid)
 from partners.validation import interventions as intervention_validation
+from utils.common.models.fields import CodedGenericRelation
 
 
 def _get_partner_base_path(partner):
@@ -398,6 +400,14 @@ class PartnerOrganization(AdminURLMixin, TimeStampedModel):
         max_length=1024,
         help_text='Only required for CSO partners'
     )
+    core_values_assessment_attachment = CodedGenericRelation(
+        Attachment,
+        verbose_name=_('Core Values Assessment'),
+        code='partners_partner_assessment',
+        blank=True,
+        null=True,
+        help_text='Only required for CSO partners'
+    )
     vision_synced = models.BooleanField(
         verbose_name=_("VISION Synced"),
         default=False,
@@ -514,7 +524,7 @@ class PartnerOrganization(AdminURLMixin, TimeStampedModel):
     @cached_property
     def min_req_programme_visits(self):
         programme_visits = 0
-        ct = self.net_ct_cy
+        ct = self.net_ct_cy or 0  # Must be integer, but net_ct_cy could be None
 
         if ct <= PartnerOrganization.CT_MR_AUDIT_TRIGGER_LEVEL:
             programme_visits = 0
@@ -538,7 +548,9 @@ class PartnerOrganization(AdminURLMixin, TimeStampedModel):
 
     @cached_property
     def min_req_spot_checks(self):
-        return 1 if self.reported_cy > PartnerOrganization.CT_CP_AUDIT_TRIGGER_LEVEL else 0
+        # reported_cy can be None
+        reported_cy = self.reported_cy or 0
+        return 1 if reported_cy > PartnerOrganization.CT_CP_AUDIT_TRIGGER_LEVEL else 0
 
     @cached_property
     def hact_min_requirements(self):
@@ -909,6 +921,13 @@ class Assessment(TimeStampedModel):
         max_length=1024,
         upload_to=get_assesment_path
     )
+    report_attachment = CodedGenericRelation(
+        Attachment,
+        verbose_name=_('Report'),
+        code='partners_assessment_report',
+        blank=True,
+        null=True
+    )
     # Basis for Risk Rating
     current = models.BooleanField(
         verbose_name=_('Basis for risk rating'),
@@ -1008,6 +1027,12 @@ class Agreement(TimeStampedModel):
         upload_to=get_agreement_path,
         blank=True,
         max_length=1024
+    )
+    attachment = CodedGenericRelation(
+        Attachment,
+        verbose_name=_('Attached Agreement'),
+        code='partners_agreement',
+        blank=True
     )
     start = models.DateField(
         verbose_name=_("Start Date"),
@@ -1189,13 +1214,15 @@ class Agreement(TimeStampedModel):
             self.update_reference_number(amendment_number)
 
         if self.agreement_type == self.PCA:
+            assert self.country_programme is not None, 'Country Programme is required'
             # set start date
             if self.signed_by_partner_date and self.signed_by_unicef_date:
-                self.start = self.signed_by_unicef_date \
-                    if self.signed_by_unicef_date > self.signed_by_partner_date else self.signed_by_partner_date
+                self.start = max(self.signed_by_unicef_date,
+                                 self.signed_by_partner_date,
+                                 self.country_programme.from_date
+                                 )
 
             # set end date
-            assert self.country_programme is not None, 'Country Programme is required'
             self.end = self.country_programme.to_date
 
         return super(Agreement, self).save()
@@ -1235,6 +1262,13 @@ class AgreementAmendment(TimeStampedModel):
         max_length=1024,
         null=True, blank=True,
         upload_to=get_agreement_amd_file_path
+    )
+    signed_amendment_attachment = CodedGenericRelation(
+        Attachment,
+        verbose_name=_('Signed Amendment'),
+        code='partners_agreement_amendment',
+        blank=True,
+        null=True
     )
     types = ArrayField(models.CharField(
         max_length=50,
@@ -1471,12 +1505,26 @@ class Intervention(TimeStampedModel):
         blank=True,
         upload_to=get_prc_intervention_file_path
     )
+    prc_review_attachment = CodedGenericRelation(
+        Attachment,
+        verbose_name=_('Review Document by PRC'),
+        code='partners_intervention_prc_review',
+        blank=True,
+        null=True
+    )
     signed_pd_document = models.FileField(
         verbose_name=_("Signed PD Document"),
         max_length=1024,
         null=True,
         blank=True,
         upload_to=get_prc_intervention_file_path
+    )
+    signed_pd_attachment = CodedGenericRelation(
+        Attachment,
+        verbose_name=_('Signed PD Document'),
+        code='partners_intervention_signed_pd',
+        blank=True,
+        null=True
     )
     signed_by_unicef_date = models.DateField(
         verbose_name=_("Signed by UNICEF Date"),
@@ -1768,7 +1816,7 @@ class Intervention(TimeStampedModel):
         pass
 
     @transition(field=status,
-                source=[ACTIVE],
+                source=[ACTIVE, SIGNED],
                 target=[SUSPENDED],
                 conditions=[intervention_validation.transition_to_suspended],
                 permission=intervention_validation.partnership_manager_only)
@@ -1776,7 +1824,7 @@ class Intervention(TimeStampedModel):
         pass
 
     @transition(field=status,
-                source=[ACTIVE, SUSPENDED],
+                source=[ACTIVE, SUSPENDED, SIGNED],
                 target=[TERMINATED],
                 conditions=[intervention_validation.transition_to_terminated],
                 permission=intervention_validation.partnership_manager_only)
@@ -1907,6 +1955,12 @@ class InterventionAmendment(TimeStampedModel):
         verbose_name=_("Amendment Document"),
         max_length=1024,
         upload_to=get_intervention_amendment_file_path
+    )
+    signed_amendment_attachment = CodedGenericRelation(
+        Attachment,
+        verbose_name=_('Amendment Document'),
+        code='partners_intervention_amendment_signed',
+        blank=True,
     )
 
     tracker = FieldTracker()
@@ -2070,6 +2124,13 @@ class InterventionAttachment(TimeStampedModel):
     attachment = models.FileField(
         max_length=1024,
         upload_to=get_intervention_attachments_file_path
+    )
+    attachment_file = CodedGenericRelation(
+        Attachment,
+        verbose_name=_('Intervention Attachment'),
+        code='partners_intervention_attachment',
+        blank=True,
+        null=True,
     )
 
     tracker = FieldTracker()

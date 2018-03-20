@@ -14,7 +14,7 @@ def agr_copy_type_tmp(apps, schema_editor):
     for amd in AgreementAmendment.objects.all():
         amd.tmp_type = amd.type
         amd.save()
-        print 'saved amd {}'.format(amd.id)
+        print('saved amd {}'.format(amd.id))
 
 def agr_copy_tmp_arr_type(apps, schema_editor):
     AgreementAmendment = apps.get_model('partners', 'AgreementAmendment')
@@ -22,7 +22,7 @@ def agr_copy_tmp_arr_type(apps, schema_editor):
     for amd in amendments:
         amd.type = [amd.tmp_type]
         amd.save()
-        print 'saved amd {}'.format(amd.id)
+        print('saved amd {}'.format(amd.id))
 
 
 class Migration(migrations.Migration):
@@ -36,12 +36,12 @@ class Migration(migrations.Migration):
             model_name='agreementamendment',
             name='tmp_type',
             field=models.CharField(blank=True,
-                                   choices=[(b'Change IP name', b'Change in Legal Name of Implementing Partner'),
-                                            (b'CP extension', b'Extension of Country Programme Cycle'),
-                                            (b'Change authorized officer', b'Change Authorized Officer'),
-                                            (b'Change banking info', b'Banking Information'),
-                                            (b'Additional clause', b'Additional Clause'),
-                                            (b'Amend existing clause', b'Amend Existing Clause')], max_length=64,
+                                   choices=[('Change IP name', 'Change in Legal Name of Implementing Partner'),
+                                            ('CP extension', 'Extension of Country Programme Cycle'),
+                                            ('Change authorized officer', 'Change Authorized Officer'),
+                                            ('Change banking info', 'Banking Information'),
+                                            ('Additional clause', 'Additional Clause'),
+                                            ('Amend existing clause', 'Amend Existing Clause')], max_length=64,
                                    null=True),
         ),
         migrations.RunPython(
@@ -55,11 +55,11 @@ class Migration(migrations.Migration):
             model_name='agreementamendment',
             name='type',
             field=django.contrib.postgres.fields.ArrayField(base_field=models.CharField(
-                choices=[(b'Change IP name', b'Change in Legal Name of Implementing Partner'),
-                         (b'CP extension', b'Extension of Country Programme Cycle'),
-                         (b'Change authorized officer', b'Change Authorized Officer'),
-                         (b'Change banking info', b'Banking Information'), (b'Additional clause', b'Additional Clause'),
-                         (b'Amend existing clause', b'Amend Existing Clause')], max_length=64), null=True, size=None),
+                choices=[('Change IP name', 'Change in Legal Name of Implementing Partner'),
+                         ('CP extension', 'Extension of Country Programme Cycle'),
+                         ('Change authorized officer', 'Change Authorized Officer'),
+                         ('Change banking info', 'Banking Information'), ('Additional clause', 'Additional Clause'),
+                         ('Amend existing clause', 'Amend Existing Clause')], max_length=64), null=True, size=None),
         ),
         migrations.RunPython(
             agr_copy_tmp_arr_type, reverse_code=reverse

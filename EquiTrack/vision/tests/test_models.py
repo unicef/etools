@@ -3,7 +3,7 @@ from __future__ import absolute_import, division, print_function, unicode_litera
 import sys
 from unittest import skipIf, TestCase
 
-from EquiTrack.factories import CountryFactory
+from users.tests.factories import CountryFactory
 from vision.models import VisionSyncLog
 
 
