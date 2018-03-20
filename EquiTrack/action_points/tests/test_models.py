@@ -4,7 +4,9 @@ import factory.fuzzy
 from rest_framework.exceptions import ValidationError
 
 from EquiTrack.tests.cases import EToolsTenantTestCase
+from action_points.models import ActionPoint
 from action_points.tests.factories import ActionPointFactory
+from audit.tests.factories import MicroAssessmentFactory
 
 
 class TestActionPointModel(EToolsTenantTestCase):
@@ -21,3 +23,18 @@ class TestActionPointModel(EToolsTenantTestCase):
         action_point = ActionPointFactory()
         action_point.action_taken = factory.fuzzy.FuzzyText()
         action_point.complete()
+
+    def test_related_module_none_allowed(self):
+        action_point = ActionPointFactory(related_module=None)
+        self.assertIsNone(action_point.related_module)
+
+    def test_related_module_str(self):
+        action_point = ActionPointFactory(related_module=ActionPoint.MODULE_CHOICES.audit)
+        self.assertEqual(action_point.related_module, ActionPoint.MODULE_CHOICES.audit)
+
+    def test_related_module_from_related_object(self):
+        action_point = ActionPointFactory(
+            related_module=None,
+            related_object=MicroAssessmentFactory()
+        )
+        self.assertEqual(action_point.related_module, ActionPoint.MODULE_CHOICES.audit)

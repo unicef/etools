@@ -80,6 +80,14 @@ class ActionPoint(TimeStampedModel, models.Model):
     class Meta:
         ordering = ('related_module', 'related_content_type', 'related_object_id')
 
+    def save(self, **kwargs):
+        if self.related_content_type:
+            related_module = self.MODULES_MAPPING.get(self.related_content_type.app_label)
+            if related_module != self.related_module:
+                self.related_module = related_module
+
+        super(ActionPoint, self).save(**kwargs)
+
     @property
     def reference_number(self):
         return '{0}/{1}/ACTP'.format(
@@ -98,15 +106,6 @@ class ActionPoint(TimeStampedModel, models.Model):
             key_events.append(self.KEY_EVENTS.reassign)
 
         return {'key_events': key_events}
-
-    def get_related_module(self):
-        if self.related_module:
-            return self.related_module
-
-        if not self.related_content_type:
-            return
-
-        return self.MODULES_MAPPING.get(self.related_content_type.app_label)
 
     @transition(status, source=STATUSES.open, target=STATUSES.completed,
                 conditions=[
