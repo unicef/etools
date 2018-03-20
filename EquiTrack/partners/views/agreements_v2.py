@@ -18,7 +18,7 @@ from rest_framework.generics import (
 )
 
 from EquiTrack.renderers import CSVFlatRenderer
-from EquiTrack.mixins import ExportModelMixin
+from EquiTrack.mixins import ExportModelMixin, QueryStringFilterMixin
 from EquiTrack.validation_mixins import ValidatorViewMixin
 from partners.models import (
     Agreement,
@@ -45,7 +45,7 @@ from partners.exports_v2 import AgreementCSVRenderer
 from partners.validation.agreements import AgreementValid
 
 
-class AgreementListAPIView(ExportModelMixin, ValidatorViewMixin, ListCreateAPIView):
+class AgreementListAPIView(QueryStringFilterMixin, ExportModelMixin, ValidatorViewMixin, ListCreateAPIView):
     """
     Create new Agreements.
     Returns a list of Agreements.
@@ -96,11 +96,9 @@ class AgreementListAPIView(ExportModelMixin, ValidatorViewMixin, ListCreateAPIVi
                 queries.append(Q(start__gt=query_params.get("start")))
             if "end" in query_params.keys():
                 queries.append(Q(end__lte=query_params.get("end")))
-            if "search" in query_params.keys():
-                queries.append(
-                    Q(partner__name__icontains=query_params.get("search")) |
-                    Q(agreement_number__icontains=query_params.get("search"))
-                )
+
+            queries.append(self.search_params(query_params,
+                                              ['partner__name__icontains', 'agreement_number__icontains']))
 
             if queries:
                 expression = functools.reduce(operator.and_, queries)

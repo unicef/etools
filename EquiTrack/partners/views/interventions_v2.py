@@ -19,7 +19,7 @@ from rest_framework.generics import (
     DestroyAPIView,
 )
 
-from EquiTrack.mixins import ExportModelMixin
+from EquiTrack.mixins import ExportModelMixin, QueryStringFilterMixin
 from EquiTrack.renderers import CSVFlatRenderer
 from EquiTrack.validation_mixins import ValidatorViewMixin
 from environment.helpers import tenant_switch_is_active
@@ -80,7 +80,7 @@ class InterventionListBaseView(ValidatorViewMixin, ListCreateAPIView):
         return qs
 
 
-class InterventionListAPIView(ExportModelMixin, InterventionListBaseView):
+class InterventionListAPIView(QueryStringFilterMixin, ExportModelMixin, InterventionListBaseView):
     """
     Create new Interventions.
     Returns a list of Interventions.
@@ -195,12 +195,11 @@ class InterventionListAPIView(ExportModelMixin, InterventionListBaseView):
             if "location" in query_params.keys():
                 queries.append(Q(result_links__ll_results__applied_indicators__locations__name__icontains=query_params
                                  .get("location")))
-            if "search" in query_params.keys():
-                queries.append(
-                    Q(title__icontains=query_params.get("search")) |
-                    Q(agreement__partner__name__icontains=query_params.get("search")) |
-                    Q(number__icontains=query_params.get("search"))
-                )
+
+            queries.append(
+                self.search_params(query_params,
+                                   ['title__icontains', 'agreement__partner__name__icontains', 'number__icontains']))
+
             if queries:
                 expression = functools.reduce(operator.and_, queries)
                 q = q.filter(expression)

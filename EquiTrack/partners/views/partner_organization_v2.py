@@ -18,7 +18,7 @@ from rest_framework.generics import (
     CreateAPIView,
     ListAPIView)
 
-from EquiTrack.mixins import ExportModelMixin
+from EquiTrack.mixins import ExportModelMixin, QueryStringFilterMixin
 from EquiTrack.renderers import CSVFlatRenderer
 from EquiTrack.utils import get_data_from_insight
 from EquiTrack.validation_mixins import ValidatorViewMixin
@@ -59,7 +59,7 @@ from partners.exports_v2 import (
 )
 
 
-class PartnerOrganizationListAPIView(ExportModelMixin, ListCreateAPIView):
+class PartnerOrganizationListAPIView(QueryStringFilterMixin, ExportModelMixin, ListCreateAPIView):
     """
     Create new Partners.
     Returns a list of Partners.
@@ -88,7 +88,6 @@ class PartnerOrganizationListAPIView(ExportModelMixin, ListCreateAPIView):
             if query_params.get("verbosity") == 'minimal':
                 return MinimalPartnerOrganizationListSerializer
         return super(PartnerOrganizationListAPIView, self).get_serializer_class()
-
 
     def get_queryset(self, format=None):
         q = PartnerOrganization.objects.all()
@@ -123,12 +122,10 @@ class PartnerOrganizationListAPIView(ExportModelMixin, ListCreateAPIView):
                     hidden = False
                 if hidden is not None:
                     queries.append(Q(hidden=hidden))
-            if "search" in query_params.keys():
-                queries.append(
-                    Q(name__icontains=query_params.get("search")) |
-                    Q(vendor_number__icontains=query_params.get("search")) |
-                    Q(short_name__icontains=query_params.get("search"))
-                )
+
+            queries.append(self.search_params(query_params,
+                                              ['name__icontains', 'vendor_number__icontains', 'short_name__icontains']))
+
             if queries:
                 expression = functools.reduce(operator.and_, queries)
                 q = q.filter(expression)
