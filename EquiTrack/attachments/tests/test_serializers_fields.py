@@ -18,7 +18,7 @@ from EquiTrack.tests.cases import BaseTenantTestCase
 
 class TestBase64FileField(BaseTenantTestCase):
     def setUp(self):
-        self.test_file_content = 'these are the file contents!'
+        self.test_file_content = 'these are the file contents!'.encode("utf-8")
 
     def test_valid(self):
         valid_base64_file = 'data:text/plain;base64,{}'.format(base64.b64encode(self.test_file_content))
