@@ -1,10 +1,11 @@
-from __future__ import unicode_literals
+from __future__ import absolute_import, division, print_function, unicode_literals
 
 import json
 
 from django.core.urlresolvers import reverse
 from django.contrib.auth import get_user_model
 from django.contrib.auth.models import Permission
+from django.utils import six
 from rest_framework import status
 from tenant_schemas.test.client import TenantClient
 from unittest import skip
@@ -289,7 +290,7 @@ class TestUsersDetailAPIView(BaseTenantTestCase):
             user=user,
         )
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(response.data["user_id"], str(self.unicef_staff.pk))
+        self.assertEqual(response.data["user_id"], six.text_type(self.unicef_staff.pk))
 
     def test_get(self):
         user = UserFactory()
@@ -299,7 +300,7 @@ class TestUsersDetailAPIView(BaseTenantTestCase):
             user=self.unicef_staff,
         )
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(response.data["user_id"], str(user.pk))
+        self.assertEqual(response.data["user_id"], six.text_type(user.pk))
 
     def test_get_not_found(self):
         response = self.forced_auth_req(
@@ -372,7 +373,7 @@ class TestGroupViewSet(BaseTenantTestCase):
             user=self.unicef_staff,
         )
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(response.data[0]["id"], str(group.pk))
+        self.assertEqual(response.data[0]["id"], six.text_type(group.pk))
 
     def test_api_groups_list(self):
         response = self.forced_auth_req(

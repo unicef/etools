@@ -21,10 +21,10 @@ class Migration(migrations.Migration):
             model_name='agreementamendment',
             name='type',
             field=django.contrib.postgres.fields.ArrayField(base_field=models.CharField(
-                choices=[(b'Change IP name', b'Change in Legal Name of Implementing Partner'),
-                         (b'CP extension', b'Extension of Country Programme Cycle'),
-                         (b'Change authorized officer', b'Change Authorized Officer'),
-                         (b'Change banking info', b'Banking Information'), (b'Additional clause', b'Additional Clause'),
-                         (b'Amend existing clause', b'Amend Existing Clause')], max_length=64), size=None),
+                choices=[('Change IP name', 'Change in Legal Name of Implementing Partner'),
+                         ('CP extension', 'Extension of Country Programme Cycle'),
+                         ('Change authorized officer', 'Change Authorized Officer'),
+                         ('Change banking info', 'Banking Information'), ('Additional clause', 'Additional Clause'),
+                         ('Amend existing clause', 'Amend Existing Clause')], max_length=64), size=None),
         ),
     ]

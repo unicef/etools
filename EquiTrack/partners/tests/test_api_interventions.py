@@ -88,7 +88,8 @@ class TestInterventionsAPI(BaseTenantTestCase):
                   "partner_authorized_officer_signatory_id", "created", "planned_visits",
                   "planned_budget", "modified", "signed_pd_document", "submission_date_prc", "document_type",
                   "offices", "population_focus", "country_programme_id", "engagement", "sections",
-                  "sections_present", "flat_locations", "reporting_periods", "activity", ],
+                  "sections_present", "flat_locations", "reporting_periods", "activity",
+                  "prc_review_attachment", "signed_pd_attachment"],
         'signed': [],
         'active': ['']
     }
@@ -382,6 +383,27 @@ class TestInterventionsAPI(BaseTenantTestCase):
                                                  user=self.unicef_staff)
         self.assertEqual(status_code, status.HTTP_403_FORBIDDEN)
         self.assertFalse(Activity.objects.exists())
+
+    def test_patch_fails_with_wrong_cp_structure(self):
+        self.assertIsNone(self.intervention_2.country_programme)
+        self.assertTrue(self.intervention_2.agreement.agreement_type, 'PCA')
+        random_cp = CountryProgrammeFactory()
+        data = {
+            "country_programme": random_cp.id
+        }
+        status_code, response = self.run_request(self.intervention_2.id, data, method='patch')
+        self.assertEqual(status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn('The Country Programme selected on this PD is not the same ', response[0])
+
+    def test_patch_ok_with_wrong_cp_structure(self):
+        self.assertIsNone(self.intervention_2.country_programme)
+        self.assertTrue(self.intervention_2.agreement.agreement_type, 'PCA')
+        data = {
+            "country_programme": self.intervention_2.agreement.country_programme.id
+        }
+
+        status_code, response = self.run_request(self.intervention_2.id, data, method='patch')
+        self.assertEqual(status_code, status.HTTP_200_OK)
 
     def test_permissions_for_intervention_status_draft(self):
 
@@ -1105,7 +1127,7 @@ class TestAPInterventionIndicatorsCreateView(BaseTenantTestCase):
         # Adding the same indicator again should fail.
         self.assertEquals(response.status_code, status.HTTP_400_BAD_REQUEST)
         response_json = json.loads(response.rendered_content)
-        self.assertEqual(response_json.keys(), ['non_field_errors'])
+        self.assertEqual(list(response_json.keys()), ['non_field_errors'])
         self.assertIsInstance(response_json['non_field_errors'], list)
         self.assertEqual(response_json['non_field_errors'],
                          ['This indicator is already being monitored for this Result'])

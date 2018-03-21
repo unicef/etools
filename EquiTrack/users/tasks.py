@@ -1,3 +1,5 @@
+from __future__ import absolute_import, division, print_function, unicode_literals
+
 import csv
 import json
 import logging
@@ -12,6 +14,7 @@ from django.core.mail.message import EmailMessage
 from django.db import IntegrityError, transaction
 from django.db.models import Q
 from django.utils import six
+from django.utils.encoding import force_text
 
 import requests
 from celery.utils.log import get_task_logger
@@ -243,7 +246,8 @@ def sync_users_remote():
     with storage.open('saml/etools.dat') as csvfile:
         reader = csv.DictReader(csvfile, delimiter='|')
         for row in reader:
-            uni_row = {unicode(key, 'latin-1'): unicode(value, 'latin-1') for key, value in six.iteritems(row)}
+            uni_row = {
+                six.text_type(key, 'latin-1'): six.text_type(value, 'latin-1') for key, value in six.iteritems(row)}
             user_sync.create_or_update_user(uni_row)
 
 
@@ -256,8 +260,8 @@ def sync_users():
     try:
         sync_users_remote()
     except Exception as e:
-        log.exception_message = e.message
-        raise VisionException(message=e.message)
+        log.exception_message = force_text(e)
+        raise VisionException(*e.args)
     finally:
         log.save()
 
@@ -272,8 +276,8 @@ def map_users():
         user_sync = UserMapper()
         user_sync.map_users()
     except Exception as e:
-        log.exception_message = e.message
-        raise VisionException(message=e.message)
+        log.exception_message = force_text(e)
+        raise VisionException(*e.args)
     finally:
         log.save()
 
@@ -288,7 +292,8 @@ def sync_users_local(n=20):
             i += 1
             if i == n:
                 break
-            uni_row = {unicode(key, 'latin-1'): unicode(value, 'latin-1') for key, value in six.iteritems(row)}
+            uni_row = {
+                six.text_type(key, 'latin-1'): six.text_type(value, 'latin-1') for key, value in six.iteritems(row)}
             user_sync.create_or_update_user(uni_row)
 
 
@@ -325,7 +330,7 @@ class UserSynchronizer(object):
                     return False
             return True
 
-        return filter(is_valid_record, records)
+        return [rec for rec in records if is_valid_record(rec)]
 
     def _load_records(self):
         logger.debug(self.url)
@@ -336,9 +341,7 @@ class UserSynchronizer(object):
             verify=False
         )
         if response.status_code != 200:
-            raise VisionException(
-                message=('Load data failed! Http code: {}'.format(response.status_code))
-            )
+            raise VisionException('Load data failed! Http code: {}'.format(response.status_code))
 
         return self._get_json(response.json())
 

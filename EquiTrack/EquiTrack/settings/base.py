@@ -12,7 +12,9 @@ https://docs.djangoproject.com/en/1.9/topics/settings/
 For the full list of settings and their values, see
 https://docs.djangoproject.com/en/1.9/ref/settings/
 """
-from __future__ import absolute_import
+from __future__ import absolute_import, division, print_function, unicode_literals
+
+from django.utils import six
 
 import datetime
 import os
@@ -30,7 +32,7 @@ def str2bool(value):
 
     This assumes that 'value' is one of a list of some common possible Truthy string values.
     """
-    return str(value).lower() in ("yes", "true", "t", "1")
+    return six.text_type(value).lower() in ("yes", "true", "t", "1")
 
 
 # Absolute filesystem path to the Django project directory:

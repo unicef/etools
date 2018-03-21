@@ -3,6 +3,7 @@
 from __future__ import unicode_literals, print_function
 
 from django.db import migrations, models, connection
+from django.utils import six
 import django.utils.timezone
 import model_utils.fields
 import mptt.fields
@@ -13,7 +14,7 @@ from django.db.models import Q
 def myprint(*args):
     print(*args)
     file_name = 'migration_reports_0015.txt'
-    args_list = [unicode(arg) for arg in args]
+    args_list = [six.text_type(arg) for arg in args]
     with open(file_name, 'ab') as f:
         f.write(', '.join(args_list))
         f.write('\n')
@@ -48,7 +49,7 @@ def check_fields(apps, schema_editor):
             assert int(aind.target) >= 0
         except:
             myprint('bad indicator: ',
-                    ' '.join(unicode(i) for i in ['id', aind.id, 'target', aind.target, 'baseline', aind.baseline,
+                    ' '.join(six.text_type(i) for i in ['id', aind.id, 'target', aind.target, 'baseline', aind.baseline,
                                                   'interventionid', aind.lower_result.result_link.intervention.id]))
 
             if not aind.target:
