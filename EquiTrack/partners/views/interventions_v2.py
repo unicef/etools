@@ -734,7 +734,7 @@ class InterventionDeleteView(DestroyAPIView):
         else:
             # get the history of this PD and make sure it wasn't manually moved back to draft before allowing deletion
             act = Activity.objects.filter(target_object_id=intervention.id,
-                                    target_content_type=ContentType.objects.get_for_model(intervention))
+                                          target_content_type=ContentType.objects.get_for_model(intervention))
             historical_statuses = set(a.data.get('status', Intervention.DRAFT) for a in act.all())
             if len(historical_statuses) > 1 or \
                     (len(historical_statuses) == 1 and historical_statuses.pop() != Intervention.DRAFT):

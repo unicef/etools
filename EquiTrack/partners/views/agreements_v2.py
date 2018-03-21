@@ -274,4 +274,3 @@ class AgreementDeleteView(DestroyAPIView):
         else:
             agreement.delete()
             return Response(status=status.HTTP_204_NO_CONTENT)
-
