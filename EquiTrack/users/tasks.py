@@ -321,7 +321,7 @@ class UserSynchronizer(object):
                     return False
             return True
 
-        return filter(is_valid_record, records)
+        return [rec for rec in records if is_valid_record(rec)]
 
     def _load_records(self):
         logger.debug(self.url)

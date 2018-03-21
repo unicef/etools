@@ -1106,7 +1106,7 @@ class TestAPInterventionIndicatorsCreateView(BaseTenantTestCase):
         # Adding the same indicator again should fail.
         self.assertEquals(response.status_code, status.HTTP_400_BAD_REQUEST)
         response_json = json.loads(response.rendered_content)
-        self.assertEqual(response_json.keys(), ['non_field_errors'])
+        self.assertEqual(list(response_json.keys()), ['non_field_errors'])
         self.assertIsInstance(response_json['non_field_errors'], list)
         self.assertEqual(response_json['non_field_errors'],
                          ['This indicator is already being monitored for this Result'])
