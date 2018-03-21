@@ -44,7 +44,7 @@ class Migration(migrations.Migration):
                 ('national_priority', models.CharField(max_length=255)),
                 ('responsible_government_entity', models.CharField(max_length=255)),
                 ('planning_assumptions', models.TextField()),
-                ('logo', models.ImageField(blank=True, height_field=b'logo_height', null=True, upload_to=b'', width_field=b'logo_width')),
+                ('logo', models.ImageField(blank=True, height_field='logo_height', null=True, upload_to='', width_field='logo_width')),
             ],
         ),
         migrations.CreateModel(
@@ -80,7 +80,7 @@ class Migration(migrations.Migration):
             fields=[
                 ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
                 ('assumptions', models.TextField(blank=True, null=True)),
-                ('status', models.CharField(blank=True, choices=[(b'On Track', b'On Track'), (b'Constrained', b'Constrained'), (b'No Progress', b'No Progress'), (b'Target Met', b'Target Met')], max_length=255, null=True)),
+                ('status', models.CharField(blank=True, choices=[('On Track', 'On Track'), ('Constrained', 'Constrained'), ('No Progress', 'No Progress'), ('Target Met', 'Target Met')], max_length=255, null=True)),
                 ('prioritized', models.BooleanField(default=False)),
                 ('metadata', django.contrib.postgres.fields.jsonb.JSONField(blank=True, null=True)),
                 ('other_partners', models.CharField(blank=True, max_length=2048, null=True)),
@@ -100,7 +100,7 @@ class Migration(migrations.Migration):
             name='Workplan',
             fields=[
                 ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('status', models.CharField(blank=True, choices=[(b'On Track', b'On Track'), (b'Constrained', b'Constrained'), (b'No Progress', b'No Progress'), (b'Target Met', b'Target Met')], max_length=32, null=True)),
+                ('status', models.CharField(blank=True, choices=[('On Track', 'On Track'), ('Constrained', 'Constrained'), ('No Progress', 'No Progress'), ('Target Met', 'Target Met')], max_length=32, null=True)),
                 ('country_programme', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to='reports.CountryProgramme')),
             ],
         ),

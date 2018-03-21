@@ -27,7 +27,7 @@ class TestStrUnicode(BaseTenantTestCase):
         self.assertEqual(unicode(donor), u'R\xe4dda Barnen')
 
     def test_grant(self):
-        donor = DonorFactory.build(name=b'xyz')
+        donor = DonorFactory.build(name='xyz')
         grant = GrantFactory.build(donor=donor, name=u'R\xe4dda Barnen')
         self.assertEqual(str(grant), b'xyz: R\xc3\xa4dda Barnen')
         self.assertEqual(unicode(grant), u'xyz: R\xe4dda Barnen')
@@ -38,7 +38,7 @@ class TestStrUnicode(BaseTenantTestCase):
         self.assertEqual(unicode(grant), u'xyz: R\xe4dda Barnen')
 
         donor = DonorFactory.build(name=u'R\xe4dda Barnen')
-        grant = GrantFactory.build(donor=donor, name=b'xyz')
+        grant = GrantFactory.build(donor=donor, name='xyz')
         self.assertEqual(str(grant), b'R\xc3\xa4dda Barnen: xyz')
         self.assertEqual(unicode(grant), u'R\xe4dda Barnen: xyz')
 

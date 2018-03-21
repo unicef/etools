@@ -30,7 +30,7 @@ class InterventionAmendmentExportSerializer(InterventionAmendmentCUSerializer):
 
     class Meta:
         model = InterventionAmendment
-        fields = "__all__"
+        exclude = ("signed_amendment_attachment", )
 
 
 class InterventionAmendmentExportFlatSerializer(InterventionAmendmentExportSerializer):
