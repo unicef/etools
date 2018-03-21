@@ -1,4 +1,4 @@
-from __future__ import unicode_literals
+from __future__ import absolute_import, division, print_function, unicode_literals
 
 import csv
 import datetime
@@ -110,10 +110,26 @@ class TestChoicesToJSONReady(BaseTenantTestCase):
             {"label": "Two", "value": 2}
         ])
 
+    def test_list_of_tuples_sorted(self):
+        """Make list of tuples JSON ready"""
+        ready = v2.choices_to_json_ready([(1, "Uno"), (2, "Due")])
+        self.assertEqual(ready, [
+            {"label": "Due", "value": 2},
+            {"label": "Uno", "value": 1}
+        ])
+
     def test_dict(self):
         """Make dict JSON ready"""
         ready = v2.choices_to_json_ready({"k": "v"})
         self.assertEqual(ready, [{"label": "v", "value": "k"}])
+
+    def test_dict_sorted(self):
+        """Make dict JSON ready"""
+        ready = v2.choices_to_json_ready({"k": "v", "a": "b"})
+        self.assertEqual(ready, [
+            {"label": "b", "value": "a"},
+            {"label": "v", "value": "k"}
+        ])
 
     def test_choices(self):
         """Make model_utils.Choices JSON ready"""
@@ -673,16 +689,14 @@ class TestPartnerOrganizationRetrieveUpdateDeleteViews(BaseTenantTestCase):
         self.assertIn("vendor_number", response.data.keys())
         self.assertIn("address", response.data.keys())
         self.assertIn("Partner", response.data["name"])
-        self.assertEqual(['programme_visits', 'spot_checks'], response.data['hact_min_requirements'].keys())
-        self.assertEqual(['outstanding_findings', 'audits', 'programmatic_visits', 'spot_checks'],
-                         response.data['hact_values'].keys())
+        self.assertEqual(['programme_visits', 'spot_checks'],
+                         sorted(response.data['hact_min_requirements'].keys()))
+        self.assertEqual(['audits', 'outstanding_findings', 'programmatic_visits', 'spot_checks'],
+                         sorted(response.data['hact_values'].keys()))
         six.assertCountEqual(
             self,
             ['completed', 'minimum_requirements'],
-            response.data['hact_values']['audits'].keys()
-        )
-        self.assertEqual(['outstanding_findings', 'audits', 'programmatic_visits', 'spot_checks'],
-                         response.data['hact_values'].keys())
+            response.data['hact_values']['audits'].keys())
         self.assertEqual(response.data['interventions'], [])
 
     def test_api_partners_retreive_actual_fr_amounts(self):
@@ -801,7 +815,7 @@ class TestPartnershipViews(BaseTenantTestCase):
     @skip("different endpoint")
     def test_api_agreements_list(self):
 
-        response = self.forced_auth_req('get', '/api/partners/' + str(self.partner.id) +
+        response = self.forced_auth_req('get', '/api/partners/' + six.text_type(self.partner.id) +
                                         '/agreements/', user=self.unicef_staff)
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
@@ -858,7 +872,7 @@ class TestAgreementCreateAPIView(BaseTenantTestCase):
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
         self.assertIsInstance(response.data, dict)
-        self.assertEqual(response.data.keys(), ['country_programme'])
+        self.assertEqual(list(response.data.keys()), ['country_programme'])
         self.assertIsInstance(response.data['country_programme'], list)
         self.assertEqual(response.data['country_programme'][0], 'Country Programme is required for PCAs!')
 
@@ -925,7 +939,7 @@ class TestAgreementAPIFileAttachments(BaseTenantTestCase):
                                     connection.schema_name,
                                     'file_attachments',
                                     'partner_organization',
-                                    str(self.agreement.partner.id),
+                                    six.text_type(self.agreement.partner.id),
                                     'agreements',
                                     # Note that slashes have to be stripped from the agreement number to match the
                                     # normalized path.
@@ -966,7 +980,7 @@ class TestAgreementAPIFileAttachments(BaseTenantTestCase):
                                     connection.schema_name,
                                     'file_attachments',
                                     'partner_org',
-                                    str(self.agreement.partner.id),
+                                    six.text_type(self.agreement.partner.id),
                                     'agreements',
                                     self.agreement.base_number.strip('/'),
                                     'amendments',
@@ -1131,13 +1145,22 @@ class TestAgreementAPIView(BaseTenantTestCase):
             1
         )
 
-    def test_agreements_delete(self):
+    def test_agreements_delete_fail_wrong_ep(self):
         response = self.forced_auth_req(
             'delete',
             reverse('partners_api:agreement-detail', args=[self.agreement.pk]),
             user=self.partnership_manager_user
         )
 
+        self.assertEqual(response.status_code, status.HTTP_405_METHOD_NOT_ALLOWED)
+
+    def test_agreements_delete(self):
+        new_agreement = AgreementFactory(status=Agreement.DRAFT)
+        response = self.forced_auth_req(
+            'delete',
+            reverse('partners_api:agreement-delete', args=[new_agreement.pk]),
+            user=self.partnership_manager_user
+        )
         self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
 
     def test_agreements_list_filter_type(self):
@@ -1501,7 +1524,7 @@ class TestInterventionViews(BaseTenantTestCase):
         )
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(response.data[0].keys(), ["id", "title"])
+        self.assertEqual(list(response.data[0].keys()), ["id", "title"])
 
     def test_intervention_create(self):
         data = {
@@ -1657,6 +1680,24 @@ class TestInterventionViews(BaseTenantTestCase):
                          {"document_type": ["This field is required."],
                           "agreement": ["This field is required."],
                           "title": ["This field is required."]})
+
+    def test_intervention_delete(self):
+        new_intervention = InterventionFactory()
+        response = self.forced_auth_req(
+            'delete',
+            reverse('partners_api:intervention-delete', args=[new_intervention.pk]),
+            user=self.partnership_manager_user
+        )
+        self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
+
+    def test_fail_intervention_delete(self):
+        new_intervention = InterventionFactory(status=Intervention.ACTIVE)
+        response = self.forced_auth_req(
+            'delete',
+            reverse('partners_api:intervention-delete', args=[new_intervention.pk]),
+            user=self.partnership_manager_user
+        )
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
     def test_intervention_validation_doctype_pca(self):
         data = {
@@ -1858,7 +1899,7 @@ class TestInterventionReportingPeriodViews(BaseTenantTestCase):
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         data = json.loads(response.content)
         for key in ['start_date', 'end_date', 'due_date', 'intervention']:
-            self.assertEqual(str(data[key]), str(self.params[key]))
+            self.assertEqual(six.text_type(data[key]), six.text_type(self.params[key]))
 
     def test_create_required_fields(self):
         params = {}
@@ -1977,7 +2018,7 @@ class TestInterventionReportingPeriodViews(BaseTenantTestCase):
         response = self.forced_auth_req('patch', self.detail_url, data=params)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         data = json.loads(response.content)
-        self.assertEqual(data['due_date'], str(params['due_date']))
+        self.assertEqual(data['due_date'], six.text_type(params['due_date']))
 
     def test_patch_change_multiple_fields(self):
         params = {
@@ -1987,8 +2028,8 @@ class TestInterventionReportingPeriodViews(BaseTenantTestCase):
         response = self.forced_auth_req('patch', self.detail_url, data=params)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         data = json.loads(response.content)
-        self.assertEqual(data['end_date'], str(params['end_date']))
-        self.assertEqual(data['due_date'], str(params['due_date']))
+        self.assertEqual(data['end_date'], six.text_type(params['end_date']))
+        self.assertEqual(data['due_date'], six.text_type(params['due_date']))
 
     def test_patch_order_must_still_be_valid(self):
         params = {
@@ -2053,6 +2094,7 @@ class TestPartnershipDashboardView(BaseTenantTestCase):
             "review_date_prc": "2017-01-28",
             "submission_date": "2017-01-28",
             "prc_review_document": None,
+            "prc_review_attachment": None,
             "signed_by_unicef_date": "2017-01-28",
             "signed_by_partner_date": "2017-01-20",
             "unicef_signatory": self.unicef_staff.id,

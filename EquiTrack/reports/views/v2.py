@@ -10,7 +10,7 @@ from rest_framework.response import Response
 from rest_framework import status
 from rest_framework_csv.renderers import CSVRenderer, JSONRenderer
 
-from EquiTrack.mixins import ExportModelMixin
+from EquiTrack.mixins import ExportModelMixin, QueryStringFilterMixin
 from EquiTrack.renderers import CSVFlatRenderer
 from reports.models import (
     AppliedIndicator,
@@ -261,7 +261,7 @@ class AppliedIndicatorLoc(object):
         setattr(self, 'selected_location', location)
 
 
-class ExportAppliedIndicatorLocationListView(ListAPIView):
+class ExportAppliedIndicatorLocationListView(QueryStringFilterMixin, ListAPIView):
     serializer_class = AppliedIndicatorLocationExportSerializer
     renderer_classes = (
         JSONRenderer,
@@ -269,14 +269,37 @@ class ExportAppliedIndicatorLocationListView(ListAPIView):
         CSVFlatRenderer,
     )
 
-    queryset = AppliedIndicator.objects.select_related("indicator",
-                                                       "section",
-                                                       "lower_result",
-                                                       "lower_result__result_link__intervention__agreement__partner",
+    def get_queryset(self):
+        qs = AppliedIndicator.objects.select_related(
+            "indicator", "section", "lower_result", "lower_result__result_link__intervention__agreement__partner"
+        ).prefetch_related(
+            "locations", "lower_result__result_link__cp_output", "lower_result__result_link__ram_indicators"
+        )
 
-                                                       ).prefetch_related("locations",
-                                                                          "lower_result__result_link__cp_output",
-                                                                          "lower_result__result_link__ram_indicators")
+        if self.request.query_params:
+            queries = []
+            filters = (
+                ('document_type', 'lower_result__result_link__intervention__document_type__in'),
+                ('country_programme', 'lower_result__result_link__intervention__agreement__country_programme'),
+                ('section', 'section__in'),
+                ('cluster', 'cluster_indicator_title__icontains'),
+                ('status', 'lower_result__result_link__intervention__status__in'),
+                ('unicef_focal_points', 'lower_result__result_link__intervention__unicef_focal_points__in'),
+                ('start', 'lower_result__result_link__intervention__start__gte'),
+                ('end', 'lower_result__result_link__intervention__end__lte'),
+                ('office', 'lower_result__result_link__intervention__offices__in'),
+                ('location', 'locations__name__icontains'),
+            )
+            search_terms = ['lower_result__result_link__intervention__title__icontains',
+                            'lower_result__result_link__intervention__agreement__partner__name__icontains',
+                            'lower_result__result_link__intervention__number__icontains']
+            queries.extend(self.filter_params(filters))
+            queries.append(self.search_params(search_terms))
+
+            if queries:
+                expression = functools.reduce(operator.and_, queries)
+                qs = qs.filter(expression)
+        return qs
 
     def list(self, request, *args, **kwargs):
         rows = {}
