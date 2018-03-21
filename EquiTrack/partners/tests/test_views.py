@@ -1145,13 +1145,22 @@ class TestAgreementAPIView(BaseTenantTestCase):
             1
         )
 
-    def test_agreements_delete(self):
+    def test_agreements_delete_fail_wrong_ep(self):
         response = self.forced_auth_req(
             'delete',
             reverse('partners_api:agreement-detail', args=[self.agreement.pk]),
             user=self.partnership_manager_user
         )
 
+        self.assertEqual(response.status_code, status.HTTP_405_METHOD_NOT_ALLOWED)
+
+    def test_agreements_delete(self):
+        new_agreement = AgreementFactory(status=Agreement.DRAFT)
+        response = self.forced_auth_req(
+            'delete',
+            reverse('partners_api:agreement-delete', args=[new_agreement.pk]),
+            user=self.partnership_manager_user
+        )
         self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
 
     def test_agreements_list_filter_type(self):
@@ -1671,6 +1680,24 @@ class TestInterventionViews(BaseTenantTestCase):
                          {"document_type": ["This field is required."],
                           "agreement": ["This field is required."],
                           "title": ["This field is required."]})
+
+    def test_intervention_delete(self):
+        new_intervention = InterventionFactory()
+        response = self.forced_auth_req(
+            'delete',
+            reverse('partners_api:intervention-delete', args=[new_intervention.pk]),
+            user=self.partnership_manager_user
+        )
+        self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
+
+    def test_fail_intervention_delete(self):
+        new_intervention = InterventionFactory(status=Intervention.ACTIVE)
+        response = self.forced_auth_req(
+            'delete',
+            reverse('partners_api:intervention-delete', args=[new_intervention.pk]),
+            user=self.partnership_manager_user
+        )
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
     def test_intervention_validation_doctype_pca(self):
         data = {

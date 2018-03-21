@@ -119,6 +119,9 @@ def ssfa_static(agreement):
 
 def one_pca_per_cp_per_partner(agreement):
     if agreement.agreement_type == agreement.PCA:
+        # Make sure this is not an old CP (previous to july 2015) if so the following validation does not apply
+        if agreement.start is not None and agreement.start <= date(2015, 7, 1):
+            return True
         # see if there are any PCAs in the CP other than this for this partner and started after july 2015
         if agreement.__class__.objects.filter(partner=agreement.partner,
                                               agreement_type=agreement.PCA,

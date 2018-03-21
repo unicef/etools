@@ -252,3 +252,19 @@ class AgreementAmendmentDeleteView(DestroyAPIView):
         else:
             amendment.delete()
             return Response(status=status.HTTP_204_NO_CONTENT)
+
+
+class AgreementDeleteView(DestroyAPIView):
+    permission_classes = (PartnershipManagerRepPermission,)
+
+    def delete(self, request, *args, **kwargs):
+        try:
+            agreement = Agreement.objects.get(id=int(kwargs['pk']))
+        except Agreement.DoesNotExist:
+            return Response(status=status.HTTP_404_NOT_FOUND)
+        if agreement.status != Agreement.DRAFT or \
+                agreement.interventions.count():
+            raise ValidationError("Cannot delete an agreement that is not Draft or has PDs associated with it")
+        else:
+            agreement.delete()
+            return Response(status=status.HTTP_204_NO_CONTENT)
