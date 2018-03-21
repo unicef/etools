@@ -290,8 +290,8 @@ class QueryStringFilterMixin(object):
         search_term = self.request.query_params.get(param_name)
         search_query = Q()
         if param_name in self.request.query_params:
-            for filter in filters:
-                q = Q(**{filter: search_term})
+            for param_filter in filters:
+                q = Q(**{param_filter: search_term})
                 search_query = search_query | q
         return search_query
 
