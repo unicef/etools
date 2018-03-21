@@ -1,13 +1,16 @@
 from six.moves import urllib_parse
 
+from django.core.cache import cache
+from django.db import connection
 from django.db.models import Q
 from django.http import HttpResponseNotFound, HttpResponseRedirect
 from django.utils.translation import ugettext as _
 from django.views.generic.detail import DetailView
 from rest_framework.generics import ListAPIView
 from rest_framework.permissions import IsAdminUser
+from rest_framework.response import Response
 
-from attachments.models import Attachment
+from attachments.models import ATTACHMENT_CACHE_KEY_FORMAT, Attachment
 from attachments.serializers import AttachmentSerializer
 from utils.common.urlresolvers import site_url
 
@@ -20,22 +23,14 @@ class AttachmentListView(ListAPIView):
     permission_classes = (IsAdminUser, )
     serializer_class = AttachmentSerializer
 
-    def get_queryset(self):
-        file_type = self.request.query_params.getlist("file_type")
-        if file_type:
-            self.queryset = self.queryset.filter(file_type__pk__in=file_type)
-        before = self.request.query_params.get("before")
-        if before:
-            self.queryset = self.queryset.filter(modified__lte=before)
-        after = self.request.query_params.get("after")
-        if after:
-            self.queryset = self.queryset.filter(modified__gte=after)
-        uploaded_by = self.request.query_params.getlist("uploaded_by")
-        if uploaded_by:
-            self.queryset = self.queryset.filter(
-                uploaded_by__pk__in=uploaded_by
-            )
-        return self.queryset.all()
+    def get(self, *args, **kwargs):
+        cache_key = ATTACHMENT_CACHE_KEY_FORMAT.format(connection.schema_name)
+        data = cache.get(cache_key)
+        if data is None:
+            response = super(AttachmentListView, self).get(*args, **kwargs)
+            data = response.data
+            cache.set(cache_key, response.data)
+        return Response(data)
 
 
 class AttachmentFileView(DetailView):

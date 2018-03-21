@@ -5,9 +5,10 @@ import os
 from django.conf import settings
 from django.contrib.contenttypes.fields import GenericForeignKey
 from django.contrib.contenttypes.models import ContentType
+from django.core.cache import cache
 from django.core.exceptions import ValidationError
 from django.core.urlresolvers import reverse
-from django.db import models
+from django.db import connection, models
 from django.utils import six
 from django.utils.encoding import python_2_unicode_compatible
 from django.utils.text import slugify
@@ -16,6 +17,8 @@ from future.backports.urllib.parse import urlsplit
 
 from model_utils.models import TimeStampedModel
 from ordered_model.models import OrderedModel
+
+ATTACHMENT_CACHE_KEY_FORMAT = "attachments_{}"
 
 
 @python_2_unicode_compatible
@@ -90,3 +93,9 @@ class Attachment(TimeStampedModel, models.Model):
     @property
     def file_link(self):
         return reverse("attachments:file", args=[self.pk])
+
+    def save(self, *args, **kwargs):
+        attachment = super(Attachment, self).save(*args, **kwargs)
+        cache_key = ATTACHMENT_CACHE_KEY_FORMAT.format(connection.schema_name)
+        cache.delete(cache_key)
+        return attachment
