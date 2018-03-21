@@ -49,7 +49,4 @@ ADD EquiTrack /code/
 WORKDIR /code/
 
 ENV DJANGO_SETTINGS_MODULE EquiTrack.settings.production
-ENV AZURE_ACCOUNT_KEY D9u20eMcoNGsrgNe8kFaFSfk8mEPFqatqleiIjbb0RUt8xCtLpa7vHD0KnBD7BDY7rvKTUjmLCwEanaom5QFUg==
-ENV AZURE_ACCOUNT_NAME saunietoolsdevstg
-ENV AZURE_CONTAINER files
 RUN SECRET_KEY=not-so-secret-key-just-for-collectstatic DISABLE_JWT_LOGIN=1 python manage.py collectstatic --noinput
