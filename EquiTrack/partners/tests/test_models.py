@@ -4,14 +4,14 @@ import sys
 from unittest import skipIf, TestCase, skip
 
 from django.core.files.uploadedfile import SimpleUploadedFile
-from django.utils import timezone
+from django.utils import six, timezone
 from freezegun import freeze_time
 
 from mock import patch, Mock
 
 from audit.models import Engagement
 from audit.tests.factories import SpotCheckFactory, AuditFactory, SpecialAuditFactory
-from EquiTrack.tests.cases import EToolsTenantTestCase
+from EquiTrack.tests.cases import BaseTenantTestCase
 from funds.tests.factories import (
     DonorFactory,
     FundsReservationHeaderFactory,
@@ -54,7 +54,7 @@ def get_date_from_prior_year():
     return datetime.date.today() - datetime.timedelta(days=700)
 
 
-class TestAgreementNumberGeneration(EToolsTenantTestCase):
+class TestAgreementNumberGeneration(BaseTenantTestCase):
     '''Test that agreements have the expected base and reference numbers for all types of agreements'''
     @classmethod
     def setUpTestData(cls):
@@ -158,7 +158,7 @@ class TestAgreementNumberGeneration(EToolsTenantTestCase):
         self.assertEqual(agreement.reference_number, expected_reference_number)
 
 
-class TestHACTCalculations(EToolsTenantTestCase):
+class TestHACTCalculations(BaseTenantTestCase):
     @classmethod
     def setUpTestData(cls):
         year = datetime.date.today().year
@@ -210,7 +210,7 @@ class TestHACTCalculations(EToolsTenantTestCase):
         )
 
 
-class TestPartnerOrganizationModel(EToolsTenantTestCase):
+class TestPartnerOrganizationModel(BaseTenantTestCase):
     def setUp(self):
         super(TestPartnerOrganizationModel, self).setUp()
         self.partner_organization = PartnerFactory(
@@ -564,29 +564,46 @@ class TestPartnerOrganizationModel(EToolsTenantTestCase):
         self.assertEqual(self.partner_organization.hact_values['audits']['completed'], 2)
 
 
-class TestAgreementModel(EToolsTenantTestCase):
-    @classmethod
-    def setUpTestData(cls):
-        cls.partner_organization = models.PartnerOrganization.objects.create(
+class TestAgreementModel(BaseTenantTestCase):
+    def setUp(self):
+        super(TestAgreementModel, self).setUp()
+
+        self.partner_organization = PartnerFactory(
             name="Partner Org 1",
         )
-        cp = CountryProgrammeFactory(
+        self.cp = CountryProgrammeFactory(
             name="CP 1",
             wbs="0001/A0/01",
             from_date=datetime.date(datetime.date.today().year - 1, 1, 1),
             to_date=datetime.date(datetime.date.today().year + 1, 1, 1),
         )
-        cls.agreement = models.Agreement.objects.create(
+        self.agreement = AgreementFactory(
             agreement_type=models.Agreement.PCA,
-            partner=cls.partner_organization,
-            country_programme=cp
+            partner=self.partner_organization,
+            country_programme=self.cp,
+            signed_by_unicef_date=datetime.date(datetime.date.today().year - 1, 5, 1),
+            signed_by_partner_date=datetime.date(datetime.date.today().year - 1, 4, 1),
         )
 
     def test_reference_number(self):
         self.assertIn("PCA", self.agreement.reference_number)
 
+    def test_start_date_unicef_date(self):
+        self.assertEqual(self.agreement.start, self.agreement.signed_by_unicef_date)
 
-class TestInterventionModel(EToolsTenantTestCase):
+    def test_start_date_partner_date(self):
+        self.agreement.signed_by_partner_date = datetime.date(datetime.date.today().year - 1, 7, 1)
+        self.agreement.save()
+        self.assertEqual(self.agreement.start, self.agreement.signed_by_partner_date)
+
+    def test_start_date_programme_date(self):
+        self.agreement.signed_by_unicef_date = datetime.date(datetime.date.today().year - 2, 1, 1)
+        self.agreement.signed_by_partner_date = datetime.date(datetime.date.today().year - 2, 1, 1)
+        self.agreement.save()
+        self.assertEqual(self.agreement.start, self.cp.from_date)
+
+
+class TestInterventionModel(BaseTenantTestCase):
     def setUp(self):
         super(TestInterventionModel, self).setUp()
         self.partner_organization = PartnerFactory(name="Partner Org 1")
@@ -846,7 +863,7 @@ class TestInterventionModel(EToolsTenantTestCase):
         )
         lower_result_1 = LowerResultFactory(result_link=link)
         lower_result_2 = LowerResultFactory(result_link=link)
-        self.assertItemsEqual(intervention.all_lower_results, [
+        six.assertCountEqual(self, intervention.all_lower_results, [
             lower_result_1,
             lower_result_2,
         ])
@@ -871,7 +888,7 @@ class TestInterventionModel(EToolsTenantTestCase):
             lower_result=lower_result_2
         )
         applied_indicator_2.locations.add(location_2)
-        self.assertItemsEqual(intervention.intervention_locations, [
+        six.assertCountEqual(self, intervention.intervention_locations, [
             location_1,
             location_2,
         ])
@@ -899,7 +916,7 @@ class TestInterventionModel(EToolsTenantTestCase):
             cluster_name=None,
         )
         AppliedIndicatorFactory(lower_result=lower_result_2)
-        self.assertItemsEqual(intervention.intervention_clusters, [
+        six.assertCountEqual(self, intervention.intervention_clusters, [
             "Title 1",
             "Title 2",
         ])
@@ -1106,7 +1123,7 @@ class TestInterventionModel(EToolsTenantTestCase):
         self.assertEqual(agreement.status, models.Agreement.ENDED)
 
 
-class TestGetFilePaths(EToolsTenantTestCase):
+class TestGetFilePaths(BaseTenantTestCase):
     def test_get_agreement_path(self):
         partner = PartnerFactory()
         agreement = models.Agreement(
@@ -1205,13 +1222,13 @@ class TestGetFilePaths(EToolsTenantTestCase):
         )
 
 
-class TestWorkspaceFileType(EToolsTenantTestCase):
+class TestWorkspaceFileType(BaseTenantTestCase):
     def test_str(self):
         w = models.WorkspaceFileType(name="Test")
         self.assertEqual(str(w), "Test")
 
 
-class TestPartnerOrganization(EToolsTenantTestCase):
+class TestPartnerOrganization(BaseTenantTestCase):
     def test_str(self):
         p = models.PartnerOrganization(name="Test Partner Org")
         self.assertEqual(str(p), "Test Partner Org")
@@ -1241,7 +1258,7 @@ class TestPartnerOrganization(EToolsTenantTestCase):
         self.assertEqual(p.hact_values, '{"all": "good"}')
 
 
-class TestPartnerStaffMember(EToolsTenantTestCase):
+class TestPartnerStaffMember(BaseTenantTestCase):
     def test_str(self):
         partner = models.PartnerOrganization(name="Partner")
         staff = models.PartnerStaffMember(
@@ -1277,7 +1294,7 @@ class TestPartnerStaffMember(EToolsTenantTestCase):
         self.assertEqual(mock_send.call_count, 2)
 
 
-class TestAssessment(EToolsTenantTestCase):
+class TestAssessment(BaseTenantTestCase):
     def test_str_not_completed(self):
         partner = models.PartnerOrganization(name="Partner")
         a = models.Assessment(
@@ -1298,7 +1315,7 @@ class TestAssessment(EToolsTenantTestCase):
         self.assertEqual(str(a), "Type: Partner Rating 01-01-2001")
 
 
-class TestAgreement(EToolsTenantTestCase):
+class TestAgreement(BaseTenantTestCase):
     def test_str(self):
         partner = models.PartnerOrganization(name="Partner")
         agreement = models.Agreement(
@@ -1369,7 +1386,7 @@ class TestAgreement(EToolsTenantTestCase):
         self.assertEqual(intervention_updated.status, agreement.status)
 
 
-class TestAgreementAmendment(EToolsTenantTestCase):
+class TestAgreementAmendment(BaseTenantTestCase):
     def test_str(self):
         agreement = AgreementFactory()
         amendment = AgreementAmendmentFactory(
@@ -1381,7 +1398,7 @@ class TestAgreementAmendment(EToolsTenantTestCase):
         )
 
 
-class TestInterventionAmendment(EToolsTenantTestCase):
+class TestInterventionAmendment(BaseTenantTestCase):
     def test_str(self):
         ia = models.InterventionAmendment(
             amendment_number="123",
@@ -1406,7 +1423,7 @@ class TestInterventionAmendment(EToolsTenantTestCase):
         self.assertEqual(ia.compute_reference_number(), 2)
 
 
-class TestInterventionResultLink(EToolsTenantTestCase):
+class TestInterventionResultLink(BaseTenantTestCase):
     def test_str(self):
         intervention = InterventionFactory()
         result = ResultFactory(
@@ -1425,7 +1442,7 @@ class TestInterventionResultLink(EToolsTenantTestCase):
         )
 
 
-class TestInterventionBudget(EToolsTenantTestCase):
+class TestInterventionBudget(BaseTenantTestCase):
     def test_str(self):
         intervention = InterventionFactory()
         intervention_str = str(intervention)
@@ -1438,19 +1455,19 @@ class TestInterventionBudget(EToolsTenantTestCase):
         self.assertEqual(str(budget), "{}: 35.00".format(intervention_str))
 
 
-class TestFileType(EToolsTenantTestCase):
+class TestFileType(BaseTenantTestCase):
     def test_str(self):
         f = models.FileType(name="FileType")
         self.assertEqual(str(f), "FileType")
 
 
-class TestInterventionAttachment(EToolsTenantTestCase):
+class TestInterventionAttachment(BaseTenantTestCase):
     def test_str(self):
         a = models.InterventionAttachment(attachment="test.pdf")
         self.assertEqual(str(a), "test.pdf")
 
 
-class TestInterventionReportingPeriod(EToolsTenantTestCase):
+class TestInterventionReportingPeriod(BaseTenantTestCase):
     def test_str(self):
         intervention = InterventionFactory()
         intervention_str = str(intervention)
@@ -1469,16 +1486,16 @@ class TestInterventionReportingPeriod(EToolsTenantTestCase):
 
 
 @skipIf(sys.version_info.major == 3, "This test can be deleted under Python 3")
-class TestStrUnicodeSlow(EToolsTenantTestCase):
+class TestStrUnicodeSlow(BaseTenantTestCase):
     '''Ensure calling str() on model instances returns UTF8-encoded text and unicode() returns unicode.
 
     This is the same as TestStrUnicode below, except that it tests objects that need to be saved to the database
-    so it's based on EToolsTenantTestCase instead of TestCase.
+    so it's based on BaseTenantTestCase instead of TestCase.
     '''
     def test_assessment(self):
-        partner = PartnerFactory(name=b'xyz')
+        partner = PartnerFactory(name='xyz')
         instance = AssessmentFactory(partner=partner)
-        self.assertIn(b'xyz', str(instance))
+        self.assertIn('xyz', str(instance))
         self.assertIn(u'xyz', unicode(instance))
 
         partner = PartnerFactory(name=u'R\xe4dda Barnen')
@@ -1487,9 +1504,9 @@ class TestStrUnicodeSlow(EToolsTenantTestCase):
         self.assertIn(u'R\xe4dda Barnen', unicode(instance))
 
     def test_agreement_amendment(self):
-        partner = PartnerFactory(name=b'xyz')
+        partner = PartnerFactory(name='xyz')
         agreement = AgreementFactory(partner=partner)
-        instance = AgreementAmendmentFactory(number=b'xyz', agreement=agreement)
+        instance = AgreementAmendmentFactory(number='xyz', agreement=agreement)
         # This model's __str__() method operates on a limited range of text, so it's not possible to challenge it
         # with non-ASCII text. As long as str() and unicode() succeed, that's all the testing we can do.
         str(instance)
@@ -1500,8 +1517,8 @@ class TestStrUnicodeSlow(EToolsTenantTestCase):
 class TestStrUnicode(TestCase):
     '''Ensure calling str() on model instances returns UTF8-encoded text and unicode() returns unicode.'''
     def test_workspace_file_type(self):
-        instance = WorkspaceFileTypeFactory.build(name=b'xyz')
-        self.assertEqual(str(instance), b'xyz')
+        instance = WorkspaceFileTypeFactory.build(name='xyz')
+        self.assertEqual(str(instance), 'xyz')
         self.assertEqual(unicode(instance), u'xyz')
 
         instance = WorkspaceFileTypeFactory.build(name=u'R\xe4dda Barnen')
@@ -1509,8 +1526,8 @@ class TestStrUnicode(TestCase):
         self.assertEqual(unicode(instance), u'R\xe4dda Barnen')
 
     def test_partner_organization(self):
-        instance = PartnerFactory.build(name=b'xyz')
-        self.assertEqual(str(instance), b'xyz')
+        instance = PartnerFactory.build(name='xyz')
+        self.assertEqual(str(instance), 'xyz')
         self.assertEqual(unicode(instance), u'xyz')
 
         instance = PartnerFactory.build(name=u'R\xe4dda Barnen')
@@ -1518,10 +1535,10 @@ class TestStrUnicode(TestCase):
         self.assertEqual(unicode(instance), u'R\xe4dda Barnen')
 
     def test_partner_staff_member(self):
-        partner = PartnerFactory.build(name=b'partner')
+        partner = PartnerFactory.build(name='partner')
 
-        instance = PartnerStaffFactory.build(first_name=b'xyz', partner=partner)
-        self.assertTrue(str(instance).startswith(b'xyz'))
+        instance = PartnerStaffFactory.build(first_name='xyz', partner=partner)
+        self.assertTrue(str(instance).startswith('xyz'))
         self.assertTrue(unicode(instance).startswith(u'xyz'))
 
         instance = PartnerStaffFactory.build(first_name=u'R\xe4dda Barnen', partner=partner)
@@ -1529,9 +1546,9 @@ class TestStrUnicode(TestCase):
         self.assertTrue(unicode(instance).startswith(u'R\xe4dda Barnen'))
 
     def test_agreement(self):
-        partner = PartnerFactory.build(name=b'xyz')
+        partner = PartnerFactory.build(name='xyz')
         instance = AgreementFactory.build(partner=partner)
-        self.assertIn(b'xyz', str(instance))
+        self.assertIn('xyz', str(instance))
         self.assertIn(u'xyz', unicode(instance))
 
         partner = PartnerFactory.build(name=u'R\xe4dda Barnen')
@@ -1540,8 +1557,8 @@ class TestStrUnicode(TestCase):
         self.assertIn(u'R\xe4dda Barnen', unicode(instance))
 
     def test_intervention(self):
-        instance = InterventionFactory.build(number=b'two')
-        self.assertEqual(b'two', str(instance))
+        instance = InterventionFactory.build(number='two')
+        self.assertEqual('two', str(instance))
         self.assertEqual(u'two', unicode(instance))
 
         instance = InterventionFactory.build(number=u'tv\xe5')
@@ -1556,9 +1573,9 @@ class TestStrUnicode(TestCase):
         unicode(instance)
 
     def test_intervention_result_link(self):
-        intervention = InterventionFactory.build(number=b'two')
+        intervention = InterventionFactory.build(number='two')
         instance = InterventionResultLinkFactory.build(intervention=intervention)
-        self.assertTrue(str(instance).startswith(b'two'))
+        self.assertTrue(str(instance).startswith('two'))
         self.assertTrue(unicode(instance).startswith(u'two'))
 
         intervention = InterventionFactory.build(number=u'tv\xe5')
@@ -1567,9 +1584,9 @@ class TestStrUnicode(TestCase):
         self.assertTrue(unicode(instance).startswith(u'tv\xe5'))
 
     def test_intervention_budget(self):
-        intervention = InterventionFactory.build(number=b'two')
+        intervention = InterventionFactory.build(number='two')
         instance = InterventionBudgetFactory.build(intervention=intervention)
-        self.assertTrue(str(instance).startswith(b'two'))
+        self.assertTrue(str(instance).startswith('two'))
         self.assertTrue(unicode(instance).startswith(u'two'))
 
         intervention = InterventionFactory.build(number=u'tv\xe5')
@@ -1585,9 +1602,9 @@ class TestStrUnicode(TestCase):
         unicode(instance)
 
     def test_intervention_attachment(self):
-        attachment = SimpleUploadedFile(b'two.txt', u'hello world!'.encode('utf-8'))
+        attachment = SimpleUploadedFile('two.txt', u'hello world!'.encode('utf-8'))
         instance = InterventionAttachmentFactory.build(attachment=attachment)
-        self.assertEqual(str(instance), b'two.txt')
+        self.assertEqual(str(instance), 'two.txt')
         self.assertEqual(unicode(instance), u'two.txt')
 
         attachment = SimpleUploadedFile(u'tv\xe5.txt', u'hello world!'.encode('utf-8'))
@@ -1596,10 +1613,10 @@ class TestStrUnicode(TestCase):
         self.assertEqual(unicode(instance), u'tv\xe5.txt')
 
     def test_intervention_reporting_period(self):
-        intervention = InterventionFactory.build(number=b'two')
+        intervention = InterventionFactory.build(number='two')
         instance = InterventionReportingPeriodFactory.build(intervention=intervention)
-        self.assertTrue(str(instance).startswith(b'two'))
-        self.assertTrue(unicode(instance).startswith(b'two'))
+        self.assertTrue(str(instance).startswith('two'))
+        self.assertTrue(unicode(instance).startswith('two'))
 
         intervention = InterventionFactory.build(number=u'tv\xe5')
         instance = InterventionReportingPeriodFactory.build(intervention=intervention)
@@ -1607,7 +1624,7 @@ class TestStrUnicode(TestCase):
         self.assertTrue(unicode(instance).startswith(u'tv\xe5'))
 
 
-class TestPlannedEngagement(EToolsTenantTestCase):
+class TestPlannedEngagement(BaseTenantTestCase):
     @classmethod
     def setUpTestData(cls):
         cls.user = UserFactory()

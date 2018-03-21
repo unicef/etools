@@ -3,9 +3,11 @@ from abc import ABCMeta, abstractmethod
 
 from django.conf import settings
 from django.db import connection
+from django.utils import six
 
 import requests
 from celery.utils.log import get_task_logger
+from django.utils.encoding import force_text
 
 from vision.exceptions import VisionException
 from vision.models import VisionSyncLog
@@ -19,14 +21,11 @@ VISION_NO_DATA_MESSAGE = 'No Data Available'
 class VisionDataLoader(object):
     # Caveat - this loader probably doesn't construct a correct URL when the synchronizer's GLOBAL_CALL = True).
     # See https://github.com/unicef/etools/issues/1098
-    URL = ''
+    URL = settings.VISION_URL
 
     def __init__(self, country=None, endpoint=None):
-        if not self.URL:
-            self.URL = settings.VISION_URL
-
         if endpoint is None:
-            raise VisionException(message='You must set the ENDPOINT name')
+            raise VisionException('You must set the ENDPOINT name')
 
         separator = '' if self.URL.endswith('/') else '/'
 
@@ -43,9 +42,7 @@ class VisionDataLoader(object):
         )
 
         if response.status_code != 200:
-            raise VisionException(
-                message=('Load data failed! Http code: {}'.format(response.status_code))
-            )
+            raise VisionException('Load data failed! Http code: {}'.format(response.status_code))
         json_response = response.json()
         if json_response == VISION_NO_DATA_MESSAGE:
             return []
@@ -65,9 +62,9 @@ class VisionDataSynchronizer(object):
 
     def __init__(self, country=None):
         if not country:
-            raise VisionException(message='Country is required')
+            raise VisionException('Country is required')
         if self.ENDPOINT is None:
-            raise VisionException(message='You must set the ENDPOINT name')
+            raise VisionException('You must set the ENDPOINT name')
 
         logger.info('Synchronizer is {}'.format(self.__class__.__name__))
 
@@ -124,9 +121,9 @@ class VisionDataSynchronizer(object):
             totals = self._save_records(converted_records)
 
         except Exception as e:
-            logger.info('sync caught {} with message "{}"'.format(type(e).__name__, e.message))
-            log.exception_message = e.message
-            raise VisionException(message=e.message), None, sys.exc_info()[2]
+            logger.info('sync', exc_info=True)
+            log.exception_message = force_text(e)
+            six.reraise(VisionException, force_text(e), sys.exc_info()[2])
         else:
             if isinstance(totals, dict):
                 log.total_processed = totals.get('processed', 0)

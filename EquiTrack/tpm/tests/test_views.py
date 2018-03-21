@@ -4,11 +4,12 @@ from datetime import timedelta, datetime
 
 from django.core.management import call_command
 from django.core.urlresolvers import reverse
+from django.utils import six
 from django.utils.translation import ugettext_lazy as _
 
 from rest_framework import status
 
-from EquiTrack.tests.mixins import APITenantTestCase
+from EquiTrack.tests.cases import BaseTenantTestCase
 from partners.models import PartnerType
 from tpm.models import TPMActionPoint
 from tpm.tests.base import TPMTestCaseMixin
@@ -28,7 +29,7 @@ class TestExportMixin(object):
             self.assertIn(response._headers['content-disposition'][0], 'Content-Disposition')
 
 
-class TestTPMVisitViewSet(TestExportMixin, TPMTestCaseMixin, APITenantTestCase):
+class TestTPMVisitViewSet(TestExportMixin, TPMTestCaseMixin, BaseTenantTestCase):
     @classmethod
     def setUpTestData(cls):
         call_command('update_tpm_permissions', verbosity=0)
@@ -45,7 +46,8 @@ class TestTPMVisitViewSet(TestExportMixin, TPMTestCaseMixin, APITenantTestCase):
         )
 
         self.assertEquals(response.status_code, status.HTTP_200_OK)
-        self.assertItemsEqual(
+        six.assertCountEqual(
+            self,
             map(lambda x: x['id'], response.data['results']),
             map(lambda x: x.id, expected_visits)
         )
@@ -192,7 +194,7 @@ class TestTPMVisitViewSet(TestExportMixin, TPMTestCaseMixin, APITenantTestCase):
         self._test_export(self.pme_user, 'tpm:visits-visit-letter', args=(visit.id,))
 
 
-class TestTPMStaffMembersViewSet(TestExportMixin, TPMTestCaseMixin, APITenantTestCase):
+class TestTPMStaffMembersViewSet(TestExportMixin, TPMTestCaseMixin, BaseTenantTestCase):
     @classmethod
     def setUpTestData(cls):
         cls.tpm_partner = TPMPartnerFactory()
@@ -320,7 +322,7 @@ class TestTPMStaffMembersViewSet(TestExportMixin, TPMTestCaseMixin, APITenantTes
         self._test_export(self.pme_user, 'tpm:tpmstaffmembers-export', args=(self.tpm_partner.id,))
 
 
-class TestTPMPartnerViewSet(TestExportMixin, TPMTestCaseMixin, APITenantTestCase):
+class TestTPMPartnerViewSet(TestExportMixin, TPMTestCaseMixin, BaseTenantTestCase):
     @classmethod
     def setUpTestData(cls):
         cls.tpm_partner = TPMPartnerFactory()
@@ -338,7 +340,8 @@ class TestTPMPartnerViewSet(TestExportMixin, TPMTestCaseMixin, APITenantTestCase
         )
 
         self.assertEquals(response.status_code, status.HTTP_200_OK)
-        self.assertItemsEqual(
+        six.assertCountEqual(
+            self,
             map(lambda x: x['id'], response.data['results']),
             map(lambda x: x.id, expected_firms)
         )
@@ -354,7 +357,8 @@ class TestTPMPartnerViewSet(TestExportMixin, TPMTestCaseMixin, APITenantTestCase
 
         if can_create:
             self.assertIn('POST', response.data['actions'])
-            self.assertItemsEqual(
+            six.assertCountEqual(
+                self,
                 writable_fields or [],
                 response.data['actions']['POST'].keys()
             )
@@ -372,7 +376,8 @@ class TestTPMPartnerViewSet(TestExportMixin, TPMTestCaseMixin, APITenantTestCase
 
         if can_update:
             self.assertIn('PUT', response.data['actions'])
-            self.assertItemsEqual(
+            six.assertCountEqual(
+                self,
                 writable_fields or [],
                 response.data['actions']['PUT'].keys()
             )
