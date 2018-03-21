@@ -9,6 +9,7 @@ from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db import connection, models, transaction
 from django.db.models.signals import post_save, pre_delete
 from django.utils.encoding import python_2_unicode_compatible
+from django.utils.translation import ugettext_lazy as _
 
 from djangosaml2.signals import pre_user_save
 from tenant_schemas.models import TenantMixin
@@ -75,6 +76,7 @@ class Country(TenantMixin):
 
     class Meta:
         ordering = ['name']
+        verbose_name_plural = _('Countries')
 
 
 @python_2_unicode_compatible
@@ -329,9 +331,9 @@ def create_partner_user(sender, instance, created, **kwargs):
             if not user_created:
                 logger.info(u'User already exists for a partner staff member: {}'.format(instance.email))
                 # TODO: check for user not being already associated with another partnership (can be done on the form)
-        except Exception as exp:
+        except Exception:
             # we dont need do anything special except log the error, we have enough information to create the user later
-            logger.exception(u'Exception occurred whilst creating partner user: {}'.format(exp.message))
+            logger.exception(u'Exception occurred whilst creating partner user')
         else:
             # TODO: here we have a decision.. either we update the user with the info just received from
             # TODO: or we update the instance with the user we already have. this might have implications on login.
@@ -360,8 +362,8 @@ def delete_partner_relationship(sender, instance, **kwargs):
             profile.save()
             profile.user.is_active = False
             profile.user.save()
-    except Exception as exp:
-        logger.exception(u'Exception occurred whilst de-linking partner user: {}'.format(exp.message))
+    except Exception:
+        logger.exception(u'Exception occurred whilst de-linking partner user')
 
 
 pre_delete.connect(delete_partner_relationship, sender='partners.PartnerStaffMember')

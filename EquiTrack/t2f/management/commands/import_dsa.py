@@ -1,4 +1,4 @@
-from __future__ import unicode_literals
+from __future__ import absolute_import, division, print_function, unicode_literals
 
 import csv
 from datetime import datetime
@@ -32,7 +32,7 @@ class Command(BaseCommand):
         country_name = options['country_name'][0]
         import_file_path = options['import_file_path'][0]
 
-        self.stdout.write(str(map(lambda x: x.name, Country.objects.all())))
+        self.stdout.write(six.text_type(map(lambda x: x.name, Country.objects.all())))
         self.stdout.write(country_name)
         country = Country.objects.get(name=country_name)
         connection.set_tenant(country)

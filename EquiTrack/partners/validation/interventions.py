@@ -1,7 +1,9 @@
-from __future__ import unicode_literals
+from __future__ import absolute_import, division, print_function, unicode_literals
+
 from datetime import date
 import logging
 
+from django.utils import six
 from django.utils.translation import ugettext as _
 
 from EquiTrack.validation_mixins import TransitionError, CompleteValidation, StateValidError, \
@@ -220,7 +222,7 @@ def locations_valid(i):
         raise BasicValidationError(_('The following locations have been selected on '
                                      'the PD/SSFA indicators and cannot be removed'
                                      ' without removing them from the indicators first: ') +
-                                   ', '.join([str(l) for l in ind_locations - intervention_locations]))
+                                   ', '.join([six.text_type(l) for l in ind_locations - intervention_locations]))
     return True
 
 
@@ -254,7 +256,7 @@ class InterventionValid(CompleteValidation):
         'sections_valid': "The sections selected on the PD/SSFA are not a subset of all sections selected "
                           "for this PD/SSFA's indicators",
         'locations_valid': "The locations selected on the PD/SSFA are not a subset of all locations selected "
-                          "for this PD/SSFA's indicators"
+                          "for this PD/SSFA's indicators",
     }
 
     PERMISSIONS_CLASS = InterventionPermissions
