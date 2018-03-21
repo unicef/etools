@@ -649,3 +649,4 @@ class TestAttachmentCreatreView(BaseTenantTestCase):
         self.assertTrue(attachment_qs.exists())
         attachment = attachment_qs.first()
         self.assertIsNone(attachment.content_object)
+        self.assertEqual(attachment.uploaded_by, self.unicef_staff)
