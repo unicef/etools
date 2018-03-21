@@ -11,5 +11,6 @@ urlpatterns = [
         r'^autocomplete-light/$',
         views.LocationAutocompleteView.as_view(),
         name='locations-autocomplete-light',
-    )
+    ),
+    #url(r'^locations/gis/in-use/$', views.GisLocationsInUseViewset.as_view(), name='gis-locations-in-use'),
 ]

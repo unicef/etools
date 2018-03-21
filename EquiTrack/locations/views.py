@@ -2,13 +2,24 @@ from django.core.exceptions import ValidationError
 from django.shortcuts import get_object_or_404
 
 from dal import autocomplete
+from django.db import connection
 from rest_framework import mixins, permissions, viewsets
 from rest_framework.generics import ListAPIView
 
-from EquiTrack.utils import etag_cached
+from EquiTrack.utils import etag_cached, set_country
+from environment.helpers import tenant_switch_is_active
+from t2f.models import TravelActivity
+from users.models import Country
+from partners.models import Intervention
 from locations.models import CartoDBTable, GatewayType, Location
 from locations.serializers import (
-    CartoDBTableSerializer, GatewayTypeSerializer, LocationLightSerializer, LocationSerializer,)
+    CartoDBTableSerializer,
+    GatewayTypeSerializer,
+    LocationLightSerializer,
+    LocationSerializer,
+    GisLocationListSerializer,
+    GisLocationGeoDetailSerializer,
+)
 
 
 class CartoDBTablesView(ListAPIView):
@@ -68,8 +79,7 @@ class LocationsViewSet(mixins.RetrieveModelMixin,
         return queryset
 
 
-class LocationsLightViewSet(mixins.ListModelMixin,
-                            viewsets.GenericViewSet):
+class LocationsLightViewSet(mixins.ListModelMixin, viewsets.GenericViewSet):
     """
     Returns a list of all Locations with restricted field set.
     """
@@ -106,5 +116,52 @@ class LocationAutocompleteView(autocomplete.Select2QuerySetView):
 
         if self.q:
             qs = qs.filter(name__istartswith=self.q)
+
+        return qs
+
+
+class GisLocationsInUseViewset(mixins.ListModelMixin, viewsets.GenericViewSet):
+#class GisLocationsInUseViewset(ListAPIView):
+    model = Location
+    serializer_class = GisLocationListSerializer
+    permission_classes = (permissions.IsAdminUser,)
+
+    def get_queryset(self):
+        country_id = self.request.query_params.get('country_id')
+
+        if country_id:
+            connection.set_tenant(Country.objects.get(pk=country_id))
+            interventions = Intervention.objects.all()
+            location_ids = []
+
+            for intervention in interventions:
+                flat_locations = set(intervention.flat_locations.all())
+
+                ll_locations = set()
+                for lower_result in intervention.all_lower_results:
+                    for applied_indicator in lower_result.applied_indicators.all():
+                        for location in applied_indicator.locations.all():
+                            ll_locations.add(location)
+
+                for loc in flat_locations | ll_locations:
+                    location_ids.append(loc.id)
+
+            travel_locations = TravelActivity.objects.prefetch_related(
+                'locations'
+            ).all()
+
+            for t2f_loc in travel_locations:
+                location_ids.append(t2f_loc.id)
+
+            qs = Location.objects.filter(
+                pk__in=location_ids
+            )
+
+            print ""
+            print qs.count()
+            print len(location_ids)
+            print ""
+        else:
+            raise ValidationError("Country id is missing!")
 
         return qs

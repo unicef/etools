@@ -1,6 +1,8 @@
 from __future__ import unicode_literals
 
 from rest_framework import serializers
+from django.contrib.gis.geos import GEOSGeometry
+from django.contrib.gis.geos.collections import MultiPolygon
 
 from locations.models import CartoDBTable, GatewayType, Location
 
@@ -72,6 +74,39 @@ class LocationLightSerializer(serializers.ModelSerializer):
             'id',
             'name',
             'p_code',
+        )
+
+
+class GisLocationListSerializer(serializers.ModelSerializer):
+    id = serializers.CharField(read_only=True)
+
+    class Meta:
+        model = Location
+        fields = (
+            'id',
+            'name',
+            'p_code',
+            'gateway_id',
+            'level',
+        )
+
+
+class GisLocationGeoDetailSerializer(serializers.ModelSerializer):
+    id = serializers.CharField(read_only=True)
+    geom = serializers.SerializerMethodField()
+
+    def get_geom(self, obj):
+        return "{}".format(GEOSGeometry(obj.geom).wkt)
+
+    class Meta:
+        model = Location
+        fields = (
+            'id',
+            'name',
+            'p_code',
+            'gateway_id',
+            'level',
+            'geom'
         )
 
 

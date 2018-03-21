@@ -14,7 +14,7 @@ from rest_framework_swagger.views import get_swagger_view
 
 from email_auth.urls import urlpatterns as email_auth_patterns
 from EquiTrack.views import IssueJWTRedirectView, MainView, OutdatedBrowserView
-from locations.views import LocationsLightViewSet, LocationsViewSet, LocationTypesViewSet
+from locations.views import LocationsLightViewSet, LocationsViewSet, LocationTypesViewSet, GisLocationsInUseViewset
 from management.urls import urlpatterns as management_urls
 from partners.views.v1 import FileTypeViewSet
 from publics import urls as publics_patterns
@@ -52,6 +52,9 @@ api.register(r'locations', LocationsViewSet, base_name='locations')
 api.register(r'locations-light', LocationsLightViewSet, base_name='locations-light')
 api.register(r'locations-types', LocationTypesViewSet, base_name='locationtypes')
 
+#gis URLs
+api.register(r'locations/gis/in-use', GisLocationsInUseViewset, base_name='gis-locations-in-use')
+
 urlpatterns = [
     # Used for admin and dashboard pages in django
     url(r'^$', ModuleRedirectView.as_view(), name='dashboard'),
@@ -61,7 +64,7 @@ urlpatterns = [
     url(r'^api/static_data/$', StaticDataView.as_view({'get': 'list'}), name='public_static'),
 
     # ***************  API version 1  ********************
-    url(r'^locations/', include('locations.urls')),
+    url(r'^locations/', include('locations.urls')),     #does this even work??
     url(r'^users/', include('users.urls')),
     url(r'^api/management/', include(management_urls)),
     url(r'^api/', include(api.urls)),
