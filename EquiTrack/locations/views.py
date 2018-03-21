@@ -4,10 +4,10 @@ from django.shortcuts import get_object_or_404
 from dal import autocomplete
 from django.db import connection
 from rest_framework import mixins, permissions, viewsets
-from rest_framework.generics import ListAPIView
+from rest_framework.generics import ListAPIView, RetrieveAPIView
+from rest_framework.response import Response
 
-from EquiTrack.utils import etag_cached, set_country
-from environment.helpers import tenant_switch_is_active
+from EquiTrack.utils import etag_cached
 from t2f.models import TravelActivity
 from users.models import Country
 from partners.models import Intervention
@@ -120,8 +120,7 @@ class LocationAutocompleteView(autocomplete.Select2QuerySetView):
         return qs
 
 
-class GisLocationsInUseViewset(mixins.ListModelMixin, viewsets.GenericViewSet):
-#class GisLocationsInUseViewset(ListAPIView):
+class GisLocationsInUseViewset(ListAPIView):
     model = Location
     serializer_class = GisLocationListSerializer
     permission_classes = (permissions.IsAdminUser,)
@@ -130,7 +129,9 @@ class GisLocationsInUseViewset(mixins.ListModelMixin, viewsets.GenericViewSet):
         country_id = self.request.query_params.get('country_id')
 
         if country_id:
+            # we need to set the workspace before making any query
             connection.set_tenant(Country.objects.get(pk=country_id))
+
             interventions = Intervention.objects.all()
             location_ids = []
 
@@ -154,14 +155,55 @@ class GisLocationsInUseViewset(mixins.ListModelMixin, viewsets.GenericViewSet):
                 location_ids.append(t2f_loc.id)
 
             qs = Location.objects.filter(
-                pk__in=location_ids
+                pk__in=location_ids,
+                # geom__isnull=False,
             )
 
+            '''
             print ""
             print qs.count()
             print len(location_ids)
             print ""
+            '''
         else:
             raise ValidationError("Country id is missing!")
 
         return qs
+
+
+class GisLocationsGeomListViewset(ListAPIView):
+    model = Location
+    serializer_class = GisLocationGeoDetailSerializer
+    permission_classes = (permissions.IsAdminUser,)
+
+    def get_queryset(self):
+        country_id = self.request.query_params.get('country_id')
+
+        if country_id:
+            # we need to set the workspace before making any query
+            connection.set_tenant(Country.objects.get(pk=country_id))
+
+            qs = Location.objects.filter(geom__isnull=False)
+        else:
+            raise ValidationError("Country id is missing!")
+
+        return qs
+
+
+class GisLocationsGeomDetailsViewset(RetrieveAPIView):
+    permission_classes = (permissions.IsAdminUser,)
+
+    def get(self, request, id=None, pcode=None):
+        country_id = self.request.query_params.get('country_id')
+
+        if country_id:
+            # we need to set the workspace before making any query
+            connection.set_tenant(Country.objects.get(pk=country_id))
+
+            lookup = {'p_code': pcode} if id is None else {'pk': id}
+            location = get_object_or_404(Location, **lookup)
+
+            serializer = GisLocationGeoDetailSerializer(location, context={'request': request})
+            return Response(serializer.data)
+        else:
+            raise ValidationError("Some of the required request parameters are missing!")

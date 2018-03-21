@@ -2,7 +2,6 @@ from __future__ import unicode_literals
 
 from rest_framework import serializers
 from django.contrib.gis.geos import GEOSGeometry
-from django.contrib.gis.geos.collections import MultiPolygon
 
 from locations.models import CartoDBTable, GatewayType, Location
 
@@ -96,7 +95,7 @@ class GisLocationGeoDetailSerializer(serializers.ModelSerializer):
     geom = serializers.SerializerMethodField()
 
     def get_geom(self, obj):
-        return "{}".format(GEOSGeometry(obj.geom).wkt)
+        return "{}".format(GEOSGeometry(obj.geom).wkt if obj.geom else '')
 
     class Meta:
         model = Location
