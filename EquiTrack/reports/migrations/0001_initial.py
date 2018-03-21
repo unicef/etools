@@ -43,8 +43,8 @@ class Migration(migrations.Migration):
                 ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
                 ('name', models.CharField(max_length=1024)),
                 ('code', models.CharField(blank=True, max_length=50, null=True)),
-                ('total', models.IntegerField(blank=True, null=True, verbose_name=b'UNICEF Target')),
-                ('sector_total', models.IntegerField(blank=True, null=True, verbose_name=b'Sector Target')),
+                ('total', models.IntegerField(blank=True, null=True, verbose_name='UNICEF Target')),
+                ('sector_total', models.IntegerField(blank=True, null=True, verbose_name='Sector Target')),
                 ('current', models.IntegerField(blank=True, default=0, null=True)),
                 ('sector_current', models.IntegerField(blank=True, null=True)),
                 ('assumptions', models.TextField(blank=True, null=True)),
@@ -113,7 +113,7 @@ class Migration(migrations.Migration):
             name='ResultType',
             fields=[
                 ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('name', models.CharField(choices=[(b'Outcome', b'Outcome'), (b'Output', b'Output'), (b'Activity', b'Activity'), (b'Sub-Activity', b'Sub-Activity')], max_length=150, unique=True)),
+                ('name', models.CharField(choices=[('Outcome', 'Outcome'), ('Output', 'Output'), ('Activity', 'Activity'), ('Sub-Activity', 'Sub-Activity')], max_length=150, unique=True)),
             ],
         ),
         migrations.CreateModel(
