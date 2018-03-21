@@ -95,10 +95,23 @@ class PMPStaticDropdownsListAPIView(APIView):
         intervention_amendment_types = choices_to_json_ready(InterventionAmendment.AMENDMENT_TYPES)
         location_types = GatewayType.objects.values('id', 'name', 'admin_level').order_by('id')
         currencies = choices_to_json_ready(CURRENCIES)
+        # hardcoded to partners app attachments for now
+        # once tpm and audit come online we can remove the filter
+        # on attachment file types
         attachment_types = AttachmentFileType.objects.values_list(
             'label',
             flat=True
-        )
+        ).filter(code__in=[
+            "partners_agreement",
+            "partners_partner_assessment",
+            "partners_assessment_report",
+            "partners_agreement_amendment",
+            "partners_intervention_prc_review",
+            "partners_intervention_signed_pd",
+            "partners_intervention_amendment_signed",
+            "partners_intervention_attachment",
+        ])
+        partner_file_types = FileType.objects.values_list("name", flat=True)
 
         local_currency = local_workspace.local_currency.id if local_workspace.local_currency else None
 
@@ -118,6 +131,7 @@ class PMPStaticDropdownsListAPIView(APIView):
                 'local_currency': local_currency,
                 'location_types': location_types,
                 'attachment_types': attachment_types,
+                'partner_file_types': partner_file_types,
             },
             status=status.HTTP_200_OK
         )

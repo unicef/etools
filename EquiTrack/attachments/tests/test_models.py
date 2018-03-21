@@ -229,6 +229,7 @@ class TestAttachments(BaseTenantTestCase):
 
     def test_valid_file(self):
         valid_file_attachment = AttachmentFactory(
+            # Note: file content is intended to be a byte-string here.
             file=SimpleUploadedFile('simple_file.txt', b'these are the file contents!'),
             content_object=self.simple_object
         )

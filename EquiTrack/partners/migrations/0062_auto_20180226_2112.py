@@ -22,7 +22,7 @@ class Migration(migrations.Migration):
                 ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
                 ('created', model_utils.fields.AutoCreatedField(default=django.utils.timezone.now, editable=False, verbose_name='created')),
                 ('modified', model_utils.fields.AutoLastModifiedField(default=django.utils.timezone.now, editable=False, verbose_name='modified')),
-                ('spot_check_mr', EquiTrack.fields.QuarterField(blank=True, choices=[(b'q1', b'Q1'), (b'q2', b'Q2'), (b'q3', b'Q3'), (b'q4', b'Q4')], max_length=2, null=True)),
+                ('spot_check_mr', EquiTrack.fields.QuarterField(blank=True, choices=[('q1', 'Q1'), ('q2', 'Q2'), ('q3', 'Q3'), ('q4', 'Q4')], max_length=2, null=True)),
                 ('spot_check_follow_up_q1', models.IntegerField(default=0, verbose_name='Spot Check Q1')),
                 ('spot_check_follow_up_q2', models.IntegerField(default=0, verbose_name='Spot Check Q2')),
                 ('spot_check_follow_up_q3', models.IntegerField(default=0, verbose_name='Spot Check Q3')),
@@ -37,7 +37,7 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name='interventionplannedvisits',
             name='quarter',
-            field=EquiTrack.fields.QuarterField(blank=True, choices=[(b'q1', b'Q1'), (b'q2', b'Q2'), (b'q3', b'Q3'), (b'q4', b'Q4')], max_length=2, null=True),
+            field=EquiTrack.fields.QuarterField(blank=True, choices=[('q1', 'Q1'), ('q2', 'Q2'), ('q3', 'Q3'), ('q4', 'Q4')], max_length=2, null=True),
         ),
         migrations.AlterField(
             model_name='partnerorganization',

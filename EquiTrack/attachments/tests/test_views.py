@@ -282,7 +282,7 @@ class TestAttachmentListView(BaseTenantTestCase):
             "partner": self.partner.name,
             "partner_type": self.partner.partner_type,
             "vendor_number": self.partner.vendor_number,
-            "pd_ssfa_number": self.intervention.reference_number,
+            "pd_ssfa_number": None,
         }])
 
     def test_agreement_amendment(self):
@@ -306,7 +306,7 @@ class TestAttachmentListView(BaseTenantTestCase):
             "partner": self.partner.name,
             "partner_type": self.partner.partner_type,
             "vendor_number": self.partner.vendor_number,
-            "pd_ssfa_number": self.intervention.reference_number,
+            "pd_ssfa_number": None,
         }])
 
     def test_intervention_amendment(self):
@@ -330,7 +330,7 @@ class TestAttachmentListView(BaseTenantTestCase):
             "partner": self.partner.name,
             "partner_type": self.partner.partner_type,
             "vendor_number": self.partner.vendor_number,
-            "pd_ssfa_number": self.intervention.reference_number,
+            "pd_ssfa_number": self.intervention.number,
         }])
 
     def test_intervention_attachment(self):
@@ -354,7 +354,50 @@ class TestAttachmentListView(BaseTenantTestCase):
             "partner": self.partner.name,
             "partner_type": self.partner.partner_type,
             "vendor_number": self.partner.vendor_number,
-            "pd_ssfa_number": self.intervention.reference_number,
+            "pd_ssfa_number": self.intervention.number,
+        }])
+        six.assertCountEqual(self, [x["file_type"] for x in response.data], [
+            self.file_type_1.label,
+            self.file_type_2.label,
+            self.intervention_attachment.type.name
+        ])
+
+    def test_intervention(self):
+        code_prc = "partners_intervention_prc_review"
+        file_type_prc = AttachmentFileTypeFactory(code=code_prc)
+        code_pd = "partners_intervention_signed_pd"
+        file_type_pd = AttachmentFileTypeFactory(code=code_pd)
+        AttachmentFactory(
+            file_type=file_type_prc,
+            code=code_prc,
+            file="sample1.pdf",
+            content_object=self.intervention,
+            uploaded_by=self.user
+        )
+        AttachmentFactory(
+            file_type=file_type_pd,
+            code=code_pd,
+            file="sample1.pdf",
+            content_object=self.intervention,
+            uploaded_by=self.user
+        )
+        response = self.forced_auth_req(
+            "get",
+            self.url,
+            user=self.unicef_staff,
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(response.data), 4)
+        self.assert_values(response, self.default_partner_response + [{
+            "partner": self.partner.name,
+            "partner_type": self.partner.partner_type,
+            "vendor_number": self.partner.vendor_number,
+            "pd_ssfa_number": self.intervention.number,
+        }, {
+            "partner": self.partner.name,
+            "partner_type": self.partner.partner_type,
+            "vendor_number": self.partner.vendor_number,
+            "pd_ssfa_number": self.intervention.number,
         }])
 
 
