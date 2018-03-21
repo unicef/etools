@@ -1,9 +1,13 @@
+from __future__ import absolute_import, division, print_function, unicode_literals
+
 from django.db import IntegrityError
+from django.utils import six
 
 from carto.auth import APIKeyAuthClient
 from carto.exceptions import CartoException
 from carto.sql import SQLClient
 from celery.utils.log import get_task_logger
+from django.utils.encoding import force_text
 
 from EquiTrack.celery import app
 from locations.models import CartoDBTable, Location
@@ -117,7 +121,7 @@ def update_sites_from_cartodb(carto_table_pk):
     else:
 
         for row in sites['rows']:
-            pcode = str(row[carto_table.pcode_col]).strip()
+            pcode = six.text_type(row[carto_table.pcode_col]).strip()
             site_name = row[carto_table.name_col]
 
             if not site_name or site_name.isspace():
@@ -147,7 +151,7 @@ def update_sites_from_cartodb(carto_table_pk):
                         parent_code
                     )
                 except Exception as exp:
-                    msg = exp.message
+                    msg = force_text(exp)
 
                 if msg is not None:
                     logger.warning(msg)
