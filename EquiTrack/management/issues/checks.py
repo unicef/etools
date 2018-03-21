@@ -1,3 +1,5 @@
+from __future__ import absolute_import, division, print_function, unicode_literals
+
 import logging
 from abc import ABCMeta, abstractmethod
 from collections import namedtuple
@@ -40,7 +42,7 @@ class BaseIssueCheck(object):
                     self.run_check(model_instance, metadata)
                 except IssueFoundException as e:
                     issue = FlaggedIssue.get_or_new(content_object=model_instance, issue_id=self.check_id)
-                    issue.message = unicode(e)
+                    issue.message = six.text_type(e)
                     issue.save()
         # todo: is it always valid to run all checks against all tenants?
         run_on_all_tenants(_inner)
@@ -141,7 +143,7 @@ def recheck_all_open_issues():
                 issue.recheck()
             except IssueCheckNotFoundException as e:
                 # todo: should this fail hard?
-                logging.error(unicode(e))
+                logging.error(six.text_type(e))
 
     # todo: is it always valid to run all checks against all tenants?
     run_on_all_tenants(_check)

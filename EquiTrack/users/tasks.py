@@ -1,3 +1,5 @@
+from __future__ import absolute_import, division, print_function, unicode_literals
+
 import csv
 import json
 import logging
@@ -240,7 +242,8 @@ def sync_users_remote():
     with storage.open('saml/etools.dat') as csvfile:
         reader = csv.DictReader(csvfile, delimiter='|')
         for row in reader:
-            uni_row = {unicode(key, 'latin-1'): unicode(value, 'latin-1') for key, value in six.iteritems(row)}
+            uni_row = {
+                six.text_type(key, 'latin-1'): six.text_type(value, 'latin-1') for key, value in six.iteritems(row)}
             user_sync.create_or_update_user(uni_row)
 
 
@@ -285,7 +288,8 @@ def sync_users_local(n=20):
             i += 1
             if i == n:
                 break
-            uni_row = {unicode(key, 'latin-1'): unicode(value, 'latin-1') for key, value in six.iteritems(row)}
+            uni_row = {
+                six.text_type(key, 'latin-1'): six.text_type(value, 'latin-1') for key, value in six.iteritems(row)}
             user_sync.create_or_update_user(uni_row)
 
 

@@ -1,6 +1,9 @@
+from __future__ import absolute_import, division, print_function, unicode_literals
+
 from django import template
 from django.conf import settings
 from django.utils.safestring import mark_safe
+from django.utils import six
 
 register = template.Library()
 
@@ -18,9 +21,9 @@ def show_country_select(context, profile):
     html = ''
     for country in countries:
         if country == profile.country:
-            html += '<option value="' + str(country.id) + '" selected>' + country.name + '</option>'
+            html += '<option value="' + six.text_type(country.id) + '" selected>' + country.name + '</option>'
         else:
-            html += '<option value="' + str(country.id) + '">' + country.name + '</option>'
+            html += '<option value="' + six.text_type(country.id) + '">' + country.name + '</option>'
 
     return mark_safe('<select id="country_selection">' + html + '</select>')
 

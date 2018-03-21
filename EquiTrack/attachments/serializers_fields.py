@@ -43,7 +43,7 @@ class Base64FileField(serializers.FileField):
         try:
             mime, encoded_data = data.replace('data:', '', 1).split(';base64,')
             extension = mimetypes.guess_extension(mime)
-            content_file = ContentFile(base64.b64decode(encoded_data), name=str(uuid.uuid4()) + extension)
+            content_file = ContentFile(base64.b64decode(encoded_data), name=six.text_type(uuid.uuid4()) + extension)
 
         except (ValueError, TypeError):
             raise serializers.ValidationError(_('Incorrect base64 format.'))

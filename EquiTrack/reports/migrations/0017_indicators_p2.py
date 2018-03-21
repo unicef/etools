@@ -2,17 +2,15 @@ from __future__ import unicode_literals, print_function
 
 from django.db import migrations, models, connection
 import django.db.models.deletion
+from django.utils import six
 import django.utils.timezone
 from django.contrib.gis.geos import GEOSGeometry
-import model_utils.fields
-import mptt.fields
-from django.db.models import Q
 
 
 def myprint(*args):
     print(*args)
     file_name = 'migration_reports_0015.txt'
-    args_list = [unicode(arg) for arg in args]
+    args_list = [six.text_type(arg) for arg in args]
     with open(file_name, 'ab') as f:
         f.write(', '.join(args_list))
         f.write('\n')
@@ -64,7 +62,7 @@ def finalize_migrations(apps, schema_editor):
 
         intervention_sections = intervention.sections.count()
         if intervention_sections > 1:
-            myprint('multiple sections for this pd ', ' '.join(unicode(i) for i in [
+            myprint('multiple sections for this pd ', ' '.join(six.text_type(i) for i in [
                 'id', intervention.id,
                 'number', intervention.number,
                 'status', intervention.status,
@@ -74,7 +72,7 @@ def finalize_migrations(apps, schema_editor):
             # TODO: Raise these
             # raise Exception("this intervention has more than 1 section")
         elif intervention_sections < 1:
-            myprint('no sections for this pd ', ' '.join(unicode(i) for i in[
+            myprint('no sections for this pd ', ' '.join(six.text_type(i) for i in[
                 'id', intervention.id,
                 'number', intervention.number,
                 'status', intervention.status,
