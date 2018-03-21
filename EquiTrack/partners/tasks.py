@@ -9,9 +9,10 @@ from django.conf import settings
 from django.core.mail.message import EmailMessage
 from django.db import connection, transaction
 from django.db.models import F, Sum
-
-from celery.utils.log import get_task_logger
 from django.db.models.functions import Coalesce
+
+import six
+from celery.utils.log import get_task_logger
 
 from EquiTrack.celery import app
 from notification.models import Notification
@@ -289,7 +290,7 @@ def pmp_indicator_report():
                 planned_budget = getattr(intervention, 'planned_budget', None)
                 writer.writerow({
                     'Country': country,
-                    'Partner Name': str(partner).decode('unicode_escape').encode('ascii', 'ignore'),
+                    'Partner Name': six.text_type(partner).decode('unicode_escape').encode('ascii', 'ignore'),
                     'Partner Type': partner.cso_type,
                     'PD / SSFA ref': intervention.number.encode('utf-8').replace(',', '-'),
                     'PD / SSFA status': intervention.get_status_display(),
