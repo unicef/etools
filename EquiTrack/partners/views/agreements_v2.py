@@ -18,7 +18,7 @@ from rest_framework.generics import (
 )
 
 from EquiTrack.renderers import CSVFlatRenderer
-from EquiTrack.mixins import ExportModelMixin
+from EquiTrack.mixins import ExportModelMixin, QueryStringFilterMixin
 from EquiTrack.validation_mixins import ValidatorViewMixin
 from partners.models import (
     Agreement,
@@ -45,7 +45,7 @@ from partners.exports_v2 import AgreementCSVRenderer
 from partners.validation.agreements import AgreementValid
 
 
-class AgreementListAPIView(ExportModelMixin, ValidatorViewMixin, ListCreateAPIView):
+class AgreementListAPIView(QueryStringFilterMixin, ExportModelMixin, ValidatorViewMixin, ListCreateAPIView):
     """
     Create new Agreements.
     Returns a list of Agreements.
@@ -65,7 +65,7 @@ class AgreementListAPIView(ExportModelMixin, ValidatorViewMixin, ListCreateAPIVi
 
     def get_serializer_class(self, format=None):
         """
-        Use restriceted field set for listing
+        Use restricted field set for listing
         """
         if self.request.method == "GET":
             query_params = self.request.query_params
@@ -81,26 +81,20 @@ class AgreementListAPIView(ExportModelMixin, ValidatorViewMixin, ListCreateAPIVi
 
     def get_queryset(self, format=None):
         q = Agreement.view_objects
-        query_params = self.request.query_params
 
-        if query_params:
+        if self.request.query_params:
             queries = []
 
-            if "agreement_type" in query_params.keys():
-                queries.append(Q(agreement_type=query_params.get("agreement_type")))
-            if "status" in query_params.keys():
-                queries.append(Q(status=query_params.get("status")))
-            if "partner_name" in query_params.keys():
-                queries.append(Q(partner__name=query_params.get("partner_name")))
-            if "start" in query_params.keys():
-                queries.append(Q(start__gt=query_params.get("start")))
-            if "end" in query_params.keys():
-                queries.append(Q(end__lte=query_params.get("end")))
-            if "search" in query_params.keys():
-                queries.append(
-                    Q(partner__name__icontains=query_params.get("search")) |
-                    Q(agreement_number__icontains=query_params.get("search"))
-                )
+            filters = (
+                ('agreement_type', 'agreement_type__in'),
+                ('status', 'status__in'),
+                ('partner_name', 'partner__name__in'),
+                ('start', 'start__gt'),
+                ('end', 'end__lte'),
+            )
+            search_terms = ['partner__name__icontains', 'agreement_number__icontains']
+            queries.extend(self.filter_params(filters))
+            queries.append(self.search_params(search_terms))
 
             if queries:
                 expression = functools.reduce(operator.and_, queries)

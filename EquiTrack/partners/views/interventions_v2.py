@@ -20,7 +20,7 @@ from rest_framework.generics import (
     DestroyAPIView,
 )
 
-from EquiTrack.mixins import ExportModelMixin
+from EquiTrack.mixins import ExportModelMixin, QueryStringFilterMixin
 from EquiTrack.renderers import CSVFlatRenderer
 from EquiTrack.validation_mixins import ValidatorViewMixin
 from environment.helpers import tenant_switch_is_active
@@ -82,7 +82,7 @@ class InterventionListBaseView(ValidatorViewMixin, ListCreateAPIView):
         return qs
 
 
-class InterventionListAPIView(ExportModelMixin, InterventionListBaseView):
+class InterventionListAPIView(QueryStringFilterMixin, ExportModelMixin, InterventionListBaseView):
     """
     Create new Interventions.
     Returns a list of Interventions.
@@ -174,35 +174,23 @@ class InterventionListAPIView(ExportModelMixin, InterventionListBaseView):
             if query_params.get("my_partnerships", "").lower() == "true":
                 queries.append(Q(unicef_focal_points__in=[self.request.user.id]) |
                                Q(unicef_signatory=self.request.user))
-            if "document_type" in query_params.keys():
-                queries.append(Q(document_type=query_params.get("document_type")))
-            if "country_programme" in query_params.keys():
-                queries.append(Q(agreement__country_programme=query_params.get("country_programme")))
-            if "section" in query_params.keys():
-                queries.append(Q(sections__pk=query_params.get("section")))
-            if "cluster" in query_params.keys():
-                queries.append(Q(
-                    result_links__ll_results__applied_indicators__cluster_indicator_title__icontains=query_params
-                    .get("cluster")))
-            if "status" in query_params.keys():
-                queries.append(Q(status__in=query_params.get("status").split(',')))
-            if "unicef_focal_points" in query_params.keys():
-                queries.append(Q(unicef_focal_points__in=[query_params.get("unicef_focal_points")]))
-            if "start" in query_params.keys():
-                queries.append(Q(start__gte=query_params.get("start")))
-            if "end" in query_params.keys():
-                queries.append(Q(end__lte=query_params.get("end")))
-            if "office" in query_params.keys():
-                queries.append(Q(offices__in=[query_params.get("office")]))
-            if "location" in query_params.keys():
-                queries.append(Q(result_links__ll_results__applied_indicators__locations__name__icontains=query_params
-                                 .get("location")))
-            if "search" in query_params.keys():
-                queries.append(
-                    Q(title__icontains=query_params.get("search")) |
-                    Q(agreement__partner__name__icontains=query_params.get("search")) |
-                    Q(number__icontains=query_params.get("search"))
-                )
+
+            filters = (
+                ('document_type', 'document_type__in'),
+                ('country_programme', 'agreement__country_programme'),
+                ('section', 'sections__in'),
+                ('cluster', 'result_links__ll_results__applied_indicators__cluster_indicator_title__icontains'),
+                ('status', 'status__in'),
+                ('unicef_focal_points', 'unicef_focal_points__in'),
+                ('start', 'start__gte'),
+                ('end', 'end__lte'),
+                ('office', 'offices__in'),
+                ('location', 'result_links__ll_results__applied_indicators__locations__name__icontains'),
+            )
+            search_terms = ['title__icontains', 'agreement__partner__name__icontains', 'number__icontains']
+            queries.extend(self.filter_params(filters))
+            queries.append(self.search_params(search_terms))
+
             if queries:
                 expression = functools.reduce(operator.and_, queries)
                 q = q.filter(expression)
