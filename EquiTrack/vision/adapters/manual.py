@@ -28,7 +28,7 @@ class ManualDataLoader(VisionDataLoader):
             super(ManualDataLoader, self).__init__(country=country, endpoint=endpoint)
         else:
             if endpoint is None:
-                raise VisionException(message='You must set the ENDPOINT name')
+                raise VisionException('You must set the ENDPOINT name')
             self.url = '{}/{}/{}'.format(
                 self.URL,
                 endpoint,
@@ -116,9 +116,8 @@ class MultiModelDataSynchronizer(VisionDataSynchronizer):
                 model.objects.update_or_create(
                     defaults=defaults, **kwargs
                 )
-        except Exception as exp:
-            logger.warning("Exception message: {}".format(exp.message))
-            logger.warning("Exception type: {}".format(type(exp)))
+        except Exception:
+            logger.warning('Exception processing record', exc_info=True)
 
     def _save_records(self, records):
         processed = 0
@@ -141,7 +140,7 @@ class ManualVisionSynchronizer(MultiModelDataSynchronizer):
             super(MultiModelDataSynchronizer, self).__init__(country=country)
         else:
             if self.ENDPOINT is None:
-                raise VisionException(message='You must set the ENDPOINT name')
+                raise VisionException('You must set the ENDPOINT name')
 
             self.country = country
 

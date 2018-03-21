@@ -100,3 +100,34 @@ LOGGING['handlers']['console']['formatter'] = 'tenant_context'
 SHELL_PLUS_PRE_IMPORTS = (
     ('EquiTrack.util_scripts', '*'),
 )
+
+# django-storages: https://django-storages.readthedocs.io/en/latest/backends/azure.html
+AZURE_ACCOUNT_NAME = os.environ.get('AZURE_ACCOUNT_NAME')  # noqa: F405
+AZURE_ACCOUNT_KEY = os.environ.get('AZURE_ACCOUNT_KEY')  # noqa: F405
+AZURE_CONTAINER = os.environ.get('AZURE_CONTAINER')  # noqa: F405
+AZURE_SSL = True
+AZURE_AUTO_SIGN = True  # flag for automatically signing urls
+AZURE_ACCESS_POLICY_EXPIRY = 10800  # length of time before signature expires in seconds
+AZURE_ACCESS_POLICY_PERMISSION = 'r'  # read permission
+
+if AZURE_ACCOUNT_NAME and AZURE_ACCOUNT_KEY and AZURE_CONTAINER:
+    DEFAULT_FILE_STORAGE = 'storages.backends.azure_storage.AzureStorage'
+    # from storages.backends.azure_storage import AzureStorage
+    # storage = AzureStorage()
+    # with storage.open('saml/certs/saml.key') as key, \
+    #         storage.open('saml/certs/sp.crt') as crt, \
+    #         storage.open('saml/federationmetadata.xml') as meta, \
+    #         storage.open('keys/jwt/key.pem') as jwt_key, \
+    #         storage.open('keys/jwt/certificate.pem') as jwt_cert:
+    #
+    #     with open('EquiTrack/saml/certs/saml.key', 'w+') as new_key, \
+    #             open('EquiTrack/saml/certs/sp.crt', 'w+') as new_crt, \
+    #             open('EquiTrack/keys/jwt/key.pem', 'w+') as new_jwt_key, \
+    #             open('EquiTrack/keys/jwt/certificate.pem', 'w+') as new_jwt_cert, \
+    #             open('EquiTrack/saml/federationmetadata.xml', 'w+') as new_meta:
+    #
+    #         new_key.write(key.read())
+    #         new_crt.write(crt.read())
+    #         new_meta.write(meta.read())
+    #         new_jwt_key.write(jwt_key.read())
+    #         new_jwt_cert.write(jwt_cert.read())
