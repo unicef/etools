@@ -8,6 +8,7 @@ from django.core.management.base import BaseCommand
 from django.db import connection
 from django.db.transaction import atomic
 from django.utils.encoding import force_text
+from django.utils import six
 
 from t2f.models import DSARegion
 from users.models import Country
@@ -44,7 +45,7 @@ class Command(BaseCommand):
             sheet = csv.reader(fp.readlines())
 
         # To skip header line
-        sheet.next()
+        six.next(sheet)
 
         DSARegion.objects.all().delete()
 
