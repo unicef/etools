@@ -59,6 +59,7 @@ class ActionPoint(TimeStampedModel, models.Model):
 
     description = models.TextField(verbose_name=_('Description'))
     due_date = models.DateField(verbose_name=_('Due Date'), blank=True, null=True)
+    high_priority = models.BooleanField(default=False, verbose_name=_('High Priority'))
 
     action_taken = models.TextField(verbose_name=_('Action Taken'), blank=True)
 
