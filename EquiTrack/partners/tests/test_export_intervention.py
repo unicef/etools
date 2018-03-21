@@ -165,7 +165,7 @@ class TestInterventionModelExport(BaseInterventionModelExportTestCase):
             self.intervention.status,
             self.intervention.agreement.partner.partner_type,
             self.intervention.agreement.agreement_number,
-            unicode(self.intervention.agreement.country_programme.name),
+            unicode(self.intervention.country_programme.name),
             self.intervention.document_type,
             self.intervention.number,
             unicode(self.intervention.title),
