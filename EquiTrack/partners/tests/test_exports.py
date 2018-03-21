@@ -76,6 +76,7 @@ class TestModelExport(BaseTenantTestCase):
             unicef_signatory=cls.unicef_staff,
             population_focus="Population focus",
             partner_authorized_officer_signatory=cls.partnerstaff,
+            country_programme=cls.agreement.country_programme,
         )
         cls.ib = InterventionBudgetFactory(intervention=cls.intervention, currency="USD")
 

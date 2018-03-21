@@ -200,7 +200,6 @@ class InterventionIndicatorExportFlatSerializer(IndicatorExportFlatSerializer):
 
 
 class InterventionExportSerializer(serializers.ModelSerializer):
-    # TODO CP Outputs, RAM Indicators, Fund Commitment(s), Supply Plan, Distribution Plan, URL
 
     partner_name = serializers.CharField(
         label=_("Partner"),
