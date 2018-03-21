@@ -48,7 +48,7 @@ class AttachmentFileView(DetailView):
             return HttpResponseNotFound(
                 _("No Attachment matches the given query.")
             )
-        if attachment.url == "None":
+        if not attachment.file and not attachment.hyperlink:
             return HttpResponseNotFound(
                 _("Attachment has no file or hyperlink")
             )
