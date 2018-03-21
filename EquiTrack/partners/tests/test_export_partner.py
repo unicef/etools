@@ -88,7 +88,7 @@ class TestPartnerOrganizationModelExport(PartnerModelExportTestCase):
         deleted_flag = "Yes" if self.partner.deleted_flag else "No"
         blocked = "Yes" if self.partner.blocked else "No"
 
-        test_option = filter(lambda e: e[0] == self.partner.vendor_number, dataset)[0]
+        test_option = [e for e in dataset if e[0] == self.partner.vendor_number][0]
 
         # the order of staff members in the results is hard to determine
         # so just ensuring that all relevant staff members are in the results

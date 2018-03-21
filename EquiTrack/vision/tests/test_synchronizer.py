@@ -394,8 +394,8 @@ class TestVisionDataSynchronizerSync(BaseTenantTestCase):
         expected_msg = 'About to get data from http://example.com'
         self.assertEqual(mock_logger_info.call_args_list[2][0], (expected_msg, ))
         self.assertEqual(mock_logger_info.call_args_list[2][1], {})
-        expected_msg = 'sync caught ValueError with message "Wrong!"'
+        expected_msg = 'sync'
         self.assertEqual(mock_logger_info.call_args_list[3][0], (expected_msg, ))
-        self.assertEqual(mock_logger_info.call_args_list[3][1], {})
+        self.assertEqual(mock_logger_info.call_args_list[3][1], {'exc_info': True})
 
         self._assertVisionSyncLogFundamentals(0, 0, exception_message='Wrong!', successful=False)

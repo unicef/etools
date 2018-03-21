@@ -673,16 +673,14 @@ class TestPartnerOrganizationRetrieveUpdateDeleteViews(BaseTenantTestCase):
         self.assertIn("vendor_number", response.data.keys())
         self.assertIn("address", response.data.keys())
         self.assertIn("Partner", response.data["name"])
-        self.assertEqual(['programme_visits', 'spot_checks'], response.data['hact_min_requirements'].keys())
-        self.assertEqual(['outstanding_findings', 'audits', 'programmatic_visits', 'spot_checks'],
-                         response.data['hact_values'].keys())
+        self.assertEqual(['programme_visits', 'spot_checks'],
+                         sorted(response.data['hact_min_requirements'].keys()))
+        self.assertEqual(['audits', 'outstanding_findings', 'programmatic_visits', 'spot_checks'],
+                         sorted(response.data['hact_values'].keys()))
         six.assertCountEqual(
             self,
             ['completed', 'minimum_requirements'],
-            response.data['hact_values']['audits'].keys()
-        )
-        self.assertEqual(['outstanding_findings', 'audits', 'programmatic_visits', 'spot_checks'],
-                         response.data['hact_values'].keys())
+            response.data['hact_values']['audits'].keys())
         self.assertEqual(response.data['interventions'], [])
 
     def test_api_partners_retreive_actual_fr_amounts(self):
@@ -858,7 +856,7 @@ class TestAgreementCreateAPIView(BaseTenantTestCase):
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
         self.assertIsInstance(response.data, dict)
-        self.assertEqual(response.data.keys(), ['country_programme'])
+        self.assertEqual(list(response.data.keys()), ['country_programme'])
         self.assertIsInstance(response.data['country_programme'], list)
         self.assertEqual(response.data['country_programme'][0], 'Country Programme is required for PCAs!')
 
@@ -1501,7 +1499,7 @@ class TestInterventionViews(BaseTenantTestCase):
         )
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(response.data[0].keys(), ["id", "title"])
+        self.assertEqual(list(response.data[0].keys()), ["id", "title"])
 
     def test_intervention_create(self):
         data = {
@@ -2053,6 +2051,7 @@ class TestPartnershipDashboardView(BaseTenantTestCase):
             "review_date_prc": "2017-01-28",
             "submission_date": "2017-01-28",
             "prc_review_document": None,
+            "prc_review_attachment": None,
             "signed_by_unicef_date": "2017-01-28",
             "signed_by_partner_date": "2017-01-20",
             "unicef_signatory": self.unicef_staff.id,

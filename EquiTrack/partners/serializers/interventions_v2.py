@@ -5,6 +5,7 @@ from django.core.exceptions import ValidationError
 from django.db import transaction
 from rest_framework import serializers
 
+from attachments.serializers_fields import AttachmentSingleFileField
 from EquiTrack.serializers import SnapshotModelSerializer
 from funds.models import FundsCommitmentItem, FundsReservationHeader
 from funds.serializers import FRsSerializer
@@ -50,6 +51,7 @@ class InterventionBudgetCUSerializer(serializers.ModelSerializer):
 class InterventionAmendmentCUSerializer(serializers.ModelSerializer):
     amendment_number = serializers.CharField(read_only=True)
     signed_amendment_file = serializers.FileField(source="signed_amendment", read_only=True)
+    signed_amendment_attachment = AttachmentSingleFileField(read_only=True)
 
     class Meta:
         model = InterventionAmendment
@@ -246,11 +248,18 @@ class InterventionSectorLocationCUSerializer(serializers.ModelSerializer):
 
 class InterventionAttachmentSerializer(serializers.ModelSerializer):
     attachment_file = serializers.FileField(source="attachment", read_only=True)
+    attachment_document = AttachmentSingleFileField(source="attachment_file", read_only=True)
 
     class Meta:
         model = InterventionAttachment
         fields = (
-            'id', 'intervention', 'created', 'type', 'attachment', "attachment_file"
+            'id',
+            'intervention',
+            'created',
+            'type',
+            'attachment',
+            'attachment_file',
+            'attachment_document',
         )
 
 
@@ -439,7 +448,9 @@ class InterventionCreateUpdateSerializer(SnapshotModelSerializer):
     planned_budget = InterventionBudgetCUSerializer(read_only=True)
     partner = serializers.CharField(source='agreement.partner.name', read_only=True)
     prc_review_document_file = serializers.FileField(source='prc_review_document', read_only=True)
+    prc_review_attachment = AttachmentSingleFileField(read_only=True)
     signed_pd_document_file = serializers.FileField(source='signed_pd_document', read_only=True)
+    signed_pd_attachment = AttachmentSingleFileField(read_only=True)
     planned_visits = PlannedVisitsNestedSerializer(many=True, read_only=True, required=False)
     attachments = InterventionAttachmentSerializer(many=True, read_only=True, required=False)
     result_links = InterventionResultCUSerializer(many=True, read_only=True, required=False)
@@ -485,7 +496,9 @@ class InterventionDetailSerializer(serializers.ModelSerializer):
     partner = serializers.CharField(source='agreement.partner.name')
     partner_id = serializers.CharField(source='agreement.partner.id', read_only=True)
     prc_review_document_file = serializers.FileField(source='prc_review_document', read_only=True)
+    prc_review_attachment = AttachmentSingleFileField(read_only=True)
     signed_pd_document_file = serializers.FileField(source='signed_pd_document', read_only=True)
+    signed_pd_attachment = AttachmentSingleFileField(read_only=True)
     amendments = InterventionAmendmentCUSerializer(many=True, read_only=True, required=False)
     planned_visits = PlannedVisitsNestedSerializer(many=True, read_only=True, required=False)
     attachments = InterventionAttachmentSerializer(many=True, read_only=True, required=False)
@@ -531,7 +544,7 @@ class InterventionDetailSerializer(serializers.ModelSerializer):
             "planned_budget", "result_links", 'country_programme', 'metadata', 'contingency_pd', "amendments",
             "planned_visits", "attachments", 'permissions', 'partner_id', "sections",
             "locations", "location_names", "cluster_names", "flat_locations", "flagged_sections", "section_names",
-            "in_amendment"
+            "in_amendment", "prc_review_attachment", "signed_pd_attachment",
         )
 
 

@@ -12,6 +12,7 @@ from celery.utils.log import get_task_logger
 
 from EquiTrack.celery import app
 from partners.models import Agreement, Intervention
+from partners.utils import copy_all_attachments
 from partners.validation.agreements import AgreementValid
 from partners.validation.interventions import InterventionValid
 from users.models import Country, User
@@ -243,3 +244,9 @@ def _notify_interventions_ending_soon(country_name):
             template_data=email_context
         )
         notification.send_notification()
+
+
+@app.task
+def copy_attachments():
+    """Copy all partner app attachments"""
+    copy_all_attachments()

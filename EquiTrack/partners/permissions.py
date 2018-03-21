@@ -1,3 +1,5 @@
+from __future__ import absolute_import
+
 from django.apps import apps
 from rest_framework import permissions
 from django.utils.lru_cache import lru_cache

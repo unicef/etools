@@ -10,6 +10,7 @@ from django.core.exceptions import ObjectDoesNotExist
 from django.db import IntegrityError, transaction
 from django.db.models import Q
 from django.utils import six
+from django.utils.encoding import force_text
 
 import requests
 from celery.utils.log import get_task_logger
@@ -255,8 +256,8 @@ def sync_users():
     try:
         sync_users_remote()
     except Exception as e:
-        log.exception_message = e.message
-        raise VisionException(message=e.message)
+        log.exception_message = force_text(e)
+        raise VisionException(*e.args)
     finally:
         log.save()
 
@@ -271,8 +272,8 @@ def map_users():
         user_sync = UserMapper()
         user_sync.map_users()
     except Exception as e:
-        log.exception_message = e.message
-        raise VisionException(message=e.message)
+        log.exception_message = force_text(e)
+        raise VisionException(*e.args)
     finally:
         log.save()
 
@@ -325,7 +326,7 @@ class UserSynchronizer(object):
                     return False
             return True
 
-        return filter(is_valid_record, records)
+        return [rec for rec in records if is_valid_record(rec)]
 
     def _load_records(self):
         logger.debug(self.url)
@@ -336,9 +337,7 @@ class UserSynchronizer(object):
             verify=False
         )
         if response.status_code != 200:
-            raise VisionException(
-                message=('Load data failed! Http code: {}'.format(response.status_code))
-            )
+            raise VisionException('Load data failed! Http code: {}'.format(response.status_code))
 
         return self._get_json(response.json())
 
