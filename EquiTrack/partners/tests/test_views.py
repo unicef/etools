@@ -1,4 +1,4 @@
-from __future__ import unicode_literals
+from __future__ import absolute_import, division, print_function, unicode_literals
 
 import csv
 import datetime
@@ -799,7 +799,7 @@ class TestPartnershipViews(BaseTenantTestCase):
     @skip("different endpoint")
     def test_api_agreements_list(self):
 
-        response = self.forced_auth_req('get', '/api/partners/' + str(self.partner.id) +
+        response = self.forced_auth_req('get', '/api/partners/' + six.text_type(self.partner.id) +
                                         '/agreements/', user=self.unicef_staff)
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
@@ -923,7 +923,7 @@ class TestAgreementAPIFileAttachments(BaseTenantTestCase):
                                     connection.schema_name,
                                     'file_attachments',
                                     'partner_organization',
-                                    str(self.agreement.partner.id),
+                                    six.text_type(self.agreement.partner.id),
                                     'agreements',
                                     # Note that slashes have to be stripped from the agreement number to match the
                                     # normalized path.
@@ -964,7 +964,7 @@ class TestAgreementAPIFileAttachments(BaseTenantTestCase):
                                     connection.schema_name,
                                     'file_attachments',
                                     'partner_org',
-                                    str(self.agreement.partner.id),
+                                    six.text_type(self.agreement.partner.id),
                                     'agreements',
                                     self.agreement.base_number.strip('/'),
                                     'amendments',
@@ -1856,7 +1856,7 @@ class TestInterventionReportingPeriodViews(BaseTenantTestCase):
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         data = json.loads(response.content)
         for key in ['start_date', 'end_date', 'due_date', 'intervention']:
-            self.assertEqual(str(data[key]), str(self.params[key]))
+            self.assertEqual(six.text_type(data[key]), six.text_type(self.params[key]))
 
     def test_create_required_fields(self):
         params = {}
@@ -1975,7 +1975,7 @@ class TestInterventionReportingPeriodViews(BaseTenantTestCase):
         response = self.forced_auth_req('patch', self.detail_url, data=params)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         data = json.loads(response.content)
-        self.assertEqual(data['due_date'], str(params['due_date']))
+        self.assertEqual(data['due_date'], six.text_type(params['due_date']))
 
     def test_patch_change_multiple_fields(self):
         params = {
@@ -1985,8 +1985,8 @@ class TestInterventionReportingPeriodViews(BaseTenantTestCase):
         response = self.forced_auth_req('patch', self.detail_url, data=params)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         data = json.loads(response.content)
-        self.assertEqual(data['end_date'], str(params['end_date']))
-        self.assertEqual(data['due_date'], str(params['due_date']))
+        self.assertEqual(data['end_date'], six.text_type(params['end_date']))
+        self.assertEqual(data['due_date'], six.text_type(params['due_date']))
 
     def test_patch_order_must_still_be_valid(self):
         params = {
