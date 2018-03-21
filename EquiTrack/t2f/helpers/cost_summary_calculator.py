@@ -245,14 +245,16 @@ class DSACalculator(object):
 
         dsa_dto_list = []
         counter = 1
-        for date, itinerary in mapping.items():
+        # Process these in date order so we know when we pass 60 days
+        for date in sorted(mapping.keys()):
+            itinerary = mapping[date]
             dto = DSAdto(date, itinerary)
             over_60 = counter > 60
             dto.daily_rate = self.get_dsa_amount(dto.region, over_60)
             dsa_dto_list.append(dto)
             counter += 1
 
-        return sorted(dsa_dto_list, cmp=lambda x, y: cmp(x.date, y.date))
+        return dsa_dto_list
 
     def check_one_day_long_trip(self, dsa_dto_list):
         # If it's a day long trip and only one less than 8 hour travel was made, no dsa applied
