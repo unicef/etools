@@ -1,15 +1,18 @@
-from __future__ import unicode_literals
+from __future__ import absolute_import, division, print_function, unicode_literals
+
 import datetime
 import itertools
 
 from django.conf import settings
 from django.db import connection, transaction
 from django.db.models import F, Sum
+from django.utils import six
 
 from celery.utils.log import get_task_logger
 
 from EquiTrack.celery import app
 from partners.models import Agreement, Intervention
+from partners.utils import copy_all_attachments
 from partners.validation.agreements import AgreementValid
 from partners.validation.interventions import InterventionValid
 from users.models import Country, User
@@ -28,9 +31,9 @@ def get_intervention_context(intervention):
     Helper function for some of the notification tasks in this file.
     '''
     return {
-        'number': unicode(intervention),
+        'number': six.text_type(intervention),
         'partner': intervention.agreement.partner.name,
-        'start_date': str(intervention.start),
+        'start_date': six.text_type(intervention.start),
         'url': 'https://{}/pmp/interventions/{}/details'.format(settings.HOST, intervention.id),
         'unicef_focal_points': [focal_point.email for focal_point in intervention.unicef_focal_points.all()]
     }
@@ -77,7 +80,7 @@ def _make_agreement_status_automatic_transitions(country_name):
                 bad_agreements.append(agr)
 
     logger.error('Bad agreements {}'.format(len(bad_agreements)))
-    logger.error('Bad agreements ids: ' + ' '.join(str(a.id) for a in bad_agreements))
+    logger.error('Bad agreements ids: ' + ' '.join(six.text_type(a.id) for a in bad_agreements))
     logger.info('Total agreements {}'.format(signed_ended_agrs.count()))
     logger.info("Transitioned agreements {} ".format(processed))
 
@@ -139,7 +142,7 @@ def _make_intervention_status_automatic_transitions(country_name):
                 bad_interventions.append(intervention)
 
     logger.error('Bad interventions {}'.format(len(bad_interventions)))
-    logger.error('Bad interventions ids: ' + ' '.join(str(a.id) for a in bad_interventions))
+    logger.error('Bad interventions ids: ' + ' '.join(six.text_type(a.id) for a in bad_interventions))
     logger.info('Total interventions {}'.format(active_ended.count() + qs.count()))
     logger.info("Transitioned interventions {} ".format(processed))
 
@@ -241,3 +244,9 @@ def _notify_interventions_ending_soon(country_name):
             template_data=email_context
         )
         notification.send_notification()
+
+
+@app.task
+def copy_attachments():
+    """Copy all partner app attachments"""
+    copy_all_attachments()

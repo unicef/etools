@@ -221,7 +221,8 @@ class EngagementCheckTransitionsMetadataTestCaseMixin(object):
         )
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        action_codes = map(lambda action: action['code'], response.data['actions']['allowed_FSM_transitions'])
+        action_codes = [action['code'] for action in response.data['actions']['allowed_FSM_transitions']]
+        self.assertItemsEqual(action_codes, actions)
         six.assertCountEqual(self, action_codes, actions)
 
 

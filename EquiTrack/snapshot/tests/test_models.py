@@ -1,7 +1,6 @@
-from __future__ import absolute_import
-from __future__ import division
-from __future__ import print_function
-from __future__ import unicode_literals
+from __future__ import absolute_import, division, print_function, unicode_literals
+
+from django.utils import six
 
 from EquiTrack.tests.cases import BaseTenantTestCase
 from partners.models import WorkspaceFileType
@@ -21,20 +20,20 @@ class TestActivity(BaseTenantTestCase):
             by_user=user
         )
         self.assertEqual(
-            str(activity),
+            six.text_type(activity),
             "{} {} {}".format(user, Activity.CREATE, intervention)
         )
 
     def test_by_user_display_empty(self):
         user = UserFactory()
         activity = ActivityFactory(by_user=user)
-        self.assertEqual(str(user), "")
+        self.assertEqual(six.text_type(user), "")
         self.assertEqual(activity.by_user_display(), user.email)
 
     def test_by_user_display(self):
         user = UserFactory(first_name="First")
         activity = ActivityFactory(by_user=user)
-        self.assertEqual(str(user), "First")
+        self.assertEqual(six.text_type(user), "First")
         self.assertEqual(activity.by_user_display(), "First")
 
     def test_delete_target(self):
@@ -50,6 +49,6 @@ class TestActivity(BaseTenantTestCase):
         )
         self.assertEqual(
             activity_updated.target_object_id,
-            str(activity.target_object_id)
+            six.text_type(activity.target_object_id)
         )
         self.assertIsNone(activity_updated.target)

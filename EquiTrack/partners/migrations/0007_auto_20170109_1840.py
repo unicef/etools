@@ -22,7 +22,7 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name='governmentintervention',
             name='country_programme',
-            field=models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.DO_NOTHING, related_query_name=b'government_interventions', to='reports.CountryProgramme'),
+            field=models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.DO_NOTHING, related_query_name='government_interventions', to='reports.CountryProgramme'),
         ),
         migrations.AlterField(
             model_name='governmentintervention',

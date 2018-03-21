@@ -65,6 +65,8 @@ class TestPMPStaticDropdownsListApiView(BaseTenantTestCase):
                                      'currencies',
                                      'local_currency',
                                      'location_types',
+                                     'attachment_types',
+                                     'partner_file_types',
                                      ))
 
     def _assertResponseFundamentals(self, response):
