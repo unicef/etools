@@ -2026,6 +2026,7 @@ class InterventionPlannedVisits(TimeStampedModel):
 
     class Meta:
         unique_together = ('intervention', 'year')
+        verbose_name_plural = _('Intervention Planned Visits')
 
     def __str__(self):
         return '{} {}'.format(self.intervention, self.year)

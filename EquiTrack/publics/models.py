@@ -10,6 +10,7 @@ from django.db.models.query_utils import Q
 from django.db.utils import IntegrityError
 from django.utils.encoding import python_2_unicode_compatible
 from django.utils.timezone import now
+from django.utils.translation import ugettext_lazy as _
 
 from pytz import UTC
 
@@ -101,6 +102,9 @@ class Currency(SoftDeleteMixin, models.Model):
     code = models.CharField(max_length=5)
     decimal_places = models.PositiveIntegerField(default=0)
 
+    class Meta:
+        verbose_name_plural = _('Currencies')
+
     def __str__(self):
         return self.name
 
@@ -123,6 +127,9 @@ class AirlineCompany(SoftDeleteMixin, models.Model):
     iata = models.CharField(max_length=3)
     icao = models.CharField(max_length=3)
     country = models.CharField(max_length=255)
+
+    class Meta:
+        verbose_name_plural = _('Airline Companies')
 
     def __str__(self):
         return self.name
@@ -153,6 +160,9 @@ class WBS(SoftDeleteMixin, models.Model):
     business_area = models.ForeignKey('BusinessArea', null=True)
     name = models.CharField(max_length=25)
     grants = models.ManyToManyField('Grant', related_name='wbs')
+
+    class Meta:
+        verbose_name_plural = _('WBSes')
 
     def __str__(self):
         return self.name
@@ -187,6 +197,9 @@ class Country(SoftDeleteMixin, models.Model):
     currency = models.ForeignKey('Currency', null=True)
     valid_from = models.DateField(null=True)
     valid_to = models.DateField(null=True)
+
+    class Meta:
+        verbose_name_plural = _('Countries')
 
     def __str__(self):
         return self.name
