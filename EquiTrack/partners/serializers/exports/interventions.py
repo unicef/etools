@@ -214,7 +214,6 @@ class InterventionExportSerializer(serializers.ModelSerializer):
         label=_("Partner Type"),
         source='agreement.partner.partner_type',
     )
-    number = serializers.SerializerMethodField(label=_("Reference Number"))
     agreement_number = serializers.CharField(
         label=_("Agreement"),
         source='agreement.agreement_number',
@@ -359,9 +358,6 @@ class InterventionExportSerializer(serializers.ModelSerializer):
             "cp_outputs",
             "url",
         )
-
-    def get_number(self, obj):
-        return obj.reference_number
 
     def get_unicef_signatory(self, obj):
         return obj.unicef_signatory.get_full_name() if obj.unicef_signatory else ''
