@@ -304,6 +304,7 @@ class PartnerOrganizationCreateUpdateSerializer(SnapshotModelSerializer):
     planned_engagement = PlannedEngagementNestedSerializer(read_only=True)
     hact_values = serializers.SerializerMethodField(read_only=True)
     core_values_assessment_file = serializers.FileField(source='core_values_assessment', read_only=True)
+    core_values_assessment_attachment = AttachmentSingleFileField(read_only=True)
     hidden = serializers.BooleanField(read_only=True)
 
     def get_hact_values(self, obj):

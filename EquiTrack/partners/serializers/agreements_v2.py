@@ -20,6 +20,7 @@ class AgreementAmendmentCreateUpdateSerializer(serializers.ModelSerializer):
     created = serializers.DateTimeField(read_only=True)
     modified = serializers.DateTimeField(read_only=True)
     signed_amendment_file = serializers.FileField(source="signed_amendment", read_only=True)
+    signed_amendment_attachment = AttachmentSingleFileField(read_only=True)
 
     class Meta:
         model = AgreementAmendment
