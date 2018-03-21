@@ -279,9 +279,20 @@ class ExportAppliedIndicatorLocationListView(QueryStringFilterMixin, ListAPIView
         if self.request.query_params:
             queries = []
             filters = (
+                ('document_type', 'lower_result__result_link__intervention__document_type__in'),
+                ('country_programme', 'lower_result__result_link__intervention__agreement__country_programme'),
+                ('section', 'sections__in'),
+                ('cluster', 'cluster_indicator_title__icontains'),
+                ('status', 'lower_result__result_link__intervention__status__in'),
+                ('unicef_focal_points', 'lower_result__result_link__intervention__unicef_focal_points__in'),
+                ('start', 'lower_result__result_link__intervention__start__gte'),
+                ('end', 'lower_result__result_link__intervention__end__lte'),
+                ('office', 'lower_result__result_link__intervention__offices__in'),
+                ('location', 'locations__name__icontains'),
             )
-            search_terms = [
-            ]
+            search_terms = ['lower_result__result_link__intervention__title__icontains',
+                            'lower_result__result_link__intervention__agreement__partner__name__icontains',
+                            'lower_result__result_link__intervention__number__icontains']
             queries.extend(self.filter_params(filters))
             queries.append(self.search_params(search_terms))
 
