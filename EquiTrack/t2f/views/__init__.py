@@ -1,8 +1,9 @@
-from __future__ import unicode_literals
+from __future__ import absolute_import, division, print_function, unicode_literals
 
 from collections import OrderedDict
 
 from django.contrib.auth import get_user_model
+from django.utils import six
 from django_fsm import TransitionNotAllowed
 from rest_framework.exceptions import ValidationError
 from rest_framework.pagination import PageNumberPagination
@@ -37,5 +38,5 @@ def run_transition(serializer):
         try:
             transition()
         except (TransitionNotAllowed, TransitionError) as exception:
-            raise ValidationError({'non_field_errors': [str(exception)]})
+            raise ValidationError({'non_field_errors': [six.text_type(exception)]})
         instance.save()
