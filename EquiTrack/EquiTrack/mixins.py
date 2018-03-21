@@ -281,8 +281,10 @@ class QueryStringFilterMixin(object):
         queries = []
         for param_filter, query_filter in filters:
             if param_filter in query_params:
-                print param_filter, query_filter
-                queries.append(Q(**{query_filter: query_params.get(param_filter).split(',')}))
+                value = query_params.get(param_filter)
+                if query_filter.endswith(('__in')):
+                    value = value.split(',')
+                queries.append(Q(**{query_filter: value}))
         return queries
 
     @staticmethod
