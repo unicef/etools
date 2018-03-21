@@ -78,6 +78,7 @@ class TestModelExport(BaseTenantTestCase):
             unicef_signatory=cls.unicef_staff,
             population_focus="Population focus",
             partner_authorized_officer_signatory=cls.partnerstaff,
+            country_programme=cls.agreement.country_programme,
         )
         cls.ib = InterventionBudgetFactory(intervention=cls.intervention, currency="USD")
 
@@ -154,10 +155,10 @@ class TestModelExport(BaseTenantTestCase):
             self.intervention.status,
             self.intervention.agreement.partner.partner_type,
             self.intervention.agreement.agreement_number,
-            six.text_type(self.intervention.agreement.country_programme.name),
+            six.text_type(self.intervention.country_programme.name),
             self.intervention.document_type,
-            self.intervention.reference_number,
-            six.text_type(self.intervention.title),
+            self.intervention.number,
+            unicode(self.intervention.title),
             '{}'.format(self.intervention.start),
             '{}'.format(self.intervention.end),
             u'',
@@ -173,7 +174,7 @@ class TestModelExport(BaseTenantTestCase):
             u'{:.2f}'.format(self.intervention.total_in_kind_amount),
             u'{:.2f}'.format(self.intervention.total_budget),
             u', '.join([fr.fr_numbers for fr in self.intervention.frs.all()]),
-            u'',
+            u'Multiple Currencies',
             u'',
             six.text_type(self.intervention.total_frs["total_frs_amt"]),
             six.text_type(self.intervention.total_frs["total_actual_amt"]),

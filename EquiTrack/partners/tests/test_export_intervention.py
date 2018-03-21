@@ -78,6 +78,7 @@ class BaseInterventionModelExportTestCase(BaseTenantTestCase):
             unicef_signatory=cls.unicef_staff,
             population_focus="Population focus",
             partner_authorized_officer_signatory=partnerstaff,
+            country_programme=agreement.country_programme,
         )
         cls.ib = InterventionBudgetFactory(
             intervention=cls.intervention,
@@ -185,7 +186,7 @@ class TestInterventionModelExport(BaseInterventionModelExportTestCase):
             u'{:.2f}'.format(self.intervention.total_in_kind_amount),
             u'{:.2f}'.format(self.intervention.total_budget),
             u', '.join([fr.fr_numbers for fr in self.intervention.frs.all()]),
-            u'',
+            u'Multiple Currencies',
             u'',
             six.text_type(self.intervention.total_frs["total_frs_amt"]),
             six.text_type(self.intervention.total_frs["total_actual_amt"]),
@@ -223,8 +224,8 @@ class TestInterventionModelExport(BaseInterventionModelExportTestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         dataset = Dataset().load(response.content.decode('utf-8'), 'csv')
         self.assertEqual(dataset.height, 1)
-        self.assertEqual(len(dataset._get_headers()), 61)
-        self.assertEqual(len(dataset[0]), 61)
+        self.assertEqual(len(dataset._get_headers()), 62)
+        self.assertEqual(len(dataset[0]), 62)
 
 
 class TestInterventionAmendmentModelExport(BaseInterventionModelExportTestCase):
