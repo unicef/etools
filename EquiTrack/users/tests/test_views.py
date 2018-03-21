@@ -1,16 +1,16 @@
-from __future__ import unicode_literals
+from __future__ import absolute_import, division, print_function, unicode_literals
 
 import json
 
 from django.core.urlresolvers import reverse
 from django.contrib.auth import get_user_model
 from django.contrib.auth.models import Permission
+from django.utils import six
 from rest_framework import status
 from tenant_schemas.test.client import TenantClient
 from unittest import skip
 
-from EquiTrack.tests.mixins import APITenantTestCase
-from EquiTrack.tests.cases import EToolsTenantTestCase
+from EquiTrack.tests.cases import BaseTenantTestCase
 from publics.tests.factories import PublicsBusinessAreaFactory
 from users.models import Group, User, UserProfile
 from users.tests.factories import (
@@ -22,7 +22,7 @@ from users.tests.factories import (
 )
 
 
-class TestUserAuthAPIView(APITenantTestCase):
+class TestUserAuthAPIView(BaseTenantTestCase):
     def test_get(self):
         self.user = UserFactory()
         response = self.forced_auth_req(
@@ -34,7 +34,7 @@ class TestUserAuthAPIView(APITenantTestCase):
         self.assertEqual(response.data["id"], self.user.pk)
 
 
-class TestChangeUserCountry(APITenantTestCase):
+class TestChangeUserCountry(BaseTenantTestCase):
     @classmethod
     def setUpTestData(cls):
         cls.unicef_staff = UserFactory(is_staff=True)
@@ -75,7 +75,7 @@ class TestChangeUserCountry(APITenantTestCase):
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
 
 
-class TestSectionViews(APITenantTestCase):
+class TestSectionViews(BaseTenantTestCase):
     @classmethod
     def setUpTestData(cls):
         cls.unicef_staff = UserFactory(is_staff=True)
@@ -102,7 +102,7 @@ class TestSectionViews(APITenantTestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
 
 
-class TestOfficeViews(APITenantTestCase):
+class TestOfficeViews(BaseTenantTestCase):
     @classmethod
     def setUpTestData(cls):
         cls.unicef_staff = UserFactory(is_staff=True)
@@ -129,7 +129,7 @@ class TestOfficeViews(APITenantTestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
 
 
-class TestUserViews(APITenantTestCase):
+class TestUserViews(BaseTenantTestCase):
     @classmethod
     def setUpTestData(cls):
         cls.unicef_staff = UserFactory(is_staff=True)
@@ -216,7 +216,7 @@ class TestUserViews(APITenantTestCase):
         self.assertEqual(response_json['t2f']['business_area'], None)
 
 
-class TestMyProfileAPIView(APITenantTestCase):
+class TestMyProfileAPIView(BaseTenantTestCase):
     def setUp(self):
         super(TestMyProfileAPIView, self).setUp()
         self.unicef_staff = UserFactory(is_staff=True)
@@ -277,7 +277,7 @@ class TestMyProfileAPIView(APITenantTestCase):
         self.assertEqual(response.data["oic"], self.unicef_superuser.id)
 
 
-class TestUsersDetailAPIView(APITenantTestCase):
+class TestUsersDetailAPIView(BaseTenantTestCase):
     @classmethod
     def setUpTestData(cls):
         cls.unicef_staff = UserFactory(is_staff=True)
@@ -290,7 +290,7 @@ class TestUsersDetailAPIView(APITenantTestCase):
             user=user,
         )
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(response.data["user_id"], str(self.unicef_staff.pk))
+        self.assertEqual(response.data["user_id"], six.text_type(self.unicef_staff.pk))
 
     def test_get(self):
         user = UserFactory()
@@ -300,7 +300,7 @@ class TestUsersDetailAPIView(APITenantTestCase):
             user=self.unicef_staff,
         )
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(response.data["user_id"], str(user.pk))
+        self.assertEqual(response.data["user_id"], six.text_type(user.pk))
 
     def test_get_not_found(self):
         response = self.forced_auth_req(
@@ -312,7 +312,7 @@ class TestUsersDetailAPIView(APITenantTestCase):
         self.assertEqual(response.data, {})
 
 
-class TestProfileEdit(EToolsTenantTestCase):
+class TestProfileEdit(BaseTenantTestCase):
     @classmethod
     def setUpTestData(cls):
         cls.client = TenantClient(cls.tenant)
@@ -356,7 +356,7 @@ class TestProfileEdit(EToolsTenantTestCase):
         self.assertEqual(profile.phone_number, "123-546-7890")
 
 
-class TestGroupViewSet(APITenantTestCase):
+class TestGroupViewSet(BaseTenantTestCase):
     @classmethod
     def setUpTestData(cls):
         cls.unicef_staff = UserFactory(is_staff=True)
@@ -373,7 +373,7 @@ class TestGroupViewSet(APITenantTestCase):
             user=self.unicef_staff,
         )
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(response.data[0]["id"], str(group.pk))
+        self.assertEqual(response.data[0]["id"], six.text_type(group.pk))
 
     def test_api_groups_list(self):
         response = self.forced_auth_req(
@@ -416,7 +416,7 @@ class TestGroupViewSet(APITenantTestCase):
         self.assertIn(permission, group.permissions.all())
 
 
-class TestUserViewSet(APITenantTestCase):
+class TestUserViewSet(BaseTenantTestCase):
     @classmethod
     def setUpTestData(cls):
         cls.unicef_staff = UserFactory(is_staff=True)

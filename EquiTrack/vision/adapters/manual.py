@@ -6,6 +6,7 @@ import logging
 from collections import OrderedDict
 
 from django.db import connection
+from django.utils import six
 
 from vision.exceptions import VisionException
 from vision.utils import wcf_json_date_as_datetime
@@ -27,7 +28,7 @@ class ManualDataLoader(VisionDataLoader):
             super(ManualDataLoader, self).__init__(country=country, endpoint=endpoint)
         else:
             if endpoint is None:
-                raise VisionException(message='You must set the ENDPOINT name')
+                raise VisionException('You must set the ENDPOINT name')
             self.url = '{}/{}/{}'.format(
                 self.URL,
                 endpoint,
@@ -79,7 +80,7 @@ class MultiModelDataSynchronizer(VisionDataSynchronizer):
 
         # additional logic on field may be applied
         value_handler = self.FIELD_HANDLERS.get(
-            {y: x for x, y in self.MODEL_MAPPING.iteritems()}.get(model), {}
+            {y: x for x, y in six.iteritems(self.MODEL_MAPPING)}.get(model), {}
         ).get(field_name, None)
         if value_handler:
             result = value_handler(result)
@@ -115,9 +116,8 @@ class MultiModelDataSynchronizer(VisionDataSynchronizer):
                 model.objects.update_or_create(
                     defaults=defaults, **kwargs
                 )
-        except Exception as exp:
-            logger.warning("Exception message: {}".format(exp.message))
-            logger.warning("Exception type: {}".format(type(exp)))
+        except Exception:
+            logger.warning('Exception processing record', exc_info=True)
 
     def _save_records(self, records):
         processed = 0
@@ -140,7 +140,7 @@ class ManualVisionSynchronizer(MultiModelDataSynchronizer):
             super(MultiModelDataSynchronizer, self).__init__(country=country)
         else:
             if self.ENDPOINT is None:
-                raise VisionException(message='You must set the ENDPOINT name')
+                raise VisionException('You must set the ENDPOINT name')
 
             self.country = country
 

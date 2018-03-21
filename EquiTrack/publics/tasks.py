@@ -1,4 +1,4 @@
-from __future__ import unicode_literals
+from __future__ import absolute_import, division, print_function, unicode_literals
 
 import csv
 from collections import defaultdict
@@ -8,6 +8,8 @@ from decimal import Decimal, InvalidOperation
 from celery.utils.log import get_task_logger
 from django.core.exceptions import ObjectDoesNotExist
 from django.db.transaction import atomic
+from django.utils import six
+from django.utils.encoding import force_text
 
 from storages.backends.azure_storage import AzureStorage
 
@@ -258,7 +260,7 @@ class DSARateUploader(object):
                 raw = raw.replace(' ', '')  # remove space delimiter
                 n = Decimal(raw)
             except InvalidOperation as e:
-                self.errors['{} (line {})'.format(field, line + 1)] = e.message
+                self.errors['{} (line {})'.format(field, line + 1)] = force_text(e)
                 return None
             else:
                 return n
@@ -267,11 +269,11 @@ class DSARateUploader(object):
             try:
                 day, month, year = map(int, row[field].split('/'))
                 # If year is coming in a 2 digit format
-                if len(str(year)) == 2:
+                if len(six.text_type(year)) == 2:
                     year += 2000
                 d = date(year, month, day)
             except ValueError as e:
-                self.errors['{} (line {})'.format(field, line + 1)] = e.message
+                self.errors['{} (line {})'.format(field, line + 1)] = force_text(e)
                 return None
             else:
                 return d
@@ -348,7 +350,7 @@ def upload_dsa_rates(dsa_rate_upload_id):
         uploader = DSARateUploader(dsa_rate_upload)
         uploader.update_dsa_regions()
     except Exception as e:
-        dsa_rate_upload.errors = {e.__class__.__name__: e.message}
+        dsa_rate_upload.errors = {e.__class__.__name__: force_text(e)}
         dsa_rate_upload.status = DSARateUpload.FAILED
     else:
         if uploader.errors:
