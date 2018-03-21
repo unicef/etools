@@ -1,7 +1,4 @@
-from __future__ import absolute_import
-from __future__ import division
-from __future__ import print_function
-from __future__ import unicode_literals
+from __future__ import absolute_import, division, print_function, unicode_literals
 
 from django.forms import model_to_dict
 from django.utils import six
@@ -22,7 +19,7 @@ def jsonify(data):
     )
     for key, value in data.items():
         if not isinstance(value, allowed_types):
-            data[key] = unicode(data[key])
+            data[key] = six.text_type(data[key])
     return data
 
 
