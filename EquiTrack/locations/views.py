@@ -196,7 +196,7 @@ class GisLocationsGeomDetailsViewset(RetrieveAPIView):
     def get(self, request, id=None, pcode=None):
         country_id = self.request.query_params.get('country_id')
 
-        if country_id:
+        if country_id and (pcode is not None or id is not None):
             # we need to set the workspace before making any query
             connection.set_tenant(Country.objects.get(pk=country_id))
 
