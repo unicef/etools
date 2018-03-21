@@ -10,7 +10,7 @@ from rest_framework.response import Response
 from rest_framework import status
 from rest_framework_csv.renderers import CSVRenderer, JSONRenderer
 
-from EquiTrack.mixins import ExportModelMixin
+from EquiTrack.mixins import ExportModelMixin, QueryStringFilterMixin
 from EquiTrack.renderers import CSVFlatRenderer
 from reports.models import (
     AppliedIndicator,
@@ -261,7 +261,7 @@ class AppliedIndicatorLoc(object):
         setattr(self, 'selected_location', location)
 
 
-class ExportAppliedIndicatorLocationListView(ListAPIView):
+class ExportAppliedIndicatorLocationListView(QueryStringFilterMixin, ListAPIView):
     serializer_class = AppliedIndicatorLocationExportSerializer
     renderer_classes = (
         JSONRenderer,
@@ -269,14 +269,26 @@ class ExportAppliedIndicatorLocationListView(ListAPIView):
         CSVFlatRenderer,
     )
 
-    queryset = AppliedIndicator.objects.select_related("indicator",
-                                                       "section",
-                                                       "lower_result",
-                                                       "lower_result__result_link__intervention__agreement__partner",
+    def get_queryset(self):
+        qs = AppliedIndicator.objects.select_related(
+            "indicator", "section", "lower_result", "lower_result__result_link__intervention__agreement__partner"
+        ).prefetch_related(
+            "locations", "lower_result__result_link__cp_output", "lower_result__result_link__ram_indicators"
+        )
 
-                                                       ).prefetch_related("locations",
-                                                                          "lower_result__result_link__cp_output",
-                                                                          "lower_result__result_link__ram_indicators")
+        if self.request.query_params:
+            queries = []
+            filters = (
+            )
+            search_terms = [
+            ]
+            queries.extend(self.filter_params(filters))
+            queries.append(self.search_params(search_terms))
+
+            if queries:
+                expression = functools.reduce(operator.and_, queries)
+                qs = qs.filter(expression)
+        return qs
 
     def list(self, request, *args, **kwargs):
         rows = {}

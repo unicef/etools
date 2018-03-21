@@ -276,22 +276,20 @@ class ExportModelMixin(object):
 
 class QueryStringFilterMixin(object):
 
-    @staticmethod
-    def filter_params(query_params, filters):
+    def filter_params(self, filters):
         queries = []
         for param_filter, query_filter in filters:
-            if param_filter in query_params:
-                value = query_params.get(param_filter)
+            if param_filter in self.request.query_params:
+                value = self.request.query_params.get(param_filter)
                 if query_filter.endswith(('__in')):
                     value = value.split(',')
                 queries.append(Q(**{query_filter: value}))
         return queries
 
-    @staticmethod
-    def search_params(query_params, filters, param_name='search'):
-        search_term = query_params.get(param_name)
+    def search_params(self, filters, param_name='search'):
+        search_term = self.request.query_params.get(param_name)
         search_query = Q()
-        if param_name in query_params:
+        if param_name in self.request.query_params:
             for filter in filters:
                 q = Q(**{filter: search_term})
                 search_query = search_query | q

@@ -81,9 +81,8 @@ class AgreementListAPIView(QueryStringFilterMixin, ExportModelMixin, ValidatorVi
 
     def get_queryset(self, format=None):
         q = Agreement.view_objects
-        query_params = self.request.query_params
 
-        if query_params:
+        if self.request.query_params:
             queries = []
 
             filters = (
@@ -94,8 +93,8 @@ class AgreementListAPIView(QueryStringFilterMixin, ExportModelMixin, ValidatorVi
                 ('end', 'end__lte'),
             )
             search_terms = ['partner__name__icontains', 'agreement_number__icontains']
-            queries.extend(self.filter_params(query_params, filters))
-            queries.append(self.search_params(query_params, search_terms))
+            queries.extend(self.filter_params(filters))
+            queries.append(self.search_params(search_terms))
 
             if queries:
                 expression = functools.reduce(operator.and_, queries)

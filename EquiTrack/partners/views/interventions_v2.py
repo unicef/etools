@@ -186,8 +186,8 @@ class InterventionListAPIView(QueryStringFilterMixin, ExportModelMixin, Interven
                 ('location', 'result_links__ll_results__applied_indicators__locations__name__icontains'),
             )
             search_terms = ['title__icontains', 'agreement__partner__name__icontains', 'number__icontains']
-            queries.extend(self.filter_params(query_params, filters))
-            queries.append(self.search_params(query_params, search_terms))
+            queries.extend(self.filter_params(filters))
+            queries.append(self.search_params(search_terms))
 
             if queries:
                 expression = functools.reduce(operator.and_, queries)

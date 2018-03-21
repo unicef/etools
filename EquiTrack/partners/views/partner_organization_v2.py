@@ -111,8 +111,8 @@ class PartnerOrganizationListAPIView(QueryStringFilterMixin, ExportModelMixin, L
                 ('cso_type', 'cso_type__in'),
             )
             search_terms = ['name__icontains', 'vendor_number__icontains', 'short_name__icontains']
-            queries.extend(self.filter_params(query_params, filters))
-            queries.append(self.search_params(query_params, search_terms))
+            queries.extend(self.filter_params(filters))
+            queries.append(self.search_params(search_terms))
 
             if "hidden" in query_params.keys():
                 hidden = None
