@@ -22,11 +22,13 @@ from model_utils.models import (
 from model_utils import Choices, FieldTracker
 from dateutil.relativedelta import relativedelta
 
+from attachments.models import Attachment
 from EquiTrack.fields import CurrencyField, QuarterField
 from EquiTrack.utils import get_current_year
 from EquiTrack.mixins import AdminURLMixin
 from environment.helpers import tenant_switch_is_active
 from funds.models import Grant
+from generics.fields import CodedGenericRelation
 from reports.models import (
     Indicator,
     Sector,
@@ -397,6 +399,14 @@ class PartnerOrganization(AdminURLMixin, TimeStampedModel):
         null=True,
         upload_to='partners/core_values/',
         max_length=1024,
+        help_text='Only required for CSO partners'
+    )
+    core_values_assessment_attachment = CodedGenericRelation(
+        Attachment,
+        verbose_name=_('Core Values Assessment'),
+        code='partners_partner_assessment',
+        blank=True,
+        null=True,
         help_text='Only required for CSO partners'
     )
     vision_synced = models.BooleanField(
@@ -912,6 +922,13 @@ class Assessment(TimeStampedModel):
         max_length=1024,
         upload_to=get_assesment_path
     )
+    report_attachment = CodedGenericRelation(
+        Attachment,
+        verbose_name=_('Report'),
+        code='partners_assessment_report',
+        blank=True,
+        null=True
+    )
     # Basis for Risk Rating
     current = models.BooleanField(
         verbose_name=_('Basis for risk rating'),
@@ -1011,6 +1028,12 @@ class Agreement(TimeStampedModel):
         upload_to=get_agreement_path,
         blank=True,
         max_length=1024
+    )
+    attachment = CodedGenericRelation(
+        Attachment,
+        verbose_name=_('Attached Agreement'),
+        code='partners_agreement',
+        blank=True
     )
     start = models.DateField(
         verbose_name=_("Start Date"),
@@ -1240,6 +1263,13 @@ class AgreementAmendment(TimeStampedModel):
         max_length=1024,
         null=True, blank=True,
         upload_to=get_agreement_amd_file_path
+    )
+    signed_amendment_attachment = CodedGenericRelation(
+        Attachment,
+        verbose_name=_('Signed Amendment'),
+        code='partners_agreement_amendment',
+        blank=True,
+        null=True
     )
     types = ArrayField(models.CharField(
         max_length=50,
@@ -1476,12 +1506,26 @@ class Intervention(TimeStampedModel):
         blank=True,
         upload_to=get_prc_intervention_file_path
     )
+    prc_review_attachment = CodedGenericRelation(
+        Attachment,
+        verbose_name=_('Review Document by PRC'),
+        code='partners_intervention_prc_review',
+        blank=True,
+        null=True
+    )
     signed_pd_document = models.FileField(
         verbose_name=_("Signed PD Document"),
         max_length=1024,
         null=True,
         blank=True,
         upload_to=get_prc_intervention_file_path
+    )
+    signed_pd_attachment = CodedGenericRelation(
+        Attachment,
+        verbose_name=_('Signed PD Document'),
+        code='partners_intervention_signed_pd',
+        blank=True,
+        null=True
     )
     signed_by_unicef_date = models.DateField(
         verbose_name=_("Signed by UNICEF Date"),
@@ -1913,6 +1957,12 @@ class InterventionAmendment(TimeStampedModel):
         max_length=1024,
         upload_to=get_intervention_amendment_file_path
     )
+    signed_amendment_attachment = CodedGenericRelation(
+        Attachment,
+        verbose_name=_('Amendment Document'),
+        code='partners_intervention_amendment_signed',
+        blank=True,
+    )
 
     tracker = FieldTracker()
 
@@ -2075,6 +2125,13 @@ class InterventionAttachment(TimeStampedModel):
     attachment = models.FileField(
         max_length=1024,
         upload_to=get_intervention_attachments_file_path
+    )
+    attachment_file = CodedGenericRelation(
+        Attachment,
+        verbose_name=_('Intervention Attachment'),
+        code='partners_intervention_attachment',
+        blank=True,
+        null=True,
     )
 
     tracker = FieldTracker()

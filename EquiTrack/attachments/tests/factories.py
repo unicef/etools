@@ -7,17 +7,18 @@ from factory import fuzzy
 from attachments.models import Attachment, FileType
 
 
-class FileTypeFactory(factory.django.DjangoModelFactory):
+class AttachmentFileTypeFactory(factory.django.DjangoModelFactory):
     class Meta:
         model = FileType
-        django_get_or_create = ('name', 'code')
+        django_get_or_create = ('code', )
 
     code = fuzzy.FuzzyText()
     name = factory.Sequence(lambda n: 'file_type_%d' % n)
 
 
 class AttachmentFactory(factory.django.DjangoModelFactory):
-    file_type = factory.SubFactory(FileTypeFactory)
+    file_type = factory.SubFactory(AttachmentFileTypeFactory)
+    code = fuzzy.FuzzyText(length=64)
 
     class Meta:
         model = Attachment
