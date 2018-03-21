@@ -216,6 +216,7 @@ class InterventionAdmin(CountryUsersAdminMixin, HiddenPartnerMixin, SnapshotMode
             'fields':
                 (
                     'agreement',
+                    'in_amendment',
                     'document_type',
                     'number',
                     'title',
