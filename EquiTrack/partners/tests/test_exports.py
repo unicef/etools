@@ -172,7 +172,7 @@ class TestModelExport(BaseTenantTestCase):
             u'{:.2f}'.format(self.intervention.total_in_kind_amount),
             u'{:.2f}'.format(self.intervention.total_budget),
             u', '.join([fr.fr_numbers for fr in self.intervention.frs.all()]),
-            u'',
+            u'Multiple Currencies',
             u'',
             unicode(self.intervention.total_frs["total_frs_amt"]),
             unicode(self.intervention.total_frs["total_actual_amt"]),
