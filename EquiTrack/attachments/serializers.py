@@ -70,7 +70,7 @@ class Base64AttachmentSerializer(BaseAttachmentsSerializer):
 
 class AttachmentSerializer(BaseAttachmentsSerializer):
     created = serializers.DateTimeField(format='%d %b %Y')
-    file_type = serializers.SerializerMethodField(source='file_type.label')
+    file_type = serializers.SerializerMethodField()
     file_link = serializers.CharField()
     filename = serializers.CharField()
     partner = serializers.SerializerMethodField()
@@ -98,7 +98,9 @@ class AttachmentSerializer(BaseAttachmentsSerializer):
         """
         if isinstance(obj.content_object, InterventionAttachment):
             return obj.content_object.type.name
-        return obj.file_type.label
+        elif obj.file_type:
+            return obj.file_type.label
+        return None
 
     def get_partner_obj(self, obj):
         """Try and get partner value"""
@@ -142,3 +144,13 @@ class AttachmentSerializer(BaseAttachmentsSerializer):
         elif isinstance(obj.content_object, (InterventionAmendment, InterventionAttachment)):
             return obj.content_object.intervention.number
         return None
+
+
+class AttachmentFileUploadSerializer(serializers.ModelSerializer):
+    uploaded_by = serializers.HiddenField(
+        default=serializers.CurrentUserDefault()
+    )
+
+    class Meta:
+        model = Attachment
+        fields = ["file", "uploaded_by"]

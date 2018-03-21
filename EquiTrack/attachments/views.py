@@ -4,11 +4,15 @@ from django.db.models import Q
 from django.http import HttpResponseNotFound, HttpResponseRedirect
 from django.utils.translation import ugettext as _
 from django.views.generic.detail import DetailView
-from rest_framework.generics import ListAPIView
+from rest_framework.generics import CreateAPIView, ListAPIView, UpdateAPIView
 from rest_framework.permissions import IsAdminUser
+from rest_framework.response import Response
 
 from attachments.models import Attachment
-from attachments.serializers import AttachmentSerializer
+from attachments.serializers import (
+    AttachmentFileUploadSerializer,
+    AttachmentSerializer,
+)
 from utils.common.urlresolvers import site_url
 
 
@@ -54,3 +58,36 @@ class AttachmentFileView(DetailView):
             )
         url = urllib_parse.urljoin(site_url(), attachment.url)
         return HttpResponseRedirect(url)
+
+
+class AttachmentCreateView(CreateAPIView):
+    queryset = Attachment.objects.all()
+    permission_classes = (IsAdminUser,)
+    serializer_class = AttachmentFileUploadSerializer
+
+    def perform_create(self, serializer):
+        self.instance = serializer.save()
+
+    def post(self, *args, **kwargs):
+        super(AttachmentCreateView, self).post(*args, **kwargs)
+        return Response(AttachmentSerializer(self.instance).data)
+
+
+class AttachmentUpdateView(UpdateAPIView):
+    queryset = Attachment.objects.all()
+    permission_classes = (IsAdminUser,)
+    serializer_class = AttachmentFileUploadSerializer
+
+    def perform_update(self, serializer):
+        # force the updating of the uploaded by field to current user
+        # this is not set when PATCH request made
+        serializer.instance.uploaded_by = serializer.context["request"].user
+        self.instance = serializer.save()
+
+    def put(self, *args, **kwargs):
+        super(AttachmentUpdateView, self).put(*args, **kwargs)
+        return Response(AttachmentSerializer(self.instance).data)
+
+    def patch(self, *args, **kwargs):
+        super(AttachmentUpdateView, self).patch(*args, **kwargs)
+        return Response(AttachmentSerializer(self.instance).data)

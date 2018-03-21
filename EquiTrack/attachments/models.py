@@ -38,8 +38,12 @@ def generate_file_path(attachment, filename):
     # for now maintaining their previous upload
     # paths
     # TODO move all files to standard file path setup?
-    app = attachment.content_type.app_label
-    model_name = attachment.content_type.model
+    if attachment.content_type:
+        app = attachment.content_type.app_label
+        model_name = attachment.content_type.model
+    else:
+        app = "unknown"
+        model_name = "tmp"
     obj_pk = str(attachment.object_id)
     obj = attachment.content_object
 
@@ -131,8 +135,11 @@ def generate_file_path(attachment, filename):
 
 @python_2_unicode_compatible
 class Attachment(TimeStampedModel, models.Model):
-    file_type = models.ForeignKey(FileType, verbose_name=_('Document Type'))
-
+    file_type = models.ForeignKey(
+        FileType,
+        verbose_name=_('Document Type'),
+        null=True
+    )
     file = models.FileField(
         upload_to=generate_file_path,
         blank=True,
@@ -140,12 +147,15 @@ class Attachment(TimeStampedModel, models.Model):
         verbose_name=_('File Attachment'),
         max_length=1024,
     )
-    hyperlink = models.CharField(max_length=255, blank=True, null=True, verbose_name=_('Hyperlink'))
-
-    content_type = models.ForeignKey(ContentType)
-    object_id = models.IntegerField()
+    hyperlink = models.CharField(
+        max_length=255,
+        blank=True,
+        null=True,
+        verbose_name=_('Hyperlink')
+    )
+    content_type = models.ForeignKey(ContentType, blank=True, null=True)
+    object_id = models.IntegerField(blank=True, null=True)
     content_object = GenericForeignKey()
-
     code = models.CharField(max_length=64, blank=True, verbose_name=_('Code'))
     uploaded_by = models.ForeignKey(
         settings.AUTH_USER_MODEL,
