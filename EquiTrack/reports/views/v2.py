@@ -281,7 +281,7 @@ class ExportAppliedIndicatorLocationListView(QueryStringFilterMixin, ListAPIView
             filters = (
                 ('document_type', 'lower_result__result_link__intervention__document_type__in'),
                 ('country_programme', 'lower_result__result_link__intervention__agreement__country_programme'),
-                ('section', 'section__in'),
+                ('sections', 'section__in'),
                 ('cluster', 'cluster_indicator_title__icontains'),
                 ('status', 'lower_result__result_link__intervention__status__in'),
                 ('unicef_focal_points', 'lower_result__result_link__intervention__unicef_focal_points__in'),

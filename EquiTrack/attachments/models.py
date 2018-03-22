@@ -93,3 +93,25 @@ class Attachment(TimeStampedModel, models.Model):
     @property
     def file_link(self):
         return reverse("attachments:file", args=[self.pk])
+
+    def save(self, *args, **kwargs):
+        from attachments.utils import denormalize_attachment
+
+        super(Attachment, self).save(*args, **kwargs)
+        denormalize_attachment(self)
+
+
+@python_2_unicode_compatible
+class AttachmentFlat(models.Model):
+    attachment = models.ForeignKey(Attachment)
+    partner = models.CharField(max_length=150, blank=True)
+    partner_type = models.CharField(max_length=150, blank=True)
+    vendor_number = models.CharField(max_length=50, blank=True)
+    pd_ssfa_number = models.CharField(max_length=50, blank=True)
+    file_type = models.CharField(max_length=100, blank=True)
+    file_link = models.CharField(max_length=1024, blank=True)
+    uploaded_by = models.CharField(max_length=255, blank=True)
+    created = models.CharField(max_length=50)
+
+    def __str__(self):
+        return six.text_type(self.attachment)
