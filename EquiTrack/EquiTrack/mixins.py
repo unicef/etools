@@ -8,6 +8,7 @@ from django.contrib.auth import get_user_model
 from django.contrib.contenttypes.models import ContentType
 from django.core.urlresolvers import reverse
 from django.db import connection
+from django.db.models import Q
 from django.http.response import HttpResponseRedirect
 from django.template.response import SimpleTemplateResponse
 from django.utils.http import urlsafe_base64_encode
@@ -271,6 +272,28 @@ class ExportModelMixin(object):
                 model
             )
         return context
+
+
+class QueryStringFilterMixin(object):
+
+    def filter_params(self, filters):
+        queries = []
+        for param_filter, query_filter in filters:
+            if param_filter in self.request.query_params:
+                value = self.request.query_params.get(param_filter)
+                if query_filter.endswith(('__in')):
+                    value = value.split(',')
+                queries.append(Q(**{query_filter: value}))
+        return queries
+
+    def search_params(self, filters, param_name='search'):
+        search_term = self.request.query_params.get(param_name)
+        search_query = Q()
+        if param_name in self.request.query_params:
+            for param_filter in filters:
+                q = Q(**{param_filter: search_term})
+                search_query = search_query | q
+        return search_query
 
 
 def custom_jwt_payload_handler(user):
