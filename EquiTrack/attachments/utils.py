@@ -76,7 +76,7 @@ def denormalize_attachment(attachment):
     file_type = get_file_type(attachment)
     uploaded_by = attachment.uploaded_by if attachment.uploaded_by else ""
 
-    flat, created = AttachmentFlat.objects.get_or_create(
+    flat, created = AttachmentFlat.objects.update_or_create(
         attachment=attachment,
         defaults={
             "partner": partner,
@@ -89,14 +89,5 @@ def denormalize_attachment(attachment):
             "created": attachment.created.strftime("%d %b %Y"),
         }
     )
-
-    if not created:
-        flat.partner = partner
-        flat.vendor_number = vendor_number
-        flat.partner_type = partner_type
-        flat.pd_ssfa_number = pd_ssfa_number
-        flat.file_type = file_type
-        flat.uploaded_by = uploaded_by
-        flat.save()
 
     return flat
