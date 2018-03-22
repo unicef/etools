@@ -1,4 +1,4 @@
-from __future__ import absolute_import
+from __future__ import absolute_import, division, print_function, unicode_literals
 
 import json
 import logging
@@ -130,5 +130,5 @@ class Notification(models.Model):
         else:
             template_obj = Template(email_template.html_content)
 
-            return map(lambda node: str(node).split(': ')[1][:-1],
+            return map(lambda node: six.text_type(node).split(': ')[1][:-1],
                        template_obj.nodelist.get_nodes_by_type(VariableNode))

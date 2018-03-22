@@ -1,7 +1,9 @@
-from __future__ import unicode_literals
+from __future__ import absolute_import, division, print_function, unicode_literals
+
 from datetime import date
 import logging
 
+from django.utils import six
 from django.utils.translation import ugettext as _
 
 from EquiTrack.validation_mixins import TransitionError, CompleteValidation, StateValidError, \
@@ -220,7 +222,16 @@ def locations_valid(i):
         raise BasicValidationError(_('The following locations have been selected on '
                                      'the PD/SSFA indicators and cannot be removed'
                                      ' without removing them from the indicators first: ') +
-                                   ', '.join([str(l) for l in ind_locations - intervention_locations]))
+                                   ', '.join([six.text_type(l) for l in ind_locations - intervention_locations]))
+    return True
+
+
+def cp_structure_valid(i):
+    if i.country_programme and i.agreement.agreement_type == i.agreement.PCA \
+            and i.country_programme != i.agreement.country_programme:
+        raise BasicValidationError(_('The Country Programme selected on this PD is not the same as the '
+                                     'Country Programme selected on the Agreement, '
+                                     'please select "{}"'.format(i.agreement.country_programme)))
     return True
 
 
@@ -236,7 +247,8 @@ class InterventionValid(CompleteValidation):
         document_type_pca_valid,
         rigid_in_amendment_flag,
         sections_valid,
-        locations_valid
+        locations_valid,
+        cp_structure_valid,
     ]
 
     VALID_ERRORS = {

@@ -54,7 +54,7 @@ class BasePermission(models.Model):
 
         when_mapping = [
             models.When(name=name, then=models.Value(i))
-            for i, name in enumerate(reversed(ordered_user_types))
+            for i, name in enumerate(reversed(list(ordered_user_types)))
         ]
         group = user.groups.annotate(
             order=models.Case(*when_mapping, default=models.Value(-1), output_field=models.IntegerField())

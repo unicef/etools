@@ -1,4 +1,4 @@
-from __future__ import absolute_import, unicode_literals
+from __future__ import absolute_import, division, print_function, unicode_literals
 
 import copy
 import logging
@@ -308,7 +308,7 @@ def error_string(function):
         try:
             valid = function(*args, **kwargs)
         except BasicValidationError as e:
-            return (False, [str(e)])
+            return (False, [six.text_type(e)])
         else:
             if valid and type(valid) is bool:
                 return (True, [])
@@ -322,7 +322,7 @@ def transition_error_string(function):
         try:
             valid = function(*args, **kwargs)
         except TransitionError as e:
-            return (False, [str(e)])
+            return (False, [six.text_type(e)])
 
         if valid and type(valid) is bool:
             return (True, [])
@@ -336,7 +336,7 @@ def state_error_string(function):
         try:
             valid = function(*args, **kwargs)
         except StateValidError as e:
-            return (False, [str(e)])
+            return (False, [six.text_type(e)])
 
         if valid and type(valid) is bool:
             return (True, [])
