@@ -1,5 +1,6 @@
-from __future__ import unicode_literals
+from __future__ import absolute_import, division, print_function, unicode_literals
 
+from django.utils import six
 from django.utils.translation import ugettext as _
 from rest_framework import serializers
 
@@ -30,7 +31,7 @@ class InterventionAmendmentExportSerializer(InterventionAmendmentCUSerializer):
 
     class Meta:
         model = InterventionAmendment
-        fields = "__all__"
+        exclude = ("signed_amendment_attachment", )
 
 
 class InterventionAmendmentExportFlatSerializer(InterventionAmendmentExportSerializer):
@@ -52,13 +53,13 @@ class InterventionSectorLocationLinkExportSerializer(LocationExportSerializer):
 
     def get_intervention(self, obj):
         return ",".join(
-            [str(x.intervention.pk)
+            [six.text_type(x.intervention.pk)
              for x in obj.intervention_sector_locations.all()]
         )
 
     def get_sector(self, obj):
         return ",".join(
-            [str(x.sector.pk) for x in obj.intervention_sector_locations.all()]
+            [six.text_type(x.sector.pk) for x in obj.intervention_sector_locations.all()]
         )
 
 
@@ -74,13 +75,13 @@ class InterventionSectorLocationLinkExportFlatSerializer(LocationExportFlatSeria
 
     def get_intervention(self, obj):
         return ",".join(
-            [str(x.intervention.number)
+            [six.text_type(x.intervention.number)
              for x in obj.intervention_sector_locations.all()]
         )
 
     def get_sector(self, obj):
         return ",".join(
-            [str(x.sector.name)
+            [six.text_type(x.sector.name)
              for x in obj.intervention_sector_locations.all()]
         )
 
@@ -178,7 +179,7 @@ class InterventionIndicatorExportSerializer(IndicatorExportSerializer):
 
     def get_intervention(self, obj):
         return ",".join(
-            [str(x.intervention.pk)
+            [six.text_type(x.intervention.pk)
              for x in obj.interventionresultlink_set.all()]
         )
 

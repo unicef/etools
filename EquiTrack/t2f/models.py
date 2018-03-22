@@ -13,7 +13,7 @@ from django.db import connection, models
 from django.template.loader import render_to_string
 from django.utils.encoding import python_2_unicode_compatible
 from django.utils.timezone import now as timezone_now
-from django.utils.translation import ugettext, ugettext_lazy
+from django.utils.translation import ugettext, ugettext_lazy, ugettext_lazy as _
 from django_fsm import FSMField, transition
 
 from publics.models import TravelExpenseType
@@ -431,8 +431,8 @@ class Travel(models.Model):
 
         try:
             msg.send(fail_silently=False)
-        except ValidationError as exc:
-            log.error(u'Was not able to send the email. Exception: %s', exc.message)
+        except ValidationError:
+            log.exception(u'Was not able to send the email.')
 
     def generate_invoices(self):
         maker = InvoiceMaker(self)
@@ -450,6 +450,9 @@ class TravelActivity(models.Model):
     locations = models.ManyToManyField('locations.Location', related_name='+')
     primary_traveler = models.ForeignKey(settings.AUTH_USER_MODEL)
     date = models.DateTimeField(null=True, blank=True)
+
+    class Meta:
+        verbose_name_plural = _("Travel Activities")
 
     @property
     def travel_status(self):
@@ -548,6 +551,9 @@ class Clearances(models.Model):
     medical_clearance = models.CharField(max_length=14, choices=CHOICES, default=NOT_APPLICABLE)
     security_clearance = models.CharField(max_length=14, choices=CHOICES, default=NOT_APPLICABLE)
     security_course = models.CharField(max_length=14, choices=CHOICES, default=NOT_APPLICABLE)
+
+    class Meta:
+        verbose_name_plural = _('Clearances')
 
 
 def determine_file_upload_path(instance, filename):
@@ -656,8 +662,8 @@ class ActionPoint(models.Model):
 
         try:
             msg.send(fail_silently=False)
-        except ValidationError as exc:
-            log.error(u'Was not able to send the email. Exception: %s', exc.message)
+        except ValidationError:
+            log.exception(u'Was not able to send the email.')
 
 
 @python_2_unicode_compatible

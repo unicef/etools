@@ -21,6 +21,6 @@ class Migration(migrations.Migration):
         migrations.AlterField(
             model_name='partnerorganization',
             name='shared_with',
-            field=django.contrib.postgres.fields.ArrayField(base_field=models.CharField(blank=True, choices=[(b'DPKO', b'DPKO'), (b'ECA', b'ECA'), (b'ECLAC', b'ECLAC'), (b'ESCWA', b'ESCWA'), (b'FAO', b'FAO'), (b'ILO', b'ILO'), (b'IOM', b'IOM'), (b'OHCHR', b'OHCHR'), (b'UN', b'UN'), (b'UN Women', b'UN Women'), (b'UNAIDS', b'UNAIDS'), (b'UNDP', b'UNDP'), (b'UNESCO', b'UNESCO'), (b'UNFPA', b'UNFPA'), (b'UN - Habitat', b'UN - Habitat'), (b'UNHCR', b'UNHCR'), (b'UNODC', b'UNODC'), (b'UNOPS', b'UNOPS'), (b'UNRWA', b'UNRWA'), (b'UNSC', b'UNSC'), (b'UNU', b'UNU'), (b'WB', b'WB'), (b'WFP', b'WFP'), (b'WHO', b'WHO')], max_length=20), blank=True, null=True, size=None),
+            field=django.contrib.postgres.fields.ArrayField(base_field=models.CharField(blank=True, choices=[('DPKO', 'DPKO'), ('ECA', 'ECA'), ('ECLAC', 'ECLAC'), ('ESCWA', 'ESCWA'), ('FAO', 'FAO'), ('ILO', 'ILO'), ('IOM', 'IOM'), ('OHCHR', 'OHCHR'), ('UN', 'UN'), ('UN Women', 'UN Women'), ('UNAIDS', 'UNAIDS'), ('UNDP', 'UNDP'), ('UNESCO', 'UNESCO'), ('UNFPA', 'UNFPA'), ('UN - Habitat', 'UN - Habitat'), ('UNHCR', 'UNHCR'), ('UNODC', 'UNODC'), ('UNOPS', 'UNOPS'), ('UNRWA', 'UNRWA'), ('UNSC', 'UNSC'), ('UNU', 'UNU'), ('WB', 'WB'), ('WFP', 'WFP'), ('WHO', 'WHO')], max_length=20), blank=True, null=True, size=None),
         ),
     ]

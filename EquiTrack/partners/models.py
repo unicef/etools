@@ -1,5 +1,5 @@
-from __future__ import absolute_import
-from __future__ import unicode_literals
+from __future__ import absolute_import, division, print_function, unicode_literals
+
 import datetime
 import decimal
 import json
@@ -10,6 +10,7 @@ from django.db import models, connection, transaction
 from django.db.models import F, Sum, Max, Min, CharField, Count
 from django.db.models.signals import post_save, pre_delete
 from django.utils.encoding import python_2_unicode_compatible
+from django.utils import six
 from django.utils.translation import ugettext as _
 from django.utils.functional import cached_property
 
@@ -22,6 +23,7 @@ from model_utils.models import (
 from model_utils import Choices, FieldTracker
 from dateutil.relativedelta import relativedelta
 
+from attachments.models import Attachment
 from EquiTrack.fields import CurrencyField, QuarterField
 from EquiTrack.utils import import_permissions, get_quarter, get_current_year
 from EquiTrack.mixins import AdminURLMixin
@@ -41,6 +43,7 @@ from partners.validation.agreements import (
     agreements_illegal_transition,
     agreement_transition_to_signed_valid)
 from partners.validation import interventions as intervention_validation
+from utils.common.models.fields import CodedGenericRelation
 
 
 def _get_partner_base_path(partner):
@@ -48,7 +51,7 @@ def _get_partner_base_path(partner):
         connection.schema_name,
         'file_attachments',
         'partner_organization',
-        str(partner.id),
+        six.text_type(partner.id),
     ])
 
 
@@ -56,7 +59,7 @@ def get_agreement_path(instance, filename):
     return '/'.join([
         _get_partner_base_path(instance.partner),
         'agreements',
-        str(instance.agreement_number),
+        six.text_type(instance.agreement_number),
         filename
     ])
 
@@ -67,7 +70,7 @@ def get_assesment_path(instance, filename):
     return '/'.join([
         _get_partner_base_path(instance.partner),
         'assesments',
-        str(instance.id),
+        six.text_type(instance.id),
         filename
     ])
 
@@ -76,9 +79,9 @@ def get_intervention_file_path(instance, filename):
     return '/'.join([
         _get_partner_base_path(instance.agreement.partner),
         'agreements',
-        str(instance.agreement.id),
+        six.text_type(instance.agreement.id),
         'interventions',
-        str(instance.id),
+        six.text_type(instance.id),
         filename
     ])
 
@@ -87,9 +90,9 @@ def get_prc_intervention_file_path(instance, filename):
     return '/'.join([
         _get_partner_base_path(instance.agreement.partner),
         'agreements',
-        str(instance.agreement.id),
+        six.text_type(instance.agreement.id),
         'interventions',
-        str(instance.id),
+        six.text_type(instance.id),
         'prc',
         filename
     ])
@@ -98,13 +101,13 @@ def get_prc_intervention_file_path(instance, filename):
 def get_intervention_amendment_file_path(instance, filename):
     return '/'.join([
         _get_partner_base_path(instance.intervention.agreement.partner),
-        str(instance.intervention.agreement.partner.id),
+        six.text_type(instance.intervention.agreement.partner.id),
         'agreements',
-        str(instance.intervention.agreement.id),
+        six.text_type(instance.intervention.agreement.id),
         'interventions',
-        str(instance.intervention.id),
+        six.text_type(instance.intervention.id),
         'amendments',
-        str(instance.id),
+        six.text_type(instance.id),
         filename
     ])
 
@@ -113,11 +116,11 @@ def get_intervention_attachments_file_path(instance, filename):
     return '/'.join([
         _get_partner_base_path(instance.intervention.agreement.partner),
         'agreements',
-        str(instance.intervention.agreement.id),
+        six.text_type(instance.intervention.agreement.id),
         'interventions',
-        str(instance.intervention.id),
+        six.text_type(instance.intervention.id),
         'attachments',
-        str(instance.id),
+        six.text_type(instance.id),
         filename
     ])
 
@@ -127,11 +130,11 @@ def get_agreement_amd_file_path(instance, filename):
         connection.schema_name,
         'file_attachments',
         'partner_org',
-        str(instance.agreement.partner.id),
+        six.text_type(instance.agreement.partner.id),
         'agreements',
         instance.agreement.base_number,
         'amendments',
-        str(instance.number),
+        six.text_type(instance.number),
         filename
     ])
 
@@ -398,6 +401,14 @@ class PartnerOrganization(AdminURLMixin, TimeStampedModel):
         max_length=1024,
         help_text='Only required for CSO partners'
     )
+    core_values_assessment_attachment = CodedGenericRelation(
+        Attachment,
+        verbose_name=_('Core Values Assessment'),
+        code='partners_partner_assessment',
+        blank=True,
+        null=True,
+        help_text='Only required for CSO partners'
+    )
     vision_synced = models.BooleanField(
         verbose_name=_("VISION Synced"),
         default=False,
@@ -459,12 +470,11 @@ class PartnerOrganization(AdminURLMixin, TimeStampedModel):
 
     def save(self, *args, **kwargs):
         # JSONFIELD has an issue where it keeps escaping characters
-        hact_is_string = isinstance(self.hact_values, str)
+        hact_is_string = isinstance(self.hact_values, six.text_type)
         try:
-
             self.hact_values = json.loads(self.hact_values) if hact_is_string else self.hact_values
         except ValueError as e:
-            e.message = 'hact_values needs to be a valid format (dict)'
+            e.args = ['hact_values needs to be a valid format (dict)']
             raise e
 
         super(PartnerOrganization, self).save(*args, **kwargs)
@@ -570,7 +580,9 @@ class PartnerOrganization(AdminURLMixin, TimeStampedModel):
             pvq3 = pv.aggregate(models.Sum('programmatic_q3'))['programmatic_q3__sum'] or 0
             pvq4 = pv.aggregate(models.Sum('programmatic_q4'))['programmatic_q4__sum'] or 0
 
-        hact = json.loads(partner.hact_values) if isinstance(partner.hact_values, str) else partner.hact_values
+        hact = json.loads(partner.hact_values) \
+            if isinstance(partner.hact_values, six.text_type) \
+            else partner.hact_values
         hact['programmatic_visits']['planned']['q1'] = pvq1
         hact['programmatic_visits']['planned']['q2'] = pvq2
         hact['programmatic_visits']['planned']['q3'] = pvq3
@@ -911,6 +923,13 @@ class Assessment(TimeStampedModel):
         max_length=1024,
         upload_to=get_assesment_path
     )
+    report_attachment = CodedGenericRelation(
+        Attachment,
+        verbose_name=_('Report'),
+        code='partners_assessment_report',
+        blank=True,
+        null=True
+    )
     # Basis for Risk Rating
     current = models.BooleanField(
         verbose_name=_('Basis for risk rating'),
@@ -1010,6 +1029,12 @@ class Agreement(TimeStampedModel):
         upload_to=get_agreement_path,
         blank=True,
         max_length=1024
+    )
+    attachment = CodedGenericRelation(
+        Attachment,
+        verbose_name=_('Attached Agreement'),
+        code='partners_agreement',
+        blank=True
     )
     start = models.DateField(
         verbose_name=_("Start Date"),
@@ -1239,6 +1264,13 @@ class AgreementAmendment(TimeStampedModel):
         max_length=1024,
         null=True, blank=True,
         upload_to=get_agreement_amd_file_path
+    )
+    signed_amendment_attachment = CodedGenericRelation(
+        Attachment,
+        verbose_name=_('Signed Amendment'),
+        code='partners_agreement_amendment',
+        blank=True,
+        null=True
     )
     types = ArrayField(models.CharField(
         max_length=50,
@@ -1475,12 +1507,26 @@ class Intervention(TimeStampedModel):
         blank=True,
         upload_to=get_prc_intervention_file_path
     )
+    prc_review_attachment = CodedGenericRelation(
+        Attachment,
+        verbose_name=_('Review Document by PRC'),
+        code='partners_intervention_prc_review',
+        blank=True,
+        null=True
+    )
     signed_pd_document = models.FileField(
         verbose_name=_("Signed PD Document"),
         max_length=1024,
         null=True,
         blank=True,
         upload_to=get_prc_intervention_file_path
+    )
+    signed_pd_attachment = CodedGenericRelation(
+        Attachment,
+        verbose_name=_('Signed PD Document'),
+        code='partners_intervention_signed_pd',
+        blank=True,
+        null=True
     )
     signed_by_unicef_date = models.DateField(
         verbose_name=_("Signed by UNICEF Date"),
@@ -1912,6 +1958,12 @@ class InterventionAmendment(TimeStampedModel):
         max_length=1024,
         upload_to=get_intervention_amendment_file_path
     )
+    signed_amendment_attachment = CodedGenericRelation(
+        Attachment,
+        verbose_name=_('Amendment Document'),
+        code='partners_intervention_amendment_signed',
+        blank=True,
+    )
 
     tracker = FieldTracker()
 
@@ -1959,6 +2011,7 @@ class InterventionPlannedVisits(TimeStampedModel):
 
     class Meta:
         unique_together = ('intervention', 'year')
+        verbose_name_plural = _('Intervention Planned Visits')
 
     def __str__(self):
         return '{} {}'.format(self.intervention, self.year)
@@ -2075,6 +2128,13 @@ class InterventionAttachment(TimeStampedModel):
         max_length=1024,
         upload_to=get_intervention_attachments_file_path
     )
+    attachment_file = CodedGenericRelation(
+        Attachment,
+        verbose_name=_('Intervention Attachment'),
+        code='partners_intervention_attachment',
+        blank=True,
+        null=True,
+    )
 
     tracker = FieldTracker()
 
@@ -2174,10 +2234,10 @@ def get_file_path(instance, filename):
         [connection.schema_name,
          'file_attachments',
          'partner_org',
-         str(instance.pca.agreement.partner.id),
+         six.text_type(instance.pca.agreement.partner.id),
          'agreements',
-         str(instance.pca.agreement.id),
+         six.text_type(instance.pca.agreement.id),
          'interventions',
-         str(instance.pca.id),
+         six.text_type(instance.pca.id),
          filename]
     )

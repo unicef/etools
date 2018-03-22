@@ -1,4 +1,4 @@
-from __future__ import unicode_literals
+from __future__ import absolute_import, division, print_function, unicode_literals
 
 import logging
 from collections import defaultdict
@@ -13,6 +13,7 @@ from django.db import connection
 from django.db.models.query_utils import Q
 from django.template.loader import render_to_string
 from django.utils.datastructures import MultiValueDict
+from django.utils import six
 
 from t2f.models import Invoice
 from users.models import Country as Workspace
@@ -75,7 +76,7 @@ class InvoiceExport(object):
 
     def generate_vendor_node(self, main, invoice):
         vendor = ET.SubElement(main, 'vendor')
-        ET.SubElement(vendor, 'amount').text = str(invoice.amount.quantize(Decimal('1.000')))
+        ET.SubElement(vendor, 'amount').text = six.text_type(invoice.amount.quantize(Decimal('1.000')))
         ET.SubElement(vendor, 'posting_key').text = self.get_posting_key(invoice.amount)
         ET.SubElement(vendor, 'vendor').text = invoice.vendor_number
         ET.SubElement(vendor, 'payment_terms')
@@ -89,8 +90,8 @@ class InvoiceExport(object):
 
     def _generate_expense_node(self, main, invoice_item, item_no):
         expense = ET.SubElement(main, 'expense')
-        ET.SubElement(expense, 'amount').text = str(invoice_item.amount.quantize(Decimal('1.000')))
-        ET.SubElement(expense, 'item_no').text = str(item_no)
+        ET.SubElement(expense, 'amount').text = six.text_type(invoice_item.amount.quantize(Decimal('1.000')))
+        ET.SubElement(expense, 'item_no').text = six.text_type(item_no)
         ET.SubElement(expense, 'posting_key').text = self.get_posting_key(invoice_item.amount)
         ET.SubElement(expense, 'wbs').text = invoice_item.wbs.name
         ET.SubElement(expense, 'grant').text = invoice_item.grant.name
@@ -212,5 +213,5 @@ class InvoiceUpdater(object):
 
         try:
             msg.send(fail_silently=False)
-        except ValidationError as exc:
-            log.error('Was not able to send the email. Exception: %s', exc.message)
+        except ValidationError:
+            log.exception('Was not able to send the email.')
