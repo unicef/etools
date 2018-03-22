@@ -211,7 +211,11 @@ class EngagementViewSet(
 
     @list_route(methods=['get'], url_path='hact')
     def hact(self, request, *args, **kwargs):
-        engagements = Engagement.objects.filter(status=Engagement.FINAL).select_subclasses(
+        if "partner" not in request.query_params:
+            raise Http404("Need partner as a query parameter")
+
+        engagements = Engagement.objects.filter(partner_pk=request.query_params["partner"],
+                                                status=Engagement.FINAL).select_subclasses(
             "audit", "spotcheck", "microassessment", "specialaudit"
         )
         serializer = EngagementHactSerializer(engagements, many=True, context={"request": request})
