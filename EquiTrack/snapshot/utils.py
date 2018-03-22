@@ -20,7 +20,7 @@ def jsonify(data):
     )
     for key, value in data.items():
         if isinstance(value, QuerySet):
-            data[key] = [six.text_type(v) for v in value]
+            data[key] = [v.pk for v in value]
         if not isinstance(value, allowed_types):
             data[key] = six.text_type(data[key])
     return data
