@@ -1,10 +1,11 @@
 from __future__ import absolute_import, division, print_function, unicode_literals
 
 import datetime
-import sys
-from unittest import skipIf, TestCase
+from unittest import TestCase
 
-from EquiTrack.tests.cases import EToolsTenantTestCase
+from django.utils import six
+
+from EquiTrack.tests.cases import BaseTenantTestCase
 from partners.models import Agreement
 from partners.tests.factories import AgreementFactory
 from reports.models import (
@@ -26,97 +27,78 @@ from reports.tests.factories import (
 from reports.tests.factories import QuarterFactory
 
 
-@skipIf(sys.version_info.major == 3, "This test can be deleted under Python 3")
 class TestStrUnicode(TestCase):
-    '''Ensure calling str() on model instances returns UTF8-encoded text and unicode() returns unicode.'''
+    '''Ensure calling six.text_type() on model instances returns the right text.'''
     def test_country_programme(self):
         instance = CountryProgrammeFactory.build(name=b'xyz', wbs=b'xyz')
-        self.assertEqual(str(instance), b'xyz xyz')
-        self.assertEqual(unicode(instance), u'xyz xyz')
+        self.assertEqual(six.text_type(instance), u'xyz xyz')
 
         instance = CountryProgrammeFactory.build(name=u'\xccsland', wbs=b'xyz')
-        self.assertEqual(str(instance), b'\xc3\x8csland xyz')
-        self.assertEqual(unicode(instance), u'\xccsland xyz')
+        self.assertEqual(six.text_type(instance), u'\xccsland xyz')
 
         instance = CountryProgrammeFactory.build(name=u'\xccsland', wbs=u'xyz')
-        self.assertEqual(str(instance), b'\xc3\x8csland xyz')
-        self.assertEqual(unicode(instance), u'\xccsland xyz')
+        self.assertEqual(six.text_type(instance), u'\xccsland xyz')
 
     def test_result_type(self):
         instance = ResultTypeFactory.build(name=b'xyz')
-        self.assertEqual(str(instance), b'xyz')
-        self.assertEqual(unicode(instance), u'xyz')
+        self.assertEqual(six.text_type(instance), u'xyz')
 
         instance = ResultTypeFactory.build(name=u'\xccsland')
-        self.assertEqual(str(instance), b'\xc3\x8csland')
-        self.assertEqual(unicode(instance), u'\xccsland')
+        self.assertEqual(six.text_type(instance), u'\xccsland')
 
     def test_sector(self):
         instance = SectorFactory.build(name=b'xyz')
-        self.assertEqual(str(instance), b' xyz')
-        self.assertEqual(unicode(instance), u' xyz')
+        self.assertEqual(six.text_type(instance), u' xyz')
 
         instance = SectorFactory.build(name=u'\xccsland')
-        self.assertEqual(str(instance), b' \xc3\x8csland')
-        self.assertEqual(unicode(instance), u' \xccsland')
+        self.assertEqual(six.text_type(instance), u' \xccsland')
 
     def test_result(self):
         instance = ResultFactory.build(name=b'xyz')
-        self.assertTrue(str(instance).endswith(b'xyz'))
-        self.assertTrue(unicode(instance).endswith(u'xyz'))
+        self.assertTrue(six.text_type(instance).endswith(u'xyz'))
 
         instance = ResultFactory.build(name=u'\xccsland')
-        self.assertTrue(str(instance).endswith(b'\xc3\x8csland'))
-        self.assertTrue(unicode(instance).endswith(u'\xccsland'))
+        self.assertTrue(six.text_type(instance).endswith(u'\xccsland'))
 
     def test_lower_result(self):
         instance = LowerResultFactory.build(name=b'xyz', code=b'xyz')
-        self.assertEqual(str(instance), b'xyz: xyz')
-        self.assertEqual(unicode(instance), u'xyz: xyz')
+        self.assertEqual(six.text_type(instance), u'xyz: xyz')
 
         instance = LowerResultFactory.build(name=u'\xccsland', code=b'xyz')
-        self.assertEqual(str(instance), b'xyz: \xc3\x8csland')
-        self.assertEqual(unicode(instance), u'xyz: \xccsland')
+        self.assertEqual(six.text_type(instance), u'xyz: \xccsland')
 
         instance = LowerResultFactory.build(name=u'\xccsland', code=u'xyz')
-        self.assertEqual(str(instance), b'xyz: \xc3\x8csland')
-        self.assertEqual(unicode(instance), u'xyz: \xccsland')
+        self.assertEqual(six.text_type(instance), u'xyz: \xccsland')
 
     def test_unit(self):
         instance = UnitFactory.build(type=b'xyz')
-        self.assertTrue(str(instance).endswith(b'xyz'))
-        self.assertTrue(unicode(instance).endswith(u'xyz'))
+        self.assertTrue(six.text_type(instance).endswith(u'xyz'))
 
         instance = UnitFactory.build(type=u'\xccsland')
-        self.assertTrue(str(instance).endswith(b'\xc3\x8csland'))
-        self.assertTrue(unicode(instance).endswith(u'\xccsland'))
+        self.assertTrue(six.text_type(instance).endswith(u'\xccsland'))
 
     def test_indicator_blueprint(self):
         instance = IndicatorBlueprintFactory.build(title=b'xyz')
-        self.assertEqual(str(instance), b'xyz')
-        self.assertEqual(unicode(instance), u'xyz')
+        self.assertEqual(six.text_type(instance), u'xyz')
 
         instance = IndicatorBlueprintFactory.build(title=u'\xccsland')
-        self.assertEqual(str(instance), b'\xc3\x8csland')
-        self.assertEqual(unicode(instance), u'\xccsland')
+        self.assertEqual(six.text_type(instance), u'\xccsland')
 
     def test_indicator(self):
         instance = IndicatorFactory.build(name=b'xyz', active=True)
-        self.assertEqual(str(instance), b'xyz  ')
-        self.assertEqual(unicode(instance), u'xyz  ')
+        self.assertEqual(six.text_type(instance), u'xyz  ')
 
         instance = IndicatorFactory.build(name=u'\xccsland', active=True)
-        self.assertEqual(str(instance), b'\xc3\x8csland  ')
-        self.assertEqual(unicode(instance), u'\xccsland  ')
+        self.assertEqual(six.text_type(instance), u'\xccsland  ')
 
 
-class TestQuarter(EToolsTenantTestCase):
+class TestQuarter(BaseTenantTestCase):
     def test_repr(self):
         quarter = QuarterFactory(name=Quarter.Q1, year=2001)
         self.assertEqual(repr(quarter), "Q1-2001")
 
 
-class TestCountryProgramme(EToolsTenantTestCase):
+class TestCountryProgramme(BaseTenantTestCase):
     @classmethod
     def setUpTestData(cls):
         today = datetime.date.today()
@@ -212,7 +194,7 @@ class TestCountryProgramme(EToolsTenantTestCase):
         self.assertEqual(agreement_updated.end, new_to_date)
 
 
-class TestResult(EToolsTenantTestCase):
+class TestResult(BaseTenantTestCase):
     def test_result_name(self):
         result_type = ResultTypeFactory(name="RType")
         result = ResultFactory(
@@ -247,7 +229,7 @@ class TestResult(EToolsTenantTestCase):
         self.assertFalse(result.valid_entry())
 
 
-class TestIndicatorBlueprint(EToolsTenantTestCase):
+class TestIndicatorBlueprint(BaseTenantTestCase):
     def test_save_empty(self):
         """If code is empty ensure it is set to None"""
         indicator = IndicatorBlueprint(code="")
@@ -261,7 +243,7 @@ class TestIndicatorBlueprint(EToolsTenantTestCase):
         self.assertEqual(indicator.code, "C123")
 
 
-class TestIndicator(EToolsTenantTestCase):
+class TestIndicator(BaseTenantTestCase):
     def test_save_empty(self):
         """If code is empty ensure it is set to None"""
         indicator = Indicator(name="Indicator", code="")

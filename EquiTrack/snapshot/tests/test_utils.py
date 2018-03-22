@@ -5,7 +5,7 @@ from __future__ import unicode_literals
 
 from django.forms import model_to_dict
 
-from EquiTrack.tests.cases import EToolsTenantTestCase
+from EquiTrack.tests.cases import BaseTenantTestCase
 from funds.tests.factories import FundsReservationHeaderFactory
 from partners.tests.factories import (
     AgreementFactory,
@@ -17,14 +17,21 @@ from snapshot import utils
 from users.tests.factories import UserFactory
 
 
-class TestJsonify(EToolsTenantTestCase):
+class TestJsonify(BaseTenantTestCase):
     def test_jsonify(self):
         intervention = InterventionFactory()
         j = utils.jsonify(model_to_dict(intervention))
         self.assertEqual(j["title"], intervention.title)
 
+    def test_jsonify_unicode(self):
+        staff = PartnerStaffFactory(first_name=u'R\xe4dda')
+        agreement = AgreementFactory(agreement_type=u'R\xe4dda')
+        agreement.authorized_officers.add(staff)
+        j = utils.jsonify(model_to_dict(agreement))
+        self.assertEqual(j["agreement_type"], agreement.agreement_type)
 
-class TestGetToManyFieldNames(EToolsTenantTestCase):
+
+class TestGetToManyFieldNames(BaseTenantTestCase):
     def test_intervention(self):
         intervention = InterventionFactory()
         fields = utils.get_to_many_field_names(intervention.__class__)
@@ -55,7 +62,7 @@ class TestGetToManyFieldNames(EToolsTenantTestCase):
         self.assertIn("amendments", fields)
 
 
-class TestCreateDictWithRelations(EToolsTenantTestCase):
+class TestCreateDictWithRelations(BaseTenantTestCase):
     def test_no_relation(self):
         intervention = InterventionFactory()
         obj_dict = utils.create_dict_with_relations(intervention)
@@ -72,7 +79,7 @@ class TestCreateDictWithRelations(EToolsTenantTestCase):
         self.assertEqual(obj_dict, {})
 
 
-class TestCreateChangeDict(EToolsTenantTestCase):
+class TestCreateChangeDict(BaseTenantTestCase):
     def test_no_prev_dict(self):
         self.assertEqual(utils.create_change_dict(None, {"key": "value"}), {})
 
@@ -88,7 +95,7 @@ class TestCreateChangeDict(EToolsTenantTestCase):
         })
 
 
-class TestCreateSnapshot(EToolsTenantTestCase):
+class TestCreateSnapshot(BaseTenantTestCase):
     def test_create(self):
         user = UserFactory()
         intervention = InterventionFactory()

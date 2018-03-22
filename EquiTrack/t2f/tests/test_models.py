@@ -1,12 +1,8 @@
-from __future__ import absolute_import
-from __future__ import division
-from __future__ import print_function
-from __future__ import unicode_literals
+from __future__ import absolute_import, division, print_function, unicode_literals
 
-import sys
-from unittest import skipIf
+from django.utils import six
 
-from EquiTrack.tests.cases import EToolsTenantTestCase
+from EquiTrack.tests.cases import BaseTenantTestCase
 from t2f.tests.factories import (
     InvoiceFactory,
     ItineraryItemFactory,
@@ -14,37 +10,29 @@ from t2f.tests.factories import (
 )
 
 
-@skipIf(sys.version_info.major == 3, "This test can be deleted under Python 3")
-class TestStrUnicode(EToolsTenantTestCase):
-    '''Ensure calling str() on model instances returns UTF8-encoded text and unicode() returns unicode.'''
+class TestStrUnicode(BaseTenantTestCase):
+    '''Ensure calling six.text_type() on model instances returns the right text.'''
     def test_travel(self):
         instance = TravelFactory(reference_number=b'two')
-        self.assertEqual(str(instance), b'two')
-        self.assertEqual(unicode(instance), u'two')
+        self.assertEqual(six.text_type(instance), u'two')
 
         instance = TravelFactory(reference_number=u'tv\xe5')
-        self.assertEqual(str(instance), b'tv\xc3\xa5')
-        self.assertEqual(unicode(instance), u'tv\xe5')
+        self.assertEqual(six.text_type(instance), u'tv\xe5')
 
     def test_itinerary_item(self):
         travel = TravelFactory()
         instance = ItineraryItemFactory(origin=b'here', destination=b'there', travel=travel)
-        self.assertTrue(str(instance).endswith(b'here - there'))
-        self.assertTrue(unicode(instance).endswith(u'here - there'))
+        self.assertTrue(six.text_type(instance).endswith(u'here - there'))
 
         instance = ItineraryItemFactory(origin=b'here', destination=u'G\xf6teborg', travel=travel)
-        self.assertTrue(str(instance).endswith(b'here - G\xc3\xb6teborg'))
-        self.assertTrue(unicode(instance).endswith(u'here - G\xf6teborg'))
+        self.assertTrue(six.text_type(instance).endswith(u'here - G\xf6teborg'))
 
         instance = ItineraryItemFactory(origin=u'Przemy\u015bl', destination=u'G\xf6teborg', travel=travel)
-        self.assertTrue(str(instance).endswith(b'Przemy\xc5\x9bl - G\xc3\xb6teborg'))
-        self.assertTrue(unicode(instance).endswith(u'Przemy\u015bl - G\xf6teborg'))
+        self.assertTrue(six.text_type(instance).endswith(u'Przemy\u015bl - G\xf6teborg'))
 
     def test_invoice(self):
         instance = InvoiceFactory(business_area=b'xyz')
-        self.assertTrue(str(instance).startswith(b'xyz/'))
-        self.assertTrue(unicode(instance).startswith(u'xyz/'))
+        self.assertTrue(six.text_type(instance).startswith(u'xyz/'))
 
         instance = InvoiceFactory(business_area=u'G\xf6teborg')
-        self.assertTrue(str(instance).startswith(b'G\xc3\xb6teborg/'))
-        self.assertTrue(unicode(instance).startswith(u'G\xf6teborg/'))
+        self.assertTrue(six.text_type(instance).startswith(u'G\xf6teborg/'))

@@ -15,6 +15,6 @@ class Migration(migrations.Migration):
         migrations.AlterField(
             model_name='resulttype',
             name='name',
-            field=models.CharField(choices=[(b'Outcome', b'Outcome'), (b'Output', b'Output'), (b'Activity', b'Activity')], max_length=150, unique=True),
+            field=models.CharField(choices=[('Outcome', 'Outcome'), ('Output', 'Output'), ('Activity', 'Activity')], max_length=150, unique=True),
         ),
     ]

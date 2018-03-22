@@ -2,11 +2,12 @@
 from __future__ import absolute_import, division, print_function, unicode_literals
 
 from django.test import override_settings
+from django.utils import six
 from django.utils.timezone import now as django_now
 
 import mock
 
-from EquiTrack.tests.cases import EToolsTenantTestCase
+from EquiTrack.tests.cases import BaseTenantTestCase
 from users.models import Country
 from vision.exceptions import VisionException
 from vision.models import VisionSyncLog
@@ -30,7 +31,7 @@ class _MySynchronizer(VisionDataSynchronizer):
         pass
 
 
-class TestVisionDataLoader(EToolsTenantTestCase):
+class TestVisionDataLoader(BaseTenantTestCase):
     '''Exercise VisionDataLoader class'''
     # Note - I don't understand why, but @override_settings(VISION_URL=FAUX_VISION_URL) doesn't work when I apply
     # it at the TestCase class level instead of each individual test case.
@@ -121,7 +122,7 @@ class TestVisionDataLoader(EToolsTenantTestCase):
             loader.get()
 
         # Assert that the status code is repeated in the message of the raised exception.
-        self.assertIn('401', str(context_manager.exception))
+        self.assertIn('401', six.text_type(context_manager.exception))
 
         # Ensure get was called as normal.
         self.assertEqual(mock_requests.get.call_count, 1)
@@ -131,14 +132,14 @@ class TestVisionDataLoader(EToolsTenantTestCase):
                                                           'verify': False})
 
 
-class TestVisionDataSynchronizerInit(EToolsTenantTestCase):
+class TestVisionDataSynchronizerInit(BaseTenantTestCase):
     '''Exercise initialization of VisionDataSynchronizer class'''
     def test_instantiation_no_country(self):
         '''Ensure I can't create a synchronizer without specifying a country'''
         with self.assertRaises(VisionException) as context_manager:
             _MySynchronizer()
 
-        self.assertEqual('Country is required', str(context_manager.exception))
+        self.assertEqual('Country is required', six.text_type(context_manager.exception))
 
     def test_instantiation_no_endpoint(self):
         '''Ensure I can't create a synchronizer without specifying an endpoint'''
@@ -151,7 +152,7 @@ class TestVisionDataSynchronizerInit(EToolsTenantTestCase):
         with self.assertRaises(VisionException) as context_manager:
             _MyBadSynchronizer(country=test_country)
 
-        self.assertEqual('You must set the ENDPOINT name', str(context_manager.exception))
+        self.assertEqual('You must set the ENDPOINT name', six.text_type(context_manager.exception))
 
     @mock.patch('vision.vision_data_synchronizer.connection', spec=['set_tenant'])
     @mock.patch('vision.vision_data_synchronizer.logger.info')
@@ -179,7 +180,7 @@ class TestVisionDataSynchronizerInit(EToolsTenantTestCase):
         self.assertEqual(mock_logger_info.call_args_list[1][1], {})
 
 
-class TestVisionDataSynchronizerSync(EToolsTenantTestCase):
+class TestVisionDataSynchronizerSync(BaseTenantTestCase):
     '''Exercise the sync() method of VisionDataSynchronizer class'''
     def _assertVisionSyncLogFundamentals(self, total_records, total_processed, details='', exception_message='',
                                          successful=True):
@@ -393,8 +394,8 @@ class TestVisionDataSynchronizerSync(EToolsTenantTestCase):
         expected_msg = 'About to get data from http://example.com'
         self.assertEqual(mock_logger_info.call_args_list[2][0], (expected_msg, ))
         self.assertEqual(mock_logger_info.call_args_list[2][1], {})
-        expected_msg = 'sync caught ValueError with message "Wrong!"'
+        expected_msg = 'sync'
         self.assertEqual(mock_logger_info.call_args_list[3][0], (expected_msg, ))
-        self.assertEqual(mock_logger_info.call_args_list[3][1], {})
+        self.assertEqual(mock_logger_info.call_args_list[3][1], {'exc_info': True})
 
         self._assertVisionSyncLogFundamentals(0, 0, exception_message='Wrong!', successful=False)

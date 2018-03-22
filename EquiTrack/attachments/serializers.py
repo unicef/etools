@@ -5,8 +5,10 @@ from django.utils.translation import ugettext as _
 from rest_framework import serializers
 from rest_framework.exceptions import ValidationError
 
-from attachments.models import Attachment
-from attachments.serializers_fields import Base64FileField
+from attachments.models import Attachment, AttachmentFlat
+from attachments.serializers_fields import (
+    Base64FileField
+)
 
 
 class BaseAttachmentsSerializer(serializers.ModelSerializer):
@@ -26,7 +28,15 @@ class BaseAttachmentsSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Attachment
-        fields = ['id', 'file_type', 'file', 'hyperlink', 'created', 'modified', ]
+        fields = [
+            'id',
+            'file_type',
+            'file',
+            'hyperlink',
+            'created',
+            'modified',
+            'uploaded_by',
+        ]
         extra_kwargs = {
             'created': {
                 'label': _('Date Uploaded'),
@@ -47,3 +57,17 @@ class Base64AttachmentSerializer(BaseAttachmentsSerializer):
 
     class Meta(BaseAttachmentsSerializer.Meta):
         fields = BaseAttachmentsSerializer.Meta.fields + ['file_name', ]
+
+
+class AttachmentSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = AttachmentFlat
+        exclude = ("id", )
+        extra_kwargs = {
+            'created': {
+                'label': _('Date Uploaded'),
+            },
+            'attachment': {
+                'label': _('id'),
+            }
+        }

@@ -1,7 +1,8 @@
-from __future__ import unicode_literals
+from __future__ import absolute_import, division, print_function, unicode_literals
 
 import json
 
+from django.utils import six
 from rest_framework import serializers
 
 from reports.models import (
@@ -31,7 +32,7 @@ class AppliedIndicatorExportSerializer(serializers.ModelSerializer):
 
     def get_disaggregation(self, obj):
         res = obj.disaggregation
-        if isinstance(obj.disaggregation, str):
+        if isinstance(obj.disaggregation, six.text_type):
             res = json.loads(obj.disaggregation)
         return res
 
