@@ -212,9 +212,9 @@ class EngagementViewSet(
     @list_route(methods=['get'], url_path='hact')
     def hact(self, request, *args, **kwargs):
         if "partner" not in request.query_params:
-            raise Http404("Need partner as a query parameter")
+            raise Http404
 
-        engagements = Engagement.objects.filter(partner_pk=request.query_params["partner"],
+        engagements = Engagement.objects.filter(partner__pk=request.query_params["partner"],
                                                 status=Engagement.FINAL).select_subclasses(
             "audit", "spotcheck", "microassessment", "specialaudit"
         )
