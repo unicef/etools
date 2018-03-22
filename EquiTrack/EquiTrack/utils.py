@@ -7,10 +7,12 @@ import uuid
 from functools import wraps
 
 from datetime import datetime
+
 from django.conf import settings
 from django.contrib.sites.models import Site
 from django.core.cache import cache
 from django.db import connection
+from django.utils import six
 from django.utils.cache import patch_cache_control
 
 import requests
@@ -59,7 +61,7 @@ def etag_cached(cache_key, public_cache=False):
     match the one sent along with the request.
     Otherwise it returns 304 NOT MODIFIED.
     """
-    assert isinstance(cache_key, (str, unicode)), 'Cache key has to be a string'
+    assert isinstance(cache_key, six.string_types), 'Cache key has to be a string'
 
     def make_cache_key():
         if public_cache:
