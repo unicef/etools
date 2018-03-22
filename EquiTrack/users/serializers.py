@@ -1,4 +1,5 @@
 from django.contrib.auth import get_user_model
+from django.utils.encoding import force_text
 from rest_framework import serializers
 
 from t2f.serializers.user_data import T2FUserDataSerializer
@@ -104,7 +105,7 @@ class GroupSerializer(serializers.ModelSerializer):
             group = Group.objects.create(**validated_data)
 
         except Exception as ex:
-            raise serializers.ValidationError({'group': ex.message})
+            raise serializers.ValidationError({'group': force_text(ex)})
 
         return group
 
@@ -192,7 +193,7 @@ class UserCreationSerializer(serializers.ModelSerializer):
             user.profile.save()
 
         except Exception as ex:
-            raise serializers.ValidationError({'user': ex.message})
+            raise serializers.ValidationError({'user': force_text(ex)})
 
         return user
 

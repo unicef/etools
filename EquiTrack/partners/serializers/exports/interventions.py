@@ -1,5 +1,6 @@
-from __future__ import unicode_literals
+from __future__ import absolute_import, division, print_function, unicode_literals
 
+from django.utils import six
 from django.utils.translation import ugettext as _
 from rest_framework import serializers
 
@@ -52,13 +53,13 @@ class InterventionSectorLocationLinkExportSerializer(LocationExportSerializer):
 
     def get_intervention(self, obj):
         return ",".join(
-            [str(x.intervention.pk)
+            [six.text_type(x.intervention.pk)
              for x in obj.intervention_sector_locations.all()]
         )
 
     def get_sector(self, obj):
         return ",".join(
-            [str(x.sector.pk) for x in obj.intervention_sector_locations.all()]
+            [six.text_type(x.sector.pk) for x in obj.intervention_sector_locations.all()]
         )
 
 
@@ -74,13 +75,13 @@ class InterventionSectorLocationLinkExportFlatSerializer(LocationExportFlatSeria
 
     def get_intervention(self, obj):
         return ",".join(
-            [str(x.intervention.number)
+            [six.text_type(x.intervention.number)
              for x in obj.intervention_sector_locations.all()]
         )
 
     def get_sector(self, obj):
         return ",".join(
-            [str(x.sector.name)
+            [six.text_type(x.sector.name)
              for x in obj.intervention_sector_locations.all()]
         )
 
@@ -178,7 +179,7 @@ class InterventionIndicatorExportSerializer(IndicatorExportSerializer):
 
     def get_intervention(self, obj):
         return ",".join(
-            [str(x.intervention.pk)
+            [six.text_type(x.intervention.pk)
              for x in obj.interventionresultlink_set.all()]
         )
 
@@ -214,14 +215,13 @@ class InterventionExportSerializer(serializers.ModelSerializer):
         label=_("Partner Type"),
         source='agreement.partner.partner_type',
     )
-    number = serializers.SerializerMethodField(label=_("Reference Number"))
     agreement_number = serializers.CharField(
         label=_("Agreement"),
         source='agreement.agreement_number',
     )
     country_programme = serializers.CharField(
         label=_("Country Programme"),
-        source='agreement.country_programme.name',
+        source='country_programme.name',
     )
     offices = serializers.SerializerMethodField(label=_("UNICEF Office"))
     sectors = serializers.SerializerMethodField(label=_("Sections"))
@@ -231,9 +231,7 @@ class InterventionExportSerializer(serializers.ModelSerializer):
         label=_("Cluster"),
     )
     fr_numbers = serializers.SerializerMethodField(label=_("FR Number(s)"))
-    fr_currency = serializers.ReadOnlyField(
-        label=_("FR Currency"),
-    )
+    fr_currency = serializers.SerializerMethodField(label=_("FR Currency"))
     fr_posting_date = serializers.SerializerMethodField(label=_("FR Posting Date"))
     fr_amount = serializers.SerializerMethodField(
         label=_("FR Amount"),
@@ -362,9 +360,6 @@ class InterventionExportSerializer(serializers.ModelSerializer):
             "url",
         )
 
-    def get_number(self, obj):
-        return obj.reference_number
-
     def get_unicef_signatory(self, obj):
         return obj.unicef_signatory.get_full_name() if obj.unicef_signatory else ''
 
@@ -400,6 +395,12 @@ class InterventionExportSerializer(serializers.ModelSerializer):
 
     def get_cp_outputs(self, obj):
         return ', '.join([rs.cp_output.name for rs in obj.result_links.all()])
+
+    def fr_currencies_ok(self, obj):
+        return obj.frs__currency__count == 1 if obj.frs__currency__count else None
+
+    def get_fr_currency(self, obj):
+        return obj.max_fr_currency if self.fr_currencies_ok(obj) else None
 
     def get_fr_amount(self, obj):
         return obj.total_frs["total_frs_amt"]

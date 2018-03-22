@@ -1,4 +1,4 @@
-from __future__ import absolute_import
+from __future__ import absolute_import, division, print_function, unicode_literals
 
 import json
 import logging
@@ -10,9 +10,9 @@ from django.contrib.contenttypes.models import ContentType
 from django.contrib.postgres.fields import ArrayField, JSONField
 from django.db import models
 from django.template.base import Template, VariableNode
+from django.utils import six
 from django.utils.encoding import python_2_unicode_compatible
 
-import six
 from model_utils import Choices
 from post_office import mail
 from post_office.models import EmailTemplate
@@ -130,5 +130,5 @@ class Notification(models.Model):
         else:
             template_obj = Template(email_template.html_content)
 
-            return map(lambda node: str(node).split(': ')[1][:-1],
+            return map(lambda node: six.text_type(node).split(': ')[1][:-1],
                        template_obj.nodelist.get_nodes_by_type(VariableNode))

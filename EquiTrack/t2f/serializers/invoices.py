@@ -1,7 +1,8 @@
-from __future__ import unicode_literals
+from __future__ import absolute_import, division, print_function, unicode_literals
 
 from decimal import Decimal, getcontext, InvalidOperation
 
+from django.utils import six
 from rest_framework import serializers
 
 from t2f.models import Invoice, InvoiceItem
@@ -31,7 +32,7 @@ class InvoiceItemSerializer(serializers.ModelSerializer):
         fields = ('wbs', 'grant', 'fund', 'amount')
 
     def get_amount(self, obj):
-        return str(round_to_currency_precision(obj.invoice.currency, obj.amount))
+        return six.text_type(round_to_currency_precision(obj.invoice.currency, obj.amount))
 
 
 class InvoiceSerializer(serializers.ModelSerializer):
@@ -46,5 +47,5 @@ class InvoiceSerializer(serializers.ModelSerializer):
 
     def to_representation(self, instance):
         data = super(InvoiceSerializer, self).to_representation(instance)
-        data['amount'] = str(round_to_currency_precision(instance.currency, instance.amount))
+        data['amount'] = six.text_type(round_to_currency_precision(instance.currency, instance.amount))
         return data

@@ -152,7 +152,7 @@ class TestOutputListAPIView(BaseTenantTestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         first_response = sorted(response.data, key=itemgetter("id"))[0]
         keys = sorted(first_response.keys())
-        self.assertEqual(keys, ["id", "name"])
+        six.assertCountEqual(self, keys, ['id', 'name'])
 
     def test_current_cp(self):
         response = self.forced_auth_req('get', self.url)
@@ -206,7 +206,9 @@ class TestOutputListAPIView(BaseTenantTestCase):
         }
         response = self.forced_auth_req('get', self.url, data=data)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertIn(self.result1.id, [int(i["id"]) for i in response.data])
+        response_ids = [int(item['id']) for item in response.data]
+        result_ids = [self.result1.id, self.result2.id]
+        self.assertEqual(sorted(response_ids), sorted(result_ids))
 
     def test_dropdown(self):
         data = {"dropdown": "true"}
