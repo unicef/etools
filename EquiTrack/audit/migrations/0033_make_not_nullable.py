@@ -8,7 +8,7 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('audit', '0031_fix_null_values'),
+        ('audit', '0032_fix_null_values'),
     ]
 
     operations = [

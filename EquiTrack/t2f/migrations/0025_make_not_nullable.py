@@ -9,7 +9,7 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('t2f', '0023_fix_null_values'),
+        ('t2f', '0024_fix_null_values'),
     ]
 
     operations = [

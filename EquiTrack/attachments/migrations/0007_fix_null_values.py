@@ -19,7 +19,7 @@ def fix_nulls(apps, schema):
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('attachments', '0005_auto_20180206_1700'),
+        ('attachments', '0006_attachmentflat'),
     ]
 
     operations = [

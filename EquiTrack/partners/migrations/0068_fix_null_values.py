@@ -53,7 +53,7 @@ def fix_nulls(apps, schema):
 class Migration(migrations.Migration):
 
     dependencies = [
-        (u'partners', u'0061_auto_20180221_1654'),
+        (u'partners', u'0067_auto_20180309_1210'),
     ]
 
     operations = [

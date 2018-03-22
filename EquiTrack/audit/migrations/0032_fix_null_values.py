@@ -18,7 +18,7 @@ def fix_nulls(apps, schema):
 class Migration(migrations.Migration):
 
     dependencies = [
-        (u'audit', u'0030_auto_20180219_1402'),
+        (u'audit', u'0031_auto_20180309_1210'),
     ]
 
     operations = [

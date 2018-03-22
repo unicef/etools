@@ -8,7 +8,7 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('publics', '0025_fix_null_values'),
+        ('publics', '0026_fix_null_values'),
     ]
 
     operations = [
