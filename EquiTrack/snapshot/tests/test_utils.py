@@ -23,6 +23,13 @@ class TestJsonify(BaseTenantTestCase):
         j = utils.jsonify(model_to_dict(intervention))
         self.assertEqual(j["title"], intervention.title)
 
+    def test_jsonify_unicode(self):
+        staff = PartnerStaffFactory(first_name=u'R\xe4dda')
+        agreement = AgreementFactory(agreement_type=u'R\xe4dda')
+        agreement.authorized_officers.add(staff)
+        j = utils.jsonify(model_to_dict(agreement))
+        self.assertEqual(j["agreement_type"], agreement.agreement_type)
+
 
 class TestGetToManyFieldNames(BaseTenantTestCase):
     def test_intervention(self):

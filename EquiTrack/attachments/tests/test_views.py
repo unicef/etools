@@ -1,7 +1,5 @@
 from __future__ import absolute_import, division, print_function, unicode_literals
 
-import datetime
-
 from django.core.files.uploadedfile import SimpleUploadedFile
 from django.core.urlresolvers import reverse
 from django.utils import six
@@ -67,10 +65,10 @@ class TestAttachmentListView(BaseTenantTestCase):
         )
 
         cls.default_partner_response = [{
-            "partner": None,
-            "partner_type": None,
-            "vendor_number": None,
-            "pd_ssfa_number": None,
+            "partner": "",
+            "partner_type": "",
+            "vendor_number": "",
+            "pd_ssfa_number": "",
         }] * 2
 
     def test_get_no_file(self):
@@ -113,99 +111,6 @@ class TestAttachmentListView(BaseTenantTestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(len(response.data), 3)
 
-    def test_filter_not_found(self):
-        response = self.forced_auth_req(
-            "get",
-            self.url,
-            user=self.unicef_staff,
-            data={"file_type": 404}
-        )
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertFalse(response.data)
-
-    def test_filter_invalid(self):
-        """If invalid filter param provided, then all attachments
-        are provided
-        """
-        response = self.forced_auth_req(
-            "get",
-            self.url,
-            user=self.unicef_staff,
-            data={"wrong": self.file_type_1.pk}
-        )
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(len(response.data), 2)
-
-    def test_filter_file_type(self):
-        response = self.forced_auth_req(
-            "get",
-            self.url,
-            user=self.unicef_staff,
-            data={"file_type": self.file_type_1.pk}
-        )
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(len(response.data), 1)
-        self.assertEqual(
-            response.data[0]["filename"],
-            self.attachment_1.filename
-        )
-
-    def test_filter_file_type_list(self):
-        response = self.forced_auth_req(
-            "get",
-            self.url,
-            user=self.unicef_staff,
-            data={"file_type": [self.file_type_1.pk, self.file_type_2.pk]}
-        )
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(len(response.data), 2)
-
-    def test_filter_before(self):
-        before = self.attachment_1.modified + datetime.timedelta(days=1)
-        response = self.forced_auth_req(
-            "get",
-            self.url,
-            user=self.unicef_staff,
-            data={"before": before.strftime("%Y-%m-%d")}
-        )
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(len(response.data), 2)
-
-    def test_filter_after(self):
-        after = self.attachment_1.modified - datetime.timedelta(days=1)
-        response = self.forced_auth_req(
-            "get",
-            self.url,
-            user=self.unicef_staff,
-            data={"after": after.strftime("%Y-%m-%d")}
-        )
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(len(response.data), 2)
-
-    def test_filter_uploaded_by(self):
-        response = self.forced_auth_req(
-            "get",
-            self.url,
-            user=self.unicef_staff,
-            data={"uploaded_by": self.unicef_staff.pk}
-        )
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(len(response.data), 1)
-        self.assertEqual(
-            response.data[0]["filename"],
-            self.attachment_1.filename
-        )
-
-    def test_filter_uploaded_by_list(self):
-        response = self.forced_auth_req(
-            "get",
-            self.url,
-            user=self.unicef_staff,
-            data={"uploaded_by": [self.unicef_staff.pk, self.user.pk]}
-        )
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(len(response.data), 2)
-
     def assert_values(self, response, expected):
         received = [{
             "partner": x["partner"],
@@ -236,7 +141,7 @@ class TestAttachmentListView(BaseTenantTestCase):
             "partner": self.partner.name,
             "partner_type": self.partner.partner_type,
             "vendor_number": self.partner.vendor_number,
-            "pd_ssfa_number": None,
+            "pd_ssfa_number": "",
         }])
 
     def test_assessment(self):
@@ -260,7 +165,7 @@ class TestAttachmentListView(BaseTenantTestCase):
             "partner": self.partner.name,
             "partner_type": self.partner.partner_type,
             "vendor_number": self.partner.vendor_number,
-            "pd_ssfa_number": None,
+            "pd_ssfa_number": "",
         }])
 
     def test_agreement(self):
@@ -284,7 +189,7 @@ class TestAttachmentListView(BaseTenantTestCase):
             "partner": self.partner.name,
             "partner_type": self.partner.partner_type,
             "vendor_number": self.partner.vendor_number,
-            "pd_ssfa_number": None,
+            "pd_ssfa_number": "",
         }])
 
     def test_agreement_amendment(self):
@@ -308,7 +213,7 @@ class TestAttachmentListView(BaseTenantTestCase):
             "partner": self.partner.name,
             "partner_type": self.partner.partner_type,
             "vendor_number": self.partner.vendor_number,
-            "pd_ssfa_number": None,
+            "pd_ssfa_number": "",
         }])
 
     def test_intervention_amendment(self):
