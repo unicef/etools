@@ -32,7 +32,7 @@ djangorestframework-recursive==0.1.1
 drfpasswordless==1.1.2
 
 # Other Python packages
-psycopg2==2.6.2
+psycopg2==2.7.4
 celery==4.1.0
 amqp==2.2.2
 billiard==3.5.0.3
