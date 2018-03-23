@@ -171,8 +171,8 @@ class TestAttachmentListView(BaseTenantTestCase):
             content_object=self.assessment,
             uploaded_by=self.user
         )
-        response = self.forced_auth_req( 
-           "get",
+        response = self.forced_auth_req(
+            "get",
             self.url,
             user=self.unicef_staff,
         )
