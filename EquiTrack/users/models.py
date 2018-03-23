@@ -9,6 +9,7 @@ from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db import connection, models, transaction
 from django.db.models.signals import post_save, pre_delete
 from django.utils.encoding import python_2_unicode_compatible
+from django.utils.translation import ugettext_lazy as _
 
 from djangosaml2.signals import pre_user_save
 from tenant_schemas.models import TenantMixin
@@ -75,6 +76,7 @@ class Country(TenantMixin):
 
     class Meta:
         ordering = ['name']
+        verbose_name_plural = _('Countries')
 
 
 @python_2_unicode_compatible
@@ -149,6 +151,9 @@ class Office(models.Model):
 
     def __str__(self):
         return self.name
+
+    class Meta:
+        ordering = ('name', )
 
 
 class CountrySectionManager(models.Manager):

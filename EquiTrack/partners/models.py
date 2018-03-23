@@ -221,7 +221,7 @@ class PartnerOrganization(AdminURLMixin, TimeStampedModel):
     EXPIRING_ASSESSMENT_LIMIT_YEAR = 4
     CT_CP_AUDIT_TRIGGER_LEVEL = decimal.Decimal('50000.00')
 
-    CT_MR_AUDIT_TRIGGER_LEVEL = decimal.Decimal('25000.00')
+    CT_MR_AUDIT_TRIGGER_LEVEL = decimal.Decimal('2500.00')
     CT_MR_AUDIT_TRIGGER_LEVEL2 = decimal.Decimal('100000.00')
     CT_MR_AUDIT_TRIGGER_LEVEL3 = decimal.Decimal('500000.00')
 
@@ -2011,6 +2011,7 @@ class InterventionPlannedVisits(TimeStampedModel):
 
     class Meta:
         unique_together = ('intervention', 'year')
+        verbose_name_plural = _('Intervention Planned Visits')
 
     def __str__(self):
         return '{} {}'.format(self.intervention, self.year)

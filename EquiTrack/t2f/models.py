@@ -10,7 +10,7 @@ from django.contrib.postgres.fields.array import ArrayField
 from django.db import connection, models
 from django.utils.encoding import python_2_unicode_compatible
 from django.utils.timezone import now as timezone_now
-from django.utils.translation import ugettext, ugettext_lazy
+from django.utils.translation import ugettext, ugettext_lazy, ugettext_lazy as _
 from django_fsm import FSMField, transition
 
 from notification.utils import send_notification_using_templates
@@ -444,6 +444,9 @@ class TravelActivity(models.Model):
     primary_traveler = models.ForeignKey(settings.AUTH_USER_MODEL)
     date = models.DateTimeField(null=True, blank=True)
 
+    class Meta:
+        verbose_name_plural = _("Travel Activities")
+
     @property
     def travel_status(self):
         return self.travels.filter(traveler=self.primary_traveler).first().status
@@ -541,6 +544,9 @@ class Clearances(models.Model):
     medical_clearance = models.CharField(max_length=14, choices=CHOICES, default=NOT_APPLICABLE)
     security_clearance = models.CharField(max_length=14, choices=CHOICES, default=NOT_APPLICABLE)
     security_course = models.CharField(max_length=14, choices=CHOICES, default=NOT_APPLICABLE)
+
+    class Meta:
+        verbose_name_plural = _('Clearances')
 
 
 def determine_file_upload_path(instance, filename):
