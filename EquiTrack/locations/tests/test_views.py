@@ -27,9 +27,10 @@ class TestLocationViews(BaseTenantTestCase):
 
     def test_api_location_light_list(self):
         response = self.forced_auth_req('get', reverse('locations-light-list'), user=self.unicef_staff)
-
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response.data[0].keys(), ["id", "name", "p_code"])
+        #sort he locations the same way the API results are sorted
+        self.locations.sort(key=lambda location: location.name)
         self.assertEqual(response.data[0]["name"], '{} [{} - {}]'.format(
             self.locations[0].name, self.locations[0].gateway.name, self.locations[0].p_code))
 
@@ -144,3 +145,21 @@ class TestLocationAutocompleteView(BaseTenantTestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         data = response.json()
         self.assertEqual(len(data["results"]), 1)
+
+
+class TestGisLocationViews(BaseTenantTestCase):
+    def setUp(self):
+        self.unicef_staff = UserFactory(is_staff=True)
+
+        self.location_no_geom = LocationFactory(name="Test 1")
+        self.location_with_geom = LocationFactory(
+            name="Test 2",
+            geom="MultiPolygon(((10 10, 10 20, 20 20, 20 15, 10 10)), ((10 10, 10 20, 20 20, 20 15, 10 10)))"
+        )
+
+        super(TestGisLocationViews, self).setUp()
+
+    def test_non_auth(self):
+        response = self.client.get(reverse("locations-gis-in-use"))
+
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)

@@ -11,5 +11,5 @@ urlpatterns = [
         r'^autocomplete-light/$',
         views.LocationAutocompleteView.as_view(),
         name='locations-autocomplete-light',
-    ),
+    )
 ]

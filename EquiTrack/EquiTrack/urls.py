@@ -14,14 +14,7 @@ from rest_framework_swagger.views import get_swagger_view
 
 from email_auth.urls import urlpatterns as email_auth_patterns
 from EquiTrack.views import IssueJWTRedirectView, MainView, OutdatedBrowserView
-from locations.views import (
-    LocationsLightViewSet,
-    LocationsViewSet,
-    LocationTypesViewSet,
-    GisLocationsInUseViewset,
-    GisLocationsGeomListViewset,
-    GisLocationsGeomDetailsViewset,
-)
+from locations.views import LocationsLightViewSet, LocationsViewSet, LocationTypesViewSet
 from management.urls import urlpatterns as management_urls
 from partners.views.v1 import FileTypeViewSet
 from publics import urls as publics_patterns
@@ -36,8 +29,7 @@ schema_view = get_swagger_view(title='eTools API')
 # coreapi+json (http://www.coreapi.org/)
 schema_view_json_coreapi = get_schema_view(title="eTools API")
 # openapi+json (https://openapis.org/ aka swagger 2.0)
-schema_view_json_openapi = get_schema_view(title="eTools API",
-                                           renderer_classes=[OpenAPIRenderer])
+schema_view_json_openapi = get_schema_view(title="eTools API", renderer_classes=[OpenAPIRenderer])
 
 api = routers.SimpleRouter()
 
@@ -59,44 +51,7 @@ api.register(r'locations', LocationsViewSet, base_name='locations')
 api.register(r'locations-light', LocationsLightViewSet, base_name='locations-light')
 api.register(r'locations-types', LocationTypesViewSet, base_name='locationtypes')
 
-'''
-# gis URLs
-# TODO: solve conflicting URL definitions, then move this to the locations module
-api.register(r'locations/', GisLocationsInUseViewset, base_name='lgis-in-use')
-api.register(
-    r'locations/gis/locations-geom',
-    GisLocationsGeomListViewset,
-    base_name='lgis-geom-list'
-)
-api.register(
-    r'locations/gis/locations-geom/pcode/{p_code}',
-    GisLocationsGeomDetailsViewset,
-    base_name='lgis-by-pcode'
-)
-api.register(
-    r'locations/gis/locations-geom/id/{id}',
-    GisLocationsGeomDetailsViewset,
-    base_name='lgis-by-id'
-)
-'''
-
 urlpatterns = [
-    # gis URLs
-    # TODO: solve conflicting URL definitions, then move this to the locations module
-    url(r'^api/locations/gis/in-use/$', GisLocationsInUseViewset.as_view(), name='lgis-in-use'),
-    url(
-       r'^api/locations/gis/locations-geom/$',
-       GisLocationsGeomListViewset.as_view(),
-       name='lgis-geom-list'),
-    url(
-       r'^api/locations/gis/locations-geom/pcode/(?P<pcode>\w+)/$',
-       GisLocationsGeomDetailsViewset.as_view(),
-       name='lgis-by-pcode'),
-    url(
-       r'^api/locations/gis/locations-geom/id/(?P<id>\w+)/$',
-       GisLocationsGeomDetailsViewset.as_view(),
-       name='lgis-by-id'),
-
     # Used for admin and dashboard pages in django
     url(r'^$', ModuleRedirectView.as_view(), name='dashboard'),
     url(r'^login/$', MainView.as_view(), name='main'),
@@ -105,8 +60,9 @@ urlpatterns = [
     url(r'^api/static_data/$', StaticDataView.as_view({'get': 'list'}), name='public_static'),
 
     # ***************  API version 1  ********************
-    # TODO this does not seem to work, investigate why.. seems to be conflicting with previous definitions
     url(r'^locations/', include('locations.urls')),
+    # GIS API url's
+    url(r'^api/locations/gis/', include('locations.urls_gis')),
     url(r'^users/', include('users.urls')),
     url(r'^api/management/', include(management_urls)),
     url(r'^api/', include(api.urls)),
