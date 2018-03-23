@@ -34,13 +34,6 @@ class PartnerStaffFactory(factory.django.DjangoModelFactory):
     last_name = 'Windu'
     email = factory.Sequence(lambda n: "mace{}@example.com".format(n))
 
-    @factory.post_generation
-    def make_user(self, create, extracted, **kwargs):
-        if not create:
-            return
-        user = UserFactory(email=self.email)
-        return user
-
 
 class PartnerFactory(factory.django.DjangoModelFactory):
     class Meta:
