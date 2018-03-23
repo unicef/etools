@@ -178,7 +178,7 @@ class InterventionListAPIView(QueryStringFilterMixin, ExportModelMixin, Interven
             filters = (
                 ('document_type', 'document_type__in'),
                 ('country_programme', 'agreement__country_programme'),
-                ('section', 'sections__in'),
+                ('sections', 'sections__in'),
                 ('cluster', 'result_links__ll_results__applied_indicators__cluster_indicator_title__icontains'),
                 ('status', 'status__in'),
                 ('unicef_focal_points', 'unicef_focal_points__in'),

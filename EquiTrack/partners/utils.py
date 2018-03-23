@@ -24,16 +24,13 @@ def update_or_create_attachment(file_type, content_type, object_id, filename):
     logger.info("code: {}".format(file_type.code))
     logger.info("content type: {}".format(content_type))
     logger.info("object_id: {}".format(object_id))
-    attachment, created = Attachment.objects.get_or_create(
+    attachment, created = Attachment.objects.update_or_create(
         code=file_type.code,
         content_type=content_type,
         object_id=object_id,
         file_type=file_type,
         defaults={"file": filename}
     )
-    if not created and attachment.file != filename:
-        attachment.file = filename
-        attachment.save()
 
 
 def copy_attached_agreements():
