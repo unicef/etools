@@ -69,6 +69,30 @@ class TestAttachmentListView(BaseTenantTestCase):
             "pd_ssfa_number": "",
         }] * 2
 
+    def assert_keys(self, response):
+        expected_keys = [
+            "id",
+            "partner",
+            "partner_type",
+            "vendor_number",
+            "pd_ssfa_number",
+            "file_type",
+            "file_link",
+            "uploaded_by",
+            "created",
+        ]
+        for row in response.data:
+            six.assertCountEqual(self, list(row.keys()), expected_keys)
+
+    def assert_values(self, response, expected):
+        received = [{
+            "partner": x["partner"],
+            "partner_type": x["partner_type"],
+            "vendor_number": x["vendor_number"],
+            "pd_ssfa_number": x["pd_ssfa_number"],
+        } for x in response.data]
+        six.assertCountEqual(self, received, expected)
+
     def test_get_no_file(self):
         attachment = AttachmentFactory(
             file_type=self.file_type_1,
@@ -83,6 +107,7 @@ class TestAttachmentListView(BaseTenantTestCase):
         )
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(len(response.data), 2)
+        self.assert_keys(response)
 
     def test_get_file(self):
         response = self.forced_auth_req(
@@ -92,6 +117,7 @@ class TestAttachmentListView(BaseTenantTestCase):
         )
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(len(response.data), 2)
+        self.assert_keys(response)
 
     def test_get_hyperlink(self):
         attachment = AttachmentFactory(
@@ -108,15 +134,7 @@ class TestAttachmentListView(BaseTenantTestCase):
         )
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(len(response.data), 3)
-
-    def assert_values(self, response, expected):
-        received = [{
-            "partner": x["partner"],
-            "partner_type": x["partner_type"],
-            "vendor_number": x["vendor_number"],
-            "pd_ssfa_number": x["pd_ssfa_number"],
-        } for x in response.data]
-        six.assertCountEqual(self, received, expected)
+        self.assert_keys(response)
 
     def test_partner(self):
         code = "partners_partner_assessment"
@@ -135,6 +153,7 @@ class TestAttachmentListView(BaseTenantTestCase):
         )
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(len(response.data), 3)
+        self.assert_keys(response)
         self.assert_values(response, self.default_partner_response + [{
             "partner": self.partner.name,
             "partner_type": self.partner.partner_type,
@@ -152,13 +171,14 @@ class TestAttachmentListView(BaseTenantTestCase):
             content_object=self.assessment,
             uploaded_by=self.user
         )
-        response = self.forced_auth_req(
-            "get",
+        response = self.forced_auth_req( 
+           "get",
             self.url,
             user=self.unicef_staff,
         )
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(len(response.data), 3)
+        self.assert_keys(response)
         self.assert_values(response, self.default_partner_response + [{
             "partner": self.partner.name,
             "partner_type": self.partner.partner_type,
@@ -183,6 +203,7 @@ class TestAttachmentListView(BaseTenantTestCase):
         )
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(len(response.data), 3)
+        self.assert_keys(response)
         self.assert_values(response, self.default_partner_response + [{
             "partner": self.partner.name,
             "partner_type": self.partner.partner_type,
@@ -207,6 +228,7 @@ class TestAttachmentListView(BaseTenantTestCase):
         )
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(len(response.data), 3)
+        self.assert_keys(response)
         self.assert_values(response, self.default_partner_response + [{
             "partner": self.partner.name,
             "partner_type": self.partner.partner_type,
@@ -231,6 +253,7 @@ class TestAttachmentListView(BaseTenantTestCase):
         )
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(len(response.data), 3)
+        self.assert_keys(response)
         self.assert_values(response, self.default_partner_response + [{
             "partner": self.partner.name,
             "partner_type": self.partner.partner_type,
@@ -255,6 +278,7 @@ class TestAttachmentListView(BaseTenantTestCase):
         )
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(len(response.data), 3)
+        self.assert_keys(response)
         self.assert_values(response, self.default_partner_response + [{
             "partner": self.partner.name,
             "partner_type": self.partner.partner_type,
@@ -293,6 +317,7 @@ class TestAttachmentListView(BaseTenantTestCase):
         )
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(len(response.data), 4)
+        self.assert_keys(response)
         self.assert_values(response, self.default_partner_response + [{
             "partner": self.partner.name,
             "partner_type": self.partner.partner_type,
