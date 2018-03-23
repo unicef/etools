@@ -60,14 +60,8 @@ class Base64AttachmentSerializer(BaseAttachmentsSerializer):
 
 
 class AttachmentSerializer(serializers.ModelSerializer):
+    id = serializers.IntegerField(source="attachment.pk")
+
     class Meta:
         model = AttachmentFlat
-        exclude = ("id", )
-        extra_kwargs = {
-            'created': {
-                'label': _('Date Uploaded'),
-            },
-            'attachment': {
-                'label': _('id'),
-            }
-        }
+        exclude = ("attachment", )
