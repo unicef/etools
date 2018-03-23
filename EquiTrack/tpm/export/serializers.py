@@ -103,7 +103,9 @@ class TPMActionPointExportSerializer(serializers.Serializer):
     due_date = serializers.DateField(format='%d/%m/%Y')
 
     def get_locations(self, obj):
-        return ', '.join(map(str, itertools.chain(*map(lambda a: a.locations.all(), obj.tpm_visit.tpm_activities.all()))))
+        return ', '.join(
+            map(str, itertools.chain(*map(lambda a: a.locations.all(), obj.tpm_visit.tpm_activities.all())))
+        )
 
 
 class TPMVisitExportSerializer(serializers.Serializer):
