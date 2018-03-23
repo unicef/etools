@@ -1,0 +1,1107 @@
+ ########################  , afghanistan
+ 
+ Number of Applied indicators without results : , (0, {u'reports.AppliedIndicator': 0})
+ Number of Blueprint indicators without Applied Indicators : , (0, {})
+number of yesno indicators updated: , 0
+number of applied indicators indicators checked: , 0
+number of indicators to update: , 0
+ ########################  , angola
+ 
+ Number of Applied indicators without results : , (0, {u'reports.AppliedIndicator': 0})
+ Number of Blueprint indicators without Applied Indicators : , (0, {})
+number of yesno indicators updated: , 0
+number of applied indicators indicators checked: , 0
+Creating a default location for the country , angola
+number of indicators to update: , 0
+ ########################  , bangladesh
+ 
+ Number of Applied indicators without results : , (0, {u'reports.AppliedIndicator': 0})
+ Number of Blueprint indicators without Applied Indicators : , (0, {})
+number of yesno indicators updated: , 0
+number of applied indicators indicators checked: , 0
+number of indicators to update: , 0
+ ########################  , indonesia
+ 
+ Number of Applied indicators without results : , (0, {u'reports.AppliedIndicator': 0})
+ Number of Blueprint indicators without Applied Indicators : , (29, {u'reports.AppliedIndicator': 0, u'reports.IndicatorBlueprint': 29})
+number of yesno indicators updated: , 25
+number of applied indicators indicators checked: , 63
+number of indicators to update: , 63
+ ########################  , bolivia
+ 
+ Number of Applied indicators without results : , (0, {u'reports.AppliedIndicator': 0})
+ Number of Blueprint indicators without Applied Indicators : , (0, {})
+number of yesno indicators updated: , 0
+number of applied indicators indicators checked: , 0
+Creating a default location for the country , bolivia
+number of indicators to update: , 0
+ ########################  , lebanon
+ 
+ Number of Applied indicators without results : , (0, {u'reports.AppliedIndicator': 0})
+ Number of Blueprint indicators without Applied Indicators : , (0, {})
+number of yesno indicators updated: , 0
+number of applied indicators indicators checked: , 0
+number of indicators to update: , 0
+ ########################  , burkina_faso
+ 
+ Number of Applied indicators without results : , (0, {u'reports.AppliedIndicator': 0})
+ Number of Blueprint indicators without Applied Indicators : , (0, {})
+number of yesno indicators updated: , 0
+number of applied indicators indicators checked: , 0
+number of indicators to update: , 0
+ ########################  , pakistan
+ 
+ Number of Applied indicators without results : , (0, {u'reports.AppliedIndicator': 0})
+ Number of Blueprint indicators without Applied Indicators : , (0, {})
+number of yesno indicators updated: , 0
+number of applied indicators indicators checked: , 0
+number of indicators to update: , 0
+ ########################  , cambodia
+ 
+ Number of Applied indicators without results : , (0, {u'reports.AppliedIndicator': 0})
+ Number of Blueprint indicators without Applied Indicators : , (0, {})
+number of yesno indicators updated: , 0
+number of applied indicators indicators checked: , 0
+number of indicators to update: , 0
+ ########################  , sudan
+ 
+ Number of Applied indicators without results : , (0, {u'reports.AppliedIndicator': 0})
+ Number of Blueprint indicators without Applied Indicators : , (1, {u'reports.AppliedIndicator': 0, u'reports.IndicatorBlueprint': 1})
+number of yesno indicators updated: , 1
+number of applied indicators indicators checked: , 587
+bad indicator: , id 344 target None baseline 0 interventionid 85
+FIXED TARGET
+FIXED BASELINE
+bad indicator: , id 614 target 10 baseline  interventionid 63
+FIXED TARGET
+FIXED BASELINE
+bad indicator: , id 332 target 24,435 baseline 16,258 interventionid 39
+FIXED TARGET
+FIXED BASELINE
+number of indicators to update: , 587
+multiple sections for this pd , id 38 number PCA/2015/SUD/040/WOD PD2 status closed indicator_id 279
+multiple sections for this pd , id 38 number PCA/2015/SUD/040/WOD PD2 status closed indicator_id 275
+multiple sections for this pd , id 38 number PCA/2015/SUD/040/WOD PD2 status closed indicator_id 276
+multiple sections for this pd , id 38 number PCA/2015/SUD/040/WOD PD2 status closed indicator_id 277
+multiple sections for this pd , id 38 number PCA/2015/SUD/040/WOD PD2 status closed indicator_id 262
+multiple sections for this pd , id 38 number PCA/2015/SUD/040/WOD PD2 status closed indicator_id 263
+multiple sections for this pd , id 38 number PCA/2015/SUD/040/WOD PD2 status closed indicator_id 284
+multiple sections for this pd , id 38 number PCA/2015/SUD/040/WOD PD2 status closed indicator_id 278
+multiple sections for this pd , id 39 number PCA/2015/SUD/014/SRCS PD5 status closed indicator_id 315
+multiple sections for this pd , id 39 number PCA/2015/SUD/014/SRCS PD5 status closed indicator_id 316
+multiple sections for this pd , id 39 number PCA/2015/SUD/014/SRCS PD5 status closed indicator_id 317
+multiple sections for this pd , id 39 number PCA/2015/SUD/014/SRCS PD5 status closed indicator_id 318
+multiple sections for this pd , id 39 number PCA/2015/SUD/014/SRCS PD5 status closed indicator_id 319
+multiple sections for this pd , id 39 number PCA/2015/SUD/014/SRCS PD5 status closed indicator_id 320
+multiple sections for this pd , id 39 number PCA/2015/SUD/014/SRCS PD5 status closed indicator_id 321
+multiple sections for this pd , id 244 number PCA/2016/SUD/062/GAH/PD201704 status ended indicator_id 556
+multiple sections for this pd , id 38 number PCA/2015/SUD/040/WOD PD2 status closed indicator_id 280
+multiple sections for this pd , id 38 number PCA/2015/SUD/040/WOD PD2 status closed indicator_id 281
+multiple sections for this pd , id 39 number PCA/2015/SUD/014/SRCS PD5 status closed indicator_id 322
+multiple sections for this pd , id 39 number PCA/2015/SUD/014/SRCS PD5 status closed indicator_id 323
+multiple sections for this pd , id 39 number PCA/2015/SUD/014/SRCS PD5 status closed indicator_id 324
+multiple sections for this pd , id 39 number PCA/2015/SUD/014/SRCS PD5 status closed indicator_id 325
+multiple sections for this pd , id 39 number PCA/2015/SUD/014/SRCS PD5 status closed indicator_id 326
+multiple sections for this pd , id 39 number PCA/2015/SUD/014/SRCS PD5 status closed indicator_id 327
+multiple sections for this pd , id 39 number PCA/2015/SUD/014/SRCS PD5 status closed indicator_id 328
+multiple sections for this pd , id 39 number PCA/2015/SUD/014/SRCS PD5 status closed indicator_id 329
+multiple sections for this pd , id 39 number PCA/2015/SUD/014/SRCS PD5 status closed indicator_id 330
+multiple sections for this pd , id 39 number PCA/2015/SUD/014/SRCS PD5 status closed indicator_id 331
+multiple sections for this pd , id 39 number PCA/2015/SUD/014/SRCS PD5 status closed indicator_id 336
+multiple sections for this pd , id 39 number PCA/2015/SUD/014/SRCS PD5 status closed indicator_id 333
+multiple sections for this pd , id 39 number PCA/2015/SUD/014/SRCS PD5 status closed indicator_id 334
+multiple sections for this pd , id 39 number PCA/2015/SUD/014/SRCS PD5 status closed indicator_id 335
+multiple sections for this pd , id 38 number PCA/2015/SUD/040/WOD PD2 status closed indicator_id 282
+multiple sections for this pd , id 38 number PCA/2015/SUD/040/WOD PD2 status closed indicator_id 283
+multiple sections for this pd , id 38 number PCA/2015/SUD/040/WOD PD2 status closed indicator_id 273
+multiple sections for this pd , id 37 number PCA/2015/SUD/041/TOD PD2 status ended indicator_id 292
+multiple sections for this pd , id 37 number PCA/2015/SUD/041/TOD PD2 status ended indicator_id 293
+multiple sections for this pd , id 37 number PCA/2015/SUD/041/TOD PD2 status ended indicator_id 294
+multiple sections for this pd , id 37 number PCA/2015/SUD/041/TOD PD2 status ended indicator_id 295
+multiple sections for this pd , id 37 number PCA/2015/SUD/041/TOD PD2 status ended indicator_id 291
+multiple sections for this pd , id 37 number PCA/2015/SUD/041/TOD PD2 status ended indicator_id 296
+multiple sections for this pd , id 37 number PCA/2015/SUD/041/TOD PD2 status ended indicator_id 297
+multiple sections for this pd , id 37 number PCA/2015/SUD/041/TOD PD2 status ended indicator_id 298
+multiple sections for this pd , id 37 number PCA/2015/SUD/041/TOD PD2 status ended indicator_id 299
+multiple sections for this pd , id 37 number PCA/2015/SUD/041/TOD PD2 status ended indicator_id 300
+multiple sections for this pd , id 37 number PCA/2015/SUD/041/TOD PD2 status ended indicator_id 301
+multiple sections for this pd , id 37 number PCA/2015/SUD/041/TOD PD2 status ended indicator_id 302
+multiple sections for this pd , id 38 number PCA/2015/SUD/040/WOD PD2 status closed indicator_id 258
+multiple sections for this pd , id 244 number PCA/2016/SUD/062/GAH/PD201704 status ended indicator_id 550
+multiple sections for this pd , id 244 number PCA/2016/SUD/062/GAH/PD201704 status ended indicator_id 538
+multiple sections for this pd , id 244 number PCA/2016/SUD/062/GAH/PD201704 status ended indicator_id 539
+multiple sections for this pd , id 244 number PCA/2016/SUD/062/GAH/PD201704 status ended indicator_id 544
+multiple sections for this pd , id 244 number PCA/2016/SUD/062/GAH/PD201704 status ended indicator_id 549
+multiple sections for this pd , id 244 number PCA/2016/SUD/062/GAH/PD201704 status ended indicator_id 548
+multiple sections for this pd , id 38 number PCA/2015/SUD/040/WOD PD2 status closed indicator_id 260
+multiple sections for this pd , id 38 number PCA/2015/SUD/040/WOD PD2 status closed indicator_id 261
+multiple sections for this pd , id 38 number PCA/2015/SUD/040/WOD PD2 status closed indicator_id 267
+multiple sections for this pd , id 38 number PCA/2015/SUD/040/WOD PD2 status closed indicator_id 268
+multiple sections for this pd , id 38 number PCA/2015/SUD/040/WOD PD2 status closed indicator_id 269
+multiple sections for this pd , id 38 number PCA/2015/SUD/040/WOD PD2 status closed indicator_id 265
+multiple sections for this pd , id 38 number PCA/2015/SUD/040/WOD PD2 status closed indicator_id 266
+multiple sections for this pd , id 38 number PCA/2015/SUD/040/WOD PD2 status closed indicator_id 274
+multiple sections for this pd , id 244 number PCA/2016/SUD/062/GAH/PD201704 status ended indicator_id 526
+multiple sections for this pd , id 244 number PCA/2016/SUD/062/GAH/PD201704 status ended indicator_id 519
+multiple sections for this pd , id 244 number PCA/2016/SUD/062/GAH/PD201704 status ended indicator_id 520
+multiple sections for this pd , id 244 number PCA/2016/SUD/062/GAH/PD201704 status ended indicator_id 521
+multiple sections for this pd , id 244 number PCA/2016/SUD/062/GAH/PD201704 status ended indicator_id 522
+multiple sections for this pd , id 244 number PCA/2016/SUD/062/GAH/PD201704 status ended indicator_id 523
+multiple sections for this pd , id 244 number PCA/2016/SUD/062/GAH/PD201704 status ended indicator_id 524
+multiple sections for this pd , id 244 number PCA/2016/SUD/062/GAH/PD201704 status ended indicator_id 530
+multiple sections for this pd , id 244 number PCA/2016/SUD/062/GAH/PD201704 status ended indicator_id 531
+multiple sections for this pd , id 244 number PCA/2016/SUD/062/GAH/PD201704 status ended indicator_id 528
+multiple sections for this pd , id 244 number PCA/2016/SUD/062/GAH/PD201704 status ended indicator_id 529
+multiple sections for this pd , id 244 number PCA/2016/SUD/062/GAH/PD201704 status ended indicator_id 535
+multiple sections for this pd , id 244 number PCA/2016/SUD/062/GAH/PD201704 status ended indicator_id 536
+multiple sections for this pd , id 244 number PCA/2016/SUD/062/GAH/PD201704 status ended indicator_id 537
+multiple sections for this pd , id 244 number PCA/2016/SUD/062/GAH/PD201704 status ended indicator_id 532
+multiple sections for this pd , id 244 number PCA/2016/SUD/062/GAH/PD201704 status ended indicator_id 533
+multiple sections for this pd , id 244 number PCA/2016/SUD/062/GAH/PD201704 status ended indicator_id 534
+multiple sections for this pd , id 244 number PCA/2016/SUD/062/GAH/PD201704 status ended indicator_id 540
+multiple sections for this pd , id 244 number PCA/2016/SUD/062/GAH/PD201704 status ended indicator_id 541
+multiple sections for this pd , id 244 number PCA/2016/SUD/062/GAH/PD201704 status ended indicator_id 542
+multiple sections for this pd , id 244 number PCA/2016/SUD/062/GAH/PD201704 status ended indicator_id 543
+multiple sections for this pd , id 38 number PCA/2015/SUD/040/WOD PD2 status closed indicator_id 264
+multiple sections for this pd , id 38 number PCA/2015/SUD/040/WOD PD2 status closed indicator_id 254
+multiple sections for this pd , id 38 number PCA/2015/SUD/040/WOD PD2 status closed indicator_id 255
+multiple sections for this pd , id 38 number PCA/2015/SUD/040/WOD PD2 status closed indicator_id 256
+multiple sections for this pd , id 38 number PCA/2015/SUD/040/WOD PD2 status closed indicator_id 257
+multiple sections for this pd , id 38 number PCA/2015/SUD/040/WOD PD2 status closed indicator_id 259
+multiple sections for this pd , id 38 number PCA/2015/SUD/040/WOD PD2 status closed indicator_id 270
+multiple sections for this pd , id 38 number PCA/2015/SUD/040/WOD PD2 status closed indicator_id 271
+multiple sections for this pd , id 38 number PCA/2015/SUD/040/WOD PD2 status closed indicator_id 272
+multiple sections for this pd , id 244 number PCA/2016/SUD/062/GAH/PD201704 status ended indicator_id 527
+multiple sections for this pd , id 244 number PCA/2016/SUD/062/GAH/PD201704 status ended indicator_id 525
+multiple sections for this pd , id 37 number PCA/2015/SUD/041/TOD PD2 status ended indicator_id 303
+multiple sections for this pd , id 37 number PCA/2015/SUD/041/TOD PD2 status ended indicator_id 304
+multiple sections for this pd , id 37 number PCA/2015/SUD/041/TOD PD2 status ended indicator_id 305
+multiple sections for this pd , id 37 number PCA/2015/SUD/041/TOD PD2 status ended indicator_id 306
+multiple sections for this pd , id 244 number PCA/2016/SUD/062/GAH/PD201704 status ended indicator_id 547
+multiple sections for this pd , id 244 number PCA/2016/SUD/062/GAH/PD201704 status ended indicator_id 546
+multiple sections for this pd , id 244 number PCA/2016/SUD/062/GAH/PD201704 status ended indicator_id 545
+multiple sections for this pd , id 244 number PCA/2016/SUD/062/GAH/PD201704 status ended indicator_id 561
+multiple sections for this pd , id 244 number PCA/2016/SUD/062/GAH/PD201704 status ended indicator_id 560
+multiple sections for this pd , id 244 number PCA/2016/SUD/062/GAH/PD201704 status ended indicator_id 559
+multiple sections for this pd , id 244 number PCA/2016/SUD/062/GAH/PD201704 status ended indicator_id 558
+multiple sections for this pd , id 244 number PCA/2016/SUD/062/GAH/PD201704 status ended indicator_id 557
+multiple sections for this pd , id 244 number PCA/2016/SUD/062/GAH/PD201704 status ended indicator_id 555
+multiple sections for this pd , id 244 number PCA/2016/SUD/062/GAH/PD201704 status ended indicator_id 553
+multiple sections for this pd , id 244 number PCA/2016/SUD/062/GAH/PD201704 status ended indicator_id 552
+multiple sections for this pd , id 244 number PCA/2016/SUD/062/GAH/PD201704 status ended indicator_id 551
+multiple sections for this pd , id 244 number PCA/2016/SUD/062/GAH/PD201704 status ended indicator_id 554
+multiple sections for this pd , id 37 number PCA/2015/SUD/041/TOD PD2 status ended indicator_id 307
+multiple sections for this pd , id 37 number PCA/2015/SUD/041/TOD PD2 status ended indicator_id 308
+multiple sections for this pd , id 37 number PCA/2015/SUD/041/TOD PD2 status ended indicator_id 309
+multiple sections for this pd , id 37 number PCA/2015/SUD/041/TOD PD2 status ended indicator_id 310
+multiple sections for this pd , id 37 number PCA/2015/SUD/041/TOD PD2 status ended indicator_id 311
+multiple sections for this pd , id 37 number PCA/2015/SUD/041/TOD PD2 status ended indicator_id 312
+multiple sections for this pd , id 37 number PCA/2015/SUD/041/TOD PD2 status ended indicator_id 313
+multiple sections for this pd , id 37 number PCA/2015/SUD/041/TOD PD2 status ended indicator_id 314
+multiple sections for this pd , id 39 number PCA/2015/SUD/014/SRCS PD5 status closed indicator_id 332
+ ########################  , cameroon
+ 
+ Number of Applied indicators without results : , (0, {u'reports.AppliedIndicator': 0})
+ Number of Blueprint indicators without Applied Indicators : , (0, {})
+number of yesno indicators updated: , 0
+number of applied indicators indicators checked: , 0
+Creating a default location for the country , cameroon
+number of indicators to update: , 0
+ ########################  , syria
+ 
+ Number of Applied indicators without results : , (0, {u'reports.AppliedIndicator': 0})
+ Number of Blueprint indicators without Applied Indicators : , (18, {u'reports.AppliedIndicator': 0, u'reports.IndicatorBlueprint': 18})
+number of yesno indicators updated: , 0
+number of applied indicators indicators checked: , 402
+bad indicator: , id 247 target 10,000 baseline 0 interventionid 155
+FIXED TARGET
+FIXED BASELINE
+bad indicator: , id 248 target 2,500 baseline 0 interventionid 155
+FIXED TARGET
+FIXED BASELINE
+bad indicator: , id 249 target 3,500 baseline 0 interventionid 155
+FIXED TARGET
+FIXED BASELINE
+number of indicators to update: , 402
+multiple sections for this pd , id 3 number SYR/ADAP-CP/2017 status signed indicator_id 96
+multiple sections for this pd , id 3 number SYR/ADAP-CP/2017 status signed indicator_id 97
+multiple sections for this pd , id 3 number SYR/ADAP-CP/2017 status signed indicator_id 98
+multiple sections for this pd , id 3 number SYR/ADAP-CP/2017 status signed indicator_id 99
+multiple sections for this pd , id 3 number SYR/ADAP-CP/2017 status signed indicator_id 100
+multiple sections for this pd , id 198 number SYR/2015/43/PD201719 status active indicator_id 114
+multiple sections for this pd , id 198 number SYR/2015/43/PD201719 status active indicator_id 115
+multiple sections for this pd , id 198 number SYR/2015/43/PD201719 status active indicator_id 116
+multiple sections for this pd , id 198 number SYR/2015/43/PD201719 status active indicator_id 117
+multiple sections for this pd , id 45 number SYR/Edu-Wash/2016/59/01 status closed indicator_id 56
+multiple sections for this pd , id 45 number SYR/Edu-Wash/2016/59/01 status closed indicator_id 57
+multiple sections for this pd , id 45 number SYR/Edu-Wash/2016/59/01 status closed indicator_id 58
+multiple sections for this pd , id 45 number SYR/Edu-Wash/2016/59/01 status closed indicator_id 59
+multiple sections for this pd , id 45 number SYR/Edu-Wash/2016/59/01 status closed indicator_id 53
+multiple sections for this pd , id 45 number SYR/Edu-Wash/2016/59/01 status closed indicator_id 54
+multiple sections for this pd , id 45 number SYR/Edu-Wash/2016/59/01 status closed indicator_id 55
+multiple sections for this pd , id 48 number SYR/ADAP-01 status closed indicator_id 60
+multiple sections for this pd , id 52 number SYR/CP/2016/56/03 status ended indicator_id 70
+multiple sections for this pd , id 52 number SYR/CP/2016/56/03 status ended indicator_id 71
+multiple sections for this pd , id 52 number SYR/CP/2016/56/03 status ended indicator_id 72
+multiple sections for this pd , id 52 number SYR/CP/2016/56/03 status ended indicator_id 73
+multiple sections for this pd , id 45 number SYR/Edu-Wash/2016/59/01 status closed indicator_id 63
+multiple sections for this pd , id 45 number SYR/Edu-Wash/2016/59/01 status closed indicator_id 61
+multiple sections for this pd , id 45 number SYR/Edu-Wash/2016/59/01 status closed indicator_id 62
+multiple sections for this pd , id 45 number SYR/Edu-Wash/2016/59/01 status closed indicator_id 64
+multiple sections for this pd , id 52 number SYR/CP/2016/56/03 status ended indicator_id 65
+multiple sections for this pd , id 52 number SYR/CP/2016/56/03 status ended indicator_id 66
+multiple sections for this pd , id 52 number SYR/CP/2016/56/03 status ended indicator_id 67
+multiple sections for this pd , id 198 number SYR/2015/43/PD201719 status active indicator_id 118
+multiple sections for this pd , id 198 number SYR/2015/43/PD201719 status active indicator_id 119
+multiple sections for this pd , id 198 number SYR/2015/43/PD201719 status active indicator_id 120
+multiple sections for this pd , id 29 number SYR/Wash-Edu-CP/2016/81 status closed indicator_id 313
+multiple sections for this pd , id 48 number SYR/ADAP-01 status closed indicator_id 216
+multiple sections for this pd , id 48 number SYR/ADAP-01 status closed indicator_id 217
+multiple sections for this pd , id 48 number SYR/ADAP-01 status closed indicator_id 218
+multiple sections for this pd , id 48 number SYR/ADAP-01 status closed indicator_id 219
+multiple sections for this pd , id 48 number SYR/ADAP-01 status closed indicator_id 220
+multiple sections for this pd , id 48 number SYR/ADAP-01 status closed indicator_id 221
+multiple sections for this pd , id 48 number SYR/ADAP-01 status closed indicator_id 222
+multiple sections for this pd , id 48 number SYR/ADAP-01 status closed indicator_id 223
+multiple sections for this pd , id 69 number SYR/Cp-03 status active indicator_id 236
+multiple sections for this pd , id 69 number SYR/Cp-03 status active indicator_id 237
+multiple sections for this pd , id 69 number SYR/Cp-03 status active indicator_id 238
+multiple sections for this pd , id 69 number SYR/Cp-03 status active indicator_id 239
+multiple sections for this pd , id 69 number SYR/Cp-03 status active indicator_id 240
+multiple sections for this pd , id 69 number SYR/Cp-03 status active indicator_id 241
+multiple sections for this pd , id 69 number SYR/Cp-03 status active indicator_id 242
+multiple sections for this pd , id 69 number SYR/Cp-03 status active indicator_id 243
+multiple sections for this pd , id 107 number SYR/ADAP-WASH-CP/2016/64/01 status closed indicator_id 262
+multiple sections for this pd , id 107 number SYR/ADAP-WASH-CP/2016/64/01 status closed indicator_id 263
+multiple sections for this pd , id 107 number SYR/ADAP-WASH-CP/2016/64/01 status closed indicator_id 264
+multiple sections for this pd , id 107 number SYR/ADAP-WASH-CP/2016/64/01 status closed indicator_id 265
+multiple sections for this pd , id 107 number SYR/ADAP-WASH-CP/2016/64/01 status closed indicator_id 266
+multiple sections for this pd , id 107 number SYR/ADAP-WASH-CP/2016/64/01 status closed indicator_id 267
+multiple sections for this pd , id 107 number SYR/ADAP-WASH-CP/2016/64/01 status closed indicator_id 268
+multiple sections for this pd , id 39 number SYR/ADAP-CP/2016/62/01 status closed indicator_id 269
+multiple sections for this pd , id 39 number SYR/ADAP-CP/2016/62/01 status closed indicator_id 270
+multiple sections for this pd , id 39 number SYR/ADAP-CP/2016/62/01 status closed indicator_id 271
+multiple sections for this pd , id 39 number SYR/ADAP-CP/2016/62/01 status closed indicator_id 272
+multiple sections for this pd , id 39 number SYR/ADAP-CP/2016/62/01 status closed indicator_id 273
+multiple sections for this pd , id 39 number SYR/ADAP-CP/2016/62/01 status closed indicator_id 274
+multiple sections for this pd , id 44 number SYR/CP-01 status ended indicator_id 292
+multiple sections for this pd , id 44 number SYR/CP-01 status ended indicator_id 293
+multiple sections for this pd , id 44 number SYR/CP-01 status ended indicator_id 294
+multiple sections for this pd , id 44 number SYR/CP-01 status ended indicator_id 295
+multiple sections for this pd , id 44 number SYR/CP-01 status ended indicator_id 296
+multiple sections for this pd , id 44 number SYR/CP-01 status ended indicator_id 297
+multiple sections for this pd , id 44 number SYR/CP-01 status ended indicator_id 298
+multiple sections for this pd , id 29 number SYR/Wash-Edu-CP/2016/81 status closed indicator_id 314
+multiple sections for this pd , id 29 number SYR/Wash-Edu-CP/2016/81 status closed indicator_id 315
+multiple sections for this pd , id 29 number SYR/Wash-Edu-CP/2016/81 status closed indicator_id 316
+multiple sections for this pd , id 29 number SYR/Wash-Edu-CP/2016/81 status closed indicator_id 317
+multiple sections for this pd , id 268 number SYR/2015/37/PD201731 status active indicator_id 398
+multiple sections for this pd , id 268 number SYR/2015/37/PD201731 status active indicator_id 399
+multiple sections for this pd , id 268 number SYR/2015/37/PD201731 status active indicator_id 400
+multiple sections for this pd , id 268 number SYR/2015/37/PD201731 status active indicator_id 401
+multiple sections for this pd , id 268 number SYR/2015/37/PD201731 status active indicator_id 402
+multiple sections for this pd , id 268 number SYR/2015/37/PD201731 status active indicator_id 403
+multiple sections for this pd , id 268 number SYR/2015/37/PD201731 status active indicator_id 404
+multiple sections for this pd , id 268 number SYR/2015/37/PD201731 status active indicator_id 405
+multiple sections for this pd , id 268 number SYR/2015/37/PD201731 status active indicator_id 406
+multiple sections for this pd , id 268 number SYR/2015/37/PD201731 status active indicator_id 407
+multiple sections for this pd , id 268 number SYR/2015/37/PD201731 status active indicator_id 408
+multiple sections for this pd , id 268 number SYR/2015/37/PD201731 status active indicator_id 409
+multiple sections for this pd , id 268 number SYR/2015/37/PD201731 status active indicator_id 410
+multiple sections for this pd , id 268 number SYR/2015/37/PD201731 status active indicator_id 411
+multiple sections for this pd , id 270 number SYR/2015/27/PD2016109-01 status active indicator_id 419
+multiple sections for this pd , id 270 number SYR/2015/27/PD2016109-01 status active indicator_id 420
+multiple sections for this pd , id 270 number SYR/2015/27/PD2016109-01 status active indicator_id 421
+multiple sections for this pd , id 270 number SYR/2015/27/PD2016109-01 status active indicator_id 422
+multiple sections for this pd , id 270 number SYR/2015/27/PD2016109-01 status active indicator_id 423
+multiple sections for this pd , id 273 number SYR/2015/29/PD2016110-03 status signed indicator_id 425
+multiple sections for this pd , id 273 number SYR/2015/29/PD2016110-03 status signed indicator_id 426
+multiple sections for this pd , id 273 number SYR/2015/29/PD2016110-03 status signed indicator_id 427
+multiple sections for this pd , id 273 number SYR/2015/29/PD2016110-03 status signed indicator_id 428
+multiple sections for this pd , id 273 number SYR/2015/29/PD2016110-03 status signed indicator_id 429
+multiple sections for this pd , id 273 number SYR/2015/29/PD2016110-03 status signed indicator_id 430
+multiple sections for this pd , id 273 number SYR/2015/29/PD2016110-03 status signed indicator_id 431
+multiple sections for this pd , id 273 number SYR/2015/29/PD2016110-03 status signed indicator_id 432
+no sections for this pd , id 276 number SYR/2016/60/TempRef:276 status draft indicator_id 441
+no sections for this pd , id 276 number SYR/2016/60/TempRef:276 status draft indicator_id 442
+no sections for this pd , id 276 number SYR/2016/60/TempRef:276 status draft indicator_id 443
+no sections for this pd , id 276 number SYR/2016/60/TempRef:276 status draft indicator_id 444
+no sections for this pd , id 276 number SYR/2016/60/TempRef:276 status draft indicator_id 445
+no sections for this pd , id 276 number SYR/2016/60/TempRef:276 status draft indicator_id 446
+no sections for this pd , id 276 number SYR/2016/60/TempRef:276 status draft indicator_id 447
+multiple sections for this pd , id 277 number SYR/2016/49/PD201734-01 status active indicator_id 448
+multiple sections for this pd , id 277 number SYR/2016/49/PD201734-01 status active indicator_id 449
+multiple sections for this pd , id 277 number SYR/2016/49/PD201734-01 status active indicator_id 450
+multiple sections for this pd , id 277 number SYR/2016/49/PD201734-01 status active indicator_id 451
+multiple sections for this pd , id 277 number SYR/2016/49/PD201734-01 status active indicator_id 452
+multiple sections for this pd , id 277 number SYR/2016/49/PD201734-01 status active indicator_id 453
+multiple sections for this pd , id 278 number SYR/2015/21/PD201733-01 status active indicator_id 454
+multiple sections for this pd , id 278 number SYR/2015/21/PD201733-01 status active indicator_id 455
+multiple sections for this pd , id 278 number SYR/2015/21/PD201733-01 status active indicator_id 456
+multiple sections for this pd , id 278 number SYR/2015/21/PD201733-01 status active indicator_id 457
+multiple sections for this pd , id 278 number SYR/2015/21/PD201733-01 status active indicator_id 458
+multiple sections for this pd , id 278 number SYR/2015/21/PD201733-01 status active indicator_id 459
+multiple sections for this pd , id 278 number SYR/2015/21/PD201733-01 status active indicator_id 460
+multiple sections for this pd , id 278 number SYR/2015/21/PD201733-01 status active indicator_id 461
+ ########################  , chad
+ 
+ Number of Applied indicators without results : , (0, {u'reports.AppliedIndicator': 0})
+ Number of Blueprint indicators without Applied Indicators : , (0, {})
+number of yesno indicators updated: , 0
+number of applied indicators indicators checked: , 0
+Creating a default location for the country , chad
+number of indicators to update: , 0
+ ########################  , syria_xb
+ 
+ Number of Applied indicators without results : , (0, {u'reports.AppliedIndicator': 0})
+ Number of Blueprint indicators without Applied Indicators : , (0, {})
+number of yesno indicators updated: , 0
+number of applied indicators indicators checked: , 0
+number of indicators to update: , 0
+ ########################  , china
+ 
+ Number of Applied indicators without results : , (0, {u'reports.AppliedIndicator': 0})
+ Number of Blueprint indicators without Applied Indicators : , (0, {})
+number of yesno indicators updated: , 0
+number of applied indicators indicators checked: , 0
+Creating a default location for the country , china
+number of indicators to update: , 0
+ ########################  , uat
+ 
+ Number of Applied indicators without results : , (0, {u'reports.AppliedIndicator': 0})
+ Number of Blueprint indicators without Applied Indicators : , (1, {u'reports.AppliedIndicator': 0, u'reports.IndicatorBlueprint': 1})
+number of yesno indicators updated: , 0
+number of applied indicators indicators checked: , 0
+Creating a default location for the country , uat
+number of indicators to update: , 0
+ ########################  , cote_divoire
+ 
+ Number of Applied indicators without results : , (0, {u'reports.AppliedIndicator': 0})
+ Number of Blueprint indicators without Applied Indicators : , (0, {})
+number of yesno indicators updated: , 0
+number of applied indicators indicators checked: , 0
+number of indicators to update: , 0
+ ########################  , djibouti
+ 
+ Number of Applied indicators without results : , (0, {u'reports.AppliedIndicator': 0})
+ Number of Blueprint indicators without Applied Indicators : , (0, {})
+number of yesno indicators updated: , 0
+number of applied indicators indicators checked: , 0
+number of indicators to update: , 0
+ ########################  , drc
+ 
+ Number of Applied indicators without results : , (0, {u'reports.AppliedIndicator': 0})
+ Number of Blueprint indicators without Applied Indicators : , (0, {})
+number of yesno indicators updated: , 0
+number of applied indicators indicators checked: , 0
+number of indicators to update: , 0
+ ########################  , esaro
+ 
+ Number of Applied indicators without results : , (0, {u'reports.AppliedIndicator': 0})
+ Number of Blueprint indicators without Applied Indicators : , (0, {})
+number of yesno indicators updated: , 0
+number of applied indicators indicators checked: , 0
+Creating a default location for the country , esaro
+number of indicators to update: , 0
+ ########################  , indonesia
+ 
+ Number of Applied indicators without results : , (0, {u'reports.AppliedIndicator': 0})
+ Number of Blueprint indicators without Applied Indicators : , (0, {})
+number of yesno indicators updated: , 14
+number of applied indicators indicators checked: , 45
+bad indicator: , id 18 target  baseline  interventionid 34
+FIXED TARGET
+FIXED BASELINE
+Creating a default location for the country , indonesia
+number of indicators to update: , 45
+no sections for this pd , id 34 number IDS/PCA201727/PD201734 status draft indicator_id 1
+no sections for this pd , id 34 number IDS/PCA201727/PD201734 status draft indicator_id 2
+no sections for this pd , id 34 number IDS/PCA201727/PD201734 status draft indicator_id 17
+no sections for this pd , id 34 number IDS/PCA201727/PD201734 status draft indicator_id 20
+no sections for this pd , id 34 number IDS/PCA201727/PD201734 status draft indicator_id 21
+no sections for this pd , id 34 number IDS/PCA201727/PD201734 status draft indicator_id 22
+no sections for this pd , id 34 number IDS/PCA201727/PD201734 status draft indicator_id 24
+no sections for this pd , id 34 number IDS/PCA201727/PD201734 status draft indicator_id 26
+no sections for this pd , id 34 number IDS/PCA201727/PD201734 status draft indicator_id 28
+no sections for this pd , id 34 number IDS/PCA201727/PD201734 status draft indicator_id 30
+multiple sections for this pd , id 37 number IDS/PCA201729/PD201737-05 status active indicator_id 36
+multiple sections for this pd , id 37 number IDS/PCA201729/PD201737-05 status active indicator_id 37
+multiple sections for this pd , id 37 number IDS/PCA201729/PD201737-05 status active indicator_id 40
+multiple sections for this pd , id 37 number IDS/PCA201729/PD201737-05 status active indicator_id 43
+multiple sections for this pd , id 37 number IDS/PCA201729/PD201737-05 status active indicator_id 44
+multiple sections for this pd , id 37 number IDS/PCA201729/PD201737-05 status active indicator_id 45
+multiple sections for this pd , id 37 number IDS/PCA201729/PD201737-05 status active indicator_id 46
+multiple sections for this pd , id 37 number IDS/PCA201729/PD201737-05 status active indicator_id 48
+no sections for this pd , id 34 number IDS/PCA201727/PD201734 status draft indicator_id 19
+no sections for this pd , id 34 number IDS/PCA201727/PD201734 status draft indicator_id 23
+no sections for this pd , id 34 number IDS/PCA201727/PD201734 status draft indicator_id 25
+no sections for this pd , id 34 number IDS/PCA201727/PD201734 status draft indicator_id 27
+no sections for this pd , id 34 number IDS/PCA201727/PD201734 status draft indicator_id 29
+multiple sections for this pd , id 37 number IDS/PCA201729/PD201737-05 status active indicator_id 34
+multiple sections for this pd , id 37 number IDS/PCA201729/PD201737-05 status active indicator_id 35
+multiple sections for this pd , id 37 number IDS/PCA201729/PD201737-05 status active indicator_id 38
+multiple sections for this pd , id 37 number IDS/PCA201729/PD201737-05 status active indicator_id 39
+multiple sections for this pd , id 37 number IDS/PCA201729/PD201737-05 status active indicator_id 41
+multiple sections for this pd , id 37 number IDS/PCA201729/PD201737-05 status active indicator_id 42
+no sections for this pd , id 34 number IDS/PCA201727/PD201734 status draft indicator_id 18
+ ########################  , lebanon
+ 
+ Number of Applied indicators without results : , (0, {u'reports.AppliedIndicator': 0})
+ Number of Blueprint indicators without Applied Indicators : , (0, {})
+number of yesno indicators updated: , 1
+number of applied indicators indicators checked: , 4
+number of indicators to update: , 4
+no sections for this pd , id 422 number LEBA/PCA2017062/TempRef:422 status draft indicator_id 1
+no sections for this pd , id 422 number LEBA/PCA2017062/TempRef:422 status draft indicator_id 2
+no sections for this pd , id 422 number LEBA/PCA2017062/TempRef:422 status draft indicator_id 4
+no sections for this pd , id 422 number LEBA/PCA2017062/TempRef:422 status draft indicator_id 3
+ ########################  , sudan
+ 
+ Number of Applied indicators without results : , (0, {u'reports.AppliedIndicator': 0})
+ Number of Blueprint indicators without Applied Indicators : , (1, {u'reports.AppliedIndicator': 0, u'reports.IndicatorBlueprint': 1})
+number of yesno indicators updated: , 1
+number of applied indicators indicators checked: , 587
+bad indicator: , id 344 target None baseline 0 interventionid 85
+FIXED TARGET
+FIXED BASELINE
+bad indicator: , id 614 target 10 baseline  interventionid 63
+FIXED TARGET
+FIXED BASELINE
+bad indicator: , id 332 target 24,435 baseline 16,258 interventionid 39
+FIXED TARGET
+FIXED BASELINE
+number of indicators to update: , 587
+multiple sections for this pd , id 38 number PCA/2015/SUD/040/WOD PD2 status closed indicator_id 279
+multiple sections for this pd , id 38 number PCA/2015/SUD/040/WOD PD2 status closed indicator_id 275
+multiple sections for this pd , id 38 number PCA/2015/SUD/040/WOD PD2 status closed indicator_id 276
+multiple sections for this pd , id 38 number PCA/2015/SUD/040/WOD PD2 status closed indicator_id 277
+multiple sections for this pd , id 38 number PCA/2015/SUD/040/WOD PD2 status closed indicator_id 262
+multiple sections for this pd , id 38 number PCA/2015/SUD/040/WOD PD2 status closed indicator_id 263
+multiple sections for this pd , id 38 number PCA/2015/SUD/040/WOD PD2 status closed indicator_id 284
+multiple sections for this pd , id 38 number PCA/2015/SUD/040/WOD PD2 status closed indicator_id 278
+multiple sections for this pd , id 39 number PCA/2015/SUD/014/SRCS PD5 status closed indicator_id 315
+multiple sections for this pd , id 39 number PCA/2015/SUD/014/SRCS PD5 status closed indicator_id 316
+multiple sections for this pd , id 39 number PCA/2015/SUD/014/SRCS PD5 status closed indicator_id 317
+multiple sections for this pd , id 39 number PCA/2015/SUD/014/SRCS PD5 status closed indicator_id 318
+multiple sections for this pd , id 39 number PCA/2015/SUD/014/SRCS PD5 status closed indicator_id 319
+multiple sections for this pd , id 39 number PCA/2015/SUD/014/SRCS PD5 status closed indicator_id 320
+multiple sections for this pd , id 39 number PCA/2015/SUD/014/SRCS PD5 status closed indicator_id 321
+multiple sections for this pd , id 244 number PCA/2016/SUD/062/GAH/PD201704 status ended indicator_id 556
+multiple sections for this pd , id 38 number PCA/2015/SUD/040/WOD PD2 status closed indicator_id 280
+multiple sections for this pd , id 38 number PCA/2015/SUD/040/WOD PD2 status closed indicator_id 281
+multiple sections for this pd , id 39 number PCA/2015/SUD/014/SRCS PD5 status closed indicator_id 322
+multiple sections for this pd , id 39 number PCA/2015/SUD/014/SRCS PD5 status closed indicator_id 323
+multiple sections for this pd , id 39 number PCA/2015/SUD/014/SRCS PD5 status closed indicator_id 324
+multiple sections for this pd , id 39 number PCA/2015/SUD/014/SRCS PD5 status closed indicator_id 325
+multiple sections for this pd , id 39 number PCA/2015/SUD/014/SRCS PD5 status closed indicator_id 326
+multiple sections for this pd , id 39 number PCA/2015/SUD/014/SRCS PD5 status closed indicator_id 327
+multiple sections for this pd , id 39 number PCA/2015/SUD/014/SRCS PD5 status closed indicator_id 328
+multiple sections for this pd , id 39 number PCA/2015/SUD/014/SRCS PD5 status closed indicator_id 329
+multiple sections for this pd , id 39 number PCA/2015/SUD/014/SRCS PD5 status closed indicator_id 330
+multiple sections for this pd , id 39 number PCA/2015/SUD/014/SRCS PD5 status closed indicator_id 331
+multiple sections for this pd , id 39 number PCA/2015/SUD/014/SRCS PD5 status closed indicator_id 336
+multiple sections for this pd , id 39 number PCA/2015/SUD/014/SRCS PD5 status closed indicator_id 333
+multiple sections for this pd , id 39 number PCA/2015/SUD/014/SRCS PD5 status closed indicator_id 334
+multiple sections for this pd , id 39 number PCA/2015/SUD/014/SRCS PD5 status closed indicator_id 335
+multiple sections for this pd , id 38 number PCA/2015/SUD/040/WOD PD2 status closed indicator_id 282
+multiple sections for this pd , id 38 number PCA/2015/SUD/040/WOD PD2 status closed indicator_id 283
+multiple sections for this pd , id 38 number PCA/2015/SUD/040/WOD PD2 status closed indicator_id 273
+multiple sections for this pd , id 37 number PCA/2015/SUD/041/TOD PD2 status ended indicator_id 292
+multiple sections for this pd , id 37 number PCA/2015/SUD/041/TOD PD2 status ended indicator_id 293
+multiple sections for this pd , id 37 number PCA/2015/SUD/041/TOD PD2 status ended indicator_id 294
+multiple sections for this pd , id 37 number PCA/2015/SUD/041/TOD PD2 status ended indicator_id 295
+multiple sections for this pd , id 37 number PCA/2015/SUD/041/TOD PD2 status ended indicator_id 291
+multiple sections for this pd , id 37 number PCA/2015/SUD/041/TOD PD2 status ended indicator_id 296
+multiple sections for this pd , id 37 number PCA/2015/SUD/041/TOD PD2 status ended indicator_id 297
+multiple sections for this pd , id 37 number PCA/2015/SUD/041/TOD PD2 status ended indicator_id 298
+multiple sections for this pd , id 37 number PCA/2015/SUD/041/TOD PD2 status ended indicator_id 299
+multiple sections for this pd , id 37 number PCA/2015/SUD/041/TOD PD2 status ended indicator_id 300
+multiple sections for this pd , id 37 number PCA/2015/SUD/041/TOD PD2 status ended indicator_id 301
+multiple sections for this pd , id 37 number PCA/2015/SUD/041/TOD PD2 status ended indicator_id 302
+multiple sections for this pd , id 38 number PCA/2015/SUD/040/WOD PD2 status closed indicator_id 258
+multiple sections for this pd , id 244 number PCA/2016/SUD/062/GAH/PD201704 status ended indicator_id 550
+multiple sections for this pd , id 244 number PCA/2016/SUD/062/GAH/PD201704 status ended indicator_id 538
+multiple sections for this pd , id 244 number PCA/2016/SUD/062/GAH/PD201704 status ended indicator_id 539
+multiple sections for this pd , id 244 number PCA/2016/SUD/062/GAH/PD201704 status ended indicator_id 544
+multiple sections for this pd , id 244 number PCA/2016/SUD/062/GAH/PD201704 status ended indicator_id 549
+multiple sections for this pd , id 244 number PCA/2016/SUD/062/GAH/PD201704 status ended indicator_id 548
+multiple sections for this pd , id 38 number PCA/2015/SUD/040/WOD PD2 status closed indicator_id 260
+multiple sections for this pd , id 38 number PCA/2015/SUD/040/WOD PD2 status closed indicator_id 261
+multiple sections for this pd , id 38 number PCA/2015/SUD/040/WOD PD2 status closed indicator_id 267
+multiple sections for this pd , id 38 number PCA/2015/SUD/040/WOD PD2 status closed indicator_id 268
+multiple sections for this pd , id 38 number PCA/2015/SUD/040/WOD PD2 status closed indicator_id 269
+multiple sections for this pd , id 38 number PCA/2015/SUD/040/WOD PD2 status closed indicator_id 265
+multiple sections for this pd , id 38 number PCA/2015/SUD/040/WOD PD2 status closed indicator_id 266
+multiple sections for this pd , id 38 number PCA/2015/SUD/040/WOD PD2 status closed indicator_id 274
+multiple sections for this pd , id 244 number PCA/2016/SUD/062/GAH/PD201704 status ended indicator_id 526
+multiple sections for this pd , id 244 number PCA/2016/SUD/062/GAH/PD201704 status ended indicator_id 519
+multiple sections for this pd , id 244 number PCA/2016/SUD/062/GAH/PD201704 status ended indicator_id 520
+multiple sections for this pd , id 244 number PCA/2016/SUD/062/GAH/PD201704 status ended indicator_id 521
+multiple sections for this pd , id 244 number PCA/2016/SUD/062/GAH/PD201704 status ended indicator_id 522
+multiple sections for this pd , id 244 number PCA/2016/SUD/062/GAH/PD201704 status ended indicator_id 523
+multiple sections for this pd , id 244 number PCA/2016/SUD/062/GAH/PD201704 status ended indicator_id 524
+multiple sections for this pd , id 244 number PCA/2016/SUD/062/GAH/PD201704 status ended indicator_id 530
+multiple sections for this pd , id 244 number PCA/2016/SUD/062/GAH/PD201704 status ended indicator_id 531
+multiple sections for this pd , id 244 number PCA/2016/SUD/062/GAH/PD201704 status ended indicator_id 528
+multiple sections for this pd , id 244 number PCA/2016/SUD/062/GAH/PD201704 status ended indicator_id 529
+multiple sections for this pd , id 244 number PCA/2016/SUD/062/GAH/PD201704 status ended indicator_id 535
+multiple sections for this pd , id 244 number PCA/2016/SUD/062/GAH/PD201704 status ended indicator_id 536
+multiple sections for this pd , id 244 number PCA/2016/SUD/062/GAH/PD201704 status ended indicator_id 537
+multiple sections for this pd , id 244 number PCA/2016/SUD/062/GAH/PD201704 status ended indicator_id 532
+multiple sections for this pd , id 244 number PCA/2016/SUD/062/GAH/PD201704 status ended indicator_id 533
+multiple sections for this pd , id 244 number PCA/2016/SUD/062/GAH/PD201704 status ended indicator_id 534
+multiple sections for this pd , id 244 number PCA/2016/SUD/062/GAH/PD201704 status ended indicator_id 540
+multiple sections for this pd , id 244 number PCA/2016/SUD/062/GAH/PD201704 status ended indicator_id 541
+multiple sections for this pd , id 244 number PCA/2016/SUD/062/GAH/PD201704 status ended indicator_id 542
+multiple sections for this pd , id 244 number PCA/2016/SUD/062/GAH/PD201704 status ended indicator_id 543
+multiple sections for this pd , id 38 number PCA/2015/SUD/040/WOD PD2 status closed indicator_id 264
+multiple sections for this pd , id 38 number PCA/2015/SUD/040/WOD PD2 status closed indicator_id 254
+multiple sections for this pd , id 38 number PCA/2015/SUD/040/WOD PD2 status closed indicator_id 255
+multiple sections for this pd , id 38 number PCA/2015/SUD/040/WOD PD2 status closed indicator_id 256
+multiple sections for this pd , id 38 number PCA/2015/SUD/040/WOD PD2 status closed indicator_id 257
+multiple sections for this pd , id 38 number PCA/2015/SUD/040/WOD PD2 status closed indicator_id 259
+multiple sections for this pd , id 38 number PCA/2015/SUD/040/WOD PD2 status closed indicator_id 270
+multiple sections for this pd , id 38 number PCA/2015/SUD/040/WOD PD2 status closed indicator_id 271
+multiple sections for this pd , id 38 number PCA/2015/SUD/040/WOD PD2 status closed indicator_id 272
+multiple sections for this pd , id 244 number PCA/2016/SUD/062/GAH/PD201704 status ended indicator_id 527
+multiple sections for this pd , id 244 number PCA/2016/SUD/062/GAH/PD201704 status ended indicator_id 525
+multiple sections for this pd , id 37 number PCA/2015/SUD/041/TOD PD2 status ended indicator_id 303
+multiple sections for this pd , id 37 number PCA/2015/SUD/041/TOD PD2 status ended indicator_id 304
+multiple sections for this pd , id 37 number PCA/2015/SUD/041/TOD PD2 status ended indicator_id 305
+multiple sections for this pd , id 37 number PCA/2015/SUD/041/TOD PD2 status ended indicator_id 306
+multiple sections for this pd , id 244 number PCA/2016/SUD/062/GAH/PD201704 status ended indicator_id 547
+multiple sections for this pd , id 244 number PCA/2016/SUD/062/GAH/PD201704 status ended indicator_id 546
+multiple sections for this pd , id 244 number PCA/2016/SUD/062/GAH/PD201704 status ended indicator_id 545
+multiple sections for this pd , id 244 number PCA/2016/SUD/062/GAH/PD201704 status ended indicator_id 561
+multiple sections for this pd , id 244 number PCA/2016/SUD/062/GAH/PD201704 status ended indicator_id 560
+multiple sections for this pd , id 244 number PCA/2016/SUD/062/GAH/PD201704 status ended indicator_id 559
+multiple sections for this pd , id 244 number PCA/2016/SUD/062/GAH/PD201704 status ended indicator_id 558
+multiple sections for this pd , id 244 number PCA/2016/SUD/062/GAH/PD201704 status ended indicator_id 557
+multiple sections for this pd , id 244 number PCA/2016/SUD/062/GAH/PD201704 status ended indicator_id 555
+multiple sections for this pd , id 244 number PCA/2016/SUD/062/GAH/PD201704 status ended indicator_id 553
+multiple sections for this pd , id 244 number PCA/2016/SUD/062/GAH/PD201704 status ended indicator_id 552
+multiple sections for this pd , id 244 number PCA/2016/SUD/062/GAH/PD201704 status ended indicator_id 551
+multiple sections for this pd , id 244 number PCA/2016/SUD/062/GAH/PD201704 status ended indicator_id 554
+multiple sections for this pd , id 37 number PCA/2015/SUD/041/TOD PD2 status ended indicator_id 307
+multiple sections for this pd , id 37 number PCA/2015/SUD/041/TOD PD2 status ended indicator_id 308
+multiple sections for this pd , id 37 number PCA/2015/SUD/041/TOD PD2 status ended indicator_id 309
+multiple sections for this pd , id 37 number PCA/2015/SUD/041/TOD PD2 status ended indicator_id 310
+multiple sections for this pd , id 37 number PCA/2015/SUD/041/TOD PD2 status ended indicator_id 311
+multiple sections for this pd , id 37 number PCA/2015/SUD/041/TOD PD2 status ended indicator_id 312
+multiple sections for this pd , id 37 number PCA/2015/SUD/041/TOD PD2 status ended indicator_id 313
+multiple sections for this pd , id 37 number PCA/2015/SUD/041/TOD PD2 status ended indicator_id 314
+multiple sections for this pd , id 39 number PCA/2015/SUD/014/SRCS PD5 status closed indicator_id 332
+ ########################  , syria
+ 
+ Number of Applied indicators without results : , (0, {u'reports.AppliedIndicator': 0})
+ Number of Blueprint indicators without Applied Indicators : , (4, {u'reports.AppliedIndicator': 0, u'reports.IndicatorBlueprint': 4})
+number of yesno indicators updated: , 0
+number of applied indicators indicators checked: , 401
+bad indicator: , id 247 target 10,000 baseline 0 interventionid 155
+FIXED TARGET
+FIXED BASELINE
+bad indicator: , id 248 target 2,500 baseline 0 interventionid 155
+FIXED TARGET
+FIXED BASELINE
+bad indicator: , id 249 target 3,500 baseline 0 interventionid 155
+FIXED TARGET
+FIXED BASELINE
+number of indicators to update: , 401
+multiple sections for this pd , id 3 number SYR/ADAP-CP/2017 status signed indicator_id 96
+multiple sections for this pd , id 3 number SYR/ADAP-CP/2017 status signed indicator_id 97
+multiple sections for this pd , id 3 number SYR/ADAP-CP/2017 status signed indicator_id 98
+multiple sections for this pd , id 3 number SYR/ADAP-CP/2017 status signed indicator_id 99
+multiple sections for this pd , id 3 number SYR/ADAP-CP/2017 status signed indicator_id 100
+multiple sections for this pd , id 198 number SYR/2015/43/PD201719 status active indicator_id 114
+multiple sections for this pd , id 198 number SYR/2015/43/PD201719 status active indicator_id 115
+multiple sections for this pd , id 198 number SYR/2015/43/PD201719 status active indicator_id 116
+multiple sections for this pd , id 198 number SYR/2015/43/PD201719 status active indicator_id 117
+multiple sections for this pd , id 45 number SYR/Edu-Wash/2016/59/01 status closed indicator_id 56
+multiple sections for this pd , id 45 number SYR/Edu-Wash/2016/59/01 status closed indicator_id 57
+multiple sections for this pd , id 45 number SYR/Edu-Wash/2016/59/01 status closed indicator_id 58
+multiple sections for this pd , id 45 number SYR/Edu-Wash/2016/59/01 status closed indicator_id 59
+multiple sections for this pd , id 45 number SYR/Edu-Wash/2016/59/01 status closed indicator_id 53
+multiple sections for this pd , id 45 number SYR/Edu-Wash/2016/59/01 status closed indicator_id 54
+multiple sections for this pd , id 45 number SYR/Edu-Wash/2016/59/01 status closed indicator_id 55
+multiple sections for this pd , id 48 number SYR/ADAP-01 status closed indicator_id 60
+multiple sections for this pd , id 52 number SYR/CP/2016/56/03 status ended indicator_id 70
+multiple sections for this pd , id 52 number SYR/CP/2016/56/03 status ended indicator_id 71
+multiple sections for this pd , id 52 number SYR/CP/2016/56/03 status ended indicator_id 72
+multiple sections for this pd , id 52 number SYR/CP/2016/56/03 status ended indicator_id 73
+multiple sections for this pd , id 45 number SYR/Edu-Wash/2016/59/01 status closed indicator_id 63
+multiple sections for this pd , id 45 number SYR/Edu-Wash/2016/59/01 status closed indicator_id 61
+multiple sections for this pd , id 45 number SYR/Edu-Wash/2016/59/01 status closed indicator_id 62
+multiple sections for this pd , id 45 number SYR/Edu-Wash/2016/59/01 status closed indicator_id 64
+multiple sections for this pd , id 52 number SYR/CP/2016/56/03 status ended indicator_id 65
+multiple sections for this pd , id 52 number SYR/CP/2016/56/03 status ended indicator_id 66
+multiple sections for this pd , id 52 number SYR/CP/2016/56/03 status ended indicator_id 67
+multiple sections for this pd , id 198 number SYR/2015/43/PD201719 status active indicator_id 118
+multiple sections for this pd , id 198 number SYR/2015/43/PD201719 status active indicator_id 119
+multiple sections for this pd , id 198 number SYR/2015/43/PD201719 status active indicator_id 120
+multiple sections for this pd , id 48 number SYR/ADAP-01 status closed indicator_id 216
+multiple sections for this pd , id 29 number SYR/Wash-Edu-CP/2016/81 status closed indicator_id 313
+multiple sections for this pd , id 48 number SYR/ADAP-01 status closed indicator_id 217
+multiple sections for this pd , id 48 number SYR/ADAP-01 status closed indicator_id 218
+multiple sections for this pd , id 48 number SYR/ADAP-01 status closed indicator_id 219
+multiple sections for this pd , id 48 number SYR/ADAP-01 status closed indicator_id 220
+multiple sections for this pd , id 48 number SYR/ADAP-01 status closed indicator_id 221
+multiple sections for this pd , id 48 number SYR/ADAP-01 status closed indicator_id 222
+multiple sections for this pd , id 48 number SYR/ADAP-01 status closed indicator_id 223
+multiple sections for this pd , id 79 number SYR/CP-ADAP-Wash/22/06 status ended indicator_id 224
+multiple sections for this pd , id 79 number SYR/CP-ADAP-Wash/22/06 status ended indicator_id 225
+multiple sections for this pd , id 79 number SYR/CP-ADAP-Wash/22/06 status ended indicator_id 226
+multiple sections for this pd , id 79 number SYR/CP-ADAP-Wash/22/06 status ended indicator_id 227
+multiple sections for this pd , id 79 number SYR/CP-ADAP-Wash/22/06 status ended indicator_id 228
+multiple sections for this pd , id 79 number SYR/CP-ADAP-Wash/22/06 status ended indicator_id 229
+multiple sections for this pd , id 79 number SYR/CP-ADAP-Wash/22/06 status ended indicator_id 230
+multiple sections for this pd , id 79 number SYR/CP-ADAP-Wash/22/06 status ended indicator_id 231
+multiple sections for this pd , id 79 number SYR/CP-ADAP-Wash/22/06 status ended indicator_id 232
+multiple sections for this pd , id 79 number SYR/CP-ADAP-Wash/22/06 status ended indicator_id 233
+multiple sections for this pd , id 79 number SYR/CP-ADAP-Wash/22/06 status ended indicator_id 234
+multiple sections for this pd , id 79 number SYR/CP-ADAP-Wash/22/06 status ended indicator_id 235
+multiple sections for this pd , id 69 number SYR/Cp-ADAP-Wash/34/04 status closed indicator_id 236
+multiple sections for this pd , id 69 number SYR/Cp-ADAP-Wash/34/04 status closed indicator_id 237
+multiple sections for this pd , id 69 number SYR/Cp-ADAP-Wash/34/04 status closed indicator_id 238
+multiple sections for this pd , id 69 number SYR/Cp-ADAP-Wash/34/04 status closed indicator_id 239
+multiple sections for this pd , id 69 number SYR/Cp-ADAP-Wash/34/04 status closed indicator_id 240
+multiple sections for this pd , id 69 number SYR/Cp-ADAP-Wash/34/04 status closed indicator_id 241
+multiple sections for this pd , id 69 number SYR/Cp-ADAP-Wash/34/04 status closed indicator_id 242
+multiple sections for this pd , id 69 number SYR/Cp-ADAP-Wash/34/04 status closed indicator_id 243
+multiple sections for this pd , id 107 number SYR/ADAP-WASH-CP/2016/64/01 status closed indicator_id 262
+multiple sections for this pd , id 107 number SYR/ADAP-WASH-CP/2016/64/01 status closed indicator_id 263
+multiple sections for this pd , id 107 number SYR/ADAP-WASH-CP/2016/64/01 status closed indicator_id 264
+multiple sections for this pd , id 107 number SYR/ADAP-WASH-CP/2016/64/01 status closed indicator_id 265
+multiple sections for this pd , id 107 number SYR/ADAP-WASH-CP/2016/64/01 status closed indicator_id 266
+multiple sections for this pd , id 107 number SYR/ADAP-WASH-CP/2016/64/01 status closed indicator_id 267
+multiple sections for this pd , id 107 number SYR/ADAP-WASH-CP/2016/64/01 status closed indicator_id 268
+multiple sections for this pd , id 39 number SYR/ADAP-CP/2016/62/01 status closed indicator_id 269
+multiple sections for this pd , id 39 number SYR/ADAP-CP/2016/62/01 status closed indicator_id 270
+multiple sections for this pd , id 39 number SYR/ADAP-CP/2016/62/01 status closed indicator_id 271
+multiple sections for this pd , id 39 number SYR/ADAP-CP/2016/62/01 status closed indicator_id 272
+multiple sections for this pd , id 39 number SYR/ADAP-CP/2016/62/01 status closed indicator_id 273
+multiple sections for this pd , id 39 number SYR/ADAP-CP/2016/62/01 status closed indicator_id 274
+multiple sections for this pd , id 44 number SYR/CP-01 status ended indicator_id 292
+multiple sections for this pd , id 44 number SYR/CP-01 status ended indicator_id 293
+multiple sections for this pd , id 44 number SYR/CP-01 status ended indicator_id 294
+multiple sections for this pd , id 44 number SYR/CP-01 status ended indicator_id 295
+multiple sections for this pd , id 44 number SYR/CP-01 status ended indicator_id 296
+multiple sections for this pd , id 44 number SYR/CP-01 status ended indicator_id 297
+multiple sections for this pd , id 44 number SYR/CP-01 status ended indicator_id 298
+multiple sections for this pd , id 29 number SYR/Wash-Edu-CP/2016/81 status closed indicator_id 314
+multiple sections for this pd , id 29 number SYR/Wash-Edu-CP/2016/81 status closed indicator_id 315
+multiple sections for this pd , id 29 number SYR/Wash-Edu-CP/2016/81 status closed indicator_id 316
+multiple sections for this pd , id 29 number SYR/Wash-Edu-CP/2016/81 status closed indicator_id 317
+multiple sections for this pd , id 268 number SYR/2015/37/PD201731 status active indicator_id 398
+multiple sections for this pd , id 268 number SYR/2015/37/PD201731 status active indicator_id 399
+multiple sections for this pd , id 268 number SYR/2015/37/PD201731 status active indicator_id 400
+multiple sections for this pd , id 268 number SYR/2015/37/PD201731 status active indicator_id 401
+multiple sections for this pd , id 268 number SYR/2015/37/PD201731 status active indicator_id 402
+multiple sections for this pd , id 268 number SYR/2015/37/PD201731 status active indicator_id 403
+multiple sections for this pd , id 268 number SYR/2015/37/PD201731 status active indicator_id 404
+multiple sections for this pd , id 268 number SYR/2015/37/PD201731 status active indicator_id 405
+multiple sections for this pd , id 268 number SYR/2015/37/PD201731 status active indicator_id 406
+multiple sections for this pd , id 268 number SYR/2015/37/PD201731 status active indicator_id 407
+multiple sections for this pd , id 268 number SYR/2015/37/PD201731 status active indicator_id 408
+multiple sections for this pd , id 268 number SYR/2015/37/PD201731 status active indicator_id 409
+multiple sections for this pd , id 268 number SYR/2015/37/PD201731 status active indicator_id 410
+multiple sections for this pd , id 268 number SYR/2015/37/PD201731 status active indicator_id 411
+multiple sections for this pd , id 270 number SYR/2015/27/PD2016109-01 status active indicator_id 419
+multiple sections for this pd , id 270 number SYR/2015/27/PD2016109-01 status active indicator_id 420
+multiple sections for this pd , id 270 number SYR/2015/27/PD2016109-01 status active indicator_id 421
+multiple sections for this pd , id 270 number SYR/2015/27/PD2016109-01 status active indicator_id 422
+multiple sections for this pd , id 270 number SYR/2015/27/PD2016109-01 status active indicator_id 423
+multiple sections for this pd , id 273 number SYR/2015/29/PD2016110-01 status signed indicator_id 425
+multiple sections for this pd , id 273 number SYR/2015/29/PD2016110-01 status signed indicator_id 426
+multiple sections for this pd , id 273 number SYR/2015/29/PD2016110-01 status signed indicator_id 427
+multiple sections for this pd , id 273 number SYR/2015/29/PD2016110-01 status signed indicator_id 428
+multiple sections for this pd , id 273 number SYR/2015/29/PD2016110-01 status signed indicator_id 429
+multiple sections for this pd , id 273 number SYR/2015/29/PD2016110-01 status signed indicator_id 430
+multiple sections for this pd , id 273 number SYR/2015/29/PD2016110-01 status signed indicator_id 431
+multiple sections for this pd , id 273 number SYR/2015/29/PD2016110-01 status signed indicator_id 432
+no sections for this pd , id 276 number SYR/2016/60/TempRef:276 status draft indicator_id 441
+no sections for this pd , id 276 number SYR/2016/60/TempRef:276 status draft indicator_id 442
+no sections for this pd , id 276 number SYR/2016/60/TempRef:276 status draft indicator_id 443
+no sections for this pd , id 276 number SYR/2016/60/TempRef:276 status draft indicator_id 444
+no sections for this pd , id 276 number SYR/2016/60/TempRef:276 status draft indicator_id 445
+no sections for this pd , id 276 number SYR/2016/60/TempRef:276 status draft indicator_id 446
+no sections for this pd , id 276 number SYR/2016/60/TempRef:276 status draft indicator_id 447
+multiple sections for this pd , id 277 number SYR/2016/49/PD201734 status ended indicator_id 448
+multiple sections for this pd , id 277 number SYR/2016/49/PD201734 status ended indicator_id 449
+multiple sections for this pd , id 277 number SYR/2016/49/PD201734 status ended indicator_id 450
+multiple sections for this pd , id 277 number SYR/2016/49/PD201734 status ended indicator_id 451
+multiple sections for this pd , id 277 number SYR/2016/49/PD201734 status ended indicator_id 452
+multiple sections for this pd , id 277 number SYR/2016/49/PD201734 status ended indicator_id 453
+multiple sections for this pd , id 278 number SYR/2015/21/PD201733 status ended indicator_id 454
+multiple sections for this pd , id 278 number SYR/2015/21/PD201733 status ended indicator_id 455
+multiple sections for this pd , id 278 number SYR/2015/21/PD201733 status ended indicator_id 456
+multiple sections for this pd , id 278 number SYR/2015/21/PD201733 status ended indicator_id 457
+multiple sections for this pd , id 278 number SYR/2015/21/PD201733 status ended indicator_id 458
+multiple sections for this pd , id 278 number SYR/2015/21/PD201733 status ended indicator_id 459
+multiple sections for this pd , id 278 number SYR/2015/21/PD201733 status ended indicator_id 460
+multiple sections for this pd , id 278 number SYR/2015/21/PD201733 status ended indicator_id 461
+ ########################  , syria_xb
+ 
+ Number of Applied indicators without results : , (0, {u'reports.AppliedIndicator': 0})
+ Number of Blueprint indicators without Applied Indicators : , (0, {})
+number of yesno indicators updated: , 0
+number of applied indicators indicators checked: , 0
+number of indicators to update: , 0
+ ########################  , uat
+ 
+ Number of Applied indicators without results : , (0, {u'reports.AppliedIndicator': 0})
+ Number of Blueprint indicators without Applied Indicators : , (1, {u'reports.AppliedIndicator': 0, u'reports.IndicatorBlueprint': 1})
+number of yesno indicators updated: , 0
+number of applied indicators indicators checked: , 0
+Creating a default location for the country , uat
+number of indicators to update: , 0
+ ########################  , indonesia
+ 
+ Number of Applied indicators without results : , (0, {u'reports.AppliedIndicator': 0})
+ Number of Blueprint indicators without Applied Indicators : , (0, {})
+number of yesno indicators updated: , 14
+number of applied indicators indicators checked: , 45
+bad indicator: , id 18 target  baseline  interventionid 34
+FIXED TARGET
+FIXED BASELINE
+Creating a default location for the country , indonesia
+number of indicators to update: , 45
+no sections for this pd , id 34 number IDS/PCA201727/PD201734 status draft indicator_id 1
+no sections for this pd , id 34 number IDS/PCA201727/PD201734 status draft indicator_id 2
+no sections for this pd , id 34 number IDS/PCA201727/PD201734 status draft indicator_id 17
+no sections for this pd , id 34 number IDS/PCA201727/PD201734 status draft indicator_id 20
+no sections for this pd , id 34 number IDS/PCA201727/PD201734 status draft indicator_id 21
+no sections for this pd , id 34 number IDS/PCA201727/PD201734 status draft indicator_id 22
+no sections for this pd , id 34 number IDS/PCA201727/PD201734 status draft indicator_id 24
+no sections for this pd , id 34 number IDS/PCA201727/PD201734 status draft indicator_id 26
+no sections for this pd , id 34 number IDS/PCA201727/PD201734 status draft indicator_id 28
+no sections for this pd , id 34 number IDS/PCA201727/PD201734 status draft indicator_id 30
+multiple sections for this pd , id 37 number IDS/PCA201729/PD201737-05 status active indicator_id 36
+multiple sections for this pd , id 37 number IDS/PCA201729/PD201737-05 status active indicator_id 37
+multiple sections for this pd , id 37 number IDS/PCA201729/PD201737-05 status active indicator_id 40
+multiple sections for this pd , id 37 number IDS/PCA201729/PD201737-05 status active indicator_id 43
+multiple sections for this pd , id 37 number IDS/PCA201729/PD201737-05 status active indicator_id 44
+multiple sections for this pd , id 37 number IDS/PCA201729/PD201737-05 status active indicator_id 45
+multiple sections for this pd , id 37 number IDS/PCA201729/PD201737-05 status active indicator_id 46
+multiple sections for this pd , id 37 number IDS/PCA201729/PD201737-05 status active indicator_id 48
+no sections for this pd , id 34 number IDS/PCA201727/PD201734 status draft indicator_id 19
+no sections for this pd , id 34 number IDS/PCA201727/PD201734 status draft indicator_id 23
+no sections for this pd , id 34 number IDS/PCA201727/PD201734 status draft indicator_id 25
+no sections for this pd , id 34 number IDS/PCA201727/PD201734 status draft indicator_id 27
+no sections for this pd , id 34 number IDS/PCA201727/PD201734 status draft indicator_id 29
+multiple sections for this pd , id 37 number IDS/PCA201729/PD201737-05 status active indicator_id 34
+multiple sections for this pd , id 37 number IDS/PCA201729/PD201737-05 status active indicator_id 35
+multiple sections for this pd , id 37 number IDS/PCA201729/PD201737-05 status active indicator_id 38
+multiple sections for this pd , id 37 number IDS/PCA201729/PD201737-05 status active indicator_id 39
+multiple sections for this pd , id 37 number IDS/PCA201729/PD201737-05 status active indicator_id 41
+multiple sections for this pd , id 37 number IDS/PCA201729/PD201737-05 status active indicator_id 42
+no sections for this pd , id 34 number IDS/PCA201727/PD201734 status draft indicator_id 18
+ ########################  , lebanon
+ 
+ Number of Applied indicators without results : , (0, {u'reports.AppliedIndicator': 0})
+ Number of Blueprint indicators without Applied Indicators : , (0, {})
+number of yesno indicators updated: , 1
+number of applied indicators indicators checked: , 4
+number of indicators to update: , 4
+no sections for this pd , id 422 number LEBA/PCA2017062/TempRef:422 status draft indicator_id 1
+no sections for this pd , id 422 number LEBA/PCA2017062/TempRef:422 status draft indicator_id 2
+no sections for this pd , id 422 number LEBA/PCA2017062/TempRef:422 status draft indicator_id 4
+no sections for this pd , id 422 number LEBA/PCA2017062/TempRef:422 status draft indicator_id 3
+ ########################  , sudan
+ 
+ Number of Applied indicators without results : , (0, {u'reports.AppliedIndicator': 0})
+ Number of Blueprint indicators without Applied Indicators : , (1, {u'reports.AppliedIndicator': 0, u'reports.IndicatorBlueprint': 1})
+number of yesno indicators updated: , 1
+number of applied indicators indicators checked: , 587
+bad indicator: , id 344 target None baseline 0 interventionid 85
+FIXED TARGET
+FIXED BASELINE
+bad indicator: , id 614 target 10 baseline  interventionid 63
+FIXED TARGET
+FIXED BASELINE
+bad indicator: , id 332 target 24,435 baseline 16,258 interventionid 39
+FIXED TARGET
+FIXED BASELINE
+number of indicators to update: , 587
+multiple sections for this pd , id 38 number PCA/2015/SUD/040/WOD PD2 status closed indicator_id 279
+multiple sections for this pd , id 38 number PCA/2015/SUD/040/WOD PD2 status closed indicator_id 275
+multiple sections for this pd , id 38 number PCA/2015/SUD/040/WOD PD2 status closed indicator_id 276
+multiple sections for this pd , id 38 number PCA/2015/SUD/040/WOD PD2 status closed indicator_id 277
+multiple sections for this pd , id 38 number PCA/2015/SUD/040/WOD PD2 status closed indicator_id 262
+multiple sections for this pd , id 38 number PCA/2015/SUD/040/WOD PD2 status closed indicator_id 263
+multiple sections for this pd , id 38 number PCA/2015/SUD/040/WOD PD2 status closed indicator_id 284
+multiple sections for this pd , id 38 number PCA/2015/SUD/040/WOD PD2 status closed indicator_id 278
+multiple sections for this pd , id 39 number PCA/2015/SUD/014/SRCS PD5 status closed indicator_id 315
+multiple sections for this pd , id 39 number PCA/2015/SUD/014/SRCS PD5 status closed indicator_id 316
+multiple sections for this pd , id 39 number PCA/2015/SUD/014/SRCS PD5 status closed indicator_id 317
+multiple sections for this pd , id 39 number PCA/2015/SUD/014/SRCS PD5 status closed indicator_id 318
+multiple sections for this pd , id 39 number PCA/2015/SUD/014/SRCS PD5 status closed indicator_id 319
+multiple sections for this pd , id 39 number PCA/2015/SUD/014/SRCS PD5 status closed indicator_id 320
+multiple sections for this pd , id 39 number PCA/2015/SUD/014/SRCS PD5 status closed indicator_id 321
+multiple sections for this pd , id 244 number PCA/2016/SUD/062/GAH/PD201704 status ended indicator_id 556
+multiple sections for this pd , id 38 number PCA/2015/SUD/040/WOD PD2 status closed indicator_id 280
+multiple sections for this pd , id 38 number PCA/2015/SUD/040/WOD PD2 status closed indicator_id 281
+multiple sections for this pd , id 39 number PCA/2015/SUD/014/SRCS PD5 status closed indicator_id 322
+multiple sections for this pd , id 39 number PCA/2015/SUD/014/SRCS PD5 status closed indicator_id 323
+multiple sections for this pd , id 39 number PCA/2015/SUD/014/SRCS PD5 status closed indicator_id 324
+multiple sections for this pd , id 39 number PCA/2015/SUD/014/SRCS PD5 status closed indicator_id 325
+multiple sections for this pd , id 39 number PCA/2015/SUD/014/SRCS PD5 status closed indicator_id 326
+multiple sections for this pd , id 39 number PCA/2015/SUD/014/SRCS PD5 status closed indicator_id 327
+multiple sections for this pd , id 39 number PCA/2015/SUD/014/SRCS PD5 status closed indicator_id 328
+multiple sections for this pd , id 39 number PCA/2015/SUD/014/SRCS PD5 status closed indicator_id 329
+multiple sections for this pd , id 39 number PCA/2015/SUD/014/SRCS PD5 status closed indicator_id 330
+multiple sections for this pd , id 39 number PCA/2015/SUD/014/SRCS PD5 status closed indicator_id 331
+multiple sections for this pd , id 39 number PCA/2015/SUD/014/SRCS PD5 status closed indicator_id 336
+multiple sections for this pd , id 39 number PCA/2015/SUD/014/SRCS PD5 status closed indicator_id 333
+multiple sections for this pd , id 39 number PCA/2015/SUD/014/SRCS PD5 status closed indicator_id 334
+multiple sections for this pd , id 39 number PCA/2015/SUD/014/SRCS PD5 status closed indicator_id 335
+multiple sections for this pd , id 38 number PCA/2015/SUD/040/WOD PD2 status closed indicator_id 282
+multiple sections for this pd , id 38 number PCA/2015/SUD/040/WOD PD2 status closed indicator_id 283
+multiple sections for this pd , id 38 number PCA/2015/SUD/040/WOD PD2 status closed indicator_id 273
+multiple sections for this pd , id 37 number PCA/2015/SUD/041/TOD PD2 status ended indicator_id 292
+multiple sections for this pd , id 37 number PCA/2015/SUD/041/TOD PD2 status ended indicator_id 293
+multiple sections for this pd , id 37 number PCA/2015/SUD/041/TOD PD2 status ended indicator_id 294
+multiple sections for this pd , id 37 number PCA/2015/SUD/041/TOD PD2 status ended indicator_id 295
+multiple sections for this pd , id 37 number PCA/2015/SUD/041/TOD PD2 status ended indicator_id 291
+multiple sections for this pd , id 37 number PCA/2015/SUD/041/TOD PD2 status ended indicator_id 296
+multiple sections for this pd , id 37 number PCA/2015/SUD/041/TOD PD2 status ended indicator_id 297
+multiple sections for this pd , id 37 number PCA/2015/SUD/041/TOD PD2 status ended indicator_id 298
+multiple sections for this pd , id 37 number PCA/2015/SUD/041/TOD PD2 status ended indicator_id 299
+multiple sections for this pd , id 37 number PCA/2015/SUD/041/TOD PD2 status ended indicator_id 300
+multiple sections for this pd , id 37 number PCA/2015/SUD/041/TOD PD2 status ended indicator_id 301
+multiple sections for this pd , id 37 number PCA/2015/SUD/041/TOD PD2 status ended indicator_id 302
+multiple sections for this pd , id 38 number PCA/2015/SUD/040/WOD PD2 status closed indicator_id 258
+multiple sections for this pd , id 244 number PCA/2016/SUD/062/GAH/PD201704 status ended indicator_id 550
+multiple sections for this pd , id 244 number PCA/2016/SUD/062/GAH/PD201704 status ended indicator_id 538
+multiple sections for this pd , id 244 number PCA/2016/SUD/062/GAH/PD201704 status ended indicator_id 539
+multiple sections for this pd , id 244 number PCA/2016/SUD/062/GAH/PD201704 status ended indicator_id 544
+multiple sections for this pd , id 244 number PCA/2016/SUD/062/GAH/PD201704 status ended indicator_id 549
+multiple sections for this pd , id 244 number PCA/2016/SUD/062/GAH/PD201704 status ended indicator_id 548
+multiple sections for this pd , id 38 number PCA/2015/SUD/040/WOD PD2 status closed indicator_id 260
+multiple sections for this pd , id 38 number PCA/2015/SUD/040/WOD PD2 status closed indicator_id 261
+multiple sections for this pd , id 38 number PCA/2015/SUD/040/WOD PD2 status closed indicator_id 267
+multiple sections for this pd , id 38 number PCA/2015/SUD/040/WOD PD2 status closed indicator_id 268
+multiple sections for this pd , id 38 number PCA/2015/SUD/040/WOD PD2 status closed indicator_id 269
+multiple sections for this pd , id 38 number PCA/2015/SUD/040/WOD PD2 status closed indicator_id 265
+multiple sections for this pd , id 38 number PCA/2015/SUD/040/WOD PD2 status closed indicator_id 266
+multiple sections for this pd , id 38 number PCA/2015/SUD/040/WOD PD2 status closed indicator_id 274
+multiple sections for this pd , id 244 number PCA/2016/SUD/062/GAH/PD201704 status ended indicator_id 526
+multiple sections for this pd , id 244 number PCA/2016/SUD/062/GAH/PD201704 status ended indicator_id 519
+multiple sections for this pd , id 244 number PCA/2016/SUD/062/GAH/PD201704 status ended indicator_id 520
+multiple sections for this pd , id 244 number PCA/2016/SUD/062/GAH/PD201704 status ended indicator_id 521
+multiple sections for this pd , id 244 number PCA/2016/SUD/062/GAH/PD201704 status ended indicator_id 522
+multiple sections for this pd , id 244 number PCA/2016/SUD/062/GAH/PD201704 status ended indicator_id 523
+multiple sections for this pd , id 244 number PCA/2016/SUD/062/GAH/PD201704 status ended indicator_id 524
+multiple sections for this pd , id 244 number PCA/2016/SUD/062/GAH/PD201704 status ended indicator_id 530
+multiple sections for this pd , id 244 number PCA/2016/SUD/062/GAH/PD201704 status ended indicator_id 531
+multiple sections for this pd , id 244 number PCA/2016/SUD/062/GAH/PD201704 status ended indicator_id 528
+multiple sections for this pd , id 244 number PCA/2016/SUD/062/GAH/PD201704 status ended indicator_id 529
+multiple sections for this pd , id 244 number PCA/2016/SUD/062/GAH/PD201704 status ended indicator_id 535
+multiple sections for this pd , id 244 number PCA/2016/SUD/062/GAH/PD201704 status ended indicator_id 536
+multiple sections for this pd , id 244 number PCA/2016/SUD/062/GAH/PD201704 status ended indicator_id 537
+multiple sections for this pd , id 244 number PCA/2016/SUD/062/GAH/PD201704 status ended indicator_id 532
+multiple sections for this pd , id 244 number PCA/2016/SUD/062/GAH/PD201704 status ended indicator_id 533
+multiple sections for this pd , id 244 number PCA/2016/SUD/062/GAH/PD201704 status ended indicator_id 534
+multiple sections for this pd , id 244 number PCA/2016/SUD/062/GAH/PD201704 status ended indicator_id 540
+multiple sections for this pd , id 244 number PCA/2016/SUD/062/GAH/PD201704 status ended indicator_id 541
+multiple sections for this pd , id 244 number PCA/2016/SUD/062/GAH/PD201704 status ended indicator_id 542
+multiple sections for this pd , id 244 number PCA/2016/SUD/062/GAH/PD201704 status ended indicator_id 543
+multiple sections for this pd , id 38 number PCA/2015/SUD/040/WOD PD2 status closed indicator_id 264
+multiple sections for this pd , id 38 number PCA/2015/SUD/040/WOD PD2 status closed indicator_id 254
+multiple sections for this pd , id 38 number PCA/2015/SUD/040/WOD PD2 status closed indicator_id 255
+multiple sections for this pd , id 38 number PCA/2015/SUD/040/WOD PD2 status closed indicator_id 256
+multiple sections for this pd , id 38 number PCA/2015/SUD/040/WOD PD2 status closed indicator_id 257
+multiple sections for this pd , id 38 number PCA/2015/SUD/040/WOD PD2 status closed indicator_id 259
+multiple sections for this pd , id 38 number PCA/2015/SUD/040/WOD PD2 status closed indicator_id 270
+multiple sections for this pd , id 38 number PCA/2015/SUD/040/WOD PD2 status closed indicator_id 271
+multiple sections for this pd , id 38 number PCA/2015/SUD/040/WOD PD2 status closed indicator_id 272
+multiple sections for this pd , id 244 number PCA/2016/SUD/062/GAH/PD201704 status ended indicator_id 527
+multiple sections for this pd , id 244 number PCA/2016/SUD/062/GAH/PD201704 status ended indicator_id 525
+multiple sections for this pd , id 37 number PCA/2015/SUD/041/TOD PD2 status ended indicator_id 303
+multiple sections for this pd , id 37 number PCA/2015/SUD/041/TOD PD2 status ended indicator_id 304
+multiple sections for this pd , id 37 number PCA/2015/SUD/041/TOD PD2 status ended indicator_id 305
+multiple sections for this pd , id 37 number PCA/2015/SUD/041/TOD PD2 status ended indicator_id 306
+multiple sections for this pd , id 244 number PCA/2016/SUD/062/GAH/PD201704 status ended indicator_id 547
+multiple sections for this pd , id 244 number PCA/2016/SUD/062/GAH/PD201704 status ended indicator_id 546
+multiple sections for this pd , id 244 number PCA/2016/SUD/062/GAH/PD201704 status ended indicator_id 545
+multiple sections for this pd , id 244 number PCA/2016/SUD/062/GAH/PD201704 status ended indicator_id 561
+multiple sections for this pd , id 244 number PCA/2016/SUD/062/GAH/PD201704 status ended indicator_id 560
+multiple sections for this pd , id 244 number PCA/2016/SUD/062/GAH/PD201704 status ended indicator_id 559
+multiple sections for this pd , id 244 number PCA/2016/SUD/062/GAH/PD201704 status ended indicator_id 558
+multiple sections for this pd , id 244 number PCA/2016/SUD/062/GAH/PD201704 status ended indicator_id 557
+multiple sections for this pd , id 244 number PCA/2016/SUD/062/GAH/PD201704 status ended indicator_id 555
+multiple sections for this pd , id 244 number PCA/2016/SUD/062/GAH/PD201704 status ended indicator_id 553
+multiple sections for this pd , id 244 number PCA/2016/SUD/062/GAH/PD201704 status ended indicator_id 552
+multiple sections for this pd , id 244 number PCA/2016/SUD/062/GAH/PD201704 status ended indicator_id 551
+multiple sections for this pd , id 244 number PCA/2016/SUD/062/GAH/PD201704 status ended indicator_id 554
+multiple sections for this pd , id 37 number PCA/2015/SUD/041/TOD PD2 status ended indicator_id 307
+multiple sections for this pd , id 37 number PCA/2015/SUD/041/TOD PD2 status ended indicator_id 308
+multiple sections for this pd , id 37 number PCA/2015/SUD/041/TOD PD2 status ended indicator_id 309
+multiple sections for this pd , id 37 number PCA/2015/SUD/041/TOD PD2 status ended indicator_id 310
+multiple sections for this pd , id 37 number PCA/2015/SUD/041/TOD PD2 status ended indicator_id 311
+multiple sections for this pd , id 37 number PCA/2015/SUD/041/TOD PD2 status ended indicator_id 312
+multiple sections for this pd , id 37 number PCA/2015/SUD/041/TOD PD2 status ended indicator_id 313
+multiple sections for this pd , id 37 number PCA/2015/SUD/041/TOD PD2 status ended indicator_id 314
+multiple sections for this pd , id 39 number PCA/2015/SUD/014/SRCS PD5 status closed indicator_id 332
+ ########################  , syria
+ 
+ Number of Applied indicators without results : , (0, {u'reports.AppliedIndicator': 0})
+ Number of Blueprint indicators without Applied Indicators : , (4, {u'reports.AppliedIndicator': 0, u'reports.IndicatorBlueprint': 4})
+number of yesno indicators updated: , 0
+number of applied indicators indicators checked: , 401
+bad indicator: , id 247 target 10,000 baseline 0 interventionid 155
+FIXED TARGET
+FIXED BASELINE
+bad indicator: , id 248 target 2,500 baseline 0 interventionid 155
+FIXED TARGET
+FIXED BASELINE
+bad indicator: , id 249 target 3,500 baseline 0 interventionid 155
+FIXED TARGET
+FIXED BASELINE
+number of indicators to update: , 401
+multiple sections for this pd , id 3 number SYR/ADAP-CP/2017 status signed indicator_id 96
+multiple sections for this pd , id 3 number SYR/ADAP-CP/2017 status signed indicator_id 97
+multiple sections for this pd , id 3 number SYR/ADAP-CP/2017 status signed indicator_id 98
+multiple sections for this pd , id 3 number SYR/ADAP-CP/2017 status signed indicator_id 99
+multiple sections for this pd , id 3 number SYR/ADAP-CP/2017 status signed indicator_id 100
+multiple sections for this pd , id 198 number SYR/2015/43/PD201719 status active indicator_id 114
+multiple sections for this pd , id 198 number SYR/2015/43/PD201719 status active indicator_id 115
+multiple sections for this pd , id 198 number SYR/2015/43/PD201719 status active indicator_id 116
+multiple sections for this pd , id 198 number SYR/2015/43/PD201719 status active indicator_id 117
+multiple sections for this pd , id 45 number SYR/Edu-Wash/2016/59/01 status closed indicator_id 56
+multiple sections for this pd , id 45 number SYR/Edu-Wash/2016/59/01 status closed indicator_id 57
+multiple sections for this pd , id 45 number SYR/Edu-Wash/2016/59/01 status closed indicator_id 58
+multiple sections for this pd , id 45 number SYR/Edu-Wash/2016/59/01 status closed indicator_id 59
+multiple sections for this pd , id 45 number SYR/Edu-Wash/2016/59/01 status closed indicator_id 53
+multiple sections for this pd , id 45 number SYR/Edu-Wash/2016/59/01 status closed indicator_id 54
+multiple sections for this pd , id 45 number SYR/Edu-Wash/2016/59/01 status closed indicator_id 55
+multiple sections for this pd , id 48 number SYR/ADAP-01 status closed indicator_id 60
+multiple sections for this pd , id 52 number SYR/CP/2016/56/03 status ended indicator_id 70
+multiple sections for this pd , id 52 number SYR/CP/2016/56/03 status ended indicator_id 71
+multiple sections for this pd , id 52 number SYR/CP/2016/56/03 status ended indicator_id 72
+multiple sections for this pd , id 52 number SYR/CP/2016/56/03 status ended indicator_id 73
+multiple sections for this pd , id 45 number SYR/Edu-Wash/2016/59/01 status closed indicator_id 63
+multiple sections for this pd , id 45 number SYR/Edu-Wash/2016/59/01 status closed indicator_id 61
+multiple sections for this pd , id 45 number SYR/Edu-Wash/2016/59/01 status closed indicator_id 62
+multiple sections for this pd , id 45 number SYR/Edu-Wash/2016/59/01 status closed indicator_id 64
+multiple sections for this pd , id 52 number SYR/CP/2016/56/03 status ended indicator_id 65
+multiple sections for this pd , id 52 number SYR/CP/2016/56/03 status ended indicator_id 66
+multiple sections for this pd , id 52 number SYR/CP/2016/56/03 status ended indicator_id 67
+multiple sections for this pd , id 198 number SYR/2015/43/PD201719 status active indicator_id 118
+multiple sections for this pd , id 198 number SYR/2015/43/PD201719 status active indicator_id 119
+multiple sections for this pd , id 198 number SYR/2015/43/PD201719 status active indicator_id 120
+multiple sections for this pd , id 48 number SYR/ADAP-01 status closed indicator_id 216
+multiple sections for this pd , id 29 number SYR/Wash-Edu-CP/2016/81 status closed indicator_id 313
+multiple sections for this pd , id 48 number SYR/ADAP-01 status closed indicator_id 217
+multiple sections for this pd , id 48 number SYR/ADAP-01 status closed indicator_id 218
+multiple sections for this pd , id 48 number SYR/ADAP-01 status closed indicator_id 219
+multiple sections for this pd , id 48 number SYR/ADAP-01 status closed indicator_id 220
+multiple sections for this pd , id 48 number SYR/ADAP-01 status closed indicator_id 221
+multiple sections for this pd , id 48 number SYR/ADAP-01 status closed indicator_id 222
+multiple sections for this pd , id 48 number SYR/ADAP-01 status closed indicator_id 223
+multiple sections for this pd , id 79 number SYR/CP-ADAP-Wash/22/06 status ended indicator_id 224
+multiple sections for this pd , id 79 number SYR/CP-ADAP-Wash/22/06 status ended indicator_id 225
+multiple sections for this pd , id 79 number SYR/CP-ADAP-Wash/22/06 status ended indicator_id 226
+multiple sections for this pd , id 79 number SYR/CP-ADAP-Wash/22/06 status ended indicator_id 227
+multiple sections for this pd , id 79 number SYR/CP-ADAP-Wash/22/06 status ended indicator_id 228
+multiple sections for this pd , id 79 number SYR/CP-ADAP-Wash/22/06 status ended indicator_id 229
+multiple sections for this pd , id 79 number SYR/CP-ADAP-Wash/22/06 status ended indicator_id 230
+multiple sections for this pd , id 79 number SYR/CP-ADAP-Wash/22/06 status ended indicator_id 231
+multiple sections for this pd , id 79 number SYR/CP-ADAP-Wash/22/06 status ended indicator_id 232
+multiple sections for this pd , id 79 number SYR/CP-ADAP-Wash/22/06 status ended indicator_id 233
+multiple sections for this pd , id 79 number SYR/CP-ADAP-Wash/22/06 status ended indicator_id 234
+multiple sections for this pd , id 79 number SYR/CP-ADAP-Wash/22/06 status ended indicator_id 235
+multiple sections for this pd , id 69 number SYR/Cp-ADAP-Wash/34/04 status closed indicator_id 236
+multiple sections for this pd , id 69 number SYR/Cp-ADAP-Wash/34/04 status closed indicator_id 237
+multiple sections for this pd , id 69 number SYR/Cp-ADAP-Wash/34/04 status closed indicator_id 238
+multiple sections for this pd , id 69 number SYR/Cp-ADAP-Wash/34/04 status closed indicator_id 239
+multiple sections for this pd , id 69 number SYR/Cp-ADAP-Wash/34/04 status closed indicator_id 240
+multiple sections for this pd , id 69 number SYR/Cp-ADAP-Wash/34/04 status closed indicator_id 241
+multiple sections for this pd , id 69 number SYR/Cp-ADAP-Wash/34/04 status closed indicator_id 242
+multiple sections for this pd , id 69 number SYR/Cp-ADAP-Wash/34/04 status closed indicator_id 243
+multiple sections for this pd , id 107 number SYR/ADAP-WASH-CP/2016/64/01 status closed indicator_id 262
+multiple sections for this pd , id 107 number SYR/ADAP-WASH-CP/2016/64/01 status closed indicator_id 263
+multiple sections for this pd , id 107 number SYR/ADAP-WASH-CP/2016/64/01 status closed indicator_id 264
+multiple sections for this pd , id 107 number SYR/ADAP-WASH-CP/2016/64/01 status closed indicator_id 265
+multiple sections for this pd , id 107 number SYR/ADAP-WASH-CP/2016/64/01 status closed indicator_id 266
+multiple sections for this pd , id 107 number SYR/ADAP-WASH-CP/2016/64/01 status closed indicator_id 267
+multiple sections for this pd , id 107 number SYR/ADAP-WASH-CP/2016/64/01 status closed indicator_id 268
+multiple sections for this pd , id 39 number SYR/ADAP-CP/2016/62/01 status closed indicator_id 269
+multiple sections for this pd , id 39 number SYR/ADAP-CP/2016/62/01 status closed indicator_id 270
+multiple sections for this pd , id 39 number SYR/ADAP-CP/2016/62/01 status closed indicator_id 271
+multiple sections for this pd , id 39 number SYR/ADAP-CP/2016/62/01 status closed indicator_id 272
+multiple sections for this pd , id 39 number SYR/ADAP-CP/2016/62/01 status closed indicator_id 273
+multiple sections for this pd , id 39 number SYR/ADAP-CP/2016/62/01 status closed indicator_id 274
+multiple sections for this pd , id 44 number SYR/CP-01 status ended indicator_id 292
+multiple sections for this pd , id 44 number SYR/CP-01 status ended indicator_id 293
+multiple sections for this pd , id 44 number SYR/CP-01 status ended indicator_id 294
+multiple sections for this pd , id 44 number SYR/CP-01 status ended indicator_id 295
+multiple sections for this pd , id 44 number SYR/CP-01 status ended indicator_id 296
+multiple sections for this pd , id 44 number SYR/CP-01 status ended indicator_id 297
+multiple sections for this pd , id 44 number SYR/CP-01 status ended indicator_id 298
+multiple sections for this pd , id 29 number SYR/Wash-Edu-CP/2016/81 status closed indicator_id 314
+multiple sections for this pd , id 29 number SYR/Wash-Edu-CP/2016/81 status closed indicator_id 315
+multiple sections for this pd , id 29 number SYR/Wash-Edu-CP/2016/81 status closed indicator_id 316
+multiple sections for this pd , id 29 number SYR/Wash-Edu-CP/2016/81 status closed indicator_id 317
+multiple sections for this pd , id 268 number SYR/2015/37/PD201731 status active indicator_id 398
+multiple sections for this pd , id 268 number SYR/2015/37/PD201731 status active indicator_id 399
+multiple sections for this pd , id 268 number SYR/2015/37/PD201731 status active indicator_id 400
+multiple sections for this pd , id 268 number SYR/2015/37/PD201731 status active indicator_id 401
+multiple sections for this pd , id 268 number SYR/2015/37/PD201731 status active indicator_id 402
+multiple sections for this pd , id 268 number SYR/2015/37/PD201731 status active indicator_id 403
+multiple sections for this pd , id 268 number SYR/2015/37/PD201731 status active indicator_id 404
+multiple sections for this pd , id 268 number SYR/2015/37/PD201731 status active indicator_id 405
+multiple sections for this pd , id 268 number SYR/2015/37/PD201731 status active indicator_id 406
+multiple sections for this pd , id 268 number SYR/2015/37/PD201731 status active indicator_id 407
+multiple sections for this pd , id 268 number SYR/2015/37/PD201731 status active indicator_id 408
+multiple sections for this pd , id 268 number SYR/2015/37/PD201731 status active indicator_id 409
+multiple sections for this pd , id 268 number SYR/2015/37/PD201731 status active indicator_id 410
+multiple sections for this pd , id 268 number SYR/2015/37/PD201731 status active indicator_id 411
+multiple sections for this pd , id 270 number SYR/2015/27/PD2016109-01 status active indicator_id 419
+multiple sections for this pd , id 270 number SYR/2015/27/PD2016109-01 status active indicator_id 420
+multiple sections for this pd , id 270 number SYR/2015/27/PD2016109-01 status active indicator_id 421
+multiple sections for this pd , id 270 number SYR/2015/27/PD2016109-01 status active indicator_id 422
+multiple sections for this pd , id 270 number SYR/2015/27/PD2016109-01 status active indicator_id 423
+multiple sections for this pd , id 273 number SYR/2015/29/PD2016110-01 status signed indicator_id 425
+multiple sections for this pd , id 273 number SYR/2015/29/PD2016110-01 status signed indicator_id 426
+multiple sections for this pd , id 273 number SYR/2015/29/PD2016110-01 status signed indicator_id 427
+multiple sections for this pd , id 273 number SYR/2015/29/PD2016110-01 status signed indicator_id 428
+multiple sections for this pd , id 273 number SYR/2015/29/PD2016110-01 status signed indicator_id 429
+multiple sections for this pd , id 273 number SYR/2015/29/PD2016110-01 status signed indicator_id 430
+multiple sections for this pd , id 273 number SYR/2015/29/PD2016110-01 status signed indicator_id 431
+multiple sections for this pd , id 273 number SYR/2015/29/PD2016110-01 status signed indicator_id 432
+no sections for this pd , id 276 number SYR/2016/60/TempRef:276 status draft indicator_id 441
+no sections for this pd , id 276 number SYR/2016/60/TempRef:276 status draft indicator_id 442
+no sections for this pd , id 276 number SYR/2016/60/TempRef:276 status draft indicator_id 443
+no sections for this pd , id 276 number SYR/2016/60/TempRef:276 status draft indicator_id 444
+no sections for this pd , id 276 number SYR/2016/60/TempRef:276 status draft indicator_id 445
+no sections for this pd , id 276 number SYR/2016/60/TempRef:276 status draft indicator_id 446
+no sections for this pd , id 276 number SYR/2016/60/TempRef:276 status draft indicator_id 447
+multiple sections for this pd , id 277 number SYR/2016/49/PD201734 status ended indicator_id 448
+multiple sections for this pd , id 277 number SYR/2016/49/PD201734 status ended indicator_id 449
+multiple sections for this pd , id 277 number SYR/2016/49/PD201734 status ended indicator_id 450
+multiple sections for this pd , id 277 number SYR/2016/49/PD201734 status ended indicator_id 451
+multiple sections for this pd , id 277 number SYR/2016/49/PD201734 status ended indicator_id 452
+multiple sections for this pd , id 277 number SYR/2016/49/PD201734 status ended indicator_id 453
+multiple sections for this pd , id 278 number SYR/2015/21/PD201733 status ended indicator_id 454
+multiple sections for this pd , id 278 number SYR/2015/21/PD201733 status ended indicator_id 455
+multiple sections for this pd , id 278 number SYR/2015/21/PD201733 status ended indicator_id 456
+multiple sections for this pd , id 278 number SYR/2015/21/PD201733 status ended indicator_id 457
+multiple sections for this pd , id 278 number SYR/2015/21/PD201733 status ended indicator_id 458
+multiple sections for this pd , id 278 number SYR/2015/21/PD201733 status ended indicator_id 459
+multiple sections for this pd , id 278 number SYR/2015/21/PD201733 status ended indicator_id 460
+multiple sections for this pd , id 278 number SYR/2015/21/PD201733 status ended indicator_id 461
+ ########################  , syria_xb
+ 
+ Number of Applied indicators without results : , (0, {u'reports.AppliedIndicator': 0})
+ Number of Blueprint indicators without Applied Indicators : , (0, {})
+number of yesno indicators updated: , 0
+number of applied indicators indicators checked: , 0
+number of indicators to update: , 0
+ ########################  , uat
+ 
+ Number of Applied indicators without results : , (0, {u'reports.AppliedIndicator': 0})
+ Number of Blueprint indicators without Applied Indicators : , (1, {u'reports.AppliedIndicator': 0, u'reports.IndicatorBlueprint': 1})
+number of yesno indicators updated: , 0
+number of applied indicators indicators checked: , 0
+Creating a default location for the country , uat
+number of indicators to update: , 0
