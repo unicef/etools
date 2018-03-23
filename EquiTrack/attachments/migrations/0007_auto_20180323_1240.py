@@ -17,4 +17,9 @@ class Migration(migrations.Migration):
             name='partner',
             field=models.CharField(blank=True, max_length=255),
         ),
+        migrations.AlterField(
+            model_name='attachmentflat',
+            name='pd_ssfa_number',
+            field=models.CharField(blank=True, max_length=64),
+        ),
     ]
