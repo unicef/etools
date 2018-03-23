@@ -1,12 +1,14 @@
-from __future__ import unicode_literals
+from __future__ import absolute_import, division, print_function, unicode_literals
+
 import json
 
 from django.core.exceptions import ValidationError
 from django.db.models import Q
 from django.contrib.auth import get_user_model
-from django.utils import timezone
+from django.utils import six, timezone
 from rest_framework import serializers
 
+from attachments.serializers_fields import AttachmentSingleFileField
 from EquiTrack.serializers import SnapshotModelSerializer
 from partners.serializers.interventions_v2 import InterventionListSerializer
 
@@ -132,7 +134,7 @@ class PartnerStaffMemberDetailSerializer(serializers.ModelSerializer):
 
 
 class AssessmentDetailSerializer(serializers.ModelSerializer):
-
+    report_attachment = AttachmentSingleFileField(read_only=True)
     report_file = serializers.FileField(source='report', read_only=True)
     report = serializers.FileField(required=True)
     completed_date = serializers.DateField(required=True)
@@ -274,12 +276,13 @@ class PartnerOrganizationDetailSerializer(serializers.ModelSerializer):
     planned_engagement = PlannedEngagementSerializer(read_only=True)
     hact_values = serializers.SerializerMethodField(read_only=True)
     core_values_assessment_file = serializers.FileField(source='core_values_assessment', read_only=True)
+    core_values_assessment_attachment = AttachmentSingleFileField(read_only=True)
     interventions = serializers.SerializerMethodField(read_only=True)
     hact_min_requirements = serializers.JSONField(read_only=True)
     hidden = serializers.BooleanField(read_only=True)
 
     def get_hact_values(self, obj):
-        return json.loads(obj.hact_values) if isinstance(obj.hact_values, str) else obj.hact_values
+        return json.loads(obj.hact_values) if isinstance(obj.hact_values, six.text_type) else obj.hact_values
 
     def get_interventions(self, obj):
         interventions = InterventionListSerializer(self.get_related_interventions(obj), many=True)
@@ -305,7 +308,7 @@ class PartnerOrganizationCreateUpdateSerializer(SnapshotModelSerializer):
     hidden = serializers.BooleanField(read_only=True)
 
     def get_hact_values(self, obj):
-        return json.loads(obj.hact_values) if isinstance(obj.hact_values, str) else obj.hact_values
+        return json.loads(obj.hact_values) if isinstance(obj.hact_values, six.text_type) else obj.hact_values
 
     class Meta:
         model = PartnerOrganization
@@ -327,7 +330,7 @@ class PartnerOrganizationHactSerializer(serializers.ModelSerializer):
     rating = serializers.CharField(source='get_rating_display')
 
     def get_hact_values(self, obj):
-        return json.loads(obj.hact_values) if isinstance(obj.hact_values, str) else obj.hact_values
+        return json.loads(obj.hact_values) if isinstance(obj.hact_values, six.text_type) else obj.hact_values
 
     class Meta:
         model = PartnerOrganization

@@ -6,14 +6,14 @@ import os
 from django.utils.translation import ugettext as _
 
 from attachments.serializers import Base64AttachmentSerializer
-from attachments.tests.factories import FileTypeFactory
+from attachments.tests.factories import AttachmentFileTypeFactory
 from EquiTrack.tests.cases import BaseTenantTestCase
 
 
-class TestAttachmentsModels(BaseTenantTestCase):
+class TestAttachmentsSerializer(BaseTenantTestCase):
     @classmethod
     def setUpTestData(cls):
-        cls.file_type = FileTypeFactory()
+        cls.file_type = AttachmentFileTypeFactory()
         cls.file_name = 'simple_file.txt'
         file_content = 'these are the file contents!'.encode('utf-8')
         cls.base64_file = 'data:text/plain;base64,{}'.format(base64.b64encode(file_content))
