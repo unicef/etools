@@ -92,7 +92,7 @@ class OutputListAPIView(ListAPIView):
             return q
         else:
             show_all = query_params.get('show_all', None)
-            if show_all in ['true','True']:
+            if show_all in ['true', 'True']:
                 return q
             current_cp = CountryProgramme.main_active()
             return q.filter(country_programme=current_cp)
