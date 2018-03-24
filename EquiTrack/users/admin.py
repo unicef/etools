@@ -8,7 +8,7 @@ from django.core.urlresolvers import reverse
 from django.http.response import HttpResponseRedirect
 
 from users.models import Country, Office, Section, UserProfile, WorkspaceCounter
-from vision.tasks import sync_handler
+from vision.tasks import sync_handler, vision_sync_task
 
 
 class ProfileInline(admin.StackedInline):
@@ -260,7 +260,10 @@ class CountryAdmin(admin.ModelAdmin):
     @staticmethod
     def execute_sync(country_pk, synchronizer):
         country = Country.objects.get(pk=country_pk)
-        sync_handler.delay(country.name, synchronizer)
+        if country.schema_name == 'public':
+            vision_sync_task(synchronizers=[synchronizer, ])
+        else:
+            sync_handler.delay(country.name, synchronizer)
         return HttpResponseRedirect(reverse('admin:users_country_change', args=[country.pk]))
 
 
