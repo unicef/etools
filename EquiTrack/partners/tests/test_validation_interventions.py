@@ -8,7 +8,7 @@ from unittest import skip
 
 from mock import patch, Mock
 
-from EquiTrack.tests.cases import EToolsTenantTestCase
+from EquiTrack.tests.cases import BaseTenantTestCase
 from EquiTrack.validation_mixins import (
     BasicValidationError,
     StateValidError,
@@ -39,11 +39,13 @@ from partners.validation.interventions import (
     transition_to_active,
     transition_to_closed,
     transition_to_signed,
+    transition_to_suspended,
+    transition_to_terminated,
 )
 from users.tests.factories import GroupFactory, UserFactory
 
 
-class TestPartnershipManagerOnly(EToolsTenantTestCase):
+class TestPartnershipManagerOnly(BaseTenantTestCase):
     def test_manager_no_groups(self):
         user = UserFactory()
         with self.assertRaises(TransitionError):
@@ -55,12 +57,12 @@ class TestPartnershipManagerOnly(EToolsTenantTestCase):
         self.assertTrue(partnership_manager_only(None, user))
 
 
-class TestTransitionOk(EToolsTenantTestCase):
+class TestTransitionOk(BaseTenantTestCase):
     def test_ok(self):
         self.assertTrue(transition_ok(None))
 
 
-class TestTransitionToClosed(EToolsTenantTestCase):
+class TestTransitionToClosed(BaseTenantTestCase):
     @classmethod
     def setUpTestData(cls):
         cls.intervention = InterventionFactory(
@@ -290,7 +292,7 @@ class TestTransitionToClosed(EToolsTenantTestCase):
         self.assertFundamentals(self.intervention.total_frs)
 
 
-class TestTransitionToSigned(EToolsTenantTestCase):
+class TestTransitionToSigned(BaseTenantTestCase):
     def test_type_status_invalid(self):
         """Certain document types with agreement in certain status
         cannot be signed
@@ -316,7 +318,7 @@ class TestTransitionToSigned(EToolsTenantTestCase):
         self.assertTrue(transition_to_signed(intervention))
 
 
-class TestTransitionToActive(EToolsTenantTestCase):
+class TestTransitionToActive(BaseTenantTestCase):
     def test_type_status_invalid(self):
         """Certain document types with agreement not in signed status
         cannot be made active
@@ -340,7 +342,71 @@ class TestTransitionToActive(EToolsTenantTestCase):
         self.assertTrue(transition_to_active(intervention))
 
 
-class TestStateDateSignedValid(EToolsTenantTestCase):
+class TestTransitionToSuspended(BaseTenantTestCase):
+    def test_intervention_suspendable_statuses(self):
+        """Interventions in amendment cannot be suspended"""
+        suspendable_statuses = [Intervention.SIGNED, Intervention.ACTIVE]
+
+        for suspendable_status in suspendable_statuses:
+            intervention = InterventionFactory(
+                status=suspendable_status,
+            )
+            self.assertTrue(transition_to_suspended(intervention))
+
+            intervention.in_amendment = True
+            with self.assertRaises(TransitionError):
+                transition_to_suspended(intervention)
+
+    @skip("TODO: enable if the respective transitional validations are implemented")
+    def test_intervention_nonsuspendable_statuses(self):
+        non_suspendable_statuses = [
+            Intervention.DRAFT,
+            Intervention.ENDED,
+            Intervention.IMPLEMENTED,
+            Intervention.CLOSED,
+            Intervention.TERMINATED,
+        ]
+
+        for non_suspendable_status in non_suspendable_statuses:
+            intervention = InterventionFactory(
+                status=non_suspendable_status,
+            )
+            self.assertFalse(transition_to_suspended(intervention))
+
+
+class TestTransitionToTerminated(BaseTenantTestCase):
+    def test_intervention_terminable_statuses(self):
+        """Interventions in amendment cannot be terminated"""
+        terminable_statuses = [Intervention.SIGNED, Intervention.ACTIVE]
+
+        for terminable_status in terminable_statuses:
+            intervention = InterventionFactory(
+                status=terminable_status,
+            )
+            self.assertTrue(transition_to_terminated(intervention))
+
+            intervention.in_amendment = True
+            with self.assertRaises(TransitionError):
+                transition_to_terminated(intervention)
+
+    @skip("TODO: enable if respective transitional validations are implemented")
+    def test_intervention_nonterminable_statuses(self):
+        non_terminable_statuses = [
+            Intervention.DRAFT,
+            Intervention.ENDED,
+            Intervention.IMPLEMENTED,
+            Intervention.CLOSED,
+            Intervention.SUSPENDED,
+        ]
+
+        for non_terminable_status in non_terminable_statuses:
+            intervention = InterventionFactory(
+                status=non_terminable_status,
+            )
+            self.assertFalse(transition_to_terminated(intervention))
+
+
+class TestStateDateSignedValid(BaseTenantTestCase):
     def test_start_date_before_signed_date(self):
         """Start date before max signed date is invalid"""
         intervention = InterventionFactory(
@@ -362,7 +428,7 @@ class TestStateDateSignedValid(EToolsTenantTestCase):
         self.assertTrue(start_date_signed_valid(intervention))
 
 
-class TestStateDateRelatedAgreementValid(EToolsTenantTestCase):
+class TestStateDateRelatedAgreementValid(BaseTenantTestCase):
     def test_start_date_before_agreement_start(self):
         """Start date before agreement start date is invalid
         If not contingency_pd, and certain document_type
@@ -395,7 +461,7 @@ class TestStateDateRelatedAgreementValid(EToolsTenantTestCase):
         self.assertTrue(start_date_related_agreement_valid(intervention))
 
 
-class TestSignedDateValid(EToolsTenantTestCase):
+class TestSignedDateValid(BaseTenantTestCase):
     @classmethod
     def setUpTestData(cls):
         cls.unicef_user = UserFactory()
@@ -496,7 +562,7 @@ class TestSignedDateValid(EToolsTenantTestCase):
         self.assertFalse(signed_date_valid(intervention))
 
 
-class TestAmendmentsInvalid(EToolsTenantTestCase):
+class TestAmendmentsInvalid(BaseTenantTestCase):
     def setUp(self):
         super(TestAmendmentsInvalid, self).setUp()
         self.intervention = InterventionFactory(
@@ -574,7 +640,7 @@ class TestAmendmentsInvalid(EToolsTenantTestCase):
         # self.assertFalse(amendments_valid(self.intervention))
 
 
-class TestSSFAgreementHasNoOtherIntervention(EToolsTenantTestCase):
+class TestSSFAgreementHasNoOtherIntervention(BaseTenantTestCase):
     def setUp(self):
         super(TestSSFAgreementHasNoOtherIntervention, self).setUp()
         self.agreement = AgreementFactory(
@@ -619,7 +685,7 @@ class TestSSFAgreementHasNoOtherIntervention(EToolsTenantTestCase):
             ssfa_agreement_has_no_other_intervention(self.intervention)
 
 
-class TestInterventionValid(EToolsTenantTestCase):
+class TestInterventionValid(BaseTenantTestCase):
     @classmethod
     def setUpTestData(cls):
         cls.unicef_staff = UserFactory(is_staff=True)

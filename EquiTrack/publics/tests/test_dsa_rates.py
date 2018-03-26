@@ -10,7 +10,7 @@ from django.utils.timezone import now
 from freezegun import freeze_time
 from pytz import UTC
 
-from EquiTrack.tests.mixins import APITenantTestCase
+from EquiTrack.tests.cases import BaseTenantTestCase
 from publics.models import DSARate
 from publics.tests.factories import (
     PublicsBusinessAreaFactory,
@@ -21,7 +21,7 @@ from publics.tests.factories import (
 from users.tests.factories import UserFactory
 
 
-class DSARateTest(APITenantTestCase):
+class DSARateTest(BaseTenantTestCase):
     @classmethod
     def setUpTestData(cls):
         cls.unicef_staff = UserFactory(is_staff=True)

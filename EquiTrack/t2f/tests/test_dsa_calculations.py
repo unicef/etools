@@ -1,12 +1,13 @@
-from __future__ import unicode_literals
+from __future__ import absolute_import, division, print_function, unicode_literals
 
 from datetime import date, datetime, timedelta
 from decimal import Decimal
 from unittest import skip
 
+from django.utils import six
 from pytz import UTC
 
-from EquiTrack.tests.mixins import APITenantTestCase
+from EquiTrack.tests.cases import BaseTenantTestCase
 from publics.tests.factories import (
     PublicsCountryFactory,
     PublicsCurrencyFactory,
@@ -18,7 +19,7 @@ from t2f.tests.factories import DeductionFactory, ItineraryItemFactory, TravelFa
 from users.tests.factories import UserFactory
 
 
-class TestDASdto(APITenantTestCase):
+class TestDASdto(BaseTenantTestCase):
     @classmethod
     def setUpTestData(cls):
         netherlands = PublicsCountryFactory(
@@ -110,10 +111,10 @@ class TestDASdto(APITenantTestCase):
             date.today(),
             self.amsterdam,
         )
-        self.assertEqual(str(self.dsa), res)
+        self.assertEqual(six.text_type(self.dsa), res)
 
 
-class TestDSACalculator(APITenantTestCase):
+class TestDSACalculator(BaseTenantTestCase):
     @classmethod
     def setUpTestData(cls):
         cls.unicef_staff = UserFactory(is_staff=True)

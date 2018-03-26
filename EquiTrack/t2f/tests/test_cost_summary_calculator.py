@@ -6,7 +6,7 @@ from decimal import Decimal
 from django.utils import six
 from pytz import UTC
 
-from EquiTrack.tests.mixins import APITenantTestCase
+from EquiTrack.tests.cases import BaseTenantTestCase
 from publics.models import TravelExpenseType
 from publics.tests.factories import (
     PublicsCountryFactory,
@@ -24,7 +24,7 @@ from t2f.tests.factories import ExpenseFactory, ItineraryItemFactory, TravelFact
 from users.tests.factories import UserFactory
 
 
-class TestExpenseDTO(APITenantTestCase):
+class TestExpenseDTO(BaseTenantTestCase):
     def test_init(self):
         currency_usd = PublicsCurrencyFactory(code='USD')
         travel = TravelFactory(currency=currency_usd)
@@ -45,7 +45,7 @@ class TestExpenseDTO(APITenantTestCase):
         self.assertEqual(dto.amount, 100)
 
 
-class CostSummaryTest(APITenantTestCase):
+class CostSummaryTest(BaseTenantTestCase):
     @classmethod
     def setUpTestData(cls):
         cls.unicef_staff = UserFactory(is_staff=True)

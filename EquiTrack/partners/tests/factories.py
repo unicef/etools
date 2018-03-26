@@ -87,6 +87,7 @@ class AssessmentFactory(factory.django.DjangoModelFactory):
 class FileTypeFactory(factory.django.DjangoModelFactory):
     class Meta:
         model = models.FileType
+        django_get_or_create = ("name", )
 
     name = fuzzy.FuzzyChoice([
         'FACE',

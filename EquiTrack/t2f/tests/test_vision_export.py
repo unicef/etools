@@ -5,7 +5,8 @@ from datetime import datetime
 from django.core.urlresolvers import reverse
 from pytz import UTC
 
-from EquiTrack.tests.mixins import APITenantTestCase, URLAssertionMixin
+from EquiTrack.tests.cases import BaseTenantTestCase
+from EquiTrack.tests.mixins import URLAssertionMixin
 from publics.models import TravelExpenseType
 from publics.tests.factories import (
     PublicsCurrencyFactory,
@@ -28,7 +29,7 @@ except ImportError:
     import xml.etree.ElementTree as ET
 
 
-class VisionXML(URLAssertionMixin, APITenantTestCase):
+class VisionXML(URLAssertionMixin, BaseTenantTestCase):
     @classmethod
     def setUpTestData(cls):
         cls.unicef_staff = UserFactory(is_staff=True)
@@ -122,7 +123,7 @@ class VisionXML(URLAssertionMixin, APITenantTestCase):
         self.make_invoices(travel)
 
         response = self.forced_auth_req('get', reverse('t2f:vision_invoice_export'), user=self.unicef_staff)
-        xml_data = response.content
+        xml_data = response.content.decode('utf-8')
 
         self.assertFalse(xml_data.startswith('"'))
         self.assertFalse(xml_data.endswith('"'))
@@ -137,7 +138,7 @@ class VisionXML(URLAssertionMixin, APITenantTestCase):
                              content_type='text/xml')
 
         response = self.forced_auth_req('get', reverse('t2f:vision_invoice_export'), user=self.unicef_staff)
-        xml_data = response.content
+        xml_data = response.content.decode('utf-8')
 
         self.assertEqual(xml_data, "<?xml version='1.0' encoding='UTF-8'?>\n<ta_invoices />")
 
@@ -176,7 +177,7 @@ class VisionXML(URLAssertionMixin, APITenantTestCase):
         self.make_invoices(travel)
 
         response = self.forced_auth_req('get', reverse('t2f:vision_invoice_export'), user=self.unicef_staff)
-        xml_data = response.content
+        xml_data = response.content.decode('utf-8')
 
         self.assertEqual(xml_data.count('<pernr />'), 1)
         self.assertEqual(xml_data.count('<pernr>{}</pernr>'.format(self.traveler.profile.staff_id)), 1)

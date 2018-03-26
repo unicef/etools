@@ -6,15 +6,16 @@ from __future__ import unicode_literals
 import json
 
 from django.core.urlresolvers import reverse
+from django.utils import six
 from rest_framework import status
 
-from EquiTrack.tests.mixins import APITenantTestCase
+from EquiTrack.tests.cases import BaseTenantTestCase
 from partners.models import Intervention
 from partners.tests.factories import InterventionFactory
 from users.tests.factories import UserFactory
 
 
-class TestInterventionPartnershipDashView(APITenantTestCase):
+class TestInterventionPartnershipDashView(BaseTenantTestCase):
     @classmethod
     def setUpTestData(cls):
         cls.unicef_staff = UserFactory(is_staff=True)
@@ -31,7 +32,7 @@ class TestInterventionPartnershipDashView(APITenantTestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         data = json.loads(response.rendered_content)
         self.assertEqual(len(data), 1)
-        self.assertEqual(data[0]["intervention_id"], str(self.intervention.pk))
+        self.assertEqual(data[0]["intervention_id"], six.text_type(self.intervention.pk))
 
     def test_export(self):
         response = self.forced_auth_req(
