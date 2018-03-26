@@ -1,14 +1,20 @@
 from django.core.cache import cache
 from django.core.urlresolvers import reverse
 from django.db import connection
+from django.contrib.gis.db.models import MultiPolygonField
 
+from unittest import skip
 from rest_framework import status
 from tenant_schemas.test.client import TenantClient
 
 from EquiTrack.tests.cases import BaseTenantTestCase
 from locations.models import Location
+from partners.models import Intervention
+from t2f.models import Travel, TravelType
 from locations.tests.factories import LocationFactory
-from users.tests.factories import UserFactory
+from users.tests.factories import UserFactory, CountryFactory, GroupFactory
+from partners.tests.factories import InterventionFactory
+from t2f.tests.factories import TravelFactory, TravelActivityFactory
 
 
 class TestLocationViews(BaseTenantTestCase):
@@ -29,7 +35,7 @@ class TestLocationViews(BaseTenantTestCase):
         response = self.forced_auth_req('get', reverse('locations-light-list'), user=self.unicef_staff)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(sorted(response.data[0].keys()), ["id", "name", "p_code"])
-        # sort he locations the same way the API results are sorted
+        # sort the expected locations by name, the same way the API results are sorted
         self.locations.sort(key=lambda location: location.name)
         self.assertEqual(response.data[0]["name"], '{} [{} - {}]'.format(
             self.locations[0].name, self.locations[0].gateway.name, self.locations[0].p_code))
@@ -148,18 +154,118 @@ class TestLocationAutocompleteView(BaseTenantTestCase):
 
 
 class TestGisLocationViews(BaseTenantTestCase):
-    def setUp(self):
-        self.unicef_staff = UserFactory(is_staff=True)
+    @classmethod
+    def setUpTestData(cls):
+        cls.unicef_staff = UserFactory(is_staff=True)
+        group = GroupFactory()
+        cls.unicef_staff.groups.add(group)
+        # The tested endpoints require the country id in the query string
+        cls.country = CountryFactory()
+        cls.unicef_staff.profile.country = cls.country
+        cls.unicef_staff.save()
 
-        self.location_no_geom = LocationFactory(name="Test 1")
-        self.location_with_geom = LocationFactory(
-            name="Test 2",
+        cls.location_no_geom = LocationFactory(name="Test no geom")
+        cls.location_with_geom = LocationFactory(
+            name="Test with geom",
             geom="MultiPolygon(((10 10, 10 20, 20 20, 20 15, 10 10)), ((10 10, 10 20, 20 20, 20 15, 10 10)))"
         )
 
-        super(TestGisLocationViews, self).setUp()
-
     def test_non_auth(self):
         response = self.client.get(reverse("locations-gis-in-use"))
-
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+
+    def test_intervention_locations_in_use(self):
+        self.client.force_login(self.unicef_staff)
+        response = self.client.get(
+            "%s?country_id=%s" % (reverse("locations-gis-in-use"), self.country.id),
+            user=self.unicef_staff
+        )
+
+        # see if no location are in use yet
+        self.assertEqual(len(response.json()), 0)
+
+        # add intervention locations and test the response
+        intervention = InterventionFactory(status=Intervention.SIGNED)
+        intervention.flat_locations.add(self.location_no_geom, self.location_with_geom)
+        intervention.save()
+
+        response = self.client.get(
+            "%s?country_id=%s" % (reverse("locations-gis-in-use"), self.country.id),
+            user=self.unicef_staff
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(sorted(response.data[0].keys()), ["gateway_id", "id", "level", "name", "p_code"])
+
+    @skip("figure out what is missing, the travel locations aren't returned back by the API")
+    def test_travel_locations_in_use(self):
+        self.client.force_login(self.unicef_staff)
+        response = self.client.get(
+            "%s?country_id=%s" % (reverse("locations-gis-in-use"), self.country.id),
+            user=self.unicef_staff
+        )
+
+        # see if no location are in use yet
+        self.assertEqual(len(response.json()), 0)
+
+        # add travel locations and test the response
+        traveller = UserFactory()
+        travel = TravelFactory(
+            traveler=traveller,
+            status=Travel.COMPLETED,
+        )
+        travel_activity = TravelActivityFactory(
+            travels=[travel],
+            primary_traveler=self.unicef_staff,
+            travel_type=TravelType.SPOT_CHECK,
+        )
+        travel_activity.locations.add(self.location_no_geom.id, self.location_with_geom.id)
+        travel_activity.save()
+
+        response = self.client.get(
+            "%s?country_id=%s" % (reverse("locations-gis-in-use"), self.country.id),
+            user=self.unicef_staff
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(sorted(response.data[0].keys()), ["gateway_id", "id", "level", "name", "p_code"])
+
+    def test_intervention_locations_geom(self):
+        self.client.force_login(self.unicef_staff)
+        response = self.client.get(
+            "%s?country_id=%s" % (reverse("locations-gis-geom-list"), self.country.id),
+            user=self.unicef_staff
+        )
+
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        # only one of the two test locations have GEOM, so the response is expected to have 1 eleemnt
+        self.assertEqual(len(response.json()), 1)
+        self.assertEqual(sorted(response.data[0].keys()), ["gateway_id", "geom", "id", "level", "name", "p_code"])
+        self.assertEqual(response.data[0]["geom"], self.location_with_geom.geom)
+
+    def test_intervention_locations_geom_by_pcode(self):
+        self.client.force_login(self.unicef_staff)
+        url = reverse("locations-gis-get-by-pcode", kwargs={"pcode": self.location_with_geom.p_code})
+        response = self.client.get(
+            "%s?country_id=%s" % (url, self.country.id),
+            user=self.unicef_staff,
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(sorted(response.data.keys()), ["gateway_id", "geom", "id", "level", "name", "p_code"])
+        self.assertEqual(response.data["id"], str(self.location_with_geom.id))
+        self.assertEqual(response.data["geom"], self.location_with_geom.geom)
+
+    def test_intervention_locations_geom_by_id(self):
+        self.client.force_login(self.unicef_staff)
+        url = reverse("locations-gis-get-by-id", kwargs={"id": self.location_with_geom.id})
+        response = self.client.get(
+            "%s?country_id=%s" % (url, self.country.id),
+            user=self.unicef_staff,
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(sorted(response.data.keys()), ["gateway_id", "geom", "id", "level", "name", "p_code"])
+        self.assertEqual(response.data["id"], str(self.location_with_geom.id))
+        self.assertEqual(response.data["geom"], self.location_with_geom.geom)
