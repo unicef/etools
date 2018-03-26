@@ -23,13 +23,16 @@ class Command(BaseCommand):
         if options['schema']:
             countries = countries.filter(schema_name=options['schema'])
 
+        etools_apps = ','.join(["'audit'", "'activities'", "'attachments'", "'environment'", "'firms'", "'funds'",
+                                "'locations'", "'hact'", "'management'", "'notification'", "'partners'", "'publics'",
+                                "'purchase_order'", "'reports'", "'snapshot'", "'t2f'", "'tpm'", "'tpmpartners'",
+                                "'users'", "'vision'",
+                                "'trips'", "'supplies'", "'workplan'"  # TODO remove these apps
+                                ])
         for country in countries:
             connection.set_tenant(country)
             logger.info(u'Clear table for %s' % country.name)
             with connection.cursor() as cursor:
-                cursor.execute("DELETE FROM django_migrations WHERE app IN ('partners', 'trips', 'tpm', 't2f', 'audit',"
-                               "'hact', 'workplan', 'activities', 'attachments', 'environment', 'firms', 'funds',"
-                               "'locations', 'management', 'notification', 'publics', 'purchase_order', 'reports',"
-                               "'snapshot', 'tpmpartners', 'supplies', 'users', 'vision')")
+                cursor.execute("DELETE FROM django_migrations WHERE app IN ({})".format(etools_apps))
 
         logger.info(u'Command finished')
