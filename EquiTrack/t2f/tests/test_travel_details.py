@@ -5,7 +5,7 @@ from datetime import datetime
 
 from django.core.urlresolvers import reverse
 from django.utils import six
-from six import StringIO
+from django.utils.six import StringIO
 import factory
 from freezegun import freeze_time
 from pytz import UTC

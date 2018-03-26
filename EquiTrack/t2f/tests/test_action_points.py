@@ -3,7 +3,7 @@ from __future__ import unicode_literals
 import csv
 import json
 from datetime import datetime, timedelta
-from io import StringIO
+from django.utils.six import StringIO
 
 from django.core import mail
 from django.core.urlresolvers import reverse

@@ -1597,7 +1597,6 @@ class TestStrUnicode(TestCase):
         intervention = InterventionFactory.build(number='two')
         six.text_type(intervention)
         instance = InterventionReportingPeriodFactory.build(intervention=intervention)
-        six.text_type(instance)
         self.assertTrue(six.text_type(instance).startswith('two'))
 
         intervention = InterventionFactory.build(number=u'tv\xe5')

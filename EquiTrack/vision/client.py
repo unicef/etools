@@ -103,8 +103,8 @@ def main():
 
         logger.info(client.get_business_areas())
 
-    except Exception as exp:
-        logger.exception(str(exp))
+    except Exception:
+        logger.exception("Exception in vision client")
 
 
 if __name__ == '__main__':
