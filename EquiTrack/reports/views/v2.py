@@ -91,6 +91,9 @@ class OutputListAPIView(ListAPIView):
         if any(x in ['year', 'country_programme', 'values'] for x in query_params.keys()):
             return q
         else:
+            show_all = query_params.get('show_all', None)
+            if show_all in ['true', 'True']:
+                return q
             current_cp = CountryProgramme.main_active()
             return q.filter(country_programme=current_cp)
 
@@ -281,7 +284,7 @@ class ExportAppliedIndicatorLocationListView(QueryStringFilterMixin, ListAPIView
             filters = (
                 ('document_type', 'lower_result__result_link__intervention__document_type__in'),
                 ('country_programme', 'lower_result__result_link__intervention__agreement__country_programme'),
-                ('section', 'section__in'),
+                ('sections', 'section__in'),
                 ('cluster', 'cluster_indicator_title__icontains'),
                 ('status', 'lower_result__result_link__intervention__status__in'),
                 ('unicef_focal_points', 'lower_result__result_link__intervention__unicef_focal_points__in'),
