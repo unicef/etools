@@ -3,10 +3,8 @@ from __future__ import absolute_import, division, print_function, unicode_litera
 import csv
 import json
 import logging
-from StringIO import StringIO
-
 from datetime import date
-from dateutil.relativedelta import relativedelta
+
 from django.conf import settings
 from django.contrib.auth.models import Group
 from django.core.exceptions import ObjectDoesNotExist
@@ -18,6 +16,8 @@ from django.utils.encoding import force_text
 
 import requests
 from celery.utils.log import get_task_logger
+from dateutil.relativedelta import relativedelta
+from six import StringIO
 
 from EquiTrack.celery import app
 from users.models import Country, Section, User, UserProfile

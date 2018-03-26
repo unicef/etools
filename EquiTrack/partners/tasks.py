@@ -3,16 +3,15 @@ from __future__ import absolute_import, division, print_function, unicode_litera
 import csv
 import datetime
 import itertools
-from StringIO import StringIO
 
 from django.conf import settings
 from django.core.mail.message import EmailMessage
 from django.db import connection, transaction
-from django.db.models import F, Sum
+from django.db.models import F, six, Sum
 from django.db.models.functions import Coalesce
-from django.utils import six
 
 from celery.utils.log import get_task_logger
+from six import StringIO
 
 from EquiTrack.celery import app
 from notification.models import Notification
