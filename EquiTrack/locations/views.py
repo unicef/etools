@@ -156,9 +156,7 @@ class GisLocationsInUseViewset(ListAPIView):
 
             qs = Location.objects.filter(
                 pk__in=location_ids,
-                # geom__isnull=False,
             )
-            
         else:
             raise ValidationError("Country id is missing!")
 
