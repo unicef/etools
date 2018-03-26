@@ -17,4 +17,13 @@ class Migration(migrations.Migration):
             name='exchange_rate',
             field=models.DecimalField(blank=True, decimal_places=2, max_digits=20, null=True, verbose_name='Exchange Rate'),
         ),
+        migrations.AlterModelOptions(
+            name='riskcategory',
+            options={'verbose_name_plural': 'Risk Categories'},
+        ),
+        migrations.AlterField(
+            model_name='finding',
+            name='recommendation',
+            field=models.TextField(blank=True, verbose_name='Finding and Recommendation'),
+        ),
     ]

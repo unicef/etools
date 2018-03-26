@@ -476,7 +476,7 @@ class Finding(models.Model):
     category_of_observation = models.CharField(
         verbose_name=_('Category of Observation'), max_length=100, choices=CATEGORIES,
     )
-    recommendation = models.TextField(verbose_name=_('Recommendation'), blank=True)
+    recommendation = models.TextField(verbose_name=_('Finding and Recommendation'), blank=True)
     agreed_action_by_ip = models.TextField(verbose_name=_('Agreed Action by IP'), blank=True)
     deadline_of_action = models.DateField(verbose_name=_('Deadline of Action'), null=True, blank=True)
 

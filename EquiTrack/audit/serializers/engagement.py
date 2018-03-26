@@ -302,9 +302,6 @@ class FindingSerializer(WritableNestedSerializerMixin, serializers.ModelSerializ
             'id', 'priority', 'category_of_observation',
             'recommendation', 'agreed_action_by_ip', 'deadline_of_action',
         ]
-        extra_kwargs = {
-            'recommendation': {'label': _('Finding and Recommendation')}
-        }
 
 
 class SpotCheckSerializer(ActivePDValidationMixin, EngagementSerializer):
