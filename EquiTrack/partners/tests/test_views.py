@@ -8,7 +8,6 @@ from unittest import skip, TestCase
 from urlparse import urlparse
 
 from django.conf import settings
-from django.contrib.auth.models import Group
 from django.core.files.uploadedfile import SimpleUploadedFile
 from django.core.urlresolvers import reverse, resolve
 from django.db import connection

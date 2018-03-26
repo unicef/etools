@@ -2,7 +2,6 @@ import json
 import os
 import datetime
 
-from django.contrib.auth.models import Group
 from django.core.urlresolvers import reverse, resolve
 
 from rest_framework import status

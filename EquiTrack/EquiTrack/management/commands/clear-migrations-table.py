@@ -33,6 +33,3 @@ class Command(BaseCommand):
                                "'snapshot', 'tpmpartners', 'supplies', 'users', 'vision')")
 
         logger.info(u'Command finished')
-
-
-
