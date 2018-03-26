@@ -7,8 +7,9 @@ import itertools
 from django.conf import settings
 from django.core.mail.message import EmailMessage
 from django.db import connection, transaction
-from django.db.models import F, six, Sum
+from django.db.models import F, Sum
 from django.db.models.functions import Coalesce
+from django.db.utils import six
 
 from celery.utils.log import get_task_logger
 from six import StringIO
