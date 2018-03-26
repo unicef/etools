@@ -62,7 +62,7 @@ enum34==1.1.6             # via cryptography
 et-xmlfile==1.0.1         # via openpyxl
 flower==0.9.1
 future==0.15.2            # via pyrestcli, pysaml2
-futures==3.2.0            # via azure-storage, flower
+futures==3.2.0            # via azure-storage
 gdal==1.10.0
 gunicorn==19.6.0
 html5lib==1.0b10          # via xhtml2pdf
