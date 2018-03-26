@@ -1,7 +1,6 @@
 from django.core.cache import cache
 from django.core.urlresolvers import reverse
 from django.db import connection
-from django.contrib.gis.db.models import MultiPolygonField
 
 from unittest import skip
 from rest_framework import status
@@ -236,7 +235,6 @@ class TestGisLocationViews(BaseTenantTestCase):
             "%s?country_id=%s" % (reverse("locations-gis-geom-list"), self.country.id),
             user=self.unicef_staff
         )
-
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         # only one of the two test locations have GEOM, so the response is expected to have 1 eleemnt
