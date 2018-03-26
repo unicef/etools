@@ -158,13 +158,7 @@ class GisLocationsInUseViewset(ListAPIView):
                 pk__in=location_ids,
                 # geom__isnull=False,
             )
-
-            '''
-            print ""
-            print qs.count()
-            print len(location_ids)
-            print ""
-            '''
+            
         else:
             raise ValidationError("Country id is missing!")
 
