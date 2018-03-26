@@ -6,8 +6,7 @@ import datetime
 from django.utils import six
 from rest_framework import serializers
 
-# Project imports
-from EquiTrack.tests.cases import EToolsTenantTestCase
+from EquiTrack.tests.cases import BaseTenantTestCase
 from partners.models import Agreement, PartnerType
 from partners.serializers.agreements_v2 import AgreementCreateUpdateSerializer
 from partners.serializers.partner_organization_v2 import PartnerOrganizationDetailSerializer
@@ -25,7 +24,7 @@ from users.tests.factories import UserFactory
 _ALL_AGREEMENT_TYPES = [agreement_type[0] for agreement_type in Agreement.AGREEMENT_TYPES]
 
 
-class AgreementCreateUpdateSerializerBase(EToolsTenantTestCase):
+class AgreementCreateUpdateSerializerBase(BaseTenantTestCase):
     '''Base class for testing AgreementCreateUpdateSerializer'''
     @classmethod
     def setUpTestData(cls):
@@ -35,10 +34,6 @@ class AgreementCreateUpdateSerializerBase(EToolsTenantTestCase):
 
         cls.today = datetime.date.today()
 
-        this_year = cls.today.year
-        cls.country_programme = CountryProgrammeFactory(from_date=datetime.date(this_year - 1, 1, 1),
-                                                        to_date=datetime.date(this_year + 1, 1, 1))
-
         # The serializer examines context['request'].user during the course of its operation. If that's not set, the
         # serializer will fail. It doesn't need a real request object, just something with a .user attribute, so
         # that's what I create here.
@@ -46,6 +41,13 @@ class AgreementCreateUpdateSerializerBase(EToolsTenantTestCase):
             pass
         cls.fake_request = Stub()
         cls.fake_request.user = cls.user
+
+    def setUp(self):
+        this_year = self.today.year
+        self.country_programme = CountryProgrammeFactory(
+            from_date=datetime.date(this_year - 1, 1, 1),
+            to_date=datetime.date(this_year + 1, 1, 1)
+        )
 
     def assertSimpleExceptionFundamentals(self, context_manager, expected_message):
         """Given the context manager produced by self.assertRaises(), checks the exception it contains for
@@ -56,7 +58,7 @@ class AgreementCreateUpdateSerializerBase(EToolsTenantTestCase):
         self.assertTrue(hasattr(exception, 'detail'))
         self.assertIsInstance(exception.detail, dict)
         # exception.detail should have only one key.
-        self.assertEqual(exception.detail.keys(), ['errors'])
+        self.assertEqual(list(exception.detail.keys()), ['errors'])
         # exception.detail['errors'] should map to a list that contains the expected message.
         self.assertIsInstance(exception.detail['errors'], list)
         self.assertEqual(exception.detail['errors'], [expected_message])
@@ -80,12 +82,12 @@ class AgreementCreateUpdateSerializerBase(EToolsTenantTestCase):
         #    }
         self.assertTrue(hasattr(exception, 'detail'))
         self.assertIsInstance(exception.detail, dict)
-        self.assertEqual(exception.detail.keys(), ['errors'])
+        self.assertEqual(list(exception.detail.keys()), ['errors'])
         self.assertIsInstance(exception.detail['errors'], list)
         self.assertEqual(len(exception.detail['errors']), 1)
         the_error = exception.detail['errors'][0]
         self.assertIsInstance(the_error, dict)
-        self.assertEqual(the_error.keys(), ['signed_amendment'])
+        self.assertEqual(list(the_error.keys()), ['signed_amendment'])
         self.assertIsInstance(the_error['signed_amendment'], list)
         self.assertEqual(the_error['signed_amendment'], [expected_message])
 
@@ -117,7 +119,7 @@ class TestAgreementCreateUpdateSerializer(AgreementCreateUpdateSerializerBase):
         exception = context_manager.exception
 
         self.assertIsInstance(exception.detail, dict)
-        self.assertEqual(exception.detail.keys(), ['country_programme'])
+        self.assertEqual(list(exception.detail.keys()), ['country_programme'])
         self.assertEqual(exception.detail['country_programme'], 'Country Programme is required for PCAs!')
 
     def test_create_fail_one_PCA_per_country_programme_and_partner(self):
@@ -691,7 +693,7 @@ class TestAgreementSerializerTransitions(AgreementCreateUpdateSerializerBase):
     def test_ensure_field_read_write_status(self):
         """Ensure that the fields I expect to be read-only are read-only; also confirm the converse"""
         expected_read_only_fields = ('id', 'created', 'modified', 'partner_name', 'amendments', 'unicef_signatory',
-                                     'partner_signatory', 'agreement_number', 'attached_agreement_file')
+                                     'partner_signatory', 'agreement_number', 'attached_agreement_file', 'attachment')
 
         serializer = AgreementCreateUpdateSerializer()
 
@@ -700,7 +702,7 @@ class TestAgreementSerializerTransitions(AgreementCreateUpdateSerializerBase):
             self.assertEqual(field.read_only, expected_read_only)
 
 
-class TestPartnerOrganizationDetailSerializer(EToolsTenantTestCase):
+class TestPartnerOrganizationDetailSerializer(BaseTenantTestCase):
     @classmethod
     def setUpTestData(cls):
         cls.user = UserFactory()
@@ -719,7 +721,7 @@ class TestPartnerOrganizationDetailSerializer(EToolsTenantTestCase):
             'hidden', u'id', 'interventions', 'last_assessment_date', 'modified', 'name', 'net_ct_cy', 'partner_type',
             'phone_number', 'planned_engagement', 'postal_code', 'rating', 'reported_cy', 'shared_with', 'short_name',
             'staff_members', 'street_address', 'total_ct_cp', 'total_ct_cy', 'total_ct_ytd', 'type_of_assessment',
-            'vendor_number', 'vision_synced'
+            'vendor_number', 'vision_synced', 'core_values_assessment_attachment'
         ])
 
         six.assertCountEqual(self, data['planned_engagement'].keys(), [

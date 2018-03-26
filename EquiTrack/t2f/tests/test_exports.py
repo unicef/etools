@@ -9,7 +9,7 @@ from decimal import Decimal
 from django.core.urlresolvers import reverse
 from pytz import UTC
 
-from EquiTrack.tests.mixins import APITenantTestCase
+from EquiTrack.tests.cases import BaseTenantTestCase
 from locations.tests.factories import LocationFactory
 from partners.tests.factories import InterventionFactory
 from publics.tests.factories import (
@@ -36,7 +36,7 @@ from users.tests.factories import OfficeFactory, UserFactory
 log = logging.getLogger('__name__')
 
 
-class TravelExports(APITenantTestCase):
+class TravelExports(BaseTenantTestCase):
     @classmethod
     def setUpTestData(cls):
         cls.traveler = UserFactory(first_name='John', last_name='Doe')
@@ -156,7 +156,7 @@ class TravelExports(APITenantTestCase):
         with self.assertNumQueries(6):
             response = self.forced_auth_req('get', reverse('t2f:travels:list:activity_export'),
                                             user=self.unicef_staff)
-        export_csv = csv.reader(StringIO(response.content))
+        export_csv = csv.reader(StringIO(response.content.decode('utf-8')))
         rows = [r for r in export_csv]
 
         self.assertEqual(len(rows), 5)
@@ -264,7 +264,7 @@ class TravelExports(APITenantTestCase):
         with self.assertNumQueries(27):
             response = self.forced_auth_req('get', reverse('t2f:travels:list:finance_export'),
                                             user=self.unicef_staff)
-        export_csv = csv.reader(StringIO(response.content))
+        export_csv = csv.reader(StringIO(response.content.decode('utf-8')))
         rows = [r for r in export_csv]
 
         self.assertEqual(len(rows), 3)
@@ -391,7 +391,7 @@ class TravelExports(APITenantTestCase):
         with self.assertNumQueries(6):
             response = self.forced_auth_req('get', reverse('t2f:travels:list:travel_admin_export'),
                                             user=self.unicef_staff)
-        export_csv = csv.reader(StringIO(response.content))
+        export_csv = csv.reader(StringIO(response.content.decode('utf-8')))
         rows = [r for r in export_csv]
 
         self.assertEqual(len(rows), 6)
@@ -564,7 +564,7 @@ class TravelExports(APITenantTestCase):
         with self.assertNumQueries(1):
             response = self.forced_auth_req('get', reverse('t2f:travels:list:invoice_export'),
                                             user=self.unicef_staff)
-        export_csv = csv.reader(StringIO(response.content))
+        export_csv = csv.reader(StringIO(response.content.decode('utf-8')))
         rows = [r for r in export_csv]
 
         self.assertEqual(len(rows), 5)

@@ -5,11 +5,11 @@ import datetime
 from decimal import Decimal
 
 from django.conf import settings
-from django.utils import timezone
+from django.utils import six, timezone
 
 import mock
 
-from EquiTrack.tests.cases import EToolsTenantTestCase
+from EquiTrack.tests.cases import BaseTenantTestCase
 from funds.tests.factories import FundsReservationHeaderFactory
 from partners.models import Agreement, Intervention
 import partners.tasks
@@ -41,7 +41,7 @@ def _make_past_datetime(n_days):
     return timezone.now() - datetime.timedelta(days=n_days)
 
 
-class TestGetInterventionContext(EToolsTenantTestCase):
+class TestGetInterventionContext(BaseTenantTestCase):
     '''Exercise the tasks' helper function get_intervention_context()'''
     def setUp(self):
         super(TestGetInterventionContext, self).setUp()
@@ -54,7 +54,7 @@ class TestGetInterventionContext(EToolsTenantTestCase):
         self.assertIsInstance(result, dict)
         self.assertEqual(sorted(result.keys()),
                          sorted(['number', 'partner', 'start_date', 'url', 'unicef_focal_points']))
-        self.assertEqual(result['number'], unicode(self.intervention))
+        self.assertEqual(result['number'], six.text_type(self.intervention))
         self.assertEqual(result['partner'], self.intervention.agreement.partner.name)
         self.assertEqual(result['start_date'], 'None')
         self.assertEqual(result['url'],
@@ -74,7 +74,7 @@ class TestGetInterventionContext(EToolsTenantTestCase):
         self.assertIsInstance(result, dict)
         self.assertEqual(sorted(result.keys()),
                          sorted(['number', 'partner', 'start_date', 'url', 'unicef_focal_points']))
-        self.assertEqual(result['number'], unicode(self.intervention))
+        self.assertEqual(result['number'], six.text_type(self.intervention))
         self.assertEqual(result['partner'], self.intervention.agreement.partner.name)
         self.assertEqual(result['start_date'], '2017-08-01')
         self.assertEqual(result['url'],
@@ -82,7 +82,7 @@ class TestGetInterventionContext(EToolsTenantTestCase):
         self.assertEqual(result['unicef_focal_points'], [focal_point_user.email])
 
 
-class PartnersTestBaseClass(EToolsTenantTestCase):
+class PartnersTestBaseClass(BaseTenantTestCase):
     '''Common elements for most of the tests in this file.'''
     def _assertCalls(self, mocked_function, all_expected_call_args):
         '''Given a mocked function (like mock_logger.info or mock_connection.set_tentant), asserts that the mock was

@@ -304,6 +304,9 @@ class RiskCategory(OrderedModel, models.Model):
 
     order_with_respect_to = 'parent'
 
+    class Meta:
+        verbose_name_plural = _('Risk Categories')
+
     def __str__(self):
         text = 'RiskCategory {}'.format(self.header)
         if self.parent:

@@ -1,7 +1,4 @@
-from __future__ import absolute_import
-from __future__ import division
-from __future__ import print_function
-from __future__ import unicode_literals
+from __future__ import absolute_import, division, print_function, unicode_literals
 
 from decimal import Decimal
 import random
@@ -10,7 +7,7 @@ from django.conf import settings
 from django.contrib.auth.models import Group
 from django.db import connection, models
 from django.utils.encoding import python_2_unicode_compatible
-from django.utils import timezone
+from django.utils import six, timezone
 from waffle.models import BaseModel, CACHE_EMPTY, set_flag
 from waffle import managers
 from waffle.utils import get_setting, keyfmt, get_cache
@@ -219,7 +216,7 @@ class TenantFlag(BaseModel):
                 set_flag(request, self.name, flag_active, self.rollout)
                 return flag_active
 
-            if Decimal(str(random.uniform(0, 100))) <= self.percent:
+            if Decimal(six.text_type(random.uniform(0, 100))) <= self.percent:
                 set_flag(request, self.name, True, self.rollout)
                 return True
             set_flag(request, self.name, False, self.rollout)
