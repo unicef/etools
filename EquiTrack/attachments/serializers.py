@@ -61,6 +61,7 @@ class Base64AttachmentSerializer(BaseAttachmentsSerializer):
 
 class AttachmentSerializer(serializers.ModelSerializer):
     id = serializers.IntegerField(source="attachment.pk")
+    filename = serializers.CharField(source="attachment.filename")
 
     class Meta:
         model = AttachmentFlat

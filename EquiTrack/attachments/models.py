@@ -198,10 +198,10 @@ class Attachment(TimeStampedModel, models.Model):
 @python_2_unicode_compatible
 class AttachmentFlat(models.Model):
     attachment = models.ForeignKey(Attachment, related_name="denormalized")
-    partner = models.CharField(max_length=150, blank=True)
+    partner = models.CharField(max_length=255, blank=True)
     partner_type = models.CharField(max_length=150, blank=True)
     vendor_number = models.CharField(max_length=50, blank=True)
-    pd_ssfa_number = models.CharField(max_length=50, blank=True)
+    pd_ssfa_number = models.CharField(max_length=64, blank=True)
     file_type = models.CharField(max_length=100, blank=True)
     file_link = models.CharField(max_length=1024, blank=True)
     uploaded_by = models.CharField(max_length=255, blank=True)
