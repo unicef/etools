@@ -5,7 +5,6 @@ from django.core.exceptions import ValidationError
 from django.shortcuts import get_object_or_404
 
 from django.db import connection
-from rest_framework import permissions
 from rest_framework.generics import ListAPIView, RetrieveAPIView
 from rest_framework.response import Response
 
