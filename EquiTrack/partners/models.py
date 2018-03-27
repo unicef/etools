@@ -605,6 +605,7 @@ class PartnerOrganization(AdminURLMixin, TimeStampedModel):
             pv += 1
             pvq += 1
             partner.hact_values['programmatic_visits']['completed'][quarter_name] = pvq
+            partner.hact_values['programmatic_visits']['completed']['total'] = pv
         else:
             pv_year = TravelActivity.objects.filter(
                 travel_type=TravelType.PROGRAMME_MONITORING,
@@ -654,7 +655,7 @@ class PartnerOrganization(AdminURLMixin, TimeStampedModel):
             partner.hact_values['programmatic_visits']['completed']['q3'] = pvq3 + tpmv3
             partner.hact_values['programmatic_visits']['completed']['q4'] = pvq4 + tpmv4
 
-        partner.hact_values['programmatic_visits']['completed']['total'] = pv + tpm_total
+            partner.hact_values['programmatic_visits']['completed']['total'] = pv + tpm_total
         partner.save()
 
     @classmethod
