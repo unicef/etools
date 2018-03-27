@@ -244,7 +244,7 @@ def sync_users_remote():
     storage = AzureStorage()
     user_sync = UserMapper()
     with storage.open('saml/etools.dat') as csvfile:
-        reader = csv.DictReader(csvfile, delimiter='|')
+        reader = csv.DictReader(csvfile, delimiter=six.string_types('|'))
         for row in reader:
             uni_row = {
                 six.text_type(key, 'latin-1'): six.text_type(value, 'latin-1') for key, value in six.iteritems(row)}
