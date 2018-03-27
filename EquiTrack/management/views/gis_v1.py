@@ -8,6 +8,7 @@ from rest_framework import permissions
 from rest_framework.generics import ListAPIView, RetrieveAPIView
 from rest_framework.response import Response
 
+from EquiTrack.permissions import IsSuperUser
 from t2f.models import TravelActivity
 from users.models import Country
 from partners.models import Intervention
@@ -19,7 +20,7 @@ from management.serializers import GisLocationListSerializer, GisLocationGeoDeta
 class GisLocationsInUseViewset(ListAPIView):
     model = Location
     serializer_class = GisLocationListSerializer
-    permission_classes = (permissions.IsAdminUser,)
+    permission_classes = (IsSuperUser,)
 
     def get_queryset(self):
         country_id = self.request.query_params.get('country_id')
@@ -62,7 +63,7 @@ class GisLocationsInUseViewset(ListAPIView):
 class GisLocationsGeomListViewset(ListAPIView):
     model = Location
     serializer_class = GisLocationGeoDetailSerializer
-    permission_classes = (permissions.IsAdminUser,)
+    permission_classes = (IsSuperUser,)
 
     def get_queryset(self):
         country_id = self.request.query_params.get('country_id')
@@ -79,7 +80,7 @@ class GisLocationsGeomListViewset(ListAPIView):
 
 
 class GisLocationsGeomDetailsViewset(RetrieveAPIView):
-    permission_classes = (permissions.IsAdminUser,)
+    permission_classes = (IsSuperUser,)
 
     def get(self, request, id=None, pcode=None):
         country_id = self.request.query_params.get('country_id')

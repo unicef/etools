@@ -161,17 +161,17 @@ class TestPortalDashView(BaseTenantTestCase):
 
 class TestGisLocationViews(BaseTenantTestCase):
     @classmethod
-    def setUpTestData(cls):
-        cls.unicef_staff = UserFactory(is_staff=True)
+    def setUp(self):
+        self.unicef_staff = UserFactory(is_superuser=True)
         group = GroupFactory()
-        cls.unicef_staff.groups.add(group)
+        self.unicef_staff.groups.add(group)
         # The tested endpoints require the country id in the query string
-        cls.country = CountryFactory()
-        cls.unicef_staff.profile.country = cls.country
-        cls.unicef_staff.save()
+        self.country = CountryFactory()
+        self.unicef_staff.profile.country = self.country
+        self.unicef_staff.save()
 
-        cls.location_no_geom = LocationFactory(name="Test no geom")
-        cls.location_with_geom = LocationFactory(
+        self.location_no_geom = LocationFactory(name="Test no geom")
+        self.location_with_geom = LocationFactory(
             name="Test with geom",
             geom="MultiPolygon(((10 10, 10 20, 20 20, 20 15, 10 10)), ((10 10, 10 20, 20 20, 20 15, 10 10)))"
         )
@@ -187,6 +187,7 @@ class TestGisLocationViews(BaseTenantTestCase):
             user=self.unicef_staff
         )
 
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
         # see if no location are in use yet
         self.assertEqual(len(response.json()), 0)
 
