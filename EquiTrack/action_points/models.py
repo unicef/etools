@@ -4,6 +4,7 @@ from django.conf import settings
 from django.contrib.contenttypes.fields import GenericForeignKey, GenericRelation
 from django.contrib.contenttypes.models import ContentType
 from django.db import models
+from django.utils import six
 from django.utils.six import python_2_unicode_compatible
 from django.utils.translation import ugettext_lazy as _
 
@@ -12,8 +13,10 @@ from model_utils import Choices
 from model_utils.fields import MonitorField
 from model_utils.models import TimeStampedModel
 
+from EquiTrack.utils import get_environment
 from action_points.conditions import ActionPointCompleteRequiredFieldsCheck
 from locations.models import Location
+from notification.models import Notification
 from partners.models import PartnerOrganization, Intervention
 from reports.models import Result
 from users.models import Section, Office
@@ -108,9 +111,34 @@ class ActionPoint(TimeStampedModel, models.Model):
 
         return {'key_events': key_events}
 
+    def get_mail_context(self):
+        return {
+            'person_responsible': self.assigned_to.get_full_name(),
+            'author': self.author.get_full_name(),
+            'reference_number': self.reference_number,
+            'implementing_partner': six.text_type(self.partner),
+            'description': self.description,
+            'due_date': self.due_date.strftime('%d %b %Y'),
+            'object_url': 'link to follow up',
+        }
+
+    def send_email(self, recipient, template_name):
+        context = {
+            'environment': get_environment(),
+            'action_point': self.get_mail_context(),
+            'recipient': recipient.get_full_name(),
+        }
+
+        notification = Notification.objects.create(
+            sender=self,
+            recipients=[recipient.email], template_name=template_name,
+            template_data=context
+        )
+        notification.send_notification()
+
     @transition(status, source=STATUSES.open, target=STATUSES.completed,
                 conditions=[
                     ActionPointCompleteRequiredFieldsCheck.as_condition()
                 ])
     def complete(self):
-        pass
+        self.send_email(self.author, 'action_points/action_point/completed')

@@ -47,6 +47,7 @@ class Migration(migrations.Migration):
                 ('partner', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to='partners.PartnerOrganization', verbose_name='Partner')),
                 ('related_content_type', models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.CASCADE, to='contenttypes.ContentType')),
                 ('section', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to='users.Section', verbose_name='Section')),
+                ('high_priority', models.BooleanField(default=False, verbose_name='High Priority')),
             ],
             options={
                 'abstract': False,
