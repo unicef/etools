@@ -111,4 +111,3 @@ class LocationAutocompleteView(autocomplete.Select2QuerySetView):
             qs = qs.filter(name__istartswith=self.q)
 
         return qs
-

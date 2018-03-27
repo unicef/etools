@@ -1,3 +1,5 @@
+from __future__ import absolute_import
+
 from django.core.exceptions import ValidationError
 from django.shortcuts import get_object_or_404
 
@@ -47,7 +49,7 @@ class GisLocationsInUseViewset(ListAPIView):
 
             for t2f_loc in travel_locations:
                 location_ids.add(t2f_loc.id)
-            
+
             qs = Location.objects.filter(
                 pk__in=list(location_ids),
             )

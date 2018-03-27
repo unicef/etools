@@ -16,7 +16,6 @@ from partners.tests.factories import InterventionFactory
 from t2f.tests.factories import TravelFactory, TravelActivityFactory
 
 
-
 class InvalidateCacheTest(BaseTenantTestCase):
 
     def setUp(self):
