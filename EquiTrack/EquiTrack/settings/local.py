@@ -61,7 +61,7 @@ if 'test' in sys.argv:
 
     # Disable logging output during tests
     logging.disable(logging.CRITICAL)
-elif 'runserver' in sys.argv or 'shell_plus' in sys.argv :
+elif 'runserver' in sys.argv:
     # Settings which should only be active when running a local server
 
     # django-debug-toolbar: https://django-debug-toolbar.readthedocs.io/en/stable/configuration.html
