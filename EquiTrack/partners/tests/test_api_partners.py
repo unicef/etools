@@ -6,16 +6,16 @@ import json
 from django.core.urlresolvers import reverse
 from mock import patch, Mock
 from rest_framework import status
-from unittest import TestCase, skip
+from unittest import TestCase
 
 from EquiTrack.tests.cases import BaseTenantTestCase
 from EquiTrack.tests.mixins import URLAssertionMixin
-from partners.models import PartnerOrganization, PartnerType
+from partners.models import Intervention, PartnerOrganization, PartnerType
 from partners.views.partner_organization_v2 import PartnerOrganizationAddView
 from partners.tests.factories import (
     AgreementFactory,
     PartnerFactory,
-    InterventionBudgetFactory,
+    InterventionFactory,
 )
 from t2f.tests.factories import TravelActivityFactory
 from users.tests.factories import GroupFactory, UserFactory
@@ -38,29 +38,23 @@ class TestPartnerOrganizationDetailAPIView(BaseTenantTestCase):
     def setUp(self):
         super(TestPartnerOrganizationDetailAPIView, self).setUp()
         self.unicef_staff = UserFactory(is_staff=True)
-        self.interventionbudget = InterventionBudgetFactory()
-
-        self.intervention = self.interventionbudget.intervention
-        self.intervention.save()
-
-        self.agreement = self.interventionbudget.intervention.agreement
-        self.agreement.save()
-
-        self.partner = self.interventionbudget.intervention.agreement.partner
+        self.partner = PartnerFactory()
+        self.agreement = AgreementFactory(partner=self.partner)
+        self.intervention = InterventionFactory(
+            agreement=self.agreement,
+            status=Intervention.CLOSED
+        )
         self.partner.save()
-
         self.url = reverse("partners_api:partner-detail", kwargs={'pk': self.partner.id})
 
-    @skip("This will be done in a separate PR")
     def test_get_partner_details(self):
         response = self.forced_auth_req(
             'get',
             self.url,
             user=self.unicef_staff
         )
-
-        response_json = json.loads(response.rendered_content)
-        self.assertEqual(self.intervention.id, response_json.get("interventions")[0].id)
+        data = json.loads(response.rendered_content)
+        self.assertEqual(self.intervention.pk, data["interventions"][0]["id"])
 
 
 class TestPartnerOrganizationHactAPIView(BaseTenantTestCase):
