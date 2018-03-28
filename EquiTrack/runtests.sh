@@ -13,7 +13,7 @@ python manage.py makemigrations --dry-run  --settings="$TEST_SETTINGS" | grep 'N
 
 # Run unittests and coverage report
 coverage erase
-coverage run manage.py test --noinput --keepdb --settings="$TEST_SETTINGS" "$@"
+coverage run manage.py test --noinput --settings="$TEST_SETTINGS" "$@"
 coverage report --include "$@/*.py"
 
 # Check code style
