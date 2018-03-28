@@ -101,8 +101,6 @@ def validate_attachment(cls, data):
     """
     value, code = data
 
-    if not isinstance(value, int):
-        raise serializers.ValidationError("Needs to be an integer")
     try:
         attachment = Attachment.objects.get(pk=int(value))
     except Attachment.DoesNotExist:
@@ -155,6 +153,12 @@ class AttachmentSerializerMixin(object):
             # attachment data
             if hasattr(self, "initial_data"):
                 if field.source in self.initial_data:
+                    # TODO remove this once using attachment flow
+                    # if we override another field
+                    # mark the otherfield as read only
+                    if field.override is not None:
+                        if field.override in self.fields:
+                            self.fields[field.override].read_only = True
                     setattr(
                         self,
                         "validate_{}".format(field.source),
