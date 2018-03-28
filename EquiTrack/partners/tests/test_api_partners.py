@@ -8,6 +8,11 @@ from mock import patch, Mock
 from rest_framework import status
 from unittest import TestCase
 
+from attachments.models import Attachment
+from attachments.tests.factories import (
+    AttachmentFactory,
+    AttachmentFileTypeFactory,
+)
 from EquiTrack.tests.cases import BaseTenantTestCase
 from EquiTrack.tests.mixins import URLAssertionMixin
 from partners.models import Intervention, PartnerOrganization, PartnerType
@@ -46,6 +51,9 @@ class TestPartnerOrganizationDetailAPIView(BaseTenantTestCase):
         )
         self.partner.save()
         self.url = reverse("partners_api:partner-detail", kwargs={'pk': self.partner.id})
+        self.file_type = AttachmentFileTypeFactory(
+            code="partners_partner_assessment"
+        )
 
     def test_get_partner_details(self):
         response = self.forced_auth_req(
@@ -55,6 +63,35 @@ class TestPartnerOrganizationDetailAPIView(BaseTenantTestCase):
         )
         data = json.loads(response.rendered_content)
         self.assertEqual(self.intervention.pk, data["interventions"][0]["id"])
+
+    def test_patch_with_attachment(self):
+        attachment = AttachmentFactory(
+            file="test_file.pdf",
+            file_type=None,
+            code="",
+        )
+        self.assertIsNone(attachment.file_type)
+        self.assertIsNone(attachment.content_object)
+        self.assertFalse(attachment.code)
+        response = self.forced_auth_req(
+            'patch',
+            self.url,
+            data={"core_values_assessment_attachment": attachment.pk},
+            user=self.unicef_staff
+        )
+        data = json.loads(response.rendered_content)
+        self.assertEqual(data["id"], self.partner.pk)
+        self.assertEqual(data["interventions"][0]["id"], self.intervention.pk)
+        attachment_updated = Attachment.objects.get(pk=attachment.pk)
+        self.assertEqual(
+            attachment_updated.file_type.code,
+            self.file_type.code
+        )
+        self.assertEqual(attachment_updated.object_id, data["id"])
+        self.assertEqual(
+            attachment_updated.code,
+            self.file_type.code
+        )
 
 
 class TestPartnerOrganizationHactAPIView(BaseTenantTestCase):

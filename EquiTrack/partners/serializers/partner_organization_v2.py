@@ -8,6 +8,7 @@ from django.contrib.auth import get_user_model
 from django.utils import six, timezone
 from rest_framework import serializers
 
+from attachments.serializers import AttachmentSerializerMixin
 from attachments.serializers_fields import AttachmentSingleFileField
 from EquiTrack.serializers import SnapshotModelSerializer
 from partners.serializers.interventions_v2 import InterventionListSerializer
@@ -299,13 +300,13 @@ class PartnerOrganizationDetailSerializer(serializers.ModelSerializer):
         fields = "__all__"
 
 
-class PartnerOrganizationCreateUpdateSerializer(SnapshotModelSerializer):
+class PartnerOrganizationCreateUpdateSerializer(AttachmentSerializerMixin, SnapshotModelSerializer):
 
     staff_members = PartnerStaffMemberNestedSerializer(many=True, read_only=True)
     planned_engagement = PlannedEngagementNestedSerializer(read_only=True)
     hact_values = serializers.SerializerMethodField(read_only=True)
     core_values_assessment_file = serializers.FileField(source='core_values_assessment', read_only=True)
-    core_values_assessment_attachment = AttachmentSingleFileField(read_only=True)
+    core_values_assessment_attachment = AttachmentSingleFileField()
     hidden = serializers.BooleanField(read_only=True)
 
     def get_hact_values(self, obj):
