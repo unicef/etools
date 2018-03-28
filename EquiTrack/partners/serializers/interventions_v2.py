@@ -5,6 +5,7 @@ from django.core.exceptions import ValidationError
 from django.db import transaction
 from rest_framework import serializers
 
+from attachments.serializers import AttachmentSerializerMixin
 from attachments.serializers_fields import AttachmentSingleFileField
 from EquiTrack.serializers import SnapshotModelSerializer
 from funds.models import FundsCommitmentItem, FundsReservationHeader
@@ -48,10 +49,12 @@ class InterventionBudgetCUSerializer(serializers.ModelSerializer):
         )
 
 
-class InterventionAmendmentCUSerializer(serializers.ModelSerializer):
+class InterventionAmendmentCUSerializer(AttachmentSerializerMixin, serializers.ModelSerializer):
     amendment_number = serializers.CharField(read_only=True)
     signed_amendment_file = serializers.FileField(source="signed_amendment", read_only=True)
-    signed_amendment_attachment = AttachmentSingleFileField(read_only=True)
+    signed_amendment_attachment = AttachmentSingleFileField(
+        override="signed_amendment"
+    )
 
     class Meta:
         model = InterventionAmendment
