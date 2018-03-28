@@ -234,6 +234,54 @@ class TestInterventionsAPI(BaseTenantTestCase):
             self.file_type_attachment.code
         )
 
+    def test_add_contingency_pd_with_prc_review_and_signed_pd(self):
+        attachment_prc = AttachmentFactory(
+            file="test_file_prc.pdf",
+            file_type=None,
+            code="",
+        )
+        attachment_pd = AttachmentFactory(
+            file="test_file_pd.pdf",
+            file_type=None,
+            code="",
+        )
+        self.assertIsNone(attachment_prc.file_type)
+        self.assertIsNone(attachment_prc.content_object)
+        self.assertFalse(attachment_prc.code)
+        self.assertIsNone(attachment_pd.file_type)
+        self.assertIsNone(attachment_pd.content_object)
+        self.assertFalse(attachment_pd.code)
+        data = {
+            "document_type": Intervention.PD,
+            "title": "My test intervention1",
+            "contingency_pd": True,
+            "agreement": self.agreement.pk,
+            "prc_review_attachment": attachment_prc.pk,
+            "signed_pd_attachment": attachment_pd.pk,
+        }
+        status_code, response = self.run_request_list_ep(data, user=self.partnership_manager_user)
+        self.assertEqual(status_code, status.HTTP_201_CREATED)
+        attachment_prc_updated = Attachment.objects.get(pk=attachment_prc.pk)
+        self.assertEqual(
+            attachment_prc_updated.file_type.code,
+            self.file_type_prc.code
+        )
+        self.assertEqual(attachment_prc_updated.object_id, response["id"])
+        self.assertEqual(
+            attachment_prc_updated.code,
+            self.file_type_prc.code
+        )
+        attachment_pd_updated = Attachment.objects.get(pk=attachment_pd.pk)
+        self.assertEqual(
+            attachment_pd_updated.file_type.code,
+            self.file_type_pd.code
+        )
+        self.assertEqual(attachment_pd_updated.object_id, response["id"])
+        self.assertEqual(
+            attachment_pd_updated.code,
+            self.file_type_pd.code
+        )
+
     def test_add_one_valid_fr_on_create_pd(self):
         self.assertFalse(Activity.objects.exists())
         frs_data = [self.fr_1.id]
