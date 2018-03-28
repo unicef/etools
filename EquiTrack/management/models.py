@@ -3,8 +3,9 @@ from __future__ import absolute_import, division, print_function, unicode_litera
 from django.contrib.contenttypes.fields import GenericForeignKey
 from django.contrib.contenttypes.models import ContentType
 from django.db import models
-from django.utils.encoding import python_2_unicode_compatible
 from django.utils import six
+from django.utils.encoding import python_2_unicode_compatible
+from django.utils.translation import ugettext as _
 
 from management.issues.exceptions import IssueFoundException
 
@@ -31,22 +32,23 @@ ISSUE_STATUS_CHOICES = (
 class FlaggedIssue(models.Model):
     # generic foreign key to any object in the DB
     # https://docs.djangoproject.com/en/1.11/ref/contrib/contenttypes/#generic-relations
-    content_type = models.ForeignKey(ContentType, on_delete=models.CASCADE)
-    object_id = models.PositiveIntegerField(db_index=True)
+    content_type = models.ForeignKey(ContentType, on_delete=models.CASCADE, verbose_name=_('Content Type'))
+    object_id = models.PositiveIntegerField(db_index=True, verbose_name=_('Object ID'))
     content_object = GenericForeignKey('content_type', 'object_id')
 
-    date_created = models.DateTimeField(auto_now_add=True)
-    date_updated = models.DateTimeField(auto_now=True)
+    date_created = models.DateTimeField(auto_now_add=True, verbose_name=_('Creation Date'))
+    date_updated = models.DateTimeField(auto_now=True, verbose_name=_('Updated Date'))
     issue_category = models.CharField(max_length=32, choices=ISSUE_CATEGORY_CHOICES, default=ISSUE_CATEGORY_DATA,
-                                      db_index=True)
+                                      db_index=True, verbose_name=_('Issue Category'))
     issue_status = models.CharField(max_length=32, choices=ISSUE_STATUS_CHOICES, default=ISSUE_STATUS_NEW,
-                                    db_index=True)
+                                    db_index=True, verbose_name=_('Issue Status'))
     issue_id = models.CharField(
         max_length=100,
         help_text='A readable ID associated with the specific issue, e.g. "pca-no-attachment"',
         db_index=True,
+        verbose_name=_('Issue ID')
     )
-    message = models.TextField()
+    message = models.TextField(verbose_name=_('Message'))
 
     def recheck(self):
         from management.issues.checks import get_issue_check_by_id  # noqa
