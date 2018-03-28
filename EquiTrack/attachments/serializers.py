@@ -143,21 +143,11 @@ class AttachmentSerializerMixin(object):
             if isinstance(field, serializers.ListSerializer):
                 if hasattr(field.child, "field"):
                     for child_name, child in field.child.field.items():
-                        self.handle_attachment_field(
-                            self.fields[field_name].child.fields,
-                            field.child.instance,
-                            child,
-                            child_name
-                        )
+                        self.handle_attachment_field(child)
             else:
-                self.handle_attachment_field(
-                    self.fields,
-                    self.instance,
-                    field,
-                    field_name
-                )
+                self.handle_attachment_field(field)
 
-    def handle_attachment_field(self, fields, instance, field, field_name):
+    def handle_attachment_field(self, field):
         if isinstance(field, AttachmentSingleFileField):
             # TODO once attachment flow used throughout
             # we can remove this check on initial data
