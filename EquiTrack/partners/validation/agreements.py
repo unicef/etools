@@ -63,7 +63,7 @@ def agreements_illegal_transition_permissions(agreement, user):
 def amendments_valid(agreement):
     today = date.today()
     for a in agreement.amendments.all():
-        if not getattr(a.signed_amendment, 'name'):
+        if not getattr(a.signed_amendment, 'name') and not a.signed_amendment_attachment.count():
             return False
         if not a.signed_date or a.signed_date > today:
             return False

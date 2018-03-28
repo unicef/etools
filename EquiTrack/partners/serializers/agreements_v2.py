@@ -16,12 +16,12 @@ from reports.models import CountryProgramme
 from users.serializers import SimpleUserSerializer
 
 
-class AgreementAmendmentCreateUpdateSerializer(serializers.ModelSerializer):
+class AgreementAmendmentCreateUpdateSerializer(AttachmentSerializerMixin, serializers.ModelSerializer):
     number = serializers.CharField(read_only=True)
     created = serializers.DateTimeField(read_only=True)
     modified = serializers.DateTimeField(read_only=True)
     signed_amendment_file = serializers.FileField(source="signed_amendment", read_only=True)
-    signed_amendment_attachment = AttachmentSingleFileField(read_only=True)
+    signed_amendment_attachment = AttachmentSingleFileField()
 
     class Meta:
         model = AgreementAmendment
