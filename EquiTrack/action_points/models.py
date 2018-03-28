@@ -41,6 +41,11 @@ class ActionPoint(TimeStampedModel, models.Model):
         ('completed', _('Completed')),
     )
 
+    STATUSES_DATES = {
+        STATUSES.open: 'created',
+        STATUSES.completed: 'date_of_complete'
+    }
+
     KEY_EVENTS = Choices((
         ('status_update', 'Status Update'),
         ('reassign', 'Reassign'),
@@ -71,8 +76,8 @@ class ActionPoint(TimeStampedModel, models.Model):
     office = models.ForeignKey(Office, verbose_name=_('Office'))
     location = models.ForeignKey(Location, verbose_name=_('Location'), blank=True, null=True)
     partner = models.ForeignKey(PartnerOrganization, verbose_name=_('Partner'))
-    cp_output = models.ForeignKey(Result, verbose_name=_('CP Output'))
-    intervention = models.ForeignKey(Intervention, verbose_name=_('PD/SSFA'))
+    cp_output = models.ForeignKey(Result, verbose_name=_('CP Output'), blank=True, null=True)
+    intervention = models.ForeignKey(Intervention, verbose_name=_('PD/SSFA'), blank=True, null=True)
 
     date_of_complete = MonitorField(verbose_name=_('Date Action Point Completed'), null=True, blank=True,
                                     monitor='status', when=[STATUSES.completed])
@@ -99,6 +104,10 @@ class ActionPoint(TimeStampedModel, models.Model):
             self.created.year,
             self.id,
         )
+
+    @property
+    def status_date(self):
+        return getattr(self, self.STATUSES_DATES[self.status])
 
     def __str__(self):
         return self.reference_number
