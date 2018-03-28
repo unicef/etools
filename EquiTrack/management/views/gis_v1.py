@@ -44,12 +44,13 @@ class GisLocationsInUseViewset(ListAPIView):
                 for iloc in indicator.locations.all():
                     location_ids.add(iloc.id)
 
-            travel_locations = TravelActivity.objects.prefetch_related(
+            travel_activities = TravelActivity.objects.prefetch_related(
                 'locations'
             ).all()
 
-            for t2f_loc in travel_locations:
-                location_ids.add(t2f_loc.id)
+            for travel_activity in travel_activities:
+                for t2f_loc in travel_activity.locations.all():
+                    location_ids.add(t2f_loc.id)
 
             qs = Location.objects.filter(
                 pk__in=list(location_ids),
