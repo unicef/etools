@@ -54,7 +54,8 @@ class ActionPoint(TimeStampedModel, models.Model):
     related_object = GenericForeignKey(ct_field='related_content_type', fk_field='related_object_id')
 
     author = models.ForeignKey(settings.AUTH_USER_MODEL, related_name='created_action_points',
-                               verbose_name=_('Assigned By'))
+                               verbose_name=_('Author'))
+    assigned_by = models.ForeignKey(settings.AUTH_USER_MODEL, related_name='+', verbose_name=_('Assigned By'))
     assigned_to = models.ForeignKey(settings.AUTH_USER_MODEL, related_name='assigned_action_points',
                                     verbose_name=_('Assigned To'))
 
@@ -114,7 +115,7 @@ class ActionPoint(TimeStampedModel, models.Model):
     def get_mail_context(self):
         return {
             'person_responsible': self.assigned_to.get_full_name(),
-            'author': self.author.get_full_name(),
+            'assigned_by': self.assigned_by.get_full_name(),
             'reference_number': self.reference_number,
             'implementing_partner': six.text_type(self.partner),
             'description': self.description,
@@ -141,4 +142,4 @@ class ActionPoint(TimeStampedModel, models.Model):
                     ActionPointCompleteRequiredFieldsCheck.as_condition()
                 ])
     def complete(self):
-        self.send_email(self.author, 'action_points/action_point/completed')
+        self.send_email(self.assigned_by, 'action_points/action_point/completed')

@@ -231,8 +231,8 @@
         "created": "2018-03-27T14:53:23.360Z",
         "last_updated": "2018-03-27T14:53:23.360Z",
         "subject": "[eTools] ACTION POINT ASSIGNED to {{ action_point.person_responsible }}",
-        "content": "Dear {{ recipient }},\r\n\r\n{{ action_point.author }} has assigned you an action point related to:\r\nImplementing Partner: {{ action_point.implementing_partner }}\r\nDescription: {{ action_point.description }}\r\n\r\nLink: {{ action_point.object_url }}\r\n\r\n",
-        "html_content": "{% extends \"email-templates/base\" %}\r\n\r\n{% block content %}\r\nDear {{ recipient }},<br/>\r\n\r\n{{ action_point.author }} has assigned you an action point related to:<br/>\r\nImplementing Partner: {{ action_point.implementing_partner }}<br/>\r\nDescription: {{ action_point.description }}<br/>\r\nLink: <a href=\"{{ action_point.object_url }}\">{{ action_point.reference_number }}</a>\r\n{% endblock %}",
+        "content": "Dear {{ recipient }},\r\n\r\n{{ action_point.assigned_by }} has assigned you an action point related to:\r\nImplementing Partner: {{ action_point.implementing_partner }}\r\nDescription: {{ action_point.description }}\r\n\r\nLink: {{ action_point.object_url }}\r\n\r\n",
+        "html_content": "{% extends \"email-templates/base\" %}\r\n\r\n{% block content %}\r\nDear {{ recipient }},<br/>\r\n\r\n{{ action_point.assigned_by }} has assigned you an action point related to:<br/>\r\nImplementing Partner: {{ action_point.implementing_partner }}<br/>\r\nDescription: {{ action_point.description }}<br/>\r\nLink: <a href=\"{{ action_point.object_url }}\">{{ action_point.reference_number }}</a>\r\n{% endblock %}",
         "language": "",
         "default_template": null
     }
