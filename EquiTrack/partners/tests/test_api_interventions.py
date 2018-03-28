@@ -33,6 +33,7 @@ from partners.models import (
 )
 from partners.tests.factories import (
     AgreementFactory,
+    FileTypeFactory,
     InterventionAmendmentFactory,
     InterventionAttachmentFactory,
     InterventionFactory,
@@ -196,6 +197,42 @@ class TestInterventionsAPI(BaseTenantTestCase):
         status_code, response = self.run_request_list_ep(data, user=self.partnership_manager_user)
 
         self.assertEqual(status_code, status.HTTP_201_CREATED)
+
+    def test_add_contingency_pd_with_attachment(self):
+        attachment = AttachmentFactory(
+            file="test_file.pdf",
+            file_type=None,
+            code="",
+        )
+        file_type = FileTypeFactory()
+        self.assertIsNone(attachment.file_type)
+        self.assertIsNone(attachment.content_object)
+        self.assertFalse(attachment.code)
+        data = {
+            "document_type": Intervention.PD,
+            "title": "My test intervention1",
+            "contingency_pd": True,
+            "agreement": self.agreement.pk,
+            "attachments": [{
+                "type": file_type.pk,
+                "attachment_document": attachment.pk,
+            }]
+        }
+        status_code, response = self.run_request_list_ep(data, user=self.partnership_manager_user)
+        self.assertEqual(status_code, status.HTTP_201_CREATED)
+        attachment_updated = Attachment.objects.get(pk=attachment.pk)
+        self.assertEqual(
+            attachment_updated.file_type.code,
+            self.file_type_attachment.code
+        )
+        self.assertEqual(
+            attachment_updated.object_id,
+            response["attachments"][0]["id"]
+        )
+        self.assertEqual(
+            attachment_updated.code,
+            self.file_type_attachment.code
+        )
 
     def test_add_one_valid_fr_on_create_pd(self):
         self.assertFalse(Activity.objects.exists())

@@ -249,9 +249,12 @@ class InterventionSectorLocationCUSerializer(serializers.ModelSerializer):
         )
 
 
-class InterventionAttachmentSerializer(serializers.ModelSerializer):
+class InterventionAttachmentSerializer(AttachmentSerializerMixin, serializers.ModelSerializer):
     attachment_file = serializers.FileField(source="attachment", read_only=True)
-    attachment_document = AttachmentSingleFileField(source="attachment_file", read_only=True)
+    attachment_document = AttachmentSingleFileField(
+        source="attachment_file",
+        override="attachment",
+    )
 
     class Meta:
         model = InterventionAttachment
@@ -446,7 +449,7 @@ class FundingCommitmentNestedSerializer(serializers.ModelSerializer):
         )
 
 
-class InterventionCreateUpdateSerializer(SnapshotModelSerializer):
+class InterventionCreateUpdateSerializer(AttachmentSerializerMixin, SnapshotModelSerializer):
 
     planned_budget = InterventionBudgetCUSerializer(read_only=True)
     partner = serializers.CharField(source='agreement.partner.name', read_only=True)
