@@ -15,6 +15,7 @@ def create_email_template(apps, schema_editor):
 class Migration(migrations.Migration):
 
     dependencies = [
+        ('post_office', '0004_auto_20160607_0901'),
         ('action_points', '0001_initial'),
     ]
 
