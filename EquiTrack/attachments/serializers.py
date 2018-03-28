@@ -151,7 +151,7 @@ class AttachmentSerializerMixin(object):
             # we can remove this check on initial data
             # and setting of read only flag, if no matching
             # attachment data
-            if hasattr(self, "initial_data"):
+            if not field.read_only and hasattr(self, "initial_data"):
                 if field_name in self.initial_data:
                     # TODO remove this once using attachment flow
                     # if we override another field
