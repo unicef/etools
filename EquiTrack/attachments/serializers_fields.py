@@ -54,7 +54,7 @@ class Base64FileField(serializers.FileField):
 class AttachmentSingleFileField(serializers.Field):
     override = None
 
-    def __init__(self, *args,**kwargs):
+    def __init__(self, *args, **kwargs):
         if "override" in kwargs:
             self.override = kwargs.pop("override")
         super(AttachmentSingleFileField, self).__init__(*args, **kwargs)
