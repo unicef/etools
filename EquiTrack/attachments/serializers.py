@@ -141,18 +141,18 @@ class AttachmentSerializerMixin(object):
             if isinstance(field, serializers.ListSerializer):
                 if hasattr(field.child, "field"):
                     for child_name, child in field.child.field.items():
-                        self.handle_attachment_field(child)
+                        self.handle_attachment_field(child, child_name)
             else:
-                self.handle_attachment_field(field)
+                self.handle_attachment_field(field, field_name)
 
-    def handle_attachment_field(self, field):
+    def handle_attachment_field(self, field, field_name):
         if isinstance(field, AttachmentSingleFileField):
             # TODO once attachment flow used throughout
             # we can remove this check on initial data
             # and setting of read only flag, if no matching
             # attachment data
             if hasattr(self, "initial_data"):
-                if field.source in self.initial_data:
+                if field_name in self.initial_data:
                     # TODO remove this once using attachment flow
                     # if we override another field
                     # mark the otherfield as read only
@@ -161,7 +161,7 @@ class AttachmentSerializerMixin(object):
                             self.fields[field.override].read_only = True
                     setattr(
                         self,
-                        "validate_{}".format(field.source),
+                        "validate_{}".format(field_name),
                         types.MethodType(validate_attachment, self)
                     )
                     self.attachment_list.append(field.source)
