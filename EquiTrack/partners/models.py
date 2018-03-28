@@ -37,7 +37,6 @@ from reports.models import (
 )
 from t2f.models import Travel, TravelActivity, TravelType
 from locations.models import Location
-from tpm.models import TPMVisit
 from users.models import Office
 from partners.validation.agreements import (
     agreement_transition_to_ended_valid,
