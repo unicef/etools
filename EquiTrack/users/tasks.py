@@ -2,7 +2,6 @@ from __future__ import absolute_import, division, print_function, unicode_litera
 
 import csv
 import json
-import logging
 from datetime import date
 
 from django.conf import settings
