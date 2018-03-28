@@ -53,7 +53,6 @@ class ActionPoint(TimeStampedModel, models.Model):
 
     related_module = models.CharField(max_length=20, choices=MODULE_CHOICES, blank=True, null=True)
 
-    # todo: implement list of allowed content_types by app_labels/model_names/etc?
     related_content_type = models.ForeignKey(ContentType, null=True, blank=True)
     related_object_id = models.IntegerField(null=True, blank=True)
     related_object = GenericForeignKey(ct_field='related_content_type', fk_field='related_object_id')
