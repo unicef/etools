@@ -1,4 +1,4 @@
-from __future__ import unicode_literals
+from __future__ import absolute_import, division, print_function, unicode_literals
 
 import csv
 import datetime
@@ -12,31 +12,16 @@ from django.contrib.auth.models import Group
 from django.core.files.uploadedfile import SimpleUploadedFile
 from django.core.urlresolvers import reverse, resolve
 from django.db import connection
-from django.utils import timezone
+from django.utils import six, timezone
 
 from model_utils import Choices
 from rest_framework import status
 from rest_framework.test import APIRequestFactory
 
-from EquiTrack.factories import (
-    AgreementFactory,
-    AgreementAmendmentFactory,
-    CountryProgrammeFactory,
-    FundsReservationHeaderFactory,
-    GroupFactory,
-    InterventionFactory,
-    InterventionReportingPeriodFactory,
-    InterventionResultLinkFactory,
-    OfficeFactory,
-    PartnerFactory,
-    PartnerStaffFactory,
-    ResultFactory,
-    SectorFactory,
-    UserFactory,
-    PlannedEngagementFactory)
-from EquiTrack.tests.mixins import APITenantTestCase, URLAssertionMixin
-from reports.models import ResultType
+from EquiTrack.tests.cases import BaseTenantTestCase
+from EquiTrack.tests.mixins import URLAssertionMixin
 from funds.models import FundsCommitmentItem, FundsCommitmentHeader
+from funds.tests.factories import FundsReservationHeaderFactory
 from partners.models import (
     Agreement,
     AgreementAmendment,
@@ -54,9 +39,31 @@ from partners.models import (
 )
 from partners.permissions import READ_ONLY_API_GROUP_NAME
 from partners.serializers.exports.partner_organization import PartnerOrganizationExportSerializer
+from partners.tests.factories import (
+    AgreementAmendmentFactory,
+    AgreementFactory,
+    InterventionFactory,
+    InterventionReportingPeriodFactory,
+    InterventionResultLinkFactory,
+    PartnerFactory,
+    PartnerStaffFactory,
+    PlannedEngagementFactory,
+)
 from partners.views import v2
 import partners.views.partner_organization_v2
+from reports.models import ResultType
+from reports.tests.factories import (
+    CountryProgrammeFactory,
+    ResultFactory,
+    ResultTypeFactory,
+    SectorFactory,
+)
 from snapshot.models import Activity
+from users.tests.factories import (
+    GroupFactory,
+    OfficeFactory,
+    UserFactory,
+)
 
 
 class URLsTestCase(URLAssertionMixin, TestCase):
@@ -77,7 +84,7 @@ class URLsTestCase(URLAssertionMixin, TestCase):
         self.assertIntParamRegexes(names_and_paths, 'partners_api:')
 
 
-class TestChoicesToJSONReady(APITenantTestCase):
+class TestChoicesToJSONReady(BaseTenantTestCase):
     def test_tuple(self):
         """Make tuple JSON ready"""
         ready = v2.choices_to_json_ready(((1, "One"), (2, "Two")))
@@ -103,10 +110,26 @@ class TestChoicesToJSONReady(APITenantTestCase):
             {"label": "Two", "value": 2}
         ])
 
+    def test_list_of_tuples_sorted(self):
+        """Make list of tuples JSON ready"""
+        ready = v2.choices_to_json_ready([(1, "Uno"), (2, "Due")])
+        self.assertEqual(ready, [
+            {"label": "Due", "value": 2},
+            {"label": "Uno", "value": 1}
+        ])
+
     def test_dict(self):
         """Make dict JSON ready"""
         ready = v2.choices_to_json_ready({"k": "v"})
         self.assertEqual(ready, [{"label": "v", "value": "k"}])
+
+    def test_dict_sorted(self):
+        """Make dict JSON ready"""
+        ready = v2.choices_to_json_ready({"k": "v", "a": "b"})
+        self.assertEqual(ready, [
+            {"label": "b", "value": "a"},
+            {"label": "v", "value": "k"}
+        ])
 
     def test_choices(self):
         """Make model_utils.Choices JSON ready"""
@@ -117,20 +140,22 @@ class TestChoicesToJSONReady(APITenantTestCase):
         ])
 
 
-class TestAPIPartnerOrganizationListView(APITenantTestCase):
+class TestAPIPartnerOrganizationListView(BaseTenantTestCase):
     '''Exercise the list view for PartnerOrganization'''
-    def setUp(self):
-        self.user = UserFactory(is_staff=True)
+    @classmethod
+    def setUpTestData(cls):
+        cls.user = UserFactory(is_staff=True)
 
-        self.partner = PartnerFactory(
+        cls.partner = PartnerFactory(
             name='List View Test Partner',
             short_name='List View Test Partner Short Name',
             partner_type=PartnerType.UN_AGENCY,
             cso_type='International',
         )
 
-        self.url = reverse('partners_api:partner-list')
+        cls.url = reverse('partners_api:partner-list')
 
+    def setUp(self):
         # self.normal_field_names is the list of field names present in responses that don't use an out-of-the-ordinary
         # serializer.
         self.normal_field_names = sorted((
@@ -271,7 +296,7 @@ class TestAPIPartnerOrganizationListView(APITenantTestCase):
             self.assertIsInstance(list_element, dict)
             ids_in_response.append(list_element.get('id'))
 
-        self.assertItemsEqual(ids_in_response, (p1.id, p2.id))
+        six.assertCountEqual(self, ids_in_response, (p1.id, p2.id))
 
     def test_values_negative(self):
         '''Ensure that garbage values are handled properly'''
@@ -279,12 +304,18 @@ class TestAPIPartnerOrganizationListView(APITenantTestCase):
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
 
-class TestPartnerOrganizationListViewForCSV(APITenantTestCase):
+class TestPartnerOrganizationListViewForCSV(BaseTenantTestCase):
     '''Exercise the CSV-generating portion of the list view for PartnerOrganization.
 
     This is a separate test case from TestPartnerOrganizationListView because it does some monkey patching in
     setUp() that I want to do as infrequently as necessary.
     '''
+    @classmethod
+    def setUpTestData(cls):
+        cls.user = UserFactory(is_staff=True)
+        cls.partner = PartnerFactory()
+        cls.url = reverse('partners_api:partner-list')
+
     def setUp(self):
         # Monkey patch the serializer that I expect to be called. I monkey patch with a wrapper that will set a
         # flag here on my test case class before passing control to the normal serializer. I do this so that I can
@@ -298,10 +329,6 @@ class TestPartnerOrganizationListViewForCSV(APITenantTestCase):
         partners.views.partner_organization_v2.PartnerOrganizationExportSerializer = Wrapper
 
         TestPartnerOrganizationListViewForCSV.wrapper_called = False
-
-        self.user = UserFactory(is_staff=True)
-        self.partner = PartnerFactory()
-        self.url = reverse('partners_api:partner-list')
 
     def tearDown(self):
         # Undo the monkey patch.
@@ -321,7 +348,7 @@ class TestPartnerOrganizationListViewForCSV(APITenantTestCase):
         # but I want to make sure the response looks CSV-ish.
         self.assertEqual(response.get('Content-Disposition'), 'attachment;filename=partner.csv')
 
-        self.assertIsInstance(response.rendered_content, basestring)
+        self.assertIsInstance(response.rendered_content, six.string_types)
 
         # The response should *not* look like JSON.
         with self.assertRaises(ValueError):
@@ -343,11 +370,14 @@ class TestPartnerOrganizationListViewForCSV(APITenantTestCase):
         self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
 
 
-class TestPartnerOrganizationCreateView(APITenantTestCase):
+class TestPartnerOrganizationCreateView(BaseTenantTestCase):
     '''Exercise the create view for PartnerOrganization'''
+    @classmethod
+    def setUpTestData(cls):
+        cls.user = UserFactory(is_staff=True)
+        cls.url = reverse('partners_api:partner-list')
+
     def setUp(self):
-        self.user = UserFactory(is_staff=True)
-        self.url = reverse('partners_api:partner-list')
         self.data = {"name": "PO 1",
                      "partner_type": PartnerType.GOVERNMENT,
                      "vendor_number": "AAA",
@@ -364,11 +394,12 @@ class TestPartnerOrganizationCreateView(APITenantTestCase):
         return response_json['id']
 
 
-class TestPartnerOrganizationRetrieveUpdateDeleteViews(APITenantTestCase):
+class TestPartnerOrganizationRetrieveUpdateDeleteViews(BaseTenantTestCase):
     '''Exercise the retrieve, update, and delete views for PartnerOrganization'''
-    def setUp(self):
-        self.unicef_staff = UserFactory(is_staff=True)
-        self.partner = PartnerFactory(
+    @classmethod
+    def setUpTestData(cls):
+        cls.unicef_staff = UserFactory(is_staff=True)
+        cls.partner = PartnerFactory(
             partner_type=PartnerType.CIVIL_SOCIETY_ORGANIZATION,
             cso_type="International",
             hidden=False,
@@ -377,45 +408,44 @@ class TestPartnerOrganizationRetrieveUpdateDeleteViews(APITenantTestCase):
         )
 
         report = "report.pdf"
-        self.assessment1 = Assessment.objects.create(
-            partner=self.partner,
+        cls.assessment1 = Assessment.objects.create(
+            partner=cls.partner,
             type="Micro Assessment"
         )
-        self.assessment2 = Assessment.objects.create(
-            partner=self.partner,
+        cls.assessment2 = Assessment.objects.create(
+            partner=cls.partner,
             type="Micro Assessment",
             report=report,
             completed_date=datetime.date.today()
         )
 
-        self.partner_gov = PartnerFactory(partner_type=PartnerType.GOVERNMENT)
+        cls.partner_gov = PartnerFactory(partner_type=PartnerType.GOVERNMENT)
 
         agreement = AgreementFactory(
-            partner=self.partner,
+            partner=cls.partner,
             signed_by_unicef_date=datetime.date.today())
 
-        self.intervention = InterventionFactory(agreement=agreement)
-        self.output_res_type, _ = ResultType.objects.get_or_create(name='Output')
+        cls.intervention = InterventionFactory(agreement=agreement)
+        cls.output_res_type = ResultTypeFactory(name=ResultType.OUTPUT)
 
-        self.result = ResultFactory(
-            result_type=self.output_res_type,)
+        cls.result = ResultFactory(
+            result_type=cls.output_res_type,)
 
-        self.partnership_budget = InterventionBudget.objects.create(
-            intervention=self.intervention,
+        cls.partnership_budget = InterventionBudget.objects.create(
+            intervention=cls.intervention,
             unicef_cash=100,
             unicef_cash_local=10,
             partner_contribution=200,
             partner_contribution_local=20,
             in_kind_amount_local=10,
         )
-        self.amendment = InterventionAmendment.objects.create(
-            intervention=self.intervention,
+        cls.amendment = InterventionAmendment.objects.create(
+            intervention=cls.intervention,
             types=[InterventionAmendment.RESULTS]
         )
 
-        self.cp = CountryProgrammeFactory(__sequence=10)
-        self.cp_output = ResultFactory(result_type=self.output_res_type)
-        self.result = ResultFactory()
+        cls.cp = CountryProgrammeFactory(__sequence=10)
+        cls.cp_output = ResultFactory(result_type=cls.output_res_type)
 
     def test_api_partners_delete_asssessment_valid(self):
         response = self.forced_auth_req(
@@ -659,15 +689,14 @@ class TestPartnerOrganizationRetrieveUpdateDeleteViews(APITenantTestCase):
         self.assertIn("vendor_number", response.data.keys())
         self.assertIn("address", response.data.keys())
         self.assertIn("Partner", response.data["name"])
-        self.assertEqual(['programme_visits', 'spot_checks'], response.data['hact_min_requirements'].keys())
-        self.assertEqual(['outstanding_findings', 'audits', 'programmatic_visits', 'spot_checks'],
-                         response.data['hact_values'].keys())
-        self.assertItemsEqual(
+        self.assertEqual(['programme_visits', 'spot_checks'],
+                         sorted(response.data['hact_min_requirements'].keys()))
+        self.assertEqual(['audits', 'outstanding_findings', 'programmatic_visits', 'spot_checks'],
+                         sorted(response.data['hact_values'].keys()))
+        six.assertCountEqual(
+            self,
             ['completed', 'minimum_requirements'],
-            response.data['hact_values']['audits'].keys()
-        )
-        self.assertEqual(['outstanding_findings', 'audits', 'programmatic_visits', 'spot_checks'],
-                         response.data['hact_values'].keys())
+            response.data['hact_values']['audits'].keys())
         self.assertEqual(response.data['interventions'], [])
 
     def test_api_partners_retreive_actual_fr_amounts(self):
@@ -735,33 +764,32 @@ class TestPartnerOrganizationRetrieveUpdateDeleteViews(APITenantTestCase):
         )
 
 
-class TestPartnershipViews(APITenantTestCase):
-    fixtures = ['initial_data.json']
+class TestPartnershipViews(BaseTenantTestCase):
+    @classmethod
+    def setUpTestData(cls):
+        cls.unicef_staff = UserFactory(is_staff=True)
+        cls.partner = PartnerFactory()
+        cls.partner_staff_member = PartnerStaffFactory(partner=cls.partner)
 
-    def setUp(self):
-        self.unicef_staff = UserFactory(is_staff=True)
-        self.partner = PartnerFactory()
-        self.partner_staff_member = PartnerStaffFactory(partner=self.partner)
-
-        agreement = AgreementFactory(partner=self.partner,
+        agreement = AgreementFactory(partner=cls.partner,
                                      signed_by_unicef_date=datetime.date.today(),
                                      signed_by_partner_date=datetime.date.today(),
-                                     signed_by=self.unicef_staff,
-                                     partner_manager=self.partner_staff_member)
-        self.intervention = InterventionFactory(agreement=agreement)
+                                     signed_by=cls.unicef_staff,
+                                     partner_manager=cls.partner_staff_member)
+        cls.intervention = InterventionFactory(agreement=agreement)
 
-        self.result_type = ResultType.objects.get(id=1)
-        self.result = ResultFactory(result_type=self.result_type,)
-        self.partnership_budget = InterventionBudget.objects.create(
-            intervention=self.intervention,
+        cls.result_type = ResultTypeFactory()
+        cls.result = ResultFactory(result_type=cls.result_type)
+        cls.partnership_budget = InterventionBudget.objects.create(
+            intervention=cls.intervention,
             unicef_cash=100,
             unicef_cash_local=10,
             partner_contribution=200,
             partner_contribution_local=20,
             in_kind_amount_local=10,
         )
-        self.amendment = InterventionAmendment.objects.create(
-            intervention=self.intervention,
+        cls.amendment = InterventionAmendment.objects.create(
+            intervention=cls.intervention,
             types=[InterventionAmendment.RESULTS],
         )
 
@@ -787,7 +815,7 @@ class TestPartnershipViews(APITenantTestCase):
     @skip("different endpoint")
     def test_api_agreements_list(self):
 
-        response = self.forced_auth_req('get', '/api/partners/' + str(self.partner.id) +
+        response = self.forced_auth_req('get', '/api/partners/' + six.text_type(self.partner.id) +
                                         '/agreements/', user=self.unicef_staff)
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
@@ -795,16 +823,17 @@ class TestPartnershipViews(APITenantTestCase):
         self.assertIn("PCA", response.data[0]["agreement_type"])
 
 
-class TestAgreementCreateAPIView(APITenantTestCase):
+class TestAgreementCreateAPIView(BaseTenantTestCase):
     '''Exercise the create portion of the API.'''
-    def setUp(self):
-        self.partner = PartnerFactory(partner_type=PartnerType.CIVIL_SOCIETY_ORGANIZATION)
-        partner_staff = PartnerStaffFactory(partner=self.partner)
+    @classmethod
+    def setUpTestData(cls):
+        cls.partner = PartnerFactory(partner_type=PartnerType.CIVIL_SOCIETY_ORGANIZATION)
+        partner_staff = PartnerStaffFactory(partner=cls.partner)
 
-        self.partnership_manager_user = UserFactory(is_staff=True)
-        self.partnership_manager_user.groups.add(GroupFactory())
-        self.partnership_manager_user.profile.partner_staff_member = partner_staff.id
-        self.partnership_manager_user.save()
+        cls.partnership_manager_user = UserFactory(is_staff=True)
+        cls.partnership_manager_user.groups.add(GroupFactory())
+        cls.partnership_manager_user.profile.partner_staff_member = partner_staff.id
+        cls.partnership_manager_user.save()
 
     def test_minimal_create(self):
         '''Test passing as few fields as possible to create'''
@@ -843,7 +872,7 @@ class TestAgreementCreateAPIView(APITenantTestCase):
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
         self.assertIsInstance(response.data, dict)
-        self.assertEqual(response.data.keys(), ['country_programme'])
+        self.assertEqual(list(response.data.keys()), ['country_programme'])
         self.assertIsInstance(response.data['country_programme'], list)
         self.assertEqual(response.data['country_programme'][0], 'Country Programme is required for PCAs!')
 
@@ -851,16 +880,17 @@ class TestAgreementCreateAPIView(APITenantTestCase):
         self.assertFalse(Activity.objects.exists())
 
 
-class TestAgreementAPIFileAttachments(APITenantTestCase):
+class TestAgreementAPIFileAttachments(BaseTenantTestCase):
     '''Test retrieving attachments to agreements and agreement amendments. The file-specific fields are read-only
     on the relevant serializers, so they can't be edited through the API.
     '''
-    def setUp(self):
-        self.partner = PartnerFactory(partner_type=PartnerType.CIVIL_SOCIETY_ORGANIZATION)
-        self.partnership_manager_user = UserFactory(is_staff=True)
-        self.agreement = AgreementFactory(
+    @classmethod
+    def setUpTestData(cls):
+        cls.partner = PartnerFactory(partner_type=PartnerType.CIVIL_SOCIETY_ORGANIZATION)
+        cls.partnership_manager_user = UserFactory(is_staff=True)
+        cls.agreement = AgreementFactory(
             agreement_type=Agreement.MOU,
-            partner=self.partner,
+            partner=cls.partner,
             attached_agreement=None,
         )
 
@@ -909,7 +939,7 @@ class TestAgreementAPIFileAttachments(APITenantTestCase):
                                     connection.schema_name,
                                     'file_attachments',
                                     'partner_organization',
-                                    str(self.agreement.partner.id),
+                                    six.text_type(self.agreement.partner.id),
                                     'agreements',
                                     # Note that slashes have to be stripped from the agreement number to match the
                                     # normalized path.
@@ -950,7 +980,7 @@ class TestAgreementAPIFileAttachments(APITenantTestCase):
                                     connection.schema_name,
                                     'file_attachments',
                                     'partner_org',
-                                    str(self.agreement.partner.id),
+                                    six.text_type(self.agreement.partner.id),
                                     'agreements',
                                     self.agreement.base_number.strip('/'),
                                     'amendments',
@@ -959,64 +989,64 @@ class TestAgreementAPIFileAttachments(APITenantTestCase):
         self.assertEqual(expected_path_components, url.path.split('/')[:-1])
 
 
-class TestAgreementAPIView(APITenantTestCase):
+class TestAgreementAPIView(BaseTenantTestCase):
+    @classmethod
+    def setUpTestData(cls):
+        cls.unicef_staff = UserFactory(is_staff=True)
+        cls.partner = PartnerFactory(partner_type=PartnerType.CIVIL_SOCIETY_ORGANIZATION)
+        cls.partner_staff = PartnerStaffFactory(partner=cls.partner)
+        cls.partner_staff2 = PartnerStaffFactory(partner=cls.partner)
 
-    def setUp(self):
-        self.unicef_staff = UserFactory(is_staff=True)
-        self.partner = PartnerFactory(partner_type=PartnerType.CIVIL_SOCIETY_ORGANIZATION)
-        self.partner_staff = PartnerStaffFactory(partner=self.partner)
-        self.partner_staff2 = PartnerStaffFactory(partner=self.partner)
+        cls.partner_staff_user = UserFactory(is_staff=True)
+        cls.partner_staff_user.profile.partner_staff_member = cls.partner_staff.id
+        cls.partner_staff_user.save()
 
-        self.partner_staff_user = UserFactory(is_staff=True)
-        self.partner_staff_user.profile.partner_staff_member = self.partner_staff.id
-        self.partner_staff_user.save()
-
-        self.partnership_manager_user = UserFactory(is_staff=True)
-        self.partnership_manager_user.groups.add(GroupFactory())
-        self.partnership_manager_user.profile.partner_staff_member = self.partner_staff.id
-        self.partnership_manager_user.save()
+        cls.partnership_manager_user = UserFactory(is_staff=True)
+        cls.partnership_manager_user.groups.add(GroupFactory())
+        cls.partnership_manager_user.profile.partner_staff_member = cls.partner_staff.id
+        cls.partnership_manager_user.save()
 
         today = datetime.date.today()
-        self.country_programme = CountryProgrammeFactory(
+        cls.country_programme = CountryProgrammeFactory(
             from_date=datetime.date(today.year - 1, 1, 1),
             to_date=datetime.date(today.year + 1, 1, 1))
 
         attached_agreement = "agreement.pdf"
-        self.agreement = AgreementFactory(
-            partner=self.partner,
-            partner_manager=self.partner_staff,
-            country_programme=self.country_programme,
+        cls.agreement = AgreementFactory(
+            partner=cls.partner,
+            partner_manager=cls.partner_staff,
+            country_programme=cls.country_programme,
             start=datetime.date.today(),
-            end=self.country_programme.to_date,
+            end=cls.country_programme.to_date,
             signed_by_unicef_date=datetime.date.today(),
             signed_by_partner_date=datetime.date.today(),
-            signed_by=self.unicef_staff,
+            signed_by=cls.unicef_staff,
             attached_agreement=attached_agreement,
         )
-        self.agreement.authorized_officers.add(self.partner_staff)
-        self.agreement.save()
+        cls.agreement.authorized_officers.add(cls.partner_staff)
+        cls.agreement.save()
 
-        self.amendment1 = AgreementAmendment.objects.create(
+        cls.amendment1 = AgreementAmendment.objects.create(
             number="001",
-            agreement=self.agreement,
+            agreement=cls.agreement,
             signed_amendment="application/pdf",
             signed_date=datetime.date.today(),
             types=[AgreementAmendment.IP_NAME]
         )
-        self.amendment2 = AgreementAmendment.objects.create(
+        cls.amendment2 = AgreementAmendment.objects.create(
             number="002",
-            agreement=self.agreement,
+            agreement=cls.agreement,
             signed_amendment="application/pdf",
             signed_date=datetime.date.today(),
             types=[AgreementAmendment.BANKING_INFO]
         )
-        self.agreement2 = AgreementFactory(
-            partner=self.partner,
+        cls.agreement2 = AgreementFactory(
+            partner=cls.partner,
             agreement_type=Agreement.MOU,
             status=Agreement.DRAFT,
         )
-        self.intervention = InterventionFactory(
-            agreement=self.agreement,
+        cls.intervention = InterventionFactory(
+            agreement=cls.agreement,
             document_type=Intervention.PD)
 
     def test_cp_end_date_update(self):
@@ -1115,13 +1145,22 @@ class TestAgreementAPIView(APITenantTestCase):
             1
         )
 
-    def test_agreements_delete(self):
+    def test_agreements_delete_fail_wrong_ep(self):
         response = self.forced_auth_req(
             'delete',
             reverse('partners_api:agreement-detail', args=[self.agreement.pk]),
             user=self.partnership_manager_user
         )
 
+        self.assertEqual(response.status_code, status.HTTP_405_METHOD_NOT_ALLOWED)
+
+    def test_agreements_delete(self):
+        new_agreement = AgreementFactory(status=Agreement.DRAFT)
+        response = self.forced_auth_req(
+            'delete',
+            reverse('partners_api:agreement-delete', args=[new_agreement.pk]),
+            user=self.partnership_manager_user
+        )
         self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
 
     def test_agreements_list_filter_type(self):
@@ -1298,18 +1337,19 @@ class TestAgreementAPIView(APITenantTestCase):
         self.assertEqual(len(response.data["amendments"][1]["types"]), 2)
 
 
-class TestPartnerStaffMemberAPIView(APITenantTestCase):
-    def setUp(self):
-        self.unicef_staff = UserFactory(is_staff=True)
-        self.partner = PartnerFactory(partner_type=PartnerType.CIVIL_SOCIETY_ORGANIZATION)
-        self.partner_staff = PartnerStaffFactory(partner=self.partner)
-        self.partner_staff_user = UserFactory(is_staff=True)
-        self.partner_staff_user.groups.add(GroupFactory())
-        self.partner_staff_user.profile.partner_staff_member = self.partner_staff.id
-        self.partner_staff_user.profile.save()
-        self.url = reverse(
+class TestPartnerStaffMemberAPIView(BaseTenantTestCase):
+    @classmethod
+    def setUpTestData(cls):
+        cls.unicef_staff = UserFactory(is_staff=True)
+        cls.partner = PartnerFactory(partner_type=PartnerType.CIVIL_SOCIETY_ORGANIZATION)
+        cls.partner_staff = PartnerStaffFactory(partner=cls.partner)
+        cls.partner_staff_user = UserFactory(is_staff=True)
+        cls.partner_staff_user.groups.add(GroupFactory())
+        cls.partner_staff_user.profile.partner_staff_member = cls.partner_staff.id
+        cls.partner_staff_user.profile.save()
+        cls.url = reverse(
             "partners_api:partner-staff-members-list",
-            args=[self.partner.pk]
+            args=[cls.partner.pk]
         )
 
     def test_get(self):
@@ -1325,7 +1365,7 @@ class TestPartnerStaffMemberAPIView(APITenantTestCase):
         self.assertIn(data[0]["last_name"], self.partner_staff.last_name)
 
 
-class TestInterventionViews(APITenantTestCase):
+class TestInterventionViews(BaseTenantTestCase):
     @classmethod
     def setUpTestData(cls):
         cls.unicef_staff = UserFactory(is_staff=True)
@@ -1484,7 +1524,7 @@ class TestInterventionViews(APITenantTestCase):
         )
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(response.data[0].keys(), ["id", "title"])
+        self.assertEqual(list(response.data[0].keys()), ["id", "title"])
 
     def test_intervention_create(self):
         data = {
@@ -1540,7 +1580,7 @@ class TestInterventionViews(APITenantTestCase):
         r_data = json.loads(response.rendered_content)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(len(r_data["frs_details"]['frs']), 2)
-        self.assertItemsEqual(r_data["frs"], [self.fr_header_2.id, self.fr_header_1.id])
+        six.assertCountEqual(self, r_data["frs"], [self.fr_header_2.id, self.fr_header_1.id])
 
     def test_intervention_active_update_population_focus(self):
         intervention_obj = Intervention.objects.get(id=self.intervention_data["id"])
@@ -1640,6 +1680,24 @@ class TestInterventionViews(APITenantTestCase):
                          {"document_type": ["This field is required."],
                           "agreement": ["This field is required."],
                           "title": ["This field is required."]})
+
+    def test_intervention_delete(self):
+        new_intervention = InterventionFactory()
+        response = self.forced_auth_req(
+            'delete',
+            reverse('partners_api:intervention-delete', args=[new_intervention.pk]),
+            user=self.partnership_manager_user
+        )
+        self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
+
+    def test_fail_intervention_delete(self):
+        new_intervention = InterventionFactory(status=Intervention.ACTIVE)
+        response = self.forced_auth_req(
+            'delete',
+            reverse('partners_api:intervention-delete', args=[new_intervention.pk]),
+            user=self.partnership_manager_user
+        )
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
     def test_intervention_validation_doctype_pca(self):
         data = {
@@ -1779,7 +1837,7 @@ class TestInterventionViews(APITenantTestCase):
         self.assertEqual(response.data[0]["id"], self.intervention["id"])
 
 
-class TestInterventionReportingPeriodViews(APITenantTestCase):
+class TestInterventionReportingPeriodViews(BaseTenantTestCase):
 
     @classmethod
     def setUpTestData(cls):
@@ -1841,7 +1899,7 @@ class TestInterventionReportingPeriodViews(APITenantTestCase):
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         data = json.loads(response.content)
         for key in ['start_date', 'end_date', 'due_date', 'intervention']:
-            self.assertEqual(str(data[key]), str(self.params[key]))
+            self.assertEqual(six.text_type(data[key]), six.text_type(self.params[key]))
 
     def test_create_required_fields(self):
         params = {}
@@ -1960,7 +2018,7 @@ class TestInterventionReportingPeriodViews(APITenantTestCase):
         response = self.forced_auth_req('patch', self.detail_url, data=params)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         data = json.loads(response.content)
-        self.assertEqual(data['due_date'], str(params['due_date']))
+        self.assertEqual(data['due_date'], six.text_type(params['due_date']))
 
     def test_patch_change_multiple_fields(self):
         params = {
@@ -1970,8 +2028,8 @@ class TestInterventionReportingPeriodViews(APITenantTestCase):
         response = self.forced_auth_req('patch', self.detail_url, data=params)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         data = json.loads(response.content)
-        self.assertEqual(data['end_date'], str(params['end_date']))
-        self.assertEqual(data['due_date'], str(params['due_date']))
+        self.assertEqual(data['end_date'], six.text_type(params['end_date']))
+        self.assertEqual(data['due_date'], six.text_type(params['due_date']))
 
     def test_patch_order_must_still_be_valid(self):
         params = {
@@ -1997,7 +2055,7 @@ class TestInterventionReportingPeriodViews(APITenantTestCase):
         self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
 
 
-class TestPartnershipDashboardView(APITenantTestCase):
+class TestPartnershipDashboardView(BaseTenantTestCase):
 
     def setUp(self):
         self.unicef_staff = UserFactory(is_staff=True)
@@ -2036,6 +2094,7 @@ class TestPartnershipDashboardView(APITenantTestCase):
             "review_date_prc": "2017-01-28",
             "submission_date": "2017-01-28",
             "prc_review_document": None,
+            "prc_review_attachment": None,
             "signed_by_unicef_date": "2017-01-28",
             "signed_by_partner_date": "2017-01-20",
             "unicef_signatory": self.unicef_staff.id,

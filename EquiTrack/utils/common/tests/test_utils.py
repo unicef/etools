@@ -7,6 +7,7 @@ from django.contrib.auth.models import Group
 from django.contrib.contenttypes.fields import GenericForeignKey
 from django.db import models
 from django.test import TestCase
+from django.utils.translation import ugettext_lazy as _
 
 from utils.common.utils import get_all_field_names
 
@@ -48,6 +49,9 @@ class CommonUtilsTest(TestCase):
             # fields 14 and 15 shouldn't be in the list of field names because they're not Django fields.
             field14 = {}
             field15 = Useless()
+
+            class Meta:
+                verbose_name_plural = _('Dummies')
 
         expected_field_names = ['field{:02}'.format(i + 1) for i in range(12)]
         expected_field_names += ['field10_id', 'field11_id']

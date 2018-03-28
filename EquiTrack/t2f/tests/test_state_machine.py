@@ -9,23 +9,27 @@ from django.core import mail
 from django.core.urlresolvers import reverse
 from django.test.utils import override_settings
 
-from EquiTrack.factories import UserFactory
-from EquiTrack.tests.mixins import APITenantTestCase
-from publics.tests.factories import BusinessAreaFactory, DSARegionFactory, WBSFactory
+from EquiTrack.tests.cases import BaseTenantTestCase
+from publics.tests.factories import (
+    PublicsBusinessAreaFactory,
+    PublicsCurrencyFactory,
+    PublicsDSARegionFactory,
+    PublicsTravelExpenseTypeFactory,
+    PublicsWBSFactory,
+)
 from t2f.models import Invoice, ModeOfTravel, Travel
-from t2f.tests.factories import CurrencyFactory, ExpenseTypeFactory
+from t2f.tests.factories import TravelFactory
+from users.tests.factories import UserFactory
 
-from .factories import TravelFactory
 
+class StateMachineTest(BaseTenantTestCase):
+    @classmethod
+    def setUpTestData(cls):
+        cls.traveler = UserFactory(is_staff=True)
+        cls.traveler.profile.vendor_number = 'usrvend'
+        cls.traveler.profile.save()
 
-class StateMachineTest(APITenantTestCase):
-    def setUp(self):
-        super(StateMachineTest, self).setUp()
-        self.traveler = UserFactory(is_staff=True)
-        self.traveler.profile.vendor_number = 'usrvend'
-        self.traveler.profile.save()
-
-        self.unicef_staff = UserFactory(is_staff=True)
+        cls.unicef_staff = UserFactory(is_staff=True)
 
     def test_possible_transitions(self):
         travel = TravelFactory()
@@ -68,12 +72,12 @@ class StateMachineTest(APITenantTestCase):
                                         'completed']})
 
     def test_state_machine_flow(self):
-        currency = CurrencyFactory()
-        expense_type = ExpenseTypeFactory()
-        business_area = BusinessAreaFactory()
-        dsa_region = DSARegionFactory()
+        currency = PublicsCurrencyFactory()
+        expense_type = PublicsTravelExpenseTypeFactory()
+        business_area = PublicsBusinessAreaFactory()
+        dsa_region = PublicsDSARegionFactory()
 
-        wbs = WBSFactory(business_area=business_area)
+        wbs = PublicsWBSFactory(business_area=business_area)
         grant = wbs.grants.first()
         fund = grant.funds.first()
 
@@ -191,12 +195,12 @@ class StateMachineTest(APITenantTestCase):
 
     @override_settings(DISABLE_INVOICING=True)
     def test_state_machine_flow_invoice_disabled(self):
-        currency = CurrencyFactory()
-        expense_type = ExpenseTypeFactory()
-        business_area = BusinessAreaFactory()
-        dsa_region = DSARegionFactory()
+        currency = PublicsCurrencyFactory()
+        expense_type = PublicsTravelExpenseTypeFactory()
+        business_area = PublicsBusinessAreaFactory()
+        dsa_region = PublicsDSARegionFactory()
 
-        wbs = WBSFactory(business_area=business_area)
+        wbs = PublicsWBSFactory(business_area=business_area)
         grant = wbs.grants.first()
         fund = grant.funds.first()
 
@@ -392,11 +396,11 @@ class StateMachineTest(APITenantTestCase):
                                                "for method 'mark_as_completed'"]})
 
     def test_expense_required_on_send_for_payment(self):
-        business_area = BusinessAreaFactory()
-        dsa_region = DSARegionFactory()
-        currency = CurrencyFactory()
+        business_area = PublicsBusinessAreaFactory()
+        dsa_region = PublicsDSARegionFactory()
+        currency = PublicsCurrencyFactory()
 
-        wbs = WBSFactory(business_area=business_area)
+        wbs = PublicsWBSFactory(business_area=business_area)
         grant = wbs.grants.first()
         fund = grant.funds.first()
 

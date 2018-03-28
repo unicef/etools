@@ -18,7 +18,7 @@ from rest_framework.generics import (
     CreateAPIView,
     ListAPIView)
 
-from EquiTrack.mixins import ExportModelMixin
+from EquiTrack.mixins import ExportModelMixin, QueryStringFilterMixin
 from EquiTrack.renderers import CSVFlatRenderer
 from EquiTrack.utils import get_data_from_insight
 from EquiTrack.validation_mixins import ValidatorViewMixin
@@ -59,7 +59,7 @@ from partners.exports_v2 import (
 )
 
 
-class PartnerOrganizationListAPIView(ExportModelMixin, ListCreateAPIView):
+class PartnerOrganizationListAPIView(QueryStringFilterMixin, ExportModelMixin, ListCreateAPIView):
     """
     Create new Partners.
     Returns a list of Partners.
@@ -97,8 +97,6 @@ class PartnerOrganizationListAPIView(ExportModelMixin, ListCreateAPIView):
             set_tenant_or_fail(workspace)
 
         if query_params:
-            queries = []
-
             if "values" in query_params.keys():
                 # Used for ghost data - filter in all(), and return straight away.
                 try:
@@ -107,10 +105,15 @@ class PartnerOrganizationListAPIView(ExportModelMixin, ListCreateAPIView):
                     raise ValidationError("ID values must be integers")
                 else:
                     return PartnerOrganization.objects.filter(id__in=ids)
-            if "partner_type" in query_params.keys():
-                queries.append(Q(partner_type=query_params.get("partner_type")))
-            if "cso_type" in query_params.keys():
-                queries.append(Q(cso_type=query_params.get("cso_type")))
+            queries = []
+            filters = (
+                ('partner_type', 'partner_type__in'),
+                ('cso_type', 'cso_type__in'),
+            )
+            search_terms = ['name__icontains', 'vendor_number__icontains', 'short_name__icontains']
+            queries.extend(self.filter_params(filters))
+            queries.append(self.search_params(search_terms))
+
             if "hidden" in query_params.keys():
                 hidden = None
                 if query_params.get("hidden").lower() == "true":
@@ -122,12 +125,7 @@ class PartnerOrganizationListAPIView(ExportModelMixin, ListCreateAPIView):
                     hidden = False
                 if hidden is not None:
                     queries.append(Q(hidden=hidden))
-            if "search" in query_params.keys():
-                queries.append(
-                    Q(name__icontains=query_params.get("search")) |
-                    Q(vendor_number__icontains=query_params.get("search")) |
-                    Q(short_name__icontains=query_params.get("search"))
-                )
+
             if queries:
                 expression = functools.reduce(operator.and_, queries)
                 q = q.filter(expression)
@@ -392,7 +390,7 @@ class PartnerOrganizationDeleteView(DestroyAPIView):
                                   "against this partner. The Partner record cannot be deleted")
         elif TravelActivity.objects.filter(partner=partner).count() > 0:
             raise ValidationError("This partner has trips associated to it")
-        elif partner.total_ct_cp > 0:
+        elif (partner.total_ct_cp or 0) > 0:
             raise ValidationError("This partner has cash transactions associated to it")
         else:
             partner.delete()

@@ -1,8 +1,11 @@
+from __future__ import absolute_import, division, print_function, unicode_literals
+
 import datetime
 import json
 import logging
 
 from django.db import transaction
+from django.utils import six
 
 from reports.models import CountryProgramme, Indicator, Result, ResultType
 from vision.utils import wcf_json_date_as_date
@@ -327,15 +330,6 @@ class RAMSynchronizer(VisionDataSynchronizer):
     def _convert_records(self, records):
         return json.loads(records)
 
-    def _changed_fields(self, fields, local_obj, api_obj):
-        for field in fields:
-            obj_value = api_obj[self.MAPPING[field]][:255]
-            if field in ['name']:
-                obj_value = api_obj[self.MAPPING[field]][:1024]
-            if getattr(local_obj, field) != obj_value:
-                return True
-        return False
-
     def _save_records(self, records):
         processed = self.process_indicators(records)
         return processed
@@ -356,7 +350,7 @@ class RAMSynchronizer(VisionDataSynchronizer):
         mapped_records = {}
         for r in records:
             a = r['WBS_ELEMENT_CODE']
-            code = unicode(r['INDICATOR_CODE'])
+            code = six.text_type(r['INDICATOR_CODE'])
             mapped_records[code] = {
                 'name': r['INDICATOR_DESCRIPTION'][:1024],
                 'baseline': r['BASELINE'][:255],

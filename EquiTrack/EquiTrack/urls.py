@@ -74,7 +74,7 @@ urlpatterns = [
     url(r'^api/t2f/', include(t2f_patterns)),
     url(r'^api/tpm/', include('tpm.urls', namespace='tpm')),
     url(r'^api/audit/', include('audit.urls', namespace='audit')),
-    url(r'^api/v2/', include('reports.urls_v2')),
+    url(r'^api/v2/reports/', include('reports.urls_v2')),
     url(r'^api/v2/', include('partners.urls_v2', namespace='partners_api')),
     url(r'^api/prp/v1/', include('partners.prp_urls', namespace='prp_api_v1')),
     url(r'^api/v2/hact/', include('hact.urls', namespace='hact_api')),
@@ -86,7 +86,10 @@ urlpatterns = [
         include('snapshot.urls', namespace='snapshot_api')
     ),
     url(r'^api/v2/environment/', include('environment.urls_v2', namespace='environment')),
-
+    url(
+        r'^api/v2/attachments/',
+        include('attachments.urls', namespace='attachments')
+    ),
 
     # ***************  API version 3  ******************
     url(r'^api/v3/users/', include('users.urls_v3', namespace='users_v3')),

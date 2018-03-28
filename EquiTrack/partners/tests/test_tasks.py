@@ -5,16 +5,17 @@ import datetime
 from decimal import Decimal
 
 from django.conf import settings
-from django.utils import timezone
+from django.utils import six, timezone
 
 import mock
 
-import partners.tasks
-from EquiTrack.factories import (
-    AgreementFactory, CountryFactory, FundsReservationHeaderFactory, InterventionFactory, UserFactory,)
-from EquiTrack.tests.cases import EToolsTenantTestCase
+from EquiTrack.tests.cases import BaseTenantTestCase
+from funds.tests.factories import FundsReservationHeaderFactory
 from partners.models import Agreement, Intervention
+import partners.tasks
+from partners.tests.factories import AgreementFactory, InterventionFactory
 from users.models import User
+from users.tests.factories import CountryFactory, UserFactory
 
 
 def _build_country(name):
@@ -40,9 +41,10 @@ def _make_past_datetime(n_days):
     return timezone.now() - datetime.timedelta(days=n_days)
 
 
-class TestGetInterventionContext(EToolsTenantTestCase):
+class TestGetInterventionContext(BaseTenantTestCase):
     '''Exercise the tasks' helper function get_intervention_context()'''
     def setUp(self):
+        super(TestGetInterventionContext, self).setUp()
         self.intervention = InterventionFactory()
 
     def test_simple_intervention(self):
@@ -52,7 +54,7 @@ class TestGetInterventionContext(EToolsTenantTestCase):
         self.assertIsInstance(result, dict)
         self.assertEqual(sorted(result.keys()),
                          sorted(['number', 'partner', 'start_date', 'url', 'unicef_focal_points']))
-        self.assertEqual(result['number'], unicode(self.intervention))
+        self.assertEqual(result['number'], six.text_type(self.intervention))
         self.assertEqual(result['partner'], self.intervention.agreement.partner.name)
         self.assertEqual(result['start_date'], 'None')
         self.assertEqual(result['url'],
@@ -72,7 +74,7 @@ class TestGetInterventionContext(EToolsTenantTestCase):
         self.assertIsInstance(result, dict)
         self.assertEqual(sorted(result.keys()),
                          sorted(['number', 'partner', 'start_date', 'url', 'unicef_focal_points']))
-        self.assertEqual(result['number'], unicode(self.intervention))
+        self.assertEqual(result['number'], six.text_type(self.intervention))
         self.assertEqual(result['partner'], self.intervention.agreement.partner.name)
         self.assertEqual(result['start_date'], '2017-08-01')
         self.assertEqual(result['url'],
@@ -80,7 +82,7 @@ class TestGetInterventionContext(EToolsTenantTestCase):
         self.assertEqual(result['unicef_focal_points'], [focal_point_user.email])
 
 
-class PartnersTestBaseClass(EToolsTenantTestCase):
+class PartnersTestBaseClass(BaseTenantTestCase):
     '''Common elements for most of the tests in this file.'''
     def _assertCalls(self, mocked_function, all_expected_call_args):
         '''Given a mocked function (like mock_logger.info or mock_connection.set_tentant), asserts that the mock was
@@ -105,17 +107,18 @@ class PartnersTestBaseClass(EToolsTenantTestCase):
         MockCountry.objects.exclude.return_value = mock_country_objects_exclude_queryset
         mock_country_objects_exclude_queryset.all = mock.Mock(return_value=self.tenant_countries)
 
-    def setUp(self):
+    @classmethod
+    def setUpTestData(cls):
         try:
-            self.admin_user = User.objects.get(username=settings.TASK_ADMIN_USER)
+            cls.admin_user = User.objects.get(username=settings.TASK_ADMIN_USER)
         except User.DoesNotExist:
-            self.admin_user = UserFactory(username=settings.TASK_ADMIN_USER)
+            cls.admin_user = UserFactory(username=settings.TASK_ADMIN_USER)
 
         # The global "country" should be excluded from processing. Create it to ensure it's ignored during this test.
-        self.global_country = _build_country('Global')
-        self.tenant_countries = [_build_country('test{}'.format(i)) for i in range(3)]
+        cls.global_country = _build_country('Global')
+        cls.tenant_countries = [_build_country('test{}'.format(i)) for i in range(3)]
 
-        self.country_name = self.tenant_countries[0].name
+        cls.country_name = cls.tenant_countries[0].name
 
 
 @mock.patch('partners.tasks.logger', spec=['info', 'error'])

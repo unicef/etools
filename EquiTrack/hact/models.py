@@ -9,6 +9,7 @@ from django.contrib.postgres.fields import JSONField
 from django.db import models
 from django.db.models import Count, Q, Sum
 from django.db.models.functions import Coalesce
+from django.utils.translation import ugettext_lazy as _
 
 from model_utils.models import TimeStampedModel
 
@@ -34,6 +35,7 @@ class HactHistory(TimeStampedModel):
 
     class Meta:
         unique_together = ('partner', 'year')
+        verbose_name_plural = _('Hact Histories')
 
 
 class AggregateHact(TimeStampedModel):

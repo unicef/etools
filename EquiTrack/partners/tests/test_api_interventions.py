@@ -8,41 +8,44 @@ from django.contrib.auth.models import Group
 from django.core.cache import cache
 from django.core.urlresolvers import reverse, resolve
 from django.db import connection
-from django.utils import timezone
+from django.utils import six, timezone
 from django.core.files.uploadedfile import SimpleUploadedFile
 
 from rest_framework import status
 from rest_framework.test import APIRequestFactory
 
-from EquiTrack.tests.mixins import APITenantTestCase, URLAssertionMixin
-from EquiTrack.factories import (
-    AgreementFactory,
-    AppliedIndicatorFactory,
-    CountryProgrammeFactory,
-    IndicatorFactory,
-    InterventionAmendmentFactory,
-    InterventionAttachmentFactory,
-    InterventionFactory,
-    InterventionPlannedVisitsFactory,
-    InterventionResultLinkFactory,
-    InterventionSectorLocationLinkFactory,
-    LocationFactory,
-    LowerResultFactory,
-    PartnerFactory,
-    ResultFactory,
-    SectorFactory,
-    UserFactory,
-    GroupFactory)
+from EquiTrack.tests.cases import BaseTenantTestCase
+from EquiTrack.tests.mixins import URLAssertionMixin
 from environment.helpers import tenant_switch_is_active
 from environment.models import TenantSwitch
 from environment.tests.factories import TenantSwitchFactory
+from locations.tests.factories import LocationFactory
 from partners.tests.test_utils import setup_intervention_test_data
 from partners.models import (
     Intervention,
     InterventionAmendment,
     InterventionResultLink,
 )
+from partners.tests.factories import (
+    AgreementFactory,
+    InterventionAmendmentFactory,
+    InterventionAttachmentFactory,
+    InterventionFactory,
+    InterventionPlannedVisitsFactory,
+    InterventionResultLinkFactory,
+    InterventionSectorLocationLinkFactory,
+    PartnerFactory,
+)
+from reports.tests.factories import (
+    AppliedIndicatorFactory,
+    CountryProgrammeFactory,
+    IndicatorFactory,
+    LowerResultFactory,
+    ResultFactory,
+    SectorFactory,
+)
 from snapshot.models import Activity
+from users.tests.factories import GroupFactory, UserFactory
 from utils.common.utils import get_all_field_names
 
 
@@ -74,8 +77,7 @@ class URLsTestCase(URLAssertionMixin, TestCase):
         self.assertIntParamRegexes(names_and_paths, 'partners_api:')
 
 
-class TestInterventionsAPI(APITenantTestCase):
-    fixtures = ['initial_data.json']
+class TestInterventionsAPI(BaseTenantTestCase):
     EDITABLE_FIELDS = {
         'draft': ["status", "attachments", "prc_review_document", 'travel_activities',
                   "partner_authorized_officer_signatory", "partner_focal_points", "id",
@@ -86,7 +88,8 @@ class TestInterventionsAPI(APITenantTestCase):
                   "partner_authorized_officer_signatory_id", "created", "planned_visits",
                   "planned_budget", "modified", "signed_pd_document", "submission_date_prc", "document_type",
                   "offices", "population_focus", "country_programme_id", "engagement", "sections",
-                  "sections_present", "flat_locations", "reporting_periods", "activity", ],
+                  "sections_present", "flat_locations", "reporting_periods", "activity",
+                  "prc_review_attachment", "signed_pd_attachment"],
         'signed': [],
         'active': ['']
     }
@@ -203,7 +206,7 @@ class TestInterventionsAPI(APITenantTestCase):
         status_code, response = self.run_request_list_ep(data, user=self.partnership_manager_user)
 
         self.assertEqual(status_code, status.HTTP_201_CREATED)
-        self.assertItemsEqual(response['frs'], frs_data)
+        six.assertCountEqual(self, response['frs'], frs_data)
         self.assertEqual(
             Activity.objects.filter(action=Activity.CREATE).count(),
             1
@@ -223,7 +226,7 @@ class TestInterventionsAPI(APITenantTestCase):
         status_code, response = self.run_request_list_ep(data, user=self.partnership_manager_user)
 
         self.assertEqual(status_code, status.HTTP_201_CREATED)
-        self.assertItemsEqual(response['frs'], frs_data)
+        six.assertCountEqual(self, response['frs'], frs_data)
         self.assertEqual(
             Activity.objects.filter(action=Activity.CREATE).count(),
             1
@@ -247,7 +250,7 @@ class TestInterventionsAPI(APITenantTestCase):
         status_code, response = self.run_request_list_ep(data, user=self.partnership_manager_user)
 
         self.assertEqual(status_code, status.HTTP_201_CREATED)
-        self.assertItemsEqual(response['frs'], frs_data)
+        six.assertCountEqual(self, response['frs'], frs_data)
         self.assertEqual(response['frs_details']['total_actual_amt'],
                          float(sum([self.fr_1.actual_amt_local, self.fr_2.actual_amt_local])))
         self.assertEqual(response['frs_details']['total_outstanding_amt'],
@@ -274,7 +277,7 @@ class TestInterventionsAPI(APITenantTestCase):
         status_code, response = self.run_request(self.intervention_2.id, data, method='patch')
 
         self.assertEqual(status_code, status.HTTP_200_OK)
-        self.assertItemsEqual(response['frs'], frs_data)
+        six.assertCountEqual(self, response['frs'], frs_data)
         self.assertEqual(response['frs_details']['total_actual_amt'],
                          float(sum([self.fr_1.actual_amt_local, self.fr_2.actual_amt_local])))
         self.assertEqual(response['frs_details']['total_outstanding_amt'],
@@ -290,7 +293,7 @@ class TestInterventionsAPI(APITenantTestCase):
         self.assertIn("frs", activity.change)
         frs = activity.change["frs"]
         self.assertEqual(frs["before"], [])
-        self.assertItemsEqual(frs["after"], [self.fr_1.pk, self.fr_2.pk])
+        six.assertCountEqual(self, frs["after"], [self.fr_1.pk, self.fr_2.pk])
         self.assertEqual(activity.by_user, self.partnership_manager_user)
 
     def test_remove_an_fr_from_pd(self):
@@ -302,7 +305,7 @@ class TestInterventionsAPI(APITenantTestCase):
         status_code, response = self.run_request(self.intervention_2.id, data, method='patch')
 
         self.assertEqual(status_code, status.HTTP_200_OK)
-        self.assertItemsEqual(response['frs'], frs_data)
+        six.assertCountEqual(self, response['frs'], frs_data)
         self.assertEqual(
             Activity.objects.filter(action=Activity.UPDATE).count(),
             1
@@ -316,7 +319,7 @@ class TestInterventionsAPI(APITenantTestCase):
         status_code, response = self.run_request(self.intervention_2.id, data, method='patch')
 
         self.assertEqual(status_code, status.HTTP_200_OK)
-        self.assertItemsEqual(response['frs'], frs_data)
+        six.assertCountEqual(self, response['frs'], frs_data)
         self.assertEqual(
             Activity.objects.filter(action=Activity.UPDATE).count(),
             2
@@ -335,7 +338,7 @@ class TestInterventionsAPI(APITenantTestCase):
                                                  user=self.partnership_manager_user)
 
         self.assertEqual(status_code, status.HTTP_200_OK)
-        self.assertItemsEqual(response['frs'], frs_data)
+        six.assertCountEqual(self, response['frs'], frs_data)
         self.assertTrue(Activity.objects.exists())
 
     def test_fail_add_used_fr_on_pd(self):
@@ -363,12 +366,12 @@ class TestInterventionsAPI(APITenantTestCase):
         }
         status_code, response = self.run_request(self.intervention_2.id, data, method='patch')
         self.assertEqual(status_code, status.HTTP_200_OK)
-        self.assertItemsEqual(response['frs'], frs_data)
+        six.assertCountEqual(self, response['frs'], frs_data)
         self.assertTrue(Activity.objects.exists())
 
         status_code, response = self.run_request(self.intervention_2.id, data, method='patch')
         self.assertEqual(status_code, status.HTTP_200_OK)
-        self.assertItemsEqual(response['frs'], frs_data)
+        six.assertCountEqual(self, response['frs'], frs_data)
         self.assertEqual(Activity.objects.all().count(), 2)
 
     def test_patch_title_fail_as_unicef_user(self):
@@ -381,6 +384,27 @@ class TestInterventionsAPI(APITenantTestCase):
         self.assertEqual(status_code, status.HTTP_403_FORBIDDEN)
         self.assertFalse(Activity.objects.exists())
 
+    def test_patch_fails_with_wrong_cp_structure(self):
+        self.assertIsNone(self.intervention_2.country_programme)
+        self.assertTrue(self.intervention_2.agreement.agreement_type, 'PCA')
+        random_cp = CountryProgrammeFactory()
+        data = {
+            "country_programme": random_cp.id
+        }
+        status_code, response = self.run_request(self.intervention_2.id, data, method='patch')
+        self.assertEqual(status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn('The Country Programme selected on this PD is not the same ', response[0])
+
+    def test_patch_ok_with_wrong_cp_structure(self):
+        self.assertIsNone(self.intervention_2.country_programme)
+        self.assertTrue(self.intervention_2.agreement.agreement_type, 'PCA')
+        data = {
+            "country_programme": self.intervention_2.agreement.country_programme.id
+        }
+
+        status_code, response = self.run_request(self.intervention_2.id, data, method='patch')
+        self.assertEqual(status_code, status.HTTP_200_OK)
+
     def test_permissions_for_intervention_status_draft(self):
 
         # TODO: this tests only with PRP mode on. PRP mode off tests needed here.
@@ -392,7 +416,7 @@ class TestInterventionsAPI(APITenantTestCase):
         self.assertEqual(status_code, status.HTTP_200_OK)
 
         # all fields are there
-        self.assertItemsEqual(self.ALL_FIELDS, response['permissions']['edit'].keys())
+        six.assertCountEqual(self, self.ALL_FIELDS, response['permissions']['edit'].keys())
         edit_permissions = response['permissions']['edit']
         required_permissions = response['permissions']['required']
 
@@ -401,10 +425,10 @@ class TestInterventionsAPI(APITenantTestCase):
         del edit_permissions["sector_locations"]
         del required_permissions["sector_locations"]
 
-        self.assertItemsEqual(self.EDITABLE_FIELDS['draft'],
-                              [perm for perm in edit_permissions if edit_permissions[perm]])
-        self.assertItemsEqual(self.REQUIRED_FIELDS['draft'],
-                              [perm for perm in required_permissions if required_permissions[perm]])
+        six.assertCountEqual(self, self.EDITABLE_FIELDS['draft'],
+                             [perm for perm in edit_permissions if edit_permissions[perm]])
+        six.assertCountEqual(self, self.REQUIRED_FIELDS['draft'],
+                             [perm for perm in required_permissions if required_permissions[perm]])
 
     @skip('add test after permissions file is ready')
     def test_permissions_for_intervention_status_active(self):
@@ -416,13 +440,13 @@ class TestInterventionsAPI(APITenantTestCase):
         self.assertEqual(status_code, status.HTTP_200_OK)
 
         # all fields are there
-        self.assertItemsEqual(self.ALL_FIELDS, response['permissions']['edit'].keys())
+        six.assertCountEqual(self, self.ALL_FIELDS, response['permissions']['edit'].keys())
         edit_permissions = response['permissions']['edit']
         required_permissions = response['permissions']['required']
-        self.assertItemsEqual(self.EDITABLE_FIELDS['signed'],
-                              [perm for perm in edit_permissions if edit_permissions[perm]])
-        self.assertItemsEqual(self.REQUIRED_FIELDS['signed'],
-                              [perm for perm in required_permissions if required_permissions[perm]])
+        six.assertCountEqual(self, self.EDITABLE_FIELDS['signed'],
+                             [perm for perm in edit_permissions if edit_permissions[perm]])
+        six.assertCountEqual(self, self.REQUIRED_FIELDS['signed'],
+                             [perm for perm in required_permissions if required_permissions[perm]])
 
     def test_list_interventions(self):
         EXPECTED_QUERIES = 10
@@ -487,19 +511,20 @@ class TestInterventionsAPI(APITenantTestCase):
         self.assertEqual(len(response), 4 + EXTRA_INTERVENTIONS)
 
 
-class TestAPIInterventionResultLinkListView(APITenantTestCase):
+class TestAPIInterventionResultLinkListView(BaseTenantTestCase):
     '''Exercise the list view for InterventionResultLinkListCreateView'''
-    def setUp(self):
-        self.intervention = InterventionFactory()
+    @classmethod
+    def setUpTestData(cls):
+        cls.intervention = InterventionFactory()
 
-        self.result_link1 = InterventionResultLinkFactory(intervention=self.intervention)
-        self.result_link2 = InterventionResultLinkFactory(intervention=self.intervention)
+        cls.result_link1 = InterventionResultLinkFactory(intervention=cls.intervention)
+        cls.result_link2 = InterventionResultLinkFactory(intervention=cls.intervention)
 
-        self.url = reverse('partners_api:intervention-result-links-list',
-                           kwargs={'intervention_pk': self.intervention.id})
+        cls.url = reverse('partners_api:intervention-result-links-list',
+                          kwargs={'intervention_pk': cls.intervention.id})
 
-        # self.expected_field_names is the list of field names expected in responses.
-        self.expected_field_names = sorted((
+        # cls.expected_field_names is the list of field names expected in responses.
+        cls.expected_field_names = sorted((
             'cp_output',
             'ram_indicators',
             'cp_output_name',
@@ -567,19 +592,21 @@ class TestAPIInterventionResultLinkListView(APITenantTestCase):
         self.assertResponseFundamentals(response)
 
 
-class TestAPIInterventionResultLinkCreateView(APITenantTestCase):
+class TestAPIInterventionResultLinkCreateView(BaseTenantTestCase):
     '''Exercise the create view for InterventionResultLinkListCreateView'''
-    def setUp(self):
-        self.intervention = InterventionFactory()
+    @classmethod
+    def setUpTestData(cls):
+        cls.intervention = InterventionFactory()
 
-        self.url = reverse('partners_api:intervention-result-links-list',
-                           kwargs={'intervention_pk': self.intervention.id})
+        cls.url = reverse('partners_api:intervention-result-links-list',
+                          kwargs={'intervention_pk': cls.intervention.id})
 
         cp_output = ResultFactory()
 
-        self.data = {'intervention_pk': self.intervention.id,
-                     'cp_output': cp_output.id
-                     }
+        cls.data = {
+            'intervention_pk': cls.intervention.id,
+            'cp_output': cp_output.id
+        }
 
     def _make_request(self, user):
         return self.forced_auth_req('post', self.url, user=user, data=self.data)
@@ -617,16 +644,17 @@ class TestAPIInterventionResultLinkCreateView(APITenantTestCase):
         self.assertResponseFundamentals(response)
 
 
-class TestAPIInterventionResultLinkRetrieveView(APITenantTestCase):
+class TestAPIInterventionResultLinkRetrieveView(BaseTenantTestCase):
     '''Exercise the retrieve view for InterventionResultLinkUpdateView'''
-    def setUp(self):
-        self.intervention_result_link = InterventionResultLinkFactory()
+    @classmethod
+    def setUpTestData(cls):
+        cls.intervention_result_link = InterventionResultLinkFactory()
 
-        self.url = reverse('partners_api:intervention-result-links-update',
-                           kwargs={'pk': self.intervention_result_link.id})
+        cls.url = reverse('partners_api:intervention-result-links-update',
+                          kwargs={'pk': cls.intervention_result_link.id})
 
-        # self.expected_keys are the keys expected in a JSON response.
-        self.expected_keys = sorted((
+        # cls.expected_keys are the keys expected in a JSON response.
+        cls.expected_keys = sorted((
             'cp_output',
             'ram_indicators',
             'cp_output_name',
@@ -678,17 +706,18 @@ class TestAPIInterventionResultLinkRetrieveView(APITenantTestCase):
         self.assertResponseFundamentals(response)
 
 
-class TestAPIInterventionResultLinkUpdateView(APITenantTestCase):
+class TestAPIInterventionResultLinkUpdateView(BaseTenantTestCase):
     '''Exercise the update view for InterventionResultLinkUpdateView'''
-    def setUp(self):
-        self.intervention_result_link = InterventionResultLinkFactory()
+    @classmethod
+    def setUpTestData(cls):
+        cls.intervention_result_link = InterventionResultLinkFactory()
 
-        self.url = reverse('partners_api:intervention-result-links-update',
-                           kwargs={'pk': self.intervention_result_link.id})
+        cls.url = reverse('partners_api:intervention-result-links-update',
+                          kwargs={'pk': cls.intervention_result_link.id})
 
-        self.new_cp_output = ResultFactory()
+        cls.new_cp_output = ResultFactory()
 
-        self.data = {'cp_output': self.new_cp_output.id}
+        cls.data = {'cp_output': cls.new_cp_output.id}
 
     def _make_request(self, user):
         return self.forced_auth_req('patch', self.url, user=user, data=self.data)
@@ -730,13 +759,14 @@ class TestAPIInterventionResultLinkUpdateView(APITenantTestCase):
         self.assertResponseFundamentals(response)
 
 
-class TestAPIInterventionResultLinkDeleteView(APITenantTestCase):
+class TestAPIInterventionResultLinkDeleteView(BaseTenantTestCase):
     '''Exercise the delete view for InterventionResultLinkUpdateView'''
-    def setUp(self):
-        self.intervention_result_link = InterventionResultLinkFactory()
+    @classmethod
+    def setUpTestData(cls):
+        cls.intervention_result_link = InterventionResultLinkFactory()
 
-        self.url = reverse('partners_api:intervention-result-links-update',
-                           kwargs={'pk': self.intervention_result_link.id})
+        cls.url = reverse('partners_api:intervention-result-links-update',
+                          kwargs={'pk': cls.intervention_result_link.id})
 
     def _make_request(self, user):
         return self.forced_auth_req('delete', self.url, user=user)
@@ -777,7 +807,7 @@ class TestAPIInterventionResultLinkDeleteView(APITenantTestCase):
         self.assertResponseFundamentals(response)
 
 
-class TestAPIInterventionLowerResultListView(APITenantTestCase):
+class TestAPIInterventionLowerResultListView(BaseTenantTestCase):
     '''Exercise the list view for InterventionLowerResultListCreateView'''
     @classmethod
     def setUpClass(cls):
@@ -854,7 +884,7 @@ class TestAPIInterventionLowerResultListView(APITenantTestCase):
         self.assertResponseFundamentals(response)
 
 
-class TestAPIInterventionLowerResultCreateView(APITenantTestCase):
+class TestAPIInterventionLowerResultCreateView(BaseTenantTestCase):
     '''Exercise the create view for InterventionLowerResultListCreateView'''
     @classmethod
     def setUpClass(cls):
@@ -925,7 +955,7 @@ class TestAPIInterventionLowerResultCreateView(APITenantTestCase):
         self.assertNotEqual(response_json.get('code'), 'ZZZ')
 
 
-class TestAPIInterventionIndicatorsListView(APITenantTestCase):
+class TestAPIInterventionIndicatorsListView(BaseTenantTestCase):
     '''Exercise the list view for InterventionIndicatorsListView (these are AppliedIndicator instances)'''
     @classmethod
     def setUpClass(cls):
@@ -1008,7 +1038,7 @@ class TestAPIInterventionIndicatorsListView(APITenantTestCase):
         self.assertResponseFundamentals(response)
 
 
-class TestAPInterventionIndicatorsCreateView(APITenantTestCase):
+class TestAPInterventionIndicatorsCreateView(BaseTenantTestCase):
     '''Exercise the create view for InterventionIndicatorsListView (these are AppliedIndicator instances)'''
     @classmethod
     def setUpClass(cls):
@@ -1097,23 +1127,23 @@ class TestAPInterventionIndicatorsCreateView(APITenantTestCase):
         # Adding the same indicator again should fail.
         self.assertEquals(response.status_code, status.HTTP_400_BAD_REQUEST)
         response_json = json.loads(response.rendered_content)
-        self.assertEqual(response_json.keys(), ['non_field_errors'])
+        self.assertEqual(list(response_json.keys()), ['non_field_errors'])
         self.assertIsInstance(response_json['non_field_errors'], list)
         self.assertEqual(response_json['non_field_errors'],
                          ['This indicator is already being monitored for this Result'])
 
 
-class TestInterventionPlannedVisitsDeleteView(APITenantTestCase):
-    def setUp(self):
-        super(TestInterventionPlannedVisitsDeleteView, self).setUp()
-        self.unicef_staff = UserFactory(is_staff=True)
-        self.intervention = InterventionFactory()
-        self.planned_visit = InterventionPlannedVisitsFactory(
-            intervention=self.intervention,
+class TestInterventionPlannedVisitsDeleteView(BaseTenantTestCase):
+    @classmethod
+    def setUpTestData(cls):
+        cls.unicef_staff = UserFactory(is_staff=True)
+        cls.intervention = InterventionFactory()
+        cls.planned_visit = InterventionPlannedVisitsFactory(
+            intervention=cls.intervention,
         )
-        self.url = reverse(
+        cls.url = reverse(
             "partners_api:intervention-visits-del",
-            args=[self.planned_visit.pk]
+            args=[cls.planned_visit.pk]
         )
 
     def test_delete(self):
@@ -1144,18 +1174,18 @@ class TestInterventionPlannedVisitsDeleteView(APITenantTestCase):
         self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
 
 
-class TestInterventionAttachmentDeleteView(APITenantTestCase):
-    def setUp(self):
-        super(TestInterventionAttachmentDeleteView, self).setUp()
-        self.unicef_staff = UserFactory(is_staff=True)
-        self.intervention = InterventionFactory()
-        self.attachment = InterventionAttachmentFactory(
-            intervention=self.intervention,
+class TestInterventionAttachmentDeleteView(BaseTenantTestCase):
+    @classmethod
+    def setUpTestData(cls):
+        cls.unicef_staff = UserFactory(is_staff=True)
+        cls.intervention = InterventionFactory()
+        cls.attachment = InterventionAttachmentFactory(
+            intervention=cls.intervention,
             attachment="random_attachment.pdf",
         )
-        self.url = reverse(
+        cls.url = reverse(
             "partners_api:intervention-attachments-del",
-            args=[self.attachment.pk]
+            args=[cls.attachment.pk]
         )
 
     def test_delete(self):
@@ -1186,21 +1216,21 @@ class TestInterventionAttachmentDeleteView(APITenantTestCase):
         self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
 
 
-class TestInterventionResultListAPIView(APITenantTestCase):
-    def setUp(self):
-        super(TestInterventionResultListAPIView, self).setUp()
-        self.unicef_staff = UserFactory(is_staff=True)
+class TestInterventionResultListAPIView(BaseTenantTestCase):
+    @classmethod
+    def setUpTestData(cls):
+        cls.unicef_staff = UserFactory(is_staff=True)
         InterventionResultLinkFactory()
-        self.intervention = InterventionFactory()
-        self.result = ResultFactory(
+        cls.intervention = InterventionFactory()
+        cls.result = ResultFactory(
             name="Result Name",
             code="Result Code",
         )
-        self.link = InterventionResultLinkFactory(
-            intervention=self.intervention,
-            cp_output=self.result
+        cls.link = InterventionResultLinkFactory(
+            intervention=cls.intervention,
+            cp_output=cls.result
         )
-        self.url = reverse("partners_api:intervention-results")
+        cls.url = reverse("partners_api:intervention-results")
 
     def assertResponseFundamentals(self, response):
         '''Assert common fundamentals about the response.'''
@@ -1255,18 +1285,18 @@ class TestInterventionResultListAPIView(APITenantTestCase):
         self.assertEqual(first["id"], self.link.pk)
 
 
-class TestInterventionIndicatorListAPIView(APITenantTestCase):
-    def setUp(self):
-        super(TestInterventionIndicatorListAPIView, self).setUp()
-        self.unicef_staff = UserFactory(is_staff=True)
+class TestInterventionIndicatorListAPIView(BaseTenantTestCase):
+    @classmethod
+    def setUpTestData(cls):
+        cls.unicef_staff = UserFactory(is_staff=True)
         InterventionResultLinkFactory()
-        self.intervention = InterventionFactory()
-        self.indicator = IndicatorFactory()
-        self.link = InterventionResultLinkFactory(
-            intervention=self.intervention,
+        cls.intervention = InterventionFactory()
+        cls.indicator = IndicatorFactory()
+        cls.link = InterventionResultLinkFactory(
+            intervention=cls.intervention,
         )
-        self.link.ram_indicators.add(self.indicator)
-        self.url = reverse("partners_api:intervention-indicators")
+        cls.link.ram_indicators.add(cls.indicator)
+        cls.url = reverse("partners_api:intervention-indicators")
 
     def assertResponseFundamentals(self, response):
         '''Assert common fundamentals about the response.'''
@@ -1301,17 +1331,17 @@ class TestInterventionIndicatorListAPIView(APITenantTestCase):
         self.assertFalse(response_json)
 
 
-class TestInterventionResultLinkDeleteView(APITenantTestCase):
-    def setUp(self):
-        super(TestInterventionResultLinkDeleteView, self).setUp()
-        self.unicef_staff = UserFactory(is_staff=True)
-        self.intervention = InterventionFactory()
-        self.result = InterventionResultLinkFactory(
-            intervention=self.intervention,
+class TestInterventionResultLinkDeleteView(BaseTenantTestCase):
+    @classmethod
+    def setUpTestData(cls):
+        cls.unicef_staff = UserFactory(is_staff=True)
+        cls.intervention = InterventionFactory()
+        cls.result = InterventionResultLinkFactory(
+            intervention=cls.intervention,
         )
-        self.url = reverse(
+        cls.url = reverse(
             "partners_api:intervention-results-del",
-            args=[self.result.pk]
+            args=[cls.result.pk]
         )
 
     def test_delete(self):
@@ -1343,17 +1373,17 @@ class TestInterventionResultLinkDeleteView(APITenantTestCase):
         self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
 
 
-class TestInterventionAmendmentListAPIView(APITenantTestCase):
-    def setUp(self):
-        super(TestInterventionAmendmentListAPIView, self).setUp()
-        self.unicef_staff = UserFactory(is_staff=True)
+class TestInterventionAmendmentListAPIView(BaseTenantTestCase):
+    @classmethod
+    def setUpTestData(cls):
+        cls.unicef_staff = UserFactory(is_staff=True)
         InterventionAmendmentFactory()
-        self.intervention = InterventionFactory()
-        self.amendment = InterventionAmendmentFactory(
-            intervention=self.intervention,
+        cls.intervention = InterventionFactory()
+        cls.amendment = InterventionAmendmentFactory(
+            intervention=cls.intervention,
             amendment_number="321",
         )
-        self.url = reverse("partners_api:intervention-amendments")
+        cls.url = reverse("partners_api:intervention-amendments")
 
     def assertResponseFundamentals(self, response):
         '''Assert common fundamentals about the response.'''
@@ -1399,7 +1429,7 @@ class TestInterventionAmendmentListAPIView(APITenantTestCase):
         self.assertFalse(response_json)
 
 
-class TestInterventionAmendmentCreateAPIView(APITenantTestCase):
+class TestInterventionAmendmentCreateAPIView(BaseTenantTestCase):
     def setUp(self):
         super(TestInterventionAmendmentCreateAPIView, self).setUp()
 
@@ -1520,20 +1550,20 @@ class TestInterventionAmendmentCreateAPIView(APITenantTestCase):
         return self.forced_auth_req('post', self.url, user=user, data=data, request_format=request_format, **kwargs)
 
 
-class TestInterventionAmendmentDeleteView(APITenantTestCase):
-    def setUp(self):
-        super(TestInterventionAmendmentDeleteView, self).setUp()
-        self.unicef_staff = UserFactory(is_staff=True)
-        self.intervention = InterventionFactory()
-        self.amendment = InterventionAmendmentFactory(
-            intervention=self.intervention,
+class TestInterventionAmendmentDeleteView(BaseTenantTestCase):
+    @classmethod
+    def setUpTestData(cls):
+        cls.unicef_staff = UserFactory(is_staff=True)
+        cls.intervention = InterventionFactory()
+        cls.amendment = InterventionAmendmentFactory(
+            intervention=cls.intervention,
             types=[InterventionAmendment.RESULTS],
             signed_date=datetime.date.today(),
             signed_amendment="random_amendment.pdf"
         )
-        self.url = reverse(
+        cls.url = reverse(
             "partners_api:intervention-amendments-del",
-            args=[self.amendment.pk]
+            args=[cls.amendment.pk]
         )
 
     def test_delete(self):
@@ -1564,17 +1594,20 @@ class TestInterventionAmendmentDeleteView(APITenantTestCase):
         self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
 
 
-class TestInterventionSectorLocationLinkListAPIView(APITenantTestCase):
+class TestInterventionSectorLocationLinkListAPIView(BaseTenantTestCase):
+    @classmethod
+    def setUpTestData(cls):
+        cls.unicef_staff = UserFactory(is_staff=True)
+        InterventionSectorLocationLinkFactory()
+        cls.intervention = InterventionFactory()
+        cls.sector = SectorFactory(name="Sector Name")
+        cls.link = InterventionSectorLocationLinkFactory(
+            intervention=cls.intervention,
+            sector=cls.sector
+        )
+
     def setUp(self):
         super(TestInterventionSectorLocationLinkListAPIView, self).setUp()
-        self.unicef_staff = UserFactory(is_staff=True)
-        InterventionSectorLocationLinkFactory()
-        self.intervention = InterventionFactory()
-        self.sector = SectorFactory(name="Sector Name")
-        self.link = InterventionSectorLocationLinkFactory(
-            intervention=self.intervention,
-            sector=self.sector
-        )
         self.url = reverse("partners_api:intervention-sector-locations")
 
     def assertResponseFundamentals(self, response):
@@ -1620,12 +1653,12 @@ class TestInterventionSectorLocationLinkListAPIView(APITenantTestCase):
         self.assertFalse(response_json)
 
 
-class TestInterventionListMapView(APITenantTestCase):
-    def setUp(self):
-        super(TestInterventionListMapView, self).setUp()
-        self.unicef_staff = UserFactory(is_staff=True)
-        self.url = reverse("partners_api:intervention-map")
-        self.intervention = InterventionFactory(status=Intervention.DRAFT)
+class TestInterventionListMapView(BaseTenantTestCase):
+    @classmethod
+    def setUpTestData(cls):
+        cls.unicef_staff = UserFactory(is_staff=True)
+        cls.url = reverse("partners_api:intervention-map")
+        cls.intervention = InterventionFactory(status=Intervention.DRAFT)
 
     def assertResponseFundamentals(self, response):
         '''Assert common fundamentals about the response.'''
