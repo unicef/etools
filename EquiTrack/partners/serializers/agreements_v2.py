@@ -64,7 +64,7 @@ class AgreementDetailSerializer(serializers.ModelSerializer):
     unicef_signatory = SimpleUserSerializer(source='signed_by')
     partner_signatory = SimpleStaffMemberSerializer(source='partner_manager')
     attached_agreement_file = serializers.FileField(source="attached_agreement", read_only=True)
-    attachment = AttachmentSingleFileField()
+    attachment = AttachmentSingleFileField(read_only=True)
     permissions = serializers.SerializerMethodField(read_only=True)
 
     def get_permissions(self, obj):
