@@ -117,61 +117,6 @@ class TestUserModel(BaseTenantTestCase):
         self.assertEqual(six.text_type(user), 'Pel\xe9 Arantes do Nascimento')
 
 
-class TestCreatePartnerUser(BaseTenantTestCase):
-    def test_created_false(self):
-        """If 'created' param passed in is False then do nothing"""
-        user = models.User(email="new@example.com")
-        models.create_partner_user(None, user, created=False)
-        self.assertFalse(
-            models.User.objects.filter(email="new@example.com").exists()
-        )
-
-    def test_not_created(self):
-        """If user exists already, and so not created, then nothing happens
-
-        Ensuring no exception occurs
-        """
-        user = UserFactory(email="new@example.com", username="new@example.com")
-        models.create_partner_user(None, user, True)
-        self.assertTrue(
-            models.UserProfile.objects.filter(user=user).exists()
-        )
-
-    def test_create(self):
-        user = models.User(
-            email="new@example.com",
-            first_name="First",
-            last_name="Last",
-        )
-        models.create_partner_user(None, user, True)
-        self.assertTrue(
-            models.User.objects.filter(email="new@example.com").exists()
-        )
-        self.assertTrue(models.UserProfile.objects.filter(
-            user__email="new@example.com"
-        ).exists())
-
-
-class TestDeletePartnerRelationship(BaseTenantTestCase):
-    def test_delete(self):
-        profile = ProfileFactory()
-        profile.partner_staff_member = profile.user.pk
-        profile.save()
-        models.delete_partner_relationship(None, profile.user)
-        profile_updated = models.UserProfile.objects.get(pk=profile.pk)
-        self.assertIsNone(profile_updated.partner_staff_member)
-        user = models.User.objects.get(pk=profile.user.pk)
-        self.assertFalse(user.is_active)
-
-    def test_delete_exception(self):
-        """Exceptions are silently ignored, no changes saved"""
-        user = UserFactory()
-        self.assertTrue(user.is_active)
-        self.assertIsNone(models.delete_partner_relationship(None, user))
-        user_updated = models.User.objects.get(pk=user.pk)
-        self.assertTrue(user_updated.is_active)
-
-
 class TestStrUnicode(TestCase):
     '''Ensure calling six.text_type() on model instances returns the right text.'''
     def test_country(self):
