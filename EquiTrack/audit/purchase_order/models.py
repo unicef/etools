@@ -23,7 +23,7 @@ class AuditorStaffMember(BaseStaffMember):
     def send_user_appointed_email(self, engagement):
         context = {
             'environment': get_environment(),
-            'engagement': engagement.get_mail_context(),
+            'engagement': engagement.get_mail_context(user=self.user),
             'staff_member': self.user.get_full_name(),
         }
 

@@ -209,43 +209,37 @@ class Engagement(TimeStampedModel, models.Model):
             self.id
         )
 
-    def get_mail_context(self):
+    def get_mail_context(self, user=None):
+        object_url = self.get_object_url()
+
+        if user:
+            from email_auth.utils import update_url_with_auth_token
+            object_url = update_url_with_auth_token(object_url, user)
+
         return {
             'unique_id': self.unique_id,
             'engagement_type': self.get_engagement_type_display(),
-            'object_url': self.get_object_url(),
+            'object_url': object_url,
             'partner': force_text(self.partner),
             'auditor_firm': force_text(self.agreement.auditor_firm),
         }
 
-    def _send_email(self, recipients, template_name, context=None, **kwargs):
+    def _send_email(self, recipient, template_name, context=None, user=None, **kwargs):
         context = context or {}
 
         base_context = {
-            'engagement': self.get_mail_context(),
+            'engagement': self.get_mail_context(user=user),
             'environment': get_environment(),
         }
         base_context.update(context)
         context = base_context
 
-        recipients = list(recipients)
-        # assert recipients
-
-        if recipients:
-            notification = Notification.objects.create(
-                sender=self,
-                recipients=recipients, template_name=template_name,
-                template_data=context
-            )
-            notification.send_notification()
-
-    def _notify_auditors(self, template_name, context=None, **kwargs):
-        self._send_email(
-            self.staff_members.values_list('user__email', flat=True),
-            template_name,
-            context,
-            **kwargs
+        notification = Notification.objects.create(
+            sender=self,
+            recipients=[recipient], template_name=template_name,
+            template_data=context
         )
+        notification.send_notification()
 
     def _notify_focal_points(self, template_name, context=None, **kwargs):
         for focal_point in get_user_model().objects.filter(groups=UNICEFAuditFocalPoint.as_group()):
@@ -255,9 +249,9 @@ class Engagement(TimeStampedModel, models.Model):
             if context:
                 ctx.update(context)
             self._send_email(
-                [focal_point.email],
+                focal_point.email,
                 template_name,
-                ctx,
+                context=ctx,
                 **kwargs
             )
 
