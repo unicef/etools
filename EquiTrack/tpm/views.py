@@ -16,10 +16,10 @@ from reports.models import Result, Sector
 from reports.serializers.v1 import ResultLightSerializer, SectorSerializer
 from tpm.export.renderers import (
     TPMActivityCSVRenderer, TPMLocationCSVRenderer, TPMPartnerCSVRenderer, TPMPartnerContactsCSVRenderer,
-    TPMVisitCSVRenderer,)
+    TPMVisitCSVRenderer, TPMActionPointCSVRenderer)
 from tpm.export.serializers import (
     TPMActivityExportSerializer, TPMLocationExportSerializer, TPMPartnerExportSerializer, TPMPartnerContactsSerializer,
-    TPMVisitExportSerializer,)
+    TPMVisitExportSerializer, TPMActionPointExportSerializer)
 from tpm.filters import ReferenceNumberOrderingFilter
 from tpm.metadata import TPMBaseMetadata, TPMPermissionBasedMetadata
 from tpm.models import TPMVisit, ThirdPartyMonitor, TPMPermission, TPMActivity
@@ -301,6 +301,18 @@ class TPMVisitViewSet(
         serializer = TPMLocationExportSerializer(tpm_locations, many=True)
         return Response(serializer.data, headers={
             'Content-Disposition': 'attachment;filename=tpm_locations_{}.csv'.format(timezone.now().date())
+        })
+
+    @detail_route(methods=['get'], url_path='action-points/export', renderer_classes=(TPMActionPointCSVRenderer,))
+    def action_points_export(self, request, *args, **kwargs):
+        visit = self.get_object()
+        action_points = visit.action_points.order_by('id')
+
+        serializer = TPMActionPointExportSerializer(action_points, many=True)
+        return Response(serializer.data, headers={
+            'Content-Disposition': 'attachment;filename={}_action_points_{}.csv'.format(
+                visit.reference_number, timezone.now().date()
+            )
         })
 
     @detail_route(methods=['get'])
