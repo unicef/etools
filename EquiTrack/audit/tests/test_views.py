@@ -10,7 +10,7 @@ from factory import fuzzy
 from rest_framework import status
 from mock import patch, Mock
 
-from audit.models import Engagement, Risk, EngagementActionPoint
+from audit.models import Engagement, Risk
 from audit.tests.base import AuditTestCaseMixin, EngagementTransitionsTestCaseMixin
 from audit.tests.factories import (
     AuditFactory,
@@ -501,7 +501,7 @@ class TestEngagementsUpdateViewSet(EngagementTransitionsTestCaseMixin, BaseTenan
         self.assertEqual(self.engagement.action_points.count(), 0)
         response = self._do_update(self.unicef_focal_point, {
             'action_points': [{
-                'category': fuzzy.FuzzyChoice(EngagementActionPoint.CATEGORY_CHOICES).fuzz()[0],
+                'category': "Invoice and receive reimbursement of ineligible expenditure",
                 'description': fuzzy.FuzzyText(length=100).fuzz(),
                 'due_date': fuzzy.FuzzyDate(datetime.date(2001, 1, 1)).fuzz(),
                 'person_responsible': self.unicef_user.id
@@ -514,7 +514,7 @@ class TestEngagementsUpdateViewSet(EngagementTransitionsTestCaseMixin, BaseTenan
         self._init_finalized_engagement()
         response = self._do_update(self.unicef_focal_point, {
             'action_points': [{
-                'category': fuzzy.FuzzyChoice(EngagementActionPoint.CATEGORY_CHOICES).fuzz()[0],
+                'category': "Invoice and receive reimbursement of ineligible expenditure",
                 'description': fuzzy.FuzzyText(length=100).fuzz(),
                 'due_date': fuzzy.FuzzyDate(datetime.date(2001, 1, 1)).fuzz(),
             }]
