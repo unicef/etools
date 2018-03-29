@@ -35,8 +35,8 @@
             "created": "2017-05-05T13:47:34.937Z",
             "last_updated": "2017-05-06T10:56:17.261Z",
             "subject": "[Auditor Portal] ACCESS GRANTED for {{ engagement.engagement_type }}, {{ engagement.unique_id }}",
-            "content": "Dear {{ staff_member }},\r\n\r\nUNICEF is granting access to the auditor portal for a {{ engagement.engagement_type }}. Please refer below for additional information.\r\n\r\nEngagement Type: {{ engagement.engagement_type }}\r\nPartner: {{ engagement.partner }}\r\n\r\nPlease click this link to complete the report: {{ engagement.object_url }}\r\n\r\nThank you.",
-            "html_content": "{% extends \"email-templates/base\" %}\r\n\r\n{% block content %}\r\nDear {{ staff_member }},<br/><br/>\r\n\r\nUNICEF is granting access to the auditor portal for a {{ engagement.engagement_type }}. Please refer below for additional information.<br/><br/>\r\n\r\nEngagement Type: {{ engagement.engagement_type }}<br/>\r\nPartner: {{ engagement.partner }}<br/><br/>\r\n\r\nPlease click <a href=\"{{ engagement.object_url }}\">this link</a> to complete the report.<br/><br/>\r\n\r\nThank you.\r\n{% endblock %}",
+            "content": "Dear {{ staff_member }},\r\n\r\nUNICEF is granting you access to the Financial Assurance Module in eTools.\r\nPlease refer below for additional information.\r\n\r\nEngagement Type: {{ engagement.engagement_type }}\r\nPartner: {{ engagement.partner }}\r\n\r\nPlease click this link to complete the report: {{ engagement.object_url }}\r\n\r\nThank you.",
+            "html_content": "{% extends \"email-templates/base\" %}\r\n\r\n{% block content %}\r\nDear {{ staff_member }},<br/><br/>\r\n\r\nUNICEF is granting you access to the Financial Assurance Module in eTools.<br/>\r\nPlease refer below for additional information.<br/><br/>\r\n\r\nEngagement Type: {{ engagement.engagement_type }}<br/>\r\nPartner: {{ engagement.partner }}<br/><br/>\r\n\r\nPlease click <a href=\"{{ engagement.object_url }}\">this link</a> to complete the report.<br/><br/>\r\n\r\nThank you.\r\n{% endblock %}",
             "language": "",
             "default_template": null
         }
@@ -79,20 +79,6 @@
             "subject": "eTools Access Token",
             "content": "Dear {{ recipient }},\r\n\r\nPlease click on this link to sign in to eTools portal: \r\n\r\n{{ login_link }}\r\n\r\nThank you.",
             "html_content": "{% extends \"email-templates/base\" %}\r\n\r\n{% block title %}eTools Access Token{% endblock %}\r\n\r\n{% block content %}\r\n<p>Dear {{ recipient }},</p>\r\n\r\n<p>Please click on <a href=\"{{ login_link }}\">this link</a> to sign in to eTools portal.</p>\r\n\r\n<p>Thank you.</p>\r\n{% endblock %}",
-            "language": "",
-            "default_template": null
-        }
-    },
-    {
-        "model": "post_office.emailtemplate",
-        "fields": {
-            "name": "audit/staff_member/invite",
-            "description": "",
-            "created": "2018-02-16T13:15:45.507Z",
-            "last_updated": "2018-02-16T13:32:51.621Z",
-            "subject": "UNICEF Auditor Portal Access",
-            "content": "Dear {{ staff_member }},\r\n\r\nUNICEF has assingned a {{ engagement.engagement_type }} to you. Please click link to gain access to the UNICEF Auditor Portal.\r\n\r\n{{ login_link }}\r\n\r\neTools Team",
-            "html_content": "{% extends \"email-templates/base\" %}\r\n\r\n{% block title %}UNICEF Auditor Portal Access{% endblock %}\r\n\r\n{% block content %}\r\n\r\n<p>Dear {{ staff_member }},</p>\r\n\r\n<p>UNICEF has assingned a {{ engagement.engagement_type }} to you. Please click <a href=\"{{ login_link }}\">link</a> to gain access to the UNICEF Auditor Portal.</p>\r\n\r\n<p style=\"text-align:right\">eTools Team</p>\r\n{% endblock %}",
             "language": "",
             "default_template": null
         }

@@ -60,7 +60,7 @@ class EngagementStaffMemberTestCase(BaseTenantTestCase):
 
         self.assertSequenceEqual(staff_member.user.profile.countries_available.all(),
                                  [Country.objects.get(schema_name=connection.schema_name)])
-        self.assertEqual(len(mail.outbox), 2)
+        self.assertEqual(len(mail.outbox), 1)
         mail.outbox = []
 
         engagement = EngagementFactory(staff_members=[], agreement__auditor_firm=auditor_firm)
