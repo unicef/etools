@@ -50,9 +50,9 @@ class CommaSeparatedExportField(serializers.Field):
         value = set(value)
 
         if self.export_attr:
-            return ', '.join(map(lambda x: getattr(x, self.export_attr), value))
-        else:
-            return ', '.join(map(six.text_type, value))
+            value = map(lambda x: get_attribute_smart(x, self.export_attr), value)
+
+        return ', '.join(map(six.text_type, filter(lambda x: x, value)))
 
 
 class TPMActivityExportSerializer(serializers.Serializer):
@@ -91,6 +91,21 @@ class TPMLocationExportSerializer(serializers.Serializer):
 
     def get_activity(self, obj):
         return 'Activity #{}.{}'.format(obj.activity.tpmactivity.tpm_visit.id, obj.activity.tpmactivity.id)
+
+
+class TPMActionPointExportSerializer(serializers.Serializer):
+    person_responsible = serializers.CharField(source='person_responsible.get_full_name')
+    author = serializers.CharField(source='author.get_full_name')
+    section = CommaSeparatedExportField(source='tpm_visit.tpm_activities', export_attr='section')
+    status = serializers.CharField(source='get_status_display')
+    locations = serializers.SerializerMethodField()
+    cp_output = CommaSeparatedExportField(source='tpm_visit.tpm_activities', export_attr='cp_output')
+    due_date = serializers.DateField(format='%d/%m/%Y')
+
+    def get_locations(self, obj):
+        return ', '.join(
+            map(str, itertools.chain(*map(lambda a: a.locations.all(), obj.tpm_visit.tpm_activities.all())))
+        )
 
 
 class TPMVisitExportSerializer(serializers.Serializer):
