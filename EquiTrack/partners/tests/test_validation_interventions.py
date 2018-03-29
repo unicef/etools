@@ -27,7 +27,7 @@ from partners.tests.factories import (
     InterventionAttachmentFactory,
     InterventionFactory,
     PartnerStaffFactory,
-)
+    FileTypeFactory)
 from partners.validation.interventions import (
     InterventionValid,
     partnership_manager_only,
@@ -68,6 +68,8 @@ class TestTransitionToClosed(BaseTenantTestCase):
         cls.intervention = InterventionFactory(
             end=datetime.date(2001, 1, 1),
         )
+
+        cls.file_parnership_file_type = FileTypeFactory(name=FileType.FINAL_PARTNERSHIP_REVIEW)
 
     def setUp(self):
         super(TestTransitionToClosed, self).setUp()
@@ -200,9 +202,7 @@ class TestTransitionToClosed(BaseTenantTestCase):
         """If Total actual amount > 100,000 need attachment with
         type Final Partnership Review
         """
-        file_type = FileType.objects.get(
-            name=FileType.FINAL_PARTNERSHIP_REVIEW
-        )
+        file_type = self.file_parnership_file_type
         InterventionAttachmentFactory(
             intervention=self.intervention,
             type=file_type

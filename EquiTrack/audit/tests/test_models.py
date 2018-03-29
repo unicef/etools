@@ -6,6 +6,7 @@ from unittest import skipIf, TestCase
 
 from django.core import mail
 from django.core.exceptions import ValidationError
+from django.core.management import call_command
 from django.db import connection
 from django.utils import six
 
@@ -50,6 +51,11 @@ class AuditorStaffMemberTestCase(BaseTenantTestCase):
 
 
 class EngagementStaffMemberTestCase(BaseTenantTestCase):
+
+    @classmethod
+    def setUpTestData(cls):
+        call_command('update_notifications')
+
     def test_signal(self):
         auditor_firm = AuditPartnerFactory()
         staff_member = auditor_firm.staff_members.first()

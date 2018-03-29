@@ -50,7 +50,7 @@ class SoftDeleteMixin(models.Model):
                   to one which actually deletes the entity from the database
     """
 
-    deleted_at = models.DateTimeField(default=EPOCH_ZERO)
+    deleted_at = models.DateTimeField(default=EPOCH_ZERO, verbose_name='Deleted At')
 
     # IMPORTANT: The order of these two queryset is important. The normal queryset has to be defined first to have that
     #            as a default queryset
@@ -66,11 +66,12 @@ class SoftDeleteMixin(models.Model):
 
 
 class TravelAgent(SoftDeleteMixin, models.Model):
-    name = models.CharField(max_length=128)
-    code = models.CharField(max_length=128)
-    city = models.CharField(max_length=128, null=True)
-    country = models.ForeignKey('publics.Country')
-    expense_type = models.OneToOneField('TravelExpenseType', related_name='travel_agent')
+    name = models.CharField(max_length=128, verbose_name=_('Name'))
+    code = models.CharField(max_length=128, verbose_name=_('Code'))
+    city = models.CharField(max_length=128, null=True, verbose_name=_('City'))
+    country = models.ForeignKey('publics.Country', verbose_name=_('Country'))
+    expense_type = models.OneToOneField('TravelExpenseType', related_name='travel_agent',
+                                        verbose_name=_('Expense Type'))
 
 
 @python_2_unicode_compatible
@@ -78,9 +79,9 @@ class TravelExpenseType(SoftDeleteMixin, models.Model):
     # User related expense types have this placeholder as the vendor code
     USER_VENDOR_NUMBER_PLACEHOLDER = 'user'
 
-    title = models.CharField(max_length=128)
-    vendor_number = models.CharField(max_length=128)
-    rank = models.PositiveIntegerField(default=100)
+    title = models.CharField(max_length=128, verbose_name=_('Title'))
+    vendor_number = models.CharField(max_length=128, verbose_name=_('Vendor Number'))
+    rank = models.PositiveIntegerField(default=100, verbose_name=_('Rank'))
 
     class Meta:
         ordering = ('rank', 'title')
@@ -98,9 +99,9 @@ class TravelExpenseType(SoftDeleteMixin, models.Model):
 
 @python_2_unicode_compatible
 class Currency(SoftDeleteMixin, models.Model):
-    name = models.CharField(max_length=128)
-    code = models.CharField(max_length=5)
-    decimal_places = models.PositiveIntegerField(default=0)
+    name = models.CharField(max_length=128, verbose_name=_('Name'))
+    code = models.CharField(max_length=5, verbose_name=_('Code'))
+    decimal_places = models.PositiveIntegerField(default=0, verbose_name=_('Decimal Places'))
 
     class Meta:
         verbose_name_plural = _('Currencies')
@@ -110,10 +111,10 @@ class Currency(SoftDeleteMixin, models.Model):
 
 
 class ExchangeRate(SoftDeleteMixin, models.Model):
-    currency = models.ForeignKey('publics.Currency', related_name='exchange_rates')
-    valid_from = models.DateField()
-    valid_to = models.DateField()
-    x_rate = models.DecimalField(max_digits=10, decimal_places=5)
+    currency = models.ForeignKey('publics.Currency', related_name='exchange_rates', verbose_name=_('Currency'))
+    valid_from = models.DateField(verbose_name=_('Valid From'))
+    valid_to = models.DateField(verbose_name=_('Valid To'))
+    x_rate = models.DecimalField(max_digits=10, decimal_places=5, verbose_name=_('X Rate'))
 
     class Meta:
         ordering = ('valid_from',)
@@ -122,11 +123,11 @@ class ExchangeRate(SoftDeleteMixin, models.Model):
 @python_2_unicode_compatible
 class AirlineCompany(SoftDeleteMixin, models.Model):
     # This will be populated from vision
-    name = models.CharField(max_length=255)
-    code = models.IntegerField()
-    iata = models.CharField(max_length=3)
-    icao = models.CharField(max_length=3)
-    country = models.CharField(max_length=255)
+    name = models.CharField(max_length=255, verbose_name=_('Name'))
+    code = models.IntegerField(verbose_name=_('Code'))
+    iata = models.CharField(max_length=3, verbose_name=_('IATA'))
+    icao = models.CharField(max_length=3, verbose_name=_('ICAO'))
+    country = models.CharField(max_length=255, verbose_name=_('Country'))
 
     class Meta:
         verbose_name_plural = _('Airline Companies')
@@ -137,8 +138,8 @@ class AirlineCompany(SoftDeleteMixin, models.Model):
 
 @python_2_unicode_compatible
 class BusinessRegion(SoftDeleteMixin, models.Model):
-    name = models.CharField(max_length=16)
-    code = models.CharField(max_length=2)
+    name = models.CharField(max_length=16, verbose_name=_('Name'))
+    code = models.CharField(max_length=2, verbose_name=_('Code'))
 
     def __str__(self):
         return self.name
@@ -146,10 +147,10 @@ class BusinessRegion(SoftDeleteMixin, models.Model):
 
 @python_2_unicode_compatible
 class BusinessArea(SoftDeleteMixin, models.Model):
-    name = models.CharField(max_length=128)
-    code = models.CharField(max_length=32)
-    region = models.ForeignKey('BusinessRegion', related_name='business_areas')
-    default_currency = models.ForeignKey('Currency', related_name='+', null=True)
+    name = models.CharField(max_length=128, verbose_name=_('Name'))
+    code = models.CharField(max_length=32, verbose_name=_('Code'))
+    region = models.ForeignKey('BusinessRegion', related_name='business_areas', verbose_name=_('Region'))
+    default_currency = models.ForeignKey('Currency', related_name='+', null=True, verbose_name=_('Default Currency'))
 
     def __str__(self):
         return self.name
@@ -157,9 +158,9 @@ class BusinessArea(SoftDeleteMixin, models.Model):
 
 @python_2_unicode_compatible
 class WBS(SoftDeleteMixin, models.Model):
-    business_area = models.ForeignKey('BusinessArea', null=True)
-    name = models.CharField(max_length=25)
-    grants = models.ManyToManyField('Grant', related_name='wbs')
+    business_area = models.ForeignKey('BusinessArea', null=True, verbose_name=_('Business Area'))
+    name = models.CharField(max_length=25, verbose_name=_('Name'))
+    grants = models.ManyToManyField('Grant', related_name='wbs', verbose_name=_('Grants'))
 
     class Meta:
         verbose_name_plural = _('WBSes')
@@ -170,8 +171,8 @@ class WBS(SoftDeleteMixin, models.Model):
 
 @python_2_unicode_compatible
 class Grant(SoftDeleteMixin, models.Model):
-    name = models.CharField(max_length=25)
-    funds = models.ManyToManyField('Fund', related_name='grants')
+    name = models.CharField(max_length=25, verbose_name=_('Name'))
+    funds = models.ManyToManyField('Fund', related_name='grants', verbose_name=_('Funds'))
 
     def __str__(self):
         return self.name
@@ -179,7 +180,7 @@ class Grant(SoftDeleteMixin, models.Model):
 
 @python_2_unicode_compatible
 class Fund(SoftDeleteMixin, models.Model):
-    name = models.CharField(max_length=25)
+    name = models.CharField(max_length=25, verbose_name=_('Name'))
 
     def __str__(self):
         return self.name
@@ -187,16 +188,17 @@ class Fund(SoftDeleteMixin, models.Model):
 
 @python_2_unicode_compatible
 class Country(SoftDeleteMixin, models.Model):
-    name = models.CharField(max_length=64)
-    long_name = models.CharField(max_length=128)
-    business_area = models.ForeignKey('BusinessArea', related_name='countries', null=True)
-    vision_code = models.CharField(max_length=3, null=True, unique=True)
-    iso_2 = models.CharField(max_length=2, null=True)
-    iso_3 = models.CharField(max_length=3, null=True)
-    dsa_code = models.CharField(max_length=3, null=True)
-    currency = models.ForeignKey('Currency', null=True)
-    valid_from = models.DateField(null=True)
-    valid_to = models.DateField(null=True)
+    name = models.CharField(max_length=64, verbose_name=_('Name'))
+    long_name = models.CharField(max_length=128, verbose_name=_('Long Name'))
+    business_area = models.ForeignKey('BusinessArea', related_name='countries', null=True,
+                                      verbose_name=_('Business Area'))
+    vision_code = models.CharField(max_length=3, null=True, unique=True, verbose_name=_('Vision Code'))
+    iso_2 = models.CharField(max_length=2, null=True, verbose_name=_('ISO code 2'))
+    iso_3 = models.CharField(max_length=3, null=True, verbose_name=_('ISO code 3'))
+    dsa_code = models.CharField(max_length=3, null=True, verbose_name=_('DSA Code'))
+    currency = models.ForeignKey('Currency', null=True, verbose_name=_('Currency'))
+    valid_from = models.DateField(null=True, verbose_name=_('Valid From'))
+    valid_to = models.DateField(null=True, verbose_name=_('Valid To'))
 
     class Meta:
         verbose_name_plural = _('Countries')
@@ -219,10 +221,10 @@ class DSARegionQuerySet(ValidityQuerySet):
 
 @python_2_unicode_compatible
 class DSARegion(SoftDeleteMixin, models.Model):
-    country = models.ForeignKey('Country', related_name='dsa_regions')
-    area_name = models.CharField(max_length=120)
-    area_code = models.CharField(max_length=3)
-    user_defined = models.BooleanField(default=False)
+    country = models.ForeignKey('Country', related_name='dsa_regions', verbose_name=_('Country'))
+    area_name = models.CharField(max_length=120, verbose_name=_('Area Name'))
+    area_code = models.CharField(max_length=3, verbose_name=_('Area Code'))
+    user_defined = models.BooleanField(default=False, verbose_name=_('Defined User'))
 
     objects = DSARegionQuerySet.as_manager()
 
@@ -271,17 +273,19 @@ class DSARateQuerySet(QuerySet):
 class DSARate(models.Model):
     DEFAULT_EFFECTIVE_TILL = date(2999, 12, 31)
 
-    region = models.ForeignKey('DSARegion', related_name='rates')
-    effective_from_date = models.DateField()
-    effective_to_date = models.DateField(default=DEFAULT_EFFECTIVE_TILL)
+    region = models.ForeignKey('DSARegion', related_name='rates', verbose_name=_('Region'))
+    effective_from_date = models.DateField(verbose_name=_('Effective From Date'))
+    effective_to_date = models.DateField(default=DEFAULT_EFFECTIVE_TILL, verbose_name=_('Effective To Date'))
 
-    dsa_amount_usd = models.DecimalField(max_digits=20, decimal_places=4)
-    dsa_amount_60plus_usd = models.DecimalField(max_digits=20, decimal_places=4)
-    dsa_amount_local = models.DecimalField(max_digits=20, decimal_places=4)
-    dsa_amount_60plus_local = models.DecimalField(max_digits=20, decimal_places=4)
+    dsa_amount_usd = models.DecimalField(max_digits=20, decimal_places=4, verbose_name=_('DSA amount USD'))
+    dsa_amount_60plus_usd = models.DecimalField(max_digits=20, decimal_places=4,
+                                                verbose_name=_('DSA amount 60 plus USD'))
+    dsa_amount_local = models.DecimalField(max_digits=20, decimal_places=4, verbose_name=_('DSA amount local'))
+    dsa_amount_60plus_local = models.DecimalField(max_digits=20, decimal_places=4,
+                                                  verbose_name=_('DSA Amount 60 plus local'))
 
-    room_rate = models.DecimalField(max_digits=20, decimal_places=4)
-    finalization_date = models.DateField()
+    room_rate = models.DecimalField(max_digits=20, decimal_places=4, verbose_name=_('Zoom Rate'))
+    finalization_date = models.DateField(verbose_name=_('Finalization Date'))
 
     objects = DSARateQuerySet.as_manager()
 
@@ -325,15 +329,16 @@ class DSARateUpload(models.Model):
         (DONE, 'Done'),
     )
 
-    dsa_file = models.FileField(upload_to="publics/dsa_rate/")
+    dsa_file = models.FileField(upload_to="publics/dsa_rate/", verbose_name=_('DSA File'))
     status = models.CharField(
         max_length=64,
         blank=True,
         null=True,
-        choices=STATUS
+        choices=STATUS,
+        verbose_name=_('Status')
     )
-    upload_date = models.DateTimeField(auto_now_add=True)
-    errors = JSONField(blank=True, null=True, default=dict)
+    upload_date = models.DateTimeField(auto_now_add=True, verbose_name=_('Upload Date'))
+    errors = JSONField(blank=True, null=True, default=dict, verbose_name=_('Errors'))
 
     def save(self, *args, **kwargs):
         if not self.pk:
