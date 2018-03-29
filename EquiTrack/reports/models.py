@@ -27,10 +27,10 @@ class Quarter(models.Model):
         (Q4, 'Quarter 4'),
     )
 
-    name = models.CharField(max_length=64, choices=QUARTER_CHOICES)
-    year = models.CharField(max_length=4)
-    start_date = models.DateTimeField()
-    end_date = models.DateTimeField()
+    name = models.CharField(max_length=64, choices=QUARTER_CHOICES, verbose_name=_('Name'))
+    year = models.CharField(max_length=4, verbose_name=_('Year'))
+    start_date = models.DateTimeField(verbose_name=_('Start Date'))
+    end_date = models.DateTimeField(verbose_name=_('End Date'))
 
     def __repr__(self):
         return '{}-{}'.format(self.name, self.year)
@@ -61,11 +61,11 @@ class CountryProgramme(models.Model):
     """
     Represents a country programme cycle
     """
-    name = models.CharField(max_length=150)
-    wbs = models.CharField(max_length=30, unique=True)
-    invalid = models.BooleanField(default=False)
-    from_date = models.DateField()
-    to_date = models.DateField()
+    name = models.CharField(max_length=150, verbose_name=_('Name'))
+    wbs = models.CharField(max_length=30, unique=True, verbose_name=_('WBS'))
+    invalid = models.BooleanField(default=False, verbose_name=_('Invalid'))
+    from_date = models.DateField(verbose_name=_('From Date'))
+    to_date = models.DateField(verbose_name=_('To Date'))
 
     objects = CountryProgrammeManager()
 
@@ -127,7 +127,7 @@ class ResultType(models.Model):
         (OUTPUT, 'Output'),
         (ACTIVITY, 'Activity'),
     )
-    name = models.CharField(max_length=150, unique=True, choices=NAME_CHOICES)
+    name = models.CharField(max_length=150, unique=True, choices=NAME_CHOICES, verbose_name=_('Name'))
 
     def __str__(self):
         return self.name
@@ -139,25 +139,12 @@ class Sector(TimeStampedModel):
     Represents a sector
     """
 
-    name = models.CharField(max_length=45, unique=True)
-    description = models.CharField(
-        max_length=256,
-        blank=True,
-        null=True
-    )
-    alternate_id = models.IntegerField(
-        blank=True,
-        null=True
-    )
-    alternate_name = models.CharField(
-        max_length=255,
-        blank=True,
-        null=True
-    )
-    dashboard = models.BooleanField(
-        default=False
-    )
-    color = models.CharField(max_length=7, null=True, blank=True)
+    name = models.CharField(max_length=45, unique=True, verbose_name=_('Name'))
+    description = models.CharField(max_length=256, blank=True, null=True, verbose_name=_('Description'))
+    alternate_id = models.IntegerField(blank=True, null=True, verbose_name=_('Alternate ID'))
+    alternate_name = models.CharField(max_length=255, blank=True, null=True, verbose_name=_('Alternate Name'))
+    dashboard = models.BooleanField(default=False, verbose_name=_('Dashboard'))
+    color = models.CharField(max_length=7, null=True, blank=True, verbose_name=_('Color'))
 
     class Meta:
         ordering = ['name']
@@ -354,6 +341,7 @@ class LowerResult(TimeStampedModel):
     result_link = models.ForeignKey(
         'partners.InterventionResultLink',
         related_name='ll_results',
+        verbose_name=_('Result Link')
     )
 
     name = models.CharField(verbose_name=_("Name"), max_length=500)
@@ -390,7 +378,7 @@ class Unit(models.Model):
     """
     Represents an unit of measurement
     """
-    type = models.CharField(max_length=45, unique=True)
+    type = models.CharField(max_length=45, unique=True, verbose_name=_('Type'))
 
     class Meta:
         ordering = ['type']
@@ -515,8 +503,8 @@ class Disaggregation(TimeStampedModel):
     As an example, the Disaggregation could be <Age>, and it would have multiple "categories"
     such as: <1, 1-5, 5-18, 18-64, 65+. Each of those categories would be a DisaggregationValue.
     """
-    name = models.CharField(max_length=255, unique=True)
-    active = models.BooleanField(default=False)
+    name = models.CharField(max_length=255, unique=True, verbose_name=_('Name'))
+    active = models.BooleanField(default=False, verbose_name=_('Active'))
 
     def __str__(self):
         return self.name
@@ -530,9 +518,10 @@ class DisaggregationValue(TimeStampedModel):
     related models:
         Disaggregation (ForeignKey): "disaggregation"
     """
-    disaggregation = models.ForeignKey(Disaggregation, related_name="disaggregation_values")
-    value = models.CharField(max_length=15)
-    active = models.BooleanField(default=False)
+    disaggregation = models.ForeignKey(Disaggregation, related_name="disaggregation_values",
+                                       verbose_name=_('Disaggregation'))
+    value = models.CharField(max_length=15, verbose_name=_('Value'))
+    active = models.BooleanField(default=False, verbose_name=_('Active'))
 
     def __str__(self):
         return "Disaggregation Value {} -> {}".format(self.disaggregation, self.value)
