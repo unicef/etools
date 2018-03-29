@@ -1,6 +1,6 @@
 from __future__ import unicode_literals
 
-from django.db import migrations, models
+from django.db import migrations
 
 from utils.common.migrating import fix_null_values
 
@@ -15,8 +15,15 @@ def fix_nulls(apps, schema):
         ]
     )
     fix_null_values(
+        apps.get_model('partners.fundingcommitment'),
+        [
+            'fc_ref',
+        ]
+    )
+    fix_null_values(
         apps.get_model('partners.intervention'),
         [
+            'number',
             'population_focus',
         ]
     )
@@ -27,10 +34,17 @@ def fix_nulls(apps, schema):
         ]
     )
     fix_null_values(
+        apps.get_model('partners.interventionbudget'),
+        [
+            'currency',
+        ]
+    )
+    fix_null_values(
         apps.get_model('partners.partnerorganization'),
         [
             'address',
             'alternate_name',
+            'basis_for_risk_rating',
             'city',
             'country',
             'email',
@@ -46,6 +60,12 @@ def fix_nulls(apps, schema):
         [
             'phone',
             'title',
+        ]
+    )
+    fix_null_values(
+        apps.get_model('partners.plannedengagement'),
+        [
+            'spot_check_mr',
         ]
     )
 

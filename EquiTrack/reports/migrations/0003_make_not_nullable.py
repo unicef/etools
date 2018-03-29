@@ -113,11 +113,6 @@ class Migration(migrations.Migration):
             field=models.CharField(blank=True, default='', max_length=10, verbose_name='VISION ID'),
         ),
         migrations.AlterField(
-            model_name='result',
-            name='wbs',
-            field=models.CharField(blank=True, default='', max_length=50, verbose_name='WBS'),
-        ),
-        migrations.AlterField(
             model_name='sector',
             name='alternate_name',
             field=models.CharField(blank=True, default='', max_length=255, verbose_name='Alternate Name'),

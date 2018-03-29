@@ -7,6 +7,8 @@ from django.utils.encoding import python_2_unicode_compatible
 from model_utils.models import TimeStampedModel
 from django.utils.translation import ugettext as _
 
+from EquiTrack.fields import CurrencyField
+
 
 @python_2_unicode_compatible
 class Donor(TimeStampedModel):
@@ -91,11 +93,12 @@ class FundsReservationHeader(TimeStampedModel):
         default='',
         blank=True,
     )
-    currency = models.CharField(
+    currency = CurrencyField(
         verbose_name=_("Currency"),
         max_length=50,
         default='',
         blank=True,
+        null=False,
     )
     document_text = models.CharField(
         verbose_name=_("Document Text"),
@@ -272,7 +275,7 @@ class FundsCommitmentHeader(TimeStampedModel):
         default='',
         blank=True,
     )
-    currency = models.CharField(
+    currency = CurrencyField(
         verbose_name=_("Currency"),
         max_length=50,
         default='',

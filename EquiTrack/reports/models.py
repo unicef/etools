@@ -223,10 +223,12 @@ class Result(MPTTModel):
         verbose_name=_("Humanitarian Tag"),
         default=False,
     )
+    # This must be nullable so it can be optional without breaking
+    # uniqueness
     wbs = models.CharField(
         verbose_name=_("WBS"),
         max_length=50,
-        default='',
+        null=True,
         blank=True,
     )
     vision_id = models.CharField(

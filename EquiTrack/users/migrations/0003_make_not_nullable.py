@@ -28,11 +28,6 @@ class Migration(migrations.Migration):
             field=models.CharField(blank=True, default='', max_length=255, verbose_name='Long Name'),
         ),
         migrations.AlterField(
-            model_name='section',
-            name='code',
-            field=models.CharField(blank=True, default='', max_length=32, unique=True, verbose_name='Code'),
-        ),
-        migrations.AlterField(
             model_name='userprofile',
             name='job_title',
             field=models.CharField(blank=True, default='', max_length=255, verbose_name='Job Title'),

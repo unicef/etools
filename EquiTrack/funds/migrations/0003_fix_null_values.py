@@ -10,11 +10,11 @@ def fix_nulls(apps, schema):
     fix_null_values(
         apps.get_model('funds.fundscommitmentheader'),
         [
-            'currency',
             'document_text',
             'exchange_rate',
             'fc_type',
             'responsible_person',
+            'currency',
         ]
     )
     fix_null_values(
@@ -32,9 +32,9 @@ def fix_nulls(apps, schema):
     fix_null_values(
         apps.get_model('funds.fundsreservationheader'),
         [
-            'currency',
             'document_text',
             'fr_type',
+            'currency',
         ]
     )
     fix_null_values(

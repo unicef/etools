@@ -176,7 +176,7 @@ class Section(models.Model):
     """
 
     name = models.CharField(max_length=64, unique=True, verbose_name=_('Name'))
-    code = models.CharField(max_length=32, default='', unique=True, blank=True, verbose_name=_('Code'))
+    code = models.CharField(max_length=32, null=True, unique=True, blank=True, verbose_name=_('Code'))
 
     objects = CountrySectionManager()
 

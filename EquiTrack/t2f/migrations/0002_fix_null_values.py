@@ -18,9 +18,15 @@ def fix_nulls(apps, schema):
     fix_null_values(
         apps.get_model('t2f.invoice'),
         [
-            'messages',
             'vision_fi_id',
         ]
+    )
+    fix_null_values(
+        apps.get_model('t2f.invoice'),
+        [
+            'messages',
+        ],
+        []
     )
     fix_null_values(
         apps.get_model('t2f.itineraryitem'),

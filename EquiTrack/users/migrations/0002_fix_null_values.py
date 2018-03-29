@@ -16,12 +16,6 @@ def fix_nulls(apps, schema):
         ]
     )
     fix_null_values(
-        apps.get_model('users.section'),
-        [
-            'code',
-        ]
-    )
-    fix_null_values(
         apps.get_model('users.userprofile'),
         [
             'job_title',
