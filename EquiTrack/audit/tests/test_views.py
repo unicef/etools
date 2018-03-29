@@ -3,8 +3,10 @@ from __future__ import absolute_import, division, print_function, unicode_litera
 import datetime
 import random
 
+from django.conf import settings
 from django.core.management import call_command
 from django.utils import six
+from factory import fuzzy
 from rest_framework import status
 from mock import patch, Mock
 
@@ -20,8 +22,8 @@ from audit.tests.factories import (
     RiskBluePrintFactory,
     RiskCategoryFactory,
     SpotCheckFactory,
-    SpecialAuditFactory
-)
+    SpecialAuditFactory,
+    EngagementActionPointFactory)
 from EquiTrack.tests.cases import BaseTenantTestCase
 from partners.models import PartnerType
 
@@ -437,6 +439,7 @@ class SpecialAuditCreateViewSet(BaseTestEngagementsCreateViewSet, BaseTenantTest
 
 class TestEngagementsUpdateViewSet(EngagementTransitionsTestCaseMixin, BaseTenantTestCase):
     engagement_factory = MicroAssessmentFactory
+    fixtures = ['audit_users', ]
 
     def _do_update(self, user, data):
         data = data or {}
@@ -490,6 +493,70 @@ class TestEngagementsUpdateViewSet(EngagementTransitionsTestCaseMixin, BaseTenan
         response = self._do_update(self.unicef_focal_point, {'partner': partner.id})
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response.data['active_pd'], [])
+
+    def test_action_point_added(self):
+        self._init_finalized_engagement()
+        self.assertEqual(self.engagement.action_points.count(), 0)
+        response = self._do_update(self.unicef_focal_point, {
+            'action_points': [{
+                'category': "Invoice and receive reimbursement of ineligible expenditure",
+                'description': fuzzy.FuzzyText(length=100).fuzz(),
+                'due_date': fuzzy.FuzzyDate(datetime.date(2001, 1, 1)).fuzz(),
+                'person_responsible': self.unicef_user.id
+            }]
+        })
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(self.engagement.action_points.count(), 1)
+
+    def test_action_point_person_responsible_required(self):
+        self._init_finalized_engagement()
+        response = self._do_update(self.unicef_focal_point, {
+            'action_points': [{
+                'category': "Invoice and receive reimbursement of ineligible expenditure",
+                'description': fuzzy.FuzzyText(length=100).fuzz(),
+                'due_date': fuzzy.FuzzyDate(datetime.date(2001, 1, 1)).fuzz(),
+            }]
+        })
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn('action_points', response.data)
+        self.assertIn('person_responsible', response.data['action_points'][0])
+
+    def test_action_point_escalate_to_investigation(self):
+        self._init_finalized_engagement()
+        self.assertEqual(self.engagement.action_points.count(), 0)
+        response = self._do_update(self.unicef_focal_point, {
+            'action_points': [{
+                'category': 'Escalate to Investigation',
+                'description': fuzzy.FuzzyText(length=100).fuzz(),
+                'due_date': fuzzy.FuzzyDate(datetime.date(2001, 1, 1)).fuzz(),
+            }]
+        })
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(self.engagement.action_points.count(), 1)
+        self.assertEqual(
+            self.engagement.action_points.first().person_responsible.email,
+            settings.EMAIL_FOR_USER_RESPONSIBLE_FOR_INVESTIGATION_ESCALATIONS
+        )
+
+    def test_action_point_escalate_to_investigation_person_responsible_changed(self):
+        self._init_finalized_engagement()
+        action_point = EngagementActionPointFactory(
+            author=self.unicef_focal_point,
+            engagement=self.engagement,
+            category="Invoice and receive reimbursement of ineligible expenditure",
+            person_responsible=self.unicef_focal_point,
+        )
+        response = self._do_update(self.unicef_focal_point, {
+            'action_points': [{
+                'id': action_point.id,
+                'category': 'Escalate to Investigation',
+            }]
+        })
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(
+            self.engagement.action_points.first().person_responsible.email,
+            settings.EMAIL_FOR_USER_RESPONSIBLE_FOR_INVESTIGATION_ESCALATIONS
+        )
 
 
 class TestAuditorFirmViewSet(AuditTestCaseMixin, BaseTenantTestCase):
