@@ -10,7 +10,7 @@ from factory import fuzzy
 from rest_framework import status
 from mock import patch, Mock
 
-from audit.models import Engagement, EngagementActionPoint
+from audit.models import Engagement
 from audit.tests.base import AuditTestCaseMixin, EngagementTransitionsTestCaseMixin
 from audit.tests.factories import (
     AuditFactory,
