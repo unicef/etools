@@ -72,15 +72,30 @@ class EngagementActionPointSerializer(UserContextSerializerMixin,
             'status', 'high_priority',
         ]
 
-    def validate(self, attrs):
-        if not self.instance and attrs.get('description') == _('Escalate to Investigation') \
-                and 'person_responsible' not in attrs:
+    def _validate_person_responsible(self, attrs, instance=None):
+        person_responsible = attrs.get('person_responsible')
+        category = attrs.get('category')
+        if instance:
+            if not person_responsible:
+                person_responsible = instance.person_responsible
+            if not category:
+                category = instance.category
+
+        if category == 'Escalate to Investigation':
             email = settings.EMAIL_FOR_USER_RESPONSIBLE_FOR_INVESTIGATION_ESCALATIONS
-            attrs['person_responsible'] = get_user_model().objects.filter(email=email).first()
+            person_responsible = attrs['person_responsible'] = get_user_model().objects.filter(email=email).first()
+
+        if not person_responsible:
+            raise serializers.ValidationError({'person_responsible': _('This field is required.')})
 
         return attrs
 
+    def update(self, instance, validated_data):
+        validated_data = self._validate_person_responsible(validated_data, instance=instance)
+        return super(EngagementActionPointSerializer, self).update(instance, validated_data)
+
     def create(self, validated_data):
+        validated_data = self._validate_person_responsible(validated_data)
         validated_data['author'] = self.get_user()
         return super(EngagementActionPointSerializer, self).create(validated_data)
 
