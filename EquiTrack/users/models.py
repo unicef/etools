@@ -34,42 +34,40 @@ class Country(TenantMixin):
     Relates to :model:`users.Section`
     """
 
-    name = models.CharField(max_length=100)
+    name = models.CharField(max_length=100, verbose_name=_('Name'))
     country_short_code = models.CharField(
         max_length=10,
-        null=True, blank=True
+        null=True, blank=True, verbose_name=_('Short Code')
     )
-    long_name = models.CharField(max_length=255, null=True, blank=True)
-    business_area_code = models.CharField(
-        max_length=10,
-        null=True, blank=True
-    )
+    long_name = models.CharField(max_length=255, null=True, blank=True, verbose_name=_('Long Name'))
+    business_area_code = models.CharField(max_length=10, null=True, blank=True, verbose_name=_('Business Area Code'))
     latitude = models.DecimalField(
-        null=True, blank=True,
-        max_digits=8, decimal_places=5,
+        null=True, blank=True, verbose_name=_('Latitude'), max_digits=8, decimal_places=5,
         validators=[MinValueValidator(Decimal(-90)), MaxValueValidator(Decimal(90))]
     )
     longitude = models.DecimalField(
-        null=True, blank=True,
-        max_digits=8, decimal_places=5,
+        null=True, blank=True, max_digits=8, decimal_places=5, verbose_name=_('Longitude'),
         validators=[MinValueValidator(Decimal(-180)), MaxValueValidator(Decimal(180))]
     )
-    initial_zoom = models.IntegerField(default=8)
-    vision_sync_enabled = models.BooleanField(default=True)
-    vision_last_synced = models.DateTimeField(null=True, blank=True)
+    initial_zoom = models.IntegerField(default=8, verbose_name=_('Initial Zoom'))
+    vision_sync_enabled = models.BooleanField(default=True, verbose_name=_('Vision Sync Enabled'))
+    vision_last_synced = models.DateTimeField(null=True, blank=True, verbose_name=_('Vision Last Sync'))
 
     local_currency = models.ForeignKey('publics.Currency',
+                                       verbose_name=_('Local Currency'),
                                        related_name='workspaces',
                                        null=True,
                                        on_delete=models.SET_NULL,
                                        blank=True)
 
     # TODO: rename the related name as it's inappropriate for relating offices to countries.. should be office_countries
-    offices = models.ManyToManyField('Office', related_name='offices')
-    sections = models.ManyToManyField('Section', related_name='sections')
+    offices = models.ManyToManyField('Office', related_name='offices', verbose_name=_('Offices'))
+    sections = models.ManyToManyField('Section', related_name='sections', verbose_name=_('Sections'))
 
-    threshold_tre_usd = models.DecimalField(max_digits=20, decimal_places=4, default=None, null=True)
-    threshold_tae_usd = models.DecimalField(max_digits=20, decimal_places=4, default=None, null=True)
+    threshold_tre_usd = models.DecimalField(max_digits=20, decimal_places=4, default=None, null=True,
+                                            verbose_name=_('Threshold TRE (USD)'))
+    threshold_tae_usd = models.DecimalField(max_digits=20, decimal_places=4, default=None, null=True,
+                                            verbose_name=_('Threshold TAE (USD)'))
 
     def __str__(self):
         return self.name
@@ -84,11 +82,13 @@ class WorkspaceCounter(models.Model):
     TRAVEL_REFERENCE = 'travel_reference_number_counter'
     TRAVEL_INVOICE_REFERENCE = 'travel_invoice_reference_number_counter'
 
-    workspace = models.OneToOneField('users.Country', related_name='counters')
+    workspace = models.OneToOneField('users.Country', related_name='counters', verbose_name=_('Workspace'))
 
     # T2F travel reference number counter
-    travel_reference_number_counter = models.PositiveIntegerField(default=1)
-    travel_invoice_reference_number_counter = models.PositiveIntegerField(default=1)
+    travel_reference_number_counter = models.PositiveIntegerField(
+        default=1, verbose_name=_('Travel Reference Number Counter'))
+    travel_invoice_reference_number_counter = models.PositiveIntegerField(
+        default=1, verbose_name=_('Travel Invoice Reference Number Counter'))
 
     def get_next_value(self, counter_type):
         assert connection.in_atomic_block, 'Counters should be used only within an atomic block'
@@ -139,7 +139,7 @@ class Office(models.Model):
     Relates to :model:`auth.User`
     """
 
-    name = models.CharField(max_length=254)
+    name = models.CharField(max_length=254, verbose_name=_('Name'))
     zonal_chief = models.ForeignKey(
         settings.AUTH_USER_MODEL,
         blank=True, null=True,
@@ -173,8 +173,8 @@ class Section(models.Model):
     Represents a section for the country
     """
 
-    name = models.CharField(max_length=64, unique=True)
-    code = models.CharField(max_length=32, null=True, unique=True, blank=True)
+    name = models.CharField(max_length=64, unique=True, verbose_name=_('Name'))
+    code = models.CharField(max_length=32, null=True, unique=True, blank=True, verbose_name=_('Code'))
 
     objects = CountrySectionManager()
 
@@ -198,35 +198,34 @@ class UserProfile(models.Model):
     Relates to :model:`users.Office`
     """
 
-    user = models.OneToOneField(settings.AUTH_USER_MODEL, related_name='profile')
+    user = models.OneToOneField(settings.AUTH_USER_MODEL, related_name='profile', verbose_name=_('User'))
     # TODO: after migration remove the ability to add blank=True
-    guid = models.CharField(max_length=40, unique=True, null=True)
+    guid = models.CharField(max_length=40, unique=True, null=True, verbose_name=_('GUID'))
 
-    partner_staff_member = models.IntegerField(
-        null=True,
-        blank=True
-    )
-    country = models.ForeignKey(Country, null=True, blank=True)
-    country_override = models.ForeignKey(Country, null=True, blank=True, related_name="country_override")
-    countries_available = models.ManyToManyField(Country, blank=True, related_name="accessible_by")
-    section = models.ForeignKey(Section, null=True, blank=True)
-    office = models.ForeignKey(Office, null=True, blank=True)
-    job_title = models.CharField(max_length=255, null=True, blank=True)
-    phone_number = models.CharField(max_length=20, null=True, blank=True)
+    partner_staff_member = models.IntegerField(null=True, blank=True, verbose_name=_('Partner Staff Member'))
+    country = models.ForeignKey(Country, null=True, blank=True, verbose_name=_('Country'))
+    country_override = models.ForeignKey(Country, null=True, blank=True, related_name="country_override",
+                                         verbose_name=_('Country Override'))
+    countries_available = models.ManyToManyField(Country, blank=True, related_name="accessible_by",
+                                                 verbose_name=_('Countries Available'))
+    section = models.ForeignKey(Section, null=True, blank=True, verbose_name=_('Section'))
+    office = models.ForeignKey(Office, null=True, blank=True, verbose_name=_('Office'))
+    job_title = models.CharField(max_length=255, null=True, blank=True, verbose_name=_('Job Title'))
+    phone_number = models.CharField(max_length=20, null=True, blank=True, verbose_name=_('Phone Number'))
 
-    staff_id = models.CharField(max_length=32, null=True, blank=True, unique=True)
-    org_unit_code = models.CharField(max_length=32, null=True, blank=True)
-    org_unit_name = models.CharField(max_length=64, null=True, blank=True)
-    post_number = models.CharField(max_length=32, null=True, blank=True)
-    post_title = models.CharField(max_length=64, null=True, blank=True)
-    vendor_number = models.CharField(max_length=32, null=True, blank=True, unique=True)
+    staff_id = models.CharField(max_length=32, null=True, blank=True, unique=True, verbose_name=_('Staff ID'))
+    org_unit_code = models.CharField(max_length=32, null=True, blank=True, verbose_name=_('Org Unit Code'))
+    org_unit_name = models.CharField(max_length=64, null=True, blank=True, verbose_name=_('Org Unit Name'))
+    post_number = models.CharField(max_length=32, null=True, blank=True, verbose_name=_('Post Number'))
+    post_title = models.CharField(max_length=64, null=True, blank=True, verbose_name=_('Post Title'))
+    vendor_number = models.CharField(max_length=32, null=True, blank=True, unique=True, verbose_name=_('Vendor Number'))
     supervisor = models.ForeignKey(settings.AUTH_USER_MODEL, related_name='supervisee', on_delete=models.SET_NULL,
-                                   blank=True, null=True)
-    oic = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL,
+                                   blank=True, null=True, verbose_name=_('Supervisor'))
+    oic = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, verbose_name=_('OIC'),
                             null=True, blank=True)  # related oic_set
 
     # TODO: refactor when sections are properly set
-    section_code = models.CharField(max_length=32, null=True, blank=True)
+    section_code = models.CharField(max_length=32, null=True, blank=True, verbose_name=_('Section Code'))
 
     # TODO: figure this out when we need to autmatically map to groups
     # vision_roles = ArrayField(models.CharField(max_length=20, blank=True, choices=VISION_ROLES),
