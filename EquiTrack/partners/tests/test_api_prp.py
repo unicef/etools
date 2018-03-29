@@ -2,7 +2,6 @@ import json
 import os
 import datetime
 
-from django.contrib.auth.models import Group
 from django.core.urlresolvers import reverse, resolve
 
 from rest_framework import status
@@ -18,7 +17,7 @@ from partners.tests.factories import InterventionFactory
 from partners.tests.test_utils import setup_intervention_test_data
 from reports.models import LowerResult, AppliedIndicator, IndicatorBlueprint
 from reports.tests.factories import ResultFactory
-from users.tests.factories import UserFactory
+from users.tests.factories import UserFactory, GroupFactory
 
 
 class TestInterventionsAPI(WorkspaceRequiredAPITestMixIn, BaseTenantTestCase):
@@ -134,6 +133,11 @@ class TestInterventionsAPI(WorkspaceRequiredAPITestMixIn, BaseTenantTestCase):
 
 class TestInterventionsAPIListPermissions(BaseTenantTestCase):
     '''Exercise permissions on the PRPIntervention list view'''
+
+    @classmethod
+    def setUpTestData(cls):
+        cls.readonly_group = GroupFactory(name=READ_ONLY_API_GROUP_NAME)
+
     def setUp(self):
         self.url = reverse('prp_api_v1:prp-intervention-list')
         self.query_param_data = {'workspace': self.tenant.business_area_code}
@@ -154,7 +158,7 @@ class TestInterventionsAPIListPermissions(BaseTenantTestCase):
     def test_group_member_has_access(self):
         '''Ensure a non-staff user in the correct group has access'''
         user = UserFactory()
-        user.groups.add(Group.objects.get(name=READ_ONLY_API_GROUP_NAME))
+        user.groups.add(self.readonly_group)
         response = self.forced_auth_req('get', self.url, user=user, data=self.query_param_data)
         self.assertEquals(response.status_code, status.HTTP_200_OK)
 

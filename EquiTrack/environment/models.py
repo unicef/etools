@@ -1,16 +1,18 @@
 from __future__ import absolute_import, division, print_function, unicode_literals
 
-from decimal import Decimal
 import random
+from decimal import Decimal
 
 from django.conf import settings
 from django.contrib.auth.models import Group
 from django.db import connection, models
-from django.utils.encoding import python_2_unicode_compatible
 from django.utils import six, timezone
-from waffle.models import BaseModel, CACHE_EMPTY, set_flag
+from django.utils.encoding import python_2_unicode_compatible
+from django.utils.translation import ugettext as _
+
 from waffle import managers
-from waffle.utils import get_setting, keyfmt, get_cache
+from waffle.models import BaseModel, CACHE_EMPTY, set_flag
+from waffle.utils import get_cache, get_setting, keyfmt
 
 from users.models import Country
 
@@ -22,8 +24,8 @@ class IssueCheckConfig(models.Model):
     """
     Used to enable/disable issue checks at runtime.
     """
-    check_id = models.CharField(max_length=100, unique=True, db_index=True)
-    is_active = models.BooleanField(default=False)
+    check_id = models.CharField(max_length=100, unique=True, db_index=True, verbose_name=_('Check id'))
+    is_active = models.BooleanField(default=False, verbose_name=_('Is Active'))
 
     def __str__(self):
         return '{}: {}'.format(self.check_id, self.is_active)
@@ -36,38 +38,38 @@ class TenantFlag(BaseModel):
 
     'countries' is the only field we add. All other fields are copy/pasted from waffle.Flag.
     """
-    name = models.CharField(max_length=100, unique=True, help_text=(
+    name = models.CharField(max_length=100, unique=True, verbose_name=_('Name'), help_text=(
         'The human/computer readable name.'))
-    countries = models.ManyToManyField(Country, blank=True, help_text=(
+    countries = models.ManyToManyField(Country, blank=True, verbose_name=_('Countries'), help_text=(
         'Activate this flag for these countries.'))
-    everyone = models.NullBooleanField(blank=True, help_text=(
+    everyone = models.NullBooleanField(blank=True, verbose_name=_('Everyone'), help_text=(
         'Flip this flag on (Yes) or off (No) for everyone, overriding all '
         'other settings. Leave as Unknown to use normally.'))
-    percent = models.DecimalField(max_digits=3, decimal_places=1, null=True, blank=True, help_text=(
-        'A number between 0.0 and 99.9 to indicate a percentage of users for '
-        'whom this flag will be active.'))
-    testing = models.BooleanField(default=False, help_text=(
+    percent = models.DecimalField(max_digits=3, decimal_places=1, null=True, blank=True, verbose_name=_('Percent'),
+                                  help_text=('A number between 0.0 and 99.9 to indicate a percentage of users for '
+                                             'whom this flag will be active.'))
+    testing = models.BooleanField(default=False, verbose_name=_('Testing'), help_text=(
         'Allow this flag to be set for a session for user testing.'))
-    superusers = models.BooleanField(default=True, help_text=(
+    superusers = models.BooleanField(default=True, verbose_name=_('Superusers'), help_text=(
         'Flag always active for superusers?'))
-    staff = models.BooleanField(default=False, help_text=(
+    staff = models.BooleanField(default=False, verbose_name=_('Staff'), help_text=(
         'Flag always active for staff?'))
-    authenticated = models.BooleanField(default=False, help_text=(
+    authenticated = models.BooleanField(default=False, verbose_name=_('Authenticated'), help_text=(
         'Flag always active for authenticate users?'))
-    languages = models.TextField(blank=True, default='', help_text=(
+    languages = models.TextField(blank=True, default='', verbose_name=_('Languages'), help_text=(
         'Activate this flag for users with one of these languages (comma '
         'separated list)'))
-    groups = models.ManyToManyField(Group, blank=True, help_text=(
+    groups = models.ManyToManyField(Group, blank=True, verbose_name=_('Users'), help_text=(
         'Activate this flag for these user groups.'))
-    users = models.ManyToManyField(settings.AUTH_USER_MODEL, blank=True, help_text=(
+    users = models.ManyToManyField(settings.AUTH_USER_MODEL, verbose_name=_('Users'), blank=True, help_text=(
         'Activate this flag for these users.'))
-    rollout = models.BooleanField(default=False, help_text=(
+    rollout = models.BooleanField(default=False, verbose_name=_('Rollout'), help_text=(
         'Activate roll-out mode?'))
-    note = models.TextField(blank=True, help_text=(
+    note = models.TextField(blank=True, verbose_name=_('Note'), help_text=(
         'Note where this Flag is used.'))
-    created = models.DateTimeField(default=timezone.now, db_index=True, help_text=(
+    created = models.DateTimeField(default=timezone.now, verbose_name=_('Created'), db_index=True, help_text=(
         'Date when this Flag was created.'))
-    modified = models.DateTimeField(default=timezone.now, help_text=(
+    modified = models.DateTimeField(default=timezone.now, verbose_name=_('Modified'), help_text=(
         'Date when this Flag was last modified.'))
 
     objects = managers.FlagManager()
@@ -238,17 +240,17 @@ class TenantSwitch(BaseModel):
 
     'countries' is the only field we add. All other fields are copy/pasted from waffle.Switch.
     """
-    name = models.CharField(max_length=100, unique=True,
+    name = models.CharField(max_length=100, unique=True, verbose_name=_('Name'),
                             help_text='The human/computer readable name.')
-    active = models.BooleanField(default=False, help_text=(
+    active = models.BooleanField(default=False, verbose_name=_('Active'), help_text=(
         'Is this switch active?'))
-    countries = models.ManyToManyField(Country, blank=True, help_text=(
+    countries = models.ManyToManyField(Country, blank=True, verbose_name=_('Countries'), help_text=(
         'Activate this switch for these countries.'))
-    note = models.TextField(blank=True, help_text=(
+    note = models.TextField(blank=True, verbose_name=_('Note'), help_text=(
         'Note where this Switch is used.'))
-    created = models.DateTimeField(default=timezone.now, db_index=True,
+    created = models.DateTimeField(default=timezone.now, db_index=True, verbose_name=_('Created'),
                                    help_text=('Date when this Switch was created.'))
-    modified = models.DateTimeField(default=timezone.now, help_text=(
+    modified = models.DateTimeField(default=timezone.now, verbose_name=_('Modified'), help_text=(
         'Date when this Switch was last modified.'))
 
     objects = TenantSwitchManager()

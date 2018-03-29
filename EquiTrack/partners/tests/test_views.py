@@ -9,7 +9,6 @@ from urlparse import urlparse
 
 import mock
 from django.conf import settings
-from django.contrib.auth.models import Group
 from django.core.files.uploadedfile import SimpleUploadedFile
 from django.core.urlresolvers import reverse, resolve
 from django.db import connection
@@ -154,6 +153,8 @@ class TestAPIPartnerOrganizationListView(BaseTenantTestCase):
             cso_type='International',
         )
 
+        cls.readonly_group = GroupFactory(name=READ_ONLY_API_GROUP_NAME)
+
         cls.url = reverse('partners_api:partner-list')
 
     def setUp(self):
@@ -205,7 +206,7 @@ class TestAPIPartnerOrganizationListView(BaseTenantTestCase):
     def test_group_permission(self):
         '''Ensure a non-staff user in the correct group has access'''
         user = UserFactory()
-        user.groups.add(Group.objects.get(name=READ_ONLY_API_GROUP_NAME))
+        user.groups.add(self.readonly_group)
         response = self.forced_auth_req('get', self.url, user=user)
         self.assertResponseFundamentals(response)
 
