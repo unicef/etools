@@ -110,7 +110,7 @@ def update_all_partners(country_name=None):
         countries = countries.filter(name=country_name)
     for country in countries:
         connection.set_tenant(country)
-        logger.info(u'Updating '.format(country.name))
+        logger.info(u'Updating {}'.format(country.name))
         partners = PartnerOrganization.objects.all()
         for partner in partners:
             try:

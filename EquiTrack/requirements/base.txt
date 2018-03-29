@@ -32,7 +32,7 @@ djangorestframework-recursive==0.1.1
 drfpasswordless==1.1.2
 
 # Other Python packages
-psycopg2==2.6.2
+psycopg2==2.7.4
 celery==4.1.0
 amqp==2.2.2
 billiard==3.5.0.3
@@ -65,6 +65,8 @@ Faker==0.7.4 # A temporary fix for factory-boy library until there is a new rele
 freezegun==0.3.8
 flake8==3.3.0
 mock==2.0.0
+responses==0.8.1
+
 
 # Git python packages
 git+https://github.com/unicef/djangosaml2.git@v0.16.11.2#egg=djangosaml2
