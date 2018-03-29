@@ -26,7 +26,7 @@ class Activity(models.Model):
 
     @staticmethod
     def _validate_cp_output(intervention, cp_output):
-        if cp_output and intervention and cp_output.intervention_links.intervention != intervention:
+        if cp_output and intervention and not cp_output.intervention_links.filter(intervention=intervention).exists():
             raise ValidationError(_('CP Output should be within the {intervention}.').format(
                 intervention=intervention
             ))

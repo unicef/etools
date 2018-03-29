@@ -29,9 +29,9 @@ class HactEncoder(json.JSONEncoder):
 
 class HactHistory(TimeStampedModel):
 
-    partner = models.ForeignKey(PartnerOrganization, related_name='related_partner')
-    year = models.IntegerField(default=get_current_year)
-    partner_values = JSONField(null=True, blank=True)
+    partner = models.ForeignKey(PartnerOrganization, verbose_name=_('Partner'), related_name='related_partner')
+    year = models.IntegerField(default=get_current_year, verbose_name=_('Year'))
+    partner_values = JSONField(null=True, blank=True, verbose_name=_('Partner Values'))
 
     class Meta:
         unique_together = ('partner', 'year')
@@ -40,8 +40,8 @@ class HactHistory(TimeStampedModel):
 
 class AggregateHact(TimeStampedModel):
 
-    year = models.IntegerField(default=get_current_year, unique=True)
-    partner_values = JSONField(null=True, blank=True)
+    year = models.IntegerField(default=get_current_year, unique=True, verbose_name=_('Year'))
+    partner_values = JSONField(null=True, blank=True, verbose_name=_('Partner Values'))
 
     def update(self):
         self.partner_values = json.dumps({

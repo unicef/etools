@@ -12,6 +12,7 @@ from django.db import models
 from django.template.base import Template, VariableNode
 from django.utils import six
 from django.utils.encoding import python_2_unicode_compatible
+from django.utils.translation import ugettext as _
 
 from model_utils import Choices
 from post_office import mail
@@ -58,19 +59,18 @@ class Notification(models.Model):
         ('tpm/visit/action_point_assigned', 'tpm/visit/action_point_assigned'),
     )
 
-    type = models.CharField(max_length=255, default='Email')
-    content_type = models.ForeignKey(ContentType, null=True, on_delete=models.CASCADE)
-    object_id = models.PositiveIntegerField(null=True)
+    type = models.CharField(max_length=255, default='Email', verbose_name=_('Type'))
+    content_type = models.ForeignKey(ContentType, null=True, on_delete=models.CASCADE, verbose_name=_('Content Type'))
+    object_id = models.PositiveIntegerField(null=True, verbose_name=_('Object ID'))
     sender = GenericForeignKey('content_type', 'object_id')
-    recipients = ArrayField(
-        models.CharField(max_length=255),
-    )
+    recipients = ArrayField(models.CharField(max_length=255), verbose_name=_('Recipients'))
     sent_recipients = ArrayField(
         models.CharField(max_length=255),
-        default=list
+        default=list,
+        verbose_name=_('Sent Recipients')
     )
-    template_name = models.CharField(max_length=255)
-    template_data = JSONField()
+    template_name = models.CharField(max_length=255, verbose_name=_('Template Name'))
+    template_data = JSONField(verbose_name=_('Template Data'))
 
     def __str__(self):
         return u"{} Notification from {}: {}".format(self.type, self.sender, self.template_data)
