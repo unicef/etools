@@ -1,6 +1,7 @@
 from __future__ import unicode_literals
 
 from django.conf import settings
+from django.core.management import call_command
 from django.utils import six
 from mock import patch
 from post_office.models import Email, EmailTemplate
@@ -17,6 +18,7 @@ class TestEmailNotification(BaseTenantTestCase):
         cls.tenant.country_short_code = 'LEBA'
         cls.tenant.save()
 
+        call_command('update_notifications')
         if EmailTemplate.objects.count() == 0:
             cls.fail("No EmailTemplate instances found. Is the migration run?")
 

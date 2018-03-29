@@ -153,8 +153,17 @@ class Attachment(TimeStampedModel, models.Model):
         null=True,
         verbose_name=_('Hyperlink')
     )
-    content_type = models.ForeignKey(ContentType, blank=True, null=True)
-    object_id = models.IntegerField(blank=True, null=True)
+    content_type = models.ForeignKey(
+        ContentType,
+        blank=True,
+        null=True,
+        verbose_name=_('Content Type')
+    )
+    object_id = models.IntegerField(
+        blank=True,
+        null=True,
+        verbose_name=_('Object ID')
+    )
     content_object = GenericForeignKey()
     code = models.CharField(max_length=64, blank=True, verbose_name=_('Code'))
     uploaded_by = models.ForeignKey(
@@ -198,14 +207,42 @@ class Attachment(TimeStampedModel, models.Model):
 @python_2_unicode_compatible
 class AttachmentFlat(models.Model):
     attachment = models.ForeignKey(Attachment, related_name="denormalized")
-    partner = models.CharField(max_length=255, blank=True)
-    partner_type = models.CharField(max_length=150, blank=True)
-    vendor_number = models.CharField(max_length=50, blank=True)
-    pd_ssfa_number = models.CharField(max_length=64, blank=True)
-    file_type = models.CharField(max_length=100, blank=True)
-    file_link = models.CharField(max_length=1024, blank=True)
-    uploaded_by = models.CharField(max_length=255, blank=True)
-    created = models.CharField(max_length=50)
+    partner = models.CharField(
+        max_length=255,
+        blank=True,
+        verbose_name=_('Partner')
+    )
+    partner_type = models.CharField(
+        max_length=150,
+        blank=True,
+        verbose_name=_('Partner Type')
+    )
+    vendor_number = models.CharField(
+        max_length=50,
+        blank=True,
+        verbose_name=_('Vendor Number')
+    )
+    pd_ssfa_number = models.CharField(
+        max_length=64,
+        blank=True,
+        verbose_name=_('PD SSFA Number')
+    )
+    file_type = models.CharField(
+        max_length=100,
+        blank=True,
+        verbose_name=_('File Type')
+    )
+    file_link = models.CharField(
+        max_length=1024,
+        blank=True,
+        verbose_name=_('File Link')
+    )
+    uploaded_by = models.CharField(
+        max_length=255,
+        blank=True,
+        verbose_name=_('Uploaded by')
+    )
+    created = models.CharField(max_length=50, verbose_name=_('Created'))
 
     def __str__(self):
         return six.text_type(self.attachment)
