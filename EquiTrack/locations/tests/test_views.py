@@ -30,8 +30,13 @@ class TestLocationViews(BaseTenantTestCase):
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(sorted(response.data[0].keys()), ["id", "name", "p_code"])
-        self.assertEqual(response.data[0]["name"], '{} [{} - {}]'.format(
-            self.locations[0].name, self.locations[0].gateway.name, self.locations[0].p_code))
+        self.assertEqual(len(response.data), len(self.locations))
+        location_list = [
+            '{} [{} - {}]'.format(l.name, l.gateway.name, l.p_code)
+            for l in self.locations
+        ]
+        for data in response.data:
+            self.assertIn(data["name"], location_list)
 
     def test_api_location_heavy_list(self):
         response = self.forced_auth_req('get', reverse('locations-list'), user=self.unicef_staff)
