@@ -16,7 +16,7 @@ class Migration(migrations.Migration):
         migrations.AlterField(
             model_name='attachment',
             name='content_type',
-            field=models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.CASCADE, to='contenttypes.ContentType'),
+            field=models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.CASCADE, to='contenttypes.ContentType', verbose_name='Content Type'),
         ),
         migrations.AlterField(
             model_name='attachment',
@@ -26,6 +26,6 @@ class Migration(migrations.Migration):
         migrations.AlterField(
             model_name='attachment',
             name='object_id',
-            field=models.IntegerField(blank=True, null=True),
+            field=models.IntegerField(blank=True, null=True, verbose_name='Object ID'),
         ),
     ]
