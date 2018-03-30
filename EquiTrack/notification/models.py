@@ -11,6 +11,7 @@ from django.contrib.postgres.fields import ArrayField, JSONField
 from django.core.exceptions import ValidationError
 from django.db import models
 from django.utils.encoding import python_2_unicode_compatible
+from django.utils.translation import ugettext as _
 
 import six
 from model_utils import Choices
@@ -44,9 +45,11 @@ class Notification(models.Model):
         ('Email', 'Email'),
     )
 
-    type = models.CharField(max_length=255, default='Email', validators=[validate_notification_type])
-    content_type = models.ForeignKey(ContentType, null=True, on_delete=models.CASCADE, blank=True)
-    object_id = models.PositiveIntegerField(null=True, blank=True)
+    type = models.CharField(max_length=255, default='Email', validators=[validate_notification_type],
+                            verbose_name=_('Type'))
+    content_type = models.ForeignKey(ContentType, null=True, on_delete=models.CASCADE, blank=True,
+                                     verbose_name=_('Content Type'))
+    object_id = models.PositiveIntegerField(null=True, blank=True, verbose_name=_('Object ID'))
     sender = GenericForeignKey('content_type', 'object_id')
     # from_address can be used as the notification from address if sender is
     # not a user with an email address.
@@ -54,6 +57,7 @@ class Notification(models.Model):
     recipients = ArrayField(
         models.CharField(max_length=255),
         blank=True,
+        verbose_name=_('Recipients')
     )
     cc = ArrayField(
         models.CharField(max_length=255),
@@ -64,11 +68,13 @@ class Notification(models.Model):
         models.CharField(max_length=255),
         default=list,
         blank=True,
+        verbose_name=_('Sent Recipients')
     )
     # template_name has to be the name of an existing EmailTemplate object. validate_template_name checks that.
-    template_name = models.CharField(max_length=255, validators=[validate_template_name], blank=True, default='')
+    template_name = models.CharField(max_length=255, validators=[validate_template_name],
+                                     blank=True, default='', verbose_name=_('Template Name'))
     # template_data is the context for rendering any templates.
-    template_data = JSONField(null=True, blank=True)
+    template_data = JSONField(null=True, blank=True, verbose_name=_('Template Data'))
     # Save a link to the actual post_office.Email object that was sent
     sent_email = models.ForeignKey('post_office.Email', null=True, on_delete=models.CASCADE, blank=True)
     # Content of template used to render subject if template_name not specified.
