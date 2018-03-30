@@ -6,9 +6,11 @@ from django.contrib.auth import get_user_model
 from django.contrib.auth.admin import UserAdmin
 from django.core.urlresolvers import reverse
 from django.http.response import HttpResponseRedirect
+from django.shortcuts import get_object_or_404
 
+from azure_graph_api.tasks import sync_user
 from users.models import Country, Office, Section, UserProfile, WorkspaceCounter
-from vision.tasks import sync_handler
+from vision.tasks import sync_handler, vision_sync_task
 
 
 class ProfileInline(admin.StackedInline):
@@ -22,7 +24,9 @@ class ProfileInline(admin.StackedInline):
         'office',
         'section',
         'job_title',
+        'post_title',
         'phone_number',
+        'staff_id',
     ]
     filter_horizontal = (
         'countries_available',
@@ -157,6 +161,7 @@ class ProfileAdmin(admin.ModelAdmin):
 
 class UserAdminPlus(UserAdmin):
 
+    change_form_template = 'admin/users/user/change_form.html'
     inlines = [ProfileInline]
 
     list_display = [
@@ -167,6 +172,24 @@ class UserAdminPlus(UserAdmin):
         'is_staff',
         'is_active',
     ]
+
+    def get_urls(self):
+        urls = super(UserAdminPlus, self).get_urls()
+
+        def wrap(view):
+            def wrapper(*args, **kwargs):
+                return self.admin_site.admin_view(view)(*args, **kwargs)
+            return update_wrapper(wrapper, view)
+
+        custom_urls = [
+            url(r'^(?P<pk>\d+)/sync_user/$', wrap(self.sync_user), name='users_sync_user'),
+        ]
+        return custom_urls + urls
+
+    def sync_user(self, request, pk):
+        user = get_object_or_404(get_user_model(), pk=pk)
+        sync_user.delay(user.username)
+        return HttpResponseRedirect(reverse('admin:auth_user_change', args=[user.pk]))
 
     def office(self, obj):
         return obj.profile.office
@@ -260,7 +283,10 @@ class CountryAdmin(admin.ModelAdmin):
     @staticmethod
     def execute_sync(country_pk, synchronizer):
         country = Country.objects.get(pk=country_pk)
-        sync_handler.delay(country.name, synchronizer)
+        if country.schema_name == 'public':
+            vision_sync_task(synchronizers=[synchronizer, ])
+        else:
+            sync_handler.delay(country.name, synchronizer)
         return HttpResponseRedirect(reverse('admin:users_country_change', args=[country.pk]))
 
 

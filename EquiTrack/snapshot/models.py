@@ -25,9 +25,10 @@ class Activity(TimeStampedModel):
         ContentType,
         related_name='activity',
         on_delete=models.CASCADE,
-        db_index=True
+        db_index=True,
+        verbose_name=_('Content Type')
     )
-    target_object_id = models.CharField(max_length=255, db_index=True)
+    target_object_id = models.CharField(max_length=255, db_index=True, verbose_name=_('Target Object ID'))
     target = GenericForeignKey('target_content_type', 'target_object_id')
     action = models.CharField(
         verbose_name=_("Action"),

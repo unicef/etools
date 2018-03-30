@@ -45,6 +45,19 @@ class TPMLocationCSVRenderer(CSVRenderer):
     }
 
 
+class TPMActionPointCSVRenderer(CSVRenderer):
+    header = ['person_responsible', 'author', 'section', 'status', 'locations', 'cp_output', 'due_date']
+    labels = {
+        'person_responsible': _('Person Responsible'),
+        'author': _('Assigned By'),
+        'section': _('Section'),
+        'status': _('Status'),
+        'locations': _('Location(s)'),
+        'cp_output': _('CP Output'),
+        'due_date': _('Due Date'),
+    }
+
+
 class TPMVisitCSVRenderer(CSVRenderer):
     header = [
         'ref', 'visit', 'status', 'activities',
