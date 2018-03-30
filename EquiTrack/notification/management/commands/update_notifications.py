@@ -431,7 +431,7 @@ class Command(BaseCommand):
                 {{ action_point.assigned_by }} has assigned you an action point related to:
                 Implementing Partner: {{ action_point.implementing_partner }}
                 Description: {{ action_point.description }}
-                
+
                 Link: {{ action_point.object_url }}
                 """,
 
@@ -440,7 +440,7 @@ class Command(BaseCommand):
 
                 {% block content %}
                 Dear {{ recipient }},<br/><br/>
-                
+
                 {{ action_point.assigned_by }} has assigned you an action point related to:<br/>
                 Implementing Partner: {{ action_point.implementing_partner }}<br/>
                 Description: {{ action_point.description }}<br/>
@@ -457,7 +457,7 @@ class Command(BaseCommand):
 
                 'content': """
                 Dear {{ recipient }},
-                
+
                 {{ action_point.person_responsible }} has closed the following action point:
                 Reference Number: {{ action_point.reference_number }}
                 Description: {{ action_point.description }}
@@ -467,7 +467,7 @@ class Command(BaseCommand):
 
                 'html_content': """
                 {% extends "email-templates/base" %}
-                
+
                 {% block content %}
                 Dear {{ recipient }},<br/><br/>
 
