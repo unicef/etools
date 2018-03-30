@@ -419,7 +419,7 @@ class Command(BaseCommand):
         EmailTemplate.objects.get_or_create(name='organisations/staff_member/set_password')
 
         # Action Points Module
-        EmailTemplate.objects.get_or_create(
+        EmailTemplate.objects.update_or_create(
             name='action_points/action_point/assigned',
             defaults={
                 'description': 'Action point assigned/reassigned',
@@ -449,7 +449,7 @@ class Command(BaseCommand):
                 """
             }
         )
-        EmailTemplate.objects.get_or_create(
+        EmailTemplate.objects.update_or_create(
             name='action_points/action_point/completed',
             default={
                 'description': 'Action point completed',
