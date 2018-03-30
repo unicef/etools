@@ -48,7 +48,7 @@ class ActionPoint(TimeStampedModel):
 
     STATUSES_DATES = {
         STATUSES.open: 'created',
-        STATUSES.completed: 'date_of_complete'
+        STATUSES.completed: 'date_of_completion'
     }
 
     KEY_EVENTS = Choices((
@@ -84,8 +84,8 @@ class ActionPoint(TimeStampedModel):
     cp_output = models.ForeignKey(Result, verbose_name=_('CP Output'), blank=True, null=True)
     intervention = models.ForeignKey(Intervention, verbose_name=_('PD/SSFA'), blank=True, null=True)
 
-    date_of_complete = MonitorField(verbose_name=_('Date Action Point Completed'), null=True, blank=True,
-                                    monitor='status', when=[STATUSES.completed])
+    date_of_completion = MonitorField(verbose_name=_('Date Action Point Completed'), null=True, blank=True,
+                                      monitor='status', when=[STATUSES.completed])
 
     comments = GenericRelation('django_comments.Comment', object_id_field='object_pk')
 

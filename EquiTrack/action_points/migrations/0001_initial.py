@@ -37,7 +37,7 @@ class Migration(migrations.Migration):
                 ('due_date', models.DateField(blank=True, null=True, verbose_name='Due Date')),
                 ('high_priority', models.CharField(choices=[('yes', 'Yes'), ('no', 'No')], default='no', max_length=10, verbose_name='High Priority')),
                 ('action_taken', models.TextField(blank=True, verbose_name='Action Taken')),
-                ('date_of_complete', model_utils.fields.MonitorField(blank=True, default=django.utils.timezone.now, monitor='status', null=True, verbose_name='Date Action Point Completed', when=set(['completed']))),
+                ('date_of_completion', model_utils.fields.MonitorField(blank=True, default=django.utils.timezone.now, monitor='status', null=True, verbose_name='Date Action Point Completed', when=set(['completed']))),
                 ('assigned_by', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='+', to=settings.AUTH_USER_MODEL, verbose_name='Assigned By')),
                 ('assigned_to', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='assigned_action_points', to=settings.AUTH_USER_MODEL, verbose_name='Assigned To')),
                 ('author', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='created_action_points', to=settings.AUTH_USER_MODEL, verbose_name='Author')),
