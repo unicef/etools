@@ -5,9 +5,14 @@ from datetime import date
 
 from django.utils.translation import ugettext as _
 
-from EquiTrack.validation_mixins import TransitionError, CompleteValidation, check_rigid_fields, StateValidError, \
-    check_required_fields, BasicValidationError
 from partners.permissions import AgreementPermissions
+from validator.exceptions import (
+    BasicValidationError,
+    StateValidationError,
+    TransitionError,
+)
+from validator.utils import check_rigid_fields, check_required_fields
+from validator.validation import CompleteValidation
 
 
 def agreement_transition_to_signed_valid(agreement):
@@ -165,7 +170,7 @@ class AgreementValid(CompleteValidation):
         required_fields = [f for f in self.permissions['required'] if self.permissions['required'][f] is True]
         required_valid, field = check_required_fields(intervention, required_fields)
         if not required_valid:
-            raise StateValidError(['Required fields not completed in {}: {}'.format(intervention.status, field)])
+            raise StateValidationError(['Required fields not completed in {}: {}'.format(intervention.status, field)])
 
     def check_rigid_fields(self, intervention, related=False):
         # this can be set if running in a task and old_instance is not set
@@ -174,7 +179,7 @@ class AgreementValid(CompleteValidation):
         rigid_fields = [f for f in self.permissions['edit'] if self.permissions['edit'][f] is False]
         rigid_valid, field = check_rigid_fields(intervention, rigid_fields, related=related)
         if not rigid_valid:
-            raise StateValidError(['Cannot change fields while in {}: {}'.format(intervention.status, field)])
+            raise StateValidationError(['Cannot change fields while in {}: {}'.format(intervention.status, field)])
 
     def state_draft_valid(self, agreement, user=None):
         # for SSFAs there will be no states valid since the states are forced by the Interventions
@@ -202,5 +207,5 @@ class AgreementValid(CompleteValidation):
         self.check_rigid_fields(agreement, related=True)
         today = date.today()
         if not today > agreement.end:
-            raise StateValidError([_('Today is not after the end date')])
+            raise StateValidationError([_('Today is not after the end date')])
         return True

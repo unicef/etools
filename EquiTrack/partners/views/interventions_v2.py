@@ -22,7 +22,6 @@ from rest_framework.generics import (
 
 from EquiTrack.mixins import ExportModelMixin, QueryStringFilterMixin
 from EquiTrack.renderers import CSVFlatRenderer
-from EquiTrack.validation_mixins import ValidatorViewMixin
 from environment.helpers import tenant_switch_is_active
 from partners.models import (
     Intervention,
@@ -74,6 +73,7 @@ from partners.permissions import PartnershipManagerRepPermission, PartnershipMan
 from reports.models import LowerResult, AppliedIndicator
 from reports.serializers.v2 import LowerResultSimpleCUSerializer, AppliedIndicatorSerializer
 from snapshot.models import Activity
+from validator.mixins import ValidatorViewMixin
 
 
 class InterventionListBaseView(ValidatorViewMixin, ListCreateAPIView):

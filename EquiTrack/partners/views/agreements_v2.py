@@ -19,7 +19,6 @@ from rest_framework.generics import (
 
 from EquiTrack.renderers import CSVFlatRenderer
 from EquiTrack.mixins import ExportModelMixin, QueryStringFilterMixin
-from EquiTrack.validation_mixins import ValidatorViewMixin
 from partners.models import (
     Agreement,
     AgreementAmendment,
@@ -37,12 +36,12 @@ from partners.serializers.agreements_v2 import (
     AgreementDetailSerializer,
     AgreementAmendmentCreateUpdateSerializer
 )
-
 from partners.filters import PartnerScopeFilter
 from partners.permissions import PartnershipManagerRepPermission, PartnershipManagerPermission
 
 from partners.exports_v2 import AgreementCSVRenderer
 from partners.validation.agreements import AgreementValid
+from validator.mixins import ValidatorViewMixin
 
 
 class AgreementListAPIView(QueryStringFilterMixin, ExportModelMixin, ValidatorViewMixin, ListCreateAPIView):

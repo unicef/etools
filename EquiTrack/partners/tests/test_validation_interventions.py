@@ -9,11 +9,6 @@ from unittest import skip
 from mock import patch, Mock
 
 from EquiTrack.tests.cases import BaseTenantTestCase
-from EquiTrack.validation_mixins import (
-    BasicValidationError,
-    StateValidError,
-    TransitionError,
-)
 from funds.tests.factories import FundsReservationHeaderFactory
 from partners.models import (
     Agreement,
@@ -43,6 +38,11 @@ from partners.validation.interventions import (
     transition_to_terminated,
 )
 from users.tests.factories import GroupFactory, UserFactory
+from validator.exceptions import (
+    BasicValidationError,
+    StateValidationError,
+    TransitionError,
+)
 
 
 class TestPartnershipManagerOnly(BaseTenantTestCase):
@@ -717,7 +717,7 @@ class TestInterventionValid(BaseTenantTestCase):
                 mock_check
         ):
             with self.assertRaisesRegexp(
-                    StateValidError,
+                    StateValidationError,
                     "Cannot change fields while"
             ):
                 validator.check_rigid_fields(self.intervention)
@@ -725,7 +725,7 @@ class TestInterventionValid(BaseTenantTestCase):
     def test_state_signed_valid_invalid(self):
         """Invalid if unicef budget is 0"""
         self.intervention.total_unicef_budget = 0
-        with self.assertRaisesRegexp(StateValidError, "UNICEF Cash"):
+        with self.assertRaisesRegexp(StateValidationError, "UNICEF Cash"):
             self.validator.state_signed_valid(self.intervention)
 
     def test_state_signed_valid(self):
@@ -741,7 +741,7 @@ class TestInterventionValid(BaseTenantTestCase):
         self.intervention.total_unicef_budget = 10
         self.intervention.start = self.future_date
         with self.assertRaisesRegexp(
-                StateValidError,
+                StateValidationError,
                 "Today is not after the start date"
         ):
             self.validator.state_active_valid(self.intervention)
@@ -750,7 +750,7 @@ class TestInterventionValid(BaseTenantTestCase):
         """Invalid if unicef budget is 0"""
         self.intervention.total_unicef_budget = 0
         self.intervention.start = datetime.date(2001, 1, 1)
-        with self.assertRaisesRegexp(StateValidError, "UNICEF Cash"):
+        with self.assertRaisesRegexp(StateValidationError, "UNICEF Cash"):
             self.validator.state_active_valid(self.intervention)
 
     def test_state_active_valid(self):
@@ -765,7 +765,7 @@ class TestInterventionValid(BaseTenantTestCase):
         """Invalid if end date is after today"""
         self.intervention.end = self.future_date
         with self.assertRaisesRegexp(
-                StateValidError,
+                StateValidationError,
                 "Today is not after the end date"
         ):
             self.validator.state_ended_valid(self.intervention)

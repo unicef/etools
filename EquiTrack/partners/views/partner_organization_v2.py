@@ -21,8 +21,6 @@ from rest_framework.generics import (
 from EquiTrack.mixins import ExportModelMixin, QueryStringFilterMixin
 from EquiTrack.renderers import CSVFlatRenderer
 from EquiTrack.utils import get_data_from_insight
-from EquiTrack.validation_mixins import ValidatorViewMixin
-
 from partners.models import (
     PartnerStaffMember,
     PartnerOrganization,
@@ -57,6 +55,7 @@ from partners.exports_v2 import (
     PartnerOrganizationCSVRenderer,
     PartnerOrganizationHactCsvRenderer,
 )
+from validator.mixins import ValidatorViewMixin
 
 
 class PartnerOrganizationListAPIView(QueryStringFilterMixin, ExportModelMixin, ListCreateAPIView):
