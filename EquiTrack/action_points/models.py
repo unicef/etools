@@ -23,7 +23,7 @@ from users.models import Section, Office
 
 
 @python_2_unicode_compatible
-class ActionPoint(TimeStampedModel, models.Model):
+class ActionPoint(TimeStampedModel):
     MODULE_CHOICES = Choices(
         ('t2f', 'Trip Management'),
         ('tpm', 'Third Party Monitoring'),
