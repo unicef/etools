@@ -119,7 +119,7 @@ class ActionPoint(TimeStampedModel):
     def __str__(self):
         return self.reference_number
 
-    def get_additional_data(self, diff):
+    def snapshot_additional_data(self, diff):
         key_events = []
         if 'status' in diff:
             key_events.append(self.KEY_EVENTS.status_update)
