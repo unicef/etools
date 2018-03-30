@@ -1260,7 +1260,7 @@ class Command(BaseCommand):
         )
         EmailTemplate.objects.update_or_create(
             name='action_points/action_point/completed',
-            default={
+            defaults={
                 'description': 'Action point completed',
                 'subject': '[eTools] ACTION POINT CLOSURE to {{ action_point.person_responsible }}',
 
