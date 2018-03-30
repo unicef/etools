@@ -24,7 +24,7 @@ class CommentInline(GenericStackedInline):
 
 
 class ActionPointAdmin(SnapshotModelAdmin):
-    list_display = ('get_related_module', 'related_object', 'author', 'assigned_to', 'status', 'date_of_complete')
+    list_display = ('get_related_module', 'related_object', 'author', 'assigned_to', 'status', 'date_of_completion')
     list_filter = ('status', )
     search_fields = ('author__email', 'assigned_to__email')
     inlines = (CommentInline, ActivityInline, )
