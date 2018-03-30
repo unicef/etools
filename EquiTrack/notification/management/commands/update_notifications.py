@@ -510,7 +510,7 @@ class Command(BaseCommand):
                   <body style="background-color:#EEEEEE;font-family:sans-serif;-webkit-font-smoothing:antialiased;
                                font-size:14px;line-height:1.4;margin:0;padding:0;-ms-text-size-adjust:100%;
                                -webkit-text-size-adjust:100%;">
-                    <table border="0" cellpadding="0" cellspacing="0" class="body" 
+                    <table border="0" cellpadding="0" cellspacing="0" class="body"
                            style="border-collapse:separate;mso-table-lspace:0pt;mso-table-rspace:0pt;
                            background-color:#EEEEEE;width:100%;">
                       <tr>
@@ -522,7 +522,7 @@ class Command(BaseCommand):
                           <div class="content" style="box-sizing:border-box;display:block;margin:0 auto;
                                                       max-width:580px;padding:10px 0;">
                             <!-- START MAIN CONTENT AREA -->
-                            <table border="0" cellpadding="0" cellspacing="0" class="main" 
+                            <table border="0" cellpadding="0" cellspacing="0" class="main"
                                    style="border-collapse:separate;mso-table-lspace:0pt;mso-table-rspace:0pt;
                                    background:#FFFFFF;border-radius:3px;width:100%;
                                    box-shadow:0 0 2px rgba(0,0,0,.12), 0 2px 2px rgba(0,0,0,.24);">
@@ -532,13 +532,13 @@ class Command(BaseCommand):
                                                           box-sizing:border-box;width:100%;max-height:56px;margin:0;
                                                           padding:16px 20px 12px;overflow:hidden;
                                                           background-color:#233944;border-radius:3px 3px 0 0;">
-                                  <table border="0" cellpadding="0" cellspacing="0" 
+                                  <table border="0" cellpadding="0" cellspacing="0"
                                          style="border-collapse:separate;mso-table-lspace:0pt;
                                          mso-table-rspace:0pt;width:100%;">
                                     <tr>
                                       <td style="font-family:sans-serif;font-size:14px;vertical-align:top;">
                                         <!-- TODO: update image link with global -->
-                                        <a href="http://etools.unicef.org" target="_blank" 
+                                        <a href="http://etools.unicef.org" target="_blank"
                                            style="color:#0099FF;text-decoration:none;">
                                           <span style="color: white;text-decoration: none;">eTools</span>
                                         </a>
@@ -552,7 +552,7 @@ class Command(BaseCommand):
                               <tr>
                                 <td class="wrapper" style="font-family:sans-serif;font-size:14px;vertical-align:top;
                                                            box-sizing:border-box;padding:20px;">
-                                  <table border="0" cellpadding="0" cellspacing="0" 
+                                  <table border="0" cellpadding="0" cellspacing="0"
                                          style="border-collapse:separate;mso-table-lspace:0pt;
                                          mso-table-rspace:0pt;width:100%;">
                                     <tr>
@@ -566,21 +566,21 @@ class Command(BaseCommand):
                               </tr>
                               <!-- END CONTENT -->
                               <tr>
-                                <td class="footer" 
+                                <td class="footer"
                                     style="font-family:sans-serif;font-size:14px;vertical-align:top;
                                     box-sizing:border-box;width:100%;max-height:56px;padding:14px 20px 14px;
                                     overflow:hidden;background-color:#E5F4FF;border-radius:0 0 3px 3px;">
-                                  <table border="0" cellpadding="0" cellspacing="0" 
+                                  <table border="0" cellpadding="0" cellspacing="0"
                                          style="border-collapse:separate;mso-table-lspace:0pt;
                                          mso-table-rspace:0pt;width:100%;">
                                     <tr>
                                       <td style="font-family:sans-serif;font-size:14px;vertical-align:top;">
                                         <!-- TODO: update image link with global -->
-                                        <a href="http://unicef.org" target="_blank" 
+                                        <a href="http://unicef.org" target="_blank"
                                            style="color:#0099FF;text-decoration:underline;">
-                                           
-                                           <img src='http://etools.unicef.org/static/img/UNICEF_logo_Cyan.png' 
-                                                alt="Unicef" class="logo-unicef" width="101" height="24" 
+
+                                           <img src='http://etools.unicef.org/static/img/UNICEF_logo_Cyan.png'
+                                                alt="Unicef" class="logo-unicef" width="101" height="24"
                                                 style="border:none;-ms-interpolation-mode:bicubic;max-width:100%;
                                                        display:block;margin:0;padding:0;width:101px;height:24px;"/>
                                        </a>
@@ -588,27 +588,27 @@ class Command(BaseCommand):
                                       <td class="links" style="font-family:sans-serif;font-size:14px;
                                                                vertical-align:top;text-align:right;">
                                         <!-- TODO: add links -->
-                                        <!-- 
-                                        <a href="#" target="_blank" 
+                                        <!--
+                                        <a href="#" target="_blank"
                                            style="color:#0099FF;text-decoration:underline;display:inline-block;
                                            margin:0;padding:4px;margin-left:10px;font-size:12px;text-decoration:none;">
                                             Contact
                                         </a>
                                         <span class="br" style="display:none;"><br/></span>
-                                        
-                                        <a href="#" target="_blank" 
+
+                                        <a href="#" target="_blank"
                                            style="color:#0099FF;text-decoration:underline;display:inline-block;
                                            margin:0;padding:4px;margin-left:10px;font-size:12px;text-decoration:none;">
                                             Disclaimer
                                         </a>
                                         <span class="br" style="display:none;"><br/></span>
-                                        
-                                        <a href="#" target="_blank" 
+
+                                        <a href="#" target="_blank"
                                            style="color:#0099FF;text-decoration:underline;display:inline-block;
                                            margin:0;padding:4px;margin-left:10px;font-size:12px;text-decoration:none;">
                                             Privacy Policy
                                         </a>
-                                        <span class="br" style="display:none;"><br/></span> 
+                                        <span class="br" style="display:none;"><br/></span>
                                         -->
                                       </td>
                                     </tr>
@@ -639,24 +639,24 @@ class Command(BaseCommand):
                 'subject': 'eTools Access Token',
                 'content': strip_text("""
                     Dear {{ recipient }},
-    
-                    Please click on this link to sign in to eTools portal: 
-                    
+
+                    Please click on this link to sign in to eTools portal:
+
                     {{ login_link }}
-                    
+
                     Thank you.
                 """),
 
                 'html_content': """
                     {% extends "email-templates/base" %}
-    
+
                     {% block title %}eTools Access Token{% endblock %}
-                    
+
                     {% block content %}
                     <p>Dear {{ recipient }},</p>
-                    
+
                     <p>Please click on <a href="{{ login_link }}">this link</a> to sign in to eTools portal.</p>
-                    
+
                     <p>Thank you.</p>
                     {% endblock %}
                 """
@@ -673,27 +673,27 @@ class Command(BaseCommand):
 
                 'content': strip_text("""
                     Dear Colleague,
-    
+
                     You have been invited to the eTools. To get access to our system follow link.
-                    
+
                     {{ login_link }}
-                    
+
                     eTools Team
                 """),
 
                 'html_content': """
                     {% extends "email-templates/base" %}
-                
+
                     {% block title %}eTools {% if environment %}{{ environment }} {% endif %}- Invitation{% endblock %}
-                    
+
                     {% block content %}
                     <p>Dear Colleague,</p>
-                    
+
                     <p>
-                        You have been invited to the <b>eTools</b>. 
+                        You have been invited to the <b>eTools</b>.
                         To get access to our system follow <a href="{{ login_link }}">link</a>.
                     </p>
-                    
+
                     <p style="text-align:right">eTools Team</p>
                     {% endblock %}
                 """
@@ -710,32 +710,32 @@ class Command(BaseCommand):
 
                 'content': strip_text("""
                     Dear {{ staff_member }},
-    
+
                     UNICEF is granting you access to the Financial Assurance Module in eTools.
                     Please refer below for additional information.
-                    
+
                     Engagement Type: {{ engagement.engagement_type }}
                     Partner: {{ engagement.partner }}
-                    
+
                     Please click this link to complete the report: {{ engagement.object_url }}
-                    
+
                     Thank you.
                 """),
 
                 'html_content': """
                     {% extends "email-templates/base" %}
-    
+
                     {% block content %}
                     Dear {{ staff_member }},<br/><br/>
-                    
+
                     UNICEF is granting you access to the Financial Assurance Module in eTools.<br/>
                     Please refer below for additional information.<br/><br/>
-                    
+
                     Engagement Type: {{ engagement.engagement_type }}<br/>
                     Partner: {{ engagement.partner }}<br/><br/>
-                    
+
                     Please click <a href="{{ engagement.object_url }}">this link</a> to complete the report.<br/><br/>
-                    
+
                     Thank you.
                     {% endblock %}
                 """
@@ -750,32 +750,32 @@ class Command(BaseCommand):
 
                 'content': strip_text("""
                     Dear {{ focal_point }},
-    
-                    {{ engagement.auditor_firm }} has completed the final report for {{ engagement.engagement_type }}. 
+
+                    {{ engagement.auditor_firm }} has completed the final report for {{ engagement.engagement_type }}.
                     Please refer below for additional information.
-                    
+
                     Engagement Type: {{ engagement.engagement_type }}
                     Partner: {{ engagement.partner }}
-                    
+
                     Please click this link to view the final report: {{ engagement.object_url }}
-                    
+
                     Thank you.
                 """),
 
                 'html_content': """
                     {% extends "email-templates/base" %}
-    
+
                     {% block content %}
                     Dear {{ focal_point }},<br/><br/>
-                    
-                    {{ engagement.auditor_firm }} has completed the final report for {{ engagement.engagement_type }}. 
+
+                    {{ engagement.auditor_firm }} has completed the final report for {{ engagement.engagement_type }}.
                     Please refer below for additional information.<br/><br/>
-                    
+
                     Engagement Type: {{ engagement.engagement_type }}<br/>
                     Partner: {{ engagement.partner }}<br/><br/>
-                    
+
                     Please click <a href="{{ engagement.object_url }}">this link</a> to view the final report.<br/><br/>
-                    
+
                     Thank you.
                     {% endblock %}
                 """
@@ -789,30 +789,30 @@ class Command(BaseCommand):
 
                 'content': strip_text("""
                     Dear {{ action_point.person_responsible }},
-    
-                    {{ action_point.author }} has assigned you an action point. 
-                    
+
+                    {{ action_point.author }} has assigned you an action point.
+
                     Engagement ID: {{ engagement.unique_id }}
                     Category: {{ action_point.category }}
                     Due Date: {{ action_point.due_date}}
-                    Link: {{ engagement.object_url }} 
-                    
+                    Link: {{ engagement.object_url }}
+
                     Thank you.
                 """),
 
                 'html_content': """
                     {% extends "email-templates/base" %}
-    
+
                     {% block content %}
                     Dear {{ action_point.person_responsible }},<br/><br/>
-                    
+
                     {{ action_point.author }} has assigned you an action point. <br/><br/>
-                    
+
                     Engagement ID: {{ engagement.unique_id }}<br/>
                     Category: {{ action_point.category }}<br/>
                     Due Date: {{ action_point.due_date}}<br/>
                     Link: <a href="{{ engagement.object_url }}">click here</a><br/><br/>
-                    
+
                     Thank you.
                     {% endblock %}
                 """
@@ -826,27 +826,27 @@ class Command(BaseCommand):
 
                 'content': strip_text("""
                     Dear {{ staff_member }},
-    
+
                     UNICEF has assingned a {{ engagement.engagement_type }} to you.
                     Please click link to gain access to the UNICEF Auditor Portal.
-                    
+
                     {{ login_link }}
-                    
+
                     eTools Team
                 """),
 
                 'html_content': """
                     {% extends "email-templates/base" %}
-    
+
                     {% block title %}UNICEF Auditor Portal Access{% endblock %}
-                    
+
                     {% block content %}
-                    
+
                     <p>Dear {{ staff_member }},</p>
-                    
+
                     <p>UNICEF has assingned a {{ engagement.engagement_type }} to you.
                     Please click <a href="{{ login_link }}">link</a> to gain access to the UNICEF Auditor Portal.</p>
-                    
+
                     <p style="text-align:right">eTools Team</p>
                     {% endblock %}
                 """
@@ -862,23 +862,23 @@ class Command(BaseCommand):
 
                 'content': strip_text("""
                     Dear {{ visit.tpm_partner }},
-    
+
                     UNICEF is requesting a Monitoring/Verification Visit for {{ visit.partners }}.
                     Please refer below for additional information.
                     {% for activity in visit.tpm_activities %}
                     PD/SSFA/ToR: {{ activity.intervention }}
                     CP Output {{ activity.cp_output }}, {{ activity.locations }}
-                    
+
                     {% endfor %}
                     Please click this link for additional information and documents related to the visit:
                     {{ visit.object_url }}
-                    
+
                     Thank you.
                 """),
 
                 'html_content': """
                     {% extends "email-templates/base" %}
-    
+
                     {% block content %}
                     Dear {{ visit.tpm_partner }},<br/>
                     <br/>
@@ -891,7 +891,7 @@ class Command(BaseCommand):
                     <b>Section</b>: {{ activity.section }}<br/><br/>
                     {% endfor %}
                     <br/>
-                    Please click this link for additional information and documents related to the visit: 
+                    Please click this link for additional information and documents related to the visit:
                     <a href="{{ visit.object_url }}">{{ visit.object_url }}</a><br/>
                     <br/>
                     Thank you.
@@ -908,24 +908,24 @@ class Command(BaseCommand):
                            "{{ visit.reference_number }}",
                 "content": strip_text("""
                     Dear {{ recipient }},
-            
-                    TPM {{ visit.tpm_partner }} has rejected your request for a Monitoring/Verifcation visit to 
+
+                    TPM {{ visit.tpm_partner }} has rejected your request for a Monitoring/Verifcation visit to
                     Implementing Partner{% if visit.multiple_tpm_activities %}s{% endif %} {{ visit.partners }}
-                    
+
                     Please click this link for additional information and reason for rejection {{ visit.object_url }}
-                    
+
                     Thank you.
                 """),
                 "html_content": """
                     {% extends "email-templates/base" %}
-                    
+
                     {% block content %}
                     Dear {{ recipient }},<br/>
                     <br/>
-                    TPM <b>{{ visit.tpm_partner }}</b> has rejected your request for a Monitoring/Verifcation visit to 
+                    TPM <b>{{ visit.tpm_partner }}</b> has rejected your request for a Monitoring/Verifcation visit to
                     Implementing Partner{% if visit.multiple_tpm_activities %}s{% endif %} <b>{{ visit.partners }}</b>.
                     <br/><br/>
-                    Please click this link for additional information and reason for rejection 
+                    Please click this link for additional information and reason for rejection
                     <a href="{{ visit.object_url }}">{{ visit.object_url }}</a><br/>
                     <br/>
                     Thank you.
@@ -943,28 +943,28 @@ class Command(BaseCommand):
 
                 "content": strip_text("""
                     Dear {{ recipient }},
-                
-                    TPM {{ visit.tpm_partner }} has accepted your request for a Monitoring/Verifcation visit to 
+
+                    TPM {{ visit.tpm_partner }} has accepted your request for a Monitoring/Verifcation visit to
                     Implementing Partner{% if visit.multiple_tpm_activities %}s{% endif %} {{ visit.partners }}
-                    
+
                     Please click this link for additional information {{ visit.object_url }}
-                    
+
                     Thank you.
                 """),
 
                 "html_content": """
                     {% extends "email-templates/base" %}
-                    
+
                     {% block content %}
                     Dear {{ recipient }},<br/><br/>
-                    
-                    TPM <b>{{ visit.tpm_partner }}</b> has accepted your request for a Monitoring/Verifcation visit to 
+
+                    TPM <b>{{ visit.tpm_partner }}</b> has accepted your request for a Monitoring/Verifcation visit to
                     Implementing Partner{% if visit.multiple_tpm_activities %}s{% endif %} <b>{{ visit.partners }}</b>.
                     <br/><br/>
-                    
-                    Please click this link for additional information 
+
+                    Please click this link for additional information
                     <a href="{{ visit.object_url }}">{{ visit.object_url }}</a><br/><br/>
-                    
+
                     Thank you.
                     {% endblock %}
                 """,
@@ -980,29 +980,29 @@ class Command(BaseCommand):
                 'content': strip_text("""
                     Dear {{ recipient }},
 
-                    {{ visit.tpm_partner }} has submited the final report for the Monitoring/Verification 
+                    {{ visit.tpm_partner }} has submited the final report for the Monitoring/Verification
                     visit{% if partnerships %} requested for {{ visit.interventions }}{% endif %}.
                     Please refer below for additional information.
-                    
+
                     {% for activity in visit.tpm_activities %}
                     PD/SSFA/ToR: {{ activity.intervention}}
                     CP Output: {{ activity.cp_output }}
                     Location: {{ activity.locations }}
                     Section: {{ activity.section }}
                     {% endfor %}
-                    
-                    Please click this link to view the final report: {{ visit.object_url }} and take 
+
+                    Please click this link to view the final report: {{ visit.object_url }} and take
                     the appropriate action {Accept/Request for more information}
                     Thank you.
                 """),
 
                 'html_content': """
                     {% extends "email-templates/base" %}
-    
+
                     {% block content %}
                     Dear {{ recipient }},<br/>
                     <br/>
-                    <b>{{ visit.tpm_partner }}</b> has submited the final report for the Monitoring/Verification 
+                    <b>{{ visit.tpm_partner }}</b> has submited the final report for the Monitoring/Verification
                     visit{% if partnerships %} requested for <b>{{ visit.interventions }}</b>{% endif %}.<br/>
                     Please refer below for additional information.<br/>
                     <br/>
@@ -1014,7 +1014,7 @@ class Command(BaseCommand):
                     {% endfor %}
                     <br/>
                     Please click this link to view the final report:
-                    <a href="{{ visit.object_url }}">{{ visit.object_url }}</a> and take 
+                    <a href="{{ visit.object_url }}">{{ visit.object_url }}</a> and take
                     the appropriate action {Accept/Request for more information}<br/><br/>
                     Thank you.
                     {% endblock %}
@@ -1030,19 +1030,19 @@ class Command(BaseCommand):
                            '{{ visit.reference_number }}',
 
                 'content': strip_text("""
-                    UNICEF has requested additional information on  the final report submited for 
-                    the Monitoring/Verification visit to 
+                    UNICEF has requested additional information on  the final report submited for
+                    the Monitoring/Verification visit to
                     Implementing Partner{% if visit.multiple_tpm_activities %}s{% endif %} {{ visit.partners }}.
                     Please refer below for additional information.
-                    
+
                     {% for activity in visit.tpm_activities %}
                     PD/SSFA/ToR: {{ activity.intervention}}
                     CP Output: {{ activity.cp_output }}
                     Location: {{ activity.locations }}
                     Section: {{ activity.section }}
-                    
+
                     {% endfor %}
-                    
+
                     Please click this link to view the additional information/clarifications requested:
                     {{ visit.object_url }}
                     Thank you.
@@ -1050,12 +1050,12 @@ class Command(BaseCommand):
 
                 'html_content': """
                     {% extends "email-templates/base" %}
-    
+
                     {% block content %}
                     Dear {{ recipient }},<br/>
                     <br/>
-                    UNICEF has requested additional information on  the final report submited for 
-                    the Monitoring/Verification visit to 
+                    UNICEF has requested additional information on  the final report submited for
+                    the Monitoring/Verification visit to
                     Implementing Partner{% if visit.multiple_tpm_activities %}s{% endif %} <b>{{ visit.partners }}</b>.
                     <br/>
                     Please refer below for additional information.<br/>
@@ -1083,29 +1083,29 @@ class Command(BaseCommand):
                            '{{ visit.reference_number }}',
 
                 'content': strip_text("""
-                    UNICEF approved final report submited for the Monitoring/Verification visit to 
+                    UNICEF approved final report submited for the Monitoring/Verification visit to
                     Implementing Partner{% if visit.multiple_tpm_activities %}s{% endif %} {{ visit.partners }}.
                     Please refer below for additional information.
-                    
+
                     {% for activity in visit.tpm_activities %}
                     PD/SSFA/ToR: {{ activity.intervention}}
                     CP Output: {{ activity.cp_output }}
                     Location: {{ activity.locations }}
                     Section: {{ activity.section }}
-                    
+
                     {% endfor %}
-                    
+
                     Please click this link for additional information: {{ visit.object_url }}
                     Thank you.
                 """),
 
                 'html_content': """
                     {% extends "email-templates/base" %}
-    
+
                     {% block content %}
                     Dear {{ recipient }},<br/>
                     <br/>
-                    UNICEF approved final report submited for the Monitoring/Verification visit to 
+                    UNICEF approved final report submited for the Monitoring/Verification visit to
                     Implementing Partner{% if visit.multiple_tpm_activities %}s{% endif %} <b>{{ visit.partners }}</b>.
                     <br/>
                     Please refer below for additional information.<br/>
@@ -1133,17 +1133,17 @@ class Command(BaseCommand):
                            '{{ visit.reference_number }}',
 
                 'content': strip_text("""
-                    UNICEF approved final report submited for the Monitoring/Verification visit to 
+                    UNICEF approved final report submited for the Monitoring/Verification visit to
                     Implementing Partner{% if visit.multiple_tpm_activities %}s{% endif %} {{ visit.partners }}.
                     Please refer below for additional information.
-                    
+
                     {% for activity in visit.tpm_activities %}
                     PD/SSFA/ToR: {{ activity.intervention}}
                     CP Output: {{ activity.cp_output }}
                     Location: {{ activity.locations }}
                     Section: {{ activity.section }}
                     {% endfor %}
-                    
+
                     Please click this link for additional information: {{ visit.object_url }}
                     Thank you.
                 """),
@@ -1154,7 +1154,7 @@ class Command(BaseCommand):
                     {% block content %}
                     Dear {{ recipient }},<br/>
                     <br/>
-                    UNICEF approved final report submited for the Monitoring/Verification visit to 
+                    UNICEF approved final report submited for the Monitoring/Verification visit to
                     Implementing Partner{% if visit.multiple_tpm_activities %}s{% endif %} <b>{{ visit.partners }}</b>.
                     <br/>
                     Please refer below for additional information.<br/>
@@ -1166,7 +1166,7 @@ class Command(BaseCommand):
                     <b>Section</b>: {{ activity.section }}<br/><br/>
                     {% endfor %}
                     <br/>
-                    Please click this link for additional information: 
+                    Please click this link for additional information:
                     <a href="{{ visit.object_url }}">{{ visit.object_url }}</a><br/><br/>
                     Thank you.
                     {% endblock %}
@@ -1182,31 +1182,31 @@ class Command(BaseCommand):
 
                 'content': strip_text("""
                     Dear {{ action_point.person_responsible.first_name }},
-    
-                    {{ action_point.author.get_full_name }} has assigned you an action point related to 
+
+                    {{ action_point.author.get_full_name }} has assigned you an action point related to
                     Monitoring/Verification Visit {{ visit.reference_number }}.
-                    
+
                     Implementing Partner{% if visit.multiple_tpm_activities %}s{% endif %} {{ visit.partners }}.
                     Please refer below for additional information.
-                    
+
                     {% for activity in visit.tpm_activities %}
                     PD/SSFA/ToR: {{ activity.intervention}}
                     CP Output: {{ activity.cp_output }}
                     Location: {{ activity.locations }}
                     Section: {{ activity.section }}
                     {% endfor %}
-                    
+
                     Please click this link for additional information: {{ visit.object_url }}
                     Thank you.
                 """),
 
                 'html_content': """
                     {% extends "email-templates/base" %}
-    
+
                     {% block content %}
                     Dear {{ action_point.person_responsible.first_name }},<br/>
                     <br/>
-                    <b>{{ action_point.author.get_full_name }}</b> has assigned you an action point related to 
+                    <b>{{ action_point.author.get_full_name }}</b> has assigned you an action point related to
                     Monitoring/Verification Visit {{ visit.reference_number }}.<br/>
                     Implementing Partner{% if visit.multiple_tpm_activities %}s{% endif %} <b>{{ visit.partners }}</b>.
                     <br/>
@@ -1218,7 +1218,7 @@ class Command(BaseCommand):
                     <b>Locations</b>: {{ activity.locations }}</br>
                     <b>Section</b>: {{ activity.section }}<br/><br/>
                     {% endfor %}
-                    
+
                     Please click this link for additional information:
                     <a href="{{ visit.object_url }}">{{ visit.object_url }}</a><br/><br/>
                     Thank you.
