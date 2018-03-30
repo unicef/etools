@@ -14,6 +14,7 @@ certifi==2018.1.18
 cffi==1.11.4
 configparser==3.5.0       # via flake8
 contextlib2==0.5.5
+cookies==2.2.1            # via responses
 coreapi==2.3.3
 coreschema==0.0.4
 coverage==4.2
@@ -111,6 +112,7 @@ reportlab==3.3.0
 repoze.who==2.3
 requests-oauthlib==0.8.0
 requests==2.11.1
+responses==0.8.1
 simplejson==3.13.2
 six==1.11.0
 sqlparse==0.2.2
