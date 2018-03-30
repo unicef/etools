@@ -827,7 +827,8 @@ class Command(BaseCommand):
                 'content': strip_text("""
                     Dear {{ staff_member }},
     
-                    UNICEF has assingned a {{ engagement.engagement_type }} to you. Please click link to gain access to the UNICEF Auditor Portal.
+                    UNICEF has assingned a {{ engagement.engagement_type }} to you.
+                    Please click link to gain access to the UNICEF Auditor Portal.
                     
                     {{ login_link }}
                     
@@ -843,7 +844,8 @@ class Command(BaseCommand):
                     
                     <p>Dear {{ staff_member }},</p>
                     
-                    <p>UNICEF has assingned a {{ engagement.engagement_type }} to you. Please click <a href="{{ login_link }}">link</a> to gain access to the UNICEF Auditor Portal.</p>
+                    <p>UNICEF has assingned a {{ engagement.engagement_type }} to you.
+                    Please click <a href="{{ login_link }}">link</a> to gain access to the UNICEF Auditor Portal.</p>
                     
                     <p style="text-align:right">eTools Team</p>
                     {% endblock %}
@@ -852,14 +854,377 @@ class Command(BaseCommand):
         )
 
         # TPM Notifications
-        EmailTemplate.objects.get_or_create(name='tpm/visit/assign')
-        EmailTemplate.objects.get_or_create(name='tpm/visit/reject')
-        EmailTemplate.objects.get_or_create(name='tpm/visit/accept')
-        EmailTemplate.objects.get_or_create(name='tpm/visit/generate_report')
-        EmailTemplate.objects.get_or_create(name='tpm/visit/report')
-        EmailTemplate.objects.get_or_create(name='tpm/visit/report_rejected')
-        EmailTemplate.objects.get_or_create(name='tpm/visit/approve_report')
-        EmailTemplate.objects.get_or_create(name='tpm/visit/approve_report_tpm')
-        EmailTemplate.objects.get_or_create(name='tpm/visit/action_point_assigned')
+        EmailTemplate.objects.update_or_create(
+            name='tpm/visit/assign',
+            defaults={
+                'description': 'Visit assigned. TPM should be notified.',
+                'subject': '[TPM Portal] TPM Visit Request for {{ visit.partners }}; {{ visit.reference_number }}',
+
+                'content': strip_text("""
+                    Dear {{ visit.tpm_partner }},
+    
+                    UNICEF is requesting a Monitoring/Verification Visit for {{ visit.partners }}.
+                    Please refer below for additional information.
+                    {% for activity in visit.tpm_activities %}
+                    PD/SSFA/ToR: {{ activity.intervention }}
+                    CP Output {{ activity.cp_output }}, {{ activity.locations }}
+                    
+                    {% endfor %}
+                    Please click this link for additional information and documents related to the visit:
+                    {{ visit.object_url }}
+                    
+                    Thank you.
+                """),
+
+                'html_content': """
+                    {% extends "email-templates/base" %}
+    
+                    {% block content %}
+                    Dear {{ visit.tpm_partner }},<br/>
+                    <br/>
+                    UNICEF is requesting a Monitoring/Verification Visit for <b>{{ visit.partners }}</b>. <br/><br/>
+                    Please refer below for additional information.<br/><br/>
+                    {% for activity in visit.tpm_activities %}
+                    <b>PD/SSFA/ToR</b>: {{ activity.intervention }}<br/>
+                    <b>CP Output</b> {{ activity.cp_output|default:"unassigned" }}<br/>
+                    <b>Locations</b>: {{ activity.locations }}</br>
+                    <b>Section</b>: {{ activity.section }}<br/><br/>
+                    {% endfor %}
+                    <br/>
+                    Please click this link for additional information and documents related to the visit: 
+                    <a href="{{ visit.object_url }}">{{ visit.object_url }}</a><br/>
+                    <br/>
+                    Thank you.
+                    {% endblock %}
+                """
+            }
+        )
+
+        EmailTemplate.objects.update_or_create(
+            name='tpm/visit/reject',
+            defaults={
+                'description': 'TPM rejected visit. Notify focal points.',
+                "subject": "{{ visit.tpm_partner }} has rejected the Monitoring/Verification Visit Request "
+                           "{{ visit.reference_number }}",
+                "content": strip_text("""
+                    Dear {{ recipient }},
+            
+                    TPM {{ visit.tpm_partner }} has rejected your request for a Monitoring/Verifcation visit to 
+                    Implementing Partner{% if visit.multiple_tpm_activities %}s{% endif %} {{ visit.partners }}
+                    
+                    Please click this link for additional information and reason for rejection {{ visit.object_url }}
+                    
+                    Thank you.
+                """),
+                "html_content": """
+                    {% extends "email-templates/base" %}
+                    
+                    {% block content %}
+                    Dear {{ recipient }},<br/>
+                    <br/>
+                    TPM <b>{{ visit.tpm_partner }}</b> has rejected your request for a Monitoring/Verifcation visit to 
+                    Implementing Partner{% if visit.multiple_tpm_activities %}s{% endif %} <b>{{ visit.partners }}</b>.
+                    <br/><br/>
+                    Please click this link for additional information and reason for rejection 
+                    <a href="{{ visit.object_url }}">{{ visit.object_url }}</a><br/>
+                    <br/>
+                    Thank you.
+                    {% endblock %}
+                """,
+            }
+        )
+
+        EmailTemplate.objects.update_or_create(
+            name='tpm/visit/accept',
+            defaults={
+                "description": "TPM accepted visit. Notify focal points & PME.",
+                "subject": "{{ visit.tpm_partner }} has accepted the Monitoring/Verification Visit Request "
+                           "{{ visit.reference_number }}",
+
+                "content": strip_text("""
+                    Dear {{ recipient }},
+                
+                    TPM {{ visit.tpm_partner }} has accepted your request for a Monitoring/Verifcation visit to 
+                    Implementing Partner{% if visit.multiple_tpm_activities %}s{% endif %} {{ visit.partners }}
+                    
+                    Please click this link for additional information {{ visit.object_url }}
+                    
+                    Thank you.
+                """),
+
+                "html_content": """
+                    {% extends "email-templates/base" %}
+                    
+                    {% block content %}
+                    Dear {{ recipient }},<br/><br/>
+                    
+                    TPM <b>{{ visit.tpm_partner }}</b> has accepted your request for a Monitoring/Verifcation visit to 
+                    Implementing Partner{% if visit.multiple_tpm_activities %}s{% endif %} <b>{{ visit.partners }}</b>.
+                    <br/><br/>
+                    
+                    Please click this link for additional information 
+                    <a href="{{ visit.object_url }}">{{ visit.object_url }}</a><br/><br/>
+                    
+                    Thank you.
+                    {% endblock %}
+                """,
+            }
+        )
+
+        EmailTemplate.objects.update_or_create(
+            name='tpm/visit/report',
+            defaults={
+                'description': 'TPM finished with visit report.  Notify PME & focal points.',
+                'subject': '{{ visit.tpm_partner }} has submited the final report for {{ visit.reference_number }}',
+
+                'content': strip_text("""
+                    Dear {{ recipient }},
+
+                    {{ visit.tpm_partner }} has submited the final report for the Monitoring/Verification 
+                    visit{% if partnerships %} requested for {{ visit.interventions }}{% endif %}.
+                    Please refer below for additional information.
+                    
+                    {% for activity in visit.tpm_activities %}
+                    PD/SSFA/ToR: {{ activity.intervention}}
+                    CP Output: {{ activity.cp_output }}
+                    Location: {{ activity.locations }}
+                    Section: {{ activity.section }}
+                    {% endfor %}
+                    
+                    Please click this link to view the final report: {{ visit.object_url }} and take 
+                    the appropriate action {Accept/Request for more information}
+                    Thank you.
+                """),
+
+                'html_content': """
+                    {% extends "email-templates/base" %}
+    
+                    {% block content %}
+                    Dear {{ recipient }},<br/>
+                    <br/>
+                    <b>{{ visit.tpm_partner }}</b> has submited the final report for the Monitoring/Verification 
+                    visit{% if partnerships %} requested for <b>{{ visit.interventions }}</b>{% endif %}.<br/>
+                    Please refer below for additional information.<br/>
+                    <br/>
+                    {% for activity in visit.tpm_activities %}
+                    <b>PD/SSFA/ToR</b>: {{ activity.intervention }}<br/>
+                    <b>CP Output</b> {{ activity.cp_output|default:"unassigned" }}<br/>
+                    <b>Locations</b>: {{ activity.locations }}</br>
+                    <b>Section</b>: {{ activity.section }}<br/><br/>
+                    {% endfor %}
+                    <br/>
+                    Please click this link to view the final report:
+                    <a href="{{ visit.object_url }}">{{ visit.object_url }}</a> and take 
+                    the appropriate action {Accept/Request for more information}<br/><br/>
+                    Thank you.
+                    {% endblock %}
+                """
+            }
+        )
+
+        EmailTemplate.objects.update_or_create(
+            name='tpm/visit/report_rejected',
+            defaults={
+                'description': 'Report was rejected. Notify TPM.',
+                'subject': 'Request for more information on the Final report for the Monitoring/Verification Visit '
+                           '{{ visit.reference_number }}',
+
+                'content': strip_text("""
+                    UNICEF has requested additional information on  the final report submited for 
+                    the Monitoring/Verification visit to 
+                    Implementing Partner{% if visit.multiple_tpm_activities %}s{% endif %} {{ visit.partners }}.
+                    Please refer below for additional information.
+                    
+                    {% for activity in visit.tpm_activities %}
+                    PD/SSFA/ToR: {{ activity.intervention}}
+                    CP Output: {{ activity.cp_output }}
+                    Location: {{ activity.locations }}
+                    Section: {{ activity.section }}
+                    
+                    {% endfor %}
+                    
+                    Please click this link to view the additional information/clarifications requested:
+                    {{ visit.object_url }}
+                    Thank you.
+                """),
+
+                'html_content': """
+                    {% extends "email-templates/base" %}
+    
+                    {% block content %}
+                    Dear {{ recipient }},<br/>
+                    <br/>
+                    UNICEF has requested additional information on  the final report submited for 
+                    the Monitoring/Verification visit to 
+                    Implementing Partner{% if visit.multiple_tpm_activities %}s{% endif %} <b>{{ visit.partners }}</b>.
+                    <br/>
+                    Please refer below for additional information.<br/>
+                    <br/>
+                    {% for activity in visit.tpm_activities %}
+                    <b>PD/SSFA/ToR</b>: {{ activity.intervention }}<br/>
+                    <b>CP Output</b> {{ activity.cp_output|default:"unassigned" }}<br/>
+                    <b>Locations</b>: {{ activity.locations }}</br>
+                    <b>Section</b>: {{ activity.section }}<br/><br/>
+                    {% endfor %}
+                    <br/>
+                    Please click this link to view the additional information/clarifications requested:
+                    <a href="{{ visit.object_url }}">{{ visit.object_url }}</a><br/><br/>
+                    Thank you.
+                    {% endblock %}
+                """
+            }
+        )
+
+        EmailTemplate.objects.update_or_create(
+            name='tpm/visit/approve_report_tpm',
+            defaults={
+                'description': 'Report was approved. Notify TPM.',
+                'subject': 'UNICEF approved Final report for the Monitoring/Verification Visit '
+                           '{{ visit.reference_number }}',
+
+                'content': strip_text("""
+                    UNICEF approved final report submited for the Monitoring/Verification visit to 
+                    Implementing Partner{% if visit.multiple_tpm_activities %}s{% endif %} {{ visit.partners }}.
+                    Please refer below for additional information.
+                    
+                    {% for activity in visit.tpm_activities %}
+                    PD/SSFA/ToR: {{ activity.intervention}}
+                    CP Output: {{ activity.cp_output }}
+                    Location: {{ activity.locations }}
+                    Section: {{ activity.section }}
+                    
+                    {% endfor %}
+                    
+                    Please click this link for additional information: {{ visit.object_url }}
+                    Thank you.
+                """),
+
+                'html_content': """
+                    {% extends "email-templates/base" %}
+    
+                    {% block content %}
+                    Dear {{ recipient }},<br/>
+                    <br/>
+                    UNICEF approved final report submited for the Monitoring/Verification visit to 
+                    Implementing Partner{% if visit.multiple_tpm_activities %}s{% endif %} <b>{{ visit.partners }}</b>.
+                    <br/>
+                    Please refer below for additional information.<br/>
+                    <br/>
+                    {% for activity in visit.tpm_activities %}
+                    <b>PD/SSFA/ToR</b>: {{ activity.intervention }}<br/>
+                    <b>CP Output</b> {{ activity.cp_output|default:"unassigned" }}<br/>
+                    <b>Locations</b>: {{ activity.locations }}</br>
+                    <b>Section</b>: {{ activity.section }}<br/><br/>
+                    {% endfor %}
+                    <br/>
+                    Please click this link for additional information:
+                    <a href="{{ visit.object_url }}">{{ visit.object_url }}</a><br/><br/>
+                    Thank you.
+                    {% endblock %}
+                """
+            }
+        )
+
+        EmailTemplate.objects.update_or_create(
+            name='tpm/visit/approve_report',
+            defaults={
+                'description': 'Report was approved. Notify UNICEF focal points.',
+                'subject': 'UNICEF approved Final report for the Monitoring/Verification Visit '
+                           '{{ visit.reference_number }}',
+
+                'content': strip_text("""
+                    UNICEF approved final report submited for the Monitoring/Verification visit to 
+                    Implementing Partner{% if visit.multiple_tpm_activities %}s{% endif %} {{ visit.partners }}.
+                    Please refer below for additional information.
+                    
+                    {% for activity in visit.tpm_activities %}
+                    PD/SSFA/ToR: {{ activity.intervention}}
+                    CP Output: {{ activity.cp_output }}
+                    Location: {{ activity.locations }}
+                    Section: {{ activity.section }}
+                    {% endfor %}
+                    
+                    Please click this link for additional information: {{ visit.object_url }}
+                    Thank you.
+                """),
+
+                'html_content': """
+                    {% extends "email-templates/base" %}
+
+                    {% block content %}
+                    Dear {{ recipient }},<br/>
+                    <br/>
+                    UNICEF approved final report submited for the Monitoring/Verification visit to 
+                    Implementing Partner{% if visit.multiple_tpm_activities %}s{% endif %} <b>{{ visit.partners }}</b>.
+                    <br/>
+                    Please refer below for additional information.<br/>
+                    <br/>
+                    {% for activity in visit.tpm_activities %}
+                    <b>PD/SSFA/ToR</b>: {{ activity.intervention }}<br/>
+                    <b>CP Output</b> {{ activity.cp_output|default:"unassigned" }}<br/>
+                    <b>Locations</b>: {{ activity.locations }}</br>
+                    <b>Section</b>: {{ activity.section }}<br/><br/>
+                    {% endfor %}
+                    <br/>
+                    Please click this link for additional information: 
+                    <a href="{{ visit.object_url }}">{{ visit.object_url }}</a><br/><br/>
+                    Thank you.
+                    {% endblock %}
+                """
+            }
+        )
+
+        EmailTemplate.objects.update_or_create(
+            name='tpm/visit/action_point_assigned',
+            defaults={
+                'description': 'Action point assigned to visit. Person responsible should be notified.',
+                'subject': '[eTools] ACTION POINT ASSIGNED to {{ action_point.person_responsible }}',
+
+                'content': strip_text("""
+                    Dear {{ action_point.person_responsible.first_name }},
+    
+                    {{ action_point.author.get_full_name }} has assigned you an action point related to 
+                    Monitoring/Verification Visit {{ visit.reference_number }}.
+                    
+                    Implementing Partner{% if visit.multiple_tpm_activities %}s{% endif %} {{ visit.partners }}.
+                    Please refer below for additional information.
+                    
+                    {% for activity in visit.tpm_activities %}
+                    PD/SSFA/ToR: {{ activity.intervention}}
+                    CP Output: {{ activity.cp_output }}
+                    Location: {{ activity.locations }}
+                    Section: {{ activity.section }}
+                    {% endfor %}
+                    
+                    Please click this link for additional information: {{ visit.object_url }}
+                    Thank you.
+                """),
+
+                'html_content': """
+                    {% extends "email-templates/base" %}
+    
+                    {% block content %}
+                    Dear {{ action_point.person_responsible.first_name }},<br/>
+                    <br/>
+                    <b>{{ action_point.author.get_full_name }}</b> has assigned you an action point related to 
+                    Monitoring/Verification Visit {{ visit.reference_number }}.<br/>
+                    Implementing Partner{% if visit.multiple_tpm_activities %}s{% endif %} <b>{{ visit.partners }}</b>.
+                    <br/>
+                    Please refer below for additional information.<br/>
+                    <br/>
+                    {% for activity in visit.tpm_activities %}
+                    <b>PD/SSFA/ToR</b>: {{ activity.intervention }}<br/>
+                    <b>CP Output</b> {{ activity.cp_output|default:"unassigned" }}<br/>
+                    <b>Locations</b>: {{ activity.locations }}</br>
+                    <b>Section</b>: {{ activity.section }}<br/><br/>
+                    {% endfor %}
+                    
+                    Please click this link for additional information:
+                    <a href="{{ visit.object_url }}">{{ visit.object_url }}</a><br/><br/>
+                    Thank you.
+                    {% endblock %}
+                """
+            }
+        )
 
         logger.info(u'Command finished')
