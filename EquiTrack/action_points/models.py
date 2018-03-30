@@ -92,7 +92,7 @@ class ActionPoint(TimeStampedModel):
     history = GenericRelation('snapshot.Activity', object_id_field='target_object_id',
                               content_type_field='target_content_type')
 
-    tracker = FieldTracker()
+    tracker = FieldTracker(fields=['assigned_to'])
 
     class Meta:
         ordering = ('related_module', 'related_content_type', 'related_object_id')

@@ -1,3 +1,5 @@
+from __future__ import absolute_import, division, print_function, unicode_literals
+
 import factory.fuzzy
 from django.core import mail
 from django.core.management import call_command
@@ -36,4 +38,5 @@ class ActionPointsEmailsTestCase(BaseTenantTestCase):
         action_point = ActionPointFactory()
         mail.outbox = []
         action_point.assigned_to = UserFactory()
+        action_point.save()
         self.assertEqual(len(mail.outbox), 1)
