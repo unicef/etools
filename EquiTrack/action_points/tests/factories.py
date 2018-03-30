@@ -8,7 +8,8 @@ import factory.fuzzy
 
 from action_points.models import ActionPoint
 from locations.tests.factories import LocationFactory
-from partners.tests.factories import InterventionFactory, ResultFactory, UserFactory
+from partners.tests.factories import InterventionFactory, ResultFactory
+from users.tests.factories import UserFactory
 
 
 class ActionPointFactory(factory.DjangoModelFactory):

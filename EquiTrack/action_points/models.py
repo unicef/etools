@@ -9,7 +9,7 @@ from django.utils.six import python_2_unicode_compatible
 from django.utils.translation import ugettext_lazy as _
 
 from django_fsm import FSMField, transition
-from model_utils import Choices
+from model_utils import Choices, FieldTracker
 from model_utils.fields import MonitorField
 from model_utils.models import TimeStampedModel
 
@@ -85,6 +85,8 @@ class ActionPoint(TimeStampedModel, models.Model):
 
     history = GenericRelation('snapshot.Activity', object_id_field='target_object_id',
                               content_type_field='target_content_type')
+
+    tracker = FieldTracker()
 
     class Meta:
         ordering = ('related_module', 'related_content_type', 'related_object_id')

@@ -1,6 +1,7 @@
 from __future__ import absolute_import, division, print_function, unicode_literals
 
 import factory.fuzzy
+from django.core.management import call_command
 from rest_framework.exceptions import ValidationError
 
 from EquiTrack.tests.cases import BaseTenantTestCase
@@ -10,6 +11,10 @@ from audit.tests.factories import MicroAssessmentFactory
 
 
 class TestActionPointModel(BaseTenantTestCase):
+    @classmethod
+    def setUpTestData(cls):
+        call_command('update_notifications')
+
     def test_str(self):
         action_point = ActionPointFactory()
         self.assertEqual(str(action_point), '{0}/{1}/ACTP'.format(action_point.created.year, action_point.id))
