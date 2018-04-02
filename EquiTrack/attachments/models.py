@@ -107,6 +107,7 @@ class AttachmentFlat(models.Model):
     pd_ssfa_number = models.CharField(max_length=64, blank=True, verbose_name=_('PD SSFA Number'))
     file_type = models.CharField(max_length=100, blank=True, verbose_name=_('File Type'))
     file_link = models.CharField(max_length=1024, blank=True, verbose_name=_('File Link'))
+    filename = models.CharField(max_length=1024, blank=True, verbose_name=_('File Name'))
     uploaded_by = models.CharField(max_length=255, blank=True, verbose_name=_('Uploaded by'))
     created = models.CharField(max_length=50, verbose_name=_('Created'))
 
