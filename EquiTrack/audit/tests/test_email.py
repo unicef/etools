@@ -11,10 +11,12 @@ from EquiTrack.tests.cases import BaseTenantTestCase
 
 class TestEmail(BaseTenantTestCase):
     @classmethod
-    def setUpTestData(cls):
+    def setUpClass(cls):
         call_command('update_notifications')
         # tests check that emails has any content, so we need to load also emails fixture
-        call_command('load_emails emails')
+        call_command('load_emails', 'emails')
+
+        super(TestEmail, cls).setUpClass()
 
     def test_expected_email_templates_exist(self):
         '''Ensure the email templates for this app exist and have content'''
