@@ -2,12 +2,13 @@ from __future__ import unicode_literals
 
 import json
 import datetime
-from unittest import skip, TestCase
+from unittest import skip
 
 from django.contrib.auth.models import Group
 from django.core.cache import cache
 from django.core.urlresolvers import reverse, resolve
 from django.db import connection
+from django.test import SimpleTestCase
 from django.utils import six, timezone
 from django.core.files.uploadedfile import SimpleUploadedFile
 
@@ -55,7 +56,7 @@ def _add_user_to_partnership_manager_group(user):
     user.groups.add(group)
 
 
-class URLsTestCase(URLAssertionMixin, TestCase):
+class URLsTestCase(URLAssertionMixin, SimpleTestCase):
     '''Simple test case to verify URL reversal'''
     def test_urls(self):
         '''Verify URL pattern names generate the URLs we expect them to.'''
