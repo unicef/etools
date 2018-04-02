@@ -1,6 +1,6 @@
 from django.conf.urls import url
 
-from views.gis_v1 import (
+from management.views.gis_v1 import (
     GisLocationsInUseViewset,
     GisLocationsGeomListViewset,
     GisLocationsGeomDetailsViewset,
