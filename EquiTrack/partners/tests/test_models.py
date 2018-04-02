@@ -2,9 +2,10 @@ from __future__ import absolute_import, division, print_function, unicode_litera
 
 import copy
 import datetime
-from unittest import TestCase, skip
+from unittest import skip
 
 from django.core.files.uploadedfile import SimpleUploadedFile
+from django.test import SimpleTestCase
 from django.utils import six, timezone
 from freezegun import freeze_time
 
@@ -1513,7 +1514,7 @@ class TestStrUnicodeSlow(BaseTenantTestCase):
         six.text_type(instance)
 
 
-class TestStrUnicode(TestCase):
+class TestStrUnicode(SimpleTestCase):
     '''Ensure calling six.text_type() on model instances returns the right text.'''
     def test_workspace_file_type(self):
         instance = WorkspaceFileTypeFactory.build(name='xyz')

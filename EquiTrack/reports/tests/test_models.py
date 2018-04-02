@@ -1,8 +1,8 @@
 from __future__ import absolute_import, division, print_function, unicode_literals
 
 import datetime
-from unittest import TestCase
 
+from django.test import SimpleTestCase
 from django.utils import six
 
 from EquiTrack.tests.cases import BaseTenantTestCase
@@ -27,7 +27,7 @@ from reports.tests.factories import (
 from reports.tests.factories import QuarterFactory
 
 
-class TestStrUnicode(TestCase):
+class TestStrUnicode(SimpleTestCase):
     '''Ensure calling six.text_type() on model instances returns the right text.'''
     def test_country_programme(self):
         instance = CountryProgrammeFactory.build(name=b'xyz', wbs=b'xyz')
