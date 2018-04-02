@@ -207,6 +207,12 @@ class TPMVisit(SoftDeleteMixin, TimeStampedModel, models.Model):
                 cc=self._get_unicef_focal_points_as_email_recipients()
             )
 
+        for staff_member in self.tpm_partner.staff_members.filter(user__email__isnull=False):
+            self._send_email(
+                staff_member.user.email, 'tpm/visit/assign_staff_member',
+                context={'recipient': staff_member.user.get_full_name()}
+            )
+
     @transition(
         status, source=[
             STATUSES.draft, STATUSES.assigned, STATUSES.tpm_accepted, STATUSES.tpm_rejected,

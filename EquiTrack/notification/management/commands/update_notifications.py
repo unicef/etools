@@ -407,6 +407,7 @@ class Command(BaseCommand):
 
         # TPM Notifications
         EmailTemplate.objects.get_or_create(name='tpm/visit/assign')
+        EmailTemplate.objects.get_or_create(name='tpm/visit/assign_staff_member')
         EmailTemplate.objects.get_or_create(name='tpm/visit/reject')
         EmailTemplate.objects.get_or_create(name='tpm/visit/accept')
         EmailTemplate.objects.get_or_create(name='tpm/visit/generate_report')

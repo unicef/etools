@@ -114,6 +114,20 @@
   {
     "model": "post_office.emailtemplate",
     "fields": {
+      "name": "tpm/visit/assign_staff_member",
+      "description": "Visit assigned. TPM staff member should be notified.",
+      "created": "2017-04-02T10:08:23.360Z",
+      "last_updated": "2017-04-02T09:08:55.557Z",
+      "subject": "Access to eTools Third Party Monitoring Module",
+      "content": "Dear {{ recipient }},\r\n\r\nUNICEF is granting you access to the Third Party Monitoring Module in eTools.\r\nPlease click {{ visit.object_url }} to access your assigned visit. \r\n\r\nThank you.",
+      "html_content": "{% extends \"email-templates/base\" %}\r\n\r\n{% block content %}\r\nDear {{ recipient }},<br/><br/>\r\n\r\nUNICEF is granting you access to the Third Party Monitoring Module in eTools.<br/>\r\nPlease click <a href=\"{{ visit.object_url }}\">{{ visit.reference_number }}</a> \r\nto access your assigned visit.<br/><br/>\r\n\r\nThank you.\r\n{% endblock %}",
+      "language": "",
+      "default_template": null
+    }
+  },
+  {
+    "model": "post_office.emailtemplate",
+    "fields": {
       "name": "tpm/visit/reject",
       "description": "TPM rejected visit. Notify focal points.",
       "created": "2017-09-01T10:08:23.360Z",
