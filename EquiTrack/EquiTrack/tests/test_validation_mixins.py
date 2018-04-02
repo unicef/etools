@@ -3,14 +3,13 @@ from __future__ import absolute_import, division, print_function, unicode_litera
 # Don't enable unicode_literals in this module until Python 3. Tests in this module rely on being able to create
 # both str and unicode literals.
 # from __future__ import unicode_literals
-from unittest import TestCase
-
+from django.test import SimpleTestCase
 from django.utils import six
 
 from EquiTrack.validation_mixins import _BaseStateError, BasicValidationError, StateValidError, TransitionError
 
 
-class TestExceptions(TestCase):
+class TestExceptions(SimpleTestCase):
     '''Tests behavior of the 3 exceptions defined in validation_mixins. StateValidError and TransitionError are
     tested through their base class _BaseStateError.
     '''
@@ -49,6 +48,6 @@ class TestExceptions(TestCase):
                       ('hello world', 'goodbye world'),
                       42,
                       object(),
-                      TestCase,):
+                      type(self),):
             with self.assertRaises(TypeError):
                 _BaseStateError(param)

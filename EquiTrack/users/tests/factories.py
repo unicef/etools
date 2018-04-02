@@ -3,10 +3,11 @@ from __future__ import division
 from __future__ import print_function
 from __future__ import unicode_literals
 
-from django.db.models.signals import post_save
+from django.db.models import signals
 from django.contrib.auth import get_user_model
 from django.contrib.auth.models import Group
 import factory
+from factory.fuzzy import FuzzyText
 
 from EquiTrack.tests.cases import SCHEMA_NAME, TENANT_DOMAIN
 from users import models
@@ -31,7 +32,7 @@ class SectionFactory(factory.django.DjangoModelFactory):
     class Meta:
         model = models.Section
 
-    name = factory.Sequence(lambda n: "section_%d" % n)
+    name = FuzzyText()
 
 
 class CountryFactory(factory.django.DjangoModelFactory):
@@ -61,27 +62,18 @@ class ProfileFactory(factory.django.DjangoModelFactory):
     )
 
 
+@factory.django.mute_signals(signals.pre_save, signals.post_save)
 class UserFactory(factory.django.DjangoModelFactory):
     class Meta:
         model = get_user_model()
 
-    username = factory.Sequence(lambda n: "user_%d" % n)
+    username = FuzzyText()
     email = factory.Sequence(lambda n: "user{}@example.com".format(n))
     password = factory.PostGenerationMethodCall('set_password', 'test')
 
     # We pass in 'user' to link the generated Profile to our just-generated User
     # This will call ProfileFactory(user=our_new_user), thus skipping the SubFactory.
     profile = factory.RelatedFactory(ProfileFactory, 'user')
-
-    @classmethod
-    def _generate(cls, create, attrs):
-        """Override the default _generate() to disable the post-save signal."""
-
-        # Note: If the signal was defined with a dispatch_uid, include that in both calls.
-        post_save.disconnect(models.UserProfile.create_user_profile, get_user_model())
-        user = super(UserFactory, cls)._generate(create, attrs)
-        post_save.connect(models.UserProfile.create_user_profile, get_user_model())
-        return user
 
     @factory.post_generation
     def groups(self, create, extracted, **kwargs):

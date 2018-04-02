@@ -96,7 +96,7 @@ class AggregateHact(TimeStampedModel):
             ct_amount_first.aggregate(count=Count('total_ct_ytd'))['count'],
         ]
 
-        ct_amount_second = self.get_queryset().filter(total_ct_ytd__gte=FIRST_LEVEL, total_ct_ytd__lte=SECOND_LEVEL)
+        ct_amount_second = self.get_queryset().filter(total_ct_ytd__gt=FIRST_LEVEL, total_ct_ytd__lte=SECOND_LEVEL)
         cash_transfers_amounts_second = [
             '$50,001-100,000',
             ct_amount_second.filter(rating=PartnerOrganization.RATING_NON_ASSESSED).aggregate(
@@ -112,7 +112,7 @@ class AggregateHact(TimeStampedModel):
             ct_amount_second.aggregate(count=Count('total_ct_ytd'))['count'],
         ]
 
-        ct_amount_third = self.get_queryset().filter(total_ct_ytd__gte=SECOND_LEVEL, total_ct_ytd__lte=THIRD_LEVEL)
+        ct_amount_third = self.get_queryset().filter(total_ct_ytd__gt=SECOND_LEVEL, total_ct_ytd__lte=THIRD_LEVEL)
         cash_transfers_amounts_third = [
             '$100,001-350,000',
             ct_amount_third.filter(rating=PartnerOrganization.RATING_NON_ASSESSED).aggregate(
@@ -128,7 +128,7 @@ class AggregateHact(TimeStampedModel):
             ct_amount_third.aggregate(count=Count('total_ct_ytd'))['count'],
         ]
 
-        ct_amount_fourth = self.get_queryset().filter(total_ct_ytd__gte=THIRD_LEVEL, total_ct_ytd__lte=FOURTH_LEVEL)
+        ct_amount_fourth = self.get_queryset().filter(total_ct_ytd__gt=THIRD_LEVEL, total_ct_ytd__lte=FOURTH_LEVEL)
         cash_transfers_amounts_fourth = [
             '$350,001-500,000',
             ct_amount_fourth.filter(rating=PartnerOrganization.RATING_NON_ASSESSED).aggregate(
@@ -144,7 +144,7 @@ class AggregateHact(TimeStampedModel):
             ct_amount_fourth.aggregate(count=Count('total_ct_ytd'))['count'],
         ]
 
-        ct_amount_fifth = self.get_queryset().filter(total_ct_ytd__gte=FOURTH_LEVEL)
+        ct_amount_fifth = self.get_queryset().filter(total_ct_ytd__gt=FOURTH_LEVEL)
         cash_transfers_amounts_fifth = [
             '>$500,000',
             ct_amount_fifth.filter(rating=PartnerOrganization.RATING_NON_ASSESSED).aggregate(
