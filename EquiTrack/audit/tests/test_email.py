@@ -13,6 +13,8 @@ class TestEmail(BaseTenantTestCase):
     @classmethod
     def setUpTestData(cls):
         call_command('update_notifications')
+        # tests check that emails has any content, so we need to load also emails fixture
+        call_command('load_emails emails')
 
     def test_expected_email_templates_exist(self):
         '''Ensure the email templates for this app exist and have content'''
