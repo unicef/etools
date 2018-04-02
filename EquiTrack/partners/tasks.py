@@ -291,7 +291,7 @@ def pmp_indicator_report():
                 planned_budget = getattr(intervention, 'planned_budget', None)
                 writer.writerow({
                     'Country': country,
-                    'Partner Name': six.text_type(partner).decode('unicode_escape').encode('ascii', 'ignore'),
+                    'Partner Name': six.string_types(partner).decode('unicode_escape').encode('ascii', 'ignore'),
                     'Partner Type': partner.cso_type,
                     'PD / SSFA ref': intervention.number.encode('utf-8').replace(',', '-'),
                     'PD / SSFA status': intervention.get_status_display(),
