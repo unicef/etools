@@ -206,6 +206,8 @@ TENANT_APPS = (
     'firms',
     'management',
     'snapshot',
+    'action_points',
+    'django_comments',
 )
 INSTALLED_APPS = ('tenant_schemas',) + SHARED_APPS + TENANT_APPS
 

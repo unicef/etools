@@ -41,6 +41,7 @@ class Activity(TimeStampedModel):
     )
     data = JSONField(verbose_name=_("Data"))
     change = JSONField(verbose_name=_("Change"), blank=True)
+    additional_data = JSONField(blank=True, null=True, verbose_name=_("additional data"))
 
     class Meta:
         ordering = ["-created"]
