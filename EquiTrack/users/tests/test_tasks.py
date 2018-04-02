@@ -108,7 +108,7 @@ class TestUserMapper(BaseTenantTestCase):
         self.assertEqual(self.mapper.sections, {})
         res = self.mapper._get_section(name, code)
         self.assertIsInstance(res, Section)
-        self.assertEqual(self.mapper.sections.keys(), [name])
+        self.assertEqual(list(self.mapper.sections.keys()), [name])
         with schema_context(SCHEMA_NAME):
             self.assertTrue(
                 Section.objects.filter(name=name, code=code).exists()

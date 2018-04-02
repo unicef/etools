@@ -2,12 +2,13 @@ from __future__ import unicode_literals
 
 import json
 import datetime
-from unittest import skip, TestCase
+from unittest import skip
 
 from django.contrib.auth.models import Group
 from django.core.cache import cache
 from django.core.urlresolvers import reverse, resolve
 from django.db import connection
+from django.test import SimpleTestCase
 from django.utils import six, timezone
 from django.core.files.uploadedfile import SimpleUploadedFile
 
@@ -61,7 +62,7 @@ def _add_user_to_partnership_manager_group(user):
     user.groups.add(group)
 
 
-class URLsTestCase(URLAssertionMixin, TestCase):
+class URLsTestCase(URLAssertionMixin, SimpleTestCase):
     '''Simple test case to verify URL reversal'''
     def test_urls(self):
         '''Verify URL pattern names generate the URLs we expect them to.'''
@@ -81,6 +82,20 @@ class URLsTestCase(URLAssertionMixin, TestCase):
         )
         self.assertReversal(names_and_paths, 'partners_api:', '/api/v2/interventions/')
         self.assertIntParamRegexes(names_and_paths, 'partners_api:')
+
+
+class TestInterventionsSwagger(BaseTenantTestCase):
+    def test_accessing_css_file(self):
+        # Because a swagger bug was breaking this (in combination with
+        # a particular way we had designed some URLs), this test is to
+        # reproduce the problem, then make sure the changes we make fix it.
+        # The swagger bug:
+        # https://github.com/marcgibbons/django-rest-swagger/issues/702
+        # was tickled by our having URLs that end in delete, maybe in
+        # combination with having their only method be 'delete'.
+        unicef_staff = UserFactory(is_staff=True)
+        response = self.forced_auth_req('get', '/api/docs/css/dashboard.css', user=unicef_staff)
+        self.assertEqual(200, response.status_code)
 
 
 class TestInterventionsAPI(BaseTenantTestCase):

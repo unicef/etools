@@ -1,8 +1,7 @@
 from __future__ import absolute_import, division, print_function, unicode_literals
 
-from unittest import TestCase
-
 from django.contrib.auth import get_user_model
+from django.test import SimpleTestCase
 from django.utils import six
 
 from EquiTrack.tests.cases import BaseTenantTestCase
@@ -172,10 +171,10 @@ class TestDeletePartnerRelationship(BaseTenantTestCase):
         self.assertTrue(user_updated.is_active)
 
 
-class TestStrUnicode(TestCase):
+class TestStrUnicode(SimpleTestCase):
     '''Ensure calling six.text_type() on model instances returns the right text.'''
     def test_country(self):
-        instance = CountryFactory.build(name=b'xyz')
+        instance = CountryFactory.build(name='xyz')
         self.assertEqual(six.text_type(instance), u'xyz')
 
         instance = CountryFactory.build(name=u'Magyarorsz\xe1g')
@@ -183,7 +182,7 @@ class TestStrUnicode(TestCase):
 
     def test_workspace_counter(self):
         instance = models.WorkspaceCounter()
-        instance.workspace = CountryFactory.build(name=b'xyz')
+        instance.workspace = CountryFactory.build(name='xyz')
         self.assertEqual(six.text_type(instance), u'xyz')
 
         instance = models.WorkspaceCounter()
@@ -191,14 +190,14 @@ class TestStrUnicode(TestCase):
         self.assertEqual(six.text_type(instance), u'Magyarorsz\xe1g')
 
     def test_office(self):
-        instance = OfficeFactory.build(name=b'xyz')
+        instance = OfficeFactory.build(name='xyz')
         self.assertEqual(six.text_type(instance), u'xyz')
 
         instance = OfficeFactory.build(name=u'Magyarorsz\xe1g')
         self.assertEqual(six.text_type(instance), u'Magyarorsz\xe1g')
 
     def test_section(self):
-        instance = SectionFactory.build(name=b'xyz')
+        instance = SectionFactory.build(name='xyz')
         self.assertEqual(six.text_type(instance), u'xyz')
 
         instance = SectionFactory.build(name=u'Magyarorsz\xe1g')
@@ -206,7 +205,7 @@ class TestStrUnicode(TestCase):
 
     def test_user_profile(self):
         UserModel = get_user_model()
-        user = UserModel(first_name=b'Sviatoslav', last_name='')
+        user = UserModel(first_name='Sviatoslav', last_name='')
         instance = models.UserProfile()
         instance.user = user
         self.assertEqual(six.text_type(instance), u'User profile for Sviatoslav')

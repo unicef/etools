@@ -13,7 +13,7 @@ from rest_framework.response import Response
 from attachments.models import Attachment, AttachmentFlat
 from attachments.serializers import (
     AttachmentFileUploadSerializer,
-    AttachmentSerializer,
+    AttachmentFlatSerializer,
 )
 from utils.common.urlresolvers import site_url
 
@@ -24,7 +24,7 @@ class AttachmentListView(ListAPIView):
         Q(attachment__hyperlink__isnull=True) | Q(attachment__hyperlink__exact="")
     )
     permission_classes = (IsAdminUser, )
-    serializer_class = AttachmentSerializer
+    serializer_class = AttachmentFlatSerializer
 
 
 class AttachmentFileView(DetailView):
@@ -37,7 +37,7 @@ class AttachmentFileView(DetailView):
             return HttpResponseNotFound(
                 _("No Attachment matches the given query.")
             )
-        if attachment.url == "None":
+        if not attachment or not attachment.file:
             return HttpResponseNotFound(
                 _("Attachment has no file or hyperlink")
             )
@@ -56,7 +56,7 @@ class AttachmentCreateView(CreateAPIView):
     def post(self, *args, **kwargs):
         super(AttachmentCreateView, self).post(*args, **kwargs)
         return Response(
-            AttachmentSerializer(self.instance.denormalized.first()).data
+            AttachmentFlatSerializer(self.instance.denormalized.first()).data
         )
 
 
@@ -74,11 +74,11 @@ class AttachmentUpdateView(UpdateAPIView):
     def put(self, *args, **kwargs):
         super(AttachmentUpdateView, self).put(*args, **kwargs)
         return Response(
-            AttachmentSerializer(self.instance.denormalized.first()).data
+            AttachmentFlatSerializer(self.instance.denormalized.first()).data
         )
 
     def patch(self, *args, **kwargs):
         super(AttachmentUpdateView, self).patch(*args, **kwargs)
         return Response(
-            AttachmentSerializer(self.instance.denormalized.first()).data
+            AttachmentFlatSerializer(self.instance.denormalized.first()).data
         )

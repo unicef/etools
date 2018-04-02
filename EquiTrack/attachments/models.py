@@ -187,7 +187,10 @@ class Attachment(TimeStampedModel, models.Model):
 
     @property
     def url(self):
-        return six.text_type(self.file.url if self.file else self.hyperlink)
+        if self.file:
+            return six.text_type(self.file.url)
+        else:
+            return self.hyperlink
 
     @property
     def filename(self):
@@ -236,6 +239,11 @@ class AttachmentFlat(models.Model):
         max_length=1024,
         blank=True,
         verbose_name=_('File Link')
+    )
+    filename = models.CharField(
+        max_length=1024,
+        blank=True,
+        verbose_name=_('File Name')
     )
     uploaded_by = models.CharField(
         max_length=255,
