@@ -46,6 +46,7 @@ class TestGetInterventionContext(BaseTenantTestCase):
     def setUp(self):
         super(TestGetInterventionContext, self).setUp()
         self.intervention = InterventionFactory()
+        self.focal_point_user = UserFactory()
 
     def test_simple_intervention(self):
         '''Exercise get_intervention_context() with a very simple intervention'''
@@ -63,8 +64,8 @@ class TestGetInterventionContext(BaseTenantTestCase):
 
     def test_non_trivial_intervention(self):
         '''Exercise get_intervention_context() with an intervention that has some interesting detail'''
-        focal_point_user = User.objects.all()[0]
-        self.intervention.unicef_focal_points.add(focal_point_user)
+        self.focal_point_user = User.objects.first()
+        self.intervention.unicef_focal_points.add(self.focal_point_user)
 
         self.intervention.start = datetime.date(2017, 8, 1)
         self.intervention.save()
@@ -79,7 +80,7 @@ class TestGetInterventionContext(BaseTenantTestCase):
         self.assertEqual(result['start_date'], '2017-08-01')
         self.assertEqual(result['url'],
                          'https://{}/pmp/interventions/{}/details'.format(settings.HOST, self.intervention.id))
-        self.assertEqual(result['unicef_focal_points'], [focal_point_user.email])
+        self.assertEqual(result['unicef_focal_points'], [self.focal_point_user.email])
 
 
 class PartnersTestBaseClass(BaseTenantTestCase):
