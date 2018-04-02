@@ -207,7 +207,6 @@ def sections_valid(i):
         raise BasicValidationError(_('The following sections have been selected on '
                                      'the PD/SSFA indicators and cannot be removed{}: '.format(draft_status_err)) +
                                    ', '.join([s.name for s in ind_sections - intervention_sections]))
-        # return False
     return True
 
 

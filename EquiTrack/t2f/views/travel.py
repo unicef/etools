@@ -138,7 +138,6 @@ class TravelAttachmentViewSet(mixins.ListModelMixin,
 
 class TravelActivityViewSet(mixins.ListModelMixin,
                             viewsets.GenericViewSet):
-    # queryset = TravelActivity.objects.prefetch_related('travels').all()
     permission_classes = (IsAdminUser,)
     serializer_class = TravelActivityByPartnerSerializer
     filter_backends = (TravelActivityPartnerFilter,)
@@ -161,7 +160,6 @@ class TravelActivityViewSet(mixins.ListModelMixin,
 
 class TravelActivityPerInterventionViewSet(mixins.ListModelMixin,
                                            viewsets.GenericViewSet):
-    # queryset = TravelActivity.objects.prefetch_related('travels').all()
     permission_classes = (IsAdminUser,)
     serializer_class = TravelActivityByPartnerSerializer
     filter_backends = (TravelActivityInterventionFilter,)
