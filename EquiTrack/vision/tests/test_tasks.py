@@ -227,7 +227,7 @@ class TestVisionSyncTask(SimpleTestCase):
         self._assertLoggerMessages(mock_logger, selected_countries, selected_synchronizers)
 
 
-class TestSyncHandlerTask(SimpleTestCase):
+class TestSyncHandlerTask(BaseTenantTestCase):
     """Exercises the sync_handler()"""
     def setUp(self):
         self.country = _build_country('My')
