@@ -22,7 +22,9 @@ class TestClient(BaseTenantTestCase):
         self.assertEqual(handle_function.call_args[0], (2, ))
 
     def test_handle_record_create(self):
-        self.assertEqual(get_user_model().objects.count(), 0)
+        user_qs = get_user_model().objects
+        user_initial_count = user_qs.count()
+        self.assertEqual(user_qs.count(), user_initial_count)
         user_record = {
             'givenName': 'Joe',
             'mail': 'jdoe@unicef.org',
@@ -30,11 +32,13 @@ class TestClient(BaseTenantTestCase):
             'userPrincipalName': 'jdoe@unicef.org'
         }
         handle_record(user_record)
-        self.assertEqual(get_user_model().objects.count(), 1)
+        self.assertEqual(user_qs.count(), user_initial_count + 1)
 
     def test_handle_record_update(self):
         UserFactory(username='jdoe@unicef.org', email='jdoe@unicef.org')
-        self.assertEqual(get_user_model().objects.count(), 1)
+        user_qs = get_user_model().objects
+        user_initial_count = user_qs.count()
+        self.assertEqual(user_qs.count(), user_initial_count)
         user_record = {
             'givenName': 'Joe',
             'mail': 'jdoe@unicef.org',
@@ -42,4 +46,4 @@ class TestClient(BaseTenantTestCase):
             'userPrincipalName': 'jdoe@unicef.org'
         }
         handle_record(user_record)
-        self.assertEqual(get_user_model().objects.count(), 1)
+        self.assertEqual(user_qs.count(), user_initial_count)
