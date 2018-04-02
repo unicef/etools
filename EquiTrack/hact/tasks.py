@@ -3,6 +3,7 @@ from __future__ import absolute_import, division, print_function, unicode_litera
 import json
 from datetime import datetime
 
+from decimal import Decimal
 from django.db import connection
 
 from celery.utils.log import get_task_logger
@@ -26,7 +27,7 @@ def update_hact_values():
             audits = Audit.objects.filter(partner=partner, status=Engagement.FINAL,
                                           date_of_draft_report_to_unicef__year=datetime.now().year)
             hact['outstanding_findings'] = sum([
-                audit.pending_unsupported_amount for audit in audits if audit.pending_unsupported_amount])
+                Decimal(audit.pending_unsupported_amount) for audit in audits if audit.pending_unsupported_amount])
             partner.hact_values = json.dumps(hact, cls=HactEncoder)
             partner.save()
     logger.info('Hact Freeze Task process finished')
