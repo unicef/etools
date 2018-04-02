@@ -6,14 +6,10 @@ azure-common==1.1.8
 azure-nspkg==2.0.0
 azure-storage==0.20.2
 babel==2.5.3
-backports.ssl-match-hostname==3.5.0.1
 billiard==3.5.0.3
 carto==1.0.1
 celery==4.1.0
-certifi==2018.1.18
 cffi==1.11.4
-configparser==3.5.0       # via flake8
-contextlib2==0.5.5
 cookies==2.2.1            # via responses
 coreapi==2.3.3
 coreschema==0.0.4
@@ -61,22 +57,18 @@ djangorestframework==3.5.3
 djrill==2.1.0
 drf-nested-routers==0.11.1
 drfpasswordless==1.1.2
-enum34==1.1.6
 et-xmlfile==1.0.1
 factory-boy==2.8
 faker==0.7.4
 flake8==3.5.0
 flower==0.9.1
 freezegun==0.3.9
-funcsigs==1.0.2           # via mock
 future==0.15.2
-futures==3.2.0
 gdal==1.10.0
 gunicorn==19.6.0
 html5lib==1.0b10
 httplib2==0.10.3
 idna==2.6
-ipaddress==1.0.19
 itypes==1.1.0
 jdcal==1.3
 jinja2==2.10
@@ -103,7 +95,7 @@ pypdf2==1.26.0
 pyrestcli==0.6.4
 pysaml2==4.4.0
 python-dateutil==2.5.3
-python-openid==2.2.5
+python3-openid==3.1.0
 pytz==2018.3
 pyyaml==3.12
 raven==6.2.1
