@@ -2,6 +2,7 @@ from __future__ import absolute_import, division, print_function, unicode_litera
 
 from django.core.exceptions import ValidationError
 from django.core.files.uploadedfile import SimpleUploadedFile
+from django.utils import six
 
 from attachments.tests.factories import (
     AttachmentFactory,
@@ -12,13 +13,11 @@ from EquiTrack.tests.cases import BaseTenantTestCase
 
 class TestFileType(BaseTenantTestCase):
     def test_str(self):
-        instance = AttachmentFileTypeFactory(label=b'xyz')
-        self.assertIn(b'xyz', str(instance))
-        self.assertIn(u'xyz', unicode(instance))
+        instance = AttachmentFileTypeFactory(label='xyz')
+        self.assertIn(u'xyz', six.text_type(instance))
 
-        instance = AttachmentFileTypeFactory(label=u'R\xe4dda Barnen')
-        self.assertIn(b'R\xc3\xa4dda Barnen', str(instance))
-        self.assertIn(u'R\xe4dda Barnen', unicode(instance))
+        instance = AttachmentFileTypeFactory(label='R\xe4dda Barnen')
+        self.assertIn('R\xe4dda Barnen', six.text_type(instance))
 
 
 class TestAttachments(BaseTenantTestCase):
@@ -28,18 +27,16 @@ class TestAttachments(BaseTenantTestCase):
 
     def test_str(self):
         instance = AttachmentFactory(
-            file=b'these are the file contents!',
+            file=SimpleUploadedFile('simple_file.txt', b'these are the file contents!'),
             content_object=self.simple_object
         )
-        self.assertIn(b'these are the file contents!', str(instance))
-        self.assertIn(u'these are the file contents!', unicode(instance))
+        self.assertIn('simple_file', six.text_type(instance))
 
         instance = AttachmentFactory(
-            file=u'R\xe4dda Barnen',
+            file=SimpleUploadedFile('simple_file.txt', u'R\xe4dda Barnen'.encode('utf-8')),
             content_object=self.simple_object
         )
-        self.assertIn(b'R\xc3\xa4dda Barnen', str(instance))
-        self.assertIn(u'R\xe4dda Barnen', unicode(instance))
+        self.assertIn('simple_file', six.text_type(instance))
 
     def test_filename(self):
         instance = AttachmentFactory(

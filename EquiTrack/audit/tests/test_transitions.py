@@ -2,6 +2,7 @@ from __future__ import absolute_import, division, print_function, unicode_litera
 
 import random
 
+from django.core.management import call_command
 from django.utils import six
 from factory import fuzzy
 from rest_framework import status
@@ -17,6 +18,10 @@ from EquiTrack.tests.cases import BaseTenantTestCase
 
 class EngagementCheckTransitionsTestCaseMixin(object):
     fixtures = ('audit_risks_blueprints', )
+
+    @classmethod
+    def setUpTestData(cls):
+        call_command('update_notifications')
 
     def _test_transition(self, user, action, expected_response, errors=None, data=None):
         response = self.forced_auth_req(
@@ -222,7 +227,6 @@ class EngagementCheckTransitionsMetadataTestCaseMixin(object):
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         action_codes = [action['code'] for action in response.data['actions']['allowed_FSM_transitions']]
-        self.assertItemsEqual(action_codes, actions)
         six.assertCountEqual(self, action_codes, actions)
 
 
