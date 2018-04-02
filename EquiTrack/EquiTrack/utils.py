@@ -5,10 +5,11 @@ and not enough to make into a library
 Used throughout the eTools project
 """
 import datetime
+import uuid
+
 from functools import wraps
 from itertools import chain
 import logging
-import uuid
 
 from django.conf import settings
 from django.contrib.contenttypes.fields import GenericForeignKey

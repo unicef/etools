@@ -27,9 +27,9 @@ class TestLocationViews(BaseTenantTestCase):
 
     def test_api_location_light_list(self):
         response = self.forced_auth_req('get', reverse('locations-light-list'), user=self.unicef_staff)
-
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(sorted(response.data[0].keys()), ["id", "name", "p_code"])
+
         self.assertEqual(len(response.data), len(self.locations))
         location_list = [
             '{} [{} - {}]'.format(l.name, l.gateway.name, l.p_code)
@@ -123,7 +123,7 @@ class TestLocationViews(BaseTenantTestCase):
 class TestLocationAutocompleteView(BaseTenantTestCase):
     def setUp(self):
         super(TestLocationAutocompleteView, self).setUp()
-        self.unicef_staff = UserFactory(is_staff=True)
+        self.unicef_staff = UserFactory(is_staff=True, username='TestLocationAutocompleteView')
         self.client = TenantClient(self.tenant)
 
     def test_non_auth(self):

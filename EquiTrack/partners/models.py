@@ -38,6 +38,7 @@ from reports.models import (
 )
 from t2f.models import Travel, TravelActivity, TravelType
 from locations.models import Location
+from tpm.models import TPMVisit
 from users.models import Office
 from partners.utils import get_quarter, import_permissions
 from partners.validation.agreements import (
@@ -424,7 +425,7 @@ class PartnerOrganization(AdminURLMixin, TimeStampedModel):
     total_ct_cp = models.DecimalField(
         verbose_name=_("Total Cash Transferred for Country Programme"),
         decimal_places=2,
-        max_digits=12,
+        max_digits=20,
         blank=True,
         null=True,
         help_text='Total Cash Transferred for Country Programme'
@@ -432,26 +433,26 @@ class PartnerOrganization(AdminURLMixin, TimeStampedModel):
     total_ct_cy = models.DecimalField(
         verbose_name=_("Total Cash Transferred per Current Year"),
         decimal_places=2,
-        max_digits=12,
+        max_digits=20,
         blank=True,
         null=True,
         help_text='Total Cash Transferred per Current Year'
     )
 
     net_ct_cy = models.DecimalField(
-        decimal_places=2, max_digits=12, blank=True, null=True,
+        decimal_places=2, max_digits=20, blank=True, null=True,
         help_text='Net Cash Transferred per Current Year',
         verbose_name=_('Net Cash Transferred')
     )
 
     reported_cy = models.DecimalField(
-        decimal_places=2, max_digits=12, blank=True, null=True,
+        decimal_places=2, max_digits=20, blank=True, null=True,
         help_text='Liquidations 1 Oct - 30 Sep',
         verbose_name=_('Liquidation')
     )
 
     total_ct_ytd = models.DecimalField(
-        decimal_places=2, max_digits=12, blank=True, null=True,
+        decimal_places=2, max_digits=20, blank=True, null=True,
         help_text='Cash Transfers Jan - Dec',
         verbose_name=_('Cash Transfer Jan - Dec')
     )
@@ -608,6 +609,7 @@ class PartnerOrganization(AdminURLMixin, TimeStampedModel):
             pv += 1
             pvq += 1
             partner.hact_values['programmatic_visits']['completed'][quarter_name] = pvq
+            partner.hact_values['programmatic_visits']['completed']['total'] = pv
         else:
             pv_year = TravelActivity.objects.filter(
                 travel_type=TravelType.PROGRAMME_MONITORING,
@@ -623,12 +625,41 @@ class PartnerOrganization(AdminURLMixin, TimeStampedModel):
             pvq3 = pv_year.filter(travels__completed_at__month__in=[7, 8, 9]).count()
             pvq4 = pv_year.filter(travels__completed_at__month__in=[10, 11, 12]).count()
 
-            partner.hact_values['programmatic_visits']['completed']['q1'] = pvq1
-            partner.hact_values['programmatic_visits']['completed']['q2'] = pvq2
-            partner.hact_values['programmatic_visits']['completed']['q3'] = pvq3
-            partner.hact_values['programmatic_visits']['completed']['q4'] = pvq4
+            # TPM visit are counted one per month maximum
+            tpmv = TPMVisit.objects.filter(
+                tpm_activities__partner=partner, status=TPMVisit.UNICEF_APPROVED,
+                date_of_unicef_approved__year=datetime.datetime.now().year
+            ).distinct()
 
-        partner.hact_values['programmatic_visits']['completed']['total'] = pv
+            tpmv1 = sum([
+                tpmv.filter(date_of_unicef_approved__month=1).exists(),
+                tpmv.filter(date_of_unicef_approved__month=2).exists(),
+                tpmv.filter(date_of_unicef_approved__month=3).exists()
+            ])
+            tpmv2 = sum([
+                tpmv.filter(date_of_unicef_approved__month=4).exists(),
+                tpmv.filter(date_of_unicef_approved__month=5).exists(),
+                tpmv.filter(date_of_unicef_approved__month=6).exists()
+            ])
+            tpmv3 = sum([
+                tpmv.filter(date_of_unicef_approved__month=7).exists(),
+                tpmv.filter(date_of_unicef_approved__month=8).exists(),
+                tpmv.filter(date_of_unicef_approved__month=9).exists()
+            ])
+            tpmv4 = sum([
+                tpmv.filter(date_of_unicef_approved__month=10).exists(),
+                tpmv.filter(date_of_unicef_approved__month=11).exists(),
+                tpmv.filter(date_of_unicef_approved__month=12).exists()
+            ])
+
+            tpm_total = tpmv1 + tpmv2 + tpmv3 + tpmv4
+
+            partner.hact_values['programmatic_visits']['completed']['q1'] = pvq1 + tpmv1
+            partner.hact_values['programmatic_visits']['completed']['q2'] = pvq2 + tpmv2
+            partner.hact_values['programmatic_visits']['completed']['q3'] = pvq3 + tpmv3
+            partner.hact_values['programmatic_visits']['completed']['q4'] = pvq4 + tpmv4
+
+            partner.hact_values['programmatic_visits']['completed']['total'] = pv + tpm_total
         partner.save()
 
     @classmethod
@@ -2211,13 +2242,13 @@ class FundingCommitment(TimeFramedModel):
     fc_ref = models.CharField(
         max_length=50, blank=True, null=True, unique=True, verbose_name=_('Reference'))
     fr_item_amount_usd = models.DecimalField(
-        decimal_places=2, max_digits=12, blank=True, null=True, verbose_name=_('Item Amount (USD)'))
+        decimal_places=2, max_digits=20, blank=True, null=True, verbose_name=_('Item Amount (USD)'))
     agreement_amount = models.DecimalField(
-        decimal_places=2, max_digits=12, blank=True, null=True, verbose_name=_('Agreement Amount'))
+        decimal_places=2, max_digits=20, blank=True, null=True, verbose_name=_('Agreement Amount'))
     commitment_amount = models.DecimalField(
-        decimal_places=2, max_digits=12, blank=True, null=True, verbose_name=_('Commitment Amount'))
+        decimal_places=2, max_digits=20, blank=True, null=True, verbose_name=_('Commitment Amount'))
     expenditure_amount = models.DecimalField(
-        decimal_places=2, max_digits=12, blank=True, null=True, verbose_name=_('Expenditure Amount'))
+        decimal_places=2, max_digits=20, blank=True, null=True, verbose_name=_('Expenditure Amount'))
 
     tracker = FieldTracker()
     objects = FCManager()
@@ -2229,17 +2260,17 @@ class DirectCashTransfer(models.Model):
     """
 
     fc_ref = models.CharField(max_length=50, verbose_name=_('Fund Commitment Reference'))
-    amount_usd = models.DecimalField(decimal_places=2, max_digits=10, verbose_name=_('Amount (USD)'))
-    liquidation_usd = models.DecimalField(decimal_places=2, max_digits=10, verbose_name=_('Liquidation (USD)'))
-    outstanding_balance_usd = models.DecimalField(decimal_places=2, max_digits=10,
+    amount_usd = models.DecimalField(decimal_places=2, max_digits=20, verbose_name=_('Amount (USD)'))
+    liquidation_usd = models.DecimalField(decimal_places=2, max_digits=20, verbose_name=_('Liquidation (USD)'))
+    outstanding_balance_usd = models.DecimalField(decimal_places=2, max_digits=20,
                                                   verbose_name=_('Outstanding Balance (USD)'))
-    amount_less_than_3_Months_usd = models.DecimalField(decimal_places=2, max_digits=10,
+    amount_less_than_3_Months_usd = models.DecimalField(decimal_places=2, max_digits=20,
                                                         verbose_name=_('Amount mess than 3 months (USD)'))
-    amount_3_to_6_months_usd = models.DecimalField(decimal_places=2, max_digits=10,
+    amount_3_to_6_months_usd = models.DecimalField(decimal_places=2, max_digits=20,
                                                    verbose_name=_('Amount between 3 and 6 months (USD)'))
-    amount_6_to_9_months_usd = models.DecimalField(decimal_places=2, max_digits=10,
+    amount_6_to_9_months_usd = models.DecimalField(decimal_places=2, max_digits=20,
                                                    verbose_name=_('Amount between 6 and 9 months (USD)'))
-    amount_more_than_9_Months_usd = models.DecimalField(decimal_places=2, max_digits=10,
+    amount_more_than_9_Months_usd = models.DecimalField(decimal_places=2, max_digits=20,
                                                         verbose_name=_('Amount more than 9 months (USD)'))
 
     tracker = FieldTracker()

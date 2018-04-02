@@ -1,12 +1,11 @@
 import datetime
-from unittest import TestCase
 
+from django.test import SimpleTestCase
 from freezegun import freeze_time
-
-from partners import utils
 
 from funds.tests.factories import FundsReservationHeaderFactory
 from locations.tests.factories import GatewayTypeFactory, LocationFactory
+from partners import utils
 from partners.models import Intervention, InterventionBudget, InterventionResultLink
 from partners.tests.factories import (
     AgreementFactory,
@@ -91,7 +90,7 @@ def setup_intervention_test_data(test_case, include_results_and_indicators=False
         test_case.disaggregation = test_case.applied_indicator.disaggregation.create(name='A Disaggregation')
 
 
-class TestGetQuarterDefault(TestCase):
+class TestGetQuarterDefault(SimpleTestCase):
     @freeze_time("2013-05-26")
     def test_get_quarter_default(self):
 

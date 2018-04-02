@@ -1,17 +1,16 @@
 # Python imports
 from __future__ import absolute_import, division, print_function
 
-from unittest import TestCase
-
 from django.contrib.auth.models import Group
 from django.contrib.contenttypes.fields import GenericForeignKey
 from django.db import models
+from django.test import SimpleTestCase
 from freezegun import freeze_time
 
 from EquiTrack import utils
 
 
-class TestUtils(TestCase):
+class TestUtils(SimpleTestCase):
     """
     Test utils function
     """
@@ -24,7 +23,7 @@ class TestUtils(TestCase):
         self.assertEqual(current_year, 2013)
 
 
-class TestGetAllFieldNames(TestCase):
+class TestGetAllFieldNames(SimpleTestCase):
     def test_get_all_field_names(self):
         '''Exercise get_all_field_names() which is Django-provided code to replace Model._meta.get_all_field_names()'''
         class Useless:

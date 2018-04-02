@@ -25,13 +25,15 @@ class CheckView(View):
         if any(not r.success for r in results.values()):
             response = 'Problems with the following services:\n{}'.format(
                 '\n'.join(
-                    '{}: {}'.format(service_id, result.message)
-                    for service_id, result in results.items() if not result.success
+                    sorted(
+                        '{}: {}'.format(service_id, result.message)
+                        for service_id, result in results.items() if not result.success
+                    )
                 )
             )
             return HttpResponse(response, status=500, content_type='text/plain')
         else:
             return HttpResponse(
-                'all is well (checked: {})'.format(', '.join(results.keys())),
+                'all is well (checked: {})'.format(', '.join(sorted(results.keys()))),
                 content_type='text/plain',
             )

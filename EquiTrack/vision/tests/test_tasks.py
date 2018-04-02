@@ -2,8 +2,8 @@
 from __future__ import absolute_import, division, print_function, unicode_literals
 
 import datetime
-from unittest import TestCase
 
+from django.test import SimpleTestCase
 from django.test.utils import override_settings
 from django.utils import timezone
 
@@ -38,7 +38,7 @@ def _build_country(name):
 @mock.patch('vision.tasks.sync_handler')
 @mock.patch('vision.tasks.connection', spec=['set_tenant'])
 @mock.patch('vision.tasks.logger.info')
-class TestVisionSyncTask(TestCase):
+class TestVisionSyncTask(SimpleTestCase):
     """Exercises the vision_sync_task() task which requires a lot of mocking and some monkey patching."""
     def setUp(self):
         super(TestVisionSyncTask, self).setUp()
@@ -227,7 +227,7 @@ class TestVisionSyncTask(TestCase):
         self._assertLoggerMessages(mock_logger, selected_countries, selected_synchronizers)
 
 
-class TestSyncHandlerTask(TestCase):
+class TestSyncHandlerTask(BaseTenantTestCase):
     """Exercises the sync_handler()"""
     def setUp(self):
         self.country = _build_country('My')

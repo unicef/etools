@@ -36,15 +36,25 @@ def _has_action_permission(action):
 
 @python_2_unicode_compatible
 class TPMVisit(SoftDeleteMixin, TimeStampedModel, models.Model):
+
+    DRAFT = 'draft'
+    ASSIGNED = 'assigned'
+    CANCELLED = 'cancelled'
+    ACCEPTED = 'tpm_accepted'
+    REJECTED = 'tpm_rejected'
+    REPORTED = 'tpm_reported'
+    REPORT_REJECTED = 'tpm_report_rejected'
+    UNICEF_APPROVED = 'unicef_approved'
+
     STATUSES = Choices(
-        ('draft', _('Draft')),
-        ('assigned', _('Assigned')),
-        ('cancelled', _('Cancelled')),
-        ('tpm_accepted', _('TPM Accepted')),
-        ('tpm_rejected', _('TPM Rejected')),
-        ('tpm_reported', _('TPM Reported')),
-        ('tpm_report_rejected', _('Sent Back to TPM')),
-        ('unicef_approved', _('UNICEF Approved')),
+        (DRAFT, _('Draft')),
+        (ASSIGNED, _('Assigned')),
+        (CANCELLED, _('Cancelled')),
+        (ACCEPTED, _('TPM Accepted')),
+        (REJECTED, _('TPM Rejected')),
+        (REPORTED, _('TPM Reported')),
+        (REPORT_REJECTED, _('Sent Back to TPM')),
+        (UNICEF_APPROVED, _('UNICEF Approved')),
     )
 
     STATUSES_DATES = {
