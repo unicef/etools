@@ -36,15 +36,25 @@ def _has_action_permission(action):
 
 @python_2_unicode_compatible
 class TPMVisit(SoftDeleteMixin, TimeStampedModel, models.Model):
+
+    DRAFT = 'draft'
+    ASSIGNED = 'assigned'
+    CANCELLED = 'cancelled'
+    ACCEPTED = 'tpm_accepted'
+    REJECTED = 'tpm_rejected'
+    REPORTED = 'tpm_reported'
+    REPORT_REJECTED = 'tpm_report_rejected'
+    UNICEF_APPROVED = 'unicef_approved'
+
     STATUSES = Choices(
-        ('draft', _('Draft')),
-        ('assigned', _('Assigned')),
-        ('cancelled', _('Cancelled')),
-        ('tpm_accepted', _('TPM Accepted')),
-        ('tpm_rejected', _('TPM Rejected')),
-        ('tpm_reported', _('TPM Reported')),
-        ('tpm_report_rejected', _('Sent Back to TPM')),
-        ('unicef_approved', _('UNICEF Approved')),
+        (DRAFT, _('Draft')),
+        (ASSIGNED, _('Assigned')),
+        (CANCELLED, _('Cancelled')),
+        (ACCEPTED, _('TPM Accepted')),
+        (REJECTED, _('TPM Rejected')),
+        (REPORTED, _('TPM Reported')),
+        (REPORT_REJECTED, _('Sent Back to TPM')),
+        (UNICEF_APPROVED, _('UNICEF Approved')),
     )
 
     STATUSES_DATES = {
@@ -129,17 +139,17 @@ class TPMVisit(SoftDeleteMixin, TimeStampedModel, models.Model):
         return _has_action_permission(self, user, action)
 
     def get_mail_context(self):
+        activities = self.tpm_activities.all()
+        interventions = set(a.intervention.title for a in activities if a.intervention)
+        partner_names = set(a.partner.name for a in activities)
         return {
             'reference_number': self.reference_number,
             'tpm_partner': self.tpm_partner.name,
-            'tpm_activities': [map(lambda a: a.get_mail_context(), self.tpm_activities.all())],
-            'multiple_tpm_activities': self.tpm_activities.count() > 1,
+            'tpm_activities': [a.get_mail_context() for a in activities],
+            'multiple_tpm_activities': activities.count() > 1,
             'object_url': self.get_object_url(),
-            'partners': ', '.join(set(map(lambda a: a.partner.name, self.tpm_activities.all()))),
-            'interventions': ', '.join(set(map(
-                lambda a: a.intervention.title,
-                self.tpm_activities.filter(intervention__isnull=False)
-            ))),
+            'partners': ', '.join(partner_names),
+            'interventions': ', '.join(interventions),
         }
 
     def _send_email(self, recipients, template_name, context=None, **kwargs):

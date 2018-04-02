@@ -2,6 +2,7 @@ from __future__ import absolute_import, division, print_function, unicode_litera
 
 from django.contrib.auth.models import User
 from django.core import mail
+from django.core.management import call_command
 
 from EquiTrack.tests.cases import BaseTenantTestCase
 from tpm.models import ThirdPartyMonitor
@@ -34,9 +35,11 @@ class TestTPMVisit(BaseTenantTestCase):
 
 
 class TPMStaffMemberTestCase(BaseTenantTestCase):
+
     @classmethod
     def setUpTestData(cls):
         cls.firm = TPMPartnerFactory()
+        call_command('update_notifications')
 
     def test_signal(self):
         ThirdPartyMonitor.invalidate_cache()

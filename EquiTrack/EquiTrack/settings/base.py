@@ -12,7 +12,9 @@ https://docs.djangoproject.com/en/1.9/topics/settings/
 For the full list of settings and their values, see
 https://docs.djangoproject.com/en/1.9/ref/settings/
 """
-from __future__ import absolute_import
+from __future__ import absolute_import, division, print_function, unicode_literals
+
+from django.utils import six
 
 import datetime
 import os
@@ -30,7 +32,7 @@ def str2bool(value):
 
     This assumes that 'value' is one of a list of some common possible Truthy string values.
     """
-    return str(value).lower() in ("yes", "true", "t", "1")
+    return six.text_type(value).lower() in ("yes", "true", "t", "1")
 
 
 # Absolute filesystem path to the Django project directory:
@@ -196,11 +198,8 @@ TENANT_APPS = (
     'reports',
     'partners',
     'hact',
-    'trips',
-    'supplies',
     'activities',
     't2f',
-    'workplan',
     'attachments',
     'tpm',
     'audit',
@@ -563,6 +562,12 @@ EMAIL_FOR_USER_RESPONSIBLE_FOR_INVESTIGATION_ESCALATIONS = os.getenv(
     'EMAIL_FOR_USER_RESPONSIBLE_FOR_INVESTIGATION_ESCALATIONS', 'integrity1@unicef.org'
 )
 
+AZURE_CLIENT_ID = os.getenv('AZURE_CLIENT_ID', 'invalid_azure_client_id')
+AZURE_CLIENT_SECRET = os.getenv('AZURE_CLIENT_SECRET', 'invalid_azure_client_secret')
+AZURE_TOKEN_URL = 'https://login.microsoftonline.com/unicef.org/oauth2/token'
+AZURE_GRAPH_API_BASE_URL = 'https://graph.microsoft.com'
+AZURE_GRAPH_API_VERSION = 'beta'
+AZURE_GRAPH_API_PAGE_SIZE = 250
 
 # drfpaswordless: https://github.com/aaronn/django-rest-framework-passwordless
 
@@ -573,3 +578,5 @@ PASSWORDLESS_AUTH = {
     # username is better choice as it can be only 30 symbols max and unique.
     'PASSWORDLESS_USER_EMAIL_FIELD_NAME': 'username'
 }
+
+REPORT_EMAILS = os.getenv('REPORT_EMAILS', ['etools@unicef.org', ])

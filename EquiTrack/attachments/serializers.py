@@ -5,13 +5,15 @@ from django.utils.translation import ugettext as _
 from rest_framework import serializers
 from rest_framework.exceptions import ValidationError
 
-from attachments.models import Attachment
-from attachments.serializers_fields import Base64FileField
+from attachments.models import Attachment, AttachmentFlat
+from attachments.serializers_fields import (
+    Base64FileField
+)
 
 
-class BaseAttachmentsSerializer(serializers.ModelSerializer):
+class BaseAttachmentSerializer(serializers.ModelSerializer):
     def validate(self, attrs):
-        data = super(BaseAttachmentsSerializer, self).validate(attrs)
+        data = super(BaseAttachmentSerializer, self).validate(attrs)
 
         if not self.partial and bool(data.get('file')) == bool(data.get('hyperlink')):
             raise ValidationError(_('Please provide file or hyperlink.'))
@@ -26,7 +28,15 @@ class BaseAttachmentsSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Attachment
-        fields = ['id', 'file_type', 'file', 'hyperlink', 'created', 'modified', ]
+        fields = [
+            'id',
+            'file_type',
+            'file',
+            'hyperlink',
+            'created',
+            'modified',
+            'uploaded_by',
+        ]
         extra_kwargs = {
             'created': {
                 'label': _('Date Uploaded'),
@@ -34,7 +44,7 @@ class BaseAttachmentsSerializer(serializers.ModelSerializer):
         }
 
 
-class Base64AttachmentSerializer(BaseAttachmentsSerializer):
+class Base64AttachmentSerializer(BaseAttachmentSerializer):
     file = Base64FileField(required=False, label=_('File Attachment'))
     file_name = serializers.CharField(write_only=True, required=False)
 
@@ -45,5 +55,13 @@ class Base64AttachmentSerializer(BaseAttachmentsSerializer):
             data['file'].name = file_name
         return data
 
-    class Meta(BaseAttachmentsSerializer.Meta):
-        fields = BaseAttachmentsSerializer.Meta.fields + ['file_name', ]
+    class Meta(BaseAttachmentSerializer.Meta):
+        fields = BaseAttachmentSerializer.Meta.fields + ['file_name', ]
+
+
+class AttachmentFlatSerializer(serializers.ModelSerializer):
+    id = serializers.IntegerField(source="attachment_id")
+
+    class Meta:
+        model = AttachmentFlat
+        exclude = ("attachment", )

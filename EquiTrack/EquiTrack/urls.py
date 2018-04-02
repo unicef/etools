@@ -62,6 +62,8 @@ urlpatterns = [
 
     # ***************  API version 1  ********************
     url(r'^locations/', include('locations.urls')),
+    # GIS API urls
+    url(r'^api/management/gis/', include('management.urls_gis')),
     url(r'^users/', include('users.urls')),
     url(r'^api/management/', include(management_urls)),
     url(r'^api/', include(api.urls)),
@@ -86,7 +88,10 @@ urlpatterns = [
         include('snapshot.urls', namespace='snapshot_api')
     ),
     url(r'^api/v2/environment/', include('environment.urls_v2', namespace='environment')),
-
+    url(
+        r'^api/v2/attachments/',
+        include('attachments.urls', namespace='attachments')
+    ),
 
     # ***************  API version 3  ******************
     url(r'^api/v3/users/', include('users.urls_v3', namespace='users_v3')),

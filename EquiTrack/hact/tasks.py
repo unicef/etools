@@ -27,6 +27,10 @@ def update_hact_values():
                                           date_of_draft_report_to_unicef__year=datetime.now().year)
             hact['outstanding_findings'] = sum([
                 audit.pending_unsupported_amount for audit in audits if audit.pending_unsupported_amount])
+
+            partner.programmatic_visits()
+            # partner.spot_checks()
+
             partner.hact_values = json.dumps(hact, cls=HactEncoder)
             partner.save()
     logger.info('Hact Freeze Task process finished')
@@ -40,7 +44,7 @@ def update_aggregate_hact_values():
         aggregate_hact, _ = AggregateHact.objects.get_or_create(year=datetime.today().year)
         try:
             aggregate_hact.update()
-        except Exception as e:
-            logger.error(country, e.message)
+        except Exception:
+            logger.exception(country)
 
     logger.info('Hact Aggregator Task process finished')

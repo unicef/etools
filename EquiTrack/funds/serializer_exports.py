@@ -1,8 +1,10 @@
-from __future__ import unicode_literals
+from __future__ import absolute_import, division, print_function, unicode_literals
 
+from django.utils import six
 from django.utils.translation import ugettext as _
 from rest_framework import serializers
 
+from EquiTrack.mixins import ExportSerializerMixin
 from funds.models import (
     FundsReservationHeader,
     FundsReservationItem,
@@ -20,7 +22,10 @@ class FundsReservationHeaderExportSerializer(serializers.ModelSerializer):
         fields = '__all__'
 
 
-class FundsReservationHeaderExportFlatSerializer(FundsReservationHeaderExportSerializer):
+class FundsReservationHeaderExportFlatSerializer(
+        ExportSerializerMixin,
+        FundsReservationHeaderExportSerializer
+):
     intervention = serializers.CharField(
         label=_("Reference Number"),
         source="intervention.number",
@@ -38,7 +43,10 @@ class FundsReservationItemExportSerializer(serializers.ModelSerializer):
         fields = "__all__"
 
 
-class FundsReservationItemExportFlatSerializer(FundsReservationItemExportSerializer):
+class FundsReservationItemExportFlatSerializer(
+        ExportSerializerMixin,
+        FundsReservationItemExportSerializer
+):
     intervention = serializers.CharField(
         label=_("Reference Number"),
         source="fund_reservation.intervention.number",
@@ -46,11 +54,14 @@ class FundsReservationItemExportFlatSerializer(FundsReservationItemExportSeriali
     fund_reservation = serializers.CharField(source="fund_reservation.fr_number")
 
 
-class FundsCommitmentItemExportFlatSerializer(FundsCommitmentItemSerializer):
+class FundsCommitmentItemExportFlatSerializer(
+        ExportSerializerMixin,
+        FundsCommitmentItemSerializer
+):
     fund_commitment = serializers.CharField(source="fund_commitment.fc_number")
 
 
-class GrantExportFlatSerializer(GrantSerializer):
+class GrantExportFlatSerializer(ExportSerializerMixin, GrantSerializer):
     donor = serializers.CharField(source="donor.name")
 
 
@@ -62,9 +73,9 @@ class DonorExportSerializer(serializers.ModelSerializer):
         fields = "__all__"
 
     def get_grant(self, obj):
-        return ", ".join([str(g.pk) for g in obj.grant_set.all()])
+        return ", ".join([six.text_type(g.pk) for g in obj.grant_set.all()])
 
 
-class DonorExportFlatSerializer(DonorExportSerializer):
+class DonorExportFlatSerializer(ExportSerializerMixin, DonorExportSerializer):
     def get_grant(self, obj):
         return ", ".join([g.name for g in obj.grant_set.all()])

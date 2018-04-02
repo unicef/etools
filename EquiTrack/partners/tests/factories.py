@@ -87,6 +87,7 @@ class AssessmentFactory(factory.django.DjangoModelFactory):
 class FileTypeFactory(factory.django.DjangoModelFactory):
     class Meta:
         model = models.FileType
+        django_get_or_create = ("name", )
 
     name = fuzzy.FuzzyChoice([
         'FACE',
@@ -131,7 +132,7 @@ class InterventionAttachmentFactory(factory.django.DjangoModelFactory):
 
     intervention = factory.SubFactory(InterventionFactory)
     attachment = factory.django.FileField(filename='test_file.pdf')
-    type = factory.Iterator(models.FileType.objects.all())
+    type = factory.SubFactory(FileTypeFactory)
 
 
 class InterventionBudgetFactory(factory.django.DjangoModelFactory):

@@ -19,7 +19,7 @@ from partners.views.agreements_v2 import (
     AgreementListAPIView,
     AgreementDetailAPIView,
     AgreementAmendmentDeleteView,
-)
+    AgreementDeleteView)
 from partners.views.interventions_v2 import (
     InterventionAmendmentListAPIView,
     InterventionListAPIView,
@@ -37,7 +37,7 @@ from partners.views.interventions_v2 import (
     InterventionResultLinkUpdateView, InterventionIndicatorsListView, InterventionIndicatorsUpdateView,
     InterventionReportingPeriodListCreateView,
     InterventionReportingPeriodDetailView,
-)
+    InterventionDeleteView)
 
 from partners.views.v2 import (
     PMPStaticDropdownsListAPIView, PMPDropdownsListApiView,
@@ -49,7 +49,12 @@ from partners.views.v2 import (
 urlpatterns = (
 
     url(r'^agreements/$', view=AgreementListAPIView.as_view(), name='agreement-list'),
-    url(r'^agreements/(?P<pk>\d+)/$', view=AgreementDetailAPIView.as_view(), name='agreement-detail'),
+    url(r'^agreements/(?P<pk>\d+)/$', view=AgreementDetailAPIView.as_view(http_method_names=['get', 'patch']),
+        name='agreement-detail'),
+
+    url(r'^agreements/delete/(?P<pk>\d+)/$', view=AgreementDeleteView.as_view(http_method_names=['delete']),
+        name='agreement-delete'),
+
     url(r'^agreements/(?P<agr>\d+)/generate_doc/$', PCAPDFView.as_view(), name='pca_pdf'),
     url(r'^agreements/amendments/$',
         view=AgreementAmendmentListAPIView.as_view(),
@@ -135,6 +140,10 @@ urlpatterns = (
     url(r'^interventions/(?P<pk>\d+)/$',
         view=InterventionDetailAPIView.as_view(http_method_names=['get', 'patch']),
         name='intervention-detail'),
+    url(r'^interventions/delete/(?P<pk>\d+)/$',
+        view=InterventionDeleteView.as_view(http_method_names=['delete']),
+        name='intervention-delete'),
+
     url(r'^interventions/planned-visits/(?P<pk>\d+)/$',
         view=InterventionPlannedVisitsDeleteView.as_view(http_method_names=['delete', ]),
         name='intervention-visits-del'),

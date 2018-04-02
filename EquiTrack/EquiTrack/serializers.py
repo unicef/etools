@@ -1,5 +1,6 @@
 import json
 
+from django.utils import six
 from rest_framework import serializers
 from snapshot.utils import create_dict_with_relations, create_snapshot
 
@@ -7,7 +8,7 @@ from snapshot.utils import create_dict_with_relations, create_snapshot
 class JsonFieldSerializer(serializers.Field):
 
     def to_representation(self, value):
-        return json.loads(value) if isinstance(value, str) else value
+        return json.loads(value) if isinstance(value, six.text_type) else value
 
     def to_internal_value(self, data):
         return json.dumps(data) if isinstance(data, dict) else data

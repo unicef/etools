@@ -3,11 +3,17 @@ from __future__ import absolute_import, division, print_function, unicode_litera
 import datetime
 import random
 
+from django.conf import settings
 from django.core.management import call_command
 from django.utils import six
+from factory import fuzzy
 from rest_framework import status
 from mock import patch, Mock
 
+from attachments.tests.factories import (
+    AttachmentFactory,
+    AttachmentFileTypeFactory,
+)
 from audit.models import Engagement
 from audit.tests.base import AuditTestCaseMixin, EngagementTransitionsTestCaseMixin
 from audit.tests.factories import (
@@ -20,8 +26,8 @@ from audit.tests.factories import (
     RiskBluePrintFactory,
     RiskCategoryFactory,
     SpotCheckFactory,
-    SpecialAuditFactory
-)
+    SpecialAuditFactory,
+    EngagementActionPointFactory)
 from EquiTrack.tests.cases import BaseTenantTestCase
 from partners.models import PartnerType
 
@@ -342,6 +348,10 @@ class TestEngagementsListViewSet(EngagementTransitionsTestCaseMixin, BaseTenantT
 class BaseTestEngagementsCreateViewSet(EngagementTransitionsTestCaseMixin):
     endpoint = 'engagements'
 
+    @classmethod
+    def setUpTestData(cls):
+        call_command('update_notifications')
+
     def setUp(self):
         super(BaseTestEngagementsCreateViewSet, self).setUp()
         self.create_data = {
@@ -437,6 +447,7 @@ class SpecialAuditCreateViewSet(BaseTestEngagementsCreateViewSet, BaseTenantTest
 
 class TestEngagementsUpdateViewSet(EngagementTransitionsTestCaseMixin, BaseTenantTestCase):
     engagement_factory = MicroAssessmentFactory
+    fixtures = ['audit_users', ]
 
     def _do_update(self, user, data):
         data = data or {}
@@ -490,6 +501,70 @@ class TestEngagementsUpdateViewSet(EngagementTransitionsTestCaseMixin, BaseTenan
         response = self._do_update(self.unicef_focal_point, {'partner': partner.id})
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response.data['active_pd'], [])
+
+    def test_action_point_added(self):
+        self._init_finalized_engagement()
+        self.assertEqual(self.engagement.action_points.count(), 0)
+        response = self._do_update(self.unicef_focal_point, {
+            'action_points': [{
+                'category': "Invoice and receive reimbursement of ineligible expenditure",
+                'description': fuzzy.FuzzyText(length=100).fuzz(),
+                'due_date': fuzzy.FuzzyDate(datetime.date(2001, 1, 1)).fuzz(),
+                'person_responsible': self.unicef_user.id
+            }]
+        })
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(self.engagement.action_points.count(), 1)
+
+    def test_action_point_person_responsible_required(self):
+        self._init_finalized_engagement()
+        response = self._do_update(self.unicef_focal_point, {
+            'action_points': [{
+                'category': "Invoice and receive reimbursement of ineligible expenditure",
+                'description': fuzzy.FuzzyText(length=100).fuzz(),
+                'due_date': fuzzy.FuzzyDate(datetime.date(2001, 1, 1)).fuzz(),
+            }]
+        })
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn('action_points', response.data)
+        self.assertIn('person_responsible', response.data['action_points'][0])
+
+    def test_action_point_escalate_to_investigation(self):
+        self._init_finalized_engagement()
+        self.assertEqual(self.engagement.action_points.count(), 0)
+        response = self._do_update(self.unicef_focal_point, {
+            'action_points': [{
+                'category': 'Escalate to Investigation',
+                'description': fuzzy.FuzzyText(length=100).fuzz(),
+                'due_date': fuzzy.FuzzyDate(datetime.date(2001, 1, 1)).fuzz(),
+            }]
+        })
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(self.engagement.action_points.count(), 1)
+        self.assertEqual(
+            self.engagement.action_points.first().person_responsible.email,
+            settings.EMAIL_FOR_USER_RESPONSIBLE_FOR_INVESTIGATION_ESCALATIONS
+        )
+
+    def test_action_point_escalate_to_investigation_person_responsible_changed(self):
+        self._init_finalized_engagement()
+        action_point = EngagementActionPointFactory(
+            author=self.unicef_focal_point,
+            engagement=self.engagement,
+            category="Invoice and receive reimbursement of ineligible expenditure",
+            person_responsible=self.unicef_focal_point,
+        )
+        response = self._do_update(self.unicef_focal_point, {
+            'action_points': [{
+                'id': action_point.id,
+                'category': 'Escalate to Investigation',
+            }]
+        })
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(
+            self.engagement.action_points.first().person_responsible.email,
+            settings.EMAIL_FOR_USER_RESPONSIBLE_FOR_INVESTIGATION_ESCALATIONS
+        )
 
 
 class TestAuditorFirmViewSet(AuditTestCaseMixin, BaseTenantTestCase):
@@ -625,6 +700,49 @@ class TestAuditorStaffMembersViewSet(AuditTestCaseMixin, BaseTenantTestCase):
             user=self.usual_user
         )
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+
+
+class TestEngagementSpecialPDFExportViewSet(EngagementTransitionsTestCaseMixin, BaseTenantTestCase):
+    engagement_factory = SpecialAuditFactory
+
+    def _test_pdf_view(self, user, status_code=status.HTTP_200_OK):
+        response = self.forced_auth_req(
+            'get',
+            '/api/audit/special-audits/{}/pdf/'.format(self.engagement.id),
+            user=user
+        )
+
+        self.assertEqual(response.status_code, status_code)
+        if status_code == status.HTTP_200_OK:
+            self.assertIn(response._headers['content-disposition'][0], 'Content-Disposition')
+
+    def test_guest(self):
+        self.user = None
+        self._test_pdf_view(None, status.HTTP_403_FORBIDDEN)
+
+    def test_common_user(self):
+        self._test_pdf_view(self.usual_user, status.HTTP_404_NOT_FOUND)
+
+    def test_unicef_user(self):
+        self._test_pdf_view(self.unicef_user, status.HTTP_404_NOT_FOUND)
+
+    def test_auditor(self):
+        self._test_pdf_view(self.auditor)
+
+    def test_auditor_with_attachment(self):
+        file_type = AttachmentFileTypeFactory(
+            code="audit_report"
+        )
+        AttachmentFactory(
+            file="test_report.pdf",
+            file_type=file_type,
+            code=file_type.code,
+            content_object=self.engagement
+        )
+        self._test_pdf_view(self.auditor)
+
+    def test_focal_point(self):
+        self._test_pdf_view(self.unicef_focal_point)
 
 
 class TestEngagementPDFExportViewSet(EngagementTransitionsTestCaseMixin, BaseTenantTestCase):
