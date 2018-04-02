@@ -12,7 +12,7 @@ from django.core.urlresolvers import reverse, resolve
 from django.db import connection
 from django.test import SimpleTestCase
 from django.utils import six, timezone
-from six.moves.urllib_parse import urlparse
+from django.utils.six.moves.urllib_parse import urlparse
 
 from model_utils import Choices
 from rest_framework import status

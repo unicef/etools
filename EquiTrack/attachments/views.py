@@ -10,7 +10,7 @@ from rest_framework.generics import ListAPIView
 from rest_framework.permissions import IsAdminUser
 
 from attachments.models import Attachment, AttachmentFlat
-from attachments.serializers import AttachmentSerializer
+from attachments.serializers import AttachmentFlatSerializer
 from utils.common.urlresolvers import site_url
 
 
@@ -20,7 +20,7 @@ class AttachmentListView(ListAPIView):
         Q(attachment__hyperlink__isnull=True) | Q(attachment__hyperlink__exact="")
     )
     permission_classes = (IsAdminUser, )
-    serializer_class = AttachmentSerializer
+    serializer_class = AttachmentFlatSerializer
 
 
 class AttachmentFileView(DetailView):
