@@ -18,6 +18,7 @@ from allauth.account.adapter import DefaultAccountAdapter
 from allauth.account.utils import perform_login
 from allauth.exceptions import ImmediateHttpResponse
 from allauth.socialaccount.adapter import DefaultSocialAccountAdapter
+from rest_framework import serializers
 from rest_framework.authentication import BasicAuthentication, SessionAuthentication, TokenAuthentication
 from rest_framework.exceptions import AuthenticationFailed, PermissionDenied
 from rest_framework_jwt.authentication import JSONWebTokenAuthentication
@@ -272,6 +273,24 @@ class ExportModelMixin(object):
                 model
             )
         return context
+
+
+class ExportSerializerMixin(object):
+    country = serializers.SerializerMethodField()
+
+    def __init__(self, *args, **kwargs):
+        self.add_country()
+        super(ExportSerializerMixin, self).__init__(*args, **kwargs)
+
+    def add_country(self):
+        # Add country to list of fields exported
+        if hasattr(self.Meta, "fields") and self.Meta.fields != "__all__":
+            self.Meta.fields.append("country")
+            if "country" not in self._declared_fields:
+                self._declared_fields["country"] = self.country
+
+    def get_country(self, obj):
+        return connection.schema_name
 
 
 class QueryStringFilterMixin(object):
