@@ -1,9 +1,8 @@
 import datetime
 from operator import itemgetter
 
-from unittest import TestCase
-
 from django.core.urlresolvers import reverse
+from django.test import SimpleTestCase
 from django.utils import six
 from rest_framework import status
 from partners.tests.test_utils import setup_intervention_test_data
@@ -38,7 +37,7 @@ from reports.tests.factories import (
 from users.tests.factories import UserFactory
 
 
-class UrlsTestCase(URLAssertionMixin, TestCase):
+class UrlsTestCase(URLAssertionMixin, SimpleTestCase):
     '''Simple test case to verify URL reversal'''
     def test_urls(self):
         '''Verify URL pattern names generate the URLs we expect them to.'''
@@ -214,18 +213,21 @@ class TestOutputListAPIView(BaseTenantTestCase):
         data = {"dropdown": "true"}
         response = self.forced_auth_req('get', self.url, data=data)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertItemsEqual(response.data, [
-            {
-                "wbs": self.result1.wbs,
-                "id": self.result1.pk,
-                "name": self.result1.name
-            },
-            {
-                "wbs": self.result2.wbs,
-                "id": self.result2.pk,
-                "name": self.result2.name
-            },
-        ])
+        six.assertCountEqual(
+            self,
+            response.data, [
+                {
+                    "wbs": self.result1.wbs,
+                    "id": self.result1.pk,
+                    "name": self.result1.name
+                },
+                {
+                    "wbs": self.result2.wbs,
+                    "id": self.result2.pk,
+                    "name": self.result2.name
+                },
+            ]
+        )
 
 
 class TestOutputDetailAPIView(BaseTenantTestCase):

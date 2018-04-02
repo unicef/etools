@@ -4,16 +4,17 @@ from __future__ import print_function
 from __future__ import unicode_literals
 
 from mock import patch, Mock
-from unittest import TestCase
 
 from django.conf import settings
 from django.contrib.auth import get_user_model
+from django.test import SimpleTestCase
 
+from EquiTrack.tests.cases import BaseTenantTestCase
 from monitoring.service_checks import check_celery, check_db
 from users.tests.factories import UserFactory
 
 
-class TestCheckDB(TestCase):
+class TestCheckDB(BaseTenantTestCase):
     def test_no_users(self):
         # if --keepdb flag used Users probably exist in db
         # so ignore this test if that is the case
@@ -40,7 +41,7 @@ class TestCheckDB(TestCase):
         )
 
 
-class TestCheckCelery(TestCase):
+class TestCheckCelery(SimpleTestCase):
     def test_valid(self):
         mock_ping = Mock()
         mock_ping.control.ping.return_value = [1, 2]
