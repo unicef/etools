@@ -2,6 +2,7 @@ from __future__ import absolute_import, division, print_function, unicode_litera
 
 from django.db import models
 from django.utils.encoding import python_2_unicode_compatible
+from django.utils.translation import ugettext as _
 
 from model_utils import Choices
 
@@ -50,7 +51,7 @@ class BasePermission(models.Model):
         :param user:
         :return:
         """
-        ordered_user_types = zip(*cls.USER_TYPES)[1]
+        ordered_user_types = list(zip(*cls.USER_TYPES))[1]
 
         when_mapping = [
             models.When(name=name, then=models.Value(i))
@@ -74,7 +75,7 @@ class StatusBasePermission(BasePermission):
         ('new', 'New instance'),
     )
 
-    instance_status = models.CharField(max_length=32)
+    instance_status = models.CharField(max_length=32, verbose_name=_('Instance Status'))
 
     objects = StatusBasePermissionQueryset.as_manager()
 

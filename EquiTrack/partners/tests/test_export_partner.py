@@ -231,8 +231,10 @@ class TestPartnerOrganizationAssessmentModelExport(PartnerModelExportTestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         dataset = Dataset().load(response.content.decode('utf-8'), 'csv')
         self.assertEqual(dataset.height, 1)
-        self.assertEqual(len(dataset._get_headers()), 14)
-        self.assertEqual(len(dataset[0]), 14)
+        headers = dataset._get_headers()
+        self.assertEqual(len(headers), 15)
+        self.assertIn("Country", headers)
+        self.assertEqual(len(dataset[0]), 15)
 
 
 class TestPartnerOrganizationHactExport(BaseTenantTestCase):

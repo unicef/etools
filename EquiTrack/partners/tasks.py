@@ -1,22 +1,26 @@
 from __future__ import absolute_import, division, print_function, unicode_literals
 
+import csv
 import datetime
 import itertools
 
 from django.conf import settings
+from django.core.mail.message import EmailMessage
 from django.db import connection, transaction
 from django.db.models import F, Sum
-from django.utils import six
+from django.db.models.functions import Coalesce
+from django.db.utils import six
 
 from celery.utils.log import get_task_logger
+from six import StringIO
 
 from EquiTrack.celery import app
-from partners.models import Agreement, Intervention
+from notification.models import Notification
+from partners.models import Agreement, Intervention, PartnerOrganization
 from partners.utils import copy_all_attachments
 from partners.validation.agreements import AgreementValid
 from partners.validation.interventions import InterventionValid
 from users.models import Country, User
-from notification.models import Notification
 
 logger = get_task_logger(__name__)
 
@@ -244,6 +248,77 @@ def _notify_interventions_ending_soon(country_name):
             template_data=email_context
         )
         notification.send_notification()
+
+
+@app.task
+def pmp_indicator_report():
+    base_url = 'https://etools.unicef.org'
+    countries = Country.objects.exclude(schema_name__in=['public', 'uat', 'frg'])
+    fieldnames = [
+        'Country',
+        'Partner Name',
+        'Partner Type',
+        'PD / SSFA ref',
+        'PD / SSFA status',
+        'PD / SSFA start date',
+        'PD / SSFA creation date',
+        'PD / SSFA end date',
+        'UNICEF US$ Cash contribution',
+        'UNICEF US$ Supply contribution',
+        'Total Budget',
+        'UNICEF Budget',
+        'Currency',
+        'Partner Contribution',
+        'Unicef Cash',
+        'In kind Amount',
+        'Total',
+        'FR numbers against PD / SSFA',
+        'Sum of all FR planned amount',
+        'Core value attached',
+        'Partner Link',
+        'Intervention Link',
+    ]
+    csvfile = StringIO()
+    writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
+    writer.writeheader()
+
+    for country in countries:
+        connection.set_tenant(Country.objects.get(name=country.name))
+        logger.info(u'Running on %s' % country.name)
+        for partner in PartnerOrganization.objects.filter():
+            for intervention in Intervention.objects.filter(
+                    agreement__partner=partner).select_related('planned_budget'):
+                planned_budget = getattr(intervention, 'planned_budget', None)
+                writer.writerow({
+                    'Country': country,
+                    'Partner Name': six.string_types(partner).decode('unicode_escape').encode('ascii', 'ignore'),
+                    'Partner Type': partner.cso_type,
+                    'PD / SSFA ref': intervention.number.encode('utf-8').replace(',', '-'),
+                    'PD / SSFA status': intervention.get_status_display(),
+                    'PD / SSFA start date': intervention.start,
+                    'PD / SSFA creation date': intervention.created,
+                    'PD / SSFA end date': intervention.end,
+                    'UNICEF US$ Cash contribution': intervention.total_unicef_cash,
+                    'UNICEF US$ Supply contribution': intervention.total_in_kind_amount,
+                    'Total Budget': intervention.total_budget,
+                    'UNICEF Budget': intervention.total_unicef_budget,
+                    'Currency': intervention.planned_budget.currency if planned_budget else '-',
+                    'Partner Contribution': intervention.planned_budget.partner_contribution if planned_budget else '-',
+                    'Unicef Cash': intervention.planned_budget.unicef_cash if planned_budget else '-',
+                    'In kind Amount': intervention.planned_budget.in_kind_amount if planned_budget else '-',
+                    'Total': intervention.planned_budget.total if planned_budget else '-',
+                    'FR numbers against PD / SSFA': u' - '.join([
+                        (fh.fr_number.encode('utf-8')) for fh in intervention.frs.all()]),
+                    'Sum of all FR planned amount': intervention.frs.aggregate(
+                        total=Coalesce(Sum('intervention_amt'), 0))['total'],
+                    'Core value attached': True if partner.core_values_assessment else False,
+                    'Partner Link': '{}/pmp/partners/{}/details'.format(base_url, partner.pk),
+                    'Intervention Link': '{}/pmp/interventions/{}/details'.format(base_url, intervention.pk),
+                })
+
+    mail = EmailMessage('PMP Indicator Report', 'Report generated', 'etools-reports@unicef.org', settings.REPORT_EMAILS)
+    mail.attach('pmp_indicators.csv', csvfile.getvalue(), 'text/csv')
+    mail.send()
 
 
 @app.task

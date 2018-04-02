@@ -4,15 +4,15 @@ import csv
 import datetime
 from decimal import Decimal
 import json
-from unittest import skip, TestCase
-from urlparse import urlparse
+from unittest import skip
 
 from django.conf import settings
-from django.contrib.auth.models import Group
 from django.core.files.uploadedfile import SimpleUploadedFile
 from django.core.urlresolvers import reverse, resolve
 from django.db import connection
+from django.test import SimpleTestCase
 from django.utils import six, timezone
+from django.utils.six.moves.urllib_parse import urlparse
 
 from model_utils import Choices
 from rest_framework import status
@@ -66,7 +66,7 @@ from users.tests.factories import (
 )
 
 
-class URLsTestCase(URLAssertionMixin, TestCase):
+class URLsTestCase(URLAssertionMixin, SimpleTestCase):
     '''Simple test case to verify URL reversal'''
     def test_urls(self):
         '''Verify URL pattern names generate the URLs we expect them to.'''
@@ -153,6 +153,8 @@ class TestAPIPartnerOrganizationListView(BaseTenantTestCase):
             cso_type='International',
         )
 
+        cls.readonly_group = GroupFactory(name=READ_ONLY_API_GROUP_NAME)
+
         cls.url = reverse('partners_api:partner-list')
 
     def setUp(self):
@@ -204,7 +206,7 @@ class TestAPIPartnerOrganizationListView(BaseTenantTestCase):
     def test_group_permission(self):
         '''Ensure a non-staff user in the correct group has access'''
         user = UserFactory()
-        user.groups.add(Group.objects.get(name=READ_ONLY_API_GROUP_NAME))
+        user.groups.add(self.readonly_group)
         response = self.forced_auth_req('get', self.url, user=user)
         self.assertResponseFundamentals(response)
 
@@ -348,13 +350,15 @@ class TestPartnerOrganizationListViewForCSV(BaseTenantTestCase):
         # but I want to make sure the response looks CSV-ish.
         self.assertEqual(response.get('Content-Disposition'), 'attachment;filename=partner.csv')
 
-        self.assertIsInstance(response.rendered_content, six.string_types)
+        response_content = response.rendered_content.decode('utf-8')
+
+        self.assertIsInstance(response_content, six.text_type)
 
         # The response should *not* look like JSON.
         with self.assertRaises(ValueError):
-            json.loads(response.rendered_content)
+            json.loads(response_content)
 
-        lines = response.rendered_content.replace('\r\n', '\n').split('\n')
+        lines = response_content.replace('\r\n', '\n').split('\n')
         # Try to read it with Python's CSV reader.
         reader = csv.DictReader(lines)
 

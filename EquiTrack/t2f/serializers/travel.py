@@ -122,7 +122,7 @@ class ActionPointSerializer(serializers.ModelSerializer):
     def validate_status(self, value):
         statuses = dict(ActionPoint.STATUS).keys()
         if value not in statuses:
-            raise ValidationError('Invalid status. Possible choices: {}'.format(', '.join(statuses)))
+            raise ValidationError('Invalid status. Possible choices: {}'.format(', '.join(sorted(statuses))))
         return value
 
 
@@ -411,7 +411,7 @@ class TravelDetailsSerializer(PermissionBasedModelSerializer):
         new_models = []
         for data in related_data:
             data = dict(data)
-            m2m_fields = {k: data.pop(k, []) for k in data.keys()
+            m2m_fields = {k: data.pop(k, []) for k in list(data.keys())
                           if isinstance(model._meta.get_field(k), ManyToManyField)}
             data.update(kwargs)
 
@@ -452,7 +452,7 @@ class TravelDetailsSerializer(PermissionBasedModelSerializer):
         return instance
 
     def update_object(self, obj, data):
-        m2m_fields = {k: data.pop(k, []) for k in data.keys()
+        m2m_fields = {k: data.pop(k, []) for k in list(data.keys())
                       if isinstance(obj._meta.get_field(k), ManyToManyField)}
         for attr, value in data.items():
             setattr(obj, attr, value)
