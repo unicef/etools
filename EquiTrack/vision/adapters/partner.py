@@ -132,8 +132,8 @@ class PartnerSynchronizer(VisionDataSynchronizer):
                     partner['VENDOR_NAME'], partner['PARTNER_TYPE_DESC']
                 ))
                 if partner_org.id:
-                    partner_org.deleted_flag = True if 'MARKED_FOR_DELETION' in partner else False
-                    partner_org.blocked = True if 'POSTING_BLOCK' in partner else False
+                    partner_org.deleted_flag = True if partner.get('MARKED_FOR_DELETION', None) else False
+                    partner_org.blocked = True if partner.get('POSTING_BLOCK', None) else False
                     partner_org.hidden = True
                     partner_org.save()
                 return processed
@@ -205,13 +205,13 @@ class PartnerSynchronizer(VisionDataSynchronizer):
     @staticmethod
     def get_cso_type(partner):
         cso_type_mapping = {
-            'International NGO': u'International',
-            'National NGO': u'National',
-            'Community based organization': u'Community Based Organization',
-            'Academic Institution': u'Academic Institution'
+            'INTERNATIONAL NGO': u'International',
+            'NATIONAL NGO': u'National',
+            'COMMUNITY BASED ORGANIZATION': u'Community Based Organization',
+            'ACADEMIC INSTITUTION': u'Academic Institution'
         }
-        if 'CSO_TYPE' in partner and partner['CSO_TYPE'] in cso_type_mapping:
-            return cso_type_mapping[partner['CSO_TYPE']]
+        if 'CSO_TYPE' in partner and partner['CSO_TYPE'].upper() in cso_type_mapping:
+            return cso_type_mapping[partner['CSO_TYPE'].upper()]
 
     @staticmethod
     def get_partner_type(partner):
@@ -221,7 +221,7 @@ class PartnerSynchronizer(VisionDataSynchronizer):
             'GOVERNMENT': u'Government',
             'UN AGENCY': u'UN Agency',
         }
-        return type_mapping.get(partner['PARTNER_TYPE_DESC'], None)
+        return type_mapping.get(partner['PARTNER_TYPE_DESC'].upper(), None)
 
     @staticmethod
     def get_partner_rating(partner):
