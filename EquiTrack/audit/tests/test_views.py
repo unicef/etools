@@ -344,6 +344,10 @@ class TestEngagementsListViewSet(EngagementTransitionsTestCaseMixin, BaseTenantT
 class BaseTestEngagementsCreateViewSet(EngagementTransitionsTestCaseMixin):
     endpoint = 'engagements'
 
+    @classmethod
+    def setUpTestData(cls):
+        call_command('update_notifications')
+
     def setUp(self):
         super(BaseTestEngagementsCreateViewSet, self).setUp()
         self.create_data = {
