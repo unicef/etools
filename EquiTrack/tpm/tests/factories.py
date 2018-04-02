@@ -216,7 +216,7 @@ class TPMVisitFactory(factory.DjangoModelFactory):
         assigned = InheritedTrait(
             pre_assigned,
             status=TPMVisit.STATUSES.assigned,
-            date_of_assigned = factory.LazyFunction(timezone.now),
+            date_of_assigned=factory.LazyFunction(timezone.now),
         )
 
         cancelled = factory.Trait(
