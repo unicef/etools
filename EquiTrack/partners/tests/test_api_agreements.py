@@ -1,8 +1,8 @@
 from __future__ import unicode_literals
-from unittest import TestCase
 import json
 import datetime
 from django.core.urlresolvers import reverse
+from django.test import SimpleTestCase
 from rest_framework import status
 
 from EquiTrack.tests.cases import BaseTenantTestCase
@@ -23,7 +23,7 @@ from snapshot.models import Activity
 from users.tests.factories import GroupFactory, UserFactory
 
 
-class URLsTestCase(URLAssertionMixin, TestCase):
+class URLsTestCase(URLAssertionMixin, SimpleTestCase):
     '''Simple test case to verify URL reversal'''
     def test_urls(self):
         '''Verify URL pattern names generate the URLs we expect them to.'''

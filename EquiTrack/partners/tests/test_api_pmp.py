@@ -4,9 +4,9 @@ from __future__ import print_function
 from __future__ import unicode_literals
 import json
 from operator import itemgetter
-from unittest import TestCase
 
 from django.core.urlresolvers import reverse
+from django.test import SimpleTestCase
 from django.utils import six
 
 from rest_framework import status
@@ -30,7 +30,7 @@ from publics.tests.factories import PublicsCurrencyFactory
 from users.tests.factories import UserFactory
 
 
-class URLsTestCase(URLAssertionMixin, TestCase):
+class URLsTestCase(URLAssertionMixin, SimpleTestCase):
     '''Simple test case to verify URL reversal'''
     def test_urls(self):
         '''Verify URL pattern names generate the URLs we expect them to.'''

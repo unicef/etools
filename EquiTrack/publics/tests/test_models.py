@@ -1,7 +1,6 @@
 from __future__ import absolute_import, division, print_function, unicode_literals
 
-from unittest import TestCase
-
+from django.test import SimpleTestCase
 from django.utils import six
 
 from publics.tests.factories import (
@@ -19,7 +18,7 @@ from publics.tests.factories import (
 )
 
 
-class TestStrUnicode(TestCase):
+class TestStrUnicode(SimpleTestCase):
     '''Ensure calling six.text_type() on model instances returns the right text.'''
     def test_travel_expense_type(self):
         instance = PublicsTravelExpenseTypeFactory.build(title='xyz')

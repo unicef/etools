@@ -4,12 +4,13 @@ import csv
 import datetime
 from decimal import Decimal
 import json
-from unittest import skip, TestCase
+from unittest import skip
 
 from django.conf import settings
 from django.core.files.uploadedfile import SimpleUploadedFile
 from django.core.urlresolvers import reverse, resolve
 from django.db import connection
+from django.test import SimpleTestCase
 from django.utils import six, timezone
 from six.moves.urllib_parse import urlparse
 
@@ -65,7 +66,7 @@ from users.tests.factories import (
 )
 
 
-class URLsTestCase(URLAssertionMixin, TestCase):
+class URLsTestCase(URLAssertionMixin, SimpleTestCase):
     '''Simple test case to verify URL reversal'''
     def test_urls(self):
         '''Verify URL pattern names generate the URLs we expect them to.'''

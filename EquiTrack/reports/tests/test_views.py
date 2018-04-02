@@ -1,9 +1,8 @@
 import datetime
 from operator import itemgetter
 
-from unittest import TestCase
-
 from django.core.urlresolvers import reverse
+from django.test import SimpleTestCase
 from django.utils import six
 from rest_framework import status
 from partners.tests.test_utils import setup_intervention_test_data
@@ -38,7 +37,7 @@ from reports.tests.factories import (
 from users.tests.factories import UserFactory
 
 
-class UrlsTestCase(URLAssertionMixin, TestCase):
+class UrlsTestCase(URLAssertionMixin, SimpleTestCase):
     '''Simple test case to verify URL reversal'''
     def test_urls(self):
         '''Verify URL pattern names generate the URLs we expect them to.'''
