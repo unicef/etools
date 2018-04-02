@@ -3,11 +3,10 @@ import sys
 from decimal import Decimal
 
 from django.conf import settings
-from django.contrib.auth import get_user_model
 from django.contrib.auth.models import Group, User
 from django.core.validators import MaxValueValidator, MinValueValidator
-from django.db import connection, models, transaction
-from django.db.models.signals import post_save, pre_delete
+from django.db import connection, models
+from django.db.models.signals import post_save
 from django.utils.encoding import python_2_unicode_compatible
 from django.utils.translation import ugettext_lazy as _
 
