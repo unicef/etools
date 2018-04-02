@@ -130,7 +130,6 @@ class InterventionAttachmentsInline(admin.TabularInline):
 
 class InterventionResultsLinkAdmin(admin.ModelAdmin):
 
-    # form = ResultLinkForm
     model = InterventionResultLink
     fields = (
         'intervention',
@@ -235,18 +234,12 @@ class InterventionAdmin(CountryUsersAdminMixin, HiddenPartnerMixin, SnapshotMode
                  ('unicef_signatory', 'signed_by_unicef_date',),
                  'partner_focal_points',
                  'unicef_focal_points',
-                 # ('days_from_submission_to_signed', 'days_from_review_to_signed',),
                  ('start', 'end'),
                  'population_focus'),
         }),
     )
 
     inlines = (
-        # InterventionAmendmentsInlineAdmin,
-        # BudgetInlineAdmin,
-        # PlannedVisitsInline,
-        # ResultsLinkInline,
-        # SectorLocationInline,
         InterventionAttachmentsInline,
         ActivityInline,
     )

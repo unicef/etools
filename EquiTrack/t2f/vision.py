@@ -106,7 +106,13 @@ class InvoiceExport(object):
 
     def generate_tree(self, root):
         # https://docs.python.org/2/library/xml.etree.elementtree.html
-        return ET.tostring(root, encoding='UTF-8', method='xml')
+        # https://docs.python.org/3/library/xml.etree.elementtree.html#xml.etree.ElementTree.ElementTree.write
+        # root is an Element
+        # Doing it this way makes the results consistent between Python 2 & 3
+        tree = ET.ElementTree(root)
+        buffer = six.BytesIO()
+        tree.write(buffer, xml_declaration=True, encoding='utf-8')
+        return buffer.getvalue()
 
     @staticmethod
     def get_posting_key(amount):

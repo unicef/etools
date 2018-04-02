@@ -2,10 +2,10 @@ from __future__ import unicode_literals
 
 import json
 from datetime import datetime
-from StringIO import StringIO
 
 from django.core.urlresolvers import reverse
 from django.utils import six
+from django.utils.six import StringIO
 import factory
 from freezegun import freeze_time
 from pytz import UTC
@@ -153,7 +153,7 @@ class TravelDetails(URLAssertionMixin, BaseTenantTestCase):
                                                      name='test_attachment',
                                                      type='document')
         attachment.file.save('fake.txt', fakefile)
-        self.assertGreater(fakefile.len, 0)
+        self.assertGreater(len(fakefile.getvalue()), 0)
         fakefile.seek(0)
 
         data = {'name': 'second',
