@@ -77,6 +77,20 @@ class URLsTestCase(URLAssertionMixin, TestCase):
         self.assertIntParamRegexes(names_and_paths, 'partners_api:')
 
 
+class TestInterventionsSwagger(BaseTenantTestCase):
+    def test_accessing_css_file(self):
+        # Because a swagger bug was breaking this (in combination with
+        # a particular way we had designed some URLs), this test is to
+        # reproduce the problem, then make sure the changes we make fix it.
+        # The swagger bug:
+        # https://github.com/marcgibbons/django-rest-swagger/issues/702
+        # was tickled by our having URLs that end in delete, maybe in
+        # combination with having their only method be 'delete'.
+        unicef_staff = UserFactory(is_staff=True)
+        response = self.forced_auth_req('get', '/api/docs/css/dashboard.css', user=unicef_staff)
+        self.assertEqual(200, response.status_code)
+
+
 class TestInterventionsAPI(BaseTenantTestCase):
     EDITABLE_FIELDS = {
         'draft': ["status", "attachments", "prc_review_document", 'travel_activities',
