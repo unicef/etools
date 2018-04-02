@@ -51,7 +51,7 @@ class BasePermission(models.Model):
         :param user:
         :return:
         """
-        ordered_user_types = zip(*cls.USER_TYPES)[1]
+        ordered_user_types = list(zip(*cls.USER_TYPES))[1]
 
         when_mapping = [
             models.When(name=name, then=models.Value(i))

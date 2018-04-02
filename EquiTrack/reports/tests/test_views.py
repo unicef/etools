@@ -213,18 +213,21 @@ class TestOutputListAPIView(BaseTenantTestCase):
         data = {"dropdown": "true"}
         response = self.forced_auth_req('get', self.url, data=data)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertItemsEqual(response.data, [
-            {
-                "wbs": self.result1.wbs,
-                "id": self.result1.pk,
-                "name": self.result1.name
-            },
-            {
-                "wbs": self.result2.wbs,
-                "id": self.result2.pk,
-                "name": self.result2.name
-            },
-        ])
+        six.assertCountEqual(
+            self,
+            response.data, [
+                {
+                    "wbs": self.result1.wbs,
+                    "id": self.result1.pk,
+                    "name": self.result1.name
+                },
+                {
+                    "wbs": self.result2.wbs,
+                    "id": self.result2.pk,
+                    "name": self.result2.name
+                },
+            ]
+        )
 
 
 class TestOutputDetailAPIView(BaseTenantTestCase):
