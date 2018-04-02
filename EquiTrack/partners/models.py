@@ -424,7 +424,7 @@ class PartnerOrganization(AdminURLMixin, TimeStampedModel):
     total_ct_cp = models.DecimalField(
         verbose_name=_("Total Cash Transferred for Country Programme"),
         decimal_places=2,
-        max_digits=12,
+        max_digits=20,
         blank=True,
         null=True,
         help_text='Total Cash Transferred for Country Programme'
@@ -432,26 +432,26 @@ class PartnerOrganization(AdminURLMixin, TimeStampedModel):
     total_ct_cy = models.DecimalField(
         verbose_name=_("Total Cash Transferred per Current Year"),
         decimal_places=2,
-        max_digits=12,
+        max_digits=20,
         blank=True,
         null=True,
         help_text='Total Cash Transferred per Current Year'
     )
 
     net_ct_cy = models.DecimalField(
-        decimal_places=2, max_digits=12, blank=True, null=True,
+        decimal_places=2, max_digits=20, blank=True, null=True,
         help_text='Net Cash Transferred per Current Year',
         verbose_name=_('Net Cash Transferred')
     )
 
     reported_cy = models.DecimalField(
-        decimal_places=2, max_digits=12, blank=True, null=True,
+        decimal_places=2, max_digits=20, blank=True, null=True,
         help_text='Liquidations 1 Oct - 30 Sep',
         verbose_name=_('Liquidation')
     )
 
     total_ct_ytd = models.DecimalField(
-        decimal_places=2, max_digits=12, blank=True, null=True,
+        decimal_places=2, max_digits=20, blank=True, null=True,
         help_text='Cash Transfers Jan - Dec',
         verbose_name=_('Cash Transfer Jan - Dec')
     )
@@ -2241,13 +2241,13 @@ class FundingCommitment(TimeFramedModel):
     fc_ref = models.CharField(
         max_length=50, blank=True, null=True, unique=True, verbose_name=_('Reference'))
     fr_item_amount_usd = models.DecimalField(
-        decimal_places=2, max_digits=12, blank=True, null=True, verbose_name=_('Item Amount (USD)'))
+        decimal_places=2, max_digits=20, blank=True, null=True, verbose_name=_('Item Amount (USD)'))
     agreement_amount = models.DecimalField(
-        decimal_places=2, max_digits=12, blank=True, null=True, verbose_name=_('Agreement Amount'))
+        decimal_places=2, max_digits=20, blank=True, null=True, verbose_name=_('Agreement Amount'))
     commitment_amount = models.DecimalField(
-        decimal_places=2, max_digits=12, blank=True, null=True, verbose_name=_('Commitment Amount'))
+        decimal_places=2, max_digits=20, blank=True, null=True, verbose_name=_('Commitment Amount'))
     expenditure_amount = models.DecimalField(
-        decimal_places=2, max_digits=12, blank=True, null=True, verbose_name=_('Expenditure Amount'))
+        decimal_places=2, max_digits=20, blank=True, null=True, verbose_name=_('Expenditure Amount'))
 
     tracker = FieldTracker()
     objects = FCManager()
@@ -2259,17 +2259,17 @@ class DirectCashTransfer(models.Model):
     """
 
     fc_ref = models.CharField(max_length=50, verbose_name=_('Fund Commitment Reference'))
-    amount_usd = models.DecimalField(decimal_places=2, max_digits=10, verbose_name=_('Amount (USD)'))
-    liquidation_usd = models.DecimalField(decimal_places=2, max_digits=10, verbose_name=_('Liquidation (USD)'))
-    outstanding_balance_usd = models.DecimalField(decimal_places=2, max_digits=10,
+    amount_usd = models.DecimalField(decimal_places=2, max_digits=20, verbose_name=_('Amount (USD)'))
+    liquidation_usd = models.DecimalField(decimal_places=2, max_digits=20, verbose_name=_('Liquidation (USD)'))
+    outstanding_balance_usd = models.DecimalField(decimal_places=2, max_digits=20,
                                                   verbose_name=_('Outstanding Balance (USD)'))
-    amount_less_than_3_Months_usd = models.DecimalField(decimal_places=2, max_digits=10,
+    amount_less_than_3_Months_usd = models.DecimalField(decimal_places=2, max_digits=20,
                                                         verbose_name=_('Amount mess than 3 months (USD)'))
-    amount_3_to_6_months_usd = models.DecimalField(decimal_places=2, max_digits=10,
+    amount_3_to_6_months_usd = models.DecimalField(decimal_places=2, max_digits=20,
                                                    verbose_name=_('Amount between 3 and 6 months (USD)'))
-    amount_6_to_9_months_usd = models.DecimalField(decimal_places=2, max_digits=10,
+    amount_6_to_9_months_usd = models.DecimalField(decimal_places=2, max_digits=20,
                                                    verbose_name=_('Amount between 6 and 9 months (USD)'))
-    amount_more_than_9_Months_usd = models.DecimalField(decimal_places=2, max_digits=10,
+    amount_more_than_9_Months_usd = models.DecimalField(decimal_places=2, max_digits=20,
                                                         verbose_name=_('Amount more than 9 months (USD)'))
 
     tracker = FieldTracker()

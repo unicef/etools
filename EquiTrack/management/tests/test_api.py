@@ -1,12 +1,12 @@
 # Python imports
 from __future__ import absolute_import, division, print_function, unicode_literals
 
-from unittest import TestCase
+from django.test import SimpleTestCase
 
 from EquiTrack.tests.mixins import URLAssertionMixin
 
 
-class UrlsTestCase(URLAssertionMixin, TestCase):
+class UrlsTestCase(URLAssertionMixin, SimpleTestCase):
     '''Simple test case to verify URL reversal'''
     def test_urls(self):
         '''Verify URL pattern names generate the URLs we expect them to.'''

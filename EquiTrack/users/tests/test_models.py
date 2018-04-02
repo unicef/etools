@@ -1,8 +1,7 @@
 from __future__ import absolute_import, division, print_function, unicode_literals
 
-from unittest import TestCase
-
 from django.contrib.auth import get_user_model
+from django.test import SimpleTestCase
 from django.utils import six
 
 from EquiTrack.tests.cases import BaseTenantTestCase
@@ -172,7 +171,7 @@ class TestDeletePartnerRelationship(BaseTenantTestCase):
         self.assertTrue(user_updated.is_active)
 
 
-class TestStrUnicode(TestCase):
+class TestStrUnicode(SimpleTestCase):
     '''Ensure calling six.text_type() on model instances returns the right text.'''
     def test_country(self):
         instance = CountryFactory.build(name=b'xyz')
