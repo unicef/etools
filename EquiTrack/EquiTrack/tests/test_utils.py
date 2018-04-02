@@ -2,14 +2,14 @@
 from __future__ import absolute_import, division, print_function
 
 from datetime import datetime
-from unittest import TestCase
 
+from django.test import SimpleTestCase
 from freezegun import freeze_time
 
 from EquiTrack.utils import get_current_year, get_quarter
 
 
-class TestUtils(TestCase):
+class TestUtils(SimpleTestCase):
     """
     Test utils function
     """

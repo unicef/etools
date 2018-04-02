@@ -1,13 +1,12 @@
 from __future__ import absolute_import, division, print_function, unicode_literals
 
-from unittest import TestCase
-
+from django.test import SimpleTestCase
 from django.utils import six
 
 from firms.utils import generate_username
 
 
-class UsernameGeneratorTestCase(TestCase):
+class UsernameGeneratorTestCase(SimpleTestCase):
     iterations = 10 ** 5
 
     def test_length(self):

@@ -11,9 +11,9 @@ from attachments.serializers_fields import (
 )
 
 
-class BaseAttachmentsSerializer(serializers.ModelSerializer):
+class BaseAttachmentSerializer(serializers.ModelSerializer):
     def validate(self, attrs):
-        data = super(BaseAttachmentsSerializer, self).validate(attrs)
+        data = super(BaseAttachmentSerializer, self).validate(attrs)
 
         if not self.partial and bool(data.get('file')) == bool(data.get('hyperlink')):
             raise ValidationError(_('Please provide file or hyperlink.'))
@@ -44,7 +44,7 @@ class BaseAttachmentsSerializer(serializers.ModelSerializer):
         }
 
 
-class Base64AttachmentSerializer(BaseAttachmentsSerializer):
+class Base64AttachmentSerializer(BaseAttachmentSerializer):
     file = Base64FileField(required=False, label=_('File Attachment'))
     file_name = serializers.CharField(write_only=True, required=False)
 
@@ -55,11 +55,11 @@ class Base64AttachmentSerializer(BaseAttachmentsSerializer):
             data['file'].name = file_name
         return data
 
-    class Meta(BaseAttachmentsSerializer.Meta):
-        fields = BaseAttachmentsSerializer.Meta.fields + ['file_name', ]
+    class Meta(BaseAttachmentSerializer.Meta):
+        fields = BaseAttachmentSerializer.Meta.fields + ['file_name', ]
 
 
-class AttachmentSerializer(serializers.ModelSerializer):
+class AttachmentFlatSerializer(serializers.ModelSerializer):
     id = serializers.IntegerField(source="attachment.pk")
     filename = serializers.CharField(source="attachment.filename")
 
