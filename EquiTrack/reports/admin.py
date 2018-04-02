@@ -79,11 +79,6 @@ class IndicatorAdmin(admin.ModelAdmin):
 
 class LowerIndicatorAdmin(admin.ModelAdmin):
     search_fields = ('name', 'code')
-    # list_filter = (
-    #     SectorListFilter,
-    #     'lower_result__result_structure',
-    #     'lower_result__result_type',
-    # )
     list_display = (
         'name',
         'result',

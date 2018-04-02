@@ -256,8 +256,6 @@ class ProgrammeSynchronizer(VisionDataSynchronizer):
         ("ACTIVITY_FOCUS_CODE", "activity_focus_code"),
         ("ACTIVITY_FOCUS_NAME", "activity_focus_name"),
         ("HUMANITARIAN_TAG", "humanitarian_tag"),
-        # ("PROGRAMME_AREA_CODE", "code"),
-        # ("PROGRAMME_AREA_NAME", ""),
     )
 
     def _get_json(self, data):
@@ -274,7 +272,7 @@ class ProgrammeSynchronizer(VisionDataSynchronizer):
                 return True
             return False
 
-        return filter(in_time_range, records)
+        return [record for record in records if in_time_range(record)]
 
     def _clean_records(self, records):
         records = self._filter_by_time_range(records)
@@ -342,7 +340,7 @@ class RAMSynchronizer(VisionDataSynchronizer):
             if record['INDICATOR_DESCRIPTION'] in ['', None] or record["INDICATOR_CODE"] in ['undefined', '', None]:
                 return False
             return True
-        return filter(is_valid_record, records)
+        return [rec for rec in records if is_valid_record(rec)]
 
     def _clean_records(self, records):
         records = self._filter_records(records)

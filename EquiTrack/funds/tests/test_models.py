@@ -1,10 +1,16 @@
-# -*- coding: UTF-8 -*-
+# -*- coding: utf-8 -*-
 from __future__ import absolute_import, division, print_function, unicode_literals
+
+from decimal import Decimal
 
 from django.utils import six
 
 from EquiTrack.tests.cases import BaseTenantTestCase
-from funds.models import FundsReservationItem, FundsCommitmentItem
+from funds.models import (
+    FundsReservationHeader,
+    FundsReservationItem,
+    FundsCommitmentItem,
+)
 from funds.tests.factories import (
     DonorFactory,
     FundsCommitmentItemFactory,
@@ -49,6 +55,16 @@ class TestStrUnicode(BaseTenantTestCase):
     def test_funds_commitment_item(self):
         funds_commitment_item = FundsCommitmentItemFactory.build(fc_ref_number=u'R\xe4dda Barnen')
         self.assertEqual(six.text_type(funds_commitment_item), u'R\xe4dda Barnen')
+
+
+class TestFundsReservationHeader(BaseTenantTestCase):
+    def test_ax_digits(self):
+        amt = Decimal('12549773241.00')
+        fr = FundsReservationHeader(
+            total_amt_local=amt
+        )
+        fr.save()
+        self.assertEqual(fr.total_amt_local, amt)
 
 
 class TestFundsReservationItem(BaseTenantTestCase):

@@ -3,9 +3,9 @@ from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 from __future__ import unicode_literals
-from unittest import TestCase
 
 from django.core.urlresolvers import reverse
+from django.test import SimpleTestCase
 from django.utils import six
 from rest_framework import status
 from tablib.core import Dataset
@@ -23,7 +23,7 @@ from funds.tests.factories import (
 from users.tests.factories import UserFactory
 
 
-class UrlsTestCase(URLAssertionMixin, TestCase):
+class UrlsTestCase(URLAssertionMixin, SimpleTestCase):
     '''Simple test case to verify URL reversal'''
     def test_urls(self):
         '''Verify URL pattern names generate the URLs we expect them to.'''

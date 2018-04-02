@@ -28,6 +28,8 @@ def update_hact_values():
                                           date_of_draft_report_to_unicef__year=datetime.now().year)
             hact['outstanding_findings'] = sum([
                 Decimal(audit.pending_unsupported_amount) for audit in audits if audit.pending_unsupported_amount])
+
+            partner.programmatic_visits()
             partner.hact_values = json.dumps(hact, cls=HactEncoder)
             partner.save()
     logger.info('Hact Freeze Task process finished')
