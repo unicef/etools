@@ -1,8 +1,7 @@
 from __future__ import absolute_import, division, print_function, unicode_literals
 
+from django.test import SimpleTestCase
 from django.utils import six
-
-from unittest import TestCase
 
 from locations.tests.factories import (
     CartoDBTableFactory,
@@ -11,7 +10,7 @@ from locations.tests.factories import (
 )
 
 
-class TestStrUnicode(TestCase):
+class TestStrUnicode(SimpleTestCase):
     '''Ensure calling six.text_type() on model instances returns the right text.'''
     def test_gateway_type(self):
         gateway_type = GatewayTypeFactory.build(name=b'xyz')

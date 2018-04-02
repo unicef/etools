@@ -3,12 +3,12 @@ from __future__ import division
 from __future__ import print_function
 from __future__ import unicode_literals
 
-from unittest import TestCase
+from django.test import SimpleTestCase
 
 from EquiTrack import parsers
 
 
-class TestIntOrString(TestCase):
+class TestIntOrString(SimpleTestCase):
     def test_int(self):
         self.assertEqual(parsers._int_or_str(1), 1)
 
@@ -19,7 +19,7 @@ class TestIntOrString(TestCase):
         self.assertEqual(parsers._int_or_str("one"), "one")
 
 
-class TestNaturalKeys(TestCase):
+class TestNaturalKeys(SimpleTestCase):
     def test_int(self):
         self.assertEqual(parsers._natural_keys('123'), ["", 123, ""])
 
@@ -34,7 +34,7 @@ class TestNaturalKeys(TestCase):
         )
 
 
-class TestCreateListsFromDictKeys(TestCase):
+class TestCreateListsFromDictKeys(SimpleTestCase):
     def test_empty_dict(self):
         self.assertEqual(parsers._create_lists_from_dict_keys({}), [])
 
@@ -72,7 +72,7 @@ class TestCreateListsFromDictKeys(TestCase):
         )
 
 
-class TestCreateKey(TestCase):
+class TestCreateKey(SimpleTestCase):
     def test_empty(self):
         """If empty path list provided, then return an empty string"""
         self.assertEqual(parsers._create_key([]), "")
@@ -92,7 +92,7 @@ class TestCreateKey(TestCase):
         self.assertEqual(res, "sample[m\xe9lange][k][2]")
 
 
-class TestInitData(TestCase):
+class TestInitData(SimpleTestCase):
     def test_int_new(self):
         """Test int key, that does NOT exist"""
         self.assertEqual(parsers._init_data([], 0, []), [[]])
@@ -113,7 +113,7 @@ class TestInitData(TestCase):
         )
 
 
-class TestBuildParsedData(TestCase):
+class TestBuildParsedData(SimpleTestCase):
     def test_dict(self):
         """Check handling of last element as a string, should result in
         dictionary"""
@@ -142,7 +142,7 @@ class TestBuildParsedData(TestCase):
         self.assertEqual(res, {"one": {"two": {"three": ["end"]}}})
 
 
-class TestParseMultipartData(TestCase):
+class TestParseMultipartData(SimpleTestCase):
     def test_empty(self):
         self.assertEqual(parsers.parse_multipart_data({}), {})
 
