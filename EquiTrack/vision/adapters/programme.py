@@ -1,8 +1,11 @@
+from __future__ import absolute_import, division, print_function, unicode_literals
+
 import datetime
 import json
 import logging
 
 from django.db import transaction
+from django.utils import six
 
 from reports.models import CountryProgramme, Indicator, Result, ResultType
 from vision.utils import wcf_json_date_as_date
@@ -269,7 +272,7 @@ class ProgrammeSynchronizer(VisionDataSynchronizer):
                 return True
             return False
 
-        return filter(in_time_range, records)
+        return [record for record in records if in_time_range(record)]
 
     def _clean_records(self, records):
         records = self._filter_by_time_range(records)
@@ -337,7 +340,7 @@ class RAMSynchronizer(VisionDataSynchronizer):
             if record['INDICATOR_DESCRIPTION'] in ['', None] or record["INDICATOR_CODE"] in ['undefined', '', None]:
                 return False
             return True
-        return filter(is_valid_record, records)
+        return [rec for rec in records if is_valid_record(rec)]
 
     def _clean_records(self, records):
         records = self._filter_records(records)
@@ -345,7 +348,7 @@ class RAMSynchronizer(VisionDataSynchronizer):
         mapped_records = {}
         for r in records:
             a = r['WBS_ELEMENT_CODE']
-            code = unicode(r['INDICATOR_CODE'])
+            code = six.text_type(r['INDICATOR_CODE'])
             mapped_records[code] = {
                 'name': r['INDICATOR_DESCRIPTION'][:1024],
                 'baseline': r['BASELINE'][:255],

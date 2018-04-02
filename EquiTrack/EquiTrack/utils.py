@@ -1,16 +1,19 @@
 """
 Project wide base classes and utility functions for apps
 """
+import codecs
 import csv
 import json
 import uuid
 from functools import wraps
 
 from datetime import datetime
+
 from django.conf import settings
 from django.contrib.sites.models import Site
 from django.core.cache import cache
 from django.db import connection
+from django.utils import six
 from django.utils.cache import patch_cache_control
 
 import requests
@@ -59,7 +62,7 @@ def etag_cached(cache_key, public_cache=False):
     match the one sent along with the request.
     Otherwise it returns 304 NOT MODIFIED.
     """
-    assert isinstance(cache_key, (str, unicode)), 'Cache key has to be a string'
+    assert isinstance(cache_key, six.string_types), 'Cache key has to be a string'
 
     def make_cache_key():
         if public_cache:
@@ -111,13 +114,15 @@ class HashableDict(dict):
 
 def proccess_permissions(permission_dict):
     '''
-    :param permission_dict: the csv field read as a dictionary where the header contains the following keys:
+    :param permission_dict: the csv file read as a generator of dictionaries
+     where the header contains the following keys:
+
     'Group' - the Django Group the user should belong to - field may be blank.
     'Condition' - the condition that should be required to satisfy.
     'Status' - the status of the model (represents state)
     'Field' - the field we are targetting (eg: start_date) this needs to be spelled exactly as it is on the model
     'Action' - One of the following values: 'view', 'edit', 'required'
-    'Allowed' - the boolean 'TRUE' or 'FALSE' if the action should be allowed if the: group match, stastus match and
+    'Allowed' - the boolean 'TRUE' or 'FALSE' if the action should be allowed if the: group match, status match and
     condition match are all valid
 
     *** note that in order for the system to know what the default behaviour should be on a specified field for a
@@ -154,9 +159,11 @@ def proccess_permissions(permission_dict):
             result[field][action][allowed] = []
 
         # this action should not have been defined with any other allowed param
-        assert result[field][action].keys() == [allowed], 'There cannot be two types of "allowed" defined on the same '\
-                                                          'field with the same action as the system will not  be able' \
-                                                          ' to have a default behaviour'
+        assert list(result[field][action].keys()) == [allowed], \
+            'There cannot be two types of "allowed" defined on the same ' \
+            'field with the same action as the system will not be able' \
+            ' to have a default behaviour.  field=%r, action=%r, allowed=%r' \
+            % (field, action, allowed)
 
         result[field][action][allowed].append({
             'group': row['Group'],
@@ -173,7 +180,7 @@ def import_permissions(model_name):
     }
 
     def process_file():
-        with open(permission_file_map[model_name], 'rb') as csvfile:
+        with codecs.open(permission_file_map[model_name], 'r', encoding='ascii') as csvfile:
             sheet = csv.DictReader(csvfile, delimiter=',', quotechar='|')
             result = proccess_permissions(sheet)
         return result

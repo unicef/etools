@@ -2,8 +2,8 @@
 from __future__ import absolute_import, division, print_function, unicode_literals
 
 import datetime
-from unittest import TestCase
 
+from django.test import SimpleTestCase
 from django.test.utils import override_settings
 from django.utils import timezone
 
@@ -38,7 +38,7 @@ def _build_country(name):
 @mock.patch('vision.tasks.sync_handler')
 @mock.patch('vision.tasks.connection', spec=['set_tenant'])
 @mock.patch('vision.tasks.logger.info')
-class TestVisionSyncTask(TestCase):
+class TestVisionSyncTask(SimpleTestCase):
     """Exercises the vision_sync_task() task which requires a lot of mocking and some monkey patching."""
     def setUp(self):
         super(TestVisionSyncTask, self).setUp()
@@ -227,7 +227,7 @@ class TestVisionSyncTask(TestCase):
         self._assertLoggerMessages(mock_logger, selected_countries, selected_synchronizers)
 
 
-class TestSyncHandlerTask(TestCase):
+class TestSyncHandlerTask(BaseTenantTestCase):
     """Exercises the sync_handler()"""
     def setUp(self):
         self.country = _build_country('My')
@@ -267,11 +267,11 @@ class TestSyncHandlerTask(TestCase):
         self.assertEqual(mock_logger_info.call_args[0], (expected_msg,))
         self.assertEqual(mock_logger_info.call_args[1], {})
 
-        expected_msg = '{} sync failed, Reason: {}, Country: {}'.format(
-            'programme', 'banana', 'Country My'
+        expected_msg = '{} sync failed, Country: {}'.format(
+            'programme', 'Country My'
         )
         self.assertEqual(mock_logger_error.call_args[0], (expected_msg,))
-        self.assertEqual(mock_logger_error.call_args[1], {})
+        self.assertEqual(mock_logger_error.call_args[1], {'exc_info': True})
 
     @mock.patch('vision.tasks.logger.error')
     @override_settings(CELERY_ALWAYS_EAGER=True, CELERY_EAGER_PROPAGATES_EXCEPTIONS=True)

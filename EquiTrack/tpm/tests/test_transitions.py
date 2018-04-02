@@ -17,6 +17,7 @@ class TPMTransitionTestCase(TPMTestCaseMixin, BaseTenantTestCase):
     @classmethod
     def setUpTestData(cls):
         call_command('update_tpm_permissions', verbosity=0)
+        call_command('update_notifications')
 
     def _do_transition(self, visit, action, user, data=None):
         data = data or {}
@@ -198,7 +199,7 @@ class TransitionPermissionTestCaseMetaclass(type):
 
         newclass.transitions = cls._collect_transitions(newclass.model)
         newclass.status_field = getattr(newclass.model, newclass.transitions[0])._django_fsm.field
-        newclass.statuses = zip(*newclass.status_field.choices)[0]
+        newclass.statuses = list(zip(*newclass.status_field.choices))[0]
 
         for obj_status in newclass.statuses:
             for transition in newclass.transitions:

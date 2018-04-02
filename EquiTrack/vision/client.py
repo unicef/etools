@@ -5,7 +5,8 @@ import argparse
 import json
 import logging
 import os
-from urlparse import urljoin
+
+from django.utils.six.moves.urllib_parse import urljoin
 
 import requests
 from requests.auth import HTTPDigestAuth
@@ -102,8 +103,8 @@ def main():
 
         logger.info(client.get_business_areas())
 
-    except Exception as exp:
-        logger.exception(str(exp))
+    except Exception:
+        logger.exception("Exception in vision client")
 
 
 if __name__ == '__main__':
