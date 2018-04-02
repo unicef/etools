@@ -33,6 +33,7 @@ class TestTPMVisitViewSet(TestExportMixin, TPMTestCaseMixin, BaseTenantTestCase)
     @classmethod
     def setUpTestData(cls):
         call_command('update_tpm_permissions', verbosity=0)
+        call_command('update_notifications')
 
         cls.pme_user = UserFactory(pme=True)
         cls.unicef_user = UserFactory(unicef_user=True)

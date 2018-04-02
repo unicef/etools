@@ -58,8 +58,25 @@ djangorestframework==3.5.3
 djrill==2.1.0
 drf-nested-routers==0.11.1
 drfpasswordless==1.1.2
-enum34==1.1.6             # via cryptography
-et-xmlfile==1.0.1         # via openpyxl
+psycopg2==2.7.4
+celery==4.1.0
+amqp==2.2.2
+billiard==3.5.0.3
+kombu==4.1.0
+vine==1.1.4
+django-celery-beat==1.1.1
+django-celery-results==1.0.1
+GDAL==1.10.0           # DO NOT USE GDAL <= 2.1.0
+carto==1.0.1
+gunicorn==19.6.0
+tenant-schemas-celery==0.1.7
+sqlparse==0.2.2  # for django debug toolbar to not break admin
+azure-storage==0.20.2
+requests==2.11.1
+xlrd==1.0.0
+xhtml2pdf==0.2.1
+html5lib==1.0b10 #must be added after xhtml2pdf
+reportlab==3.3.0
 flower==0.9.1
 future==0.15.2            # via pyrestcli, pysaml2
 futures==3.2.0            # via azure-storage

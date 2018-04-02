@@ -103,7 +103,7 @@ class FundReservationsSynchronizer(VisionDataSynchronizer):
                 return False
             return True
 
-        return filter(bad_record, records)
+        return [rec for rec in records if bad_record(rec)]
 
     def get_value_for_field(self, field, value):
         if field in ['start_date', 'end_date', 'document_date', 'due_date']:
@@ -322,7 +322,7 @@ class FundCommitmentSynchronizer(VisionDataSynchronizer):
                 return False
             return True
 
-        return filter(bad_record, records)
+        return [rec for rec in records if bad_record(rec)]
 
     def get_value_for_field(self, field, value):
         if field in ['document_date', 'due_date']:
