@@ -118,7 +118,7 @@ class TestLocationViews(BaseTenantTestCase):
 class TestLocationAutocompleteView(BaseTenantTestCase):
     def setUp(self):
         super(TestLocationAutocompleteView, self).setUp()
-        self.unicef_staff = UserFactory(is_staff=True)
+        self.unicef_staff = UserFactory(is_staff=True, username='TestLocationAutocompleteView')
         self.client = TenantClient(self.tenant)
 
     def test_non_auth(self):

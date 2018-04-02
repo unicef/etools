@@ -28,7 +28,7 @@ class TestStrUnicode(SimpleTestCase):
         self.assertEqual(six.text_type(instance), u'R\xe4dda Barnen')
 
     def test_currency(self):
-        instance = PublicsCurrencyFactory.build(name=b'xyz')
+        instance = PublicsCurrencyFactory.build(name='xyz')
         self.assertEqual(six.text_type(instance), u'xyz')
 
         # Polish Zloty
@@ -36,7 +36,7 @@ class TestStrUnicode(SimpleTestCase):
         self.assertEqual(six.text_type(instance), 'z\u0142oty')
 
     def test_airline(self):
-        instance = PublicsAirlineCompanyFactory.build(name=b'xyz')
+        instance = PublicsAirlineCompanyFactory.build(name='xyz')
         self.assertEqual(six.text_type(instance), u'xyz')
 
         # Myflug (Iceland)
@@ -44,7 +44,7 @@ class TestStrUnicode(SimpleTestCase):
         self.assertEqual(six.text_type(instance), 'M\xfdflug')
 
     def test_business_region(self):
-        instance = PublicsBusinessRegionFactory.build(name=b'xyz')
+        instance = PublicsBusinessRegionFactory.build(name='xyz')
         self.assertEqual(six.text_type(instance), u'xyz')
 
         # Ost (East)
@@ -52,7 +52,7 @@ class TestStrUnicode(SimpleTestCase):
         self.assertEqual(six.text_type(instance), u'\xd6st')
 
     def test_business_area(self):
-        instance = PublicsBusinessAreaFactory.build(name=b'xyz')
+        instance = PublicsBusinessAreaFactory.build(name='xyz')
         self.assertEqual(six.text_type(instance), u'xyz')
 
         # Ost (East)
@@ -60,7 +60,7 @@ class TestStrUnicode(SimpleTestCase):
         self.assertEqual(six.text_type(instance), u'\xd6st')
 
     def test_wbs(self):
-        instance = PublicsWBSFactory.build(name=b'xyz')
+        instance = PublicsWBSFactory.build(name='xyz')
         self.assertEqual(six.text_type(instance), u'xyz')
 
         # Ost (East)
@@ -68,7 +68,7 @@ class TestStrUnicode(SimpleTestCase):
         self.assertEqual(six.text_type(instance), u'\xd6st')
 
     def test_fund(self):
-        instance = PublicsFundFactory.build(name=b'xyz')
+        instance = PublicsFundFactory.build(name='xyz')
         self.assertEqual(six.text_type(instance), u'xyz')
 
         # Ost (East)
@@ -76,7 +76,7 @@ class TestStrUnicode(SimpleTestCase):
         self.assertEqual(six.text_type(instance), u'\xd6st')
 
     def test_grant(self):
-        instance = PublicsGrantFactory.build(name=b'xyz')
+        instance = PublicsGrantFactory.build(name='xyz')
         self.assertEqual(six.text_type(instance), u'xyz')
 
         # Ost (East)
@@ -84,7 +84,7 @@ class TestStrUnicode(SimpleTestCase):
         self.assertEqual(six.text_type(instance), u'\xd6st')
 
     def test_country(self):
-        instance = PublicsCountryFactory.build(name=b'xyz')
+        instance = PublicsCountryFactory.build(name='xyz')
         self.assertEqual(six.text_type(instance), u'xyz')
 
         # Island (Iceland)
@@ -92,22 +92,22 @@ class TestStrUnicode(SimpleTestCase):
         self.assertEqual(six.text_type(instance), u'\xccsland')
 
     def test_dsa_region(self):
-        country = PublicsCountryFactory.build(name=b'xyz')
-        instance = PublicsDSARegionFactory.build(area_name=b'xyz', country=country)
+        country = PublicsCountryFactory.build(name='xyz')
+        instance = PublicsDSARegionFactory.build(area_name='xyz', country=country)
         self.assertEqual(six.text_type(instance), u'xyz - xyz')
 
         # Island (Iceland)
         country = PublicsCountryFactory.build(name=u'\xccsland')
-        instance = PublicsDSARegionFactory.build(area_name=b'xyz', country=country)
+        instance = PublicsDSARegionFactory.build(area_name='xyz', country=country)
         self.assertEqual(six.text_type(instance), u'\xccsland - xyz')
 
     def test_dsa_rate(self):
-        country = PublicsCountryFactory.build(name=b'xyz')
-        region = PublicsDSARegionFactory.build(area_name=b'xyz', country=country)
+        country = PublicsCountryFactory.build(name='xyz')
+        region = PublicsDSARegionFactory.build(area_name='xyz', country=country)
         instance = PublicsDSARateFactory.build(region=region)
         self.assertTrue(six.text_type(instance).startswith(u'xyz - xyz'))
 
         country = PublicsCountryFactory.build(name=u'\xccsland')
-        region = PublicsDSARegionFactory.build(area_name=b'xyz', country=country)
+        region = PublicsDSARegionFactory.build(area_name='xyz', country=country)
         instance = PublicsDSARateFactory.build(region=region)
         self.assertTrue(six.text_type(instance).startswith(u'\xccsland - xyz'))
