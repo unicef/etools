@@ -18,7 +18,7 @@ def fix_nulls(apps, schema):
 class Migration(migrations.Migration):
 
     dependencies = [
-        (u'attachments', u'0001_initial'),
+        (u'attachments', u'0002_attachmentflat_filename'),
     ]
 
     operations = [

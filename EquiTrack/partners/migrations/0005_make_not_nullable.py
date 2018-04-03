@@ -10,7 +10,7 @@ import EquiTrack
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('partners', '0003_fix_null_values'),
+        ('partners', '0004_fix_null_values'),
     ]
 
     operations = [

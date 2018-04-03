@@ -2,11 +2,11 @@ from __future__ import unicode_literals
 
 import csv
 import logging
-from cStringIO import StringIO
 from datetime import datetime
 from decimal import Decimal
 
 from django.core.urlresolvers import reverse
+from django.utils.six import StringIO
 from pytz import UTC
 
 from EquiTrack.tests.cases import BaseTenantTestCase

@@ -32,7 +32,7 @@ def fix_nulls(apps, schema):
 class Migration(migrations.Migration):
 
     dependencies = [
-        (u'users', u'0001_initial'),
+        (u'users', u'0002_auto_20180329_2123'),
     ]
 
     operations = [

@@ -85,6 +85,7 @@ def denormalize_attachment(attachment):
             "pd_ssfa_number": pd_ssfa_number,
             "file_type": file_type,
             "file_link": attachment.file_link,
+            "filename": attachment.filename,
             "uploaded_by": uploaded_by,
             "created": attachment.created.strftime("%d %b %Y"),
         }

@@ -579,3 +579,5 @@ PASSWORDLESS_AUTH = {
     # username is better choice as it can be only 30 symbols max and unique.
     'PASSWORDLESS_USER_EMAIL_FIELD_NAME': 'username'
 }
+
+REPORT_EMAILS = os.getenv('REPORT_EMAILS', ['etools@unicef.org', ])
