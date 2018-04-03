@@ -224,9 +224,14 @@ class PartnershipManagerRepPermission(permissions.BasePermission):
             return self._has_access_permissions(request.user, obj)
         else:
             # Check permissions for write request
-            return self._has_access_permissions(request.user, obj) and \
-                is_user_in_groups(request.user, ['Partnership Manager', 'Senior Management Team',
-                                                  'Representative Office'])
+            return self._has_access_permissions(request.user, obj) and is_user_in_groups(
+                request.user,
+                [
+                    'Partnership Manager',
+                    'Senior Management Team',
+                    'Representative Office'
+                ]
+            )
 
 
 class ListCreateAPIMixedPermission(permissions.BasePermission):

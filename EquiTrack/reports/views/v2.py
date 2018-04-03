@@ -210,7 +210,7 @@ class DisaggregationListCreateView(ListCreateAPIView):
 class DisaggregationRetrieveUpdateView(RetrieveUpdateAPIView):
     serializer_class = DisaggregationSerializer
     queryset = Disaggregation.objects.all()
-    permission_classes =  (PMEPermission, )
+    permission_classes = (PMEPermission, )
 
 
 class AppliedIndicatorListAPIView(ExportModelMixin, ListAPIView):
