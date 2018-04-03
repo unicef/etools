@@ -152,7 +152,6 @@ class PartnerOrganizationDetailAPIView(ValidatorViewMixin, RetrieveUpdateDestroy
     queryset = PartnerOrganization.objects.select_related('planned_engagement')
     serializer_class = PartnerOrganizationDetailSerializer
     permission_classes = (IsAdminUser,)
-    # parser_classes = (FormParser, MultiPartParser)
 
     SERIALIZER_MAP = {
         'assessments': AssessmentDetailSerializer,
