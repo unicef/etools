@@ -111,7 +111,7 @@ def import_permissions(model_name):
     }
 
     def process_file():
-        with open(permission_file_map[model_name], 'rb') as csvfile:
+        with open(permission_file_map[model_name], 'r', encoding="ascii") as csvfile:
             sheet = csv.DictReader(csvfile, delimiter=',', quotechar='|')
             result = process_permissions(sheet)
         return result
