@@ -95,3 +95,7 @@ def get_attribute_smart(instance, attrs):
             instance = instance.all()
 
     return get_attribute_smart(instance, attrs[1:])
+
+
+def strip_text(text):
+    return '\r\n'.join(map(lambda line: line.lstrip(), text.splitlines()))

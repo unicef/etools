@@ -105,47 +105,47 @@ class FundsReservationHeader(TimeStampedModel):
     intervention_amt = models.DecimalField(
         verbose_name=_('Current FR Amount'),
         default=0,
-        max_digits=12,
+        max_digits=20,
         decimal_places=2,
     )
     # overall_amount
     total_amt = models.DecimalField(
         verbose_name=_('FR Overall Amount'),
         default=0,
-        max_digits=12,
+        max_digits=20,
         decimal_places=2,
     )
     # overall_amount
     total_amt_local = models.DecimalField(
         verbose_name=_('FR Overall Amount DC'),
         default=0,
-        max_digits=12,
+        max_digits=20,
         decimal_places=2,
     )
     # actual is also referred to as "disbursment"
     actual_amt = models.DecimalField(
         verbose_name=_('Actual Cash Transfer'),
         default=0,
-        max_digits=12,
+        max_digits=20,
         decimal_places=2,
     )
     # actual is also referred to as "disbursment"
     actual_amt_local = models.DecimalField(
         verbose_name=_('Actual Cash Transfer Local'),
         default=0,
-        max_digits=12,
+        max_digits=20,
         decimal_places=2,
     )
     outstanding_amt = models.DecimalField(
         verbose_name=_('Outstanding DCT'),
         default=0,
-        max_digits=12,
+        max_digits=20,
         decimal_places=2,
     )
     outstanding_amt_local = models.DecimalField(
         verbose_name=_('Outstanding DCT Local'),
         default=0,
-        max_digits=12,
+        max_digits=20,
         decimal_places=2,
     )
 
@@ -212,13 +212,13 @@ class FundsReservationItem(TimeStampedModel):
     overall_amount = models.DecimalField(
         verbose_name=_("Overall Amount"),
         default=0,
-        max_digits=12,
+        max_digits=20,
         decimal_places=2,
     )
     overall_amount_dc = models.DecimalField(
         verbose_name=_("Overall Amount DC"),
         default=0,
-        max_digits=12,
+        max_digits=20,
         decimal_places=2,
     )
     due_date = models.DateField(
@@ -352,19 +352,19 @@ class FundsCommitmentItem(TimeStampedModel):
     commitment_amount = models.DecimalField(
         verbose_name=_("Amount"),
         default=0,
-        max_digits=12,
+        max_digits=20,
         decimal_places=2,
     )
     commitment_amount_dc = models.DecimalField(
         verbose_name=_("Amount DC"),
         default=0,
-        max_digits=12,
+        max_digits=20,
         decimal_places=2,
     )
     amount_changed = models.DecimalField(
         verbose_name=_("Amount Changed"),
         default=0,
-        max_digits=12,
+        max_digits=20,
         decimal_places=2,
     )
     line_item_text = models.CharField(

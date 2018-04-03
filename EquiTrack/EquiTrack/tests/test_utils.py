@@ -3,19 +3,19 @@ from __future__ import absolute_import, division, print_function, unicode_litera
 
 import json
 from datetime import datetime
-from unittest import TestCase
 
 import mock
 from django.contrib.auth import get_user_model
 from django.contrib.auth.models import Group, Permission
 from django.core.serializers.json import DjangoJSONEncoder
+from django.test import SimpleTestCase
 from freezegun import freeze_time
 
 from EquiTrack.tests.cases import BaseTenantTestCase
 from EquiTrack.utils import get_current_year, get_quarter, model_instance_to_dictionary, make_dictionary_serializable
 
 
-class TestUtils(TestCase):
+class TestUtils(SimpleTestCase):
     """
     Test utils function
     """

@@ -353,8 +353,8 @@ class TestAttachmentFileView(BaseTenantTestCase):
             reverse("attachments:file", args=[404]),
             user=self.unicef_staff,
         )
-        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
-        self.assertIn("No Attachment matches the given query", response.content)
+        self.assertContains(response, "No Attachment matches the given query",
+                            status_code=status.HTTP_404_NOT_FOUND)
 
     def test_no_url(self):
         attachment = AttachmentFactory(
@@ -369,8 +369,8 @@ class TestAttachmentFileView(BaseTenantTestCase):
             reverse("attachments:file", args=[attachment.pk]),
             user=self.unicef_staff,
         )
-        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
-        self.assertIn("Attachment has no file or hyperlink", response.content)
+        self.assertContains(response, "Attachment has no file or hyperlink",
+                            status_code=status.HTTP_404_NOT_FOUND)
 
     def test_redirect(self):
         response = self.forced_auth_req(

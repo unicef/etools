@@ -3,6 +3,7 @@ from __future__ import unicode_literals
 from django.utils.translation import ugettext as _
 from rest_framework import serializers
 
+from EquiTrack.mixins import ExportSerializerMixin
 from partners.models import (
     Assessment,
     PartnerOrganization,
@@ -23,7 +24,10 @@ class PartnerStaffMemberExportSerializer(serializers.ModelSerializer):
         return "Yes" if obj.active else "No"
 
 
-class PartnerStaffMemberExportFlatSerializer(PartnerStaffMemberExportSerializer):
+class PartnerStaffMemberExportFlatSerializer(
+        ExportSerializerMixin,
+        PartnerStaffMemberExportSerializer
+):
     partner_name = serializers.CharField(source="partner.name")
 
 
@@ -104,7 +108,10 @@ class PartnerOrganizationExportSerializer(serializers.ModelSerializer):
         return "{}".format(obj.partner_type)
 
 
-class PartnerOrganizationExportFlatSerializer(PartnerOrganizationExportSerializer):
+class PartnerOrganizationExportFlatSerializer(
+        ExportSerializerMixin,
+        PartnerOrganizationExportSerializer
+):
     vision_synced = serializers.SerializerMethodField(label=_("VISION Synced"))
     hidden = serializers.SerializerMethodField(label=_("Hidden"))
     hact_values = HactValuesField(label=_("HACT"))
@@ -135,10 +142,10 @@ class AssessmentExportSerializer(serializers.ModelSerializer):
         return "Yes" if obj.current else "No"
 
 
-class AssessmentExportFlatSerializer(AssessmentExportSerializer):
+class AssessmentExportFlatSerializer(ExportSerializerMixin, AssessmentExportSerializer):
     class Meta:
         model = Assessment
-        fields = (
+        fields = [
             "id",
             "partner",
             "type",
@@ -153,4 +160,4 @@ class AssessmentExportFlatSerializer(AssessmentExportSerializer):
             "rating",
             "report_file",
             "current",
-        )
+        ]
