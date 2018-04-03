@@ -93,7 +93,7 @@ def process_permissions(permission_dict):
             result[field][action][allowed] = []
 
         # this action should not have been defined with any other allowed param
-        assert result[field][action].keys() == [allowed], \
+        assert list(result[field][action].keys()) == [allowed], \
             'There cannot be two types of "allowed" defined on the same '\
             'field with the same action as the system will not  be able' \
             ' to have a default behaviour.  field=%r, action=%r, allowed=%r' \
