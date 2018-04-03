@@ -4,7 +4,7 @@ from django.core.management import BaseCommand
 from django.db import transaction
 from post_office.models import EmailTemplate
 
-from utils.common.utils import strip_text
+from EquiTrack.utils import strip_text
 
 logger = logging.getLogger(__name__)
 
