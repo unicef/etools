@@ -1,8 +1,9 @@
-from __future__ import unicode_literals
+from __future__ import absolute_import, division, print_function, unicode_literals
 
 import datetime
 
 from django.core.urlresolvers import reverse
+from django.utils import six
 from rest_framework import status
 from tablib.core import Dataset
 
@@ -77,6 +78,7 @@ class BaseInterventionModelExportTestCase(BaseTenantTestCase):
             unicef_signatory=cls.unicef_staff,
             population_focus="Population focus",
             partner_authorized_officer_signatory=partnerstaff,
+            country_programme=agreement.country_programme,
         )
         cls.ib = InterventionBudgetFactory(
             intervention=cls.intervention,
@@ -160,25 +162,25 @@ class TestInterventionModelExport(BaseInterventionModelExportTestCase):
         ])
 
         self.assertEqual(dataset[0], (
-            unicode(self.intervention.agreement.partner.name),
-            unicode(self.intervention.agreement.partner.vendor_number),
+            six.text_type(self.intervention.agreement.partner.name),
+            six.text_type(self.intervention.agreement.partner.vendor_number),
             self.intervention.status,
             self.intervention.agreement.partner.partner_type,
             self.intervention.agreement.agreement_number,
-            unicode(self.intervention.agreement.country_programme.name),
+            six.text_type(self.intervention.country_programme.name),
             self.intervention.document_type,
-            self.intervention.reference_number,
-            unicode(self.intervention.title),
+            self.intervention.number,
+            six.text_type(self.intervention.title),
             '{}'.format(self.intervention.start),
             '{}'.format(self.intervention.end),
             u'',
             u'',
             u'',
-            unicode("Yes" if self.intervention.contingency_pd else "No"),
+            six.text_type("Yes" if self.intervention.contingency_pd else "No"),
             u'',
             u'',
             u'',
-            unicode(self.ib.currency),
+            six.text_type(self.ib.currency),
             u'{:.2f}'.format(self.intervention.total_partner_contribution),
             u'{:.2f}'.format(self.intervention.total_unicef_cash),
             u'{:.2f}'.format(self.intervention.total_in_kind_amount),
@@ -186,9 +188,9 @@ class TestInterventionModelExport(BaseInterventionModelExportTestCase):
             u', '.join([fr.fr_numbers for fr in self.intervention.frs.all()]),
             u'',
             u'',
-            unicode(self.intervention.total_frs["total_frs_amt"]),
-            unicode(self.intervention.total_frs["total_actual_amt"]),
-            unicode(self.intervention.total_frs["total_outstanding_amt"]),
+            six.text_type(self.intervention.total_frs["total_frs_amt"]),
+            six.text_type(self.intervention.total_frs["total_actual_amt"]),
+            six.text_type(self.intervention.total_frs["total_outstanding_amt"]),
             u'{} (Q1:{} Q2:{}, Q3:{}, Q4:{})'.format(self.planned_visit.year,
                                                      self.planned_visit.programmatic_q1,
                                                      self.planned_visit.programmatic_q2,
@@ -203,10 +205,10 @@ class TestInterventionModelExport(BaseInterventionModelExportTestCase):
             '{}'.format(self.intervention.signed_by_unicef_date),
             '{}'.format(self.intervention.days_from_submission_to_signed),
             '{}'.format(self.intervention.days_from_review_to_signed),
-            unicode(self.intervention.amendments.count()),
+            six.text_type(self.intervention.amendments.count()),
             u'',
-            unicode(', '.join(['{}'.format(att.type.name) for att in self.intervention.attachments.all()])),
-            unicode(self.intervention.attachments.count()),
+            six.text_type(', '.join(['{}'.format(att.type.name) for att in self.intervention.attachments.all()])),
+            six.text_type(self.intervention.attachments.count()),
             u'',
             u'https://testserver/pmp/interventions/{}/details/'.format(self.intervention.id),
         ))
@@ -222,8 +224,8 @@ class TestInterventionModelExport(BaseInterventionModelExportTestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         dataset = Dataset().load(response.content.decode('utf-8'), 'csv')
         self.assertEqual(dataset.height, 1)
-        self.assertEqual(len(dataset._get_headers()), 61)
-        self.assertEqual(len(dataset[0]), 61)
+        self.assertEqual(len(dataset._get_headers()), 62)
+        self.assertEqual(len(dataset[0]), 62)
 
 
 class TestInterventionAmendmentModelExport(BaseInterventionModelExportTestCase):

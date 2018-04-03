@@ -1,12 +1,10 @@
-from __future__ import absolute_import
-from __future__ import division
-from __future__ import print_function
-from __future__ import unicode_literals
+from __future__ import absolute_import, division, print_function, unicode_literals
 
 from django.db import models
 from django.contrib import admin
 from django.utils.translation import ugettext_lazy as _
 from django.forms import SelectMultiple
+from django.utils import six
 
 from import_export.admin import ExportMixin
 
@@ -131,7 +129,6 @@ class InterventionAttachmentsInline(admin.TabularInline):
 
 class InterventionResultsLinkAdmin(admin.ModelAdmin):
 
-    # form = ResultLinkForm
     model = InterventionResultLink
     fields = (
         'intervention',
@@ -215,6 +212,7 @@ class InterventionAdmin(CountryUsersAdminMixin, HiddenPartnerMixin, SnapshotMode
             'fields':
                 (
                     'agreement',
+                    'in_amendment',
                     'document_type',
                     'number',
                     'title',
@@ -235,18 +233,12 @@ class InterventionAdmin(CountryUsersAdminMixin, HiddenPartnerMixin, SnapshotMode
                  ('unicef_signatory', 'signed_by_unicef_date',),
                  'partner_focal_points',
                  'unicef_focal_points',
-                 # ('days_from_submission_to_signed', 'days_from_review_to_signed',),
                  ('start', 'end'),
                  'population_focus'),
         }),
     )
 
     inlines = (
-        # InterventionAmendmentsInlineAdmin,
-        # BudgetInlineAdmin,
-        # PlannedVisitsInline,
-        # ResultsLinkInline,
-        # SectorLocationInline,
         InterventionAttachmentsInline,
         ActivityInline,
     )
@@ -287,12 +279,12 @@ class PartnerStaffMemberAdmin(SnapshotModelAdmin):
     form = PartnerStaffMemberForm
 
     # display_staff_member_name() is used only in list_display. It could be replaced by this simple lambda --
-    #     lambda instance: unicode(instance)
+    #     lambda instance: six.text_type(instance)
     # However, creating a function allows me to put a title on the column in the admin by populating the function's
     # 'short_description' attribute.
     # https://docs.djangoproject.com/en/1.11/ref/contrib/admin/#django.contrib.admin.ModelAdmin.list_display
     def display_staff_member_name(instance):
-        return unicode(instance)
+        return six.text_type(instance)
     display_staff_member_name.short_description = 'Partner Staff Member'
 
     list_display = (

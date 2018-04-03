@@ -88,14 +88,14 @@ def sync_handler(self, country_name, handler):
             SYNC_HANDLERS[handler](country).sync()
             logger.info(u"{} sync successfully for {}".format(handler, country.name))
 
-        except VisionException as e:
+        except VisionException:
             # Catch and log the exception so we're aware there's a problem.
-            logger.error(u"{} sync failed, Reason: {}, Country: {}".format(
-                handler, e.message, country_name
+            logger.exception(u"{} sync failed, Country: {}".format(
+                handler, country_name
             ))
             # The 'autoretry_for' in the task decorator tells Celery to
             # retry this a few times on VisionExceptions, so just re-raise it
-            raise VisionException
+            raise
 
 
 # Not scheduled by any code in this repo, but by other means, so keep it around.
@@ -110,7 +110,7 @@ def update_all_partners(country_name=None):
         countries = countries.filter(name=country_name)
     for country in countries:
         connection.set_tenant(country)
-        logger.info(u'Updating '.format(country.name))
+        logger.info(u'Updating {}'.format(country.name))
         partners = PartnerOrganization.objects.all()
         for partner in partners:
             try:
@@ -143,10 +143,8 @@ def update_purchase_orders(country_name=None):
             POSynchronizer(country).sync()
             processed.append(country.name)
             logger.info(u"Update finished successfully for {}".format(country.name))
-        except VisionException as e:
-                logger.error(u"{} sync failed, Reason: {}".format(
-                    POSynchronizer.__name__, e.message
-                ))
+        except VisionException:
+                logger.exception(u"{} sync failed".format(POSynchronizer.__name__))
                 # Keep going to the next country
     logger.info(u'Purchase orders synced successfully for {}.'.format(u', '.join(processed)))
 
@@ -171,8 +169,6 @@ def update_tpm_partners(country_name=None):
                 ).sync()
             processed.append(country.name)
             logger.info(u"Update finished successfully for {}".format(country.name))
-        except VisionException as e:
-                logger.error(u"{} sync failed, Reason: {}".format(
-                    TPMPartnerSynchronizer.__name__, e.message
-                ))
+        except VisionException:
+                logger.exception(u"{} sync failed".format(TPMPartnerSynchronizer.__name__))
     logger.info(u'TPM Partners synced successfully for {}.'.format(u', '.join(processed)))

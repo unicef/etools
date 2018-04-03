@@ -62,6 +62,8 @@ urlpatterns = [
 
     # ***************  API version 1  ********************
     url(r'^locations/', include('locations.urls')),
+    # GIS API urls
+    url(r'^api/management/gis/', include('management.urls_gis')),
     url(r'^users/', include('users.urls')),
     url(r'^api/management/', include(management_urls)),
     url(r'^api/', include(api.urls)),

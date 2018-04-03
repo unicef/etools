@@ -63,7 +63,7 @@ class TPMPartnerSynchronizer(ManualVisionSynchronizer):
                 return False
             return True
 
-        return filter(bad_record, records)
+        return [rec for rec in records if bad_record(rec)]
 
 
 class TPMPartnerManualSynchronizer(TPMPartnerSynchronizer):

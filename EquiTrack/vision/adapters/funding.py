@@ -1,4 +1,4 @@
-from __future__ import division
+from __future__ import absolute_import, division, print_function, unicode_literals
 
 import datetime
 import json
@@ -103,7 +103,7 @@ class FundReservationsSynchronizer(VisionDataSynchronizer):
                 return False
             return True
 
-        return filter(bad_record, records)
+        return [rec for rec in records if bad_record(rec)]
 
     def get_value_for_field(self, field, value):
         if field in ['start_date', 'end_date', 'document_date', 'due_date']:
@@ -137,7 +137,7 @@ class FundReservationsSynchronizer(VisionDataSynchronizer):
                      'intervention_amt', 'total_amt', 'actual_amt', 'outstanding_amt']:
             return comp_decimals(obj_field, record_field)
         if field == 'line_item':
-            return str(obj_field) == record_field
+            return six.text_type(obj_field) == record_field
         return obj_field == record_field
 
     def update_obj(self, obj, new_record):
@@ -322,7 +322,7 @@ class FundCommitmentSynchronizer(VisionDataSynchronizer):
                 return False
             return True
 
-        return filter(bad_record, records)
+        return [rec for rec in records if bad_record(rec)]
 
     def get_value_for_field(self, field, value):
         if field in ['document_date', 'due_date']:
@@ -358,7 +358,7 @@ class FundCommitmentSynchronizer(VisionDataSynchronizer):
         if field in ['commitment_amount', 'commitment_amount_dc', 'amount_changed']:
             return comp_decimals(obj_field, record_field)
         if field == 'line_item':
-            return str(obj_field) == record_field
+            return six.text_type(obj_field) == record_field
         return obj_field == record_field
 
     def update_obj(self, obj, new_record):

@@ -1,9 +1,8 @@
 import datetime
 from operator import itemgetter
 
-from unittest import TestCase
-
 from django.core.urlresolvers import reverse
+from django.test import SimpleTestCase
 from django.utils import six
 from rest_framework import status
 from partners.tests.test_utils import setup_intervention_test_data
@@ -38,7 +37,7 @@ from reports.tests.factories import (
 from users.tests.factories import UserFactory
 
 
-class UrlsTestCase(URLAssertionMixin, TestCase):
+class UrlsTestCase(URLAssertionMixin, SimpleTestCase):
     '''Simple test case to verify URL reversal'''
     def test_urls(self):
         '''Verify URL pattern names generate the URLs we expect them to.'''
@@ -152,7 +151,7 @@ class TestOutputListAPIView(BaseTenantTestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         first_response = sorted(response.data, key=itemgetter("id"))[0]
         keys = sorted(first_response.keys())
-        self.assertEqual(keys, ["id", "name"])
+        six.assertCountEqual(self, keys, ['id', 'name'])
 
     def test_current_cp(self):
         response = self.forced_auth_req('get', self.url)
@@ -206,24 +205,29 @@ class TestOutputListAPIView(BaseTenantTestCase):
         }
         response = self.forced_auth_req('get', self.url, data=data)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertIn(self.result1.id, [int(i["id"]) for i in response.data])
+        response_ids = [int(item['id']) for item in response.data]
+        result_ids = [self.result1.id, self.result2.id]
+        self.assertEqual(sorted(response_ids), sorted(result_ids))
 
     def test_dropdown(self):
         data = {"dropdown": "true"}
         response = self.forced_auth_req('get', self.url, data=data)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertItemsEqual(response.data, [
-            {
-                "wbs": self.result1.wbs,
-                "id": self.result1.pk,
-                "name": self.result1.name
-            },
-            {
-                "wbs": self.result2.wbs,
-                "id": self.result2.pk,
-                "name": self.result2.name
-            },
-        ])
+        six.assertCountEqual(
+            self,
+            response.data, [
+                {
+                    "wbs": self.result1.wbs,
+                    "id": self.result1.pk,
+                    "name": self.result1.name
+                },
+                {
+                    "wbs": self.result2.wbs,
+                    "id": self.result2.pk,
+                    "name": self.result2.name
+                },
+            ]
+        )
 
 
 class TestOutputDetailAPIView(BaseTenantTestCase):
