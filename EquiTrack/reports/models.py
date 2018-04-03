@@ -630,6 +630,8 @@ class AppliedIndicator(TimeStampedModel):
         verbose_name=_("Location"),
         related_name='applied_indicators',
     )
+    is_high_frequency = models.BooleanField(default=False)
+    is_active = models.BooleanField(default=True)
 
     class Meta:
         unique_together = (("indicator", "lower_result"),)

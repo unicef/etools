@@ -990,10 +990,28 @@ class TestAPIInterventionIndicatorsListView(BaseTenantTestCase):
                           kwargs={'lower_result_pk': cls.lower_result.id})
 
         # cls.expected_field_names is the list of field names expected in responses.
-        cls.expected_field_names = sorted(('id', 'assumptions', 'baseline', 'cluster_indicator_id', 'cluster_name',
-                                           'cluster_indicator_title', 'context_code', 'disaggregation',
-                                           'indicator', 'locations', 'lower_result', 'means_of_verification',
-                                           'section', 'target', 'total', 'created', 'modified', 'response_plan_name', ))
+        cls.expected_field_names = sorted((
+            'id',
+            'assumptions',
+            'baseline',
+            'cluster_indicator_id',
+            'cluster_name',
+            'cluster_indicator_title',
+            'context_code',
+            'disaggregation',
+            'indicator',
+            'locations',
+            'lower_result',
+            'means_of_verification',
+            'section',
+            'target',
+            'total',
+            'created',
+            'modified',
+            'response_plan_name',
+            'is_active',
+            'is_high_frequency',
+        ))
 
     def _make_request(self, user):
         return self.forced_auth_req('get', self.url, user=user)

@@ -26,7 +26,9 @@
             ],
             "cluster_indicator_id": null,
             "id": 8,
-            "baseline": null
+              "baseline": null,
+              "is_active": true,
+              "is_high_frequency": false
           }
         ],
         "cp_output": {
