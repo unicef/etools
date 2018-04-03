@@ -1,5 +1,7 @@
 from __future__ import absolute_import, division, print_function, unicode_literals
 
+from django.utils import six
+
 
 def collect_parent_models(model):
     result = [model._meta.model_name, ]
@@ -23,3 +25,13 @@ def has_action_permission(permission_class, instance=None, user=None, action=Non
         return lambda user: has_action_permission(instance, user, action)
 
     assert False
+
+
+def is_user_in_groups(user, group_names):
+    '''Utility function; returns True if user is in ANY of the groups in the group_names list, False if the user
+    is in none of them. Note that group_names should be a tuple or list, not a single string.
+    '''
+    if isinstance(group_names, six.string_types):
+        # Anticipate common programming oversight.
+        raise ValueError('group_names parameter must be a tuple or list, not a string')
+    return user.groups.filter(name__in=group_names).exists()
