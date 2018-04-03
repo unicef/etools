@@ -7,15 +7,13 @@ from functools import wraps
 
 from django.conf import settings
 from django.contrib.postgres.fields.array import ArrayField
-from django.core.exceptions import ValidationError
-from django.core.mail.message import EmailMultiAlternatives
 from django.db import connection, models
-from django.template.loader import render_to_string
 from django.utils.encoding import python_2_unicode_compatible
 from django.utils.timezone import now as timezone_now
 from django.utils.translation import ugettext, ugettext_lazy, ugettext_lazy as _
 from django_fsm import FSMField, transition
 
+from notification.utils import send_notification_using_templates
 from publics.models import TravelExpenseType
 from t2f.helpers.cost_summary_calculator import CostSummaryCalculator
 from t2f.helpers.invoice_maker import InvoiceMaker
@@ -431,18 +429,13 @@ class Travel(models.Model):
         url = 'https://{host}/t2f/edit-travel/{travel_id}/'.format(host=settings.HOST,
                                                                    travel_id=self.id)
 
-        html_content = render_to_string(template_name, {'travel': serializer.data, 'url': url})
-
-        # TODO what should be used?
-        sender = settings.DEFAULT_FROM_EMAIL
-        msg = EmailMultiAlternatives(subject, '',
-                                     sender, [recipient])
-        msg.attach_alternative(html_content, 'text/html')
-
-        try:
-            msg.send(fail_silently=False)
-        except ValidationError:
-            log.exception(u'Was not able to send the email.')
+        send_notification_using_templates(
+            recipients=[recipient],
+            from_address=settings.DEFAULT_FROM_EMAIL,  # TODO what should sender be?
+            subject_template_content=subject,
+            html_template_filename=template_name,
+            context={'travel': serializer.data, 'url': url}
+        )
 
     def generate_invoices(self):
         maker = InvoiceMaker(self)
@@ -670,20 +663,19 @@ class ActionPoint(models.Model):
         url = 'https://{host}/t2f/action-point/{action_point_id}/'.format(host=settings.HOST,
                                                                           action_point_id=self.id)
         trip_url = 'https://{host}/t2f/edit-travel/{travel_id}'.format(host=settings.HOST, travel_id=self.travel.id)
-        html_content = render_to_string('emails/action_point_assigned.html',
-                                        {'action_point': serializer.data, 'url': url, 'trip_url': trip_url})
 
-        # TODO what should be used?
-        sender = settings.DEFAULT_FROM_EMAIL
-        msg = EmailMultiAlternatives(subject, '',
-                                     sender, [recipient],
-                                     cc=[cc])
-        msg.attach_alternative(html_content, 'text/html')
+        context = {'action_point': serializer.data, 'url': url, 'trip_url': trip_url}
+        template_name = 'emails/action_point_assigned.html'
 
-        try:
-            msg.send(fail_silently=False)
-        except ValidationError:
-            log.exception(u'Was not able to send the email.')
+        send_notification_using_templates(
+            recipients=[recipient],
+            cc=[cc],
+            from_address=settings.DEFAULT_FROM_EMAIL,  # TODO what should sender be?
+            subject_template_content=subject,
+            html_template_filename=template_name,
+            text_template_content='',
+            context=context,
+        )
 
 
 @python_2_unicode_compatible
