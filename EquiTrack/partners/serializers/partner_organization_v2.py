@@ -311,7 +311,7 @@ class PartnerOrganizationCreateUpdateSerializer(SnapshotModelSerializer):
         return json.loads(obj.hact_values) if isinstance(obj.hact_values, six.text_type) else obj.hact_values
 
     def validate(self, data):
-        data = super(PartnerOrganizationDetailSerializer, self).validate(data)
+        data = super(PartnerOrganizationCreateUpdateSerializer, self).validate(data)
         rating = data.get('rating', None)
         basis_for_risk_rating = data.get('basis_for_risk_rating', None)
         if basis_for_risk_rating and rating in [PartnerOrganization.RATING_NON_ASSESSED,
