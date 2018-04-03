@@ -81,5 +81,5 @@ if not os.getenv('DISABLE_JWT_LOGIN', False):
         'JWT_LEEWAY': 60,
         'JWT_EXPIRATION_DELTA': datetime.timedelta(seconds=3000),  # noqa: F405
         'JWT_AUDIENCE': 'https://etools.unicef.org/',
-        'JWT_PAYLOAD_HANDLER': 'EquiTrack.mixins.custom_jwt_payload_handler'
+        'JWT_PAYLOAD_HANDLER': 'EquiTrack.auth.custom_jwt_payload_handler'
     })
