@@ -6,7 +6,7 @@ from django.utils.translation import ugettext_lazy as _
 
 from rest_framework import serializers
 
-from attachments.serializers import AttachmentSerializer
+from attachments.serializers import BaseAttachmentSerializer
 from audit.models import (
     Audit, Engagement, EngagementActionPoint, MicroAssessment, SpotCheck, Finding, SpecificProcedure,
     SpecialAuditRecommendation)
@@ -102,8 +102,8 @@ class EngagementPDFSerializer(serializers.ModelSerializer):
 
     action_points = EngagementActionPointPDFSerializer(many=True)
 
-    engagement_attachments = AttachmentSerializer(many=True)
-    report_attachments = AttachmentSerializer(many=True)
+    engagement_attachments = BaseAttachmentSerializer(many=True)
+    report_attachments = BaseAttachmentSerializer(many=True)
 
     class Meta:
         model = Engagement

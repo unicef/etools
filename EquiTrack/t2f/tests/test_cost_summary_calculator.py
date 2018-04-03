@@ -245,9 +245,6 @@ class CostSummaryTest(BaseTenantTestCase):
             departure_date=datetime(2017, 1, 2, 4, 0, tzinfo=UTC),
             dsa_region=self.budapest
         )
-        # daily_amt = self.budapest.dsa_amount_local
-        # last_day_amount = daily_amt * (1 - DSACalculator.LAST_DAY_DEDUCTION)
-        # total_amt = daily_amt + last_day_amount
 
         calculator = CostSummaryCalculator(self.travel)
         cost_summary = calculator.get_cost_summary()

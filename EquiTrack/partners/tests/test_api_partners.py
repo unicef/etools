@@ -4,9 +4,10 @@ import datetime
 import json
 
 from django.core.urlresolvers import reverse
+from django.test import SimpleTestCase
 from mock import patch, Mock
 from rest_framework import status
-from unittest import TestCase, skip
+from unittest import skip
 
 from EquiTrack.tests.cases import BaseTenantTestCase
 from EquiTrack.tests.mixins import URLAssertionMixin
@@ -23,7 +24,7 @@ from users.tests.factories import GroupFactory, UserFactory
 INSIGHT_PATH = "partners.views.partner_organization_v2.get_data_from_insight"
 
 
-class URLsTestCase(URLAssertionMixin, TestCase):
+class URLsTestCase(URLAssertionMixin, SimpleTestCase):
     '''Simple test case to verify URL reversal'''
     def test_urls(self):
         '''Verify URL pattern names generate the URLs we expect them to.'''
