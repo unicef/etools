@@ -138,7 +138,7 @@ class UserMapper(object):
                 logger.info(u"User doesn't have the required fields {}".format(ad_user))
                 return
 
-        # TODO: MODIFY THIS TO USER THE GUID ON THE PROFILE INSTEAD OF EMAIL on the USer
+        # TODO: MODIFY THIS TO USE THE GUID ON THE PROFILE INSTEAD OF EMAIL on the USer
 
         try:
             user, created = User.objects.get_or_create(email=ad_user[self.KEY_ATTRIBUTE],
