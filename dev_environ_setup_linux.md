@@ -23,7 +23,8 @@ your machine.
 ```bash
 $ sudo apt update
 $ sudo apt install python2.7 python-pip virtualenv libgdal-dev \
-                   postgresql postgresql-9.5-postgis-2.2 libpq-dev
+                   postgresql postgresql-9.5-postgis-2.2 libpq-dev \
+                   libpgpool0 pgpool2 postgresql-9.5-pgpool2
 ```
 
 Prepare Postgres

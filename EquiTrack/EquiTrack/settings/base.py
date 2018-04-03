@@ -103,7 +103,7 @@ MIDDLEWARE_CLASSES = (
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
     'corsheaders.middleware.CorsMiddleware',
-    'EquiTrack.mixins.EToolsTenantMiddleware',
+    'EquiTrack.middleware.EToolsTenantMiddleware',
     'waffle.middleware.WaffleMiddleware',  # needs request.tenant from EToolsTenantMiddleware
 )
 WSGI_APPLICATION = '%s.wsgi.application' % SITE_NAME
@@ -343,8 +343,8 @@ REST_FRAMEWORK = {
     ),
     'DEFAULT_AUTHENTICATION_CLASSES': (
         'rest_framework.authentication.SessionAuthentication',
-        'EquiTrack.mixins.EToolsTenantJWTAuthentication',
-        'EquiTrack.mixins.EtoolsTokenAuthentication',
+        'EquiTrack.auth.EToolsTenantJWTAuthentication',
+        'EquiTrack.auth.EtoolsTokenAuthentication',
     ),
     'TEST_REQUEST_RENDERER_CLASSES': (
         'rest_framework.renderers.JSONRenderer',
@@ -367,7 +367,7 @@ SWAGGER_SETTINGS = {
 USERVOICE_WIDGET_KEY = os.getenv('USERVOICE_KEY', '')
 
 # django-allauth: https://github.com/pennersr/django-allauth
-ACCOUNT_ADAPTER = 'EquiTrack.mixins.CustomAccountAdapter'
+ACCOUNT_ADAPTER = 'EquiTrack.auth.CustomAccountAdapter'
 ACCOUNT_AUTHENTICATION_METHOD = 'email'
 ACCOUNT_DEFAULT_HTTP_PROTOCOL = "https"
 ACCOUNT_EMAIL_REQUIRED = True
@@ -376,7 +376,7 @@ ACCOUNT_LOGOUT_REDIRECT_URL = "/login"
 ACCOUNT_LOGOUT_ON_GET = True
 ACCOUNT_UNIQUE_EMAIL = True
 SOCIALACCOUNT_AUTO_SIGNUP = True
-SOCIALACCOUNT_ADAPTER = 'EquiTrack.mixins.CustomSocialAccountAdapter'
+SOCIALACCOUNT_ADAPTER = 'EquiTrack.auth.CustomSocialAccountAdapter'
 SOCIALACCOUNT_PROVIDERS = \
     {'google':
         {'SCOPE': ['profile', 'email'],
@@ -529,6 +529,10 @@ ENVIRONMENT = os.environ.get('ENVIRONMENT', '')
 ETRIPS_VERSION = os.environ.get('ETRIPS_VERSION')
 
 INACTIVE_BUSINESS_AREAS = os.environ.get('INACTIVE_BUSINESS_AREAS', '').split(',')
+if INACTIVE_BUSINESS_AREAS == ['']:
+    # 'split' splits an empty string into an array with one empty string, which isn't
+    # really what we want
+    INACTIVE_BUSINESS_AREAS = []
 
 SLACK_URL = os.environ.get('SLACK_URL')
 
@@ -543,7 +547,7 @@ VISION_PASSWORD = os.getenv('VISION_PASSWORD', 'invalid_vision_password')
 ALLOW_BASIC_AUTH = os.getenv('ALLOW_BASIC_AUTH', False)
 if ALLOW_BASIC_AUTH:
     REST_FRAMEWORK['DEFAULT_AUTHENTICATION_CLASSES'] += (
-        'EquiTrack.mixins.DRFBasicAuthMixin',
+        'EquiTrack.auth.DRFBasicAuthMixin',
     )
 
 ISSUE_CHECKS = [
