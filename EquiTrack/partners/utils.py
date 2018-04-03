@@ -1,3 +1,4 @@
+import codecs
 import csv
 import datetime
 import json
@@ -92,9 +93,11 @@ def process_permissions(permission_dict):
             result[field][action][allowed] = []
 
         # this action should not have been defined with any other allowed param
-        assert result[field][action].keys() == [allowed], 'There cannot be two types of "allowed" defined on the same '\
-                                                          'field with the same action as the system will not  be able' \
-                                                          ' to have a default behaviour'
+        assert result[field][action].keys() == [allowed], \
+            'There cannot be two types of "allowed" defined on the same '\
+            'field with the same action as the system will not  be able' \
+            ' to have a default behaviour.  field=%r, action=%r, allowed=%r' \
+            % (field, action, allowed)
 
         result[field][action][allowed].append({
             'group': row['Group'],
@@ -111,13 +114,12 @@ def import_permissions(model_name):
     }
 
     def process_file():
-        with open(permission_file_map[model_name], 'r', encoding="ascii") as csvfile:
+        with codecs.open(permission_file_map[model_name], 'r', encoding="ascii") as csvfile:
             sheet = csv.DictReader(csvfile, delimiter=',', quotechar='|')
             result = process_permissions(sheet)
         return result
 
     cache_key = "public-{}-permissions".format(model_name.lower())
-    # cache.delete(cache_key)
     response = cache.get_or_set(cache_key, process_file, 60 * 60 * 24)
 
     return response
