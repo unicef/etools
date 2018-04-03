@@ -85,7 +85,7 @@ class PurchaseOrderFactory(factory.DjangoModelFactory):
 
     auditor_firm = factory.SubFactory(AuditPartnerFactory)
     items = factory.RelatedFactory(PurchaseOrderItemFactory, 'purchase_order')
-    order_number = factory.fuzzy.FuzzyText(length=20)
+    order_number = fuzzy.FuzzyText(length=20)
 
 
 class EngagementFactory(factory.DjangoModelFactory):
