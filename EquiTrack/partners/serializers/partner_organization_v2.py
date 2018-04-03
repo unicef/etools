@@ -310,6 +310,18 @@ class PartnerOrganizationCreateUpdateSerializer(SnapshotModelSerializer):
     def get_hact_values(self, obj):
         return json.loads(obj.hact_values) if isinstance(obj.hact_values, six.text_type) else obj.hact_values
 
+    def validate(self, data):
+        data = super(PartnerOrganizationDetailSerializer, self).validate(data)
+        rating = data.get('rating', None)
+        basis_for_risk_rating = data.get('basis_for_risk_rating', None)
+        if basis_for_risk_rating and rating in [PartnerOrganization.RATING_NON_ASSESSED,
+                                                PartnerOrganization.RATING_LOW,
+                                                PartnerOrganization.RATING_HIGH]:
+            raise ValidationError(
+                {'basis_for_risk_rating': 'The basis for risk rating has to be blank if Not Required, Low or High'})
+        return data
+
+
     class Meta:
         model = PartnerOrganization
         fields = "__all__"
