@@ -529,6 +529,10 @@ ENVIRONMENT = os.environ.get('ENVIRONMENT', '')
 ETRIPS_VERSION = os.environ.get('ETRIPS_VERSION')
 
 INACTIVE_BUSINESS_AREAS = os.environ.get('INACTIVE_BUSINESS_AREAS', '').split(',')
+if INACTIVE_BUSINESS_AREAS == ['']:
+    # 'split' splits an empty string into an array with one empty string, which isn't
+    # really what we want
+    INACTIVE_BUSINESS_AREAS = []
 
 SLACK_URL = os.environ.get('SLACK_URL')
 

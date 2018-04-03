@@ -13,13 +13,13 @@ from django.db.transaction import atomic
 from django.utils import timezone
 from django.utils.encoding import python_2_unicode_compatible, force_text
 from django.utils.translation import ugettext_lazy as _
+
 from django_fsm import FSMField, transition
 from model_utils import Choices, FieldTracker
 from model_utils.managers import InheritanceManager
 from model_utils.models import TimeStampedModel
 from ordered_model.models import OrderedModel
 
-from EquiTrack.utils import get_environment
 from attachments.models import Attachment
 from audit.purchase_order.models import AuditorStaffMember, PurchaseOrder, PurchaseOrderItem
 from audit.transitions.conditions import (
@@ -27,6 +27,7 @@ from audit.transitions.conditions import (
     EngagementSubmitReportRequiredFieldsCheck, SpecialAuditSubmitRelatedModelsCheck, SPSubmitReportRequiredFieldsCheck,
     ValidateAuditRiskCategories, ValidateMARiskCategories, ValidateMARiskExtra, )
 from audit.transitions.serializers import EngagementCancelSerializer
+from EquiTrack.utils import get_environment
 from notification.utils import send_notification_using_email_template
 from partners.models import PartnerStaffMember, PartnerOrganization
 from utils.common.models.fields import CodedGenericRelation
@@ -524,7 +525,7 @@ class Audit(Engagement):
     financial_findings = models.DecimalField(verbose_name=_('Financial Findings $'), null=True, blank=True,
                                              decimal_places=2, max_digits=20)
     audit_opinion = models.CharField(
-        verbose_name=_('Audit Opinion'), max_length=20, choices=OPTIONS, null=True, blank=True,
+        verbose_name=_('Audit Opinion'), max_length=20, choices=OPTIONS, default='', blank=True,
     )
 
     class Meta:

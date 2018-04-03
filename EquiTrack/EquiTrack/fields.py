@@ -25,8 +25,9 @@ class CurrencyField(models.CharField):
     def __init__(self, *args, **kwargs):
         kwargs['max_length'] = kwargs.get('max_length', 4)
         kwargs['choices'] = CURRENCIES
-        kwargs['null'] = kwargs.get('null', True)
+        kwargs['null'] = kwargs.get('null', False)
         kwargs['blank'] = kwargs.get('blank', True)
+        kwargs['default'] = kwargs.get('default', '')
         super(CurrencyField, self).__init__(*args, **kwargs)
 
 

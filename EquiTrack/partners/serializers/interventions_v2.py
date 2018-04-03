@@ -193,7 +193,7 @@ class InterventionListSerializer(BaseInterventionListSerializer):
         return self.fr_currencies_ok(obj) and obj.max_fr_currency == obj.planned_budget.currency
 
     def get_fr_currency(self, obj):
-        return obj.max_fr_currency if self.fr_currencies_ok(obj) else None
+        return obj.max_fr_currency if self.fr_currencies_ok(obj) else ''
 
     class Meta(BaseInterventionListSerializer.Meta):
         fields = BaseInterventionListSerializer.Meta.fields + (

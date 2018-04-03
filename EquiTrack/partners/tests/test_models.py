@@ -949,7 +949,7 @@ class TestInterventionModel(BaseTenantTestCase):
         )
         AppliedIndicatorFactory(
             lower_result=lower_result_2,
-            cluster_name=None,
+            cluster_name='',
         )
         AppliedIndicatorFactory(lower_result=lower_result_2)
         six.assertCountEqual(self, intervention.intervention_clusters, [
