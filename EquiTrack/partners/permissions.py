@@ -101,6 +101,7 @@ class InterventionPermissions(PMPPermissions):
     def __init__(self, **kwargs):
         '''
         :param kwargs: user, instance, permission_structure
+        # FIXME: This documentation is out of date as the flag check has been commented out.
         if 'inbound_check' key, is sent in, that means that instance now contains all of the fields available in the
         validation: old_instance, old.instance.property_old in case of related fields.
         the reason for this is so that we can check the more complex permissions that can only be checked on save.

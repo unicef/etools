@@ -86,22 +86,9 @@ urlpatterns = (
         name='partner-assessment-del'),
     url(r'^partners/add/$', view=PartnerOrganizationAddView.as_view(http_method_names=['post']), name='partner-add'),
 
-    # url(r'^partners/(?P<partner_pk>\d+)/agreements/$',
-    #     view=AgreementListAPIView.as_view(),
-    #     name='parter-agreement-list'),
-
     url(r'^partners/(?P<partner_pk>\d+)/staff-members/$',
         view=PartnerStaffMemberListAPIVIew.as_view(http_method_names=['get']),
         name='partner-staff-members-list'),
-    # url(r'^staff-members/$', view=PartnerStaffMemberListAPIVIew.as_view(), name='staff-member-list'),
-    # url(r'^staff-members/(?P<pk>\d+)/$', view=PartnerStaffMemberDetailAPIView.as_view(), name='staff-member-detail'),
-    # url(r'^partnership-dash/(?P<ct_pk>\d+)/(?P<office_pk>\d+)/$',
-    #     view=PartnershipDashboardAPIView.as_view(),
-    #     name='partnership-dash-with-ct-office'),
-    # url(r'^partnership-dash/(?P<ct_pk>\d+)/$',
-    #     view=PartnershipDashboardAPIView.as_view(),
-    #     name='partnership-dash-with-ct'),
-    # url(r'^partnership-dash/$', view=PartnershipDashboardAPIView.as_view(), name='partnership-dash'),
 
     url(r'^interventions/$',
         view=InterventionListAPIView.as_view(http_method_names=['get', 'post']),
