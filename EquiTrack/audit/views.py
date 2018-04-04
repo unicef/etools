@@ -13,13 +13,13 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.renderers import JSONRenderer
 from rest_framework.response import Response
 
+from audit.conditions import AuditModuleCondition, AuditStaffMemberCondition
 from audit.exports import AuditorFirmCSVRenderer, EngagementCSVRenderer
 from audit.filters import DisplayStatusFilter, UniqueIDOrderingFilter
-from audit.metadata import AuditBaseMetadata, EngagementMetadata
+from audit.metadata import AuditBaseMetadata, AuditPermissionBasedMetadata
 from audit.models import (
-    Engagement, MicroAssessment, Audit, SpotCheck, Auditor, AuditPermission, SpecialAudit, UNICEFUser)
+    Engagement, MicroAssessment, Audit, SpotCheck, Auditor, SpecialAudit)
 from audit.purchase_order.models import AuditorFirm, AuditorStaffMember, PurchaseOrder
-from audit.permissions import HasCreatePermission, CanCreateStaffMembers
 from audit.serializers.auditor import (
     AuditorFirmExportSerializer, AuditorFirmLightSerializer, AuditorFirmSerializer, AuditorStaffMemberSerializer,
     PurchaseOrderSerializer,)
@@ -30,8 +30,11 @@ from audit.serializers.export import (
     AuditPDFSerializer, MicroAssessmentPDFSerializer, SpecialAuditPDFSerializer, SpotCheckPDFSerializer,)
 from partners.models import PartnerOrganization
 from partners.serializers.partner_organization_v2 import MinimalPartnerOrganizationListSerializer
+from permissions2.conditions import GroupCondition, NewObjectCondition, ObjectStatusCondition
+from permissions2.drf_permissions import NestedPermission
+from permissions2.views import PermittedSerializerMixin, PermittedFSMActionMixin
 from utils.common.views import (
-    ExportViewSetDataMixin, FSMTransitionActionMixin, MultiSerializerViewSetMixin, NestedViewSetMixin,
+    ExportViewSetDataMixin, MultiSerializerViewSetMixin, NestedViewSetMixin,
     SafeTenantViewSetMixin,)
 from utils.common.pagination import DynamicPageNumberPagination
 from vision.adapters.purchase_order import POSynchronizer
@@ -41,18 +44,34 @@ class BaseAuditViewSet(
     SafeTenantViewSetMixin,
     ExportViewSetDataMixin,
     MultiSerializerViewSetMixin,
+    PermittedSerializerMixin,
 ):
     metadata_class = AuditBaseMetadata
     pagination_class = DynamicPageNumberPagination
-    permission_classes = (IsAuthenticated, )
+    permission_classes = [IsAuthenticated, ]
+
+    def get_permission_context(self):
+        context = [
+            AuditModuleCondition(),
+            GroupCondition(self.request.user),
+        ]
+
+        if getattr(self, 'action', None) == 'create':
+            context.append(
+                NewObjectCondition(self.queryset.model),
+            )
+
+        return context
 
 
 class AuditorFirmViewSet(
     BaseAuditViewSet,
     mixins.ListModelMixin,
     mixins.RetrieveModelMixin,
+    PermittedFSMActionMixin,
     viewsets.GenericViewSet
 ):
+    metadata_class = AuditPermissionBasedMetadata
     queryset = AuditorFirm.objects.filter(hidden=False)
     serializer_class = AuditorFirmSerializer
     serializer_action_classes = {
@@ -68,11 +87,26 @@ class AuditorFirmViewSet(
     def get_queryset(self):
         queryset = super(AuditorFirmViewSet, self).get_queryset()
 
-        user_type = AuditPermission._get_user_type(self.request.user)
-        if not user_type or user_type == Auditor:
+        if Auditor.as_group() in self.request.user.groups.all():
             queryset = queryset.filter(staff_members__user=self.request.user)
 
         return queryset
+
+    def get_permission_context(self):
+        context = super(AuditorFirmViewSet, self).get_permission_context()
+
+        if Auditor.as_group() in self.request.user.groups.all():
+            context += [
+                AuditStaffMemberCondition(self.request.user.purchase_order_auditorstaffmember.auditor_firm,
+                                          self.request.user),
+            ]
+
+        return context
+
+    def get_obj_permission_context(self, obj):
+        return [
+            AuditStaffMemberCondition(obj, self.request.user),
+        ]
 
 
 class PurchaseOrderViewSet(
@@ -82,6 +116,7 @@ class PurchaseOrderViewSet(
     mixins.UpdateModelMixin,
     viewsets.GenericViewSet
 ):
+    metadata_class = AuditPermissionBasedMetadata
     queryset = PurchaseOrder.objects.all()
     serializer_class = PurchaseOrderSerializer
 
@@ -107,6 +142,8 @@ class PurchaseOrderViewSet(
         self.check_object_permissions(self.request, instance)
 
         serializer = self.get_serializer(instance)
+        self.check_serializer_permissions(serializer)
+
         return Response(serializer.data)
 
 
@@ -138,11 +175,10 @@ class EngagementViewSet(
     queryset = Engagement.objects.all()
     serializer_class = EngagementSerializer
     serializer_action_classes = {
-        'list': EngagementLightSerializer
+        'list': EngagementLightSerializer,
     }
-    metadata_class = EngagementMetadata
+    metadata_class = AuditPermissionBasedMetadata
 
-    permission_classes = (IsAuthenticated, HasCreatePermission,)
     export_serializer_class = EngagementExportSerializer
     export_filename = 'engagements'
     renderer_classes = [JSONRenderer, EngagementCSVRenderer]
@@ -195,14 +231,30 @@ class EngagementViewSet(
             'partner', Prefetch('agreement', PurchaseOrder.objects.prefetch_related('auditor_firm'))
         )
 
-        user_type = AuditPermission._get_user_type(self.request.user)
-        if not user_type or user_type == Auditor:
+        if Auditor.as_group() in self.request.user.groups.all():
             queryset = queryset.filter(staff_members__user=self.request.user)
 
-        if user_type == UNICEFUser:
-            queryset = queryset.exclude(engagement_type=Engagement.TYPES.sa)
+        # todo: if simple unicef user
+        # queryset = queryset.exclude(engagement_type=Engagement.TYPES.sa)
 
         return queryset
+
+    def get_permission_context(self):
+        context = super(EngagementViewSet, self).get_permission_context()
+
+        if Auditor.as_group() in self.request.user.groups.all():
+            context += [
+                AuditStaffMemberCondition(self.request.user.purchase_order_auditorstaffmember.auditor_firm,
+                                          self.request.user),
+            ]
+
+        return context
+
+    def get_obj_permission_context(self, obj):
+        return [
+            ObjectStatusCondition(obj),
+            AuditStaffMemberCondition(obj.agreement.auditor_firm, self.request.user),
+        ]
 
     @list_route(methods=['get'], url_path='partners')
     def partners(self, request, *args, **kwargs):
@@ -225,11 +277,7 @@ class EngagementViewSet(
     def export_pdf(self, request, *args, **kwargs):
         obj = self.get_object()
 
-        if not AuditPermission.objects.filter(instance=obj, user=request.user).exists():
-            self.permission_denied(
-                request, message=_('You have no access to this engagement.')
-            )
-
+        # todo: don't allow access if no permissions
         engagement_params = self.ENGAGEMENT_MAPPING.get(obj.engagement_type, {})
         serializer_class = engagement_params.get('pdf_serializer_class', None)
         template = engagement_params.get('pdf_template', None)
@@ -248,10 +296,10 @@ class EngagementViewSet(
 
 
 class EngagementManagementMixin(
-    FSMTransitionActionMixin,
     mixins.RetrieveModelMixin,
     mixins.UpdateModelMixin,
-    mixins.DestroyModelMixin
+    mixins.DestroyModelMixin,
+    PermittedFSMActionMixin,
 ):
     pass
 
@@ -280,20 +328,37 @@ class AuditorStaffMembersViewSet(
     BaseAuditViewSet,
     mixins.ListModelMixin,
     mixins.CreateModelMixin,
-    mixins.RetrieveModelMixin,
     mixins.UpdateModelMixin,
     mixins.DestroyModelMixin,
     NestedViewSetMixin,
     viewsets.GenericViewSet
 ):
+    metadata_class = AuditPermissionBasedMetadata
     queryset = AuditorStaffMember.objects.all()
     serializer_class = AuditorStaffMemberSerializer
-    permission_classes = (IsAuthenticated, CanCreateStaffMembers, )
+    permission_classes = BaseAuditViewSet.permission_classes + [NestedPermission]
     filter_backends = (OrderingFilter, SearchFilter, DjangoFilterBackend, )
     ordering_fields = ('user__email', 'user__first_name', 'id', )
     search_fields = ('user__first_name', 'user__email', 'user__last_name', )
 
     def perform_create(self, serializer, **kwargs):
+        self.check_serializer_permissions(serializer, edit=True)
+
         instance = serializer.save(auditor_firm=self.get_parent_object(), **kwargs)
         instance.user.profile.country = self.request.user.profile.country
         instance.user.profile.save()
+
+    def get_permission_context(self):
+        context = super(AuditorStaffMembersViewSet, self).get_permission_context()
+
+        if Auditor.as_group() in self.request.user.groups.all():
+            context += [
+                AuditStaffMemberCondition(self.get_parent_object(), self.request.user),
+            ]
+
+        return context
+
+    def get_obj_permission_context(self, obj):
+        return [
+            AuditStaffMemberCondition(obj.auditor_firm, self.request.user),
+        ]

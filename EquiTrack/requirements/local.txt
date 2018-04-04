@@ -10,3 +10,5 @@ sphinx==1.6.2
   snowballstemmer==1.2.1
   sphinxcontrib-websupport==1.0.1
   typing==3.6.1
+
+pydevd

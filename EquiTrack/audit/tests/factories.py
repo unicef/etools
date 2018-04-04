@@ -11,7 +11,6 @@ from factory import fuzzy
 from audit.models import (
     Audit,
     Auditor,
-    AuditPermission,
     DetailedFindingInfo,
     Engagement,
     EngagementActionPoint,
@@ -201,14 +200,3 @@ class EngagementActionPointFactory(factory.DjangoModelFactory):
     category = fuzzy.FuzzyChoice(EngagementActionPoint.CATEGORY_CHOICES)
     description = fuzzy.FuzzyText(length=100)
     due_date = fuzzy.FuzzyDate(datetime.date(2001, 1, 1))
-
-
-class AuditPermissionFactory(factory.django.DjangoModelFactory):
-    class Meta:
-        model = AuditPermission
-
-    user_type = fuzzy.FuzzyChoice(AuditPermission.USER_TYPES)
-    permission = fuzzy.FuzzyChoice(AuditPermission.PERMISSIONS)
-    permission_type = fuzzy.FuzzyChoice(AuditPermission.TYPES)
-    target = fuzzy.FuzzyText(length=100)
-    instance_status = fuzzy.FuzzyChoice(AuditPermission.STATUSES)

@@ -35,8 +35,8 @@ special_audits_api.register(r'special-audits', SpecialAuditViewSet, base_name='s
 
 
 urlpatterns = [
-    url(r'^', include(auditor_firms_api.urls)),
     url(r'^', include(auditor_staffmember_api.urls)),
+    url(r'^', include(auditor_firms_api.urls)),
     url(r'^', include(purchase_orders_api.urls)),
     url(r'^', include(engagements_api.urls)),
     url(r'^', include(micro_assessments_api.urls)),

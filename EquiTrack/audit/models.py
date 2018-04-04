@@ -32,16 +32,7 @@ from partners.models import PartnerStaffMember, PartnerOrganization
 from utils.common.models.fields import CodedGenericRelation
 from utils.common.urlresolvers import build_frontend_url
 from utils.groups.wrappers import GroupWrapper
-from utils.permissions.models.models import StatusBasePermission
-from utils.permissions.models.query import StatusBasePermissionQueryset
-from utils.permissions.utils import has_action_permission
-
-
-def _has_action_permission(action):
-    return lambda instance=None, user=None: \
-        has_action_permission(
-            AuditPermission, instance=instance, user=user, action=action
-        )
+from permissions2.fsm import has_action_permission
 
 
 @python_2_unicode_compatible
@@ -256,21 +247,21 @@ class Engagement(TimeStampedModel, models.Model):
             )
 
     @transition(status, source=STATUSES.partner_contacted, target=STATUSES.report_submitted,
-                permission=_has_action_permission(action='submit'))
+                permission=has_action_permission(action='submit'))
     def submit(self):
         self.date_of_report_submit = timezone.now()
 
         self._notify_focal_points('audit/engagement/reported_by_auditor')
 
     @transition(status, source=[STATUSES.partner_contacted, STATUSES.report_submitted], target=STATUSES.cancelled,
-                permission=_has_action_permission(action='cancel'),
+                permission=has_action_permission(action='cancel'),
                 custom={'serializer': EngagementCancelSerializer})
     def cancel(self, cancel_comment):
         self.date_of_cancel = timezone.now()
         self.cancel_comment = cancel_comment
 
     @transition(status, source=STATUSES.report_submitted, target=STATUSES.final,
-                permission=_has_action_permission(action='finalize'))
+                permission=has_action_permission(action='finalize'))
     def finalize(self):
         self.date_of_final_report = timezone.now()
 
@@ -399,13 +390,13 @@ class SpotCheck(Engagement):
             SPSubmitReportRequiredFieldsCheck.as_condition(),
             EngagementHasReportAttachmentsCheck.as_condition(),
         ],
-        permission=_has_action_permission(action='submit')
+        permission=has_action_permission(action='submit')
     )
     def submit(self, *args, **kwargs):
         return super(SpotCheck, self).submit(*args, **kwargs)
 
     @transition('status', source=Engagement.STATUSES.report_submitted, target=Engagement.STATUSES.final,
-                permission=_has_action_permission(action='finalize'))
+                permission=has_action_permission(action='finalize'))
     def finalize(self, *args, **kwargs):
         PartnerOrganization.spot_checks(self.partner, update_one=True, event_date=self.date_of_draft_report_to_unicef)
         return super(SpotCheck, self).finalize(*args, **kwargs)
@@ -497,7 +488,7 @@ class MicroAssessment(Engagement):
             ValidateMARiskExtra.as_condition(),
             EngagementHasReportAttachmentsCheck.as_condition(),
         ],
-        permission=_has_action_permission(action='submit')
+        permission=has_action_permission(action='submit')
     )
     def submit(self, *args, **kwargs):
         return super(MicroAssessment, self).submit(*args, **kwargs)
@@ -577,13 +568,13 @@ class Audit(Engagement):
             ValidateAuditRiskCategories.as_condition(),
             EngagementHasReportAttachmentsCheck.as_condition(),
         ],
-        permission=_has_action_permission(action='submit')
+        permission=has_action_permission(action='submit')
     )
     def submit(self, *args, **kwargs):
         return super(Audit, self).submit(*args, **kwargs)
 
     @transition('status', source=Engagement.STATUSES.report_submitted, target=Engagement.STATUSES.final,
-                permission=_has_action_permission(action='finalize'))
+                permission=has_action_permission(action='finalize'))
     def finalize(self, *args, **kwargs):
         PartnerOrganization.audits_completed(self.partner, update_one=True)
         return super(Audit, self).finalize(*args, **kwargs)
@@ -660,13 +651,13 @@ class SpecialAudit(Engagement):
             SpecialAuditSubmitRelatedModelsCheck.as_condition(),
             EngagementHasReportAttachmentsCheck.as_condition(),
         ],
-        permission=_has_action_permission(action='submit')
+        permission=has_action_permission(action='submit')
     )
     def submit(self, *args, **kwargs):
         return super(SpecialAudit, self).submit(*args, **kwargs)
 
     @transition('status', source=Engagement.STATUSES.report_submitted, target=Engagement.STATUSES.final,
-                permission=_has_action_permission(action='finalize'))
+                permission=has_action_permission(action='finalize'))
     def finalize(self, *args, **kwargs):
         PartnerOrganization.audits_completed(self.partner, update_one=True)
         return super(SpecialAudit, self).finalize(*args, **kwargs)
@@ -779,42 +770,3 @@ Auditor = GroupWrapper(code='auditor',
 
 UNICEFUser = GroupWrapper(code='unicef_user',
                           name='UNICEF User')
-
-
-class AuditPermissionQueryset(StatusBasePermissionQueryset):
-    def filter(self, *args, **kwargs):
-        if 'user' in kwargs and 'instance' in kwargs and kwargs['instance']:
-            kwargs['user_type'] = self.model._get_user_type(kwargs.pop('user'), kwargs['instance'])
-            return self.filter(*args, **kwargs)
-
-        return super(AuditPermissionQueryset, self).filter(*args, **kwargs)
-
-
-@python_2_unicode_compatible
-class AuditPermission(StatusBasePermission):
-    STATUSES = StatusBasePermission.STATUSES + Engagement.STATUSES
-
-    USER_TYPES = Choices(
-        UNICEFAuditFocalPoint.as_choice(),
-        Auditor.as_choice(),
-        UNICEFUser.as_choice(),
-    )
-
-    objects = AuditPermissionQueryset.as_manager()
-
-    def __str__(self):
-        return '{} can {} {} on {} engagement'.format(self.user_type, self.permission, self.target,
-                                                      self.instance_status)
-
-    @classmethod
-    def _get_user_type(cls, user, engagement=None):
-        user_type = super(AuditPermission, cls)._get_user_type(user)
-
-        if user_type == Auditor and engagement:
-            try:
-                if user.purchase_order_auditorstaffmember not in engagement.staff_members.all():
-                    return None
-            except AuditorStaffMember.DoesNotExist:
-                return None
-
-        return user_type
