@@ -19,33 +19,47 @@ class Command(BaseCommand):
 
         PeriodicTask.objects.get_or_create(name='Hact Chart', defaults={
             'task': 'hact.tasks.update_aggregate_hact_values',
+            'enabled': False,
             'interval': every_day})
 
         PeriodicTask.objects.get_or_create(name='Hact Values', defaults={
             'task': 'hact.tasks.update_hact_values',
+            'enabled': False,
             'interval': every_day})
 
         PeriodicTask.objects.get_or_create(name='Intervention Notification Ending', defaults={
             'task': 'partners.tasks.intervention_notification_ending',
+            'enabled': False,
             'interval': every_day})
 
         PeriodicTask.objects.get_or_create(name='Intervention Notification Ended frs Outstanding', defaults={
             'task': 'partners.tasks.intervention_notification_ended_fr_outstanding',
+            'enabled': False,
             'interval': every_two_weeks})
 
         PeriodicTask.objects.get_or_create(name='Intervention Notification Signed no frs', defaults={
             'task': 'partners.tasks.intervention_notification_signed_no_frs',
+            'enabled': False,
             'interval': every_week})
 
         PeriodicTask.objects.get_or_create(name='Intervention Status Automatic Transition', defaults={
             'task': 'partners.tasks.intervention_status_automatic_transition',
+            'enabled': False,
             'interval': every_day})
 
         PeriodicTask.objects.get_or_create(name='Agreement Status Automatic Transition', defaults={
             'task': 'partners.tasks.agreement_status_automatic_transition',
+            'enabled': False,
             'interval': every_day})
 
         PeriodicTask.objects.get_or_create(name='Vision Sync Task', defaults={
             'task': 'vision.tasks.vision_sync_task',
+            'enabled': False,
             'crontab': midnight})
+
+        PeriodicTask.objects.get_or_create(name='Update users with Azure', defaults={
+            'task': 'azure_graph_api.tasks.sync_delta_users',
+            'enabled': False,
+            'crontab': midnight})
+
         logger.info(u'Init Celery command finished')
