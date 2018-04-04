@@ -70,7 +70,7 @@ class TestPartnerSynchronizer(BaseTenantTestCase):
         self.assertEqual(self.adapter.get_partner_type(self.data), "UN Agency")
 
     def test_get_partner_rating_none(self):
-        self.assertIsNone(self.adapter.get_partner_rating(self.data))
+        self.assertEqual('', self.adapter.get_partner_rating(self.data))
 
     def test_get_partner_rating(self):
         self.data["RISK_RATING"] = "High"
@@ -101,8 +101,8 @@ class TestPartnerSynchronizer(BaseTenantTestCase):
             vendor_number=self.data["VENDOR_CODE"]
         )
         self.assertFalse(partner_qs.exists())
-        response = self.adapter._save_records([self.data])
-        self.assertEqual(response, 1)
+        num_saved = self.adapter._save_records([self.data])
+        self.assertEqual(num_saved, 1)
         self.assertTrue(partner_qs.exists())
         partner = partner_qs.first()
         self.assertEqual(partner.name, self.data["VENDOR_NAME"])
