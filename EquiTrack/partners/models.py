@@ -602,13 +602,13 @@ class PartnerOrganization(TimeStampedModel):
         """
         :return: all completed programmatic visits
         """
-        if not event_date:
-            event_date = datetime.datetime.today()
-        quarter_name = get_quarter(event_date)
         pv = partner.hact_values['programmatic_visits']['completed']['total']
-        pvq = partner.hact_values['programmatic_visits']['completed'][quarter_name]
 
         if update_one:
+            if not event_date:
+                event_date = datetime.datetime.today()
+            quarter_name = get_quarter(event_date)
+            pvq = partner.hact_values['programmatic_visits']['completed'][quarter_name]
             pv += 1
             pvq += 1
             partner.hact_values['programmatic_visits']['completed'][quarter_name] = pvq
