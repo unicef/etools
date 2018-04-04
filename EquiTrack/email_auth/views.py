@@ -9,7 +9,7 @@ from drfpasswordless.utils import authenticate_by_token
 
 from email_auth.forms import EmailLoginForm
 from email_auth.utils import get_token_auth_link
-from notification.models import Notification
+from notification.utils import send_notification_using_email_template
 
 
 class TokenAuthView(FormView):
@@ -40,11 +40,11 @@ class TokenAuthView(FormView):
             'login_link': get_token_auth_link(form.get_user()),
         }
 
-        notification = Notification.objects.create(
+        send_notification_using_email_template(
             sender=form.get_user(),
-            recipients=[form.get_user().email, ], template_name='email_auth/token/login',
-            template_data=email_context
+            recipients=[form.get_user().email],
+            email_template_name='email_auth/token/login',
+            context=email_context
         )
-        notification.send_notification()
 
         return self.render_to_response(self.get_context_data(email=form.get_user().email))

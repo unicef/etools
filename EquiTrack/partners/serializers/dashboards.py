@@ -62,7 +62,7 @@ class InterventionDashSerializer(serializers.ModelSerializer):
         return self.fr_currencies_ok(obj) and obj.max_fr_currency == obj.planned_budget.currency
 
     def get_fr_currency(self, obj):
-        return obj.max_fr_currency if self.fr_currencies_ok(obj) else None
+        return obj.max_fr_currency if self.fr_currencies_ok(obj) else ''
 
     def get_disbursement_percent(self, obj):
         if obj.frs__actual_amt_local__sum is None:

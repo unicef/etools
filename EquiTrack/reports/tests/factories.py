@@ -101,6 +101,7 @@ class IndicatorFactory(factory.django.DjangoModelFactory):
         model = models.Indicator
 
     name = factory.Sequence(lambda n: 'Indicator {}'.format(n))
+    code = fuzzy.FuzzyText(length=5)
 
 
 class AppliedIndicatorFactory(factory.django.DjangoModelFactory):
