@@ -321,7 +321,6 @@ class PartnerOrganizationCreateUpdateSerializer(SnapshotModelSerializer):
                 {'basis_for_risk_rating': 'The basis for risk rating has to be blank if Not Required, Low or High'})
         return data
 
-
     class Meta:
         model = PartnerOrganization
         fields = "__all__"
