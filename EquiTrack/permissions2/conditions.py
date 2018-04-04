@@ -56,9 +56,28 @@ class ObjectStatusCondition(TemplateCondition):
     def __init__(self, obj):
         self.obj = obj
 
+    def _get_parents(self, cls=None, depth=0):
+        if not cls:
+            parents = [[self.obj.__class__, 0]]
+        else:
+            parents = [[base, depth] for base in cls.__bases__]
+
+        for base, depth in parents:
+            parents.extend(self._get_parents(base, depth=depth+1))
+
+        return parents
+
+    def get_status_root(self):
+        status_parents = list(filter(
+            lambda p:
+                hasattr(p[0], '_meta') and any(map(lambda f: f.name == 'status', p[0]._meta.fields)),
+            self._get_parents()
+        ))
+        return max(*status_parents, key=lambda p: p[1])[0]
+
     def get_context(self):
         return {
-            'obj': '{}_{}'.format(self.obj._meta.app_label, self.obj._meta.model_name),
+            'obj': '{}_{}'.format(self.get_status_root()._meta.app_label, self.get_status_root()._meta.model_name),
             'status': getattr(self.obj, self.status_field),
         }
 
