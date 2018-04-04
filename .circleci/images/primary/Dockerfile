@@ -34,7 +34,7 @@ RUN apt-get install -y --no-install-recommends \
 # and setuptools.  Using pip2 means that when the older code
 # invokes 'virtualenv' it'll end up with a Python 2 virtualenv
 # by default, which is what it needs.
-RUN pip2 install virtualenv
+RUN pip install virtualenv
 
 # http://gis.stackexchange.com/a/74060
 ENV CPLUS_INCLUDE_PATH /usr/include/gdal
