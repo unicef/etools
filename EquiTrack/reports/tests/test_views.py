@@ -519,7 +519,7 @@ class TestLowerResultListAPIView(BaseTenantTestCase):
         self.assertIn(
             self.lower_result.pk,
             [int(x["id"]) for x in response.data]
-         )
+        )
 
     def test_search_name(self):
         response = self.forced_auth_req(
@@ -532,7 +532,7 @@ class TestLowerResultListAPIView(BaseTenantTestCase):
         self.assertIn(
             self.lower_result.pk,
             [int(x["id"]) for x in response.data]
-         )
+        )
 
     def test_search_empty(self):
         response = self.forced_auth_req(

@@ -581,3 +581,5 @@ PASSWORDLESS_AUTH = {
 }
 
 REPORT_EMAILS = os.getenv('REPORT_EMAILS', ['etools@unicef.org', ])
+
+USERVOICE_WIDGET_KEY = 'defaultVoiceKey'
