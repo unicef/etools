@@ -270,7 +270,7 @@ class TestVisionDataSynchronizerSync(BaseTenantTestCase):
 
         # The first two calls to logger.info()  are part of the instantiation of VisionDataLoader so I don't need to
         # test them here.
-        self.assertEqual(mock_logger_info.call_count, 5)
+        self.assertEqual(mock_logger_info.call_count, 4)
         expected_msg = 'About to get data from http://example.com'
         self.assertEqual(mock_logger_info.call_args_list[2][0], (expected_msg, ))
         self.assertEqual(mock_logger_info.call_args_list[2][1], {})
@@ -390,7 +390,7 @@ class TestVisionDataSynchronizerSync(BaseTenantTestCase):
 
         # The first two calls to logger.info()  are part of the instantiation of VisionDataLoader so I don't need to
         # test them here.
-        self.assertEqual(mock_logger_info.call_count, 4)
+        self.assertEqual(mock_logger_info.call_count, 3)
         expected_msg = 'About to get data from http://example.com'
         self.assertEqual(mock_logger_info.call_args_list[2][0], (expected_msg, ))
         self.assertEqual(mock_logger_info.call_args_list[2][1], {})
