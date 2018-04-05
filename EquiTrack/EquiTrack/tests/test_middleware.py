@@ -3,6 +3,8 @@ from __future__ import division
 from __future__ import print_function
 from __future__ import unicode_literals
 
+from unittest import skip
+
 from django.conf import settings
 from django.contrib.auth.models import AnonymousUser
 from django.core.urlresolvers import reverse
@@ -63,6 +65,7 @@ class EToolsTenantMiddlewareTest(TestCase):
         self.request.user = superuser
         self.assertEquals(EToolsTenantMiddleware().process_request(self.request), None)
 
+    @skip('unused')
     @override_settings(INACTIVE_BUSINESS_AREAS=['ZZZ'])
     def test_user_with_inactive_country_redirects_to_inactive_workspace(self):
         "If user is part of an inactive workspace, redirect to inactive workspace."

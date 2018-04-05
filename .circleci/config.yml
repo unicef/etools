@@ -4,13 +4,13 @@ jobs:
     working_directory: ~/code
     # The primary container is an instance of the first list image listed. Your build commands run in this container.
     docker:
-      - image: unicef/etools:test-base
+      - image: unicef/etools:test-base-p3
         environment:
           PGHOST: 127.0.0.1
           DATABASE_URL: "postgis://postgres:postgres@localhost:5432/circle_test"
       - image: circleci/postgres:9.5-alpine-postgis
         environment:
-          POSTGRES_USER: postgres 
+          POSTGRES_USER: postgres
           PGUSER: postgres
           POSTGRES_DB: circle_test
           POSTGRES_PASSWORD: postgres
@@ -19,31 +19,28 @@ jobs:
       - restore_cache:
           key: deps2-{{ .Branch }}-{{ checksum "EquiTrack/requirements/test.txt" }}-{{ checksum ".circleci/config.yml" }}
       - run:
-          name: create main virtualenv, install tox, generate test envs
+          name: create main virtualenv, install requirements
           command: |
             virtualenv -p $(type -p python3) env1
             . env1/bin/activate
-            pip --quiet install tox
-            # This creates the virtualenvs for tox so we can cache them
-            cd EquiTrack && tox --notest
+            pip install -r EquiTrack/requirements/test.txt
       - save_cache:
           key: deps2-{{ .Branch }}-{{ checksum "EquiTrack/requirements/test.txt" }}-{{ checksum ".circleci/config.yml" }}
           paths:
             - "env1"
-            - "EquiTrack/.tox"
             - /root/.cache/pip
       - run:
           name: Postgres Extensions
           command: |
             psql -U postgres -d template1 -c 'create extension if not exists hstore;'
-            
+
       - run:
           name: Run Tests
           command: |
             . env1/bin/activate
             cd EquiTrack
             mkdir media
-            tox
+            ./runtests.sh
       - store_artifacts:
           path: test-reports/
           destination: tr1
@@ -52,13 +49,13 @@ jobs:
     working_directory: ~/code
     # The primary container is an instance of the first list image listed. Your build commands run in this container.
     docker:
-      - image: unicef/etools:test-base
+      - image: unicef/etools:test-base-p3
         environment:
           PGHOST: 127.0.0.1
           DATABASE_URL: "postgis://postgres:postgres@localhost:5432/circle_test"
       - image: circleci/postgres:9.5-alpine-postgis
         environment:
-          POSTGRES_USER: postgres 
+          POSTGRES_USER: postgres
           PGUSER: postgres
           POSTGRES_DB: circle_test
           POSTGRES_PASSWORD: postgres
@@ -112,7 +109,7 @@ jobs:
           command: |
             TAG=${CIRCLE_BRANCH}
             HOSTIP=`/sbin/ip route|awk '/default/ { print $3 }'`
-            docker run --network container:docker-postgres -it -e "DATABASE_URL=postgis://postgres:postgres@localhost:5432/circle_test" -e "DISABLE_JWT_LOGIN=1" -e SECRET_KEY unicef/etools:$TAG bash tox
+            docker run --network container:docker-postgres -it -e "DATABASE_URL=postgis://postgres:postgres@localhost:5432/circle_test" -e "DISABLE_JWT_LOGIN=1" -e SECRET_KEY unicef/etools:$TAG python manage.py test --noinput
       - run:
           name: Pushing to Docker Hub
           command: |
