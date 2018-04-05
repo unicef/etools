@@ -14,9 +14,7 @@ RUN apt-get install -y --no-install-recommends \
 RUN apt-get install -y --no-install-recommends \
     git-core
 RUN apt-get install -y --no-install-recommends \
-    python-dev \
     python3-dev \
-    python2.7-dev \
     python-software-properties \
     python-setuptools
 RUN apt-get install -y --no-install-recommends \
@@ -36,8 +34,7 @@ RUN apt-get install -y --no-install-recommends \
 RUN pip install --upgrade \
     setuptools \
     pip \
-    wheel \
-    tox
+    wheel
 
 # http://gis.stackexchange.com/a/74060
 ENV CPLUS_INCLUDE_PATH /usr/include/gdal

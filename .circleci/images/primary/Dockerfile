@@ -15,9 +15,7 @@ RUN apt-get install -y --no-install-recommends \
     python-pip \
     postgresql-client \
     libpq-dev \
-    python-dev \
-    python3-dev \
-    python2.7-dev
+    python3-dev
 RUN apt-get install -y --no-install-recommends \
     python-gdal \
     gdal-bin \
