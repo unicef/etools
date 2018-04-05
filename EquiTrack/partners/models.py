@@ -604,9 +604,7 @@ class PartnerOrganization(TimeStampedModel):
         """
         pv = partner.hact_values['programmatic_visits']['completed']['total']
 
-        if update_one:
-            if not event_date:
-                event_date = datetime.datetime.today()
+        if update_one and event_date:
             quarter_name = get_quarter(event_date)
             pvq = partner.hact_values['programmatic_visits']['completed'][quarter_name]
             pv += 1
