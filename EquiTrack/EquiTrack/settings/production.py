@@ -3,7 +3,7 @@ from cryptography.hazmat.primitives import serialization
 from cryptography.x509 import load_pem_x509_certificate
 from cryptography.hazmat.backends import default_backend
 
-from base import *  # noqa: F403
+from EquiTrack.settings.base import *  # noqa: F403
 
 # raven (Sentry): https://github.com/getsentry/raven-python
 RAVEN_CONFIG = {
