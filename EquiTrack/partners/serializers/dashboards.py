@@ -75,10 +75,10 @@ class InterventionDashSerializer(serializers.ModelSerializer):
         return "%.1f" % percent
 
     def get_days_last_pv(self, obj):
-        return obj.days_since_last_pv.days if obj.days_since_last_pv else None
+        return ""  # obj.days_since_last_pv.days if obj.days_since_last_pv else None
 
     def get_last_pv_date(self, obj):
-        return obj.last_pv_date
+        return ""  # obj.last_pv_date
 
     def get_offices_names(self, obj):
         return ",".join(o.name for o in obj.offices.all())
