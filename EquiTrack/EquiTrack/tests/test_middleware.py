@@ -53,7 +53,6 @@ class EToolsTenantMiddlewareTest(TestCase):
         response = EToolsTenantMiddleware().process_request(self.request)
         self.assertRedirects(response, settings.LOGIN_URL, fetch_redirect_response=False)
 
-    @skip('unused')
     def test_user_without_country_redirects_to_inactive_workspace(self):
         "If user has no country, middleware redirects them to inactive workspace."
         self.request.user.profile.country = None
@@ -66,6 +65,7 @@ class EToolsTenantMiddlewareTest(TestCase):
         self.request.user = superuser
         self.assertEquals(EToolsTenantMiddleware().process_request(self.request), None)
 
+    @skip('unused')
     @override_settings(INACTIVE_BUSINESS_AREAS=['ZZZ'])
     def test_user_with_inactive_country_redirects_to_inactive_workspace(self):
         "If user is part of an inactive workspace, redirect to inactive workspace."
