@@ -10,7 +10,7 @@ jobs:
           DATABASE_URL: "postgis://postgres:postgres@localhost:5432/circle_test"
       - image: circleci/postgres:9.5-alpine-postgis
         environment:
-          POSTGRES_USER: postgres 
+          POSTGRES_USER: postgres
           PGUSER: postgres
           POSTGRES_DB: circle_test
           POSTGRES_PASSWORD: postgres
@@ -23,7 +23,7 @@ jobs:
           command: |
             virtualenv -p $(type -p python3) env1
             . env1/bin/activate
-            pip install -r requirements.txt
+            pip install -r EquiTrack/requirements/test.txt
       - save_cache:
           key: deps2-{{ .Branch }}-{{ checksum "EquiTrack/requirements/test.txt" }}-{{ checksum ".circleci/config.yml" }}
           paths:
@@ -33,7 +33,7 @@ jobs:
           name: Postgres Extensions
           command: |
             psql -U postgres -d template1 -c 'create extension if not exists hstore;'
-            
+
       - run:
           name: Run Tests
           command: |
@@ -55,7 +55,7 @@ jobs:
           DATABASE_URL: "postgis://postgres:postgres@localhost:5432/circle_test"
       - image: circleci/postgres:9.5-alpine-postgis
         environment:
-          POSTGRES_USER: postgres 
+          POSTGRES_USER: postgres
           PGUSER: postgres
           POSTGRES_DB: circle_test
           POSTGRES_PASSWORD: postgres
