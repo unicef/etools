@@ -1,4 +1,6 @@
-FROM python:2.7
+FROM python:3.6.4-jessie
+# python:3.6.4-jessie has python 2.7 and 3.6 installed, and packages
+# available to install 3.4
 
 # Install dependencies
 RUN apt-get update
@@ -13,6 +15,8 @@ RUN apt-get install -y --no-install-recommends \
     git-core
 RUN apt-get install -y --no-install-recommends \
     python-dev \
+    python3-dev \
+    python2.7-dev \
     python-software-properties \
     python-setuptools
 RUN apt-get install -y --no-install-recommends \
@@ -32,7 +36,8 @@ RUN apt-get install -y --no-install-recommends \
 RUN pip install --upgrade \
     setuptools \
     pip \
-    wheel
+    wheel \
+    tox
 
 # http://gis.stackexchange.com/a/74060
 ENV CPLUS_INCLUDE_PATH /usr/include/gdal
