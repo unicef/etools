@@ -20,7 +20,6 @@ class InterventionAmendmentExportSerializer(InterventionAmendmentCUSerializer):
 
     class Meta:
         model = InterventionAmendment
-        exclude = ("signed_amendment_attachment", )
 
 
 class InterventionAmendmentExportFlatSerializer(
@@ -31,6 +30,8 @@ class InterventionAmendmentExportFlatSerializer(
         label=_("Reference Number"),
         source="intervention.number",
     )
+    class Meta:
+        fields="__all__"
 
 
 class InterventionSectorLocationLinkExportSerializer(LocationExportSerializer):
@@ -82,71 +83,71 @@ class InterventionSectorLocationLinkExportFlatSerializer(
 
 
 class InterventionResultExportSerializer(InterventionResultSerializer):
-    intervention = serializers.CharField(
+    intervention = serializers.ReadOnlyField(
         label=_("Reference Number"),
         source="intervention.number",
     )
-    country_programme = serializers.CharField(
+    country_programme = serializers.ReadOnlyField(
         label=_("Country Programme"),
         source="cp_output.country_programme.name",
     )
-    result_type = serializers.CharField(
+    result_type = serializers.ReadOnlyField(
         label=_("Result Type"),
         source="cp_output.result_type.name",
     )
-    sector = serializers.CharField(
+    sector = serializers.ReadOnlyField(
         label=_("Sector"),
         source="cp_output.sector.name",
     )
-    name = serializers.CharField(
+    name = serializers.ReadOnlyField(
         label=_("Name"),
         source="cp_output.name",
     )
-    code = serializers.CharField(
+    code = serializers.ReadOnlyField(
         label=_("Code"),
         source="cp_output.code",
     )
-    from_date = serializers.CharField(
+    from_date = serializers.ReadOnlyField(
         label=_("From Date"),
         source="cp_output.from_date",
     )
-    to_date = serializers.CharField(
+    to_date = serializers.ReadOnlyField(
         label=_("To Date"),
         source="cp_output.to_date",
     )
-    parent = serializers.CharField(
+    parent = serializers.ReadOnlyField(
         label=_("Parent"),
         source="cp_output.parent.pk",
     )
-    wbs = serializers.CharField(
+    wbs = serializers.ReadOnlyField(
         label=_("WBS"),
         source="cp_output.wbs",
     )
-    vision_id = serializers.CharField(
+    vision_id = serializers.ReadOnlyField(
         label=_("VISION ID"),
         source="cp_output.vision_id",
     )
-    gic_code = serializers.CharField(
+    gic_code = serializers.ReadOnlyField(
         label=_("GIC Code"),
         source="cp_output.gic_code",
     )
-    gic_name = serializers.CharField(
+    gic_name = serializers.ReadOnlyField(
         label=_("GIC Name"),
         source="cp_output.gic_name",
     )
-    sic_code = serializers.CharField(
+    sic_code = serializers.ReadOnlyField(
         label=_("SIC Code"),
         source="cp_output.sic_code",
     )
-    sic_name = serializers.CharField(
+    sic_name = serializers.ReadOnlyField(
         label=_("SIC Name"),
         source="cp_output.sic_name",
     )
-    activity_focus_code = serializers.CharField(
+    activity_focus_code = serializers.ReadOnlyField(
         label=_("Activity Focus Code"),
         source="cp_output.activity_focus_code",
     )
-    activity_focus_name = serializers.CharField(
+    activity_focus_name = serializers.ReadOnlyField(
         label=_("Activity Focus Name"),
         source="cp_output.activity_focus_name",
     )
@@ -160,7 +161,7 @@ class InterventionResultExportFlatSerializer(
         ExportSerializerMixin,
         InterventionResultExportSerializer
 ):
-    parent = serializers.CharField(
+    parent = serializers.ReadOnlyField(
         label=_("Parent"),
         source="cp_output.parent.name",
     )

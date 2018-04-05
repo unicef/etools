@@ -247,17 +247,17 @@ class TestTPMVisitViewSet(TestExportMixin, TPMTestCaseMixin, BaseTenantTestCase)
         self._test_partner()
 
     def test_visits_csv(self):
-        self._test_export(self.pme_user, 'tpm:visits-export')
+        self._test_export(self.pme_user, 'tpm:visits-visits-export')
 
     def test_activities_csv(self):
-        self._test_export(self.pme_user, 'tpm:visits-activities/export')
+        self._test_export(self.pme_user, 'tpm:visits-activities-export')
 
     def test_locations_csv(self):
-        self._test_export(self.pme_user, 'tpm:visits-locations/export')
+        self._test_export(self.pme_user, 'tpm:visits-locations-export')
 
     def test_visit_letter(self):
         visit = TPMVisitFactory(status='tpm_accepted')
-        self._test_export(self.pme_user, 'tpm:visits-visit-letter', args=(visit.id,))
+        self._test_export(self.pme_user, 'tpm:visits-tpm-visit-letter', args=(visit.id,))
 
 
 class TestTPMStaffMembersViewSet(TestExportMixin, TPMTestCaseMixin, BaseTenantTestCase):

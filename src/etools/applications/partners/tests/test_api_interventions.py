@@ -11,6 +11,7 @@ from django.test import SimpleTestCase
 from django.utils import six, timezone
 
 from rest_framework import status
+from rest_framework.exceptions import ErrorDetail
 from rest_framework.test import APIRequestFactory
 
 from etools.applications.environment.helpers import tenant_switch_is_active
@@ -1582,7 +1583,8 @@ class TestInterventionAmendmentCreateAPIView(BaseTenantTestCase):
         )
 
         self.assertEquals(response.status_code, status.HTTP_400_BAD_REQUEST)
-        self.assertEquals(response.data['types'], [u'"%s" is not a valid choice.' % invalid_type])
+        self.assertEquals(response.data['types'],
+                          {0: [ErrorDetail(string='"%s" is not a valid choice.' % invalid_type)]})
 
     def test_create_amendment_invalid_file(self):
         response = self._make_request(

@@ -1,6 +1,6 @@
-
 from django.http import Http404
 from django.utils import timezone
+from django_filters.rest_framework import DjangoFilterBackend
 
 from easy_pdf.rendering import render_to_pdf_response
 from rest_framework import generics, mixins, viewsets

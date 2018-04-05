@@ -16,13 +16,13 @@ class CostAssignmentNameSerializer(serializers.Serializer):
 
 class TravelMailSerializer(serializers.Serializer):
     estimated_travel_cost = serializers.DecimalField(max_digits=18, decimal_places=2, required=False)
-    supervisor = serializers.CharField(source='supervisor.get_full_name')
-    traveler = serializers.CharField(source='traveler.get_full_name')
+    supervisor = serializers.ReadOnlyField(source='supervisor.get_full_name')
+    traveler = serializers.ReadOnlyField(source='traveler.get_full_name')
     start_date = serializers.DateTimeField(format='%m/%d/%Y')
     end_date = serializers.DateTimeField(format='%m/%d/%Y')
-    currency = serializers.CharField(source='currency.code')
+    currency = serializers.ReadOnlyField(source='currency.code')
     cost_summary = CostSummarySerializer(read_only=True)
-    location = serializers.CharField(source='itinerary.first.destination')
+    location = serializers.ReadOnlyField(source='itinerary.first.destination')
     cost_assignments = CostAssignmentNameSerializer(many=True)
     reference_number = serializers.CharField()
     purpose = serializers.CharField()
@@ -35,10 +35,10 @@ class TravelMailSerializer(serializers.Serializer):
 
 
 class ActionPointMailSerializer(serializers.Serializer):
-    person_responsible = serializers.CharField(source='person_responsible.get_full_name')
-    assigned_by = serializers.CharField(source='assigned_by.get_full_name')
+    person_responsible = serializers.ReadOnlyField(source='person_responsible.get_full_name')
+    assigned_by = serializers.ReadOnlyField(source='assigned_by.get_full_name')
     action_point_number = serializers.CharField()
-    travel_reference_number = serializers.CharField(source='travel.reference_number')
+    travel_reference_number = serializers.ReadOnlyField(source='travel.reference_number')
     description = serializers.CharField()
     due_date = serializers.DateTimeField(format='%m/%d/%Y')
     completed_at = serializers.DateTimeField(format='%m/%d/%Y')

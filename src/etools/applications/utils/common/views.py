@@ -5,7 +5,6 @@ from django.http import Http404, QueryDict
 
 from django_fsm import can_proceed, has_transition_perm
 from rest_framework import exceptions
-from rest_framework.compat import is_authenticated
 from rest_framework.decorators import detail_route
 from rest_framework.exceptions import PermissionDenied, ValidationError
 from rest_framework.serializers import Serializer
@@ -205,6 +204,6 @@ class SafeTenantViewSetMixin(object):
         try:
             return super(SafeTenantViewSetMixin, self).dispatch(request, *args, **kwargs)
         except ProgrammingError:
-            if request.user and not is_authenticated(request.user):
+            if request.user and not request.user.is_authenticated:
                 raise exceptions.NotAuthenticated()
             raise

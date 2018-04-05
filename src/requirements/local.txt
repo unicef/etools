@@ -54,7 +54,7 @@ djangorestframework-hstore==1.3
 djangorestframework-jwt==1.11.0
 djangorestframework-recursive==0.1.2
 djangorestframework-xml==1.3
-djangorestframework==3.5.3
+djangorestframework==3.8.0
 djrill==2.1.0
 docutils==0.14            # via sphinx
 drf-nested-routers==0.11.1
@@ -72,7 +72,7 @@ html5lib==1.0b10
 httplib2==0.10.3
 idna==2.6
 imagesize==0.7.1          # via sphinx
-invoke==0.22.1
+invoke==0.23.0
 itypes==1.1.0
 jdcal==1.3
 jinja2==2.10

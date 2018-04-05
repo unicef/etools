@@ -40,7 +40,7 @@ class MinimalUserDetailSerializer(serializers.ModelSerializer):
 
 
 class CountrySerializer(serializers.ModelSerializer):
-    local_currency = serializers.CharField(source='local_currency.name')
+    local_currency = serializers.ReadOnlyField(source='local_currency.name')
 
     class Meta:
         model = Country
