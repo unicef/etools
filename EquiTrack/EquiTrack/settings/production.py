@@ -50,11 +50,11 @@ if AZURE_ACCOUNT_NAME and AZURE_ACCOUNT_KEY and AZURE_CONTAINER:
             storage.open('keys/jwt/key.pem') as jwt_key, \
             storage.open('keys/jwt/certificate.pem') as jwt_cert:
 
-        with open('EquiTrack/saml/certs/saml.key', 'w+') as new_key, \
-                open('EquiTrack/saml/certs/sp.crt', 'w+') as new_crt, \
-                open('EquiTrack/keys/jwt/key.pem', 'w+') as new_jwt_key, \
-                open('EquiTrack/keys/jwt/certificate.pem', 'w+') as new_jwt_cert, \
-                open('EquiTrack/saml/federationmetadata.xml', 'w+') as new_meta:
+        with open('EquiTrack/saml/certs/saml.key', 'wb+') as new_key, \
+                open('EquiTrack/saml/certs/sp.crt', 'wb+') as new_crt, \
+                open('EquiTrack/keys/jwt/key.pem', 'wb+') as new_jwt_key, \
+                open('EquiTrack/keys/jwt/certificate.pem', 'wb+') as new_jwt_cert, \
+                open('EquiTrack/saml/federationmetadata.xml', 'wb+') as new_meta:
 
             new_key.write(key.read())
             new_crt.write(crt.read())
