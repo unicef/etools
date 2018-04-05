@@ -1,4 +1,6 @@
-FROM python:2.7
+FROM python:3.6.4-jessie
+# python:3.6.4-jessie has python 2.7 and 3.6 installed, and packages
+# available to install 3.4
 
 # Install dependencies
 RUN apt-get update
@@ -12,7 +14,7 @@ RUN apt-get install -y --no-install-recommends \
 RUN apt-get install -y --no-install-recommends \
     git-core
 RUN apt-get install -y --no-install-recommends \
-    python-dev \
+    python3-dev \
     python-software-properties \
     python-setuptools
 RUN apt-get install -y --no-install-recommends \
