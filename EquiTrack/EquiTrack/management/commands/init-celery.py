@@ -16,6 +16,7 @@ class Command(BaseCommand):
         every_two_weeks, _ = IntervalSchedule.objects.get_or_create(every=14, period=IntervalSchedule.DAYS)
         every_week, _ = IntervalSchedule.objects.get_or_create(every=7, period=IntervalSchedule.DAYS)
         midnight, _ = CrontabSchedule.objects.get_or_create(minute=0, hour=0)
+        first_day_of_the_month, _ = CrontabSchedule.objects.get_or_create(day_of_month=1, hour=1)
 
         PeriodicTask.objects.get_or_create(name='Hact Chart', defaults={
             'task': 'hact.tasks.update_aggregate_hact_values',
@@ -61,5 +62,15 @@ class Command(BaseCommand):
             'task': 'azure_graph_api.tasks.sync_delta_users',
             'enabled': False,
             'crontab': midnight})
+
+        PeriodicTask.objects.get_or_create(name='User Report', defaults={
+            'task': 'users.tasks.user_report',
+            'enabled': False,
+            'crontab': first_day_of_the_month})
+
+        PeriodicTask.objects.get_or_create(name='PMP Indicator Report', defaults={
+            'task': 'partners.tasks.pmp_indicator_report',
+            'enabled': False,
+            'crontab': first_day_of_the_month})
 
         logger.info(u'Init Celery command finished')
