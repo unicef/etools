@@ -83,3 +83,4 @@ Field no,Field Name,Group,Condition,Status,Action,Allowed
 3.13.1,reporting_periods,Partnership Manager,user_adds_amendment+prp_mode_on,*,Edit,TRUE
 3.13.1,reporting_periods,UNICEF User,prp_server_on,*,View,TRUE
 3.13.1,reporting_periods,UNICEF User,,*,Required,FALSE
+3.14.1,last_pv_date,UNICEF User,,*,Edit,FALSE

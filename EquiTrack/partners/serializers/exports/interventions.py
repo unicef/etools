@@ -495,7 +495,7 @@ class InterventionExportFlatSerializer(ExportSerializerMixin, InterventionExport
 
     class Meta:
         model = Intervention
-        fields = "__all__"
+        exclude = ("last_pv_date", )
 
     def get_planned_visits(self, obj):
         planned_visits = []
