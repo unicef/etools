@@ -3,6 +3,8 @@ from __future__ import division
 from __future__ import print_function
 from __future__ import unicode_literals
 
+from unittest import skip
+
 from django.conf import settings
 from django.contrib.auth.models import AnonymousUser
 from django.core.urlresolvers import reverse
@@ -51,6 +53,7 @@ class EToolsTenantMiddlewareTest(TestCase):
         response = EToolsTenantMiddleware().process_request(self.request)
         self.assertRedirects(response, settings.LOGIN_URL, fetch_redirect_response=False)
 
+    @skip('unused')
     def test_user_without_country_redirects_to_inactive_workspace(self):
         "If user has no country, middleware redirects them to inactive workspace."
         self.request.user.profile.country = None
