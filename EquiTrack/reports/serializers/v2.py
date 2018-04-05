@@ -1,3 +1,5 @@
+from operator import itemgetter
+
 from django.db import transaction
 from django.utils.translation import ugettext as _
 
@@ -11,6 +13,7 @@ from reports.models import (
     Indicator,
     IndicatorBlueprint,
     LowerResult,
+    ReportingRequirement,
     Result,
 )
 
@@ -277,3 +280,64 @@ class IndicatorSerializer(serializers.ModelSerializer):
     class Meta:
         model = Indicator
         fields = "__all__"
+
+
+class ReportingRequirementSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = ReportingRequirement
+        fields = "__all__"
+
+
+class IndicatorReportingRequirementSerializer(serializers.ModelSerializer):
+    reporting_requirements = ReportingRequirementSerializer(many=True)
+
+    class Meta:
+        model = AppliedIndicator
+        fields = ("id", "reporting_requirements")
+        read_only_fields = ("id", )
+
+    def validate(self, data):
+        """The first reporting requirement's start date needs to be
+        on or after the PD start date.
+        Subsequent reporting requirements start date needs to be after the
+        previous reporting requirement end date.
+        """
+        try:
+            indicator = self.model.objects.get(pk=data["id"])
+        except self.model.DoesNotExist:
+            raise serializers.ValidationError(_("Invalid indicator id"))
+
+        # Only able to change reporting requirements when PD
+        # is in amendment status
+        intervention = indicator.lower_result.intervention_result_link.intervention
+        if intervention.status not in [intervention.DRAFT]:
+            raise serializers.ValidationError(
+                _("Changes not allowed when PD not in amendment state")
+            )
+        current_reqs = ReportingRequirement.objects.values_list(
+            "start_date",
+            "end_date",
+            "due_date",
+            flat=True
+        ).filter(
+            applied_indicator__pk=data["pk"],
+            report_type=data["report_type"],
+        )
+        # We need all reporting requirements in end date order
+        merged_reqs = current_reqs + data["reporting_requirements"]
+        reqs = sorted(merged_reqs, key=itemgetter("end_date"))
+
+        # Ensure that the first reporting requirement start date
+        # is on or after PD start date
+        if reqs[0]["start_date"] < intervention.start:
+            raise serializers.ValidationError(
+                _("Start date needs to be on or after PD start date")
+            )
+
+        # Ensure start date is after previous end date
+        for i in range(1, len(reqs)):
+            if reqs[i]["start_date"] >= reqs[i-1]["end_date"]:
+                raise serializers.ValidationError(
+                    _("Start date needs to be after previous end date")
+                )
+        return data

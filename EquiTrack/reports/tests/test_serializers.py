@@ -297,3 +297,19 @@ class TestLowerResultCUSerializer(BaseTenantTestCase):
         self.assertIsInstance(lower_result_updated, LowerResult)
         self.assertEqual(lower_result_updated.name, "LL Name")
         self.assertTrue(lower_result_qs.exists())
+
+
+class TestIndicatorReportingRequirementSerializer(BaseTenantTestCase):
+    @classmethod
+    def setUpTestData(cls):
+        cls.intervention = InterventionFactory()
+        cls.result_link = InterventionResultLinkFactory(
+            intervention=cls.intervention
+        )
+        cls.lower_result = LowerResultFactory(result_link=cls.result_link)
+        cls.indicator = AppliedIndicatorFactory(lower_result=cls.lower_result)
+
+    def test_validate_required(self):
+        data = {"id": self.indicator.pk}
+        serializer = IndicatorReportingRequirementSerializer(data=data)
+        self.assertFalse(serializer.is_valid())
