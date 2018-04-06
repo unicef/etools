@@ -11,13 +11,13 @@ class TestStrUnicode(BaseTenantTestCase):
     '''Ensure calling six.text_type() on model instances returns the right text.'''
 
     def test_notification(self):
-        agreement = AgreementFactory(partner=PartnerFactory(name=b'xyz'))
+        agreement = AgreementFactory(partner=PartnerFactory(name='xyz'))
         notification = NotificationFactory(sender=agreement)
 
-        self.assertIn(u'Email Notification from', six.text_type(notification))
-        self.assertIn(u'for xyz', six.text_type(notification))
+        self.assertIn('Email Notification from', six.text_type(notification))
+        self.assertIn('for xyz', six.text_type(notification))
 
-        agreement = AgreementFactory(partner=PartnerFactory(name=u'R\xe4dda Barnen'))
+        agreement = AgreementFactory(partner=PartnerFactory(name='R\xe4dda Barnen'))
         notification = NotificationFactory(sender=agreement)
-        self.assertIn(u'Email Notification from', six.text_type(notification))
-        self.assertIn(u'for R\xe4dda Barnen', six.text_type(notification))
+        self.assertIn('Email Notification from', six.text_type(notification))
+        self.assertIn('for R\xe4dda Barnen', six.text_type(notification))

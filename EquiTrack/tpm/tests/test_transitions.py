@@ -17,6 +17,7 @@ class TPMTransitionTestCase(TPMTestCaseMixin, BaseTenantTestCase):
     @classmethod
     def setUpTestData(cls):
         call_command('update_tpm_permissions', verbosity=0)
+        call_command('update_notifications')
 
     def _do_transition(self, visit, action, user, data=None):
         data = data or {}

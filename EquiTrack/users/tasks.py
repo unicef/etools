@@ -2,10 +2,12 @@ from __future__ import absolute_import, division, print_function, unicode_litera
 
 import csv
 import json
+from datetime import date
 
 from django.conf import settings
 from django.contrib.auth.models import Group
 from django.core.exceptions import ObjectDoesNotExist
+from django.core.mail.message import EmailMessage
 from django.db import IntegrityError, transaction
 from django.db.models import Q
 from django.utils import six
@@ -13,6 +15,8 @@ from django.utils.encoding import force_text
 
 import requests
 from celery.utils.log import get_task_logger
+from dateutil.relativedelta import relativedelta
+from six import StringIO
 
 from EquiTrack.celery import app
 from users.models import Country, Section, User, UserProfile
@@ -134,7 +138,7 @@ class UserMapper(object):
                 logger.info(u"User doesn't have the required fields {}".format(ad_user))
                 return
 
-        # TODO: MODIFY THIS TO USER THE GUID ON THE PROFILE INSTEAD OF EMAIL on the USer
+        # TODO: MODIFY THIS TO USE THE GUID ON THE PROFILE INSTEAD OF EMAIL on the USer
 
         try:
             user, created = User.objects.get_or_create(email=ad_user[self.KEY_ATTRIBUTE],
@@ -373,3 +377,28 @@ class UserSynchronizer(object):
     @property
     def response(self):
         return self._filter_records(self._convert_records(self._load_records()))
+
+
+@app.task
+def user_report():
+
+    today = date.today()
+    start_date = today + relativedelta(months=-1)
+
+    qs = Country.objects.exclude(schema_name__in=['public', 'uat', 'frg'])
+    fieldnames = ['country', 'total_users', 'unicef_users', 'users_last_month', 'unicef_users_last_month']
+    csvfile = StringIO()
+    writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
+    writer.writeheader()
+    for country in qs:
+        writer.writerow({
+            'country': country,
+            'total_users': User.objects.filter(profile__country=country).count(),
+            'unicef_users': User.objects.filter(profile__country=country, email__endswith='@unicef.org').count(),
+            'users_last_month': User.objects.filter(profile__country=country, last_login__gte=start_date).count(),
+            'unicef_users_last_month': User.objects.filter(profile__country=country, email__endswith='@unicef.org',
+                                                           last_login__gte=start_date).count(),
+        })
+    mail = EmailMessage('Report Latest Users', 'Report generated', 'etools-reports@unicef.org', settings.REPORT_EMAILS)
+    mail.attach('users.csv', csvfile.getvalue(), 'text/csv')
+    mail.send()

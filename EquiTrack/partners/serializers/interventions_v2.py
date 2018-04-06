@@ -101,9 +101,6 @@ class BaseInterventionListSerializer(serializers.ModelSerializer):
 
     section_names = serializers.SerializerMethodField()
     flagged_sections = serializers.SerializerMethodField()
-    # locations = serializers.SerializerMethodField()
-    # location_names = serializers.SerializerMethodField()
-    # cluster_names = serializers.SerializerMethodField()
     cp_outputs = serializers.SerializerMethodField()
     offices_names = serializers.SerializerMethodField()
     frs_earliest_start_date = serializers.DateField(source='frs__start_date__min', read_only=True)
@@ -144,18 +141,6 @@ class BaseInterventionListSerializer(serializers.ModelSerializer):
 
     def get_flagged_sections(self, obj):
         return [l.pk for l in obj.sections.all()]
-
-    # def get_locations(self, obj):
-    #     return [l.pk for l in obj.flat_locations.all()]
-
-    # def get_location_names(self, obj):
-    #     return [
-    #         '{} [{} - {}]'.format(l.name, l.gateway.name, l.p_code)
-    #         for l in obj.flat_locations.all()
-    #     ]
-
-    # def get_cluster_names(self, obj):
-    #     return [c for c in obj.intervention_clusters]
 
     class Meta:
         model = Intervention
@@ -208,7 +193,7 @@ class InterventionListSerializer(BaseInterventionListSerializer):
         return self.fr_currencies_ok(obj) and obj.max_fr_currency == obj.planned_budget.currency
 
     def get_fr_currency(self, obj):
-        return obj.max_fr_currency if self.fr_currencies_ok(obj) else None
+        return obj.max_fr_currency if self.fr_currencies_ok(obj) else ''
 
     class Meta(BaseInterventionListSerializer.Meta):
         fields = BaseInterventionListSerializer.Meta.fields + (
@@ -264,8 +249,6 @@ class InterventionAttachmentSerializer(serializers.ModelSerializer):
 
 
 class InterventionResultNestedSerializer(serializers.ModelSerializer):
-    # cp_output = ResultLightSerializer()
-    # ram_indicators = RAMIndicatorLightSerializer(many=True, read_only=True)
     cp_output_name = serializers.CharField(source="cp_output.name", read_only=True)
     ram_indicator_names = serializers.SerializerMethodField(read_only=True)
     ll_results = LowerResultSerializer(many=True, read_only=True)

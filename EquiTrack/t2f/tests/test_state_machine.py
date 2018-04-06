@@ -8,6 +8,7 @@ from decimal import Decimal
 from django.core import mail
 from django.core.urlresolvers import reverse
 from django.test.utils import override_settings
+from django.utils import six
 
 from EquiTrack.tests.cases import BaseTenantTestCase
 from publics.tests.factories import (
@@ -38,38 +39,41 @@ class StateMachineTest(BaseTenantTestCase):
             transition_mapping[transition.source].append(transition.target)
 
         # mapping == {source: [target list]}
-        self.assertEqual(dict(transition_mapping),
-                         {'*': ['planned'],
-                          'approved': ['sent_for_payment',
-                                       'cancelled',
-                                       'completed'],
-                          'cancelled': ['submitted',
-                                        'planned',
-                                        'completed'],
-                          'certification_approved': ['certification_rejected',
-                                                     'certified'],
-                          'certification_rejected': ['certification_submitted'],
-                          'certification_submitted': ['certification_rejected',
-                                                      'certification_approved'],
-                          'certified': ['sent_for_payment',
-                                        'certification_submitted',
-                                        'cancelled',
-                                        'completed'],
-                          'planned': ['submitted',
-                                      'cancelled',
-                                      'completed'],
-                          'rejected': ['submitted',
-                                       'planned',
-                                       'cancelled'],
-                          'sent_for_payment': ['sent_for_payment',
-                                               'submitted',
-                                               'certified',
-                                               'certification_submitted',
-                                               'cancelled'],
-                          'submitted': ['rejected',
-                                        'cancelled',
-                                        'approved',
-                                        'completed']})
+        expected = {'*': ['planned'],
+                    'approved': ['sent_for_payment',
+                                 'cancelled',
+                                 'completed'],
+                    'cancelled': ['submitted',
+                                  'planned',
+                                  'completed'],
+                    'certification_approved': ['certification_rejected',
+                                               'certified'],
+                    'certification_rejected': ['certification_submitted'],
+                    'certification_submitted': ['certification_rejected',
+                                                'certification_approved'],
+                    'certified': ['sent_for_payment',
+                                  'certification_submitted',
+                                  'cancelled',
+                                  'completed'],
+                    'planned': ['submitted',
+                                'cancelled',
+                                'completed'],
+                    'rejected': ['submitted',
+                                 'planned',
+                                 'cancelled'],
+                    'sent_for_payment': ['sent_for_payment',
+                                         'submitted',
+                                         'certified',
+                                         'certification_submitted',
+                                         'cancelled'],
+                    'submitted': ['rejected',
+                                  'cancelled',
+                                  'approved',
+                                  'completed']}
+
+        six.assertCountEqual(self, expected.keys(), transition_mapping.keys())
+        for key in expected:
+            six.assertCountEqual(self, expected[key], transition_mapping[key])
 
     def test_state_machine_flow(self):
         currency = PublicsCurrencyFactory()

@@ -8,7 +8,11 @@ from rest_framework.generics import ListAPIView
 from EquiTrack.utils import etag_cached
 from locations.models import CartoDBTable, GatewayType, Location
 from locations.serializers import (
-    CartoDBTableSerializer, GatewayTypeSerializer, LocationLightSerializer, LocationSerializer,)
+    CartoDBTableSerializer,
+    GatewayTypeSerializer,
+    LocationLightSerializer,
+    LocationSerializer,
+)
 
 
 class CartoDBTablesView(ListAPIView):
@@ -68,8 +72,7 @@ class LocationsViewSet(mixins.RetrieveModelMixin,
         return queryset
 
 
-class LocationsLightViewSet(mixins.ListModelMixin,
-                            viewsets.GenericViewSet):
+class LocationsLightViewSet(mixins.ListModelMixin, viewsets.GenericViewSet):
     """
     Returns a list of all Locations with restricted field set.
     """

@@ -1,8 +1,13 @@
+# -*- coding: utf-8 -*-
+from __future__ import absolute_import, division, print_function, unicode_literals
+
 from django.db import models
 from django.utils import timezone
 from django.utils.encoding import python_2_unicode_compatible
 from model_utils.models import TimeStampedModel
 from django.utils.translation import ugettext as _
+
+from EquiTrack.fields import CurrencyField
 
 
 @python_2_unicode_compatible
@@ -42,7 +47,7 @@ class Grant(TimeStampedModel):
     description = models.CharField(
         verbose_name=_("Description"),
         max_length=255,
-        null=True,
+        default='',
         blank=True
     )
     expiry = models.DateField(verbose_name=_("Expiry"), null=True, blank=True)
@@ -85,19 +90,20 @@ class FundsReservationHeader(TimeStampedModel):
     fr_type = models.CharField(
         verbose_name=_("Type"),
         max_length=50,
-        null=True,
+        default='',
         blank=True,
     )
-    currency = models.CharField(
+    currency = CurrencyField(
         verbose_name=_("Currency"),
         max_length=50,
-        null=True,
+        default='',
         blank=True,
+        null=False,
     )
     document_text = models.CharField(
         verbose_name=_("Document Text"),
         max_length=255,
-        null=True,
+        default='',
         blank=True,
     )
 
@@ -105,47 +111,47 @@ class FundsReservationHeader(TimeStampedModel):
     intervention_amt = models.DecimalField(
         verbose_name=_('Current FR Amount'),
         default=0,
-        max_digits=12,
+        max_digits=20,
         decimal_places=2,
     )
     # overall_amount
     total_amt = models.DecimalField(
         verbose_name=_('FR Overall Amount'),
         default=0,
-        max_digits=12,
+        max_digits=20,
         decimal_places=2,
     )
     # overall_amount
     total_amt_local = models.DecimalField(
         verbose_name=_('FR Overall Amount DC'),
         default=0,
-        max_digits=12,
+        max_digits=20,
         decimal_places=2,
     )
     # actual is also referred to as "disbursment"
     actual_amt = models.DecimalField(
         verbose_name=_('Actual Cash Transfer'),
         default=0,
-        max_digits=12,
+        max_digits=20,
         decimal_places=2,
     )
     # actual is also referred to as "disbursment"
     actual_amt_local = models.DecimalField(
         verbose_name=_('Actual Cash Transfer Local'),
         default=0,
-        max_digits=12,
+        max_digits=20,
         decimal_places=2,
     )
     outstanding_amt = models.DecimalField(
         verbose_name=_('Outstanding DCT'),
         default=0,
-        max_digits=12,
+        max_digits=20,
         decimal_places=2,
     )
     outstanding_amt_local = models.DecimalField(
         verbose_name=_('Outstanding DCT Local'),
         default=0,
-        max_digits=12,
+        max_digits=20,
         decimal_places=2,
     )
 
@@ -185,7 +191,7 @@ class FundsReservationItem(TimeStampedModel):
     fr_ref_number = models.CharField(
         verbose_name=_("Item Number"),
         max_length=30,
-        null=True,
+        default='',
         blank=True,
     )
     line_item = models.CharField(verbose_name=_("Line Item"), max_length=5)
@@ -194,31 +200,31 @@ class FundsReservationItem(TimeStampedModel):
     wbs = models.CharField(
         verbose_name=_("WBS"),
         max_length=30,
-        null=True,
+        default='',
         blank=True,
     )
     grant_number = models.CharField(
         verbose_name=_("Grant Number"),
         max_length=20,
-        null=True,
+        default='',
         blank=True,
     )
     fund = models.CharField(
         verbose_name=_("Fund"),
         max_length=10,
-        null=True,
+        default='',
         blank=True,
     )
     overall_amount = models.DecimalField(
         verbose_name=_("Overall Amount"),
         default=0,
-        max_digits=12,
+        max_digits=20,
         decimal_places=2,
     )
     overall_amount_dc = models.DecimalField(
         verbose_name=_("Overall Amount DC"),
         default=0,
-        max_digits=12,
+        max_digits=20,
         decimal_places=2,
     )
     due_date = models.DateField(
@@ -229,7 +235,7 @@ class FundsReservationItem(TimeStampedModel):
     line_item_text = models.CharField(
         verbose_name=_("Description"),
         max_length=255,
-        null=True,
+        default='',
         blank=True,
     )
 
@@ -266,32 +272,32 @@ class FundsCommitmentHeader(TimeStampedModel):
     fc_type = models.CharField(
         verbose_name=_("Type"),
         max_length=50,
-        null=True,
+        default='',
         blank=True,
     )
-    currency = models.CharField(
+    currency = CurrencyField(
         verbose_name=_("Currency"),
         max_length=50,
-        null=True,
+        default='',
         blank=True,
     )
     document_text = models.CharField(
         verbose_name=_("Document"),
         max_length=255,
-        null=True,
+        default='',
         blank=True,
     )
     exchange_rate = models.CharField(
         verbose_name=_("Exchange Rate"),
         max_length=20,
-        null=True,
+        default='',
         blank=True,
     )
     responsible_person = models.CharField(
         verbose_name=_("Responsible"),
         max_length=100,
         blank=True,
-        null=True,
+        default='',
     )
 
     def __str__(self):
@@ -310,32 +316,32 @@ class FundsCommitmentItem(TimeStampedModel):
     fc_ref_number = models.CharField(
         verbose_name=_("Number"),
         max_length=30,
-        null=True,
+        default='',
         blank=True,
     )
     line_item = models.CharField(verbose_name=_("Line Item"), max_length=5)
     wbs = models.CharField(
         verbose_name=_("WBS"),
         max_length=30,
-        null=True,
+        default='',
         blank=True,
     )
     grant_number = models.CharField(
         verbose_name=_("Grant Number"),
         max_length=20,
-        null=True,
+        default='',
         blank=True,
     )
     fund = models.CharField(
         verbose_name=_("Fund"),
         max_length=10,
-        null=True,
+        default='',
         blank=True,
     )
     gl_account = models.CharField(
         verbose_name=_("GL Account"),
         max_length=15,
-        null=True,
+        default='',
         blank=True,
     )
     due_date = models.DateField(
@@ -347,30 +353,30 @@ class FundsCommitmentItem(TimeStampedModel):
         verbose_name=_("FR Number"),
         max_length=20,
         blank=True,
-        null=True,
+        default='',
     )
     commitment_amount = models.DecimalField(
         verbose_name=_("Amount"),
         default=0,
-        max_digits=12,
+        max_digits=20,
         decimal_places=2,
     )
     commitment_amount_dc = models.DecimalField(
         verbose_name=_("Amount DC"),
         default=0,
-        max_digits=12,
+        max_digits=20,
         decimal_places=2,
     )
     amount_changed = models.DecimalField(
         verbose_name=_("Amount Changed"),
         default=0,
-        max_digits=12,
+        max_digits=20,
         decimal_places=2,
     )
     line_item_text = models.CharField(
         verbose_name=_("Description"),
         max_length=255,
-        null=True,
+        default='',
         blank=True,
     )
 
