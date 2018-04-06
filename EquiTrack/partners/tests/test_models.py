@@ -455,11 +455,11 @@ class TestPartnerOrganizationModel(BaseTenantTestCase):
             4
         )
 
-    @freeze_time("2013-05-26")
     def test_programmatic_visits_update_one(self):
         self.assertEqual(self.partner_organization.hact_values['programmatic_visits']['completed']['total'], 0)
         models.PartnerOrganization.programmatic_visits(
             self.partner_organization,
+            event_date=datetime.datetime(2013, 5, 26),
             update_one=True
         )
         self.assertEqual(self.partner_organization.hact_values['programmatic_visits']['completed']['total'], 1)
