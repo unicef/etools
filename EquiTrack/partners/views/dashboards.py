@@ -3,11 +3,11 @@ from __future__ import unicode_literals
 from datetime import datetime
 from django.db.models import F, Max, DurationField, ExpressionWrapper, Min, Sum, Count, CharField
 
-from rest_framework_csv import renderers as r
-from rest_framework.permissions import IsAdminUser
 from rest_framework.generics import (
     ListCreateAPIView
 )
+from rest_framework.permissions import IsAdminUser
+from rest_framework_csv import renderers as r
 
 from partners.models import (
     Intervention,
@@ -28,9 +28,7 @@ class InterventionPartnershipDashView(ListCreateAPIView):
         today = datetime.now()
         delta = ExpressionWrapper(today - F('last_pv_date'), output_field=DurationField())
 
-        qs = Intervention.objects.exclude(status=Intervention.DRAFT)
-
-        qs = qs.annotate(
+        qs = Intervention.objects.exclude(status=Intervention.DRAFT).annotate(
             Max("frs__end_date"),
             Min("frs__start_date"),
             Sum("frs__total_amt"),
@@ -65,7 +63,7 @@ class InterventionPartnershipDashView(ListCreateAPIView):
             :returns: JSON or CSV file
         """
         query_params = self.request.query_params
-        response = super(InterventionPartnershipDashView, self).list(request)
+        response = super().list(request)
         if "format" in query_params.keys():
             if query_params.get("format") == 'csv':
                 response['Content-Disposition'] = "attachment;filename=partnership-dash.csv"

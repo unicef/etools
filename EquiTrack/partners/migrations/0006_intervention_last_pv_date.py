@@ -31,7 +31,7 @@ class Migration(migrations.Migration):
 
     dependencies = [
         ('t2f', '0001_initial'),
-        ('partners', '0003_auto_20180329_1155'),
+        ('partners', '0005_make_not_nullable'),
     ]
 
     operations = [

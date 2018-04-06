@@ -13,13 +13,13 @@ from django.db.transaction import atomic
 from django.utils import timezone
 from django.utils.encoding import python_2_unicode_compatible, force_text
 from django.utils.translation import ugettext_lazy as _
+
 from django_fsm import FSMField, transition
 from model_utils import Choices, FieldTracker
 from model_utils.managers import InheritanceManager
 from model_utils.models import TimeStampedModel
 from ordered_model.models import OrderedModel
 
-from EquiTrack.utils import get_environment
 from attachments.models import Attachment
 from audit.purchase_order.models import AuditorStaffMember, PurchaseOrder, PurchaseOrderItem
 from audit.transitions.conditions import (
@@ -27,7 +27,8 @@ from audit.transitions.conditions import (
     EngagementSubmitReportRequiredFieldsCheck, SpecialAuditSubmitRelatedModelsCheck, SPSubmitReportRequiredFieldsCheck,
     ValidateAuditRiskCategories, ValidateMARiskCategories, ValidateMARiskExtra, )
 from audit.transitions.serializers import EngagementCancelSerializer
-from notification.models import Notification
+from EquiTrack.utils import get_environment
+from notification.utils import send_notification_using_email_template
 from partners.models import PartnerStaffMember, PartnerOrganization
 from utils.common.models.fields import CodedGenericRelation
 from utils.common.urlresolvers import build_frontend_url
@@ -215,47 +216,26 @@ class Engagement(TimeStampedModel, models.Model):
             'auditor_firm': force_text(self.agreement.auditor_firm),
         }
 
-    def _send_email(self, recipients, template_name, context=None, **kwargs):
-        context = context or {}
-
-        base_context = {
-            'engagement': self.get_mail_context(),
-            'environment': get_environment(),
-        }
-        base_context.update(context)
-        context = base_context
-
-        recipients = list(recipients)
-        # assert recipients
-
-        if recipients:
-            notification = Notification.objects.create(
-                sender=self,
-                recipients=recipients, template_name=template_name,
-                template_data=context
-            )
-            notification.send_notification()
-
-    def _notify_auditors(self, template_name, context=None, **kwargs):
-        self._send_email(
-            self.staff_members.values_list('user__email', flat=True),
-            template_name,
-            context,
-            **kwargs
-        )
-
-    def _notify_focal_points(self, template_name, context=None, **kwargs):
+    def _notify_focal_points(self, template_name, context=None):
         for focal_point in get_user_model().objects.filter(groups=UNICEFAuditFocalPoint.as_group()):
+            # Build the context in the same order the previous version of the code did,
+            # just in case something relies on it (intentionally or not).
             ctx = {
                 'focal_point': focal_point.get_full_name(),
             }
             if context:
                 ctx.update(context)
-            self._send_email(
-                [focal_point.email],
-                template_name,
-                ctx,
-                **kwargs
+            base_context = {
+                'engagement': self.get_mail_context(),
+                'environment': get_environment(),
+            }
+            base_context.update(ctx)
+            context = base_context
+
+            send_notification_using_email_template(
+                recipients=[focal_point.email],
+                email_template_name=template_name,
+                context=context,
             )
 
     @transition(status, source=STATUSES.partner_contacted, target=STATUSES.report_submitted,
@@ -545,7 +525,7 @@ class Audit(Engagement):
     financial_findings = models.DecimalField(verbose_name=_('Financial Findings $'), null=True, blank=True,
                                              decimal_places=2, max_digits=20)
     audit_opinion = models.CharField(
-        verbose_name=_('Audit Opinion'), max_length=20, choices=OPTIONS, null=True, blank=True,
+        verbose_name=_('Audit Opinion'), max_length=20, choices=OPTIONS, default='', blank=True,
     )
 
     class Meta:
@@ -766,12 +746,12 @@ class EngagementActionPoint(models.Model):
             'action_point': self.get_mail_context(),
         }
 
-        notification = Notification.objects.create(
-            sender=self,
-            recipients=[self.person_responsible.email], template_name=template_name,
-            template_data=context
+        send_notification_using_email_template(
+            recipients=[self.person_responsible.email],
+            cc=[self.author.email],
+            email_template_name=template_name,
+            context=context,
         )
-        notification.send_notification()
 
 
 UNICEFAuditFocalPoint = GroupWrapper(code='unicef_audit_focal_point',

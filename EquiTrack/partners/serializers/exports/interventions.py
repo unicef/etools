@@ -410,7 +410,7 @@ class InterventionExportSerializer(serializers.ModelSerializer):
         return obj.frs__currency__count == 1 if obj.frs__currency__count else None
 
     def get_fr_currency(self, obj):
-        return obj.max_fr_currency if self.fr_currencies_ok(obj) else None
+        return obj.max_fr_currency if self.fr_currencies_ok(obj) else ''
 
     def get_fr_amount(self, obj):
         return obj.total_frs["total_frs_amt"]

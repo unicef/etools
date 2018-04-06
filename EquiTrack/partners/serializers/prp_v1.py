@@ -1,5 +1,6 @@
 from __future__ import unicode_literals
 from django.contrib.auth import get_user_model
+from django.core.exceptions import ObjectDoesNotExist
 from django.db import connection
 
 from rest_framework import serializers
@@ -172,10 +173,10 @@ class PRPInterventionListSerializer(serializers.ModelSerializer):
     end_date = serializers.DateField(source='end')
     cso_budget = serializers.DecimalField(source='total_partner_contribution', read_only=True,
                                           max_digits=20, decimal_places=2)
-    cso_budget_currency = serializers.CharField(source='planned_budget.currency', read_only=True)
+    cso_budget_currency = serializers.SerializerMethodField(read_only=True)
     unicef_budget = serializers.DecimalField(source='total_unicef_budget', read_only=True,
                                              max_digits=20, decimal_places=2)
-    unicef_budget_currency = serializers.CharField(source='planned_budget.currency', read_only=True)
+    unicef_budget_currency = serializers.SerializerMethodField(read_only=True)
     # TODO: update this after FR Validation changes, pending new Insight API changes.
 
     expected_results = PRPResultSerializer(many=True, read_only=True, source='all_lower_results')
@@ -183,6 +184,15 @@ class PRPInterventionListSerializer(serializers.ModelSerializer):
     reporting_periods = ReportingPeriodsSerializer(many=True, read_only=True)
     sections = SectorSerializer(source="combined_sections", many=True, read_only=True)
     locations = PRPLocationSerializer(source="flat_locations", many=True, read_only=True)
+
+    def get_unicef_budget_currency(self, obj):
+        # Intervention.planned_budget isn't a real field, it's a related
+        # name from an InterventionBudget, and there might not be one.
+        try:
+            return obj.planned_budget.currency
+        except ObjectDoesNotExist:
+            return ''
+    get_cso_budget_currency = get_unicef_budget_currency
 
     def get_business_area_code(self, obj):
         return connection.tenant.business_area_code
