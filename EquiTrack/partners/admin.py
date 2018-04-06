@@ -14,7 +14,6 @@ from import_export.admin import ExportMixin
 from attachments.admin import AttachmentSingleInline
 from attachments.models import Attachment
 from EquiTrack.admin import SnapshotModelAdmin, ActivityInline
-from EquiTrack.mixins import CountryUsersAdminMixin
 
 from partners.exports import PartnerExport
 from partners.models import (
@@ -35,7 +34,7 @@ from partners.models import (
     InterventionAttachment,
     PlannedEngagement
 )
-from partners.mixins import HiddenPartnerMixin
+from partners.mixins import HiddenPartnerMixin, CountryUsersAdminMixin
 from partners.forms import (
     PartnersAdminForm,
     PartnerStaffMemberForm,
