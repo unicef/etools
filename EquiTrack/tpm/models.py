@@ -18,10 +18,10 @@ from EquiTrack.urlresolvers import build_frontend_url
 from EquiTrack.utils import get_environment
 from EquiTrack.wrappers import GroupWrapper
 from generics.fields import CodedGenericRelation
-from notification.models import Notification
 from permissions.models.models import StatusBasePermission
 from permissions.models.query import StatusBasePermissionQueryset
 from permissions.utils import has_action_permission
+from notification.utils import send_notification_using_email_template
 from publics.models import SoftDeleteMixin
 from tpm.tpmpartners.models import TPMPartner, TPMPartnerStaffMember
 from tpm.transitions.serializers import TPMVisitApproveSerializer, TPMVisitRejectSerializer
@@ -169,12 +169,12 @@ class TPMVisit(SoftDeleteMixin, TimeStampedModel, models.Model):
 
         # assert recipients
         if recipients:
-            notification = Notification.objects.create(
+            send_notification_using_email_template(
+                recipients=recipients,
+                email_template_name=template_name,
+                context=context,
                 sender=self,
-                recipients=recipients, template_name=template_name,
-                template_data=context
             )
-            notification.send_notification()
 
     def _get_unicef_focal_points_as_email_recipients(self):
         return list(
@@ -429,12 +429,12 @@ class TPMActionPoint(TimeStampedModel, models.Model):
             'action_point': self.get_mail_context(),
         }
 
-        notification = Notification.objects.create(
+        send_notification_using_email_template(
+            recipients=[self.person_responsible.email],
+            email_template_name=template_name,
+            context=context,
             sender=self,
-            recipients=[self.person_responsible.email], template_name=template_name,
-            template_data=context
         )
-        notification.send_notification()
 
 
 PME = GroupWrapper(code='pme',

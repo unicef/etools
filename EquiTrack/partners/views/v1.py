@@ -34,7 +34,7 @@ class PCAPDFView(PDFTemplateView):
 
     def get_context_data(self, **kwargs):
         agr_id = self.kwargs.get('agr')
-        lang = self.request.GET.get('lang', None)
+        lang = self.request.GET.get('lang', 'english') or 'english'
         error = None
 
         try:

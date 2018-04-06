@@ -53,7 +53,7 @@ class Attachment(TimeStampedModel, models.Model):
         verbose_name=_('File Attachment'),
         max_length=1024,
     )
-    hyperlink = models.CharField(max_length=255, blank=True, null=True, verbose_name=_('Hyperlink'))
+    hyperlink = models.CharField(max_length=255, blank=True, default='', verbose_name=_('Hyperlink'))
 
     content_type = models.ForeignKey(ContentType, verbose_name=_('Content Type'))
     object_id = models.IntegerField(verbose_name=_('Object ID'))
@@ -82,7 +82,7 @@ class Attachment(TimeStampedModel, models.Model):
     @property
     def url(self):
         if self.file:
-            return six.text_type(self.file.url)
+            return self.file.url
         else:
             return self.hyperlink
 

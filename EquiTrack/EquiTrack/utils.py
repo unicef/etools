@@ -5,6 +5,7 @@ and not enough to make into a library
 Used throughout the eTools project
 """
 import datetime
+import json
 import uuid
 
 from functools import wraps
@@ -14,8 +15,9 @@ import logging
 from django.conf import settings
 from django.contrib.contenttypes.fields import GenericForeignKey
 from django.contrib.sites.models import Site
+from django.core import serializers
 from django.core.cache import cache
-from django.db import connection
+from django.db import connection, models
 from django.utils import six
 from django.utils.cache import patch_cache_control
 
@@ -141,3 +143,49 @@ def get_all_field_names(TheModel):
 
 def strip_text(text):
     return '\r\n'.join(map(lambda line: line.lstrip(), text.splitlines()))
+
+
+def model_instance_to_dictionary(obj):
+    """
+    Given a model instance `obj`, return a dictionary that represents it.
+    E.g. something like
+    {u'pk': 15, u'model': u'audit.auditorstaffmember', u'auditor_firm': 15, u'user': 934}
+
+    For _simple_ use from templates, this'll work as well as the model instance itself.
+    And it's trivially serializable by the default json encoder.
+    That's all we really need here.
+    """
+    # We cannot just use model_to_dict, because it excludes non-editable fields
+    # unconditionally, and we want them all.
+
+    # Note that Django's serializers only work on iterables of model instances
+
+    json_string = serializers.serialize('json', [obj])
+    # The string will deserialize to a list with one simple dictionary, like
+    #  {u'pk': 15, u'model': u'audit.auditorstaffmember', u'fields': {u'auditor_firm': 15, u'user': 934}}
+    d = json.loads(json_string)[0]
+    # Promote the fields into the main dictionary
+    d.update(**d.pop('fields'))
+    return d
+
+
+def make_dictionary_serializable(data):
+    """
+    Return a new dictionary, which is a copy of data, but
+    if data is a dictionary with some model instances as values,
+    the model instances are replaced with dictionaries so that
+    the whole thing should be serializable.
+    """
+    return {
+        k: model_instance_to_dictionary(v) if isinstance(v, models.Model) else v
+        for k, v in six.iteritems(data)
+    }
+
+
+def fix_null_values(model, field_names, new_value=''):
+    """
+    For each fieldname, update any records in 'model' where the field's value is NULL
+    to be an empty string instead (or whatever new_value is)
+    """
+    for name in field_names:
+        model._default_manager.filter(**{name: None}).update(**{name: new_value})
