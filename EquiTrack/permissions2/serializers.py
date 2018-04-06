@@ -72,12 +72,7 @@ class PermissionsBasedSerializerMixin(object):
         if not hasattr(self.root, '_permissions'):
             self.root._permissions = list(self._collect_permissions())
 
-        permissions = self.root._permissions
-
-        context = set(self._get_permission_context())
-        permissions = filter(lambda p: set(p.condition).issubset(context), permissions)
-
-        return permissions
+        return self.root._permissions
 
     def _filter_fields_by_permissions(self, fields, permission):
         model = self.Meta.model

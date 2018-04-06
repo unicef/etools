@@ -2,7 +2,6 @@ from __future__ import absolute_import, division, print_function, unicode_litera
 
 from django.db.models import Prefetch
 from django.http import Http404
-from django.utils.translation import ugettext_lazy as _
 
 from django_filters.rest_framework import DjangoFilterBackend
 from easy_pdf.rendering import render_to_pdf_response
@@ -167,8 +166,8 @@ class EngagementPartnerView(generics.ListAPIView):
 
 
 class EngagementViewSet(
-    mixins.CreateModelMixin,
     BaseAuditViewSet,
+    mixins.CreateModelMixin,
     mixins.ListModelMixin,
     viewsets.GenericViewSet
 ):
@@ -277,7 +276,6 @@ class EngagementViewSet(
     def export_pdf(self, request, *args, **kwargs):
         obj = self.get_object()
 
-        # todo: don't allow access if no permissions
         engagement_params = self.ENGAGEMENT_MAPPING.get(obj.engagement_type, {})
         serializer_class = engagement_params.get('pdf_serializer_class', None)
         template = engagement_params.get('pdf_template', None)
@@ -285,12 +283,14 @@ class EngagementViewSet(
         if not serializer_class or not template:
             raise NotImplementedError
 
-        main_serializer = engagement_params.get('serializer_class', None)(obj, context=self.get_serializer_context())
+        pdf_serializer = self.get_serializer(
+            instance=obj, many=True, serializer_class=engagement_params.get('serializer_class', None)
+        )
 
         return render_to_pdf_response(
             request, template,
             context={'engagement': serializer_class(obj).data,
-                     'serializer': main_serializer},
+                     'serializer': pdf_serializer},
             filename='engagement_{}.pdf'.format(obj.unique_id),
         )
 
@@ -328,6 +328,7 @@ class AuditorStaffMembersViewSet(
     BaseAuditViewSet,
     mixins.ListModelMixin,
     mixins.CreateModelMixin,
+    mixins.RetrieveModelMixin,
     mixins.UpdateModelMixin,
     mixins.DestroyModelMixin,
     NestedViewSetMixin,

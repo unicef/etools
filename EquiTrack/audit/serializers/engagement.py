@@ -128,7 +128,7 @@ class EngagementExportSerializer(serializers.ModelSerializer):
         )
 
 
-class EngagementLightSerializer(serializers.ModelSerializer):
+class EngagementLightSerializer(PermissionsBasedSerializerMixin, serializers.ModelSerializer):
     agreement = SeparatedReadWriteField(
         read_field=PurchaseOrderSerializer(read_only=True, label=_('Purchase Order')),
     )
@@ -180,8 +180,7 @@ class SpecificProcedureSerializer(WritableNestedSerializerMixin,
         ]
 
 
-class EngagementSerializer(PermissionsBasedSerializerMixin,
-                           EngagementDatesValidation,
+class EngagementSerializer(EngagementDatesValidation,
                            WritableNestedParentSerializerMixin,
                            EngagementLightSerializer):
     staff_members = SeparatedReadWriteField(

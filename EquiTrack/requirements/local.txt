@@ -11,4 +11,3 @@ sphinx==1.6.2
   sphinxcontrib-websupport==1.0.1
   typing==3.6.1
 
-pydevd

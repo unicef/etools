@@ -41,10 +41,10 @@ class PermittedSerializerMixin(PermissionContextMixin):
         if edit and not serializer._writable_fields:
             self.permission_denied(self.request)
 
-    def get_serializer(self, instance=None, *args, **kwargs):
+    def get_serializer(self, instance=None, serializer_class=None, *args, **kwargs):
         many = kwargs.get('many', False)
 
-        serializer_class = self.get_serializer_class()
+        serializer_class = serializer_class or self.get_serializer_class()
         kwargs['context'] = self.get_serializer_context()
         kwargs['context']['permission_context'] = self._collect_permission_context(not many and instance)
 

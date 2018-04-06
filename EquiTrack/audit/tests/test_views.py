@@ -242,22 +242,27 @@ class TestEngagementsListViewSet(EngagementTransitionsTestCaseMixin, BaseTenantT
 
     @classmethod
     def setUpTestData(cls):
+        super(TestEngagementsListViewSet, cls).setUpTestData()
         cls.second_engagement = cls.engagement_factory()
 
-    def _test_list(self, user, engagements, params=""):
+    def _test_list(self, user, engagements=None, filter_params=None, expected_status=status.HTTP_200_OK):
         response = self.forced_auth_req(
             'get',
             '/api/audit/engagements/',
-            data={"status": params},
+            data=filter_params or {},
             user=user
         )
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.status_code, expected_status)
+
+        if not response.status_code == status.HTTP_200_OK:
+            return
+
         self.assertIn('results', response.data)
         self.assertIsInstance(response.data['results'], list)
         six.assertCountEqual(
             self,
             map(lambda x: x['id'], response.data['results']),
-            map(lambda x: x.id, engagements)
+            map(lambda x: x.id, engagements or [])
         )
 
     def test_focal_point_list(self):
@@ -270,7 +275,7 @@ class TestEngagementsListViewSet(EngagementTransitionsTestCaseMixin, BaseTenantT
         self._test_list(self.non_engagement_auditor, [])
 
     def test_unknown_user_list(self):
-        self._test_list(self.usual_user, [])
+        self._test_list(self.usual_user, expected_status=status.HTTP_403_FORBIDDEN)
 
     def test_status_filter_final(self):
         status = Engagement.STATUSES.final
@@ -279,7 +284,7 @@ class TestEngagementsListViewSet(EngagementTransitionsTestCaseMixin, BaseTenantT
             status=status
         )
         self.assertEqual(self.third_engagement.status, status)
-        self._test_list(self.auditor, [self.third_engagement], params=status)
+        self._test_list(self.auditor, [self.third_engagement], filter_params={'status': status})
 
     def test_status_filter_partner_contacted(self):
         status = Engagement.DISPLAY_STATUSES.partner_contacted
@@ -290,7 +295,7 @@ class TestEngagementsListViewSet(EngagementTransitionsTestCaseMixin, BaseTenantT
         self._test_list(
             self.auditor,
             [self.engagement, self.third_engagement],
-            params=status
+            filter_params={'status': status}
         )
 
     def test_status_filter_field_visit(self):
@@ -302,7 +307,7 @@ class TestEngagementsListViewSet(EngagementTransitionsTestCaseMixin, BaseTenantT
         )
         self.assertIsNone(self.third_engagement.date_of_draft_report_to_ip)
         self.assertIsNotNone(self.third_engagement.date_of_field_visit)
-        self._test_list(self.auditor, [self.third_engagement], params=status)
+        self._test_list(self.auditor, [self.third_engagement], filter_params={'status': status})
 
     def test_status_filter_draft_issued_to_partner(self):
         status = Engagement.DISPLAY_STATUSES.draft_issued_to_partner
@@ -311,7 +316,7 @@ class TestEngagementsListViewSet(EngagementTransitionsTestCaseMixin, BaseTenantT
             status=Engagement.STATUSES.partner_contacted,
             date_of_draft_report_to_ip=datetime.date(2001, 1, 1),
         )
-        self._test_list(self.auditor, [self.third_engagement], params=status)
+        self._test_list(self.auditor, [self.third_engagement], filter_params={'status': status})
 
     def test_status_filter_comments_recieved_by_partner(self):
         status = Engagement.DISPLAY_STATUSES.comments_received_by_partner
@@ -320,7 +325,7 @@ class TestEngagementsListViewSet(EngagementTransitionsTestCaseMixin, BaseTenantT
             status=Engagement.STATUSES.partner_contacted,
             date_of_comments_by_ip=datetime.date(2001, 1, 1),
         )
-        self._test_list(self.auditor, [self.third_engagement], params=status)
+        self._test_list(self.auditor, [self.third_engagement], filter_params={'status': status})
 
     def test_status_filter_draft_issued_to_unicef(self):
         status = Engagement.DISPLAY_STATUSES.draft_issued_to_unicef
@@ -329,7 +334,7 @@ class TestEngagementsListViewSet(EngagementTransitionsTestCaseMixin, BaseTenantT
             status=Engagement.STATUSES.partner_contacted,
             date_of_draft_report_to_unicef=datetime.date(2001, 1, 1),
         )
-        self._test_list(self.auditor, [self.third_engagement], params=status)
+        self._test_list(self.auditor, [self.third_engagement], filter_params={'status': status})
 
     def test_status_filter_comments_received_by_unicef(self):
         status = Engagement.DISPLAY_STATUSES.comments_received_by_unicef
@@ -338,15 +343,11 @@ class TestEngagementsListViewSet(EngagementTransitionsTestCaseMixin, BaseTenantT
             status=Engagement.STATUSES.partner_contacted,
             date_of_comments_by_unicef=datetime.date(2001, 1, 1),
         )
-        self._test_list(self.auditor, [self.third_engagement], params=status)
+        self._test_list(self.auditor, [self.third_engagement], filter_params={'status': status})
 
 
 class BaseTestEngagementsCreateViewSet(EngagementTransitionsTestCaseMixin):
     endpoint = 'engagements'
-
-    @classmethod
-    def setUpTestData(cls):
-        call_command('update_notifications')
 
     def setUp(self):
         super(BaseTestEngagementsCreateViewSet, self).setUp()
@@ -599,19 +600,23 @@ class TestAuditorFirmViewSet(AuditTestCaseMixin, BaseTenantTestCase):
         super(TestAuditorFirmViewSet, self).setUp()
         self.second_auditor_firm = AuditPartnerFactory()
 
-    def _test_list_view(self, user, expected_firms):
+    def _test_list_view(self, user, expected_firms=None, expected_status=status.HTTP_200_OK):
         response = self.forced_auth_req(
             'get',
             '/api/audit/audit-firms/',
             user=user
         )
 
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
-        six.assertCountEqual(
-            self,
-            map(lambda x: x['id'], response.data['results']),
-            map(lambda x: x.id, expected_firms)
-        )
+        self.assertEqual(response.status_code, expected_status)
+        if expected_status == status.HTTP_200_OK:
+            six.assertCountEqual(
+                self,
+                map(lambda x: x['id'], response.data['results']),
+                map(lambda x: x.id, expected_firms)
+            )
+
+    def test_focal_point_list_view(self):
+        self._test_list_view(self.unicef_focal_point, [self.auditor_firm, self.second_auditor_firm])
 
     def test_unicef_list_view(self):
         self._test_list_view(self.unicef_user, [self.auditor_firm, self.second_auditor_firm])
@@ -620,7 +625,7 @@ class TestAuditorFirmViewSet(AuditTestCaseMixin, BaseTenantTestCase):
         self._test_list_view(self.auditor, [self.auditor_firm])
 
     def test_usual_user_list_view(self):
-        self._test_list_view(self.usual_user, [])
+        self._test_list_view(self.usual_user, expected_status=status.HTTP_403_FORBIDDEN)
 
 
 class TestAuditorStaffMembersViewSet(AuditTestCaseMixin, BaseTenantTestCase):
@@ -748,7 +753,7 @@ class TestEngagementPDFExportViewSet(EngagementTransitionsTestCaseMixin, BaseTen
         self._test_pdf_view(None, status.HTTP_403_FORBIDDEN)
 
     def test_common_user(self):
-        self._test_pdf_view(self.usual_user, status.HTTP_404_NOT_FOUND)
+        self._test_pdf_view(self.usual_user, status.HTTP_403_FORBIDDEN)
 
     def test_unicef_user(self):
         self._test_pdf_view(self.unicef_user)
@@ -761,10 +766,6 @@ class TestEngagementPDFExportViewSet(EngagementTransitionsTestCaseMixin, BaseTen
 
 
 class TestPurchaseOrderView(AuditTestCaseMixin, BaseTenantTestCase):
-    def setUp(self):
-        super(TestPurchaseOrderView, self).setUp()
-        call_command('update_audit_permissions', verbosity=0)
-
     def test_get_not_found(self):
         """If instance does not exist, code will attempt to sync,
         and if still does not exist then return 404

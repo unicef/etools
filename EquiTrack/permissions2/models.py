@@ -13,6 +13,7 @@ from .utils import collect_child_models, collect_parent_models
 
 class PermissionQuerySet(models.QuerySet):
     def filter_by_context(self, context):
+        context = list(context)
         i = 0
         while i < len(context):
             if isinstance(context[i], BaseCondition):

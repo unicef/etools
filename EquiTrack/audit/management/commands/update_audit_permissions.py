@@ -80,13 +80,13 @@ class Command(BaseCommand):
     ]
 
     follow_up_page = [
-        # 'audit.engagement.action_points',
-        # 'audit.engagement.amount_refunded',
-        # 'audit.engagement.additional_supporting_documentation_provided',
-        # 'audit.engagement.explanation_for_additional_information',
-        # 'audit.engagement.justification_provided_and_accepted',
-        # 'audit.engagement.write_off_required',
-        # 'audit.engagement.pending_unsupported_amount',
+        'audit.engagement.action_points',
+        'audit.engagement.amount_refunded',
+        'audit.engagement.additional_supporting_documentation_provided',
+        'audit.engagement.explanation_for_additional_information',
+        'audit.engagement.justification_provided_and_accepted',
+        'audit.engagement.write_off_required',
+        'audit.engagement.pending_unsupported_amount',
     ]
 
     engagement_overview_editable_page = engagement_overview_editable_block + special_audit_block + partner_block + staff_members_block
@@ -95,14 +95,47 @@ class Command(BaseCommand):
         'audit.engagement.engagement_attachments',
     ]
     report_attachments_block = [
-        # 'audit.engagement.report_attachments',
+        'audit.engagement.report_attachments',
     ]
 
-    microassessment_report_fields = [
-        # 'audit.engagement.overall_risk_assessment',
-        # 'audit.engagement.questionnaire',
-        # 'audit.engagement.test_subject_areas',
+    microassessment_report_block = [
+        'audit.microassessment.overall_risk_assessment',
+        'audit.microassessment.questionnaire',
+        'audit.microassessment.test_subject_areas',
+        'audit.microassessment.findings',
     ]
+
+    audit_report_block = [
+        'audit.audit.audit_opinion',
+        'audit.audit.audited_expenditure',
+        'audit.audit.financial_findings',
+        'audit.audit.financial_finding_set',
+        'audit.audit.key_internal_controls',
+        'audit.audit.key_internal_weakness',
+    ]
+
+    spot_check_report_block = [
+        'audit.spot_check.findings',
+        'audit.spot_check.internal_controls',
+        'audit.spot_check.total_amount_of_ineligible_expenditure',
+        'audit.spot_check.total_amount_tested',
+    ]
+
+    special_audit_report_block = [
+        'audit.specialaudit.other_recommendations',
+        'audit.specialaudit.specific_procedures',
+    ]
+
+    report_readonly_block = [
+        'audit.audit.percent_of_audited_expenditure',
+        'audit.audit.number_of_financial_findings',
+        'audit.audit.pending_unsupported_amount',
+    ]
+
+    report_editable_block = microassessment_report_block + audit_report_block + spot_check_report_block
+    report_editable_block += special_audit_report_block + report_attachments_block
+
+    report_block = report_readonly_block + report_editable_block
 
     def _update_permissions(self, role, perm, targets, perm_type, condition=None):
         if isinstance(role, (list, tuple)):
@@ -162,106 +195,7 @@ class Command(BaseCommand):
                 'Generating new permissions...'
             )
 
-        # common permissions: unicef users can view everything, auditor can view everything except follow up
-        self.add_permission([self.focal_point, self.auditor], 'edit', [
-            'purchase_order.auditorfirm.staff_members',
-            'purchase_order.auditorstaffmember.*',
-        ])
-
-        self.add_permission(
-            self.everybody, 'view',
-            self.engagement_overview_page +
-            self.engagement_status_auto_date_fields +
-            self.engagement_status_editable_date_fields +
-            self.engagement_attachments_block
-        )
-
-        # new object: focal point can add
-        self.add_permission(
-            self.focal_point, 'edit',
-            self.engagement_overview_editable_page + self.engagement_attachments_block,
-            condition=self.new_engagement()
-        )
-
-        # ip_contacted: auditor can edit, everybody else can view, focal point can cancel and edit staff members
-        # self.add_permission(self.auditor, 'edit', self.staff_members_block + self.report_attachments_block + self.engagement_status_editable_date_fields, condition=self.engagement_status(Engagement.STATUSES.partner_contacted))
-
-        self.add_permission(
-            self.focal_point, 'edit',
-            self.staff_members_block,
-            condition=self.engagement_status(Engagement.STATUSES.partner_contacted)
-        )
-        self.add_permission(
-            self.focal_point, 'action',
-            'audit.engagement.cancel',
-            condition=self.engagement_status(Engagement.STATUSES.partner_contacted)
-        )
-
-        # self.add_permissions(self.partner_contacted, self.auditor, 'edit', [
-        #     'engagement.*',
-        #     'attachment.*',
-        #     'detailedfindinginfo.*',
-        #     'financialfinding.*',
-        #     'finding.*',
-        #     'riskblueprint.*',
-        #     'riskcategory.*',
-        #     'keyinternalcontrol.*'
-        # ])
-        # self.revoke_permissions(self.partner_contacted, self.auditor, 'edit',
-        #                         self.engagement_overview_block + self.partner_block)
-        # self.revoke_permissions(self.partner_contacted, self.auditor, 'edit', 'engagement.engagement_attachments')
-        # self.add_permissions(self.partner_contacted, self.auditor, 'action', ['engagement.submit'])
-        # self.add_permissions(self.partner_contacted, self.auditor, 'view', [
-        #     'purchaseorder.*',
-        #     'partnerorganization.*',
-        #     'engagementstaffmember.*',
-        #     'profile.*',
-        #     'user.*',
-        #     'specificprocedure.*',
-        # ])
-        #
-        # self.add_permissions(self.partner_contacted, self.auditor, 'edit', [
-        #     'specialaudit.specific_procedures',
-        #     'specificprocedure.finding',
-        #     'specialaudit.other_recommendations',
-        # ])
-        #
-        # self.add_permissions(self.partner_contacted, self.all_unicef_users, 'view', self.everything)
-        # self.add_permissions(
-        #     self.partner_contacted, self.focal_point, 'edit', self.staff_members_block + [
-        #         'engagement.partner',
-        #         'engagement.partner_contacted_at',
-        #         'engagement.authorized_officers',
-        #         'engagement.active_pd',
-        #         'engagement.engagement_attachments',
-        #         'attachment.*',
-        #     ]
-        # )
-        # self.add_permissions(self.partner_contacted, self.focal_point, 'action', 'engagement.cancel')
-        # self.add_permissions(self.partner_contacted, self.focal_point, 'edit', [
-        #     'engagement.related_agreement',
-        #     'purchaseorder.contract_end_date',
-        # ])
-        #
-        # # report submitted. focal point can finalize. all can view
-        # self.add_permissions(self.report_submitted, self.everybody, 'view', self.everything)
-        # self.add_permissions(self.report_submitted, self.focal_point, 'action', [
-        #     'engagement.finalize',
-        # ])
-        #
-        # # final report. everybody can view. focal point can add action points
-        # self.add_permissions(self.final_report, self.everybody, 'view', self.everything)
-        #
-        # # UNICEF Focal Point can create action points
-        # self.add_permissions(self.final_report, self.focal_point, 'edit', self.follow_up_page)
-        # self.revoke_permissions(self.final_report, self.auditor, 'view', self.follow_up_page)
-        #
-        # # report cancelled. everybody can view
-        # self.add_permissions(self.report_cancelled, self.everybody, 'view', self.everything)
-        #
-        # # Follow-Up fields available in finalized engagements.
-        # for status in [self.new_engagement, self.partner_contacted, self.report_submitted, self.report_cancelled]:
-        #     self.revoke_permissions(status, self.everybody, 'view', self.follow_up_page)
+        self.assign_permissions()
 
         old_permissions = Permission.objects.filter(
             Q(target__startswith='audit.') |
@@ -285,3 +219,74 @@ class Command(BaseCommand):
             self.stdout.write(
                 'Audit permissions updated ({}) -> ({}).'.format(old_permissions_count, len(self.permissions))
             )
+
+    def assign_permissions(self):
+        # common permissions: unicef users can view everything, auditor can view everything except follow up
+        self.add_permission([self.focal_point, self.auditor], 'edit', [
+            'purchase_order.auditorfirm.staff_members',
+            'purchase_order.auditorstaffmember.*',
+        ])
+
+        self.add_permission(
+            self.everybody, 'view',
+            self.engagement_overview_page +
+            self.engagement_status_auto_date_fields +
+            self.engagement_status_editable_date_fields +
+            self.engagement_attachments_block
+        )
+
+        # new object: focal point can add
+        self.add_permission(
+            self.focal_point, 'edit',
+            self.engagement_overview_editable_page + self.engagement_attachments_block,
+            condition=self.new_engagement()
+        )
+
+        # ip_contacted: auditor can edit, everybody else can view, focal point can cancel and edit staff members
+        self.add_permission(
+            self.auditor, 'view',
+            self.report_readonly_block,
+            condition=self.engagement_status(Engagement.STATUSES.partner_contacted)
+        )
+        self.add_permission(
+            self.auditor, 'edit',
+            self.staff_members_block +
+            self.engagement_status_editable_date_fields +
+            self.report_editable_block,
+            condition=self.engagement_status(Engagement.STATUSES.partner_contacted)
+        )
+        self.add_permission(
+            self.auditor, 'action',
+            'audit.engagement.submit',
+            condition=self.engagement_status(Engagement.STATUSES.partner_contacted)
+        )
+
+        self.add_permission(
+            self.focal_point, 'edit',
+            self.partner_block + self.staff_members_block,
+            condition=self.engagement_status(Engagement.STATUSES.partner_contacted)
+        )
+        self.add_permission(
+            self.focal_point, 'action',
+            'audit.engagement.cancel',
+            condition=self.engagement_status(Engagement.STATUSES.partner_contacted)
+        )
+
+        # report submitted. focal point can finalize. all can view
+        self.add_permission(
+            self.focal_point, 'action',
+            'audit.engagement.finalize',
+            condition=self.engagement_status(Engagement.STATUSES.report_submitted)
+        )
+
+        # final report. everybody can view. focal point can add action points
+        self.add_permission(
+            self.all_unicef_users, 'view',
+            self.follow_up_page,
+            condition=self.engagement_status(Engagement.STATUSES.final)
+        )
+        self.add_permission(
+            self.focal_point, 'edit',
+            'audit.engagement.action_points',
+            condition=self.engagement_status(Engagement.STATUSES.final)
+        )
