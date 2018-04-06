@@ -24,7 +24,7 @@ class ActionPointsEmailsTestCase(BaseTenantTestCase):
         related_object = MicroAssessmentFactory()
         mail.outbox = []
 
-        ActionPointFactory(related_object=related_object)
+        ActionPointFactory(engagement=related_object)
         self.assertEqual(len(mail.outbox), 0)
 
     def test_complete(self):

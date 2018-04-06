@@ -9,6 +9,7 @@ import factory.fuzzy
 from action_points.models import ActionPoint
 from locations.tests.factories import LocationFactory
 from partners.tests.factories import InterventionFactory, ResultFactory
+from reports.tests.factories import SectorFactory
 from users.tests.factories import UserFactory
 
 
@@ -16,7 +17,6 @@ class ActionPointFactory(factory.DjangoModelFactory):
     class Meta:
         model = ActionPoint
 
-    related_module = factory.fuzzy.FuzzyChoice(dict(ActionPoint.MODULE_CHOICES).keys())
     intervention = factory.SubFactory(InterventionFactory)
     partner = factory.SelfAttribute('intervention.agreement.partner')
     cp_output = factory.SubFactory(ResultFactory)
@@ -27,7 +27,7 @@ class ActionPointFactory(factory.DjangoModelFactory):
 
     author = factory.SubFactory(UserFactory)
     assigned_by = factory.SelfAttribute('author')
-    section = factory.SelfAttribute('author.profile.section')
+    section = factory.SubFactory(SectorFactory)
     office = factory.SelfAttribute('author.profile.office')
 
     assigned_to = factory.SubFactory(UserFactory)

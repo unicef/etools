@@ -8,6 +8,10 @@ from EquiTrack.tests.cases import BaseTenantTestCase
 from action_points.models import ActionPoint
 from action_points.tests.factories import ActionPointFactory
 from audit.tests.factories import MicroAssessmentFactory
+from snapshot.utils import create_dict_with_relations, create_snapshot
+from t2f.tests.factories import TravelFactory
+from tpm.tests.factories import TPMVisitFactory
+from users.tests.factories import UserFactory
 
 
 class TestActionPointModel(BaseTenantTestCase):
@@ -29,17 +33,37 @@ class TestActionPointModel(BaseTenantTestCase):
         action_point.action_taken = factory.fuzzy.FuzzyText()
         action_point.complete()
 
-    def test_related_module_none_allowed(self):
-        action_point = ActionPointFactory(related_module=None)
-        self.assertIsNone(action_point.related_module)
-
-    def test_related_module_str(self):
-        action_point = ActionPointFactory(related_module=ActionPoint.MODULE_CHOICES.audit)
+    def test_audit_related(self):
+        action_point = ActionPointFactory(engagement=MicroAssessmentFactory())
         self.assertEqual(action_point.related_module, ActionPoint.MODULE_CHOICES.audit)
 
-    def test_related_module_from_related_object(self):
-        action_point = ActionPointFactory(
-            related_module=None,
-            related_object=MicroAssessmentFactory()
-        )
-        self.assertEqual(action_point.related_module, ActionPoint.MODULE_CHOICES.audit)
+    def test_tpm_related(self):
+        action_point = ActionPointFactory(tpm_activity=TPMVisitFactory(tpm_activities__count=1).tpm_activities.first())
+        self.assertEqual(action_point.related_module, ActionPoint.MODULE_CHOICES.tpm)
+
+    def test_t2f_related(self):
+        action_point = ActionPointFactory(travel_activity=TravelFactory().activities.first())
+        self.assertEqual(action_point.related_module, ActionPoint.MODULE_CHOICES.t2f)
+
+    def test_none_related(self):
+        action_point = ActionPointFactory()
+        self.assertEqual(action_point.related_module, None)
+
+    def test_additional_data(self):
+        action_point = ActionPointFactory()
+        initial_data = create_dict_with_relations(action_point)
+
+        action_point.assigned_to = UserFactory()
+        action_point.action_taken = factory.fuzzy.FuzzyText().fuzz()
+        action_point.complete()
+        action_point.save()
+
+        author = UserFactory()
+        create_snapshot(action_point, initial_data, author)
+
+        self.assertEqual(action_point.history.count(), 1)
+
+        snapshot = action_point.history.first()
+        self.assertIn('key_events', snapshot.data)
+        self.assertIn(ActionPoint.KEY_EVENTS.status_update, snapshot.data['key_events'])
+        self.assertIn(ActionPoint.KEY_EVENTS.reassign, snapshot.data['key_events'])

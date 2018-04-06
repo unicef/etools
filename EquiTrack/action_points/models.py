@@ -1,7 +1,7 @@
 from __future__ import absolute_import, division, print_function, unicode_literals
 
 from django.conf import settings
-from django.contrib.contenttypes.fields import GenericForeignKey, GenericRelation
+from django.contrib.contenttypes.fields import GenericRelation
 from django.contrib.contenttypes.models import ContentType
 from django.db import models
 from django.utils import six
@@ -15,35 +15,26 @@ from model_utils.models import TimeStampedModel
 
 from EquiTrack.utils import get_environment
 from action_points.conditions import ActionPointCompleteRequiredFieldsCheck
-from locations.models import Location
 from notification.models import Notification
-from partners.models import PartnerOrganization, Intervention
-from reports.models import Result
-from users.models import Section, Office
 
 
 @python_2_unicode_compatible
 class ActionPoint(TimeStampedModel):
     MODULE_CHOICES = Choices(
-        ('t2f', 'Trip Management'),
+        ('t2f', _('Trip Management')),
         ('tpm', 'Third Party Monitoring'),
-        ('audit', 'Auditor Portal'),
+        ('audit', _('Auditor Portal')),
     )
-
-    MODULES_MAPPING = {
-        't2f': MODULE_CHOICES.t2f,
-        'tpm': MODULE_CHOICES.tpm,
-        'audit': MODULE_CHOICES.audit,
-    }
 
     STATUSES = Choices(
         ('open', _('Open')),
         ('completed', _('Completed')),
     )
 
-    HIGH_PRIORITY_CHOICES = Choices(
-        ('yes', _('Yes')),
-        ('no', _('No')),
+    PRIORITY_CHOICES = Choices(
+        ('low', _('Low')),
+        ('normal', _('Normal')),
+        ('high', _('High')),
     )
 
     STATUSES_DATES = {
@@ -51,16 +42,10 @@ class ActionPoint(TimeStampedModel):
         STATUSES.completed: 'date_of_completion'
     }
 
-    KEY_EVENTS = Choices((
-        ('status_update', 'Status Update'),
-        ('reassign', 'Reassign'),
-    ))
-
-    related_module = models.CharField(max_length=20, choices=MODULE_CHOICES, blank=True, null=True)
-
-    related_content_type = models.ForeignKey(ContentType, null=True, blank=True)
-    related_object_id = models.IntegerField(null=True, blank=True)
-    related_object = GenericForeignKey(ct_field='related_content_type', fk_field='related_object_id')
+    KEY_EVENTS = Choices(
+        ('status_update', _('Status Update')),
+        ('reassign', _('Reassign')),
+    )
 
     author = models.ForeignKey(settings.AUTH_USER_MODEL, related_name='created_action_points',
                                verbose_name=_('Author'))
@@ -72,17 +57,21 @@ class ActionPoint(TimeStampedModel):
 
     description = models.TextField(verbose_name=_('Description'))
     due_date = models.DateField(verbose_name=_('Due Date'), blank=True, null=True)
-    high_priority = models.CharField(choices=HIGH_PRIORITY_CHOICES, default=HIGH_PRIORITY_CHOICES.no, max_length=10,
-                                     verbose_name=_('High Priority'))
+    priority = models.CharField(choices=PRIORITY_CHOICES, default=PRIORITY_CHOICES.normal, max_length=10,
+                                verbose_name=_('Priority'))
 
     action_taken = models.TextField(verbose_name=_('Action Taken'), blank=True)
 
-    section = models.ForeignKey(Section, verbose_name=_('Section'))
-    office = models.ForeignKey(Office, verbose_name=_('Office'))
-    location = models.ForeignKey(Location, verbose_name=_('Location'), blank=True, null=True)
-    partner = models.ForeignKey(PartnerOrganization, verbose_name=_('Partner'))
-    cp_output = models.ForeignKey(Result, verbose_name=_('CP Output'), blank=True, null=True)
-    intervention = models.ForeignKey(Intervention, verbose_name=_('PD/SSFA'), blank=True, null=True)
+    section = models.ForeignKey('reports.Sector', verbose_name=_('Section'))
+    office = models.ForeignKey('users.Office', verbose_name=_('Office'))
+
+    location = models.ForeignKey('locations.Location', verbose_name=_('Location'), blank=True, null=True)
+    partner = models.ForeignKey('partners.PartnerOrganization', verbose_name=_('Partner'), blank=True, null=True)
+    cp_output = models.ForeignKey('reports.Result', verbose_name=_('CP Output'), blank=True, null=True)
+    intervention = models.ForeignKey('partners.Intervention', verbose_name=_('PD/SSFA'), blank=True, null=True)
+    engagement = models.ForeignKey('audit.Engagement', verbose_name=_('Engagement'), blank=True, null=True)
+    tpm_activity = models.ForeignKey('tpm.TPMActivity', verbose_name=_('TPM Activity'), blank=True, null=True)
+    travel_activity = models.ForeignKey('t2f.TravelActivity', verbose_name=_('Travel Activity'), blank=True, null=True)
 
     date_of_completion = MonitorField(verbose_name=_('Date Action Point Completed'), null=True, blank=True,
                                       monitor='status', when=[STATUSES.completed])
@@ -94,16 +83,15 @@ class ActionPoint(TimeStampedModel):
 
     tracker = FieldTracker(fields=['assigned_to'])
 
-    class Meta:
-        ordering = ('related_module', 'related_content_type', 'related_object_id')
-
-    def save(self, **kwargs):
-        if self.related_content_type:
-            related_module = self.MODULES_MAPPING.get(self.related_content_type.app_label)
-            if related_module != self.related_module:
-                self.related_module = related_module
-
-        super(ActionPoint, self).save(**kwargs)
+    @property
+    def related_module(self):
+        if self.engagement:
+            return self.MODULE_CHOICES.audit
+        if self.tpm_activity:
+            return self.MODULE_CHOICES.tpm
+        if self.travel_activity:
+            return self.MODULE_CHOICES.t2f
+        return None
 
     @property
     def reference_number(self):

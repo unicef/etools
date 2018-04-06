@@ -9,7 +9,7 @@ from action_points.models import ActionPoint
 @receiver(post_save, sender=ActionPoint)
 def action_point_updated_receiver(instance, created, **kwargs):
     if created:
-        if instance.related_object is None:
+        if instance.related_module is None:
             instance.send_email(instance.assigned_to, 'action_points/action_point/assigned')
     else:
         if instance.tracker.has_changed('assigned_to'):

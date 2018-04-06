@@ -95,7 +95,7 @@ def create_snapshot(target, target_before, by_user):
 
     snapshot_additional_data = getattr(target, 'snapshot_additional_data', None)
     if callable(snapshot_additional_data):
-        activity_kwargs['additional_data'] = snapshot_additional_data(change)
+        activity_kwargs['data'].update(snapshot_additional_data(change))
 
     activity = Activity.objects.create(**activity_kwargs)
 
