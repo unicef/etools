@@ -690,7 +690,6 @@ class InterventionIndicatorsListView(ListCreateAPIView):
 
 class InterventionIndicatorsUpdateView(RetrieveUpdateDestroyAPIView):
 
-
     serializer_class = AppliedIndicatorSerializer
     permission_classes = (PartnershipManagerPermission,)
     filter_backends = (AppliedIndicatorsFilter,)
