@@ -421,7 +421,7 @@ class TestIndicatorReportingRequirementSerializer(BaseTenantTestCase):
             ['This field is required.']
         )
 
-    def test_validation_reporting_requirements_start_missing_fields(self):
+    def test_validation_qpr_missing_fields(self):
         data = {
             "id": self.indicator.pk,
             "report_type": ReportingRequirement.TYPE_QPR,
@@ -437,7 +437,7 @@ class TestIndicatorReportingRequirementSerializer(BaseTenantTestCase):
             [{"start_date": ['This field is required.']}]
         )
 
-    def test_validation_reporting_requirements_start_early(self):
+    def test_validation_qpr_start_early(self):
         data = {
             "id": self.indicator.pk,
             "report_type": ReportingRequirement.TYPE_QPR,
@@ -451,10 +451,10 @@ class TestIndicatorReportingRequirementSerializer(BaseTenantTestCase):
         self.assertFalse(serializer.is_valid())
         self.assertEqual(
             serializer.errors['reporting_requirements'],
-            {"start_date":'Start date needs to be on or after PD start date.'}
+            {"start_date": 'Start date needs to be on or after PD start date.'}
         )
 
-    def test_validation_reporting_requirements_end_before_start(self):
+    def test_validation_qpr_end_before_start(self):
         data = {
             "id": self.indicator.pk,
             "report_type": ReportingRequirement.TYPE_QPR,
@@ -475,7 +475,7 @@ class TestIndicatorReportingRequirementSerializer(BaseTenantTestCase):
             {"start_date": 'Start date needs to be after previous end date.'}
         )
 
-    def test_validation(self):
+    def test_validation_qpr(self):
         data = {
             "id": self.indicator.pk,
             "report_type": ReportingRequirement.TYPE_QPR,
@@ -490,5 +490,52 @@ class TestIndicatorReportingRequirementSerializer(BaseTenantTestCase):
             }]
         }
         serializer = IndicatorReportingRequirementSerializer(data=data)
-        res = serializer.is_valid()
-        self.assertTrue(res)
+        self.assertTrue(serializer.is_valid())
+
+    def test_validation_hr_missing_fields(self):
+        data = {
+            "id": self.indicator.pk,
+            "report_type": ReportingRequirement.TYPE_HR,
+            "reporting_requirements": [{
+                "start_date": datetime.date(2001, 4, 15),
+            }]
+        }
+        serializer = IndicatorReportingRequirementSerializer(data=data)
+        self.assertFalse(serializer.is_valid())
+        self.assertEqual(
+            serializer.errors['reporting_requirements'],
+            [{"due_date": ['This field is required.']}]
+        )
+
+    def test_validation_hr_indicator_invalid(self):
+        self.assertFalse(self.indicator.is_high_frequency)
+        data = {
+            "id": self.indicator.pk,
+            "report_type": ReportingRequirement.TYPE_HR,
+            "reporting_requirements": [
+                {"due_date": datetime.date(2001, 4, 15)},
+                {"due_date": datetime.date(2001, 5, 15)}
+            ]
+        }
+        serializer = IndicatorReportingRequirementSerializer(data=data)
+        self.assertFalse(serializer.is_valid())
+        self.assertEqual(
+            serializer.errors['non_field_errors'],
+            ["Indicator needs to be either cluster or high frequency."]
+        )
+
+    def test_validation_hr(self):
+        indicator = AppliedIndicatorFactory(
+            is_high_frequency=True,
+            lower_result=self.lower_result
+        )
+        data = {
+            "id": indicator.pk,
+            "report_type": ReportingRequirement.TYPE_HR,
+            "reporting_requirements": [
+                {"due_date": datetime.date(2001, 4, 15)},
+                {"due_date": datetime.date(2001, 5, 15)}
+            ]
+        }
+        serializer = IndicatorReportingRequirementSerializer(data=data)
+        self.assertTrue(serializer.is_valid())

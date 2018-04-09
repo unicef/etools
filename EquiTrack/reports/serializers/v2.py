@@ -305,7 +305,9 @@ class IndicatorReportingRequirementSerializer(serializers.ModelSerializer):
         if reqs[0]["start_date"] < intervention.start:
             raise serializers.ValidationError({
                 "reporting_requirements": {
-                    "start_date": _("Start date needs to be on or after PD start date.")
+                    "start_date": _(
+                        "Start date needs to be on or after PD start date."
+                    )
                 }
             })
 
@@ -313,10 +315,27 @@ class IndicatorReportingRequirementSerializer(serializers.ModelSerializer):
         for i in range(1, len(reqs)):
             if reqs[i]["start_date"] <= reqs[i-1]["end_date"]:
                 raise serializers.ValidationError({
-                "reporting_requirements": {
-                    "start_date": _("Start date needs to be after previous end date.")
-                }
-            })
+                    "reporting_requirements": {
+                        "start_date": _(
+                            "Start date needs to be after previous end date."
+                        )
+                    }
+                })
+
+    def _validate_hr(self, indicator, intervention, reqs):
+        # Ensure intervention is HF or cluster
+        if not indicator.is_high_frequency and not indicator.cluster_indicator_id:
+            raise serializers.ValidationError(
+                _("Indicator needs to be either cluster or high frequency.")
+            )
+
+    def run_validation(self, initial_data):
+        serializer = self.fields["reporting_requirements"].child
+        report_type = initial_data.get("report_type")
+        if report_type == ReportingRequirement.TYPE_HR:
+            serializer.fields["start_date"].required = False
+            serializer.fields["end_date"].required = False
+        return super().run_validation(initial_data)
 
     def validate(self, data):
         """The first reporting requirement's start date needs to be
@@ -351,6 +370,7 @@ class IndicatorReportingRequirementSerializer(serializers.ModelSerializer):
             })
 
         current_reqs = ReportingRequirement.objects.values_list(
+            "id",
             "start_date",
             "end_date",
             "due_date",
@@ -360,9 +380,12 @@ class IndicatorReportingRequirementSerializer(serializers.ModelSerializer):
         )
         # We need all reporting requirements in end date order
         merged_reqs = list(current_reqs) + data["reporting_requirements"]
-        reqs = sorted(merged_reqs, key=itemgetter("end_date"))
 
         if data["report_type"] == ReportingRequirement.TYPE_QPR:
+            reqs = sorted(merged_reqs, key=itemgetter("end_date"))
             self._validate_qpr(intervention, reqs)
+        elif data["report_type"] == ReportingRequirement.TYPE_HR:
+            reqs = sorted(merged_reqs, key=itemgetter("due_date"))
+            self._validate_hr(indicator, intervention, reqs)
 
         return data
