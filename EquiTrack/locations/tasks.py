@@ -52,7 +52,7 @@ def create_location(pcode, carto_table, parent, parent_instance,
         except IntegrityError as e:
             logger.info('Not Added: {}', e)
 
-        logger.info('{}: {} ({})'.format(
+        logger.info(u'{}: {} ({})'.format(
             'Added',
             location.name,
             carto_table.location_type.name
@@ -79,7 +79,7 @@ def create_location(pcode, carto_table, parent, parent_instance,
 
         sites_updated += 1
 
-        logger.info('{}: {} ({})'.format(
+        logger.info(u'{}: {} ({})'.format(
             'Updated',
             location.name,
             carto_table.location_type.name
