@@ -80,9 +80,6 @@ jobs:
           name: see all docker containers
           command: |
             docker ps -a
-      - restore_cache:
-          keys:
-            - docker-{{ .Branch }}-docker-cache
       - run:
           name: see if postgres is available locally
           command: |
@@ -100,10 +97,6 @@ jobs:
           command: |
             TAG=${CIRCLE_BRANCH}
             docker build -t unicef/etools:$TAG .
-      - save_cache:
-          key: docker-{{ .Branch }}-docker-cache
-          paths:
-            - /var/lib/docker/
       - run:
           name: Test in the image
           command: |
