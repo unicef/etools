@@ -192,6 +192,7 @@ SHARED_APPS = (
 )
 TENANT_APPS = (
     'django_fsm',
+    'django_comments',
     'logentry_admin',
     'funds',
     'locations',
@@ -207,7 +208,6 @@ TENANT_APPS = (
     'management',
     'snapshot',
     'action_points',
-    'django_comments',
 )
 INSTALLED_APPS = ('tenant_schemas',) + SHARED_APPS + TENANT_APPS
 
