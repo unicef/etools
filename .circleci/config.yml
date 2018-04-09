@@ -100,7 +100,7 @@ jobs:
           command: |
             TAG=${CIRCLE_BRANCH}
             docker build -t unicef/etools:$TAG .
-        - run:
+      - run:
           name: create main virtualenv, install requirements
           command: |
             virtualenv -p $(type -p python3) env1
