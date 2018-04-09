@@ -285,16 +285,38 @@ class IndicatorSerializer(serializers.ModelSerializer):
 class ReportingRequirementSerializer(serializers.ModelSerializer):
     class Meta:
         model = ReportingRequirement
-        fields = "__all__"
+        fields = ("id", "start_date", "end_date", "due_date", )
 
 
 class IndicatorReportingRequirementSerializer(serializers.ModelSerializer):
+    report_type = serializers.ChoiceField(
+        choices=ReportingRequirement.TYPE_CHOICES
+    )
     reporting_requirements = ReportingRequirementSerializer(many=True)
 
     class Meta:
         model = AppliedIndicator
-        fields = ("id", "reporting_requirements")
+        fields = ("id", "reporting_requirements", "report_type", )
         read_only_fields = ("id", )
+
+    def _validate_qpr(self, intervention, reqs):
+        # Ensure that the first reporting requirement start date
+        # is on or after PD start date
+        if reqs[0]["start_date"] < intervention.start:
+            raise serializers.ValidationError({
+                "reporting_requirements": {
+                    "start_date": _("Start date needs to be on or after PD start date.")
+                }
+            })
+
+        # Ensure start date is after previous end date
+        for i in range(1, len(reqs)):
+            if reqs[i]["start_date"] <= reqs[i-1]["end_date"]:
+                raise serializers.ValidationError({
+                "reporting_requirements": {
+                    "start_date": _("Start date needs to be after previous end date.")
+                }
+            })
 
     def validate(self, data):
         """The first reporting requirement's start date needs to be
@@ -302,42 +324,45 @@ class IndicatorReportingRequirementSerializer(serializers.ModelSerializer):
         Subsequent reporting requirements start date needs to be after the
         previous reporting requirement end date.
         """
+        pk = self.initial_data.get("id")
         try:
-            indicator = self.model.objects.get(pk=data["id"])
-        except self.model.DoesNotExist:
-            raise serializers.ValidationError(_("Invalid indicator id"))
+            indicator = self.Meta.model.objects.get(pk=pk)
+        except self.Meta.model.DoesNotExist:
+            raise serializers.ValidationError({
+                "id": _("Invalid indicator id.")
+            })
 
         # Only able to change reporting requirements when PD
         # is in amendment status
-        intervention = indicator.lower_result.intervention_result_link.intervention
+        intervention = indicator.lower_result.result_link.intervention
         if intervention.status not in [intervention.DRAFT]:
             raise serializers.ValidationError(
-                _("Changes not allowed when PD not in amendment state")
+                _("Changes not allowed when PD not in amendment state.")
             )
+        if not intervention.start:
+            raise serializers.ValidationError(
+                _("PD needs to have a start date.")
+            )
+
+        # Validate reporting requirements first
+        if not len(data["reporting_requirements"]):
+            raise serializers.ValidationError({
+                "reporting_requirements": _("This field cannot be empty.")
+            })
+
         current_reqs = ReportingRequirement.objects.values_list(
             "start_date",
             "end_date",
             "due_date",
-            flat=True
         ).filter(
-            applied_indicator__pk=data["pk"],
+            applied_indicator__pk=pk,
             report_type=data["report_type"],
         )
         # We need all reporting requirements in end date order
-        merged_reqs = current_reqs + data["reporting_requirements"]
+        merged_reqs = list(current_reqs) + data["reporting_requirements"]
         reqs = sorted(merged_reqs, key=itemgetter("end_date"))
 
-        # Ensure that the first reporting requirement start date
-        # is on or after PD start date
-        if reqs[0]["start_date"] < intervention.start:
-            raise serializers.ValidationError(
-                _("Start date needs to be on or after PD start date")
-            )
+        if data["report_type"] == ReportingRequirement.TYPE_QPR:
+            self._validate_qpr(intervention, reqs)
 
-        # Ensure start date is after previous end date
-        for i in range(1, len(reqs)):
-            if reqs[i]["start_date"] >= reqs[i-1]["end_date"]:
-                raise serializers.ValidationError(
-                    _("Start date needs to be after previous end date")
-                )
         return data

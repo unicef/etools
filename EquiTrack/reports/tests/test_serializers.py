@@ -1,17 +1,26 @@
 from __future__ import unicode_literals
 
+import datetime
+
 from rest_framework.exceptions import ValidationError
 
 from EquiTrack.tests.cases import BaseTenantTestCase
 from locations.tests.factories import LocationFactory
+from partners.models import Intervention
 from partners.tests.factories import (
     InterventionFactory,
     InterventionResultLinkFactory,
 )
-from reports.models import AppliedIndicator, IndicatorBlueprint, LowerResult
+from reports.models import (
+    AppliedIndicator,
+    IndicatorBlueprint,
+    LowerResult,
+    ReportingRequirement,
+)
 from reports.serializers.v2 import (
     AppliedIndicatorSerializer,
     DisaggregationSerializer,
+    IndicatorReportingRequirementSerializer,
     LowerResultCUSerializer,
     LowerResultSimpleCUSerializer,
 )
@@ -302,14 +311,184 @@ class TestLowerResultCUSerializer(BaseTenantTestCase):
 class TestIndicatorReportingRequirementSerializer(BaseTenantTestCase):
     @classmethod
     def setUpTestData(cls):
-        cls.intervention = InterventionFactory()
+        cls.intervention = InterventionFactory(start=datetime.date(2001, 1, 1))
         cls.result_link = InterventionResultLinkFactory(
             intervention=cls.intervention
         )
         cls.lower_result = LowerResultFactory(result_link=cls.result_link)
         cls.indicator = AppliedIndicatorFactory(lower_result=cls.lower_result)
 
-    def test_validate_required(self):
-        data = {"id": self.indicator.pk}
+    def test_validation_invalid_indicator(self):
+        data = {
+            "id": 404,
+            "report_type": ReportingRequirement.TYPE_QPR,
+            "reporting_requirements": []
+        }
         serializer = IndicatorReportingRequirementSerializer(data=data)
         self.assertFalse(serializer.is_valid())
+        self.assertEqual(serializer.errors['id'], ['Invalid indicator id.'])
+
+    def test_validation_missing_indicator(self):
+        data = {
+            "report_type": ReportingRequirement.TYPE_QPR,
+            "reporting_requirements": []
+        }
+        serializer = IndicatorReportingRequirementSerializer(data=data)
+        self.assertFalse(serializer.is_valid())
+        self.assertEqual(serializer.errors['id'], ['Invalid indicator id.'])
+
+    def test_validation_invalid_report_type(self):
+        data = {
+            "id": self.indicator.pk,
+            "report_type": "wrong",
+            "reporting_requirements": []
+        }
+        serializer = IndicatorReportingRequirementSerializer(data=data)
+        self.assertFalse(serializer.is_valid())
+        self.assertEqual(
+            serializer.errors['report_type'],
+            ['"wrong" is not a valid choice.']
+        )
+
+    def test_validation_missing_report_type(self):
+        data = {
+            "id": self.indicator.pk,
+            "reporting_requirements": []
+        }
+        serializer = IndicatorReportingRequirementSerializer(data=data)
+        self.assertFalse(serializer.is_valid())
+        self.assertEqual(
+            serializer.errors['report_type'],
+            ['This field is required.']
+        )
+
+    def test_validation_pd_status(self):
+        intervention = InterventionFactory(status=Intervention.CLOSED)
+        result_link = InterventionResultLinkFactory(intervention=intervention)
+        lower_result = LowerResultFactory(result_link=result_link)
+        indicator = AppliedIndicatorFactory(lower_result=lower_result)
+        data = {
+            "id": indicator.pk,
+            "report_type": ReportingRequirement.TYPE_QPR,
+            "reporting_requirements": []
+        }
+        serializer = IndicatorReportingRequirementSerializer(data=data)
+        self.assertFalse(serializer.is_valid())
+        self.assertEqual(
+            serializer.errors['non_field_errors'],
+            ['Changes not allowed when PD not in amendment state.']
+        )
+
+    def test_validation_pd_has_no_start(self):
+        intervention = InterventionFactory()
+        result_link = InterventionResultLinkFactory(intervention=intervention)
+        lower_result = LowerResultFactory(result_link=result_link)
+        indicator = AppliedIndicatorFactory(lower_result=lower_result)
+        data = {
+            "id": indicator.pk,
+            "report_type": ReportingRequirement.TYPE_QPR,
+            "reporting_requirements": []
+        }
+        serializer = IndicatorReportingRequirementSerializer(data=data)
+        self.assertFalse(serializer.is_valid())
+        self.assertEqual(
+            serializer.errors['non_field_errors'],
+            ['PD needs to have a start date.']
+        )
+
+    def test_validation_empty_reporting_requirements(self):
+        data = {
+            "id": self.indicator.pk,
+            "report_type": ReportingRequirement.TYPE_QPR,
+            "reporting_requirements": []
+        }
+        serializer = IndicatorReportingRequirementSerializer(data=data)
+        self.assertFalse(serializer.is_valid())
+        self.assertEqual(
+            serializer.errors['reporting_requirements'],
+            ['This field cannot be empty.']
+        )
+
+    def test_validation_missing_reporting_requirements(self):
+        data = {
+            "id": self.indicator.pk,
+            "report_type": ReportingRequirement.TYPE_QPR,
+        }
+        serializer = IndicatorReportingRequirementSerializer(data=data)
+        self.assertFalse(serializer.is_valid())
+        self.assertEqual(
+            serializer.errors['reporting_requirements'],
+            ['This field is required.']
+        )
+
+    def test_validation_reporting_requirements_start_missing_fields(self):
+        data = {
+            "id": self.indicator.pk,
+            "report_type": ReportingRequirement.TYPE_QPR,
+            "reporting_requirements": [{
+                "end_date": datetime.date(2001, 3, 31),
+                "due_date": datetime.date(2001, 4, 15),
+            }]
+        }
+        serializer = IndicatorReportingRequirementSerializer(data=data)
+        self.assertFalse(serializer.is_valid())
+        self.assertEqual(
+            serializer.errors['reporting_requirements'],
+            [{"start_date": ['This field is required.']}]
+        )
+
+    def test_validation_reporting_requirements_start_early(self):
+        data = {
+            "id": self.indicator.pk,
+            "report_type": ReportingRequirement.TYPE_QPR,
+            "reporting_requirements": [{
+                "start_date": datetime.date(2000, 1, 1),
+                "end_date": datetime.date(2001, 3, 31),
+                "due_date": datetime.date(2001, 4, 15),
+            }]
+        }
+        serializer = IndicatorReportingRequirementSerializer(data=data)
+        self.assertFalse(serializer.is_valid())
+        self.assertEqual(
+            serializer.errors['reporting_requirements'],
+            {"start_date":'Start date needs to be on or after PD start date.'}
+        )
+
+    def test_validation_reporting_requirements_end_before_start(self):
+        data = {
+            "id": self.indicator.pk,
+            "report_type": ReportingRequirement.TYPE_QPR,
+            "reporting_requirements": [{
+                "start_date": datetime.date(2001, 1, 1),
+                "end_date": datetime.date(2001, 3, 31),
+                "due_date": datetime.date(2001, 4, 15),
+            }, {
+                "start_date": datetime.date(2001, 2, 1),
+                "end_date": datetime.date(2001, 4, 30),
+                "due_date": datetime.date(2001, 5, 15),
+            }]
+        }
+        serializer = IndicatorReportingRequirementSerializer(data=data)
+        self.assertFalse(serializer.is_valid())
+        self.assertEqual(
+            serializer.errors['reporting_requirements'],
+            {"start_date": 'Start date needs to be after previous end date.'}
+        )
+
+    def test_validation(self):
+        data = {
+            "id": self.indicator.pk,
+            "report_type": ReportingRequirement.TYPE_QPR,
+            "reporting_requirements": [{
+                "start_date": datetime.date(2001, 1, 1),
+                "end_date": datetime.date(2001, 3, 31),
+                "due_date": datetime.date(2001, 4, 15),
+            }, {
+                "start_date": datetime.date(2001, 4, 1),
+                "end_date": datetime.date(2001, 5, 31),
+                "due_date": datetime.date(2001, 5, 15),
+            }]
+        }
+        serializer = IndicatorReportingRequirementSerializer(data=data)
+        res = serializer.is_valid()
+        self.assertTrue(res)
