@@ -100,6 +100,12 @@ jobs:
           command: |
             TAG=${CIRCLE_BRANCH}
             docker build -t unicef/etools:$TAG .
+        - run:
+          name: create main virtualenv, install requirements
+          command: |
+            virtualenv -p $(type -p python3) env1
+            . env1/bin/activate
+            pip install -r EquiTrack/requirements/test.txt
       - save_cache:
           key: docker-{{ .Branch }}-docker-cache
           paths:
