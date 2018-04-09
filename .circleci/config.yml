@@ -102,7 +102,7 @@ jobs:
           command: |
             TAG=${CIRCLE_BRANCH}
             HOSTIP=`/sbin/ip route|awk '/default/ { print $3 }'`
-            docker run --network container:docker-postgres -it -e "DATABASE_URL=postgis://postgres:postgres@localhost:5432/circle_test" -e "DISABLE_JWT_LOGIN=1" -e SECRET_KEY unicef/etools:$TAG python manage.py test --noinput
+            docker run --network container:docker-postgres -it -e "DJANGO_SETTINGS_MODULE=EquiTrack.settings.local" -e "DATABASE_URL=postgis://postgres:postgres@localhost:5432/circle_test" -e "DISABLE_JWT_LOGIN=1" -e SECRET_KEY unicef/etools:$TAG /bin/bash -c "pip install -r requirements/test.txt; python manage.py test --noinput"
       - run:
           name: Pushing to Docker Hub
           command: |
