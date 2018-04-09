@@ -52,7 +52,7 @@ def create_location(pcode, carto_table, parent, parent_instance,
         except IntegrityError as e:
             logger.info('Not Added: {}', e)
 
-        logger.info(u'{}: {} ({})'.format(
+        logger.info('{}: {} ({})'.format(
             'Added',
             location.name,
             carto_table.location_type.name
@@ -79,7 +79,7 @@ def create_location(pcode, carto_table, parent, parent_instance,
 
         sites_updated += 1
 
-        logger.info(u'{}: {} ({})'.format(
+        logger.info('{}: {} ({})'.format(
             'Updated',
             location.name,
             carto_table.location_type.name
@@ -128,8 +128,6 @@ def update_sites_from_cartodb(carto_table_pk):
                 logger.warning("No name for location with PCode: {}".format(pcode))
                 sites_not_added += 1
                 continue
-
-            site_name = site_name.encode('UTF-8')
 
             parent = None
             parent_code = None
