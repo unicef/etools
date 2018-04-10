@@ -283,6 +283,8 @@ class IndicatorSerializer(serializers.ModelSerializer):
 
 
 class ReportingRequirementSerializer(serializers.ModelSerializer):
+    id = serializers.IntegerField(required=False)
+
     class Meta:
         model = ReportingRequirement
         fields = ("id", "start_date", "end_date", "due_date", "description", )
@@ -329,6 +331,43 @@ class IndicatorReportingRequirementSerializer(serializers.ModelSerializer):
                 _("Indicator needs to be either cluster or high frequency.")
             )
 
+    def _merge_data(self, data):
+        current_reqs = ReportingRequirement.objects.values(
+            "id",
+            "start_date",
+            "end_date",
+            "due_date",
+        ).filter(
+            applied_indicator=self.indicator,
+            report_type=data["report_type"],
+        )
+
+        current_reqs_dict = {}
+        for r in current_reqs:
+            current_reqs_dict[r["id"]] = r
+
+        report_type = data["report_type"]
+        for r in data["reporting_requirements"]:
+            if r.get("id") in current_reqs_dict:
+                current_reqs_dict.pop(r["id"])
+            r["applied_indicator"] = self.indicator
+            r["report_type"] = report_type
+            if report_type == ReportingRequirement.TYPE_HR:
+                r["end_date"] = r["due_date"]
+                r["start_date"] = None
+                r["description"] = ""
+            elif report_type == ReportingRequirement.TYPE_SPECIAL:
+                r["start_date"] = None
+                r["end_date"] = r["due_date"]
+
+        # We need all reporting requirements in end date order
+        merged_reqs = list(current_reqs_dict.values()) + data["reporting_requirements"]
+        data["reporting_requirements"] = sorted(
+            merged_reqs,
+            key=itemgetter("end_date")
+        )
+        return data
+
     def run_validation(self, initial_data):
         serializer = self.fields["reporting_requirements"].child
         report_type = initial_data.get("report_type")
@@ -347,7 +386,7 @@ class IndicatorReportingRequirementSerializer(serializers.ModelSerializer):
         """
         pk = self.initial_data.get("id")
         try:
-            indicator = self.Meta.model.objects.get(pk=pk)
+            self.indicator = self.Meta.model.objects.get(pk=pk)
         except self.Meta.model.DoesNotExist:
             raise serializers.ValidationError({
                 "id": _("Invalid indicator id.")
@@ -355,7 +394,7 @@ class IndicatorReportingRequirementSerializer(serializers.ModelSerializer):
 
         # Only able to change reporting requirements when PD
         # is in amendment status
-        intervention = indicator.lower_result.result_link.intervention
+        intervention = self.indicator.lower_result.result_link.intervention
         if intervention.status not in [intervention.DRAFT]:
             raise serializers.ValidationError(
                 _("Changes not allowed when PD not in amendment state.")
@@ -371,22 +410,33 @@ class IndicatorReportingRequirementSerializer(serializers.ModelSerializer):
                 "reporting_requirements": _("This field cannot be empty.")
             })
 
-        current_reqs = ReportingRequirement.objects.values_list(
-            "id",
-            "start_date",
-            "end_date",
-            "due_date",
-        ).filter(
-            applied_indicator__pk=pk,
-            report_type=data["report_type"],
-        )
+        self._merge_data(data)
 
         if data["report_type"] == ReportingRequirement.TYPE_QPR:
-            # We need all reporting requirements in end date order
-            merged_reqs = list(current_reqs) + data["reporting_requirements"]
-            requirements = sorted(merged_reqs, key=itemgetter("end_date"))
-            self._validate_qpr(intervention, requirements)
+            self._validate_qpr(intervention, data["reporting_requirements"])
         elif data["report_type"] == ReportingRequirement.TYPE_HR:
-            self._validate_hr(indicator)
+            self._validate_hr(self.indicator)
 
         return data
+
+    def create(self, validated_data):
+        current_reqs = ReportingRequirement.objects.values_list(
+            "id",
+            flat=True
+        ).filter(
+            applied_indicator=self.indicator,
+            report_type=validated_data["report_type"]
+        )
+        new_reqs = [
+            r["id"] for r in validated_data["reporting_requirements"]
+            if "id" in r
+        ]
+        delete_reqs = [r for r in current_reqs if r not in new_reqs]
+        ReportingRequirement.objects.filter(id__in=delete_reqs).delete()
+        for r in validated_data["reporting_requirements"]:
+            if r.get("id"):
+                pk = r.pop("id")
+                ReportingRequirement.objects.filter(pk=pk).update(**r)
+            else:
+                ReportingRequirement.objects.create(**r)
+        return self.indicator

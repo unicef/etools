@@ -30,6 +30,7 @@ from reports.tests.factories import (
     DisaggregationValueFactory,
     IndicatorBlueprintFactory,
     LowerResultFactory,
+    ReportingRequirementFactory,
     SectorFactory,
 )
 
@@ -586,3 +587,112 @@ class TestIndicatorReportingRequirementSerializer(BaseTenantTestCase):
         }
         serializer = IndicatorReportingRequirementSerializer(data=data)
         self.assertTrue(serializer.is_valid())
+
+    def test_create_qpr(self):
+        """Creating new qpr reporting requirements
+
+        When none currently existing
+        """
+        requirement_qs = ReportingRequirement.objects.filter(
+            applied_indicator=self.indicator,
+            report_type=ReportingRequirement.TYPE_QPR,
+        )
+        init_count = requirement_qs.count()
+        data = {
+            "id": self.indicator.pk,
+            "report_type": ReportingRequirement.TYPE_QPR,
+            "reporting_requirements": [{
+                "start_date": datetime.date(2001, 1, 1),
+                "end_date": datetime.date(2001, 3, 31),
+                "due_date": datetime.date(2001, 4, 15),
+            }, {
+                "start_date": datetime.date(2001, 4, 1),
+                "end_date": datetime.date(2001, 5, 31),
+                "due_date": datetime.date(2001, 5, 15),
+            }]
+        }
+        serializer = IndicatorReportingRequirementSerializer(data=data)
+        self.assertTrue(serializer.is_valid())
+        serializer.create(serializer.validated_data)
+        self.assertEqual(requirement_qs.count(), init_count + 2)
+
+    def test_create_hr(self):
+        """Creating new hr reporting requirements
+
+        When none currently existing
+        """
+        indicator = AppliedIndicatorFactory(
+            is_high_frequency=True,
+            lower_result=self.lower_result
+        )
+        requirement_qs = ReportingRequirement.objects.filter(
+            applied_indicator=indicator,
+            report_type=ReportingRequirement.TYPE_HR,
+        )
+        init_count = requirement_qs.count()
+        data = {
+            "id": indicator.pk,
+            "report_type": ReportingRequirement.TYPE_HR,
+            "reporting_requirements": [
+                {"due_date": datetime.date(2001, 4, 15)},
+                {"due_date": datetime.date(2001, 5, 15)}
+            ]
+        }
+        serializer = IndicatorReportingRequirementSerializer(data=data)
+        self.assertTrue(serializer.is_valid())
+        serializer.create(serializer.validated_data)
+        self.assertEqual(requirement_qs.count(), init_count + 2)
+
+    def test_create_special(self):
+        """Creating new special reporting requirements
+
+        When none currently existing"""
+        requirement_qs = ReportingRequirement.objects.filter(
+            applied_indicator=self.indicator,
+            report_type=ReportingRequirement.TYPE_SPECIAL,
+        )
+        init_count = requirement_qs.count()
+        data = {
+            "id": self.indicator.pk,
+            "report_type": ReportingRequirement.TYPE_SPECIAL,
+            "reporting_requirements": [{
+                "due_date": datetime.date(2001, 4, 15),
+                "description": "some description goes here"
+            }]
+        }
+        serializer = IndicatorReportingRequirementSerializer(data=data)
+        self.assertTrue(serializer.is_valid())
+        serializer.create(serializer.validated_data)
+        self.assertEqual(requirement_qs.count(), init_count + 1)
+
+    def test_update_qpr(self):
+        """Updating existing qpr reporting requirements"""
+        report_type = ReportingRequirement.TYPE_QPR
+        requirement = ReportingRequirementFactory(
+            applied_indicator=self.indicator,
+            report_type=report_type,
+            start_date=datetime.date(2001, 1, 3),
+        )
+        requirement_qs = ReportingRequirement.objects.filter(
+            applied_indicator=self.indicator,
+            report_type=ReportingRequirement.TYPE_QPR,
+        )
+        init_count = requirement_qs.count()
+        data = {
+            "id": self.indicator.pk,
+            "report_type": ReportingRequirement.TYPE_QPR,
+            "reporting_requirements": [{
+                "id": requirement.pk,
+                "start_date": datetime.date(2001, 1, 1),
+                "end_date": datetime.date(2001, 3, 31),
+                "due_date": datetime.date(2001, 4, 15),
+            }]
+        }
+        serializer = IndicatorReportingRequirementSerializer(data=data)
+        self.assertTrue(serializer.is_valid())
+        serializer.create(serializer.validated_data)
+        self.assertEqual(requirement_qs.count(), init_count)
+        req_updated = ReportingRequirement.objects.get(pk=requirement.pk)
+        self.assertEqual(req_updated.start_date, datetime.date(2001, 1, 1))
+        self.assertEqual(req_updated.end_date, datetime.date(2001, 3, 31))
+        self.assertEqual(req_updated.due_date, datetime.date(2001, 4, 15))
