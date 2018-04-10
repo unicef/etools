@@ -9,7 +9,7 @@ from django.conf import settings
 from django.contrib.postgres.fields import JSONField, ArrayField
 from django.core.urlresolvers import reverse
 from django.db import models, connection, transaction
-from django.db.models import F, Sum, Max, Min, CharField, Count
+from django.db.models import F, Sum, Max, Min, CharField, Count, Case, When
 from django.db.models.signals import post_save, pre_delete
 from django.utils.encoding import python_2_unicode_compatible
 from django.utils import six
@@ -1645,6 +1645,7 @@ class Intervention(TimeStampedModel):
         verbose_name=_("Amendment Open"),
         default=False,
     )
+    last_pv_date = models.DateTimeField(null=True)
 
     # Flag if this has been migrated to a status that is not correct
     # previous status
@@ -1925,6 +1926,26 @@ class Intervention(TimeStampedModel):
 
             if save_agreement:
                 self.agreement.save()
+
+    def set_last_pv_date(self):
+        # TODO when Django>=1.11 we can remove this
+        # and make use of subquery expressions instead on the dashboard query
+        # https://docs.djangoproject.com/en/2.0/ref/models/expressions/#subquery-expressions
+        self.last_pv_date = Intervention.objects.filter(pk=self.pk).annotate(
+            latest_pv_date=Max(
+                Case(
+                    When(
+                        travel_activities__travel_type=TravelType.PROGRAMME_MONITORING,
+                        travel_activities__travels__traveler=F(
+                            'travel_activities__primary_traveler'
+                        ),
+                        travel_activities__travels__status=Travel.COMPLETED,
+                        then=F('travel_activities__date')
+                    ),
+                )
+            )
+        ).last().latest_pv_date
+        self.save()
 
     @transaction.atomic
     def save(self, **kwargs):

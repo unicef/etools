@@ -441,6 +441,13 @@ class Travel(models.Model):
         maker = InvoiceMaker(self)
         maker.do_invoicing()
 
+    def save(self, *args, **kwargs):
+        super(Travel, self).save(*args, **kwargs)
+        partnerships = set([a.partnership for a in self.activities.all()])
+        for partnership in partnerships:
+            if partnership:
+                partnership.set_last_pv_date()
+
 
 class TravelActivity(models.Model):
     travels = models.ManyToManyField('Travel', related_name='activities', verbose_name=_('Travels'))
@@ -464,6 +471,11 @@ class TravelActivity(models.Model):
     @property
     def travel_status(self):
         return self.travels.filter(traveler=self.primary_traveler).first().status
+
+    def save(self, *args, **kwargs):
+        super(TravelActivity, self).save(*args, **kwargs)
+        if self.partnership:
+            self.partnership.set_last_pv_date()
 
 
 @python_2_unicode_compatible
