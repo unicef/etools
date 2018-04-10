@@ -5,7 +5,7 @@ from decimal import Decimal
 
 from partners.models import PartnerOrganization, PlannedEngagement
 from vision.utils import comp_decimals
-from vision.vision_data_synchronizer import VisionDataSynchronizer, VISION_NO_DATA_MESSAGE
+from vision.vision_data_synchronizer import VisionDataSynchronizer, VISION_NO_DATA_MESSAGE, FileDataSynchronizer
 
 logger = logging.getLogger(__name__)
 
@@ -230,3 +230,14 @@ class PartnerSynchronizer(VisionDataSynchronizer):
         if partner.get('RISK_RATING') in allowed_risk_rating:
             return partner['RISK_RATING']
         return ''
+
+
+class FilePartnerSynchronizer(FileDataSynchronizer, PartnerSynchronizer):
+    """
+    >>> from vision.adapters.partner import *
+    >>> from users.models import Country
+    >>> country = Country.objects.get(name='Indonesia')
+    >>> filename = '/home/user/Downloads/partners.json'
+    >>> FilePartnerSynchronizer(country, filename).sync()
+    """
+    pass
