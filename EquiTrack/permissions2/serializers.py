@@ -53,8 +53,7 @@ class PermissionsBasedSerializerMixin(object):
         targets = self._collect_permissions_targets()
         perms = self._get_permissions_queryset(targets)
         context = self._get_permission_context()
-        if context:
-            perms = perms.filter_by_context(context)
+        perms = perms.filter_by_context(context)
         return perms
 
     def _get_permissions_queryset(self, targets):
