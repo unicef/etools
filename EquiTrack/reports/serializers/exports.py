@@ -113,4 +113,4 @@ class AppliedIndicatorLocationExportSerializer(serializers.Serializer):
     #     return ", ".join([rl.cp_output.name for rl in obj.indicator.lower_result.result_link.all()])
 
     def get_ram_indicators(self, obj):
-        ', '.join([ri.name for ri in obj.indicator.lower_result.result_link.ram_indicators.all()]),
+        return ', '.join([ri.name for ri in obj.indicator.lower_result.result_link.ram_indicators.all()])

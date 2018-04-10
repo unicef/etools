@@ -17,7 +17,7 @@ jobs:
     steps:
       - checkout
       - restore_cache:
-          key: deps2-{{ .Branch }}-{{ checksum "EquiTrack/requirements/test.txt" }}-{{ checksum ".circleci/config.yml" }}
+          key: deps2-{{ .Branch }}-{{ checksum "EquiTrack/requirements/base.txt" }}--{{ checksum "EquiTrack/requirements/test.txt" }}-{{ checksum ".circleci/config.yml" }}
       - run:
           name: create main virtualenv, install requirements
           command: |
@@ -25,7 +25,7 @@ jobs:
             . env1/bin/activate
             pip install -r EquiTrack/requirements/test.txt
       - save_cache:
-          key: deps2-{{ .Branch }}-{{ checksum "EquiTrack/requirements/test.txt" }}-{{ checksum ".circleci/config.yml" }}
+          key: deps2-{{ .Branch }}-{{ checksum "EquiTrack/requirements/base.txt" }}--{{ checksum "EquiTrack/requirements/test.txt" }}-{{ checksum ".circleci/config.yml" }}
           paths:
             - "env1"
             - /root/.cache/pip
@@ -80,9 +80,6 @@ jobs:
           name: see all docker containers
           command: |
             docker ps -a
-      - restore_cache:
-          keys:
-            - docker-{{ .Branch }}-docker-cache
       - run:
           name: see if postgres is available locally
           command: |
@@ -100,16 +97,12 @@ jobs:
           command: |
             TAG=${CIRCLE_BRANCH}
             docker build -t unicef/etools:$TAG .
-      - save_cache:
-          key: docker-{{ .Branch }}-docker-cache
-          paths:
-            - /var/lib/docker/
       - run:
           name: Test in the image
           command: |
             TAG=${CIRCLE_BRANCH}
             HOSTIP=`/sbin/ip route|awk '/default/ { print $3 }'`
-            docker run --network container:docker-postgres -it -e "DATABASE_URL=postgis://postgres:postgres@localhost:5432/circle_test" -e "DISABLE_JWT_LOGIN=1" -e SECRET_KEY unicef/etools:$TAG python manage.py test --noinput
+            docker run --network container:docker-postgres -it -e "DJANGO_SETTINGS_MODULE=EquiTrack.settings.local" -e "DATABASE_URL=postgis://postgres:postgres@localhost:5432/circle_test" -e "DISABLE_JWT_LOGIN=1" -e SECRET_KEY unicef/etools:$TAG /bin/bash -c "pip install -r requirements/test.txt; python manage.py test --noinput"
       - run:
           name: Pushing to Docker Hub
           command: |
