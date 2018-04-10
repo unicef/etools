@@ -8,6 +8,7 @@ from django.conf import settings
 from django.core.files import File
 from django.core.management import call_command
 from django.utils import timezone
+from post_office.models import EmailTemplate
 
 from attachments.models import Attachment, FileType
 from audit.models import RiskBluePrint, UNICEFAuditFocalPoint, UNICEFUser
@@ -19,6 +20,9 @@ from utils.groups.wrappers import GroupWrapper
 class AuditTestCaseMixin(object):
     def setUp(self):
         super(AuditTestCaseMixin, self).setUp()
+        EmailTemplate.objects.get_or_create(name='audit/staff_member/invite')
+        EmailTemplate.objects.get_or_create(name='audit/engagement/submit_to_auditor')
+        EmailTemplate.objects.get_or_create(name='audit/engagement/reported_by_auditor')
 
         GroupWrapper.invalidate_instances()
 

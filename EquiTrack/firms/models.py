@@ -18,7 +18,7 @@ class BaseFirm(TimeStampedModel, models.Model):
     vendor_number = models.CharField(
         verbose_name=_('Vendor Number'),
         blank=True,
-        null=True,
+        default='',
         unique=True,
         max_length=30
     )
@@ -30,33 +30,33 @@ class BaseFirm(TimeStampedModel, models.Model):
     street_address = models.CharField(
         verbose_name=_('Address'),
         max_length=500,
-        blank=True, null=True
+        blank=True, default=''
     )
     city = models.CharField(
         verbose_name=_('City'),
         max_length=255,
-        blank=True, null=True
+        blank=True, default=''
     )
     postal_code = models.CharField(
         verbose_name=_('Postal Code'),
         max_length=32,
-        blank=True, null=True
+        blank=True, default=''
     )
     country = models.CharField(
         verbose_name=_('Country'),
         max_length=255,
-        blank=True, null=True
+        blank=True, default=''
     )
 
     email = models.CharField(
         verbose_name=_('Email'),
         max_length=255,
-        blank=True, null=True
+        blank=True, default=''
     )
     phone_number = models.CharField(
         verbose_name=_('Phone Number'),
         max_length=32,
-        blank=True, null=True
+        blank=True, default=''
     )
 
     vision_synced = models.BooleanField(verbose_name=_('Synced from VISION'), default=False)

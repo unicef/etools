@@ -5,7 +5,7 @@
         "indicators": [
           {
             "blueprint_id": 0,
-            "means_of_verification": null,
+            "means_of_verification": "",
             "target": 0,
             "title": "The Blueprint",
             "disaggregation": [
@@ -48,7 +48,7 @@
     "business_area_code": "ZZZ",
     "title": "Active Intervention",
     "unicef_budget": "0.00",
-    "unicef_budget_currency": null,
+    "unicef_budget_currency": "",
     "number": "/PCA2017394/PD2017642",
     "start_date": "2017-09-13",
     "focal_points": [],
@@ -62,7 +62,7 @@
     },
     "reporting_periods": [],
     "status": "active",
-    "cso_budget_currency": null,
+    "cso_budget_currency": "",
     "id": 642,
     "cso_budget": "0.00",
     "update_date": "2017-10-12T08:10:43.708677Z"
@@ -78,7 +78,7 @@
     "business_area_code": "ZZZ",
     "title": "Intervention 2",
     "unicef_budget": "0.00",
-    "unicef_budget_currency": null,
+    "unicef_budget_currency": "",
     "number": "/PCA2017393/PD2017641",
     "start_date": null,
     "focal_points": [],
@@ -92,7 +92,7 @@
     },
     "reporting_periods": [],
     "status": "draft",
-    "cso_budget_currency": null,
+    "cso_budget_currency": "",
     "id": 641,
     "cso_budget": "0.00",
     "update_date": "2017-10-12T08:10:43.708677Z"
@@ -108,7 +108,7 @@
     "business_area_code": "ZZZ",
     "title": "Intervention 1",
     "unicef_budget": "110.00",
-    "unicef_budget_currency": null,
+    "unicef_budget_currency": "",
     "number": "/PCA2017393/2017640",
     "start_date": null,
     "focal_points": [],
@@ -122,7 +122,7 @@
     },
     "reporting_periods": [],
     "status": "draft",
-    "cso_budget_currency": null,
+    "cso_budget_currency": "",
     "id": 640,
     "cso_budget": "200.00",
     "update_date": "2017-10-12T08:10:43.708677Z"

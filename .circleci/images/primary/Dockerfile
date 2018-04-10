@@ -15,9 +15,7 @@ RUN apt-get install -y --no-install-recommends \
     python-pip \
     postgresql-client \
     libpq-dev \
-    python-dev \
-    python3-dev \
-    python2.7-dev
+    python3-dev
 RUN apt-get install -y --no-install-recommends \
     python-gdal \
     gdal-bin \
@@ -28,15 +26,13 @@ RUN apt-get install -y --no-install-recommends \
     libxslt-dev \
     xmlsec1
 
-# We need a newer virtualenv than what Debian jessie would give us
-# if we used the distribution package. Installing using pip will
-# get the latest, which will in turn include recent pip itself,
-# and setuptools.  Using pip2 means that when the older code
-# invokes 'virtualenv' it'll end up with a Python 2 virtualenv
-# by default, which is what it needs.
-RUN pip2 install virtualenv
+RUN pip install virtualenv
 
 # http://gis.stackexchange.com/a/74060
 ENV CPLUS_INCLUDE_PATH /usr/include/gdal
 ENV C_INCLUDE_PATH /usr/include/gdal
 ENV REQUIREMENTS_FILE production.txt
+
+ADD ./EquiTrack/requirements/*.txt /pip/
+ADD ./EquiTrack/requirements/$REQUIREMENTS_FILE /pip/app_requirements.txt
+RUN pip install -f /pip -r /pip/app_requirements.txt
