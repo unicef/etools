@@ -1,8 +1,8 @@
 from __future__ import absolute_import, division, print_function, unicode_literals
 
 import datetime
-from unittest import TestCase
 
+from django.test import SimpleTestCase
 from django.utils import six
 
 from EquiTrack.tests.cases import BaseTenantTestCase
@@ -27,65 +27,65 @@ from reports.tests.factories import (
 from reports.tests.factories import QuarterFactory
 
 
-class TestStrUnicode(TestCase):
+class TestStrUnicode(SimpleTestCase):
     '''Ensure calling six.text_type() on model instances returns the right text.'''
     def test_country_programme(self):
-        instance = CountryProgrammeFactory.build(name=b'xyz', wbs=b'xyz')
+        instance = CountryProgrammeFactory.build(name='xyz', wbs='xyz')
         self.assertEqual(six.text_type(instance), u'xyz xyz')
 
-        instance = CountryProgrammeFactory.build(name=u'\xccsland', wbs=b'xyz')
+        instance = CountryProgrammeFactory.build(name=u'\xccsland', wbs='xyz')
         self.assertEqual(six.text_type(instance), u'\xccsland xyz')
 
         instance = CountryProgrammeFactory.build(name=u'\xccsland', wbs=u'xyz')
         self.assertEqual(six.text_type(instance), u'\xccsland xyz')
 
     def test_result_type(self):
-        instance = ResultTypeFactory.build(name=b'xyz')
+        instance = ResultTypeFactory.build(name='xyz')
         self.assertEqual(six.text_type(instance), u'xyz')
 
         instance = ResultTypeFactory.build(name=u'\xccsland')
         self.assertEqual(six.text_type(instance), u'\xccsland')
 
     def test_sector(self):
-        instance = SectorFactory.build(name=b'xyz')
+        instance = SectorFactory.build(name='xyz')
         self.assertEqual(six.text_type(instance), u' xyz')
 
         instance = SectorFactory.build(name=u'\xccsland')
         self.assertEqual(six.text_type(instance), u' \xccsland')
 
     def test_result(self):
-        instance = ResultFactory.build(name=b'xyz')
+        instance = ResultFactory.build(name='xyz')
         self.assertTrue(six.text_type(instance).endswith(u'xyz'))
 
         instance = ResultFactory.build(name=u'\xccsland')
         self.assertTrue(six.text_type(instance).endswith(u'\xccsland'))
 
     def test_lower_result(self):
-        instance = LowerResultFactory.build(name=b'xyz', code=b'xyz')
+        instance = LowerResultFactory.build(name='xyz', code='xyz')
         self.assertEqual(six.text_type(instance), u'xyz: xyz')
 
-        instance = LowerResultFactory.build(name=u'\xccsland', code=b'xyz')
+        instance = LowerResultFactory.build(name=u'\xccsland', code='xyz')
         self.assertEqual(six.text_type(instance), u'xyz: \xccsland')
 
         instance = LowerResultFactory.build(name=u'\xccsland', code=u'xyz')
         self.assertEqual(six.text_type(instance), u'xyz: \xccsland')
 
     def test_unit(self):
-        instance = UnitFactory.build(type=b'xyz')
+        instance = UnitFactory.build(type='xyz')
         self.assertTrue(six.text_type(instance).endswith(u'xyz'))
 
         instance = UnitFactory.build(type=u'\xccsland')
         self.assertTrue(six.text_type(instance).endswith(u'\xccsland'))
 
     def test_indicator_blueprint(self):
-        instance = IndicatorBlueprintFactory.build(title=b'xyz')
+        instance = IndicatorBlueprintFactory.build(title='xyz')
         self.assertEqual(six.text_type(instance), u'xyz')
 
         instance = IndicatorBlueprintFactory.build(title=u'\xccsland')
         self.assertEqual(six.text_type(instance), u'\xccsland')
 
     def test_indicator(self):
-        instance = IndicatorFactory.build(name=b'xyz', active=True)
+        instance = IndicatorFactory.build(name='xyz', active=True)
         self.assertEqual(six.text_type(instance), u'xyz  ')
 
         instance = IndicatorFactory.build(name=u'\xccsland', active=True)
@@ -127,7 +127,8 @@ class TestCountryProgramme(BaseTenantTestCase):
         """Check that all active country programmes have
         from date in the past and to date in the future
         """
-        self.assertItemsEqual(
+        six.assertCountEqual(
+            self,
             [x.pk for x in CountryProgramme.objects.all_active],
             [self.programme_active.pk]
         )
@@ -144,7 +145,8 @@ class TestCountryProgramme(BaseTenantTestCase):
         """Check that all future country programmes have
         from date in the future
         """
-        self.assertItemsEqual(
+        six.assertCountEqual(
+            self,
             [x.pk for x in CountryProgramme.objects.all_future],
             [self.programme_future.pk]
         )
@@ -153,7 +155,8 @@ class TestCountryProgramme(BaseTenantTestCase):
         """Check that all future and active country programmes have
         to date in the future
         """
-        self.assertItemsEqual(
+        six.assertCountEqual(
+            self,
             [x.pk for x in CountryProgramme.objects.all_active_and_future],
             [self.programme_future.pk, self.programme_active.pk]
         )
@@ -245,10 +248,10 @@ class TestIndicatorBlueprint(BaseTenantTestCase):
 
 class TestIndicator(BaseTenantTestCase):
     def test_save_empty(self):
-        """If code is empty ensure it is set to None"""
+        """If code is empty ensure it is set to the empty string"""
         indicator = Indicator(name="Indicator", code="")
         indicator.save()
-        self.assertIsNone(indicator.code)
+        self.assertEqual('', indicator.code)
 
     def test_save(self):
         """If code is NOT empty ensure it is not changed"""

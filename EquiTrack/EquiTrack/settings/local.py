@@ -19,7 +19,7 @@ POST_OFFICE = {
 # change config to remove CSRF verification in localhost in order to enable testing from postman.
 REST_FRAMEWORK['DEFAULT_AUTHENTICATION_CLASSES'] = (
     # this setting fixes the bug where user can be logged in as AnonymousUser
-    'EquiTrack.mixins.CsrfExemptSessionAuthentication',
+    'EquiTrack.auth.CsrfExemptSessionAuthentication',
 ) + REST_FRAMEWORK['DEFAULT_AUTHENTICATION_CLASSES']
 
 # No SAML for local dev
@@ -62,7 +62,7 @@ if 'test' in sys.argv:
 
     # Disable logging output during tests
     logging.disable(logging.CRITICAL)
-elif 'runserver' in sys.argv:
+elif 'runserver' in sys.argv or 'shell_plus' in sys.argv:
     # Settings which should only be active when running a local server
 
     # django-debug-toolbar: https://django-debug-toolbar.readthedocs.io/en/stable/configuration.html

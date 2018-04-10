@@ -4,14 +4,16 @@ import csv
 import datetime
 from decimal import Decimal
 import json
-from unittest import skip, TestCase
-from urlparse import urlparse
+from unittest import skip
 
+import mock
 from django.conf import settings
 from django.core.files.uploadedfile import SimpleUploadedFile
 from django.core.urlresolvers import reverse, resolve
 from django.db import connection
+from django.test import SimpleTestCase
 from django.utils import six, timezone
+from django.utils.six.moves.urllib_parse import urlparse
 
 from model_utils import Choices
 from rest_framework import status
@@ -65,7 +67,7 @@ from users.tests.factories import (
 )
 
 
-class URLsTestCase(URLAssertionMixin, TestCase):
+class URLsTestCase(URLAssertionMixin, SimpleTestCase):
     '''Simple test case to verify URL reversal'''
     def test_urls(self):
         '''Verify URL pattern names generate the URLs we expect them to.'''
@@ -349,13 +351,15 @@ class TestPartnerOrganizationListViewForCSV(BaseTenantTestCase):
         # but I want to make sure the response looks CSV-ish.
         self.assertEqual(response.get('Content-Disposition'), 'attachment;filename=partner.csv')
 
-        self.assertIsInstance(response.rendered_content, six.string_types)
+        response_content = response.rendered_content.decode('utf-8')
+
+        self.assertIsInstance(response_content, six.text_type)
 
         # The response should *not* look like JSON.
         with self.assertRaises(ValueError):
-            json.loads(response.rendered_content)
+            json.loads(response_content)
 
-        lines = response.rendered_content.replace('\r\n', '\n').split('\n')
+        lines = response_content.replace('\r\n', '\n').split('\n')
         # Try to read it with Python's CSV reader.
         reader = csv.DictReader(lines)
 
@@ -618,7 +622,7 @@ class TestPartnerOrganizationRetrieveUpdateDeleteViews(BaseTenantTestCase):
             1
         )
 
-    def test_api_partners_update_with_members_null_phone(self):
+    def test_api_partners_update_with_members_empty_phone(self):
         self.assertFalse(Activity.objects.exists())
         response = self.forced_auth_req(
             'get',
@@ -635,7 +639,7 @@ class TestPartnerOrganizationRetrieveUpdateDeleteViews(BaseTenantTestCase):
             "last_name": "Doe",
             "email": "a1@a.com",
             "active": True,
-            "phone": None
+            "phone": ''
         }]
         data = {
             "staff_members": staff_members,
@@ -648,7 +652,7 @@ class TestPartnerOrganizationRetrieveUpdateDeleteViews(BaseTenantTestCase):
         )
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(response.data["staff_members"][1]["phone"], None)
+        self.assertEqual(response.data["staff_members"][1]["phone"], '')
         self.assertEqual(
             Activity.objects.filter(action=Activity.UPDATE).count(),
             1
@@ -998,6 +1002,11 @@ class TestAgreementAPIView(BaseTenantTestCase):
         cls.partner_staff = PartnerStaffFactory(partner=cls.partner)
         cls.partner_staff2 = PartnerStaffFactory(partner=cls.partner)
 
+        cls.unicef_staff = UserFactory(is_staff=True)
+        cls.partner = PartnerFactory(partner_type=PartnerType.CIVIL_SOCIETY_ORGANIZATION)
+        cls.partner_staff = PartnerStaffFactory(partner=cls.partner)
+        cls.partner_staff2 = PartnerStaffFactory(partner=cls.partner)
+
         cls.partner_staff_user = UserFactory(is_staff=True)
         cls.partner_staff_user.profile.partner_staff_member = cls.partner_staff.id
         cls.partner_staff_user.save()
@@ -1296,26 +1305,40 @@ class TestAgreementAPIView(BaseTenantTestCase):
         self.assertEqual(response.data, ["Cannot delete a signed amendment"])
 
     def test_agreement_generate_pdf_default(self):
-        response = self.forced_auth_req(
-            'get',
-            reverse('partners_api:pca_pdf', args=[self.agreement.pk]),
-            user=self.unicef_staff
-        )
+        with mock.patch('partners.views.v1.get_data_from_insight') as mock_get_insight:
+            # FIXME: need to return some fake data here (not just {}) to actually get a PDF that
+            # has more in it than an error message
+            mock_get_insight.return_value = (True, {})
+            response = self.forced_auth_req(
+                'get',
+                reverse('partners_api:pca_pdf', args=[self.agreement.pk]),
+                user=self.unicef_staff
+            )
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response['Content-Type'], 'application/pdf')
+        # FIXME: find a way to verify the pdf has the right content,
+        # or at least not an error message
 
     @skip('figure out why this is failing with a random vendor number')
     def test_agreement_generate_pdf_lang(self):
         params = {
             "lang": "spanish",
         }
-        response = self.forced_auth_req(
-            'get',
-            reverse('partners_api:pca_pdf', args=[self.agreement.pk]),
-            user=self.unicef_staff,
-            data=params
-        )
+        with mock.patch('partners.views.v1.get_data_from_insight') as mock_get_insight:
+            # FIXME: need to return some fake data here (not just {}) to actually get a PDF that
+            # has more in it than an error message
+            mock_get_insight.return_value = (True, {})
+            response = self.forced_auth_req(
+                'get',
+                reverse('partners_api:pca_pdf', args=[self.agreement.pk]),
+                user=self.unicef_staff,
+                data=params
+            )
         self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response['Content-Type'], 'application/pdf')
+        # FIXME: find a way to verify the pdf has the right content
+        # or at least not an error message
 
     def test_agreement_add_amendment_type(self):
         amd_types = self.amendment1.types

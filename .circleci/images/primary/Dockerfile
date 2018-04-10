@@ -1,4 +1,6 @@
-FROM python:2.7
+FROM python:3.6.4-jessie
+# python:3.6.4-jessie has python 2.7 and 3.6 installed, and packages
+# available to install 3.4
 
 # Install dependencies
 RUN apt-get update
@@ -8,17 +10,12 @@ RUN apt-get install -y --no-install-recommends \
     libjpeg-dev \
     vim \
     ntp \
-    libpq-dev
-RUN apt-get install -y --no-install-recommends \
     git-core
 RUN apt-get install -y --no-install-recommends \
-    python-dev \
-    python-software-properties \
-    python-setuptools
-RUN apt-get install -y --no-install-recommends \
+    python-pip \
     postgresql-client \
     libpq-dev \
-    python-psycopg2
+    python3-dev
 RUN apt-get install -y --no-install-recommends \
     python-gdal \
     gdal-bin \
@@ -29,12 +26,13 @@ RUN apt-get install -y --no-install-recommends \
     libxslt-dev \
     xmlsec1
 
-RUN pip install --upgrade \
-    setuptools \
-    pip \
-    wheel
+RUN pip install virtualenv
 
 # http://gis.stackexchange.com/a/74060
 ENV CPLUS_INCLUDE_PATH /usr/include/gdal
 ENV C_INCLUDE_PATH /usr/include/gdal
 ENV REQUIREMENTS_FILE production.txt
+
+ADD ./EquiTrack/requirements/*.txt /pip/
+ADD ./EquiTrack/requirements/$REQUIREMENTS_FILE /pip/app_requirements.txt
+RUN pip install -f /pip -r /pip/app_requirements.txt

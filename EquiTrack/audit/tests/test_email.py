@@ -13,8 +13,6 @@ class TestEmail(BaseTenantTestCase):
     @classmethod
     def setUpTestData(cls):
         call_command('update_notifications')
-        # tests check that emails has any content, so we need to load also emails fixture
-        call_command('load_emails', 'emails')
 
         super(TestEmail, cls).setUpTestData()
 
