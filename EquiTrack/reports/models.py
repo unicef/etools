@@ -763,10 +763,21 @@ class ReportingRequirement(TimeStampedModel):
         verbose_name=_("Indicator"),
         related_name="reporting_requirements"
     )
-    start_date = models.DateField(verbose_name=_('Start Date'))
-    end_date = models.DateField(verbose_name=_('End Date'))
+    start_date = models.DateField(
+        null=True,
+        verbose_name=_('Start Date')
+    )
+    end_date = models.DateField(
+        null=True,
+        verbose_name=_('End Date')
+    )
     due_date = models.DateField(verbose_name=_('Due Date'))
     report_type = models.CharField(max_length=50, choices=TYPE_CHOICES)
+    description = models.CharField(
+        blank=True,
+        max_length=256,
+        verbose_name=_("Description")
+    )
 
     class Meta:
         ordering = ("-end_date", )

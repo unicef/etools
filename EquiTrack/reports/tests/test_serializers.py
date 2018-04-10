@@ -539,3 +539,50 @@ class TestIndicatorReportingRequirementSerializer(BaseTenantTestCase):
         }
         serializer = IndicatorReportingRequirementSerializer(data=data)
         self.assertTrue(serializer.is_valid())
+
+    def test_validation_special_missing_fields(self):
+        data = {
+            "id": self.indicator.pk,
+            "report_type": ReportingRequirement.TYPE_SPECIAL,
+            "reporting_requirements": [{
+                "due_date": datetime.date(2001, 4, 15),
+            }]
+        }
+        serializer = IndicatorReportingRequirementSerializer(data=data)
+        self.assertFalse(serializer.is_valid())
+        self.assertEqual(
+            serializer.errors['reporting_requirements'],
+            [{"description": ['This field is required.']}]
+        )
+
+    def test_validation_special_description_long(self):
+        data = {
+            "id": self.indicator.pk,
+            "report_type": ReportingRequirement.TYPE_SPECIAL,
+            "reporting_requirements": [{
+                "due_date": datetime.date(2001, 4, 15),
+                "description": "long"*256
+            }]
+        }
+        serializer = IndicatorReportingRequirementSerializer(data=data)
+        self.assertFalse(serializer.is_valid())
+        self.assertEqual(
+            serializer.errors['reporting_requirements'],
+            [{
+                "description": [
+                    "Ensure this field has no more than 256 characters."
+                ]
+            }]
+        )
+
+    def test_validation_special(self):
+        data = {
+            "id": self.indicator.pk,
+            "report_type": ReportingRequirement.TYPE_SPECIAL,
+            "reporting_requirements": [{
+                "due_date": datetime.date(2001, 4, 15),
+                "description": "some description goes here"
+            }]
+        }
+        serializer = IndicatorReportingRequirementSerializer(data=data)
+        self.assertTrue(serializer.is_valid())

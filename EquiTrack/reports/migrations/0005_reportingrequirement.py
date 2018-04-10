@@ -21,10 +21,11 @@ class Migration(migrations.Migration):
                 ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
                 ('created', model_utils.fields.AutoCreatedField(default=django.utils.timezone.now, editable=False, verbose_name='created')),
                 ('modified', model_utils.fields.AutoLastModifiedField(default=django.utils.timezone.now, editable=False, verbose_name='modified')),
-                ('start_date', models.DateField(verbose_name='Start Date')),
-                ('end_date', models.DateField(verbose_name='End Date')),
+                ('start_date', models.DateField(null=True, verbose_name='Start Date')),
+                ('end_date', models.DateField(null=True, verbose_name='End Date')),
                 ('due_date', models.DateField(verbose_name='Due Date')),
                 ('report_type', models.CharField(choices=[('QPR', 'Standard Quarterly Progress Report'), ('HR', 'Humanitarian Report'), ('SPECIAL', 'Special/Ad hoc Report')], max_length=50)),
+                ('description', models.CharField(blank=True, max_length=256, verbose_name='Description')),
                 ('applied_indicator', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='reporting_requirements', to='reports.AppliedIndicator', verbose_name='Indicator')),
             ],
             options={
