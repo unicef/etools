@@ -3,10 +3,11 @@ from __future__ import unicode_literals
 import csv
 import json
 from datetime import datetime, timedelta
-from StringIO import StringIO
+from django.utils.six import StringIO
 
 from django.core import mail
 from django.core.urlresolvers import reverse
+from django.utils import six
 from freezegun import freeze_time
 from pytz import UTC
 
@@ -173,7 +174,7 @@ class ActionPoints(URLAssertionMixin, BaseTenantTestCase):
                                    'person_responsible': self.unicef_staff.id,
                                    'status': 'open',
                                    'completed_at': None,
-                                   'actions_taken': None,
+                                   'actions_taken': '',
                                    'follow_up': True,
                                    'comments': '',
                                    'trip_id': self.travel.id}]}
@@ -190,7 +191,7 @@ class ActionPoints(URLAssertionMixin, BaseTenantTestCase):
                                    'person_responsible': self.unicef_staff.id,
                                    'status': 'completed',
                                    'completed_at': None,
-                                   'actions_taken': None,
+                                   'actions_taken': '',
                                    'follow_up': True,
                                    'comments': '',
                                    'trip_id': self.travel.id}]}
@@ -210,7 +211,7 @@ class ActionPoints(URLAssertionMixin, BaseTenantTestCase):
                                    'person_responsible': self.unicef_staff.id,
                                    'status': 'ongoing',
                                    'completed_at': datetime.now().isoformat(),
-                                   'actions_taken': None,
+                                   'actions_taken': '',
                                    'follow_up': True,
                                    'comments': '',
                                    'trip_id': self.travel.id}]}
@@ -268,7 +269,7 @@ class ActionPoints(URLAssertionMixin, BaseTenantTestCase):
                                    'person_responsible': self.unicef_staff.id,
                                    'status': 'invalid',
                                    'completed_at': None,
-                                   'actions_taken': None,
+                                   'actions_taken': '',
                                    'follow_up': True,
                                    'comments': '',
                                    'trip_id': self.travel.id}]}
@@ -279,12 +280,12 @@ class ActionPoints(URLAssertionMixin, BaseTenantTestCase):
 
         response_json = json.loads(response.rendered_content)['action_points']
         self.assertEqual(response_json,
-                         [{'status': ['Invalid status. Possible choices: cancelled, ongoing, completed, open']}])
+                         [{'status': ['Invalid status. Possible choices: cancelled, completed, ongoing, open']}])
 
     def test_export(self):
         response = self.forced_auth_req('get', reverse('t2f:action_points:export'),
                                         data={'format': 'csv'}, user=self.unicef_staff)
-        export_csv = csv.reader(StringIO(response.content))
+        export_csv = csv.reader(StringIO(response.content.decode('utf-8')))
         rows = [r for r in export_csv]
         self.assertEqual(len(rows), 2)
 
@@ -302,9 +303,9 @@ class ActionPoints(URLAssertionMixin, BaseTenantTestCase):
                           'Assigned By',
                           'URL'])
 
-        self.assertTrue(isinstance(rows[1][4], (str, unicode)))
+        self.assertTrue(isinstance(rows[1][4], six.string_types))
         self.assertFalse(rows[1][4].isdigit())
-        self.assertTrue(isinstance(rows[1][9], (str, unicode)))
+        self.assertTrue(isinstance(rows[1][9], six.string_types))
         self.assertFalse(rows[1][9].isdigit())
 
     def test_mail_on_first_save(self):

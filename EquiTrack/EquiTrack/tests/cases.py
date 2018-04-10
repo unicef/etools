@@ -2,6 +2,7 @@ from django.core.exceptions import ObjectDoesNotExist
 from django.core.management import call_command
 from django.core.urlresolvers import resolve
 from django.db import connection
+from post_office.models import EmailTemplate
 from rest_framework.test import APIClient, APIRequestFactory, force_authenticate
 from tenant_schemas.test.cases import TenantTestCase
 from tenant_schemas.utils import get_tenant_model
@@ -55,10 +56,13 @@ class BaseTenantTestCase(TenantTestCase):
         # It also drops the check whether the database supports transactions.
         cls.sync_shared()
 
+        EmailTemplate.objects.get_or_create(name='audit/staff_member/invite')
+        EmailTemplate.objects.get_or_create(name='audit/engagement/submit_to_auditor')
+
         TenantModel = get_tenant_model()
         try:
             cls.tenant = TenantModel.objects.get(domain_url=TENANT_DOMAIN, schema_name=SCHEMA_NAME)
-        except Exception:
+        except TenantModel.DoesNotExist:
             cls.tenant = TenantModel(domain_url=TENANT_DOMAIN, schema_name=SCHEMA_NAME)
             cls.tenant.save(verbosity=0)
 

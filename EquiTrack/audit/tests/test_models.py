@@ -2,12 +2,13 @@ from __future__ import absolute_import, division, print_function, unicode_litera
 
 import datetime
 import sys
-from unittest import skipIf, TestCase
+from unittest import skipIf
 
 from django.core import mail
 from django.core.exceptions import ValidationError
 from django.core.management import call_command
 from django.db import connection
+from django.test import SimpleTestCase
 from django.utils import six
 
 from audit.models import (
@@ -77,7 +78,7 @@ class EngagementStaffMemberTestCase(BaseTenantTestCase):
 
 
 @skipIf(sys.version_info.major == 3, "This test can be deleted under Python 3")
-class TestStrUnicode(TestCase):
+class TestStrUnicode(SimpleTestCase):
     """
     Ensure calling six.binary_type() on model instances returns UTF8-encoded text
     and six.text_type() returns unicode.

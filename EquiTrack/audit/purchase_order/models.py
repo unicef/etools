@@ -5,7 +5,7 @@ from model_utils.models import TimeStampedModel
 
 from EquiTrack.utils import get_environment
 from firms.models import BaseFirm, BaseStaffMember
-from notification.models import Notification
+from notification.utils import send_notification_using_email_template
 
 
 class AuditorFirm(BaseFirm):
@@ -27,12 +27,12 @@ class AuditorStaffMember(BaseStaffMember):
             'staff_member': self.user.get_full_name(),
         }
 
-        notification = Notification.objects.create(
+        send_notification_using_email_template(
             sender=self,
-            recipients=[self.user.email], template_name='audit/engagement/submit_to_auditor',
-            template_data=context
+            recipients=[self.user.email],
+            email_template_name='audit/engagement/submit_to_auditor',
+            context=context,
         )
-        notification.send_notification()
 
 
 class PurchaseOrderManager(models.Manager):

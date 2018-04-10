@@ -108,7 +108,7 @@ class TestUserMapper(BaseTenantTestCase):
         self.assertEqual(self.mapper.sections, {})
         res = self.mapper._get_section(name, code)
         self.assertIsInstance(res, Section)
-        self.assertEqual(self.mapper.sections.keys(), [name])
+        self.assertEqual(list(self.mapper.sections.keys()), [name])
         with schema_context(SCHEMA_NAME):
             self.assertTrue(
                 Section.objects.filter(name=name, code=code).exists()
@@ -193,7 +193,7 @@ class TestUserMapper(BaseTenantTestCase):
     def test_set_attribute_section_code(self):
         """If section_code attribute, then set to last 4 chars of value"""
         profile = ProfileFactory()
-        self.assertIsNone(profile.section_code)
+        self.assertIsNotNone(profile.section_code)
         res = self.mapper._set_attribute(profile, "section_code", "12345678")
         self.assertTrue(res)
         self.assertEqual(profile.section_code, "5678")

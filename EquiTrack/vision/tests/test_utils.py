@@ -1,12 +1,13 @@
 from __future__ import absolute_import, division, print_function, unicode_literals
 
 import datetime
-from unittest import TestCase
+
+from django.test import SimpleTestCase
 
 from vision import utils
 
 
-class TestWCFJSONDateAsDatetime(TestCase):
+class TestWCFJSONDateAsDatetime(SimpleTestCase):
     def test_none(self):
         self.assertIsNone(utils.wcf_json_date_as_datetime(None))
 
@@ -32,7 +33,7 @@ class TestWCFJSONDateAsDatetime(TestCase):
         )
 
 
-class TestWCFJSONDateAsDate(TestCase):
+class TestWCFJSONDateAsDate(SimpleTestCase):
     def test_none(self):
         self.assertIsNone(utils.wcf_json_date_as_date(None))
 
@@ -58,7 +59,7 @@ class TestWCFJSONDateAsDate(TestCase):
         )
 
 
-class TestCompDecimals(TestCase):
+class TestCompDecimals(SimpleTestCase):
     def test_not_equal(self):
         self.assertFalse(utils.comp_decimals(0.2, 0.3))
 

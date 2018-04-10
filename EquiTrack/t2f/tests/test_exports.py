@@ -2,11 +2,11 @@ from __future__ import unicode_literals
 
 import csv
 import logging
-from cStringIO import StringIO
 from datetime import datetime
 from decimal import Decimal
 
 from django.core.urlresolvers import reverse
+from django.utils.six import StringIO
 from pytz import UTC
 
 from EquiTrack.tests.cases import BaseTenantTestCase
@@ -102,7 +102,9 @@ class TravelExports(BaseTenantTestCase):
                                  start_date=datetime.strptime('08-Nov-2017', '%d-%b-%Y'),
                                  end_date=datetime.strptime('14-Nov-2017', '%d-%b-%Y')
                                  )
+        supervisor = UserFactory()
         travel_2 = TravelFactory(reference_number='2016/1211',
+                                 supervisor=supervisor,
                                  traveler=user_alice_carter,
                                  office=office,
                                  sector=section_education,

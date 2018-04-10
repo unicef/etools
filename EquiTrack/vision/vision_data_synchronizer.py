@@ -88,7 +88,7 @@ class VisionDataSynchronizer(object):
                     return False
             return True
 
-        return filter(is_valid_record, records)
+        return [rec for rec in records if is_valid_record(rec)]
 
     def sync(self):
         """
@@ -123,11 +123,12 @@ class VisionDataSynchronizer(object):
         except Exception as e:
             logger.info('sync', exc_info=True)
             log.exception_message = force_text(e)
-            six.reraise(VisionException, force_text(e), sys.exc_info()[2])
+            traceback = sys.exc_info()[2]
+            six.reraise(VisionException, VisionException(force_text(e)), traceback)
         else:
             if isinstance(totals, dict):
                 log.total_processed = totals.get('processed', 0)
-                log.details = totals.get('details', None)
+                log.details = totals.get('details', '')
                 log.total_records = totals.get('total_records', log.total_records)
             else:
                 log.total_processed = totals

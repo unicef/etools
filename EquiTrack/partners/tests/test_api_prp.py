@@ -7,6 +7,7 @@ from django.core.urlresolvers import reverse, resolve
 from rest_framework import status
 from rest_framework.test import APIRequestFactory
 
+from partners.models import PartnerOrganization
 from EquiTrack.tests.cases import BaseTenantTestCase
 from EquiTrack.tests.mixins import WorkspaceRequiredAPITestMixIn
 from locations.tests.factories import GatewayTypeFactory, LocationFactory
@@ -55,6 +56,8 @@ class TestInterventionsAPI(WorkspaceRequiredAPITestMixIn, BaseTenantTestCase):
                 del expected_intervention[dynamic_key]
                 del actual_intervention[dynamic_key]
 
+            partner_org = PartnerOrganization.objects.get(id=actual_intervention['partner_org']['id'])
+            expected_intervention['partner_org']['unicef_vendor_number'] = partner_org.vendor_number
             del actual_intervention['partner_org']['id']
             del actual_intervention['agreement']
             del expected_intervention['partner_org']['id']
