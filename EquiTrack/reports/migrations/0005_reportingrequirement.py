@@ -11,6 +11,7 @@ import model_utils.fields
 class Migration(migrations.Migration):
 
     dependencies = [
+        ('partners', '0005_make_not_nullable'),
         ('reports', '0004_auto_20180403_1309'),
     ]
 
@@ -26,7 +27,7 @@ class Migration(migrations.Migration):
                 ('due_date', models.DateField(verbose_name='Due Date')),
                 ('report_type', models.CharField(choices=[('QPR', 'Standard Quarterly Progress Report'), ('HR', 'Humanitarian Report'), ('SPECIAL', 'Special/Ad hoc Report')], max_length=50)),
                 ('description', models.CharField(blank=True, max_length=256, verbose_name='Description')),
-                ('applied_indicator', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='reporting_requirements', to='reports.AppliedIndicator', verbose_name='Indicator')),
+                ('intervention', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='reporting_requirements', to='partners.Intervention', verbose_name='Intervention')),
             ],
             options={
                 'ordering': ('-end_date',),

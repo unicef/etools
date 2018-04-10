@@ -757,10 +757,10 @@ class ReportingRequirement(TimeStampedModel):
         (TYPE_SPECIAL, _("Special/Ad hoc Report")),
     )
 
-    applied_indicator = models.ForeignKey(
-        AppliedIndicator,
+    intervention = models.ForeignKey(
+        "partners.Intervention",
         on_delete=models.CASCADE,
-        verbose_name=_("Indicator"),
+        verbose_name=_("Intervention"),
         related_name="reporting_requirements"
     )
     start_date = models.DateField(

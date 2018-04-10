@@ -126,7 +126,6 @@ class ReportingRequirementFactory(factory.django.DjangoModelFactory):
     class Meta:
         model = models.ReportingRequirement
 
-    applied_indicator = factory.SubFactory(AppliedIndicatorFactory)
     report_type = fuzzy.FuzzyChoice(models.ReportingRequirement.TYPE_CHOICES)
     end_date = fuzzy.FuzzyDate(datetime.date(2001, 1, 1))
     due_date = fuzzy.FuzzyDate(datetime.date(2001, 1, 1))
