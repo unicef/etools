@@ -7,10 +7,8 @@ from django.views.generic import TemplateView
 
 import djangosaml2.views
 import rest_framework_jwt.views
-from rest_framework.schemas import get_schema_view
 from rest_framework_nested import routers
 from rest_framework_swagger.renderers import OpenAPIRenderer
-from rest_framework_swagger.views import get_swagger_view
 
 from email_auth.urls import urlpatterns as email_auth_patterns
 from EquiTrack.views import IssueJWTRedirectView, MainView, OutdatedBrowserView
@@ -22,6 +20,7 @@ from publics.views import StaticDataView
 from reports.views.v1 import IndicatorViewSet, ResultTypeViewSet, ResultViewSet, SectorViewSet, UnitViewSet
 from t2f.urls import urlpatterns as t2f_patterns
 from users.views import GroupViewSet, ModuleRedirectView, OfficeViewSet, SectionViewSet, UserViewSet, CountriesViewSet
+from utils.common.schemas import get_schema_view, get_swagger_view
 
 # ******************  API docs and schemas  ******************************
 schema_view = get_swagger_view(title='eTools API')

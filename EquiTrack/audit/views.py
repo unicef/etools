@@ -67,7 +67,6 @@ class AuditorFirmViewSet(
     BaseAuditViewSet,
     mixins.ListModelMixin,
     mixins.RetrieveModelMixin,
-    PermittedFSMActionMixin,
     viewsets.GenericViewSet
 ):
     metadata_class = AuditPermissionBasedMetadata

@@ -162,7 +162,7 @@ class NestedViewSetMixin(object):
 
     def get_parent_object(self):
         parent = self.get_parent()
-        if not parent:
+        if not parent or not self.kwargs:
             return
         return parent.get_object()
 
