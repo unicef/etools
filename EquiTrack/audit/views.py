@@ -1,6 +1,6 @@
 from __future__ import absolute_import, division, print_function, unicode_literals
 
-from django.db.models import Prefetch, Q
+from django.db.models import Prefetch
 from django.http import Http404
 
 from django_filters.rest_framework import DjangoFilterBackend
