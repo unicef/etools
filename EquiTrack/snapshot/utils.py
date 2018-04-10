@@ -85,12 +85,18 @@ def create_snapshot(target, target_before, by_user):
     current_obj_dict = create_dict_with_relations(target)
     change = create_change_dict(target_before, current_obj_dict)
 
-    activity = Activity.objects.create(
-        target=target,
-        by_user=by_user,
-        action=action,
-        data=current_obj_dict,
-        change=change
-    )
+    activity_kwargs = {
+        'target': target,
+        'by_user': by_user,
+        'action': action,
+        'data': current_obj_dict,
+        'change': change
+    }
+
+    snapshot_additional_data = getattr(target, 'snapshot_additional_data', None)
+    if callable(snapshot_additional_data):
+        activity_kwargs['data'].update(snapshot_additional_data(change))
+
+    activity = Activity.objects.create(**activity_kwargs)
 
     return activity
