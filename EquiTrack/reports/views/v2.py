@@ -3,8 +3,13 @@ import operator
 
 from django.db.models import Q
 from rest_framework.exceptions import ValidationError
-from rest_framework.generics import ListAPIView, RetrieveAPIView, DestroyAPIView, ListCreateAPIView, \
-    RetrieveUpdateAPIView
+from rest_framework.generics import (
+    DestroyAPIView,
+    ListAPIView,
+    ListCreateAPIView,
+    RetrieveAPIView,
+    RetrieveUpdateAPIView,
+)
 from rest_framework.permissions import IsAdminUser
 from rest_framework.response import Response
 from rest_framework import status
@@ -20,6 +25,7 @@ from reports.models import (
     LowerResult,
     Result,
 )
+from reports.permissions import PMEPermission
 from reports.serializers.exports import (
     AppliedIndicatorExportFlatSerializer,
     AppliedIndicatorExportSerializer,
@@ -198,11 +204,13 @@ class LowerResultsDeleteView(DestroyAPIView):
 class DisaggregationListCreateView(ListCreateAPIView):
     serializer_class = DisaggregationSerializer
     queryset = Disaggregation.objects.all()
+    permission_classes = (PMEPermission, )
 
 
 class DisaggregationRetrieveUpdateView(RetrieveUpdateAPIView):
     serializer_class = DisaggregationSerializer
     queryset = Disaggregation.objects.all()
+    permission_classes = (PMEPermission, )
 
 
 class AppliedIndicatorListAPIView(ExportModelMixin, ListAPIView):
