@@ -11,7 +11,7 @@ import model_utils.fields
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('reports', '0002_auto_20180403_1309'),
+        ('reports', '0004_auto_20180403_1309'),
     ]
 
     operations = [
