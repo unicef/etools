@@ -757,10 +757,10 @@ class TestEngagementSpecialPDFExportViewSet(EngagementTransitionsTestCaseMixin, 
         self._test_pdf_view(None, status.HTTP_403_FORBIDDEN)
 
     def test_common_user(self):
-        self._test_pdf_view(self.usual_user, status.HTTP_404_NOT_FOUND)
+        self._test_pdf_view(self.usual_user, status.HTTP_403_FORBIDDEN)
 
     def test_unicef_user(self):
-        self._test_pdf_view(self.unicef_user, status.HTTP_404_NOT_FOUND)
+        self._test_pdf_view(self.unicef_user)
 
     def test_auditor(self):
         self._test_pdf_view(self.auditor)
