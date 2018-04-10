@@ -4,7 +4,6 @@ import datetime
 import random
 
 from django.conf import settings
-from django.core.management import call_command
 from django.utils import six
 from factory import fuzzy
 from rest_framework import status

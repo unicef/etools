@@ -89,7 +89,9 @@ class Command(BaseCommand):
         'audit.engagement.pending_unsupported_amount',
     ]
 
-    engagement_overview_editable_page = engagement_overview_editable_block + special_audit_block + partner_block + staff_members_block
+    engagement_overview_editable_page = engagement_overview_editable_block + special_audit_block
+    engagement_overview_editable_page += partner_block + staff_members_block
+
     engagement_overview_page = engagement_overview_editable_page + engagement_overview_read_block
     engagement_attachments_block = [
         'audit.engagement.engagement_attachments',
