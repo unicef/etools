@@ -89,7 +89,7 @@ class PermissionsBasedSerializerMixin(object):
 
         allowed_targets = Permission.apply_permissions(self.permissions, targets_map.keys(), permission)
 
-        allowed_fields = map(lambda target: targets_map[target], allowed_targets)
+        allowed_fields = list(map(lambda target: targets_map[target], allowed_targets))
 
         if allowed_fields:
             allowed_fields.extend(pk_fields)

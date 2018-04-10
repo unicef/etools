@@ -1,6 +1,6 @@
 from __future__ import absolute_import, division, print_function, unicode_literals
 
-from django.db.models import Prefetch
+from django.db.models import Prefetch, Q
 from django.http import Http404
 
 from django_filters.rest_framework import DjangoFilterBackend
@@ -17,7 +17,7 @@ from audit.exports import AuditorFirmCSVRenderer, EngagementCSVRenderer
 from audit.filters import DisplayStatusFilter, UniqueIDOrderingFilter
 from audit.metadata import AuditBaseMetadata, AuditPermissionBasedMetadata
 from audit.models import (
-    Engagement, MicroAssessment, Audit, SpotCheck, Auditor, SpecialAudit)
+    Engagement, MicroAssessment, Audit, SpotCheck, Auditor, SpecialAudit, UNICEFAuditFocalPoint, UNICEFUser)
 from audit.purchase_order.models import AuditorFirm, AuditorStaffMember, PurchaseOrder
 from audit.serializers.auditor import (
     AuditorFirmExportSerializer, AuditorFirmLightSerializer, AuditorFirmSerializer, AuditorStaffMemberSerializer,
@@ -225,15 +225,19 @@ class EngagementViewSet(
     def get_queryset(self):
         queryset = super(EngagementViewSet, self).get_queryset()
 
+        user_groups = self.request.user.groups.all()
+
+        if UNICEFUser.as_group() in user_groups or UNICEFAuditFocalPoint.as_group() in user_groups:
+            # no need to filter queryset
+            pass
+        elif Auditor.as_group() in user_groups:
+            queryset = queryset.filter(staff_members__user=self.request.user)
+        else:
+            queryset = queryset.none()
+
         queryset = queryset.prefetch_related(
             'partner', Prefetch('agreement', PurchaseOrder.objects.prefetch_related('auditor_firm'))
         )
-
-        if Auditor.as_group() in self.request.user.groups.all():
-            queryset = queryset.filter(staff_members__user=self.request.user)
-
-        # todo: if simple unicef user
-        # queryset = queryset.exclude(engagement_type=Engagement.TYPES.sa)
 
         return queryset
 
