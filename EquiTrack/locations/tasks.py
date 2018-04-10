@@ -129,8 +129,6 @@ def update_sites_from_cartodb(carto_table_pk):
                 sites_not_added += 1
                 continue
 
-            site_name = site_name.encode('UTF-8')
-
             parent = None
             parent_code = None
             parent_instance = None
