@@ -57,14 +57,13 @@ class TravelActivityExport(QueryStringFilterMixin, ExportBaseView):
             ('travel_type', 'travel_type__in'),
             ('year', 'date__year'),
             ('month', 'date__month'),
-            )
+        )
 
         queries = []
         queries.extend(self.filter_params(filters))
         if queries:
             expression = functools.reduce(operator.and_, queries)
             queryset = queryset.filter(expression)
-
 
         return queryset.distinct()
 
