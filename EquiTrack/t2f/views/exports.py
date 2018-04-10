@@ -1,10 +1,14 @@
 from __future__ import unicode_literals
 
+import functools
+import operator
+
 from rest_framework import generics, status
 from rest_framework.permissions import IsAdminUser
 from rest_framework.response import Response
 from rest_framework_csv import renderers
 
+from EquiTrack.mixins import QueryStringFilterMixin
 from t2f.filters import travel_list
 from t2f.models import InvoiceItem, ItineraryItem, Travel, TravelActivity
 from t2f.serializers.export import (
@@ -28,7 +32,7 @@ class ExportBaseView(generics.GenericAPIView):
         return context
 
 
-class TravelActivityExport(ExportBaseView):
+class TravelActivityExport(QueryStringFilterMixin, ExportBaseView):
     serializer_class = TravelActivityExportSerializer
 
     class SimpleDTO(object):
@@ -36,11 +40,38 @@ class TravelActivityExport(ExportBaseView):
             self.travel = travel
             self.activity = activity
 
-    def get(self, request):
+    def get_queryset(self):
         queryset = TravelActivity.objects.prefetch_related('travels', 'travels__traveler', 'travels__office',
                                                            'travels__sector', 'locations')
         queryset = queryset.select_related('partner', 'partnership', 'result', 'primary_traveler')
         queryset = queryset.order_by('id')
+
+        filters = (
+            ('supervisor', 'travels__supervisor__pk__in'),
+            ('office', 'travels__office__pk__in'),
+            ('section', 'travels__sector__pk__in'),
+            ('status', 'travels__status__in'),
+            ('traveler', 'travels__traveler__pk__in'),
+            ('partner', 'partner__pk__in'),
+            ('result', 'result__pk__in'),
+            ('travel_type', 'travel_type__in'),
+            ('year', 'date__year'),
+            ('month', 'date__month'),
+            )
+
+        queries = []
+        queries.extend(self.filter_params(filters))
+        if queries:
+            expression = functools.reduce(operator.and_, queries)
+            queryset = queryset.filter(expression)
+
+
+        return queryset.distinct()
+
+    def get(self, request):
+
+        queryset = self.get_queryset()
+
         dto_list = []
         for activity in queryset:
             for travel in activity.travels.all():
