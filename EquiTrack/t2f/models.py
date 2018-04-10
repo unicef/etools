@@ -409,7 +409,7 @@ class Travel(models.Model):
             from partners.models import PartnerOrganization
             for act in self.activities.filter(primary_traveler=self.traveler,
                                               travel_type=TravelType.PROGRAMME_MONITORING):
-                PartnerOrganization.programmatic_visits(act.partner, update_one=True)
+                PartnerOrganization.programmatic_visits(act.partner, event_date=self.end_date, update_one=True)
 
             for act in self.activities.filter(primary_traveler=self.traveler,
                                               travel_type=TravelType.SPOT_CHECK):
