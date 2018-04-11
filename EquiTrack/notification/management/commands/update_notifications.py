@@ -1227,4 +1227,67 @@ class Command(BaseCommand):
             }
         )
 
+        # Action Points Module
+        EmailTemplate.objects.update_or_create(
+            name='action_points/action_point/assigned',
+            defaults={
+                'description': 'Action point assigned/reassigned',
+                'subject': '[eTools] ACTION POINT ASSIGNED to {{ action_point.person_responsible }}',
+
+                'content': """
+                Dear {{ recipient }},
+
+                {{ action_point.assigned_by }} has assigned you an action point related to:
+                Implementing Partner: {{ action_point.implementing_partner }}
+                Description: {{ action_point.description }}
+
+                Link: {{ action_point.object_url }}
+                """,
+
+                'html_content': """
+                {% extends "email-templates/base" %}
+
+                {% block content %}
+                Dear {{ recipient }},<br/><br/>
+
+                {{ action_point.assigned_by }} has assigned you an action point related to:<br/>
+                Implementing Partner: {{ action_point.implementing_partner }}<br/>
+                Description: {{ action_point.description }}<br/>
+                Link: <a href="{{ action_point.object_url }}">{{ action_point.reference_number }}</a>
+                {% endblock %}
+                """
+            }
+        )
+        EmailTemplate.objects.update_or_create(
+            name='action_points/action_point/completed',
+            defaults={
+                'description': 'Action point completed',
+                'subject': '[eTools] ACTION POINT CLOSURE to {{ action_point.person_responsible }}',
+
+                'content': """
+                Dear {{ recipient }},
+
+                {{ action_point.person_responsible }} has closed the following action point:
+                Reference Number: {{ action_point.reference_number }}
+                Description: {{ action_point.description }}
+                Due Date: {{ action_point.due_date }}
+                Link: {{ action_point.object_url }}
+                """,
+
+                'html_content': """
+                {% extends "email-templates/base" %}
+
+                {% block content %}
+                Dear {{ recipient }},<br/><br/>
+
+                {{ action_point.person_responsible }} has closed the following action point:<br/>
+                Reference Number: {{ action_point.reference_number }}<br/>
+                Description: {{ action_point.description }}<br/>
+                Due Date: {{ action_point.due_date }}<br/>
+                Link: <a href="{{ action_point.object_url }}">{{ action_point.reference_number }}</a>
+                {% endblock %}
+                """
+            }
+        )
+
         logger.info(u'Command finished')
