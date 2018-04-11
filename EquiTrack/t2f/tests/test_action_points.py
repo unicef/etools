@@ -174,7 +174,7 @@ class ActionPoints(URLAssertionMixin, BaseTenantTestCase):
                                    'person_responsible': self.unicef_staff.id,
                                    'status': 'open',
                                    'completed_at': None,
-                                   'actions_taken': None,
+                                   'actions_taken': '',
                                    'follow_up': True,
                                    'comments': '',
                                    'trip_id': self.travel.id}]}
@@ -191,7 +191,7 @@ class ActionPoints(URLAssertionMixin, BaseTenantTestCase):
                                    'person_responsible': self.unicef_staff.id,
                                    'status': 'completed',
                                    'completed_at': None,
-                                   'actions_taken': None,
+                                   'actions_taken': '',
                                    'follow_up': True,
                                    'comments': '',
                                    'trip_id': self.travel.id}]}
@@ -211,7 +211,7 @@ class ActionPoints(URLAssertionMixin, BaseTenantTestCase):
                                    'person_responsible': self.unicef_staff.id,
                                    'status': 'ongoing',
                                    'completed_at': datetime.now().isoformat(),
-                                   'actions_taken': None,
+                                   'actions_taken': '',
                                    'follow_up': True,
                                    'comments': '',
                                    'trip_id': self.travel.id}]}
@@ -269,7 +269,7 @@ class ActionPoints(URLAssertionMixin, BaseTenantTestCase):
                                    'person_responsible': self.unicef_staff.id,
                                    'status': 'invalid',
                                    'completed_at': None,
-                                   'actions_taken': None,
+                                   'actions_taken': '',
                                    'follow_up': True,
                                    'comments': '',
                                    'trip_id': self.travel.id}]}

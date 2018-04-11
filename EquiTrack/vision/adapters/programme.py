@@ -256,8 +256,6 @@ class ProgrammeSynchronizer(VisionDataSynchronizer):
         ("ACTIVITY_FOCUS_CODE", "activity_focus_code"),
         ("ACTIVITY_FOCUS_NAME", "activity_focus_name"),
         ("HUMANITARIAN_TAG", "humanitarian_tag"),
-        # ("PROGRAMME_AREA_CODE", "code"),
-        # ("PROGRAMME_AREA_NAME", ""),
     )
 
     def _get_json(self, data):

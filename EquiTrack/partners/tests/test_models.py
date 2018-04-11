@@ -5,10 +5,10 @@ import datetime
 from unittest import skip
 
 from django.core.files.uploadedfile import SimpleUploadedFile
+from django.core.urlresolvers import reverse
 from django.test import SimpleTestCase
 from django.utils import six, timezone
 from freezegun import freeze_time
-
 from mock import patch, Mock
 
 from audit.models import Engagement
@@ -455,11 +455,11 @@ class TestPartnerOrganizationModel(BaseTenantTestCase):
             4
         )
 
-    @freeze_time("2013-05-26")
     def test_programmatic_visits_update_one(self):
         self.assertEqual(self.partner_organization.hact_values['programmatic_visits']['completed']['total'], 0)
         models.PartnerOrganization.programmatic_visits(
             self.partner_organization,
+            event_date=datetime.datetime(2013, 5, 26),
             update_one=True
         )
         self.assertEqual(self.partner_organization.hact_values['programmatic_visits']['completed']['total'], 1)
@@ -474,7 +474,7 @@ class TestPartnerOrganizationModel(BaseTenantTestCase):
         travel = TravelFactory(
             traveler=traveller,
             status=Travel.COMPLETED,
-            completed_at=datetime.datetime(datetime.datetime.today().year, 9, 1)
+            end_date=datetime.datetime(datetime.datetime.today().year, 9, 1)
         )
         TravelActivityFactory(
             travels=[travel],
@@ -596,6 +596,12 @@ class TestPartnerOrganizationModel(BaseTenantTestCase):
         )
         models.PartnerOrganization.audits_completed(self.partner_organization)
         self.assertEqual(self.partner_organization.hact_values['audits']['completed'], 2)
+
+    def test_partner_organization_get_admin_url(self):
+        "Test that get_admin_url produces the URL we expect."
+        admin_url = self.partner_organization.get_admin_url()
+        expected = reverse('admin:partners_partnerorganization_change', args=[self.partner_organization.id])
+        self.assertEqual(admin_url, expected)
 
 
 class TestAgreementModel(BaseTenantTestCase):
@@ -798,11 +804,6 @@ class TestInterventionModel(BaseTenantTestCase):
         )
         self.assertEqual(intervention.fr_currency, "USD")
 
-    def test_duration(self):
-        self.intervention.start_date = datetime.date(datetime.date.today().year - 1, 1, 1)
-        self.intervention.end_date = datetime.date(datetime.date.today().year + 1, 1, 1)
-        # self.assertEqual(self.intervention.duration, 24)
-
     def test_total_no_intervention(self):
         self.assertEqual(int(self.intervention.total_unicef_cash), 0)
         self.assertEqual(int(self.intervention.total_partner_contribution), 0)
@@ -948,7 +949,7 @@ class TestInterventionModel(BaseTenantTestCase):
         )
         AppliedIndicatorFactory(
             lower_result=lower_result_2,
-            cluster_name=None,
+            cluster_name='',
         )
         AppliedIndicatorFactory(lower_result=lower_result_2)
         six.assertCountEqual(self, intervention.intervention_clusters, [

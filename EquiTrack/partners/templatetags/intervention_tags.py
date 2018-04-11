@@ -22,8 +22,6 @@ def show_dct(value):
     if not value:
         return ''
 
-    # intervention = Intervention.objects.get(id=int(value))
-    # fr_number = intervention.fr_number
     data = tablib.Dataset()
     dct_summary = []
 

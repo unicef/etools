@@ -298,7 +298,6 @@ class Migration(migrations.Migration):
             options={
                 'ordering': ['name'],
             },
-            bases=(EquiTrack.mixins.AdminURLMixin, models.Model),
         ),
         migrations.CreateModel(
             name='PartnerStaffMember',

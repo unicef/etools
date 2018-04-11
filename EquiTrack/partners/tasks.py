@@ -15,7 +15,7 @@ from celery.utils.log import get_task_logger
 from six import StringIO
 
 from EquiTrack.celery import app
-from notification.models import Notification
+from notification.utils import send_notification_using_email_template
 from partners.models import Agreement, Intervention, PartnerOrganization
 from partners.utils import copy_all_attachments
 from partners.validation.agreements import AgreementValid
@@ -175,13 +175,12 @@ def _notify_of_signed_interventions_with_no_frs(country_name):
 
     for intervention in signed_interventions:
         email_context = get_intervention_context(intervention)
-        notification = Notification.objects.create(
+        send_notification_using_email_template(
             sender=intervention,
             recipients=email_context['unicef_focal_points'],
-            template_name="partners/partnership/signed/frs",
-            template_data=email_context
+            email_template_name="partners/partnership/signed/frs",
+            context=email_context
         )
-        notification.send_notification()
 
 
 @app.task
@@ -206,13 +205,12 @@ def _notify_of_ended_interventions_with_mismatched_frs(country_name):
     for intervention in ended_interventions:
         if intervention.total_frs['total_actual_amt'] != intervention.total_frs['total_frs_amt']:
             email_context = get_intervention_context(intervention)
-            notification = Notification.objects.create(
+            send_notification_using_email_template(
                 sender=intervention,
                 recipients=email_context['unicef_focal_points'],
-                template_name="partners/partnership/ended/frs/outstanding",
-                template_data=email_context
+                email_template_name="partners/partnership/ended/frs/outstanding",
+                context=email_context
             )
-            notification.send_notification()
 
 
 @app.task
@@ -241,13 +239,12 @@ def _notify_interventions_ending_soon(country_name):
     for intervention in interventions:
         email_context = get_intervention_context(intervention)
         email_context["days"] = str((intervention.end - today).days)
-        notification = Notification.objects.create(
+        send_notification_using_email_template(
             sender=intervention,
             recipients=email_context['unicef_focal_points'],
-            template_name="partners/partnership/ending",
-            template_data=email_context
+            email_template_name="partners/partnership/ending",
+            context=email_context
         )
-        notification.send_notification()
 
 
 @app.task

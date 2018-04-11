@@ -3,8 +3,9 @@ from __future__ import absolute_import, division, print_function, unicode_litera
 from django.core import mail
 from django.test import TestCase
 
-from post_office import mail as post_office_mail
 from post_office.models import EmailTemplate
+
+from notification.utils import send_notification_using_email_template
 
 
 class EmailTemplateLoaderTestCase(TestCase):
@@ -31,10 +32,10 @@ class EmailTemplateLoaderTestCase(TestCase):
         mail.outbox = []
 
     def test_extends(self):
-        post_office_mail.send(
-            'test@test.com',
-            'no-reply@test.com',
-            template='template1',
+        send_notification_using_email_template(
+            recipients=['test@test.com'],
+            from_address='no-reply@test.com',
+            email_template_name='template1',
             context={},
         )
 
