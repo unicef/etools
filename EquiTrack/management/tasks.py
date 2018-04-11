@@ -1,4 +1,3 @@
-from __future__ import absolute_import
 
 from EquiTrack.celery import app
 from management.issues.checks import recheck_all_open_issues, run_all_checks

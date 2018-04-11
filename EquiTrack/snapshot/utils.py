@@ -1,4 +1,3 @@
-from __future__ import absolute_import, division, print_function, unicode_literals
 
 from django.db.models.query import QuerySet
 from django.forms import model_to_dict

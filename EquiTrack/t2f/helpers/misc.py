@@ -1,4 +1,3 @@
-from __future__ import unicode_literals
 
 from t2f.models import Travel
 

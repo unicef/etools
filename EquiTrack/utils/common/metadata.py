@@ -1,4 +1,3 @@
-from __future__ import absolute_import, division, print_function, unicode_literals
 
 from django.core.exceptions import PermissionDenied
 from django.http import Http404

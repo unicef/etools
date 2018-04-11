@@ -1,4 +1,3 @@
-from __future__ import unicode_literals
 
 from django.db.transaction import atomic
 from django.http.response import HttpResponse

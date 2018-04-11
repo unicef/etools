@@ -1,4 +1,3 @@
-from __future__ import absolute_import, division, print_function, unicode_literals
 
 from django.utils import six
 from django.utils.translation import ugettext as _
