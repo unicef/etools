@@ -5,6 +5,8 @@ import random
 
 from django.conf import settings
 from django.utils import six
+from django.utils.translation import ugettext_lazy as _
+
 from factory import fuzzy
 from rest_framework import status
 from mock import patch, Mock
@@ -26,7 +28,8 @@ from audit.tests.factories import (
     RiskCategoryFactory,
     SpotCheckFactory,
     SpecialAuditFactory,
-    EngagementActionPointFactory)
+    EngagementActionPointFactory,
+    UserFactory)
 from EquiTrack.tests.cases import BaseTenantTestCase
 from partners.models import PartnerType
 
@@ -668,7 +671,7 @@ class TestAuditorStaffMembersViewSet(AuditTestCaseMixin, BaseTenantTestCase):
         )
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
 
-    def test_create_view(self):
+    def test_unicef_create_view(self):
         response = self.forced_auth_req(
             'post',
             '/api/audit/audit-firms/{0}/staff-members/'.format(
@@ -686,6 +689,56 @@ class TestAuditorStaffMembersViewSet(AuditTestCaseMixin, BaseTenantTestCase):
         )
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
 
+    def test_assign_existing_user(self):
+        user = UserFactory(unicef_user=True)
+
+        response = self.forced_auth_req(
+            'post',
+            '/api/audit/audit-firms/{0}/staff-members/'.format(
+                self.auditor_firm.id,
+                self.auditor_firm.staff_members.first().id
+            ),
+            data={
+                "user_pk": user.pk
+            },
+            user=self.unicef_focal_point
+        )
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        self.assertEqual(response.data['user']['email'], user.email)
+
+    def test_assign_existing_auditor(self):
+        user = UserFactory(auditor=True)
+
+        response = self.forced_auth_req(
+            'post',
+            '/api/audit/audit-firms/{0}/staff-members/'.format(
+                self.auditor_firm.id,
+                self.auditor_firm.staff_members.first().id
+            ),
+            data={
+                "user_pk": user.pk
+            },
+            user=self.unicef_focal_point
+        )
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn('user', response.data)
+        self.assertEqual(response.data['user'][0], 'User is already assigned to auditor firm.')
+
+    def test_assign_none_provided(self):
+        response = self.forced_auth_req(
+            'post',
+            '/api/audit/audit-firms/{0}/staff-members/'.format(
+                self.auditor_firm.id,
+                self.auditor_firm.staff_members.first().id
+            ),
+            data={},
+            user=self.unicef_focal_point
+        )
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn('user', response.data)
+        self.assertEqual(response.data['user'][0], 'This field is required.')
+
+    def test_usual_user_create_view(self):
         response = self.forced_auth_req(
             'post',
             '/api/audit/audit-firms/{0}/staff-members/'.format(
@@ -703,7 +756,7 @@ class TestAuditorStaffMembersViewSet(AuditTestCaseMixin, BaseTenantTestCase):
         )
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
 
-    def test_update_view(self):
+    def test_unicef_update_view(self):
         response = self.forced_auth_req(
             'patch',
             '/api/audit/audit-firms/{0}/staff-members/{1}/'.format(
@@ -720,6 +773,7 @@ class TestAuditorStaffMembersViewSet(AuditTestCaseMixin, BaseTenantTestCase):
         )
         self.assertEqual(response.status_code, status.HTTP_200_OK)
 
+    def test_usual_user_update_view(self):
         response = self.forced_auth_req(
             'patch',
             '/api/audit/audit-firms/{0}/staff-members/{1}/'.format(

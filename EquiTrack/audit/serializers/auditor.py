@@ -1,5 +1,6 @@
 from __future__ import absolute_import, division, print_function, unicode_literals
 
+from django.contrib.auth import get_user_model
 from django.utils.translation import ugettext_lazy as _
 
 from rest_framework import serializers
@@ -26,10 +27,31 @@ class UserSerializer(BaseUserSerializer):
 
 
 class AuditorStaffMemberSerializer(BaseStaffMemberSerializer):
-    user = UserSerializer()
+    user = UserSerializer(required=False)
+    user_pk = serializers.PrimaryKeyRelatedField(
+        write_only=True, required=False,
+        queryset=get_user_model().objects.all()
+    )
+
+    def validate(self, attrs):
+        validated_data = super(AuditorStaffMemberSerializer, self).validate(attrs)
+        user_pk = validated_data.pop('user_pk', None)
+
+        if not self.instance:
+            if user_pk:
+                if hasattr(user_pk, 'purchase_order_auditorstaffmember'):
+                    raise serializers.ValidationError({'user': _('User is already assigned to auditor firm.')})
+
+                validated_data['user'] = user_pk
+
+            if 'user' not in validated_data and not user_pk:
+                raise serializers.ValidationError({'user': _('This field is required.')})
+
+        return validated_data
 
     class Meta(BaseStaffMemberSerializer.Meta):
         model = AuditorStaffMember
+        fields = BaseStaffMemberSerializer.Meta.fields + ['user_pk', ]
 
 
 class AuditorFirmLightSerializer(PermissionsBasedSerializerMixin, serializers.ModelSerializer):
