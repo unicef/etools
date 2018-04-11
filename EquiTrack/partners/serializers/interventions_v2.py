@@ -556,7 +556,18 @@ class InterventionListMapSerializer(serializers.ModelSerializer):
         )
 
 
-class InterventionReportingRequirementSerializer(serializers.ModelSerializer):
+class InterventionReportingRequirementListSerializer(serializers.ModelSerializer):
+    reporting_requirements = ReportingRequirementSerializer(
+        many=True,
+        read_only=True
+    )
+
+    class Meta:
+        model = Intervention
+        fields = ("reporting_requirements", )
+
+
+class InterventionReportingRequirementCreateSerializer(serializers.ModelSerializer):
     report_type = serializers.ChoiceField(
         choices=ReportingRequirement.TYPE_CHOICES
     )
@@ -656,13 +667,7 @@ class InterventionReportingRequirementSerializer(serializers.ModelSerializer):
         Subsequent reporting requirements start date needs to be after the
         previous reporting requirement end date.
         """
-        pk = self.initial_data.get("id")
-        try:
-            self.intervention = self.Meta.model.objects.get(pk=pk)
-        except self.Meta.model.DoesNotExist:
-            raise serializers.ValidationError({
-                "id": _("Invalid PD id.")
-            })
+        self.intervention = self.context["intervention"]
 
         # Only able to change reporting requirements when PD
         # is in amendment status
