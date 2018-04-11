@@ -106,3 +106,15 @@ class PurchaseOrderSerializer(
             'id', 'order_number', 'auditor_firm', 'items',
             'contract_start_date', 'contract_end_date'
         ]
+
+
+class AuditUserSerializer(UserSerializer):
+    auditor_firm = serializers.SerializerMethodField()
+
+    class Meta(UserSerializer.Meta):
+        fields = UserSerializer.Meta.fields + ['id', 'auditor_firm', ]
+
+    def get_auditor_firm(self, obj):
+        if hasattr(obj, 'purchase_order_auditorstaffmember'):
+            return obj.purchase_order_auditorstaffmember.auditor_firm.id
+        return

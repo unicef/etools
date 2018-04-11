@@ -1,5 +1,6 @@
 from __future__ import absolute_import, division, print_function, unicode_literals
 
+from django.contrib.auth import get_user_model
 from django.db.models import Prefetch
 from django.http import Http404
 
@@ -21,7 +22,7 @@ from audit.models import (
 from audit.purchase_order.models import AuditorFirm, AuditorStaffMember, PurchaseOrder
 from audit.serializers.auditor import (
     AuditorFirmExportSerializer, AuditorFirmLightSerializer, AuditorFirmSerializer, AuditorStaffMemberSerializer,
-    PurchaseOrderSerializer,)
+    PurchaseOrderSerializer, AuditUserSerializer)
 from audit.serializers.engagement import (
     AuditSerializer, EngagementExportSerializer, EngagementLightSerializer, EngagementSerializer,
     EngagementHactSerializer, MicroAssessmentSerializer, SpecialAuditSerializer, SpotCheckSerializer,)
@@ -61,6 +62,18 @@ class BaseAuditViewSet(
             )
 
         return context
+
+
+class AuditUsersViewSet(generics.ListAPIView):
+    """
+    Endpoint which will be used for searching users by email only.
+    """
+
+    permission_classes = (IsAuthenticated, )
+    filter_backends = (SearchFilter,)
+    search_fields = ('email',)
+    queryset = get_user_model().objects.all()
+    serializer_class = AuditUserSerializer
 
 
 class AuditorFirmViewSet(
@@ -105,6 +118,10 @@ class AuditorFirmViewSet(
         return [
             AuditStaffMemberCondition(obj, self.request.user),
         ]
+
+    @list_route(methods=['get'], url_path='users')
+    def users(self, request, *args, **kwargs):
+        return AuditUsersViewSet.as_view()(request, *args, **kwargs)
 
 
 class PurchaseOrderViewSet(

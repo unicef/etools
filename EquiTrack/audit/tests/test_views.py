@@ -5,7 +5,6 @@ import random
 
 from django.conf import settings
 from django.utils import six
-from django.utils.translation import ugettext_lazy as _
 
 from factory import fuzzy
 from rest_framework import status
@@ -632,6 +631,34 @@ class TestAuditorFirmViewSet(AuditTestCaseMixin, BaseTenantTestCase):
 
     def test_usual_user_list_view(self):
         self._test_list_view(self.usual_user, expected_status=status.HTTP_403_FORBIDDEN)
+
+    def test_auditor_search_view(self):
+        UserFactory()
+        auditor = UserFactory(auditor=True, email='test@test.com')
+
+        response = self.forced_auth_req(
+            'get',
+            '/api/audit/audit-firms/users/',
+            user=self.unicef_user,
+            data={'search': auditor.email}
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(response.data), 1)
+        self.assertEqual(response.data[0]['auditor_firm'], auditor.purchase_order_auditorstaffmember.auditor_firm.id)
+
+    def test_user_search_view(self):
+        UserFactory()
+        user = UserFactory(email='test@test.com')
+
+        response = self.forced_auth_req(
+            'get',
+            '/api/audit/audit-firms/users/',
+            user=self.unicef_user,
+            data={'search': user.email}
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(response.data), 1)
+        self.assertIsNone(response.data[0]['auditor_firm'])
 
 
 class TestAuditorStaffMembersViewSet(AuditTestCaseMixin, BaseTenantTestCase):
