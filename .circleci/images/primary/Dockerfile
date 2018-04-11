@@ -32,7 +32,3 @@ RUN pip install virtualenv
 ENV CPLUS_INCLUDE_PATH /usr/include/gdal
 ENV C_INCLUDE_PATH /usr/include/gdal
 ENV REQUIREMENTS_FILE production.txt
-
-ADD ./EquiTrack/requirements/*.txt /pip/
-ADD ./EquiTrack/requirements/$REQUIREMENTS_FILE /pip/app_requirements.txt
-RUN pip install -f /pip -r /pip/app_requirements.txt
