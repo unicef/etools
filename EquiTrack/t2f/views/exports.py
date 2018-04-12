@@ -47,16 +47,16 @@ class TravelActivityExport(QueryStringFilterMixin, ExportBaseView):
         queryset = queryset.order_by('id')
 
         filters = (
-            ('supervisor', 'travels__supervisor__pk__in'),
-            ('office', 'travels__office__pk__in'),
-            ('section', 'travels__sector__pk__in'),
-            ('status', 'travels__status__in'),
-            ('traveler', 'travels__traveler__pk__in'),
-            ('partner', 'partner__pk__in'),
-            ('result', 'result__pk__in'),
-            ('travel_type', 'travel_type__in'),
-            ('year', 'date__year'),
-            ('month', 'date__month'),
+            ('f_supervisor', 'travels__supervisor__pk__in'),
+            ('f_office', 'travels__office__pk__in'),
+            ('f_section', 'travels__sector__pk__in'),
+            ('f_status', 'travels__status__in'),
+            ('f_traveler', 'travels__traveler__pk__in'),
+            ('f_partner', 'partner__pk__in'),
+            ('f_result', 'result__pk__in'),
+            ('f_travel_type', 'travel_type__in'),
+            ('f_year', 'date__year'),
+            ('f_month', 'date__month'),
         )
 
         queries = []
