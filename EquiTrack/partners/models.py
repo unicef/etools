@@ -517,8 +517,9 @@ class PartnerOrganization(TimeStampedModel):
 
     @cached_property
     def approaching_threshold_flag(self):
+        total_ct_ytd = self.total_ct_ytd or 0
         return self.rating == PartnerOrganization.RATING_NON_ASSESSED and \
-               self.total_ct_ytd > PartnerOrganization.CT_CP_AUDIT_TRIGGER_LEVEL
+               total_ct_ytd > PartnerOrganization.CT_CP_AUDIT_TRIGGER_LEVEL
 
     @cached_property
     def flags(self):
