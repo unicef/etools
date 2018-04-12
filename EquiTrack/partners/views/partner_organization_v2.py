@@ -313,8 +313,8 @@ class PartnerOrganizationAddView(CreateAPIView):
             return Response({"error": 'Partner Organization already exists with this vendor number'},
                             status=status.HTTP_400_BAD_REQUEST)
         except PartnerOrganization.DoesNotExist:
-
-            partner_sync = PartnerSynchronizer(country=request.tenant)
+            country = request.user.profile.country
+            partner_sync = PartnerSynchronizer(country=country)
             partner_sync._partner_save(partner_resp, full_sync=False)
 
             return Response(status=status.HTTP_201_CREATED)
