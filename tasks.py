@@ -4,6 +4,7 @@ from invoke import task
 
 @task
 def update_requirements(ctx):
+    """Update requirements for all environments"""
     ctx.run(
         'pip-compile EquiTrack/requirements/input/base.in '
         '--no-header '
@@ -31,6 +32,7 @@ def update_requirements(ctx):
     )
 
 
-@task
+@task(help={"env": "Environment to install"})
 def install_requirements(ctx, env='production'):
+    """Install requirements for specified environment"""
     ctx.run('pip-sync EquiTrack/requirements/{}.txt'.format(env))
