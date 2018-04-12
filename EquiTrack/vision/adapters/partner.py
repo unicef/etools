@@ -167,12 +167,15 @@ class PartnerSynchronizer(VisionDataSynchronizer):
                 saving = True
 
             if full_sync and (
-                    partner_org.total_ct_cp is None or partner_org.total_ct_cy is None or partner_org.net_ct_cy is None \
-                    or partner_org.total_ct_ytd is None or partner_org.reported_cy is None or \
-                    not comp_decimals(partner_org.total_ct_cp, Decimal(partner['TOTAL_CASH_TRANSFERRED_CP'])) or \
-                    not comp_decimals(partner_org.total_ct_cy, Decimal(partner['TOTAL_CASH_TRANSFERRED_CY'])) or \
-                    not comp_decimals(partner_org.net_ct_cy, Decimal(partner['NET_CASH_TRANSFERRED_CY'])) or \
-                    not comp_decimals(partner_org.total_ct_ytd, Decimal(partner['TOTAL_CASH_TRANSFERRED_YTD'])) or \
+                    partner_org.total_ct_cp is None or
+                    partner_org.total_ct_cy is None or
+                    partner_org.net_ct_cy is None or
+                    partner_org.total_ct_ytd is None or
+                    partner_org.reported_cy is None or
+                    not comp_decimals(partner_org.total_ct_cp, Decimal(partner['TOTAL_CASH_TRANSFERRED_CP'])) or
+                    not comp_decimals(partner_org.total_ct_cy, Decimal(partner['TOTAL_CASH_TRANSFERRED_CY'])) or
+                    not comp_decimals(partner_org.net_ct_cy, Decimal(partner['NET_CASH_TRANSFERRED_CY'])) or
+                    not comp_decimals(partner_org.total_ct_ytd, Decimal(partner['TOTAL_CASH_TRANSFERRED_YTD'])) or
                     not comp_decimals(partner_org.reported_cy, Decimal(partner['REPORTED_CY']))):
 
                 partner_org.total_ct_cy = partner['TOTAL_CASH_TRANSFERRED_CY']
