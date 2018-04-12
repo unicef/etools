@@ -1,14 +1,7 @@
 import logging
 
-from allauth.account.adapter import DefaultAccountAdapter
-from allauth.account.utils import perform_login
-from allauth.exceptions import ImmediateHttpResponse
-from allauth.socialaccount.adapter import DefaultSocialAccountAdapter
 from django.conf import settings
 from django.contrib.auth import get_user_model
-from django.core.urlresolvers import reverse
-from django.http.response import HttpResponseRedirect
-from django.utils.http import urlsafe_base64_encode
 import jwt
 from rest_framework.authentication import BasicAuthentication, SessionAuthentication, TokenAuthentication
 from rest_framework.exceptions import AuthenticationFailed, PermissionDenied
@@ -84,45 +77,6 @@ class EToolsTenantJWTAuthentication(JSONWebTokenAuthentication):
 
         set_country(user, request)
         return user, jwt_value
-
-
-class CustomSocialAccountAdapter(DefaultSocialAccountAdapter):
-
-    def pre_social_login(self, request, sociallogin):
-        User = get_user_model()
-
-        # TODO: make sure that the partnership is still in good standing or valid or whatever
-        if sociallogin.user.pk:
-            set_country(sociallogin.user, request)
-            logger.info("setting connection to {}".format(sociallogin.user.profile.country))
-            return
-        try:
-            # if user exists, connect the account to the existing account and login
-            new_login_user = User.objects.get(email=sociallogin.user.email)
-        except User.DoesNotExist:
-            url = reverse('sociallogin_notamember', kwargs={'email': urlsafe_base64_encode(sociallogin.user.email)})
-            raise ImmediateHttpResponse(HttpResponseRedirect(url))
-
-        sociallogin.connect(request, new_login_user)
-        set_country(new_login_user, request)
-        perform_login(
-            request,
-            new_login_user,
-            'none',
-            redirect_url=sociallogin.get_redirect_url(request),
-            signal_kwargs={"sociallogin": sociallogin}
-        )
-
-
-class CustomAccountAdapter(DefaultAccountAdapter):
-
-    def is_open_for_signup(self, request):
-        # quick way of disabling signups.
-        return False
-
-    def login(self, request, user):
-        # if we need to add any other login validation, here would be the place.
-        return super(CustomAccountAdapter, self).login(request, user)
 
 
 class CsrfExemptSessionAuthentication(SessionAuthentication):
