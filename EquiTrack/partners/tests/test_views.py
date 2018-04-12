@@ -1,5 +1,6 @@
 from __future__ import absolute_import, division, print_function, unicode_literals
 
+import os
 import csv
 import datetime
 from decimal import Decimal
@@ -1054,6 +1055,10 @@ class TestAgreementAPIView(BaseTenantTestCase):
             agreement=cls.agreement,
             document_type=Intervention.PD)
 
+        vision_bank_fixture_path = os.path.join(os.path.dirname(__file__), 'data', 'sample-bank-details.json')
+        with open(vision_bank_fixture_path) as vision_bank_fixture_file:
+            cls.mock_insight_bank_response = json.load(vision_bank_fixture_file)
+
     def test_cp_end_date_update(self):
         data = {
             'agreement_type': Agreement.PCA,
@@ -1303,7 +1308,7 @@ class TestAgreementAPIView(BaseTenantTestCase):
         with mock.patch('partners.views.v1.get_data_from_insight') as mock_get_insight:
             # FIXME: need to return some fake data here (not just {}) to actually get a PDF that
             # has more in it than an error message
-            mock_get_insight.return_value = (True, {})
+            mock_get_insight.return_value = (True, self.mock_insight_bank_response)
             response = self.forced_auth_req(
                 'get',
                 reverse('partners_api:pca_pdf', args=[self.agreement.pk]),
@@ -1315,7 +1320,6 @@ class TestAgreementAPIView(BaseTenantTestCase):
         # FIXME: find a way to verify the pdf has the right content,
         # or at least not an error message
 
-    @skip('figure out why this is failing with a random vendor number')
     def test_agreement_generate_pdf_lang(self):
         params = {
             "lang": "spanish",
@@ -1323,7 +1327,7 @@ class TestAgreementAPIView(BaseTenantTestCase):
         with mock.patch('partners.views.v1.get_data_from_insight') as mock_get_insight:
             # FIXME: need to return some fake data here (not just {}) to actually get a PDF that
             # has more in it than an error message
-            mock_get_insight.return_value = (True, {})
+            mock_get_insight.return_value = (True, self.mock_insight_bank_response)
             response = self.forced_auth_req(
                 'get',
                 reverse('partners_api:pca_pdf', args=[self.agreement.pk]),
