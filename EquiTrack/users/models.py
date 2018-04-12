@@ -5,11 +5,10 @@ import sys
 from decimal import Decimal
 
 from django.conf import settings
-from django.contrib.auth import get_user_model
 from django.contrib.auth.models import Group, User
 from django.core.validators import MaxValueValidator, MinValueValidator
-from django.db import connection, models, transaction
-from django.db.models.signals import post_save, pre_delete
+from django.db import connection, models
+from django.db.models.signals import post_save
 from django.utils.encoding import python_2_unicode_compatible
 from django.utils.translation import ugettext_lazy as _
 
@@ -315,62 +314,3 @@ class UserProfile(models.Model):
 
 post_save.connect(UserProfile.create_user_profile, sender=User)
 pre_user_save.connect(UserProfile.custom_update_user)  # TODO: The sender should be set
-
-
-def create_partner_user(sender, instance, created, **kwargs):
-    """
-    Create a user based on the email address of a partner staff member
-
-    :param sender: PartnerStaffMember class
-    :param instance: PartnerStaffMember instance
-    :param created: if the instance is newly created or not
-    :param kwargs:
-    """
-    if created:
-
-        try:
-            user, user_created = get_user_model().objects.get_or_create(
-                # the built in username field is 30 chars, we can't set this to the email address which is likely longer
-                username=instance.email[:30],
-                email=instance.email
-            )
-            if not user_created:
-                logger.info(u'User already exists for a partner staff member: {}'.format(instance.email))
-                # TODO: check for user not being already associated with another partnership (can be done on the form)
-        except Exception:
-            # we dont need do anything special except log the error, we have enough information to create the user later
-            logger.exception(u'Exception occurred whilst creating partner user')
-        else:
-            # TODO: here we have a decision.. either we update the user with the info just received from
-            # TODO: or we update the instance with the user we already have. this might have implications on login.
-            with transaction.atomic():
-                try:
-                    country = Country.objects.get(schema_name=connection.schema_name)
-                    user.profile.country = country
-                except Country.DoesNotExist:
-                    logger.error(u"Couldn't get the current country schema for user: {}".format(user.username))
-
-                user.email = instance.email
-                user.first_name = instance.first_name
-                user.last_name = instance.last_name
-                user.is_active = True
-                user.save()
-                user.profile.partner_staff_member = instance.id
-                user.profile.save()
-
-
-def delete_partner_relationship(sender, instance, **kwargs):
-    try:
-        profile = UserProfile.objects.filter(partner_staff_member=instance.id,
-                                             user__email=instance.email).get()
-        with transaction.atomic():
-            profile.partner_staff_member = None
-            profile.save()
-            profile.user.is_active = False
-            profile.user.save()
-    except Exception:
-        logger.exception(u'Exception occurred whilst de-linking partner user')
-
-
-pre_delete.connect(delete_partner_relationship, sender='partners.PartnerStaffMember')
-post_save.connect(create_partner_user, sender='partners.PartnerStaffMember')
