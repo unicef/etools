@@ -998,12 +998,7 @@ class TestAgreementAPIView(BaseTenantTestCase):
     @classmethod
     def setUpTestData(cls):
         cls.unicef_staff = UserFactory(is_staff=True)
-        cls.partner = PartnerFactory(partner_type=PartnerType.CIVIL_SOCIETY_ORGANIZATION)
-        cls.partner_staff = PartnerStaffFactory(partner=cls.partner)
-        cls.partner_staff2 = PartnerStaffFactory(partner=cls.partner)
-
-        cls.unicef_staff = UserFactory(is_staff=True)
-        cls.partner = PartnerFactory(partner_type=PartnerType.CIVIL_SOCIETY_ORGANIZATION)
+        cls.partner = PartnerFactory(partner_type=PartnerType.CIVIL_SOCIETY_ORGANIZATION, vendor_number="V123")
         cls.partner_staff = PartnerStaffFactory(partner=cls.partner)
         cls.partner_staff2 = PartnerStaffFactory(partner=cls.partner)
 
