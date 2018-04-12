@@ -105,7 +105,6 @@ urlpatterns = [
     # helper urls
     url(r'^accounts/', include('allauth.urls')),
     url(r'^saml2/', include('djangosaml2.urls')),
-    url(r'^chaining/', include('smart_selects.urls')),
     url(r'^login/token-auth/', rest_framework_jwt.views.obtain_jwt_token),
     # TODO: remove this when eTrips is deployed needed
     url(r'^api-token-auth/', rest_framework_jwt.views.obtain_jwt_token),

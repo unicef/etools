@@ -153,7 +153,6 @@ SHARED_APPS = (
     'rest_framework.authtoken',
     'drfpasswordless',
     'import_export',
-    'smart_selects',
     'gunicorn',
     'post_office',
     'django_celery_beat',
