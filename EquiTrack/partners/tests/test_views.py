@@ -528,9 +528,9 @@ class TestPartnerOrganizationRetrieveUpdateDeleteViews(BaseTenantTestCase):
             1
         )
 
-    def test_api_partners_update_invalid_basis_for_risk_rating(self):
+    def test_api_partners_update_invalid_basis_for_type_of_assessment(self):
         data = {
-            "rating": PartnerOrganization.RATING_LOW,
+            "type_of_assessment": PartnerOrganization.HIGH_RISK_ASSUMED,
             "basis_for_risk_rating": "NOT NULL VALUE",
         }
         response = self.forced_auth_req(

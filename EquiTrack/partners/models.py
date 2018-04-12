@@ -241,6 +241,22 @@ class PartnerOrganization(TimeStampedModel):
         (RATING_NON_ASSESSED, 'Non Required'),
     )
 
+    MICRO_ASSESSMENT = 'MICRO ASSESSMENT'
+    HIGH_RISK_ASSUMED = 'HIGH RISK ASSUMED'
+    LOW_RISK_ASSUMED = 'LOW RISK ASSUMED'
+    NEGATIVE_AUDIT_RESULTS = 'NEGATIVE AUDIT RESULTS'
+    SIMPLIFIED_CHECKLIST = 'SIMPLIFIED CHECKLIST'
+    OTHERS = 'OTHERS'
+
+    TYPE_OF_ASSESSMENT = (
+        (MICRO_ASSESSMENT, 'Micro Assessment'),
+        (HIGH_RISK_ASSUMED, 'High Risk Assumed'),
+        (LOW_RISK_ASSUMED, 'Low Risk Assumed'),
+        (NEGATIVE_AUDIT_RESULTS, 'Negative Audit Results'),
+        (SIMPLIFIED_CHECKLIST, 'Simplified Checklist'),
+        (OTHERS, 'Others'),
+    )
+
     AGENCY_CHOICES = Choices(
         ('DPKO', 'DPKO'),
         ('ECA', 'ECA'),
@@ -384,6 +400,7 @@ class PartnerOrganization(TimeStampedModel):
     type_of_assessment = models.CharField(
         verbose_name=_("Assessment Type"),
         max_length=50,
+        choices=TYPE_OF_ASSESSMENT,
         default='',
     )
     last_assessment_date = models.DateField(
