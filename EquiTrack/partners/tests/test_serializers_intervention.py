@@ -26,38 +26,16 @@ class TestInterventionReportingRequirementCreateSerializer(BaseTenantTestCase):
         )
         cls.lower_result = LowerResultFactory(result_link=cls.result_link)
         cls.indicator = AppliedIndicatorFactory(lower_result=cls.lower_result)
-
-    def test_validation_invalid_indicator(self):
-        data = {
-            "id": 404,
-            "report_type": ReportingRequirement.TYPE_QPR,
-            "reporting_requirements": []
-        }
-        serializer = InterventionReportingRequirementCreateSerializer(
-            data=data
-        )
-        self.assertFalse(serializer.is_valid())
-        self.assertEqual(serializer.errors['id'], ['Invalid PD id.'])
-
-    def test_validation_missing_indicator(self):
-        data = {
-            "report_type": ReportingRequirement.TYPE_QPR,
-            "reporting_requirements": []
-        }
-        serializer = InterventionReportingRequirementCreateSerializer(
-            data=data
-        )
-        self.assertFalse(serializer.is_valid())
-        self.assertEqual(serializer.errors['id'], ['Invalid PD id.'])
+        cls.context = {"intervention": cls.intervention}
 
     def test_validation_invalid_report_type(self):
         data = {
-            "id": self.intervention.pk,
             "report_type": "wrong",
             "reporting_requirements": []
         }
         serializer = InterventionReportingRequirementCreateSerializer(
-            data=data
+            data=data,
+            context=self.context
         )
         self.assertFalse(serializer.is_valid())
         self.assertEqual(
@@ -67,11 +45,11 @@ class TestInterventionReportingRequirementCreateSerializer(BaseTenantTestCase):
 
     def test_validation_missing_report_type(self):
         data = {
-            "id": self.intervention.pk,
             "reporting_requirements": []
         }
         serializer = InterventionReportingRequirementCreateSerializer(
-            data=data
+            data=data,
+            context=self.context
         )
         self.assertFalse(serializer.is_valid())
         self.assertEqual(
@@ -80,17 +58,20 @@ class TestInterventionReportingRequirementCreateSerializer(BaseTenantTestCase):
         )
 
     def test_validation_pd_status(self):
-        intervention = InterventionFactory(status=Intervention.CLOSED)
+        intervention = InterventionFactory(
+            start=datetime.date(2001, 1, 1),
+            status=Intervention.CLOSED
+        )
         result_link = InterventionResultLinkFactory(intervention=intervention)
         lower_result = LowerResultFactory(result_link=result_link)
         AppliedIndicatorFactory(lower_result=lower_result)
         data = {
-            "id": intervention.pk,
             "report_type": ReportingRequirement.TYPE_QPR,
             "reporting_requirements": []
         }
         serializer = InterventionReportingRequirementCreateSerializer(
-            data=data
+            data=data,
+            context={"intervention": intervention}
         )
         self.assertFalse(serializer.is_valid())
         self.assertEqual(
@@ -104,12 +85,12 @@ class TestInterventionReportingRequirementCreateSerializer(BaseTenantTestCase):
         lower_result = LowerResultFactory(result_link=result_link)
         AppliedIndicatorFactory(lower_result=lower_result)
         data = {
-            "id": intervention.pk,
             "report_type": ReportingRequirement.TYPE_QPR,
             "reporting_requirements": []
         }
         serializer = InterventionReportingRequirementCreateSerializer(
-            data=data
+            data=data,
+            context={"intervention": intervention}
         )
         self.assertFalse(serializer.is_valid())
         self.assertEqual(
@@ -119,12 +100,12 @@ class TestInterventionReportingRequirementCreateSerializer(BaseTenantTestCase):
 
     def test_validation_empty_reporting_requirements(self):
         data = {
-            "id": self.intervention.pk,
             "report_type": ReportingRequirement.TYPE_QPR,
             "reporting_requirements": []
         }
         serializer = InterventionReportingRequirementCreateSerializer(
-            data=data
+            data=data,
+            context=self.context
         )
         self.assertFalse(serializer.is_valid())
         self.assertEqual(
@@ -133,12 +114,10 @@ class TestInterventionReportingRequirementCreateSerializer(BaseTenantTestCase):
         )
 
     def test_validation_missing_reporting_requirements(self):
-        data = {
-            "id": self.intervention.pk,
-            "report_type": ReportingRequirement.TYPE_QPR,
-        }
+        data = {}
         serializer = InterventionReportingRequirementCreateSerializer(
-            data=data
+            data=data,
+            context=self.context
         )
         self.assertFalse(serializer.is_valid())
         self.assertEqual(
@@ -148,7 +127,6 @@ class TestInterventionReportingRequirementCreateSerializer(BaseTenantTestCase):
 
     def test_validation_qpr_missing_fields(self):
         data = {
-            "id": self.intervention.pk,
             "report_type": ReportingRequirement.TYPE_QPR,
             "reporting_requirements": [{
                 "end_date": datetime.date(2001, 3, 31),
@@ -156,7 +134,8 @@ class TestInterventionReportingRequirementCreateSerializer(BaseTenantTestCase):
             }]
         }
         serializer = InterventionReportingRequirementCreateSerializer(
-            data=data
+            data=data,
+            context=self.context
         )
         self.assertFalse(serializer.is_valid())
         self.assertEqual(
@@ -166,7 +145,6 @@ class TestInterventionReportingRequirementCreateSerializer(BaseTenantTestCase):
 
     def test_validation_qpr_start_early(self):
         data = {
-            "id": self.intervention.pk,
             "report_type": ReportingRequirement.TYPE_QPR,
             "reporting_requirements": [{
                 "start_date": datetime.date(2000, 1, 1),
@@ -175,7 +153,8 @@ class TestInterventionReportingRequirementCreateSerializer(BaseTenantTestCase):
             }]
         }
         serializer = InterventionReportingRequirementCreateSerializer(
-            data=data
+            data=data,
+            context=self.context
         )
         self.assertFalse(serializer.is_valid())
         self.assertEqual(
@@ -185,7 +164,6 @@ class TestInterventionReportingRequirementCreateSerializer(BaseTenantTestCase):
 
     def test_validation_qpr_end_before_start(self):
         data = {
-            "id": self.intervention.pk,
             "report_type": ReportingRequirement.TYPE_QPR,
             "reporting_requirements": [{
                 "start_date": datetime.date(2001, 1, 1),
@@ -198,7 +176,8 @@ class TestInterventionReportingRequirementCreateSerializer(BaseTenantTestCase):
             }]
         }
         serializer = InterventionReportingRequirementCreateSerializer(
-            data=data
+            data=data,
+            context=self.context
         )
         self.assertFalse(serializer.is_valid())
         self.assertEqual(
@@ -208,7 +187,6 @@ class TestInterventionReportingRequirementCreateSerializer(BaseTenantTestCase):
 
     def test_validation_qpr(self):
         data = {
-            "id": self.intervention.pk,
             "report_type": ReportingRequirement.TYPE_QPR,
             "reporting_requirements": [{
                 "start_date": datetime.date(2001, 1, 1),
@@ -221,20 +199,21 @@ class TestInterventionReportingRequirementCreateSerializer(BaseTenantTestCase):
             }]
         }
         serializer = InterventionReportingRequirementCreateSerializer(
-            data=data
+            data=data,
+            context=self.context
         )
         self.assertTrue(serializer.is_valid())
 
     def test_validation_hr_missing_fields(self):
         data = {
-            "id": self.intervention.pk,
             "report_type": ReportingRequirement.TYPE_HR,
             "reporting_requirements": [{
                 "start_date": datetime.date(2001, 4, 15),
             }]
         }
         serializer = InterventionReportingRequirementCreateSerializer(
-            data=data
+            data=data,
+            context=self.context
         )
         self.assertFalse(serializer.is_valid())
         self.assertEqual(
@@ -245,7 +224,6 @@ class TestInterventionReportingRequirementCreateSerializer(BaseTenantTestCase):
     def test_validation_hr_indicator_invalid(self):
         self.assertFalse(self.indicator.is_high_frequency)
         data = {
-            "id": self.intervention.pk,
             "report_type": ReportingRequirement.TYPE_HR,
             "reporting_requirements": [
                 {"due_date": datetime.date(2001, 4, 15)},
@@ -253,7 +231,8 @@ class TestInterventionReportingRequirementCreateSerializer(BaseTenantTestCase):
             ]
         }
         serializer = InterventionReportingRequirementCreateSerializer(
-            data=data
+            data=data,
+            context=self.context
         )
         self.assertFalse(serializer.is_valid())
         self.assertEqual(
@@ -267,7 +246,6 @@ class TestInterventionReportingRequirementCreateSerializer(BaseTenantTestCase):
             lower_result=self.lower_result
         )
         data = {
-            "id": self.intervention.pk,
             "report_type": ReportingRequirement.TYPE_HR,
             "reporting_requirements": [
                 {"due_date": datetime.date(2001, 4, 15)},
@@ -275,20 +253,21 @@ class TestInterventionReportingRequirementCreateSerializer(BaseTenantTestCase):
             ]
         }
         serializer = InterventionReportingRequirementCreateSerializer(
-            data=data
+            data=data,
+            context=self.context
         )
         self.assertTrue(serializer.is_valid())
 
     def test_validation_special_missing_fields(self):
         data = {
-            "id": self.intervention.pk,
             "report_type": ReportingRequirement.TYPE_SPECIAL,
             "reporting_requirements": [{
                 "due_date": datetime.date(2001, 4, 15),
             }]
         }
         serializer = InterventionReportingRequirementCreateSerializer(
-            data=data
+            data=data,
+            context=self.context
         )
         self.assertFalse(serializer.is_valid())
         self.assertEqual(
@@ -298,7 +277,6 @@ class TestInterventionReportingRequirementCreateSerializer(BaseTenantTestCase):
 
     def test_validation_special_description_long(self):
         data = {
-            "id": self.intervention.pk,
             "report_type": ReportingRequirement.TYPE_SPECIAL,
             "reporting_requirements": [{
                 "due_date": datetime.date(2001, 4, 15),
@@ -306,7 +284,8 @@ class TestInterventionReportingRequirementCreateSerializer(BaseTenantTestCase):
             }]
         }
         serializer = InterventionReportingRequirementCreateSerializer(
-            data=data
+            data=data,
+            context=self.context
         )
         self.assertFalse(serializer.is_valid())
         self.assertEqual(
@@ -320,7 +299,6 @@ class TestInterventionReportingRequirementCreateSerializer(BaseTenantTestCase):
 
     def test_validation_special(self):
         data = {
-            "id": self.intervention.pk,
             "report_type": ReportingRequirement.TYPE_SPECIAL,
             "reporting_requirements": [{
                 "due_date": datetime.date(2001, 4, 15),
@@ -328,7 +306,8 @@ class TestInterventionReportingRequirementCreateSerializer(BaseTenantTestCase):
             }]
         }
         serializer = InterventionReportingRequirementCreateSerializer(
-            data=data
+            data=data,
+            context=self.context
         )
         self.assertTrue(serializer.is_valid())
 
@@ -343,7 +322,6 @@ class TestInterventionReportingRequirementCreateSerializer(BaseTenantTestCase):
         )
         init_count = requirement_qs.count()
         data = {
-            "id": self.intervention.pk,
             "report_type": ReportingRequirement.TYPE_QPR,
             "reporting_requirements": [{
                 "start_date": datetime.date(2001, 1, 1),
@@ -356,7 +334,8 @@ class TestInterventionReportingRequirementCreateSerializer(BaseTenantTestCase):
             }]
         }
         serializer = InterventionReportingRequirementCreateSerializer(
-            data=data
+            data=data,
+            context=self.context
         )
         self.assertTrue(serializer.is_valid())
         serializer.create(serializer.validated_data)
@@ -377,7 +356,6 @@ class TestInterventionReportingRequirementCreateSerializer(BaseTenantTestCase):
         )
         init_count = requirement_qs.count()
         data = {
-            "id": self.intervention.pk,
             "report_type": ReportingRequirement.TYPE_HR,
             "reporting_requirements": [
                 {"due_date": datetime.date(2001, 4, 15)},
@@ -385,7 +363,8 @@ class TestInterventionReportingRequirementCreateSerializer(BaseTenantTestCase):
             ]
         }
         serializer = InterventionReportingRequirementCreateSerializer(
-            data=data
+            data=data,
+            context=self.context
         )
         self.assertTrue(serializer.is_valid())
         serializer.create(serializer.validated_data)
@@ -401,7 +380,6 @@ class TestInterventionReportingRequirementCreateSerializer(BaseTenantTestCase):
         )
         init_count = requirement_qs.count()
         data = {
-            "id": self.intervention.pk,
             "report_type": ReportingRequirement.TYPE_SPECIAL,
             "reporting_requirements": [{
                 "due_date": datetime.date(2001, 4, 15),
@@ -409,7 +387,8 @@ class TestInterventionReportingRequirementCreateSerializer(BaseTenantTestCase):
             }]
         }
         serializer = InterventionReportingRequirementCreateSerializer(
-            data=data
+            data=data,
+            context=self.context
         )
         self.assertTrue(serializer.is_valid())
         serializer.create(serializer.validated_data)
@@ -429,7 +408,6 @@ class TestInterventionReportingRequirementCreateSerializer(BaseTenantTestCase):
         )
         init_count = requirement_qs.count()
         data = {
-            "id": self.intervention.pk,
             "report_type": report_type,
             "reporting_requirements": [{
                 "id": requirement.pk,
@@ -439,7 +417,8 @@ class TestInterventionReportingRequirementCreateSerializer(BaseTenantTestCase):
             }]
         }
         serializer = InterventionReportingRequirementCreateSerializer(
-            data=data
+            data=data,
+            context=self.context
         )
         self.assertTrue(serializer.is_valid())
         serializer.create(serializer.validated_data)
@@ -466,7 +445,6 @@ class TestInterventionReportingRequirementCreateSerializer(BaseTenantTestCase):
         )
         init_count = requirement_qs.count()
         data = {
-            "id": self.intervention.pk,
             "report_type": report_type,
             "reporting_requirements": [{
                 "id": requirement.pk,
@@ -474,7 +452,8 @@ class TestInterventionReportingRequirementCreateSerializer(BaseTenantTestCase):
             }]
         }
         serializer = InterventionReportingRequirementCreateSerializer(
-            data=data
+            data=data,
+            context=self.context
         )
         self.assertTrue(serializer.is_valid())
         serializer.create(serializer.validated_data)
@@ -497,7 +476,6 @@ class TestInterventionReportingRequirementCreateSerializer(BaseTenantTestCase):
         )
         init_count = requirement_qs.count()
         data = {
-            "id": self.intervention.pk,
             "report_type": report_type,
             "reporting_requirements": [{
                 "id": requirement.pk,
@@ -506,7 +484,8 @@ class TestInterventionReportingRequirementCreateSerializer(BaseTenantTestCase):
             }]
         }
         serializer = InterventionReportingRequirementCreateSerializer(
-            data=data
+            data=data,
+            context=self.context
         )
         self.assertTrue(serializer.is_valid())
         serializer.create(serializer.validated_data)
@@ -531,7 +510,6 @@ class TestInterventionReportingRequirementCreateSerializer(BaseTenantTestCase):
         )
         init_count = requirement_qs.count()
         data = {
-            "id": self.intervention.pk,
             "report_type": report_type,
             "reporting_requirements": [{
                 "id": requirement.pk,
@@ -545,7 +523,8 @@ class TestInterventionReportingRequirementCreateSerializer(BaseTenantTestCase):
             }]
         }
         serializer = InterventionReportingRequirementCreateSerializer(
-            data=data
+            data=data,
+            context=self.context
         )
         self.assertTrue(serializer.is_valid())
         serializer.create(serializer.validated_data)
@@ -572,7 +551,6 @@ class TestInterventionReportingRequirementCreateSerializer(BaseTenantTestCase):
         )
         init_count = requirement_qs.count()
         data = {
-            "id": self.intervention.pk,
             "report_type": report_type,
             "reporting_requirements": [{
                 "id": requirement.pk,
@@ -582,7 +560,8 @@ class TestInterventionReportingRequirementCreateSerializer(BaseTenantTestCase):
             }]
         }
         serializer = InterventionReportingRequirementCreateSerializer(
-            data=data
+            data=data,
+            context=self.context
         )
         self.assertTrue(serializer.is_valid())
         serializer.create(serializer.validated_data)
@@ -605,7 +584,6 @@ class TestInterventionReportingRequirementCreateSerializer(BaseTenantTestCase):
         )
         init_count = requirement_qs.count()
         data = {
-            "id": self.intervention.pk,
             "report_type": report_type,
             "reporting_requirements": [{
                 "id": requirement.pk,
@@ -617,7 +595,8 @@ class TestInterventionReportingRequirementCreateSerializer(BaseTenantTestCase):
             }]
         }
         serializer = InterventionReportingRequirementCreateSerializer(
-            data=data
+            data=data,
+            context=self.context
         )
         self.assertTrue(serializer.is_valid())
         serializer.create(serializer.validated_data)

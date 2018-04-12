@@ -745,27 +745,30 @@ class InterventionReportingRequirementView(APIView):
     def get_data(self):
         return {
             "reporting_requirements": ReportingRequirement.objects.filter(
-                intervention=self.get_object()
+                intervention=self.intervention,
+                report_type=self.report_type,
             ).all()
         }
 
-    def get_object(self):
-        return get_object_or_404(
-            Intervention,
-            pk=self.pk
-        )
+    def get_object(self, pk):
+        return get_object_or_404(Intervention, pk=pk)
 
-    def get(self, request, intervention_pk, format=None):
-        self.pk = intervention_pk
+    def get(self, request, intervention_pk, report_type, format=None):
+        self.intervention = self.get_object(intervention_pk)
+        self.report_type = report_type
         return Response(
             self.serializer_list_class(self.get_data()).data
         )
 
-    def post(self, request, intervention_pk, format=None):
-        self.pk = intervention_pk
+    def post(self, request, intervention_pk, report_type, format=None):
+        self.intervention = self.get_object(intervention_pk)
+        self.report_type = report_type
+        self.request.data["report_type"] = self.report_type
         serializer = self.serializer_create_class(
             data=self.request.data,
-            context={"intervention": self.get_object()}
+            context={
+                "intervention": self.intervention,
+            }
         )
         if serializer.is_valid():
             serializer.save()

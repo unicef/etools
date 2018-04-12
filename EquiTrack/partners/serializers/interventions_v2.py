@@ -575,8 +575,7 @@ class InterventionReportingRequirementCreateSerializer(serializers.ModelSerializ
 
     class Meta:
         model = Intervention
-        fields = ("id", "reporting_requirements", "report_type", )
-        read_only_fields = ("id", )
+        fields = ("reporting_requirements", "report_type", )
 
     def _validate_qpr(self, requirements):
         # Ensure that the first reporting requirement start date

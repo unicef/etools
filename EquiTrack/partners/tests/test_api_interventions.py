@@ -42,6 +42,7 @@ from reports.tests.factories import (
     CountryProgrammeFactory,
     IndicatorFactory,
     LowerResultFactory,
+    ReportingRequirementFactory,
     ResultFactory,
     SectorFactory,
 )
@@ -1881,44 +1882,65 @@ class TestInterventionReportingRequirementView(BaseTenantTestCase):
         )
         cls.lower_result = LowerResultFactory(result_link=cls.result_link)
         cls.indicator = AppliedIndicatorFactory(lower_result=cls.lower_result)
-        cls.url = reverse(
+
+    def _get_url(self, report_type):
+        return reverse(
             "partners_api:intervention-reporting-requirements",
-            args=[cls.intervention.pk]
+            args=[self.intervention.pk, report_type]
         )
 
     def test_get(self):
-        requirement_qs = ReportingRequirement.objects.filter(
-            intervention=self.intervention,
-        )
-        init_count = requirement_qs.count()
-        response = self.forced_auth_req(
-            "get",
-            self.url,
-            user=self.unicef_staff,
-        )
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(
-            len(response.data["reporting_requirements"]),
-            init_count
-        )
+        for report_type, _ in ReportingRequirement.TYPE_CHOICES:
+            report_type = ReportingRequirement.TYPE_QPR
+            requirement = ReportingRequirementFactory(
+                intervention=self.intervention,
+                report_type=report_type
+            )
+            requirement_qs = ReportingRequirement.objects.filter(
+                intervention=self.intervention,
+                report_type=report_type
+            )
+            init_count = requirement_qs.count()
+            response = self.forced_auth_req(
+                "get",
+                self._get_url(report_type),
+                user=self.unicef_staff,
+            )
+            self.assertEqual(response.status_code, status.HTTP_200_OK)
+            self.assertEqual(
+                len(response.data["reporting_requirements"]),
+                init_count
+            )
+            requirement_pks = []
+            for r in response.data["reporting_requirements"]:
+                requirement_pks.append(r["id"])
+            self.assertIn(requirement.pk, requirement_pks)
+            self.assertEqual(
+                len(requirement_pks),
+                ReportingRequirement.objects.filter(
+                    pk__in=requirement_pks,
+                    report_type=report_type
+                ).count()
+            )
 
-    def test_post(self):
+    def test_post_qpr(self):
+        report_type = ReportingRequirement.TYPE_QPR
         requirement_qs = ReportingRequirement.objects.filter(
             intervention=self.intervention,
+            report_type=report_type,
         )
         init_count = requirement_qs.count()
         response = self.forced_auth_req(
             "post",
-            self.url,
+            self._get_url(report_type),
             user=self.unicef_staff,
             data={
-                "report_type": ReportingRequirement.TYPE_QPR,
                 "reporting_requirements": [{
                     "start_date": datetime.date(2001, 1, 1),
                     "end_date": datetime.date(2001, 3, 31),
                     "due_date": datetime.date(2001, 4, 15),
                 }, {
-                "start_date": datetime.date(2001, 4, 1),
+                    "start_date": datetime.date(2001, 4, 1),
                     "end_date": datetime.date(2001, 5, 31),
                     "due_date": datetime.date(2001, 5, 15),
                 }]
@@ -1931,18 +1953,77 @@ class TestInterventionReportingRequirementView(BaseTenantTestCase):
             init_count + 2
         )
 
-    def test_post_invalid(self):
+    def test_post_hr(self):
+        AppliedIndicatorFactory(
+            is_high_frequency=True,
+            lower_result=self.lower_result
+        )
+        report_type = ReportingRequirement.TYPE_HR
         requirement_qs = ReportingRequirement.objects.filter(
             intervention=self.intervention,
+            report_type=report_type,
         )
         init_count = requirement_qs.count()
         response = self.forced_auth_req(
             "post",
-            self.url,
+            self._get_url(report_type),
             user=self.unicef_staff,
             data={
                 "reporting_requirements": [{
-                    "start_date": datetime.date(2001, 1, 1),
+                    "due_date": datetime.date(2001, 4, 15),
+                }, {
+                    "due_date": datetime.date(2001, 5, 15),
+                }]
+            }
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(requirement_qs.count(), init_count + 2)
+        self.assertEqual(
+            len(response.data["reporting_requirements"]),
+            init_count + 2
+        )
+
+    def test_post_special(self):
+        report_type = ReportingRequirement.TYPE_SPECIAL
+        requirement_qs = ReportingRequirement.objects.filter(
+            intervention=self.intervention,
+            report_type=report_type,
+        )
+        init_count = requirement_qs.count()
+        response = self.forced_auth_req(
+            "post",
+            self._get_url(report_type),
+            user=self.unicef_staff,
+            data={
+                "reporting_requirements": [{
+                    "due_date": datetime.date(2001, 4, 15),
+                    "description": "Randomness"
+                }, {
+                    "due_date": datetime.date(2001, 5, 15),
+                    "description": "Short description"
+                }]
+            }
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(requirement_qs.count(), init_count + 2)
+        self.assertEqual(
+            len(response.data["reporting_requirements"]),
+            init_count + 2
+        )
+
+    def test_post_invalid(self):
+        report_type = ReportingRequirement.TYPE_QPR
+        requirement_qs = ReportingRequirement.objects.filter(
+            intervention=self.intervention,
+            report_type=report_type,
+        )
+        init_count = requirement_qs.count()
+        response = self.forced_auth_req(
+            "post",
+            self._get_url(report_type),
+            user=self.unicef_staff,
+            data={
+                "reporting_requirements": [{
                     "end_date": datetime.date(2001, 3, 31),
                     "due_date": datetime.date(2001, 4, 15),
                 }]
@@ -1952,5 +2033,7 @@ class TestInterventionReportingRequirementView(BaseTenantTestCase):
         self.assertEqual(requirement_qs.count(), init_count)
         self.assertEqual(
             response.data,
-            {"report_type": ["This field is required."]}
+            {"reporting_requirements": [
+                {"start_date": ["This field is required."]}
+            ]}
         )
