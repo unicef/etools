@@ -11,7 +11,7 @@ from attachments.serializers import Base64AttachmentSerializer
 from attachments.serializers_fields import FileTypeModelChoiceField
 from audit.models import (
     Audit, DetailedFindingInfo, Engagement, EngagementActionPoint, FinancialFinding, Finding, MicroAssessment,
-    SpecialAudit, SpecialAuditRecommendation, SpecificProcedure, SpotCheck, KeyInternalControl)
+    SpecialAudit, SpecialAuditRecommendation, SpecificProcedure, SpotCheck, KeyInternalControl, Risk)
 from audit.serializers.auditor import AuditorStaffMemberSerializer, PurchaseOrderSerializer, PurchaseOrderItemSerializer
 from audit.serializers.mixins import (
     AuditPermissionsBasedRootSerializerMixin, AuditPermissionsBasedSerializerMixin, EngagementDatesValidation,
@@ -364,7 +364,8 @@ class MicroAssessmentSerializer(ActivePDValidationMixin, RiskCategoriesUpdateMix
         code='ma_subject_areas', required=False, label=_('Tested Subject Areas')
     )
     overall_risk_assessment = RiskRootSerializer(
-        code='ma_global_assessment', required=False, label=_('Overall Risk Assessment')
+        code='ma_global_assessment', required=False, label=_('Overall Risk Assessment'),
+        risk_choices=list(Risk.VALUES)[1:]
     )
     findings = DetailedFindingInfoSerializer(
         many=True, required=False, label=_('Detailed Internal Control Findings and Recommendations')

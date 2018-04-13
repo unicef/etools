@@ -14,7 +14,7 @@ from attachments.tests.factories import (
     AttachmentFactory,
     AttachmentFileTypeFactory,
 )
-from audit.models import Engagement
+from audit.models import Engagement, Risk
 from audit.tests.base import AuditTestCaseMixin, EngagementTransitionsTestCaseMixin
 from audit.tests.factories import (
     AuditFactory,
@@ -565,6 +565,35 @@ class TestEngagementsUpdateViewSet(EngagementTransitionsTestCaseMixin, BaseTenan
             self.engagement.action_points.first().person_responsible.email,
             settings.EMAIL_FOR_USER_RESPONSIBLE_FOR_INVESTIGATION_ESCALATIONS
         )
+
+
+class TestMicroAssessmentMetadataDetailViewSet(EngagementTransitionsTestCaseMixin, BaseTenantTestCase):
+    engagement_factory = MicroAssessmentFactory
+
+    def _test_risk_choices(self, field, expected_choices):
+        response = self.forced_auth_req(
+            'options',
+            '/api/audit/micro-assessments/{}/'.format(self.engagement.id),
+            user=self.auditor
+        )
+        self.assertIn('GET', response.data['actions'])
+        get = response.data['actions']['GET']
+
+        self.assertIn(field, get)
+        self.assertIn('blueprints', get[field]['children'])
+        self.assertIn('risk', get[field]['children']['blueprints']['child']['children'])
+        risk_fields = get[field]['children']['blueprints']['child']['children']['risk']['children']
+        self.assertIn('choices', risk_fields['value'])
+        self.assertListEqual(
+            [{'value': c, 'display_name': six.text_type(v)} for c, v in expected_choices],
+            risk_fields['value']['choices']
+        )
+
+    def test_overall_choices(self):
+        self._test_risk_choices('overall_risk_assessment', list(Risk.VALUES)[1:])
+
+    def test_subject_areas_choices(self):
+        self._test_risk_choices('test_subject_areas', Risk.VALUES)
 
 
 class TestAuditorFirmViewSet(AuditTestCaseMixin, BaseTenantTestCase):
