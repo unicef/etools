@@ -17,7 +17,6 @@ from django.utils.translation import ugettext as _
 from django.utils.functional import cached_property
 
 from django_fsm import FSMField, transition
-from smart_selects.db_fields import ChainedForeignKey
 from model_utils.models import (
     TimeFramedModel,
     TimeStampedModel,
@@ -517,8 +516,10 @@ class PartnerOrganization(TimeStampedModel):
 
     @cached_property
     def approaching_threshold_flag(self):
-        return self.rating == PartnerOrganization.RATING_NON_ASSESSED and \
-               self.total_ct_ytd > PartnerOrganization.CT_CP_AUDIT_TRIGGER_LEVEL
+        total_ct_ytd = self.total_ct_ytd or 0
+        non_assessed = self.rating == PartnerOrganization.RATING_NON_ASSESSED
+        ct_year_overflow = total_ct_ytd > PartnerOrganization.CT_CP_AUDIT_TRIGGER_LEVEL
+        return non_assessed and ct_year_overflow
 
     @cached_property
     def flags(self):
@@ -598,15 +599,15 @@ class PartnerOrganization(TimeStampedModel):
         partner.save()
 
     @classmethod
-    def programmatic_visits(cls, partner, update_one=False):
+    def programmatic_visits(cls, partner, event_date=None, update_one=False):
         """
         :return: all completed programmatic visits
         """
-        quarter_name = get_quarter()
         pv = partner.hact_values['programmatic_visits']['completed']['total']
-        pvq = partner.hact_values['programmatic_visits']['completed'][quarter_name]
 
-        if update_one:
+        if update_one and event_date:
+            quarter_name = get_quarter(event_date)
+            pvq = partner.hact_values['programmatic_visits']['completed'][quarter_name]
             pv += 1
             pvq += 1
             partner.hact_values['programmatic_visits']['completed'][quarter_name] = pvq
@@ -616,15 +617,15 @@ class PartnerOrganization(TimeStampedModel):
                 travel_type=TravelType.PROGRAMME_MONITORING,
                 travels__traveler=F('primary_traveler'),
                 travels__status__in=[Travel.COMPLETED],
-                travels__completed_at__year=datetime.datetime.now().year,
+                travels__end_date__year=datetime.datetime.now().year,
                 partner=partner,
             )
 
             pv = pv_year.count()
-            pvq1 = pv_year.filter(travels__completed_at__month__in=[1, 2, 3]).count()
-            pvq2 = pv_year.filter(travels__completed_at__month__in=[4, 5, 6]).count()
-            pvq3 = pv_year.filter(travels__completed_at__month__in=[7, 8, 9]).count()
-            pvq4 = pv_year.filter(travels__completed_at__month__in=[10, 11, 12]).count()
+            pvq1 = pv_year.filter(travels__end_date__month__in=[1, 2, 3]).count()
+            pvq2 = pv_year.filter(travels__end_date__month__in=[4, 5, 6]).count()
+            pvq3 = pv_year.filter(travels__end_date__month__in=[7, 8, 9]).count()
+            pvq4 = pv_year.filter(travels__end_date__month__in=[10, 11, 12]).count()
 
             # TPM visit are counted one per month maximum
             tpmv = TPMVisit.objects.filter(
@@ -659,8 +660,8 @@ class PartnerOrganization(TimeStampedModel):
             partner.hact_values['programmatic_visits']['completed']['q2'] = pvq2 + tpmv2
             partner.hact_values['programmatic_visits']['completed']['q3'] = pvq3 + tpmv3
             partner.hact_values['programmatic_visits']['completed']['q4'] = pvq4 + tpmv4
-
             partner.hact_values['programmatic_visits']['completed']['total'] = pv + tpm_total
+
         partner.save()
 
     @classmethod
@@ -1111,14 +1112,10 @@ class Agreement(TimeStampedModel):
     )
 
     # Signatory on behalf of the PartnerOrganization
-    partner_manager = ChainedForeignKey(
+    partner_manager = models.ForeignKey(
         PartnerStaffMember,
         related_name='agreements_signed',
         verbose_name=_('Signed by partner'),
-        chained_field="partner",
-        chained_model_field="partner",
-        show_all=False,
-        auto_choose=False,
         blank=True, null=True,
     )
 
@@ -1318,7 +1315,7 @@ class AgreementAmendment(TimeStampedModel):
     )
     types = ArrayField(models.CharField(
         max_length=50,
-        verbose_name=_('Types'),
+        verbose_name=_("Types"),
         choices=AMENDMENT_TYPES))
     signed_date = models.DateField(
         verbose_name=_("Signed Date"),

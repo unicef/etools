@@ -8,7 +8,11 @@ from partners.tests.factories import (
     InterventionFactory,
     InterventionResultLinkFactory,
 )
-from reports.models import AppliedIndicator, IndicatorBlueprint, LowerResult
+from reports.models import (
+    AppliedIndicator,
+    IndicatorBlueprint,
+    LowerResult,
+)
 from reports.serializers.v2 import (
     AppliedIndicatorSerializer,
     DisaggregationSerializer,
