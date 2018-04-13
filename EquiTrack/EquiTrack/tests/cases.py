@@ -124,7 +124,7 @@ class BaseTenantTestCase(TenantTestCase):
         user = user or self.user
         force_authenticate(request, user=user)
 
-        if user.profile:
+        if hasattr(user, 'profile'):
             request.tenant = (user.profile.country or user.profile.country_override)
 
         if "view" in kwargs:
