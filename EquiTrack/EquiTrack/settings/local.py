@@ -25,7 +25,6 @@ REST_FRAMEWORK['DEFAULT_AUTHENTICATION_CLASSES'] = (
 # No SAML for local dev
 AUTHENTICATION_BACKENDS = (
     'django.contrib.auth.backends.ModelBackend',
-    'allauth.account.auth_backends.AuthenticationBackend',
 )
 
 # No Redis for local dev
@@ -34,9 +33,6 @@ CACHES = {
         'BACKEND': 'django.core.cache.backends.locmem.LocMemCache',
     }
 }
-
-# local override for django-allauth
-ACCOUNT_DEFAULT_HTTP_PROTOCOL = "http"
 
 # local override for django-cors-headers
 CORS_ORIGIN_ALLOW_ALL = True
