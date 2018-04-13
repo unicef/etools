@@ -1306,13 +1306,11 @@ class TestAgreementAPIView(BaseTenantTestCase):
 
     def test_agreement_generate_pdf_default(self):
         with mock.patch('partners.views.v1.get_data_from_insight') as mock_get_insight:
-            # FIXME: need to return some fake data here (not just {}) to actually get a PDF that
-            # has more in it than an error message
             mock_get_insight.return_value = (True, self.mock_insight_bank_response)
             response = self.forced_auth_req(
                 'get',
                 reverse('partners_api:pca_pdf', args=[self.agreement.pk]),
-                user=self.unicef_staff
+                user=self.unicef_staff,
             )
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
@@ -1325,8 +1323,6 @@ class TestAgreementAPIView(BaseTenantTestCase):
             "lang": "spanish",
         }
         with mock.patch('partners.views.v1.get_data_from_insight') as mock_get_insight:
-            # FIXME: need to return some fake data here (not just {}) to actually get a PDF that
-            # has more in it than an error message
             mock_get_insight.return_value = (True, self.mock_insight_bank_response)
             response = self.forced_auth_req(
                 'get',

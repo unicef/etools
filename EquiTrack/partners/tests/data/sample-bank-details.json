@@ -1,20 +1,18 @@
-[{
-    "ROWSET": {
-        "ROW": {
-            "VENDOR_BANK": {
-                "VENDOR_BANK_ROW": [
-                    {
-                        "ACCT_HOLDER": "TEST Organization",
-                        "BANK_ACCOUNT_NO": "1234567890",
-                        "BANK_COUNTRY_KEY": "000",
-                        "BANK_KEY": "TESTBK",
-                        "BANK_NAME": "TEST BN",
-                        "CITY": "Beirut",
-                        "STREET": "000 TEST STREET",
-                        "SWIFT_CODE": "TESTESTSC"
-                    }
-                ]
-            }
+{"ROWSET": {
+    "ROW": {
+        "VENDOR_BANK": {
+            "VENDOR_BANK_ROW": [
+                {
+                    "ACCT_HOLDER": "TEST Organization",
+                    "BANK_ACCOUNT_NO": "1234567890",
+                    "BANK_COUNTRY_KEY": "000",
+                    "BANK_KEY": "TESTBK",
+                    "BANK_NAME": "TEST BN",
+                    "CITY": "Beirut",
+                    "STREET": "000 TEST STREET",
+                    "SWIFT_CODE": "TESTESTSC"
+                }
+            ]
         }
     }
-}]
+}}

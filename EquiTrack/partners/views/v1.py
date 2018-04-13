@@ -56,7 +56,6 @@ class PCAPDFView(RetrieveAPIView):
 
         valid_response, response = get_data_from_insight('GetPartnerDetailsInfo_json/{vendor_code}',
                                                          {"vendor_code": agreement.partner.vendor_number})
-
         if not valid_response:
             return {"error": response}
         try:
