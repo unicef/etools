@@ -634,6 +634,8 @@ class AppliedIndicator(TimeStampedModel):
         verbose_name=_("Location"),
         related_name='applied_indicators',
     )
+    is_high_frequency = models.BooleanField(default=False)
+    is_active = models.BooleanField(default=True)
 
     class Meta:
         unique_together = (("indicator", "lower_result"),)
@@ -742,3 +744,47 @@ class Indicator(TimeStampedModel):
         if not self.code:
             self.code = ''
         super(Indicator, self).save(*args, **kwargs)
+
+
+@python_2_unicode_compatible
+class ReportingRequirement(TimeStampedModel):
+    TYPE_QPR = "QPR"
+    TYPE_HR = "HR"
+    TYPE_SPECIAL = "SPECIAL"
+    TYPE_CHOICES = (
+        (TYPE_QPR, _("Standard Quarterly Progress Report")),
+        (TYPE_HR, _("Humanitarian Report")),
+        (TYPE_SPECIAL, _("Special/Ad hoc Report")),
+    )
+
+    intervention = models.ForeignKey(
+        "partners.Intervention",
+        on_delete=models.CASCADE,
+        verbose_name=_("Intervention"),
+        related_name="reporting_requirements"
+    )
+    start_date = models.DateField(
+        null=True,
+        verbose_name=_('Start Date')
+    )
+    end_date = models.DateField(
+        null=True,
+        verbose_name=_('End Date')
+    )
+    due_date = models.DateField(verbose_name=_('Due Date'))
+    report_type = models.CharField(max_length=50, choices=TYPE_CHOICES)
+    description = models.CharField(
+        blank=True,
+        max_length=256,
+        verbose_name=_("Description")
+    )
+
+    class Meta:
+        ordering = ("-end_date", )
+
+    def __str__(self):
+        return "{} ({}) {}".format(
+            self.get_report_type_display,
+            self.report_type,
+            self.due_date
+        )

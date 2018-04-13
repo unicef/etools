@@ -5,7 +5,6 @@ from __future__ import unicode_literals
 from django.conf import settings
 from django.db import migrations, models
 import django.db.models.deletion
-import smart_selects.db_fields
 
 
 class Migration(migrations.Migration):
@@ -160,7 +159,7 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name='agreement',
             name='partner_manager',
-            field=smart_selects.db_fields.ChainedForeignKey(blank=True, chained_field='partner', chained_model_field='partner', null=True, on_delete=django.db.models.deletion.CASCADE, related_name='agreements_signed', to='partners.PartnerStaffMember', verbose_name='Signed by partner'),
+            field=models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.CASCADE, related_name='agreements_signed', to='partners.PartnerStaffMember', verbose_name='Signed by partner'),
         ),
         migrations.AddField(
             model_name='agreement',

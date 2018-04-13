@@ -17,7 +17,6 @@ from django.utils.translation import ugettext as _
 from django.utils.functional import cached_property
 
 from django_fsm import FSMField, transition
-from smart_selects.db_fields import ChainedForeignKey
 from model_utils.models import (
     TimeFramedModel,
     TimeStampedModel,
@@ -534,8 +533,10 @@ class PartnerOrganization(TimeStampedModel):
 
     @cached_property
     def approaching_threshold_flag(self):
-        return self.rating == PartnerOrganization.RATING_NON_ASSESSED and \
-               self.total_ct_ytd > PartnerOrganization.CT_CP_AUDIT_TRIGGER_LEVEL
+        total_ct_ytd = self.total_ct_ytd or 0
+        non_assessed = self.rating == PartnerOrganization.RATING_NON_ASSESSED
+        ct_year_overflow = total_ct_ytd > PartnerOrganization.CT_CP_AUDIT_TRIGGER_LEVEL
+        return non_assessed and ct_year_overflow
 
     @cached_property
     def flags(self):
@@ -1128,14 +1129,10 @@ class Agreement(TimeStampedModel):
     )
 
     # Signatory on behalf of the PartnerOrganization
-    partner_manager = ChainedForeignKey(
+    partner_manager = models.ForeignKey(
         PartnerStaffMember,
         related_name='agreements_signed',
         verbose_name=_('Signed by partner'),
-        chained_field="partner",
-        chained_model_field="partner",
-        show_all=False,
-        auto_choose=False,
         blank=True, null=True,
     )
 
