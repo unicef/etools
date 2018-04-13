@@ -11,6 +11,7 @@ from reports.models import (
     Indicator,
     IndicatorBlueprint,
     LowerResult,
+    ReportingRequirement,
     Result,
 )
 
@@ -277,3 +278,11 @@ class IndicatorSerializer(serializers.ModelSerializer):
     class Meta:
         model = Indicator
         fields = "__all__"
+
+
+class ReportingRequirementSerializer(serializers.ModelSerializer):
+    id = serializers.IntegerField(required=False)
+
+    class Meta:
+        model = ReportingRequirement
+        fields = ("id", "start_date", "end_date", "due_date", "description", )
