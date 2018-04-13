@@ -318,7 +318,7 @@ class PartnerOrganizationCreateUpdateSerializer(SnapshotModelSerializer):
         basis_for_risk_rating = data.get('basis_for_risk_rating', None)
 
         rating_non_assessed = rating == PartnerOrganization.RATING_NON_ASSESSED
-        risk_rating_required_types = type_of_assessment.upper() in [
+        risk_rating_required_types = type_of_assessment and type_of_assessment.upper() in [
             PartnerOrganization.HIGH_RISK_ASSUMED, PartnerOrganization.LOW_RISK_ASSUMED]
 
         if basis_for_risk_rating and risk_rating_required_types:

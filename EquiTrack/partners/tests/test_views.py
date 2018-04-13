@@ -542,7 +542,7 @@ class TestPartnerOrganizationRetrieveUpdateDeleteViews(BaseTenantTestCase):
 
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertEqual(response.data, {
-            "non_field_errors": ["The basis for risk rating has to be blank if Not Required, Low or High"]})
+            "non_field_errors": ["The basis for risk rating has to be blank if Type is Low or High"]})
 
     def test_api_partners_update_assessments_invalid(self):
         self.assertFalse(Activity.objects.exists())
