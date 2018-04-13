@@ -15,7 +15,6 @@ from django.test import SimpleTestCase
 # testing 3rd party packages. If an eTools model fails in TestStrMethods, it needs to be fixed.
 
 EXCLUDED_PACKAGES = (
-    'allauth',
     'corsheaders',
     'django',
     'django_celery_beat',
