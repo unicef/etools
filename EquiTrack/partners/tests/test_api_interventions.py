@@ -4,7 +4,6 @@ import json
 import datetime
 from unittest import skip
 
-from django.contrib.auth.models import Group
 from django.core.cache import cache
 from django.core.urlresolvers import reverse, resolve
 from django.db import connection
@@ -43,11 +42,13 @@ from partners.tests.factories import (
     InterventionSectorLocationLinkFactory,
     PartnerFactory,
 )
+from reports.models import AppliedIndicator, ReportingRequirement
 from reports.tests.factories import (
     AppliedIndicatorFactory,
     CountryProgrammeFactory,
     IndicatorFactory,
     LowerResultFactory,
+    ReportingRequirementFactory,
     ResultFactory,
     SectorFactory,
 )
@@ -58,7 +59,7 @@ from utils.common.utils import get_all_field_names
 
 def _add_user_to_partnership_manager_group(user):
     '''Utility function to add a user to the 'Partnership Manager' group which may or may not exist'''
-    group = Group.objects.get_or_create(name='Partnership Manager')[0]
+    group = GroupFactory(name='Partnership Manager')
     user.groups.add(group)
 
 
@@ -110,7 +111,8 @@ class TestInterventionsAPI(BaseTenantTestCase):
                   "planned_budget", "modified", "signed_pd_document", "submission_date_prc", "document_type",
                   "offices", "population_focus", "country_programme_id", "engagement", "sections",
                   "sections_present", "flat_locations", "reporting_periods", "activity",
-                  "prc_review_attachment", "signed_pd_attachment", "actionpoint", ],
+                  "prc_review_attachment", "signed_pd_attachment", "actionpoint",
+                  "reporting_requirements", ],
         'signed': [],
         'active': ['']
     }
@@ -1080,10 +1082,28 @@ class TestAPIInterventionIndicatorsListView(BaseTenantTestCase):
                           kwargs={'lower_result_pk': cls.lower_result.id})
 
         # cls.expected_field_names is the list of field names expected in responses.
-        cls.expected_field_names = sorted(('id', 'assumptions', 'baseline', 'cluster_indicator_id', 'cluster_name',
-                                           'cluster_indicator_title', 'context_code', 'disaggregation',
-                                           'indicator', 'locations', 'lower_result', 'means_of_verification',
-                                           'section', 'target', 'total', 'created', 'modified', 'response_plan_name', ))
+        cls.expected_field_names = sorted((
+            'id',
+            'assumptions',
+            'baseline',
+            'cluster_indicator_id',
+            'cluster_name',
+            'cluster_indicator_title',
+            'context_code',
+            'disaggregation',
+            'indicator',
+            'locations',
+            'lower_result',
+            'means_of_verification',
+            'section',
+            'target',
+            'total',
+            'created',
+            'modified',
+            'response_plan_name',
+            'is_active',
+            'is_high_frequency',
+        ))
 
     def _make_request(self, user):
         return self.forced_auth_req('get', self.url, user=user)
@@ -1235,6 +1255,86 @@ class TestAPInterventionIndicatorsCreateView(BaseTenantTestCase):
         self.assertIsInstance(response_json['non_field_errors'], list)
         self.assertEqual(response_json['non_field_errors'],
                          ['This indicator is already being monitored for this Result'])
+
+
+class TestAPInterventionIndicatorsUpdateView(BaseTenantTestCase):
+    '''Exercise the update view for InterventionIndicatorsUpdateView
+    (these are AppliedIndicator instances)
+    '''
+    @classmethod
+    def setUpClass(cls):
+        super(TestAPInterventionIndicatorsUpdateView, cls).setUpClass()
+        cls.intervention = InterventionFactory()
+        cls.result_link = InterventionResultLinkFactory(intervention=cls.intervention)
+        cls.lower_result = LowerResultFactory(result_link=cls.result_link)
+        # Create another result link/lower result pair that will break this
+        # test if the views don't behave properly
+        LowerResultFactory(result_link=InterventionResultLinkFactory())
+        cls.indicator = AppliedIndicatorFactory(lower_result=cls.lower_result)
+        cls.url = reverse(
+            'partners_api:intervention-indicators-update',
+            args=[cls.indicator.pk]
+        )
+
+        location = LocationFactory()
+        cls.section = SectorFactory()
+
+        cls.result_link.intervention.flat_locations.add(location)
+        cls.result_link.intervention.sections.add(cls.section)
+        cls.user = UserFactory()
+        _add_user_to_partnership_manager_group(cls.user)
+
+    def setUp(self):
+        self.data = {
+            "is_active": True,
+            "section": self.section.pk
+        }
+
+    def _make_request(self, user, data=None):
+        if data is None:
+            data = self.data
+        return self.forced_auth_req('patch', self.url, user=user, data=data)
+
+    def assertResponseFundamentals(self, response):
+        '''Assert common fundamentals about the response.'''
+        self.assertEquals(response.status_code, status.HTTP_200_OK)
+        response_json = json.loads(response.rendered_content)
+        self.assertIsInstance(response_json, dict)
+        self.assertIn('id', response_json.keys())
+        # The id of the newly-created indicator should be associated with
+        # lower result, and it should be the only one associated with that
+        # result.
+        self.assertEqual(
+            [response_json['id']],
+            [indicator.id for indicator in self.lower_result.applied_indicators.all()]
+        )
+        return response_json
+
+    def test_no_permission_user_forbidden(self):
+        '''Ensure a non-staff user gets the 403 smackdown'''
+        response = self._make_request(UserFactory())
+        self.assertEquals(response.status_code, status.HTTP_403_FORBIDDEN)
+
+    def test_unauthenticated_user_forbidden(self):
+        '''Ensure an unauthenticated user gets the 403 smackdown'''
+        factory = APIRequestFactory()
+        view_info = resolve(self.url)
+        request = factory.patch(self.url, data=self.data, format='json')
+        response = view_info.func(request)
+        self.assertEquals(response.status_code, status.HTTP_403_FORBIDDEN)
+
+    def test_update(self):
+        self.data["is_active"] = False
+        self.data["is_high_frequency"] = True
+        self.assertTrue(self.indicator.is_active)
+        self.assertFalse(self.indicator.is_high_frequency)
+        self.assertEqual(self.intervention.status, Intervention.DRAFT)
+        response = self._make_request(self.user, self.data)
+        data = self.assertResponseFundamentals(response)
+        self.assertFalse(data["is_active"])
+        self.assertTrue(data["is_high_frequency"])
+        indicator_updated = AppliedIndicator.objects.get(pk=self.indicator.pk)
+        self.assertFalse(indicator_updated.is_active)
 
 
 class TestInterventionPlannedVisitsDeleteView(BaseTenantTestCase):
@@ -1890,3 +1990,174 @@ class TestInterventionListMapView(BaseTenantTestCase):
         )
         data, first = self.assertResponseFundamentals(response)
         self.assertEqual(first["id"], intervention.pk)
+
+
+class TestInterventionReportingRequirementView(BaseTenantTestCase):
+    @classmethod
+    def setUpTestData(cls):
+        cls.unicef_staff = UserFactory(is_staff=True)
+        _add_user_to_partnership_manager_group(cls.unicef_staff)
+        cls.intervention = InterventionFactory(
+            start=datetime.date(2001, 1, 1),
+            status=Intervention.DRAFT
+        )
+        cls.result_link = InterventionResultLinkFactory(
+            intervention=cls.intervention
+        )
+        cls.lower_result = LowerResultFactory(result_link=cls.result_link)
+        cls.indicator = AppliedIndicatorFactory(lower_result=cls.lower_result)
+
+    def _get_url(self, report_type):
+        return reverse(
+            "partners_api:intervention-reporting-requirements",
+            args=[self.intervention.pk, report_type]
+        )
+
+    def test_get(self):
+        for report_type, _ in ReportingRequirement.TYPE_CHOICES:
+            report_type = ReportingRequirement.TYPE_QPR
+            requirement = ReportingRequirementFactory(
+                intervention=self.intervention,
+                report_type=report_type
+            )
+            requirement_qs = ReportingRequirement.objects.filter(
+                intervention=self.intervention,
+                report_type=report_type
+            )
+            init_count = requirement_qs.count()
+            response = self.forced_auth_req(
+                "get",
+                self._get_url(report_type),
+                user=self.unicef_staff,
+            )
+            self.assertEqual(response.status_code, status.HTTP_200_OK)
+            self.assertEqual(
+                len(response.data["reporting_requirements"]),
+                init_count
+            )
+            requirement_pks = []
+            for r in response.data["reporting_requirements"]:
+                requirement_pks.append(r["id"])
+            self.assertIn(requirement.pk, requirement_pks)
+            self.assertEqual(
+                len(requirement_pks),
+                ReportingRequirement.objects.filter(
+                    pk__in=requirement_pks,
+                    report_type=report_type
+                ).count()
+            )
+
+    def test_post_qpr(self):
+        report_type = ReportingRequirement.TYPE_QPR
+        requirement_qs = ReportingRequirement.objects.filter(
+            intervention=self.intervention,
+            report_type=report_type,
+        )
+        init_count = requirement_qs.count()
+        response = self.forced_auth_req(
+            "post",
+            self._get_url(report_type),
+            user=self.unicef_staff,
+            data={
+                "reporting_requirements": [{
+                    "start_date": datetime.date(2001, 1, 1),
+                    "end_date": datetime.date(2001, 3, 31),
+                    "due_date": datetime.date(2001, 4, 15),
+                }, {
+                    "start_date": datetime.date(2001, 4, 1),
+                    "end_date": datetime.date(2001, 5, 31),
+                    "due_date": datetime.date(2001, 5, 15),
+                }]
+            }
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(requirement_qs.count(), init_count + 2)
+        self.assertEqual(
+            len(response.data["reporting_requirements"]),
+            init_count + 2
+        )
+
+    def test_post_hr(self):
+        AppliedIndicatorFactory(
+            is_high_frequency=True,
+            lower_result=self.lower_result
+        )
+        report_type = ReportingRequirement.TYPE_HR
+        requirement_qs = ReportingRequirement.objects.filter(
+            intervention=self.intervention,
+            report_type=report_type,
+        )
+        init_count = requirement_qs.count()
+        response = self.forced_auth_req(
+            "post",
+            self._get_url(report_type),
+            user=self.unicef_staff,
+            data={
+                "reporting_requirements": [{
+                    "due_date": datetime.date(2001, 4, 15),
+                }, {
+                    "due_date": datetime.date(2001, 5, 15),
+                }]
+            }
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(requirement_qs.count(), init_count + 2)
+        self.assertEqual(
+            len(response.data["reporting_requirements"]),
+            init_count + 2
+        )
+
+    def test_post_special(self):
+        report_type = ReportingRequirement.TYPE_SPECIAL
+        requirement_qs = ReportingRequirement.objects.filter(
+            intervention=self.intervention,
+            report_type=report_type,
+        )
+        init_count = requirement_qs.count()
+        response = self.forced_auth_req(
+            "post",
+            self._get_url(report_type),
+            user=self.unicef_staff,
+            data={
+                "reporting_requirements": [{
+                    "due_date": datetime.date(2001, 4, 15),
+                    "description": "Randomness"
+                }, {
+                    "due_date": datetime.date(2001, 5, 15),
+                    "description": "Short description"
+                }]
+            }
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(requirement_qs.count(), init_count + 2)
+        self.assertEqual(
+            len(response.data["reporting_requirements"]),
+            init_count + 2
+        )
+
+    def test_post_invalid(self):
+        report_type = ReportingRequirement.TYPE_QPR
+        requirement_qs = ReportingRequirement.objects.filter(
+            intervention=self.intervention,
+            report_type=report_type,
+        )
+        init_count = requirement_qs.count()
+        response = self.forced_auth_req(
+            "post",
+            self._get_url(report_type),
+            user=self.unicef_staff,
+            data={
+                "reporting_requirements": [{
+                    "end_date": datetime.date(2001, 3, 31),
+                    "due_date": datetime.date(2001, 4, 15),
+                }]
+            }
+        )
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertEqual(requirement_qs.count(), init_count)
+        self.assertEqual(
+            response.data,
+            {"reporting_requirements": [
+                {"start_date": ["This field is required."]}
+            ]}
+        )
