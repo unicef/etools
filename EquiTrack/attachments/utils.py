@@ -28,10 +28,8 @@ def get_partner_obj(obj):
         return obj.content_object.agreement.partner
     elif isinstance(obj.content_object, (InterventionAmendment, InterventionAttachment)):
         return obj.content_object.intervention.agreement.partner
-    elif isinstance(obj.content_object, (Agreement, Assessment, Engagement)):
+    elif isinstance(obj.content_object, (Agreement, Assessment, Engagement, TPMActivity)):
         return obj.content_object.partner
-    elif isinstance(obj.content_object, TPMActivity):
-        return obj.content_object.tpm_visit.tpm_partner
     return ""
 
 
@@ -65,7 +63,11 @@ def get_pd_ssfa_number(obj):
     """
     if isinstance(obj.content_object, Intervention):
         return obj.content_object.number
-    elif isinstance(obj.content_object, (InterventionAmendment, InterventionAttachment)):
+    elif isinstance(obj.content_object, (
+            TPMActivity,
+            InterventionAmendment,
+            InterventionAttachment,
+    )):
         return obj.content_object.intervention.number
     return ""
 

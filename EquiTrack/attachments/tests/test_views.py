@@ -18,6 +18,8 @@ from partners.tests.factories import (
     InterventionAmendmentFactory,
     InterventionAttachmentFactory,
     InterventionFactory,
+    InterventionResultLinkFactory,
+    InterventionSectorLocationLinkFactory,
     PartnerFactory,
 )
 from tpm.tests.factories import (
@@ -61,6 +63,12 @@ class TestAttachmentListView(BaseTenantTestCase):
         cls.assessment = AssessmentFactory(partner=cls.partner)
         cls.amendment = AgreementAmendmentFactory(agreement=cls.agreement)
         cls.intervention = InterventionFactory(agreement=cls.agreement)
+        cls.result_link = InterventionResultLinkFactory(
+            intervention=cls.intervention
+        )
+        cls.sector_location = InterventionSectorLocationLinkFactory(
+            intervention=cls.intervention
+        )
         cls.intervention_amendment = InterventionAmendmentFactory(
             intervention=cls.intervention
         )
@@ -70,7 +78,11 @@ class TestAttachmentListView(BaseTenantTestCase):
 
         cls.tpm_partner = SimpleTPMPartnerFactory(vendor_number="V432")
         cls.tpm_visit = TPMVisitFactory(tpm_partner=cls.tpm_partner)
-        cls.tpm_activity = TPMActivityFactory(tpm_visit=cls.tpm_visit)
+        cls.tpm_activity = TPMActivityFactory(
+            partner=cls.partner,
+            intervention=cls.intervention,
+            tpm_visit=cls.tpm_visit
+        )
 
         cls.engagement = EngagementFactory(partner=cls.partner)
 
@@ -365,10 +377,10 @@ class TestAttachmentListView(BaseTenantTestCase):
         self.assertEqual(len(response.data), 3)
         self.assert_keys(response)
         self.assert_values(response, self.default_partner_response + [{
-            "partner": self.tpm_partner.name,
-            "partner_type": "",
-            "vendor_number": self.tpm_partner.vendor_number,
-            "pd_ssfa_number": "",
+            "partner": self.partner.name,
+            "partner_type": self.partner.partner_type,
+            "vendor_number": self.partner.vendor_number,
+            "pd_ssfa_number": self.intervention.number,
         }])
         six.assertCountEqual(self, [x["file_type"] for x in response.data], [
             self.file_type_1.label,
@@ -398,10 +410,10 @@ class TestAttachmentListView(BaseTenantTestCase):
         self.assertEqual(len(response.data), 3)
         self.assert_keys(response)
         self.assert_values(response, self.default_partner_response + [{
-            "partner": self.tpm_partner.name,
-            "partner_type": "",
-            "vendor_number": self.tpm_partner.vendor_number,
-            "pd_ssfa_number": "",
+            "partner": self.partner.name,
+            "partner_type": self.partner.partner_type,
+            "vendor_number": self.partner.vendor_number,
+            "pd_ssfa_number": self.intervention.number,
         }])
         six.assertCountEqual(self, [x["file_type"] for x in response.data], [
             self.file_type_1.label,
