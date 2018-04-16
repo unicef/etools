@@ -7,11 +7,12 @@ from partners.models import (
     InterventionAttachment,
     PartnerOrganization,
 )
+from tpm.models import TPMActivity
 
 
 def get_file_type(obj):
     """If dealing with intervention attachment then use
-    partner file type instead of attachement file type
+    partner file type instead of attachment file type
     """
     if isinstance(obj.content_object, InterventionAttachment):
         return obj.content_object.type.name
@@ -28,6 +29,8 @@ def get_partner_obj(obj):
         return obj.content_object.intervention.agreement.partner
     elif isinstance(obj.content_object, (Agreement, Assessment)):
         return obj.content_object.partner
+    elif isinstance(obj.content_object, TPMActivity):
+        return obj.content_object.tpm_visit.tpm_partner
     return ""
 
 
@@ -48,7 +51,7 @@ def get_vendor_number(obj):
 
 def get_partner_type(obj):
     partner = get_partner_obj(obj)
-    if partner:
+    if partner and hasattr(partner, "partner_type"):
         return "" if partner.partner_type is None else partner.partner_type
     return ""
 

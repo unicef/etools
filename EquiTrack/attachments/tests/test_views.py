@@ -19,6 +19,11 @@ from partners.tests.factories import (
     InterventionFactory,
     PartnerFactory,
 )
+from tpm.tests.factories import (
+    SimpleTPMPartnerFactory,
+    TPMActivityFactory,
+    TPMVisitFactory,
+)
 from users.tests.factories import UserFactory
 
 
@@ -61,6 +66,10 @@ class TestAttachmentListView(BaseTenantTestCase):
         cls.intervention_attachment = InterventionAttachmentFactory(
             intervention=cls.intervention
         )
+
+        cls.tpm_partner = SimpleTPMPartnerFactory(vendor_number="V432")
+        cls.tpm_visit = TPMVisitFactory(tpm_partner=cls.tpm_partner)
+        cls.tpm_activity = TPMActivityFactory(tpm_visit=cls.tpm_visit)
 
         cls.default_partner_response = [{
             "partner": "",
@@ -330,6 +339,72 @@ class TestAttachmentListView(BaseTenantTestCase):
             "vendor_number": self.partner.vendor_number,
             "pd_ssfa_number": self.intervention.number,
         }])
+
+    def test_tpm_activity_attachments(self):
+        code = "activity_attachments"
+        file_type = AttachmentFileTypeFactory(
+            label="Activity Attachment",
+            code=code
+        )
+        AttachmentFactory(
+            file_type=file_type,
+            code=code,
+            file="sample3.pdf",
+            content_object=self.tpm_activity,
+            uploaded_by=self.user
+        )
+        response = self.forced_auth_req(
+            "get",
+            self.url,
+            user=self.unicef_staff,
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(response.data), 3)
+        self.assert_keys(response)
+        self.assert_values(response, self.default_partner_response + [{
+            "partner": self.tpm_partner.name,
+            "partner_type": "",
+            "vendor_number": self.tpm_partner.vendor_number,
+            "pd_ssfa_number": "",
+        }])
+        six.assertCountEqual(self, [x["file_type"] for x in response.data], [
+            self.file_type_1.label,
+            self.file_type_2.label,
+            file_type.label
+        ])
+
+    def test_tpm_activity_report_attachments(self):
+        code = "activity_report"
+        file_type = AttachmentFileTypeFactory(
+            label="Activity Report",
+            code=code
+        )
+        AttachmentFactory(
+            file_type=file_type,
+            code=code,
+            file="sample3.pdf",
+            content_object=self.tpm_activity,
+            uploaded_by=self.user
+        )
+        response = self.forced_auth_req(
+            "get",
+            self.url,
+            user=self.unicef_staff,
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(response.data), 3)
+        self.assert_keys(response)
+        self.assert_values(response, self.default_partner_response + [{
+            "partner": self.tpm_partner.name,
+            "partner_type": "",
+            "vendor_number": self.tpm_partner.vendor_number,
+            "pd_ssfa_number": "",
+        }])
+        six.assertCountEqual(self, [x["file_type"] for x in response.data], [
+            self.file_type_1.label,
+            self.file_type_2.label,
+            file_type.label
+        ])
 
 
 class TestAttachmentFileView(BaseTenantTestCase):
