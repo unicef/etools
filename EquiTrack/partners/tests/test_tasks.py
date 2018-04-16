@@ -569,8 +569,7 @@ class TestNotifyOfNoFrsSignedInterventionsTask(PartnersTestBaseClass):
             'from_address': '',
             'template_name': 'partners/partnership/signed/frs',
             'template_data': partners.tasks.get_intervention_context(intervention_),
-        })
-                              for intervention_ in interventions]
+        }) for intervention_ in interventions]
         self._assertCalls(mock_notification_model, expected_call_args)
 
         # Verify that each notification object that was created had send_notification() called.
@@ -662,8 +661,7 @@ class TestNotifyOfMismatchedEndedInterventionsTask(PartnersTestBaseClass):
             'from_address': '',
             'template_name': 'partners/partnership/ended/frs/outstanding',
             'template_data': partners.tasks.get_intervention_context(intervention_),
-        })
-                              for intervention_ in interventions]
+        }) for intervention_ in interventions]
         self._assertCalls(mock_notification_model, expected_call_args)
 
         # Verify that each created notification object had send_notification() called.
