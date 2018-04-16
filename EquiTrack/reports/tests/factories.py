@@ -3,6 +3,7 @@ from __future__ import absolute_import, division, print_function, unicode_litera
 import datetime
 
 import factory
+from django.utils import timezone
 from factory import fuzzy
 
 from reports import models
@@ -20,14 +21,8 @@ class QuarterFactory(factory.django.DjangoModelFactory):
         model = models.Quarter
 
     name = FuzzyQuarterChoice()
-    start_date = datetime.date(
-        datetime.date.today().year,
-        1, 1
-    )
-    end_date = datetime.date(
-        datetime.date.today().year,
-        3, 31
-    )
+    start_date = datetime.datetime(datetime.date.today().year, 1, 1, tzinfo=timezone.get_default_timezone())
+    end_date = datetime.datetime(datetime.date.today().year, 3, 31, tzinfo=timezone.get_default_timezone())
 
 
 class CountryProgrammeFactory(factory.DjangoModelFactory):
@@ -120,3 +115,12 @@ class SectorFactory(factory.django.DjangoModelFactory):
         model = models.Sector
 
     name = factory.Sequence(lambda n: 'Sector {}'.format(n))
+
+
+class ReportingRequirementFactory(factory.django.DjangoModelFactory):
+    class Meta:
+        model = models.ReportingRequirement
+
+    report_type = fuzzy.FuzzyChoice(models.ReportingRequirement.TYPE_CHOICES)
+    end_date = fuzzy.FuzzyDate(datetime.date(2001, 1, 1))
+    due_date = fuzzy.FuzzyDate(datetime.date(2001, 1, 1))
