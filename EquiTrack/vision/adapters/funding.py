@@ -10,7 +10,7 @@ from django.utils import six
 
 from funds.models import FundsCommitmentHeader, FundsCommitmentItem, FundsReservationHeader, FundsReservationItem
 from vision.utils import comp_decimals
-from vision.vision_data_synchronizer import VisionDataSynchronizer
+from vision.vision_data_synchronizer import VisionDataSynchronizer, FileDataSynchronizer
 
 
 class FundReservationsSynchronizer(VisionDataSynchronizer):
@@ -445,3 +445,14 @@ class FundCommitmentSynchronizer(VisionDataSynchronizer):
         processed = h_processed[0] + i_processed[0] + h_processed[1] + i_processed[1]
 
         return processed
+
+
+class FileFundReservationsSynchronizer(FileDataSynchronizer, FundReservationsSynchronizer):
+    """
+    >>> from vision.adapters.funding import *
+    >>> from users.models import Country
+    >>> country = Country.objects.get(name='Indonesia')
+    >>> filename = '/home/user/Downloads/fundreservation.json'
+    >>> FileFundReservationsSynchronizer(country, filename=filename).sync()
+    """
+    pass
