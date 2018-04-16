@@ -65,7 +65,7 @@ elif 'runserver' in sys.argv or 'shell_plus' in sys.argv:
         'django_extensions',
     )
     INTERNAL_IPS = ('127.0.0.1',)
-    MIDDLEWARE_CLASSES += (  # noqa
+    MIDDLEWARE += (  # noqa
         'debug_toolbar.middleware.DebugToolbarMiddleware',
     )
     DEBUG_TOOLBAR_CONFIG = {

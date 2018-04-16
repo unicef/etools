@@ -94,7 +94,7 @@ USE_L10N = True
 USE_TZ = True
 
 # DJANGO: HTTP
-MIDDLEWARE_CLASSES = (
+MIDDLEWARE = (
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.contrib.auth.middleware.SessionAuthenticationMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
@@ -371,6 +371,10 @@ LEAFLET_CONFIG = {
 # django-tenant-schemas: https://github.com/bernardopires/django-tenant-schemas
 TENANT_MODEL = "users.Country"  # app.Model
 
+# don't call set search_path so much
+# https://django-tenant-schemas.readthedocs.io/en/latest/use.html#performance-considerations
+TENANT_LIMIT_SET_CALLS = True
+
 # django-saml2: https://github.com/robertavram/djangosaml2
 HOST = os.environ.get('DJANGO_ALLOWED_HOST', 'localhost:8000')
 SAML_ATTRIBUTE_MAPPING = {
@@ -555,3 +559,5 @@ PASSWORDLESS_AUTH = {
 }
 
 REPORT_EMAILS = os.getenv('REPORT_EMAILS', ['etools@unicef.org', ])
+
+USERVOICE_WIDGET_KEY = 'defaultVoiceKey'

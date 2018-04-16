@@ -234,7 +234,7 @@ class GroupViewSet(mixins.RetrieveModelMixin,
     """
     Returns a list of all User Groups
     """
-    queryset = Group.objects.all()
+    queryset = Group.objects.order_by('name')  # Provide consistent ordering
     serializer_class = GroupSerializer
     permission_classes = (IsAdminUser,)
 

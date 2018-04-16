@@ -100,7 +100,7 @@ urlpatterns = [
     url(r'^api/docs/', schema_view),
     url(r'^api/schema/coreapi', schema_view_json_coreapi),
     url(r'^api/schema/openapi', schema_view_json_openapi),
-    url(r'^admin/', include(admin.site.urls)),
+    url(r'^admin/', admin.site.urls),
 
     # helper urls
     url(r'^saml2/', include('djangosaml2.urls')),

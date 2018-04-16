@@ -1,7 +1,5 @@
 import operator
 import functools
-import datetime
-from decimal import Decimal
 
 from django.db import transaction
 from django.db.models import Q
@@ -57,6 +55,7 @@ from partners.exports_v2 import (
     PartnerOrganizationCSVRenderer,
     PartnerOrganizationHactCsvRenderer,
 )
+from vision.adapters.partner import PartnerSynchronizer
 
 
 class PartnerOrganizationListAPIView(QueryStringFilterMixin, ExportModelMixin, ListCreateAPIView):
@@ -294,53 +293,6 @@ class PartnerOrganizationAddView(CreateAPIView):
     serializer_class = PartnerOrganizationCreateUpdateSerializer
     permission_classes = (PartnershipManagerPermission,)
 
-    # TODO: let's aim to standardize where mapping goes
-    MAPPING = {
-        'vendor_number': "VENDOR_CODE",
-        'name': "VENDOR_NAME",
-        'partner_type': 'PARTNER_TYPE_DESC',
-        'cso_type': 'CSO_TYPE',
-        'core_values_assessment_date': "CORE_VALUE_ASSESSMENT_DT",
-        'rating': 'RISK_RATING',
-        'type_of_assessment': "TYPE_OF_ASSESSMENT",
-        'last_assessment_date': "DATE_OF_ASSESSMENT",
-        'address': "STREET",
-        'postal_code': "POSTAL_CODE",
-        'city': "CITY",
-        'country': "COUNTRY",
-        'phone_number': 'PHONE_NUMBER',
-        'email': "EMAIL",
-        'total_ct_cp': "TOTAL_CASH_TRANSFERRED_CP",
-        'total_ct_cy': "TOTAL_CASH_TRANSFERRED_CY",
-        'deleted_flag': "MARKED_FOR_DELETION",
-        'blocked': "POSTING_BLOCK",
-    }
-
-    cso_type_mapping = {
-        "International NGO": u'International',
-        "National NGO": u'National',
-        "Community based organization": u'Community Based Organization',
-        "Academic Institution": u'Academic Institution'
-    }
-
-    type_mapping = {
-        "BILATERAL / MULTILATERAL": u'Bilateral / Multilateral',
-        "CIVIL SOCIETY ORGANIZATION": u'Civil Society Organization',
-        "GOVERNMENT": u'Government',
-        "UN AGENCY": u'UN Agency',
-    }
-
-    def get_value_for_field(self, field, value):
-        if field in ['core_values_assessment_date', 'last_assessment_date']:
-            return datetime.datetime.strptime(value, '%d-%b-%y').date()
-        if field in ['partner_type']:
-            return self.type_mapping[value]
-        if field in ['cso_type']:
-            return self.cso_type_mapping[value]
-        if field in ['total_ct_cp', 'total_ct_cy']:
-            return Decimal(value.replace(",", ""))
-        return value
-
     @transaction.atomic
     def create(self, request, *args, **kwargs):
         vendor = self.request.query_params.get('vendor', None)
@@ -355,25 +307,15 @@ class PartnerOrganizationAddView(CreateAPIView):
 
         partner_resp = response["ROWSET"]["ROW"]
         try:
-            partner_org = PartnerOrganization.objects.get(vendor_number=partner_resp[self.MAPPING['vendor_number']])
-            # TODO standardize error keys and abstract error messages where possible
+            PartnerOrganization.objects.get(vendor_number=partner_resp[PartnerSynchronizer.MAPPING['vendor_number']])
             return Response({"error": 'Partner Organization already exists with this vendor number'},
                             status=status.HTTP_400_BAD_REQUEST)
         except PartnerOrganization.DoesNotExist:
-            partner_org = {
-                k: self.get_value_for_field(k, partner_resp[v])
-                for k, v in self.MAPPING.items()
-                if v in partner_resp
-            }
-            partner_org['vision_synced'] = True
-            partner_org['deleted_flag'] = True if self.MAPPING['deleted_flag'] in partner_resp.keys() else False
-            partner_org['blocked'] = True if self.MAPPING['blocked'] in partner_resp.keys() else False
-            po_serializer = self.get_serializer(data=partner_org)
-            po_serializer.is_valid(raise_exception=True)
-            po_serializer.save()
+            country = request.user.profile.country
+            partner_sync = PartnerSynchronizer(country=country)
+            partner_sync._partner_save(partner_resp, full_sync=False)
 
-            headers = self.get_success_headers(po_serializer.data)
-            return Response(po_serializer.data, status=status.HTTP_201_CREATED, headers=headers)
+            return Response(status=status.HTTP_201_CREATED)
 
 
 class PartnerOrganizationDeleteView(DestroyAPIView):
