@@ -1448,6 +1448,7 @@ class TestInterventionViews(BaseTenantTestCase):
         self.fr_header_1 = FundsReservationHeaderFactory(fr_number=self.funding_commitment1.fr_number)
         self.fr_header_2 = FundsReservationHeaderFactory(fr_number=self.funding_commitment2.fr_number)
 
+        output_type = ResultTypeFactory(name=ResultType.OUTPUT)
         # Basic data to adjust in tests
         self.intervention_data = {
             "agreement": self.agreement2.id,
@@ -1490,7 +1491,7 @@ class TestInterventionViews(BaseTenantTestCase):
             "sections": [self.section.id],
             "result_links": [
                 {
-                    "cp_output": ResultFactory().id,
+                    "cp_output": ResultFactory(result_type=output_type).id,
                     "ram_indicators": []
                 }
             ],
@@ -1516,7 +1517,8 @@ class TestInterventionViews(BaseTenantTestCase):
             attachment=attachment,
             type=FileType.objects.create(name="pdf")
         )
-        self.result = InterventionResultLinkFactory(intervention=self.intervention_obj)
+        self.result = InterventionResultLinkFactory(intervention=self.intervention_obj,
+                                                    cp_output__result_type=output_type)
         amendment = "amendment.pdf"
         self.amendment = InterventionAmendment.objects.create(
             intervention=self.intervention_obj,
