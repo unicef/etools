@@ -1,3 +1,4 @@
+from audit.models import Engagement
 from partners.models import (
     Agreement,
     AgreementAmendment,
@@ -7,11 +8,12 @@ from partners.models import (
     InterventionAttachment,
     PartnerOrganization,
 )
+from tpm.models import TPMActivity
 
 
 def get_file_type(obj):
     """If dealing with intervention attachment then use
-    partner file type instead of attachement file type
+    partner file type instead of attachment file type
     """
     if isinstance(obj.content_object, InterventionAttachment):
         return obj.content_object.type.name
@@ -26,7 +28,7 @@ def get_partner_obj(obj):
         return obj.content_object.agreement.partner
     elif isinstance(obj.content_object, (InterventionAmendment, InterventionAttachment)):
         return obj.content_object.intervention.agreement.partner
-    elif isinstance(obj.content_object, (Agreement, Assessment)):
+    elif isinstance(obj.content_object, (Agreement, Assessment, Engagement, TPMActivity)):
         return obj.content_object.partner
     return ""
 
@@ -48,7 +50,7 @@ def get_vendor_number(obj):
 
 def get_partner_type(obj):
     partner = get_partner_obj(obj)
-    if partner:
+    if partner and hasattr(partner, "partner_type"):
         return "" if partner.partner_type is None else partner.partner_type
     return ""
 
@@ -61,7 +63,11 @@ def get_pd_ssfa_number(obj):
     """
     if isinstance(obj.content_object, Intervention):
         return obj.content_object.number
-    elif isinstance(obj.content_object, (InterventionAmendment, InterventionAttachment)):
+    elif isinstance(obj.content_object, (
+            TPMActivity,
+            InterventionAmendment,
+            InterventionAttachment,
+    )):
         return obj.content_object.intervention.number
     return ""
 
