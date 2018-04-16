@@ -469,12 +469,13 @@ class TestPartnerOrganizationModel(BaseTenantTestCase):
         self.assertEqual(self.partner_organization.hact_values['programmatic_visits']['completed']['q4'], 0)
 
     def test_programmatic_visits_update_travel_activity(self):
+        tz = timezone.get_default_timezone()
         self.assertEqual(self.partner_organization.hact_values['programmatic_visits']['completed']['total'], 0)
         traveller = UserFactory()
         travel = TravelFactory(
             traveler=traveller,
             status=Travel.COMPLETED,
-            end_date=datetime.datetime(datetime.datetime.today().year, 9, 1)
+            end_date=datetime.datetime(datetime.datetime.today().year, 9, 1, tzinfo=tz)
         )
         TravelActivityFactory(
             travels=[travel],
@@ -547,12 +548,13 @@ class TestPartnerOrganizationModel(BaseTenantTestCase):
         self.assertEqual(self.partner_organization.hact_values['spot_checks']['completed']['q4'], 0)
 
     def test_spot_checks_update_travel_activity(self):
+        tz = timezone.get_default_timezone()
         self.assertEqual(self.partner_organization.hact_values['spot_checks']['completed']['total'], 0)
         traveller = UserFactory()
         travel = TravelFactory(
             traveler=traveller,
             status=Travel.COMPLETED,
-            completed_at=datetime.datetime(datetime.datetime.today().year, 9, 1)
+            completed_at=datetime.datetime(datetime.datetime.today().year, 9, 1, tzinfo=tz)
         )
         TravelActivityFactory(
             travels=[travel],
