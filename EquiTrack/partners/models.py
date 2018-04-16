@@ -12,7 +12,7 @@ from django.db import models, connection, transaction
 from django.db.models import F, Sum, Max, Min, CharField, Count
 from django.db.models.signals import post_save, pre_delete
 from django.utils.encoding import python_2_unicode_compatible
-from django.utils import six
+from django.utils import six, timezone
 from django.utils.translation import ugettext as _
 from django.utils.functional import cached_property
 
@@ -617,7 +617,7 @@ class PartnerOrganization(TimeStampedModel):
                 travel_type=TravelType.PROGRAMME_MONITORING,
                 travels__traveler=F('primary_traveler'),
                 travels__status__in=[Travel.COMPLETED],
-                travels__end_date__year=datetime.datetime.now().year,
+                travels__end_date__year=timezone.now().year,
                 partner=partner,
             )
 
