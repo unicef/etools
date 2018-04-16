@@ -254,7 +254,7 @@ class InterventionAttachmentSerializer(serializers.ModelSerializer):
 
 
 class InterventionResultNestedSerializer(serializers.ModelSerializer):
-    cp_output_name = serializers.CharField(source="cp_output.name", read_only=True)
+    cp_output_name = serializers.CharField(source="cp_output.output_name", read_only=True)
     ram_indicator_names = serializers.SerializerMethodField(read_only=True)
     ll_results = LowerResultSerializer(many=True, read_only=True)
 
