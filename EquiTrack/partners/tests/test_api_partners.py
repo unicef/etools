@@ -156,7 +156,8 @@ class TestPartnerOrganizationAddView(BaseTenantTestCase):
                     "PARTNER_TYPE_DESC": "UN AGENCY",
                     "CSO_TYPE": "National NGO",
                     "TOTAL_CASH_TRANSFERRED_CP": "2,000",
-                    "CORE_VALUE_ASSESSMENT_DT": "01-Jan-01"
+                    "CORE_VALUE_ASSESSMENT_DT": "01-Jan-01",
+                    "COUNTRY": "239",
                 }
             }
         }))
@@ -173,7 +174,7 @@ class TestPartnerOrganizationAddView(BaseTenantTestCase):
         partner = qs.first()
         self.assertEqual(partner.partner_type, PartnerType.UN_AGENCY)
         self.assertEqual(partner.cso_type, "National")
-        self.assertEqual(partner.total_ct_cp, 2000.00)
+        self.assertEqual(partner.total_ct_cp, None)
         self.assertEqual(
             partner.core_values_assessment_date,
             datetime.date(2001, 1, 1)

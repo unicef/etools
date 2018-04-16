@@ -10,7 +10,7 @@ from utils.common.models.fields import CodedGenericRelation
 
 class GenericChild(models.Model):
     object_id = models.IntegerField()
-    content_type = models.ForeignKey(ContentType)
+    content_type = models.ForeignKey(ContentType, related_name='generic_child')
     obj = GenericForeignKey()
 
     field = models.IntegerField()
@@ -21,7 +21,7 @@ class GenericChild(models.Model):
 
 class CodedGenericChild(models.Model):
     object_id = models.IntegerField()
-    content_type = models.ForeignKey(ContentType)
+    content_type = models.ForeignKey(ContentType, related_name='coded_generic_child')
     obj = GenericForeignKey()
 
     code = models.CharField(max_length=10, blank=True)
