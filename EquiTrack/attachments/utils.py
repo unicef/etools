@@ -1,3 +1,4 @@
+from audit.models import Engagement
 from partners.models import (
     Agreement,
     AgreementAmendment,
@@ -27,7 +28,7 @@ def get_partner_obj(obj):
         return obj.content_object.agreement.partner
     elif isinstance(obj.content_object, (InterventionAmendment, InterventionAttachment)):
         return obj.content_object.intervention.agreement.partner
-    elif isinstance(obj.content_object, (Agreement, Assessment)):
+    elif isinstance(obj.content_object, (Agreement, Assessment, Engagement)):
         return obj.content_object.partner
     elif isinstance(obj.content_object, TPMActivity):
         return obj.content_object.tpm_visit.tpm_partner

@@ -8,6 +8,7 @@ from attachments.tests.factories import (
     AttachmentFactory,
     AttachmentFileTypeFactory,
 )
+from audit.tests.factories import EngagementFactory
 from EquiTrack.tests.cases import BaseTenantTestCase
 from partners.models import PartnerType
 from partners.tests.factories import (
@@ -70,6 +71,8 @@ class TestAttachmentListView(BaseTenantTestCase):
         cls.tpm_partner = SimpleTPMPartnerFactory(vendor_number="V432")
         cls.tpm_visit = TPMVisitFactory(tpm_partner=cls.tpm_partner)
         cls.tpm_activity = TPMActivityFactory(tpm_visit=cls.tpm_visit)
+
+        cls.engagement = EngagementFactory(partner=cls.partner)
 
         cls.default_partner_response = [{
             "partner": "",
@@ -398,6 +401,72 @@ class TestAttachmentListView(BaseTenantTestCase):
             "partner": self.tpm_partner.name,
             "partner_type": "",
             "vendor_number": self.tpm_partner.vendor_number,
+            "pd_ssfa_number": "",
+        }])
+        six.assertCountEqual(self, [x["file_type"] for x in response.data], [
+            self.file_type_1.label,
+            self.file_type_2.label,
+            file_type.label
+        ])
+
+    def test_audit_engagement_attachments(self):
+        code = "audit_engagement"
+        file_type = AttachmentFileTypeFactory(
+            label="Audit Engagement",
+            code=code
+        )
+        AttachmentFactory(
+            file_type=file_type,
+            code=code,
+            file="sample3.pdf",
+            content_object=self.engagement,
+            uploaded_by=self.user
+        )
+        response = self.forced_auth_req(
+            "get",
+            self.url,
+            user=self.unicef_staff,
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(response.data), 3)
+        self.assert_keys(response)
+        self.assert_values(response, self.default_partner_response + [{
+            "partner": self.partner.name,
+            "partner_type": self.partner.partner_type,
+            "vendor_number": self.partner.vendor_number,
+            "pd_ssfa_number": "",
+        }])
+        six.assertCountEqual(self, [x["file_type"] for x in response.data], [
+            self.file_type_1.label,
+            self.file_type_2.label,
+            file_type.label
+        ])
+
+    def test_audit_engagement_report_attachments(self):
+        code = "audit_report"
+        file_type = AttachmentFileTypeFactory(
+            label="Audit Report",
+            code=code
+        )
+        AttachmentFactory(
+            file_type=file_type,
+            code=code,
+            file="sample3.pdf",
+            content_object=self.engagement,
+            uploaded_by=self.user
+        )
+        response = self.forced_auth_req(
+            "get",
+            self.url,
+            user=self.unicef_staff,
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(response.data), 3)
+        self.assert_keys(response)
+        self.assert_values(response, self.default_partner_response + [{
+            "partner": self.partner.name,
+            "partner_type": self.partner.partner_type,
+            "vendor_number": self.partner.vendor_number,
             "pd_ssfa_number": "",
         }])
         six.assertCountEqual(self, [x["file_type"] for x in response.data], [
