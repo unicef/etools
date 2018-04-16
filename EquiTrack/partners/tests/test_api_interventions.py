@@ -1197,7 +1197,6 @@ class TestAPInterventionIndicatorsUpdateView(BaseTenantTestCase):
     def setUp(self):
         self.data = {
             "is_active": True,
-            "section": self.section.pk
         }
 
     def _make_request(self, user, data=None):
