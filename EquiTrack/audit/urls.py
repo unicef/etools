@@ -34,6 +34,7 @@ special_audits_api = routers.SimpleRouter()
 special_audits_api.register(r'special-audits', SpecialAuditViewSet, base_name='special-audits')
 
 
+app_name = 'audit'
 urlpatterns = [
     url(r'^', include(auditor_firms_api.urls)),
     url(r'^', include(auditor_staffmember_api.urls)),

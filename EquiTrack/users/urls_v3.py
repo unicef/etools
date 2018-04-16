@@ -9,6 +9,7 @@ from users.views_v3 import (
     UsersListAPIView,
 )
 
+app_name = 'users'
 urlpatterns = (
     # api
     url(r'^profile/$', MyProfileAPIView.as_view(http_method_names=['get', 'patch']), name="myprofile-detail"),
