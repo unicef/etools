@@ -17,7 +17,7 @@ jobs:
     steps:
       - checkout
       - restore_cache:
-          key: deps2-{{ .Branch }}-{{ checksum "EquiTrack/requirements/test.txt" }}-{{ checksum ".circleci/config.yml" }}
+          key: deps2-{{ .Branch }}-{{ checksum "EquiTrack/requirements/base.txt" }}--{{ checksum "EquiTrack/requirements/test.txt" }}-{{ checksum ".circleci/config.yml" }}
       - run:
           name: create main virtualenv, install requirements
           command: |
@@ -25,7 +25,7 @@ jobs:
             . env1/bin/activate
             pip install -r EquiTrack/requirements/test.txt
       - save_cache:
-          key: deps2-{{ .Branch }}-{{ checksum "EquiTrack/requirements/test.txt" }}-{{ checksum ".circleci/config.yml" }}
+          key: deps2-{{ .Branch }}-{{ checksum "EquiTrack/requirements/base.txt" }}--{{ checksum "EquiTrack/requirements/test.txt" }}-{{ checksum ".circleci/config.yml" }}
           paths:
             - "env1"
             - /root/.cache/pip

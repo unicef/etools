@@ -119,7 +119,9 @@ class PRPIndicatorSerializer(serializers.ModelSerializer):
             'baseline',
             'target',
             'locations',
-            'disaggregation'
+            'disaggregation',
+            'is_high_frequency',
+            'is_active',
         )
 
 
