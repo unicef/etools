@@ -11,6 +11,7 @@ from users.views_v2 import (
 )
 
 
+app_name = 'users'
 urlpatterns = (
     url(r'^profile/$', UserAuthAPIView.as_view()),
     url(r'^changecountry/$', ChangeUserCountryView.as_view(http_method_names=['post']), name="country-change"),

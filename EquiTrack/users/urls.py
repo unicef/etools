@@ -10,6 +10,7 @@ from users.views import (
     UsersDetailAPIView,
 )
 
+app_name = 'users'
 urlpatterns = (
     # api
     url(r'^api/profile/$', UserAuthAPIView.as_view(), name="user-api-profile"),
