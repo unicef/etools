@@ -17,7 +17,7 @@ def site_url():
 def build_frontend_url(*parts):
     return '{domain}{change_country_view}?country={country_id}&next={next}'.format(
         domain=site_url(),
-        change_country_view=reverse('country-change'),
+        change_country_view=reverse('users:country-change'),
         country_id=Country.objects.get(schema_name=connection.schema_name).id,
         next=urlquote('/'.join(map(str, ('',) + parts))),
     )

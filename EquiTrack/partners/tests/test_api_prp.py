@@ -3,6 +3,7 @@ import os
 import datetime
 
 from django.core.urlresolvers import reverse, resolve
+from django.utils import timezone
 
 from rest_framework import status
 from rest_framework.test import APIRequestFactory
@@ -86,8 +87,8 @@ class TestInterventionsAPI(WorkspaceRequiredAPITestMixIn, BaseTenantTestCase):
         self.assertEqual(response, expected_interventions)
 
     def test_prp_api_modified_queries(self):
-        yesterday = (datetime.datetime.today() - datetime.timedelta(days=1)).isoformat()
-        tomorrow = (datetime.datetime.today() + datetime.timedelta(days=1)).isoformat()
+        yesterday = (timezone.now() - datetime.timedelta(days=1)).isoformat()
+        tomorrow = (timezone.now() + datetime.timedelta(days=1)).isoformat()
         checks = [
             ({'updated_before': yesterday}, 0),
             ({'updated_before': tomorrow}, 3),

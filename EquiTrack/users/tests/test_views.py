@@ -28,7 +28,7 @@ class TestUserAuthAPIView(BaseTenantTestCase):
         self.user = UserFactory()
         response = self.forced_auth_req(
             "get",
-            reverse("user-api-profile"),
+            reverse("users:user-api-profile"),
             user=self.user
         )
         self.assertEqual(response.status_code, status.HTTP_200_OK)
@@ -42,7 +42,7 @@ class TestChangeUserCountry(BaseTenantTestCase):
 
     def setUp(self):
         super(TestChangeUserCountry, self).setUp()
-        self.url = reverse("country-change")
+        self.url = reverse("users:country-change")
 
     def test_post(self):
         self.unicef_staff.profile.countries_available.add(
@@ -222,7 +222,7 @@ class TestMyProfileAPIView(BaseTenantTestCase):
         super(TestMyProfileAPIView, self).setUp()
         self.unicef_staff = UserFactory(is_staff=True)
         self.unicef_superuser = UserFactory(is_superuser=True)
-        self.url = reverse("myprofile-detail")
+        self.url = reverse("users:myprofile-detail")
 
     def test_get(self):
         response = self.forced_auth_req(
@@ -299,7 +299,7 @@ class TestUsersDetailAPIView(BaseTenantTestCase):
         user = UserFactory()
         response = self.forced_auth_req(
             "get",
-            reverse("user-detail", args=[self.unicef_staff.pk]),
+            reverse("users:user-detail", args=[self.unicef_staff.pk]),
             user=user,
         )
         self.assertEqual(response.status_code, status.HTTP_200_OK)
@@ -309,7 +309,7 @@ class TestUsersDetailAPIView(BaseTenantTestCase):
         user = UserFactory()
         response = self.forced_auth_req(
             "get",
-            reverse("user-detail", args=[user.pk]),
+            reverse("users:user-detail", args=[user.pk]),
             user=self.unicef_staff,
         )
         self.assertEqual(response.status_code, status.HTTP_200_OK)
@@ -318,7 +318,7 @@ class TestUsersDetailAPIView(BaseTenantTestCase):
     def test_get_not_found(self):
         response = self.forced_auth_req(
             "get",
-            reverse("user-detail", args=[404]),
+            reverse("users:user-detail", args=[404]),
             user=self.unicef_staff,
         )
         self.assertEqual(response.status_code, status.HTTP_200_OK)
@@ -332,7 +332,7 @@ class TestProfileEdit(BaseTenantTestCase):
 
     def setUp(self):
         super(TestProfileEdit, self).setUp()
-        self.url = reverse("user_profile")
+        self.url = reverse("users:user_profile")
 
     def test_get_non_staff(self):
         user = UserFactory()
