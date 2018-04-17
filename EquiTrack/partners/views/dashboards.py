@@ -2,7 +2,7 @@ from __future__ import unicode_literals
 
 from datetime import datetime
 from django.db.models import Case, When, F, Max, DateTimeField, DurationField, ExpressionWrapper, Min, Sum, Count, \
-    CharField, BooleanField
+    CharField
 
 from rest_framework_csv import renderers as r
 from rest_framework.permissions import IsAdminUser

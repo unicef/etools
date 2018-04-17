@@ -187,8 +187,6 @@ class InterventionListSerializer(BaseInterventionListSerializer):
     fr_currency = serializers.SerializerMethodField()
     multi_curr_flag = serializers.BooleanField()
 
-
-
     def fr_currencies_ok(self, obj):
         return obj.frs__currency__count == 1 if obj.frs__currency__count else None
 
