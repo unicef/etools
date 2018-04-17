@@ -1,6 +1,8 @@
 from __future__ import unicode_literals
 
 from rest_framework.exceptions import ValidationError
+from django.core.urlresolvers import reverse
+from django.test import RequestFactory
 
 from EquiTrack.tests.cases import BaseTenantTestCase
 from locations.tests.factories import LocationFactory
@@ -137,13 +139,24 @@ class TestAppliedIndicatorSerializer(BaseTenantTestCase):
         ]})
 
     def test_validate_no_section(self):
-        """If no section provided, then fail validation"""
+        """If no section provided on indicator creation, then fail validation"""
         del self.data["section"]
-        serializer = AppliedIndicatorSerializer(data=self.data)
+
+        request = RequestFactory().post(
+            reverse('partners_api:intervention-indicators-update', args=[self.intervention.id])
+        )
+        serializer = AppliedIndicatorSerializer(data=self.data, context={"request": request})
         self.assertFalse(serializer.is_valid())
         self.assertEqual(serializer.errors, {"non_field_errors": [
             'Section is required'
         ]})
+
+        # PATCHing an indicator should not require to have sections in the request
+        request = RequestFactory().patch(
+            reverse('partners_api:intervention-indicators-update', args=[self.intervention.id])
+        )
+        serializer = AppliedIndicatorSerializer(data=self.data, context={"request": request})
+        self.assertTrue(serializer.is_valid())
 
     def test_validate_invalid_section(self):
         """If sector already set on applied indicator then fail validation"""
