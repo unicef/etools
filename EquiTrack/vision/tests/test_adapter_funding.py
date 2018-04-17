@@ -123,6 +123,12 @@ class TestFundReservationsSynchronizer(BaseTenantTestCase):
             [self.data]
         )
 
+    def test_update_fr_totals_no_fr_items__overall_amount_dc(self):
+        # Test for https://app.clubhouse.io/unicefetools/story/4978/fr-handler-none-values-failing-on-frs
+        # We were throwing an exception because we expected Sum() to always
+        # return a value, but if there's nothing to sum, it returns None.
+        self.adapter.update_fr_totals()
+
     def test_filter_records_no_overall_amount(self):
         """If no overall amount then ignore record"""
         self.data["OVERALL_AMOUNT"] = ""
