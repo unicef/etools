@@ -5,7 +5,7 @@ from __future__ import unicode_literals
 
 from EquiTrack.tests.cases import BaseTenantTestCase
 from partners import forms
-from partners.models import PartnerType
+from partners.models import PartnerType, PartnerOrganization
 from partners.tests.factories import PartnerFactory, PartnerStaffFactory
 from users.tests.factories import ProfileFactory, UserFactory
 
@@ -17,7 +17,7 @@ class TestPartnersAdminForm(BaseTenantTestCase):
             "name": "Name",
             "partner_type": PartnerType.UN_AGENCY,
             "rating": "High",
-            "type_of_assessment": "Normal",
+            "type_of_assessment": PartnerOrganization.MICRO_ASSESSMENT,
         }
 
     def test_form(self):
