@@ -178,6 +178,10 @@ class PRPInterventionListSerializer(serializers.ModelSerializer):
     cso_budget_currency = serializers.SerializerMethodField(read_only=True)
     unicef_budget = serializers.DecimalField(source='total_unicef_budget', read_only=True,
                                              max_digits=20, decimal_places=2)
+    unicef_budget_supplies = serializers.DecimalField(source='total_in_kind_amount', read_only=True,
+                                                      max_digits=20, decimal_places=2)
+    unicef_budget_cash = serializers.DecimalField(source='total_unicef_cash', read_only=True,
+                                                  max_digits=20, decimal_places=2)
     unicef_budget_currency = serializers.SerializerMethodField(read_only=True)
     # TODO: update this after FR Validation changes, pending new Insight API changes.
 
@@ -222,5 +226,7 @@ class PRPInterventionListSerializer(serializers.ModelSerializer):
             'expected_results',
             'update_date',
             'amendments',
-            'locations'
+            'locations',
+            'unicef_budget_cash',
+            'unicef_budget_supplies'
         )

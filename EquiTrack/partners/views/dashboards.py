@@ -39,8 +39,10 @@ class InterventionPartnershipDashView(ListCreateAPIView):
             Sum("frs__actual_amt"),
             Sum("frs__actual_amt_local"),
             Count("frs__currency", distinct=True),
-            max_fr_currency=Max("frs__currency", output_field=CharField(), distinct=True)
+            max_fr_currency=Max("frs__currency", output_field=CharField(), distinct=True),
+            multi_curr_flag=Count(Case(When(frs__multi_curr_flag=True, then=1)))
         )
+
         return qs.order_by('agreement__partner__name')
 
     def append_last_pv_date(self, serializer):
