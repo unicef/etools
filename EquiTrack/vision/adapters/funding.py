@@ -90,9 +90,8 @@ class FundReservationsSynchronizer(VisionDataSynchronizer):
             self.fr_headers[item.fr_number] = item
 
     def _filter_records(self, records):
-        # records = records["ROWSET"]["ROW"]
         records = super(FundReservationsSynchronizer, self)._filter_records(records)
-        print(records)
+        
         def bad_record(record):
             # We don't care about FRs without expenditure
             if not record['OVERALL_AMOUNT']:
