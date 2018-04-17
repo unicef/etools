@@ -191,14 +191,13 @@ class PartnerSynchronizer(VisionDataSynchronizer):
                 logger.debug('Updating Partner', partner_org)
 
                 # clear basis_for_risk_rating in certain cases
-                rating_non_assessed = partner_org.rating == PartnerOrganization.RATING_NON_ASSESSED
-                risk_rating_required_types = partner_org.type_of_assessment.upper() in [
-                    PartnerOrganization.HIGH_RISK_ASSUMED, PartnerOrganization.LOW_RISK_ASSUMED]
-                is_microassessment = partner_org.type_of_assessment == PartnerOrganization.MICRO_ASSESSMENT
                 if partner_org.basis_for_risk_rating and (
-                        risk_rating_required_types or (rating_non_assessed and is_microassessment)):
+                        partner_org.type_of_assessment.upper() in [PartnerOrganization.HIGH_RISK_ASSUMED,
+                                                                   PartnerOrganization.LOW_RISK_ASSUMED] or (
+                        partner_org.rating == PartnerOrganization.RATING_NON_ASSESSED and
+                        partner_org.type_of_assessment == PartnerOrganization.MICRO_ASSESSMENT)
+                ):
                     partner_org.basis_for_risk_rating = ''
-
                 partner_org.save()
 
             if new:
@@ -250,9 +249,9 @@ class PartnerSynchronizer(VisionDataSynchronizer):
 
     @staticmethod
     def get_type_of_assessment(partner):
-        type_of_assessments = [rr[0] for rr in PartnerOrganization.TYPE_OF_ASSESSMENT]
-        if 'TYPE_OF_ASSESSMENT' in partner and partner.get('TYPE_OF_ASSESSMENT').upper() in type_of_assessments:
-            return partner['TYPE_OF_ASSESSMENT'].upper()
+        type_of_assessments = dict(PartnerOrganization.TYPE_OF_ASSESSMENT)
+        if 'TYPE_OF_ASSESSMENT' in partner:
+            return type_of_assessments.get(partner['TYPE_OF_ASSESSMENT'], partner['TYPE_OF_ASSESSMENT'])
         return ''
 
 

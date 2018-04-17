@@ -313,19 +313,18 @@ class PartnerOrganizationCreateUpdateSerializer(SnapshotModelSerializer):
     def validate(self, data):
         data = super(PartnerOrganizationCreateUpdateSerializer, self).validate(data)
 
-        type_of_assessment = data.get('type_of_assessment', None)
-        rating = data.get('rating', None)
-        basis_for_risk_rating = data.get('basis_for_risk_rating', None)
+        type_of_assessment = data.get('type_of_assessment', self.instance.type_of_assessment)
+        rating = data.get('rating', self.instance.rating)
+        basis_for_risk_rating = data.get('basis_for_risk_rating', self.instance.basis_for_risk_rating)
 
-        rating_non_assessed = rating == PartnerOrganization.RATING_NON_ASSESSED
-        risk_rating_required_types = type_of_assessment and type_of_assessment.upper() in [
-            PartnerOrganization.HIGH_RISK_ASSUMED, PartnerOrganization.LOW_RISK_ASSUMED]
-
-        if basis_for_risk_rating and risk_rating_required_types:
+        if basis_for_risk_rating and \
+                type_of_assessment in [PartnerOrganization.HIGH_RISK_ASSUMED, PartnerOrganization.LOW_RISK_ASSUMED]:
             raise ValidationError(
                 {'basis_for_risk_rating': 'The basis for risk rating has to be blank if Type is Low or High'})
 
-        if basis_for_risk_rating and rating_non_assessed and type_of_assessment == PartnerOrganization.MICRO_ASSESSMENT:
+        if basis_for_risk_rating and \
+                rating == PartnerOrganization.RATING_NON_ASSESSED and \
+                type_of_assessment == PartnerOrganization.MICRO_ASSESSMENT:
             raise ValidationError({
                 'basis_for_risk_rating':
                     'The basis for risk rating has to be blank if rating is Not Required and type is Micro Assessment'

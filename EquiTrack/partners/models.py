@@ -247,6 +247,7 @@ class PartnerOrganization(TimeStampedModel):
     SIMPLIFIED_CHECKLIST = 'SIMPLIFIED CHECKLIST'
     OTHERS = 'OTHERS'
 
+    # maybe at some point this can become a type_of_assessment can became a choice
     TYPE_OF_ASSESSMENT = (
         (MICRO_ASSESSMENT, 'Micro Assessment'),
         (HIGH_RISK_ASSUMED, 'High Risk Assumed'),
@@ -399,7 +400,6 @@ class PartnerOrganization(TimeStampedModel):
     type_of_assessment = models.CharField(
         verbose_name=_("Assessment Type"),
         max_length=50,
-        choices=TYPE_OF_ASSESSMENT,
         default='',
     )
     last_assessment_date = models.DateField(
