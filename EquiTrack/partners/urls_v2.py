@@ -52,6 +52,7 @@ from partners.views.v2 import (
 
 # http://www.django-rest-framework.org/api-guide/format-suffixes/
 
+app_name = 'partners'
 urlpatterns = (
 
     url(r'^agreements/$', view=AgreementListAPIView.as_view(), name='agreement-list'),
