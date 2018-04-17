@@ -1,5 +1,3 @@
-from __future__ import absolute_import, division, print_function, unicode_literals
-
 import datetime
 import json
 import logging
@@ -37,9 +35,9 @@ class FundReservationsSynchronizer(VisionDataSynchronizer):
         "CURRENT_FR_AMOUNT",
         "ACTUAL_CASH_TRANSFER",
         "OUTSTANDING_DCT",
-        # 'FR_OVERALL_AMOUNT_DC',
-        # 'ACTUAL_CASH_TRANSFER_DC',
-        # 'OUTSTANDING_DCT_DC'
+        'ACTUAL_CASH_TRANSFER_DC',
+        'OUTSTANDING_DCT_DC',
+        'MULTI_CURR_FLAG'
     )
     MAPPING = {
         "vendor_code": "VENDOR_CODE",
@@ -60,16 +58,16 @@ class FundReservationsSynchronizer(VisionDataSynchronizer):
         "due_date": "DUE_DATE",
         "intervention_amt": "CURRENT_FR_AMOUNT",
         "total_amt": "FR_OVERALL_AMOUNT",
-        # "total_amt_local": "FR_OVERALL_AMOUNT_DC",
-        # "actual_amt_local": "ACTUAL_CASH_TRANSFER_DC",
         "actual_amt": "ACTUAL_CASH_TRANSFER",
+        "actual_amt_local": "ACTUAL_CASH_TRANSFER_DC",
         "outstanding_amt": "OUTSTANDING_DCT",
-        # "outstanding_amt_local": "OUTSTANDING_DCT_DC",
+        "outstanding_amt_local": "OUTSTANDING_DCT_DC",
+        "multi_curr_flag": "MULTI_CURR_FLAG"
     }
     HEADER_FIELDS = ['VENDOR_CODE', 'FR_NUMBER', 'FR_DOC_DATE', 'FR_TYPE', 'CURRENCY',
                      'FR_DOCUMENT_TEXT', 'FR_START_DATE', 'FR_END_DATE', "FR_OVERALL_AMOUNT",
-                     "CURRENT_FR_AMOUNT", "ACTUAL_CASH_TRANSFER", "OUTSTANDING_DCT"]
-    # 'FR_OVERALL_AMOUNT_DC', 'ACTUAL_CASH_TRANSFER_DC', 'OUTSTANDING_DCT_DC']
+                     "CURRENT_FR_AMOUNT", "ACTUAL_CASH_TRANSFER", "OUTSTANDING_DCT",
+                     'ACTUAL_CASH_TRANSFER_DC', 'OUTSTANDING_DCT_DC', 'MULTI_CURR_FLAG']
 
     LINE_ITEM_FIELDS = ['LINE_ITEM', 'FR_NUMBER', 'WBS_ELEMENT', 'GRANT_NBR',
                         'FUND', 'OVERALL_AMOUNT', 'OVERALL_AMOUNT_DC',
@@ -85,16 +83,16 @@ class FundReservationsSynchronizer(VisionDataSynchronizer):
         super(FundReservationsSynchronizer, self).__init__(*args, **kwargs)
 
     def _convert_records(self, records):
-        return json.loads(records)
+        return json.loads(records)["ROWSET"]["ROW"]
 
     def map_header_objects(self, qs):
         for item in qs:
             self.fr_headers[item.fr_number] = item
 
     def _filter_records(self, records):
-        records = records["ROWSET"]["ROW"]
+        # records = records["ROWSET"]["ROW"]
         records = super(FundReservationsSynchronizer, self)._filter_records(records)
-
+        print(records)
         def bad_record(record):
             # We don't care about FRs without expenditure
             if not record['OVERALL_AMOUNT']:
@@ -108,6 +106,8 @@ class FundReservationsSynchronizer(VisionDataSynchronizer):
     def get_value_for_field(self, field, value):
         if field in ['start_date', 'end_date', 'document_date', 'due_date']:
             return datetime.datetime.strptime(value, '%d-%b-%y').date()
+        if field == 'multi_curr_flag':
+            return value != 'N'
         return value
 
     def get_fr_item_number(self, record):
@@ -134,7 +134,10 @@ class FundReservationsSynchronizer(VisionDataSynchronizer):
 
     def equal_fields(self, field, obj_field, record_field):
         if field in ['overall_amount', 'overall_amount_dc',
-                     'intervention_amt', 'total_amt', 'actual_amt', 'outstanding_amt']:
+                     'intervention_amt',
+                     'total_amt',
+                     'actual_amt', 'actual_amt_local',
+                     'outstanding_amt', 'outstanding_amt_local']:
             return comp_decimals(obj_field, record_field)
         if field == 'line_item':
             return six.text_type(obj_field) == record_field
@@ -152,7 +155,7 @@ class FundReservationsSynchronizer(VisionDataSynchronizer):
 
         to_update = []
 
-        fr_numbers_from_records = {k for k in six.iterkeys(self.header_records)}
+        fr_numbers_from_records = {k for k in self.header_records.keys()}
 
         list_of_headers = FundsReservationHeader.objects.filter(fr_number__in=fr_numbers_from_records)
         for h in list_of_headers:
