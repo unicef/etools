@@ -16,7 +16,6 @@ from partners.models import PartnerType
 from tpm.models import TPMActionPoint
 from tpm.tests.base import TPMTestCaseMixin
 from tpm.tests.factories import (
-    TPMActivityFactory,
     TPMPartnerFactory,
     TPMVisitFactory,
     UserFactory,
