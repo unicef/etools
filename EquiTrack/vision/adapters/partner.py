@@ -251,7 +251,7 @@ class PartnerSynchronizer(VisionDataSynchronizer):
     def get_type_of_assessment(partner):
         type_of_assessments = dict(PartnerOrganization.TYPE_OF_ASSESSMENT)
         if 'TYPE_OF_ASSESSMENT' in partner:
-            return type_of_assessments.get(partner['TYPE_OF_ASSESSMENT'], partner['TYPE_OF_ASSESSMENT'])
+            return type_of_assessments.get(partner['TYPE_OF_ASSESSMENT'].upper(), partner['TYPE_OF_ASSESSMENT'])
         return ''
 
 
