@@ -9,7 +9,7 @@ from django.conf import settings
 from django.contrib.postgres.fields import JSONField, ArrayField
 from django.core.urlresolvers import reverse
 from django.db import models, connection, transaction
-from django.db.models import F, Sum, Max, Min, CharField, Count
+from django.db.models import F, Sum, Max, Min, CharField, Count, Case, When
 from django.db.models.signals import post_save, pre_delete
 from django.utils.encoding import python_2_unicode_compatible
 from django.utils import six, timezone
@@ -1423,8 +1423,10 @@ class InterventionManager(models.Manager):
             Sum("frs__actual_amt_local"),
             Sum("frs__intervention_amt"),
             Count("frs__currency", distinct=True),
-            max_fr_currency=Max("frs__currency", output_field=CharField(), distinct=True)
+            max_fr_currency=Max("frs__currency", output_field=CharField(), distinct=True),
+            multi_curr_flag=Count(Case(When(frs__multi_curr_flag=True, then=1)))
         )
+
         return qs
 
 

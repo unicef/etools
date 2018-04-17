@@ -56,7 +56,7 @@ class TestModelChoiceFileField(BaseTenantTestCase):
         self.assertFalse(invalid_serializer.is_valid())
         self.assertIn('file_type', invalid_serializer.errors)
         self.assertIn(
-            'Invalid option "{pk_value}" - option does not available.'.format(pk_value=self.code2_obj.pk),
+            'Invalid option "{pk_value}" - option is not available.'.format(pk_value=self.code2_obj.pk),
             invalid_serializer.errors['file_type']
         )
 
