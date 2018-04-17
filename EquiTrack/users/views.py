@@ -5,7 +5,6 @@ from django.contrib.auth.models import Group
 from django.core.exceptions import ValidationError as DjangoValidationError
 from django.db import connection
 from django.http import HttpResponseRedirect, HttpResponseForbidden
-from django.shortcuts import get_object_or_404
 from django.utils import six
 from django.views.generic import FormView, RedirectView
 
@@ -155,9 +154,8 @@ class MyProfileAPIView(RetrieveUpdateAPIView):
             obj = self.request.user.profile
         except AttributeError:
             self.request.user.save()
-            obj = self.request.user.profile
+            obj = UserProfile.objects.get(user=self.request.user)
 
-        obj = get_object_or_404(UserProfile, user__id=self.request.user.id)
         # May raise a permission denied
         self.check_object_permissions(self.request, obj)
         return obj
@@ -236,7 +234,7 @@ class GroupViewSet(mixins.RetrieveModelMixin,
     """
     Returns a list of all User Groups
     """
-    queryset = Group.objects.all()
+    queryset = Group.objects.order_by('name')  # Provide consistent ordering
     serializer_class = GroupSerializer
     permission_classes = (IsAdminUser,)
 

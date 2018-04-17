@@ -53,7 +53,7 @@ class Attachment(TimeStampedModel, models.Model):
         verbose_name=_('File Attachment'),
         max_length=1024,
     )
-    hyperlink = models.CharField(max_length=255, blank=True, null=True, verbose_name=_('Hyperlink'))
+    hyperlink = models.CharField(max_length=255, blank=True, default='', verbose_name=_('Hyperlink'))
 
     content_type = models.ForeignKey(ContentType, verbose_name=_('Content Type'))
     object_id = models.IntegerField(verbose_name=_('Object ID'))
@@ -81,7 +81,10 @@ class Attachment(TimeStampedModel, models.Model):
 
     @property
     def url(self):
-        return six.text_type(self.file.url if self.file else self.hyperlink)
+        if self.file:
+            return self.file.url
+        else:
+            return self.hyperlink
 
     @property
     def filename(self):
@@ -107,6 +110,7 @@ class AttachmentFlat(models.Model):
     pd_ssfa_number = models.CharField(max_length=64, blank=True, verbose_name=_('PD SSFA Number'))
     file_type = models.CharField(max_length=100, blank=True, verbose_name=_('File Type'))
     file_link = models.CharField(max_length=1024, blank=True, verbose_name=_('File Link'))
+    filename = models.CharField(max_length=1024, blank=True, verbose_name=_('File Name'))
     uploaded_by = models.CharField(max_length=255, blank=True, verbose_name=_('Uploaded by'))
     created = models.CharField(max_length=50, verbose_name=_('Created'))
 

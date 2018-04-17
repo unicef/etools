@@ -270,16 +270,13 @@ class TestVisionDataSynchronizerSync(BaseTenantTestCase):
 
         # The first two calls to logger.info()  are part of the instantiation of VisionDataLoader so I don't need to
         # test them here.
-        self.assertEqual(mock_logger_info.call_count, 5)
-        expected_msg = 'About to get data from http://example.com'
+        self.assertEqual(mock_logger_info.call_count, 4)
+        expected_msg = '{} records returned from get'.format(len(vision_records))
         self.assertEqual(mock_logger_info.call_args_list[2][0], (expected_msg, ))
         self.assertEqual(mock_logger_info.call_args_list[2][1], {})
-        expected_msg = '{} records returned from get'.format(len(vision_records))
+        expected_msg = '{} records returned from conversion'.format(len(converted_records))
         self.assertEqual(mock_logger_info.call_args_list[3][0], (expected_msg, ))
         self.assertEqual(mock_logger_info.call_args_list[3][1], {})
-        expected_msg = '{} records returned from conversion'.format(len(converted_records))
-        self.assertEqual(mock_logger_info.call_args_list[4][0], (expected_msg, ))
-        self.assertEqual(mock_logger_info.call_args_list[4][1], {})
 
         self._assertVisionSyncLogFundamentals(len(converted_records), 99)
 
@@ -369,7 +366,6 @@ class TestVisionDataSynchronizerSync(BaseTenantTestCase):
             raise ValueError('Wrong!')
 
         mock_loader = mock.Mock()
-        mock_loader.url = 'http://example.com'
         mock_loader.get.side_effect = loader_get_side_effect
         MockLoaderClass = mock.Mock(return_value=mock_loader)
 
@@ -390,12 +386,9 @@ class TestVisionDataSynchronizerSync(BaseTenantTestCase):
 
         # The first two calls to logger.info()  are part of the instantiation of VisionDataLoader so I don't need to
         # test them here.
-        self.assertEqual(mock_logger_info.call_count, 4)
-        expected_msg = 'About to get data from http://example.com'
-        self.assertEqual(mock_logger_info.call_args_list[2][0], (expected_msg, ))
-        self.assertEqual(mock_logger_info.call_args_list[2][1], {})
+        self.assertEqual(mock_logger_info.call_count, 3)
         expected_msg = 'sync'
-        self.assertEqual(mock_logger_info.call_args_list[3][0], (expected_msg, ))
-        self.assertEqual(mock_logger_info.call_args_list[3][1], {'exc_info': True})
+        self.assertEqual(mock_logger_info.call_args_list[2][0], (expected_msg, ))
+        self.assertEqual(mock_logger_info.call_args_list[2][1], {'exc_info': True})
 
         self._assertVisionSyncLogFundamentals(0, 0, exception_message='Wrong!', successful=False)

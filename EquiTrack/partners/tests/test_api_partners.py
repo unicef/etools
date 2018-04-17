@@ -4,9 +4,10 @@ import datetime
 import json
 
 from django.core.urlresolvers import reverse
+from django.test import SimpleTestCase
 from mock import patch, Mock
 from rest_framework import status
-from unittest import TestCase, skip
+from unittest import skip
 
 from EquiTrack.tests.cases import BaseTenantTestCase
 from EquiTrack.tests.mixins import URLAssertionMixin
@@ -23,7 +24,7 @@ from users.tests.factories import GroupFactory, UserFactory
 INSIGHT_PATH = "partners.views.partner_organization_v2.get_data_from_insight"
 
 
-class URLsTestCase(URLAssertionMixin, TestCase):
+class URLsTestCase(URLAssertionMixin, SimpleTestCase):
     '''Simple test case to verify URL reversal'''
     def test_urls(self):
         '''Verify URL pattern names generate the URLs we expect them to.'''
@@ -155,7 +156,8 @@ class TestPartnerOrganizationAddView(BaseTenantTestCase):
                     "PARTNER_TYPE_DESC": "UN AGENCY",
                     "CSO_TYPE": "National NGO",
                     "TOTAL_CASH_TRANSFERRED_CP": "2,000",
-                    "CORE_VALUE_ASSESSMENT_DT": "01-Jan-01"
+                    "CORE_VALUE_ASSESSMENT_DT": "01-Jan-01",
+                    "COUNTRY": "239",
                 }
             }
         }))
@@ -172,7 +174,7 @@ class TestPartnerOrganizationAddView(BaseTenantTestCase):
         partner = qs.first()
         self.assertEqual(partner.partner_type, PartnerType.UN_AGENCY)
         self.assertEqual(partner.cso_type, "National")
-        self.assertEqual(partner.total_ct_cp, 2000.00)
+        self.assertEqual(partner.total_ct_cp, None)
         self.assertEqual(
             partner.core_values_assessment_date,
             datetime.date(2001, 1, 1)

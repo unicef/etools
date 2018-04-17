@@ -3,6 +3,7 @@ from __future__ import unicode_literals
 from django.utils.translation import ugettext as _
 from rest_framework import serializers
 
+from EquiTrack.mixins import ExportSerializerMixin
 from partners.serializers.fields import TypeArrayField
 from partners.models import (
     Agreement,
@@ -85,7 +86,7 @@ class AgreementExportSerializer(serializers.ModelSerializer):
         )
 
 
-class AgreementExportFlatSerializer(AgreementExportSerializer):
+class AgreementExportFlatSerializer(ExportSerializerMixin, AgreementExportSerializer):
     attached_agreement_file = serializers.FileField(
         label=_("Attached Agreement"),
         source="attached_agreement",

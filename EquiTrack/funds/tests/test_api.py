@@ -3,9 +3,9 @@ from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 from __future__ import unicode_literals
-from unittest import TestCase
 
 from django.core.urlresolvers import reverse
+from django.test import SimpleTestCase
 from django.utils import six
 from rest_framework import status
 from tablib.core import Dataset
@@ -23,7 +23,7 @@ from funds.tests.factories import (
 from users.tests.factories import UserFactory
 
 
-class UrlsTestCase(URLAssertionMixin, TestCase):
+class UrlsTestCase(URLAssertionMixin, SimpleTestCase):
     '''Simple test case to verify URL reversal'''
     def test_urls(self):
         '''Verify URL pattern names generate the URLs we expect them to.'''
@@ -65,8 +65,8 @@ class TestFundsReservationHeaderExportList(BaseTenantTestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         dataset = Dataset().load(response.content.decode('utf-8'), 'csv')
         self.assertEqual(dataset.height, 1)
-        self.assertEqual(len(dataset._get_headers()), 19)
-        self.assertEqual(len(dataset[0]), 19)
+        self.assertEqual(len(dataset._get_headers()), 20)
+        self.assertEqual(len(dataset[0]), 20)
 
     def test_csv_flat_export_api(self):
         response = self.forced_auth_req(
@@ -79,8 +79,8 @@ class TestFundsReservationHeaderExportList(BaseTenantTestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         dataset = Dataset().load(response.content.decode('utf-8'), 'csv')
         self.assertEqual(dataset.height, 1)
-        self.assertEqual(len(dataset._get_headers()), 19)
-        self.assertEqual(len(dataset[0]), 19)
+        self.assertEqual(len(dataset._get_headers()), 20)
+        self.assertEqual(len(dataset[0]), 20)
 
 
 class TestFundsReservationItemExportList(BaseTenantTestCase):

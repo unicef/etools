@@ -1,13 +1,14 @@
+from __future__ import unicode_literals
+
 import logging
 import sys
 from decimal import Decimal
 
 from django.conf import settings
-from django.contrib.auth import get_user_model
 from django.contrib.auth.models import Group, User
 from django.core.validators import MaxValueValidator, MinValueValidator
-from django.db import connection, models, transaction
-from django.db.models.signals import post_save, pre_delete
+from django.db import connection, models
+from django.db.models.signals import post_save
 from django.utils.encoding import python_2_unicode_compatible
 from django.utils.translation import ugettext_lazy as _
 
@@ -37,10 +38,10 @@ class Country(TenantMixin):
     name = models.CharField(max_length=100, verbose_name=_('Name'))
     country_short_code = models.CharField(
         max_length=10,
-        null=True, blank=True, verbose_name=_('Short Code')
+        default='', blank=True, verbose_name=_('Short Code')
     )
-    long_name = models.CharField(max_length=255, null=True, blank=True, verbose_name=_('Long Name'))
-    business_area_code = models.CharField(max_length=10, null=True, blank=True, verbose_name=_('Business Area Code'))
+    long_name = models.CharField(max_length=255, default='', blank=True, verbose_name=_('Long Name'))
+    business_area_code = models.CharField(max_length=10, default='', blank=True, verbose_name=_('Business Area Code'))
     latitude = models.DecimalField(
         null=True, blank=True, verbose_name=_('Latitude'), max_digits=8, decimal_places=5,
         validators=[MinValueValidator(Decimal(-90)), MaxValueValidator(Decimal(90))]
@@ -210,14 +211,16 @@ class UserProfile(models.Model):
                                                  verbose_name=_('Countries Available'))
     section = models.ForeignKey(Section, null=True, blank=True, verbose_name=_('Section'))
     office = models.ForeignKey(Office, null=True, blank=True, verbose_name=_('Office'))
-    job_title = models.CharField(max_length=255, null=True, blank=True, verbose_name=_('Job Title'))
-    phone_number = models.CharField(max_length=20, null=True, blank=True, verbose_name=_('Phone Number'))
+    job_title = models.CharField(max_length=255, default='', blank=True, verbose_name=_('Job Title'))
+    phone_number = models.CharField(max_length=20, default='', blank=True, verbose_name=_('Phone Number'))
 
+    # staff_id needs to be NULLable so we can make it unique while still making it optional
     staff_id = models.CharField(max_length=32, null=True, blank=True, unique=True, verbose_name=_('Staff ID'))
-    org_unit_code = models.CharField(max_length=32, null=True, blank=True, verbose_name=_('Org Unit Code'))
-    org_unit_name = models.CharField(max_length=64, null=True, blank=True, verbose_name=_('Org Unit Name'))
-    post_number = models.CharField(max_length=32, null=True, blank=True, verbose_name=_('Post Number'))
-    post_title = models.CharField(max_length=64, null=True, blank=True, verbose_name=_('Post Title'))
+    org_unit_code = models.CharField(max_length=32, default='', blank=True, verbose_name=_('Org Unit Code'))
+    org_unit_name = models.CharField(max_length=64, default='', blank=True, verbose_name=_('Org Unit Name'))
+    post_number = models.CharField(max_length=32, default='', blank=True, verbose_name=_('Post Number'))
+    post_title = models.CharField(max_length=64, default='', blank=True, verbose_name=_('Post Title'))
+    # vendor_number needs to be NULLable so we can make it unique while still making it optional
     vendor_number = models.CharField(max_length=32, null=True, blank=True, unique=True, verbose_name=_('Vendor Number'))
     supervisor = models.ForeignKey(settings.AUTH_USER_MODEL, related_name='supervisee', on_delete=models.SET_NULL,
                                    blank=True, null=True, verbose_name=_('Supervisor'))
@@ -225,7 +228,7 @@ class UserProfile(models.Model):
                             null=True, blank=True)  # related oic_set
 
     # TODO: refactor when sections are properly set
-    section_code = models.CharField(max_length=32, null=True, blank=True, verbose_name=_('Section Code'))
+    section_code = models.CharField(max_length=32, default='', blank=True, verbose_name=_('Section Code'))
 
     # TODO: figure this out when we need to autmatically map to groups
     # vision_roles = ArrayField(models.CharField(max_length=20, blank=True, choices=VISION_ROLES),
@@ -255,7 +258,7 @@ class UserProfile(models.Model):
         """
         Signal handler to create user profiles automatically
         """
-        if created:
+        if not cls.objects.filter(user=instance).exists():
             cls.objects.create(user=instance)
 
     @classmethod
@@ -311,62 +314,3 @@ class UserProfile(models.Model):
 
 post_save.connect(UserProfile.create_user_profile, sender=User)
 pre_user_save.connect(UserProfile.custom_update_user)  # TODO: The sender should be set
-
-
-def create_partner_user(sender, instance, created, **kwargs):
-    """
-    Create a user based on the email address of a partner staff member
-
-    :param sender: PartnerStaffMember class
-    :param instance: PartnerStaffMember instance
-    :param created: if the instance is newly created or not
-    :param kwargs:
-    """
-    if created:
-
-        try:
-            user, user_created = get_user_model().objects.get_or_create(
-                # the built in username field is 30 chars, we can't set this to the email address which is likely longer
-                username=instance.email[:30],
-                email=instance.email
-            )
-            if not user_created:
-                logger.info(u'User already exists for a partner staff member: {}'.format(instance.email))
-                # TODO: check for user not being already associated with another partnership (can be done on the form)
-        except Exception:
-            # we dont need do anything special except log the error, we have enough information to create the user later
-            logger.exception(u'Exception occurred whilst creating partner user')
-        else:
-            # TODO: here we have a decision.. either we update the user with the info just received from
-            # TODO: or we update the instance with the user we already have. this might have implications on login.
-            with transaction.atomic():
-                try:
-                    country = Country.objects.get(schema_name=connection.schema_name)
-                    user.profile.country = country
-                except Country.DoesNotExist:
-                    logger.error(u"Couldn't get the current country schema for user: {}".format(user.username))
-
-                user.email = instance.email
-                user.first_name = instance.first_name
-                user.last_name = instance.last_name
-                user.is_active = True
-                user.save()
-                user.profile.partner_staff_member = instance.id
-                user.profile.save()
-
-
-def delete_partner_relationship(sender, instance, **kwargs):
-    try:
-        profile = UserProfile.objects.filter(partner_staff_member=instance.id,
-                                             user__email=instance.email).get()
-        with transaction.atomic():
-            profile.partner_staff_member = None
-            profile.save()
-            profile.user.is_active = False
-            profile.user.save()
-    except Exception:
-        logger.exception(u'Exception occurred whilst de-linking partner user')
-
-
-pre_delete.connect(delete_partner_relationship, sender='partners.PartnerStaffMember')
-post_save.connect(create_partner_user, sender='partners.PartnerStaffMember')

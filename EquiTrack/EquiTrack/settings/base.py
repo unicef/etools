@@ -94,7 +94,7 @@ USE_L10N = True
 USE_TZ = True
 
 # DJANGO: HTTP
-MIDDLEWARE_CLASSES = (
+MIDDLEWARE = (
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.contrib.auth.middleware.SessionAuthenticationMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
@@ -103,7 +103,7 @@ MIDDLEWARE_CLASSES = (
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
     'corsheaders.middleware.CorsMiddleware',
-    'EquiTrack.mixins.EToolsTenantMiddleware',
+    'EquiTrack.middleware.EToolsTenantMiddleware',
     'waffle.middleware.WaffleMiddleware',  # needs request.tenant from EToolsTenantMiddleware
 )
 WSGI_APPLICATION = '%s.wsgi.application' % SITE_NAME
@@ -153,7 +153,6 @@ SHARED_APPS = (
     'rest_framework.authtoken',
     'drfpasswordless',
     'import_export',
-    'smart_selects',
     'gunicorn',
     'post_office',
     'django_celery_beat',
@@ -162,13 +161,6 @@ SHARED_APPS = (
     'leaflet',
     'corsheaders',
     'djangosaml2',
-    'allauth',
-    'allauth.account',
-    'allauth.socialaccount',
-    # allauth providers you want to enable:
-    # 'allauth.socialaccount.providers.facebook',
-    'allauth.socialaccount.providers.google',
-    # 'allauth.socialaccount.providers.twitter',
     'analytical',
     'mptt',
     'easy_pdf',
@@ -192,6 +184,7 @@ SHARED_APPS = (
 )
 TENANT_APPS = (
     'django_fsm',
+    'django_comments',
     'logentry_admin',
     'funds',
     'locations',
@@ -206,6 +199,7 @@ TENANT_APPS = (
     'firms',
     'management',
     'snapshot',
+    'action_points',
 )
 INSTALLED_APPS = ('tenant_schemas',) + SHARED_APPS + TENANT_APPS
 
@@ -236,7 +230,6 @@ TEMPLATES = [
             'context_processors': [
                 # Already defined Django-related contexts here
 
-                # `allauth` needs this from django
                 'django.contrib.auth.context_processors.auth',
                 'django.template.context_processors.request',
                 'django.template.context_processors.debug',
@@ -263,7 +256,6 @@ ROOT_URLCONF = '%s.urls' % SITE_NAME
 AUTHENTICATION_BACKENDS = (
     'django.contrib.auth.backends.ModelBackend',
     'djangosaml2.backends.Saml2Backend',
-    'allauth.account.auth_backends.AuthenticationBackend',
 )
 AUTH_USER_MODEL = 'auth.User'
 LOGIN_REDIRECT_URL = '/'
@@ -343,8 +335,8 @@ REST_FRAMEWORK = {
     ),
     'DEFAULT_AUTHENTICATION_CLASSES': (
         'rest_framework.authentication.SessionAuthentication',
-        'EquiTrack.mixins.EToolsTenantJWTAuthentication',
-        'EquiTrack.mixins.EtoolsTokenAuthentication',
+        'EquiTrack.auth.EToolsTenantJWTAuthentication',
+        'EquiTrack.auth.EtoolsTokenAuthentication',
     ),
     'TEST_REQUEST_RENDERER_CLASSES': (
         'rest_framework.renderers.JSONRenderer',
@@ -366,23 +358,6 @@ SWAGGER_SETTINGS = {
 # django-analytical: https://pythonhosted.org/django-analytical/
 USERVOICE_WIDGET_KEY = os.getenv('USERVOICE_KEY', '')
 
-# django-allauth: https://github.com/pennersr/django-allauth
-ACCOUNT_ADAPTER = 'EquiTrack.mixins.CustomAccountAdapter'
-ACCOUNT_AUTHENTICATION_METHOD = 'email'
-ACCOUNT_DEFAULT_HTTP_PROTOCOL = "https"
-ACCOUNT_EMAIL_REQUIRED = True
-ACCOUNT_EMAIL_VERIFICATION = "none"  # "optional", "mandatory" or "none"
-ACCOUNT_LOGOUT_REDIRECT_URL = "/login"
-ACCOUNT_LOGOUT_ON_GET = True
-ACCOUNT_UNIQUE_EMAIL = True
-SOCIALACCOUNT_AUTO_SIGNUP = True
-SOCIALACCOUNT_ADAPTER = 'EquiTrack.mixins.CustomSocialAccountAdapter'
-SOCIALACCOUNT_PROVIDERS = \
-    {'google':
-        {'SCOPE': ['profile', 'email'],
-         'AUTH_PARAMS': {'access_type': 'online'}}}
-SOCIALACCOUNT_STORE_TOKENS = True
-
 # django-mptt: https://github.com/django-mptt/django-mptt
 MPTT_ADMIN_LEVEL_INDENT = 20
 
@@ -396,6 +371,10 @@ LEAFLET_CONFIG = {
 
 # django-tenant-schemas: https://github.com/bernardopires/django-tenant-schemas
 TENANT_MODEL = "users.Country"  # app.Model
+
+# don't call set search_path so much
+# https://django-tenant-schemas.readthedocs.io/en/latest/use.html#performance-considerations
+TENANT_LIMIT_SET_CALLS = True
 
 # django-saml2: https://github.com/robertavram/djangosaml2
 HOST = os.environ.get('DJANGO_ALLOWED_HOST', 'localhost:8000')
@@ -529,6 +508,10 @@ ENVIRONMENT = os.environ.get('ENVIRONMENT', '')
 ETRIPS_VERSION = os.environ.get('ETRIPS_VERSION')
 
 INACTIVE_BUSINESS_AREAS = os.environ.get('INACTIVE_BUSINESS_AREAS', '').split(',')
+if INACTIVE_BUSINESS_AREAS == ['']:
+    # 'split' splits an empty string into an array with one empty string, which isn't
+    # really what we want
+    INACTIVE_BUSINESS_AREAS = []
 
 SLACK_URL = os.environ.get('SLACK_URL')
 
@@ -543,7 +526,7 @@ VISION_PASSWORD = os.getenv('VISION_PASSWORD', 'invalid_vision_password')
 ALLOW_BASIC_AUTH = os.getenv('ALLOW_BASIC_AUTH', False)
 if ALLOW_BASIC_AUTH:
     REST_FRAMEWORK['DEFAULT_AUTHENTICATION_CLASSES'] += (
-        'EquiTrack.mixins.DRFBasicAuthMixin',
+        'EquiTrack.auth.DRFBasicAuthMixin',
     )
 
 ISSUE_CHECKS = [
@@ -575,3 +558,7 @@ PASSWORDLESS_AUTH = {
     # username is better choice as it can be only 30 symbols max and unique.
     'PASSWORDLESS_USER_EMAIL_FIELD_NAME': 'username'
 }
+
+REPORT_EMAILS = os.getenv('REPORT_EMAILS', ['etools@unicef.org', ])
+
+USERVOICE_WIDGET_KEY = 'defaultVoiceKey'

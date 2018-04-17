@@ -1,6 +1,7 @@
 from __future__ import absolute_import, division, print_function, unicode_literals
 
 import json
+from operator import itemgetter
 
 from django.core.urlresolvers import reverse
 from django.contrib.auth import get_user_model
@@ -27,7 +28,7 @@ class TestUserAuthAPIView(BaseTenantTestCase):
         self.user = UserFactory()
         response = self.forced_auth_req(
             "get",
-            reverse("user-api-profile"),
+            reverse("users:user-api-profile"),
             user=self.user
         )
         self.assertEqual(response.status_code, status.HTTP_200_OK)
@@ -41,7 +42,7 @@ class TestChangeUserCountry(BaseTenantTestCase):
 
     def setUp(self):
         super(TestChangeUserCountry, self).setUp()
-        self.url = reverse("country-change")
+        self.url = reverse("users:country-change")
 
     def test_post(self):
         self.unicef_staff.profile.countries_available.add(
@@ -221,7 +222,7 @@ class TestMyProfileAPIView(BaseTenantTestCase):
         super(TestMyProfileAPIView, self).setUp()
         self.unicef_staff = UserFactory(is_staff=True)
         self.unicef_superuser = UserFactory(is_superuser=True)
-        self.url = reverse("myprofile-detail")
+        self.url = reverse("users:myprofile-detail")
 
     def test_get(self):
         response = self.forced_auth_req(
@@ -237,17 +238,29 @@ class TestMyProfileAPIView(BaseTenantTestCase):
 
     def test_get_no_profile(self):
         """Ensure profile is created for user, if it does not exist"""
-        user = UserFactory()
-        UserProfile.objects.get(user=user).delete()
+        user = self.unicef_staff
+        UserProfile.objects.filter(user=user).delete()
         self.assertFalse(UserProfile.objects.filter(user=user).exists())
+
+        # We need user.profile to NOT return a profile, otherwise the view will
+        # still see the deleted one and not create a new one.  (This is only a
+        # problem for this test, not in real usage.)
+        # ``user.refresh_from_db()`` does not seem sufficient to stop user.profile from
+        # returning the now-deleted profile object, so do it the hard way.
+        # (Hopefully this is fixed, but here in Django 1.10.8 it's a problem.
+        # And I don't see any mention of a fix in release notes up through
+        # 2.0.3.)
+        user = User.objects.get(pk=user.pk)
+
+        # View MyProfileDetail.  We expect it to create a new profile for this user.
         response = self.forced_auth_req(
             "get",
             self.url,
-            user=self.unicef_staff,
+            user=user,
         )
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response.data["name"], user.get_full_name())
-        self.assertFalse(UserProfile.objects.filter(user=user).exists())
+        self.assertTrue(UserProfile.objects.filter(user=user).exists())
 
     def test_patch(self):
         self.assertNotEqual(
@@ -286,7 +299,7 @@ class TestUsersDetailAPIView(BaseTenantTestCase):
         user = UserFactory()
         response = self.forced_auth_req(
             "get",
-            reverse("user-detail", args=[self.unicef_staff.pk]),
+            reverse("users:user-detail", args=[self.unicef_staff.pk]),
             user=user,
         )
         self.assertEqual(response.status_code, status.HTTP_200_OK)
@@ -296,7 +309,7 @@ class TestUsersDetailAPIView(BaseTenantTestCase):
         user = UserFactory()
         response = self.forced_auth_req(
             "get",
-            reverse("user-detail", args=[user.pk]),
+            reverse("users:user-detail", args=[user.pk]),
             user=self.unicef_staff,
         )
         self.assertEqual(response.status_code, status.HTTP_200_OK)
@@ -305,7 +318,7 @@ class TestUsersDetailAPIView(BaseTenantTestCase):
     def test_get_not_found(self):
         response = self.forced_auth_req(
             "get",
-            reverse("user-detail", args=[404]),
+            reverse("users:user-detail", args=[404]),
             user=self.unicef_staff,
         )
         self.assertEqual(response.status_code, status.HTTP_200_OK)
@@ -319,7 +332,7 @@ class TestProfileEdit(BaseTenantTestCase):
 
     def setUp(self):
         super(TestProfileEdit, self).setUp()
-        self.url = reverse("user_profile")
+        self.url = reverse("users:user_profile")
 
     def test_get_non_staff(self):
         user = UserFactory()
@@ -366,14 +379,15 @@ class TestGroupViewSet(BaseTenantTestCase):
         self.url = "/api/groups/"
 
     def test_get(self):
-        group = Group.objects.first()
+        group = Group.objects.order_by('id').first()
         response = self.forced_auth_req(
             "get",
             self.url,
             user=self.unicef_staff,
         )
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(response.data[0]["id"], six.text_type(group.pk))
+        groups = sorted(response.data, key=itemgetter('id'))
+        self.assertEqual(groups[0]['id'], six.text_type(group.pk))
 
     def test_api_groups_list(self):
         response = self.forced_auth_req(

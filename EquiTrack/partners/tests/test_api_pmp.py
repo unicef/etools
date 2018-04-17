@@ -3,9 +3,11 @@ from __future__ import division
 from __future__ import print_function
 from __future__ import unicode_literals
 import json
-from unittest import TestCase
+from operator import itemgetter
 
 from django.core.urlresolvers import reverse
+from django.test import SimpleTestCase
+from django.utils import six
 
 from rest_framework import status
 from tenant_schemas.test.client import TenantClient
@@ -28,7 +30,7 @@ from publics.tests.factories import PublicsCurrencyFactory
 from users.tests.factories import UserFactory
 
 
-class URLsTestCase(URLAssertionMixin, TestCase):
+class URLsTestCase(URLAssertionMixin, SimpleTestCase):
     '''Simple test case to verify URL reversal'''
     def test_urls(self):
         '''Verify URL pattern names generate the URLs we expect them to.'''
@@ -88,91 +90,98 @@ class TestPMPStaticDropdownsListApiView(BaseTenantTestCase):
         '''Given a list of 2 tuples of (value, name), returns those in a list in the same format in which I expect
         PmpStaticDropdownsListApiView to format its responses.
         '''
-        return sorted([{'value': value, 'label': label} for value, label in choices])
+        return sorted(
+            [
+                {'value': value, 'label': label}
+                for value, label in choices
+            ],
+            key=itemgetter('value')
+        )
 
     def test_cso_types(self):
         '''Verify the cso_types portion of the response'''
         PartnerFactory(cso_type=PartnerOrganization.CSO_TYPES['International'])
         # These should be filtered out of the endpoint response (https://github.com/unicef/etools/issues/510)
-        PartnerFactory(cso_type=None)
         PartnerFactory(cso_type='')
 
         response = self.forced_auth_req('get', self.url)
         d = self._assertResponseFundamentals(response)
-        self.assertEqual(d['cso_types'], [{'value': PartnerOrganization.CSO_TYPES['International'],
-                                           'label': PartnerOrganization.CSO_TYPES['International']}])
+        six.assertCountEqual(self,
+                             d['cso_types'],
+                             [{'value': PartnerOrganization.CSO_TYPES['International'],
+                               'label': PartnerOrganization.CSO_TYPES['International']}])
 
     def test_partner_types(self):
         '''Verify the partner_types portion of the response'''
         response = self.forced_auth_req('get', self.url)
         d = self._assertResponseFundamentals(response)
 
-        self.assertEqual(sorted(d['partner_types']),
-                         self._make_value_label_list_from_choices(PartnerType.CHOICES))
+        six.assertCountEqual(self, d['partner_types'],
+                             self._make_value_label_list_from_choices(PartnerType.CHOICES))
 
     def test_agency_choices(self):
         '''Verify the agency_choices portion of the response'''
         response = self.forced_auth_req('get', self.url)
         d = self._assertResponseFundamentals(response)
-
-        self.assertEqual(sorted(d['agency_choices']),
-                         self._make_value_label_list_from_choices(PartnerOrganization.AGENCY_CHOICES))
+        six.assertCountEqual(
+            self, d['agency_choices'],
+            self._make_value_label_list_from_choices(PartnerOrganization.AGENCY_CHOICES))
 
     def test_assessment_types(self):
         '''Verify the assessment_types portion of the response'''
         response = self.forced_auth_req('get', self.url)
         d = self._assertResponseFundamentals(response)
 
-        self.assertEqual(sorted(d['assessment_types']),
-                         self._make_value_label_list_from_choices(Assessment.ASSESSMENT_TYPES))
+        six.assertCountEqual(self, d['assessment_types'],
+                             self._make_value_label_list_from_choices(Assessment.ASSESSMENT_TYPES))
 
     def test_agreement_types(self):
         '''Verify the assessment_types portion of the response'''
         response = self.forced_auth_req('get', self.url)
         d = self._assertResponseFundamentals(response)
 
-        self.assertEqual(sorted(d['agreement_types']),
-                         self._make_value_label_list_from_choices(Agreement.AGREEMENT_TYPES))
+        six.assertCountEqual(self, d['agreement_types'],
+                             self._make_value_label_list_from_choices(Agreement.AGREEMENT_TYPES))
 
     def test_agreement_status(self):
         '''Verify the agreement_status portion of the response'''
         response = self.forced_auth_req('get', self.url)
         d = self._assertResponseFundamentals(response)
 
-        self.assertEqual(sorted(d['agreement_status']),
-                         self._make_value_label_list_from_choices(Agreement.STATUS_CHOICES))
+        six.assertCountEqual(self, d['agreement_status'],
+                             self._make_value_label_list_from_choices(Agreement.STATUS_CHOICES))
 
     def test_agreement_amendment_types(self):
         '''Verify the agreement_amendment_types portion of the response'''
         response = self.forced_auth_req('get', self.url)
         d = self._assertResponseFundamentals(response)
 
-        self.assertEqual(sorted(d['agreement_amendment_types']),
-                         self._make_value_label_list_from_choices(AgreementAmendment.AMENDMENT_TYPES))
+        six.assertCountEqual(self, d['agreement_amendment_types'],
+                             self._make_value_label_list_from_choices(AgreementAmendment.AMENDMENT_TYPES))
 
     def test_intervention_types(self):
         '''Verify the intervention_doc_type portion of the response'''
         response = self.forced_auth_req('get', self.url)
         d = self._assertResponseFundamentals(response)
 
-        self.assertEqual(sorted(d['intervention_doc_type']),
-                         self._make_value_label_list_from_choices(Intervention.INTERVENTION_TYPES))
+        six.assertCountEqual(self, d['intervention_doc_type'],
+                             self._make_value_label_list_from_choices(Intervention.INTERVENTION_TYPES))
 
     def test_intervention_status(self):
         '''Verify the intervention_status portion of the response'''
         response = self.forced_auth_req('get', self.url)
         d = self._assertResponseFundamentals(response)
 
-        self.assertEqual(sorted(d['intervention_status']),
-                         self._make_value_label_list_from_choices(Intervention.INTERVENTION_STATUS))
+        six.assertCountEqual(self, d['intervention_status'],
+                             self._make_value_label_list_from_choices(Intervention.INTERVENTION_STATUS))
 
     def test_intervention_amendment_types(self):
         '''Verify the intervention_amendment_types portion of the response'''
         response = self.forced_auth_req('get', self.url)
         d = self._assertResponseFundamentals(response)
 
-        self.assertEqual(sorted(d['intervention_amendment_types']),
-                         self._make_value_label_list_from_choices(InterventionAmendment.AMENDMENT_TYPES))
+        six.assertCountEqual(self, d['intervention_amendment_types'],
+                             self._make_value_label_list_from_choices(InterventionAmendment.AMENDMENT_TYPES))
 
     def test_location_types(self):
         '''Verify the location_types portion of the response'''
@@ -185,7 +194,7 @@ class TestPMPStaticDropdownsListApiView(BaseTenantTestCase):
         gateway_types = [{name: getattr(gateway_type, name) for name in ('id', 'name', 'admin_level')}
                          for gateway_type in gateway_types]
         gateway_types.sort(key=lambda gateway_type: gateway_type['id'])
-        self.assertEqual(d['location_types'], gateway_types)
+        six.assertCountEqual(self, d['location_types'], gateway_types)
 
     def test_currencies(self):
         '''Verify the currencies portion of the response'''
@@ -197,8 +206,8 @@ class TestPMPStaticDropdownsListApiView(BaseTenantTestCase):
         response = self.forced_auth_req('get', self.url)
         d = self._assertResponseFundamentals(response)
 
-        self.assertEqual(sorted(d['currencies']),
-                         self._make_value_label_list_from_choices(choices))
+        six.assertCountEqual(self, d['currencies'],
+                             self._make_value_label_list_from_choices(choices))
 
     def test_local_currency(self):
         '''Verify the local_currency portion of the response in two parts'''
@@ -243,4 +252,4 @@ class TestPMPDropdownsListApiView(BaseTenantTestCase):
         self.client.force_login(self.unicef_staff)
         response = self.client.get(self.url)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(sorted(response.data.keys()), self.expected_keys)
+        six.assertCountEqual(self, list(response.data.keys()), self.expected_keys)

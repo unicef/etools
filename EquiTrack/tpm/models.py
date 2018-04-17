@@ -15,7 +15,7 @@ from model_utils.models import TimeStampedModel
 from activities.models import Activity
 from attachments.models import Attachment
 from EquiTrack.utils import get_environment
-from notification.models import Notification
+from notification.utils import send_notification_using_email_template
 from publics.models import SoftDeleteMixin
 from tpm.tpmpartners.models import TPMPartner, TPMPartnerStaffMember
 from tpm.transitions.serializers import TPMVisitApproveSerializer, TPMVisitRejectSerializer
@@ -36,15 +36,25 @@ def _has_action_permission(action):
 
 @python_2_unicode_compatible
 class TPMVisit(SoftDeleteMixin, TimeStampedModel, models.Model):
+
+    DRAFT = 'draft'
+    ASSIGNED = 'assigned'
+    CANCELLED = 'cancelled'
+    ACCEPTED = 'tpm_accepted'
+    REJECTED = 'tpm_rejected'
+    REPORTED = 'tpm_reported'
+    REPORT_REJECTED = 'tpm_report_rejected'
+    UNICEF_APPROVED = 'unicef_approved'
+
     STATUSES = Choices(
-        ('draft', _('Draft')),
-        ('assigned', _('Assigned')),
-        ('cancelled', _('Cancelled')),
-        ('tpm_accepted', _('TPM Accepted')),
-        ('tpm_rejected', _('TPM Rejected')),
-        ('tpm_reported', _('TPM Reported')),
-        ('tpm_report_rejected', _('Sent Back to TPM')),
-        ('unicef_approved', _('UNICEF Approved')),
+        (DRAFT, _('Draft')),
+        (ASSIGNED, _('Assigned')),
+        (CANCELLED, _('Cancelled')),
+        (ACCEPTED, _('TPM Accepted')),
+        (REJECTED, _('TPM Rejected')),
+        (REPORTED, _('TPM Reported')),
+        (REPORT_REJECTED, _('Sent Back to TPM')),
+        (UNICEF_APPROVED, _('UNICEF Approved')),
     )
 
     STATUSES_DATES = {
@@ -159,12 +169,12 @@ class TPMVisit(SoftDeleteMixin, TimeStampedModel, models.Model):
 
         # assert recipients
         if recipients:
-            notification = Notification.objects.create(
+            send_notification_using_email_template(
+                recipients=recipients,
+                email_template_name=template_name,
+                context=context,
                 sender=self,
-                recipients=recipients, template_name=template_name,
-                template_data=context
             )
-            notification.send_notification()
 
     def _get_unicef_focal_points_as_email_recipients(self):
         return list(
@@ -419,12 +429,12 @@ class TPMActionPoint(TimeStampedModel, models.Model):
             'action_point': self.get_mail_context(),
         }
 
-        notification = Notification.objects.create(
+        send_notification_using_email_template(
+            recipients=[self.person_responsible.email],
+            email_template_name=template_name,
+            context=context,
             sender=self,
-            recipients=[self.person_responsible.email], template_name=template_name,
-            template_data=context
         )
-        notification.send_notification()
 
 
 PME = GroupWrapper(code='pme',

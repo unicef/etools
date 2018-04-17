@@ -8,17 +8,31 @@ from django.contrib.auth import get_user_model
 from django.contrib.contenttypes.fields import GenericForeignKey
 from django.contrib.contenttypes.models import ContentType
 from django.contrib.postgres.fields import ArrayField, JSONField
+from django.core.exceptions import ValidationError
 from django.db import models
-from django.template.base import Template, VariableNode
-from django.utils import six
 from django.utils.encoding import python_2_unicode_compatible
 from django.utils.translation import ugettext as _
 
+import six
 from model_utils import Choices
 from post_office import mail
 from post_office.models import EmailTemplate
 
+from EquiTrack.utils import make_dictionary_serializable
+
 logger = logging.getLogger(__name__)
+
+
+def validate_template_name(template_name):
+    try:
+        EmailTemplate.objects.get(name=template_name)
+    except EmailTemplate.DoesNotExist:
+        raise ValidationError("No such EmailTemplate: %s" % template_name)
+
+
+def validate_notification_type(type_name):
+    if type_name not in ('Email'):
+        raise ValidationError("Notification type must be 'Email'")
 
 
 @python_2_unicode_compatible
@@ -31,49 +45,70 @@ class Notification(models.Model):
         ('Email', 'Email'),
     )
 
-    TEMPLATE_NAME_CHOICES = Choices(
-        ('trips/trip/created/updated', 'trips/trip/created/updated'),
-        ('trips/trip/approved', 'trips/trip/approved'),
-        ('trips/trip/cancelled', 'trips/trip/cancelled'),
-        ('trips/trip/completed', 'trips/trip/completed'),
-        ('trips/trip/representative', 'trips/trip/representative'),
-        ('travel/trip/travel_or_admin_assistant', 'travel/trip/travel_or_admin_assistant'),
-        ('trips/trip/TA_request', 'trips/trip/TA_request'),
-        ('trips/trip/TA_drafted', 'trips/trip/TA_drafted'),
-        ('trips/action/created/updated/closed', 'trips/action/created/updated/closed'),
-        ('trips/trip/summary', 'trips/trip/summary'),
-        ('partners/partnership/created/updated', 'partners/partnership/created/updated'),
-        ('partners/partnership/signed/frs', 'partners/partnership/signed/frs'),
-        ('organisations/staff_member/invite', 'organisations/staff_member/invite',),
-        ('audit/engagement/submit_to_auditor', 'audit/engagement/submit_to_auditor',),
-        ('audit/engagement/reported_by_auditor', 'audit/engagement/reported_by_auditor',),
-        ('audit/engagement/action_point_assigned', 'audit/engagement/action_point_assigned',),
-        ('email_auth/token/login', 'email_auth/token/login'),
-        ('tpm/visit/assign', 'tpm/visit/assign'),
-        ('tpm/visit/reject', 'tpm/visit/reject'),
-        ('tpm/visit/accept', 'tpm/visit/accept'),
-        ('tpm/visit/report', 'tpm/visit/report'),
-        ('tpm/visit/report_rejected', 'tpm/visit/report_rejected'),
-        ('tpm/visit/approve_report_tpm', 'tpm/visit/approve_report_tpm'),
-        ('tpm/visit/approve_report', 'tpm/visit/approve_report'),
-        ('tpm/visit/action_point_assigned', 'tpm/visit/action_point_assigned'),
-    )
-
-    type = models.CharField(max_length=255, default='Email', verbose_name=_('Type'))
-    content_type = models.ForeignKey(ContentType, null=True, on_delete=models.CASCADE, verbose_name=_('Content Type'))
-    object_id = models.PositiveIntegerField(null=True, verbose_name=_('Object ID'))
+    type = models.CharField(max_length=255, default='Email', validators=[validate_notification_type],
+                            verbose_name=_('Type'))
+    content_type = models.ForeignKey(ContentType, null=True, on_delete=models.CASCADE, blank=True,
+                                     verbose_name=_('Content Type'))
+    object_id = models.PositiveIntegerField(null=True, blank=True, verbose_name=_('Object ID'))
     sender = GenericForeignKey('content_type', 'object_id')
-    recipients = ArrayField(models.CharField(max_length=255), verbose_name=_('Recipients'))
+    # from_address can be used as the notification from address if sender is
+    # not a user with an email address.
+    from_address = models.CharField(max_length=255, null=True, blank=True)
+    recipients = ArrayField(
+        models.CharField(max_length=255),
+        blank=True,
+        verbose_name=_('Recipients')
+    )
+    cc = ArrayField(
+        models.CharField(max_length=255),
+        default=list,
+        blank=True,
+    )
     sent_recipients = ArrayField(
         models.CharField(max_length=255),
         default=list,
+        blank=True,
         verbose_name=_('Sent Recipients')
     )
-    template_name = models.CharField(max_length=255, verbose_name=_('Template Name'))
-    template_data = JSONField(verbose_name=_('Template Data'))
+    # template_name has to be the name of an existing EmailTemplate object. validate_template_name checks that.
+    template_name = models.CharField(max_length=255, validators=[validate_template_name],
+                                     blank=True, default='', verbose_name=_('Template Name'))
+    # template_data is the context for rendering any templates.
+    template_data = JSONField(null=True, blank=True, verbose_name=_('Template Data'))
+    # Save a link to the actual post_office.Email object that was sent
+    sent_email = models.ForeignKey('post_office.Email', null=True, on_delete=models.CASCADE, blank=True)
+    # Content of template used to render subject if template_name not specified.
+    subject = models.TextField(default='', blank=True)
+    # Content of template used to render plain text message if template_name not specified.
+    text_message = models.TextField(default='', blank=True)
+    # Content of template used to render HTML message if template_name not specified.
+    html_message = models.TextField(default='', blank=True)
 
     def __str__(self):
         return u"{} Notification from {}: {}".format(self.type, self.sender, self.template_data)
+
+    def __init__(self, *args, **kwargs):
+        template_data = kwargs.pop('template_data', {})
+        # Before trying to serialize template_data, we might need to make it serializable
+        try:
+            json.dumps(template_data)
+        except TypeError:
+            assert isinstance(template_data, dict)
+            template_data = make_dictionary_serializable(template_data)
+        kwargs['template_data'] = template_data
+        super(Notification, self).__init__(*args, **kwargs)
+
+    def clean(self):
+        if (self.text_message or self.html_message or self.subject) and self.template_name:
+            raise ValidationError("Notification cannot have both a template name, "
+                                  "and a text_message or html_message or subject")
+        if not (self.text_message or self.html_message or self.template_name or self.subject):
+            raise ValidationError("Notification must have template name or text_message or html_message or subject.")
+        # We won't require there to be any recipients, since callers might find it easier to just call
+        # this with whatever list of email addresses they have without having to first check whether they
+        # have any addresses.
+        # if not (len(self.cc) + len(self.recipients)):
+        #     raise ValidationError("Notification must have at least one recipient or cc address.")
 
     def send_notification(self):
         """
@@ -83,13 +118,15 @@ class Notification(models.Model):
             self.send_mail()
         else:
             # for future notification methods
-            pass
+            raise ValueError("Unknown notification type: %s" % self.type)
 
     def send_mail(self):
         User = get_user_model()
 
         if isinstance(self.sender, User):
             sender = self.sender.email
+        elif self.from_address:
+            sender = self.from_address
         else:
             sender = settings.DEFAULT_FROM_EMAIL
 
@@ -99,36 +136,20 @@ class Notification(models.Model):
             template_data = self.template_data
 
         try:
-            mail.send(
+            email = mail.send(
                 recipients=self.recipients,
+                cc=self.cc,
                 sender=sender,
                 template=self.template_name,
                 context=template_data,
+                subject=self.subject,  # actually template text
+                message=self.text_message,  # actually template text
+                html_message=self.html_message,  # actually template text
             )
         except Exception:
             # log an exception, with traceback
             logger.exception('Failed to send mail.')
         else:
-            self.sent_recipients = self.recipients
+            self.sent_recipients = self.recipients + self.cc
+            self.sent_email = email
             self.save()
-
-    @classmethod
-    def get_template_html_content(cls, template_name):
-        try:
-            email_template = EmailTemplate.objects.get(name=template_name)
-
-            return email_template.html_content
-        except EmailTemplate.DoesNotExist:
-            return ''
-
-    @classmethod
-    def get_template_context_entries(cls, template_name):
-        try:
-            email_template = EmailTemplate.objects.get(name=template_name)
-        except EmailTemplate.DoesNotExist:
-            return []
-        else:
-            template_obj = Template(email_template.html_content)
-
-            return map(lambda node: six.text_type(node).split(': ')[1][:-1],
-                       template_obj.nodelist.get_nodes_by_type(VariableNode))
