@@ -46,7 +46,6 @@ class Command(BaseCommand):
         'audit.engagement.total_value',
         'audit.engagement.joint_audit',
         'audit.engagement.shared_ip_with',
-        'audit.engagement.exchange_rate',
         'audit.engagement.related_agreement',
         'purchase_order.purchaseorder.contract_end_date',
     ]
@@ -121,11 +120,13 @@ class Command(BaseCommand):
         'audit.spot_check.internal_controls',
         'audit.spot_check.total_amount_of_ineligible_expenditure',
         'audit.spot_check.total_amount_tested',
+        'audit.spot_check.exchange_rate',
     ]
 
     special_audit_report_block = [
         'audit.specialaudit.other_recommendations',
         'audit.specialaudit.specific_procedures',
+        'audit.specialaudit.exchange_rate',
     ]
 
     report_readonly_block = [

@@ -370,8 +370,6 @@ class BaseTestEngagementsCreateViewSet(EngagementTransitionsTestCaseMixin):
             'active_pd': self.engagement.active_pd.values_list('id', flat=True),
             'shared_ip_with': self.engagement.shared_ip_with,
         }
-        if hasattr(self.engagement, 'exchange_rate'):
-            self.create_data['exchange_rate'] = self.engagement.exchange_rate
 
     def _do_create(self, user, data):
         data = data or {}

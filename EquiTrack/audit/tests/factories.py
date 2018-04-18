@@ -155,8 +155,6 @@ class MicroAssessmentFactory(EngagementFactory):
 
 
 class AuditFactory(EngagementFactory):
-    exchange_rate = fuzzy.FuzzyDecimal(0.5, 400)
-
     class Meta:
         model = Audit
 
@@ -167,8 +165,6 @@ class SpecialAuditFactory(EngagementFactory):
 
 
 class SpotCheckFactory(EngagementFactory):
-    exchange_rate = fuzzy.FuzzyDecimal(0.5, 400)
-
     class Meta:
         model = SpotCheck
 

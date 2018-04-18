@@ -25,7 +25,8 @@ from audit.purchase_order.models import AuditorStaffMember, PurchaseOrder, Purch
 from audit.transitions.conditions import (
     AuditSubmitReportRequiredFieldsCheck, EngagementHasReportAttachmentsCheck,
     EngagementSubmitReportRequiredFieldsCheck, SpecialAuditSubmitRelatedModelsCheck, SPSubmitReportRequiredFieldsCheck,
-    ValidateAuditRiskCategories, ValidateMARiskCategories, ValidateMARiskExtra, )
+    ValidateAuditRiskCategories, ValidateMARiskCategories, ValidateMARiskExtra,
+    SpecialAuditSubmitReportRequiredFieldsCheck)
 from audit.transitions.serializers import EngagementCancelSerializer
 from EquiTrack.utils import get_environment
 from notification.utils import send_notification_using_email_template
@@ -640,6 +641,7 @@ class SpecialAudit(Engagement):
         'status',
         source=Engagement.STATUSES.partner_contacted, target=Engagement.STATUSES.report_submitted,
         conditions=[
+            SpecialAuditSubmitReportRequiredFieldsCheck.as_condition(),
             SpecialAuditSubmitRelatedModelsCheck.as_condition(),
             EngagementHasReportAttachmentsCheck.as_condition(),
         ],

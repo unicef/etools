@@ -2,10 +2,12 @@ from __future__ import absolute_import, division, print_function, unicode_litera
 
 from django.conf import settings
 from django.contrib.auth import login
+from django.utils.deprecation import MiddlewareMixin
+
 from drfpasswordless.utils import authenticate_by_token
 
 
-class TokenAuthenticationMiddleware(object):
+class TokenAuthenticationMiddleware(MiddlewareMixin):
     def process_request(self, request):
         token = request.GET.get(settings.EMAIL_AUTH_TOKEN_NAME)
         if token is None:
