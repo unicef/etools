@@ -11,6 +11,7 @@ from reports.models import (
     Indicator,
     IndicatorBlueprint,
     LowerResult,
+    ReportingRequirement,
     Result,
 )
 
@@ -149,9 +150,10 @@ class AppliedIndicatorSerializer(serializers.ModelSerializer):
 
         # make sure section are in the intervention
         section = attrs.get('section', None)
-        if section is None:
+        if section is None and self.context.get('request').method != 'PATCH':
             raise ValidationError(_('Section is required'))
-        if section.id not in [s.id for s in lower_result.result_link.intervention.sections.all()]:
+        if section is not None \
+                and section.id not in [s.id for s in lower_result.result_link.intervention.sections.all()]:
             raise ValidationError(_('This indicator can only have a section that was '
                                     'previously saved on the intervention'))
 
@@ -277,3 +279,11 @@ class IndicatorSerializer(serializers.ModelSerializer):
     class Meta:
         model = Indicator
         fields = "__all__"
+
+
+class ReportingRequirementSerializer(serializers.ModelSerializer):
+    id = serializers.IntegerField(required=False)
+
+    class Meta:
+        model = ReportingRequirement
+        fields = ("id", "start_date", "end_date", "due_date", "description", )
