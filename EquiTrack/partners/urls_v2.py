@@ -21,23 +21,29 @@ from partners.views.agreements_v2 import (
     AgreementAmendmentDeleteView,
     AgreementDeleteView)
 from partners.views.interventions_v2 import (
+    InterventionAmendmentDeleteView,
     InterventionAmendmentListAPIView,
-    InterventionListAPIView,
-    InterventionListDashView,
+    InterventionAttachmentDeleteView,
+    InterventionDeleteView,
     InterventionDetailAPIView,
     InterventionIndicatorListAPIView,
+    InterventionIndicatorsListView,
+    InterventionIndicatorsUpdateView,
+    InterventionListAPIView,
+    InterventionListDashView,
+    InterventionListMapView,
+    InterventionLowerResultListCreateView,
+    InterventionLowerResultUpdateView,
     InterventionPlannedVisitsDeleteView,
-    InterventionAttachmentDeleteView,
+    InterventionReportingPeriodDetailView,
+    InterventionReportingPeriodListCreateView,
+    InterventionReportingRequirementView,
     InterventionResultLinkDeleteView,
     InterventionResultListAPIView,
-    InterventionAmendmentDeleteView,
+    InterventionResultLinkListCreateView,
+    InterventionResultLinkUpdateView,
     InterventionSectorLocationLinkListAPIView,
-    InterventionListMapView,
-    InterventionLowerResultListCreateView, InterventionLowerResultUpdateView, InterventionResultLinkListCreateView,
-    InterventionResultLinkUpdateView, InterventionIndicatorsListView, InterventionIndicatorsUpdateView,
-    InterventionReportingPeriodListCreateView,
-    InterventionReportingPeriodDetailView,
-    InterventionDeleteView)
+)
 
 from partners.views.v2 import (
     PMPStaticDropdownsListAPIView, PMPDropdownsListApiView,
@@ -46,6 +52,7 @@ from partners.views.v2 import (
 
 # http://www.django-rest-framework.org/api-guide/format-suffixes/
 
+app_name = 'partners'
 urlpatterns = (
 
     url(r'^agreements/$', view=AgreementListAPIView.as_view(), name='agreement-list'),
@@ -171,6 +178,13 @@ urlpatterns = (
     url(r'^interventions/reporting-periods/(?P<pk>\d+)/$',
         view=InterventionReportingPeriodDetailView.as_view(http_method_names=['get', 'patch', 'delete']),
         name='intervention-reporting-periods-detail'),
+    url(
+        r'^interventions/(?P<intervention_pk>\d+)/reporting-requirements/(?P<report_type>\w+)/$',
+        view=InterventionReportingRequirementView.as_view(
+            http_method_names=['get', 'post']
+        ),
+        name='intervention-reporting-requirements'
+    ),
 
     # TODO: figure this out
     # url(r'^partners/interventions/$', view=InterventionsView.as_view()),
