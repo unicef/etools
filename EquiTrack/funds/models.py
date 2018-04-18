@@ -302,6 +302,7 @@ class FundsCommitmentHeader(TimeStampedModel):
         max_length=100,
         blank=True,
         default='',
+        null=True,
     )
 
     def __str__(self):
