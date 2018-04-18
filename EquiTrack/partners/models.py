@@ -9,7 +9,7 @@ from django.conf import settings
 from django.contrib.postgres.fields import JSONField, ArrayField
 from django.core.urlresolvers import reverse
 from django.db import models, connection, transaction
-from django.db.models import F, Sum, Max, Min, CharField, Count
+from django.db.models import F, Sum, Max, Min, CharField, Count, Case, When
 from django.db.models.signals import post_save, pre_delete
 from django.utils.encoding import python_2_unicode_compatible
 from django.utils import six, timezone
@@ -239,6 +239,23 @@ class PartnerOrganization(TimeStampedModel):
         (RATING_MODERATE, 'Medium'),
         (RATING_LOW, 'Low'),
         (RATING_NON_ASSESSED, 'Non Required'),
+    )
+
+    MICRO_ASSESSMENT = 'MICRO ASSESSMENT'
+    HIGH_RISK_ASSUMED = 'HIGH RISK ASSUMED'
+    LOW_RISK_ASSUMED = 'LOW RISK ASSUMED'
+    NEGATIVE_AUDIT_RESULTS = 'NEGATIVE AUDIT RESULTS'
+    SIMPLIFIED_CHECKLIST = 'SIMPLIFIED CHECKLIST'
+    OTHERS = 'OTHERS'
+
+    # maybe at some point this can become a type_of_assessment can became a choice
+    TYPE_OF_ASSESSMENT = (
+        (MICRO_ASSESSMENT, 'Micro Assessment'),
+        (HIGH_RISK_ASSUMED, 'High Risk Assumed'),
+        (LOW_RISK_ASSUMED, 'Low Risk Assumed'),
+        (NEGATIVE_AUDIT_RESULTS, 'Negative Audit Results'),
+        (SIMPLIFIED_CHECKLIST, 'Simplified Checklist'),
+        (OTHERS, 'Others'),
     )
 
     AGENCY_CHOICES = Choices(
@@ -1407,8 +1424,10 @@ class InterventionManager(models.Manager):
             Sum("frs__actual_amt_local"),
             Sum("frs__intervention_amt"),
             Count("frs__currency", distinct=True),
-            max_fr_currency=Max("frs__currency", output_field=CharField(), distinct=True)
+            max_fr_currency=Max("frs__currency", output_field=CharField(), distinct=True),
+            multi_curr_flag=Count(Case(When(frs__multi_curr_flag=True, then=1)))
         )
+
         return qs
 
 

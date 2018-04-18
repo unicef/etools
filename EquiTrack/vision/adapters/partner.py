@@ -146,7 +146,7 @@ class PartnerSynchronizer(VisionDataSynchronizer):
                 partner_org.name = partner['VENDOR_NAME']
                 partner_org.cso_type = self.get_cso_type(partner)
                 partner_org.rating = self.get_partner_rating(partner)
-                partner_org.type_of_assessment = partner.get('TYPE_OF_ASSESSMENT', '')
+                partner_org.type_of_assessment = self.get_type_of_assessment(partner)
                 partner_org.address = partner.get('STREET', '')
                 partner_org.city = partner.get('CITY', '')
                 partner_org.postal_code = partner.get('POSTAL_CODE', '')
@@ -189,6 +189,15 @@ class PartnerSynchronizer(VisionDataSynchronizer):
 
             if saving:
                 logger.debug('Updating Partner', partner_org)
+
+                # clear basis_for_risk_rating in certain cases
+                if partner_org.basis_for_risk_rating and (
+                        partner_org.type_of_assessment.upper() in [PartnerOrganization.HIGH_RISK_ASSUMED,
+                                                                   PartnerOrganization.LOW_RISK_ASSUMED] or (
+                        partner_org.rating == PartnerOrganization.RATING_NON_ASSESSED and
+                        partner_org.type_of_assessment == PartnerOrganization.MICRO_ASSESSMENT)
+                ):
+                    partner_org.basis_for_risk_rating = ''
                 partner_org.save()
 
             if new:
@@ -236,6 +245,13 @@ class PartnerSynchronizer(VisionDataSynchronizer):
         allowed_risk_rating = [rr[0] for rr in PartnerOrganization.RISK_RATINGS]
         if partner.get('RISK_RATING') in allowed_risk_rating:
             return partner['RISK_RATING']
+        return ''
+
+    @staticmethod
+    def get_type_of_assessment(partner):
+        type_of_assessments = dict(PartnerOrganization.TYPE_OF_ASSESSMENT)
+        if 'TYPE_OF_ASSESSMENT' in partner:
+            return type_of_assessments.get(partner['TYPE_OF_ASSESSMENT'].upper(), partner['TYPE_OF_ASSESSMENT'])
         return ''
 
 

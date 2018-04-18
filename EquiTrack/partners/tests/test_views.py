@@ -528,6 +528,22 @@ class TestPartnerOrganizationRetrieveUpdateDeleteViews(BaseTenantTestCase):
             1
         )
 
+    def test_api_partners_update_invalid_basis_for_type_of_assessment(self):
+        data = {
+            "type_of_assessment": PartnerOrganization.HIGH_RISK_ASSUMED,
+            "basis_for_risk_rating": "NOT NULL VALUE",
+        }
+        response = self.forced_auth_req(
+            'patch',
+            reverse('partners_api:partner-detail', args=[self.partner.pk]),
+            user=self.unicef_staff,
+            data=data
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertEqual(response.data, {
+            "non_field_errors": ["The basis for risk rating has to be blank if Type is Low or High"]})
+
     def test_api_partners_update_assessments_invalid(self):
         self.assertFalse(Activity.objects.exists())
         today = datetime.date.today()
