@@ -14,7 +14,7 @@ from rest_framework import serializers
 
 class ModelChoiceField(serializers.PrimaryKeyRelatedField):
     default_error_messages = {
-        'does_not_exist': _('Invalid option "{pk_value}" - option does not available.'),
+        'does_not_exist': _('Invalid option "{pk_value}" - option is not available.'),
     }
 
     @property
