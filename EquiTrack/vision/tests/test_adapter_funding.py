@@ -50,9 +50,9 @@ class TestFundReservationsSynchronizer(BaseTenantTestCase):
             "CURRENT_FR_AMOUNT": "17.00",
             "ACTUAL_CASH_TRANSFER": "18.00",
             "OUTSTANDING_DCT": "19.00",
-            "FR_OVERALL_AMOUNT_DC": "12.00",
             "ACTUAL_CASH_TRANSFER_DC": "13.00",
             "OUTSTANDING_DCT_DC": "14.00",
+            "MULTI_CURR_FLAG": "N"
         }
         self.expected_headers = {
             "vendor_code": "Code123",
@@ -64,12 +64,12 @@ class TestFundReservationsSynchronizer(BaseTenantTestCase):
             "start_date": datetime.date(2015, 1, 13),
             "end_date": datetime.date(2015, 12, 20),
             "total_amt": "15.00",
-            # "total_amt_local": "12.00",
             "intervention_amt": "17.00",
             "actual_amt": "18.00",
-            # "actual_amt_local": "13.00",
+            "actual_amt_local": "13.00",
             "outstanding_amt": "19.00",
-            # "outstanding_amt_local": "14.00",
+            "outstanding_amt_local": "14.00",
+            "multi_curr_flag": False
         }
         self.expected_line_item = {
             "line_item": "987",
@@ -119,9 +119,15 @@ class TestFundReservationsSynchronizer(BaseTenantTestCase):
 
     def test_convert_records(self):
         self.assertEqual(
-            self.adapter._convert_records(json.dumps([self.data])),
+            self.adapter._convert_records(json.dumps({"ROWSET": {"ROW": [self.data]}})),
             [self.data]
         )
+
+    def test_update_fr_totals_no_fr_items__overall_amount_dc(self):
+        # Test for https://app.clubhouse.io/unicefetools/story/4978/fr-handler-none-values-failing-on-frs
+        # We were throwing an exception because we expected Sum() to always
+        # return a value, but if there's nothing to sum, it returns None.
+        self.adapter.update_fr_totals()
 
     def test_filter_records_no_overall_amount(self):
         """If no overall amount then ignore record"""
@@ -139,7 +145,7 @@ class TestFundReservationsSynchronizer(BaseTenantTestCase):
 
     def test_filter_records(self):
         """If have both overall number and fr number then keep record"""
-        records = {"ROWSET": {"ROW": [self.data]}}
+        records = [self.data]
         response = self.adapter._filter_records(records)
         self.assertEqual(response, [self.data])
 
@@ -282,10 +288,8 @@ class TestFundReservationsSynchronizer(BaseTenantTestCase):
 
     def test_save_records(self):
         self.data["LINE_ITEM"] = "333"
-        response = self.adapter._save_records(
-            {"ROWSET": {"ROW": [self.data]}}
-        )
-        self.assertEqual(response, 1)
+        response = self.adapter._save_records([self.data])
+        self.assertEqual(response, 2)
 
 
 class TestFundCommitmentSynchronizer(BaseTenantTestCase):
