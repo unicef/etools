@@ -151,7 +151,7 @@ class Engagement(TimeStampedModel, models.Model):
     joint_audit = models.BooleanField(verbose_name=_('Joint Audit'), default=False, blank=True)
     shared_ip_with = ArrayField(models.CharField(
         max_length=20, choices=PartnerOrganization.AGENCY_CHOICES
-    ), blank=True, default=[], verbose_name=_('Shared IP with'))
+    ), blank=True, default=[], verbose_name=_('Shared Audit with'))
 
     staff_members = models.ManyToManyField(AuditorStaffMember, verbose_name=_('Staff Members'))
 
@@ -453,7 +453,7 @@ class Finding(models.Model):
     category_of_observation = models.CharField(
         verbose_name=_('Category of Observation'), max_length=100, choices=CATEGORIES,
     )
-    recommendation = models.TextField(verbose_name=_('Recommendation'), blank=True)
+    recommendation = models.TextField(verbose_name=_('Finding and Recommendation'), blank=True)
     agreed_action_by_ip = models.TextField(verbose_name=_('Agreed Action by IP'), blank=True)
     deadline_of_action = models.DateField(verbose_name=_('Deadline of Action'), null=True, blank=True)
 

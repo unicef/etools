@@ -74,7 +74,7 @@
         "pk": 8,
         "fields": {
             "order": 4,
-            "label": "ICE form",
+            "label": "ICE",
             "name": "ice_form",
             "code": "audit_engagement"
         }
