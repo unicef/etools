@@ -1,5 +1,6 @@
 from __future__ import absolute_import, division, print_function, unicode_literals
 
+import base64
 from datetime import timedelta, datetime
 
 from django.core.management import call_command
@@ -9,11 +10,16 @@ from django.utils.translation import ugettext_lazy as _
 
 from rest_framework import status
 
+from attachments.tests.factories import AttachmentFileTypeFactory
 from EquiTrack.tests.cases import BaseTenantTestCase
 from partners.models import PartnerType
 from tpm.models import TPMActionPoint
 from tpm.tests.base import TPMTestCaseMixin
-from tpm.tests.factories import TPMPartnerFactory, TPMVisitFactory, UserFactory
+from tpm.tests.factories import (
+    TPMPartnerFactory,
+    TPMVisitFactory,
+    UserFactory,
+)
 
 
 class TestExportMixin(object):
@@ -80,6 +86,41 @@ class TestTPMVisitViewSet(TestExportMixin, TPMTestCaseMixin, BaseTenantTestCase)
         )
 
         self.assertEquals(create_response.status_code, status.HTTP_201_CREATED)
+
+    def test_add_attachment(self):
+        file_type = AttachmentFileTypeFactory(code="tpm")
+        file_name = 'simple_file.txt'
+        file_content = 'these are the file contents!'.encode('utf-8')
+        base64_file = 'data:text/plain;base64,{}'.format(
+            base64.b64encode(file_content)
+        )
+        visit = TPMVisitFactory(
+            tpm_activities__count=1,
+            tpm_activities__intervention__agreement__partner__partner_type=PartnerType.GOVERNMENT
+        )
+        activity = visit.tpm_activities.first()
+        self.assertEqual(activity.attachments.count(), 0)
+
+        response = self.forced_auth_req(
+            'patch',
+            reverse('tpm:visits-detail', args=[visit.pk]),
+            user=self.pme_user,
+            data={
+                "tpm_activities": [{
+                    "id": activity.pk,
+                    "attachments": [
+                        {
+                            "file_name": file_name,
+                            "file": base64_file,
+                            "file_type": file_type.pk,
+                        }
+                    ]
+                }]
+            }
+        )
+        self.assertEquals(response.status_code, status.HTTP_200_OK)
+        self.assertTrue(len(response.data["tpm_activities"][0]["attachments"]))
+        self.assertEqual(activity.attachments.count(), 1)
 
     def test_action_points(self):
         visit = TPMVisitFactory(status='tpm_reported', unicef_focal_points__count=1)
