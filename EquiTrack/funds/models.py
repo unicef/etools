@@ -165,6 +165,10 @@ class FundsReservationHeader(TimeStampedModel):
         null=True,
         blank=True,
     )
+    multi_curr_flag = models.BooleanField(
+        default=False,
+        verbose_name=_("Actual and DCT in various currencies"),
+    )
 
     def __str__(self):
         return u'{}'.format(
