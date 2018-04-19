@@ -60,7 +60,7 @@ class AuditorFirmLightSerializer(PermissionsBasedSerializerMixin, serializers.Mo
         fields = [
             'id', 'vendor_number', 'name',
             'street_address', 'city', 'postal_code', 'country',
-            'email', 'phone_number',
+            'email', 'phone_number', 'unicef_users_allowed',
         ]
 
 
@@ -69,7 +69,7 @@ class AuditorFirmSerializer(WritableNestedSerializerMixin, AuditorFirmLightSeria
 
     class Meta(WritableNestedSerializerMixin.Meta, AuditorFirmLightSerializer.Meta):
         fields = AuditorFirmLightSerializer.Meta.fields + [
-            'unicef_users_allowed', 'staff_members',
+            'staff_members',
         ]
 
 
