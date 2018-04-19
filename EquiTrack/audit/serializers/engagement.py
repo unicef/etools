@@ -17,7 +17,6 @@ from audit.serializers.mixins import (
     AuditPermissionsBasedRootSerializerMixin, AuditPermissionsBasedSerializerMixin, EngagementDatesValidation,
     RiskCategoriesUpdateMixin,)
 from audit.serializers.risks import RiskRootSerializer, AggregatedRiskRootSerializer, KeyInternalWeaknessSerializer
-from partners.models import PartnerType
 from partners.serializers.interventions_v2 import BaseInterventionListSerializer
 from partners.serializers.partner_organization_v2 import (
     PartnerOrganizationListSerializer, PartnerStaffMemberNestedSerializer,)
