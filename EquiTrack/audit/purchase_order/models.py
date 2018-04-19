@@ -14,7 +14,10 @@ class AuditorFirm(BaseFirm):
 
 @python_2_unicode_compatible
 class AuditorStaffMember(BaseStaffMember):
-    auditor_firm = models.ForeignKey(AuditorFirm, verbose_name=_('Auditor'), related_name='staff_members')
+    auditor_firm = models.ForeignKey(
+        AuditorFirm, verbose_name=_('Auditor'), related_name='staff_members',
+        on_delete=models.CASCADE,
+    )
 
     def __str__(self):
         auditor_firm_name = ' ({})'.format(self.auditor_firm.name) if hasattr(self, 'auditor_firm') else ''
@@ -49,7 +52,10 @@ class PurchaseOrder(TimeStampedModel, models.Model):
         unique=True,
         max_length=30
     )
-    auditor_firm = models.ForeignKey(AuditorFirm, verbose_name=_('Auditor'), related_name='purchase_orders')
+    auditor_firm = models.ForeignKey(
+        AuditorFirm, verbose_name=_('Auditor'), related_name='purchase_orders',
+        on_delete=models.CASCADE,
+    )
     contract_start_date = models.DateField(verbose_name=_('PO Date'), null=True, blank=True)
     contract_end_date = models.DateField(verbose_name=_('Contract Expiry Date'), null=True, blank=True)
 
@@ -68,7 +74,10 @@ class PurchaseOrderItemManager(models.Manager):
 
 
 class PurchaseOrderItem(models.Model):
-    purchase_order = models.ForeignKey(PurchaseOrder, related_name='items', verbose_name=_('Purchase Order'))
+    purchase_order = models.ForeignKey(
+        PurchaseOrder, related_name='items', verbose_name=_('Purchase Order'),
+        on_delete=models.CASCADE,
+    )
     number = models.IntegerField(verbose_name=_('PO Item Number'))
 
     objects = PurchaseOrderItemManager()

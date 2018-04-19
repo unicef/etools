@@ -10,6 +10,7 @@ from t2f.views.travel import (
     TravelDetailsViewSet, TravelListViewSet,)
 from t2f.views.vision import VisionInvoiceExport, VisionInvoiceUpdate
 
+app_name = 't2f'
 travel_list = TravelListViewSet.as_view({'get': 'list',
                                          'post': 'create'})
 travel_dashboard_list = TravelDashboardViewSet.as_view({'get': 'list'})
