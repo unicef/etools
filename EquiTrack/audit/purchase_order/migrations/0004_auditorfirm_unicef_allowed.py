@@ -14,7 +14,7 @@ class Migration(migrations.Migration):
     operations = [
         migrations.AddField(
             model_name='auditorfirm',
-            name='unicef_allowed',
-            field=models.BooleanField(default=False, help_text='Allow UNICEF users to join and act as auditors.', verbose_name='UNICEF allowed'),
+            name='unicef_users_allowed',
+            field=models.BooleanField(default=False, help_text='Allow UNICEF users to join and act as auditors.', verbose_name='UNICEF users allowed'),
         ),
     ]
