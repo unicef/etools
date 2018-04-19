@@ -69,7 +69,7 @@ class ActionPoint(TimeStampedModel):
 
     section = models.ForeignKey('reports.Sector', verbose_name=_('Section'),
                                 on_delete=models.CASCADE,
-                               )
+                                )
     office = models.ForeignKey('users.Office', verbose_name=_('Office'),
                                on_delete=models.CASCADE,
                                )
