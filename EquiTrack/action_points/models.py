@@ -47,10 +47,16 @@ class ActionPoint(TimeStampedModel):
     )
 
     author = models.ForeignKey(settings.AUTH_USER_MODEL, related_name='created_action_points',
-                               verbose_name=_('Author'))
-    assigned_by = models.ForeignKey(settings.AUTH_USER_MODEL, related_name='+', verbose_name=_('Assigned By'))
+                               verbose_name=_('Author'),
+                               on_delete=models.CASCADE,
+                               )
+    assigned_by = models.ForeignKey(settings.AUTH_USER_MODEL, related_name='+', verbose_name=_('Assigned By'),
+                                    on_delete=models.CASCADE,
+                                    )
     assigned_to = models.ForeignKey(settings.AUTH_USER_MODEL, related_name='assigned_action_points',
-                                    verbose_name=_('Assigned To'))
+                                    verbose_name=_('Assigned To'),
+                                    on_delete=models.CASCADE,
+                                    )
 
     status = FSMField(verbose_name=_('Status'), max_length=10, choices=STATUSES, default=STATUSES.open, protected=True)
 
@@ -61,16 +67,34 @@ class ActionPoint(TimeStampedModel):
 
     action_taken = models.TextField(verbose_name=_('Action Taken'), blank=True)
 
-    section = models.ForeignKey('reports.Sector', verbose_name=_('Section'))
-    office = models.ForeignKey('users.Office', verbose_name=_('Office'))
+    section = models.ForeignKey('reports.Sector', verbose_name=_('Section'),
+                                on_delete=models.CASCADE,
+                                )
+    office = models.ForeignKey('users.Office', verbose_name=_('Office'),
+                               on_delete=models.CASCADE,
+                               )
 
-    location = models.ForeignKey('locations.Location', verbose_name=_('Location'), blank=True, null=True)
-    partner = models.ForeignKey('partners.PartnerOrganization', verbose_name=_('Partner'), blank=True, null=True)
-    cp_output = models.ForeignKey('reports.Result', verbose_name=_('CP Output'), blank=True, null=True)
-    intervention = models.ForeignKey('partners.Intervention', verbose_name=_('PD/SSFA'), blank=True, null=True)
-    engagement = models.ForeignKey('audit.Engagement', verbose_name=_('Engagement'), blank=True, null=True)
-    tpm_activity = models.ForeignKey('tpm.TPMActivity', verbose_name=_('TPM Activity'), blank=True, null=True)
-    travel_activity = models.ForeignKey('t2f.TravelActivity', verbose_name=_('Travel Activity'), blank=True, null=True)
+    location = models.ForeignKey('locations.Location', verbose_name=_('Location'), blank=True, null=True,
+                                 on_delete=models.CASCADE,
+                                 )
+    partner = models.ForeignKey('partners.PartnerOrganization', verbose_name=_('Partner'), blank=True, null=True,
+                                on_delete=models.CASCADE,
+                                )
+    cp_output = models.ForeignKey('reports.Result', verbose_name=_('CP Output'), blank=True, null=True,
+                                  on_delete=models.CASCADE,
+                                  )
+    intervention = models.ForeignKey('partners.Intervention', verbose_name=_('PD/SSFA'), blank=True, null=True,
+                                     on_delete=models.CASCADE,
+                                     )
+    engagement = models.ForeignKey('audit.Engagement', verbose_name=_('Engagement'), blank=True, null=True,
+                                   on_delete=models.CASCADE,
+                                   )
+    tpm_activity = models.ForeignKey('tpm.TPMActivity', verbose_name=_('TPM Activity'), blank=True, null=True,
+                                     on_delete=models.CASCADE,
+                                     )
+    travel_activity = models.ForeignKey('t2f.TravelActivity', verbose_name=_('Travel Activity'), blank=True, null=True,
+                                        on_delete=models.CASCADE,
+                                        )
 
     date_of_completion = MonitorField(verbose_name=_('Date Action Point Completed'), null=True, blank=True,
                                       monitor='status', when=[STATUSES.completed])
