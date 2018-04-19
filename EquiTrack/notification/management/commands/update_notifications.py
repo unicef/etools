@@ -921,7 +921,7 @@ class Command(BaseCommand):
                     Dear {{ recipient }},<br/><br/>
 
                     UNICEF is granting you access to the Third Party Monitoring Module in eTools.<br/>
-                    Please click <a href=\"{{ visit.object_url }}\">{{ visit.reference_number }}</a> 
+                    Please click <a href=\"{{ visit.object_url }}\">{{ visit.reference_number }}</a>
                     to access your assigned visit.<br/><br/>
 
                     Thank you.
