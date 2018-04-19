@@ -225,7 +225,6 @@ class EngagementSerializer(EngagementDatesValidation,
         ]
         extra_kwargs = {
             field: {'required': True} for field in [
-                'po_item',
                 'start_date', 'end_date', 'total_value',
 
                 'partner_contacted_at',
