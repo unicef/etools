@@ -38,6 +38,7 @@ class Activity(TimeStampedModel):
     by_user = models.ForeignKey(
         settings.AUTH_USER_MODEL,
         verbose_name=_("By User"),
+        on_delete=models.CASCADE,
     )
     data = JSONField(verbose_name=_("Data"))
     change = JSONField(verbose_name=_("Change"), blank=True)
