@@ -2,7 +2,7 @@ from __future__ import absolute_import, division, print_function, unicode_litera
 
 import decimal
 import json
-from datetime import date, datetime, timedelta
+from datetime import date, datetime
 from decimal import Decimal
 
 from django.contrib.postgres.fields import JSONField
