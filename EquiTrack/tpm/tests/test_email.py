@@ -27,7 +27,7 @@ class TPMVisitEmailsTestCase(BaseTenantTestCase):
     def test_cancel(self):
         visit = TPMVisitFactory(status='draft')
 
-        visit.cancel()
+        visit.cancel('Just because')
         self.assertEqual(len(mail.outbox), 0)
 
     def test_reject(self):

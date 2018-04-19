@@ -18,7 +18,7 @@ from EquiTrack.utils import get_environment
 from notification.utils import send_notification_using_email_template
 from publics.models import SoftDeleteMixin
 from tpm.tpmpartners.models import TPMPartner, TPMPartnerStaffMember
-from tpm.transitions.serializers import TPMVisitApproveSerializer, TPMVisitRejectSerializer
+from tpm.transitions.serializers import TPMVisitApproveSerializer, TPMVisitRejectSerializer, TPMVisitCancelSerializer
 from tpm.transitions.conditions import (
     TPMVisitAssignRequiredFieldsCheck, TPMVisitReportValidations, ValidateTPMVisitActivities,)
 from utils.common.models.fields import CodedGenericRelation
@@ -72,6 +72,7 @@ class TPMVisit(SoftDeleteMixin, TimeStampedModel, models.Model):
 
     status = FSMField(verbose_name=_('Status'), max_length=20, choices=STATUSES, default=STATUSES.draft, protected=True)
 
+    cancel_comment = models.TextField(verbose_name=_('Cancel Comment'), blank=True)
     reject_comment = models.TextField(verbose_name=_('Request For More Information'), blank=True)
     approval_comment = models.TextField(verbose_name=_('Approval Comments'), blank=True)
 
@@ -229,10 +230,12 @@ class TPMVisit(SoftDeleteMixin, TimeStampedModel, models.Model):
             STATUSES.tpm_reported, STATUSES.tpm_report_rejected,
         ], target=STATUSES.cancelled, permission=_has_action_permission(action='cancel'),
         custom={
+            'serializer': TPMVisitCancelSerializer,
             'name': _('Cancel Visit')
         }
     )
-    def cancel(self):
+    def cancel(self, cancel_comment):
+        self.cancel_comment = cancel_comment
         self.date_of_cancelled = timezone.now()
 
     @transition(status, source=[STATUSES.assigned], target=STATUSES.tpm_rejected,
