@@ -385,8 +385,8 @@ class TestEngagementCreateActivePDViewSet(object):
 
         response = self._do_create(self.unicef_focal_point, self.create_data)
 
-        self.assertEquals(response.status_code, status.HTTP_400_BAD_REQUEST)
-        self.assertIn('active_pd', response.data)
+        self.assertEquals(response.status_code, status.HTTP_201_CREATED)
+        self.assertEqual(response.data['active_pd'], [])
 
     def test_partner_with_active_pd(self):
         self.engagement.partner.partner_type = PartnerType.CIVIL_SOCIETY_ORGANIZATION
@@ -477,8 +477,8 @@ class TestEngagementsUpdateViewSet(EngagementTransitionsTestCaseMixin, BaseTenan
 
         response = self._do_update(self.unicef_focal_point, {'partner': partner.id})
 
-        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
-        self.assertIn('active_pd', response.data)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data['active_pd'], [])
 
     def test_partner_changed_with_pd(self):
         partner = PartnerWithAgreementsFactory(partner_type=PartnerType.CIVIL_SOCIETY_ORGANIZATION)

@@ -264,23 +264,8 @@ class ActivePDValidationMixin(object):
             partner = self.instance.partner if self.instance else validated_data.get('partner', None)
 
         if self.instance and partner != self.instance.partner and 'active_pd' not in validated_data:
-            if partner.partner_type not in [PartnerType.GOVERNMENT, PartnerType.BILATERAL_MULTILATERAL]:
-                raise serializers.ValidationError({
-                    'active_pd': [self.fields['active_pd'].write_field.error_messages['required'], ]
-                })
             validated_data['active_pd'] = []
 
-        active_pd = validated_data.get('active_pd', [])
-        if not active_pd:
-            active_pd = self.instance.active_pd.all() if self.instance else validated_data.get('active_pd', [])
-
-        status = 'new' if not self.instance else self.instance.status
-
-        if partner and partner.partner_type not in [PartnerType.GOVERNMENT, PartnerType.BILATERAL_MULTILATERAL] and \
-           len(active_pd) == 0 and status == 'new':
-            raise serializers.ValidationError({
-                'active_pd': [self.fields['active_pd'].write_field.error_messages['required'], ],
-            })
         return validated_data
 
 
