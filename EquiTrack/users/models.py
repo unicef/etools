@@ -226,15 +226,15 @@ class UserProfile(models.Model):
         Office, null=True, blank=True, verbose_name=_('Office'),
         on_delete=models.CASCADE,
     )
-    job_title = models.CharField(max_length=255, default='', blank=True, verbose_name=_('Job Title'))
-    phone_number = models.CharField(max_length=20, default='', blank=True, verbose_name=_('Phone Number'))
+    job_title = models.CharField(max_length=255, null=True, blank=True, verbose_name=_('Job Title'))
+    phone_number = models.CharField(max_length=255, null=True, blank=True, verbose_name=_('Phone Number'))
 
     # staff_id needs to be NULLable so we can make it unique while still making it optional
-    staff_id = models.CharField(max_length=32, null=True, blank=True, unique=True, verbose_name=_('Staff ID'))
-    org_unit_code = models.CharField(max_length=32, default='', blank=True, verbose_name=_('Org Unit Code'))
-    org_unit_name = models.CharField(max_length=64, default='', blank=True, verbose_name=_('Org Unit Name'))
-    post_number = models.CharField(max_length=32, default='', blank=True, verbose_name=_('Post Number'))
-    post_title = models.CharField(max_length=64, default='', blank=True, verbose_name=_('Post Title'))
+    staff_id = models.CharField(max_length=32, null=True, blank=True, verbose_name=_('Staff ID'))
+    org_unit_code = models.CharField(max_length=32, null=True, blank=True, verbose_name=_('Org Unit Code'))
+    org_unit_name = models.CharField(max_length=64, null=True, blank=True, verbose_name=_('Org Unit Name'))
+    post_number = models.CharField(max_length=32, null=True, blank=True, verbose_name=_('Post Number'))
+    post_title = models.CharField(max_length=64, null=True, blank=True, verbose_name=_('Post Title'))
     # vendor_number needs to be NULLable so we can make it unique while still making it optional
     vendor_number = models.CharField(max_length=32, null=True, blank=True, unique=True, verbose_name=_('Vendor Number'))
     supervisor = models.ForeignKey(settings.AUTH_USER_MODEL, related_name='supervisee', on_delete=models.SET_NULL,
@@ -243,7 +243,7 @@ class UserProfile(models.Model):
                             null=True, blank=True)  # related oic_set
 
     # TODO: refactor when sections are properly set
-    section_code = models.CharField(max_length=32, default='', blank=True, verbose_name=_('Section Code'))
+    section_code = models.CharField(max_length=32, null=True, blank=True, verbose_name=_('Section Code'))
 
     # TODO: figure this out when we need to autmatically map to groups
     # vision_roles = ArrayField(models.CharField(max_length=20, blank=True, choices=VISION_ROLES),
