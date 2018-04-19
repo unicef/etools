@@ -185,6 +185,7 @@ class InterventionListSerializer(BaseInterventionListSerializer):
     fr_currencies_are_consistent = serializers.SerializerMethodField()
     all_currencies_are_consistent = serializers.SerializerMethodField()
     fr_currency = serializers.SerializerMethodField()
+    multi_curr_flag = serializers.BooleanField()
 
     def fr_currencies_ok(self, obj):
         return obj.frs__currency__count == 1 if obj.frs__currency__count else None
@@ -202,7 +203,7 @@ class InterventionListSerializer(BaseInterventionListSerializer):
 
     class Meta(BaseInterventionListSerializer.Meta):
         fields = BaseInterventionListSerializer.Meta.fields + (
-            'fr_currencies_are_consistent', 'all_currencies_are_consistent', 'fr_currency')
+            'fr_currencies_are_consistent', 'all_currencies_are_consistent', 'fr_currency', 'multi_curr_flag')
 
 
 class MinimalInterventionListSerializer(serializers.ModelSerializer):
@@ -254,7 +255,7 @@ class InterventionAttachmentSerializer(serializers.ModelSerializer):
 
 
 class InterventionResultNestedSerializer(serializers.ModelSerializer):
-    cp_output_name = serializers.CharField(source="cp_output.name", read_only=True)
+    cp_output_name = serializers.CharField(source="cp_output.output_name", read_only=True)
     ram_indicator_names = serializers.SerializerMethodField(read_only=True)
     ll_results = LowerResultSerializer(many=True, read_only=True)
 
@@ -591,7 +592,7 @@ class InterventionReportingRequirementCreateSerializer(serializers.ModelSerializ
 
         # Ensure start date is after previous end date
         for i in range(1, len(requirements)):
-            if requirements[i]["start_date"] <= requirements[i-1]["end_date"]:
+            if requirements[i]["start_date"] <= requirements[i - 1]["end_date"]:
                 raise serializers.ValidationError({
                     "reporting_requirements": {
                         "start_date": _(

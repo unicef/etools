@@ -6,6 +6,7 @@ from datetime import datetime
 from decimal import Decimal
 
 from django.core.urlresolvers import reverse
+from django.utils import timezone
 from django.utils.six import StringIO
 from pytz import UTC
 
@@ -56,6 +57,7 @@ class TravelExports(BaseTenantTestCase):
         self.assertEqual(export_url, '/api/t2f/travels/invoice-export/')
 
     def test_activity_export(self):
+        tz = timezone.get_default_timezone()
         office = OfficeFactory(name='Budapest')
         section_health = SectorFactory(name='Health')
         section_education = SectorFactory(name='Education')
@@ -99,8 +101,8 @@ class TravelExports(BaseTenantTestCase):
                                  traveler=user_joe_smith,
                                  office=office,
                                  sector=section_health,
-                                 start_date=datetime.strptime('08-Nov-2017', '%d-%b-%Y'),
-                                 end_date=datetime.strptime('14-Nov-2017', '%d-%b-%Y')
+                                 start_date=datetime(2017, 11, 8, tzinfo=tz),
+                                 end_date=datetime(2017, 11, 14, tzinfo=tz),
                                  )
         supervisor = UserFactory()
         travel_2 = TravelFactory(reference_number='2016/1211',
@@ -108,8 +110,9 @@ class TravelExports(BaseTenantTestCase):
                                  traveler=user_alice_carter,
                                  office=office,
                                  sector=section_education,
-                                 start_date=datetime.strptime('08-Nov-2017', '%d-%b-%Y'),
-                                 end_date=datetime.strptime('14-Nov-2017', '%d-%b-%Y'))
+                                 start_date=datetime(2017, 11, 8, tzinfo=tz),
+                                 end_date=datetime(2017, 11, 14, tzinfo=tz),
+                                 )
 
         # Do some cleanup
         TravelActivity.objects.all().delete()

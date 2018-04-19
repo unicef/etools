@@ -65,8 +65,8 @@ class TestFundsReservationHeaderExportList(BaseTenantTestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         dataset = Dataset().load(response.content.decode('utf-8'), 'csv')
         self.assertEqual(dataset.height, 1)
-        self.assertEqual(len(dataset._get_headers()), 19)
-        self.assertEqual(len(dataset[0]), 19)
+        self.assertEqual(len(dataset._get_headers()), 20)
+        self.assertEqual(len(dataset[0]), 20)
 
     def test_csv_flat_export_api(self):
         response = self.forced_auth_req(
@@ -79,8 +79,8 @@ class TestFundsReservationHeaderExportList(BaseTenantTestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         dataset = Dataset().load(response.content.decode('utf-8'), 'csv')
         self.assertEqual(dataset.height, 1)
-        self.assertEqual(len(dataset._get_headers()), 19)
-        self.assertEqual(len(dataset[0]), 19)
+        self.assertEqual(len(dataset._get_headers()), 20)
+        self.assertEqual(len(dataset[0]), 20)
 
 
 class TestFundsReservationItemExportList(BaseTenantTestCase):

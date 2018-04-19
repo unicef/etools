@@ -529,6 +529,22 @@ class TestPartnerOrganizationRetrieveUpdateDeleteViews(BaseTenantTestCase):
             1
         )
 
+    def test_api_partners_update_invalid_basis_for_type_of_assessment(self):
+        data = {
+            "type_of_assessment": PartnerOrganization.HIGH_RISK_ASSUMED,
+            "basis_for_risk_rating": "NOT NULL VALUE",
+        }
+        response = self.forced_auth_req(
+            'patch',
+            reverse('partners_api:partner-detail', args=[self.partner.pk]),
+            user=self.unicef_staff,
+            data=data
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertEqual(response.data, {
+            "non_field_errors": ["The basis for risk rating has to be blank if Type is Low or High"]})
+
     def test_api_partners_update_assessments_invalid(self):
         self.assertFalse(Activity.objects.exists())
         today = datetime.date.today()
@@ -1445,6 +1461,7 @@ class TestInterventionViews(BaseTenantTestCase):
         self.fr_header_1 = FundsReservationHeaderFactory(fr_number=self.funding_commitment1.fr_number)
         self.fr_header_2 = FundsReservationHeaderFactory(fr_number=self.funding_commitment2.fr_number)
 
+        output_type = ResultTypeFactory(name=ResultType.OUTPUT)
         # Basic data to adjust in tests
         self.intervention_data = {
             "agreement": self.agreement2.id,
@@ -1487,7 +1504,7 @@ class TestInterventionViews(BaseTenantTestCase):
             "sections": [self.section.id],
             "result_links": [
                 {
-                    "cp_output": ResultFactory().id,
+                    "cp_output": ResultFactory(result_type=output_type).id,
                     "ram_indicators": []
                 }
             ],
@@ -1513,7 +1530,8 @@ class TestInterventionViews(BaseTenantTestCase):
             attachment=attachment,
             type=FileType.objects.create(name="pdf")
         )
-        self.result = InterventionResultLinkFactory(intervention=self.intervention_obj)
+        self.result = InterventionResultLinkFactory(intervention=self.intervention_obj,
+                                                    cp_output__result_type=output_type)
         amendment = "amendment.pdf"
         self.amendment = InterventionAmendment.objects.create(
             intervention=self.intervention_obj,
