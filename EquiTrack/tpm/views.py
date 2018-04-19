@@ -123,6 +123,7 @@ class TPMStaffMembersViewSet(
     filter_backends = (OrderingFilter, SearchFilter, DjangoFilterBackend, )
     ordering_fields = ('user__email', 'user__first_name', 'id', )
     search_fields = ('user__first_name', 'user__email', 'user__last_name', )
+    filter_fields = ('user__is_active', )
 
     def perform_create(self, serializer, **kwargs):
         instance = serializer.save(tpm_partner=self.get_parent_object(), **kwargs)
