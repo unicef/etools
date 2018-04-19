@@ -14,6 +14,7 @@ from reports.views.v2 import (
 from reports.views.v1 import CountryProgrammeListView, CountryProgrammeRetrieveView
 
 
+app_name = 'reports'
 urlpatterns = (
     url(r'^results/$', view=OutputListAPIView.as_view(), name='report-result-list'),
     url(r'^applied-indicators/$',
