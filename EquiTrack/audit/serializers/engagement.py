@@ -15,7 +15,6 @@ from audit.models import (
 from audit.serializers.auditor import AuditorStaffMemberSerializer, PurchaseOrderSerializer, PurchaseOrderItemSerializer
 from audit.serializers.mixins import EngagementDatesValidation, RiskCategoriesUpdateMixin
 from audit.serializers.risks import RiskRootSerializer, AggregatedRiskRootSerializer, KeyInternalWeaknessSerializer
-from partners.models import PartnerType
 from partners.serializers.interventions_v2 import BaseInterventionListSerializer
 from partners.serializers.partner_organization_v2 import (
     PartnerOrganizationListSerializer, PartnerStaffMemberNestedSerializer,)
@@ -223,7 +222,6 @@ class EngagementSerializer(EngagementDatesValidation,
         ]
         extra_kwargs = {
             field: {'required': True} for field in [
-                'po_item',
                 'start_date', 'end_date', 'total_value',
 
                 'partner_contacted_at',
@@ -263,23 +261,8 @@ class ActivePDValidationMixin(object):
             partner = self.instance.partner if self.instance else validated_data.get('partner', None)
 
         if self.instance and partner != self.instance.partner and 'active_pd' not in validated_data:
-            if partner.partner_type not in [PartnerType.GOVERNMENT, PartnerType.BILATERAL_MULTILATERAL]:
-                raise serializers.ValidationError({
-                    'active_pd': [self.fields['active_pd'].write_field.error_messages['required'], ]
-                })
             validated_data['active_pd'] = []
 
-        active_pd = validated_data.get('active_pd', [])
-        if not active_pd:
-            active_pd = self.instance.active_pd.all() if self.instance else validated_data.get('active_pd', [])
-
-        status = 'new' if not self.instance else self.instance.status
-
-        if partner and partner.partner_type not in [PartnerType.GOVERNMENT, PartnerType.BILATERAL_MULTILATERAL] and \
-           len(active_pd) == 0 and status == 'new':
-            raise serializers.ValidationError({
-                'active_pd': [self.fields['active_pd'].write_field.error_messages['required'], ],
-            })
         return validated_data
 
 
