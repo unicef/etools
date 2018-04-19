@@ -139,7 +139,6 @@ class UserMapper(object):
                     logger.debug(u"User doesn't have the required fields {} missing".format(field))
                     return
             elif isinstance(field, tuple):
-                print(ad_user.get(field[0], False), 1234, field[1])
                 if ad_user.get(field[0], False) != field[1]:
                     logger.debug(u"User is not in Unicef organization {}".format(field[1]))
                     return
