@@ -140,10 +140,10 @@ class TestUserMapper(BaseTenantTestCase):
 
     def test_set_special_attr_country_match(self):
         """If country attribute matches, then False"""
-        code = "test"
-        country = CountryFactory(code=code)
+        name = "test"
+        country = CountryFactory(name=name)
         profile = UserProfile(country=country)
-        self.mapper.countries = {code: country, "UAT": country}
+        self.mapper.countries = {name: country, "UAT": country}
         res = self.mapper._set_special_attr(profile, "country", country)
         self.assertEqual(profile.country, country)
         self.assertFalse(res)
@@ -152,13 +152,13 @@ class TestUserMapper(BaseTenantTestCase):
         """If country attribute, no override and country does not
         match current county, then set and return True
         """
-        code = "test"
-        country = CountryFactory(code=code)
-        self.mapper.countries = {code: country, "UAT": country}
+        name = "test"
+        country = CountryFactory(name=name)
+        self.mapper.countries = {name: country, "UAT": country}
         profile = ProfileFactory(country=None)
         self.assertIsNone(profile.country)
         self.assertFalse(profile.countries_available.count())
-        res = self.mapper._set_special_attr(profile, "country", code)
+        res = self.mapper._set_special_attr(profile, "country", name)
         self.assertTrue(res)
         self.assertEqual(profile.country, country)
         self.assertTrue(profile.countries_available.count())
@@ -196,13 +196,13 @@ class TestUserMapper(BaseTenantTestCase):
 
     def test_set_attribute_special_field(self):
         """If special field, use _set_special_attr method"""
-        code = "test"
-        country = CountryFactory(code=code)
-        self.mapper.countries = {code: country, "UAT": country}
+        name = "test"
+        country = CountryFactory(name=name)
+        self.mapper.countries = {name: country, "UAT": country}
         profile = ProfileFactory(country=None)
         self.assertIsNone(profile.country)
         self.assertFalse(profile.countries_available.count())
-        res = self.mapper._set_attribute(profile, "country", code)
+        res = self.mapper._set_attribute(profile, "country", name)
         self.assertTrue(res)
         self.assertEqual(profile.country, country)
         self.assertTrue(profile.countries_available.count())

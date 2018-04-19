@@ -82,7 +82,8 @@ class WorkspaceCounter(models.Model):
     TRAVEL_REFERENCE = 'travel_reference_number_counter'
     TRAVEL_INVOICE_REFERENCE = 'travel_invoice_reference_number_counter'
 
-    workspace = models.OneToOneField('users.Country', related_name='counters', verbose_name=_('Workspace'))
+    workspace = models.OneToOneField('users.Country', related_name='counters', verbose_name=_('Workspace'),
+                                     on_delete=models.CASCADE)
 
     # T2F travel reference number counter
     travel_reference_number_counter = models.PositiveIntegerField(
@@ -144,7 +145,8 @@ class Office(models.Model):
         settings.AUTH_USER_MODEL,
         blank=True, null=True,
         related_name='offices',
-        verbose_name='Chief'
+        verbose_name='Chief',
+        on_delete=models.CASCADE,
     )
 
     objects = CountryOfficeManager()
@@ -198,18 +200,31 @@ class UserProfile(models.Model):
     Relates to :model:`users.Office`
     """
 
-    user = models.OneToOneField(settings.AUTH_USER_MODEL, related_name='profile', verbose_name=_('User'))
+    user = models.OneToOneField(settings.AUTH_USER_MODEL, related_name='profile', verbose_name=_('User'),
+                                on_delete=models.CASCADE)
     # TODO: after migration remove the ability to add blank=True
     guid = models.CharField(max_length=40, unique=True, null=True, verbose_name=_('GUID'))
 
     partner_staff_member = models.IntegerField(null=True, blank=True, verbose_name=_('Partner Staff Member'))
-    country = models.ForeignKey(Country, null=True, blank=True, verbose_name=_('Country'))
-    country_override = models.ForeignKey(Country, null=True, blank=True, related_name="country_override",
-                                         verbose_name=_('Country Override'))
+    country = models.ForeignKey(
+        Country, null=True, blank=True, verbose_name=_('Country'),
+        on_delete=models.CASCADE,
+    )
+    country_override = models.ForeignKey(
+        Country, null=True, blank=True, related_name="country_override",
+        verbose_name=_('Country Override'),
+        on_delete=models.CASCADE,
+    )
     countries_available = models.ManyToManyField(Country, blank=True, related_name="accessible_by",
                                                  verbose_name=_('Countries Available'))
-    section = models.ForeignKey(Section, null=True, blank=True, verbose_name=_('Section'))
-    office = models.ForeignKey(Office, null=True, blank=True, verbose_name=_('Office'))
+    section = models.ForeignKey(
+        Section, null=True, blank=True, verbose_name=_('Section'),
+        on_delete=models.CASCADE,
+    )
+    office = models.ForeignKey(
+        Office, null=True, blank=True, verbose_name=_('Office'),
+        on_delete=models.CASCADE,
+    )
     job_title = models.CharField(max_length=255, default='', blank=True, verbose_name=_('Job Title'))
     phone_number = models.CharField(max_length=20, default='', blank=True, verbose_name=_('Phone Number'))
 

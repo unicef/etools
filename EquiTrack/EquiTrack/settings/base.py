@@ -93,7 +93,7 @@ USE_L10N = True
 USE_TZ = True
 
 # DJANGO: HTTP
-MIDDLEWARE_CLASSES = (
+MIDDLEWARE = (
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.contrib.auth.middleware.SessionAuthenticationMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
@@ -152,7 +152,6 @@ SHARED_APPS = (
     'rest_framework.authtoken',
     'drfpasswordless',
     'import_export',
-    'smart_selects',
     'gunicorn',
     'post_office',
     'django_celery_beat',
@@ -161,13 +160,6 @@ SHARED_APPS = (
     'leaflet',
     'corsheaders',
     'djangosaml2',
-    'allauth',
-    'allauth.account',
-    'allauth.socialaccount',
-    # allauth providers you want to enable:
-    # 'allauth.socialaccount.providers.facebook',
-    'allauth.socialaccount.providers.google',
-    # 'allauth.socialaccount.providers.twitter',
     'analytical',
     'mptt',
     'easy_pdf',
@@ -237,7 +229,6 @@ TEMPLATES = [
             'context_processors': [
                 # Already defined Django-related contexts here
 
-                # `allauth` needs this from django
                 'django.contrib.auth.context_processors.auth',
                 'django.template.context_processors.request',
                 'django.template.context_processors.debug',
@@ -264,7 +255,6 @@ ROOT_URLCONF = '%s.urls' % SITE_NAME
 AUTHENTICATION_BACKENDS = (
     'django.contrib.auth.backends.ModelBackend',
     'djangosaml2.backends.Saml2Backend',
-    'allauth.account.auth_backends.AuthenticationBackend',
 )
 AUTH_USER_MODEL = 'auth.User'
 LOGIN_REDIRECT_URL = '/'
@@ -367,23 +357,6 @@ SWAGGER_SETTINGS = {
 # django-analytical: https://pythonhosted.org/django-analytical/
 USERVOICE_WIDGET_KEY = os.getenv('USERVOICE_KEY', '')
 
-# django-allauth: https://github.com/pennersr/django-allauth
-ACCOUNT_ADAPTER = 'EquiTrack.auth.CustomAccountAdapter'
-ACCOUNT_AUTHENTICATION_METHOD = 'email'
-ACCOUNT_DEFAULT_HTTP_PROTOCOL = "https"
-ACCOUNT_EMAIL_REQUIRED = True
-ACCOUNT_EMAIL_VERIFICATION = "none"  # "optional", "mandatory" or "none"
-ACCOUNT_LOGOUT_REDIRECT_URL = "/login"
-ACCOUNT_LOGOUT_ON_GET = True
-ACCOUNT_UNIQUE_EMAIL = True
-SOCIALACCOUNT_AUTO_SIGNUP = True
-SOCIALACCOUNT_ADAPTER = 'EquiTrack.auth.CustomSocialAccountAdapter'
-SOCIALACCOUNT_PROVIDERS = \
-    {'google':
-        {'SCOPE': ['profile', 'email'],
-         'AUTH_PARAMS': {'access_type': 'online'}}}
-SOCIALACCOUNT_STORE_TOKENS = True
-
 # django-mptt: https://github.com/django-mptt/django-mptt
 MPTT_ADMIN_LEVEL_INDENT = 20
 
@@ -397,6 +370,10 @@ LEAFLET_CONFIG = {
 
 # django-tenant-schemas: https://github.com/bernardopires/django-tenant-schemas
 TENANT_MODEL = "users.Country"  # app.Model
+
+# don't call set search_path so much
+# https://django-tenant-schemas.readthedocs.io/en/latest/use.html#performance-considerations
+TENANT_LIMIT_SET_CALLS = True
 
 # django-saml2: https://github.com/robertavram/djangosaml2
 HOST = os.environ.get('DJANGO_ALLOWED_HOST', 'localhost:8000')
@@ -582,3 +559,5 @@ PASSWORDLESS_AUTH = {
 }
 
 REPORT_EMAILS = os.getenv('REPORT_EMAILS', ['etools@unicef.org', ])
+
+USERVOICE_WIDGET_KEY = 'defaultVoiceKey'

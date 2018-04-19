@@ -2,6 +2,7 @@
 import datetime
 
 from django.contrib.contenttypes.models import ContentType
+from django.utils import timezone
 from rest_framework.generics import ListAPIView
 from rest_framework.permissions import IsAdminUser
 
@@ -15,6 +16,7 @@ class ActivityListView(ListAPIView):
 
     def get_queryset(self):
         queryset = Activity.objects.all()
+        tz = timezone.get_default_timezone()
 
         # filter on user
         user = self.request.query_params.get('user', None)
@@ -37,6 +39,7 @@ class ActivityListView(ListAPIView):
         if date_from is not None:
             try:
                 date_from = datetime.datetime.strptime(date_from, "%Y-%m-%d")
+                date_from = timezone.make_aware(date_from, tz)
             except ValueError:
                 # return a blank queryset
                 queryset = queryset.none()
@@ -48,6 +51,7 @@ class ActivityListView(ListAPIView):
         if date_to is not None:
             try:
                 date_to = datetime.datetime.strptime(date_to, "%Y-%m-%d")
+                date_to = timezone.make_aware(date_to, tz)
             except ValueError:
                 # return a blank queryset
                 queryset = queryset.none()

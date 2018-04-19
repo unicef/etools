@@ -11,6 +11,7 @@ from funds.views import (
     GrantListAPIView,
 )
 
+app_name = 'funds'
 urlpatterns = (
     url(r'^frs/$', view=FRsView.as_view(), name='frs'),
     url(r'^commitment-header/$',

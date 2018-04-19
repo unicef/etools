@@ -9,7 +9,10 @@ from utils.common.models.fields import CodedGenericRelation
 
 class GenericChild(models.Model):
     object_id = models.IntegerField()
-    content_type = models.ForeignKey(ContentType)
+    content_type = models.ForeignKey(
+        ContentType, related_name='generic_child',
+        on_delete=models.CASCADE,
+    )
     obj = GenericForeignKey()
 
     field = models.IntegerField()
@@ -20,7 +23,10 @@ class GenericChild(models.Model):
 
 class CodedGenericChild(models.Model):
     object_id = models.IntegerField()
-    content_type = models.ForeignKey(ContentType)
+    content_type = models.ForeignKey(
+        ContentType, related_name='coded_generic_child',
+        on_delete=models.CASCADE,
+    )
     obj = GenericForeignKey()
 
     code = models.CharField(max_length=10, blank=True)
@@ -50,7 +56,10 @@ class Child1(models.Model):
 
 
 class Child2(models.Model):
-    parent = models.ForeignKey(Parent, related_name='children2')
+    parent = models.ForeignKey(
+        Parent, related_name='children2',
+        on_delete=models.CASCADE,
+    )
     field = models.IntegerField()
     field2 = models.IntegerField(null=True)
 
@@ -59,7 +68,10 @@ class Child2(models.Model):
 
 
 class Child3(models.Model):
-    parent = models.ForeignKey(Parent, related_name='children3')
+    parent = models.ForeignKey(
+        Parent, related_name='children3',
+        on_delete=models.CASCADE,
+    )
     field = models.IntegerField()
     field2 = models.IntegerField(unique=True)
 

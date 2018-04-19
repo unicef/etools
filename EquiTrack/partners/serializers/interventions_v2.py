@@ -1,7 +1,11 @@
 
+from operator import itemgetter
+
 from datetime import date
 from django.core.exceptions import ValidationError
 from django.db import transaction
+from django.db.models import Q
+from django.utils.translation import ugettext as _
 from rest_framework import serializers
 
 from attachments.serializers_fields import AttachmentSingleFileField
@@ -21,12 +25,13 @@ from partners.models import (
     InterventionResultLink,
     InterventionReportingPeriod,
 )
-from reports.models import LowerResult
+from reports.models import AppliedIndicator, LowerResult, ReportingRequirement
 from reports.serializers.v1 import SectorSerializer
 from reports.serializers.v2 import (
     IndicatorSerializer,
     LowerResultCUSerializer,
     LowerResultSerializer,
+    ReportingRequirementSerializer,
 )
 
 
@@ -179,6 +184,7 @@ class InterventionListSerializer(BaseInterventionListSerializer):
     fr_currencies_are_consistent = serializers.SerializerMethodField()
     all_currencies_are_consistent = serializers.SerializerMethodField()
     fr_currency = serializers.SerializerMethodField()
+    multi_curr_flag = serializers.BooleanField()
 
     def fr_currencies_ok(self, obj):
         return obj.frs__currency__count == 1 if obj.frs__currency__count else None
@@ -196,7 +202,7 @@ class InterventionListSerializer(BaseInterventionListSerializer):
 
     class Meta(BaseInterventionListSerializer.Meta):
         fields = BaseInterventionListSerializer.Meta.fields + (
-            'fr_currencies_are_consistent', 'all_currencies_are_consistent', 'fr_currency')
+            'fr_currencies_are_consistent', 'all_currencies_are_consistent', 'fr_currency', 'multi_curr_flag')
 
 
 class MinimalInterventionListSerializer(serializers.ModelSerializer):
@@ -248,7 +254,7 @@ class InterventionAttachmentSerializer(serializers.ModelSerializer):
 
 
 class InterventionResultNestedSerializer(serializers.ModelSerializer):
-    cp_output_name = serializers.CharField(source="cp_output.name", read_only=True)
+    cp_output_name = serializers.CharField(source="cp_output.output_name", read_only=True)
     ram_indicator_names = serializers.SerializerMethodField(read_only=True)
     ll_results = LowerResultSerializer(many=True, read_only=True)
 
@@ -548,3 +554,164 @@ class InterventionListMapSerializer(serializers.ModelSerializer):
             "id", "partner_id", "partner_name", "agreement", "document_type", "number", "title", "status",
             "start", "end", "offices", "sections", "locations"
         )
+
+
+class InterventionReportingRequirementListSerializer(serializers.ModelSerializer):
+    reporting_requirements = ReportingRequirementSerializer(
+        many=True,
+        read_only=True
+    )
+
+    class Meta:
+        model = Intervention
+        fields = ("reporting_requirements", )
+
+
+class InterventionReportingRequirementCreateSerializer(serializers.ModelSerializer):
+    report_type = serializers.ChoiceField(
+        choices=ReportingRequirement.TYPE_CHOICES
+    )
+    reporting_requirements = ReportingRequirementSerializer(many=True)
+
+    class Meta:
+        model = Intervention
+        fields = ("reporting_requirements", "report_type", )
+
+    def _validate_qpr(self, requirements):
+        # Ensure that the first reporting requirement start date
+        # is on or after PD start date
+        if requirements[0]["start_date"] < self.intervention.start:
+            raise serializers.ValidationError({
+                "reporting_requirements": {
+                    "start_date": _(
+                        "Start date needs to be on or after PD start date."
+                    )
+                }
+            })
+
+        # Ensure start date is after previous end date
+        for i in range(1, len(requirements)):
+            if requirements[i]["start_date"] <= requirements[i - 1]["end_date"]:
+                raise serializers.ValidationError({
+                    "reporting_requirements": {
+                        "start_date": _(
+                            "Start date needs to be after previous end date."
+                        )
+                    }
+                })
+
+    def _validate_hr(self):
+        # Ensure intervention has high frequency or cluster indicators
+        indicator_qs = AppliedIndicator.objects.filter(
+            lower_result__result_link__intervention=self.intervention
+        ).filter(
+            Q(is_high_frequency=True) |
+            Q(cluster_indicator_id__isnull=False)
+        )
+        if not indicator_qs.count():
+            raise serializers.ValidationError(
+                _("Indicator needs to be either cluster or high frequency.")
+            )
+
+    def _merge_data(self, data):
+        current_reqs = ReportingRequirement.objects.values(
+            "id",
+            "start_date",
+            "end_date",
+            "due_date",
+        ).filter(
+            intervention=self.intervention,
+            report_type=data["report_type"],
+        )
+
+        current_reqs_dict = {}
+        for r in current_reqs:
+            current_reqs_dict[r["id"]] = r
+
+        report_type = data["report_type"]
+        for r in data["reporting_requirements"]:
+            if r.get("id") in current_reqs_dict:
+                current_reqs_dict.pop(r["id"])
+            r["intervention"] = self.intervention
+            r["report_type"] = report_type
+            if report_type == ReportingRequirement.TYPE_HR:
+                r["end_date"] = r["due_date"]
+                r["start_date"] = None
+                r["description"] = ""
+            elif report_type == ReportingRequirement.TYPE_SPECIAL:
+                r["start_date"] = None
+                r["end_date"] = r["due_date"]
+
+        # We need all reporting requirements in end date order
+        merged_reqs = list(current_reqs_dict.values()) + data["reporting_requirements"]
+        data["reporting_requirements"] = sorted(
+            merged_reqs,
+            key=itemgetter("end_date")
+        )
+        return data
+
+    def run_validation(self, initial_data):
+        serializer = self.fields["reporting_requirements"].child
+        report_type = initial_data.get("report_type")
+        if report_type == ReportingRequirement.TYPE_QPR:
+            serializer.fields["start_date"].required = True
+            serializer.fields["end_date"].required = True
+        elif report_type == ReportingRequirement.TYPE_SPECIAL:
+            serializer.fields["description"].required = True
+        return super().run_validation(initial_data)
+
+    def validate(self, data):
+        """The first reporting requirement's start date needs to be
+        on or after the PD start date.
+        Subsequent reporting requirements start date needs to be after the
+        previous reporting requirement end date.
+        """
+        self.intervention = self.context["intervention"]
+
+        # Only able to change reporting requirements when PD
+        # is in amendment status
+        if self.intervention.status not in [self.intervention.DRAFT]:
+            raise serializers.ValidationError(
+                _("Changes not allowed when PD not in amendment state.")
+            )
+        if not self.intervention.start:
+            raise serializers.ValidationError(
+                _("PD needs to have a start date.")
+            )
+
+        # Validate reporting requirements first
+        if not len(data["reporting_requirements"]):
+            raise serializers.ValidationError({
+                "reporting_requirements": _("This field cannot be empty.")
+            })
+
+        self._merge_data(data)
+
+        if data["report_type"] == ReportingRequirement.TYPE_QPR:
+            self._validate_qpr(data["reporting_requirements"])
+        elif data["report_type"] == ReportingRequirement.TYPE_HR:
+            self._validate_hr()
+
+        return data
+
+    def create(self, validated_data):
+        current_reqs = ReportingRequirement.objects.values_list(
+            "id",
+            flat=True
+        ).filter(
+            intervention=self.intervention,
+            report_type=validated_data["report_type"]
+        )
+        new_reqs = [
+            r["id"] for r in validated_data["reporting_requirements"]
+            if "id" in r
+        ]
+        delete_reqs = [r for r in current_reqs if r not in new_reqs]
+        ReportingRequirement.objects.filter(id__in=delete_reqs).delete()
+        for r in validated_data["reporting_requirements"]:
+            if r.get("id"):
+                pk = r.pop("id")
+                ReportingRequirement.objects.filter(pk=pk).update(**r)
+            else:
+                ReportingRequirement.objects.create(**r)
+        return self.intervention
