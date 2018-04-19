@@ -74,7 +74,7 @@ class TravelAgent(SoftDeleteMixin, models.Model):
         on_delete=models.CASCADE,
     )
     expense_type = models.OneToOneField('TravelExpenseType', related_name='travel_agent',
-                                        verbose_name=_('Expense Type'))
+                                        verbose_name=_('Expense Type'), on_delete=models.CASCADE)
 
 
 @python_2_unicode_compatible

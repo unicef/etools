@@ -849,7 +849,8 @@ class PartnerStaffMember(TimeStampedModel):
 @python_2_unicode_compatible
 class PlannedEngagement(TimeStampedModel):
     """ class to handle partner's engagement for current year """
-    partner = models.OneToOneField(PartnerOrganization, verbose_name=_("Partner"), related_name='planned_engagement')
+    partner = models.OneToOneField(PartnerOrganization, verbose_name=_("Partner"), related_name='planned_engagement',
+                                   on_delete=models.CASCADE)
     spot_check_mr = QuarterField(verbose_name=_('Spot Check MR'), null=False, default='')
     spot_check_follow_up_q1 = models.IntegerField(verbose_name=_("Spot Check Q1"), default=0)
     spot_check_follow_up_q2 = models.IntegerField(verbose_name=_("Spot Check Q2"), default=0)
@@ -2125,7 +2126,7 @@ class InterventionBudget(TimeStampedModel):
     Represents a budget for the intervention
     """
     intervention = models.OneToOneField(Intervention, related_name='planned_budget', null=True, blank=True,
-                                        verbose_name=_('Intervention'))
+                                        verbose_name=_('Intervention'), on_delete=models.CASCADE)
 
     partner_contribution = models.DecimalField(max_digits=20, decimal_places=2, default=0,
                                                verbose_name=_('Partner Contribution'))

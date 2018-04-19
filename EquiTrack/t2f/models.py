@@ -483,7 +483,7 @@ class TravelActivity(models.Model):
     )
     locations = models.ManyToManyField('locations.Location', related_name='+', verbose_name=_('Locations'))
     primary_traveler = models.ForeignKey(
-        settings.AUTH_USER_MODEL, verbose_name=_('Primary Traveler'))
+        settings.AUTH_USER_MODEL, verbose_name=_('Primary Traveler'), on_delete=models.CASCADE)
     date = models.DateTimeField(null=True, blank=True, verbose_name=_('Date'))
 
     class Meta:
@@ -614,7 +614,8 @@ class Clearances(models.Model):
         (NOT_APPLICABLE, 'not_applicable'),
     )
 
-    travel = models.OneToOneField('Travel', related_name='clearances', verbose_name=_('Travel'))
+    travel = models.OneToOneField('Travel', related_name='clearances', verbose_name=_('Travel'),
+                                  on_delete=models.CASCADE)
     medical_clearance = models.CharField(max_length=14, choices=CHOICES, default=NOT_APPLICABLE,
                                          verbose_name=_('Medical Clearance'))
     security_clearance = models.CharField(max_length=14, choices=CHOICES, default=NOT_APPLICABLE,
