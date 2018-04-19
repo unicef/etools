@@ -87,6 +87,7 @@ class Location(MPTTModel):
         blank=True,
         related_name='children',
         db_index=True,
+        on_delete=models.CASCADE
     )
     geom = models.MultiPolygonField(
         verbose_name=_("Geo Point"),

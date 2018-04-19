@@ -83,7 +83,8 @@ class WorkspaceCounter(models.Model):
     TRAVEL_REFERENCE = 'travel_reference_number_counter'
     TRAVEL_INVOICE_REFERENCE = 'travel_invoice_reference_number_counter'
 
-    workspace = models.OneToOneField('users.Country', related_name='counters', verbose_name=_('Workspace'))
+    workspace = models.OneToOneField('users.Country', related_name='counters', verbose_name=_('Workspace'),
+                                     on_delete=models.CASCADE)
 
     # T2F travel reference number counter
     travel_reference_number_counter = models.PositiveIntegerField(
@@ -200,7 +201,8 @@ class UserProfile(models.Model):
     Relates to :model:`users.Office`
     """
 
-    user = models.OneToOneField(settings.AUTH_USER_MODEL, related_name='profile', verbose_name=_('User'))
+    user = models.OneToOneField(settings.AUTH_USER_MODEL, related_name='profile', verbose_name=_('User'),
+                                on_delete=models.CASCADE)
     # TODO: after migration remove the ability to add blank=True
     guid = models.CharField(max_length=40, unique=True, null=True, verbose_name=_('GUID'))
 
