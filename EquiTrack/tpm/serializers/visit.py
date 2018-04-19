@@ -100,7 +100,7 @@ class TPMActivitySerializer(TPMPermissionsBasedSerializerMixin, WritableNestedSe
     )
 
     attachments = TPMAttachmentsSerializer(many=True, required=False, label=_('Related Documents'))
-    report_attachments = TPMReportSerializer(many=True, required=False, label=_('Reports by Activity'))
+    report_attachments = TPMReportSerializer(many=True, required=False, label=_('Reports by Task'))
 
     pv_applicable = serializers.BooleanField(read_only=True)
 
@@ -133,7 +133,7 @@ class TPMActivitySerializer(TPMPermissionsBasedSerializerMixin, WritableNestedSe
             'pv_applicable',
         ]
         extra_kwargs = {
-            'id': {'label': _('Activity ID')},
+            'id': {'label': _('Task ID')},
             'date': {'required': True},
             'partner': {'required': True},
         }
@@ -216,7 +216,7 @@ class TPMVisitSerializer(TPMVisitLightSerializer):
 
     report_reject_comments = TPMVisitReportRejectCommentSerializer(many=True, read_only=True)
 
-    action_points = TPMActionPointSerializer(label=_('Activity Information'), many=True, required=False)
+    action_points = TPMActionPointSerializer(label=_('Task Information'), many=True, required=False)
 
     def validate(self, attrs):
         validated_data = super(TPMVisitSerializer, self).validate(attrs)
