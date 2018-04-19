@@ -34,7 +34,6 @@ class TokenAuthView(FormView):
         }
 
         send_notification_using_email_template(
-            sender=form.get_user(),
             recipients=[form.get_user().email],
             email_template_name='email_auth/token/login',
             context=email_context

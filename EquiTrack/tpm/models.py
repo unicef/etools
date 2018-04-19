@@ -180,7 +180,6 @@ class TPMVisit(SoftDeleteMixin, TimeStampedModel, models.Model):
                 recipients=recipients,
                 email_template_name=template_name,
                 context=context,
-                sender=self,
             )
 
     def _get_unicef_focal_points_as_email_recipients(self):
@@ -449,7 +448,6 @@ class TPMActionPoint(TimeStampedModel, models.Model):
             recipients=[self.person_responsible.email],
             email_template_name=template_name,
             context=context,
-            sender=self,
         )
 
 
