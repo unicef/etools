@@ -69,7 +69,7 @@ class AuditorFirmSerializer(WritableNestedSerializerMixin, AuditorFirmLightSeria
 
     class Meta(WritableNestedSerializerMixin.Meta, AuditorFirmLightSerializer.Meta):
         fields = AuditorFirmLightSerializer.Meta.fields + [
-            'staff_members',
+            'unicef_users_allowed', 'staff_members',
         ]
 
 
