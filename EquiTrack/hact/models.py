@@ -2,7 +2,7 @@ from __future__ import absolute_import, division, print_function, unicode_litera
 
 import decimal
 import json
-from datetime import date, datetime, timedelta
+from datetime import date, datetime
 from decimal import Decimal
 
 from django.contrib.postgres.fields import JSONField
@@ -29,7 +29,10 @@ class HactEncoder(json.JSONEncoder):
 
 class HactHistory(TimeStampedModel):
 
-    partner = models.ForeignKey(PartnerOrganization, verbose_name=_('Partner'), related_name='related_partner')
+    partner = models.ForeignKey(
+        PartnerOrganization, verbose_name=_('Partner'), related_name='related_partner',
+        on_delete=models.CASCADE,
+    )
     year = models.IntegerField(default=get_current_year, verbose_name=_('Year'))
     partner_values = JSONField(null=True, blank=True, verbose_name=_('Partner Values'))
 
@@ -217,8 +220,7 @@ class AggregateHact(TimeStampedModel):
         ]
 
     def get_assurance_activities(self):
-        today = date.today()
-        deadline = today - timedelta(365 * PartnerOrganization.EXPIRING_ASSESSMENT_LIMIT_YEAR)
+        year_limit = date.today().year - PartnerOrganization.EXPIRING_ASSESSMENT_LIMIT_YEAR
         return {
             'programmatic_visits': {
                 'completed': self._sum_json_values('hact_values__programmatic_visits__completed__total'),
@@ -234,8 +236,9 @@ class AggregateHact(TimeStampedModel):
                 status=Engagement.FINAL, date_of_draft_report_to_unicef__year=datetime.now().year).count(),
             'micro_assessment': MicroAssessment.objects.filter(
                 status=Engagement.FINAL, date_of_draft_report_to_unicef__year=datetime.now().year).count(),
-            'missing_micro_assessment': PartnerOrganization.objects.filter(last_assessment_date__isnull=False,
-                                                                           last_assessment_date__lte=deadline).count(),
+            'missing_micro_assessment': PartnerOrganization.objects.filter(
+                reported_cy__gt=0, total_ct_cy__gt=0, hidden=False,
+                last_assessment_date__isnull=False, last_assessment_date__year__lte=year_limit).count(),
         }
 
     def get_financial_findings(self):
