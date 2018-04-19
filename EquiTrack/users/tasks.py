@@ -139,7 +139,11 @@ class UserMapper(object):
                     logger.debug(u"User doesn't have the required fields {} missing".format(field))
                     return
             elif isinstance(field, tuple):
-                if ad_user.get(field[0], False) != field[1]:
+                allowed_values = field[1]
+                if isinstance(allowed_values, str):
+                    allowed_values = [allowed_values, ]
+
+                if ad_user.get(field[0], False) not in allowed_values:
                     logger.debug(u"User is not in Unicef organization {}".format(field[1]))
                     return
 
@@ -257,7 +261,7 @@ class AzureUserMapper(UserMapper):
         'mail',
         'surname',
         'userType',
-        ('companyName', 'UNICEF'),
+        ('companyName', ['UNICEF', ]),
     ]
 
     ATTR_MAP = {
