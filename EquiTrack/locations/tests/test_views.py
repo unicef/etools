@@ -107,7 +107,7 @@ class TestLocationViews(BaseTenantTestCase):
         assert etag_before != etag_after
 
     def test_api_location_autocomplete(self):
-        response = self.forced_auth_req('get', reverse('locations_autocomplete'),
+        response = self.forced_auth_req('get', reverse('locations:locations_autocomplete'),
                                         user=self.unicef_staff, data={"q": "Loc"})
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
@@ -124,13 +124,13 @@ class TestLocationAutocompleteView(BaseTenantTestCase):
 
     def test_non_auth(self):
         LocationFactory()
-        response = self.client.get(reverse("locations-autocomplete-light"))
+        response = self.client.get(reverse("locations:locations-autocomplete-light"))
         self.assertEqual(response.status_code, status.HTTP_302_FOUND)
 
     def test_get(self):
         LocationFactory()
         self.client.force_login(self.unicef_staff)
-        response = self.client.get(reverse("locations-autocomplete-light"))
+        response = self.client.get(reverse("locations:locations-autocomplete-light"))
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         data = response.json()
         self.assertEqual(len(data["results"]), 1)
@@ -140,7 +140,7 @@ class TestLocationAutocompleteView(BaseTenantTestCase):
         LocationFactory(name="Other")
         self.client.force_login(self.unicef_staff)
         response = self.client.get("{}?q=te".format(
-            reverse("locations-autocomplete-light")
+            reverse("locations:locations-autocomplete-light")
         ))
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         data = response.json()
