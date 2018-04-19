@@ -139,7 +139,13 @@ class TPMVisit(SoftDeleteMixin, TimeStampedModel, models.Model):
     def has_action_permission(self, user=None, action=None):
         return _has_action_permission(self, user, action)
 
-    def get_mail_context(self):
+    def get_mail_context(self, user=None):
+        object_url = self.get_object_url()
+
+        if user:
+            from email_auth.utils import update_url_with_auth_token
+            object_url = update_url_with_auth_token(object_url, user)
+
         activities = self.tpm_activities.all()
         interventions = set(a.intervention.title for a in activities if a.intervention)
         partner_names = set(a.partner.name for a in activities)
@@ -148,16 +154,16 @@ class TPMVisit(SoftDeleteMixin, TimeStampedModel, models.Model):
             'tpm_partner': self.tpm_partner.name,
             'tpm_activities': [a.get_mail_context() for a in activities],
             'multiple_tpm_activities': activities.count() > 1,
-            'object_url': self.get_object_url(),
+            'object_url': object_url,
             'partners': ', '.join(partner_names),
             'interventions': ', '.join(interventions),
         }
 
-    def _send_email(self, recipients, template_name, context=None, **kwargs):
+    def _send_email(self, recipients, template_name, context=None, user=None, **kwargs):
         context = context or {}
 
         base_context = {
-            'visit': self.get_mail_context(),
+            'visit': self.get_mail_context(user=user),
             'environment': get_environment(),
         }
         base_context.update(context)
@@ -218,10 +224,11 @@ class TPMVisit(SoftDeleteMixin, TimeStampedModel, models.Model):
                 cc=self._get_unicef_focal_points_as_email_recipients()
             )
 
-        for staff_member in self.tpm_partner.staff_members.filter(user__email__isnull=False):
+        for staff_member in self.tpm_partner_focal_points.filter(user__email__isnull=False):
             self._send_email(
                 staff_member.user.email, 'tpm/visit/assign_staff_member',
-                context={'recipient': staff_member.user.get_full_name()}
+                context={'recipient': staff_member.user.get_full_name()},
+                user=staff_member.user
             )
 
     @transition(

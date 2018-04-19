@@ -21,7 +21,7 @@ class TPMVisitEmailsTestCase(BaseTenantTestCase):
         visit.assign()
         self.assertEqual(
             len(mail.outbox),
-            visit.tpm_partner.staff_members.filter(user__email__isnull=False).count() + 1
+            visit.tpm_partner_focal_points.filter(user__email__isnull=False).count() + 1
         )
 
     def test_cancel(self):
