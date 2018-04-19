@@ -1,9 +1,8 @@
 import datetime
 from operator import itemgetter
 
-from unittest import TestCase
-
 from django.core.urlresolvers import reverse
+from django.test import SimpleTestCase
 from django.utils import six
 from rest_framework import status
 from partners.tests.test_utils import setup_intervention_test_data
@@ -35,10 +34,10 @@ from reports.tests.factories import (
     ResultFactory,
     ResultTypeFactory,
 )
-from users.tests.factories import UserFactory
+from users.tests.factories import GroupFactory, UserFactory
 
 
-class UrlsTestCase(URLAssertionMixin, TestCase):
+class UrlsTestCase(URLAssertionMixin, SimpleTestCase):
     '''Simple test case to verify URL reversal'''
     def test_urls(self):
         '''Verify URL pattern names generate the URLs we expect them to.'''
@@ -214,18 +213,21 @@ class TestOutputListAPIView(BaseTenantTestCase):
         data = {"dropdown": "true"}
         response = self.forced_auth_req('get', self.url, data=data)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertItemsEqual(response.data, [
-            {
-                "wbs": self.result1.wbs,
-                "id": self.result1.pk,
-                "name": self.result1.name
-            },
-            {
-                "wbs": self.result2.wbs,
-                "id": self.result2.pk,
-                "name": self.result2.name
-            },
-        ])
+        six.assertCountEqual(
+            self,
+            response.data, [
+                {
+                    "wbs": self.result1.wbs,
+                    "id": self.result1.pk,
+                    "name": self.result1.name
+                },
+                {
+                    "wbs": self.result2.wbs,
+                    "id": self.result2.pk,
+                    "name": self.result2.name
+                },
+            ]
+        )
 
 
 class TestOutputDetailAPIView(BaseTenantTestCase):
@@ -265,6 +267,9 @@ class TestDisaggregationListCreateViews(BaseTenantTestCase):
     @classmethod
     def setUpTestData(cls):
         cls.user = UserFactory(is_staff=True)
+        cls.pme_user = UserFactory()
+        cls.group = GroupFactory(name="PME")
+        cls.pme_user.groups.add(cls.group)
         cls.url = reverse('disaggregation-list-create')
 
     def test_get(self):
@@ -276,6 +281,18 @@ class TestDisaggregationListCreateViews(BaseTenantTestCase):
         response = self.forced_auth_req('get', self.url)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(len(response.data), num_instances)
+
+    def test_post_non_pme_user(self):
+        data = {
+            'name': 'Gender',
+            'disaggregation_values': [
+                {'value': 'Female'},
+                {'value': 'Male'},
+                {'value': 'Other'},
+            ]
+        }
+        response = self.forced_auth_req('post', self.url, data=data)
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
 
     def test_post(self):
         """
@@ -289,7 +306,12 @@ class TestDisaggregationListCreateViews(BaseTenantTestCase):
                 {'value': 'Other'},
             ]
         }
-        response = self.forced_auth_req('post', self.url, data=data)
+        response = self.forced_auth_req(
+            'post',
+            self.url,
+            user=self.pme_user,
+            data=data
+        )
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         disaggregation = Disaggregation.objects.get()
         self.assertEqual(disaggregation.name, 'Gender')
@@ -302,7 +324,12 @@ class TestDisaggregationListCreateViews(BaseTenantTestCase):
                 {'id': 999, 'value': 'Female'},
             ]
         }
-        response = self.forced_auth_req('post', self.url, data=data)
+        response = self.forced_auth_req(
+            'post',
+            self.url,
+            user=self.pme_user,
+            data=data
+        )
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
 
@@ -314,6 +341,9 @@ class TestDisaggregationRetrieveUpdateViews(BaseTenantTestCase):
     @classmethod
     def setUpTestData(cls):
         cls.user = UserFactory(is_staff=True)
+        cls.pme_user = UserFactory()
+        cls.group = GroupFactory(name="PME")
+        cls.pme_user.groups.add(cls.group)
 
     @staticmethod
     def _get_url(dissagregation):
@@ -332,17 +362,40 @@ class TestDisaggregationRetrieveUpdateViews(BaseTenantTestCase):
         self.assertEqual(disaggregation.name, response.data['name'])
         self.assertEqual(num_values, len(response.data['disaggregation_values']))
 
+    def test_update_non_pme_user(self):
+        disaggregation = DisaggregationFactory()
+        new_name = 'updated via API'
+        response = self.forced_auth_req(
+            'put',
+            self._get_url(disaggregation),
+            data={'name': new_name, 'disaggregation_values': []}
+        )
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+
     def test_update_metadata(self):
         """
         Test updating a disaggregation's metadata
         """
         disaggregation = DisaggregationFactory()
         new_name = 'updated via API'
-        response = self.forced_auth_req('put', self._get_url(disaggregation),
-                                        data={'name': new_name, 'disaggregation_values': []})
+        response = self.forced_auth_req(
+            'put',
+            self._get_url(disaggregation),
+            user=self.pme_user,
+            data={'name': new_name, 'disaggregation_values': []}
+        )
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         disaggregation = Disaggregation.objects.get(pk=disaggregation.pk)
         self.assertEqual(new_name, disaggregation.name)
+
+    def test_patch_non_pme_user(self):
+        disaggregation = DisaggregationFactory()
+        new_name = 'patched via API'
+        response = self.forced_auth_req(
+            'patch',
+            self._get_url(disaggregation),
+            data={'name': new_name})
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
 
     def test_patch_metadata(self):
         """
@@ -350,8 +403,12 @@ class TestDisaggregationRetrieveUpdateViews(BaseTenantTestCase):
         """
         disaggregation = DisaggregationFactory()
         new_name = 'patched via API'
-        response = self.forced_auth_req('patch', self._get_url(disaggregation),
-                                        data={'name': new_name})
+        response = self.forced_auth_req(
+            'patch',
+            self._get_url(disaggregation),
+            user=self.pme_user,
+            data={'name': new_name}
+        )
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         disaggregation = Disaggregation.objects.get(pk=disaggregation.pk)
         self.assertEqual(new_name, disaggregation.name)
@@ -365,7 +422,12 @@ class TestDisaggregationRetrieveUpdateViews(BaseTenantTestCase):
         new_value = 'updated value'
         data = DisaggregationSerializer(instance=disaggregation).data
         data['disaggregation_values'][0]['value'] = new_value
-        response = self.forced_auth_req('put', self._get_url(disaggregation), data=data)
+        response = self.forced_auth_req(
+            'put',
+            self._get_url(disaggregation),
+            user=self.pme_user,
+            data=data
+        )
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         disaggregation = Disaggregation.objects.get(pk=disaggregation.pk)
         self.assertEqual(1, disaggregation.disaggregation_values.count())
@@ -377,10 +439,20 @@ class TestDisaggregationRetrieveUpdateViews(BaseTenantTestCase):
         # this bootstraps a bunch of stuff, including self.disaggregation referenced by an AppliedIndicator
         setup_intervention_test_data(self, include_results_and_indicators=True)
         data = DisaggregationSerializer(instance=self.disaggregation).data
-        response = self.forced_auth_req('put', self._get_url(self.disaggregation), data=data)
+        response = self.forced_auth_req(
+            'put',
+            self._get_url(self.disaggregation),
+            user=self.pme_user,
+            data=data
+        )
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         # also try with patch
-        response = self.forced_auth_req('patch', self._get_url(self.disaggregation), data=data)
+        response = self.forced_auth_req(
+            'patch',
+            self._get_url(self.disaggregation),
+            user=self.pme_user,
+            data=data
+        )
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
     def test_create_values(self):
@@ -394,7 +466,12 @@ class TestDisaggregationRetrieveUpdateViews(BaseTenantTestCase):
             "value": "a new value",
             "active": False
         })
-        response = self.forced_auth_req('put', self._get_url(disaggregation), data=data)
+        response = self.forced_auth_req(
+            'put',
+            self._get_url(disaggregation),
+            user=self.pme_user,
+            data=data
+        )
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         disaggregation = Disaggregation.objects.get(pk=disaggregation.pk)
         self.assertEqual(2, disaggregation.disaggregation_values.count())
@@ -406,7 +483,12 @@ class TestDisaggregationRetrieveUpdateViews(BaseTenantTestCase):
         value = DisaggregationValueFactory(disaggregation=disaggregation)
         data = DisaggregationSerializer(instance=disaggregation).data
         data['disaggregation_values'] = []
-        response = self.forced_auth_req('put', self._get_url(disaggregation), data=data)
+        response = self.forced_auth_req(
+            'put',
+            self._get_url(disaggregation),
+            user=self.pme_user,
+            data=data
+        )
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         disaggregation = Disaggregation.objects.get(pk=disaggregation.pk)
         self.assertEqual(0, disaggregation.disaggregation_values.count())
@@ -430,7 +512,12 @@ class TestDisaggregationRetrieveUpdateViews(BaseTenantTestCase):
             "value": "a new value",
             "active": False
         })
-        response = self.forced_auth_req('put', self._get_url(disaggregation), data=data)
+        response = self.forced_auth_req(
+            'put',
+            self._get_url(disaggregation),
+            user=self.pme_user,
+            data=data
+        )
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         disaggregation = Disaggregation.objects.get(pk=disaggregation.pk)
         self.assertEqual(2, disaggregation.disaggregation_values.count())
@@ -446,10 +533,20 @@ class TestDisaggregationRetrieveUpdateViews(BaseTenantTestCase):
             "id": value.pk,
             "value": "not allowed",
         })
-        response = self.forced_auth_req('put', self._get_url(disaggregation), data=data)
+        response = self.forced_auth_req(
+            'put',
+            self._get_url(disaggregation),
+            user=self.pme_user,
+            data=data
+        )
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         # also try with patch
-        response = self.forced_auth_req('patch', self._get_url(disaggregation), data=data)
+        response = self.forced_auth_req(
+            'patch',
+            self._get_url(disaggregation),
+            user=self.pme_user,
+            data=data
+        )
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
     def test_delete(self):
@@ -457,7 +554,11 @@ class TestDisaggregationRetrieveUpdateViews(BaseTenantTestCase):
         Test deleting a disaggregation is not allowed
         """
         disaggregation = DisaggregationFactory()
-        response = self.forced_auth_req('delete', self._get_url(disaggregation))
+        response = self.forced_auth_req(
+            'delete',
+            self._get_url(disaggregation),
+            user=self.pme_user
+        )
         self.assertEqual(response.status_code, status.HTTP_405_METHOD_NOT_ALLOWED)
         self.assertTrue(Disaggregation.objects.filter(pk=disaggregation.pk).exists())
 
@@ -746,8 +847,8 @@ class TestAppliedIndicatorExportList(BaseTenantTestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         dataset = Dataset().load(response.content.decode('utf-8'), 'csv')
         self.assertEqual(dataset.height, 1)
-        self.assertEqual(len(dataset._get_headers()), 24)
-        self.assertEqual(len(dataset[0]), 24)
+        self.assertEqual(len(dataset._get_headers()), 26)
+        self.assertEqual(len(dataset[0]), 26)
 
     def test_csv_flat_export_api(self):
         response = self.forced_auth_req(
@@ -760,5 +861,5 @@ class TestAppliedIndicatorExportList(BaseTenantTestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         dataset = Dataset().load(response.content.decode('utf-8'), 'csv')
         self.assertEqual(dataset.height, 1)
-        self.assertEqual(len(dataset._get_headers()), 24)
-        self.assertEqual(len(dataset[0]), 24)
+        self.assertEqual(len(dataset._get_headers()), 26)
+        self.assertEqual(len(dataset[0]), 26)

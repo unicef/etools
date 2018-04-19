@@ -5,6 +5,7 @@ import json
 from django.utils import six
 from rest_framework import serializers
 
+from EquiTrack.mixins import ExportSerializerMixin
 from reports.models import (
     AppliedIndicator,
     Indicator,
@@ -37,7 +38,10 @@ class AppliedIndicatorExportSerializer(serializers.ModelSerializer):
         return res
 
 
-class AppliedIndicatorExportFlatSerializer(AppliedIndicatorExportSerializer):
+class AppliedIndicatorExportFlatSerializer(
+        ExportSerializerMixin,
+        AppliedIndicatorExportSerializer
+):
     intervention = serializers.CharField(source="lower_result.result_link.intervention.number")
     lower_result = serializers.CharField(source="lower_result.name")
 
@@ -54,7 +58,7 @@ class LowerResultExportSerializer(serializers.ModelSerializer):
         fields = "__all__"
 
 
-class LowerResultExportFlatSerializer(LowerResultExportSerializer):
+class LowerResultExportFlatSerializer(ExportSerializerMixin, LowerResultExportSerializer):
     result_link = serializers.CharField(source="result_link.intervention.number")
 
 
@@ -77,7 +81,7 @@ class IndicatorExportSerializer(serializers.ModelSerializer):
         return "Yes" if obj.view_on_dashboard else "No"
 
 
-class IndicatorExportFlatSerializer(IndicatorExportSerializer):
+class IndicatorExportFlatSerializer(ExportSerializerMixin, IndicatorExportSerializer):
     sector = serializers.CharField(source="sector.name")
     result = serializers.CharField(source="result.name")
     unit = serializers.CharField(source="unit.type")
@@ -109,4 +113,4 @@ class AppliedIndicatorLocationExportSerializer(serializers.Serializer):
     #     return ", ".join([rl.cp_output.name for rl in obj.indicator.lower_result.result_link.all()])
 
     def get_ram_indicators(self, obj):
-        ', '.join([ri.name for ri in obj.indicator.lower_result.result_link.ram_indicators.all()]),
+        return ', '.join([ri.name for ri in obj.indicator.lower_result.result_link.ram_indicators.all()])

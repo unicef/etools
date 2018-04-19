@@ -27,6 +27,7 @@ class FRsSerializer(serializers.Serializer):
     earliest_start_date = serializers.SerializerMethodField()
     latest_end_date = serializers.SerializerMethodField()
     currencies_match = serializers.SerializerMethodField()
+    multi_curr_flag = serializers.SerializerMethodField()
 
     def all_fr_currencies_match(self, obj):
         all_currencies = [i.currency for i in obj.all()]
@@ -54,6 +55,12 @@ class FRsSerializer(serializers.Serializer):
 
     def get_currencies_match(self, obj):
         return self.all_fr_currencies_match(obj)
+
+    def get_multi_curr_flag(self, obj):
+        for i in obj.all():
+            if i.multi_curr_flag:
+                return True
+        return False
 
 
 class FundsReservationItemSerializer(serializers.ModelSerializer):

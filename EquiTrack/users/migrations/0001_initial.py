@@ -49,7 +49,7 @@ class Migration(migrations.Migration):
             fields=[
                 ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
                 ('name', models.CharField(max_length=254, verbose_name='Name')),
-                ('zonal_chief', models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.CASCADE, related_name='offices', to=settings.AUTH_USER_MODEL, verbose_name=b'Chief')),
+                ('zonal_chief', models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.CASCADE, related_name='offices', to=settings.AUTH_USER_MODEL, verbose_name='Chief')),
             ],
             options={
                 'ordering': ('name',),

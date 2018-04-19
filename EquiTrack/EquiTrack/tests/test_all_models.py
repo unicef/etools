@@ -5,15 +5,16 @@ from __future__ import unicode_literals
 
 import inspect
 import sys
-from unittest import skipIf, TestCase
+from unittest import skipIf
 
 from django.apps import apps
+from django.test import SimpleTestCase
 
 # EXCLUDED_PACKAGES are the packages we want to exclude from testing for Python-3 compatible __str__() implementations.
 # If a 3rd party app model fails in TestStrMethods, feel free to add the package to this list. We aren't interested in
 # testing 3rd party packages. If an eTools model fails in TestStrMethods, it needs to be fixed.
+
 EXCLUDED_PACKAGES = (
-    'allauth',
     'corsheaders',
     'django',
     'django_celery_beat',
@@ -27,7 +28,7 @@ EXCLUDED_PACKAGES = (
 
 
 @skipIf(sys.version_info.major == 3, "This test can be deleted under Python 3")
-class TestStrMethods(TestCase):
+class TestStrMethods(SimpleTestCase):
     '''Ensure all models in this project that implement __str__() or __unicode__() use the Django decorator
     python_2_unicode_compatible. Models from non-eTools packages are excluded; we're not interested in
     testing them.

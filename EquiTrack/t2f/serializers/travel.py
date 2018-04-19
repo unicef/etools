@@ -122,7 +122,7 @@ class ActionPointSerializer(serializers.ModelSerializer):
     def validate_status(self, value):
         statuses = dict(ActionPoint.STATUS).keys()
         if value not in statuses:
-            raise ValidationError('Invalid status. Possible choices: {}'.format(', '.join(statuses)))
+            raise ValidationError('Invalid status. Possible choices: {}'.format(', '.join(sorted(statuses))))
         return value
 
 
@@ -411,7 +411,7 @@ class TravelDetailsSerializer(PermissionBasedModelSerializer):
         new_models = []
         for data in related_data:
             data = dict(data)
-            m2m_fields = {k: data.pop(k, []) for k in data.keys()
+            m2m_fields = {k: data.pop(k, []) for k in list(data.keys())
                           if isinstance(model._meta.get_field(k), ManyToManyField)}
             data.update(kwargs)
 
@@ -452,7 +452,7 @@ class TravelDetailsSerializer(PermissionBasedModelSerializer):
         return instance
 
     def update_object(self, obj, data):
-        m2m_fields = {k: data.pop(k, []) for k in data.keys()
+        m2m_fields = {k: data.pop(k, []) for k in list(data.keys())
                       if isinstance(obj._meta.get_field(k), ManyToManyField)}
         for attr, value in data.items():
             setattr(obj, attr, value)
@@ -528,25 +528,13 @@ class TravelListSerializer(TravelDetailsSerializer):
 class TravelActivityByPartnerSerializer(serializers.ModelSerializer):
     locations = serializers.SlugRelatedField(slug_field='name', many=True, read_only=True)
     primary_traveler = serializers.CharField(source='primary_traveler.get_full_name')
-    reference_number = serializers.SerializerMethodField()
-    status = serializers.SerializerMethodField()
-    trip_id = serializers.SerializerMethodField()
+    reference_number = serializers.ReadOnlyField()
+    status = serializers.ReadOnlyField()
+    trip_id = serializers.ReadOnlyField()
 
     class Meta:
         model = TravelActivity
         fields = ('primary_traveler', 'travel_type', 'date', 'locations', 'reference_number', 'status', 'trip_id')
-
-    def get_status(self, obj):
-        return obj.status
-        # return obj.travels.get(traveler=obj.primary_traveler).status
-
-    def get_reference_number(self, obj):
-        return obj.reference_number
-        # return obj.travels.get(traveler=obj.primary_traveler).reference_number
-
-    def get_trip_id(self, obj):
-        return obj.trip_id
-        # return obj.travels.get(traveler=obj.primary_traveler).id
 
 
 class CloneOutputSerializer(TravelDetailsSerializer):

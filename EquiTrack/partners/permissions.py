@@ -8,20 +8,11 @@ from EquiTrack.utils import HashableDict
 from EquiTrack.validation_mixins import check_rigid_related
 from environment.helpers import tenant_switch_is_active
 from utils.common.utils import get_all_field_names
+from utils.permissions.utils import is_user_in_groups
 
 # READ_ONLY_API_GROUP_NAME is the name of the permissions group that provides read-only access to some list views.
 # Initially, this is only being used for PRP-related endpoints.
 READ_ONLY_API_GROUP_NAME = 'Read-Only API'
-
-
-def _is_user_in_groups(user, group_names):
-    '''Utility function; returns True if user is in ANY of the groups in the group_names list, False if the user
-    is in none of them. Note that group_names should be a tuple or list, not a single string.
-    '''
-    if isinstance(group_names, basestring):
-        # Anticipate common programming oversight.
-        raise ValueError('group_names parameter must be a tuple or list, not a string')
-    return user.groups.filter(name__in=group_names).exists()
 
 
 class PMPPermissions(object):
@@ -100,6 +91,7 @@ class InterventionPermissions(PMPPermissions):
     def __init__(self, **kwargs):
         '''
         :param kwargs: user, instance, permission_structure
+        # FIXME: This documentation is out of date as the flag check has been commented out.
         if 'inbound_check' key, is sent in, that means that instance now contains all of the fields available in the
         validation: old_instance, old.instance.property_old in case of related fields.
         the reason for this is so that we can check the more complex permissions that can only be checked on save.
@@ -189,7 +181,7 @@ class PartnershipManagerPermission(permissions.BasePermission):
               - user is 'Partnership Manager' group member OR
               - user is listed as a partner staff member on the object, assuming the object has a partner attribute
         '''
-        has_access = user.is_staff or _is_user_in_groups(user, ['Partnership Manager'])
+        has_access = user.is_staff or is_user_in_groups(user, ['Partnership Manager'])
 
         has_access = has_access or \
             (hasattr(obj, 'partner') and
@@ -203,9 +195,9 @@ class PartnershipManagerPermission(permissions.BasePermission):
         """
         if request.method in permissions.SAFE_METHODS:
             # Check permissions for read-only request
-            return request.user.is_staff or _is_user_in_groups(request.user, ['Partnership Manager'])
+            return request.user.is_staff or is_user_in_groups(request.user, ['Partnership Manager'])
         else:
-            return _is_user_in_groups(request.user, ['Partnership Manager'])
+            return is_user_in_groups(request.user, ['Partnership Manager'])
 
     def has_object_permission(self, request, view, obj):
         if request.method in permissions.SAFE_METHODS:
@@ -214,7 +206,7 @@ class PartnershipManagerPermission(permissions.BasePermission):
         else:
             # Check permissions for write request
             return self._has_access_permissions(request.user, obj) and \
-                _is_user_in_groups(request.user, ['Partnership Manager'])
+                is_user_in_groups(request.user, ['Partnership Manager'])
 
 
 class PartnershipManagerRepPermission(permissions.BasePermission):
@@ -232,9 +224,14 @@ class PartnershipManagerRepPermission(permissions.BasePermission):
             return self._has_access_permissions(request.user, obj)
         else:
             # Check permissions for write request
-            return self._has_access_permissions(request.user, obj) and \
-                _is_user_in_groups(request.user, ['Partnership Manager', 'Senior Management Team',
-                                                  'Representative Office'])
+            return self._has_access_permissions(request.user, obj) and is_user_in_groups(
+                request.user,
+                [
+                    'Partnership Manager',
+                    'Senior Management Team',
+                    'Representative Office'
+                ]
+            )
 
 
 class ListCreateAPIMixedPermission(permissions.BasePermission):
@@ -248,7 +245,7 @@ class ListCreateAPIMixedPermission(permissions.BasePermission):
     def has_permission(self, request, view):
         if request.method in permissions.SAFE_METHODS:
             if request.user.is_authenticated():
-                if request.user.is_staff or _is_user_in_groups(request.user, [READ_ONLY_API_GROUP_NAME]):
+                if request.user.is_staff or is_user_in_groups(request.user, [READ_ONLY_API_GROUP_NAME]):
                     return True
             return False
         elif request.method == 'POST':

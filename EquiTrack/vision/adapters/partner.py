@@ -5,7 +5,7 @@ from decimal import Decimal
 
 from partners.models import PartnerOrganization, PlannedEngagement
 from vision.utils import comp_decimals
-from vision.vision_data_synchronizer import VisionDataSynchronizer, VISION_NO_DATA_MESSAGE
+from vision.vision_data_synchronizer import VisionDataSynchronizer, VISION_NO_DATA_MESSAGE, FileDataSynchronizer
 
 logger = logging.getLogger(__name__)
 
@@ -46,6 +46,7 @@ class PartnerSynchronizer(VisionDataSynchronizer):
     )
 
     MAPPING = {
+        'vendor_number': 'VENDOR_CODE',
         'name': 'VENDOR_NAME',
         'cso_type': 'CSO_TYPE',
         'rating': 'RISK_RATING',
@@ -61,6 +62,8 @@ class PartnerSynchronizer(VisionDataSynchronizer):
         'last_assessment_date': 'DATE_OF_ASSESSMENT',
         'core_values_assessment_date': 'CORE_VALUE_ASSESSMENT_DT',
         'partner_type': 'PARTNER_TYPE_DESC',
+        'total_ct_cp': "TOTAL_CASH_TRANSFERRED_CP",
+        'total_ct_cy': "TOTAL_CASH_TRANSFERRED_CY",
         'net_ct_cy': 'NET_CASH_TRANSFERRED_CY',
         'reported_cy': 'REPORTED_CY',
         'total_ct_ytd': 'TOTAL_CASH_TRANSFERRED_YTD'
@@ -77,7 +80,7 @@ class PartnerSynchronizer(VisionDataSynchronizer):
                 return False
             return True
 
-        return filter(bad_record, records)
+        return [rec for rec in records if bad_record(rec)]
 
     def _get_json(self, data):
         return [] if data == VISION_NO_DATA_MESSAGE else data
@@ -121,8 +124,9 @@ class PartnerSynchronizer(VisionDataSynchronizer):
                 return True
         return False
 
-    def _partner_save(self, partner):
+    def _partner_save(self, partner, full_sync=True):
         processed = 0
+
         try:
             saving = False
             partner_org, new = PartnerOrganization.objects.get_or_create(vendor_number=partner['VENDOR_CODE'])
@@ -132,8 +136,8 @@ class PartnerSynchronizer(VisionDataSynchronizer):
                     partner['VENDOR_NAME'], partner['PARTNER_TYPE_DESC']
                 ))
                 if partner_org.id:
-                    partner_org.deleted_flag = True if 'MARKED_FOR_DELETION' in partner else False
-                    partner_org.blocked = True if 'POSTING_BLOCK' in partner else False
+                    partner_org.deleted_flag = True if partner.get('MARKED_FOR_DELETION', None) else False
+                    partner_org.blocked = True if partner.get('POSTING_BLOCK', None) else False
                     partner_org.hidden = True
                     partner_org.save()
                 return processed
@@ -142,13 +146,13 @@ class PartnerSynchronizer(VisionDataSynchronizer):
                 partner_org.name = partner['VENDOR_NAME']
                 partner_org.cso_type = self.get_cso_type(partner)
                 partner_org.rating = self.get_partner_rating(partner)
-                partner_org.type_of_assessment = partner.get('TYPE_OF_ASSESSMENT', None)
-                partner_org.address = partner.get('STREET', None)
-                partner_org.city = partner.get('CITY', None)
-                partner_org.postal_code = partner.get('POSTAL_CODE', None)
+                partner_org.type_of_assessment = self.get_type_of_assessment(partner)
+                partner_org.address = partner.get('STREET', '')
+                partner_org.city = partner.get('CITY', '')
+                partner_org.postal_code = partner.get('POSTAL_CODE', '')
                 partner_org.country = partner['COUNTRY']
-                partner_org.phone_number = partner.get('PHONE_NUMBER', None)
-                partner_org.email = partner.get('EMAIL', None)
+                partner_org.phone_number = partner.get('PHONE_NUMBER', '')
+                partner_org.email = partner.get('EMAIL', '')
                 partner_org.core_values_assessment_date = datetime.strptime(
                     partner['CORE_VALUE_ASSESSMENT_DT'],
                     '%d-%b-%y') if 'CORE_VALUE_ASSESSMENT_DT' in partner else None
@@ -162,13 +166,17 @@ class PartnerSynchronizer(VisionDataSynchronizer):
                 partner_org.vision_synced = True
                 saving = True
 
-            if partner_org.total_ct_cp is None or partner_org.total_ct_cy is None or partner_org.net_ct_cy is None \
-                    or partner_org.total_ct_ytd is None or partner_org.reported_cy is None or \
-                    not comp_decimals(partner_org.total_ct_cp, Decimal(partner['TOTAL_CASH_TRANSFERRED_CP'])) or \
-                    not comp_decimals(partner_org.total_ct_cy, Decimal(partner['TOTAL_CASH_TRANSFERRED_CY'])) or \
-                    not comp_decimals(partner_org.net_ct_cy, Decimal(partner['NET_CASH_TRANSFERRED_CY'])) or \
-                    not comp_decimals(partner_org.total_ct_ytd, Decimal(partner['TOTAL_CASH_TRANSFERRED_YTD'])) or \
-                    not comp_decimals(partner_org.reported_cy, Decimal(partner['REPORTED_CY'])):
+            if full_sync and (
+                    partner_org.total_ct_cp is None or
+                    partner_org.total_ct_cy is None or
+                    partner_org.net_ct_cy is None or
+                    partner_org.total_ct_ytd is None or
+                    partner_org.reported_cy is None or
+                    not comp_decimals(partner_org.total_ct_cp, Decimal(partner['TOTAL_CASH_TRANSFERRED_CP'])) or
+                    not comp_decimals(partner_org.total_ct_cy, Decimal(partner['TOTAL_CASH_TRANSFERRED_CY'])) or
+                    not comp_decimals(partner_org.net_ct_cy, Decimal(partner['NET_CASH_TRANSFERRED_CY'])) or
+                    not comp_decimals(partner_org.total_ct_ytd, Decimal(partner['TOTAL_CASH_TRANSFERRED_YTD'])) or
+                    not comp_decimals(partner_org.reported_cy, Decimal(partner['REPORTED_CY']))):
 
                 partner_org.total_ct_cy = partner['TOTAL_CASH_TRANSFERRED_CY']
                 partner_org.total_ct_cp = partner['TOTAL_CASH_TRANSFERRED_CP']
@@ -181,6 +189,15 @@ class PartnerSynchronizer(VisionDataSynchronizer):
 
             if saving:
                 logger.debug('Updating Partner', partner_org)
+
+                # clear basis_for_risk_rating in certain cases
+                if partner_org.basis_for_risk_rating and (
+                        partner_org.type_of_assessment.upper() in [PartnerOrganization.HIGH_RISK_ASSUMED,
+                                                                   PartnerOrganization.LOW_RISK_ASSUMED] or (
+                        partner_org.rating == PartnerOrganization.RATING_NON_ASSESSED and
+                        partner_org.type_of_assessment == PartnerOrganization.MICRO_ASSESSMENT)
+                ):
+                    partner_org.basis_for_risk_rating = ''
                 partner_org.save()
 
             if new:
@@ -205,13 +222,13 @@ class PartnerSynchronizer(VisionDataSynchronizer):
     @staticmethod
     def get_cso_type(partner):
         cso_type_mapping = {
-            'International NGO': u'International',
-            'National NGO': u'National',
-            'Community based organization': u'Community Based Organization',
-            'Academic Institution': u'Academic Institution'
+            'INTERNATIONAL NGO': u'International',
+            'NATIONAL NGO': u'National',
+            'COMMUNITY BASED ORGANIZATION': u'Community Based Organization',
+            'ACADEMIC INSTITUTION': u'Academic Institution'
         }
-        if 'CSO_TYPE' in partner and partner['CSO_TYPE'] in cso_type_mapping:
-            return cso_type_mapping[partner['CSO_TYPE']]
+        if 'CSO_TYPE' in partner and partner['CSO_TYPE'].upper() in cso_type_mapping:
+            return cso_type_mapping[partner['CSO_TYPE'].upper()]
 
     @staticmethod
     def get_partner_type(partner):
@@ -221,11 +238,29 @@ class PartnerSynchronizer(VisionDataSynchronizer):
             'GOVERNMENT': u'Government',
             'UN AGENCY': u'UN Agency',
         }
-        return type_mapping.get(partner['PARTNER_TYPE_DESC'], None)
+        return type_mapping.get(partner['PARTNER_TYPE_DESC'].upper(), None)
 
     @staticmethod
     def get_partner_rating(partner):
         allowed_risk_rating = [rr[0] for rr in PartnerOrganization.RISK_RATINGS]
         if partner.get('RISK_RATING') in allowed_risk_rating:
             return partner['RISK_RATING']
-        return None
+        return ''
+
+    @staticmethod
+    def get_type_of_assessment(partner):
+        type_of_assessments = dict(PartnerOrganization.TYPE_OF_ASSESSMENT)
+        if 'TYPE_OF_ASSESSMENT' in partner:
+            return type_of_assessments.get(partner['TYPE_OF_ASSESSMENT'].upper(), partner['TYPE_OF_ASSESSMENT'])
+        return ''
+
+
+class FilePartnerSynchronizer(FileDataSynchronizer, PartnerSynchronizer):
+    """
+    >>> from vision.adapters.partner import *
+    >>> from users.models import Country
+    >>> country = Country.objects.get(name='Indonesia')
+    >>> filename = '/home/user/Downloads/partners.json'
+    >>> FilePartnerSynchronizer(country, filename).sync()
+    """
+    pass

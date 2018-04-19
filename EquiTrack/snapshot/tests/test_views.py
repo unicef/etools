@@ -7,6 +7,7 @@ import datetime
 import json
 
 from django.core.urlresolvers import reverse
+from django.utils import timezone
 from rest_framework import status
 
 from EquiTrack.tests.cases import BaseTenantTestCase
@@ -20,6 +21,7 @@ class TestActivityListView(BaseTenantTestCase):
     def setUpTestData(cls):
         cls.url = reverse("snapshot_api:activity-list")
         cls.user = UserFactory(is_staff=True)
+        cls.tz = timezone.get_default_timezone()
 
     def assert_data(self, activity, response):
         self.assertEqual(response["id"], activity.pk)
@@ -79,7 +81,7 @@ class TestActivityListView(BaseTenantTestCase):
     def test_filter_date_from(self):
         ActivityFactory(action=Activity.CREATE)
         activity = ActivityFactory(action=Activity.UPDATE)
-        activity.created = datetime.datetime(2100, 2, 1)
+        activity.created = datetime.datetime(2100, 2, 1, tzinfo=self.tz)
         activity.save()
         response = self.forced_auth_req('get', self.url, data={
             "date_from": "2100-01-01"
@@ -92,7 +94,7 @@ class TestActivityListView(BaseTenantTestCase):
     def test_filter_date_from_invalid(self):
         ActivityFactory(action=Activity.CREATE)
         activity = ActivityFactory(action=Activity.UPDATE)
-        activity.created = datetime.datetime(2100, 2, 1)
+        activity.created = datetime.datetime(2100, 2, 1, tzinfo=self.tz)
         activity.save()
         response = self.forced_auth_req('get', self.url, data={
             "date_from": "00-01-01"
@@ -104,7 +106,7 @@ class TestActivityListView(BaseTenantTestCase):
     def test_filter_date_to(self):
         ActivityFactory(action=Activity.CREATE)
         activity = ActivityFactory(action=Activity.UPDATE)
-        activity.created = datetime.datetime(2001, 1, 1)
+        activity.created = datetime.datetime(2001, 1, 1, tzinfo=self.tz)
         activity.save()
         response = self.forced_auth_req('get', self.url, data={
             "date_to": "2001-02-01"
@@ -117,7 +119,7 @@ class TestActivityListView(BaseTenantTestCase):
     def test_filter_date_to_invalid(self):
         ActivityFactory(action=Activity.CREATE)
         activity = ActivityFactory(action=Activity.UPDATE)
-        activity.created = datetime.datetime(2001, 1, 1)
+        activity.created = datetime.datetime(2001, 1, 1, tzinfo=self.tz)
         activity.save()
         response = self.forced_auth_req('get', self.url, data={
             "date_to": "01-02-01"
