@@ -29,7 +29,10 @@ class HactEncoder(json.JSONEncoder):
 
 class HactHistory(TimeStampedModel):
 
-    partner = models.ForeignKey(PartnerOrganization, verbose_name=_('Partner'), related_name='related_partner')
+    partner = models.ForeignKey(
+        PartnerOrganization, verbose_name=_('Partner'), related_name='related_partner',
+        on_delete=models.CASCADE,
+    )
     year = models.IntegerField(default=get_current_year, verbose_name=_('Year'))
     partner_values = JSONField(null=True, blank=True, verbose_name=_('Partner Values'))
 
