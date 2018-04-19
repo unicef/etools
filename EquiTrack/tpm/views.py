@@ -269,7 +269,7 @@ class TPMVisitViewSet(
 
     @list_route(methods=['get'], url_path='export', renderer_classes=(TPMVisitCSVRenderer,))
     def visits_export(self, request, *args, **kwargs):
-        tpm_visits = TPMVisit.objects.all().prefetch_related(
+        tpm_visits = self.get_queryset().prefetch_related(
             'tpm_activities', 'tpm_activities__section', 'tpm_activities__partner',
             'tpm_activities__intervention', 'tpm_activities__locations', 'unicef_focal_points',
             'tpm_partner_focal_points'
