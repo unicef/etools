@@ -4,6 +4,7 @@ from datetime import datetime, date
 
 from django.db.models import F, Sum
 from django.db import connection, transaction
+from django.db.models import F, Sum
 
 from celery.utils.log import get_task_logger
 from django.utils import timezone
