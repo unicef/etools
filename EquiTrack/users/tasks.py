@@ -134,9 +134,18 @@ class UserMapper(object):
     def create_or_update_user(self, ad_user):
         logger.debug(ad_user.get(self.KEY_ATTRIBUTE))
         for field in self.REQUIRED_USER_FIELDS:
-            if not ad_user.get(field, False):
-                logger.info(u"User doesn't have the required fields {}".format(ad_user))
-                return
+            if isinstance(field, str):
+                if not ad_user.get(field, False):
+                    logger.debug(u"User doesn't have the required fields {} missing".format(field))
+                    return
+            elif isinstance(field, tuple):
+                allowed_values = field[1]
+                if isinstance(allowed_values, str):
+                    allowed_values = [allowed_values, ]
+
+                if ad_user.get(field[0], False) not in allowed_values:
+                    logger.debug(u"User is not in Unicef organization {}".format(field[1]))
+                    return
 
         # TODO: MODIFY THIS TO USE THE GUID ON THE PROFILE INSTEAD OF EMAIL on the USer
 
@@ -250,7 +259,9 @@ class AzureUserMapper(UserMapper):
         'givenName',
         'userPrincipalName',
         'mail',
-        'surname'
+        'surname',
+        'userType',
+        ('companyName', ['UNICEF', ]),
     ]
 
     ATTR_MAP = {
