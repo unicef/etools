@@ -38,7 +38,10 @@ class Grant(TimeStampedModel):
     Relates to :model:`funds.Donor`
     """
 
-    donor = models.ForeignKey(Donor, verbose_name=_("Donor"))
+    donor = models.ForeignKey(
+        Donor, verbose_name=_("Donor"),
+        on_delete=models.CASCADE,
+    )
     name = models.CharField(
         verbose_name=_("Name"),
         max_length=128,
@@ -72,6 +75,7 @@ class FundsReservationHeader(TimeStampedModel):
         related_name='frs',
         blank=True,
         null=True,
+        on_delete=models.CASCADE,
     )
     vendor_code = models.CharField(
         verbose_name=_("Vendor Code"),
@@ -191,6 +195,7 @@ class FundsReservationItem(TimeStampedModel):
         FundsReservationHeader,
         verbose_name=_("FR Number"),
         related_name="fr_items",
+        on_delete=models.CASCADE,
     )
     fr_ref_number = models.CharField(
         verbose_name=_("Item Number"),
@@ -316,6 +321,7 @@ class FundsCommitmentItem(TimeStampedModel):
         FundsCommitmentHeader,
         related_name='fc_items',
         verbose_name=_("Fund Commitment"),
+        on_delete=models.CASCADE,
     )
     fc_ref_number = models.CharField(
         verbose_name=_("Number"),

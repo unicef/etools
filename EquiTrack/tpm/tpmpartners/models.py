@@ -13,7 +13,10 @@ class TPMPartner(BaseFirm):
 
 @python_2_unicode_compatible
 class TPMPartnerStaffMember(BaseStaffMember):
-    tpm_partner = models.ForeignKey(TPMPartner, verbose_name=_('TPM Vendor'), related_name='staff_members')
+    tpm_partner = models.ForeignKey(
+        TPMPartner, verbose_name=_('TPM Vendor'), related_name='staff_members',
+        on_delete=models.CASCADE,
+    )
 
     receive_tpm_notifications = models.BooleanField(verbose_name=_('Receive Notifications on TPM Tasks'), default=False)
 

@@ -2,6 +2,7 @@ from django.conf.urls import url
 
 from attachments import views
 
+app_name = 'attachments'
 urlpatterns = (
     url(
         r'^$',

@@ -138,7 +138,8 @@ class Attachment(TimeStampedModel, models.Model):
     file_type = models.ForeignKey(
         FileType,
         verbose_name=_('Document Type'),
-        null=True
+        null=True,
+        on_delete=models.CASCADE,
     )
     file = models.FileField(
         upload_to=generate_file_path,
@@ -157,7 +158,8 @@ class Attachment(TimeStampedModel, models.Model):
         ContentType,
         blank=True,
         null=True,
-        verbose_name=_('Content Type')
+        verbose_name=_('Content Type'),
+        on_delete=models.CASCADE,
     )
     object_id = models.IntegerField(
         blank=True,
@@ -172,6 +174,7 @@ class Attachment(TimeStampedModel, models.Model):
         related_name='attachments',
         blank=True,
         null=True,
+        on_delete=models.CASCADE,
     )
 
     class Meta:
@@ -209,7 +212,11 @@ class Attachment(TimeStampedModel, models.Model):
 
 @python_2_unicode_compatible
 class AttachmentFlat(models.Model):
-    attachment = models.ForeignKey(Attachment, related_name="denormalized")
+    attachment = models.ForeignKey(
+        Attachment,
+        related_name="denormalized",
+        on_delete=models.CASCADE,
+    )
     partner = models.CharField(
         max_length=255,
         blank=True,
