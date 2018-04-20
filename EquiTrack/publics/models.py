@@ -69,9 +69,12 @@ class TravelAgent(SoftDeleteMixin, models.Model):
     name = models.CharField(max_length=128, verbose_name=_('Name'))
     code = models.CharField(max_length=128, verbose_name=_('Code'))
     city = models.CharField(max_length=128, default='', verbose_name=_('City'))
-    country = models.ForeignKey('publics.Country', verbose_name=_('Country'))
+    country = models.ForeignKey(
+        'publics.Country', verbose_name=_('Country'),
+        on_delete=models.CASCADE,
+    )
     expense_type = models.OneToOneField('TravelExpenseType', related_name='travel_agent',
-                                        verbose_name=_('Expense Type'))
+                                        verbose_name=_('Expense Type'), on_delete=models.CASCADE)
 
 
 @python_2_unicode_compatible
@@ -111,7 +114,10 @@ class Currency(SoftDeleteMixin, models.Model):
 
 
 class ExchangeRate(SoftDeleteMixin, models.Model):
-    currency = models.ForeignKey('publics.Currency', related_name='exchange_rates', verbose_name=_('Currency'))
+    currency = models.ForeignKey(
+        'publics.Currency', related_name='exchange_rates', verbose_name=_('Currency'),
+        on_delete=models.CASCADE,
+    )
     valid_from = models.DateField(verbose_name=_('Valid From'))
     valid_to = models.DateField(verbose_name=_('Valid To'))
     x_rate = models.DecimalField(max_digits=10, decimal_places=5, verbose_name=_('X Rate'))
@@ -149,8 +155,14 @@ class BusinessRegion(SoftDeleteMixin, models.Model):
 class BusinessArea(SoftDeleteMixin, models.Model):
     name = models.CharField(max_length=128, verbose_name=_('Name'))
     code = models.CharField(max_length=32, verbose_name=_('Code'))
-    region = models.ForeignKey('BusinessRegion', related_name='business_areas', verbose_name=_('Region'))
-    default_currency = models.ForeignKey('Currency', related_name='+', null=True, verbose_name=_('Default Currency'))
+    region = models.ForeignKey(
+        'BusinessRegion', related_name='business_areas', verbose_name=_('Region'),
+        on_delete=models.CASCADE,
+    )
+    default_currency = models.ForeignKey(
+        'Currency', related_name='+', null=True, verbose_name=_('Default Currency'),
+        on_delete=models.CASCADE,
+    )
 
     def __str__(self):
         return self.name
@@ -158,7 +170,10 @@ class BusinessArea(SoftDeleteMixin, models.Model):
 
 @python_2_unicode_compatible
 class WBS(SoftDeleteMixin, models.Model):
-    business_area = models.ForeignKey('BusinessArea', null=True, verbose_name=_('Business Area'))
+    business_area = models.ForeignKey(
+        'BusinessArea', null=True, verbose_name=_('Business Area'),
+        on_delete=models.CASCADE,
+    )
     name = models.CharField(max_length=25, verbose_name=_('Name'))
     grants = models.ManyToManyField('Grant', related_name='wbs', verbose_name=_('Grants'))
 
@@ -190,13 +205,19 @@ class Fund(SoftDeleteMixin, models.Model):
 class Country(SoftDeleteMixin, models.Model):
     name = models.CharField(max_length=64, verbose_name=_('Name'))
     long_name = models.CharField(max_length=128, verbose_name=_('Long Name'))
-    business_area = models.ForeignKey('BusinessArea', related_name='countries', null=True,
-                                      verbose_name=_('Business Area'))
+    business_area = models.ForeignKey(
+        'BusinessArea', related_name='countries', null=True,
+        verbose_name=_('Business Area'),
+        on_delete=models.CASCADE,
+    )
     vision_code = models.CharField(max_length=3, null=True, unique=True, verbose_name=_('Vision Code'))
     iso_2 = models.CharField(max_length=2, default='', verbose_name=_('ISO code 2'))
     iso_3 = models.CharField(max_length=3, default='', verbose_name=_('ISO code 3'))
     dsa_code = models.CharField(max_length=3, default='', verbose_name=_('DSA Code'))
-    currency = models.ForeignKey('Currency', null=True, verbose_name=_('Currency'))
+    currency = models.ForeignKey(
+        'Currency', null=True, verbose_name=_('Currency'),
+        on_delete=models.CASCADE,
+    )
     valid_from = models.DateField(null=True, verbose_name=_('Valid From'))
     valid_to = models.DateField(null=True, verbose_name=_('Valid To'))
 
@@ -221,7 +242,10 @@ class DSARegionQuerySet(ValidityQuerySet):
 
 @python_2_unicode_compatible
 class DSARegion(SoftDeleteMixin, models.Model):
-    country = models.ForeignKey('Country', related_name='dsa_regions', verbose_name=_('Country'))
+    country = models.ForeignKey(
+        'Country', related_name='dsa_regions', verbose_name=_('Country'),
+        on_delete=models.CASCADE,
+    )
     area_name = models.CharField(max_length=120, verbose_name=_('Area Name'))
     area_code = models.CharField(max_length=3, verbose_name=_('Area Code'))
     user_defined = models.BooleanField(default=False, verbose_name=_('Defined User'))
@@ -273,7 +297,10 @@ class DSARateQuerySet(QuerySet):
 class DSARate(models.Model):
     DEFAULT_EFFECTIVE_TILL = date(2999, 12, 31)
 
-    region = models.ForeignKey('DSARegion', related_name='rates', verbose_name=_('Region'))
+    region = models.ForeignKey(
+        'DSARegion', related_name='rates', verbose_name=_('Region'),
+        on_delete=models.CASCADE,
+    )
     effective_from_date = models.DateField(verbose_name=_('Effective From Date'))
     effective_to_date = models.DateField(default=DEFAULT_EFFECTIVE_TILL, verbose_name=_('Effective To Date'))
 
