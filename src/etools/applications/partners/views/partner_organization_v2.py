@@ -23,12 +23,9 @@ from etools.applications.partners.filters import PartnerScopeFilter
 from etools.applications.partners.models import Assessment, PartnerOrganization, PartnerStaffMember, PlannedEngagement
 from etools.applications.partners.permissions import (ListCreateAPIMixedPermission, PartnershipManagerPermission,
                                                       PartnershipManagerRepPermission,)
-from etools.applications.partners.serializers.exports.partner_organization import (AssessmentExportFlatSerializer,
-                                                                                   AssessmentExportSerializer,
-                                                                                   PartnerOrganizationExportFlatSerializer,
-                                                                                   PartnerOrganizationExportSerializer,
-                                                                                   PartnerStaffMemberExportFlatSerializer,
-                                                                                   PartnerStaffMemberExportSerializer,)
+from etools.applications.partners.serializers.exports.partner_organization import (
+    AssessmentExportFlatSerializer, AssessmentExportSerializer, PartnerOrganizationExportFlatSerializer,
+    PartnerOrganizationExportSerializer, PartnerStaffMemberExportFlatSerializer, PartnerStaffMemberExportSerializer,)
 from etools.applications.partners.serializers.partner_organization_v2 import (AssessmentDetailSerializer,
                                                                               MinimalPartnerOrganizationListSerializer,
                                                                               PartnerOrganizationCreateUpdateSerializer,

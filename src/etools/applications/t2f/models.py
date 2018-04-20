@@ -255,10 +255,10 @@ class Travel(models.Model):
         # Complete action should be called only after certification was done.
         # Special case is the TA not required NOT international travel, where supervisor should be able to complete it
         # after approval
-        if (self.status == Travel.SUBMITTED) and (self.ta_required) and (not self.international_travel):
+        if (self.status == Travel.SUBMITTED) and self.ta_required and (not self.international_travel):
             return False
 
-        if (self.status == Travel.PLANNED) and (self.international_travel):
+        if (self.status == Travel.PLANNED) and self.international_travel:
             return False
         return True
 

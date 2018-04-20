@@ -1,5 +1,4 @@
 # Python imports
-
 import datetime
 
 from django.test import SimpleTestCase
