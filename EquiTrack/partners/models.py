@@ -782,7 +782,8 @@ class PartnerStaffMember(TimeStampedModel):
     partner = models.ForeignKey(
         PartnerOrganization,
         verbose_name=_("Partner"),
-        related_name='staff_members'
+        related_name='staff_members',
+        on_delete=models.CASCADE,
     )
     title = models.CharField(
         verbose_name=_("Title"),
@@ -848,7 +849,8 @@ class PartnerStaffMember(TimeStampedModel):
 @python_2_unicode_compatible
 class PlannedEngagement(TimeStampedModel):
     """ class to handle partner's engagement for current year """
-    partner = models.OneToOneField(PartnerOrganization, verbose_name=_("Partner"), related_name='planned_engagement')
+    partner = models.OneToOneField(PartnerOrganization, verbose_name=_("Partner"), related_name='planned_engagement',
+                                   on_delete=models.CASCADE)
     spot_check_mr = QuarterField(verbose_name=_('Spot Check MR'), null=False, default='')
     spot_check_follow_up_q1 = models.IntegerField(verbose_name=_("Spot Check Q1"), default=0)
     spot_check_follow_up_q2 = models.IntegerField(verbose_name=_("Spot Check Q2"), default=0)
@@ -917,7 +919,8 @@ class Assessment(TimeStampedModel):
     partner = models.ForeignKey(
         PartnerOrganization,
         verbose_name=_("Partner"),
-        related_name='assessments'
+        related_name='assessments',
+        on_delete=models.CASCADE,
     )
     type = models.CharField(
         verbose_name=_("Type"),
@@ -952,12 +955,14 @@ class Assessment(TimeStampedModel):
         related_name='requested_assessments',
         blank=True,
         null=True,
+        on_delete=models.CASCADE,
     )
     approving_officer = models.ForeignKey(
         settings.AUTH_USER_MODEL,
         verbose_name=_("Approving Officer"),
         blank=True,
         null=True,
+        on_delete=models.CASCADE,
     )
     planned_date = models.DateField(
         verbose_name=_("Planned Date"),
@@ -1059,13 +1064,17 @@ class Agreement(TimeStampedModel):
         SIGNED: [activity_to_active_side_effects],
     }
 
-    partner = models.ForeignKey(PartnerOrganization, related_name="agreements", verbose_name=_('Partner'))
+    partner = models.ForeignKey(
+        PartnerOrganization, related_name="agreements", verbose_name=_('Partner'),
+        on_delete=models.CASCADE,
+    )
     country_programme = models.ForeignKey(
         'reports.CountryProgramme',
         verbose_name=_("Country Programme"),
         related_name='agreements',
         blank=True,
         null=True,
+        on_delete=models.CASCADE,
     )
     authorized_officers = models.ManyToManyField(
         PartnerStaffMember,
@@ -1119,7 +1128,8 @@ class Agreement(TimeStampedModel):
         settings.AUTH_USER_MODEL,
         verbose_name=_("Signed By UNICEF"),
         related_name='agreements_signed+',
-        null=True, blank=True
+        null=True, blank=True,
+        on_delete=models.CASCADE,
     )
 
     signed_by_partner_date = models.DateField(
@@ -1134,6 +1144,7 @@ class Agreement(TimeStampedModel):
         related_name='agreements_signed',
         verbose_name=_('Signed by partner'),
         blank=True, null=True,
+        on_delete=models.CASCADE,
     )
 
     # TODO: Write a script that sets a status to each existing record
@@ -1316,6 +1327,7 @@ class AgreementAmendment(TimeStampedModel):
         Agreement,
         verbose_name=_("Agreement"),
         related_name='amendments',
+        on_delete=models.CASCADE,
     )
     signed_amendment = models.FileField(
         verbose_name=_("Signed Amendment"),
@@ -1505,15 +1517,17 @@ class Intervention(TimeStampedModel):
     agreement = models.ForeignKey(
         Agreement,
         verbose_name=_("Agreement"),
-        related_name='interventions'
+        related_name='interventions',
+        on_delete=models.CASCADE,
     )
     # Even though CP is defined at the Agreement Level, for a particular intervention this can be different.
     country_programme = models.ForeignKey(
         CountryProgramme,
         verbose_name=_("Country Programme"),
         related_name='interventions',
-        blank=True, null=True, on_delete=models.DO_NOTHING,
-        help_text='Which Country Programme does this Intervention belong to?'
+        blank=True, null=True,
+        on_delete=models.DO_NOTHING,
+        help_text='Which Country Programme does this Intervention belong to?',
     )
     number = models.CharField(
         verbose_name=_('Reference Number'),
@@ -1607,6 +1621,7 @@ class Intervention(TimeStampedModel):
         related_name='signed_interventions+',
         blank=True,
         null=True,
+        on_delete=models.CASCADE,
     )
     # part of the Agreement authorized officers
     partner_authorized_officer_signatory = models.ForeignKey(
@@ -1615,6 +1630,7 @@ class Intervention(TimeStampedModel):
         related_name='signed_interventions',
         blank=True,
         null=True,
+        on_delete=models.CASCADE,
     )
     # anyone in unicef country office
     unicef_focal_points = models.ManyToManyField(
@@ -1993,7 +2009,8 @@ class InterventionAmendment(TimeStampedModel):
     intervention = models.ForeignKey(
         Intervention,
         verbose_name=_("Reference Number"),
-        related_name='amendments'
+        related_name='amendments',
+        on_delete=models.CASCADE,
     )
 
     types = ArrayField(models.CharField(
@@ -2063,7 +2080,10 @@ class InterventionPlannedVisits(TimeStampedModel):
     Represents planned visits for the intervention
     """
 
-    intervention = models.ForeignKey(Intervention, related_name='planned_visits', verbose_name=_('Intervention'))
+    intervention = models.ForeignKey(
+        Intervention, related_name='planned_visits', verbose_name=_('Intervention'),
+        on_delete=models.CASCADE,
+    )
     year = models.IntegerField(default=get_current_year, verbose_name=_('Year'))
     programmatic_q1 = models.IntegerField(default=0, verbose_name=_('Programmatic Q1'))
     programmatic_q2 = models.IntegerField(default=0, verbose_name=_('Programmatic Q2'))
@@ -2082,8 +2102,14 @@ class InterventionPlannedVisits(TimeStampedModel):
 
 @python_2_unicode_compatible
 class InterventionResultLink(TimeStampedModel):
-    intervention = models.ForeignKey(Intervention, related_name='result_links', verbose_name=_('Intervention'))
-    cp_output = models.ForeignKey(Result, related_name='intervention_links', verbose_name=_('CP Output'))
+    intervention = models.ForeignKey(
+        Intervention, related_name='result_links', verbose_name=_('Intervention'),
+        on_delete=models.CASCADE,
+    )
+    cp_output = models.ForeignKey(
+        Result, related_name='intervention_links', verbose_name=_('CP Output'),
+        on_delete=models.CASCADE,
+    )
     ram_indicators = models.ManyToManyField(Indicator, blank=True, verbose_name=_('RAM Indicators'))
 
     tracker = FieldTracker()
@@ -2100,7 +2126,7 @@ class InterventionBudget(TimeStampedModel):
     Represents a budget for the intervention
     """
     intervention = models.OneToOneField(Intervention, related_name='planned_budget', null=True, blank=True,
-                                        verbose_name=_('Intervention'))
+                                        verbose_name=_('Intervention'), on_delete=models.CASCADE)
 
     partner_contribution = models.DecimalField(max_digits=20, decimal_places=2, default=0,
                                                verbose_name=_('Partner Contribution'))
@@ -2188,8 +2214,14 @@ class InterventionAttachment(TimeStampedModel):
     Relates to :model:`partners.Intervention`
     Relates to :model:`partners.WorkspaceFileType`
     """
-    intervention = models.ForeignKey(Intervention, related_name='attachments', verbose_name=_('Intervention'))
-    type = models.ForeignKey(FileType, related_name='+', verbose_name=_('Type'))
+    intervention = models.ForeignKey(
+        Intervention, related_name='attachments', verbose_name=_('Intervention'),
+        on_delete=models.CASCADE,
+    )
+    type = models.ForeignKey(
+        FileType, related_name='+', verbose_name=_('Type'),
+        on_delete=models.CASCADE,
+    )
 
     attachment = models.FileField(
         max_length=1024,
@@ -2222,7 +2254,10 @@ class InterventionReportingPeriod(TimeStampedModel):
     There can be multiple sets of these dates for each intervention, but
     within each set, start < end < due.
     """
-    intervention = models.ForeignKey(Intervention, related_name='reporting_periods', verbose_name=_('Intervention'))
+    intervention = models.ForeignKey(
+        Intervention, related_name='reporting_periods', verbose_name=_('Intervention'),
+        on_delete=models.CASCADE,
+    )
     start_date = models.DateField(verbose_name='Reporting Period Start Date')
     end_date = models.DateField(verbose_name='Reporting Period End Date')
     due_date = models.DateField(verbose_name='Report Due Date')
@@ -2238,8 +2273,14 @@ class InterventionReportingPeriod(TimeStampedModel):
 
 # TODO intervention sector locations cleanup
 class InterventionSectorLocationLink(TimeStampedModel):
-    intervention = models.ForeignKey(Intervention, related_name='sector_locations', verbose_name=_('Intervention'))
-    sector = models.ForeignKey(Sector, related_name='intervention_locations', verbose_name=_('Sector'))
+    intervention = models.ForeignKey(
+        Intervention, related_name='sector_locations', verbose_name=_('Intervention'),
+        on_delete=models.CASCADE,
+    )
+    sector = models.ForeignKey(
+        Sector, related_name='intervention_locations', verbose_name=_('Sector'),
+        on_delete=models.CASCADE,
+    )
     locations = models.ManyToManyField(Location, related_name='intervention_sector_locations', blank=True,
                                        verbose_name=_('Locations'))
 
@@ -2260,7 +2301,10 @@ class FundingCommitment(TimeFramedModel):
     Relates to :model:`funds.Grant`
     """
 
-    grant = models.ForeignKey(Grant, null=True, blank=True, verbose_name=_('Grant'))
+    grant = models.ForeignKey(
+        Grant, null=True, blank=True, verbose_name=_('Grant'),
+        on_delete=models.CASCADE,
+    )
     fr_number = models.CharField(max_length=50, verbose_name=_('FR Number'))
     wbs = models.CharField(max_length=50, verbose_name=_('WBS'))
     fc_type = models.CharField(max_length=50, verbose_name=_('Type'))

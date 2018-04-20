@@ -59,7 +59,10 @@ class Location(MPTTModel):
     """
 
     name = models.CharField(verbose_name=_("Name"), max_length=254)
-    gateway = models.ForeignKey(GatewayType, verbose_name=_('Location Type'))
+    gateway = models.ForeignKey(
+        GatewayType, verbose_name=_('Location Type'),
+        on_delete=models.CASCADE,
+    )
     latitude = models.FloatField(
         verbose_name=_("Latitude"),
         null=True,
@@ -84,6 +87,7 @@ class Location(MPTTModel):
         blank=True,
         related_name='children',
         db_index=True,
+        on_delete=models.CASCADE
     )
     geom = models.MultiPolygonField(
         verbose_name=_("Geo Point"),
@@ -143,12 +147,18 @@ class CartoDBTable(MPTTModel):
     api_key = models.CharField(max_length=254, verbose_name=_('API Key'))
     table_name = models.CharField(max_length=254, verbose_name=_('Table Name'))
     display_name = models.CharField(max_length=254, default='', blank=True, verbose_name=_('Display Name'))
-    location_type = models.ForeignKey(GatewayType, verbose_name=_('Location Type'))
+    location_type = models.ForeignKey(
+        GatewayType, verbose_name=_('Location Type'),
+        on_delete=models.CASCADE,
+    )
     name_col = models.CharField(max_length=254, default='name', verbose_name=_('Name Column'))
     pcode_col = models.CharField(max_length=254, default='pcode', verbose_name=_('Pcode Column'))
     parent_code_col = models.CharField(max_length=254, default='', blank=True, verbose_name=_('Parent Code Column'))
-    parent = TreeForeignKey('self', null=True, blank=True, related_name='children', db_index=True,
-                            verbose_name=_('Parent'))
+    parent = TreeForeignKey(
+        'self', null=True, blank=True, related_name='children', db_index=True,
+        verbose_name=_('Parent'),
+        on_delete=models.CASCADE,
+    )
     color = models.CharField(blank=True, default=get_random_color, max_length=7, verbose_name=_('Color'))
 
     def __str__(self):
