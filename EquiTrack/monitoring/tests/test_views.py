@@ -17,7 +17,7 @@ class TestCheckView(BaseTenantTestCase):
     def setUp(self):
         super(TestCheckView, self).setUp()
         self.client = Client()
-        self.url = reverse("monitoring")
+        self.url = reverse("monitoring:monitoring")
 
     def test_get_success(self):
         UserFactory()

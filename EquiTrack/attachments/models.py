@@ -44,7 +44,10 @@ def generate_file_path(attachment, filename):
 
 @python_2_unicode_compatible
 class Attachment(TimeStampedModel, models.Model):
-    file_type = models.ForeignKey(FileType, verbose_name=_('Document Type'))
+    file_type = models.ForeignKey(
+        FileType, verbose_name=_('Document Type'),
+        on_delete=models.CASCADE,
+    )
 
     file = models.FileField(
         upload_to=generate_file_path,
@@ -55,7 +58,10 @@ class Attachment(TimeStampedModel, models.Model):
     )
     hyperlink = models.CharField(max_length=255, blank=True, default='', verbose_name=_('Hyperlink'))
 
-    content_type = models.ForeignKey(ContentType, verbose_name=_('Content Type'))
+    content_type = models.ForeignKey(
+        ContentType, verbose_name=_('Content Type'),
+        on_delete=models.CASCADE,
+    )
     object_id = models.IntegerField(verbose_name=_('Object ID'))
     content_object = GenericForeignKey()
 
@@ -66,6 +72,7 @@ class Attachment(TimeStampedModel, models.Model):
         related_name='attachments',
         blank=True,
         null=True,
+        on_delete=models.CASCADE,
     )
 
     class Meta:
@@ -103,7 +110,10 @@ class Attachment(TimeStampedModel, models.Model):
 
 @python_2_unicode_compatible
 class AttachmentFlat(models.Model):
-    attachment = models.ForeignKey(Attachment)
+    attachment = models.ForeignKey(
+        Attachment,
+        on_delete=models.CASCADE,
+    )
     partner = models.CharField(max_length=255, blank=True, verbose_name=_('Partner'))
     partner_type = models.CharField(max_length=150, blank=True, verbose_name=_('Partner Type'))
     vendor_number = models.CharField(max_length=50, blank=True, verbose_name=_('Vendor Number'))
