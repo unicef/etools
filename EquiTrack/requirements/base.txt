@@ -1,6 +1,5 @@
 -e git+https://github.com/robertavram/django-storages.git@1.6.5.3#egg=django-storages
 -e git+https://github.com/unicef/djangosaml2.git@v0.16.11.2#egg=djangosaml2
--e git+https://github.com/unicef/etools-validator#egg=validator
 amqp==2.2.2               # via kombu
 asn1crypto==0.24.0        # via cryptography
 azure-common==1.1.8       # via azure-storage
@@ -56,6 +55,7 @@ djrill==2.1.0
 drf-nested-routers==0.11.1
 drfpasswordless==1.1.2
 et-xmlfile==1.0.1         # via openpyxl
+etools-validator==0.1.0
 flower==0.9.1
 future==0.15.2            # via pyrestcli, pysaml2
 gdal==1.10.0
