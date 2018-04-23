@@ -403,7 +403,7 @@ SAML_CONFIG = {
             'name': 'eTools',
             'name_id_format': saml.NAMEID_FORMAT_PERSISTENT,
             'endpoints': {
-                # url and binding to the assetion consumer service view
+                # url and binding to the assertion consumer service view
                 # do not change the binding or service name
                 'assertion_consumer_service': [
                     ('https://{}/saml2/acs/'.format(HOST),
@@ -422,6 +422,10 @@ SAML_CONFIG = {
 
             # attributes that this project needs to identify a user
             'required_attributes': ['upn', 'emailAddress'],
+
+            # Default for this value changed from False to True, so explicitly set it as False
+            # https://pysaml2.readthedocs.io/en/latest/howto/config.html#want-response-signed
+            'want_response_signed': False,
         },
     },
     # where the remote metadata is stored

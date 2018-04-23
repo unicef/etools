@@ -1,5 +1,5 @@
 -e git+https://github.com/robertavram/django-storages.git@1.6.5.3#egg=django-storages
--e git+https://github.com/unicef/djangosaml2.git@v0.16.11.2#egg=djangosaml2
+-e git+https://github.com/unicef/djangosaml2.git@v0.16.11.3#egg=djangosaml2
 alabaster==0.7.10         # via sphinx
 amqp==2.2.2
 asn1crypto==0.24.0
