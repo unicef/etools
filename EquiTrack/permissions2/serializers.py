@@ -1,5 +1,3 @@
-from __future__ import absolute_import
-
 from rest_framework import serializers
 from rest_framework.utils import model_meta
 from rest_framework_recursive.fields import RecursiveField
