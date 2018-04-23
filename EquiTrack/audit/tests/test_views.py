@@ -908,7 +908,7 @@ class TestEngagementCSVExportViewSet(EngagementTransitionsTestCaseMixin, BaseTen
         )
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertIn('text/csv', response._content_type_for_repr)
+        self.assertIn('text/csv', response['Content-Type'])
 
 
 class TestPurchaseOrderView(AuditTestCaseMixin, BaseTenantTestCase):
