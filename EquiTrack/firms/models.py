@@ -84,7 +84,8 @@ class BaseStaffMember(models.Model):
     user = models.OneToOneField(
         settings.AUTH_USER_MODEL,
         verbose_name=_('User'),
-        related_name='%(app_label)s_%(class)s'
+        related_name='%(app_label)s_%(class)s',
+        on_delete=models.CASCADE
     )
 
     class Meta:
