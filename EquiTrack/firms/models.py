@@ -68,6 +68,7 @@ class BaseFirm(TimeStampedModel, models.Model):
 
     class Meta:
         abstract = True
+        ordering = ('id',)
         verbose_name = _('Organization')
         verbose_name_plural = _('Organizations')
 
@@ -89,6 +90,7 @@ class BaseStaffMember(models.Model):
 
     class Meta:
         abstract = True
+        ordering = ('id',)
         verbose_name = _('Staff Member')
         verbose_name_plural = _('Staff Members')
 
