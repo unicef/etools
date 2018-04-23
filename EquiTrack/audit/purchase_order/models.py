@@ -29,7 +29,6 @@ class AuditorStaffMember(BaseStaffMember):
         }
 
         send_notification_using_email_template(
-            sender=self,
             recipients=[self.user.email],
             email_template_name='audit/engagement/submit_to_auditor',
             context=context,

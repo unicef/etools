@@ -14,7 +14,8 @@ from rest_framework.renderers import JSONRenderer
 from rest_framework.response import Response
 
 from audit.conditions import AuditModuleCondition, AuditStaffMemberCondition
-from audit.exports import AuditorFirmCSVRenderer, EngagementCSVRenderer
+from audit.exports import AuditorFirmCSVRenderer, EngagementCSVRenderer, MicroAssessmentDetailCSVRenderer, \
+    AuditDetailCSVRenderer, SpotCheckDetailCSVRenderer, SpecialAuditDetailCSVRenderer
 from audit.filters import DisplayStatusFilter, UniqueIDOrderingFilter
 from audit.metadata import AuditBaseMetadata, AuditPermissionBasedMetadata
 from audit.models import (
@@ -27,7 +28,9 @@ from audit.serializers.engagement import (
     AuditSerializer, EngagementExportSerializer, EngagementLightSerializer, EngagementSerializer,
     EngagementHactSerializer, MicroAssessmentSerializer, SpecialAuditSerializer, SpotCheckSerializer,)
 from audit.serializers.export import (
-    AuditPDFSerializer, MicroAssessmentPDFSerializer, SpecialAuditPDFSerializer, SpotCheckPDFSerializer,)
+    AuditPDFSerializer, MicroAssessmentPDFSerializer, SpecialAuditPDFSerializer, SpotCheckPDFSerializer,
+    MicroAssessmentDetailCSVSerializer, AuditDetailCSVSerializer, SpotCheckDetailCSVSerializer,
+    SpecialAuditDetailPDFSerializer)
 from partners.models import PartnerOrganization
 from partners.serializers.partner_organization_v2 import MinimalPartnerOrganizationListSerializer
 from permissions2.conditions import GroupCondition, NewObjectCondition, ObjectStatusCondition
@@ -321,27 +324,36 @@ class EngagementManagementMixin(
     mixins.DestroyModelMixin,
     PermittedFSMActionMixin,
 ):
-    pass
+    def get_export_filename(self, format=None):
+        return '{}.{}'.format(self.get_object().unique_id, (format or '').lower())
 
 
 class MicroAssessmentViewSet(EngagementManagementMixin, EngagementViewSet):
     queryset = MicroAssessment.objects.all()
     serializer_class = MicroAssessmentSerializer
+    export_serializer_class = MicroAssessmentDetailCSVSerializer
+    renderer_classes = [JSONRenderer, MicroAssessmentDetailCSVRenderer]
 
 
 class AuditViewSet(EngagementManagementMixin, EngagementViewSet):
     queryset = Audit.objects.all()
     serializer_class = AuditSerializer
+    export_serializer_class = AuditDetailCSVSerializer
+    renderer_classes = [JSONRenderer, AuditDetailCSVRenderer]
 
 
 class SpotCheckViewSet(EngagementManagementMixin, EngagementViewSet):
     queryset = SpotCheck.objects.all()
     serializer_class = SpotCheckSerializer
+    export_serializer_class = SpotCheckDetailCSVSerializer
+    renderer_classes = [JSONRenderer, SpotCheckDetailCSVRenderer]
 
 
 class SpecialAuditViewSet(EngagementManagementMixin, EngagementViewSet):
     queryset = SpecialAudit.objects.all()
     serializer_class = SpecialAuditSerializer
+    export_serializer_class = SpecialAuditDetailPDFSerializer
+    renderer_classes = [JSONRenderer, SpecialAuditDetailCSVRenderer]
 
 
 class AuditorStaffMembersViewSet(
