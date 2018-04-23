@@ -10,7 +10,7 @@ from utils.common.models.fields import CodedGenericRelation
 class CodedGenericChild(models.Model):
     field = models.IntegerField()
 
-    content_type = models.ForeignKey(ContentType)
+    content_type = models.ForeignKey(ContentType, on_delete=models.CASCADE)
     object_id = models.IntegerField()
 
     code = models.CharField(max_length=20, blank=True)
@@ -29,7 +29,7 @@ class Parent(models.Model):
 class Child1(models.Model):
     field = models.IntegerField()
 
-    parent = models.ForeignKey(Parent)
+    parent = models.ForeignKey(Parent, on_delete=models.CASCADE)
 
     class Meta:
         verbose_name_plural = _('Children1')
