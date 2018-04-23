@@ -360,6 +360,8 @@ class SpotCheck(Engagement):
 
     internal_controls = models.TextField(verbose_name=_('Internal Controls'), blank=True)
 
+    objects = models.Manager()
+
     class Meta:
         ordering = ('id', )
         verbose_name = _('Spot Check')
@@ -465,6 +467,8 @@ class Finding(models.Model):
 
 @python_2_unicode_compatible
 class MicroAssessment(Engagement):
+    objects = models.Manager()
+
     class Meta:
         ordering = ('id',)
         verbose_name = _('Micro Assessment')
@@ -530,6 +534,8 @@ class Audit(Engagement):
     audit_opinion = models.CharField(
         verbose_name=_('Audit Opinion'), max_length=20, choices=OPTIONS, default='', blank=True,
     )
+
+    objects = models.Manager()
 
     class Meta:
         ordering = ('id',)
@@ -636,6 +642,8 @@ class KeyInternalControl(models.Model):
 
 @python_2_unicode_compatible
 class SpecialAudit(Engagement):
+    objects = models.Manager()
+
     class Meta:
         ordering = ('id', )
         verbose_name = _('Special Audit')
