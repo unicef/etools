@@ -14,6 +14,7 @@ https://docs.djangoproject.com/en/1.9/ref/settings/
 """
 from __future__ import absolute_import, division, print_function, unicode_literals
 
+import yaml
 from django.utils import six
 
 import datetime
@@ -45,19 +46,34 @@ SITE_NAME = basename(DJANGO_ROOT)
 # DJANGO CORE SETTINGS ################################
 # organized per https://docs.djangoproject.com/en/1.9/ref/settings/#core-settings-topical-index
 
+SECRETS_FILE_LOCATION = os.environ.get('SECRETS_FILE_LOCATION', join(DJANGO_ROOT, 'secrets.yml'))
+
+try:
+    with open(SECRETS_FILE_LOCATION, 'r') as secrets_file:
+        secrets = yaml.load(secrets_file)['ENVIRONMENT']
+except FileNotFoundError:
+    # pass, for now we default trying to get the secrets from env vars as well
+    secrets = {}
+
+
+def get_from_secrets_or_env(var_name, default=None):
+    """Attempts to get variables from secrets file, if it fails, tries env, returns default"""
+    return secrets.get(var_name, os.environ.get(var_name, default))
+
+
 # DJANGO: CACHE
 CACHES = {
     'default': {
         'BACKEND': 'redis_cache.RedisCache',
-        'LOCATION': os.environ.get('REDIS_URL', 'redis://localhost:6379/0')
+        'LOCATION': get_from_secrets_or_env('REDIS_URL', 'redis://localhost:6379/0')
     }
 }
 
 # DJANGO: DATABASE
 db_config = dj_database_url.config(
-    env="DATABASE_URL",
-    default='postgis:///etools'
+    default=get_from_secrets_or_env('DATABASE_URL', 'postgis:///etools')
 )
+
 ORIGINAL_BACKEND = 'django.contrib.gis.db.backends.postgis'
 db_config['ENGINE'] = 'tenant_schemas.postgresql_backend'
 db_config['CONN_MAX_AGE'] = 0
@@ -69,16 +85,16 @@ DATABASE_ROUTERS = (
 )
 
 # DJANGO: DEBUGGING
-DEBUG = str2bool(os.environ.get('DJANGO_DEBUG'))
+DEBUG = str2bool(get_from_secrets_or_env('DJANGO_DEBUG'))
 
 # DJANGO: EMAIL
 DEFAULT_FROM_EMAIL = "no-reply@unicef.org"
 EMAIL_BACKEND = 'post_office.EmailBackend'  # Will send email via our template system
-EMAIL_HOST = os.environ.get('EMAIL_HOST', '')
-EMAIL_HOST_USER = os.environ.get('EMAIL_HOST_USER', '')
-EMAIL_HOST_PASSWORD = os.environ.get('EMAIL_HOST_PASSWORD', '')
-EMAIL_PORT = os.environ.get('EMAIL_HOST_PORT', 587)
-EMAIL_USE_TLS = str2bool(os.environ.get('EMAIL_USE_TLS'))  # set True if using TLS
+EMAIL_HOST = get_from_secrets_or_env('EMAIL_HOST', '')
+EMAIL_HOST_USER = get_from_secrets_or_env('EMAIL_HOST_USER', '')
+EMAIL_HOST_PASSWORD = get_from_secrets_or_env('EMAIL_HOST_PASSWORD', '')
+EMAIL_PORT = get_from_secrets_or_env('EMAIL_HOST_PORT', 587)
+EMAIL_USE_TLS = str2bool(get_from_secrets_or_env('EMAIL_USE_TLS'))  # set True if using TLS
 
 # DJANGO: ERROR REPORTING
 
@@ -111,7 +127,7 @@ WSGI_APPLICATION = '%s.wsgi.application' % SITE_NAME
 # DJANGO: LOGGING
 LOGGING = {
     'version': 1,
-    'disable_existing_loggers': str2bool(os.environ.get('DJANGO_DISABLE_EXISTING_LOGGERS', 'True')),
+    'disable_existing_loggers': str2bool(get_from_secrets_or_env('DJANGO_DISABLE_EXISTING_LOGGERS', 'True')),
     'handlers': {
         # Send all messages to console
         'console': {
@@ -205,7 +221,7 @@ INSTALLED_APPS = ('tenant_schemas',) + SHARED_APPS + TENANT_APPS
 
 # DJANGO: SECURITY
 ALLOWED_HOSTS = [
-    os.environ.get('DJANGO_ALLOWED_HOST', '127.0.0.1'),
+    get_from_secrets_or_env('DJANGO_ALLOWED_HOST', '127.0.0.1'),
 ]
 SECRET_KEY = r"j8%#f%3t@9)el9jh4f0ug4*mm346+wwwti#6(^@_ksf@&k^ob1"  # only used locally
 
@@ -297,8 +313,8 @@ POST_OFFICE = {
 
 # celery: http://docs.celeryproject.org/en/latest/userguide/configuration.html
 CELERY_ACCEPT_CONTENT = ['pickle', 'json', 'application/text']
-CELERY_BROKER_URL = os.environ.get('REDIS_URL', 'redis://localhost:6379/0')
-CELERY_BROKER_VISIBILITY_VAR = os.environ.get('CELERY_VISIBILITY_TIMEOUT', 1800)  # in seconds
+CELERY_BROKER_URL = get_from_secrets_or_env('REDIS_URL', 'redis://localhost:6379/0')
+CELERY_BROKER_VISIBILITY_VAR = get_from_secrets_or_env('CELERY_VISIBILITY_TIMEOUT', 1800)  # in seconds
 CELERY_BROKER_TRANSPORT_OPTIONS = {'visibility_timeout': int(CELERY_BROKER_VISIBILITY_VAR)}
 CELERY_RESULT_BACKEND = 'django-db'
 CELERY_BEAT_SCHEDULER = 'django_celery_beat.schedulers.DatabaseScheduler'
@@ -317,7 +333,7 @@ CELERY_RESULT_EXPIRES = 600
 CELERY_WORKER_PREFETCH_MULTIPLIER = 1
 
 # django-celery-email: https://github.com/pmclanahan/django-celery-email
-CELERY_EMAIL_BACKEND = os.environ.get('EMAIL_BACKEND', 'django.core.mail.backends.smtp.EmailBackend')
+CELERY_EMAIL_BACKEND = get_from_secrets_or_env('EMAIL_BACKEND', 'django.core.mail.backends.smtp.EmailBackend')
 CELERY_TASK_ROUTES = {
     'vision.tasks.sync_handler': {'queue': 'vision_queue'}
 }
@@ -377,7 +393,7 @@ TENANT_MODEL = "users.Country"  # app.Model
 TENANT_LIMIT_SET_CALLS = True
 
 # django-saml2: https://github.com/robertavram/djangosaml2
-HOST = os.environ.get('DJANGO_ALLOWED_HOST', 'localhost:8000')
+HOST = get_from_secrets_or_env('DJANGO_ALLOWED_HOST', 'localhost:8000')
 SAML_ATTRIBUTE_MAPPING = {
     'upn': ('username',),
     'emailAddress': ('email',),
@@ -498,24 +514,24 @@ JWT_AUTH = {
 
 # eTools settings ################################
 
-COUCHBASE_URL = os.environ.get('COUCHBASE_URL')
-COUCHBASE_USER = os.environ.get('COUCHBASE_USER')
-COUCHBASE_PASS = os.environ.get('COUCHBASE_PASS')
+COUCHBASE_URL = get_from_secrets_or_env('COUCHBASE_URL')
+COUCHBASE_USER = get_from_secrets_or_env('COUCHBASE_USER')
+COUCHBASE_PASS = get_from_secrets_or_env('COUCHBASE_PASS')
 
 DISABLE_INVOICING = str2bool(os.getenv('DISABLE_INVOICING'))
 
-ENVIRONMENT = os.environ.get('ENVIRONMENT', '')
-ETRIPS_VERSION = os.environ.get('ETRIPS_VERSION')
+ENVIRONMENT = get_from_secrets_or_env('ENVIRONMENT', '')
+ETRIPS_VERSION = get_from_secrets_or_env('ETRIPS_VERSION')
 
-INACTIVE_BUSINESS_AREAS = os.environ.get('INACTIVE_BUSINESS_AREAS', '').split(',')
+INACTIVE_BUSINESS_AREAS = get_from_secrets_or_env('INACTIVE_BUSINESS_AREAS', '').split(',')
 if INACTIVE_BUSINESS_AREAS == ['']:
     # 'split' splits an empty string into an array with one empty string, which isn't
     # really what we want
     INACTIVE_BUSINESS_AREAS = []
 
-SLACK_URL = os.environ.get('SLACK_URL')
+SLACK_URL = get_from_secrets_or_env('SLACK_URL')
 
-TASK_ADMIN_USER = os.environ.get('TASK_ADMIN_USER', 'etools_task_admin')
+TASK_ADMIN_USER = get_from_secrets_or_env('TASK_ADMIN_USER', 'etools_task_admin')
 
 VISION_URL = os.getenv('VISION_URL', 'invalid_vision_url')
 VISION_USER = os.getenv('VISION_USER', 'invalid_vision_user')
