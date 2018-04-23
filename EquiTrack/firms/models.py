@@ -68,6 +68,7 @@ class BaseFirm(TimeStampedModel, models.Model):
 
     class Meta:
         abstract = True
+        ordering = ('id',)
         verbose_name = _('Organization')
         verbose_name_plural = _('Organizations')
 
@@ -83,11 +84,13 @@ class BaseStaffMember(models.Model):
     user = models.OneToOneField(
         settings.AUTH_USER_MODEL,
         verbose_name=_('User'),
-        related_name='%(app_label)s_%(class)s'
+        related_name='%(app_label)s_%(class)s',
+        on_delete=models.CASCADE
     )
 
     class Meta:
         abstract = True
+        ordering = ('id',)
         verbose_name = _('Staff Member')
         verbose_name_plural = _('Staff Members')
 

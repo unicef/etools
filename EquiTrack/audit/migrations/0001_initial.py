@@ -73,6 +73,7 @@ class Migration(migrations.Migration):
                 ('cancel_comment', models.TextField(blank=True, verbose_name='Cancel Comment')),
             ],
             options={
+                'ordering': ('id', ),
                 'verbose_name': 'Engagement',
                 'verbose_name_plural': 'Engagements',
             },
@@ -189,6 +190,7 @@ class Migration(migrations.Migration):
                 ('audit_opinion', models.CharField(blank=True, choices=[('unqualified', 'Unqualified'), ('qualified', 'Qualified'), ('disclaimer_opinion', 'Disclaimer opinion'), ('adverse_opinion', 'Adverse opinion')], max_length=20, null=True, verbose_name='Audit Opinion')),
             ],
             options={
+                'ordering': ('id',),
                 'verbose_name': 'Audit',
                 'verbose_name_plural': 'Audits',
             },
@@ -200,6 +202,7 @@ class Migration(migrations.Migration):
                 ('engagement_ptr', models.OneToOneField(auto_created=True, on_delete=django.db.models.deletion.CASCADE, parent_link=True, primary_key=True, serialize=False, to='audit.Engagement')),
             ],
             options={
+                'ordering': ('id',),
                 'verbose_name': 'Micro Assessment',
                 'verbose_name_plural': 'Micro Assessments',
             },
@@ -211,7 +214,10 @@ class Migration(migrations.Migration):
                 ('engagement_ptr', models.OneToOneField(auto_created=True, on_delete=django.db.models.deletion.CASCADE, parent_link=True, primary_key=True, serialize=False, to='audit.Engagement')),
             ],
             options={
+                'ordering': ('id',),
                 'abstract': False,
+                'verbose_name': 'Special Audit',
+                'verbose_name_plural': 'Special Audits',
             },
             bases=('audit.engagement',),
         ),
@@ -224,6 +230,7 @@ class Migration(migrations.Migration):
                 ('internal_controls', models.TextField(blank=True, verbose_name='Internal Controls')),
             ],
             options={
+                'ordering': ('id',),
                 'verbose_name': 'Spot Check',
                 'verbose_name_plural': 'Spot Checks',
             },

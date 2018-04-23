@@ -42,10 +42,10 @@ class UrlsTestCase(URLAssertionMixin, SimpleTestCase):
     def test_urls(self):
         '''Verify URL pattern names generate the URLs we expect them to.'''
         names_and_paths = (
-            ('applied-indicator', 'applied-indicators/', {}),
-            ('country-programme-list', 'countryprogramme/', {}),
-            ('lower-results', 'lower_results/', {}),
-            ('report-result-list', 'results/', {}),
+            ('reports:applied-indicator', 'applied-indicators/', {}),
+            ('reports:country-programme-list', 'countryprogramme/', {}),
+            ('reports:lower-results', 'lower_results/', {}),
+            ('reports:report-result-list', 'results/', {}),
         )
         self.assertReversal(names_and_paths, '', '/api/v2/reports/')
 
@@ -73,7 +73,7 @@ class TestReportViews(BaseTenantTestCase):
             result_type=cls.result_type,
             country_programme=cls.country_programme
         )
-        cls.v2_results_url = reverse('report-result-list')
+        cls.v2_results_url = reverse('reports:report-result-list')
 
     def test_api_resulttypes_list(self):
         url = reverse('resulttypes-list')
@@ -134,7 +134,7 @@ class TestOutputListAPIView(BaseTenantTestCase):
             result_type=cls.result_type,
             country_programme=cls.country_programme
         )
-        cls.url = reverse('report-result-list')
+        cls.url = reverse('reports:report-result-list')
 
     def test_get(self):
         response = self.forced_auth_req('get', self.url)
@@ -251,7 +251,7 @@ class TestOutputDetailAPIView(BaseTenantTestCase):
             result_type=cls.result_type,
             country_programme=cls.country_programme
         )
-        cls.url = reverse('report-result-detail', args=[cls.result1.pk])
+        cls.url = reverse('reports:report-result-detail', args=[cls.result1.pk])
 
     def test_results_retrieve(self):
         response = self.forced_auth_req('get', self.url)
@@ -270,7 +270,7 @@ class TestDisaggregationListCreateViews(BaseTenantTestCase):
         cls.pme_user = UserFactory()
         cls.group = GroupFactory(name="PME")
         cls.pme_user.groups.add(cls.group)
-        cls.url = reverse('disaggregation-list-create')
+        cls.url = reverse('reports:disaggregation-list-create')
 
     def test_get(self):
         """
@@ -347,7 +347,7 @@ class TestDisaggregationRetrieveUpdateViews(BaseTenantTestCase):
 
     @staticmethod
     def _get_url(dissagregation):
-        return reverse('disaggregation-retrieve-update', args=[dissagregation.pk])
+        return reverse('reports:disaggregation-retrieve-update', args=[dissagregation.pk])
 
     def test_get(self):
         """
@@ -569,7 +569,7 @@ class TestResultIndicatorListAPIView(BaseTenantTestCase):
         cls.unicef_staff = UserFactory(is_staff=True)
         cls.result = ResultFactory()
         cls.indicator = IndicatorFactory(result=cls.result)
-        cls.url = reverse("result-indicator-list", args=[cls.result.pk])
+        cls.url = reverse("reports:result-indicator-list", args=[cls.result.pk])
 
     def test_get(self):
         response = self.forced_auth_req(
@@ -586,7 +586,7 @@ class TestResultIndicatorListAPIView(BaseTenantTestCase):
     def test_get_empty(self):
         response = self.forced_auth_req(
             "get",
-            reverse("result-indicator-list", args=[404]),
+            reverse("reports:result-indicator-list", args=[404]),
             user=self.unicef_staff
         )
         self.assertEqual(response.status_code, status.HTTP_200_OK)
@@ -597,7 +597,7 @@ class TestLowerResultListAPIView(BaseTenantTestCase):
     @classmethod
     def setUpTestData(cls):
         cls.unicef_staff = UserFactory(is_staff=True)
-        cls.url = reverse("lower-results")
+        cls.url = reverse("reports:lower-results")
         cls.intervention = InterventionFactory()
         cls.result_link = InterventionResultLinkFactory(
             intervention=cls.intervention,
@@ -657,7 +657,7 @@ class TestLowerResultDeleteView(BaseTenantTestCase):
         self.lower_result = LowerResultFactory(
             result_link=self.result_link,
         )
-        self.url = reverse("lower-results-del", args=[self.lower_result.pk])
+        self.url = reverse("reports:lower-results-del", args=[self.lower_result.pk])
 
     def test_delete(self):
         self.intervention.unicef_focal_points.add(self.unicef_staff)
@@ -674,7 +674,7 @@ class TestLowerResultDeleteView(BaseTenantTestCase):
     def test_delete_not_found(self):
         response = self.forced_auth_req(
             "delete",
-            reverse("lower-results-del", args=[404]),
+            reverse("reports:lower-results-del", args=[404]),
             user=self.unicef_staff
         )
         self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
@@ -710,7 +710,7 @@ class TestLowerResultExportList(BaseTenantTestCase):
     def test_invalid_format_export_api(self):
         response = self.forced_auth_req(
             'get',
-            reverse('lower-results'),
+            reverse('reports:lower-results'),
             user=self.unicef_staff,
             data={"format": "unknown"},
         )
@@ -719,7 +719,7 @@ class TestLowerResultExportList(BaseTenantTestCase):
     def test_csv_export_api(self):
         response = self.forced_auth_req(
             'get',
-            reverse('lower-results'),
+            reverse('reports:lower-results'),
             user=self.unicef_staff,
             data={"format": "csv"},
         )
@@ -733,7 +733,7 @@ class TestLowerResultExportList(BaseTenantTestCase):
     def test_csv_flat_export_api(self):
         response = self.forced_auth_req(
             'get',
-            reverse('lower-results'),
+            reverse('reports:lower-results'),
             user=self.unicef_staff,
             data={"format": "csv_flat"},
         )
@@ -761,7 +761,7 @@ class TestAppliedIndicatorListAPIView(BaseTenantTestCase):
             indicator=cls.indicator,
             lower_result=cls.lower_result
         )
-        cls.url = reverse("applied-indicator")
+        cls.url = reverse("reports:applied-indicator")
 
     def test_search_number(self):
         response = self.forced_auth_req(
@@ -830,7 +830,7 @@ class TestAppliedIndicatorExportList(BaseTenantTestCase):
     def test_invalid_format_export_api(self):
         response = self.forced_auth_req(
             'get',
-            reverse('applied-indicator'),
+            reverse('reports:applied-indicator'),
             user=self.unicef_staff,
             data={"format": "unknown"},
         )
@@ -839,7 +839,7 @@ class TestAppliedIndicatorExportList(BaseTenantTestCase):
     def test_csv_export_api(self):
         response = self.forced_auth_req(
             'get',
-            reverse('applied-indicator'),
+            reverse('reports:applied-indicator'),
             user=self.unicef_staff,
             data={"format": "csv"},
         )
@@ -853,7 +853,7 @@ class TestAppliedIndicatorExportList(BaseTenantTestCase):
     def test_csv_flat_export_api(self):
         response = self.forced_auth_req(
             'get',
-            reverse('applied-indicator'),
+            reverse('reports:applied-indicator'),
             user=self.unicef_staff,
             data={"format": "csv_flat"},
         )
