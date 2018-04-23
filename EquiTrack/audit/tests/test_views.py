@@ -805,6 +805,26 @@ class TestEngagementPDFExportViewSet(EngagementTransitionsTestCaseMixin, BaseTen
         self._test_pdf_view(self.unicef_focal_point)
 
 
+class TestEngagementCSVExportViewSet(EngagementTransitionsTestCaseMixin, BaseTenantTestCase):
+    engagement_factory = MicroAssessmentFactory
+
+    @classmethod
+    def setUpTestData(cls):
+        super(TestEngagementCSVExportViewSet, cls).setUpTestData()
+        call_command('tenant_loaddata', 'audit_risks_blueprints', verbosity=0)
+
+    def test_csv_view(self):
+        response = self.forced_auth_req(
+            'get',
+            '/api/audit/micro-assessments/{}/'.format(self.engagement.id),
+            user=self.unicef_user,
+            data={'format': 'csv'}
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertIn('text/csv', response._content_type_for_repr)
+
+
 class TestPurchaseOrderView(AuditTestCaseMixin, BaseTenantTestCase):
     def setUp(self):
         super(TestPurchaseOrderView, self).setUp()
