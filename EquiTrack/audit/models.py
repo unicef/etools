@@ -166,6 +166,7 @@ class Engagement(TimeStampedModel, models.Model):
     objects = InheritanceManager()
 
     class Meta:
+        ordering = ('id',)
         verbose_name = _('Engagement')
         verbose_name_plural = _('Engagements')
 
@@ -360,6 +361,7 @@ class SpotCheck(Engagement):
     internal_controls = models.TextField(verbose_name=_('Internal Controls'), blank=True)
 
     class Meta:
+        ordering = ('id', )
         verbose_name = _('Spot Check')
         verbose_name_plural = _('Spot Checks')
 
@@ -464,6 +466,7 @@ class Finding(models.Model):
 @python_2_unicode_compatible
 class MicroAssessment(Engagement):
     class Meta:
+        ordering = ('id',)
         verbose_name = _('Micro Assessment')
         verbose_name_plural = _('Micro Assessments')
 
@@ -529,6 +532,7 @@ class Audit(Engagement):
     )
 
     class Meta:
+        ordering = ('id',)
         verbose_name = _('Audit')
         verbose_name_plural = _('Audits')
 
@@ -632,6 +636,11 @@ class KeyInternalControl(models.Model):
 
 @python_2_unicode_compatible
 class SpecialAudit(Engagement):
+    class Meta:
+        ordering = ('id', )
+        verbose_name = _('Special Audit')
+        verbose_name_plural = _('Special Audits')
+
     def save(self, *args, **kwargs):
         self.engagement_type = Engagement.TYPES.sa
         return super(SpecialAudit, self).save(*args, **kwargs)
