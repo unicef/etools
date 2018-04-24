@@ -593,7 +593,7 @@ class TestMicroAssessmentMetadataDetailViewSet(EngagementTransitionsTestCaseMixi
         )
 
     def test_overall_choices(self):
-        self._test_risk_choices('overall_risk_assessment', list(Risk.VALUES)[1:])
+        self._test_risk_choices('overall_risk_assessment', Risk.POSITIVE_VALUES)
 
     def test_subject_areas_choices(self):
         self._test_risk_choices('test_subject_areas', Risk.VALUES)

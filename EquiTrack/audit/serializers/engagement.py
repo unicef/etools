@@ -346,7 +346,7 @@ class MicroAssessmentSerializer(ActivePDValidationMixin, RiskCategoriesUpdateMix
     )
     overall_risk_assessment = RiskRootSerializer(
         code='ma_global_assessment', required=False, label=_('Overall Risk Assessment'),
-        risk_choices=list(Risk.VALUES)[1:]
+        risk_choices=Risk.POSITIVE_VALUES
     )
     findings = DetailedFindingInfoSerializer(
         many=True, required=False, label=_('Detailed Internal Control Findings and Recommendations')

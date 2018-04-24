@@ -328,13 +328,16 @@ class RiskBluePrint(OrderedModel, models.Model):
 
 @python_2_unicode_compatible
 class Risk(models.Model):
-    VALUES = Choices(
-        (0, 'na', _('N/A')),
+    POSITIVE_VALUES = Choices(
         (1, 'low', _('Low')),
         (2, 'medium', _('Medium')),
         (3, 'significant', _('Significant')),
         (4, 'high', _('High')),
     )
+
+    VALUES = Choices(
+        (0, 'na', _('N/A')),
+    ) + POSITIVE_VALUES
 
     engagement = models.ForeignKey(Engagement, related_name='risks', verbose_name=_('Engagement'))
 
