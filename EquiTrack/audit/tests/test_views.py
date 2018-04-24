@@ -588,7 +588,7 @@ class TestMicroAssessmentMetadataDetailViewSet(EngagementTransitionsTestCaseMixi
         risk_fields = get[field]['children']['blueprints']['child']['children']['risk']['children']
         self.assertIn('choices', risk_fields['value'])
         self.assertListEqual(
-            [{'value': c, 'display_name': six.text_type(v)} for c, v in expected_choices],
+            [{'value': c, 'display_name': str(v)} for c, v in expected_choices],
             risk_fields['value']['choices']
         )
 

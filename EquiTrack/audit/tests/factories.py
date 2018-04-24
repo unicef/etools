@@ -6,7 +6,6 @@ import random
 from django.contrib.auth.models import Group
 
 import factory
-from django.utils import six
 from factory import fuzzy
 
 from audit.models import (
@@ -76,7 +75,7 @@ class UserFactory(BaseUserFactory):
         if extracted is not None:
             extracted = extracted[:]
             for i, group in enumerate(extracted):
-                if isinstance(group, six.string_types):
+                if isinstance(group, str):
                     extracted[i] = Group.objects.get_or_create(name=group)[0]
 
             self.groups.add(*extracted)
