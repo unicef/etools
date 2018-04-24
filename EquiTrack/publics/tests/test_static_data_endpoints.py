@@ -29,22 +29,22 @@ class StaticDataEndpoints(BaseTenantTestCase):
         cls.unicef_staff = UserFactory(is_staff=True)
 
     def test_urls(self):
-        static_data_url = reverse('public:static')
+        static_data_url = reverse('publics:static')
         self.assertEqual(static_data_url, '/api/static_data/')
 
-        currencies_url = reverse('public:currencies')
+        currencies_url = reverse('publics:currencies')
         self.assertEqual(currencies_url, '/api/currencies/')
 
-        dsa_regions_url = reverse('public:dsa_regions')
+        dsa_regions_url = reverse('publics:dsa_regions')
         self.assertEqual(dsa_regions_url, '/api/dsa_regions/')
 
-        business_areas_url = reverse('public:business_areas')
+        business_areas_url = reverse('publics:business_areas')
         self.assertEqual(business_areas_url, '/api/business_areas/')
 
-        expense_types_url = reverse('public:expense_types')
+        expense_types_url = reverse('publics:expense_types')
         self.assertEqual(expense_types_url, '/api/expense_types/')
 
-        airlines_url = reverse('public:airlines')
+        airlines_url = reverse('publics:airlines')
         self.assertEqual(airlines_url, '/api/airlines/')
 
     def test_endpoint(self):
@@ -63,7 +63,7 @@ class StaticDataEndpoints(BaseTenantTestCase):
         PublicsTravelExpenseTypeFactory()
 
         with self.assertNumQueries(10):
-            response = self.forced_auth_req('get', reverse('public:static'),
+            response = self.forced_auth_req('get', reverse('publics:static'),
                                             user=self.unicef_staff)
 
         response_json = json.loads(response.rendered_content)
@@ -111,7 +111,7 @@ class StaticDataEndpoints(BaseTenantTestCase):
         workspace.business_area_code = travel_agent_1_ba.code
         workspace.save()
 
-        response = self.forced_auth_req('get', reverse('public:static'),
+        response = self.forced_auth_req('get', reverse('publics:static'),
                                         user=self.unicef_staff)
 
         response_json = json.loads(response.rendered_content)
@@ -125,7 +125,7 @@ class StaticDataEndpoints(BaseTenantTestCase):
         factory.build_batch(PublicsCurrencyFactory, 3)
 
         with self.assertNumQueries(4):
-            response = self.forced_auth_req('get', reverse('public:currencies'),
+            response = self.forced_auth_req('get', reverse('publics:currencies'),
                                             user=self.unicef_staff)
 
         response_json = json.loads(response.rendered_content)
@@ -152,7 +152,7 @@ class StaticDataEndpoints(BaseTenantTestCase):
         PublicsDSARateFactory(region=region_3)
 
         with self.assertNumQueries(4):
-            response = self.forced_auth_req('get', reverse('public:dsa_regions'),
+            response = self.forced_auth_req('get', reverse('publics:dsa_regions'),
                                             user=self.unicef_staff)
 
         response_json = json.loads(response.rendered_content)
@@ -168,7 +168,7 @@ class StaticDataEndpoints(BaseTenantTestCase):
         factory.build_batch(PublicsBusinessAreaFactory, 3)
 
         with self.assertNumQueries(1):
-            response = self.forced_auth_req('get', reverse('public:business_areas'),
+            response = self.forced_auth_req('get', reverse('publics:business_areas'),
                                             user=self.unicef_staff)
 
         response_json = json.loads(response.rendered_content)
@@ -182,7 +182,7 @@ class StaticDataEndpoints(BaseTenantTestCase):
         factory.build_batch(PublicsTravelExpenseTypeFactory, 3)
 
         with self.assertNumQueries(1):
-            response = self.forced_auth_req('get', reverse('public:expense_types'),
+            response = self.forced_auth_req('get', reverse('publics:expense_types'),
                                             user=self.unicef_staff)
 
         response_json = json.loads(response.rendered_content)
@@ -196,7 +196,7 @@ class StaticDataEndpoints(BaseTenantTestCase):
         factory.build_batch(PublicsAirlineCompanyFactory, 3)
 
         with self.assertNumQueries(1):
-            response = self.forced_auth_req('get', reverse('public:airlines'),
+            response = self.forced_auth_req('get', reverse('publics:airlines'),
                                             user=self.unicef_staff)
         response_json = json.loads(response.rendered_content)
 

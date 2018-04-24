@@ -65,7 +65,7 @@ urlpatterns = [
     url(r'^users/', include('users.urls')),
     url(r'^api/management/', include(management_urls)),
     url(r'^api/', include(api.urls)),
-    url(r'^api/', include(publics_patterns, namespace='public')),
+    url(r'^api/', include(publics_patterns)),
 
     # ***************  API version 2  ******************
     url(r'^api/locations/pcode/(?P<p_code>\w+)/$',
