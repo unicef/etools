@@ -39,6 +39,7 @@ class Migration(migrations.Migration):
             ],
             options={
                 'abstract': False,
+                'ordering': ('id',),
                 'verbose_name': 'Organization',
                 'verbose_name_plural': 'Organizations',
             },
@@ -52,6 +53,7 @@ class Migration(migrations.Migration):
             ],
             options={
                 'abstract': False,
+                'ordering': ('id',),
                 'verbose_name': 'Staff Member',
                 'verbose_name_plural': 'Staff Members',
             },

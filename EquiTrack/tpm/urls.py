@@ -17,6 +17,7 @@ tpm_visits_api = routers.SimpleRouter()
 tpm_visits_api.register(r'visits', TPMVisitViewSet, base_name='visits')
 
 
+app_name = 'tpm'
 urlpatterns = [
     url(r'^', include(tpm_staffmember_api.urls)),
     url(r'^', include(tpm_partners_api.urls)),

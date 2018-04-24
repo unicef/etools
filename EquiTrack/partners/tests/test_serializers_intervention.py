@@ -280,7 +280,7 @@ class TestInterventionReportingRequirementCreateSerializer(BaseTenantTestCase):
             "report_type": ReportingRequirement.TYPE_SPECIAL,
             "reporting_requirements": [{
                 "due_date": datetime.date(2001, 4, 15),
-                "description": "long"*256
+                "description": "long" * 256
             }]
         }
         serializer = InterventionReportingRequirementCreateSerializer(
