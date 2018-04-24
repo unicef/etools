@@ -68,7 +68,10 @@ class TPMVisit(SoftDeleteMixin, TimeStampedModel, models.Model):
         STATUSES.unicef_approved: 'date_of_unicef_approved',
     }
 
-    tpm_partner = models.ForeignKey(TPMPartner, verbose_name=_('TPM Vendor'), null=True)
+    tpm_partner = models.ForeignKey(
+        TPMPartner, verbose_name=_('TPM Vendor'), null=True,
+        on_delete=models.CASCADE,
+    )
 
     status = FSMField(verbose_name=_('Status'), max_length=20, choices=STATUSES, default=STATUSES.draft, protected=True)
 
@@ -98,6 +101,11 @@ class TPMVisit(SoftDeleteMixin, TimeStampedModel, models.Model):
     )
 
     tpm_partner_tracker = FieldTracker(fields=['tpm_partner', ])
+
+    class Meta:
+        ordering = ('id',)
+        verbose_name = _('TPM Visit')
+        verbose_name_plural = _('TPM Visits')
 
     @property
     def date_created(self):
@@ -331,7 +339,10 @@ class TPMVisitReportRejectComment(models.Model):
 
     reject_reason = models.TextField(verbose_name=_('Reason of Rejection'))
 
-    tpm_visit = models.ForeignKey(TPMVisit, verbose_name=_('Visit'), related_name='report_reject_comments')
+    tpm_visit = models.ForeignKey(
+        TPMVisit, verbose_name=_('Visit'), related_name='report_reject_comments',
+        on_delete=models.CASCADE,
+    )
 
     def __str__(self):
         return 'Reject Comment #{0} for {1}'.format(self.id, self.tpm_visit)
@@ -343,9 +354,15 @@ class TPMVisitReportRejectComment(models.Model):
 
 @python_2_unicode_compatible
 class TPMActivity(Activity):
-    tpm_visit = models.ForeignKey(TPMVisit, verbose_name=_('Visit'), related_name='tpm_activities')
+    tpm_visit = models.ForeignKey(
+        TPMVisit, verbose_name=_('Visit'), related_name='tpm_activities',
+        on_delete=models.CASCADE,
+    )
 
-    section = models.ForeignKey('reports.Sector', related_name='tpm_activities', verbose_name=_('Section'))
+    section = models.ForeignKey(
+        'reports.Sector', related_name='tpm_activities', verbose_name=_('Section'),
+        on_delete=models.CASCADE,
+    )
 
     additional_information = models.TextField(verbose_name=_('Additional Information'), blank=True)
 
@@ -401,10 +418,19 @@ class TPMActionPoint(TimeStampedModel, models.Model):
         ('cancelled', _('Cancelled')),
     )
 
-    tpm_visit = models.ForeignKey(TPMVisit, related_name='action_points', verbose_name=_('Visit'))
+    tpm_visit = models.ForeignKey(
+        TPMVisit, related_name='action_points', verbose_name=_('Visit'),
+        on_delete=models.CASCADE,
+    )
 
-    author = models.ForeignKey(User, related_name='created_tpm_action_points', verbose_name=_('Assigned By'))
-    person_responsible = models.ForeignKey(User, related_name='tpm_action_points', verbose_name=_('Person Responsible'))
+    author = models.ForeignKey(
+        User, related_name='created_tpm_action_points', verbose_name=_('Assigned By'),
+        on_delete=models.CASCADE,
+    )
+    person_responsible = models.ForeignKey(
+        User, related_name='tpm_action_points', verbose_name=_('Person Responsible'),
+        on_delete=models.CASCADE,
+    )
 
     due_date = models.DateField(verbose_name=_('Due Date'))
     description = models.TextField(verbose_name=_('Description'))

@@ -184,13 +184,18 @@ class Result(MPTTModel):
         verbose_name=_("Country Programme"),
         null=True,
         blank=True,
+        on_delete=models.CASCADE,
     )
-    result_type = models.ForeignKey(ResultType, verbose_name=_("Result Type"))
+    result_type = models.ForeignKey(
+        ResultType, verbose_name=_("Result Type"),
+        on_delete=models.CASCADE,
+    )
     sector = models.ForeignKey(
         Sector,
         verbose_name=_("Section"),
         null=True,
         blank=True,
+        on_delete=models.CASCADE,
     )
     name = models.TextField(verbose_name=_("Name"))
     code = models.CharField(
@@ -215,7 +220,8 @@ class Result(MPTTModel):
         null=True,
         blank=True,
         related_name='children',
-        db_index=True
+        db_index=True,
+        on_delete=models.CASCADE,
     )
 
     # activity level attributes
@@ -345,7 +351,8 @@ class LowerResult(TimeStampedModel):
     result_link = models.ForeignKey(
         'partners.InterventionResultLink',
         related_name='ll_results',
-        verbose_name=_('Result Link')
+        verbose_name=_('Result Link'),
+        on_delete=models.CASCADE,
     )
 
     name = models.CharField(verbose_name=_("Name"), max_length=500)
@@ -522,8 +529,11 @@ class DisaggregationValue(TimeStampedModel):
     related models:
         Disaggregation (ForeignKey): "disaggregation"
     """
-    disaggregation = models.ForeignKey(Disaggregation, related_name="disaggregation_values",
-                                       verbose_name=_('Disaggregation'))
+    disaggregation = models.ForeignKey(
+        Disaggregation, related_name="disaggregation_values",
+        verbose_name=_('Disaggregation'),
+        on_delete=models.CASCADE,
+    )
     value = models.CharField(max_length=15, verbose_name=_('Value'))
     active = models.BooleanField(default=False, verbose_name=_('Active'))
 
@@ -547,6 +557,7 @@ class AppliedIndicator(TimeStampedModel):
         verbose_name=_("Indicator"),
         null=True,
         blank=True,
+        on_delete=models.CASCADE,
     )
 
     section = models.ForeignKey(
@@ -554,6 +565,7 @@ class AppliedIndicator(TimeStampedModel):
         verbose_name=_("Section"),
         null=True,
         blank=True,
+        on_delete=models.CASCADE,
     )
 
     cluster_indicator_id = models.PositiveIntegerField(
@@ -585,6 +597,7 @@ class AppliedIndicator(TimeStampedModel):
         LowerResult,
         verbose_name=_("PD Result"),
         related_name='applied_indicators',
+        on_delete=models.CASCADE,
     )
 
     # unique code for this indicator within the current context
@@ -654,7 +667,8 @@ class Indicator(TimeStampedModel):
     sector = models.ForeignKey(
         Sector,
         verbose_name=_("Section"),
-        blank=True, null=True
+        blank=True, null=True,
+        on_delete=models.CASCADE,
     )
 
     result = models.ForeignKey(
@@ -662,6 +676,7 @@ class Indicator(TimeStampedModel):
         verbose_name=_("Result"),
         null=True,
         blank=True,
+        on_delete=models.CASCADE,
     )
     name = models.CharField(verbose_name=_("Name"), max_length=1024)
     code = models.CharField(
@@ -675,6 +690,7 @@ class Indicator(TimeStampedModel):
         verbose_name=_("Unit"),
         null=True,
         blank=True,
+        on_delete=models.CASCADE,
     )
 
     total = models.IntegerField(

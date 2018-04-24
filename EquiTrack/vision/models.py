@@ -15,7 +15,10 @@ class VisionSyncLog(models.Model):
     Relates to :model:`users.Country`
     """
 
-    country = models.ForeignKey(Country, verbose_name=_('Country'))
+    country = models.ForeignKey(
+        Country, verbose_name=_('Country'),
+        on_delete=models.CASCADE,
+    )
     handler_name = models.CharField(max_length=50, verbose_name=_('Handler Name'))
     total_records = models.IntegerField(default=0, verbose_name=_('Total Records'))
     total_processed = models.IntegerField(default=0, verbose_name=_('Total Processed'))
