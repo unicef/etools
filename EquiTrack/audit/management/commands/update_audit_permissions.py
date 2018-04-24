@@ -2,7 +2,6 @@ from __future__ import absolute_import, division, print_function, unicode_litera
 
 from django.core.management import BaseCommand
 from django.db.models import Q
-from django.utils import six
 
 from audit.conditions import AuditStaffMemberCondition, AuditModuleCondition
 from audit.models import Auditor, UNICEFAuditFocalPoint, UNICEFUser, Engagement
@@ -147,7 +146,7 @@ class Command(BaseCommand):
                 self._update_permissions(r, perm, targets, perm_type, condition)
             return
 
-        if isinstance(targets, six.string_types):
+        if isinstance(targets, str):
             targets = [targets]
 
         condition = (condition or []) + [AuditModuleCondition()] + self.user_roles[role]
