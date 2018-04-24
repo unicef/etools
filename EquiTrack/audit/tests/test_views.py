@@ -700,10 +700,7 @@ class TestAuditorStaffMembersViewSet(AuditTestCaseMixin, BaseTenantTestCase):
     def test_unicef_create_view(self):
         response = self.forced_auth_req(
             'post',
-            '/api/audit/audit-firms/{0}/staff-members/'.format(
-                self.auditor_firm.id,
-                self.auditor_firm.staff_members.first().id
-            ),
+            '/api/audit/audit-firms/{0}/staff-members/'.format(self.auditor_firm.id),
             data={
                 "user": {
                     "email": "test_email_1@gmail.com",
@@ -720,10 +717,7 @@ class TestAuditorStaffMembersViewSet(AuditTestCaseMixin, BaseTenantTestCase):
 
         response = self.forced_auth_req(
             'post',
-            '/api/audit/audit-firms/{0}/staff-members/'.format(
-                self.auditor_firm.id,
-                self.auditor_firm.staff_members.first().id
-            ),
+            '/api/audit/audit-firms/{0}/staff-members/'.format(self.auditor_firm.id),
             data={
                 "user_pk": user.pk
             },
@@ -737,10 +731,7 @@ class TestAuditorStaffMembersViewSet(AuditTestCaseMixin, BaseTenantTestCase):
 
         response = self.forced_auth_req(
             'post',
-            '/api/audit/audit-firms/{0}/staff-members/'.format(
-                self.auditor_firm.id,
-                self.auditor_firm.staff_members.first().id
-            ),
+            '/api/audit/audit-firms/{0}/staff-members/'.format(self.auditor_firm.id),
             data={
                 "user_pk": user.pk
             },
@@ -753,10 +744,7 @@ class TestAuditorStaffMembersViewSet(AuditTestCaseMixin, BaseTenantTestCase):
     def test_assign_none_provided(self):
         response = self.forced_auth_req(
             'post',
-            '/api/audit/audit-firms/{0}/staff-members/'.format(
-                self.auditor_firm.id,
-                self.auditor_firm.staff_members.first().id
-            ),
+            '/api/audit/audit-firms/{0}/staff-members/'.format(self.auditor_firm.id),
             data={},
             user=self.unicef_focal_point
         )
@@ -767,10 +755,7 @@ class TestAuditorStaffMembersViewSet(AuditTestCaseMixin, BaseTenantTestCase):
     def test_usual_user_create_view(self):
         response = self.forced_auth_req(
             'post',
-            '/api/audit/audit-firms/{0}/staff-members/'.format(
-                self.auditor_firm.id,
-                self.auditor_firm.staff_members.first().id
-            ),
+            '/api/audit/audit-firms/{0}/staff-members/'.format(self.auditor_firm.id),
             data={
                 "user": {
                     "email": "test_email_2@gmail.com",
