@@ -29,7 +29,9 @@ class TestClient(BaseTenantTestCase):
             'givenName': 'Joe',
             'mail': 'jdoe@unicef.org',
             'surname': 'Doe',
-            'userPrincipalName': 'jdoe@unicef.org'
+            'userPrincipalName': 'jdoe@unicef.org',
+            'userType': 'Member',
+            'companyName': 'UNICEF',
         }
         handle_record(user_record)
         self.assertEqual(user_qs.count(), user_initial_count + 1)
@@ -43,7 +45,9 @@ class TestClient(BaseTenantTestCase):
             'givenName': 'Joe',
             'mail': 'jdoe@unicef.org',
             'surname': 'Doe',
-            'userPrincipalName': 'jdoe@unicef.org'
+            'userPrincipalName': 'jdoe@unicef.org',
+            'userType': 'Member',
+            'companyName': 'UNICEF',
         }
         handle_record(user_record)
         self.assertEqual(user_qs.count(), user_initial_count)

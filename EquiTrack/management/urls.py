@@ -6,6 +6,7 @@ from management.views.general import InvalidateCache, SyncFRs
 from management.views.reports import LoadResultStructure
 from management.views.v1 import ActiveUsersSection, AgreementsStatisticsView, PortalDashView
 
+app_name = 'management'
 urlpatterns = ((
     url(r'^$', PortalDashView.as_view(), name='dashboard'),
     url(r'^load-results/$', LoadResultStructure.as_view(), name='load_result_structure'),

@@ -93,10 +93,19 @@ class Engagement(TimeStampedModel, models.Model):
                       protected=True)
 
     # auditor - partner organization from agreement
-    agreement = models.ForeignKey(PurchaseOrder, verbose_name=_('Purchase Order'))
-    po_item = models.ForeignKey(PurchaseOrderItem, verbose_name=_('PO Item Number'), null=True)
+    agreement = models.ForeignKey(
+        PurchaseOrder, verbose_name=_('Purchase Order'),
+        on_delete=models.CASCADE,
+    )
+    po_item = models.ForeignKey(
+        PurchaseOrderItem, verbose_name=_('PO Item Number'), null=True,
+        on_delete=models.CASCADE,
+    )
 
-    partner = models.ForeignKey('partners.PartnerOrganization', verbose_name=_('Partner'))
+    partner = models.ForeignKey(
+        'partners.PartnerOrganization', verbose_name=_('Partner'),
+        on_delete=models.CASCADE,
+    )
     partner_contacted_at = models.DateField(verbose_name=_('Date IP was contacted'), blank=True, null=True)
     engagement_type = models.CharField(verbose_name=_('Engagement Type'), max_length=10, choices=TYPES)
     start_date = models.DateField(verbose_name=_('Period Start Date'), blank=True, null=True)
@@ -166,6 +175,7 @@ class Engagement(TimeStampedModel, models.Model):
     objects = InheritanceManager()
 
     class Meta:
+        ordering = ('id',)
         verbose_name = _('Engagement')
         verbose_name_plural = _('Engagements')
 
@@ -270,7 +280,8 @@ class RiskCategory(OrderedModel, models.Model):
 
     header = models.CharField(verbose_name=_('Header'), max_length=255)
     parent = models.ForeignKey(
-        'self', verbose_name=_('Parent'), null=True, blank=True, related_name='children', db_index=True
+        'self', verbose_name=_('Parent'), null=True, blank=True, related_name='children', db_index=True,
+        on_delete=models.CASCADE,
     )
     category_type = models.CharField(
         verbose_name=_('Category Type'), max_length=20, choices=TYPES, default=TYPES.default,
@@ -317,7 +328,10 @@ class RiskBluePrint(OrderedModel, models.Model):
     is_key = models.BooleanField(default=False, verbose_name=_('Is Key'))
     header = models.TextField(verbose_name=_('Header'))
     description = models.TextField(blank=True, verbose_name=_('Description'))
-    category = models.ForeignKey(RiskCategory, verbose_name=_('Category'), related_name='blueprints')
+    category = models.ForeignKey(
+        RiskCategory, verbose_name=_('Category'), related_name='blueprints',
+        on_delete=models.CASCADE,
+    )
 
     order_with_respect_to = 'category'
 
@@ -335,9 +349,15 @@ class Risk(models.Model):
         (4, 'high', _('High')),
     )
 
-    engagement = models.ForeignKey(Engagement, related_name='risks', verbose_name=_('Engagement'))
+    engagement = models.ForeignKey(
+        Engagement, related_name='risks', verbose_name=_('Engagement'),
+        on_delete=models.CASCADE,
+    )
 
-    blueprint = models.ForeignKey(RiskBluePrint, related_name='risks', verbose_name=_('Blueprint'))
+    blueprint = models.ForeignKey(
+        RiskBluePrint, related_name='risks', verbose_name=_('Blueprint'),
+        on_delete=models.CASCADE,
+    )
     value = models.SmallIntegerField(choices=VALUES, null=True, blank=True, verbose_name=_('Value'))
     extra = JSONField(blank=True, null=True, verbose_name=_('Extra'))
 
@@ -359,7 +379,10 @@ class SpotCheck(Engagement):
 
     internal_controls = models.TextField(verbose_name=_('Internal Controls'), blank=True)
 
+    objects = models.Manager()
+
     class Meta:
+        ordering = ('id', )
         verbose_name = _('Spot Check')
         verbose_name_plural = _('Spot Checks')
 
@@ -446,7 +469,10 @@ class Finding(models.Model):
         ("other", _("Other")),
     )
 
-    spot_check = models.ForeignKey(SpotCheck, verbose_name=_('Spot Check'), related_name='findings')
+    spot_check = models.ForeignKey(
+        SpotCheck, verbose_name=_('Spot Check'), related_name='findings',
+        on_delete=models.CASCADE,
+    )
 
     priority = models.CharField(verbose_name=_('Priority'), max_length=4, choices=PRIORITIES)
 
@@ -463,7 +489,10 @@ class Finding(models.Model):
 
 @python_2_unicode_compatible
 class MicroAssessment(Engagement):
+    objects = models.Manager()
+
     class Meta:
+        ordering = ('id',)
         verbose_name = _('Micro Assessment')
         verbose_name_plural = _('Micro Assessments')
 
@@ -499,7 +528,10 @@ class DetailedFindingInfo(models.Model):
     finding = models.TextField(verbose_name=_('Description of Finding'))
     recommendation = models.TextField(verbose_name=_('Recommendation and IP Management Response'))
 
-    micro_assesment = models.ForeignKey(MicroAssessment, verbose_name=_('Micro Assessment'), related_name='findings')
+    micro_assesment = models.ForeignKey(
+        MicroAssessment, verbose_name=_('Micro Assessment'), related_name='findings',
+        on_delete=models.CASCADE,
+    )
 
     def __str__(self):
         return 'Finding for {}'.format(self.micro_assesment)
@@ -528,7 +560,10 @@ class Audit(Engagement):
         verbose_name=_('Audit Opinion'), max_length=20, choices=OPTIONS, default='', blank=True,
     )
 
+    objects = models.Manager()
+
     class Meta:
+        ordering = ('id',)
         verbose_name = _('Audit')
         verbose_name_plural = _('Audits')
 
@@ -599,7 +634,10 @@ class FinancialFinding(models.Model):
         ('ineligible-costs-other', _('Ineligible costs (other)')),
     )
 
-    audit = models.ForeignKey(Audit, verbose_name=_('Audit'), related_name='financial_finding_set')
+    audit = models.ForeignKey(
+        Audit, verbose_name=_('Audit'), related_name='financial_finding_set',
+        on_delete=models.CASCADE,
+    )
 
     title = models.CharField(verbose_name=_('Title (Category)'), max_length=255, choices=TITLE_CHOICES)
     local_amount = models.DecimalField(verbose_name=_('Amount (local)'), decimal_places=2, max_digits=20)
@@ -617,7 +655,10 @@ class FinancialFinding(models.Model):
 
 @python_2_unicode_compatible
 class KeyInternalControl(models.Model):
-    audit = models.ForeignKey(Audit, verbose_name=_('Audit'), related_name='key_internal_controls')
+    audit = models.ForeignKey(
+        Audit, verbose_name=_('Audit'), related_name='key_internal_controls',
+        on_delete=models.CASCADE,
+    )
 
     recommendation = models.TextField(verbose_name=_('Recommendation'), blank=True)
     audit_observation = models.TextField(verbose_name=_('Audit Observation'), blank=True)
@@ -632,6 +673,13 @@ class KeyInternalControl(models.Model):
 
 @python_2_unicode_compatible
 class SpecialAudit(Engagement):
+    objects = models.Manager()
+
+    class Meta:
+        ordering = ('id', )
+        verbose_name = _('Special Audit')
+        verbose_name_plural = _('Special Audits')
+
     def save(self, *args, **kwargs):
         self.engagement_type = Engagement.TYPES.sa
         return super(SpecialAudit, self).save(*args, **kwargs)
@@ -663,7 +711,10 @@ class SpecialAudit(Engagement):
 
 @python_2_unicode_compatible
 class SpecificProcedure(models.Model):
-    audit = models.ForeignKey(SpecialAudit, verbose_name=_('Special Audit'), related_name='specific_procedures')
+    audit = models.ForeignKey(
+        SpecialAudit, verbose_name=_('Special Audit'), related_name='specific_procedures',
+        on_delete=models.CASCADE,
+    )
 
     description = models.TextField()
     finding = models.TextField(blank=True)
@@ -674,7 +725,10 @@ class SpecificProcedure(models.Model):
 
 @python_2_unicode_compatible
 class SpecialAuditRecommendation(models.Model):
-    audit = models.ForeignKey(SpecialAudit, verbose_name=_('Special Audit'), related_name='other_recommendations')
+    audit = models.ForeignKey(
+        SpecialAudit, verbose_name=_('Special Audit'), related_name='other_recommendations',
+        on_delete=models.CASCADE,
+    )
 
     description = models.TextField()
 
@@ -709,19 +763,24 @@ class EngagementActionPoint(models.Model):
         ('closed', _('Closed')),
     )
 
-    engagement = models.ForeignKey(Engagement, related_name='action_points', verbose_name=_('Engagement'))
+    engagement = models.ForeignKey(
+        Engagement, related_name='action_points', verbose_name=_('Engagement'),
+        on_delete=models.CASCADE,
+    )
     category = models.CharField(verbose_name=_('Category'), max_length=100, choices=CATEGORY_CHOICES)
     description = models.TextField(verbose_name=_('Description'), blank=True)
     due_date = models.DateField(verbose_name=_('Due Date'))
     author = models.ForeignKey(
         settings.AUTH_USER_MODEL,
         related_name='created_engagement_action_points',
-        verbose_name=_('Author')
+        verbose_name=_('Author'),
+        on_delete=models.CASCADE,
     )
     person_responsible = models.ForeignKey(
         settings.AUTH_USER_MODEL,
         related_name='engagement_action_points',
-        verbose_name=_('Person Responsible')
+        verbose_name=_('Person Responsible'),
+        on_delete=models.CASCADE,
     )
     action_taken = models.TextField(verbose_name=_('Action Taken'), blank=True)
     status = models.CharField(verbose_name=_('Status'), max_length=10,
