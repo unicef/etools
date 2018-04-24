@@ -633,7 +633,7 @@ class TestAuditorFirmViewSet(AuditTestCaseMixin, BaseTenantTestCase):
 
     def test_auditor_search_view(self):
         UserFactory()
-        auditor = UserFactory(auditor=True, email='test@test.com')
+        auditor = UserFactory(auditor=True, email='test@example.com')
 
         response = self.forced_auth_req(
             'get',
@@ -647,7 +647,7 @@ class TestAuditorFirmViewSet(AuditTestCaseMixin, BaseTenantTestCase):
 
     def test_user_search_view(self):
         UserFactory()
-        user = UserFactory(email='test@test.com')
+        user = UserFactory(email='test@example.com')
 
         response = self.forced_auth_req(
             'get',
