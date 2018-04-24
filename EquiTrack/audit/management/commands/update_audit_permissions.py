@@ -77,7 +77,7 @@ class Command(BaseCommand):
         'audit.engagement.staff_members',
     ]
 
-    follow_up_page = [
+    follow_up_editable_page = [
         'audit.engagement.action_points',
         'audit.engagement.amount_refunded',
         'audit.engagement.additional_supporting_documentation_provided',
@@ -85,6 +85,11 @@ class Command(BaseCommand):
         'audit.engagement.justification_provided_and_accepted',
         'audit.engagement.write_off_required',
         'audit.engagement.pending_unsupported_amount',
+    ]
+
+    follow_up_page = follow_up_editable_page + [
+        'audit.spotcheck.total_amount_tested',
+        'audit.spotcheck.total_amount_of_ineligible_expenditure',
     ]
 
     engagement_overview_editable_page = (engagement_overview_editable_block + special_audit_block +
@@ -116,11 +121,11 @@ class Command(BaseCommand):
     ]
 
     spot_check_report_block = [
-        'audit.spot_check.findings',
-        'audit.spot_check.internal_controls',
-        'audit.spot_check.total_amount_of_ineligible_expenditure',
-        'audit.spot_check.total_amount_tested',
-        'audit.spot_check.exchange_rate',
+        'audit.spotcheck.findings',
+        'audit.spotcheck.internal_controls',
+        'audit.spotcheck.total_amount_of_ineligible_expenditure',
+        'audit.spotcheck.total_amount_tested',
+        'audit.spotcheck.exchange_rate',
     ]
 
     special_audit_report_block = [
@@ -280,11 +285,11 @@ class Command(BaseCommand):
         # final report. everybody can view. focal point can add action points
         self.add_permissions(
             self.all_unicef_users, 'view',
-            self.follow_up_page,
+            self.report_block + self.follow_up_page,
             condition=self.engagement_status(Engagement.STATUSES.final)
         )
         self.add_permissions(
             self.focal_point, 'edit',
-            'audit.engagement.action_points',
+            self.follow_up_editable_page,
             condition=self.engagement_status(Engagement.STATUSES.final)
         )
