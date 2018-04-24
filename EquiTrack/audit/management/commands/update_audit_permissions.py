@@ -88,10 +88,11 @@ class Command(BaseCommand):
         'audit.engagement.pending_unsupported_amount',
     ]
 
-    engagement_overview_editable_page = engagement_overview_editable_block + special_audit_block
-    engagement_overview_editable_page += partner_block + staff_members_block
+    engagement_overview_editable_page = (engagement_overview_editable_block + special_audit_block +
+                                         partner_block + staff_members_block)
 
     engagement_overview_page = engagement_overview_editable_page + engagement_overview_read_block
+
     engagement_attachments_block = [
         'audit.engagement.engagement_attachments',
     ]
@@ -135,8 +136,8 @@ class Command(BaseCommand):
         'audit.audit.pending_unsupported_amount',
     ]
 
-    report_editable_block = microassessment_report_block + audit_report_block + spot_check_report_block
-    report_editable_block += special_audit_report_block + report_attachments_block
+    report_editable_block = (microassessment_report_block + audit_report_block + spot_check_report_block +
+                             special_audit_report_block + report_attachments_block)
 
     report_block = report_readonly_block + report_editable_block
 
@@ -149,12 +150,7 @@ class Command(BaseCommand):
         if isinstance(targets, six.string_types):
             targets = [targets]
 
-        conditions = [AuditModuleCondition()]
-
-        if condition is not None:
-            conditions = condition[:]
-
-        conditions.extend(self.user_roles[role])
+        condition = (condition or []) + [AuditModuleCondition()] + self.user_roles[role]
 
         if self.verbosity >= 3:
             for target in targets:
@@ -165,19 +161,19 @@ class Command(BaseCommand):
                         perm,
                         role,
                         target,
-                        conditions,
+                        condition,
                     )
                 )
 
-        self.permissions.extend([
-            Permission(target=target, permission=perm, permission_type=perm_type, condition=conditions)
+        self.defined_permissions.extend([
+            Permission(target=target, permission=perm, permission_type=perm_type, condition=condition)
             for target in targets
         ])
 
-    def add_permission(self, role, perm, targets, condition=None):
+    def add_permissions(self, role, perm, targets, condition=None):
         self._update_permissions(role, perm, targets, 'allow', condition)
 
-    def revoke_permission(self, role, perm, targets, condition=None):
+    def revoke_permissions(self, role, perm, targets, condition=None):
         self._update_permissions(role, perm, targets, 'disallow', condition)
 
     def engagement_status(self, status):
@@ -191,7 +187,7 @@ class Command(BaseCommand):
     def handle(self, *args, **options):
         self.verbosity = options.get('verbosity', 1)
 
-        self.permissions = []
+        self.defined_permissions = []
 
         if self.verbosity >= 2:
             print(
@@ -216,21 +212,21 @@ class Command(BaseCommand):
             self.stdout.write(
                 'Creating new permissions...'
             )
-        Permission.objects.bulk_create(self.permissions)
+        Permission.objects.bulk_create(self.defined_permissions)
 
         if self.verbosity >= 1:
             self.stdout.write(
-                'Audit permissions updated ({}) -> ({}).'.format(old_permissions_count, len(self.permissions))
+                'Audit permissions updated ({}) -> ({}).'.format(old_permissions_count, len(self.defined_permissions))
             )
 
     def assign_permissions(self):
         # common permissions: unicef users can view everything, auditor can view everything except follow up
-        self.add_permission([self.focal_point, self.auditor], 'edit', [
+        self.add_permissions([self.focal_point, self.auditor], 'edit', [
             'purchase_order.auditorfirm.staff_members',
             'purchase_order.auditorstaffmember.*',
         ])
 
-        self.add_permission(
+        self.add_permissions(
             self.everybody, 'view',
             self.engagement_overview_page +
             self.engagement_status_auto_date_fields +
@@ -239,56 +235,56 @@ class Command(BaseCommand):
         )
 
         # new object: focal point can add
-        self.add_permission(
+        self.add_permissions(
             self.focal_point, 'edit',
             self.engagement_overview_editable_page + self.engagement_attachments_block,
             condition=self.new_engagement()
         )
 
         # ip_contacted: auditor can edit, everybody else can view, focal point can cancel and edit staff members
-        self.add_permission(
+        self.add_permissions(
             self.auditor, 'view',
             self.report_readonly_block,
             condition=self.engagement_status(Engagement.STATUSES.partner_contacted)
         )
-        self.add_permission(
+        self.add_permissions(
             self.auditor, 'edit',
             self.staff_members_block +
             self.engagement_status_editable_date_fields +
             self.report_editable_block,
             condition=self.engagement_status(Engagement.STATUSES.partner_contacted)
         )
-        self.add_permission(
+        self.add_permissions(
             self.auditor, 'action',
             'audit.engagement.submit',
             condition=self.engagement_status(Engagement.STATUSES.partner_contacted)
         )
 
-        self.add_permission(
+        self.add_permissions(
             self.focal_point, 'edit',
             self.partner_block + self.staff_members_block,
             condition=self.engagement_status(Engagement.STATUSES.partner_contacted)
         )
-        self.add_permission(
+        self.add_permissions(
             self.focal_point, 'action',
             'audit.engagement.cancel',
             condition=self.engagement_status(Engagement.STATUSES.partner_contacted)
         )
 
         # report submitted. focal point can finalize. all can view
-        self.add_permission(
+        self.add_permissions(
             self.focal_point, 'action',
             'audit.engagement.finalize',
             condition=self.engagement_status(Engagement.STATUSES.report_submitted)
         )
 
         # final report. everybody can view. focal point can add action points
-        self.add_permission(
+        self.add_permissions(
             self.all_unicef_users, 'view',
             self.follow_up_page,
             condition=self.engagement_status(Engagement.STATUSES.final)
         )
-        self.add_permission(
+        self.add_permissions(
             self.focal_point, 'edit',
             'audit.engagement.action_points',
             condition=self.engagement_status(Engagement.STATUSES.final)
