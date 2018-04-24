@@ -114,3 +114,5 @@ docs/_build/
 
 # custom settings files
 EquiTrack/EquiTrack/settings/custom.py
+
+*secrets.yml

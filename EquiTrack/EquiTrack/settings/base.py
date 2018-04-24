@@ -50,15 +50,15 @@ SECRETS_FILE_LOCATION = os.environ.get('SECRETS_FILE_LOCATION', join(DJANGO_ROOT
 
 try:
     with open(SECRETS_FILE_LOCATION, 'r') as secrets_file:
-        secrets = yaml.load(secrets_file)['ENVIRONMENT']
+        SECRETS = yaml.load(secrets_file)['ENVIRONMENT']
 except FileNotFoundError:
     # pass, for now we default trying to get the secrets from env vars as well
-    secrets = {}
+    SECRETS = {}
 
 
 def get_from_secrets_or_env(var_name, default=None):
     """Attempts to get variables from secrets file, if it fails, tries env, returns default"""
-    return secrets.get(var_name, os.environ.get(var_name, default))
+    return SECRETS.get(var_name, os.environ.get(var_name, default))
 
 
 # DJANGO: CACHE
@@ -372,7 +372,7 @@ SWAGGER_SETTINGS = {
 }
 
 # django-analytical: https://pythonhosted.org/django-analytical/
-USERVOICE_WIDGET_KEY = os.getenv('USERVOICE_KEY', '')
+USERVOICE_WIDGET_KEY = get_from_secrets_or_env('USERVOICE_KEY', '')
 
 # django-mptt: https://github.com/django-mptt/django-mptt
 MPTT_ADMIN_LEVEL_INDENT = 20
@@ -518,7 +518,7 @@ COUCHBASE_URL = get_from_secrets_or_env('COUCHBASE_URL')
 COUCHBASE_USER = get_from_secrets_or_env('COUCHBASE_USER')
 COUCHBASE_PASS = get_from_secrets_or_env('COUCHBASE_PASS')
 
-DISABLE_INVOICING = str2bool(os.getenv('DISABLE_INVOICING'))
+DISABLE_INVOICING = str2bool(get_from_secrets_or_env('DISABLE_INVOICING'))
 
 ENVIRONMENT = get_from_secrets_or_env('ENVIRONMENT', '')
 ETRIPS_VERSION = get_from_secrets_or_env('ETRIPS_VERSION')
@@ -533,13 +533,13 @@ SLACK_URL = get_from_secrets_or_env('SLACK_URL')
 
 TASK_ADMIN_USER = get_from_secrets_or_env('TASK_ADMIN_USER', 'etools_task_admin')
 
-VISION_URL = os.getenv('VISION_URL', 'invalid_vision_url')
-VISION_USER = os.getenv('VISION_USER', 'invalid_vision_user')
-VISION_PASSWORD = os.getenv('VISION_PASSWORD', 'invalid_vision_password')
+VISION_URL = get_from_secrets_or_env('VISION_URL', 'invalid_vision_url')
+VISION_USER = get_from_secrets_or_env('VISION_USER', 'invalid_vision_user')
+VISION_PASSWORD = get_from_secrets_or_env('VISION_PASSWORD', 'invalid_vision_password')
 
 
 # ALLOW BASIC AUTH FOR DEMO SITE
-ALLOW_BASIC_AUTH = os.getenv('ALLOW_BASIC_AUTH', False)
+ALLOW_BASIC_AUTH = get_from_secrets_or_env('ALLOW_BASIC_AUTH', False)
 if ALLOW_BASIC_AUTH:
     REST_FRAMEWORK['DEFAULT_AUTHENTICATION_CLASSES'] += (
         'EquiTrack.auth.DRFBasicAuthMixin',
@@ -554,12 +554,12 @@ ISSUE_CHECKS = [
     'management.issues.project_checks.PCAAmendmentsMissingFilesCheck',
 ]
 
-EMAIL_FOR_USER_RESPONSIBLE_FOR_INVESTIGATION_ESCALATIONS = os.getenv(
+EMAIL_FOR_USER_RESPONSIBLE_FOR_INVESTIGATION_ESCALATIONS = get_from_secrets_or_env(
     'EMAIL_FOR_USER_RESPONSIBLE_FOR_INVESTIGATION_ESCALATIONS', 'integrity1@unicef.org'
 )
 
-AZURE_CLIENT_ID = os.getenv('AZURE_CLIENT_ID', 'invalid_azure_client_id')
-AZURE_CLIENT_SECRET = os.getenv('AZURE_CLIENT_SECRET', 'invalid_azure_client_secret')
+AZURE_CLIENT_ID = get_from_secrets_or_env('AZURE_CLIENT_ID', 'invalid_azure_client_id')
+AZURE_CLIENT_SECRET = get_from_secrets_or_env('AZURE_CLIENT_SECRET', 'invalid_azure_client_secret')
 AZURE_TOKEN_URL = 'https://login.microsoftonline.com/unicef.org/oauth2/token'
 AZURE_GRAPH_API_BASE_URL = 'https://graph.microsoft.com'
 AZURE_GRAPH_API_VERSION = 'beta'
@@ -575,6 +575,6 @@ PASSWORDLESS_AUTH = {
     'PASSWORDLESS_USER_EMAIL_FIELD_NAME': 'username'
 }
 
-REPORT_EMAILS = os.getenv('REPORT_EMAILS', ['etools@unicef.org', ])
+REPORT_EMAILS = get_from_secrets_or_env('REPORT_EMAILS', ['etools@unicef.org', ])
 
 USERVOICE_WIDGET_KEY = 'defaultVoiceKey'
