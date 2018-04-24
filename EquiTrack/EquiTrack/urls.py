@@ -77,14 +77,11 @@ urlpatterns = [
     url(r'^api/v2/reports/', include('reports.urls_v2')),
     url(r'^api/v2/', include('partners.urls_v2', namespace='partners_api')),
     url(r'^api/prp/v1/', include('partners.prp_urls', namespace='prp_api_v1')),
-    url(r'^api/v2/hact/', include('hact.urls', namespace='hact_api')),
+    url(r'^api/v2/hact/', include('hact.urls')),
     url(r'^api/v2/users/', include('users.urls_v2', namespace='users_v2')),
     url(r'^api/v2/workspaces/', CountriesViewSet.as_view(http_method_names=['get']), name="list-workspaces"),
     url(r'^api/v2/funds/', include('funds.urls')),
-    url(
-        r'^api/v2/activity/',
-        include('snapshot.urls', namespace='snapshot_api')
-    ),
+    url(r'^api/v2/activity/', include('snapshot.urls')),
     url(r'^api/v2/environment/', include('environment.urls_v2')),
     url(r'^api/v2/attachments/', include('attachments.urls')),
 
