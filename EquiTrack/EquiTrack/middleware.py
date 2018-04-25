@@ -51,7 +51,7 @@ class EToolsTenantMiddleware(TenantMiddleware):
         if INACTIVE_WORKSPACE_URL in request.path:
             return None
 
-        if request.user.is_anonymous():
+        if request.user.is_anonymous:
             # check if user is trying to reach an authentication endpoint
             if any(fragment in request.path
                    for fragment in ANONYMOUS_ALLOWED_URL_FRAGMENTS):
