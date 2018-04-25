@@ -180,7 +180,11 @@ class TravelActivitySerializer(PermissionBasedModelSerializer):
                                                    allow_null=True)
     travel_type = LowerTitleField(required=False, allow_null=True)
     is_primary_traveler = serializers.BooleanField(required=False)
-    primary_traveler = serializers.PrimaryKeyRelatedField(queryset=get_user_model().objects.all(), allow_null=True, required=False)
+    primary_traveler = serializers.PrimaryKeyRelatedField(
+        queryset=get_user_model().objects.all(),
+        allow_null=True,
+        required=False
+    )
 
     class Meta:
         model = TravelActivity
