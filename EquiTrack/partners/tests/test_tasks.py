@@ -6,6 +6,7 @@ from decimal import Decimal
 from pprint import pformat
 
 from django.conf import settings
+from django.contrib.auth import get_user_model
 from django.utils import six, timezone
 
 import mock
@@ -15,7 +16,6 @@ from funds.tests.factories import FundsReservationHeaderFactory
 from partners.models import Agreement, Intervention
 import partners.tasks
 from partners.tests.factories import AgreementFactory, InterventionFactory
-from users.models import User
 from users.tests.factories import CountryFactory, UserFactory
 
 
@@ -65,7 +65,7 @@ class TestGetInterventionContext(BaseTenantTestCase):
 
     def test_non_trivial_intervention(self):
         '''Exercise get_intervention_context() with an intervention that has some interesting detail'''
-        self.focal_point_user = User.objects.first()
+        self.focal_point_user = get_user_model().objects.first()
         self.intervention.unicef_focal_points.add(self.focal_point_user)
 
         self.intervention.start = datetime.date(2017, 8, 1)
@@ -123,8 +123,8 @@ Actual:
     @classmethod
     def setUpTestData(cls):
         try:
-            cls.admin_user = User.objects.get(username=settings.TASK_ADMIN_USER)
-        except User.DoesNotExist:
+            cls.admin_user = get_user_model().objects.get(username=settings.TASK_ADMIN_USER)
+        except get_user_model().DoesNotExist:
             cls.admin_user = UserFactory(username=settings.TASK_ADMIN_USER)
 
         # The global "country" should be excluded from processing. Create it to ensure it's ignored during this test.

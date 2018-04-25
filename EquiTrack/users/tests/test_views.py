@@ -13,7 +13,7 @@ from unittest import skip
 
 from EquiTrack.tests.cases import BaseTenantTestCase
 from publics.tests.factories import PublicsBusinessAreaFactory
-from users.models import Group, User, UserProfile
+from users.models import Group, UserProfile
 from users.tests.factories import (
     CountryFactory,
     GroupFactory,
@@ -250,7 +250,7 @@ class TestMyProfileAPIView(BaseTenantTestCase):
         # (Hopefully this is fixed, but here in Django 1.10.8 it's a problem.
         # And I don't see any mention of a fix in release notes up through
         # 2.0.3.)
-        user = User.objects.get(pk=user.pk)
+        user = get_user_model().objects.get(pk=user.pk)
 
         # View MyProfileDetail.  We expect it to create a new profile for this user.
         response = self.forced_auth_req(
@@ -450,7 +450,7 @@ class TestUserViewSet(BaseTenantTestCase):
             user=self.unicef_staff,
         )
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(len(response.data), User.objects.count())
+        self.assertEqual(len(response.data), get_user_model().objects.count())
 
     def test_api_users_list_managers(self):
         response = self.forced_auth_req(
@@ -493,7 +493,7 @@ class TestUserViewSet(BaseTenantTestCase):
             }
         )
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
-        self.assertTrue(User.objects.filter(username=username).exists())
+        self.assertTrue(get_user_model().objects.filter(username=username).exists())
 
     def test_post_with_groups(self):
         """Ensure user object is created, and associated with groups"""
@@ -517,6 +517,6 @@ class TestUserViewSet(BaseTenantTestCase):
             }
         )
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
-        self.assertTrue(User.objects.filter(username=username).exists())
-        user_created = User.objects.get(username=username)
+        self.assertTrue(get_user_model().objects.filter(username=username).exists())
+        user_created = get_user_model().objects.get(username=username)
         self.assertIn(self.group, user_created.groups.all())
