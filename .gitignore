@@ -116,3 +116,10 @@ docs/_build/
 EquiTrack/EquiTrack/settings/custom.py
 
 *secrets.yml
+/dist
+.tox
+html_cov
+EquiTrack/static/*
+EquiTrack/migration_errors.txt
+src/etools/EquiTrack/saml/FederationMetadata.xml
+src/etools/EquiTrack/settings/custom.py
