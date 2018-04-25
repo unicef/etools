@@ -1,4 +1,3 @@
-from __future__ import unicode_literals
 
 from rest_framework.exceptions import ValidationError
 from django.core.urlresolvers import reverse

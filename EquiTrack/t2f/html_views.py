@@ -1,4 +1,3 @@
-from __future__ import unicode_literals
 
 from django.http import HttpResponseForbidden
 from django.views.generic.base import TemplateView

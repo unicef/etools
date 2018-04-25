@@ -1,4 +1,3 @@
-from __future__ import unicode_literals
 
 from rest_framework import ISO_8601, serializers
 

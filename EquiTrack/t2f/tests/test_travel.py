@@ -1,4 +1,3 @@
-from __future__ import unicode_literals
 
 from EquiTrack.tests.cases import BaseTenantTestCase
 from publics.models import TravelExpenseType

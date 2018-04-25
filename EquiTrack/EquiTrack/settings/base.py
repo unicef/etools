@@ -12,7 +12,6 @@ https://docs.djangoproject.com/en/1.9/topics/settings/
 For the full list of settings and their values, see
 https://docs.djangoproject.com/en/1.9/ref/settings/
 """
-from __future__ import absolute_import, division, print_function, unicode_literals
 
 import yaml
 from django.utils import six

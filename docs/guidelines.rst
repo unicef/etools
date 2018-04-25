@@ -52,20 +52,10 @@ Some editors add author annotations to files when they are created: ``__author__
 prefer that those not be added to new files, and they can be removed from existing files.
 
 
-Python 3 Prep
--------------
+Python 3
+--------
 
-To make your code easier to port to Python 3, add the following to the top of
-all new files::
-
-	from __future__ import absolute_import
-	from __future__ import division
-	from __future__ import print_function
-	from __future__ import unicode_literals
-
-You can also add them to existing files, but be aware that they may change
-the behavior of your code (particularly the default use of unicode literals).
-
+All etools code is Python 3.
 
 Testing
 -------

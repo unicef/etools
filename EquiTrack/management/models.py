@@ -1,4 +1,3 @@
-from __future__ import absolute_import, division, print_function, unicode_literals
 
 from django.contrib.contenttypes.fields import GenericForeignKey
 from django.contrib.contenttypes.models import ContentType

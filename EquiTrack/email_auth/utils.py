@@ -1,4 +1,3 @@
-from __future__ import absolute_import, division, print_function, unicode_literals
 
 from django.core.urlresolvers import reverse
 from drfpasswordless.utils import create_callback_token_for_user

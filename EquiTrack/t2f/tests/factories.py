@@ -1,4 +1,3 @@
-from __future__ import unicode_literals
 
 import factory
 from django.utils import timezone

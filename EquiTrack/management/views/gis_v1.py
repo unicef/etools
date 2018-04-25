@@ -1,5 +1,3 @@
-from __future__ import absolute_import
-from __future__ import unicode_literals
 
 from django.core.exceptions import ValidationError
 from django.shortcuts import get_object_or_404

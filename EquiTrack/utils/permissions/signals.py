@@ -1,4 +1,3 @@
-from __future__ import absolute_import, division, print_function, unicode_literals
 
 from utils.permissions.models.models import BasePermission, StatusBasePermission
 

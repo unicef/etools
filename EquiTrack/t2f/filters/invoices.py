@@ -1,4 +1,3 @@
-from __future__ import unicode_literals
 
 from t2f.filters import BaseFilterBoxFilter, BaseSearchFilter, BaseSortFilter
 from t2f.serializers.filters.invoices import InvoiceFilterBoxSerializer, InvoiceSortFilterSerializer
