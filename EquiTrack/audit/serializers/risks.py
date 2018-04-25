@@ -1,5 +1,7 @@
 from __future__ import absolute_import, division, print_function, unicode_literals
 
+import itertools
+
 from django.db import models
 from django.utils import six
 from django.utils.translation import ugettext_lazy as _
@@ -11,7 +13,7 @@ from utils.common.serializers.fields import RecursiveListSerializer, WriteListSe
 from utils.writable_serializers.serializers import WritableListSerializer, WritableNestedSerializerMixin
 
 
-class RiskSerializer(WritableNestedSerializerMixin, serializers.ModelSerializer):
+class BaseRiskSerializer(WritableNestedSerializerMixin, serializers.ModelSerializer):
     value_display = serializers.ReadOnlyField(source='get_value_display')
 
     class Meta(WritableNestedSerializerMixin.Meta):
@@ -26,11 +28,11 @@ class RiskSerializer(WritableNestedSerializerMixin, serializers.ModelSerializer)
         }
 
     def __init__(self, *args, **kwargs):
-        super(RiskSerializer, self).__init__(*args, **kwargs)
+        super(BaseRiskSerializer, self).__init__(*args, **kwargs)
         self.risk_choices = None
 
     def get_extra_kwargs(self):
-        extra_kwargs = super(RiskSerializer, self).get_extra_kwargs()
+        extra_kwargs = super(BaseRiskSerializer, self).get_extra_kwargs()
         if self.risk_choices:
             extra_kwargs['value']['choices'] = self.risk_choices
 
@@ -40,6 +42,16 @@ class RiskSerializer(WritableNestedSerializerMixin, serializers.ModelSerializer)
         if isinstance(value, six.string_types):
             raise serializers.ValidationError('Invalid data type.')
         return value
+
+
+class RiskSerializer(BaseRiskSerializer):
+    class Meta(BaseRiskSerializer.Meta):
+        fields = ['id'] + BaseRiskSerializer.Meta.fields
+
+
+class RiskSingletoneSerializer(BaseRiskSerializer):
+    class Meta(BaseRiskSerializer.Meta):
+        pass
 
     def get_attribute(self, instance):
         if instance.risks.exists():
@@ -53,7 +65,7 @@ class RiskBlueprintNestedSerializer(WritableNestedSerializerMixin, serializers.M
     """
     Risk blueprint connected with risk value for certain engagement instance.
     """
-    risk = RiskSerializer(label=_('Risk Assessment'))
+    risk = RiskSingletoneSerializer(label=_('Risk Assessment'))
 
     class Meta(WritableNestedSerializerMixin.Meta):
         model = RiskBluePrint
@@ -81,6 +93,34 @@ class RiskBlueprintNestedSerializer(WritableNestedSerializerMixin, serializers.M
                     field.create(data)
             except serializers.ValidationError as exc:
                 raise serializers.ValidationError({'risk': exc.detail})
+
+        return super(RiskBlueprintNestedSerializer, self).update(instance, validated_data)
+
+
+class ManyRiskBlueprintNestedSerializer(RiskBlueprintNestedSerializer):
+    """
+    Risk blueprint connected with many risk values for certain engagement instance.
+    """
+
+    risks = RiskSerializer(label=_('Risk Assessment'), many=True)
+
+    class Meta(WritableNestedSerializerMixin.Meta):
+        model = RiskBluePrint
+        fields = [
+            'id', 'header', 'description', 'weight', 'is_key', 'risks',
+        ]
+        read_only_fields = [
+            'header', 'description', 'weight', 'is_key',
+        ]
+
+    def update(self, instance, validated_data):
+        """
+        Updating engagement risk value for selected blueprint.
+        """
+        if 'risks' in validated_data:
+            for risk in validated_data['risks']:
+                risk['engagement'] = self.root.instance
+                risk['blueprint'] = instance
 
         return super(RiskBlueprintNestedSerializer, self).update(instance, validated_data)
 
@@ -115,6 +155,13 @@ class RiskCategoryNestedSerializer(WritableNestedSerializerMixin, serializers.Mo
         read_only_fields = [
             'header', 'code', 'category_type', 'parent',
         ]
+
+
+class ManyRiskCategoryNestedSerializer(RiskCategoryNestedSerializer):
+    blueprints = WritableListSerializer(child=ManyRiskBlueprintNestedSerializer(required=False), required=False)
+
+    class Meta(RiskCategoryNestedSerializer.Meta):
+        pass
 
 
 class RiskRootSerializer(WritableNestedSerializerMixin, serializers.ModelSerializer):
@@ -213,6 +260,8 @@ class KeyInternalWeaknessSerializer(BaseAggregatedRiskRootSerializer):
     """
     Risk root serializer with additional aggregated data for audit.
     """
+    blueprints = ManyRiskBlueprintNestedSerializer(required=False, many=True)
+    children = ManyRiskCategoryNestedSerializer(many=True)
 
     high_risk_count = serializers.IntegerField(label=_('High risk'), read_only=True)
     medium_risk_count = serializers.IntegerField(label=_('Medium risk'), read_only=True)
@@ -221,8 +270,9 @@ class KeyInternalWeaknessSerializer(BaseAggregatedRiskRootSerializer):
     def __init__(self, *args, **kwagrs):
         super(KeyInternalWeaknessSerializer, self).__init__(*args, **kwagrs)
 
-        risk_value_fields = [self.fields['blueprints'].child.fields['risk'].fields['value'],
-                             self.fields['children'].child.fields['blueprints'].child.fields['risk'].fields['value']]
+        risk_value_fields = [self.fields['blueprints'].child.fields['risks'].child.fields['value'],
+                             self.fields['children'].child.fields['blueprints'].child.fields['risks']
+                                 .child.fields['value']]
         for risk_value_field in risk_value_fields:
             del risk_value_field.choices[Risk.VALUES.significant]
             del risk_value_field.choice_strings_to_values[six.text_type(Risk.VALUES.significant)]
@@ -231,9 +281,13 @@ class KeyInternalWeaknessSerializer(BaseAggregatedRiskRootSerializer):
     @staticmethod
     def _get_bluerprint_count_by_risk_value(category, field_name, risk_value):
         values_count = len([
-            b for b in category.blueprints.all()
-            if b._risk and b._risk.value == risk_value
+            risk for risk in itertools.chain(*[
+                blueprint.risks.all()
+                for blueprint in category.blueprints.all()
+            ])
+            if risk.value == risk_value
         ])
+
         setattr(category, field_name, values_count)
 
         for child in category.children.all():
@@ -241,13 +295,6 @@ class KeyInternalWeaknessSerializer(BaseAggregatedRiskRootSerializer):
 
     @staticmethod
     def calculate_risk(category):
-        for blueprint in category.blueprints.all():
-            if blueprint.risks.all().exists():
-                # It's work only if risks already filtered by engagement. See get_attribute method in RiskRootSerializer
-                blueprint._risk = blueprint.risks.all()[0]
-            else:
-                blueprint._risk = None
-
         KeyInternalWeaknessSerializer._get_bluerprint_count_by_risk_value(
             category, 'high_risk_count', Risk.VALUES.high
         )
