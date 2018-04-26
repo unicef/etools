@@ -68,6 +68,9 @@ class TPMPartnerViewSet(
     def get_queryset(self):
         queryset = super(TPMPartnerViewSet, self).get_queryset()
 
+        if self.action == 'list':
+            queryset = queryset.country_partners()
+
         user_type = TPMPermission._get_user_type(self.request.user)
         if not user_type or user_type == ThirdPartyMonitor:
             queryset = queryset.filter(staff_members__user=self.request.user)
@@ -97,6 +100,13 @@ class TPMPartnerViewSet(
 
         serializer = self.get_serializer(instance)
         return Response(serializer.data)
+
+    @detail_route(methods=['post'], url_path='activate')
+    def activate(self, request, *args, **kwargs):
+        tpm_partner = self.get_object()
+        tpm_partner.activate(request.user.profile.country)
+
+        return Response(TPMPartnerSerializer(instance=tpm_partner).data)
 
     @list_route(methods=['get'], url_path='export', renderer_classes=(TPMPartnerCSVRenderer,))
     def export(self, request, *args, **kwargs):

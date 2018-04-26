@@ -426,6 +426,20 @@ class TestTPMPartnerViewSet(TestExportMixin, TPMTestCaseMixin, BaseTenantTestCas
         else:
             self.assertNotIn('PUT', response.data['actions'])
 
+    def test_activation(self):
+        partner = TPMPartnerFactory(countries=[])
+        # partner is deactivated yet, so wouldn't appear in list
+        self._test_list_view(self.pme_user, [self.tpm_partner, self.second_tpm_partner])
+
+        activate_response = self.forced_auth_req(
+            'post',
+            reverse('tpm:partners-activate', args=(partner.id,)),
+            user=self.pme_user
+        )
+        self.assertEqual(activate_response, status.HTTP_200_OK)
+
+        self._test_list_view(self.pme_user, [self.tpm_partner, self.second_tpm_partner, partner])
+
     def test_pme_list_view(self):
         self._test_list_view(self.pme_user, [self.tpm_partner, self.second_tpm_partner])
 
