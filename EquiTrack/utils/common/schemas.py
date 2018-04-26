@@ -8,6 +8,12 @@ from rest_framework_swagger.renderers import OpenAPIRenderer, SwaggerUIRenderer
 
 
 class CustomSchemaGenerator(SchemaGenerator):
+    """
+    Generate schema for current views.
+    The only difference from base is that permission denied in new permissions
+    can be raised from serializer after success view permissions check.
+    We need to correctly handle this case.
+    """
     def get_serializer_fields(self, *args):
         try:
             return super(CustomSchemaGenerator, self).get_serializer_fields(*args)
@@ -18,6 +24,7 @@ class CustomSchemaGenerator(SchemaGenerator):
 def get_schema_view(title=None, url=None, renderer_classes=None):
     """
     Return a schema view.
+    We use own schema generator here, all the another code was kept as it is.
     """
     generator = CustomSchemaGenerator(title=title, url=url)
     if renderer_classes is None:
@@ -44,7 +51,7 @@ def get_schema_view(title=None, url=None, renderer_classes=None):
 
 def get_swagger_view(title=None, url=None):
     """
-    Returns schema view which renders Swagger/OpenAPI.
+    Returns schema view which renders Swagger/OpenAPI using custom get_schema_view.
     """
     return get_schema_view(
         title=title,
