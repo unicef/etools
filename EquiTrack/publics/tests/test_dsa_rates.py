@@ -56,14 +56,14 @@ class DSARateTest(BaseTenantTestCase):
         region = PublicsDSARegionFactory(country=country, rates=[])
 
         with self.assertNumQueries(1):
-            response = self.forced_auth_req('get', reverse('public:dsa_regions'),
+            response = self.forced_auth_req('get', reverse('publics:dsa_regions'),
                                             user=self.unicef_staff)
         response_json = json.loads(response.rendered_content)
         self.assertEqual(len(response_json), 0)
 
         rate = PublicsDSARateFactory(region=region)
 
-        response = self.forced_auth_req('get', reverse('public:dsa_regions'),
+        response = self.forced_auth_req('get', reverse('publics:dsa_regions'),
                                         user=self.unicef_staff)
         response_json = json.loads(response.rendered_content)
         self.assertEqual(len(response_json), 1)
@@ -72,7 +72,7 @@ class DSARateTest(BaseTenantTestCase):
         # Expire rate - region should be excluded
         rate.delete()
 
-        response = self.forced_auth_req('get', reverse('public:dsa_regions'),
+        response = self.forced_auth_req('get', reverse('publics:dsa_regions'),
                                         user=self.unicef_staff)
         response_json = json.loads(response.rendered_content)
         self.assertEqual(len(response_json), 0)
@@ -101,19 +101,19 @@ class DSARateTest(BaseTenantTestCase):
             )
 
         date_str = date(2017, 4, 12).isoformat()
-        response = self.forced_auth_req('get', reverse('public:dsa_regions'),
+        response = self.forced_auth_req('get', reverse('publics:dsa_regions'),
                                         data={'values_at': date_str}, user=self.unicef_staff)
         response_json = json.loads(response.rendered_content)
         self.assertEqual(Decimal(response_json[0]['dsa_amount_usd']), rate_2.dsa_amount_usd)
 
         date_str = date(2017, 4, 6).isoformat()
-        response = self.forced_auth_req('get', reverse('public:dsa_regions'),
+        response = self.forced_auth_req('get', reverse('publics:dsa_regions'),
                                         data={'values_at': date_str}, user=self.unicef_staff)
         response_json = json.loads(response.rendered_content)
         self.assertEqual(Decimal(response_json[0]['dsa_amount_usd']), rate_1.dsa_amount_usd)
 
         date_str = date(2017, 3, 31).isoformat()
-        response = self.forced_auth_req('get', reverse('public:dsa_regions'),
+        response = self.forced_auth_req('get', reverse('publics:dsa_regions'),
                                         data={'values_at': date_str}, user=self.unicef_staff)
         response_json = json.loads(response.rendered_content)
         self.assertEqual(len(response_json), 0)
@@ -122,7 +122,7 @@ class DSARateTest(BaseTenantTestCase):
         rate_2.save()
 
         date_str = datetime(2017, 4, 16, tzinfo=UTC).isoformat()
-        response = self.forced_auth_req('get', reverse('public:dsa_regions'),
+        response = self.forced_auth_req('get', reverse('publics:dsa_regions'),
                                         data={'values_at': date_str}, user=self.unicef_staff)
         response_json = json.loads(response.rendered_content)
         self.assertEqual(len(response_json), 0)

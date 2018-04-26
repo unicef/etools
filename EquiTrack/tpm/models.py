@@ -102,6 +102,11 @@ class TPMVisit(SoftDeleteMixin, TimeStampedModel, models.Model):
 
     tpm_partner_tracker = FieldTracker(fields=['tpm_partner', ])
 
+    class Meta:
+        ordering = ('id',)
+        verbose_name = _('TPM Visit')
+        verbose_name_plural = _('TPM Visits')
+
     @property
     def date_created(self):
         return self.created.date()
