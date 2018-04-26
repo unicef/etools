@@ -622,7 +622,7 @@ class AppliedIndicator(TimeStampedModel):
     means_of_verification = models.CharField(
         verbose_name=_("Means of Verification"),
         max_length=255,
-        default='',
+        null=True,
         blank=True,
     )
 
