@@ -27,7 +27,7 @@ class TestHactHistoryAPIView(BaseTenantTestCase):
             reported_cy=300.0,
             total_ct_ytd=400.0,
         )
-        cls.url = reverse("hact_api:hact-history")
+        cls.url = reverse("hact:hact-history")
 
     def setUp(self):
         self.hact_data = [

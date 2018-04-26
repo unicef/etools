@@ -102,6 +102,11 @@ class TPMVisit(SoftDeleteMixin, TimeStampedModel, models.Model):
 
     tpm_partner_tracker = FieldTracker(fields=['tpm_partner', ])
 
+    class Meta:
+        ordering = ('id',)
+        verbose_name = _('TPM Visit')
+        verbose_name_plural = _('TPM Visits')
+
     @property
     def date_created(self):
         return self.created.date()
@@ -478,8 +483,8 @@ class TPMPermissionsQueryset(StatusBasePermissionQueryset):
         if 'user' in kwargs and 'instance__in' in kwargs:
             user_type = self.model._get_user_type(kwargs.pop('user'))
             if user_type == UNICEFUser:
-                return self.filter(models.Q(user_type=UNICEFUser.code)
-                                   | models.Q(user_type=self.model.USER_TYPES.unicef_focal_point)).filter(**kwargs)
+                return self.filter(models.Q(user_type=UNICEFUser.code) | models.Q(
+                    user_type=self.model.USER_TYPES.unicef_focal_point)).filter(**kwargs)
 
             kwargs['user_type'] = user_type
             return self.filter(**kwargs)

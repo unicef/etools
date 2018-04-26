@@ -30,7 +30,6 @@ def send_invite_email(staff):
     }
 
     send_notification_using_email_template(
-        sender=staff,
         recipients=[staff.user.email],
         email_template_name='organisations/staff_member/invite',
         context=context

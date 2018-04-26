@@ -96,6 +96,9 @@ class Migration(migrations.Migration):
             ],
             options={
                 'abstract': False,
+                'ordering': ('id',),
+                'verbose_name': 'TPM Visit',
+                'verbose_name_plural': 'TPM Visits'
             },
             managers=[
                 ('admin_objects', django.db.models.manager.Manager()),

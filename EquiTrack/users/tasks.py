@@ -134,9 +134,18 @@ class UserMapper(object):
     def create_or_update_user(self, ad_user):
         logger.debug(ad_user.get(self.KEY_ATTRIBUTE))
         for field in self.REQUIRED_USER_FIELDS:
-            if not ad_user.get(field, False):
-                logger.info(u"User doesn't have the required fields {}".format(ad_user))
-                return
+            if isinstance(field, str):
+                if not ad_user.get(field, False):
+                    logger.debug(u"User doesn't have the required fields {} missing".format(field))
+                    return
+            elif isinstance(field, tuple):
+                allowed_values = field[1]
+                if isinstance(allowed_values, str):
+                    allowed_values = [allowed_values, ]
+
+                if ad_user.get(field[0], False) not in allowed_values:
+                    logger.debug(u"User is not in Unicef organization {}".format(field[1]))
+                    return
 
         # TODO: MODIFY THIS TO USE THE GUID ON THE PROFILE INSTEAD OF EMAIL on the USer
 
@@ -182,6 +191,13 @@ class UserMapper(object):
                     user.save()
                 if profile_modified:
                     logger.debug(u'saving profile for: {}'.format(user))
+                    if UserProfile.objects.filter(staff_id=profile.staff_id).exclude(pk=profile.pk).exists():
+                        # disable users which have the same staff_id number (probably due a change of username)
+                        to_disable_users = User.objects.filter(
+                            profile__staff_id=profile.staff_id).exclude(profile__pk=profile.pk)
+                        to_disable_users.update(is_active=False)
+                        disabled_string = ', '.join(to_disable_users.values_list('username', flat=True))
+                        logger.info(u'Disabled account from users:'.format(disabled_string))
                     profile.save()
             except IntegrityError as e:
                 logger.exception(u'Integrity error on user: {} - exception {}'.format(user.email, e))
@@ -196,7 +212,8 @@ class UserMapper(object):
             return False
 
         try:
-            supervisor = self.section_users.get(manager_id, User.objects.get(profile__staff_id=manager_id))
+            supervisor = self.section_users.get(manager_id, User.objects.get(is_active=True,
+                                                                             profile__staff_id=manager_id))
             self.section_users[manager_id] = supervisor
         except User.DoesNotExist:
             logger.warning(u"this user does not exist in the db to set as supervisor: {}".format(manager_id))
@@ -250,7 +267,9 @@ class AzureUserMapper(UserMapper):
         'givenName',
         'userPrincipalName',
         'mail',
-        'surname'
+        'surname',
+        'userType',
+        ('companyName', ['UNICEF', ]),
     ]
 
     ATTR_MAP = {
@@ -307,20 +326,6 @@ def map_users():
         raise VisionException(*e.args)
     finally:
         log.save()
-
-
-def sync_users_local(n=20):
-    user_sync = UserMapper()
-    with open('/code/etools.dat') as csvfile:
-        reader = csv.DictReader(csvfile, delimiter='|')
-        i = 0
-        for row in reader:
-            i += 1
-            if i == n:
-                break
-            uni_row = {
-                six.text_type(key, 'latin-1'): six.text_type(value, 'latin-1') for key, value in six.iteritems(row)}
-            user_sync.create_or_update_user(uni_row)
 
 
 class UserSynchronizer(object):

@@ -330,25 +330,25 @@ class PartnerOrganization(TimeStampedModel):
         verbose_name=_("Street Address"),
         max_length=500,
         blank=True,
-        default='',
+        null=True,
     )
     city = models.CharField(
         verbose_name=_("City"),
         max_length=64,
         blank=True,
-        default='',
+        null=True,
     )
     postal_code = models.CharField(
         verbose_name=_("Postal Code"),
         max_length=32,
         blank=True,
-        default='',
+        null=True,
     )
     country = models.CharField(
         verbose_name=_("Country"),
         max_length=64,
         blank=True,
-        default='',
+        null=True,
     )
 
     # TODO: remove this when migration to the new fields is done. check for references
@@ -356,21 +356,20 @@ class PartnerOrganization(TimeStampedModel):
     address = models.TextField(
         verbose_name=_("Address"),
         blank=True,
-        default=''
+        null=True
     )
     # END REMOVE
 
     email = models.CharField(
         verbose_name=_("Email Address"),
         max_length=255,
-        blank=True,
-        default='',
+        blank=True, null=True
     )
     phone_number = models.CharField(
         verbose_name=_("Phone Number"),
         max_length=64,
         blank=True,
-        default='',
+        null=True,
     )
     vendor_number = models.CharField(
         verbose_name=_("Vendor Number"),
@@ -388,19 +387,19 @@ class PartnerOrganization(TimeStampedModel):
         verbose_name=_("Alternate Name"),
         max_length=255,
         blank=True,
-        default=''
+        null=True
     )
     rating = models.CharField(
         verbose_name=_('Risk Rating'),
         max_length=50,
         choices=RISK_RATINGS,
-        default='',
+        null=True,
         blank=True
     )
     type_of_assessment = models.CharField(
         verbose_name=_("Assessment Type"),
         max_length=50,
-        default='',
+        null=True,
     )
     last_assessment_date = models.DateField(
         verbose_name=_("Last Assessment Date"),
@@ -788,7 +787,7 @@ class PartnerStaffMember(TimeStampedModel):
     title = models.CharField(
         verbose_name=_("Title"),
         max_length=64,
-        default='',
+        null=True,
         blank=True,
     )
     first_name = models.CharField(verbose_name=_("First Name"), max_length=64)
@@ -803,6 +802,7 @@ class PartnerStaffMember(TimeStampedModel):
         verbose_name=_("Phone Number"),
         max_length=64,
         blank=True,
+        null=True,
         default='',
     )
     active = models.BooleanField(
@@ -849,7 +849,8 @@ class PartnerStaffMember(TimeStampedModel):
 @python_2_unicode_compatible
 class PlannedEngagement(TimeStampedModel):
     """ class to handle partner's engagement for current year """
-    partner = models.OneToOneField(PartnerOrganization, verbose_name=_("Partner"), related_name='planned_engagement')
+    partner = models.OneToOneField(PartnerOrganization, verbose_name=_("Partner"), related_name='planned_engagement',
+                                   on_delete=models.CASCADE)
     spot_check_mr = QuarterField(verbose_name=_('Spot Check MR'), null=False, default='')
     spot_check_follow_up_q1 = models.IntegerField(verbose_name=_("Spot Check Q1"), default=0)
     spot_check_follow_up_q2 = models.IntegerField(verbose_name=_("Spot Check Q2"), default=0)
@@ -930,7 +931,7 @@ class Assessment(TimeStampedModel):
         verbose_name=_("Other Agencies"),
         max_length=255,
         blank=True,
-        default=True,
+        null=True,
         help_text='List the names of the other agencies they have worked with',
     )
     expected_budget = models.IntegerField(
@@ -939,8 +940,7 @@ class Assessment(TimeStampedModel):
     )
     notes = models.CharField(
         max_length=255,
-        blank=True,
-        default='',
+        blank=True, null=True,
         verbose_name=_('Special requests'),
         help_text='Note any special requests to be considered during the assessment'
     )
@@ -1532,7 +1532,7 @@ class Intervention(TimeStampedModel):
         verbose_name=_('Reference Number'),
         max_length=64,
         blank=True,
-        default='',
+        null=True,
         unique=True,
     )
     title = models.CharField(verbose_name=_("Document Title"), max_length=256)
@@ -1669,7 +1669,7 @@ class Intervention(TimeStampedModel):
     population_focus = models.CharField(
         verbose_name=_("Population Focus"),
         max_length=130,
-        default='',
+        null=True,
         blank=True,
     )
     in_amendment = models.BooleanField(
@@ -2020,7 +2020,7 @@ class InterventionAmendment(TimeStampedModel):
     other_description = models.CharField(
         verbose_name=_("Description"),
         max_length=512,
-        default='',
+        null=True,
         blank=True,
     )
 
@@ -2125,7 +2125,7 @@ class InterventionBudget(TimeStampedModel):
     Represents a budget for the intervention
     """
     intervention = models.OneToOneField(Intervention, related_name='planned_budget', null=True, blank=True,
-                                        verbose_name=_('Intervention'))
+                                        verbose_name=_('Intervention'), on_delete=models.CASCADE)
 
     partner_contribution = models.DecimalField(max_digits=20, decimal_places=2, default=0,
                                                verbose_name=_('Partner Contribution'))
@@ -2308,7 +2308,7 @@ class FundingCommitment(TimeFramedModel):
     wbs = models.CharField(max_length=50, verbose_name=_('WBS'))
     fc_type = models.CharField(max_length=50, verbose_name=_('Type'))
     fc_ref = models.CharField(
-        max_length=50, blank=True, default='', unique=True, verbose_name=_('Reference'))
+        max_length=50, blank=True, null=True, unique=True, verbose_name=_('Reference'))
     fr_item_amount_usd = models.DecimalField(
         decimal_places=2, max_digits=20, blank=True, null=True, verbose_name=_('Item Amount (USD)'))
     agreement_amount = models.DecimalField(
