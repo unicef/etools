@@ -68,7 +68,7 @@ class TPMPartnerViewSet(
     def get_queryset(self):
         queryset = super(TPMPartnerViewSet, self).get_queryset()
 
-        if self.action == 'list':
+        if getattr(self, 'action', None) == 'list':
             queryset = queryset.country_partners()
 
         user_type = TPMPermission._get_user_type(self.request.user)

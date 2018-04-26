@@ -436,7 +436,7 @@ class TestTPMPartnerViewSet(TestExportMixin, TPMTestCaseMixin, BaseTenantTestCas
             reverse('tpm:partners-activate', args=(partner.id,)),
             user=self.pme_user
         )
-        self.assertEqual(activate_response, status.HTTP_200_OK)
+        self.assertEqual(activate_response.status_code, status.HTTP_200_OK)
 
         self._test_list_view(self.pme_user, [self.tpm_partner, self.second_tpm_partner, partner])
 
