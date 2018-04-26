@@ -7,6 +7,7 @@ from audit.conditions import AuditStaffMemberCondition, AuditModuleCondition
 from audit.models import Auditor, UNICEFAuditFocalPoint, UNICEFUser, Engagement
 from permissions2.conditions import GroupCondition, ObjectStatusCondition, NewObjectCondition
 from permissions2.models import Permission
+from permissions2.utils import get_model_target
 
 
 class Command(BaseCommand):
@@ -181,11 +182,11 @@ class Command(BaseCommand):
         self._update_permissions(role, perm, targets, 'disallow', condition)
 
     def engagement_status(self, status):
-        obj = '{}_{}'.format(Engagement._meta.app_label, Engagement._meta.model_name)
+        obj = get_model_target(Engagement)
         return [ObjectStatusCondition.predicate_template.format(obj=obj, status=status)]
 
     def new_engagement(self):
-        model = '{}_{}'.format(Engagement._meta.app_label, Engagement._meta.model_name)
+        model = get_model_target(Engagement)
         return [NewObjectCondition.predicate_template.format(model=model)]
 
     def handle(self, *args, **options):

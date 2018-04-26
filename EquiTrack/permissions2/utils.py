@@ -2,6 +2,12 @@ from django.db.models import OneToOneField
 
 
 def collect_parent_models(model, levels=None):
+    """
+    Recursively collect list of parent models.
+    :param model:
+    :param levels:
+    :return:
+    """
     result = []
 
     if levels == 0:
@@ -20,6 +26,12 @@ def collect_parent_models(model, levels=None):
 
 
 def collect_child_models(model, levels=None):
+    """
+    Recursively collect list of child models.
+    :param model:
+    :param levels:
+    :return:
+    """
     result = []
 
     if levels == 0:
@@ -44,3 +56,13 @@ def collect_child_models(model, levels=None):
             result.extend(collect_child_models(rel.field.model, levels))
 
     return result
+
+
+def get_model_target(model):
+    """
+    Return string target for selected model.
+    example: audit_engagement
+    :param model: model class or instance
+    :return: str
+    """
+    return '{}_{}'.format(model._meta.app_label, model._meta.model_name)

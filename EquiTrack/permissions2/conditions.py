@@ -1,5 +1,7 @@
 from django.utils.six import python_2_unicode_compatible
 
+from permissions2.utils import collect_parent_models, get_model_target
+
 
 @python_2_unicode_compatible
 class BaseCondition(object):
@@ -11,6 +13,9 @@ class BaseCondition(object):
 
 
 class SimpleCondition(BaseCondition):
+    """
+    Condition that returns it's predicate if satisfied.
+    """
     predicate = NotImplemented
 
     def is_satisfied(self):
@@ -34,6 +39,9 @@ class TemplateCondition(BaseCondition):
 
 
 class GroupCondition(TemplateCondition):
+    """
+    Add user groups to permissions context
+    """
     predicate_template = 'user.group="{group}"'
 
     def __init__(self, user):
@@ -50,44 +58,54 @@ class GroupCondition(TemplateCondition):
 
 
 class ObjectStatusCondition(TemplateCondition):
+    """
+    Add instance status into permissions context.
+    """
     predicate_template = '{obj}.status="{status}"'
     status_field = 'status'
 
     def __init__(self, obj):
         self.obj = obj
 
-    def _get_parents(self, cls=None, depth=0):
-        if not cls:
-            parents = [[self.obj.__class__, 0]]
-        else:
-            parents = [[base, depth] for base in cls.__bases__]
-
-        for base, depth in parents:
-            parents.extend(self._get_parents(base, depth=depth+1))
-
-        return parents
-
     def get_status_root(self):
+        """
+        Determine first parent class where `status` field was implemented.
+        Required for correct inheritance handling.
+        """
         status_parents = list(filter(
-            lambda p:
-                hasattr(p[0], '_meta') and any(map(lambda f: f.name == 'status', p[0]._meta.fields)),
-            self._get_parents()
+            lambda parent:
+                hasattr(parent, '_meta') and any(map(lambda field: field.name == 'status', parent._meta.fields)),
+            [self.obj] + collect_parent_models(self.obj)
         ))
-        return max(*status_parents, key=lambda p: p[1])[0]
+
+        return status_parents[-1]
 
     def get_context(self):
+        """
+        Collect context for predicate template
+        :return:
+        """
         return {
-            'obj': '{}_{}'.format(self.get_status_root()._meta.app_label, self.get_status_root()._meta.model_name),
+            'obj': get_model_target(self.get_status_root()),
             'status': getattr(self.obj, self.status_field),
         }
 
 
 class ModuleCondition(SimpleCondition):
+    """
+    Divide permissions for shared models.
+
+    class AuditModuleCondition(ModuleCondition):
+        predicate = 'module="audit"'
+    """
     def is_satisfied(self):
         return True
 
 
 class NewObjectCondition(TemplateCondition):
+    """
+    Identify `new` instance state.
+    """
     predicate_template = 'new {model}'
 
     def __init__(self, model=None):
@@ -95,5 +113,5 @@ class NewObjectCondition(TemplateCondition):
 
     def get_context(self):
         return {
-            'model': '{}_{}'.format(self.model._meta.app_label, self.model._meta.model_name)
+            'model': get_model_target(self.model)
         }

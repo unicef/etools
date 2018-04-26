@@ -4,6 +4,10 @@ from .models import Permission
 
 
 class NestedPermission(BasePermission):
+    """
+    In case of nesting views we need to check access to child relation from parent instance.
+    """
+
     def has_permission(self, request, view):
         parent_model = view.get_parent().get_queryset().model
 
