@@ -11,7 +11,6 @@ from factory import fuzzy
 from audit.models import (
     Audit,
     Auditor,
-    AuditPermission,
     DetailedFindingInfo,
     Engagement,
     EngagementActionPoint,
@@ -24,7 +23,7 @@ from audit.models import (
     SpecialAudit,
     SpotCheck,
     SpecificProcedure,
-)
+    UNICEFAuditFocalPoint, UNICEFUser)
 from audit.purchase_order.models import (
     AuditorFirm,
     AuditorStaffMember,
@@ -38,6 +37,7 @@ from partners.tests.factories import (
     InterventionFactory,
     PartnerFactory,
 )
+from users.tests.factories import UserFactory as BaseUserFactory
 
 
 class FuzzyBooleanField(fuzzy.BaseFuzzyAttribute):
@@ -51,6 +51,47 @@ class AgreementWithInterventionsFactory(AgreementFactory):
 
 class PartnerWithAgreementsFactory(PartnerFactory):
     agreements = factory.RelatedFactory(AgreementWithInterventionsFactory, 'partner')
+
+
+class UserFactory(BaseUserFactory):
+    class Params:
+        unicef_user = factory.Trait(
+            groups=[UNICEFUser.name],
+        )
+
+        audit_focal_point = factory.Trait(
+            groups=[UNICEFUser.name, UNICEFAuditFocalPoint.name],
+        )
+
+        auditor = factory.Trait(
+            groups=[Auditor.name],
+        )
+
+    @factory.post_generation
+    def groups(self, create, extracted, **kwargs):
+        if not create:
+            return
+
+        if extracted is not None:
+            extracted = extracted[:]
+            for i, group in enumerate(extracted):
+                if isinstance(group, str):
+                    extracted[i] = Group.objects.get_or_create(name=group)[0]
+
+            self.groups.add(*extracted)
+
+    @factory.post_generation
+    def partner_firm(self, create, extracted, **kwargs):
+        if not create:
+            return
+
+        if Auditor.name not in self.groups.values_list('name', flat=True):
+            return
+
+        if not extracted:
+            extracted = AuditPartnerFactory()
+
+        AuditorStaffMemberFactory(auditor_firm=extracted, user=self)
 
 
 class AuditorStaffMemberFactory(BaseStaffMemberFactory):
@@ -198,14 +239,3 @@ class EngagementActionPointFactory(factory.DjangoModelFactory):
     category = fuzzy.FuzzyChoice(EngagementActionPoint.CATEGORY_CHOICES)
     description = fuzzy.FuzzyText(length=100)
     due_date = fuzzy.FuzzyDate(datetime.date(2001, 1, 1))
-
-
-class AuditPermissionFactory(factory.django.DjangoModelFactory):
-    class Meta:
-        model = AuditPermission
-
-    user_type = fuzzy.FuzzyChoice(AuditPermission.USER_TYPES)
-    permission = fuzzy.FuzzyChoice(AuditPermission.PERMISSIONS)
-    permission_type = fuzzy.FuzzyChoice(AuditPermission.TYPES)
-    target = fuzzy.FuzzyText(length=100)
-    instance_status = fuzzy.FuzzyChoice(AuditPermission.STATUSES)

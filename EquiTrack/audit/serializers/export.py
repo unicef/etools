@@ -1,5 +1,8 @@
 from __future__ import absolute_import, division, print_function, unicode_literals
 
+import itertools
+from collections import OrderedDict
+
 from audit.serializers.auditor import PurchaseOrderItemSerializer
 
 from django.utils.translation import ugettext_lazy as _
@@ -9,7 +12,7 @@ from rest_framework import serializers
 from attachments.serializers import BaseAttachmentSerializer
 from audit.models import (
     Audit, Engagement, EngagementActionPoint, MicroAssessment, SpotCheck, Finding, SpecificProcedure,
-    SpecialAuditRecommendation)
+    SpecialAuditRecommendation, Risk)
 from audit.purchase_order.models import AuditorFirm, AuditorStaffMember, PurchaseOrder
 from audit.serializers.engagement import DetailedFindingInfoSerializer, KeyInternalControlSerializer
 from audit.serializers.risks import KeyInternalWeaknessSerializer, AggregatedRiskRootSerializer, RiskRootSerializer
@@ -221,3 +224,106 @@ class SpecialAuditPDFSerializer(EngagementPDFSerializer):
         fields = EngagementPDFSerializer.Meta.fields + [
             'specific_procedures', 'other_recommendations',
         ]
+
+
+class EngagementBaseDetailCSVSerializer(serializers.Serializer):
+    unique_id = serializers.ReadOnlyField()
+    link = serializers.ReadOnlyField(source='get_object_url')
+    auditor = serializers.ReadOnlyField(source='agreement.auditor_firm.__str__')
+    partner = serializers.ReadOnlyField(source='partner.__str__')
+    status_display = serializers.SerializerMethodField()
+
+    def get_status_display(self, obj):
+        return dict(Engagement.DISPLAY_STATUSES)[obj.displayed_status]
+
+
+class SpotCheckDetailCSVSerializer(EngagementBaseDetailCSVSerializer):
+    total_value = serializers.ReadOnlyField()
+    total_amount_tested = serializers.ReadOnlyField()
+    amount_refunded = serializers.ReadOnlyField()
+    additional_supporting_documentation_provided = serializers.ReadOnlyField()
+    justification_provided_and_accepted = serializers.ReadOnlyField()
+    write_off_required = serializers.ReadOnlyField()
+    pending_unsupported_amount = serializers.ReadOnlyField()
+    high_priority_observations = serializers.SerializerMethodField()
+
+    def get_high_priority_observations(self, obj):
+        return ', '.join([
+            finding.get_category_of_observation_display()
+            for finding in obj.findings.filter(priority=Finding.PRIORITIES.high)
+        ])
+
+
+class AuditDetailCSVSerializer(EngagementBaseDetailCSVSerializer):
+    total_value = serializers.ReadOnlyField()
+    audited_expenditure = serializers.ReadOnlyField()
+    financial_findings = serializers.ReadOnlyField()
+    audit_opinion = serializers.ReadOnlyField()
+    amount_refunded = serializers.ReadOnlyField()
+    additional_supporting_documentation_provided = serializers.ReadOnlyField()
+    justification_provided_and_accepted = serializers.ReadOnlyField()
+    write_off_required = serializers.ReadOnlyField()
+    pending_unsupported_amount = serializers.ReadOnlyField()
+    control_weaknesses = serializers.SerializerMethodField()
+    subject_area = serializers.SerializerMethodField()
+
+    def get_control_weaknesses(self, obj):
+        serializer = KeyInternalWeaknessSerializer(code='audit_key_weakness')
+        weaknesses = serializer.to_representation(serializer.get_attribute(instance=obj))
+
+        return OrderedDict((
+            ('high', weaknesses['high_risk_count']),
+            ('medium', weaknesses['medium_risk_count']),
+            ('low', weaknesses['low_risk_count']),
+        ))
+
+    def get_subject_area(self, obj):
+        serializer = KeyInternalWeaknessSerializer(code='audit_key_weakness')
+        weaknesses = serializer.to_representation(serializer.get_attribute(instance=obj))
+
+        return OrderedDict(
+            (b['id'], Risk.VALUES[b['risk']['value']] if b['risk'] else 'N/A')
+            for b in weaknesses['blueprints']
+        )
+
+
+class MicroAssessmentDetailCSVSerializer(EngagementBaseDetailCSVSerializer):
+    overall_risk_assessment = serializers.SerializerMethodField()
+    subject_areas = serializers.SerializerMethodField()
+    questionnaire = serializers.SerializerMethodField()
+
+    def get_overall_risk_assessment(self, obj):
+        serializer = RiskRootSerializer(code='ma_global_assessment')
+        overall_risk_assessment = serializer.to_representation(serializer.get_attribute(instance=obj))
+        overall_blueprint = overall_risk_assessment['blueprints'][0]
+
+        return Risk.VALUES[overall_blueprint['risk']['value']] if overall_blueprint['risk'] else 'N/A'
+
+    def get_subject_areas(self, obj):
+        serializer = RiskRootSerializer(code='ma_subject_areas')
+        subject_areas = serializer.to_representation(serializer.get_attribute(instance=obj))
+
+        return OrderedDict(
+            (b['id'], Risk.VALUES[b['risk']['value']] if b['risk'] else 'N/A')
+            for b in itertools.chain(*map(lambda c: c['blueprints'], subject_areas['children']))
+        )
+
+    def get_questionnaire(self, obj):
+        serializer = AggregatedRiskRootSerializer(code='ma_questionnaire')
+        questionnaire = serializer.to_representation(serializer.get_attribute(instance=obj))
+
+        return OrderedDict(
+            (b['id'], Risk.VALUES[b['risk']['value']] if b['risk'] else 'N/A')
+            for b in itertools.chain(*map(
+                lambda c: itertools.chain(itertools.chain(*map(
+                    lambda sc: sc['blueprints'], c['children']
+                )), c['blueprints']),
+                questionnaire['children']
+            ))
+        )
+
+
+class SpecialAuditDetailPDFSerializer(EngagementBaseDetailCSVSerializer):
+    """
+
+    """

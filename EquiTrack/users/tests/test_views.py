@@ -472,29 +472,6 @@ class TestUserViewSet(BaseTenantTestCase):
         response_json = json.loads(response.rendered_content)
         self.assertEqual(len(response_json), 1)
 
-    def test_post(self):
-        """Ensure user object is created"""
-        username = "new@example.com"
-        response = self.forced_auth_req(
-            "post",
-            self.url,
-            user=self.unicef_staff,
-            data={
-                "username": username,
-                "profile": {
-                    "guid": "123",
-                    "country": None,
-                    "office": None,
-                    "section": None,
-                    "job_title": "New Job",
-                    "phone_number": "123-546-7890",
-                    "country_override": None,
-                }
-            }
-        )
-        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
-        self.assertTrue(User.objects.filter(username=username).exists())
-
     def test_post_with_groups(self):
         """Ensure user object is created, and associated with groups"""
         username = "new@example.com"
@@ -516,7 +493,7 @@ class TestUserViewSet(BaseTenantTestCase):
                 "groups": [self.group.pk]
             }
         )
-        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
-        self.assertTrue(User.objects.filter(username=username).exists())
-        user_created = User.objects.get(username=username)
-        self.assertIn(self.group, user_created.groups.all())
+        self.assertEqual(
+            response.status_code,
+            status.HTTP_405_METHOD_NOT_ALLOWED
+        )
