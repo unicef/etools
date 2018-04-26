@@ -12,7 +12,6 @@ from rest_framework_nested import routers
 from rest_framework_swagger.renderers import OpenAPIRenderer
 from rest_framework_swagger.views import get_swagger_view
 
-from email_auth.urls import urlpatterns as email_auth_patterns
 from EquiTrack.views import IssueJWTRedirectView, MainView, OutdatedBrowserView
 from locations.views import LocationsLightViewSet, LocationsViewSet, LocationTypesViewSet
 from management.urls import urlpatterns as management_urls
@@ -21,7 +20,7 @@ from publics import urls as publics_patterns
 from publics.views import StaticDataView
 from reports.views.v1 import IndicatorViewSet, ResultTypeViewSet, ResultViewSet, SectorViewSet, UnitViewSet
 from t2f.urls import urlpatterns as t2f_patterns
-from users.views import GroupViewSet, ModuleRedirectView, OfficeViewSet, SectionViewSet, UserViewSet, CountriesViewSet
+from users.views import CountriesViewSet, GroupViewSet, ModuleRedirectView, OfficeViewSet, SectionViewSet, UserViewSet
 
 # ******************  API docs and schemas  ******************************
 schema_view = get_swagger_view(title='eTools API')
@@ -29,8 +28,7 @@ schema_view = get_swagger_view(title='eTools API')
 # coreapi+json (http://www.coreapi.org/)
 schema_view_json_coreapi = get_schema_view(title="eTools API")
 # openapi+json (https://openapis.org/ aka swagger 2.0)
-schema_view_json_openapi = get_schema_view(title="eTools API",
-                                           renderer_classes=[OpenAPIRenderer])
+schema_view_json_openapi = get_schema_view(title="eTools API", renderer_classes=[OpenAPIRenderer])
 
 api = routers.SimpleRouter()
 
@@ -56,7 +54,7 @@ urlpatterns = [
     # Used for admin and dashboard pages in django
     url(r'^$', ModuleRedirectView.as_view(), name='dashboard'),
     url(r'^login/$', MainView.as_view(), name='main'),
-    url(r'^email-auth/', include(email_auth_patterns, namespace='email_auth')),
+    url(r'^email-auth/', include('email_auth.urls')),
 
     url(r'^api/static_data/$', StaticDataView.as_view({'get': 'list'}), name='public_static'),
 
@@ -67,31 +65,25 @@ urlpatterns = [
     url(r'^users/', include('users.urls')),
     url(r'^api/management/', include(management_urls)),
     url(r'^api/', include(api.urls)),
-    url(r'^api/', include(publics_patterns, namespace='public')),
+    url(r'^api/', include(publics_patterns)),
 
     # ***************  API version 2  ******************
     url(r'^api/locations/pcode/(?P<p_code>\w+)/$',
         LocationsViewSet.as_view({'get': 'retrieve'}),
         name='locations_detail_pcode'),
     url(r'^api/t2f/', include(t2f_patterns)),
-    url(r'^api/tpm/', include('tpm.urls', namespace='tpm')),
-    url(r'^api/audit/', include('audit.urls', namespace='audit')),
+    url(r'^api/tpm/', include('tpm.urls')),
+    url(r'^api/audit/', include('audit.urls')),
     url(r'^api/v2/reports/', include('reports.urls_v2')),
     url(r'^api/v2/', include('partners.urls_v2', namespace='partners_api')),
     url(r'^api/prp/v1/', include('partners.prp_urls', namespace='prp_api_v1')),
-    url(r'^api/v2/hact/', include('hact.urls', namespace='hact_api')),
+    url(r'^api/v2/hact/', include('hact.urls')),
     url(r'^api/v2/users/', include('users.urls_v2', namespace='users_v2')),
     url(r'^api/v2/workspaces/', CountriesViewSet.as_view(http_method_names=['get']), name="list-workspaces"),
-    url(r'^api/v2/funds/', include('funds.urls', namespace='funds')),
-    url(
-        r'^api/v2/activity/',
-        include('snapshot.urls', namespace='snapshot_api')
-    ),
-    url(r'^api/v2/environment/', include('environment.urls_v2', namespace='environment')),
-    url(
-        r'^api/v2/attachments/',
-        include('attachments.urls', namespace='attachments')
-    ),
+    url(r'^api/v2/funds/', include('funds.urls')),
+    url(r'^api/v2/activity/', include('snapshot.urls')),
+    url(r'^api/v2/environment/', include('environment.urls_v2')),
+    url(r'^api/v2/attachments/', include('attachments.urls')),
 
     # ***************  API version 3  ******************
     url(r'^api/v3/users/', include('users.urls_v3', namespace='users_v3')),
@@ -121,6 +113,6 @@ if settings.DEBUG:
     import debug_toolbar
 
     urlpatterns += [
-        url(r'^__debug__/', include(debug_toolbar.urls)),
+        url(r'^__debug__/', debug_toolbar.urls),
         url(r'^test/', djangosaml2.views.echo_attributes),
     ]

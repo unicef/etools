@@ -7,7 +7,7 @@ from EquiTrack.settings.base import *  # noqa: F403
 
 # raven (Sentry): https://github.com/getsentry/raven-python
 RAVEN_CONFIG = {
-    'dsn': os.environ.get('SENTRY_DSN'),  # noqa: F405
+    'dsn': get_from_secrets_or_env('SENTRY_DSN'),  # noqa: F405
 }
 # Override default client, in order to send extra data to Sentry
 SENTRY_CLIENT = 'utils.sentry.client.EToolsSentryClient'
@@ -32,9 +32,9 @@ CSRF_COOKIE_SECURE = True
 SESSION_COOKIE_HTTPONLY = True
 
 # django-storages: https://django-storages.readthedocs.io/en/latest/backends/azure.html
-AZURE_ACCOUNT_NAME = os.environ.get('AZURE_ACCOUNT_NAME')  # noqa: F405
-AZURE_ACCOUNT_KEY = os.environ.get('AZURE_ACCOUNT_KEY')  # noqa: F405
-AZURE_CONTAINER = os.environ.get('AZURE_CONTAINER')  # noqa: F405
+AZURE_ACCOUNT_NAME = get_from_secrets_or_env('AZURE_ACCOUNT_NAME')  # noqa: F405
+AZURE_ACCOUNT_KEY = get_from_secrets_or_env('AZURE_ACCOUNT_KEY')  # noqa: F405
+AZURE_CONTAINER = get_from_secrets_or_env('AZURE_CONTAINER')  # noqa: F405
 AZURE_SSL = True
 AZURE_AUTO_SIGN = True  # flag for automatically signing urls
 AZURE_ACCESS_POLICY_EXPIRY = 10800  # length of time before signature expires in seconds
@@ -63,7 +63,7 @@ if AZURE_ACCOUNT_NAME and AZURE_ACCOUNT_KEY and AZURE_CONTAINER:
             new_jwt_cert.write(jwt_cert.read())
 
 # production overrides for django-rest-framework-jwt
-if not os.getenv('DISABLE_JWT_LOGIN', False):
+if not get_from_secrets_or_env('DISABLE_JWT_LOGIN', False):
     private_key_bytes = open(join(DJANGO_ROOT, 'keys/jwt/key.pem'), 'rb').read()  # noqa: F405
     public_key_bytes = open(join(DJANGO_ROOT, 'keys/jwt/certificate.pem'), 'rb').read()  # noqa: F405
 

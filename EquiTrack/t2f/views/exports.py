@@ -57,6 +57,7 @@ class TravelActivityExport(QueryStringFilterMixin, ExportBaseView):
             ('f_travel_type', 'travel_type__in'),
             ('f_year', 'date__year'),
             ('f_month', 'date__month'),
+            ('f_location', 'locations__pk__in'),
         )
 
         queries = []

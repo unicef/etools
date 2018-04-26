@@ -244,13 +244,13 @@ class ListCreateAPIMixedPermission(permissions.BasePermission):
     '''
     def has_permission(self, request, view):
         if request.method in permissions.SAFE_METHODS:
-            if request.user.is_authenticated():
+            if request.user.is_authenticated:
                 if request.user.is_staff or is_user_in_groups(request.user, [READ_ONLY_API_GROUP_NAME]):
                     return True
             return False
         elif request.method == 'POST':
             # user must have have admin access
-            return request.user.is_authenticated() and request.user.is_staff
+            return request.user.is_authenticated and request.user.is_staff
         else:
             # This class shouldn't see methods other than GET and POST, but regardless the answer is 'no you may not'.
             return False
