@@ -159,7 +159,7 @@ class TPMVisit(SoftDeleteMixin, TimeStampedModel, models.Model):
         partner_names = set(a.partner.name for a in activities)
         return {
             'reference_number': self.reference_number,
-            'tpm_partner': self.tpm_partner.name,
+            'tpm_partner': self.tpm_partner.name if self.tpm_partner else '-',
             'tpm_activities': [a.get_mail_context() for a in activities],
             'multiple_tpm_activities': activities.count() > 1,
             'object_url': object_url,
@@ -418,9 +418,9 @@ class TPMActivity(Activity):
     def get_mail_context(self):
         return {
             'locations': ', '.join(map(force_text, self.locations.all())),
-            'intervention': self.intervention.title,
-            'cp_output': force_text(self.cp_output),
-            'section': force_text(self.section),
+            'intervention': self.intervention.title if self.intervention else '-',
+            'cp_output': force_text(self.cp_output) if self.cp_output else '-',
+            'section': force_text(self.section) if self.section else '-',
         }
 
 
