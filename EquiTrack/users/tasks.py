@@ -191,13 +191,6 @@ class UserMapper(object):
                     user.save()
                 if profile_modified:
                     logger.debug(u'saving profile for: {}'.format(user))
-                    if UserProfile.objects.filter(staff_id=profile.staff_id).exclude(pk=profile.pk).exists():
-                        # disable users which have the same staff_id number (probably due a change of username)
-                        to_disable_users = User.objects.filter(
-                            profile__staff_id=profile.staff_id).exclude(profile__pk=profile.pk)
-                        to_disable_users.update(is_active=False)
-                        disabled_string = ', '.join(to_disable_users.values_list('username', flat=True))
-                        logger.info(u'Disabled account from users:'.format(disabled_string))
                     profile.save()
             except IntegrityError as e:
                 logger.exception(u'Integrity error on user: {} - exception {}'.format(user.email, e))
