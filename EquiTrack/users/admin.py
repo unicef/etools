@@ -9,7 +9,7 @@ from django.http.response import HttpResponseRedirect
 from django.shortcuts import get_object_or_404
 
 from azure_graph_api.tasks import sync_user
-from users.models import Country, Office, Section, UserProfile, WorkspaceCounter
+from users.models import Country, Office, Section, User, UserProfile, WorkspaceCounter
 from vision.tasks import sync_handler, vision_sync_task
 
 
@@ -299,8 +299,8 @@ class SectionAdmin(admin.ModelAdmin):
 
 
 # Re-register UserAdmin
-admin.site.unregister(get_user_model())
-admin.site.register(get_user_model(), UserAdminPlus)
+# admin.site.unregister(get_user_model())
+admin.site.register(User, UserAdminPlus)
 admin.site.register(UserProfile, ProfileAdmin)
 admin.site.register(Country, CountryAdmin)
 admin.site.register(Office)

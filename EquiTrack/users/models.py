@@ -7,8 +7,8 @@ from django.conf import settings
 from django.contrib.auth.models import (
     AbstractBaseUser,
     Group,
-    User as AuthUser,
     UserManager,
+    PermissionsMixin,
 )
 from django.core.mail import send_mail
 from django.core.validators import MaxValueValidator, MinValueValidator
@@ -20,17 +20,14 @@ from django.utils.translation import ugettext_lazy as _
 from djangosaml2.signals import pre_user_save
 from tenant_schemas.models import TenantMixin
 
-AuthUser.__str__ = lambda user: user.get_full_name()
-AuthUser._meta.ordering = ['first_name']
-
 logger = logging.getLogger(__name__)
 
 
-class User(AbstractBaseUser):
+class User(AbstractBaseUser, PermissionsMixin):
     USERNAME_FIELD = "username"
 
     username = models.CharField(_("username"), max_length=256, unique=True)
-    email = models.EmailField(_('email address'), blank=True)
+    email = models.EmailField(_('email address'), unique=True)
     password = models.CharField(_("password"), max_length=128)
     first_name = models.CharField(_('first name'), max_length=30, blank=True)
     last_name = models.CharField(_('last name'), max_length=30, blank=True)
@@ -51,6 +48,9 @@ class User(AbstractBaseUser):
     def clean(self):
         super().clean()
         self.email = self.__class__.objects.normalize_email(self.email)
+
+    def __str__(self):
+        return self.get_full_name()
 
     def get_full_name(self):
         """

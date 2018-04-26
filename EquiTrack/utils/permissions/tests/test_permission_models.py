@@ -1,30 +1,29 @@
 from __future__ import absolute_import, division, print_function, unicode_literals
 
-from django.contrib.auth.models import Group
-from django.contrib.auth import get_user_model
 from django.test import override_settings, TestCase
 
+from users.tests.factories import GroupFactory, UserFactory
 from utils.permissions.models.models import BasePermission
 
 
 @override_settings(SHARED_APPS=[
     'django.contrib.auth',
+    'users',
     'utils.permissions.tests'
 ], INSTALLED_APPS=[
     'django.contrib.auth',
+    'users',
     'utils.permissions.tests',
 ])
 class BasePermissionTestCase(TestCase):
     @classmethod
     def setUpTestData(cls):
-        User = get_user_model()
+        group1 = GroupFactory(name='Group1')
+        group2 = GroupFactory(name='Group2')
 
-        group1 = Group.objects.create(name='Group1')
-        group2 = Group.objects.create(name='Group2')
-
-        cls.user1 = User.objects.create(username='user1')
-        cls.user2 = User.objects.create(username='user2')
-        cls.user3 = User.objects.create(username='user3')
+        cls.user1 = UserFactory(username='user1')
+        cls.user2 = UserFactory(username='user2')
+        cls.user3 = UserFactory(username='user3')
 
         cls.user1.groups = [group1]
         cls.user2.groups = [group2]
