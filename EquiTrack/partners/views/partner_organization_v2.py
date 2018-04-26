@@ -315,7 +315,10 @@ class PartnerOrganizationAddView(CreateAPIView):
             partner_sync = PartnerSynchronizer(country=country)
             partner_sync._partner_save(partner_resp, full_sync=False)
 
-            return Response(status=status.HTTP_201_CREATED)
+            partner = PartnerOrganization.objects.get(
+                vendor_number=partner_resp[PartnerSynchronizer.MAPPING['vendor_number']])
+            po_serializer = PartnerOrganizationDetailSerializer(partner)
+            return Response(po_serializer.data, status=status.HTTP_201_CREATED)
 
 
 class PartnerOrganizationDeleteView(DestroyAPIView):

@@ -125,7 +125,7 @@ class ValidatorViewMixin(object):
     def _parse_data(self, request):
         dt_cp = request.data
         for k in dt_cp:
-            if dt_cp[k] == 'null':
+            if dt_cp[k] in ["", 'null']:
                 dt_cp[k] = None
             elif dt_cp[k] == 'true':
                 dt_cp[k] = True
