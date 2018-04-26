@@ -112,6 +112,6 @@ if settings.DEBUG:
     import debug_toolbar
 
     urlpatterns += [
-        url(r'^__debug__/', debug_toolbar.urls),
+        url(r'^__debug__/', include(debug_toolbar.urls)),
         url(r'^test/', djangosaml2.views.echo_attributes),
     ]
