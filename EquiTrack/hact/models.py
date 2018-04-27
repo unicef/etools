@@ -237,8 +237,8 @@ class AggregateHact(TimeStampedModel):
             'micro_assessment': MicroAssessment.objects.filter(
                 status=Engagement.FINAL, date_of_draft_report_to_unicef__year=datetime.now().year).count(),
             'missing_micro_assessment': PartnerOrganization.objects.filter(
-                reported_cy__gt=0, total_ct_cy__gt=0, hidden=False,
-                last_assessment_date__isnull=False, last_assessment_date__year__lte=year_limit).count(),
+                Q(reported_cy__gt=0) | Q(total_ct_cy__gt=0), hidden=False, last_assessment_date__isnull=False,
+                last_assessment_date__year__lte=year_limit).count(),
         }
 
     def get_financial_findings(self):

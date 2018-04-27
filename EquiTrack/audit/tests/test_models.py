@@ -20,7 +20,6 @@ from audit.purchase_order.models import AuditorStaffMember, PurchaseOrder, Purch
 from audit.tests.factories import (
     AuditFactory,
     AuditPartnerFactory,
-    AuditPermissionFactory,
     AuditorStaffMemberFactory,
     DetailedFindingInfoFactory,
     EngagementActionPointFactory,
@@ -203,13 +202,6 @@ class TestStrUnicode(SimpleTestCase):
         engagement = EngagementFactory.build(agreement=purchase_order)
         instance = EngagementActionPointFactory.build(engagement=engagement)
         self.assertIn(' tv\xe5,', six.text_type(instance))
-
-    def test_audit_permission(self):
-        instance = AuditPermissionFactory.build(user_type='two')
-        self.assertIn('two', six.text_type(instance))
-
-        instance = AuditPermissionFactory.build(user_type='tv\xe5')
-        self.assertIn('tv\xe5', six.text_type(instance))
 
 
 class TestPurchaseOrder(BaseTenantTestCase):

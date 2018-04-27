@@ -63,7 +63,7 @@ if AZURE_ACCOUNT_NAME and AZURE_ACCOUNT_KEY and AZURE_CONTAINER:
             new_jwt_cert.write(jwt_cert.read())
 
 # production overrides for django-rest-framework-jwt
-if not os.getenv('DISABLE_JWT_LOGIN', False):
+if not get_from_secrets_or_env('DISABLE_JWT_LOGIN', False):
     private_key_bytes = open(join(DJANGO_ROOT, 'keys/jwt/key.pem'), 'rb').read()  # noqa: F405
     public_key_bytes = open(join(DJANGO_ROOT, 'keys/jwt/certificate.pem'), 'rb').read()  # noqa: F405
 

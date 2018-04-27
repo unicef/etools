@@ -143,7 +143,7 @@ class TenantFlag(BaseModel):
         return country_ids
 
     def is_active_for_user(self, user):
-        if self.authenticated and user.is_authenticated():
+        if self.authenticated and user.is_authenticated:
             return True
 
         if self.staff and user.is_staff:

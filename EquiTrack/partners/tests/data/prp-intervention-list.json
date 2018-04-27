@@ -5,7 +5,7 @@
         "indicators": [
           {
             "blueprint_id": 0,
-            "means_of_verification": "",
+            "means_of_verification": null,
             "target": 0,
             "title": "The Blueprint",
             "disaggregation": [
