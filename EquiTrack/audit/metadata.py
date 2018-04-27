@@ -3,7 +3,6 @@ from __future__ import absolute_import, division, print_function, unicode_litera
 from rest_framework.metadata import SimpleMetadata
 
 from attachments.metadata import ModelChoiceFieldMixin
-from EquiTrack.metadata import FSMTransitionActionMetadataMixin
 from permissions2.metadata import PermittedFSMTransitionActionMetadataMixin
 from rest_extra.metadata import (
     CRUActionsMetadataMixin,

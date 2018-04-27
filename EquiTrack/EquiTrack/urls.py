@@ -19,7 +19,7 @@ from publics.views import StaticDataView
 from reports.views.v1 import IndicatorViewSet, ResultTypeViewSet, ResultViewSet, SectorViewSet, UnitViewSet
 from t2f.urls import urlpatterns as t2f_patterns
 from users.views import CountriesViewSet, GroupViewSet, ModuleRedirectView, OfficeViewSet, SectionViewSet, UserViewSet
-from utils.common.schemas import get_schema_view, get_swagger_view
+from EquiTrack.schemas import get_schema_view, get_swagger_view
 
 # ******************  API docs and schemas  ******************************
 schema_view = get_swagger_view(title='eTools API')

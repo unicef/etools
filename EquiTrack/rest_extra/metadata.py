@@ -82,7 +82,6 @@ class FSMTransitionActionMetadataMixin(object):
         return actions
 
 
->>>>>>> develop:EquiTrack/utils/common/metadata.py
 class CRUActionsMetadataMixin(object):
     """
     Return "GET" with readable fields as allowed method.

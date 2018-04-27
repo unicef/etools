@@ -1,4 +1,4 @@
-from utils.common.metadata import FSMTransitionActionMetadataMixin
+from EquiTrack.metadata import FSMTransitionActionMetadataMixin
 
 
 class PermittedFSMTransitionActionMetadataMixin(FSMTransitionActionMetadataMixin):

@@ -25,14 +25,15 @@ class NestedViewSetMixin(object):
     parent_lookup_kwarg = None
     parent_lookup_field = None
 
-    def _get_parents(self):
+    @classmethod
+    def _get_parents(cls):
         parents = []
 
         try:
-            parent = self.parent
+            parent = cls.parent
             if parent:
                 parents.append(parent)
-                parents.extend(parent()._get_parents())
+                parents.extend(parent._get_parents())
         except AttributeError:
             pass
 
@@ -55,15 +56,19 @@ class NestedViewSetMixin(object):
 
         return filters
 
-    def get_parent_object(self):
+    def get_parent(self):
         parent_class = getattr(self, 'parent', None)
         if not parent_class:
             return
 
-        parent = parent_class(
+        return parent_class(
             request=self.request, kwargs=self.kwargs, lookup_url_kwarg=self.parent_lookup_kwarg
         )
 
+    def get_parent_object(self):
+        parent = self.get_parent()
+        if not parent or not self.kwargs:
+            return
         return parent.get_object()
 
     def get_root_object(self):

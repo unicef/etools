@@ -2,7 +2,7 @@ from django.db import connection
 from django.test import TestCase
 from rest_framework import serializers
 
-from utils.writable_serializers.serializers import WritableNestedSerializerMixin
+from rest_extra.serializers import WritableNestedSerializerMixin
 from ..models import Permission
 from ..serializers import PermissionsBasedSerializerMixin
 from .models import Parent, Child1

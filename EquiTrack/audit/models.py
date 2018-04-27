@@ -34,17 +34,7 @@ from EquiTrack.wrappers import GroupWrapper
 from generics.fields import CodedGenericRelation
 from notification.utils import send_notification_using_email_template
 from partners.models import PartnerStaffMember, PartnerOrganization
-from permissions.models.models import StatusBasePermission
-from permissions.models.query import StatusBasePermissionQueryset
-from permissions.utils import has_action_permission
 from permissions2.fsm import has_action_permission
-
-
-def _has_action_permission(action):
-    return lambda instance=None, user=None: \
-        has_action_permission(
-            AuditPermission, instance=instance, user=user, action=action
-        )
 
 
 @python_2_unicode_compatible

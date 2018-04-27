@@ -12,9 +12,13 @@ from post_office.models import EmailTemplate
 
 from attachments.models import Attachment, FileType
 from audit.models import RiskBluePrint
-from audit.tests.factories import AuditorStaffMemberFactory, AuditPartnerFactory, RiskFactory
+from audit.tests.factories import (
+    AuditorStaffMemberFactory,
+    AuditPartnerFactory,
+    RiskFactory,
+    UserFactory,
+)
 from EquiTrack.wrappers import GroupWrapper
-from users.tests.factories import UserFactory
 
 
 class AuditTestCaseMixin(object):

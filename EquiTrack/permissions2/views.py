@@ -1,6 +1,6 @@
 from rest_framework import serializers
 
-from utils.common.views import FSMTransitionActionMixin
+from EquiTrack.views import FSMTransitionActionMixin
 
 
 class PermissionContextMixin(object):
