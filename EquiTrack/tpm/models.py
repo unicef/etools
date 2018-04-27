@@ -394,7 +394,7 @@ class TPMActivity(Activity):
     is_pv = models.BooleanField(default=False, verbose_name=_('HACT Programmatic Visit'))
 
     def __str__(self):
-        return 'Activity #{0} for {1}'.format(self.id, self.tpm_visit)
+        return 'Task #{0} for {1}'.format(self.id, self.tpm_visit)
 
     class Meta:
         verbose_name_plural = _('TPM Activities')
