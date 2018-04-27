@@ -9,7 +9,8 @@
       "postal_code": "10017",
       "country": "U.S.A.",
       "email": "audit@unicef.org",
-      "phone_number": ""
+      "phone_number": "",
+      "unicef_users_allowed": true
    }
   },
   {

@@ -14,6 +14,8 @@ class TestEmail(BaseTenantTestCase):
     def setUpTestData(cls):
         call_command('update_notifications')
 
+        super(TestEmail, cls).setUpTestData()
+
     def test_expected_email_templates_exist(self):
         '''Ensure the email templates for this app exist and have content'''
         for name in ('audit/engagement/submit_to_auditor',

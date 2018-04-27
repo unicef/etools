@@ -111,8 +111,8 @@ class TestCountryProgramme(BaseTenantTestCase):
             to_date=datetime.date(2001, 12, 31),
         )
         cls.programme_future = CountryProgrammeFactory(
-            from_date=today + datetime.timedelta(days=2*30),
-            to_date=today + datetime.timedelta(days=6*30),
+            from_date=today + datetime.timedelta(days=2 * 30),
+            to_date=today + datetime.timedelta(days=6 * 30),
         )
 
     def test_active(self):

@@ -210,7 +210,10 @@ class UserMapper(object):
         try:
             supervisor = self.section_users.get(
                 manager_id,
-                get_user_model().objects.get(profile__staff_id=manager_id)
+                get_user_model().objects.get(
+                    is_active=True,
+                    profile__staff_id=manager_id
+                )
             )
             self.section_users[manager_id] = supervisor
         except get_user_model().DoesNotExist:
@@ -324,20 +327,6 @@ def map_users():
         raise VisionException(*e.args)
     finally:
         log.save()
-
-
-def sync_users_local(n=20):
-    user_sync = UserMapper()
-    with open('/code/etools.dat') as csvfile:
-        reader = csv.DictReader(csvfile, delimiter='|')
-        i = 0
-        for row in reader:
-            i += 1
-            if i == n:
-                break
-            uni_row = {
-                six.text_type(key, 'latin-1'): six.text_type(value, 'latin-1') for key, value in six.iteritems(row)}
-            user_sync.create_or_update_user(uni_row)
 
 
 class UserSynchronizer(object):
