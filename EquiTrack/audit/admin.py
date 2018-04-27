@@ -4,16 +4,9 @@ from django.contrib import admin
 from ordered_model.admin import OrderedModelAdmin
 
 from audit.models import (
-    Audit, AuditPermission, Engagement, FinancialFinding, Finding, MicroAssessment,
+    Audit, Engagement, FinancialFinding, Finding, MicroAssessment,
     Risk, RiskBluePrint, RiskCategory, SpecialAuditRecommendation, SpecificProcedure,
     SpotCheck, )
-
-
-@admin.register(AuditPermission)
-class AuditPermissionAdmin(admin.ModelAdmin):
-    list_display = ['target', 'user_type', 'permission_type', 'permission', 'instance_status']
-    list_filter = ['user_type', 'permission_type', 'permission', 'instance_status']
-    search_fields = ['target']
 
 
 @admin.register(Engagement)
