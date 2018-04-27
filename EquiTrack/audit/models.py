@@ -368,9 +368,6 @@ class Risk(models.Model):
     def __str__(self):
         return 'Risk at {}, {}'.format(self.engagement, self.value)
 
-    class Meta:
-        unique_together = [['engagement', 'blueprint', ]]
-
 
 @python_2_unicode_compatible
 class SpotCheck(Engagement):
