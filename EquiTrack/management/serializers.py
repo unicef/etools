@@ -25,7 +25,12 @@ class GisLocationGeoDetailSerializer(serializers.ModelSerializer):
     geom = serializers.SerializerMethodField()
 
     def get_geom(self, obj):
-        return "{}".format(GEOSGeometry(obj.geom).wkt if obj.geom else '')
+        geo_format = self.context.get('request').query_params.get('geo_format') or None
+
+        if geo_format == 'wkt':
+            return "{}".format(GEOSGeometry(obj.geom).wkt if obj.geom else '')
+        else:
+            return "{}".format(GEOSGeometry(obj.geom).geojson if obj.geom else '')
 
     class Meta:
         model = Location
