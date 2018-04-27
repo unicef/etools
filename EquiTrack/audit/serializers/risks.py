@@ -25,6 +25,17 @@ class RiskSerializer(WritableNestedSerializerMixin, serializers.ModelSerializer)
             }
         }
 
+    def __init__(self, *args, **kwargs):
+        super(RiskSerializer, self).__init__(*args, **kwargs)
+        self.risk_choices = None
+
+    def get_extra_kwargs(self):
+        extra_kwargs = super(RiskSerializer, self).get_extra_kwargs()
+        if self.risk_choices:
+            extra_kwargs['value']['choices'] = self.risk_choices
+
+        return extra_kwargs
+
     def validate_extra(self, value):
         if isinstance(value, six.string_types):
             raise serializers.ValidationError('Invalid data type.')
@@ -65,7 +76,7 @@ class RiskBlueprintNestedSerializer(WritableNestedSerializerMixin, serializers.M
                 if risk:
                     field.update(risk, data)
                 else:
-                    data['engagement'] = self.context.get('instance', None)
+                    data['engagement'] = self.root.instance
                     data['blueprint'] = instance
                     field.create(data)
             except serializers.ValidationError as exc:
@@ -124,7 +135,12 @@ class RiskRootSerializer(WritableNestedSerializerMixin, serializers.ModelSeriali
 
     def __init__(self, code, *args, **kwargs):
         self.code = code
+        self.risk_choices = kwargs.pop('risk_choices', None)
+
         super(RiskRootSerializer, self).__init__(*args, **kwargs)
+
+        if self.risk_choices:
+            self.fields['blueprints'].child.fields['risk'].risk_choices = self.risk_choices
 
     def get_attribute(self, instance):
         """

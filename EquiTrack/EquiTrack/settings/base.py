@@ -114,6 +114,7 @@ MIDDLEWARE = (
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.contrib.auth.middleware.SessionAuthenticationMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
+    'email_auth.middleware.TokenAuthenticationMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
@@ -196,6 +197,7 @@ SHARED_APPS = (
     'permissions',
     'waffle',
     'email_auth',
+    'permissions2',
 )
 TENANT_APPS = (
     'django_fsm',
@@ -577,3 +579,7 @@ PASSWORDLESS_AUTH = {
 REPORT_EMAILS = get_from_secrets_or_env('REPORT_EMAILS', ['etools@unicef.org', ])
 
 USERVOICE_WIDGET_KEY = 'defaultVoiceKey'
+
+
+# email auth settings
+EMAIL_AUTH_TOKEN_NAME = os.getenv('EMAIL_AUTH_TOKEN_NAME', 'url_auth_token')

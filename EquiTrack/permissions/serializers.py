@@ -115,8 +115,7 @@ class PermissionsBasedSerializerMixin(UserContextSerializerMixin):
         )
 
         allowed_fields_names = [p.target.split('.')[-1] for p in allowed_permissions]
-        disallowed_fields_names = map(lambda p: p.target.split('.')[-1], disallowed_permissions)
-
+        disallowed_fields_names = [p.target.split('.')[-1] for p in disallowed_permissions]
         # PK allowed be default
         if allowed_fields_names:
             model = self.Meta.model

@@ -1,5 +1,6 @@
 from __future__ import absolute_import, division, print_function, unicode_literals
 
+from django.conf import settings
 from django.core.urlresolvers import reverse
 from drfpasswordless.utils import create_callback_token_for_user
 
@@ -20,6 +21,10 @@ def update_url_with_kwargs(url, **kwargs):
     return urlunparse(url_parts)
 
 
-def get_token_auth_link(user):
+def update_url_with_auth_token(url, user):
     token = create_callback_token_for_user(user, 'email')
-    return update_url_with_kwargs(urljoin(site_url(), reverse('email_auth:login')), token=token)
+    return update_url_with_kwargs(url, **{settings.EMAIL_AUTH_TOKEN_NAME: token})
+
+
+def get_token_auth_link(user):
+    return update_url_with_auth_token(urljoin(site_url(), reverse('email_auth:login')), user)

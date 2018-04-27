@@ -11,16 +11,14 @@ from attachments.serializers import Base64AttachmentSerializer
 from attachments.serializers_fields import FileTypeModelChoiceField
 from audit.models import (
     Audit, DetailedFindingInfo, Engagement, EngagementActionPoint, FinancialFinding, Finding, MicroAssessment,
-    SpecialAudit, SpecialAuditRecommendation, SpecificProcedure, SpotCheck, KeyInternalControl)
+    SpecialAudit, SpecialAuditRecommendation, SpecificProcedure, SpotCheck, KeyInternalControl, Risk)
 from audit.serializers.auditor import AuditorStaffMemberSerializer, PurchaseOrderSerializer, PurchaseOrderItemSerializer
-from audit.serializers.mixins import (
-    AuditPermissionsBasedRootSerializerMixin, AuditPermissionsBasedSerializerMixin, EngagementDatesValidation,
-    RiskCategoriesUpdateMixin,)
+from audit.serializers.mixins import EngagementDatesValidation, RiskCategoriesUpdateMixin
 from audit.serializers.risks import RiskRootSerializer, AggregatedRiskRootSerializer, KeyInternalWeaknessSerializer
-from partners.models import PartnerType
 from partners.serializers.interventions_v2 import BaseInterventionListSerializer
 from partners.serializers.partner_organization_v2 import (
     PartnerOrganizationListSerializer, PartnerStaffMemberNestedSerializer,)
+from permissions2.serializers import PermissionsBasedSerializerMixin
 from rest_extra.fields import SeparatedReadWriteField
 from rest_extra.serializers import (
     UserContextSerializerMixin,
@@ -132,7 +130,7 @@ class EngagementExportSerializer(serializers.ModelSerializer):
         )
 
 
-class EngagementLightSerializer(AuditPermissionsBasedRootSerializerMixin, serializers.ModelSerializer):
+class EngagementLightSerializer(PermissionsBasedSerializerMixin, serializers.ModelSerializer):
     agreement = SeparatedReadWriteField(
         read_field=PurchaseOrderSerializer(read_only=True, label=_('Purchase Order')),
     )
@@ -152,7 +150,7 @@ class EngagementLightSerializer(AuditPermissionsBasedRootSerializerMixin, serial
     status_date = serializers.ReadOnlyField(source='displayed_status_date', label=_('Date of Status'))
     unique_id = serializers.ReadOnlyField(label=_('Unique ID'))
 
-    class Meta(AuditPermissionsBasedRootSerializerMixin.Meta):
+    class Meta:
         model = Engagement
         fields = [
             'id', 'unique_id', 'agreement', 'po_item',
@@ -175,10 +173,9 @@ class EngagementLightSerializer(AuditPermissionsBasedRootSerializerMixin, serial
         return attrs
 
 
-class SpecificProcedureSerializer(AuditPermissionsBasedSerializerMixin,
-                                  WritableNestedSerializerMixin,
+class SpecificProcedureSerializer(WritableNestedSerializerMixin,
                                   serializers.ModelSerializer):
-    class Meta(AuditPermissionsBasedSerializerMixin.Meta, WritableNestedSerializerMixin.Meta):
+    class Meta(WritableNestedSerializerMixin.Meta):
         model = SpecificProcedure
         fields = [
             'id', 'description', 'finding',
@@ -217,7 +214,7 @@ class EngagementSerializer(EngagementDatesValidation,
             'total_value', 'staff_members', 'active_pd',
             'authorized_officers', 'action_points',
 
-            'joint_audit', 'shared_ip_with',
+            'joint_audit', 'shared_ip_with', 'exchange_rate',
 
             'start_date', 'end_date',
             'partner_contacted_at', 'date_of_field_visit',
@@ -228,7 +225,6 @@ class EngagementSerializer(EngagementDatesValidation,
         ]
         extra_kwargs = {
             field: {'required': True} for field in [
-                'po_item',
                 'start_date', 'end_date', 'total_value',
 
                 'partner_contacted_at',
@@ -268,23 +264,8 @@ class ActivePDValidationMixin(object):
             partner = self.instance.partner if self.instance else validated_data.get('partner', None)
 
         if self.instance and partner != self.instance.partner and 'active_pd' not in validated_data:
-            if partner.partner_type not in [PartnerType.GOVERNMENT, PartnerType.BILATERAL_MULTILATERAL]:
-                raise serializers.ValidationError({
-                    'active_pd': [self.fields['active_pd'].write_field.error_messages['required'], ]
-                })
             validated_data['active_pd'] = []
 
-        active_pd = validated_data.get('active_pd', [])
-        if not active_pd:
-            active_pd = self.instance.active_pd.all() if self.instance else validated_data.get('active_pd', [])
-
-        status = 'new' if not self.instance else self.instance.status
-
-        if partner and partner.partner_type not in [PartnerType.GOVERNMENT, PartnerType.BILATERAL_MULTILATERAL] and \
-           len(active_pd) == 0 and status == 'new':
-            raise serializers.ValidationError({
-                'active_pd': [self.fields['active_pd'].write_field.error_messages['required'], ],
-            })
         return validated_data
 
 
@@ -367,7 +348,8 @@ class MicroAssessmentSerializer(ActivePDValidationMixin, RiskCategoriesUpdateMix
         code='ma_subject_areas', required=False, label=_('Tested Subject Areas')
     )
     overall_risk_assessment = RiskRootSerializer(
-        code='ma_global_assessment', required=False, label=_('Overall Risk Assessment')
+        code='ma_global_assessment', required=False, label=_('Overall Risk Assessment'),
+        risk_choices=Risk.POSITIVE_VALUES
     )
     findings = DetailedFindingInfoSerializer(
         many=True, required=False, label=_('Detailed Internal Control Findings and Recommendations')
@@ -380,6 +362,7 @@ class MicroAssessmentSerializer(ActivePDValidationMixin, RiskCategoriesUpdateMix
             'findings', 'questionnaire', 'test_subject_areas', 'overall_risk_assessment',
         ]
         fields.remove('specific_procedures')
+        fields.remove('exchange_rate')
         extra_kwargs = EngagementSerializer.Meta.extra_kwargs.copy()
         extra_kwargs.update({
             'engagement_type': {'read_only': True},
@@ -433,6 +416,7 @@ class AuditSerializer(ActivePDValidationMixin, RiskCategoriesUpdateMixin, Engage
             'explanation_for_additional_information',
         ]
         fields.remove('specific_procedures')
+        fields.remove('exchange_rate')
         extra_kwargs = EngagementSerializer.Meta.extra_kwargs.copy()
         extra_kwargs.update({
             'engagement_type': {'read_only': True},
