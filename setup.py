@@ -42,10 +42,10 @@ def get_requirements(env):
     return ret
 
 
-install_requires = get_requirements('base')
+# install_requires = get_requirements('base')
 dev_requires = get_requirements('local')
 test_requires = get_requirements('test')
-optional_requires = get_requirements('production')
+production_requires = get_requirements('production')
 
 setup(
     name=NAME,
@@ -58,7 +58,7 @@ setup(
     package_dir={'': 'src'},
     packages=find_packages('src'),
     zip_safe=False,
-    install_requires=install_requires,
+    install_requires=production_requires,
     dependency_links=list(dependency_links),
     license='BSD',
     include_package_data=True,
