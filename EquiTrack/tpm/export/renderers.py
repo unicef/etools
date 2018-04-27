@@ -11,7 +11,7 @@ class TPMActivityCSVRenderer(CSVRenderer):
     labels = {
         'ref': _('Visit Ref. #'),
         'visit': _('Visit'),
-        'activity': _('Activity'),
+        'activity': _('Task'),
         'section': _('Section'),
         'cp_output': _('PD/SSFA output'),
         'partner': _('Partner'),
@@ -31,7 +31,7 @@ class TPMLocationCSVRenderer(CSVRenderer):
     labels = {
         'ref': _('Visit Ref. #'),
         'visit': _('Visit'),
-        'activity': _('Activity'),
+        'activity': _('Task'),
         'section': _('Section'),
         'cp_output': _('PD/SSFA output'),
         'partner': _('Partner'),
