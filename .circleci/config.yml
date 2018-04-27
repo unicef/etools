@@ -31,6 +31,9 @@ jobs:
       - store_artifacts:
           path: build/coverage
           destination: coverage
+      - store_artifacts:
+          path: .tox/d110/log/
+          destination: d110/logs
 
   build_and_deploy:
     working_directory: ~/code
