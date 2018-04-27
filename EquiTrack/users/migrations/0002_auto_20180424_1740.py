@@ -20,7 +20,7 @@ def mark_duplicates(apps, schema_editor):
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('users', '0006_user'),
+        ('users', '0001_squashed_0007_user'),
     ]
 
     operations = [
