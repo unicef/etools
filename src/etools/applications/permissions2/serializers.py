@@ -2,9 +2,8 @@ from rest_framework import serializers
 from rest_framework.utils import model_meta
 from rest_framework_recursive.fields import RecursiveField
 
+from etools.applications.permissions2.models import Permission
 from etools.applications.utils.common.serializers.fields import SeparatedReadWriteField
-
-from .models import Permission
 
 
 class PermissionsBasedSerializerMixin(object):

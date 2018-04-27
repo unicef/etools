@@ -264,4 +264,3 @@ class FilePartnerSynchronizer(FileDataSynchronizer, PartnerSynchronizer):
     >>> filename = '/home/user/Downloads/partners.json'
     >>> FilePartnerSynchronizer(country, filename).sync()
     """
-    pass

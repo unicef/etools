@@ -459,4 +459,3 @@ class FileFundReservationsSynchronizer(FileDataSynchronizer, FundReservationsSyn
     >>> filename = '/home/user/Downloads/fundreservation.json'
     >>> FileFundReservationsSynchronizer(country, filename=filename).sync()
     """
-    pass

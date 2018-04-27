@@ -14,8 +14,8 @@ from etools.applications.EquiTrack.serializers import SnapshotModelSerializer
 from etools.applications.funds.models import FundsCommitmentItem, FundsReservationHeader
 from etools.applications.funds.serializers import FRsSerializer
 from etools.applications.locations.serializers import LocationLightSerializer, LocationSerializer
-from etools.applications.partners.models import (Intervention,  # TODO intervention sector locations cleanup
-                                                 InterventionAmendment, InterventionAttachment, InterventionBudget,
+from etools.applications.partners.models import Intervention  # TODO intervention sector locations cleanup
+from etools.applications.partners.models import (InterventionAmendment, InterventionAttachment, InterventionBudget,
                                                  InterventionPlannedVisits, InterventionReportingPeriod,
                                                  InterventionResultLink, InterventionSectorLocationLink,)
 from etools.applications.partners.permissions import InterventionPermissions

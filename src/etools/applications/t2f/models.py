@@ -27,7 +27,6 @@ class TransitionError(RuntimeError):
     """
     Custom exception to send proprer error messages from transitions to the frontend
     """
-    pass
 
 
 class TravelType(object):
