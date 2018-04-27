@@ -224,6 +224,14 @@ class TPMVisitSerializer(TPMVisitLightSerializer):
 
         tpm_partner = validated_data.get('tpm_partner', self.instance.tpm_partner if self.instance else None)
 
+        # no need to check if no updates to partner performed
+        if tpm_partner and (not self.instance or self.instance.tpm_partner != tpm_partner):
+            if tpm_partner.blocked or tpm_partner.deleted_flag:
+                raise ValidationError({
+                    'tpm_partner': _('Partner is marked for deletion or blocked in VISION. '
+                                     'Please add a different vendor.')
+                })
+
         if 'tpm_partner_focal_points' in validated_data:
             tpm_partner_focal_points = set(map(lambda x: x.id, validated_data['tpm_partner_focal_points']))
             diff = tpm_partner_focal_points - set(TPMPartnerStaffMember.objects.filter(

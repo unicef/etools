@@ -16,5 +16,14 @@ class Migration(migrations.Migration):
             model_name='tpmvisit',
             name='cancel_comment',
             field=models.TextField(blank=True, verbose_name='Cancel Comment'),
+        ),        migrations.AlterField(
+            model_name='tpmvisit',
+            name='reject_comment',
+            field=models.TextField(blank=True, verbose_name='Reason for Rejection'),
+        ),
+        migrations.AlterField(
+            model_name='tpmvisitreportrejectcomment',
+            name='reject_reason',
+            field=models.TextField(verbose_name='Reason for Rejection'),
         ),
     ]

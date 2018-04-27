@@ -77,8 +77,10 @@ class TPMVisit(SoftDeleteMixin, TimeStampedModel, models.Model):
 
     status = FSMField(verbose_name=_('Status'), max_length=20, choices=STATUSES, default=STATUSES.draft, protected=True)
 
+    # UNICEF cancelled visit
     cancel_comment = models.TextField(verbose_name=_('Cancel Comment'), blank=True)
-    reject_comment = models.TextField(verbose_name=_('Request For More Information'), blank=True)
+    # TPM rejected visit
+    reject_comment = models.TextField(verbose_name=_('Reason for Rejection'), blank=True)
     approval_comment = models.TextField(verbose_name=_('Approval Comments'), blank=True)
 
     report_attachments = GenericRelation(Attachment, verbose_name=_('Visit Report'), blank=True)
@@ -140,7 +142,7 @@ class TPMVisit(SoftDeleteMixin, TimeStampedModel, models.Model):
 
     @property
     def unicef_focal_points_with_emails(self):
-        return list(filter(lambda u: u.email, self.unicef_focal_points))
+        return list(filter(lambda u: u.email and u.is_active, self.unicef_focal_points))
 
     def __str__(self):
         return 'Visit ({} to {} at {} - {})'.format(
@@ -166,7 +168,7 @@ class TPMVisit(SoftDeleteMixin, TimeStampedModel, models.Model):
         partner_names = set(a.partner.name for a in activities)
         return {
             'reference_number': self.reference_number,
-            'tpm_partner': self.tpm_partner.name,
+            'tpm_partner': self.tpm_partner.name if self.tpm_partner else '-',
             'tpm_activities': [a.get_mail_context() for a in activities],
             'multiple_tpm_activities': activities.count() > 1,
             'object_url': object_url,
@@ -203,7 +205,8 @@ class TPMVisit(SoftDeleteMixin, TimeStampedModel, models.Model):
     def _get_tpm_focal_points_as_email_recipients(self):
         return list(
             self.tpm_partner_focal_points.filter(
-                user__email__isnull=False
+                user__email__isnull=False,
+                user__is_active=True
             ).values_list('user__email', flat=True)
         )
 
@@ -234,7 +237,7 @@ class TPMVisit(SoftDeleteMixin, TimeStampedModel, models.Model):
                 cc=self._get_unicef_focal_points_as_email_recipients()
             )
 
-        for staff_member in self.tpm_partner_focal_points.filter(user__email__isnull=False):
+        for staff_member in self.tpm_partner_focal_points.filter(user__email__isnull=False, user__is_active=True):
             self._send_email(
                 staff_member.user.email, 'tpm/visit/assign_staff_member',
                 context={'recipient': staff_member.user.get_full_name()},
@@ -313,7 +316,7 @@ class TPMVisit(SoftDeleteMixin, TimeStampedModel, models.Model):
         self.date_of_tpm_report_rejected = timezone.now()
         TPMVisitReportRejectComment.objects.create(reject_reason=reject_comment, tpm_visit=self)
 
-        for staff_user in self.tpm_partner_focal_points.filter(user__email__isnull=False):
+        for staff_user in self.tpm_partner_focal_points.filter(user__email__isnull=False, user__is_active=True):
             self._send_email(
                 [staff_user.user.email], 'tpm/visit/report_rejected',
                 context={'recipient': staff_user.user.get_full_name()}
@@ -338,7 +341,7 @@ class TPMVisit(SoftDeleteMixin, TimeStampedModel, models.Model):
 
         if notify_tpm_partner:
             # TODO: Generate report as PDF attachment.
-            for staff_user in self.tpm_partner_focal_points.filter(user__email__isnull=False):
+            for staff_user in self.tpm_partner_focal_points.filter(user__email__isnull=False, user__is_active=True):
                 self._send_email(
                     [staff_user.user.email, ], 'tpm/visit/approve_report_tpm',
                     context={'recipient': staff_user.user.get_full_name()}
@@ -355,7 +358,8 @@ class TPMVisit(SoftDeleteMixin, TimeStampedModel, models.Model):
 class TPMVisitReportRejectComment(models.Model):
     rejected_at = models.DateTimeField(auto_now_add=True, verbose_name=_('Rejected At'))
 
-    reject_reason = models.TextField(verbose_name=_('Reason of Rejection'))
+    # UNICEF rejected report
+    reject_reason = models.TextField(verbose_name=_('Reason for Rejection'))
 
     tpm_visit = models.ForeignKey(
         TPMVisit, verbose_name=_('Visit'), related_name='report_reject_comments',
@@ -398,7 +402,7 @@ class TPMActivity(Activity):
     is_pv = models.BooleanField(default=False, verbose_name=_('HACT Programmatic Visit'))
 
     def __str__(self):
-        return 'Activity #{0} for {1}'.format(self.id, self.tpm_visit)
+        return 'Task #{0} for {1}'.format(self.id, self.tpm_visit)
 
     class Meta:
         verbose_name_plural = _('TPM Activities')
@@ -427,9 +431,9 @@ class TPMActivity(Activity):
     def get_mail_context(self):
         return {
             'locations': ', '.join(map(force_text, self.locations.all())),
-            'intervention': self.intervention.title,
-            'cp_output': force_text(self.cp_output),
-            'section': force_text(self.section),
+            'intervention': self.intervention.title if self.intervention else '-',
+            'cp_output': force_text(self.cp_output) if self.cp_output else '-',
+            'section': force_text(self.section) if self.section else '-',
         }
 
 
@@ -506,8 +510,8 @@ class TPMPermissionsQueryset(StatusBasePermissionQueryset):
         if 'user' in kwargs and 'instance__in' in kwargs:
             user_type = self.model._get_user_type(kwargs.pop('user'))
             if user_type == UNICEFUser:
-                return self.filter(models.Q(user_type=UNICEFUser.code)
-                                   | models.Q(user_type=self.model.USER_TYPES.unicef_focal_point)).filter(**kwargs)
+                return self.filter(models.Q(user_type=UNICEFUser.code) | models.Q(
+                    user_type=self.model.USER_TYPES.unicef_focal_point)).filter(**kwargs)
 
             kwargs['user_type'] = user_type
             return self.filter(**kwargs)

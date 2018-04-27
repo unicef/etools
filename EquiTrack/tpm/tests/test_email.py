@@ -15,13 +15,17 @@ class TPMVisitEmailsTestCase(BaseTenantTestCase):
         self.assertEqual(len(mail.outbox), 0)
 
     def test_assign(self):
-        visit = TPMVisitFactory(status='pre_assigned')
+        visit = TPMVisitFactory(status='pre_assigned', tpm_partner_focal_points__count=3)
+
+        first_partner = visit.tpm_partner_focal_points.first()
+        first_partner.user.is_active = False
+        first_partner.user.save()
 
         self.assertEqual(len(mail.outbox), 0)
         visit.assign()
         self.assertEqual(
             len(mail.outbox),
-            visit.tpm_partner_focal_points.filter(user__email__isnull=False).count() + 1
+            visit.tpm_partner_focal_points.filter(user__email__isnull=False).count() - 1 + 1
         )
 
     def test_cancel(self):

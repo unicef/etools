@@ -19,7 +19,7 @@ from users.tests.factories import UserFactory
 class TestActivityListView(BaseTenantTestCase):
     @classmethod
     def setUpTestData(cls):
-        cls.url = reverse("snapshot_api:activity-list")
+        cls.url = reverse("snapshot:activity-list")
         cls.user = UserFactory(is_staff=True)
         cls.tz = timezone.get_default_timezone()
 
