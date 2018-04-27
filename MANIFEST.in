@@ -1,4 +1,4 @@
-include README.md
+include README.rst
 include MANIFEST.in
 include CONTRIBUTING.md
 include LICENSE
