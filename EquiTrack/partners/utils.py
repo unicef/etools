@@ -1,5 +1,6 @@
 from __future__ import absolute_import, division, print_function, unicode_literals
 
+import datetime
 import logging
 
 from django.contrib.contenttypes.models import ContentType
@@ -33,6 +34,11 @@ def update_or_create_attachment(file_type, content_type, object_id, filename):
     )
 
 
+def get_from_date():
+    """Return from date to use"""
+    return datetime.date.today() - datetime.timedelta(hours=25)
+
+
 def copy_attached_agreements():
     # Copy attached_agreement field content to
     # attachments model
@@ -48,7 +54,8 @@ def copy_attached_agreements():
     content_type = ContentType.objects.get_for_model(Agreement)
 
     for agreement in Agreement.view_objects.filter(
-        attached_agreement__isnull=False
+            attached_agreement__isnull=False,
+            modified__gte=get_from_date()
     ).all():
         update_or_create_attachment(
             file_type,
@@ -73,7 +80,8 @@ def copy_core_values_assessments():
     content_type = ContentType.objects.get_for_model(PartnerOrganization)
 
     for partner in PartnerOrganization.objects.filter(
-        core_values_assessment__isnull=False
+            core_values_assessment__isnull=False,
+            modified__gte=get_from_date()
     ).all():
         update_or_create_attachment(
             file_type,
@@ -97,7 +105,8 @@ def copy_reports():
     content_type = ContentType.objects.get_for_model(Assessment)
 
     for assessment in Assessment.objects.filter(
-        report__isnull=False
+            report__isnull=False,
+            modified__gte=get_from_date()
     ).all():
         update_or_create_attachment(
             file_type,
@@ -121,7 +130,8 @@ def copy_signed_amendments():
     content_type = ContentType.objects.get_for_model(AgreementAmendment)
 
     for amendment in AgreementAmendment.view_objects.filter(
-        signed_amendment__isnull=False
+            signed_amendment__isnull=False,
+            modified__gte=get_from_date()
     ).all():
         update_or_create_attachment(
             file_type,
@@ -154,7 +164,8 @@ def copy_interventions():
 
     for intervention in Intervention.objects.filter(
             Q(prc_review_document__isnull=False) |
-            Q(signed_pd_document__isnull=False)
+            Q(signed_pd_document__isnull=False),
+            modified__gte=get_from_date()
     ).all():
         if intervention.prc_review_document:
             update_or_create_attachment(
@@ -186,7 +197,8 @@ def copy_intervention_amendments():
     content_type = ContentType.objects.get_for_model(InterventionAmendment)
 
     for amendment in InterventionAmendment.objects.filter(
-            signed_amendment__isnull=False
+            signed_amendment__isnull=False,
+            modified__gte=get_from_date()
     ).all():
         if amendment.signed_amendment:
             update_or_create_attachment(
@@ -211,7 +223,8 @@ def copy_intervention_attachments():
     content_type = ContentType.objects.get_for_model(InterventionAttachment)
 
     for attachment in InterventionAttachment.objects.filter(
-            attachment__isnull=False
+            attachment__isnull=False,
+            modified__gte=get_from_date()
     ).all():
         if attachment.attachment:
             update_or_create_attachment(
