@@ -6,6 +6,7 @@ import random
 from django.conf import settings
 from django.core.management import call_command
 from django.utils import six
+
 from factory import fuzzy
 from rest_framework import status
 from mock import patch, Mock
@@ -14,7 +15,7 @@ from attachments.tests.factories import (
     AttachmentFactory,
     AttachmentFileTypeFactory,
 )
-from audit.models import Engagement
+from audit.models import Engagement, Risk
 from audit.tests.base import AuditTestCaseMixin, EngagementTransitionsTestCaseMixin
 from audit.tests.factories import (
     AuditFactory,
@@ -27,7 +28,8 @@ from audit.tests.factories import (
     RiskCategoryFactory,
     SpotCheckFactory,
     SpecialAuditFactory,
-    EngagementActionPointFactory)
+    EngagementActionPointFactory,
+    UserFactory)
 from EquiTrack.tests.cases import BaseTenantTestCase
 from partners.models import PartnerType
 
@@ -246,22 +248,27 @@ class TestEngagementsListViewSet(EngagementTransitionsTestCaseMixin, BaseTenantT
 
     @classmethod
     def setUpTestData(cls):
+        super(TestEngagementsListViewSet, cls).setUpTestData()
         cls.second_engagement = cls.engagement_factory()
 
-    def _test_list(self, user, engagements, params=""):
+    def _test_list(self, user, engagements=None, filter_params=None, expected_status=status.HTTP_200_OK):
         response = self.forced_auth_req(
             'get',
             '/api/audit/engagements/',
-            data={"status": params},
+            data=filter_params or {},
             user=user
         )
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.status_code, expected_status)
+
+        if not response.status_code == status.HTTP_200_OK:
+            return
+
         self.assertIn('results', response.data)
         self.assertIsInstance(response.data['results'], list)
         six.assertCountEqual(
             self,
             map(lambda x: x['id'], response.data['results']),
-            map(lambda x: x.id, engagements)
+            map(lambda x: x.id, engagements or [])
         )
 
     def test_focal_point_list(self):
@@ -274,7 +281,7 @@ class TestEngagementsListViewSet(EngagementTransitionsTestCaseMixin, BaseTenantT
         self._test_list(self.non_engagement_auditor, [])
 
     def test_unknown_user_list(self):
-        self._test_list(self.usual_user, [])
+        self._test_list(self.usual_user, expected_status=status.HTTP_403_FORBIDDEN)
 
     def test_status_filter_final(self):
         status = Engagement.STATUSES.final
@@ -283,7 +290,7 @@ class TestEngagementsListViewSet(EngagementTransitionsTestCaseMixin, BaseTenantT
             status=status
         )
         self.assertEqual(self.third_engagement.status, status)
-        self._test_list(self.auditor, [self.third_engagement], params=status)
+        self._test_list(self.auditor, [self.third_engagement], filter_params={'status': status})
 
     def test_status_filter_partner_contacted(self):
         status = Engagement.DISPLAY_STATUSES.partner_contacted
@@ -294,7 +301,7 @@ class TestEngagementsListViewSet(EngagementTransitionsTestCaseMixin, BaseTenantT
         self._test_list(
             self.auditor,
             [self.engagement, self.third_engagement],
-            params=status
+            filter_params={'status': status}
         )
 
     def test_status_filter_field_visit(self):
@@ -306,7 +313,7 @@ class TestEngagementsListViewSet(EngagementTransitionsTestCaseMixin, BaseTenantT
         )
         self.assertIsNone(self.third_engagement.date_of_draft_report_to_ip)
         self.assertIsNotNone(self.third_engagement.date_of_field_visit)
-        self._test_list(self.auditor, [self.third_engagement], params=status)
+        self._test_list(self.auditor, [self.third_engagement], filter_params={'status': status})
 
     def test_status_filter_draft_issued_to_partner(self):
         status = Engagement.DISPLAY_STATUSES.draft_issued_to_partner
@@ -315,7 +322,7 @@ class TestEngagementsListViewSet(EngagementTransitionsTestCaseMixin, BaseTenantT
             status=Engagement.STATUSES.partner_contacted,
             date_of_draft_report_to_ip=datetime.date(2001, 1, 1),
         )
-        self._test_list(self.auditor, [self.third_engagement], params=status)
+        self._test_list(self.auditor, [self.third_engagement], filter_params={'status': status})
 
     def test_status_filter_comments_recieved_by_partner(self):
         status = Engagement.DISPLAY_STATUSES.comments_received_by_partner
@@ -324,7 +331,7 @@ class TestEngagementsListViewSet(EngagementTransitionsTestCaseMixin, BaseTenantT
             status=Engagement.STATUSES.partner_contacted,
             date_of_comments_by_ip=datetime.date(2001, 1, 1),
         )
-        self._test_list(self.auditor, [self.third_engagement], params=status)
+        self._test_list(self.auditor, [self.third_engagement], filter_params={'status': status})
 
     def test_status_filter_draft_issued_to_unicef(self):
         status = Engagement.DISPLAY_STATUSES.draft_issued_to_unicef
@@ -333,7 +340,7 @@ class TestEngagementsListViewSet(EngagementTransitionsTestCaseMixin, BaseTenantT
             status=Engagement.STATUSES.partner_contacted,
             date_of_draft_report_to_unicef=datetime.date(2001, 1, 1),
         )
-        self._test_list(self.auditor, [self.third_engagement], params=status)
+        self._test_list(self.auditor, [self.third_engagement], filter_params={'status': status})
 
     def test_status_filter_comments_received_by_unicef(self):
         status = Engagement.DISPLAY_STATUSES.comments_received_by_unicef
@@ -342,15 +349,11 @@ class TestEngagementsListViewSet(EngagementTransitionsTestCaseMixin, BaseTenantT
             status=Engagement.STATUSES.partner_contacted,
             date_of_comments_by_unicef=datetime.date(2001, 1, 1),
         )
-        self._test_list(self.auditor, [self.third_engagement], params=status)
+        self._test_list(self.auditor, [self.third_engagement], filter_params={'status': status})
 
 
 class BaseTestEngagementsCreateViewSet(EngagementTransitionsTestCaseMixin):
     endpoint = 'engagements'
-
-    @classmethod
-    def setUpTestData(cls):
-        call_command('update_notifications')
 
     def setUp(self):
         super(BaseTestEngagementsCreateViewSet, self).setUp()
@@ -385,8 +388,8 @@ class TestEngagementCreateActivePDViewSet(object):
 
         response = self._do_create(self.unicef_focal_point, self.create_data)
 
-        self.assertEquals(response.status_code, status.HTTP_400_BAD_REQUEST)
-        self.assertIn('active_pd', response.data)
+        self.assertEquals(response.status_code, status.HTTP_201_CREATED)
+        self.assertEqual(response.data['active_pd'], [])
 
     def test_partner_with_active_pd(self):
         self.engagement.partner.partner_type = PartnerType.CIVIL_SOCIETY_ORGANIZATION
@@ -477,8 +480,8 @@ class TestEngagementsUpdateViewSet(EngagementTransitionsTestCaseMixin, BaseTenan
 
         response = self._do_update(self.unicef_focal_point, {'partner': partner.id})
 
-        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
-        self.assertIn('active_pd', response.data)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data['active_pd'], [])
 
     def test_partner_changed_with_pd(self):
         partner = PartnerWithAgreementsFactory(partner_type=PartnerType.CIVIL_SOCIETY_ORGANIZATION)
@@ -567,24 +570,57 @@ class TestEngagementsUpdateViewSet(EngagementTransitionsTestCaseMixin, BaseTenan
         )
 
 
+class TestMicroAssessmentMetadataDetailViewSet(EngagementTransitionsTestCaseMixin, BaseTenantTestCase):
+    engagement_factory = MicroAssessmentFactory
+
+    def _test_risk_choices(self, field, expected_choices):
+        response = self.forced_auth_req(
+            'options',
+            '/api/audit/micro-assessments/{}/'.format(self.engagement.id),
+            user=self.auditor
+        )
+        self.assertIn('GET', response.data['actions'])
+        get = response.data['actions']['GET']
+
+        self.assertIn(field, get)
+        self.assertIn('blueprints', get[field]['children'])
+        self.assertIn('risk', get[field]['children']['blueprints']['child']['children'])
+        risk_fields = get[field]['children']['blueprints']['child']['children']['risk']['children']
+        self.assertIn('choices', risk_fields['value'])
+        self.assertListEqual(
+            [{'value': c, 'display_name': str(v)} for c, v in expected_choices],
+            risk_fields['value']['choices']
+        )
+
+    def test_overall_choices(self):
+        self._test_risk_choices('overall_risk_assessment', Risk.POSITIVE_VALUES)
+
+    def test_subject_areas_choices(self):
+        self._test_risk_choices('test_subject_areas', Risk.VALUES)
+
+
 class TestAuditorFirmViewSet(AuditTestCaseMixin, BaseTenantTestCase):
     def setUp(self):
         super(TestAuditorFirmViewSet, self).setUp()
         self.second_auditor_firm = AuditPartnerFactory()
 
-    def _test_list_view(self, user, expected_firms):
+    def _test_list_view(self, user, expected_firms=None, expected_status=status.HTTP_200_OK):
         response = self.forced_auth_req(
             'get',
             '/api/audit/audit-firms/',
             user=user
         )
 
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
-        six.assertCountEqual(
-            self,
-            map(lambda x: x['id'], response.data['results']),
-            map(lambda x: x.id, expected_firms)
-        )
+        self.assertEqual(response.status_code, expected_status)
+        if expected_status == status.HTTP_200_OK:
+            six.assertCountEqual(
+                self,
+                map(lambda x: x['id'], response.data['results']),
+                map(lambda x: x.id, expected_firms)
+            )
+
+    def test_focal_point_list_view(self):
+        self._test_list_view(self.unicef_focal_point, [self.auditor_firm, self.second_auditor_firm])
 
     def test_unicef_list_view(self):
         self._test_list_view(self.unicef_user, [self.auditor_firm, self.second_auditor_firm])
@@ -593,7 +629,35 @@ class TestAuditorFirmViewSet(AuditTestCaseMixin, BaseTenantTestCase):
         self._test_list_view(self.auditor, [self.auditor_firm])
 
     def test_usual_user_list_view(self):
-        self._test_list_view(self.usual_user, [])
+        self._test_list_view(self.usual_user, expected_status=status.HTTP_403_FORBIDDEN)
+
+    def test_auditor_search_view(self):
+        UserFactory()
+        auditor = UserFactory(auditor=True, email='test@example.com')
+
+        response = self.forced_auth_req(
+            'get',
+            '/api/audit/audit-firms/users/',
+            user=self.unicef_user,
+            data={'search': auditor.email}
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(response.data), 1)
+        self.assertEqual(response.data[0]['auditor_firm'], auditor.purchase_order_auditorstaffmember.auditor_firm.id)
+
+    def test_user_search_view(self):
+        UserFactory()
+        user = UserFactory(email='test@example.com')
+
+        response = self.forced_auth_req(
+            'get',
+            '/api/audit/audit-firms/users/',
+            user=self.unicef_user,
+            data={'search': user.email}
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(response.data), 1)
+        self.assertIsNone(response.data[0]['auditor_firm'])
 
 
 class TestAuditorStaffMembersViewSet(AuditTestCaseMixin, BaseTenantTestCase):
@@ -633,13 +697,10 @@ class TestAuditorStaffMembersViewSet(AuditTestCaseMixin, BaseTenantTestCase):
         )
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
 
-    def test_create_view(self):
+    def test_unicef_create_view(self):
         response = self.forced_auth_req(
             'post',
-            '/api/audit/audit-firms/{0}/staff-members/'.format(
-                self.auditor_firm.id,
-                self.auditor_firm.staff_members.first().id
-            ),
+            '/api/audit/audit-firms/{0}/staff-members/'.format(self.auditor_firm.id),
             data={
                 "user": {
                     "email": "test_email_1@gmail.com",
@@ -651,12 +712,50 @@ class TestAuditorStaffMembersViewSet(AuditTestCaseMixin, BaseTenantTestCase):
         )
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
 
+    def test_assign_existing_user(self):
+        user = UserFactory(unicef_user=True)
+
         response = self.forced_auth_req(
             'post',
-            '/api/audit/audit-firms/{0}/staff-members/'.format(
-                self.auditor_firm.id,
-                self.auditor_firm.staff_members.first().id
-            ),
+            '/api/audit/audit-firms/{0}/staff-members/'.format(self.auditor_firm.id),
+            data={
+                "user_pk": user.pk
+            },
+            user=self.unicef_focal_point
+        )
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        self.assertEqual(response.data['user']['email'], user.email)
+
+    def test_assign_existing_auditor(self):
+        user = UserFactory(auditor=True)
+
+        response = self.forced_auth_req(
+            'post',
+            '/api/audit/audit-firms/{0}/staff-members/'.format(self.auditor_firm.id),
+            data={
+                "user_pk": user.pk
+            },
+            user=self.unicef_focal_point
+        )
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn('user', response.data)
+        self.assertEqual(response.data['user'][0], 'User is already assigned to auditor firm.')
+
+    def test_assign_none_provided(self):
+        response = self.forced_auth_req(
+            'post',
+            '/api/audit/audit-firms/{0}/staff-members/'.format(self.auditor_firm.id),
+            data={},
+            user=self.unicef_focal_point
+        )
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn('user', response.data)
+        self.assertEqual(response.data['user'][0], 'This field is required.')
+
+    def test_usual_user_create_view(self):
+        response = self.forced_auth_req(
+            'post',
+            '/api/audit/audit-firms/{0}/staff-members/'.format(self.auditor_firm.id),
             data={
                 "user": {
                     "email": "test_email_2@gmail.com",
@@ -668,7 +767,7 @@ class TestAuditorStaffMembersViewSet(AuditTestCaseMixin, BaseTenantTestCase):
         )
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
 
-    def test_update_view(self):
+    def test_unicef_update_view(self):
         response = self.forced_auth_req(
             'patch',
             '/api/audit/audit-firms/{0}/staff-members/{1}/'.format(
@@ -685,6 +784,7 @@ class TestAuditorStaffMembersViewSet(AuditTestCaseMixin, BaseTenantTestCase):
         )
         self.assertEqual(response.status_code, status.HTTP_200_OK)
 
+    def test_usual_user_update_view(self):
         response = self.forced_auth_req(
             'patch',
             '/api/audit/audit-firms/{0}/staff-members/{1}/'.format(
@@ -724,7 +824,7 @@ class TestEngagementSpecialPDFExportViewSet(EngagementTransitionsTestCaseMixin, 
         self._test_pdf_view(self.usual_user, status.HTTP_404_NOT_FOUND)
 
     def test_unicef_user(self):
-        self._test_pdf_view(self.unicef_user, status.HTTP_404_NOT_FOUND)
+        self._test_pdf_view(self.unicef_user)
 
     def test_auditor(self):
         self._test_pdf_view(self.auditor)
@@ -776,11 +876,27 @@ class TestEngagementPDFExportViewSet(EngagementTransitionsTestCaseMixin, BaseTen
         self._test_pdf_view(self.unicef_focal_point)
 
 
-class TestPurchaseOrderView(AuditTestCaseMixin, BaseTenantTestCase):
-    def setUp(self):
-        super(TestPurchaseOrderView, self).setUp()
-        call_command('update_audit_permissions', verbosity=0)
+class TestEngagementCSVExportViewSet(EngagementTransitionsTestCaseMixin, BaseTenantTestCase):
+    engagement_factory = MicroAssessmentFactory
 
+    @classmethod
+    def setUpTestData(cls):
+        super(TestEngagementCSVExportViewSet, cls).setUpTestData()
+        call_command('tenant_loaddata', 'audit_risks_blueprints', verbosity=0)
+
+    def test_csv_view(self):
+        response = self.forced_auth_req(
+            'get',
+            '/api/audit/micro-assessments/{}/'.format(self.engagement.id),
+            user=self.unicef_user,
+            data={'format': 'csv'}
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertIn('text/csv', response['Content-Type'])
+
+
+class TestPurchaseOrderView(AuditTestCaseMixin, BaseTenantTestCase):
     def test_get_not_found(self):
         """If instance does not exist, code will attempt to sync,
         and if still does not exist then return 404

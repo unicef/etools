@@ -1,11 +1,9 @@
 from __future__ import absolute_import, division, print_function, unicode_literals
 
-from django.contrib.auth import REDIRECT_FIELD_NAME, login
+from django.conf import settings
 from django.shortcuts import redirect
 from django.views.generic import FormView
 from django.utils.translation import ugettext_lazy as _
-
-from drfpasswordless.utils import authenticate_by_token
 
 from email_auth.forms import EmailLoginForm
 from email_auth.utils import get_token_auth_link
@@ -14,22 +12,17 @@ from notification.utils import send_notification_using_email_template
 
 class TokenAuthView(FormView):
     form_class = EmailLoginForm
-    redirect_field_name = REDIRECT_FIELD_NAME
     template_name = 'email_auth/login.html'
 
     def get(self, request, *args, **kwargs):
-        if 'token' in request.GET:
-            user = authenticate_by_token(request.GET['token'])
-            if user:
-                user.backend = 'django.contrib.auth.backends.ModelBackend'
-                login(request, user)
-                return redirect('dashboard')
+        if request.user.is_authenticated:
+            return redirect('dashboard')
 
         return super(TokenAuthView, self).get(request, *args, **kwargs)
 
     def get_context_data(self, **kwargs):
         context = super(TokenAuthView, self).get_context_data(**kwargs)
-        if 'token' in self.request.GET:
+        if settings.EMAIL_AUTH_TOKEN_NAME in self.request.GET:
             context['form'].errors['__all__'] = [_('Couldn\'t log you in. Invalid token.')]
 
         return context
@@ -41,7 +34,6 @@ class TokenAuthView(FormView):
         }
 
         send_notification_using_email_template(
-            sender=form.get_user(),
             recipients=[form.get_user().email],
             email_template_name='email_auth/token/login',
             context=email_context

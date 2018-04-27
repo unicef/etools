@@ -446,7 +446,7 @@ class TestProgrammeSynchronizer(BaseTenantTestCase):
             "outcomes": {},
             "outputs": {},
             "activities": {}
-         })
+        })
 
     def test_clean_records_outcomes(self):
         """Need all outcome map values set, otherwise ignore"""
