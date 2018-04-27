@@ -2,7 +2,6 @@ from __future__ import absolute_import, division, print_function, unicode_litera
 
 import random
 
-from django.core.management import call_command
 from django.utils import six
 from factory import fuzzy
 from rest_framework import status
@@ -12,16 +11,13 @@ from audit.tests.base import EngagementTransitionsTestCaseMixin
 from audit.tests.factories import AuditFactory, MicroAssessmentFactory, SpecialAuditFactory, SpotCheckFactory, \
     KeyInternalControlFactory
 from audit.transitions.conditions import (
-    AuditSubmitReportRequiredFieldsCheck, EngagementSubmitReportRequiredFieldsCheck, SPSubmitReportRequiredFieldsCheck,)
+    AuditSubmitReportRequiredFieldsCheck, EngagementSubmitReportRequiredFieldsCheck, SPSubmitReportRequiredFieldsCheck,
+    SpecialAuditSubmitReportRequiredFieldsCheck)
 from EquiTrack.tests.cases import BaseTenantTestCase
 
 
 class EngagementCheckTransitionsTestCaseMixin(object):
     fixtures = ('audit_risks_blueprints', )
-
-    @classmethod
-    def setUpTestData(cls):
-        call_command('update_notifications')
 
     def _test_transition(self, user, action, expected_response, errors=None, data=None):
         response = self.forced_auth_req(
@@ -74,8 +70,23 @@ class SpecialAuditTransitionsTestCaseMixin(EngagementTransitionsTestCaseMixin):
     engagement_factory = SpecialAuditFactory
     endpoint = 'special-audits'
 
-    def _fill_specific_procedure(self):
+    def _init_specific_procedure(self):
         SpecificProcedure(audit=self.engagement, description=fuzzy.FuzzyText(length=20).fuzz()).save()
+
+    def _fill_specific_procedure(self):
+        for sp in self.engagement.specific_procedures.all():
+            sp.finding = 'Test'
+            sp.save()
+
+    def _fill_special_audit_specified_fields(self):
+        self.engagement.exchange_rate = fuzzy.FuzzyDecimal(0.5, 400).fuzz()
+        self.engagement.save()
+
+    def _init_filled_engagement(self):
+        super(SpecialAuditTransitionsTestCaseMixin, self)._init_filled_engagement()
+        self._fill_special_audit_specified_fields()
+        self._init_specific_procedure()
+        self._fill_specific_procedure()
 
 
 class SCTransitionsTestCaseMixin(EngagementTransitionsTestCaseMixin):
@@ -86,6 +97,7 @@ class SCTransitionsTestCaseMixin(EngagementTransitionsTestCaseMixin):
         self.engagement.total_amount_tested = random.randint(1, 22)
         self.engagement.total_amount_of_ineligible_expenditure = random.randint(1, 22)
         self.engagement.internal_controls = fuzzy.FuzzyText(length=50).fuzz()
+        self.engagement.exchange_rate = fuzzy.FuzzyDecimal(0.5, 400).fuzz()
         self.engagement.save()
 
     def _init_filled_engagement(self):
@@ -153,19 +165,25 @@ class TestAuditTransitionsTestCase(
 class TestSATransitionsTestCase(
     EngagementCheckTransitionsTestCaseMixin, SpecialAuditTransitionsTestCaseMixin, BaseTenantTestCase
 ):
+    def test_submit_for_dummy_object(self):
+        errors_fields = SpecialAuditSubmitReportRequiredFieldsCheck.fields
+        self._test_submit(self.auditor, status.HTTP_400_BAD_REQUEST, errors=errors_fields)
+
     def test_submit_without_finding_object(self):
-        self._fill_specific_procedure()
+        self._fill_date_fields()
+        self._fill_special_audit_specified_fields()
+        self._init_specific_procedure()
         self._test_submit(self.auditor, status.HTTP_400_BAD_REQUEST, errors=['specific_procedures'])
 
-    def test_submit_without_report(self):
+    def test_attachments_required(self):
+        self._fill_date_fields()
+        self._fill_special_audit_specified_fields()
+        self._init_specific_procedure()
+        self._fill_specific_procedure()
         self._test_submit(self.auditor, status.HTTP_400_BAD_REQUEST, errors=['report_attachments'])
 
     def test_success_submit(self):
         self._init_filled_engagement()
-        self._fill_specific_procedure()
-        for sp in self.engagement.specific_procedures.all():
-            sp.finding = 'Test'
-            sp.save()
         self._test_submit(self.auditor, status.HTTP_200_OK)
 
 

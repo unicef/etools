@@ -33,7 +33,7 @@ class EmailTemplateLoaderTestCase(TestCase):
 
     def test_extends(self):
         send_notification_using_email_template(
-            recipients=['test@test.com'],
+            recipients=['test@example.com'],
             from_address='no-reply@test.com',
             email_template_name='template1',
             context={},

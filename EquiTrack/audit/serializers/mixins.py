@@ -5,29 +5,7 @@ from django.utils.translation import ugettext_lazy as _
 
 from rest_framework import serializers
 
-from utils.permissions.serializers import (
-    StatusPermissionsBasedRootSerializerMixin, StatusPermissionsBasedSerializerMixin,)
-
-from audit.models import AuditPermission
 from audit.serializers.risks import RiskRootSerializer
-
-
-class AuditPermissionsBasedSerializerMixin(StatusPermissionsBasedSerializerMixin):
-    """
-    Mixin that filter writable and readable fields based on AuditPremission model.
-    Use it in nested to engagement serializers.
-    """
-    class Meta(StatusPermissionsBasedSerializerMixin.Meta):
-        permission_class = AuditPermission
-
-
-class AuditPermissionsBasedRootSerializerMixin(StatusPermissionsBasedRootSerializerMixin):
-    """
-    Mixin that filter writable and readable fields based on AuditPremission model.
-    Use it in engagement serializer.
-    """
-    class Meta(StatusPermissionsBasedRootSerializerMixin.Meta):
-        permission_class = AuditPermission
 
 
 class RiskCategoriesUpdateMixin(object):

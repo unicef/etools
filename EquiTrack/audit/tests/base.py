@@ -11,13 +11,18 @@ from django.utils import timezone
 from post_office.models import EmailTemplate
 
 from attachments.models import Attachment, FileType
-from audit.models import RiskBluePrint, UNICEFAuditFocalPoint, UNICEFUser
-from audit.tests.factories import AuditorStaffMemberFactory, AuditPartnerFactory, RiskFactory
-from users.tests.factories import UserFactory
+from audit.models import RiskBluePrint
+from audit.tests.factories import AuditorStaffMemberFactory, AuditPartnerFactory, RiskFactory, UserFactory
 from utils.groups.wrappers import GroupWrapper
 
 
 class AuditTestCaseMixin(object):
+    @classmethod
+    def setUpTestData(cls):
+        super(AuditTestCaseMixin, cls).setUpTestData()
+        call_command('update_notifications')
+        call_command('update_audit_permissions', verbosity=0)
+
     def setUp(self):
         super(AuditTestCaseMixin, self).setUp()
         EmailTemplate.objects.get_or_create(name='audit/staff_member/invite')
@@ -27,21 +32,11 @@ class AuditTestCaseMixin(object):
         GroupWrapper.invalidate_instances()
 
         self.auditor_firm = AuditPartnerFactory()
-        self.auditor = self.auditor_firm.staff_members.first().user
 
-        self.unicef_user = UserFactory()
-        self.unicef_user.groups = [
-            UNICEFUser.as_group()
-        ]
-
-        self.unicef_focal_point = UserFactory(first_name='UNICEF Focal Point')
-        self.unicef_focal_point.groups = [
-            UNICEFUser.as_group(),
-            UNICEFAuditFocalPoint.as_group()
-        ]
-
+        self.auditor = UserFactory(auditor=True, partner_firm=self.auditor_firm)
+        self.unicef_user = UserFactory(first_name='UNICEF User', unicef_user=True)
+        self.unicef_focal_point = UserFactory(first_name='UNICEF Audit Focal Point', audit_focal_point=True)
         self.usual_user = UserFactory(first_name='Unknown user')
-        self.usual_user.groups = []
 
 
 class EngagementTransitionsTestCaseMixin(AuditTestCaseMixin):
@@ -113,7 +108,6 @@ class EngagementTransitionsTestCaseMixin(AuditTestCaseMixin):
 
     def setUp(self):
         super(EngagementTransitionsTestCaseMixin, self).setUp()
-        call_command('update_audit_permissions', verbosity=0)
 
         self.engagement = self.engagement_factory(agreement__auditor_firm=self.auditor_firm)
 
