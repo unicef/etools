@@ -75,8 +75,10 @@ class TPMVisit(SoftDeleteMixin, TimeStampedModel, models.Model):
 
     status = FSMField(verbose_name=_('Status'), max_length=20, choices=STATUSES, default=STATUSES.draft, protected=True)
 
+    # UNICEF cancelled visit
     cancel_comment = models.TextField(verbose_name=_('Cancel Comment'), blank=True)
-    reject_comment = models.TextField(verbose_name=_('Request For More Information'), blank=True)
+    # TPM rejected visit
+    reject_comment = models.TextField(verbose_name=_('Reason for Rejection'), blank=True)
     approval_comment = models.TextField(verbose_name=_('Approval Comments'), blank=True)
 
     report_attachments = GenericRelation(Attachment, verbose_name=_('Visit Report'), blank=True)
@@ -352,7 +354,8 @@ class TPMVisit(SoftDeleteMixin, TimeStampedModel, models.Model):
 class TPMVisitReportRejectComment(models.Model):
     rejected_at = models.DateTimeField(auto_now_add=True, verbose_name=_('Rejected At'))
 
-    reject_reason = models.TextField(verbose_name=_('Reason of Rejection'))
+    # UNICEF rejected report
+    reject_reason = models.TextField(verbose_name=_('Reason for Rejection'))
 
     tpm_visit = models.ForeignKey(
         TPMVisit, verbose_name=_('Visit'), related_name='report_reject_comments',
