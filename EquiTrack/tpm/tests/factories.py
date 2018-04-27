@@ -43,6 +43,13 @@ class SimpleTPMPartnerFactory(BaseFirmFactory):
 class TPMPartnerFactory(SimpleTPMPartnerFactory):
     staff_members = factory.RelatedFactory(TPMPartnerStaffMemberFactory, 'tpm_partner')
 
+    @factory.post_generation
+    def countries(self, create, extracted, **kwargs):
+        if extracted is not None:
+            self.countries.add(*extracted)
+        else:
+            self.countries.add(connection.tenant)
+
 
 class InterventionResultLinkFactory(factory.django.DjangoModelFactory):
     class Meta:
