@@ -80,6 +80,9 @@ class Permission(models.Model):
     class Meta:
         app_label = "permissions2"
 
+    class Meta:
+        app_label = "permissions2"
+
     def __str__(self):
         return '{} permission to {} {} at {}'.format(
             self.permission_type.title(),
