@@ -230,7 +230,7 @@ class UserProfile(models.Model):
     phone_number = models.CharField(max_length=255, null=True, blank=True, verbose_name=_('Phone Number'))
 
     # staff_id needs to be NULLable so we can make it unique while still making it optional
-    staff_id = models.CharField(max_length=32, null=True, blank=True, unique=True, verbose_name=_('Staff ID'))
+    staff_id = models.CharField(max_length=32, null=True, blank=True, verbose_name=_('Staff ID'))
     org_unit_code = models.CharField(max_length=32, null=True, blank=True, verbose_name=_('Org Unit Code'))
     org_unit_name = models.CharField(max_length=64, null=True, blank=True, verbose_name=_('Org Unit Name'))
     post_number = models.CharField(max_length=32, null=True, blank=True, verbose_name=_('Post Number'))

@@ -76,7 +76,7 @@ class RiskBlueprintNestedSerializer(WritableNestedSerializerMixin, serializers.M
                 if risk:
                     field.update(risk, data)
                 else:
-                    data['engagement'] = self.context.get('instance', None)
+                    data['engagement'] = self.root.instance
                     data['blueprint'] = instance
                     field.create(data)
             except serializers.ValidationError as exc:

@@ -9,7 +9,8 @@ from notification.utils import send_notification_using_email_template
 
 
 class AuditorFirm(BaseFirm):
-    pass
+    unicef_users_allowed = models.BooleanField(default=False, verbose_name=_('UNICEF users allowed'),
+                                               help_text=_('Allow UNICEF users to join and act as auditors.'))
 
 
 @python_2_unicode_compatible

@@ -13,13 +13,12 @@ from audit.models import (
     Audit, DetailedFindingInfo, Engagement, EngagementActionPoint, FinancialFinding, Finding, MicroAssessment,
     SpecialAudit, SpecialAuditRecommendation, SpecificProcedure, SpotCheck, KeyInternalControl, Risk)
 from audit.serializers.auditor import AuditorStaffMemberSerializer, PurchaseOrderSerializer, PurchaseOrderItemSerializer
-from audit.serializers.mixins import (
-    AuditPermissionsBasedRootSerializerMixin, AuditPermissionsBasedSerializerMixin, EngagementDatesValidation,
-    RiskCategoriesUpdateMixin,)
+from audit.serializers.mixins import EngagementDatesValidation, RiskCategoriesUpdateMixin
 from audit.serializers.risks import RiskRootSerializer, AggregatedRiskRootSerializer, KeyInternalWeaknessSerializer
 from partners.serializers.interventions_v2 import BaseInterventionListSerializer
 from partners.serializers.partner_organization_v2 import (
     PartnerOrganizationListSerializer, PartnerStaffMemberNestedSerializer,)
+from permissions2.serializers import PermissionsBasedSerializerMixin
 from users.serializers import MinimalUserSerializer
 from utils.common.serializers.fields import SeparatedReadWriteField
 from utils.common.serializers.mixins import UserContextSerializerMixin
@@ -128,7 +127,7 @@ class EngagementExportSerializer(serializers.ModelSerializer):
         )
 
 
-class EngagementLightSerializer(AuditPermissionsBasedRootSerializerMixin, serializers.ModelSerializer):
+class EngagementLightSerializer(PermissionsBasedSerializerMixin, serializers.ModelSerializer):
     agreement = SeparatedReadWriteField(
         read_field=PurchaseOrderSerializer(read_only=True, label=_('Purchase Order')),
     )
@@ -148,7 +147,7 @@ class EngagementLightSerializer(AuditPermissionsBasedRootSerializerMixin, serial
     status_date = serializers.ReadOnlyField(source='displayed_status_date', label=_('Date of Status'))
     unique_id = serializers.ReadOnlyField(label=_('Unique ID'))
 
-    class Meta(AuditPermissionsBasedRootSerializerMixin.Meta):
+    class Meta:
         model = Engagement
         fields = [
             'id', 'unique_id', 'agreement', 'po_item',
@@ -171,10 +170,9 @@ class EngagementLightSerializer(AuditPermissionsBasedRootSerializerMixin, serial
         return attrs
 
 
-class SpecificProcedureSerializer(AuditPermissionsBasedSerializerMixin,
-                                  WritableNestedSerializerMixin,
+class SpecificProcedureSerializer(WritableNestedSerializerMixin,
                                   serializers.ModelSerializer):
-    class Meta(AuditPermissionsBasedSerializerMixin.Meta, WritableNestedSerializerMixin.Meta):
+    class Meta(WritableNestedSerializerMixin.Meta):
         model = SpecificProcedure
         fields = [
             'id', 'description', 'finding',
@@ -348,7 +346,7 @@ class MicroAssessmentSerializer(ActivePDValidationMixin, RiskCategoriesUpdateMix
     )
     overall_risk_assessment = RiskRootSerializer(
         code='ma_global_assessment', required=False, label=_('Overall Risk Assessment'),
-        risk_choices=list(Risk.VALUES)[1:]
+        risk_choices=Risk.POSITIVE_VALUES
     )
     findings = DetailedFindingInfoSerializer(
         many=True, required=False, label=_('Detailed Internal Control Findings and Recommendations')
