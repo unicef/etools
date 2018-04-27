@@ -102,9 +102,9 @@ jobs:
 
 workflows:
   version: 2
-  django1_11:
-    jobs:
-      - test
+#  django1_11:
+#    jobs:
+#      - test
   build_and_test:
     jobs:
       - test
