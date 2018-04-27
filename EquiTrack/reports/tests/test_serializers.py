@@ -261,7 +261,7 @@ class TestLowerResultCUSerializer(BaseTenantTestCase):
         self.data = {
             "name": "LL Name",
             "code": "C123",
-            "indicator":  {"title": self.indicator.title},
+            "indicator": {"title": self.indicator.title},
             "result_link": self.result_link.pk
         }
 
