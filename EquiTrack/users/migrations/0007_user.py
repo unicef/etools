@@ -23,7 +23,7 @@ class FakeCreateModel(migrations.CreateModel):
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('users', '0005_auto_20180419_2113'),
+        ('users', '0006_auto_20180423_1515'),
     ]
 
     operations = [
