@@ -1,9 +1,6 @@
 import os
 
 import pytest
-from tenant_schemas.migration_executors import get_executor
-from tenant_schemas.utils import get_public_schema_name, get_tenant_model
-
 
 def pytest_configure(config):
     from django.conf import settings
@@ -34,6 +31,9 @@ def pytest_configure(config):
 
 @pytest.fixture(autouse=True, scope='session')
 def django_db_setup(django_db_modify_db_settings, django_db_keepdb, django_db_use_migrations, django_db_blocker):
+    from tenant_schemas.migration_executors import get_executor
+    from tenant_schemas.utils import get_public_schema_name, get_tenant_model
+
     if not django_db_keepdb:
         with django_db_blocker.unblock():
             executor = get_executor(codename=None)([], {'no_color': False, 'verbosity': 1,
