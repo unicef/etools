@@ -77,6 +77,9 @@ class Permission(models.Model):
 
     objects = PermissionQuerySet.as_manager()
 
+    class Meta:
+        app_label = "permissions2"
+
     def __str__(self):
         return '{} permission to {} {} at {}'.format(
             self.permission_type.title(),

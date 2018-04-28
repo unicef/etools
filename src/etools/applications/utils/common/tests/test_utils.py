@@ -49,6 +49,7 @@ class CommonUtilsTest(TestCase):
 
             class Meta:
                 verbose_name_plural = _('Dummies')
+                app_label = 'tests'
 
         expected_field_names = ['field{:02}'.format(i + 1) for i in range(12)]
         expected_field_names += ['field10_id', 'field11_id']
