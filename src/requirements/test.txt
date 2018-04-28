@@ -110,9 +110,8 @@ pyopenssl==17.5.0
 pypdf2==1.26.0
 pyrestcli==0.6.4
 pysaml2==4.4.0
+pytest-django
 pytest-cov==2.5.1         # via pytest-cover
-pytest-cover==3.0.0       # via pytest-coverage
-pytest-coverage==0.0
 pytest-echo==1.6.0
 pytest-flake8==1.0.0
 pytest-pythonpath==0.7.2
