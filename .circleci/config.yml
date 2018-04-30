@@ -14,6 +14,7 @@ jobs:
           PGUSER: postgres
           POSTGRES_DB: circle_test
           POSTGRES_PASSWORD: postgres
+          CODACY_PROJECT_TOKEN: 2697096ceaff4dfda84bfdea7fba494e
     steps:
       - checkout
       - restore_cache:
@@ -21,7 +22,7 @@ jobs:
       - run:
           name: Run Tests
           command: |
-            pip install tox
+            pip install tox codacy-coverage
             tox -re d110
       - save_cache:
           key: deps2-{{ .Branch }}--{{ checksum "src/requirements/test.txt" }}-{{ checksum ".circleci/config.yml" }}
@@ -31,6 +32,9 @@ jobs:
       - store_artifacts:
           path: build/coverage
           destination: coverage
+    post:
+      - bash <(curl -s https://codecov.io/bash)
+      - python-codacy-coverage -r coverage.xml
 
   build_and_deploy:
     working_directory: ~/code
