@@ -27,6 +27,13 @@ class TPMPartnerStaffMemberFactory(BaseStaffMemberFactory):
     class Meta:
         model = TPMPartnerStaffMember
 
+    @factory.post_generation
+    def groups(self, create, extracted, **kwargs):
+        if not create:
+            return
+
+        self.user.groups.add(Group.objects.get_or_create(name='Third Party Monitor')[0])
+
 
 class SimpleTPMPartnerFactory(BaseFirmFactory):
     class Meta:
@@ -35,6 +42,13 @@ class SimpleTPMPartnerFactory(BaseFirmFactory):
 
 class TPMPartnerFactory(SimpleTPMPartnerFactory):
     staff_members = factory.RelatedFactory(TPMPartnerStaffMemberFactory, 'tpm_partner')
+
+    @factory.post_generation
+    def countries(self, create, extracted, **kwargs):
+        if extracted is not None:
+            self.countries.add(*extracted)
+        else:
+            self.countries.add(connection.tenant)
 
 
 class InterventionResultLinkFactory(factory.django.DjangoModelFactory):
@@ -168,7 +182,7 @@ class UserFactory(BaseUserFactory):
             return
 
         if not extracted:
-            extracted = SimpleTPMPartnerFactory()
+            extracted = TPMPartnerFactory()
 
         TPMPartnerStaffMemberFactory(tpm_partner=extracted, user=self)
 
@@ -179,7 +193,7 @@ class TPMVisitFactory(factory.DjangoModelFactory):
 
     status = TPMVisit.STATUSES.draft
 
-    tpm_partner = factory.SubFactory(SimpleTPMPartnerFactory)
+    tpm_partner = factory.SubFactory(TPMPartnerFactory)
 
     unicef_focal_points__count = 0
     offices__count = 0
@@ -195,10 +209,7 @@ class TPMVisitFactory(factory.DjangoModelFactory):
     class Params:
         draft = factory.Trait()
 
-        assigned = factory.Trait(
-            status=TPMVisit.STATUSES.assigned,
-            date_of_assigned=factory.LazyFunction(timezone.now),
-
+        pre_assigned = factory.Trait(
             unicef_focal_points__count=3,
             offices__count=3,
 
@@ -209,48 +220,74 @@ class TPMVisitFactory(factory.DjangoModelFactory):
             tpm_activities__attachments__count=3,
         )
 
+        assigned = InheritedTrait(
+            pre_assigned,
+            status=TPMVisit.STATUSES.assigned,
+            date_of_assigned=factory.LazyFunction(timezone.now),
+        )
+
         cancelled = factory.Trait(
             status=TPMVisit.STATUSES.cancelled,
             date_of_cancelled=factory.LazyFunction(timezone.now),
         )
 
-        tpm_accepted = InheritedTrait(
+        pre_tpm_accepted = InheritedTrait(
             assigned,
+        )
+
+        tpm_accepted = InheritedTrait(
+            pre_tpm_accepted,
 
             status=TPMVisit.STATUSES.tpm_accepted,
             date_of_tpm_accepted=factory.LazyFunction(timezone.now),
         )
 
-        tpm_rejected = InheritedTrait(
+        pre_tpm_rejected = InheritedTrait(
             assigned,
-
-            status=TPMVisit.STATUSES.tpm_rejected,
-            date_of_tpm_rejected=factory.LazyFunction(timezone.now),
 
             reject_comment='Just because.',
         )
 
-        tpm_reported = InheritedTrait(
-            tpm_accepted,
+        tpm_rejected = InheritedTrait(
+            pre_tpm_rejected,
 
-            status=TPMVisit.STATUSES.tpm_reported,
-            date_of_tpm_reported=factory.LazyFunction(timezone.now),
+            status=TPMVisit.STATUSES.tpm_rejected,
+            date_of_tpm_rejected=factory.LazyFunction(timezone.now),
+        )
+
+        pre_tpm_reported = InheritedTrait(
+            tpm_accepted,
 
             tpm_activities__report_attachments__count=1,
             tpm_activities__report_attachments__file_type__name='report',
         )
 
-        tpm_report_rejected = InheritedTrait(
-            tpm_reported,
+        tpm_reported = InheritedTrait(
+            pre_tpm_reported,
 
-            status=TPMVisit.STATUSES.tpm_report_rejected,
-            date_of_tpm_report_rejected=factory.LazyFunction(timezone.now),
+            status=TPMVisit.STATUSES.tpm_reported,
+            date_of_tpm_reported=factory.LazyFunction(timezone.now),
+        )
+
+        pre_tpm_report_rejected = InheritedTrait(
+            tpm_reported,
 
             report_reject_comments__count=1,
         )
 
-        unicef_approved = InheritedTrait(
+        tpm_report_rejected = InheritedTrait(
+            pre_tpm_report_rejected,
+
+            status=TPMVisit.STATUSES.tpm_report_rejected,
+            date_of_tpm_report_rejected=factory.LazyFunction(timezone.now),
+        )
+
+        pre_unicef_approved = InheritedTrait(
             tpm_reported,
+        )
+
+        unicef_approved = InheritedTrait(
+            pre_unicef_approved,
 
             status=TPMVisit.STATUSES.unicef_approved,
             date_of_unicef_approved=factory.LazyFunction(timezone.now),
