@@ -68,6 +68,9 @@ class TPMPartnerViewSet(
     def get_queryset(self):
         queryset = super(TPMPartnerViewSet, self).get_queryset()
 
+        if getattr(self, 'action', None) == 'list':
+            queryset = queryset.country_partners()
+
         user_type = TPMPermission._get_user_type(self.request.user)
         if not user_type or user_type == ThirdPartyMonitor:
             queryset = queryset.filter(staff_members__user=self.request.user)
@@ -98,6 +101,13 @@ class TPMPartnerViewSet(
         serializer = self.get_serializer(instance)
         return Response(serializer.data)
 
+    @detail_route(methods=['post'], url_path='activate')
+    def activate(self, request, *args, **kwargs):
+        tpm_partner = self.get_object()
+        tpm_partner.activate(request.user.profile.country)
+
+        return Response(TPMPartnerSerializer(instance=tpm_partner).data)
+
     @list_route(methods=['get'], url_path='export', renderer_classes=(TPMPartnerCSVRenderer,))
     def export(self, request, *args, **kwargs):
         tpm_partners = TPMPartner.objects.all().order_by('vendor_number')
@@ -123,6 +133,7 @@ class TPMStaffMembersViewSet(
     filter_backends = (OrderingFilter, SearchFilter, DjangoFilterBackend, )
     ordering_fields = ('user__email', 'user__first_name', 'id', )
     search_fields = ('user__first_name', 'user__email', 'user__last_name', )
+    filter_fields = ('user__is_active', )
 
     def perform_create(self, serializer, **kwargs):
         instance = serializer.save(tpm_partner=self.get_parent_object(), **kwargs)
@@ -268,7 +279,7 @@ class TPMVisitViewSet(
 
     @list_route(methods=['get'], url_path='export', renderer_classes=(TPMVisitCSVRenderer,))
     def visits_export(self, request, *args, **kwargs):
-        tpm_visits = TPMVisit.objects.all().prefetch_related(
+        tpm_visits = self.get_queryset().prefetch_related(
             'tpm_activities', 'tpm_activities__section', 'tpm_activities__partner',
             'tpm_activities__intervention', 'tpm_activities__locations', 'unicef_focal_points',
             'tpm_partner_focal_points'
