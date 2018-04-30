@@ -23,7 +23,7 @@ jobs:
           name: Run Tests
           command: |
             pip install tox
-            tox -re d110, upload_coverage
+            tox -re d110,upload_coverage
 #      - save_cache:
 #          key: deps2-{{ .Branch }}--{{ checksum "src/requirements/test.txt" }}-{{ checksum ".circleci/config.yml" }}
 #          paths:
