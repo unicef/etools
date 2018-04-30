@@ -17,17 +17,18 @@ jobs:
           CODACY_PROJECT_TOKEN: 2697096ceaff4dfda84bfdea7fba494e
     steps:
       - checkout
-      - restore_cache:
-          key: deps2-{{ .Branch }}--{{ checksum "src/requirements/test.txt" }}-{{ checksum ".circleci/config.yml" }}
+#      - restore_cache:
+#          key: deps2-{{ .Branch }}--{{ checksum "src/requirements/test.txt" }}-{{ checksum ".circleci/config.yml" }}
       - run:
           name: Run Tests
           command: |
+            pip install tox
             tox -re d110, upload_coverage
-      - save_cache:
-          key: deps2-{{ .Branch }}--{{ checksum "src/requirements/test.txt" }}-{{ checksum ".circleci/config.yml" }}
-          paths:
-            - "env1"
-            - /root/.cache/pip
+#      - save_cache:
+#          key: deps2-{{ .Branch }}--{{ checksum "src/requirements/test.txt" }}-{{ checksum ".circleci/config.yml" }}
+#          paths:
+#            - "env1"
+#            - /root/.cache/pip
       - store_artifacts:
           path: build/coverage
           destination: coverage
