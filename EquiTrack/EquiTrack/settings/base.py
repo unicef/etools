@@ -584,7 +584,7 @@ PASSWORDLESS_AUTH = {
     'PASSWORDLESS_USER_EMAIL_FIELD_NAME': 'username'
 }
 
-REPORT_EMAILS = get_from_secrets_or_env('REPORT_EMAILS', ['etools@unicef.org', ])
+REPORT_EMAILS = get_from_secrets_or_env('REPORT_EMAILS', 'etools@unicef.org').replace(' ', '').split(',')
 
 USERVOICE_WIDGET_KEY = 'defaultVoiceKey'
 
