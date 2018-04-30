@@ -329,6 +329,12 @@ CELERY_WORKER_DISABLE_RATE_LIMITS = False
 # By default we will ignore result
 # If you want to see results and try out tasks interactively, change it to False
 # Or change this setting on tasks level
+
+CELERY_IMPORTS = (
+    'vision.tasks',
+    'hact.tasks',
+)
+
 CELERY_TASK_IGNORE_RESULT = True
 CELERY_SEND_TASK_ERROR_EMAILS = False
 CELERY_RESULT_EXPIRES = 600
@@ -337,7 +343,8 @@ CELERY_WORKER_PREFETCH_MULTIPLIER = 1
 # django-celery-email: https://github.com/pmclanahan/django-celery-email
 CELERY_EMAIL_BACKEND = get_from_secrets_or_env('EMAIL_BACKEND', 'django.core.mail.backends.smtp.EmailBackend')
 CELERY_TASK_ROUTES = {
-    'vision.tasks.sync_handler': {'queue': 'vision_queue'}
+    'vision.tasks.sync_handler': {'queue': 'vision_queue'},
+    'hact.tasks.update_hact_for_country': {'queue': 'vision_queue'}
 }
 
 # djangorestframework: http://www.django-rest-framework.org/api-guide/settings/
