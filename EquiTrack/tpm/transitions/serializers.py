@@ -12,3 +12,7 @@ class TPMVisitApproveSerializer(serializers.Serializer):
     approval_comment = serializers.CharField(required=False)
     notify_focal_point = serializers.BooleanField(required=False)
     notify_tpm_partner = serializers.BooleanField(required=False)
+
+
+class TPMVisitCancelSerializer(serializers.Serializer):
+    cancel_comment = serializers.CharField()
