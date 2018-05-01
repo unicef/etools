@@ -10,12 +10,12 @@ from notification.utils import send_notification_using_email_template
 
 def generate_username():
     base = 32
-    ABC = (string.digits + string.ascii_lowercase)[:base]
+    abc_function = (string.digits + string.ascii_lowercase)[:base]
 
     uid = uuid.uuid4().int
     digits = []
     while uid:
-        digits.append(ABC[uid % base])
+        digits.append(abc_function[uid % base])
         uid //= base
 
     digits.reverse()
