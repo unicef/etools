@@ -39,10 +39,10 @@ def pop_keys(d, keys):
     return res, rem
 
 
-def run_on_all_tenants(function):
+def run_on_all_tenants(function, **kwargs):
     with every_country() as c:
         for country in c:
-            function()
+            function(**kwargs)
 
 
 class every_country:
