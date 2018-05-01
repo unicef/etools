@@ -77,10 +77,17 @@ class TestTPMTransitionConditions(TPMTransitionTestCase):
         visit = self._refresh_tpm_visit_instance(visit)
         self.assertEquals(visit.status, 'assigned')
 
-    def test_success_cancel(self):
+    def test_cancel_without_msg(self):
         visit = TPMVisitFactory(status='draft')
 
         response = self._do_transition(visit, 'cancel', self.pme_user)
+        self.assertEquals(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn('cancel_comment', response.data)
+
+    def test_success_cancel(self):
+        visit = TPMVisitFactory(status='draft')
+
+        response = self._do_transition(visit, 'cancel', self.pme_user, data={'cancel_comment': 'Just because'})
         self.assertEquals(response.status_code, status.HTTP_200_OK)
 
         visit = self._refresh_tpm_visit_instance(visit)
@@ -260,6 +267,9 @@ class TPMTransitionPermissionsTestCase(TransitionPermissionsTestCaseMixin, TPMTr
 
         if transition in ['reject', 'reject_report']:
             extra_data['reject_comment'] = 'Just because.'
+
+        if transition in ['cancel']:
+            extra_data['cancel_comment'] = 'Just because.'
 
         if transition == 'approve':
             extra_data['mark_as_programmatic_visit'] = []
