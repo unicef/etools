@@ -317,6 +317,6 @@ def pmp_indicator_report():
 
 
 @app.task
-def copy_attachments():
+def copy_attachments(hours=25):
     """Copy all partner app attachments"""
-    copy_all_attachments()
+    copy_all_attachments(hours)
