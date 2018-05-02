@@ -1,8 +1,6 @@
 from __future__ import absolute_import
 from __future__ import unicode_literals
 
-from django.shortcuts import get_object_or_404
-
 from django.db import connection
 from rest_framework.generics import ListAPIView, RetrieveAPIView
 from rest_framework.response import Response
@@ -32,41 +30,39 @@ class GisLocationsInUseViewset(ListAPIView):
             try:
                 # we need to set the workspace before making any query
                 connection.set_tenant(Country.objects.get(pk=country_id))
-
-                interventions = Intervention.objects.all()
-                location_ids = set()
-
-                for intervention in interventions:
-                    for loc in intervention.flat_locations.all():
-                        location_ids.add(loc.id)
-
-                indicators = AppliedIndicator.objects.prefetch_related(
-                    'locations'
-                ).all()
-
-                for indicator in indicators:
-                    for iloc in indicator.locations.all():
-                        location_ids.add(iloc.id)
-
-                travel_activities = TravelActivity.objects.prefetch_related(
-                    'locations'
-                ).all()
-
-                for travel_activity in travel_activities:
-                    for t2f_loc in travel_activity.locations.all():
-                        location_ids.add(t2f_loc.id)
-
-                locations = Location.objects.filter(
-                    pk__in=list(location_ids),
-                ).all()
-
-                serializer = GisLocationListSerializer(locations, many=True, context={'request': request})
-
-                return Response(serializer.data)
             except Country.DoesNotExist:
                 return Response(status=400, data={'error': 'Country not found'})
-            except BaseException as e:
-                return Response(status=500, data=str(e))
+
+            interventions = Intervention.objects.all()
+            location_ids = set()
+
+            for intervention in interventions:
+                for loc in intervention.flat_locations.all():
+                    location_ids.add(loc.id)
+
+            indicators = AppliedIndicator.objects.prefetch_related(
+                'locations'
+            ).all()
+
+            for indicator in indicators:
+                for iloc in indicator.locations.all():
+                    location_ids.add(iloc.id)
+
+            travel_activities = TravelActivity.objects.prefetch_related(
+                'locations'
+            ).all()
+
+            for travel_activity in travel_activities:
+                for t2f_loc in travel_activity.locations.all():
+                    location_ids.add(t2f_loc.id)
+
+            locations = Location.objects.filter(
+                pk__in=list(location_ids),
+            ).all()
+
+            serializer = GisLocationListSerializer(locations, many=True, context={'request': request})
+
+            return Response(serializer.data)
         else:
             return Response(status=400, data={'error': 'Country is required'})
 
@@ -92,15 +88,13 @@ class GisLocationsGeomListViewset(ListAPIView):
             try:
                 # we need to set the workspace before making any query
                 connection.set_tenant(Country.objects.get(pk=country_id))
-
-                locations = Location.objects.filter(geom__isnull=False).all()
-                serializer = GisLocationGeoDetailSerializer(locations, many=True, context={'request': request})
-
-                return Response(serializer.data)
             except Country.DoesNotExist:
                 return Response(status=400, data={'error': 'Country not found'})
-            except BaseException as e:
-                return Response(status=500, data=str(e))
+
+            locations = Location.objects.filter(geom__isnull=False).all()
+            serializer = GisLocationGeoDetailSerializer(locations, many=True, context={'request': request})
+
+            return Response(serializer.data)
         else:
             return Response(status=400, data={'error': 'Country is required'})
 
@@ -126,17 +120,15 @@ class GisLocationsGeomDetailsViewset(RetrieveAPIView):
                 connection.set_tenant(Country.objects.get(pk=country_id))
             except Country.DoesNotExist:
                 return Response(status=400, data={'error': 'Country not found'})
-            except BaseException as e:
-                return Response(status=500, data=str(e))
 
             if pcode is not None or id is not None:
                 try:
                     lookup = {'p_code': pcode} if id is None else {'pk': id}
-                    location = get_object_or_404(Location, **lookup)
-                    serializer = GisLocationGeoDetailSerializer(location, context={'request': request})
+                    location = Location.get(lookup)
+                except Location.DoesNotExist:
+                    return Response(status=400, data={'error': 'Location not found'})
 
-                    return Response(serializer.data)
-                except BaseException as e:
-                    return Response(status=500, data=str(e))
+                serializer = GisLocationGeoDetailSerializer(location, context={'request': request})
+                return Response(serializer.data)
         else:
             return Response(status=400, data={'error': 'Country is required'})
