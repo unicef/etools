@@ -429,6 +429,13 @@ class PartnerAdmin(ExportMixin, admin.ModelAdmin):
         u'total_ct_cp',
         u'deleted_flag',
         u'blocked',
+        u'name',
+        u'hact_values',
+        u'total_ct_cp',
+        u'total_ct_cy',
+        u'net_ct_cy',
+        u'reported_cy',
+        u'total_ct_ytd',
     )
     fieldsets = (
         (_('Partner Details'), {
@@ -468,14 +475,6 @@ class PartnerAdmin(ExportMixin, admin.ModelAdmin):
     actions = (
         'hide_partners',
         'show_partners'
-    )
-    readonly_fields = (
-        u'hact_values',
-        u'total_ct_cp',
-        u'total_ct_cy',
-        u'net_ct_cy',
-        u'reported_cy',
-        u'total_ct_ytd',
     )
 
     def hide_partners(self, request, queryset):
