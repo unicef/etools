@@ -76,7 +76,7 @@ class BaseFirm(TimeStampedModel, models.Model):
         return self.name
 
     def natural_key(self):
-        return (self.vendor_number, )
+        return self.vendor_number,
 
 
 @python_2_unicode_compatible

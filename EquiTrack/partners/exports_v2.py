@@ -107,6 +107,49 @@ class PartnerOrganizationHactCsvRenderer(r.CSVRenderer):
     }
 
 
+class PartnerOrganizationSimpleHactCsvRenderer(r.CSVRenderer):
+
+    header = [
+        'name',
+        'vendor_number',
+        'partner_type',
+        'shared_with',
+        'type_of_assessment',
+        'total_ct_ytd',
+        'rating',
+        'flags.expiring_assessment_flag',
+        'flags.approaching_threshold_flag',
+        'hact_values.programmatic_visits.planned.total',
+        'hact_min_requirements.programme_visits',
+        'hact_values.programmatic_visits.completed.total',
+        'planned_engagement.spot_check_required',
+        'hact_values.spot_checks.completed.total',
+        'hact_values.audits.minimum_requirements',
+        'hact_values.audits.completed',
+        'hact_values.outstanding_findings',
+    ]
+
+    labels = {
+        'name': 'Implementing Partner',
+        'vendor_number': 'Vendor Number',
+        'partner_type': 'Partner Type',
+        'shared_with': 'Shared IP',
+        'total_ct_ytd': 'Cash Transfers Jan - Dec',
+        'type_of_assessment': 'Assessment Type',
+        'rating': 'Risk Rating',
+        'flags.expiring_assessment_flag': 'Expiring Threshold',
+        'flags.approaching_threshold_flag': 'Approach Threshold',
+        'hact_values.programmatic_visits.planned.total': 'Programmatic Visits Planned',
+        'hact_min_requirements.programme_visits': 'Programmatic Visits M.R',
+        'hact_values.programmatic_visits.completed.total': 'Programmatic Visits Completed',
+        'planned_engagement.spot_check_required': 'Spot Check Required',
+        'hact_values.spot_checks.completed.total': 'Spot Checks Completed',
+        'hact_values.audits.minimum_requirements': 'Audits M.R',
+        'hact_values.audits.completed': 'Audit Completed',
+        'hact_values.outstanding_findings': 'Audits Outstanding Findings',
+    }
+
+
 class AgreementCSVRenderer(r.CSVRenderer):
     header = [
         "agreement_number",
