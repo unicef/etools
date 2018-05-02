@@ -32,6 +32,9 @@ class Command(BaseCommand):
         'audit.engagement.status',
         'audit.engagement.status_date',
 
+        'audit.spotcheck.face_form_start_date',
+        'audit.spotcheck.face_form_end_date',
+
         'purchase_order.purchaseorder.*',
         'purchase_order.auditorfirm.*',
     ]
