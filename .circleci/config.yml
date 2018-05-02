@@ -17,33 +17,20 @@ jobs:
     steps:
       - checkout
       - restore_cache:
-          key: deps2-{{ .Branch }}-{{ checksum "EquiTrack/requirements/base.txt" }}--{{ checksum "EquiTrack/requirements/test.txt" }}-{{ checksum ".circleci/config.yml" }}
-      - run:
-          name: create main virtualenv, install requirements
-          command: |
-            virtualenv -p $(type -p python3) env1
-            . env1/bin/activate
-            pip install -r EquiTrack/requirements/test.txt
-      - save_cache:
-          key: deps2-{{ .Branch }}-{{ checksum "EquiTrack/requirements/base.txt" }}--{{ checksum "EquiTrack/requirements/test.txt" }}-{{ checksum ".circleci/config.yml" }}
-          paths:
-            - "env1"
-            - /root/.cache/pip
-      - run:
-          name: Postgres Extensions
-          command: |
-            psql -U postgres -d template1 -c 'create extension if not exists hstore;'
-
+          key: deps2-{{ .Branch }}--{{ checksum "src/requirements/test.txt" }}-{{ checksum ".circleci/config.yml" }}
       - run:
           name: Run Tests
           command: |
-            . env1/bin/activate
-            cd EquiTrack
-            mkdir media
-            ./runtests.sh
+            pip install tox
+            tox -re d110,report
+      - save_cache:
+          key: deps2-{{ .Branch }}--{{ checksum "src/requirements/test.txt" }}-{{ checksum ".circleci/config.yml" }}
+          paths:
+            - "env1"
+            - /root/.cache/pip
       - store_artifacts:
-          path: test-reports/
-          destination: tr1
+          path: build/coverage
+          destination: coverage
 
   build_and_deploy:
     working_directory: ~/code
