@@ -123,8 +123,8 @@ class TestTPMVisitViewSet(TestExportMixin, TPMTestCaseMixin, BaseTenantTestCase)
         self.assertEqual(activity.attachments.count(), 1)
 
     def test_action_points(self):
-        visit = TPMVisitFactory(status='tpm_reported', unicef_focal_points__count=1)
-        unicef_focal_point = visit.unicef_focal_points.first()
+        visit = TPMVisitFactory(status='tpm_reported', tpm_activities__unicef_focal_points__count=1)
+        unicef_focal_point = visit.tpm_activities.first().unicef_focal_points.first()
         self.assertFalse(TPMActionPoint.objects.filter(tpm_visit=visit).exists())
 
         response = self.forced_auth_req(
@@ -162,7 +162,9 @@ class TestTPMVisitViewSet(TestExportMixin, TPMTestCaseMixin, BaseTenantTestCase)
                         'partner': existing_activity.partner.id,
                         'date': datetime.now().date(),
                         'section': existing_activity.section.id,
-                        'locations': existing_activity.locations.all().values_list('id', flat=True)
+                        'locations': existing_activity.locations.all().values_list('id', flat=True),
+                        'offices': existing_activity.offices.all().values_list('id', flat=True),
+                        'unicef_focal_points': existing_activity.unicef_focal_points.all().values_list('id', flat=True),
                     }
                 ]
             }
@@ -187,7 +189,9 @@ class TestTPMVisitViewSet(TestExportMixin, TPMTestCaseMixin, BaseTenantTestCase)
                         'partner': existing_activity.partner.id,
                         'date': datetime.now().date(),
                         'section': existing_activity.section.id,
-                        'locations': existing_activity.locations.all().values_list('id', flat=True)
+                        'locations': existing_activity.locations.all().values_list('id', flat=True),
+                        'offices': existing_activity.offices.all().values_list('id', flat=True),
+                        'unicef_focal_points': existing_activity.unicef_focal_points.all().values_list('id', flat=True),
                     }
                 ]
             }
@@ -212,7 +216,9 @@ class TestTPMVisitViewSet(TestExportMixin, TPMTestCaseMixin, BaseTenantTestCase)
                         'partner': existing_activity.partner.id,
                         'date': datetime.now().date(),
                         'section': existing_activity.section.id,
-                        'locations': existing_activity.locations.all().values_list('id', flat=True)
+                        'locations': existing_activity.locations.all().values_list('id', flat=True),
+                        'offices': existing_activity.offices.all().values_list('id', flat=True),
+                        'unicef_focal_points': existing_activity.unicef_focal_points.all().values_list('id', flat=True),
                     }
                 ]
             }
