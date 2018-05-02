@@ -349,6 +349,13 @@ class Risk(models.Model):
         (4, 'high', _('High')),
     )
 
+    AUDIT_VALUES = Choices(
+        (0, 'na', _('None')),
+        (1, 'low', _('Low')),
+        (2, 'medium', _('Medium')),
+        (4, 'high', _('High')),
+    )
+
     VALUES = Choices(
         (0, 'na', _('N/A')),
     ) + POSITIVE_VALUES

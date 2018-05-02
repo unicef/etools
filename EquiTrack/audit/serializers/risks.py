@@ -14,7 +14,7 @@ from utils.writable_serializers.serializers import WritableListSerializer, Writa
 
 
 class BaseRiskSerializer(WritableNestedSerializerMixin, serializers.ModelSerializer):
-    value_display = serializers.ReadOnlyField(source='get_value_display')
+    value_display = serializers.SerializerMethodField()
 
     class Meta(WritableNestedSerializerMixin.Meta):
         model = Risk
@@ -26,6 +26,9 @@ class BaseRiskSerializer(WritableNestedSerializerMixin, serializers.ModelSeriali
                 'required': True,
             }
         }
+
+    def get_value_display(self, obj):
+        return dict(self.risk_choices).get(obj.value)
 
     def __init__(self, *args, **kwargs):
         super(BaseRiskSerializer, self).__init__(*args, **kwargs)
@@ -273,10 +276,6 @@ class KeyInternalWeaknessSerializer(BaseAggregatedRiskRootSerializer):
         risk_value_fields = [self.fields['blueprints'].child.fields['risks'].child.fields['value'],
                              self.fields['children'].child.fields['blueprints'].child.fields['risks']
                                  .child.fields['value']]
-        for risk_value_field in risk_value_fields:
-            del risk_value_field.choices[Risk.VALUES.significant]
-            del risk_value_field.choice_strings_to_values[six.text_type(Risk.VALUES.significant)]
-            risk_value_field.choices[Risk.VALUES.na] = 'None'
 
     @staticmethod
     def _get_bluerprint_count_by_risk_value(category, field_name, risk_value):
