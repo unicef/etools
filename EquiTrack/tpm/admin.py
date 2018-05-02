@@ -39,13 +39,17 @@ class TPMPartnerStaffMemberInlineAdmin(admin.StackedInline):
 class TPMPartnerAdmin(admin.ModelAdmin):
     list_display = [
         'vendor_number', 'name', 'email', 'phone_number', 'blocked', 'hidden',
-        'country',
+        'country', 'countries_list',
     ]
     list_filter = ['blocked', 'hidden', 'country']
     search_fields = ['vendor_number', 'name', ]
     inlines = [
         TPMPartnerStaffMemberInlineAdmin,
     ]
+
+    def countries_list(self, obj):
+        return ', '.join(obj.countries.values_list('name', flat=True))
+    countries_list.short_description = 'Available Countries'
 
 
 @admin.register(tpm.tpmpartners.models.TPMPartnerStaffMember)

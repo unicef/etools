@@ -52,6 +52,7 @@ from partners.filters import PartnerScopeFilter
 from partners.exports_v2 import (
     PartnerOrganizationCSVRenderer,
     PartnerOrganizationHactCsvRenderer,
+    PartnerOrganizationSimpleHactCsvRenderer,
 )
 from validator.mixins import ValidatorViewMixin
 from vision.adapters.partner import PartnerSynchronizer
@@ -203,6 +204,10 @@ class PartnerOrganizationHactAPIView(ListAPIView):
             if query_params.get("format") == 'csv':
                 response['Content-Disposition'] = "attachment;filename=hact_dashboard.csv"
         return response
+
+
+class PartnerOrganizationSimpleHactAPIView(PartnerOrganizationHactAPIView):
+    renderer_classes = (r.JSONRenderer, PartnerOrganizationSimpleHactCsvRenderer)
 
 
 class PlannedEngagementAPIView(ListAPIView):

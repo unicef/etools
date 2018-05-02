@@ -71,7 +71,7 @@ class TPMActivityExportSerializer(serializers.Serializer):
     link = serializers.CharField(source='tpm_visit.get_object_url')
 
     def get_activity(self, obj):
-        return 'Activity #{}.{}'.format(obj.tpm_visit.id, obj.id)
+        return 'Task #{}.{}'.format(obj.tpm_visit.id, obj.id)
 
 
 class TPMLocationExportSerializer(serializers.Serializer):
@@ -90,7 +90,7 @@ class TPMLocationExportSerializer(serializers.Serializer):
     link = serializers.CharField(source='activity.tpmactivity.tpm_visit.get_object_url')
 
     def get_activity(self, obj):
-        return 'Activity #{}.{}'.format(obj.activity.tpmactivity.tpm_visit.id, obj.activity.tpmactivity.id)
+        return 'Task #{}.{}'.format(obj.activity.tpmactivity.tpm_visit.id, obj.activity.tpmactivity.id)
 
 
 class TPMActionPointExportSerializer(serializers.Serializer):
