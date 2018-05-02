@@ -1,5 +1,6 @@
 from __future__ import absolute_import, division, print_function, unicode_literals
 
+import datetime
 import logging
 
 from django.contrib.contenttypes.models import ContentType
@@ -33,7 +34,26 @@ def update_or_create_attachment(file_type, content_type, object_id, filename):
     )
 
 
-def copy_attached_agreements():
+def get_from_date(**kwargs):
+    """Return from date to use
+
+    If `all` provided, ignore and process since beginning of time,
+    Otherwise process days and hours accordingly
+    """
+    if kwargs.get("all"):
+        return datetime.date(1970, 1, 1)
+
+    from_date = datetime.date.today()
+    if kwargs.get("days"):
+        from_date = from_date - datetime.timedelta(days=kwargs.get("days"))
+
+    if kwargs.get("hours"):
+        from_date = from_date - datetime.timedelta(hours=kwargs.get("hours"))
+
+    return from_date
+
+
+def copy_attached_agreements(**kwargs):
     # Copy attached_agreement field content to
     # attachments model
     file_type, _ = FileType.objects.get_or_create(
@@ -48,7 +68,8 @@ def copy_attached_agreements():
     content_type = ContentType.objects.get_for_model(Agreement)
 
     for agreement in Agreement.view_objects.filter(
-        attached_agreement__isnull=False
+            attached_agreement__isnull=False,
+            modified__gte=get_from_date(**kwargs)
     ).all():
         update_or_create_attachment(
             file_type,
@@ -58,7 +79,7 @@ def copy_attached_agreements():
         )
 
 
-def copy_core_values_assessments():
+def copy_core_values_assessments(**kwargs):
     # Copy core_values_assessment field content to
     # attachments model
     file_type, _ = FileType.objects.get_or_create(
@@ -73,7 +94,8 @@ def copy_core_values_assessments():
     content_type = ContentType.objects.get_for_model(PartnerOrganization)
 
     for partner in PartnerOrganization.objects.filter(
-        core_values_assessment__isnull=False
+            core_values_assessment__isnull=False,
+            modified__gte=get_from_date(**kwargs)
     ).all():
         update_or_create_attachment(
             file_type,
@@ -83,7 +105,7 @@ def copy_core_values_assessments():
         )
 
 
-def copy_reports():
+def copy_reports(**kwargs):
     # Copy report field content to attachments model
     file_type, _ = FileType.objects.get_or_create(
         code="partners_assessment_report",
@@ -97,7 +119,8 @@ def copy_reports():
     content_type = ContentType.objects.get_for_model(Assessment)
 
     for assessment in Assessment.objects.filter(
-        report__isnull=False
+            report__isnull=False,
+            modified__gte=get_from_date(**kwargs)
     ).all():
         update_or_create_attachment(
             file_type,
@@ -107,7 +130,7 @@ def copy_reports():
         )
 
 
-def copy_signed_amendments():
+def copy_signed_amendments(**kwargs):
     # Copy signed amendment field content to attachments model
     file_type, _ = FileType.objects.get_or_create(
         code="partners_agreement_amendment",
@@ -121,7 +144,8 @@ def copy_signed_amendments():
     content_type = ContentType.objects.get_for_model(AgreementAmendment)
 
     for amendment in AgreementAmendment.view_objects.filter(
-        signed_amendment__isnull=False
+            signed_amendment__isnull=False,
+            modified__gte=get_from_date(**kwargs)
     ).all():
         update_or_create_attachment(
             file_type,
@@ -131,7 +155,7 @@ def copy_signed_amendments():
         )
 
 
-def copy_interventions():
+def copy_interventions(**kwargs):
     # Copy prc review and signed pd field content to attachments model
     prc_file_type, _ = FileType.objects.get_or_create(
         code="partners_intervention_prc_review",
@@ -154,7 +178,8 @@ def copy_interventions():
 
     for intervention in Intervention.objects.filter(
             Q(prc_review_document__isnull=False) |
-            Q(signed_pd_document__isnull=False)
+            Q(signed_pd_document__isnull=False),
+            modified__gte=get_from_date(**kwargs)
     ).all():
         if intervention.prc_review_document:
             update_or_create_attachment(
@@ -172,7 +197,7 @@ def copy_interventions():
             )
 
 
-def copy_intervention_amendments():
+def copy_intervention_amendments(**kwargs):
     # Copy signed amendment field content to attachments model
     file_type, _ = FileType.objects.get_or_create(
         code="partners_intervention_amendment_signed",
@@ -186,7 +211,8 @@ def copy_intervention_amendments():
     content_type = ContentType.objects.get_for_model(InterventionAmendment)
 
     for amendment in InterventionAmendment.objects.filter(
-            signed_amendment__isnull=False
+            signed_amendment__isnull=False,
+            modified__gte=get_from_date(**kwargs)
     ).all():
         if amendment.signed_amendment:
             update_or_create_attachment(
@@ -197,7 +223,7 @@ def copy_intervention_amendments():
             )
 
 
-def copy_intervention_attachments():
+def copy_intervention_attachments(**kwargs):
     # Copy attachment field content to attachments model
     file_type, _ = FileType.objects.get_or_create(
         code="partners_intervention_attachment",
@@ -211,7 +237,8 @@ def copy_intervention_attachments():
     content_type = ContentType.objects.get_for_model(InterventionAttachment)
 
     for attachment in InterventionAttachment.objects.filter(
-            attachment__isnull=False
+            attachment__isnull=False,
+            modified__gte=get_from_date(**kwargs)
     ).all():
         if attachment.attachment:
             update_or_create_attachment(
@@ -222,7 +249,7 @@ def copy_intervention_attachments():
             )
 
 
-def copy_all_attachments():
+def copy_all_attachments(**kwargs):
     copy_commands = [
         copy_attached_agreements,
         copy_core_values_assessments,
@@ -233,4 +260,4 @@ def copy_all_attachments():
         copy_intervention_attachments,
     ]
     for cmd in copy_commands:
-        run_on_all_tenants(cmd)
+        run_on_all_tenants(cmd, **kwargs)
