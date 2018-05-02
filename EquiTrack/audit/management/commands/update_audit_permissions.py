@@ -267,7 +267,7 @@ class Command(BaseCommand):
 
         self.add_permissions(
             self.focal_point, 'edit',
-            self.partner_block + self.staff_members_block,
+            self.partner_block + self.staff_members_block + self.engagement_attachments_block,
             condition=self.engagement_status(Engagement.STATUSES.partner_contacted)
         )
         self.add_permissions(
