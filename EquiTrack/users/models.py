@@ -181,7 +181,7 @@ class Office(models.Model):
     """
     Represents an office for the country
 
-    Relates to :model:`auth.User`
+    Relates to :model:`AUTH_USER_MODEL`
     """
 
     name = models.CharField(max_length=254, verbose_name=_('Name'))
@@ -238,7 +238,7 @@ class UserProfile(models.Model):
     """
     Represents a user profile that can have access to many Countries but to one active Country at a time
 
-    Relates to :model:`auth.User`
+    Relates to :model:`AUTH_USER_MODEL`
     Relates to :model:`users.Country`
     Relates to :model:`users.Section`
     Relates to :model:`users.Office`

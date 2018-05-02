@@ -48,7 +48,7 @@ class TPMStaffMemberTestCase(BaseTenantTestCase):
 
         self.assertIn(ThirdPartyMonitor.name, staff_member.user.groups.values_list('name', flat=True))
 
-        self.assertEqual(len(mail.outbox), 1)
+        self.assertEqual(len(mail.outbox), 0)
 
     def test_post_delete(self):
         staff_member = TPMPartnerStaffMemberFactory(tpm_partner=self.firm)
