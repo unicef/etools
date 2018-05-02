@@ -2,12 +2,13 @@ from __future__ import absolute_import, division, print_function, unicode_litera
 
 import datetime
 import sys
-from unittest import skipIf, TestCase
+from unittest import skipIf
 
 from django.core import mail
 from django.core.exceptions import ValidationError
 from django.core.management import call_command
 from django.db import connection
+from django.test import SimpleTestCase
 from django.utils import six
 
 from audit.models import (
@@ -19,7 +20,6 @@ from audit.purchase_order.models import AuditorStaffMember, PurchaseOrder, Purch
 from audit.tests.factories import (
     AuditFactory,
     AuditPartnerFactory,
-    AuditPermissionFactory,
     AuditorStaffMemberFactory,
     DetailedFindingInfoFactory,
     EngagementActionPointFactory,
@@ -66,7 +66,7 @@ class EngagementStaffMemberTestCase(BaseTenantTestCase):
 
         self.assertSequenceEqual(staff_member.user.profile.countries_available.all(),
                                  [Country.objects.get(schema_name=connection.schema_name)])
-        self.assertEqual(len(mail.outbox), 2)
+        self.assertEqual(len(mail.outbox), 1)
         mail.outbox = []
 
         engagement = EngagementFactory(staff_members=[], agreement__auditor_firm=auditor_firm)
@@ -77,7 +77,7 @@ class EngagementStaffMemberTestCase(BaseTenantTestCase):
 
 
 @skipIf(sys.version_info.major == 3, "This test can be deleted under Python 3")
-class TestStrUnicode(TestCase):
+class TestStrUnicode(SimpleTestCase):
     """
     Ensure calling six.binary_type() on model instances returns UTF8-encoded text
     and six.text_type() returns unicode.
@@ -202,13 +202,6 @@ class TestStrUnicode(TestCase):
         engagement = EngagementFactory.build(agreement=purchase_order)
         instance = EngagementActionPointFactory.build(engagement=engagement)
         self.assertIn(' tv\xe5,', six.text_type(instance))
-
-    def test_audit_permission(self):
-        instance = AuditPermissionFactory.build(user_type='two')
-        self.assertIn('two', six.text_type(instance))
-
-        instance = AuditPermissionFactory.build(user_type='tv\xe5')
-        self.assertIn('tv\xe5', six.text_type(instance))
 
 
 class TestPurchaseOrder(BaseTenantTestCase):

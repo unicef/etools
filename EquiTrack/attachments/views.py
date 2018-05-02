@@ -10,7 +10,7 @@ from rest_framework.generics import ListAPIView
 from rest_framework.permissions import IsAdminUser
 
 from attachments.models import Attachment, AttachmentFlat
-from attachments.serializers import AttachmentSerializer
+from attachments.serializers import AttachmentFlatSerializer
 from utils.common.urlresolvers import site_url
 
 
@@ -20,7 +20,7 @@ class AttachmentListView(ListAPIView):
         Q(attachment__hyperlink__isnull=True) | Q(attachment__hyperlink__exact="")
     )
     permission_classes = (IsAdminUser, )
-    serializer_class = AttachmentSerializer
+    serializer_class = AttachmentFlatSerializer
 
 
 class AttachmentFileView(DetailView):
@@ -33,7 +33,7 @@ class AttachmentFileView(DetailView):
             return HttpResponseNotFound(
                 _("No Attachment matches the given query.")
             )
-        if attachment.url == "None":
+        if not attachment or (not attachment.file and not attachment.hyperlink):
             return HttpResponseNotFound(
                 _("Attachment has no file or hyperlink")
             )

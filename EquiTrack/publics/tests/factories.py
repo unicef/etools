@@ -59,6 +59,7 @@ class PublicsCountryFactory(factory.DjangoModelFactory):
     valid_to = fuzzy.FuzzyDate(_FUZZY_START_DATE.date(), _FUZZY_END_DATE.date())
     business_area = factory.SubFactory(PublicsBusinessAreaFactory)
     currency = factory.SubFactory(PublicsCurrencyFactory)
+    vision_code = fuzzy.FuzzyText(length=3)
 
     class Meta:
         model = models.Country

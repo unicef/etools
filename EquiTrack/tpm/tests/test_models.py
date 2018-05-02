@@ -1,6 +1,6 @@
 from __future__ import absolute_import, division, print_function, unicode_literals
 
-from django.contrib.auth.models import User
+from django.contrib.auth import get_user_model
 from django.core import mail
 from django.core.management import call_command
 
@@ -48,12 +48,12 @@ class TPMStaffMemberTestCase(BaseTenantTestCase):
 
         self.assertIn(ThirdPartyMonitor.name, staff_member.user.groups.values_list('name', flat=True))
 
-        self.assertEqual(len(mail.outbox), 1)
+        self.assertEqual(len(mail.outbox), 0)
 
     def test_post_delete(self):
         staff_member = TPMPartnerStaffMemberFactory(tpm_partner=self.firm)
         staff_member.delete()
 
-        user = User.objects.filter(email=staff_member.user.email).first()
+        user = get_user_model().objects.filter(email=staff_member.user.email).first()
         self.assertIsNotNone(user)
         self.assertEqual(user.is_active, False)

@@ -19,13 +19,12 @@ POST_OFFICE = {
 # change config to remove CSRF verification in localhost in order to enable testing from postman.
 REST_FRAMEWORK['DEFAULT_AUTHENTICATION_CLASSES'] = (
     # this setting fixes the bug where user can be logged in as AnonymousUser
-    'EquiTrack.mixins.CsrfExemptSessionAuthentication',
+    'EquiTrack.auth.CsrfExemptSessionAuthentication',
 ) + REST_FRAMEWORK['DEFAULT_AUTHENTICATION_CLASSES']
 
 # No SAML for local dev
 AUTHENTICATION_BACKENDS = (
     'django.contrib.auth.backends.ModelBackend',
-    'allauth.account.auth_backends.AuthenticationBackend',
 )
 
 # No Redis for local dev
@@ -34,9 +33,6 @@ CACHES = {
         'BACKEND': 'django.core.cache.backends.locmem.LocMemCache',
     }
 }
-
-# local override for django-allauth
-ACCOUNT_DEFAULT_HTTP_PROTOCOL = "http"
 
 # local override for django-cors-headers
 CORS_ORIGIN_ALLOW_ALL = True
@@ -57,11 +53,12 @@ if 'test' in sys.argv:
         # So on the serialization stage these models do not exist.
         'utils.common',
         'utils.writable_serializers',
+        'permissions2',
     ]
 
     # Disable logging output during tests
     logging.disable(logging.CRITICAL)
-elif 'runserver' in sys.argv:
+elif 'runserver' in sys.argv or 'shell_plus' in sys.argv:
     # Settings which should only be active when running a local server
 
     # django-debug-toolbar: https://django-debug-toolbar.readthedocs.io/en/stable/configuration.html
@@ -70,7 +67,7 @@ elif 'runserver' in sys.argv:
         'django_extensions',
     )
     INTERNAL_IPS = ('127.0.0.1',)
-    MIDDLEWARE_CLASSES += (  # noqa
+    MIDDLEWARE += (  # noqa
         'debug_toolbar.middleware.DebugToolbarMiddleware',
     )
     DEBUG_TOOLBAR_CONFIG = {

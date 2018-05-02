@@ -4,6 +4,7 @@ from django.utils import six
 from django.utils.translation import ugettext as _
 from rest_framework import serializers
 
+from EquiTrack.mixins import ExportSerializerMixin
 from locations.models import Location
 from locations.serializers import (
     LocationExportFlatSerializer,
@@ -34,7 +35,10 @@ class InterventionAmendmentExportSerializer(InterventionAmendmentCUSerializer):
         exclude = ("signed_amendment_attachment", )
 
 
-class InterventionAmendmentExportFlatSerializer(InterventionAmendmentExportSerializer):
+class InterventionAmendmentExportFlatSerializer(
+        ExportSerializerMixin,
+        InterventionAmendmentExportSerializer
+):
     intervention = serializers.CharField(
         label=_("Reference Number"),
         source="intervention.number",
@@ -63,7 +67,10 @@ class InterventionSectorLocationLinkExportSerializer(LocationExportSerializer):
         )
 
 
-class InterventionSectorLocationLinkExportFlatSerializer(LocationExportFlatSerializer):
+class InterventionSectorLocationLinkExportFlatSerializer(
+        ExportSerializerMixin,
+        LocationExportFlatSerializer
+):
     intervention = serializers.SerializerMethodField(
         label=_("Reference Number"),
     )
@@ -161,7 +168,10 @@ class InterventionResultExportSerializer(InterventionResultSerializer):
         fields = "__all__"
 
 
-class InterventionResultExportFlatSerializer(InterventionResultExportSerializer):
+class InterventionResultExportFlatSerializer(
+        ExportSerializerMixin,
+        InterventionResultExportSerializer
+):
     parent = serializers.CharField(
         label=_("Parent"),
         source="cp_output.parent.name",
@@ -400,16 +410,16 @@ class InterventionExportSerializer(serializers.ModelSerializer):
         return obj.frs__currency__count == 1 if obj.frs__currency__count else None
 
     def get_fr_currency(self, obj):
-        return obj.max_fr_currency if self.fr_currencies_ok(obj) else None
+        return obj.max_fr_currency if self.fr_currencies_ok(obj) else ''
 
     def get_fr_amount(self, obj):
-        return obj.total_frs["total_frs_amt"]
+        return obj.frs__total_amt_local__sum
 
     def get_fr_actual_amount(self, obj):
-        return obj.total_frs["total_actual_amt"]
+        return 'Error: Multi-currency Transaction' if obj.multi_curr_flag else obj.frs__actual_amt_local__sum
 
     def get_fr_outstanding_amt(self, obj):
-        return obj.total_frs["total_outstanding_amt"]
+        return obj.frs__outstanding_amt_local__sum
 
     def get_planned_visits(self, obj):
         return ', '.join(['{} (Q1:{} Q2:{}, Q3:{}, Q4:{})'.format(pv.year, pv.programmatic_q1, pv.programmatic_q2,
@@ -441,7 +451,7 @@ class InterventionExportSerializer(serializers.ModelSerializer):
         return obj.attachments.count()
 
 
-class InterventionExportFlatSerializer(InterventionExportSerializer):
+class InterventionExportFlatSerializer(ExportSerializerMixin, InterventionExportSerializer):
     planned_visits = serializers.SerializerMethodField(
         label=_("Planned Programmatic Visits"),
     )

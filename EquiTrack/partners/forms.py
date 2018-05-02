@@ -30,9 +30,7 @@ logger = logging.getLogger('partners.forms')
 class SectorLocationForm(forms.ModelForm):
     class Meta:
         model = InterventionSectorLocationLink
-        # fields = ('locations',)
         fields = ('sector', 'locations')
-        # autocomplete_fields = ('locations',)
         widgets = {
             'locations': autocomplete.ModelSelect2Multiple(
                 url='locations-autocomplete-light',

@@ -2,11 +2,13 @@ from __future__ import absolute_import, division, print_function, unicode_litera
 
 import csv
 import json
-import logging
+from datetime import date
 
 from django.conf import settings
+from django.contrib.auth import get_user_model
 from django.contrib.auth.models import Group
 from django.core.exceptions import ObjectDoesNotExist
+from django.core.mail.message import EmailMessage
 from django.db import IntegrityError, transaction
 from django.db.models import Q
 from django.utils import six
@@ -14,9 +16,11 @@ from django.utils.encoding import force_text
 
 import requests
 from celery.utils.log import get_task_logger
+from dateutil.relativedelta import relativedelta
+from six import StringIO
 
 from EquiTrack.celery import app
-from users.models import Country, Section, User, UserProfile
+from users.models import Country, Section, UserProfile
 from vision.exceptions import VisionException
 from vision.models import VisionSyncLog
 from vision.vision_data_synchronizer import VISION_NO_DATA_MESSAGE
@@ -25,6 +29,8 @@ logger = get_task_logger(__name__)
 
 
 class UserMapper(object):
+
+    KEY_ATTRIBUTE = 'internetaddress'
 
     SPECIAL_FIELDS = ['country']
     REQUIRED_USER_FIELDS = [
@@ -95,7 +101,7 @@ class UserMapper(object):
                 if not obj.country == new_country:
                     obj.country = self._get_country(cleaned_value)
                     obj.countries_available.add(obj.country)
-                    logger.info("Country Updated for {}".format(obj))
+                    logger.info(u"Country Updated for {}".format(obj))
                     return True
 
         return False
@@ -106,10 +112,11 @@ class UserMapper(object):
         """
         # clean the value
         field = obj._meta.get_field(attr)
-        if field.get_internal_type() == "CharField" and len(value) > field.max_length:
+        if type(value) == list:
+            value = u'- '.join([str(val) for val in value])
+        if field.get_internal_type() == "CharField" and value and len(value) > field.max_length:
             cleaned_value = value[:field.max_length]
-            logging.warn('The attribute "%s" was trimmed from "%s" to "%s"' %
-                         (attr, value, cleaned_value))
+            logger.warn(u'The attribute "%s" was trimmed from "%s" to "%s"' % (attr, value, cleaned_value))
         else:
             cleaned_value = value
         if cleaned_value == '':
@@ -126,60 +133,73 @@ class UserMapper(object):
 
     @transaction.atomic
     def create_or_update_user(self, ad_user):
-        logger.debug(ad_user.get('sn'), ad_user.get('givenName'))
+        logger.debug(ad_user.get(self.KEY_ATTRIBUTE))
         for field in self.REQUIRED_USER_FIELDS:
-            if not ad_user.get(field, False):
-                logger.info("User doesn't have the required fields {}".format(ad_user))
+            if isinstance(field, str):
+                if not ad_user.get(field, False):
+                    logger.debug(u"User doesn't have the required fields {} missing".format(field))
+                    return
+            elif isinstance(field, tuple):
+                allowed_values = field[1]
+                if isinstance(allowed_values, str):
+                    allowed_values = [allowed_values, ]
+
+                if ad_user.get(field[0], False) not in allowed_values:
+                    logger.debug(u"User is not in Unicef organization {}".format(field[1]))
+                    return
+
+        # TODO: MODIFY THIS TO USE THE GUID ON THE PROFILE INSTEAD OF EMAIL on the USer
+
+        try:
+            user, created = get_user_model().objects.get_or_create(
+                email=ad_user[self.KEY_ATTRIBUTE],
+                username=ad_user[self.KEY_ATTRIBUTE]
+            )
+            if created:
+                user.set_unusable_password()
+
+            try:
+                profile = user.profile
+            except ObjectDoesNotExist:
+                logger.warning(u'No profile for user {}'.format(user))
                 return
 
-        # TODO: MODIFY THIS TO USER THE GUID ON THE PROFILE INSTEAD OF EMAIL on the USer
-        user, created = User.objects.get_or_create(
-            email=ad_user['internetaddress'],
-            username=ad_user['internetaddress'][:User._meta.get_field('username').max_length])
-        if created:
-            user.set_unusable_password()
+            profile_modified = False
+            # TODO: user.is_staff should not be set for regular UNICEF users.. global refactor needed
+            user_modified = False if user.is_staff and user.is_active else True
+            # TODO: in the future see if ADFS returns somewhere whether users are active or not.
+            # user.is_staff = user.is_staff or True
+            # user.is_active = user.is_active or True
 
-        try:
-            profile = user.profile
-        except ObjectDoesNotExist:
-            logger.warning('No profile for user {}'.format(user))
-            return
+            if created:
+                user.groups.add(self.groups['UNICEF User'])
+                logger.info(u'Group added to user {}'.format(user))
 
-        profile_modified = False
-        # TODO: user.is_staff should not be set for regular UNICEF users.. global refactor needed
-        user_modified = False if user.is_staff and user.is_active else True
-        # TODO: in the future see if ADFS returns somewhere whether users are active or not.
-        user.is_staff = user.is_staff or True
-        user.is_active = user.is_active or True
+            # most attributes are direct maps.
+            for attr, attr_val in six.iteritems(ad_user):
+                mapped_attribute = self.ATTR_MAP.get(attr, 'unusable_attr')
+                value = ad_user[attr]
 
-        if created:
-            user.groups.add(self.groups['UNICEF User'])
-            logger.info('Group added to user {}'.format(user))
+                if hasattr(user, mapped_attribute):
+                    u_modified = self._set_attribute(user, mapped_attribute, value)
+                    user_modified = user_modified or u_modified
 
-        # most attributes are direct maps.
-        for attr, attr_val in six.iteritems(ad_user):
-
-            if hasattr(user, self.ATTR_MAP.get(attr, 'unusable_attr')):
-                u_modified = self._set_attribute(
-                    user, self.ATTR_MAP.get(attr, 'unusable_attr'), ad_user[attr]
-                )
-                user_modified = user_modified or u_modified
-
-            if self.ATTR_MAP.get(attr, 'unusable_attr') not in ['email', 'first_name', 'last_name', 'username'] \
-                    and hasattr(profile, self.ATTR_MAP.get(attr, 'unusable_attr')):
-                modified = self._set_attribute(
-                    profile, self.ATTR_MAP.get(attr, 'unusable_attr'), ad_user[attr]
-                )
-                profile_modified = profile_modified or modified
-        try:
-            if user_modified:
-                logger.debug('saving modified user')
-                user.save()
-            if profile_modified:
-                logger.debug('saving profile for: {}'.format(user))
-                profile.save()
+                if mapped_attribute not in ['email', 'first_name', 'last_name', 'username'] \
+                        and hasattr(profile, mapped_attribute):
+                    modified = self._set_attribute(profile, mapped_attribute, value)
+                    profile_modified = profile_modified or modified
+            try:
+                if user_modified:
+                    logger.debug(u'saving modified user')
+                    user.save()
+                if profile_modified:
+                    logger.debug(u'saving profile for: {}'.format(user))
+                    profile.save()
+            except IntegrityError as e:
+                logger.exception(u'Integrity error on user: {} - exception {}'.format(user.email, e))
         except IntegrityError as e:
-            logging.error('Integrity error on user: {} - exception {}'.format(user.email, e))
+            logger.exception(u'Integrity error on user retrieving: {} - exception {}'.format(
+                ad_user[self.KEY_ATTRIBUTE], e))
 
     def _set_supervisor(self, profile, manager_id):
         if not manager_id or manager_id == 'Vacant':
@@ -188,10 +208,16 @@ class UserMapper(object):
             return False
 
         try:
-            supervisor = self.section_users.get(manager_id, User.objects.get(profile__staff_id=manager_id))
+            supervisor = self.section_users.get(
+                manager_id,
+                get_user_model().objects.get(
+                    is_active=True,
+                    profile__staff_id=manager_id
+                )
+            )
             self.section_users[manager_id] = supervisor
-        except User.DoesNotExist:
-            logger.warning("this user does not exist in the db to set as supervisor: {}".format(manager_id))
+        except get_user_model().DoesNotExist:
+            logger.warning(u"this user does not exist in the db to set as supervisor: {}".format(manager_id))
             return False
 
         profile.supervisor = supervisor
@@ -207,7 +233,7 @@ class UserMapper(object):
         for code in section_codes:
             self.section_users = {}
             synchronizer = UserSynchronizer('GetOrgChartUnitsInfo_JSON', code)
-            logger.info("Mapping for section {}".format(code))
+            logger.info(u"Mapping for section {}".format(code))
             for in_user in synchronizer.response:
                 # if the user has no staff id don't bother for supervisor
                 if not in_user.get('STAFF_ID'):
@@ -216,11 +242,11 @@ class UserMapper(object):
                 try:
                     user = self.section_users.get(
                         in_user['STAFF_ID'],
-                        User.objects.get(profile__staff_id=in_user['STAFF_ID'])
+                        get_user_model().objects.get(profile__staff_id=in_user['STAFF_ID'])
                     )
                     self.section_users[in_user['STAFF_ID']] = user
-                except User.DoesNotExist:
-                    logger.warning("this user does not exist in the db: {}".format(in_user['STAFF_EMAIL']))
+                except get_user_model().DoesNotExist:
+                    logger.warning(u"this user does not exist in the db: {}".format(in_user['STAFF_EMAIL']))
                     continue
 
                 profile_updated = self._set_attribute(user.profile, "post_number", in_user["STAFF_POST_NO"])
@@ -230,9 +256,34 @@ class UserMapper(object):
                 supervisor_updated = self._set_supervisor(user.profile, in_user["MANAGER_ID"])
 
                 if profile_updated or supervisor_updated:
-                    logger.info("saving profile for {}, supervisor updated: {}, profile updated: {}".format(
+                    logger.info(u"saving profile for {}, supervisor updated: {}, profile updated: {}".format(
                         user, supervisor_updated, profile_updated))
                     user.profile.save()
+
+
+class AzureUserMapper(UserMapper):
+    KEY_ATTRIBUTE = 'userPrincipalName'
+
+    REQUIRED_USER_FIELDS = [
+        'givenName',
+        'userPrincipalName',
+        'mail',
+        'surname',
+        'userType',
+        ('companyName', ['UNICEF', ]),
+    ]
+
+    ATTR_MAP = {
+        'userPrincipalName': 'username',
+        'mail': 'email',
+        'givenName': 'first_name',
+        'surname': 'last_name',
+        'id': 'guid',
+        'businessPhones': 'phone_number',
+        'extension_f4805b4021f643d0aa596e1367d432f1_extensionAttribute1': 'country',
+        'extension_f4805b4021f643d0aa596e1367d432f1_extensionAttribute2': 'staff_id',
+        'jobTitle': 'post_title'
+    }
 
 
 def sync_users_remote():
@@ -276,21 +327,6 @@ def map_users():
         raise VisionException(*e.args)
     finally:
         log.save()
-
-
-def sync_users_local(n=20):
-    user_sync = UserMapper()
-    with open('/code/etools.dat') as csvfile:
-        # with open('/Users/Rob/Downloads/users.dat') as csvfile:
-        reader = csv.DictReader(csvfile, delimiter='|')
-        i = 0
-        for row in reader:
-            i += 1
-            if i == n:
-                break
-            uni_row = {
-                six.text_type(key, 'latin-1'): six.text_type(value, 'latin-1') for key, value in six.iteritems(row)}
-            user_sync.create_or_update_user(uni_row)
 
 
 class UserSynchronizer(object):
@@ -347,3 +383,37 @@ class UserSynchronizer(object):
     @property
     def response(self):
         return self._filter_records(self._convert_records(self._load_records()))
+
+
+@app.task
+def user_report():
+
+    today = date.today()
+    start_date = today + relativedelta(months=-1)
+
+    qs = Country.objects.exclude(schema_name__in=['public', 'uat', 'frg'])
+    fieldnames = ['country', 'total_users', 'unicef_users', 'users_last_month', 'unicef_users_last_month']
+    csvfile = StringIO()
+    writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
+    writer.writeheader()
+    for country in qs:
+        writer.writerow({
+            'country': country,
+            'total_users': get_user_model().objects.filter(profile__country=country).count(),
+            'unicef_users': get_user_model().objects.filter(
+                profile__country=country,
+                email__endswith='@unicef.org'
+            ).count(),
+            'users_last_month': get_user_model().objects.filter(
+                profile__country=country,
+                last_login__gte=start_date
+            ).count(),
+            'unicef_users_last_month': get_user_model().objects.filter(
+                profile__country=country,
+                email__endswith='@unicef.org',
+                last_login__gte=start_date
+            ).count(),
+        })
+    mail = EmailMessage('Report Latest Users', 'Report generated', 'etools-reports@unicef.org', settings.REPORT_EMAILS)
+    mail.attach('users.csv', csvfile.getvalue(), 'text/csv')
+    mail.send()

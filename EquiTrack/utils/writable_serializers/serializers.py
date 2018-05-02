@@ -307,7 +307,10 @@ class WritableNestedParentSerializerMixin(object):
         if nested_instance:
             nested_instance = field.update(nested_instance, data)
         else:
-            nested_instance = field.create(data)
+            if isinstance(data, related_model_field.related_model):
+                nested_instance = data
+            else:
+                nested_instance = field.create(data)
 
         return nested_instance
 

@@ -49,6 +49,7 @@ class InterventionDashSerializer(serializers.ModelSerializer):
                                                 read_only=True, max_digits=20, decimal_places=2)
     outstanding_dct_usd = serializers.DecimalField(source='frs__outstanding_amt__sum',
                                                    read_only=True, max_digits=20, decimal_places=2)
+    multi_curr_flag = serializers.BooleanField()
 
     def fr_currencies_ok(self, obj):
         return obj.frs__currency__count == 1 if obj.frs__currency__count else None
@@ -62,7 +63,7 @@ class InterventionDashSerializer(serializers.ModelSerializer):
         return self.fr_currencies_ok(obj) and obj.max_fr_currency == obj.planned_budget.currency
 
     def get_fr_currency(self, obj):
-        return obj.max_fr_currency if self.fr_currencies_ok(obj) else None
+        return obj.max_fr_currency if self.fr_currencies_ok(obj) else ''
 
     def get_disbursement_percent(self, obj):
         if obj.frs__actual_amt_local__sum is None:
@@ -100,4 +101,5 @@ class InterventionDashSerializer(serializers.ModelSerializer):
                   'outstanding_dct',
                   'frs_total_frs_amt_usd',
                   'disbursement_usd',
-                  'outstanding_dct_usd')
+                  'outstanding_dct_usd',
+                  'multi_curr_flag')

@@ -6,6 +6,7 @@ import copy
 from django.contrib.contenttypes.models import ContentType
 from django.db import transaction
 from django.db.models import Q
+from django.shortcuts import get_object_or_404
 
 from rest_framework import status
 from rest_framework.response import Response
@@ -13,6 +14,7 @@ from rest_framework.exceptions import ValidationError
 from rest_framework.permissions import IsAdminUser
 from rest_framework_csv import renderers as r
 
+from rest_framework.views import APIView
 from rest_framework.generics import (
     ListAPIView,
     ListCreateAPIView,
@@ -61,6 +63,8 @@ from partners.serializers.interventions_v2 import (
     InterventionReportingPeriodSerializer,
     InterventionSectorLocationCUSerializer,
     PlannedVisitsCUSerializer,
+    InterventionReportingRequirementCreateSerializer,
+    InterventionReportingRequirementListSerializer
 )
 from partners.exports_v2 import InterventionCSVRenderer
 from partners.filters import (
@@ -71,7 +75,7 @@ from partners.filters import (
 )
 from partners.validation.interventions import InterventionValid
 from partners.permissions import PartnershipManagerRepPermission, PartnershipManagerPermission
-from reports.models import LowerResult, AppliedIndicator
+from reports.models import LowerResult, AppliedIndicator, ReportingRequirement
 from reports.serializers.v2 import LowerResultSimpleCUSerializer, AppliedIndicatorSerializer
 from snapshot.models import Activity
 
@@ -468,7 +472,7 @@ class InterventionAmendmentListAPIView(ExportModelMixin, ValidatorViewMixin, Lis
         return q
 
     def create(self, request, *args, **kwargs):
-        raw_data = copy.deepcopy(request.data)
+        raw_data = request.data.copy()
         raw_data['intervention'] = kwargs.get('intervention_pk', None)
         serializer = self.get_serializer(data=raw_data)
         serializer.is_valid(raise_exception=True)
@@ -590,7 +594,7 @@ class InterventionLowerResultListCreateView(ListCreateAPIView):
     queryset = LowerResult.objects.all()
 
     def create(self, request, *args, **kwargs):
-        raw_data = copy.deepcopy(request.data)
+        raw_data = request.data
         raw_data['result_link'] = kwargs.get('result_link_pk', None)
 
         serializer = self.get_serializer(data=raw_data)
@@ -730,3 +734,45 @@ class InterventionDeleteView(DestroyAPIView):
             else:
                 intervention.delete()
                 return Response(status=status.HTTP_204_NO_CONTENT)
+
+
+class InterventionReportingRequirementView(APIView):
+    serializer_create_class = InterventionReportingRequirementCreateSerializer
+    serializer_list_class = InterventionReportingRequirementListSerializer
+    permission_classes = (PartnershipManagerPermission, )
+    renderer_classes = (r.JSONRenderer, )
+
+    def get_data(self):
+        return {
+            "reporting_requirements": ReportingRequirement.objects.filter(
+                intervention=self.intervention,
+                report_type=self.report_type,
+            ).all()
+        }
+
+    def get_object(self, pk):
+        return get_object_or_404(Intervention, pk=pk)
+
+    def get(self, request, intervention_pk, report_type, format=None):
+        self.intervention = self.get_object(intervention_pk)
+        self.report_type = report_type
+        return Response(
+            self.serializer_list_class(self.get_data()).data
+        )
+
+    def post(self, request, intervention_pk, report_type, format=None):
+        self.intervention = self.get_object(intervention_pk)
+        self.report_type = report_type
+        self.request.data["report_type"] = self.report_type
+        serializer = self.serializer_create_class(
+            data=self.request.data,
+            context={
+                "intervention": self.intervention,
+            }
+        )
+        if serializer.is_valid():
+            serializer.save()
+            return Response(
+                self.serializer_list_class(self.get_data()).data
+            )
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)

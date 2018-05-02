@@ -5,7 +5,6 @@ from django.contrib.auth.models import Group
 from django.core.exceptions import ValidationError as DjangoValidationError
 from django.db import connection
 from django.http import HttpResponseRedirect, HttpResponseForbidden
-from django.shortcuts import get_object_or_404
 from django.utils import six
 from django.views.generic import FormView, RedirectView
 
@@ -155,9 +154,8 @@ class MyProfileAPIView(RetrieveUpdateAPIView):
             obj = self.request.user.profile
         except AttributeError:
             self.request.user.save()
-            obj = self.request.user.profile
+            obj = UserProfile.objects.get(user=self.request.user)
 
-        obj = get_object_or_404(UserProfile, user__id=self.request.user.id)
         # May raise a permission denied
         self.check_object_permissions(self.request, obj)
         return obj
@@ -236,7 +234,7 @@ class GroupViewSet(mixins.RetrieveModelMixin,
     """
     Returns a list of all User Groups
     """
-    queryset = Group.objects.all()
+    queryset = Group.objects.order_by('name')  # Provide consistent ordering
     serializer_class = GroupSerializer
     permission_classes = (IsAdminUser,)
 
@@ -266,7 +264,6 @@ class GroupViewSet(mixins.RetrieveModelMixin,
 
 class UserViewSet(mixins.RetrieveModelMixin,
                   mixins.ListModelMixin,
-                  mixins.CreateModelMixin,
                   viewsets.GenericViewSet):
     """
     Returns a list of all Users
@@ -321,27 +318,6 @@ class UserViewSet(mixins.RetrieveModelMixin,
 
         serializer = get_serializer(queryset, many=True, context=self.get_serializer_context())
         return Response(serializer.data)
-
-    def create(self, request, *args, **kwargs):
-
-        serializer = self.get_serializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
-
-        serializer.instance = serializer.save()
-        data = serializer.data
-
-        try:
-            groups = request.data['groups']
-            for grp in groups:
-                serializer.instance.groups.add(grp)
-
-            serializer.save()
-        except Exception:
-            pass
-
-        headers = self.get_success_headers(serializer.data)
-        return Response(data, status=status.HTTP_201_CREATED,
-                        headers=headers)
 
 
 class OfficeViewSet(mixins.RetrieveModelMixin,

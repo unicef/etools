@@ -9,7 +9,6 @@ from django.utils import six
 from import_export.admin import ExportMixin
 
 from EquiTrack.admin import SnapshotModelAdmin, ActivityInline
-from EquiTrack.mixins import CountryUsersAdminMixin
 
 from partners.exports import PartnerExport
 from partners.models import (
@@ -30,7 +29,7 @@ from partners.models import (
     InterventionAttachment,
     PlannedEngagement
 )
-from partners.mixins import HiddenPartnerMixin
+from partners.mixins import HiddenPartnerMixin, CountryUsersAdminMixin
 from partners.forms import (
     PartnersAdminForm,
     PartnerStaffMemberForm,
@@ -130,7 +129,6 @@ class InterventionAttachmentsInline(admin.TabularInline):
 
 class InterventionResultsLinkAdmin(admin.ModelAdmin):
 
-    # form = ResultLinkForm
     model = InterventionResultLink
     fields = (
         'intervention',
@@ -235,18 +233,12 @@ class InterventionAdmin(CountryUsersAdminMixin, HiddenPartnerMixin, SnapshotMode
                  ('unicef_signatory', 'signed_by_unicef_date',),
                  'partner_focal_points',
                  'unicef_focal_points',
-                 # ('days_from_submission_to_signed', 'days_from_review_to_signed',),
                  ('start', 'end'),
                  'population_focus'),
         }),
     )
 
     inlines = (
-        # InterventionAmendmentsInlineAdmin,
-        # BudgetInlineAdmin,
-        # PlannedVisitsInline,
-        # ResultsLinkInline,
-        # SectorLocationInline,
         InterventionAttachmentsInline,
         ActivityInline,
     )
@@ -348,6 +340,7 @@ class PartnerAdmin(ExportMixin, admin.ModelAdmin):
         u'name',
         u'vendor_number',
         u'partner_type',
+        u'type_of_assessment',
         u'email',
         u'phone_number',
         u'alternate_id',
@@ -364,6 +357,13 @@ class PartnerAdmin(ExportMixin, admin.ModelAdmin):
         u'total_ct_cp',
         u'deleted_flag',
         u'blocked',
+        u'name',
+        u'hact_values',
+        u'total_ct_cp',
+        u'total_ct_cy',
+        u'net_ct_cy',
+        u'reported_cy',
+        u'total_ct_ytd',
     )
     fieldsets = (
         (_('Partner Details'), {
@@ -403,14 +403,6 @@ class PartnerAdmin(ExportMixin, admin.ModelAdmin):
     actions = (
         'hide_partners',
         'show_partners'
-    )
-    readonly_fields = (
-        u'hact_values',
-        u'total_ct_cp',
-        u'total_ct_cy',
-        u'net_ct_cy',
-        u'reported_cy',
-        u'total_ct_ytd',
     )
 
     def hide_partners(self, request, queryset):

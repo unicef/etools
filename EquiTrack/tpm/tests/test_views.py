@@ -1,5 +1,6 @@
 from __future__ import absolute_import, division, print_function, unicode_literals
 
+import base64
 from datetime import timedelta, datetime
 
 from django.core.management import call_command
@@ -9,11 +10,16 @@ from django.utils.translation import ugettext_lazy as _
 
 from rest_framework import status
 
+from attachments.tests.factories import AttachmentFileTypeFactory
 from EquiTrack.tests.cases import BaseTenantTestCase
 from partners.models import PartnerType
 from tpm.models import TPMActionPoint
 from tpm.tests.base import TPMTestCaseMixin
-from tpm.tests.factories import TPMPartnerFactory, TPMVisitFactory, UserFactory
+from tpm.tests.factories import (
+    TPMPartnerFactory,
+    TPMVisitFactory,
+    UserFactory,
+)
 
 
 class TestExportMixin(object):
@@ -33,6 +39,7 @@ class TestTPMVisitViewSet(TestExportMixin, TPMTestCaseMixin, BaseTenantTestCase)
     @classmethod
     def setUpTestData(cls):
         call_command('update_tpm_permissions', verbosity=0)
+        call_command('update_notifications')
 
         cls.pme_user = UserFactory(pme=True)
         cls.unicef_user = UserFactory(unicef_user=True)
@@ -80,9 +87,44 @@ class TestTPMVisitViewSet(TestExportMixin, TPMTestCaseMixin, BaseTenantTestCase)
 
         self.assertEquals(create_response.status_code, status.HTTP_201_CREATED)
 
+    def test_add_attachment(self):
+        file_type = AttachmentFileTypeFactory(code="tpm")
+        file_name = 'simple_file.txt'
+        file_content = 'these are the file contents!'.encode('utf-8')
+        base64_file = 'data:text/plain;base64,{}'.format(
+            base64.b64encode(file_content)
+        )
+        visit = TPMVisitFactory(
+            tpm_activities__count=1,
+            tpm_activities__intervention__agreement__partner__partner_type=PartnerType.GOVERNMENT
+        )
+        activity = visit.tpm_activities.first()
+        self.assertEqual(activity.attachments.count(), 0)
+
+        response = self.forced_auth_req(
+            'patch',
+            reverse('tpm:visits-detail', args=[visit.pk]),
+            user=self.pme_user,
+            data={
+                "tpm_activities": [{
+                    "id": activity.pk,
+                    "attachments": [
+                        {
+                            "file_name": file_name,
+                            "file": base64_file,
+                            "file_type": file_type.pk,
+                        }
+                    ]
+                }]
+            }
+        )
+        self.assertEquals(response.status_code, status.HTTP_200_OK)
+        self.assertTrue(len(response.data["tpm_activities"][0]["attachments"]))
+        self.assertEqual(activity.attachments.count(), 1)
+
     def test_action_points(self):
-        visit = TPMVisitFactory(status='tpm_reported', unicef_focal_points__count=1)
-        unicef_focal_point = visit.unicef_focal_points.first()
+        visit = TPMVisitFactory(status='tpm_reported', tpm_activities__unicef_focal_points__count=1)
+        unicef_focal_point = visit.tpm_activities.first().unicef_focal_points.first()
         self.assertFalse(TPMActionPoint.objects.filter(tpm_visit=visit).exists())
 
         response = self.forced_auth_req(
@@ -120,7 +162,9 @@ class TestTPMVisitViewSet(TestExportMixin, TPMTestCaseMixin, BaseTenantTestCase)
                         'partner': existing_activity.partner.id,
                         'date': datetime.now().date(),
                         'section': existing_activity.section.id,
-                        'locations': existing_activity.locations.all().values_list('id', flat=True)
+                        'locations': existing_activity.locations.all().values_list('id', flat=True),
+                        'offices': existing_activity.offices.all().values_list('id', flat=True),
+                        'unicef_focal_points': existing_activity.unicef_focal_points.all().values_list('id', flat=True),
                     }
                 ]
             }
@@ -145,7 +189,9 @@ class TestTPMVisitViewSet(TestExportMixin, TPMTestCaseMixin, BaseTenantTestCase)
                         'partner': existing_activity.partner.id,
                         'date': datetime.now().date(),
                         'section': existing_activity.section.id,
-                        'locations': existing_activity.locations.all().values_list('id', flat=True)
+                        'locations': existing_activity.locations.all().values_list('id', flat=True),
+                        'offices': existing_activity.offices.all().values_list('id', flat=True),
+                        'unicef_focal_points': existing_activity.unicef_focal_points.all().values_list('id', flat=True),
                     }
                 ]
             }
@@ -170,7 +216,9 @@ class TestTPMVisitViewSet(TestExportMixin, TPMTestCaseMixin, BaseTenantTestCase)
                         'partner': existing_activity.partner.id,
                         'date': datetime.now().date(),
                         'section': existing_activity.section.id,
-                        'locations': existing_activity.locations.all().values_list('id', flat=True)
+                        'locations': existing_activity.locations.all().values_list('id', flat=True),
+                        'offices': existing_activity.offices.all().values_list('id', flat=True),
+                        'unicef_focal_points': existing_activity.unicef_focal_points.all().values_list('id', flat=True),
                     }
                 ]
             }
@@ -179,6 +227,29 @@ class TestTPMVisitViewSet(TestExportMixin, TPMTestCaseMixin, BaseTenantTestCase)
         self.assertIn('tpm_activities', response.data)
         self.assertIn('intervention', response.data['tpm_activities'][0])
         self.assertEqual(response.data['tpm_activities'][0]['intervention'][0], _('This field is required.'))
+
+    def _test_partner(self, expected_status=status.HTTP_201_CREATED, **kwargs):
+        partner = TPMPartnerFactory(**kwargs)
+
+        response = self.forced_auth_req(
+            'post',
+            reverse('tpm:visits-list'),
+            user=self.pme_user,
+            data={'tpm_partner': partner.id},
+        )
+        self.assertEqual(response.status_code, expected_status)
+
+        if expected_status == status.HTTP_400_BAD_REQUEST:
+            self.assertIn('tpm_partner', response.data)
+
+    def test_blocked_in_vision_partner(self):
+        self._test_partner(blocked=True, expected_status=status.HTTP_400_BAD_REQUEST)
+
+    def test_deleted_in_vision_partner(self):
+        self._test_partner(deleted_flag=True, expected_status=status.HTTP_400_BAD_REQUEST)
+
+    def test_good_partner(self):
+        self._test_partner()
 
     def test_visits_csv(self):
         self._test_export(self.pme_user, 'tpm:visits-export')
@@ -383,6 +454,20 @@ class TestTPMPartnerViewSet(TestExportMixin, TPMTestCaseMixin, BaseTenantTestCas
             )
         else:
             self.assertNotIn('PUT', response.data['actions'])
+
+    def test_activation(self):
+        partner = TPMPartnerFactory(countries=[])
+        # partner is deactivated yet, so wouldn't appear in list
+        self._test_list_view(self.pme_user, [self.tpm_partner, self.second_tpm_partner])
+
+        activate_response = self.forced_auth_req(
+            'post',
+            reverse('tpm:partners-activate', args=(partner.id,)),
+            user=self.pme_user
+        )
+        self.assertEqual(activate_response.status_code, status.HTTP_200_OK)
+
+        self._test_list_view(self.pme_user, [self.tpm_partner, self.second_tpm_partner, partner])
 
     def test_pme_list_view(self):
         self._test_list_view(self.pme_user, [self.tpm_partner, self.second_tpm_partner])

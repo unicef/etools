@@ -10,11 +10,12 @@ from mock import patch, Mock
 from tenant_schemas.utils import schema_context
 
 from django.conf import settings
+from django.contrib.auth import get_user_model
 from django.utils import six
 
 from EquiTrack.tests.cases import SCHEMA_NAME, BaseTenantTestCase
 from users import tasks
-from users.models import Section, User, UserProfile
+from users.models import Section, UserProfile
 from users.tests.factories import (
     CountryFactory,
     GroupFactory,
@@ -108,7 +109,7 @@ class TestUserMapper(BaseTenantTestCase):
         self.assertEqual(self.mapper.sections, {})
         res = self.mapper._get_section(name, code)
         self.assertIsInstance(res, Section)
-        self.assertEqual(self.mapper.sections.keys(), [name])
+        self.assertEqual(list(self.mapper.sections.keys()), [name])
         with schema_context(SCHEMA_NAME):
             self.assertTrue(
                 Section.objects.filter(name=name, code=code).exists()
@@ -144,10 +145,10 @@ class TestUserMapper(BaseTenantTestCase):
 
     def test_set_special_attr_country_match(self):
         """If country attribute matches, then False"""
-        code = "test"
-        country = CountryFactory(code=code)
+        name = "test"
+        country = CountryFactory(name=name)
         profile = UserProfile(country=country)
-        self.mapper.countries = {code: country, "UAT": country}
+        self.mapper.countries = {name: country, "UAT": country}
         res = self.mapper._set_special_attr(profile, "country", country)
         self.assertEqual(profile.country, country)
         self.assertFalse(res)
@@ -156,13 +157,13 @@ class TestUserMapper(BaseTenantTestCase):
         """If country attribute, no override and country does not
         match current county, then set and return True
         """
-        code = "test"
-        country = CountryFactory(code=code)
-        self.mapper.countries = {code: country, "UAT": country}
+        name = "test"
+        country = CountryFactory(name=name)
+        self.mapper.countries = {name: country, "UAT": country}
         profile = ProfileFactory(country=None)
         self.assertIsNone(profile.country)
         self.assertFalse(profile.countries_available.count())
-        res = self.mapper._set_special_attr(profile, "country", code)
+        res = self.mapper._set_special_attr(profile, "country", name)
         self.assertTrue(res)
         self.assertEqual(profile.country, country)
         self.assertTrue(profile.countries_available.count())
@@ -193,20 +194,20 @@ class TestUserMapper(BaseTenantTestCase):
     def test_set_attribute_section_code(self):
         """If section_code attribute, then set to last 4 chars of value"""
         profile = ProfileFactory()
-        self.assertIsNone(profile.section_code)
+        self.assertNotEqual(profile.section_code, "5678")
         res = self.mapper._set_attribute(profile, "section_code", "12345678")
         self.assertTrue(res)
         self.assertEqual(profile.section_code, "5678")
 
     def test_set_attribute_special_field(self):
         """If special field, use _set_special_attr method"""
-        code = "test"
-        country = CountryFactory(code=code)
-        self.mapper.countries = {code: country, "UAT": country}
+        name = "test"
+        country = CountryFactory(name=name)
+        self.mapper.countries = {name: country, "UAT": country}
         profile = ProfileFactory(country=None)
         self.assertIsNone(profile.country)
         self.assertFalse(profile.countries_available.count())
-        res = self.mapper._set_attribute(profile, "country", code)
+        res = self.mapper._set_attribute(profile, "country", name)
         self.assertTrue(res)
         self.assertEqual(profile.country, country)
         self.assertTrue(profile.countries_available.count())
@@ -216,7 +217,7 @@ class TestUserMapper(BaseTenantTestCase):
         email = "tester@example.com"
         res = self.mapper.create_or_update_user({"internetaddress": email})
         self.assertIsNone(res)
-        self.assertFalse(User.objects.filter(email=email).exists())
+        self.assertFalse(get_user_model().objects.filter(email=email).exists())
 
     def test_create_or_update_user_created(self):
         """Ensure user is created and added to default group"""
@@ -228,11 +229,11 @@ class TestUserMapper(BaseTenantTestCase):
             "sn": "Last"
         })
         self.assertIsNone(res)
-        self.assertTrue(User.objects.filter(email=email).exists())
+        self.assertTrue(get_user_model().objects.filter(email=email).exists())
         self.assertTrue(
             UserProfile.objects.filter(user__email=email).exists()
         )
-        user = User.objects.get(email=email)
+        user = get_user_model().objects.get(email=email)
         self.assertIn(self.group, user.groups.all())
 
     def test_create_or_update_user_exists(self):
@@ -251,7 +252,7 @@ class TestUserMapper(BaseTenantTestCase):
             "sn": "Last"
         })
         self.assertIsNone(res)
-        user = User.objects.get(email=email)
+        user = get_user_model().objects.get(email=email)
         self.assertIn(self.group, user.groups.all())
 
     def test_create_or_update_user_profile_updated(self):
@@ -266,7 +267,7 @@ class TestUserMapper(BaseTenantTestCase):
             "telephoneNumber": phone
         })
         self.assertIsNone(res)
-        self.assertTrue(User.objects.filter(email=email).exists())
+        self.assertTrue(get_user_model().objects.filter(email=email).exists())
         self.assertTrue(
             UserProfile.objects.filter(user__email=email).exists()
         )

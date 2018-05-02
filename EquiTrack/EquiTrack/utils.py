@@ -1,6 +1,7 @@
 """
 Project wide base classes and utility functions for apps
 """
+import codecs
 import csv
 import json
 import uuid
@@ -10,8 +11,9 @@ from datetime import datetime
 
 from django.conf import settings
 from django.contrib.sites.models import Site
+from django.core import serializers
 from django.core.cache import cache
-from django.db import connection
+from django.db import connection, models
 from django.utils import six
 from django.utils.cache import patch_cache_control
 
@@ -113,13 +115,15 @@ class HashableDict(dict):
 
 def proccess_permissions(permission_dict):
     '''
-    :param permission_dict: the csv field read as a dictionary where the header contains the following keys:
+    :param permission_dict: the csv file read as a generator of dictionaries
+     where the header contains the following keys:
+
     'Group' - the Django Group the user should belong to - field may be blank.
     'Condition' - the condition that should be required to satisfy.
     'Status' - the status of the model (represents state)
     'Field' - the field we are targetting (eg: start_date) this needs to be spelled exactly as it is on the model
     'Action' - One of the following values: 'view', 'edit', 'required'
-    'Allowed' - the boolean 'TRUE' or 'FALSE' if the action should be allowed if the: group match, stastus match and
+    'Allowed' - the boolean 'TRUE' or 'FALSE' if the action should be allowed if the: group match, status match and
     condition match are all valid
 
     *** note that in order for the system to know what the default behaviour should be on a specified field for a
@@ -156,9 +160,11 @@ def proccess_permissions(permission_dict):
             result[field][action][allowed] = []
 
         # this action should not have been defined with any other allowed param
-        assert result[field][action].keys() == [allowed], 'There cannot be two types of "allowed" defined on the same '\
-                                                          'field with the same action as the system will not  be able' \
-                                                          ' to have a default behaviour'
+        assert list(result[field][action].keys()) == [allowed], \
+            'There cannot be two types of "allowed" defined on the same ' \
+            'field with the same action as the system will not be able' \
+            ' to have a default behaviour.  field=%r, action=%r, allowed=%r' \
+            % (field, action, allowed)
 
         result[field][action][allowed].append({
             'group': row['Group'],
@@ -175,13 +181,12 @@ def import_permissions(model_name):
     }
 
     def process_file():
-        with open(permission_file_map[model_name], 'rb') as csvfile:
+        with codecs.open(permission_file_map[model_name], 'r', encoding='ascii') as csvfile:
             sheet = csv.DictReader(csvfile, delimiter=',', quotechar='|')
             result = proccess_permissions(sheet)
         return result
 
     cache_key = "public-{}-permissions".format(model_name.lower())
-    # cache.delete(cache_key)
     response = cache.get_or_set(cache_key, process_file, 60 * 60 * 24)
 
     return response
@@ -204,3 +209,40 @@ def get_quarter(retrieve_date=None):
     else:
         quarter = 'q4'
     return quarter
+
+
+def model_instance_to_dictionary(obj):
+    """
+    Given a model instance `obj`, return a dictionary that represents it.
+    E.g. something like
+    {u'pk': 15, u'model': u'audit.auditorstaffmember', u'auditor_firm': 15, u'user': 934}
+
+    For _simple_ use from templates, this'll work as well as the model instance itself.
+    And it's trivially serializable by the default json encoder.
+    That's all we really need here.
+    """
+    # We cannot just use model_to_dict, because it excludes non-editable fields
+    # unconditionally, and we want them all.
+
+    # Note that Django's serializers only work on iterables of model instances
+
+    json_string = serializers.serialize('json', [obj])
+    # The string will deserialize to a list with one simple dictionary, like
+    #  {u'pk': 15, u'model': u'audit.auditorstaffmember', u'fields': {u'auditor_firm': 15, u'user': 934}}
+    d = json.loads(json_string)[0]
+    # Promote the fields into the main dictionary
+    d.update(**d.pop('fields'))
+    return d
+
+
+def make_dictionary_serializable(data):
+    """
+    Return a new dictionary, which is a copy of data, but
+    if data is a dictionary with some model instances as values,
+    the model instances are replaced with dictionaries so that
+    the whole thing should be serializable.
+    """
+    return {
+        k: model_instance_to_dictionary(v) if isinstance(v, models.Model) else v
+        for k, v in six.iteritems(data)
+    }
