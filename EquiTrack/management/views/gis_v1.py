@@ -124,7 +124,7 @@ class GisLocationsGeomDetailsViewset(RetrieveAPIView):
             if pcode is not None or id is not None:
                 try:
                     lookup = {'p_code': pcode} if id is None else {'pk': id}
-                    location = Location.get(lookup)
+                    location = Location.objects.get(**lookup)
                 except Location.DoesNotExist:
                     return Response(status=400, data={'error': 'Location not found'})
 
