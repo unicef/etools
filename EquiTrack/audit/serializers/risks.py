@@ -190,7 +190,11 @@ class RiskRootSerializer(WritableNestedSerializerMixin, serializers.ModelSeriali
         super(RiskRootSerializer, self).__init__(*args, **kwargs)
 
         if self.risk_choices:
-            self.fields['blueprints'].child.fields['risk'].risk_choices = self.risk_choices
+            blueprint_fields = self.fields['blueprints'].child.fields
+            if 'risk' in blueprint_fields:
+                blueprint_fields['risk'].risk_choices = self.risk_choices
+            if 'risks' in blueprint_fields:
+                blueprint_fields['risks'].child.risk_choices = self.risk_choices
 
     def get_attribute(self, instance):
         """
