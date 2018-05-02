@@ -267,7 +267,7 @@ class Command(BaseCommand):
 
         self.add_permissions(
             self.focal_point, 'edit',
-            self.partner_block + self.staff_members_block,
+            self.partner_block + self.staff_members_block + self.engagement_attachments_block,
             condition=self.engagement_status(Engagement.STATUSES.partner_contacted)
         )
         self.add_permissions(
@@ -282,11 +282,21 @@ class Command(BaseCommand):
             'audit.engagement.finalize',
             condition=self.engagement_status(Engagement.STATUSES.report_submitted)
         )
+        self.add_permissions(
+            self.everybody, 'view',
+            self.report_block,
+            condition=self.engagement_status(Engagement.STATUSES.report_submitted)
+        )
 
         # final report. everybody can view. focal point can add action points
         self.add_permissions(
+            self.everybody, 'view',
+            self.report_block,
+            condition=self.engagement_status(Engagement.STATUSES.final)
+        )
+        self.add_permissions(
             self.all_unicef_users, 'view',
-            self.report_block + self.follow_up_page,
+            self.follow_up_page,
             condition=self.engagement_status(Engagement.STATUSES.final)
         )
         self.add_permissions(
