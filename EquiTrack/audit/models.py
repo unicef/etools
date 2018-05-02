@@ -293,7 +293,7 @@ class RiskCategory(OrderedModel, models.Model):
 
     order_with_respect_to = 'parent'
 
-    class Meta:
+    class Meta(OrderedModel.Meta):
         verbose_name_plural = _('Risk Categories')
 
     def __str__(self):
@@ -336,6 +336,9 @@ class RiskBluePrint(OrderedModel, models.Model):
 
     order_with_respect_to = 'category'
 
+    class Meta(OrderedModel.Meta):
+        verbose_name_plural = _('Risk Blueprints')
+
     def __str__(self):
         return 'RiskBluePrint at {}'.format(self.category.header)
 
@@ -369,6 +372,7 @@ class Risk(models.Model):
         return 'Risk at {}, {}'.format(self.engagement, self.value)
 
     class Meta:
+        ordering = ('id', )
         unique_together = [['engagement', 'blueprint', ]]
 
 
@@ -487,6 +491,11 @@ class Finding(models.Model):
     agreed_action_by_ip = models.TextField(verbose_name=_('Agreed Action by IP'), blank=True)
     deadline_of_action = models.DateField(verbose_name=_('Deadline of Action'), null=True, blank=True)
 
+    class Meta:
+        ordering = ('id', )
+        verbose_name = _('Finding')
+        verbose_name_plural = _('Findings')
+
     def __str__(self):
         return 'Finding for {}'.format(self.spot_check)
 
@@ -536,6 +545,11 @@ class DetailedFindingInfo(models.Model):
         MicroAssessment, verbose_name=_('Micro Assessment'), related_name='findings',
         on_delete=models.CASCADE,
     )
+
+    class Meta:
+        ordering = ('id', )
+        verbose_name = _('Detailed Finding Info')
+        verbose_name_plural = _('Detailed Findings Info')
 
     def __str__(self):
         return 'Finding for {}'.format(self.micro_assesment)
@@ -724,6 +738,11 @@ class SpecificProcedure(models.Model):
     description = models.TextField()
     finding = models.TextField(blank=True)
 
+    class Meta:
+        ordering = ('id', )
+        verbose_name = _('Specific Procedure')
+        verbose_name_plural = _('Specific Procedures')
+
     def __str__(self):
         return '{}: {}'.format(self.audit.unique_id, self.description)
 
@@ -736,6 +755,11 @@ class SpecialAuditRecommendation(models.Model):
     )
 
     description = models.TextField()
+
+    class Meta:
+        ordering = ('id', )
+        verbose_name = _('Special Audit Recommendation')
+        verbose_name_plural = _('Special Audit Recommendations')
 
     def __str__(self):
         return '{}: {}'.format(self.audit.unique_id, self.description)
@@ -791,6 +815,11 @@ class EngagementActionPoint(models.Model):
     status = models.CharField(verbose_name=_('Status'), max_length=10,
                               choices=STATUS_CHOICES, default=STATUS_CHOICES.open)
     high_priority = models.BooleanField(verbose_name=_('High Priority'), default=False)
+
+    class Meta:
+        ordering = ('id', )
+        verbose_name = _('Engagement Action Point')
+        verbose_name_plural = _('Engagement Action Points')
 
     def __str__(self):
         return '{} on {}'.format(self.get_category_display(), self.engagement)
