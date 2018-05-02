@@ -24,7 +24,7 @@ from permissions.utils import has_action_permission
 from notification.utils import send_notification_using_email_template
 from publics.models import SoftDeleteMixin
 from tpm.tpmpartners.models import TPMPartner, TPMPartnerStaffMember
-from tpm.transitions.serializers import TPMVisitApproveSerializer, TPMVisitRejectSerializer
+from tpm.transitions.serializers import TPMVisitApproveSerializer, TPMVisitRejectSerializer, TPMVisitCancelSerializer
 from tpm.transitions.conditions import (
     TPMVisitAssignRequiredFieldsCheck, TPMVisitReportValidations, ValidateTPMVisitActivities,)
 
@@ -75,7 +75,10 @@ class TPMVisit(SoftDeleteMixin, TimeStampedModel, models.Model):
 
     status = FSMField(verbose_name=_('Status'), max_length=20, choices=STATUSES, default=STATUSES.draft, protected=True)
 
-    reject_comment = models.TextField(verbose_name=_('Request For More Information'), blank=True)
+    # UNICEF cancelled visit
+    cancel_comment = models.TextField(verbose_name=_('Cancel Comment'), blank=True)
+    # TPM rejected visit
+    reject_comment = models.TextField(verbose_name=_('Reason for Rejection'), blank=True)
     approval_comment = models.TextField(verbose_name=_('Approval Comments'), blank=True)
 
     report_attachments = GenericRelation(Attachment, verbose_name=_('Visit Report'), blank=True)
@@ -146,25 +149,31 @@ class TPMVisit(SoftDeleteMixin, TimeStampedModel, models.Model):
     def has_action_permission(self, user=None, action=None):
         return _has_action_permission(self, user, action)
 
-    def get_mail_context(self):
+    def get_mail_context(self, user=None):
+        object_url = self.get_object_url()
+
+        if user:
+            from email_auth.utils import update_url_with_auth_token
+            object_url = update_url_with_auth_token(object_url, user)
+
         activities = self.tpm_activities.all()
         interventions = set(a.intervention.title for a in activities if a.intervention)
         partner_names = set(a.partner.name for a in activities)
         return {
             'reference_number': self.reference_number,
-            'tpm_partner': self.tpm_partner.name,
+            'tpm_partner': self.tpm_partner.name if self.tpm_partner else '-',
             'tpm_activities': [a.get_mail_context() for a in activities],
             'multiple_tpm_activities': activities.count() > 1,
-            'object_url': self.get_object_url(),
+            'object_url': object_url,
             'partners': ', '.join(partner_names),
             'interventions': ', '.join(interventions),
         }
 
-    def _send_email(self, recipients, template_name, context=None, **kwargs):
+    def _send_email(self, recipients, template_name, context=None, user=None, **kwargs):
         context = context or {}
 
         base_context = {
-            'visit': self.get_mail_context(),
+            'visit': self.get_mail_context(user=user),
             'environment': get_environment(),
         }
         base_context.update(context)
@@ -181,20 +190,21 @@ class TPMVisit(SoftDeleteMixin, TimeStampedModel, models.Model):
                 recipients=recipients,
                 email_template_name=template_name,
                 context=context,
-                sender=self,
             )
 
     def _get_unicef_focal_points_as_email_recipients(self):
         return list(
             self.unicef_focal_points.filter(
-                email__isnull=False
+                email__isnull=False,
+                is_active=True
             ).values_list('email', flat=True)
         )
 
     def _get_tpm_focal_points_as_email_recipients(self):
         return list(
             self.tpm_partner_focal_points.filter(
-                user__email__isnull=False
+                user__email__isnull=False,
+                user__is_active=True
             ).values_list('user__email', flat=True)
         )
 
@@ -225,16 +235,25 @@ class TPMVisit(SoftDeleteMixin, TimeStampedModel, models.Model):
                 cc=self._get_unicef_focal_points_as_email_recipients()
             )
 
+        for staff_member in self.tpm_partner_focal_points.filter(user__email__isnull=False, user__is_active=True):
+            self._send_email(
+                staff_member.user.email, 'tpm/visit/assign_staff_member',
+                context={'recipient': staff_member.user.get_full_name()},
+                user=staff_member.user
+            )
+
     @transition(
         status, source=[
             STATUSES.draft, STATUSES.assigned, STATUSES.tpm_accepted, STATUSES.tpm_rejected,
             STATUSES.tpm_reported, STATUSES.tpm_report_rejected,
         ], target=STATUSES.cancelled, permission=_has_action_permission(action='cancel'),
         custom={
+            'serializer': TPMVisitCancelSerializer,
             'name': _('Cancel Visit')
         }
     )
-    def cancel(self):
+    def cancel(self, cancel_comment):
+        self.cancel_comment = cancel_comment
         self.date_of_cancelled = timezone.now()
 
     @transition(status, source=[STATUSES.assigned], target=STATUSES.tpm_rejected,
@@ -244,7 +263,7 @@ class TPMVisit(SoftDeleteMixin, TimeStampedModel, models.Model):
         self.date_of_tpm_rejected = timezone.now()
         self.reject_comment = reject_comment
 
-        for recipient in self.unicef_focal_points.filter(email__isnull=False):
+        for recipient in self.unicef_focal_points.filter(email__isnull=False, is_active=True):
             self._send_email(
                 recipient.email, 'tpm/visit/reject',
                 cc=self._get_tpm_focal_points_as_email_recipients(),
@@ -256,7 +275,7 @@ class TPMVisit(SoftDeleteMixin, TimeStampedModel, models.Model):
     def accept(self):
         self.date_of_tpm_accepted = timezone.now()
 
-        for recipient in self.unicef_focal_points.filter(email__isnull=False):
+        for recipient in self.unicef_focal_points.filter(email__isnull=False, is_active=True):
             self._send_email(
                 recipient.email, 'tpm/visit/accept',
                 cc=self._get_tpm_focal_points_as_email_recipients(),
@@ -276,7 +295,7 @@ class TPMVisit(SoftDeleteMixin, TimeStampedModel, models.Model):
     def send_report(self):
         self.date_of_tpm_reported = timezone.now()
 
-        for recipient in self.unicef_focal_points.filter(email__isnull=False):
+        for recipient in self.unicef_focal_points.filter(email__isnull=False, is_active=True):
             self._send_email(
                 recipient.email, 'tpm/visit/report',
                 cc=self._get_tpm_focal_points_as_email_recipients(),
@@ -295,7 +314,7 @@ class TPMVisit(SoftDeleteMixin, TimeStampedModel, models.Model):
         self.date_of_tpm_report_rejected = timezone.now()
         TPMVisitReportRejectComment.objects.create(reject_reason=reject_comment, tpm_visit=self)
 
-        for staff_user in self.tpm_partner_focal_points.filter(user__email__isnull=False):
+        for staff_user in self.tpm_partner_focal_points.filter(user__email__isnull=False, user__is_active=True):
             self._send_email(
                 [staff_user.user.email], 'tpm/visit/report_rejected',
                 context={'recipient': staff_user.user.get_full_name()}
@@ -312,7 +331,7 @@ class TPMVisit(SoftDeleteMixin, TimeStampedModel, models.Model):
 
         self.date_of_unicef_approved = timezone.now()
         if notify_focal_point:
-            for recipient in self.unicef_focal_points.filter(email__isnull=False):
+            for recipient in self.unicef_focal_points.filter(email__isnull=False, is_active=True):
                 self._send_email(
                     recipient.email, 'tpm/visit/approve_report',
                     context={'recipient': recipient.get_full_name()}
@@ -320,7 +339,7 @@ class TPMVisit(SoftDeleteMixin, TimeStampedModel, models.Model):
 
         if notify_tpm_partner:
             # TODO: Generate report as PDF attachment.
-            for staff_user in self.tpm_partner_focal_points.filter(user__email__isnull=False):
+            for staff_user in self.tpm_partner_focal_points.filter(user__email__isnull=False, user__is_active=True):
                 self._send_email(
                     [staff_user.user.email, ], 'tpm/visit/approve_report_tpm',
                     context={'recipient': staff_user.user.get_full_name()}
@@ -337,7 +356,8 @@ class TPMVisit(SoftDeleteMixin, TimeStampedModel, models.Model):
 class TPMVisitReportRejectComment(models.Model):
     rejected_at = models.DateTimeField(auto_now_add=True, verbose_name=_('Rejected At'))
 
-    reject_reason = models.TextField(verbose_name=_('Reason of Rejection'))
+    # UNICEF rejected report
+    reject_reason = models.TextField(verbose_name=_('Reason for Rejection'))
 
     tpm_visit = models.ForeignKey(
         TPMVisit, verbose_name=_('Visit'), related_name='report_reject_comments',
@@ -374,7 +394,7 @@ class TPMActivity(Activity):
     is_pv = models.BooleanField(default=False, verbose_name=_('HACT Programmatic Visit'))
 
     def __str__(self):
-        return 'Activity #{0} for {1}'.format(self.id, self.tpm_visit)
+        return 'Task #{0} for {1}'.format(self.id, self.tpm_visit)
 
     class Meta:
         verbose_name_plural = _('TPM Activities')
@@ -403,9 +423,9 @@ class TPMActivity(Activity):
     def get_mail_context(self):
         return {
             'locations': ', '.join(map(force_text, self.locations.all())),
-            'intervention': self.intervention.title,
-            'cp_output': force_text(self.cp_output),
-            'section': force_text(self.section),
+            'intervention': self.intervention.title if self.intervention else '-',
+            'cp_output': force_text(self.cp_output) if self.cp_output else '-',
+            'section': force_text(self.section) if self.section else '-',
         }
 
 
@@ -459,7 +479,6 @@ class TPMActionPoint(TimeStampedModel, models.Model):
             recipients=[self.person_responsible.email],
             email_template_name=template_name,
             context=context,
-            sender=self,
         )
 
 

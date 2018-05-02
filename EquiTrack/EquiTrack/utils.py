@@ -60,10 +60,10 @@ class EveryCountry:
         connection.set_tenant(self.original_country)
 
 
-def run_on_all_tenants(function):
+def run_on_all_tenants(function, **kwargs):
     with EveryCountry() as c:
         for country in c:
-            function()
+            function(**kwargs)
 
 
 def set_country(user, request):
