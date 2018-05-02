@@ -45,8 +45,7 @@ class TestTPMTransitionConditions(TPMTransitionTestCase):
 
     def test_assign_without_activities(self):
         visit = TPMVisitFactory(status='draft',
-                                tpm_activities__count=0,
-                                unicef_focal_points__count=3)
+                                tpm_activities__count=0)
 
         response = self._do_transition(visit, 'assign', self.pme_user)
         self.assertEquals(response.status_code, status.HTTP_400_BAD_REQUEST)
@@ -57,7 +56,7 @@ class TestTPMTransitionConditions(TPMTransitionTestCase):
     def test_assign_without_focal_points(self):
         visit = TPMVisitFactory(status='draft',
                                 tpm_activities__count=3,
-                                unicef_focal_points__count=0)
+                                tpm_activities__unicef_focal_points__count=0)
 
         response = self._do_transition(visit, 'assign', self.pme_user)
         self.assertEquals(response.status_code, status.HTTP_400_BAD_REQUEST)
@@ -68,7 +67,7 @@ class TestTPMTransitionConditions(TPMTransitionTestCase):
     def test_success_assign(self):
         visit = TPMVisitFactory(status='draft',
                                 tpm_activities__count=3,
-                                unicef_focal_points__count=3,
+                                tpm_activities__unicef_focal_points__count=3,
                                 tpm_partner_focal_points__count=3)
 
         response = self._do_transition(visit, 'assign', self.pme_user)
@@ -77,10 +76,17 @@ class TestTPMTransitionConditions(TPMTransitionTestCase):
         visit = self._refresh_tpm_visit_instance(visit)
         self.assertEquals(visit.status, 'assigned')
 
-    def test_success_cancel(self):
+    def test_cancel_without_msg(self):
         visit = TPMVisitFactory(status='draft')
 
         response = self._do_transition(visit, 'cancel', self.pme_user)
+        self.assertEquals(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn('cancel_comment', response.data)
+
+    def test_success_cancel(self):
+        visit = TPMVisitFactory(status='draft')
+
+        response = self._do_transition(visit, 'cancel', self.pme_user, data={'cancel_comment': 'Just because'})
         self.assertEquals(response.status_code, status.HTTP_200_OK)
 
         visit = self._refresh_tpm_visit_instance(visit)
@@ -243,10 +249,10 @@ class TPMTransitionPermissionsTestCase(TransitionPermissionsTestCaseMixin, TPMTr
         opts = {}
 
         if transition == 'assign':
-            opts['unicef_focal_points__count'] = 1
-            opts['offices__count'] = 1
             opts['tpm_partner_focal_points__count'] = 1
             opts['tpm_activities__count'] = 1
+            opts['tpm_activities__unicef_focal_points__count'] = 1
+            opts['tpm_activities__offices__count'] = 1
 
         if transition == 'send_report':
             opts['tpm_activities__report_attachments__count'] = 1
@@ -260,6 +266,9 @@ class TPMTransitionPermissionsTestCase(TransitionPermissionsTestCaseMixin, TPMTr
 
         if transition in ['reject', 'reject_report']:
             extra_data['reject_comment'] = 'Just because.'
+
+        if transition in ['cancel']:
+            extra_data['cancel_comment'] = 'Just because.'
 
         if transition == 'approve':
             extra_data['mark_as_programmatic_visit'] = []
@@ -320,7 +329,7 @@ class FPPermissionsForTpmTransitionTestCase(TPMTransitionPermissionsTestCase):
 
     def create_object(self, transition, **kwargs):
         opts = {
-            'unicef_focal_points': [self.user],
+            'tpm_activities__unicef_focal_points': [self.user],
         }
 
         opts.update(kwargs)

@@ -3,16 +3,15 @@ from __future__ import absolute_import, division, print_function, unicode_litera
 import csv
 import datetime
 import itertools
+from io import StringIO
 
 from django.conf import settings
 from django.core.mail.message import EmailMessage
 from django.db import connection, transaction
 from django.db.models import F, Sum
 from django.db.models.functions import Coalesce
-from django.db.utils import six
 
 from celery.utils.log import get_task_logger
-from six import StringIO
 
 from EquiTrack.celery import app
 from notification.utils import send_notification_using_email_template
@@ -30,14 +29,14 @@ _INTERVENTION_ENDING_SOON_DELTAS = (15, 30)
 
 
 def get_intervention_context(intervention):
-    '''Return a dict formatting some details about the intervention.
+    """Return a dict formatting some details about the intervention.
 
     Helper function for some of the notification tasks in this file.
-    '''
+    """
     return {
-        'number': six.text_type(intervention),
+        'number': str(intervention),
         'partner': intervention.agreement.partner.name,
-        'start_date': six.text_type(intervention.start),
+        'start_date': str(intervention.start),
         'url': 'https://{}/pmp/interventions/{}/details'.format(settings.HOST, intervention.id),
         'unicef_focal_points': [focal_point.email for focal_point in intervention.unicef_focal_points.all()]
     }
@@ -45,18 +44,18 @@ def get_intervention_context(intervention):
 
 @app.task
 def agreement_status_automatic_transition():
-    '''Check validity and save changed status (if any) for agreements that meet all of the following criteria --
+    """Check validity and save changed status (if any) for agreements that meet all of the following criteria --
         - signed
         - end date is after today
         - type != SSFA
-    '''
+    """
     for country in Country.objects.exclude(name='Global').all():
         connection.set_tenant(country)
         _make_agreement_status_automatic_transitions(country.name)
 
 
 def _make_agreement_status_automatic_transitions(country_name):
-    '''Implementation core of agreement_status_automatic_transition() (q.v.)'''
+    """Implementation core of agreement_status_automatic_transition() (q.v.)"""
     logger.info('Starting agreement auto status transition for country {}'.format(country_name))
 
     admin_user = User.objects.get(username=settings.TASK_ADMIN_USER)
@@ -84,14 +83,14 @@ def _make_agreement_status_automatic_transitions(country_name):
                 bad_agreements.append(agr)
 
     logger.error('Bad agreements {}'.format(len(bad_agreements)))
-    logger.error('Bad agreements ids: ' + ' '.join(six.text_type(a.id) for a in bad_agreements))
+    logger.error('Bad agreements ids: ' + ' '.join(str(a.id) for a in bad_agreements))
     logger.info('Total agreements {}'.format(signed_ended_agrs.count()))
     logger.info("Transitioned agreements {} ".format(processed))
 
 
 @app.task
 def intervention_status_automatic_transition():
-    '''Check validity and save changed status (if any) for interventions that meet all of the following criteria --
+    """Check validity and save changed status (if any) for interventions that meet all of the following criteria --
         - active
         - end date is yesterday
 
@@ -99,7 +98,7 @@ def intervention_status_automatic_transition():
         - ended
         - total outstanding_amt == 0
         - total_amt == actual_amt
-    '''
+    """
     for country in Country.objects.exclude(name='Global').all():
         connection.set_tenant(country)
         _make_intervention_status_automatic_transitions(country.name)
@@ -107,7 +106,7 @@ def intervention_status_automatic_transition():
 
 @transaction.atomic
 def _make_intervention_status_automatic_transitions(country_name):
-    '''Implementation core of intervention_status_automatic_transition() (q.v.)'''
+    """Implementation core of intervention_status_automatic_transition() (q.v.)"""
     logger.info('Starting intervention auto status transition for country {}'.format(country_name))
 
     admin_user = User.objects.get(username=settings.TASK_ADMIN_USER)
@@ -146,27 +145,27 @@ def _make_intervention_status_automatic_transitions(country_name):
                 bad_interventions.append(intervention)
 
     logger.error('Bad interventions {}'.format(len(bad_interventions)))
-    logger.error('Bad interventions ids: ' + ' '.join(six.text_type(a.id) for a in bad_interventions))
+    logger.error('Bad interventions ids: ' + ' '.join(str(a.id) for a in bad_interventions))
     logger.info('Total interventions {}'.format(active_ended.count() + qs.count()))
     logger.info("Transitioned interventions {} ".format(processed))
 
 
 @app.task
 def intervention_notification_signed_no_frs():
-    '''Send notifications for interventions that meet all of the following criteria --
+    """Send notifications for interventions that meet all of the following criteria --
         - signed
         - ending today or in the future
         - have no related FRS
 
     This should only run once a week.
-    '''
+    """
     for country in Country.objects.exclude(name='Global').all():
         connection.set_tenant(country)
         _notify_of_signed_interventions_with_no_frs(country.name)
 
 
 def _notify_of_signed_interventions_with_no_frs(country_name):
-    '''Implementation core of intervention_notification_signed_no_frs() (q.v.)'''
+    """Implementation core of intervention_notification_signed_no_frs() (q.v.)"""
     logger.info('Starting intervention signed but no FRs notifications for country {}'.format(country_name))
 
     signed_interventions = Intervention.objects.filter(status=Intervention.SIGNED,
@@ -185,19 +184,19 @@ def _notify_of_signed_interventions_with_no_frs(country_name):
 
 @app.task
 def intervention_notification_ended_fr_outstanding():
-    '''Send notifications for interventions that meet all of the following criteria --
+    """Send notifications for interventions that meet all of the following criteria --
         - ended
         - total_frs['total_actual_amt'] != total_frs['total_frs_amt']
 
     This will run every 2 weeks
-    '''
+    """
     for country in Country.objects.exclude(name='Global').all():
         connection.set_tenant(country)
         _notify_of_ended_interventions_with_mismatched_frs(country.name)
 
 
 def _notify_of_ended_interventions_with_mismatched_frs(country_name):
-    '''Implementation core of intervention_notification_ended_fr_outstanding() (q.v.)'''
+    """Implementation core of intervention_notification_ended_fr_outstanding() (q.v.)"""
     logger.info('Starting intervention signed but FRs Amount and actual '
                 'do not match notifications for country {}'.format(country_name))
 
@@ -215,23 +214,23 @@ def _notify_of_ended_interventions_with_mismatched_frs(country_name):
 
 @app.task
 def intervention_notification_ending():
-    '''Send notifications for interventions that will end soon, where "soon" are the # of days from today defined
+    """Send notifications for interventions that will end soon, where "soon" are the # of days from today defined
     in _INTERVENTION_ENDING_SOON_DELTAS.
 
     This will run every 24 hours.
-    '''
+    """
     for country in Country.objects.exclude(name='Global').all():
         connection.set_tenant(country)
         _notify_interventions_ending_soon(country.name)
 
 
 def _notify_interventions_ending_soon(country_name):
-    '''Implementation core of intervention_notification_ending() (q.v.)'''
+    """Implementation core of intervention_notification_ending() (q.v.)"""
     logger.info('Starting interventions almost ending notifications for country {}'.format(country_name))
 
     today = datetime.date.today()
 
-    notify_end_dates = [today + datetime.timedelta(days=delta) for delta in (_INTERVENTION_ENDING_SOON_DELTAS)]
+    notify_end_dates = [today + datetime.timedelta(days=delta) for delta in _INTERVENTION_ENDING_SOON_DELTAS]
 
     interventions = Intervention.objects.filter(status=Intervention.ACTIVE, end__in=notify_end_dates)
     interventions = interventions.prefetch_related('unicef_focal_points', 'agreement', 'agreement__partner')
@@ -288,9 +287,9 @@ def pmp_indicator_report():
                 planned_budget = getattr(intervention, 'planned_budget', None)
                 writer.writerow({
                     'Country': country,
-                    'Partner Name': six.string_types(partner).decode('unicode_escape').encode('ascii', 'ignore'),
+                    'Partner Name': str(partner),
                     'Partner Type': partner.cso_type,
-                    'PD / SSFA ref': intervention.number.encode('utf-8').replace(',', '-'),
+                    'PD / SSFA ref': intervention.number.replace(',', '-'),
                     'PD / SSFA status': intervention.get_status_display(),
                     'PD / SSFA start date': intervention.start,
                     'PD / SSFA creation date': intervention.created,
@@ -304,8 +303,7 @@ def pmp_indicator_report():
                     'Unicef Cash': intervention.planned_budget.unicef_cash if planned_budget else '-',
                     'In kind Amount': intervention.planned_budget.in_kind_amount if planned_budget else '-',
                     'Total': intervention.planned_budget.total if planned_budget else '-',
-                    'FR numbers against PD / SSFA': u' - '.join([
-                        (fh.fr_number.encode('utf-8')) for fh in intervention.frs.all()]),
+                    'FR numbers against PD / SSFA': u' - '.join([fh.fr_number for fh in intervention.frs.all()]),
                     'Sum of all FR planned amount': intervention.frs.aggregate(
                         total=Coalesce(Sum('intervention_amt'), 0))['total'],
                     'Core value attached': True if partner.core_values_assessment else False,
@@ -319,6 +317,6 @@ def pmp_indicator_report():
 
 
 @app.task
-def copy_attachments():
+def copy_attachments(hours=25):
     """Copy all partner app attachments"""
-    copy_all_attachments()
+    copy_all_attachments(hours=hours)
