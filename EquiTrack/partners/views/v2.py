@@ -1,7 +1,7 @@
 import datetime
 import operator
 
-from django.contrib.auth import models
+from django.contrib.auth import get_user_model
 from django.db.models.functions import Concat
 from django.db.models import Value
 from model_utils import Choices
@@ -147,7 +147,7 @@ class PMPDropdownsListApiView(APIView):
         """
         Return All dropdown values used for Agreements form
         """
-        signed_by_unicef = list(models.User.objects.filter(
+        signed_by_unicef = list(get_user_model().objects.filter(
             groups__name__in=['Senior Management Team'],
             profile__country=request.tenant
         ).annotate(
