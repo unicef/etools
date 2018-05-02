@@ -45,8 +45,7 @@ class TestTPMTransitionConditions(TPMTransitionTestCase):
 
     def test_assign_without_activities(self):
         visit = TPMVisitFactory(status='draft',
-                                tpm_activities__count=0,
-                                unicef_focal_points__count=3)
+                                tpm_activities__count=0)
 
         response = self._do_transition(visit, 'assign', self.pme_user)
         self.assertEquals(response.status_code, status.HTTP_400_BAD_REQUEST)
@@ -57,7 +56,7 @@ class TestTPMTransitionConditions(TPMTransitionTestCase):
     def test_assign_without_focal_points(self):
         visit = TPMVisitFactory(status='draft',
                                 tpm_activities__count=3,
-                                unicef_focal_points__count=0)
+                                tpm_activities__unicef_focal_points__count=0)
 
         response = self._do_transition(visit, 'assign', self.pme_user)
         self.assertEquals(response.status_code, status.HTTP_400_BAD_REQUEST)
@@ -68,7 +67,7 @@ class TestTPMTransitionConditions(TPMTransitionTestCase):
     def test_success_assign(self):
         visit = TPMVisitFactory(status='draft',
                                 tpm_activities__count=3,
-                                unicef_focal_points__count=3,
+                                tpm_activities__unicef_focal_points__count=3,
                                 tpm_partner_focal_points__count=3)
 
         response = self._do_transition(visit, 'assign', self.pme_user)
@@ -250,10 +249,10 @@ class TPMTransitionPermissionsTestCase(TransitionPermissionsTestCaseMixin, TPMTr
         opts = {}
 
         if transition == 'assign':
-            opts['unicef_focal_points__count'] = 1
-            opts['offices__count'] = 1
             opts['tpm_partner_focal_points__count'] = 1
             opts['tpm_activities__count'] = 1
+            opts['tpm_activities__unicef_focal_points__count'] = 1
+            opts['tpm_activities__offices__count'] = 1
 
         if transition == 'send_report':
             opts['tpm_activities__report_attachments__count'] = 1
@@ -330,7 +329,7 @@ class FPPermissionsForTpmTransitionTestCase(TPMTransitionPermissionsTestCase):
 
     def create_object(self, transition, **kwargs):
         opts = {
-            'unicef_focal_points': [self.user],
+            'tpm_activities__unicef_focal_points': [self.user],
         }
 
         opts.update(kwargs)
