@@ -282,6 +282,11 @@ class Command(BaseCommand):
             'audit.engagement.finalize',
             condition=self.engagement_status(Engagement.STATUSES.report_submitted)
         )
+        self.add_permissions(
+            self.everybody, 'view',
+            self.report_block,
+            condition=self.engagement_status(Engagement.STATUSES.report_submitted)
+        )
 
         # final report. everybody can view. focal point can add action points
         self.add_permissions(
