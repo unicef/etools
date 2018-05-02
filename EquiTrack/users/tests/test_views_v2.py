@@ -2,7 +2,7 @@ from __future__ import unicode_literals
 
 import json
 
-from django.contrib.auth.models import User
+from django.contrib.auth import get_user_model
 from django.core.urlresolvers import reverse
 from rest_framework import status
 
@@ -44,7 +44,7 @@ class TestMyProfileAPIView(BaseTenantTestCase):
         # (Hopefully this is fixed, but here in Django 1.10.8 it's a problem.
         # And I don't see any mention of a fix in release notes up through
         # 2.0.3.)
-        user = User.objects.get(pk=user.pk)
+        user = get_user_model().objects.get(pk=user.pk)
 
         response = self.forced_auth_req(
             "get",

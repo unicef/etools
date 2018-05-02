@@ -6,6 +6,7 @@ import itertools
 from io import StringIO
 
 from django.conf import settings
+from django.contrib.auth import get_user_model
 from django.core.mail.message import EmailMessage
 from django.db import connection, transaction
 from django.db.models import F, Sum
@@ -19,7 +20,7 @@ from partners.models import Agreement, Intervention, PartnerOrganization
 from partners.utils import copy_all_attachments
 from partners.validation.agreements import AgreementValid
 from partners.validation.interventions import InterventionValid
-from users.models import Country, User
+from users.models import Country
 
 logger = get_task_logger(__name__)
 
@@ -58,7 +59,7 @@ def _make_agreement_status_automatic_transitions(country_name):
     """Implementation core of agreement_status_automatic_transition() (q.v.)"""
     logger.info('Starting agreement auto status transition for country {}'.format(country_name))
 
-    admin_user = User.objects.get(username=settings.TASK_ADMIN_USER)
+    admin_user = get_user_model().objects.get(username=settings.TASK_ADMIN_USER)
 
     # these are agreements that are not even valid within their own status
     # compiling a list of them to send to an admin or save somewhere in the future
@@ -109,7 +110,7 @@ def _make_intervention_status_automatic_transitions(country_name):
     """Implementation core of intervention_status_automatic_transition() (q.v.)"""
     logger.info('Starting intervention auto status transition for country {}'.format(country_name))
 
-    admin_user = User.objects.get(username=settings.TASK_ADMIN_USER)
+    admin_user = get_user_model().objects.get(username=settings.TASK_ADMIN_USER)
 
     # these are agreements that are not even valid within their own status
     # compiling a list of them to send to an admin or save somewhere in the future

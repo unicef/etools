@@ -3,7 +3,6 @@ from __future__ import absolute_import, division, print_function, unicode_litera
 import itertools
 
 from django.conf import settings
-from django.contrib.auth.models import User
 from django.contrib.contenttypes.fields import GenericRelation
 from django.db import models
 from django.utils import timezone, six
@@ -452,11 +451,15 @@ class TPMActionPoint(TimeStampedModel, models.Model):
     )
 
     author = models.ForeignKey(
-        User, related_name='created_tpm_action_points', verbose_name=_('Assigned By'),
+        settings.AUTH_USER_MODEL,
+        related_name='created_tpm_action_points',
+        verbose_name=_('Assigned By'),
         on_delete=models.CASCADE,
     )
     person_responsible = models.ForeignKey(
-        User, related_name='tpm_action_points', verbose_name=_('Person Responsible'),
+        settings.AUTH_USER_MODEL,
+        related_name='tpm_action_points',
+        verbose_name=_('Person Responsible'),
         on_delete=models.CASCADE,
     )
 
