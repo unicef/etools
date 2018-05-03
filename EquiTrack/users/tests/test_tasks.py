@@ -10,11 +10,12 @@ from mock import patch, Mock
 from tenant_schemas.utils import schema_context
 
 from django.conf import settings
+from django.contrib.auth import get_user_model
 from django.utils import six
 
 from EquiTrack.tests.cases import SCHEMA_NAME, BaseTenantTestCase
 from users import tasks
-from users.models import Section, User, UserProfile
+from users.models import Section, UserProfile
 from users.tests.factories import (
     CountryFactory,
     GroupFactory,
@@ -216,7 +217,7 @@ class TestUserMapper(BaseTenantTestCase):
         email = "tester@example.com"
         res = self.mapper.create_or_update_user({"internetaddress": email})
         self.assertIsNone(res)
-        self.assertFalse(User.objects.filter(email=email).exists())
+        self.assertFalse(get_user_model().objects.filter(email=email).exists())
 
     def test_create_or_update_user_created(self):
         """Ensure user is created and added to default group"""
@@ -228,11 +229,11 @@ class TestUserMapper(BaseTenantTestCase):
             "sn": "Last"
         })
         self.assertIsNone(res)
-        self.assertTrue(User.objects.filter(email=email).exists())
+        self.assertTrue(get_user_model().objects.filter(email=email).exists())
         self.assertTrue(
             UserProfile.objects.filter(user__email=email).exists()
         )
-        user = User.objects.get(email=email)
+        user = get_user_model().objects.get(email=email)
         self.assertIn(self.group, user.groups.all())
 
     def test_create_or_update_user_exists(self):
@@ -251,7 +252,7 @@ class TestUserMapper(BaseTenantTestCase):
             "sn": "Last"
         })
         self.assertIsNone(res)
-        user = User.objects.get(email=email)
+        user = get_user_model().objects.get(email=email)
         self.assertIn(self.group, user.groups.all())
 
     def test_create_or_update_user_profile_updated(self):
@@ -266,7 +267,7 @@ class TestUserMapper(BaseTenantTestCase):
             "telephoneNumber": phone
         })
         self.assertIsNone(res)
-        self.assertTrue(User.objects.filter(email=email).exists())
+        self.assertTrue(get_user_model().objects.filter(email=email).exists())
         self.assertTrue(
             UserProfile.objects.filter(user__email=email).exists()
         )

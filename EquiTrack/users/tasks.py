@@ -5,6 +5,7 @@ import json
 from datetime import date
 
 from django.conf import settings
+from django.contrib.auth import get_user_model
 from django.contrib.auth.models import Group
 from django.core.exceptions import ObjectDoesNotExist
 from django.core.mail.message import EmailMessage
@@ -19,7 +20,7 @@ from dateutil.relativedelta import relativedelta
 from six import StringIO
 
 from EquiTrack.celery import app
-from users.models import Country, Section, User, UserProfile
+from users.models import Country, Section, UserProfile
 from vision.exceptions import VisionException
 from vision.models import VisionSyncLog
 from vision.vision_data_synchronizer import VISION_NO_DATA_MESSAGE
@@ -150,8 +151,10 @@ class UserMapper(object):
         # TODO: MODIFY THIS TO USE THE GUID ON THE PROFILE INSTEAD OF EMAIL on the USer
 
         try:
-            user, created = User.objects.get_or_create(email=ad_user[self.KEY_ATTRIBUTE],
-                                                       username=ad_user[self.KEY_ATTRIBUTE])
+            user, created = get_user_model().objects.get_or_create(
+                email=ad_user[self.KEY_ATTRIBUTE],
+                username=ad_user[self.KEY_ATTRIBUTE]
+            )
             if created:
                 user.set_unusable_password()
 
@@ -205,10 +208,15 @@ class UserMapper(object):
             return False
 
         try:
-            supervisor = self.section_users.get(manager_id, User.objects.get(is_active=True,
-                                                                             profile__staff_id=manager_id))
+            supervisor = self.section_users.get(
+                manager_id,
+                get_user_model().objects.get(
+                    is_active=True,
+                    profile__staff_id=manager_id
+                )
+            )
             self.section_users[manager_id] = supervisor
-        except User.DoesNotExist:
+        except get_user_model().DoesNotExist:
             logger.warning(u"this user does not exist in the db to set as supervisor: {}".format(manager_id))
             return False
 
@@ -234,10 +242,10 @@ class UserMapper(object):
                 try:
                     user = self.section_users.get(
                         in_user['STAFF_ID'],
-                        User.objects.get(profile__staff_id=in_user['STAFF_ID'])
+                        get_user_model().objects.get(profile__staff_id=in_user['STAFF_ID'])
                     )
                     self.section_users[in_user['STAFF_ID']] = user
-                except User.DoesNotExist:
+                except get_user_model().DoesNotExist:
                     logger.warning(u"this user does not exist in the db: {}".format(in_user['STAFF_EMAIL']))
                     continue
 
@@ -391,11 +399,20 @@ def user_report():
     for country in qs:
         writer.writerow({
             'country': country,
-            'total_users': User.objects.filter(profile__country=country).count(),
-            'unicef_users': User.objects.filter(profile__country=country, email__endswith='@unicef.org').count(),
-            'users_last_month': User.objects.filter(profile__country=country, last_login__gte=start_date).count(),
-            'unicef_users_last_month': User.objects.filter(profile__country=country, email__endswith='@unicef.org',
-                                                           last_login__gte=start_date).count(),
+            'total_users': get_user_model().objects.filter(profile__country=country).count(),
+            'unicef_users': get_user_model().objects.filter(
+                profile__country=country,
+                email__endswith='@unicef.org'
+            ).count(),
+            'users_last_month': get_user_model().objects.filter(
+                profile__country=country,
+                last_login__gte=start_date
+            ).count(),
+            'unicef_users_last_month': get_user_model().objects.filter(
+                profile__country=country,
+                email__endswith='@unicef.org',
+                last_login__gte=start_date
+            ).count(),
         })
     mail = EmailMessage('Report Latest Users', 'Report generated', 'etools-reports@unicef.org', settings.REPORT_EMAILS)
     mail.attach('users.csv', csvfile.getvalue(), 'text/csv')

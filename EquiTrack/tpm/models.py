@@ -1,7 +1,8 @@
 from __future__ import absolute_import, division, print_function, unicode_literals
 
+import itertools
+
 from django.conf import settings
-from django.contrib.auth.models import User
 from django.contrib.contenttypes.fields import GenericRelation
 from django.db import models
 from django.utils import timezone, six
@@ -93,12 +94,6 @@ class TPMVisit(SoftDeleteMixin, TimeStampedModel, models.Model):
     date_of_tpm_report_rejected = models.DateField(blank=True, null=True, verbose_name=_('Date of Sent Back to TPM'))
     date_of_unicef_approved = models.DateField(blank=True, null=True, verbose_name=_('Date of UNICEF Approved'))
 
-    offices = models.ManyToManyField('users.Office', related_name='tpm_visits', blank=True,
-                                     verbose_name=_('Office(s) of UNICEF Focal Point(s)'))
-
-    unicef_focal_points = models.ManyToManyField(settings.AUTH_USER_MODEL, verbose_name=_('UNICEF Focal Points'),
-                                                 related_name='tpm_visits', blank=True)
-
     tpm_partner_focal_points = models.ManyToManyField(
         TPMPartnerStaffMember, verbose_name=_('TPM Focal Points'), related_name='tpm_visits', blank=True
     )
@@ -136,6 +131,17 @@ class TPMVisit(SoftDeleteMixin, TimeStampedModel, models.Model):
         # TODO: Rewrite to reduce number of SQL queries.
         return self.tpm_activities.aggregate(
             models.Max('date'))['date__max']
+
+    @property
+    def unicef_focal_points(self):
+        return set(itertools.chain(*map(
+            lambda a: a.unicef_focal_points.all(),
+            self.tpm_activities.all()
+        )))
+
+    @property
+    def unicef_focal_points_with_emails(self):
+        return list(filter(lambda u: u.email and u.is_active, self.unicef_focal_points))
 
     def __str__(self):
         return 'Visit ({} to {} at {} - {})'.format(
@@ -193,12 +199,7 @@ class TPMVisit(SoftDeleteMixin, TimeStampedModel, models.Model):
             )
 
     def _get_unicef_focal_points_as_email_recipients(self):
-        return list(
-            self.unicef_focal_points.filter(
-                email__isnull=False,
-                is_active=True
-            ).values_list('email', flat=True)
-        )
+        return list(map(lambda u: u.email, self.unicef_focal_points_with_emails))
 
     def _get_tpm_focal_points_as_email_recipients(self):
         return list(
@@ -263,7 +264,7 @@ class TPMVisit(SoftDeleteMixin, TimeStampedModel, models.Model):
         self.date_of_tpm_rejected = timezone.now()
         self.reject_comment = reject_comment
 
-        for recipient in self.unicef_focal_points.filter(email__isnull=False, is_active=True):
+        for recipient in self.unicef_focal_points_with_emails:
             self._send_email(
                 recipient.email, 'tpm/visit/reject',
                 cc=self._get_tpm_focal_points_as_email_recipients(),
@@ -275,7 +276,7 @@ class TPMVisit(SoftDeleteMixin, TimeStampedModel, models.Model):
     def accept(self):
         self.date_of_tpm_accepted = timezone.now()
 
-        for recipient in self.unicef_focal_points.filter(email__isnull=False, is_active=True):
+        for recipient in self.unicef_focal_points_with_emails:
             self._send_email(
                 recipient.email, 'tpm/visit/accept',
                 cc=self._get_tpm_focal_points_as_email_recipients(),
@@ -295,7 +296,7 @@ class TPMVisit(SoftDeleteMixin, TimeStampedModel, models.Model):
     def send_report(self):
         self.date_of_tpm_reported = timezone.now()
 
-        for recipient in self.unicef_focal_points.filter(email__isnull=False, is_active=True):
+        for recipient in self.unicef_focal_points_with_emails:
             self._send_email(
                 recipient.email, 'tpm/visit/report',
                 cc=self._get_tpm_focal_points_as_email_recipients(),
@@ -331,7 +332,7 @@ class TPMVisit(SoftDeleteMixin, TimeStampedModel, models.Model):
 
         self.date_of_unicef_approved = timezone.now()
         if notify_focal_point:
-            for recipient in self.unicef_focal_points.filter(email__isnull=False, is_active=True):
+            for recipient in self.unicef_focal_points_with_emails:
                 self._send_email(
                     recipient.email, 'tpm/visit/approve_report',
                     context={'recipient': recipient.get_full_name()}
@@ -378,6 +379,12 @@ class TPMActivity(Activity):
         TPMVisit, verbose_name=_('Visit'), related_name='tpm_activities',
         on_delete=models.CASCADE,
     )
+
+    unicef_focal_points = models.ManyToManyField(settings.AUTH_USER_MODEL, verbose_name=_('UNICEF Focal Points'),
+                                                 related_name='+', blank=True)
+
+    offices = models.ManyToManyField('users.Office', related_name='+', blank=True,
+                                     verbose_name=_('Office(s) of UNICEF Focal Point(s)'))
 
     section = models.ForeignKey(
         'reports.Sector', related_name='tpm_activities', verbose_name=_('Section'),
@@ -444,11 +451,15 @@ class TPMActionPoint(TimeStampedModel, models.Model):
     )
 
     author = models.ForeignKey(
-        User, related_name='created_tpm_action_points', verbose_name=_('Assigned By'),
+        settings.AUTH_USER_MODEL,
+        related_name='created_tpm_action_points',
+        verbose_name=_('Assigned By'),
         on_delete=models.CASCADE,
     )
     person_responsible = models.ForeignKey(
-        User, related_name='tpm_action_points', verbose_name=_('Person Responsible'),
+        settings.AUTH_USER_MODEL,
+        related_name='tpm_action_points',
+        verbose_name=_('Person Responsible'),
         on_delete=models.CASCADE,
     )
 
@@ -529,7 +540,7 @@ class TPMPermission(StatusBasePermission):
 
     @classmethod
     def _get_user_type(cls, user, instance=None):
-        if instance and instance.unicef_focal_points.filter(id=user.id).exists():
+        if instance and TPMActivity.objects.filter(tpm_visit=instance, unicef_focal_points=user).exists():
             return cls.USER_TYPES.unicef_focal_point
 
         user_type = super(TPMPermission, cls)._get_user_type(user)

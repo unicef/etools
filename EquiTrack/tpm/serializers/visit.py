@@ -99,6 +99,15 @@ class TPMActivitySerializer(TPMPermissionsBasedSerializerMixin, WritableNestedSe
         required=True,
     )
 
+    unicef_focal_points = SeparatedReadWriteField(
+        read_field=MinimalUserSerializer(read_only=True, many=True, label=_('UNICEF Focal Points')),
+        required=True,
+    )
+
+    offices = SeparatedReadWriteField(
+        read_field=OfficeSerializer(read_only=True, many=True, label=_('Office(s) of UNICEF Focal Point(s)')),
+    )
+
     attachments = TPMAttachmentsSerializer(many=True, required=False, label=_('Related Documents'))
     report_attachments = TPMReportSerializer(many=True, required=False, label=_('Reports by Task'))
 
@@ -128,9 +137,9 @@ class TPMActivitySerializer(TPMPermissionsBasedSerializerMixin, WritableNestedSe
     class Meta(TPMPermissionsBasedSerializerMixin.Meta, WritableNestedSerializerMixin.Meta):
         model = TPMActivity
         fields = [
-            'id', 'partner', 'intervention', 'cp_output', 'section',
+            'id', 'partner', 'intervention', 'cp_output', 'section', 'unicef_focal_points',
             'date', 'locations', 'attachments', 'report_attachments', 'additional_information',
-            'pv_applicable',
+            'pv_applicable', 'offices',
         ]
         extra_kwargs = {
             'id': {'label': _('Task ID')},
@@ -143,14 +152,6 @@ class TPMVisitLightSerializer(StatusPermissionsBasedRootSerializerMixin, Writabl
                               serializers.ModelSerializer):
     tpm_partner = SeparatedReadWriteField(
         read_field=TPMPartnerLightSerializer(label=_('TPM Partner'), read_only=True),
-    )
-
-    offices = SeparatedReadWriteField(
-        read_field=OfficeSerializer(read_only=True, many=True, label=_('Office(s) of UNICEF Focal Point(s)')),
-    )
-
-    unicef_focal_points = SeparatedReadWriteField(
-        read_field=MinimalUserSerializer(read_only=True, many=True, label=_('UNICEF Focal Points')),
     )
 
     tpm_partner_focal_points = SeparatedReadWriteField(
@@ -197,7 +198,7 @@ class TPMVisitLightSerializer(StatusPermissionsBasedRootSerializerMixin, Writabl
             'id', 'start_date', 'end_date', 'tpm_partner',
             'implementing_partners', 'locations', 'sections',
             'status', 'status_date', 'reference_number',
-            'offices', 'tpm_partner_focal_points', 'unicef_focal_points',
+            'tpm_partner_focal_points',
             'date_created', 'date_of_assigned', 'date_of_tpm_accepted',
             'date_of_tpm_rejected', 'date_of_tpm_reported', 'date_of_unicef_approved',
             'date_of_tpm_report_rejected', 'date_of_cancelled',
@@ -257,7 +258,6 @@ class TPMVisitSerializer(TPMVisitLightSerializer):
         ]
         extra_kwargs = {
             'tpm_partner': {'required': True},
-            'unicef_focal_points': {'required': True},
             'tpm_partner_focal_points': {'required': True},
         }
 
