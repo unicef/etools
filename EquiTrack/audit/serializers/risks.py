@@ -28,7 +28,9 @@ class BaseRiskSerializer(WritableNestedSerializerMixin, serializers.ModelSeriali
         }
 
     def get_value_display(self, obj):
-        return dict(self.risk_choices).get(obj.value)
+        if self.risk_choices:
+            return dict(self.risk_choices).get(obj.value)
+        return obj.get_value_display()
 
     def __init__(self, *args, **kwargs):
         super(BaseRiskSerializer, self).__init__(*args, **kwargs)
