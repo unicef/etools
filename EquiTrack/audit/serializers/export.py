@@ -12,7 +12,7 @@ from rest_framework import serializers
 from attachments.serializers import BaseAttachmentSerializer
 from audit.models import (
     Audit, Engagement, EngagementActionPoint, MicroAssessment, SpotCheck, Finding, SpecificProcedure,
-    SpecialAuditRecommendation, Risk)
+    SpecialAuditRecommendation)
 from audit.purchase_order.models import AuditorFirm, AuditorStaffMember, PurchaseOrder
 from audit.serializers.engagement import DetailedFindingInfoSerializer, KeyInternalControlSerializer
 from audit.serializers.risks import KeyInternalWeaknessSerializer, AggregatedRiskRootSerializer, RiskRootSerializer

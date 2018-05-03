@@ -276,13 +276,6 @@ class KeyInternalWeaknessSerializer(BaseAggregatedRiskRootSerializer):
     medium_risk_count = serializers.IntegerField(label=_('Medium risk'), read_only=True)
     low_risk_count = serializers.IntegerField(label=_('Low risk'), read_only=True)
 
-    def __init__(self, *args, **kwagrs):
-        super(KeyInternalWeaknessSerializer, self).__init__(*args, **kwagrs)
-
-        risk_value_fields = [self.fields['blueprints'].child.fields['risks'].child.fields['value'],
-                             self.fields['children'].child.fields['blueprints'].child.fields['risks']
-                                 .child.fields['value']]
-
     @staticmethod
     def _get_bluerprint_count_by_risk_value(category, field_name, risk_value):
         values_count = len([
