@@ -2,7 +2,7 @@ web:
   image: unicef/equitrack:develop
   command: python manage.py runserver
   volumes:
-    - ./EquiTrack:/code
+    - src:/code
   ports:
     - "8080:8080"
   links:
