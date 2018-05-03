@@ -69,8 +69,8 @@ class TPMActivityExportSerializer(serializers.Serializer):
     intervention = serializers.CharField()
     locations = CommaSeparatedExportField()
     date = serializers.DateField(format='%d/%m/%Y')
-    unicef_focal_points = UsersExportField(source='tpm_visit.unicef_focal_points')
-    offices = CommaSeparatedExportField(source='tpm_visit.offices')
+    unicef_focal_points = UsersExportField(source='unicef_focal_points')
+    offices = CommaSeparatedExportField(source='offices')
     tpm_focal_points = UsersExportField(source='tpm_visit.tpm_partner_focal_points')
     link = serializers.CharField(source='tpm_visit.get_object_url')
 
@@ -88,8 +88,8 @@ class TPMLocationExportSerializer(serializers.Serializer):
     intervention = serializers.CharField(source='activity.tpmactivity.intervention')
     location = serializers.CharField()
     date = serializers.DateField(source='activity.tpmactivity.date', format='%d/%m/%Y')
-    unicef_focal_points = UsersExportField(source='activity.tpmactivity.tpm_visit.unicef_focal_points')
-    offices = CommaSeparatedExportField(source='activity.tpmactivity.tpm_visit.offices')
+    unicef_focal_points = UsersExportField(source='activity.tpmactivity.unicef_focal_points')
+    offices = CommaSeparatedExportField(source='activity.tpmactivity.offices')
     tpm_focal_points = UsersExportField(source='activity.tpmactivity.tpm_visit.tpm_partner_focal_points')
     link = serializers.CharField(source='activity.tpmactivity.tpm_visit.get_object_url')
 
