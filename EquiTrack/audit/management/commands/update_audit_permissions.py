@@ -47,7 +47,6 @@ class Command(BaseCommand):
         'audit.engagement.joint_audit',
         'audit.engagement.shared_ip_with',
         'audit.engagement.related_agreement',
-        'purchase_order.purchaseorder.contract_end_date',
     ]
 
     engagement_status_editable_date_fields = [
@@ -229,6 +228,7 @@ class Command(BaseCommand):
         self.add_permissions([self.focal_point, self.auditor], 'edit', [
             'purchase_order.auditorfirm.staff_members',
             'purchase_order.auditorstaffmember.*',
+            'purchase_order.purchaseorder.contract_end_date',
         ])
 
         self.add_permissions(

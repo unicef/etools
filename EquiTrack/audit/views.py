@@ -138,6 +138,7 @@ class PurchaseOrderViewSet(
     metadata_class = AuditPermissionBasedMetadata
     queryset = PurchaseOrder.objects.all()
     serializer_class = PurchaseOrderSerializer
+    permission_classes = (IsAuthenticated, )
 
     @list_route(methods=['get'], url_path='sync/(?P<order_number>[^/]+)')
     def sync(self, request, *args, **kwargs):
