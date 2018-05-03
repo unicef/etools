@@ -1,0 +1,40 @@
+
+from django.db.models import Q
+from django.http import HttpResponseNotFound, HttpResponseRedirect
+from django.utils.translation import ugettext as _
+from django.views.generic.detail import DetailView
+
+from rest_framework.generics import ListAPIView
+from rest_framework.permissions import IsAdminUser
+from six.moves import urllib_parse
+
+from etools.applications.attachments.models import Attachment, AttachmentFlat
+from etools.applications.attachments.serializers import AttachmentFlatSerializer
+from etools.applications.utils.common.urlresolvers import site_url
+
+
+class AttachmentListView(ListAPIView):
+    queryset = AttachmentFlat.objects.exclude(
+        Q(attachment__file__isnull=True) | Q(attachment__file__exact=""),
+        Q(attachment__hyperlink__isnull=True) | Q(attachment__hyperlink__exact="")
+    )
+    permission_classes = (IsAdminUser, )
+    serializer_class = AttachmentFlatSerializer
+
+
+class AttachmentFileView(DetailView):
+    model = Attachment
+
+    def get(self, *args, **kwargs):
+        try:
+            attachment = Attachment.objects.get(pk=kwargs["pk"])
+        except Attachment.DoesNotExist:
+            return HttpResponseNotFound(
+                _("No Attachment matches the given query.")
+            )
+        if not attachment or (not attachment.file and not attachment.hyperlink):
+            return HttpResponseNotFound(
+                _("Attachment has no file or hyperlink")
+            )
+        url = urllib_parse.urljoin(site_url(), attachment.url)
+        return HttpResponseRedirect(url)
