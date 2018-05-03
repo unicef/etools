@@ -27,13 +27,6 @@ class TPMPartnerStaffMemberFactory(BaseStaffMemberFactory):
     class Meta:
         model = TPMPartnerStaffMember
 
-    @factory.post_generation
-    def groups(self, create, extracted, **kwargs):
-        if not create:
-            return
-
-        self.user.groups.add(Group.objects.get_or_create(name='Third Party Monitor')[0])
-
 
 class SimpleTPMPartnerFactory(BaseFirmFactory):
     class Meta:
