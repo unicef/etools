@@ -1,6 +1,7 @@
 from __future__ import absolute_import, division, print_function, unicode_literals
 
 import csv
+import xml.etree.ElementTree as ET
 from collections import defaultdict
 from datetime import date, datetime
 from decimal import Decimal, InvalidOperation
@@ -17,11 +18,6 @@ from EquiTrack.celery import app
 from publics.models import (
     BusinessArea, Country, Currency, DSARate, DSARateUpload, DSARegion, ExchangeRate, Fund, Grant, TravelAgent,
     TravelExpenseType, WBS,)
-
-try:
-    import xml.etree.cElementTree as ET
-except ImportError:
-    import xml.etree.ElementTree as ET
 
 
 logger = get_task_logger(__name__)

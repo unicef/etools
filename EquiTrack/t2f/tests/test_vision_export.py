@@ -1,6 +1,7 @@
 from __future__ import unicode_literals
 
 from datetime import datetime
+import xml.etree.ElementTree as ET
 
 from django.core.urlresolvers import reverse
 from pytz import UTC
@@ -22,11 +23,6 @@ from t2f.models import CostAssignment, Expense, Invoice, Travel
 from t2f.tests.factories import ItineraryItemFactory
 from t2f.vision import InvoiceUpdater
 from users.tests.factories import UserFactory
-
-try:
-    import xml.etree.cElementTree as ET
-except ImportError:
-    import xml.etree.ElementTree as ET
 
 
 class VisionXML(URLAssertionMixin, BaseTenantTestCase):

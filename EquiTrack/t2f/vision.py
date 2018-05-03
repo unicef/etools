@@ -1,6 +1,7 @@
 from __future__ import absolute_import, division, print_function, unicode_literals
 
 import logging
+import xml.etree.ElementTree as ET
 from collections import defaultdict
 from decimal import Decimal
 from functools import wraps
@@ -11,18 +12,12 @@ from django.core.exceptions import ObjectDoesNotExist
 from django.core.urlresolvers import reverse
 from django.db import connection
 from django.db.models.query_utils import Q
-from django.utils.datastructures import MultiValueDict
 from django.utils import six
+from django.utils.datastructures import MultiValueDict
 
 from notification.utils import send_notification_using_templates
 from t2f.models import Invoice
 from users.models import Country as Workspace
-
-try:
-    import xml.etree.cElementTree as ET
-except ImportError:
-    import xml.etree.ElementTree as ET
-
 
 log = logging.getLogger(__name__)
 
@@ -190,8 +185,7 @@ class InvoiceUpdater(object):
             try:
                 invoice = Invoice.objects.get(reference_number=invoice_number)
             except ObjectDoesNotExist:
-                # TODO refine error handling
-                log.error('Cannot find invoice with reference number %s', invoice_number)
+                log.exception('Cannot find invoice with reference number %s', invoice_number)
                 continue
 
             invoice.status = invoice_data[self.STATUS_FIELD]

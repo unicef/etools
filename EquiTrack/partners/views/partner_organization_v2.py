@@ -310,19 +310,20 @@ class PartnerOrganizationAddView(CreateAPIView):
             return Response({"error": response}, status=status.HTTP_400_BAD_REQUEST)
 
         partner_resp = response["ROWSET"]["ROW"]
-        try:
-            PartnerOrganization.objects.get(vendor_number=partner_resp[PartnerSynchronizer.MAPPING['vendor_number']])
+
+        if PartnerOrganization.objects.filter(
+                vendor_number=partner_resp[PartnerSynchronizer.MAPPING['vendor_number']]).exists():
             return Response({"error": 'Partner Organization already exists with this vendor number'},
                             status=status.HTTP_400_BAD_REQUEST)
-        except PartnerOrganization.DoesNotExist:
-            country = request.user.profile.country
-            partner_sync = PartnerSynchronizer(country=country)
-            partner_sync._partner_save(partner_resp, full_sync=False)
 
-            partner = PartnerOrganization.objects.get(
-                vendor_number=partner_resp[PartnerSynchronizer.MAPPING['vendor_number']])
-            po_serializer = PartnerOrganizationDetailSerializer(partner)
-            return Response(po_serializer.data, status=status.HTTP_201_CREATED)
+        country = request.user.profile.country
+        partner_sync = PartnerSynchronizer(country=country)
+        partner_sync._partner_save(partner_resp, full_sync=False)
+
+        partner = PartnerOrganization.objects.get(
+            vendor_number=partner_resp[PartnerSynchronizer.MAPPING['vendor_number']])
+        po_serializer = PartnerOrganizationDetailSerializer(partner)
+        return Response(po_serializer.data, status=status.HTTP_201_CREATED)
 
 
 class PartnerOrganizationDeleteView(DestroyAPIView):

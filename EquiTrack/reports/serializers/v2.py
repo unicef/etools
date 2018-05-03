@@ -109,15 +109,16 @@ class DisaggregationSerializer(serializers.ModelSerializer):
                     found_values.append(value_id)
                     try:
                         value = DisaggregationValue.objects.get(disaggregation=instance, id=value_id)
-                        for k, v in value_data.items():
-                            setattr(value, k, v)
-                        value.save()
                     except DisaggregationValue.DoesNotExist:
                         raise ValidationError(
                             "Tried to modify DisaggregationValue {} that is not associated with {}".format(
                                 value_id, instance,
                             )
                         )
+                    else:
+                        for k, v in value_data.items():
+                            setattr(value, k, v)
+                        value.save()
                 else:
                     # if you're adding a new disaggregation value, add it here
                     value = DisaggregationValue.objects.create(disaggregation=instance, **value_data)
@@ -242,13 +243,14 @@ class LowerResultCUSerializer(serializers.ModelSerializer):
             if indicator_id:
                 try:
                     indicator_instance = AppliedIndicator.objects.get(pk=indicator_id)
+                except AppliedIndicator.DoesNotExist:
+                    raise ValidationError('Indicator has an ID but could not be found in the db')
+                else:
                     indicator_serializer = AppliedIndicatorCUSerializer(
                         instance=indicator_instance,
                         data=indicator,
                         partial=True
                     )
-                except AppliedIndicator.DoesNotExist:
-                    raise ValidationError('Indicator has an ID but could not be found in the db')
 
             else:
                 indicator_serializer = AppliedIndicatorCUSerializer(
