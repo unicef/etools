@@ -40,7 +40,6 @@ class Command(BaseCommand):
         'tpmvisit.tpm_partner',
         'tpmvisit.tpm_activities',
         'tpmvisit.attachments',
-        'tpmvisit.unicef_focal_points',
         'tpmvisit.tpm_partner_focal_points',
         'tpmvisit.offices',
         'tpmvisit.sections',

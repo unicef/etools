@@ -666,7 +666,7 @@ class ActionPoint(models.Model):
     Represents an action point for the trip
 
     Relates to :model:`Travel`
-    Relates to :model:`auth.User`
+    Relates to :model:`AUTH_USER_MODEL`
     """
 
     OPEN = 'open'

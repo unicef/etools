@@ -1,11 +1,16 @@
 from __future__ import unicode_literals
 
 import logging
-import sys
 from decimal import Decimal
 
 from django.conf import settings
-from django.contrib.auth.models import Group, User
+from django.contrib.auth.models import (
+    AbstractBaseUser,
+    Group,
+    User as AuthUser,
+    UserManager,
+)
+from django.core.mail import send_mail
 from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db import connection, models
 from django.db.models.signals import post_save
@@ -15,14 +20,52 @@ from django.utils.translation import ugettext_lazy as _
 from djangosaml2.signals import pre_user_save
 from tenant_schemas.models import TenantMixin
 
+AuthUser.__str__ = lambda user: user.get_full_name()
+AuthUser._meta.ordering = ['first_name']
 
-if sys.version_info.major == 3:
-    User.__str__ = lambda user: user.get_full_name()
-else:
-    # Python 2.7
-    User.__unicode__ = lambda user: user.get_full_name()
-User._meta.ordering = ['first_name']
 logger = logging.getLogger(__name__)
+
+
+class User(AbstractBaseUser):
+    USERNAME_FIELD = "username"
+
+    username = models.CharField(_("username"), max_length=256, unique=True)
+    email = models.EmailField(_('email address'), blank=True)
+    password = models.CharField(_("password"), max_length=128)
+    first_name = models.CharField(_('first name'), max_length=30, blank=True)
+    last_name = models.CharField(_('last name'), max_length=30, blank=True)
+    date_joined = models.DateTimeField(_('date joined'), auto_now_add=True)
+    last_login = models.DateTimeField(_('last login'), blank=True, null=True)
+    is_active = models.BooleanField(_('active'), default=True)
+    is_staff = models.BooleanField(_('staff'), default=False)
+    is_superuser = models.BooleanField(_('superuser'), default=False)
+
+    objects = UserManager()
+
+    class Meta:
+        db_table = "auth_user"
+        verbose_name = _("user")
+        verbose_name_plural = _("users")
+        ordering = ["first_name"]
+
+    def clean(self):
+        super().clean()
+        self.email = self.__class__.objects.normalize_email(self.email)
+
+    def get_full_name(self):
+        """
+        Return the first_name plus the last_name, with a space in between.
+        """
+        full_name = '%s %s' % (self.first_name, self.last_name)
+        return full_name.strip()
+
+    def get_short_name(self):
+        """Return the short name for the user."""
+        return self.first_name
+
+    def email_user(self, subject, message, from_email=None, **kwargs):
+        """Send an email to this user."""
+        send_mail(subject, message, from_email, [self.email], **kwargs)
 
 
 @python_2_unicode_compatible
@@ -138,7 +181,7 @@ class Office(models.Model):
     """
     Represents an office for the country
 
-    Relates to :model:`auth.User`
+    Relates to :model:`AUTH_USER_MODEL`
     """
 
     name = models.CharField(max_length=254, verbose_name=_('Name'))
@@ -195,7 +238,7 @@ class UserProfile(models.Model):
     """
     Represents a user profile that can have access to many Countries but to one active Country at a time
 
-    Relates to :model:`auth.User`
+    Relates to :model:`AUTH_USER_MODEL`
     Relates to :model:`users.Country`
     Relates to :model:`users.Section`
     Relates to :model:`users.Office`
@@ -327,5 +370,5 @@ class UserProfile(models.Model):
         super(UserProfile, self).save(**kwargs)
 
 
-post_save.connect(UserProfile.create_user_profile, sender=User)
+post_save.connect(UserProfile.create_user_profile, sender=settings.AUTH_USER_MODEL)
 pre_user_save.connect(UserProfile.custom_update_user)  # TODO: The sender should be set

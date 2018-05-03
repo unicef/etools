@@ -38,19 +38,19 @@ class TPMVisitEmailsTestCase(BaseTenantTestCase):
         visit = TPMVisitFactory(status='pre_tpm_rejected')
 
         visit.reject('Just because')
-        self.assertEqual(len(mail.outbox), visit.unicef_focal_points.filter(email__isnull=False).count())
+        self.assertEqual(len(mail.outbox), len(visit.unicef_focal_points_with_emails))
 
     def test_accept(self):
         visit = TPMVisitFactory(status='pre_tpm_accepted')
 
         visit.accept()
-        self.assertEqual(len(mail.outbox), visit.unicef_focal_points.filter(email__isnull=False).count())
+        self.assertEqual(len(mail.outbox), len(visit.unicef_focal_points_with_emails))
 
     def test_send_report(self):
         visit = TPMVisitFactory(status='pre_tpm_reported')
 
         visit.send_report()
-        self.assertEqual(len(mail.outbox), visit.unicef_focal_points.filter(email__isnull=False).count())
+        self.assertEqual(len(mail.outbox), len(visit.unicef_focal_points_with_emails))
 
     def test_report_rejected(self):
         visit = TPMVisitFactory(status='pre_tpm_report_rejected')
@@ -65,6 +65,6 @@ class TPMVisitEmailsTestCase(BaseTenantTestCase):
         self.assertEqual(
             len(mail.outbox),
 
-            visit.unicef_focal_points.filter(email__isnull=False).count() +
+            len(visit.unicef_focal_points_with_emails) +
             visit.tpm_partner_focal_points.filter(user__email__isnull=False).count()
         )
