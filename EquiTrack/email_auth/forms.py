@@ -7,6 +7,7 @@ from django.utils.translation import ugettext_lazy as _
 
 class EmailLoginForm(forms.Form):
     email = forms.EmailField(label=_("Your Email"))
+    next = forms.CharField(widget=forms.HiddenInput(), required=False)
 
     error_messages = {
         'no_such_user': _("User with such email does not exists."),

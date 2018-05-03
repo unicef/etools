@@ -1,5 +1,7 @@
 from __future__ import absolute_import, division, print_function, unicode_literals
 
+import urllib
+
 from django.core.urlresolvers import reverse
 from django.db import connection
 from django.utils.http import urlquote
@@ -15,9 +17,17 @@ def site_url():
 
 
 def build_frontend_url(*parts):
-    return '{domain}{change_country_view}?country={country_id}&next={next}'.format(
+    from email_auth.utils import update_url_with_kwargs
+
+    token_auth_view = reverse('email_auth:login')
+    change_country_view = urllib.parse.quote_plus(update_url_with_kwargs(
+        reverse('users:country-change'),
+        country=Country.objects.get(schema_name=connection.schema_name).id,
+        next=urlquote('/'.join(map(str, ('',) + parts)))
+    ))
+
+    return '{domain}{token_auth_view}?next={change_country_view}'.format(
         domain=site_url(),
-        change_country_view=reverse('users:country-change'),
-        country_id=Country.objects.get(schema_name=connection.schema_name).id,
-        next=urlquote('/'.join(map(str, ('',) + parts))),
+        token_auth_view=token_auth_view,
+        change_country_view=change_country_view,
     )
