@@ -73,7 +73,8 @@ class AuditUsersViewSet(generics.ListAPIView):
     """
 
     permission_classes = (IsAuthenticated, )
-    filter_backends = (SearchFilter,)
+    filter_backends = (SearchFilter, DjangoFilterBackend)
+    filter_fields = ('purchase_order_auditorstaffmember__auditor_firm__unicef_users_allowed', )
     search_fields = ('email',)
     queryset = get_user_model().objects.all()
     serializer_class = AuditUserSerializer
@@ -208,7 +209,8 @@ class EngagementViewSet(
     search_fields = ('partner__name', 'agreement__auditor_firm__name')
     ordering_fields = ('agreement__order_number', 'agreement__auditor_firm__name',
                        'partner__name', 'engagement_type', 'status')
-    filter_fields = ('agreement', 'agreement__auditor_firm', 'partner', 'engagement_type', 'joint_audit')
+    filter_fields = ('agreement', 'agreement__auditor_firm', 'partner', 'engagement_type', 'joint_audit',
+                     'agreement__auditor_firm__unicef_users_allowed', 'staff_members__user')
 
     ENGAGEMENT_MAPPING = {
         Engagement.TYPES.audit: {
