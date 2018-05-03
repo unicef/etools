@@ -25,7 +25,6 @@ from t2f.models import (
     TravelAttachment, TravelType,)
 from t2f.serializers import CostSummarySerializer
 
-User = get_user_model()
 
 itineraryItemSortKey = operator.attrgetter('departure_date')
 
@@ -83,7 +82,7 @@ class ActionPointSerializer(serializers.ModelSerializer):
 
     description = serializers.CharField(required=True)
     due_date = serializers.DateTimeField(required=True)
-    person_responsible = serializers.PrimaryKeyRelatedField(queryset=User.objects.all())
+    person_responsible = serializers.PrimaryKeyRelatedField(queryset=get_user_model().objects.all())
     person_responsible_name = serializers.CharField(source='person_responsible.get_full_name', read_only=True)
     status = serializers.CharField(required=True)
 
@@ -181,7 +180,11 @@ class TravelActivitySerializer(PermissionBasedModelSerializer):
                                                    allow_null=True)
     travel_type = LowerTitleField(required=False, allow_null=True)
     is_primary_traveler = serializers.BooleanField(required=False)
-    primary_traveler = serializers.PrimaryKeyRelatedField(queryset=User.objects.all(), allow_null=True, required=False)
+    primary_traveler = serializers.PrimaryKeyRelatedField(
+        queryset=get_user_model().objects.all(),
+        allow_null=True,
+        required=False
+    )
 
     class Meta:
         model = TravelActivity
@@ -544,7 +547,7 @@ class CloneOutputSerializer(TravelDetailsSerializer):
 
 
 class CloneParameterSerializer(serializers.Serializer):
-    traveler = serializers.PrimaryKeyRelatedField(queryset=User.objects.all())
+    traveler = serializers.PrimaryKeyRelatedField(queryset=get_user_model().objects.all())
 
     class Meta:
         fields = ('traveler',)
