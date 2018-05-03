@@ -102,8 +102,15 @@ class AuditorFirmViewSet(
     def get_queryset(self):
         queryset = super(AuditorFirmViewSet, self).get_queryset()
 
-        if Auditor.as_group() in self.request.user.groups.all():
+        user_groups = self.request.user.groups.all()
+
+        if UNICEFUser.as_group() in user_groups or UNICEFAuditFocalPoint.as_group() in user_groups:
+            # no need to filter queryset
+            pass
+        elif Auditor.as_group() in user_groups:
             queryset = queryset.filter(staff_members__user=self.request.user)
+        else:
+            queryset = queryset.none()
 
         return queryset
 
