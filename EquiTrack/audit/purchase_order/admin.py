@@ -12,9 +12,9 @@ class AuditorStaffMemberInlineAdmin(admin.StackedInline):
 class AuditorFirmAdmin(admin.ModelAdmin):
     list_display = [
         'vendor_number', 'name', 'email', 'phone_number', 'blocked', 'hidden',
-        'country',
+        'country', 'unicef_users_allowed',
     ]
-    list_filter = ['blocked', 'hidden', 'country', ]
+    list_filter = ['blocked', 'hidden', 'country', 'unicef_users_allowed', ]
     search_fields = ['vendor_number', 'name', ]
     inlines = [
         AuditorStaffMemberInlineAdmin,
