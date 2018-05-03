@@ -222,7 +222,7 @@ class TPMVisitViewSet(
     metadata_class = TPMPermissionBasedMetadata
     queryset = TPMVisit.objects.all().prefetch_related(
         'tpm_partner',
-        'unicef_focal_points',
+        'tpm_activities__unicef_focal_points',
     )
     serializer_class = TPMVisitSerializer
     serializer_action_classes = {
@@ -240,7 +240,7 @@ class TPMVisitViewSet(
     filter_fields = (
         'tpm_partner', 'tpm_activities__section', 'tpm_activities__partner', 'tpm_activities__locations',
         'tpm_activities__cp_output', 'tpm_activities__intervention', 'tpm_activities__date', 'status',
-        'unicef_focal_points', 'tpm_partner_focal_points',
+        'tpm_activities__unicef_focal_points', 'tpm_partner_focal_points',
     )
 
     def get_queryset(self):
@@ -281,7 +281,7 @@ class TPMVisitViewSet(
     def visits_export(self, request, *args, **kwargs):
         tpm_visits = self.get_queryset().prefetch_related(
             'tpm_activities', 'tpm_activities__section', 'tpm_activities__partner',
-            'tpm_activities__intervention', 'tpm_activities__locations', 'unicef_focal_points',
+            'tpm_activities__intervention', 'tpm_activities__locations', 'tpm_activities__unicef_focal_points',
             'tpm_partner_focal_points'
         ).order_by('id')
         serializer = TPMVisitExportSerializer(tpm_visits, many=True)
