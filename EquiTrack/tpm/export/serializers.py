@@ -2,6 +2,7 @@ from __future__ import absolute_import, division, print_function, unicode_litera
 
 import itertools
 
+from django.db.models import QuerySet
 from future.backports.urllib.parse import urljoin
 
 from django.utils import six
@@ -15,7 +16,10 @@ from utils.common.utils import get_attribute_smart
 
 class UsersExportField(serializers.Field):
     def to_representation(self, value):
-        return ','.join(map(lambda u: u.get_full_name(), value.all()))
+        if isinstance(value, QuerySet):
+            value = value.all()
+
+        return ','.join(map(lambda u: u.get_full_name(), value))
 
 
 class CommaSeparatedExportField(serializers.Field):
