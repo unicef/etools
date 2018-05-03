@@ -619,15 +619,17 @@ class PartnerOrganization(TimeStampedModel):
         """
         :return: all completed programmatic visits
         """
-        pv = partner.hact_values['programmatic_visits']['completed']['total']
+        hact = json.loads(partner.hact_values) if isinstance(partner.hact_values, str) else partner.hact_values
+
+        pv = hact['programmatic_visits']['completed']['total']
 
         if update_one and event_date:
             quarter_name = get_quarter(event_date)
-            pvq = partner.hact_values['programmatic_visits']['completed'][quarter_name]
+            pvq = hact['programmatic_visits']['completed'][quarter_name]
             pv += 1
             pvq += 1
-            partner.hact_values['programmatic_visits']['completed'][quarter_name] = pvq
-            partner.hact_values['programmatic_visits']['completed']['total'] = pv
+            hact['programmatic_visits']['completed'][quarter_name] = pvq
+            hact['programmatic_visits']['completed']['total'] = pv
         else:
             pv_year = TravelActivity.objects.filter(
                 travel_type=TravelType.PROGRAMME_MONITORING,
@@ -672,12 +674,13 @@ class PartnerOrganization(TimeStampedModel):
 
             tpm_total = tpmv1 + tpmv2 + tpmv3 + tpmv4
 
-            partner.hact_values['programmatic_visits']['completed']['q1'] = pvq1 + tpmv1
-            partner.hact_values['programmatic_visits']['completed']['q2'] = pvq2 + tpmv2
-            partner.hact_values['programmatic_visits']['completed']['q3'] = pvq3 + tpmv3
-            partner.hact_values['programmatic_visits']['completed']['q4'] = pvq4 + tpmv4
-            partner.hact_values['programmatic_visits']['completed']['total'] = pv + tpm_total
+            hact['programmatic_visits']['completed']['q1'] = pvq1 + tpmv1
+            hact['programmatic_visits']['completed']['q2'] = pvq2 + tpmv2
+            hact['programmatic_visits']['completed']['q3'] = pvq3 + tpmv3
+            hact['programmatic_visits']['completed']['q4'] = pvq4 + tpmv4
+            hact['programmatic_visits']['completed']['total'] = pv + tpm_total
 
+        partner.hact_values = hact
         partner.save()
 
     @classmethod
@@ -895,7 +898,7 @@ class Assessment(TimeStampedModel):
     Represents an assessment for a partner organization.
 
     Relates to :model:`partners.PartnerOrganization`
-    Relates to :model:`auth.User`
+    Relates to :model:`AUTH_USER_MODEL`
     """
     HIGH = 'high'
     SIGNIFICANT = 'significant'
@@ -1457,7 +1460,7 @@ class Intervention(TimeStampedModel):
     Relates to :model:`partners.PartnerOrganization`
     Relates to :model:`partners.Agreement`
     Relates to :model:`reports.CountryProgramme`
-    Relates to :model:`auth.User`
+    Relates to :model:`AUTH_USER_MODEL`
     Relates to :model:`partners.PartnerStaffMember`
     Relates to :model:`users.Office`
     """

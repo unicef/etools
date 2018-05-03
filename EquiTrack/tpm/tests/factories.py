@@ -71,6 +71,17 @@ class FullInterventionFactory(InterventionFactory):
     sector_locations = factory.RelatedFactory(InterventionSectorLocationLinkFactory, 'intervention')
 
 
+class OfficeFactory(SimpleOfficeFactory):
+    @classmethod
+    def _create(cls, model_class, *args, **kwargs):
+        obj = super(OfficeFactory, cls)._create(model_class, *args, **kwargs)
+
+        if hasattr(connection.tenant, 'id') and connection.tenant.schema_name != 'public':
+            connection.tenant.offices.add(obj)
+
+        return obj
+
+
 class TPMActivityFactory(factory.DjangoModelFactory):
     class Meta:
         model = TPMActivity
@@ -82,6 +93,28 @@ class TPMActivityFactory(factory.DjangoModelFactory):
 
     attachments__count = 0
     report_attachments__count = 0
+    unicef_focal_points__count = 0
+    offices__count = 0
+
+    @factory.post_generation
+    def unicef_focal_points(self, create, extracted, count, **kwargs):
+        if not create:
+            return
+
+        if extracted is not None:
+            self.unicef_focal_points.add(*extracted)
+        else:
+            self.unicef_focal_points.add(*[UserFactory(unicef_user=True) for i in range(count)])
+
+    @factory.post_generation
+    def offices(self, create, extracted, count, **kwargs):
+        if not create:
+            return
+
+        if extracted is not None:
+            self.offices.add(*extracted)
+        else:
+            self.offices.add(*[OfficeFactory() for i in range(count)])
 
     @factory.post_generation
     def cp_output(self, create, extracted, **kwargs):
@@ -126,17 +159,6 @@ class InheritedTrait(factory.Trait):
         overrides.update(kwargs)
 
         super(InheritedTrait, self).__init__(**overrides)
-
-
-class OfficeFactory(SimpleOfficeFactory):
-    @classmethod
-    def _create(cls, model_class, *args, **kwargs):
-        obj = super(OfficeFactory, cls)._create(model_class, *args, **kwargs)
-
-        if hasattr(connection.tenant, 'id') and connection.tenant.schema_name != 'public':
-            connection.tenant.offices.add(obj)
-
-        return obj
 
 
 class UserFactory(BaseUserFactory):
@@ -188,9 +210,6 @@ class TPMVisitFactory(factory.DjangoModelFactory):
 
     tpm_partner = factory.SubFactory(TPMPartnerFactory)
 
-    unicef_focal_points__count = 0
-    offices__count = 0
-
     tpm_partner_focal_points__count = 0
 
     tpm_activities__count = 0
@@ -203,14 +222,13 @@ class TPMVisitFactory(factory.DjangoModelFactory):
         draft = factory.Trait()
 
         pre_assigned = factory.Trait(
-            unicef_focal_points__count=3,
-            offices__count=3,
-
             tpm_partner_focal_points__count=3,
 
             tpm_activities__count=3,
 
             tpm_activities__attachments__count=3,
+            tpm_activities__unicef_focal_points__count=3,
+            tpm_activities__offices__count=3,
         )
 
         assigned = InheritedTrait(
@@ -292,26 +310,6 @@ class TPMVisitFactory(factory.DjangoModelFactory):
             status = extra.pop('status')
             extra[status] = True
         return super(TPMVisitFactory, cls).attributes(create, extra)
-
-    @factory.post_generation
-    def offices(self, create, extracted, count, **kwargs):
-        if not create:
-            return
-
-        if extracted is not None:
-            self.offices.add(*extracted)
-        else:
-            self.offices.add(*[OfficeFactory() for i in range(count)])
-
-    @factory.post_generation
-    def unicef_focal_points(self, create, extracted, count, **kwargs):
-        if not create:
-            return
-
-        if extracted is not None:
-            self.unicef_focal_points.add(*extracted)
-        else:
-            self.unicef_focal_points.add(*[UserFactory(unicef_user=True) for i in range(count)])
 
     @factory.post_generation
     def tpm_partner_focal_points(self, create, extracted, count, **kwargs):
