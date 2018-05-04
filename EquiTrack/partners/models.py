@@ -898,7 +898,7 @@ class Assessment(TimeStampedModel):
     Represents an assessment for a partner organization.
 
     Relates to :model:`partners.PartnerOrganization`
-    Relates to :model:`auth.User`
+    Relates to :model:`AUTH_USER_MODEL`
     """
     HIGH = 'high'
     SIGNIFICANT = 'significant'
@@ -1460,7 +1460,7 @@ class Intervention(TimeStampedModel):
     Relates to :model:`partners.PartnerOrganization`
     Relates to :model:`partners.Agreement`
     Relates to :model:`reports.CountryProgramme`
-    Relates to :model:`auth.User`
+    Relates to :model:`AUTH_USER_MODEL`
     Relates to :model:`partners.PartnerStaffMember`
     Relates to :model:`users.Office`
     """
