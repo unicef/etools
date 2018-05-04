@@ -1,7 +1,5 @@
 from __future__ import absolute_import, division, print_function, unicode_literals
 
-import urllib
-
 from django.core.urlresolvers import reverse
 from django.db import connection
 from django.utils.http import urlquote
@@ -20,7 +18,7 @@ def build_frontend_url(*parts):
     from email_auth.utils import update_url_with_kwargs
 
     token_auth_view = reverse('email_auth:login')
-    change_country_view = urllib.parse.quote_plus(update_url_with_kwargs(
+    change_country_view = urlquote(update_url_with_kwargs(
         reverse('users:country-change'),
         country=Country.objects.get(schema_name=connection.schema_name).id,
         next=urlquote('/'.join(map(str, ('',) + parts)))
