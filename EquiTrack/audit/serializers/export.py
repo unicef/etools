@@ -156,6 +156,7 @@ class AuditPDFSerializer(EngagementPDFSerializer):
     )
     key_internal_controls = KeyInternalControlSerializer(many=True, required=False,
                                                          label=_('Assessment of Key Internal Controls'))
+    percent_of_audited_expenditure = serializers.DecimalField(20, 1)
 
     class Meta(EngagementPDFSerializer.Meta):
         model = Audit

@@ -317,7 +317,7 @@ class EngagementViewSet(
             raise NotImplementedError
 
         pdf_serializer = self.get_serializer(
-            instance=obj, many=True, serializer_class=engagement_params.get('serializer_class', None)
+            instance=obj, serializer_class=engagement_params.get('serializer_class', None)
         )
 
         return render_to_pdf_response(
