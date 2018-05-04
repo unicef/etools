@@ -3,6 +3,7 @@ from __future__ import absolute_import, division, print_function, unicode_litera
 import itertools
 from collections import OrderedDict
 
+from attachments.models import Attachment
 from audit.serializers.auditor import PurchaseOrderItemSerializer
 
 from django.utils.translation import ugettext_lazy as _
@@ -17,6 +18,7 @@ from audit.purchase_order.models import AuditorFirm, AuditorStaffMember, Purchas
 from audit.serializers.engagement import DetailedFindingInfoSerializer, KeyInternalControlSerializer
 from audit.serializers.risks import KeyInternalWeaknessSerializer, AggregatedRiskRootSerializer, RiskRootSerializer
 from partners.models import PartnerOrganization
+from tpm.export.serializers import CommaSeparatedExportField
 
 
 class AuditorPDFSerializer(serializers.ModelSerializer):
@@ -81,6 +83,17 @@ class EngagementActionPointPDFSerializer(serializers.ModelSerializer):
         ]
 
 
+class AttachmentPDFSerializer(serializers.ModelSerializer):
+    file_type_display = serializers.ReadOnlyField(source='file_type.label')
+    created = serializers.DateTimeField(format='%d %b %Y')
+
+    class Meta:
+        model = Attachment
+        fields = [
+            'file_type_display', 'filename', 'url', 'created',
+        ]
+
+
 class EngagementPDFSerializer(serializers.ModelSerializer):
     agreement = AgreementPDFSerializer()
     po_item = PurchaseOrderItemSerializer()
@@ -92,7 +105,7 @@ class EngagementPDFSerializer(serializers.ModelSerializer):
     active_pd = serializers.SerializerMethodField()
     staff_members = StaffMemberPDFSerializer(many=True)
 
-    shared_ip_with = serializers.CharField(source='get_shared_ip_with_display')
+    shared_ip_with = CommaSeparatedExportField(source='get_shared_ip_with_display')
 
     start_date = serializers.DateField(label='Start Date', format='%d %b %Y')
     end_date = serializers.DateField(label='End Date', format='%d %b %Y')
@@ -105,8 +118,8 @@ class EngagementPDFSerializer(serializers.ModelSerializer):
 
     action_points = EngagementActionPointPDFSerializer(many=True)
 
-    engagement_attachments = BaseAttachmentSerializer(many=True)
-    report_attachments = BaseAttachmentSerializer(many=True)
+    engagement_attachments = AttachmentPDFSerializer(many=True)
+    report_attachments = AttachmentPDFSerializer(many=True)
 
     class Meta:
         model = Engagement

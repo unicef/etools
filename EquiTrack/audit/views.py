@@ -310,20 +310,21 @@ class EngagementViewSet(
         obj = self.get_object()
 
         engagement_params = self.ENGAGEMENT_MAPPING.get(obj.engagement_type, {})
-        serializer_class = engagement_params.get('pdf_serializer_class', None)
+        pdf_serializer_class = engagement_params.get('pdf_serializer_class', None)
         template = engagement_params.get('pdf_template', None)
 
-        if not serializer_class or not template:
+        if not pdf_serializer_class or not template:
             raise NotImplementedError
 
-        pdf_serializer = self.get_serializer(
+        # we use original serializer here for correct field labels
+        serializer = self.get_serializer(
             instance=obj, serializer_class=engagement_params.get('serializer_class', None)
         )
 
         return render_to_pdf_response(
             request, template,
-            context={'engagement': serializer_class(obj).data,
-                     'serializer': pdf_serializer},
+            context={'engagement': pdf_serializer_class(obj).data,
+                     'serializer': serializer},
             filename='engagement_{}.pdf'.format(obj.unique_id),
         )
 
