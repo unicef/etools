@@ -19,6 +19,7 @@ class Migration(migrations.Migration):
     dependencies = [
         ('tpmpartners', '0003_tpmpartner_countries'),
         ('auth', '0008_alter_user_username_max_length'),
+        ('users', '0002_auto_20180424_1740'),
     ]
 
     operations = [
