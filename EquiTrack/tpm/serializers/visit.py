@@ -96,8 +96,17 @@ class TPMActivitySerializer(PermissionsBasedSerializerMixin, WritableNestedSeria
         required=True,
     )
 
+    unicef_focal_points = SeparatedReadWriteField(
+        read_field=MinimalUserSerializer(read_only=True, many=True, label=_('UNICEF Focal Points')),
+        required=True,
+    )
+
+    offices = SeparatedReadWriteField(
+        read_field=OfficeSerializer(read_only=True, many=True, label=_('Office(s) of UNICEF Focal Point(s)')),
+    )
+
     attachments = TPMAttachmentsSerializer(many=True, required=False, label=_('Related Documents'))
-    report_attachments = TPMReportSerializer(many=True, required=False, label=_('Reports by Activity'))
+    report_attachments = TPMReportSerializer(many=True, required=False, label=_('Reports by Task'))
 
     pv_applicable = serializers.BooleanField(read_only=True)
 
@@ -125,12 +134,12 @@ class TPMActivitySerializer(PermissionsBasedSerializerMixin, WritableNestedSeria
     class Meta(WritableNestedSerializerMixin.Meta):
         model = TPMActivity
         fields = [
-            'id', 'partner', 'intervention', 'cp_output', 'section',
+            'id', 'partner', 'intervention', 'cp_output', 'section', 'unicef_focal_points',
             'date', 'locations', 'attachments', 'report_attachments', 'additional_information',
-            'pv_applicable',
+            'pv_applicable', 'offices',
         ]
         extra_kwargs = {
-            'id': {'label': _('Activity ID')},
+            'id': {'label': _('Task ID')},
             'date': {'required': True},
             'partner': {'required': True},
         }
@@ -141,14 +150,6 @@ class TPMVisitLightSerializer(WritableNestedSerializerMixin,
                               serializers.ModelSerializer):
     tpm_partner = SeparatedReadWriteField(
         read_field=TPMPartnerLightSerializer(label=_('TPM Partner'), read_only=True),
-    )
-
-    offices = SeparatedReadWriteField(
-        read_field=OfficeSerializer(read_only=True, many=True, label=_('Office(s) of UNICEF Focal Point(s)')),
-    )
-
-    unicef_focal_points = SeparatedReadWriteField(
-        read_field=MinimalUserSerializer(read_only=True, many=True, label=_('UNICEF Focal Points')),
     )
 
     tpm_partner_focal_points = SeparatedReadWriteField(
@@ -194,7 +195,7 @@ class TPMVisitLightSerializer(WritableNestedSerializerMixin,
             'id', 'start_date', 'end_date', 'tpm_partner',
             'implementing_partners', 'locations', 'sections',
             'status', 'status_date', 'reference_number',
-            'offices', 'tpm_partner_focal_points', 'unicef_focal_points',
+            'tpm_partner_focal_points',
             'date_created', 'date_of_assigned', 'date_of_tpm_accepted',
             'date_of_tpm_rejected', 'date_of_tpm_reported', 'date_of_unicef_approved',
             'date_of_tpm_report_rejected', 'date_of_cancelled',
@@ -213,12 +214,20 @@ class TPMVisitSerializer(TPMVisitLightSerializer):
 
     report_reject_comments = TPMVisitReportRejectCommentSerializer(many=True, read_only=True)
 
-    action_points = TPMActionPointSerializer(label=_('Activity Information'), many=True, required=False)
+    action_points = TPMActionPointSerializer(label=_('Task Information'), many=True, required=False)
 
     def validate(self, attrs):
         validated_data = super(TPMVisitSerializer, self).validate(attrs)
 
         tpm_partner = validated_data.get('tpm_partner', self.instance.tpm_partner if self.instance else None)
+
+        # no need to check if no updates to partner performed
+        if tpm_partner and (not self.instance or self.instance.tpm_partner != tpm_partner):
+            if tpm_partner.blocked or tpm_partner.deleted_flag:
+                raise ValidationError({
+                    'tpm_partner': _('Partner is marked for deletion or blocked in VISION. '
+                                     'Please add a different vendor.')
+                })
 
         if 'tpm_partner_focal_points' in validated_data:
             tpm_partner_focal_points = set(map(lambda x: x.id, validated_data['tpm_partner_focal_points']))
@@ -241,12 +250,11 @@ class TPMVisitSerializer(TPMVisitLightSerializer):
     class Meta(TPMVisitLightSerializer.Meta):
         fields = TPMVisitLightSerializer.Meta.fields + [
             'tpm_activities', 'report_attachments', 'action_points',
-            'reject_comment', 'approval_comment',
+            'cancel_comment', 'reject_comment', 'approval_comment',
             'visit_information', 'report_reject_comments',
         ]
         extra_kwargs = {
             'tpm_partner': {'required': True},
-            'unicef_focal_points': {'required': True},
             'tpm_partner_focal_points': {'required': True},
         }
 

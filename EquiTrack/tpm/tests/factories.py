@@ -10,12 +10,14 @@ import factory.fuzzy
 from factory import fuzzy
 
 from attachments.tests.factories import AttachmentFactory
-from EquiTrack.factories import (
-    InterventionFactory, LocationFactory, OfficeFactory as SimpleOfficeFactory, ResultFactory, SectorFactory)
-from firms.factories import BaseFirmFactory, BaseStaffMemberFactory, UserFactory as SimpleUserFactory
+from firms.tests.factories import BaseFirmFactory, BaseStaffMemberFactory, BaseUserFactory
+from locations.tests.factories import LocationFactory
 from partners.models import InterventionResultLink, InterventionSectorLocationLink
+from partners.tests.factories import InterventionFactory
+from reports.tests.factories import ResultFactory, SectorFactory
 from tpm.models import TPMActivity, TPMVisit, TPMVisitReportRejectComment
 from tpm.tpmpartners.models import TPMPartner, TPMPartnerStaffMember
+from users.tests.factories import OfficeFactory as SimpleOfficeFactory
 
 _FUZZY_START_DATE = timezone.now().date() - datetime.timedelta(days=5)
 _FUZZY_END_DATE = timezone.now().date() + datetime.timedelta(days=5)
@@ -33,6 +35,13 @@ class SimpleTPMPartnerFactory(BaseFirmFactory):
 
 class TPMPartnerFactory(SimpleTPMPartnerFactory):
     staff_members = factory.RelatedFactory(TPMPartnerStaffMemberFactory, 'tpm_partner')
+
+    @factory.post_generation
+    def countries(self, create, extracted, **kwargs):
+        if extracted is not None:
+            self.countries.add(*extracted)
+        else:
+            self.countries.add(connection.tenant)
 
 
 class InterventionResultLinkFactory(factory.django.DjangoModelFactory):
@@ -62,6 +71,17 @@ class FullInterventionFactory(InterventionFactory):
     sector_locations = factory.RelatedFactory(InterventionSectorLocationLinkFactory, 'intervention')
 
 
+class OfficeFactory(SimpleOfficeFactory):
+    @classmethod
+    def _create(cls, model_class, *args, **kwargs):
+        obj = super(OfficeFactory, cls)._create(model_class, *args, **kwargs)
+
+        if hasattr(connection.tenant, 'id') and connection.tenant.schema_name != 'public':
+            connection.tenant.offices.add(obj)
+
+        return obj
+
+
 class TPMActivityFactory(factory.DjangoModelFactory):
     class Meta:
         model = TPMActivity
@@ -73,6 +93,28 @@ class TPMActivityFactory(factory.DjangoModelFactory):
 
     attachments__count = 0
     report_attachments__count = 0
+    unicef_focal_points__count = 0
+    offices__count = 0
+
+    @factory.post_generation
+    def unicef_focal_points(self, create, extracted, count, **kwargs):
+        if not create:
+            return
+
+        if extracted is not None:
+            self.unicef_focal_points.add(*extracted)
+        else:
+            self.unicef_focal_points.add(*[UserFactory(unicef_user=True) for i in range(count)])
+
+    @factory.post_generation
+    def offices(self, create, extracted, count, **kwargs):
+        if not create:
+            return
+
+        if extracted is not None:
+            self.offices.add(*extracted)
+        else:
+            self.offices.add(*[OfficeFactory() for i in range(count)])
 
     @factory.post_generation
     def cp_output(self, create, extracted, **kwargs):
@@ -119,18 +161,7 @@ class InheritedTrait(factory.Trait):
         super(InheritedTrait, self).__init__(**overrides)
 
 
-class OfficeFactory(SimpleOfficeFactory):
-    @classmethod
-    def _create(cls, model_class, *args, **kwargs):
-        obj = super(OfficeFactory, cls)._create(model_class, *args, **kwargs)
-
-        if hasattr(connection.tenant, 'id') and connection.tenant.schema_name != 'public':
-            connection.tenant.offices.add(obj)
-
-        return obj
-
-
-class UserFactory(SimpleUserFactory):
+class UserFactory(BaseUserFactory):
     class Params:
         unicef_user = factory.Trait(
             groups=['UNICEF User'],
@@ -166,7 +197,7 @@ class UserFactory(SimpleUserFactory):
             return
 
         if not extracted:
-            extracted = SimpleTPMPartnerFactory()
+            extracted = TPMPartnerFactory()
 
         TPMPartnerStaffMemberFactory(tpm_partner=extracted, user=self)
 
@@ -177,10 +208,7 @@ class TPMVisitFactory(factory.DjangoModelFactory):
 
     status = TPMVisit.STATUSES.draft
 
-    tpm_partner = factory.SubFactory(SimpleTPMPartnerFactory)
-
-    unicef_focal_points__count = 0
-    offices__count = 0
+    tpm_partner = factory.SubFactory(TPMPartnerFactory)
 
     tpm_partner_focal_points__count = 0
 
@@ -193,18 +221,20 @@ class TPMVisitFactory(factory.DjangoModelFactory):
     class Params:
         draft = factory.Trait()
 
-        assigned = factory.Trait(
-            status=TPMVisit.STATUSES.assigned,
-            date_of_assigned=factory.LazyFunction(timezone.now),
-
-            unicef_focal_points__count=3,
-            offices__count=3,
-
+        pre_assigned = factory.Trait(
             tpm_partner_focal_points__count=3,
 
             tpm_activities__count=3,
 
             tpm_activities__attachments__count=3,
+            tpm_activities__unicef_focal_points__count=3,
+            tpm_activities__offices__count=3,
+        )
+
+        assigned = InheritedTrait(
+            pre_assigned,
+            status=TPMVisit.STATUSES.assigned,
+            date_of_assigned=factory.LazyFunction(timezone.now),
         )
 
         cancelled = factory.Trait(
@@ -212,43 +242,63 @@ class TPMVisitFactory(factory.DjangoModelFactory):
             date_of_cancelled=factory.LazyFunction(timezone.now),
         )
 
-        tpm_accepted = InheritedTrait(
+        pre_tpm_accepted = InheritedTrait(
             assigned,
+        )
+
+        tpm_accepted = InheritedTrait(
+            pre_tpm_accepted,
 
             status=TPMVisit.STATUSES.tpm_accepted,
             date_of_tpm_accepted=factory.LazyFunction(timezone.now),
         )
 
-        tpm_rejected = InheritedTrait(
+        pre_tpm_rejected = InheritedTrait(
             assigned,
-
-            status=TPMVisit.STATUSES.tpm_rejected,
-            date_of_tpm_rejected=factory.LazyFunction(timezone.now),
 
             reject_comment='Just because.',
         )
 
-        tpm_reported = InheritedTrait(
-            tpm_accepted,
+        tpm_rejected = InheritedTrait(
+            pre_tpm_rejected,
 
-            status=TPMVisit.STATUSES.tpm_reported,
-            date_of_tpm_reported=factory.LazyFunction(timezone.now),
+            status=TPMVisit.STATUSES.tpm_rejected,
+            date_of_tpm_rejected=factory.LazyFunction(timezone.now),
+        )
+
+        pre_tpm_reported = InheritedTrait(
+            tpm_accepted,
 
             tpm_activities__report_attachments__count=1,
             tpm_activities__report_attachments__file_type__name='report',
         )
 
-        tpm_report_rejected = InheritedTrait(
-            tpm_reported,
+        tpm_reported = InheritedTrait(
+            pre_tpm_reported,
 
-            status=TPMVisit.STATUSES.tpm_report_rejected,
-            date_of_tpm_report_rejected=factory.LazyFunction(timezone.now),
+            status=TPMVisit.STATUSES.tpm_reported,
+            date_of_tpm_reported=factory.LazyFunction(timezone.now),
+        )
+
+        pre_tpm_report_rejected = InheritedTrait(
+            tpm_reported,
 
             report_reject_comments__count=1,
         )
 
-        unicef_approved = InheritedTrait(
+        tpm_report_rejected = InheritedTrait(
+            pre_tpm_report_rejected,
+
+            status=TPMVisit.STATUSES.tpm_report_rejected,
+            date_of_tpm_report_rejected=factory.LazyFunction(timezone.now),
+        )
+
+        pre_unicef_approved = InheritedTrait(
             tpm_reported,
+        )
+
+        unicef_approved = InheritedTrait(
+            pre_unicef_approved,
 
             status=TPMVisit.STATUSES.unicef_approved,
             date_of_unicef_approved=factory.LazyFunction(timezone.now),
@@ -260,26 +310,6 @@ class TPMVisitFactory(factory.DjangoModelFactory):
             status = extra.pop('status')
             extra[status] = True
         return super(TPMVisitFactory, cls).attributes(create, extra)
-
-    @factory.post_generation
-    def offices(self, create, extracted, count, **kwargs):
-        if not create:
-            return
-
-        if extracted is not None:
-            self.offices.add(*extracted)
-        else:
-            self.offices.add(*[OfficeFactory() for i in range(count)])
-
-    @factory.post_generation
-    def unicef_focal_points(self, create, extracted, count, **kwargs):
-        if not create:
-            return
-
-        if extracted is not None:
-            self.unicef_focal_points.add(*extracted)
-        else:
-            self.unicef_focal_points.add(*[UserFactory(unicef_user=True) for i in range(count)])
 
     @factory.post_generation
     def tpm_partner_focal_points(self, create, extracted, count, **kwargs):

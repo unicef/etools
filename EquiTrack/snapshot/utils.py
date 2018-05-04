@@ -1,29 +1,28 @@
-from __future__ import absolute_import
-from __future__ import division
-from __future__ import print_function
-from __future__ import unicode_literals
+from __future__ import absolute_import, division, print_function, unicode_literals
 
+from django.db.models.query import QuerySet
 from django.forms import model_to_dict
+from django.utils import six
 
 from snapshot.models import Activity
 
 
 def jsonify(data):
     """Convert data into a dictionary that can be json encoded"""
-    allowed_types = (
-        basestring,
+    allowed_types = six.integer_types + (
+        six.text_type,
         bool,
         dict,
         float,
-        int,
-        long,
         list,
         set,
         tuple,
     )
     for key, value in data.items():
+        if isinstance(value, QuerySet):
+            data[key] = [v.pk for v in value]
         if not isinstance(value, allowed_types):
-            data[key] = unicode(data[key])
+            data[key] = six.text_type(data[key])
     return data
 
 
@@ -86,12 +85,18 @@ def create_snapshot(target, target_before, by_user):
     current_obj_dict = create_dict_with_relations(target)
     change = create_change_dict(target_before, current_obj_dict)
 
-    activity = Activity.objects.create(
-        target=target,
-        by_user=by_user,
-        action=action,
-        data=current_obj_dict,
-        change=change
-    )
+    activity_kwargs = {
+        'target': target,
+        'by_user': by_user,
+        'action': action,
+        'data': current_obj_dict,
+        'change': change
+    }
+
+    snapshot_additional_data = getattr(target, 'snapshot_additional_data', None)
+    if callable(snapshot_additional_data):
+        activity_kwargs['data'].update(snapshot_additional_data(change))
+
+    activity = Activity.objects.create(**activity_kwargs)
 
     return activity

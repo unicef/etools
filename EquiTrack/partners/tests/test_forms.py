@@ -3,25 +3,21 @@ from __future__ import division
 from __future__ import print_function
 from __future__ import unicode_literals
 
-from EquiTrack.factories import (
-    PartnerFactory,
-    PartnerStaffFactory,
-    ProfileFactory,
-    UserFactory,
-)
-from EquiTrack.tests.cases import EToolsTenantTestCase
+from EquiTrack.tests.cases import BaseTenantTestCase
 from partners import forms
-from partners.models import PartnerType
+from partners.models import PartnerType, PartnerOrganization
+from partners.tests.factories import PartnerFactory, PartnerStaffFactory
+from users.tests.factories import ProfileFactory, UserFactory
 
 
-class TestPartnersAdminForm(EToolsTenantTestCase):
+class TestPartnersAdminForm(BaseTenantTestCase):
     def setUp(self):
         super(TestPartnersAdminForm, self).setUp()
         self.data = {
             "name": "Name",
             "partner_type": PartnerType.UN_AGENCY,
             "rating": "High",
-            "type_of_assessment": "Normal",
+            "type_of_assessment": PartnerOrganization.MICRO_ASSESSMENT,
         }
 
     def test_form(self):
@@ -47,13 +43,16 @@ class TestPartnersAdminForm(EToolsTenantTestCase):
         )
 
 
-class TestPartnerStaffMemberForm(EToolsTenantTestCase):
+class TestPartnerStaffMemberForm(BaseTenantTestCase):
+    @classmethod
+    def setUpTestData(cls):
+        cls.partner = PartnerFactory()
+
     def setUp(self):
         super(TestPartnerStaffMemberForm, self).setUp()
-        partner = PartnerFactory()
         self.data = {
             "email": "test@example.com",
-            "partner": partner.pk,
+            "partner": self.partner.pk,
             "first_name": "First",
             "last_name": "Last",
             "active": True,

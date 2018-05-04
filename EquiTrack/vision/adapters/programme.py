@@ -1,8 +1,11 @@
+from __future__ import absolute_import, division, print_function, unicode_literals
+
 import datetime
 import json
 import logging
 
 from django.db import transaction
+from django.utils import six
 
 from reports.models import CountryProgramme, Indicator, Result, ResultType
 from vision.utils import wcf_json_date_as_date
@@ -253,8 +256,6 @@ class ProgrammeSynchronizer(VisionDataSynchronizer):
         ("ACTIVITY_FOCUS_CODE", "activity_focus_code"),
         ("ACTIVITY_FOCUS_NAME", "activity_focus_name"),
         ("HUMANITARIAN_TAG", "humanitarian_tag"),
-        # ("PROGRAMME_AREA_CODE", "code"),
-        # ("PROGRAMME_AREA_NAME", ""),
     )
 
     def _get_json(self, data):
@@ -271,7 +272,7 @@ class ProgrammeSynchronizer(VisionDataSynchronizer):
                 return True
             return False
 
-        return filter(in_time_range, records)
+        return [record for record in records if in_time_range(record)]
 
     def _clean_records(self, records):
         records = self._filter_by_time_range(records)
@@ -327,20 +328,19 @@ class RAMSynchronizer(VisionDataSynchronizer):
     def _convert_records(self, records):
         return json.loads(records)
 
-    def _changed_fields(self, fields, local_obj, api_obj):
-        for field in fields:
-            obj_value = api_obj[self.MAPPING[field]][:255]
-            if field in ['name']:
-                obj_value = api_obj[self.MAPPING[field]][:1024]
-            if getattr(local_obj, field) != obj_value:
-                return True
-        return False
-
     def _save_records(self, records):
-
         processed = self.process_indicators(records)
-
         return processed
+
+    def _filter_records(self, records):
+        def is_valid_record(record):
+            for key in self.REQUIRED_KEYS:
+                if key not in record:
+                    return False
+            if record['INDICATOR_DESCRIPTION'] in ['', None] or record["INDICATOR_CODE"] in ['undefined', '', None]:
+                return False
+            return True
+        return [rec for rec in records if is_valid_record(rec)]
 
     def _clean_records(self, records):
         records = self._filter_records(records)
@@ -348,7 +348,7 @@ class RAMSynchronizer(VisionDataSynchronizer):
         mapped_records = {}
         for r in records:
             a = r['WBS_ELEMENT_CODE']
-            code = unicode(r['INDICATOR_CODE'])
+            code = six.text_type(r['INDICATOR_CODE'])
             mapped_records[code] = {
                 'name': r['INDICATOR_DESCRIPTION'][:1024],
                 'baseline': r['BASELINE'][:255],

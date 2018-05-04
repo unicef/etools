@@ -4,38 +4,38 @@ import json
 
 from django.core.urlresolvers import reverse
 
-from EquiTrack.factories import UserFactory
-from EquiTrack.tests.mixins import APITenantTestCase
+from EquiTrack.tests.cases import BaseTenantTestCase
 from publics.models import EPOCH_ZERO, TravelExpenseType
-from publics.tests.factories import AirlineCompanyFactory, ExpenseTypeFactory
+from publics.tests.factories import PublicsAirlineCompanyFactory, PublicsTravelExpenseTypeFactory
+from users.tests.factories import UserFactory
 
 
-class GhostData(APITenantTestCase):
-    def setUp(self):
-        super(GhostData, self).setUp()
-        self.unicef_staff = UserFactory(is_staff=True)
+class GhostData(BaseTenantTestCase):
+    @classmethod
+    def setUpTestData(cls):
+        cls.unicef_staff = UserFactory(is_staff=True)
 
     def test_urls(self):
-        static_data_url = reverse('public:missing_static')
+        static_data_url = reverse('publics:missing_static')
         self.assertEqual(static_data_url, '/api/static_data/missing/')
 
-        currencies_url = reverse('public:missing_currencies')
+        currencies_url = reverse('publics:missing_currencies')
         self.assertEqual(currencies_url, '/api/currencies/missing/')
 
-        dsa_regions_url = reverse('public:missing_dsa_regions')
+        dsa_regions_url = reverse('publics:missing_dsa_regions')
         self.assertEqual(dsa_regions_url, '/api/dsa_regions/missing/')
 
-        business_areas_url = reverse('public:missing_business_areas')
+        business_areas_url = reverse('publics:missing_business_areas')
         self.assertEqual(business_areas_url, '/api/business_areas/missing/')
 
-        expense_types_url = reverse('public:missing_expense_types')
+        expense_types_url = reverse('publics:missing_expense_types')
         self.assertEqual(expense_types_url, '/api/expense_types/missing/')
 
-        airlines_url = reverse('public:missing_airlines')
+        airlines_url = reverse('publics:missing_airlines')
         self.assertEqual(airlines_url, '/api/airlines/missing/')
 
     def test_on_instance_delete(self):
-        expense_type = ExpenseTypeFactory()
+        expense_type = PublicsTravelExpenseTypeFactory()
 
         self.assertEqual(expense_type.deleted_at, EPOCH_ZERO)
 
@@ -43,9 +43,9 @@ class GhostData(APITenantTestCase):
         self.assertNotEqual(expense_type.deleted_at, EPOCH_ZERO)
 
     def test_queryset_delete(self):
-        ExpenseTypeFactory()
-        ExpenseTypeFactory()
-        ExpenseTypeFactory()
+        PublicsTravelExpenseTypeFactory()
+        PublicsTravelExpenseTypeFactory()
+        PublicsTravelExpenseTypeFactory()
 
         total_expense_type_count = TravelExpenseType.objects.all().count()
         self.assertEqual(total_expense_type_count, 3)
@@ -65,9 +65,9 @@ class GhostData(APITenantTestCase):
         self.assertEqual(deleted_at_populated_count, 3)
 
     def test_single_endpoint(self):
-        expense_type = ExpenseTypeFactory()
+        expense_type = PublicsTravelExpenseTypeFactory()
 
-        response = self.forced_auth_req('get', reverse('public:expense_types'),
+        response = self.forced_auth_req('get', reverse('publics:expense_types'),
                                         user=self.unicef_staff)
 
         response_json = json.loads(response.rendered_content)
@@ -75,40 +75,40 @@ class GhostData(APITenantTestCase):
 
         expense_type.delete()
 
-        response = self.forced_auth_req('get', reverse('public:expense_types'),
+        response = self.forced_auth_req('get', reverse('publics:expense_types'),
                                         user=self.unicef_staff)
 
         response_json = json.loads(response.rendered_content)
         self.assertEqual(len(response_json), 0)
 
-        response = self.forced_auth_req('get', reverse('public:missing_expense_types'),
+        response = self.forced_auth_req('get', reverse('publics:missing_expense_types'),
                                         user=self.unicef_staff)
         self.assertEqual(response.status_code, 400)
         response_json = json.loads(response.rendered_content)
         self.assertEqual(response_json,
                          {'values': ['This list may not be empty.']})
 
-        response = self.forced_auth_req('get', reverse('public:missing_expense_types'),
+        response = self.forced_auth_req('get', reverse('publics:missing_expense_types'),
                                         data={'values': [expense_type.pk]},
                                         user=self.unicef_staff)
         self.assertEqual(response.status_code, 200)
 
     def test_multiendpoint(self):
-        airline = AirlineCompanyFactory()
+        airline = PublicsAirlineCompanyFactory()
 
-        response = self.forced_auth_req('get', reverse('public:static'),
+        response = self.forced_auth_req('get', reverse('publics:static'),
                                         user=self.unicef_staff)
         response_json = json.loads(response.rendered_content)
         self.assertEqual(len(response_json['airlines']), 1)
 
         airline.delete()
 
-        response = self.forced_auth_req('get', reverse('public:static'),
+        response = self.forced_auth_req('get', reverse('publics:static'),
                                         user=self.unicef_staff)
         response_json = json.loads(response.rendered_content)
         self.assertEqual(len(response_json['airlines']), 0)
 
-        response = self.forced_auth_req('get', reverse('public:missing_static'),
+        response = self.forced_auth_req('get', reverse('publics:missing_static'),
                                         data={'values': [airline.pk]},
                                         user=self.unicef_staff)
         self.assertEqual(response.status_code, 400)
@@ -116,7 +116,7 @@ class GhostData(APITenantTestCase):
         self.assertEqual(response_json,
                          {'category': ['This field is required.']})
 
-        response = self.forced_auth_req('get', reverse('public:missing_static'),
+        response = self.forced_auth_req('get', reverse('publics:missing_static'),
                                         data={'values': [airline.pk],
                                               'category': 'airlines'},
                                         user=self.unicef_staff)

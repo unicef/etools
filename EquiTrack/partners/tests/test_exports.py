@@ -1,24 +1,33 @@
 # TODO this is a conflicted page.. needs checking..
-from __future__ import unicode_literals
+from __future__ import absolute_import, division, print_function, unicode_literals
 import datetime
 import tempfile
+
+from django.utils import six
 from rest_framework import status
 from tablib.core import Dataset
 
-from EquiTrack.factories import (
-    UserFactory, PartnerFactory, AgreementFactory, InterventionFactory, CountryProgrammeFactory, ResultFactory,
-    InterventionBudgetFactory, PartnerStaffFactory, InterventionPlannedVisitsFactory
-)
-from EquiTrack.tests.mixins import APITenantTestCase
+from EquiTrack.tests.cases import BaseTenantTestCase
 from partners.models import PartnerOrganization
+from partners.tests.factories import (
+    AgreementFactory,
+    CountryProgrammeFactory,
+    InterventionBudgetFactory,
+    InterventionFactory,
+    InterventionPlannedVisitsFactory,
+    PartnerFactory,
+    PartnerStaffFactory,
+)
 from reports.models import ResultType
+from reports.tests.factories import ResultFactory
+from users.tests.factories import UserFactory
 
 
-class TestModelExport(APITenantTestCase):
-    def setUp(self):
-        super(TestModelExport, self).setUp()
-        self.unicef_staff = UserFactory(is_staff=True)
-        self.partner = PartnerFactory(
+class TestModelExport(BaseTenantTestCase):
+    @classmethod
+    def setUpTestData(cls):
+        cls.unicef_staff = UserFactory(is_staff=True)
+        cls.partner = PartnerFactory(
             partner_type='Government',
             vendor_number='Vendor No',
             short_name="Short Name",
@@ -39,24 +48,24 @@ class TestModelExport(APITenantTestCase):
             type_of_assessment="Type of Assessment",
             last_assessment_date=datetime.date.today(),
         )
-        self.partnerstaff = PartnerStaffFactory(partner=self.partner)
+        cls.partnerstaff = PartnerStaffFactory(partner=cls.partner)
         attachment = tempfile.NamedTemporaryFile(suffix=".pdf").name
-        self.agreement = AgreementFactory(
-            partner=self.partner,
+        cls.agreement = AgreementFactory(
+            partner=cls.partner,
             country_programme=CountryProgrammeFactory(wbs="random WBS"),
             attached_agreement=attachment,
             start=datetime.date.today(),
             end=datetime.date.today(),
             signed_by_unicef_date=datetime.date.today(),
-            signed_by=self.unicef_staff,
+            signed_by=cls.unicef_staff,
             signed_by_partner_date=datetime.date.today()
         )
-        self.agreement.authorized_officers.add(self.partnerstaff)
-        self.agreement.save()
+        cls.agreement.authorized_officers.add(cls.partnerstaff)
+        cls.agreement.save()
         # This is here to test partner scoping
         AgreementFactory(signed_by_unicef_date=datetime.date.today())
-        self.intervention = InterventionFactory(
-            agreement=self.agreement,
+        cls.intervention = InterventionFactory(
+            agreement=cls.agreement,
             document_type='SHPD',
             status='draft',
             start=datetime.date.today(),
@@ -66,17 +75,18 @@ class TestModelExport(APITenantTestCase):
             review_date_prc=datetime.date.today(),
             signed_by_unicef_date=datetime.date.today(),
             signed_by_partner_date=datetime.date.today(),
-            unicef_signatory=self.unicef_staff,
+            unicef_signatory=cls.unicef_staff,
             population_focus="Population focus",
-            partner_authorized_officer_signatory=self.partnerstaff,
+            partner_authorized_officer_signatory=cls.partnerstaff,
+            country_programme=cls.agreement.country_programme,
         )
-        self.ib = InterventionBudgetFactory(intervention=self.intervention, currency='USD')
+        cls.ib = InterventionBudgetFactory(intervention=cls.intervention, currency="USD")
 
         output_res_type, _ = ResultType.objects.get_or_create(name='Output')
-        self.result = ResultFactory(result_type=output_res_type)
+        cls.result = ResultFactory(result_type=output_res_type)
 
-        self.planned_visit = InterventionPlannedVisitsFactory(
-            intervention=self.intervention,
+        cls.planned_visit = InterventionPlannedVisitsFactory(
+            intervention=cls.intervention,
         )
 
     def test_intervention_export_api(self):
@@ -88,7 +98,7 @@ class TestModelExport(APITenantTestCase):
         )
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        dataset = Dataset().load(response.content, 'csv')
+        dataset = Dataset().load(response.content.decode('utf-8'), 'csv')
         self.assertEqual(dataset.height, 1)
 
         self.assertEqual(dataset._get_headers(), [
@@ -140,25 +150,25 @@ class TestModelExport(APITenantTestCase):
         ])
 
         self.assertEqual(dataset[0], (
-            unicode(self.intervention.agreement.partner.name),
-            unicode(self.intervention.agreement.partner.vendor_number),
+            six.text_type(self.intervention.agreement.partner.name),
+            six.text_type(self.intervention.agreement.partner.vendor_number),
             self.intervention.status,
             self.intervention.agreement.partner.partner_type,
             self.intervention.agreement.agreement_number,
-            unicode(self.intervention.agreement.country_programme.name),
+            six.text_type(self.intervention.country_programme.name),
             self.intervention.document_type,
-            self.intervention.reference_number,
-            unicode(self.intervention.title),
+            self.intervention.number,
+            six.text_type(self.intervention.title),
             '{}'.format(self.intervention.start),
             '{}'.format(self.intervention.end),
             u'',
             u'',
             u'',
-            unicode("Yes" if self.intervention.contingency_pd else "No"),
+            six.text_type("Yes" if self.intervention.contingency_pd else "No"),
             u'',
             u'',
             u'',
-            unicode(self.ib.currency),
+            six.text_type(self.ib.currency),
             u'{:.2f}'.format(self.intervention.total_partner_contribution),
             u'{:.2f}'.format(self.intervention.total_unicef_cash),
             u'{:.2f}'.format(self.intervention.total_in_kind_amount),
@@ -166,9 +176,9 @@ class TestModelExport(APITenantTestCase):
             u', '.join([fr.fr_numbers for fr in self.intervention.frs.all()]),
             u'',
             u'',
-            unicode(self.intervention.total_frs["total_frs_amt"]),
-            unicode(self.intervention.total_frs["total_actual_amt"]),
-            unicode(self.intervention.total_frs["total_outstanding_amt"]),
+            u'',
+            u'',
+            u'',
             u'{} (Q1:{} Q2:{}, Q3:{}, Q4:{})'.format(self.planned_visit.year,
                                                      self.planned_visit.programmatic_q1,
                                                      self.planned_visit.programmatic_q2,
@@ -179,14 +189,14 @@ class TestModelExport(APITenantTestCase):
             '{}'.format(self.intervention.review_date_prc),
             u'{}'.format(self.intervention.partner_authorized_officer_signatory.get_full_name()),
             '{}'.format(self.intervention.signed_by_partner_date),
-            u'',
+            self.unicef_staff.get_full_name(),
             '{}'.format(self.intervention.signed_by_unicef_date),
             '{}'.format(self.intervention.days_from_submission_to_signed),
             '{}'.format(self.intervention.days_from_review_to_signed),
-            unicode(self.intervention.amendments.count()),
+            six.text_type(self.intervention.amendments.count()),
             u'',
-            unicode(', '.join(['{}'.format(att.type.name) for att in self.intervention.attachments.all()])),
-            unicode(self.intervention.attachments.count()),
+            six.text_type(', '.join(['{}'.format(att.type.name) for att in self.intervention.attachments.all()])),
+            six.text_type(self.intervention.attachments.count()),
             u'',
             u'https://testserver/pmp/interventions/{}/details/'.format(self.intervention.id),
         ))
@@ -200,7 +210,7 @@ class TestModelExport(APITenantTestCase):
         )
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        dataset = Dataset().load(response.content, 'csv')
+        dataset = Dataset().load(response.content.decode('utf-8'), 'csv')
         self.assertEqual(dataset.height, 2)
         self.assertEqual(dataset._get_headers(), [
             'Reference Number',
@@ -222,14 +232,14 @@ class TestModelExport(APITenantTestCase):
         exported_agreement = dataset[-1]
         self.assertEqual(exported_agreement, (
             self.agreement.agreement_number,
-            unicode(self.agreement.status),
-            unicode(self.agreement.partner.name),
+            six.text_type(self.agreement.status),
+            six.text_type(self.agreement.partner.name),
             self.agreement.agreement_type,
             '{}'.format(self.agreement.start),
             '{}'.format(self.agreement.end),
             u'',
             '{}'.format(self.agreement.signed_by_partner_date),
-            u'',
+            self.unicef_staff.get_full_name(),
             '{}'.format(self.agreement.signed_by_unicef_date),
             ', '.join([sm.get_full_name() for sm in self.agreement.authorized_officers.all()]),
             u'',
@@ -246,7 +256,7 @@ class TestModelExport(APITenantTestCase):
         )
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        dataset = Dataset().load(response.content, 'csv')
+        dataset = Dataset().load(response.content.decode('utf-8'), 'csv')
         self.assertEqual(dataset.height, 2)
         self.assertEqual(dataset._get_headers(), [
             'Vendor Number',
@@ -273,10 +283,10 @@ class TestModelExport(APITenantTestCase):
         deleted_flag = "Yes" if self.partner.deleted_flag else "No"
         blocked = "Yes" if self.partner.blocked else "No"
 
-        test_option = filter(lambda e: e[0] == self.partner.vendor_number, dataset)[0]
+        test_option = [e for e in dataset if e[0] == self.partner.vendor_number][0]
         self.assertEqual(test_option, (
             self.partner.vendor_number,
-            unicode(self.partner.name),
+            six.text_type(self.partner.name),
             self.partner.short_name,
             self.partner.alternate_name,
             "{}".format(self.partner.partner_type),

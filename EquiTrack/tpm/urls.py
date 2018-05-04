@@ -20,6 +20,7 @@ tpm_action_points_api = NestedComplexRouter(tpm_visits_api, r'visits', lookup='t
 tpm_action_points_api.register(r'action-points', ActionPointViewSet, base_name='tpmactionpoint')
 
 
+app_name = 'tpm'
 urlpatterns = [
     url(r'^', include(tpm_staffmember_api.urls)),
     url(r'^', include(tpm_partners_api.urls)),

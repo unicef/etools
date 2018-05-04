@@ -5,6 +5,7 @@ from django.conf.urls import url
 from publics.views import (
     AirlinesView, BusinessAreasView, CurrenciesView, DSARegionsView, ExpenseTypesView, StaticDataView, WBSGrantFundView)
 
+app_name = 'publics'
 urlpatterns = (
     url(r'^static_data/$', StaticDataView.as_view({'get': 'list'}), name='static'),
     url(r'^static_data/missing/$', StaticDataView.as_view({'get': 'missing'}), name='missing_static'),

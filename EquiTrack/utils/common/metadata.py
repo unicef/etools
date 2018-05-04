@@ -49,8 +49,13 @@ class FSMTransitionActionMetadataMixin(object):
 
     def determine_actions(self, request, view):
         actions = super(FSMTransitionActionMetadataMixin, self).determine_actions(request, view)
+
         instance = self._get_instance(view)
         if not instance:
+            return actions
+
+        current_state = getattr(instance, 'status', None)
+        if current_state is None:
             return actions
 
         allowed_FSM_transitions = []

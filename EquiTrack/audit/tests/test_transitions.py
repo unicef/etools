@@ -2,6 +2,7 @@ from __future__ import absolute_import, division, print_function, unicode_litera
 
 import random
 
+from django.utils import six
 from factory import fuzzy
 from rest_framework import status
 
@@ -10,8 +11,9 @@ from audit.tests.base import EngagementTransitionsTestCaseMixin
 from audit.tests.factories import AuditFactory, MicroAssessmentFactory, SpecialAuditFactory, SpotCheckFactory, \
     KeyInternalControlFactory
 from audit.transitions.conditions import (
-    AuditSubmitReportRequiredFieldsCheck, EngagementSubmitReportRequiredFieldsCheck, SPSubmitReportRequiredFieldsCheck,)
-from EquiTrack.tests.mixins import APITenantTestCase
+    AuditSubmitReportRequiredFieldsCheck, EngagementSubmitReportRequiredFieldsCheck, SPSubmitReportRequiredFieldsCheck,
+    SpecialAuditSubmitReportRequiredFieldsCheck)
+from EquiTrack.tests.cases import BaseTenantTestCase
 
 
 class EngagementCheckTransitionsTestCaseMixin(object):
@@ -24,7 +26,7 @@ class EngagementCheckTransitionsTestCaseMixin(object):
 
         self.assertEqual(response.status_code, expected_response)
         if errors:
-            self.assertItemsEqual(response.data.keys(), errors or [])
+            six.assertCountEqual(self, response.data.keys(), errors or [])
 
     def _test_submit(self, user, expected_response, errors=None, data=None):
         return self._test_transition(user, 'submit', expected_response, errors=errors, data=data)
@@ -68,8 +70,23 @@ class SpecialAuditTransitionsTestCaseMixin(EngagementTransitionsTestCaseMixin):
     engagement_factory = SpecialAuditFactory
     endpoint = 'special-audits'
 
-    def _fill_specific_procedure(self):
+    def _init_specific_procedure(self):
         SpecificProcedure(audit=self.engagement, description=fuzzy.FuzzyText(length=20).fuzz()).save()
+
+    def _fill_specific_procedure(self):
+        for sp in self.engagement.specific_procedures.all():
+            sp.finding = 'Test'
+            sp.save()
+
+    def _fill_special_audit_specified_fields(self):
+        self.engagement.exchange_rate = fuzzy.FuzzyDecimal(0.5, 400).fuzz()
+        self.engagement.save()
+
+    def _init_filled_engagement(self):
+        super(SpecialAuditTransitionsTestCaseMixin, self)._init_filled_engagement()
+        self._fill_special_audit_specified_fields()
+        self._init_specific_procedure()
+        self._fill_specific_procedure()
 
 
 class SCTransitionsTestCaseMixin(EngagementTransitionsTestCaseMixin):
@@ -80,6 +97,7 @@ class SCTransitionsTestCaseMixin(EngagementTransitionsTestCaseMixin):
         self.engagement.total_amount_tested = random.randint(1, 22)
         self.engagement.total_amount_of_ineligible_expenditure = random.randint(1, 22)
         self.engagement.internal_controls = fuzzy.FuzzyText(length=50).fuzz()
+        self.engagement.exchange_rate = fuzzy.FuzzyDecimal(0.5, 400).fuzz()
         self.engagement.save()
 
     def _init_filled_engagement(self):
@@ -87,7 +105,11 @@ class SCTransitionsTestCaseMixin(EngagementTransitionsTestCaseMixin):
         self._fill_sc_specified_fields()
 
 
-class TestMATransitionsTestCase(EngagementCheckTransitionsTestCaseMixin, MATransitionsTestCaseMixin, APITenantTestCase):
+class TestMATransitionsTestCase(
+        EngagementCheckTransitionsTestCaseMixin,
+        MATransitionsTestCaseMixin,
+        BaseTenantTestCase
+):
     def test_submit_for_dummy_object(self):
         errors_fields = EngagementSubmitReportRequiredFieldsCheck.fields
         self._test_submit(self.auditor, status.HTTP_400_BAD_REQUEST, errors=errors_fields)
@@ -118,7 +140,7 @@ class TestMATransitionsTestCase(EngagementCheckTransitionsTestCaseMixin, MATrans
 
 
 class TestAuditTransitionsTestCase(
-    EngagementCheckTransitionsTestCaseMixin, AuditTransitionsTestCaseMixin, APITenantTestCase
+    EngagementCheckTransitionsTestCaseMixin, AuditTransitionsTestCaseMixin, BaseTenantTestCase
 ):
     def test_submit_for_dummy_object(self):
         errors_fields = AuditSubmitReportRequiredFieldsCheck.fields
@@ -141,26 +163,32 @@ class TestAuditTransitionsTestCase(
 
 
 class TestSATransitionsTestCase(
-    EngagementCheckTransitionsTestCaseMixin, SpecialAuditTransitionsTestCaseMixin, APITenantTestCase
+    EngagementCheckTransitionsTestCaseMixin, SpecialAuditTransitionsTestCaseMixin, BaseTenantTestCase
 ):
+    def test_submit_for_dummy_object(self):
+        errors_fields = SpecialAuditSubmitReportRequiredFieldsCheck.fields
+        self._test_submit(self.auditor, status.HTTP_400_BAD_REQUEST, errors=errors_fields)
+
     def test_submit_without_finding_object(self):
-        self._fill_specific_procedure()
+        self._fill_date_fields()
+        self._fill_special_audit_specified_fields()
+        self._init_specific_procedure()
         self._test_submit(self.auditor, status.HTTP_400_BAD_REQUEST, errors=['specific_procedures'])
 
-    def test_submit_without_report(self):
+    def test_attachments_required(self):
+        self._fill_date_fields()
+        self._fill_special_audit_specified_fields()
+        self._init_specific_procedure()
+        self._fill_specific_procedure()
         self._test_submit(self.auditor, status.HTTP_400_BAD_REQUEST, errors=['report_attachments'])
 
     def test_success_submit(self):
         self._init_filled_engagement()
-        self._fill_specific_procedure()
-        for sp in self.engagement.specific_procedures.all():
-            sp.finding = 'Test'
-            sp.save()
         self._test_submit(self.auditor, status.HTTP_200_OK)
 
 
 class TestSCTransitionsTestCase(
-    EngagementCheckTransitionsTestCaseMixin, SCTransitionsTestCaseMixin, APITenantTestCase
+    EngagementCheckTransitionsTestCaseMixin, SCTransitionsTestCaseMixin, BaseTenantTestCase
 ):
     def test_submit_for_dummy_object(self):
         errors_fields = SPSubmitReportRequiredFieldsCheck.fields
@@ -216,12 +244,12 @@ class EngagementCheckTransitionsMetadataTestCaseMixin(object):
         )
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        action_codes = map(lambda action: action['code'], response.data['actions']['allowed_FSM_transitions'])
-        self.assertItemsEqual(action_codes, actions)
+        action_codes = [action['code'] for action in response.data['actions']['allowed_FSM_transitions']]
+        six.assertCountEqual(self, action_codes, actions)
 
 
 class TestSCTransitionsMetadataTestCase(
-    EngagementCheckTransitionsMetadataTestCaseMixin, SCTransitionsTestCaseMixin, APITenantTestCase
+    EngagementCheckTransitionsMetadataTestCaseMixin, SCTransitionsTestCaseMixin, BaseTenantTestCase
 ):
     def test_created_auditor(self):
         self._test_allowed_actions(self.auditor, ['submit'])

@@ -5,13 +5,14 @@ from django.core.urlresolvers import reverse
 from rest_framework import status
 from tablib.core import Dataset
 
-from EquiTrack.factories import PartnerFactory, UserFactory
-from EquiTrack.tests.mixins import APITenantTestCase
+from EquiTrack.tests.cases import BaseTenantTestCase
 from hact.tests.factories import HactHistoryFactory
 from partners.models import PartnerOrganization, PartnerType
+from partners.tests.factories import PartnerFactory
+from users.tests.factories import UserFactory
 
 
-class TestHactHistoryAPIView(APITenantTestCase):
+class TestHactHistoryAPIView(BaseTenantTestCase):
     @classmethod
     def setUpTestData(cls):
         cls.unicef_user = UserFactory(is_staff=True)
@@ -26,7 +27,7 @@ class TestHactHistoryAPIView(APITenantTestCase):
             reported_cy=300.0,
             total_ct_ytd=400.0,
         )
-        cls.url = reverse("hact_api:hact-history")
+        cls.url = reverse("hact:hact-history")
 
     def setUp(self):
         self.hact_data = [
@@ -109,7 +110,7 @@ class TestHactHistoryAPIView(APITenantTestCase):
             data={"format": "csv"}
         )
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        dataset = Dataset().load(response.content, "csv")
+        dataset = Dataset().load(response.content.decode('utf-8'), "csv")
         self.assertEqual(dataset.height, 1)
         self.assertEqual(dataset._get_headers(), [
             "Implementing Partner",
@@ -178,7 +179,7 @@ class TestHactHistoryAPIView(APITenantTestCase):
             data={"format": "csv"}
         )
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        dataset = Dataset().load(response.content, "csv")
+        dataset = Dataset().load(response.content.decode('utf-8'), "csv")
         self.assertEqual(dataset.height, 1)
         self.assertEqual(dataset[0], (
             "Partner Name",

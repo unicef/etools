@@ -2,6 +2,7 @@ from __future__ import absolute_import, division, print_function, unicode_litera
 
 import itertools
 
+from django.db.models import QuerySet, Manager
 from future.backports.urllib.parse import urljoin
 
 from django.utils import six
@@ -15,7 +16,10 @@ from utils.common.utils import get_attribute_smart
 
 class UsersExportField(serializers.Field):
     def to_representation(self, value):
-        return ','.join(map(lambda u: u.get_full_name(), value.all()))
+        if isinstance(value, (QuerySet, Manager)):
+            value = value.all()
+
+        return ','.join(map(lambda u: u.get_full_name(), value))
 
 
 class CommaSeparatedExportField(serializers.Field):
@@ -50,9 +54,9 @@ class CommaSeparatedExportField(serializers.Field):
         value = set(value)
 
         if self.export_attr:
-            return ', '.join(map(lambda x: getattr(x, self.export_attr), value))
-        else:
-            return ', '.join(map(six.text_type, value))
+            value = map(lambda x: get_attribute_smart(x, self.export_attr), value)
+
+        return ', '.join(map(six.text_type, filter(lambda x: x, value)))
 
 
 class TPMActivityExportSerializer(serializers.Serializer):
@@ -65,13 +69,13 @@ class TPMActivityExportSerializer(serializers.Serializer):
     intervention = serializers.CharField()
     locations = CommaSeparatedExportField()
     date = serializers.DateField(format='%d/%m/%Y')
-    unicef_focal_points = UsersExportField(source='tpm_visit.unicef_focal_points')
-    offices = CommaSeparatedExportField(source='tpm_visit.offices')
+    unicef_focal_points = UsersExportField()
+    offices = CommaSeparatedExportField()
     tpm_focal_points = UsersExportField(source='tpm_visit.tpm_partner_focal_points')
     link = serializers.CharField(source='tpm_visit.get_object_url')
 
     def get_activity(self, obj):
-        return 'Activity #{}.{}'.format(obj.tpm_visit.id, obj.id)
+        return 'Task #{}.{}'.format(obj.tpm_visit.id, obj.id)
 
 
 class TPMLocationExportSerializer(serializers.Serializer):
@@ -84,13 +88,28 @@ class TPMLocationExportSerializer(serializers.Serializer):
     intervention = serializers.CharField(source='activity.tpmactivity.intervention')
     location = serializers.CharField()
     date = serializers.DateField(source='activity.tpmactivity.date', format='%d/%m/%Y')
-    unicef_focal_points = UsersExportField(source='activity.tpmactivity.tpm_visit.unicef_focal_points')
-    offices = CommaSeparatedExportField(source='activity.tpmactivity.tpm_visit.offices')
+    unicef_focal_points = UsersExportField(source='activity.tpmactivity.unicef_focal_points')
+    offices = CommaSeparatedExportField(source='activity.tpmactivity.offices')
     tpm_focal_points = UsersExportField(source='activity.tpmactivity.tpm_visit.tpm_partner_focal_points')
     link = serializers.CharField(source='activity.tpmactivity.tpm_visit.get_object_url')
 
     def get_activity(self, obj):
-        return 'Activity #{}.{}'.format(obj.activity.tpmactivity.tpm_visit.id, obj.activity.tpmactivity.id)
+        return 'Task #{}.{}'.format(obj.activity.tpmactivity.tpm_visit.id, obj.activity.tpmactivity.id)
+
+
+class TPMActionPointExportSerializer(serializers.Serializer):
+    person_responsible = serializers.CharField(source='person_responsible.get_full_name')
+    author = serializers.CharField(source='author.get_full_name')
+    section = CommaSeparatedExportField(source='tpm_visit.tpm_activities', export_attr='section')
+    status = serializers.CharField(source='get_status_display')
+    locations = serializers.SerializerMethodField()
+    cp_output = CommaSeparatedExportField(source='tpm_visit.tpm_activities', export_attr='cp_output')
+    due_date = serializers.DateField(format='%d/%m/%Y')
+
+    def get_locations(self, obj):
+        return ', '.join(
+            map(str, itertools.chain(*map(lambda a: a.locations.all(), obj.tpm_visit.tpm_activities.all())))
+        )
 
 
 class TPMVisitExportSerializer(serializers.Serializer):

@@ -3,9 +3,12 @@ import json
 import logging
 from decimal import Decimal
 
+from django.db.models import Sum
+from django.utils import six
+
 from funds.models import FundsCommitmentHeader, FundsCommitmentItem, FundsReservationHeader, FundsReservationItem
 from vision.utils import comp_decimals
-from vision.vision_data_synchronizer import VisionDataSynchronizer
+from vision.vision_data_synchronizer import VisionDataSynchronizer, FileDataSynchronizer
 
 
 class FundReservationsSynchronizer(VisionDataSynchronizer):
@@ -32,9 +35,9 @@ class FundReservationsSynchronizer(VisionDataSynchronizer):
         "CURRENT_FR_AMOUNT",
         "ACTUAL_CASH_TRANSFER",
         "OUTSTANDING_DCT",
-        'FR_OVERALL_AMOUNT_DC',
         'ACTUAL_CASH_TRANSFER_DC',
-        'OUTSTANDING_DCT_DC'
+        'OUTSTANDING_DCT_DC',
+        'MULTI_CURR_FLAG'
     )
     MAPPING = {
         "vendor_code": "VENDOR_CODE",
@@ -51,58 +54,59 @@ class FundReservationsSynchronizer(VisionDataSynchronizer):
         "fund": "FUND",
         "overall_amount": "OVERALL_AMOUNT",
         "overall_amount_dc": "OVERALL_AMOUNT_DC",
-        "line_item_text": "FC_LINE_ITEM_TEXT",
+        "line_item_text": "FR_LINE_ITEM_TEXT",
         "due_date": "DUE_DATE",
         "intervention_amt": "CURRENT_FR_AMOUNT",
         "total_amt": "FR_OVERALL_AMOUNT",
-        "total_amt_local": "FR_OVERALL_AMOUNT_DC",
-        "actual_amt_local": "ACTUAL_CASH_TRANSFER_DC",
         "actual_amt": "ACTUAL_CASH_TRANSFER",
+        "actual_amt_local": "ACTUAL_CASH_TRANSFER_DC",
         "outstanding_amt": "OUTSTANDING_DCT",
-        "outstanding_amt_local": "'OUTSTANDING_DCT_DC'",
+        "outstanding_amt_local": "OUTSTANDING_DCT_DC",
+        "multi_curr_flag": "MULTI_CURR_FLAG"
     }
     HEADER_FIELDS = ['VENDOR_CODE', 'FR_NUMBER', 'FR_DOC_DATE', 'FR_TYPE', 'CURRENCY',
                      'FR_DOCUMENT_TEXT', 'FR_START_DATE', 'FR_END_DATE', "FR_OVERALL_AMOUNT",
                      "CURRENT_FR_AMOUNT", "ACTUAL_CASH_TRANSFER", "OUTSTANDING_DCT",
-                     'FR_OVERALL_AMOUNT_DC', 'ACTUAL_CASH_TRANSFER_DC', 'OUTSTANDING_DCT_DC']
+                     'ACTUAL_CASH_TRANSFER_DC', 'OUTSTANDING_DCT_DC', 'MULTI_CURR_FLAG']
 
     LINE_ITEM_FIELDS = ['LINE_ITEM', 'FR_NUMBER', 'WBS_ELEMENT', 'GRANT_NBR',
                         'FUND', 'OVERALL_AMOUNT', 'OVERALL_AMOUNT_DC',
-                        'DUE_DATE', 'FC_LINE_ITEM_TEXT']
+                        'DUE_DATE', 'FR_LINE_ITEM_TEXT']
 
     def __init__(self, *args, **kwargs):
         self.header_records = {}
         self.item_records = {}
         self.fr_headers = {}
-        self.REVERSE_MAPPING = {v: k for k, v in self.MAPPING.iteritems()}
+        self.REVERSE_MAPPING = {v: k for k, v in six.iteritems(self.MAPPING)}
         self.REVERSE_HEADER_FIELDS = [self.REVERSE_MAPPING[v] for v in self.HEADER_FIELDS]
         self.REVERSE_ITEM_FIELDS = [self.REVERSE_MAPPING[v] for v in self.LINE_ITEM_FIELDS]
         super(FundReservationsSynchronizer, self).__init__(*args, **kwargs)
 
     def _convert_records(self, records):
-        return json.loads(records)
+        return json.loads(records)["ROWSET"]["ROW"]
 
     def map_header_objects(self, qs):
         for item in qs:
             self.fr_headers[item.fr_number] = item
 
     def _filter_records(self, records):
-        records = records["ROWSET"]["ROW"]
         records = super(FundReservationsSynchronizer, self)._filter_records(records)
 
         def bad_record(record):
-            # We don't care about FCs without expenditure
+            # We don't care about FRs without expenditure
             if not record['OVERALL_AMOUNT']:
                 return False
             if not record['FR_NUMBER']:
                 return False
             return True
 
-        return filter(bad_record, records)
+        return [rec for rec in records if bad_record(rec)]
 
     def get_value_for_field(self, field, value):
         if field in ['start_date', 'end_date', 'document_date', 'due_date']:
             return datetime.datetime.strptime(value, '%d-%b-%y').date()
+        if field == 'multi_curr_flag':
+            return value != 'N'
         return value
 
     def get_fr_item_number(self, record):
@@ -129,10 +133,13 @@ class FundReservationsSynchronizer(VisionDataSynchronizer):
 
     def equal_fields(self, field, obj_field, record_field):
         if field in ['overall_amount', 'overall_amount_dc',
-                     'intervention_amt', 'total_amt', 'actual_amt', 'outstanding_amt']:
+                     'intervention_amt',
+                     'total_amt',
+                     'actual_amt', 'actual_amt_local',
+                     'outstanding_amt', 'outstanding_amt_local']:
             return comp_decimals(obj_field, record_field)
         if field == 'line_item':
-            return str(obj_field) == record_field
+            return six.text_type(obj_field) == record_field
         return obj_field == record_field
 
     def update_obj(self, obj, new_record):
@@ -147,7 +154,7 @@ class FundReservationsSynchronizer(VisionDataSynchronizer):
 
         to_update = []
 
-        fr_numbers_from_records = {k for k in self.header_records.iterkeys()}
+        fr_numbers_from_records = {k for k in self.header_records.keys()}
 
         list_of_headers = FundsReservationHeader.objects.filter(fr_number__in=fr_numbers_from_records)
         for h in list_of_headers:
@@ -162,9 +169,6 @@ class FundReservationsSynchronizer(VisionDataSynchronizer):
 
         if to_create:
             created_objects = FundsReservationHeader.objects.bulk_create(to_create)
-            # TODO in Django 1.10 the following line is not needed because ids are returned
-            created_objects = FundsReservationHeader.objects.filter(
-                fr_number__in=[c.fr_number for c in created_objects])
             self.map_header_objects(created_objects)
 
         self.map_header_objects(to_update)
@@ -180,7 +184,7 @@ class FundReservationsSynchronizer(VisionDataSynchronizer):
 
         to_update = []
 
-        fr_line_item_keys = {k for k in self.item_records.iterkeys()}
+        fr_line_item_keys = {k for k in six.iterkeys(self.item_records)}
 
         list_of_line_items = FundsReservationItem.objects.filter(fr_ref_number__in=fr_line_item_keys)
 
@@ -207,18 +211,34 @@ class FundReservationsSynchronizer(VisionDataSynchronizer):
 
         return updated, len(to_create)
 
+    def update_fr_totals(self):
+        totals_updated = 0
+        qs = FundsReservationHeader.objects
+        qs = qs.annotate(my_li_total_sum=Sum('fr_items__overall_amount_dc'))
+        for fr in qs:
+            # Note that Sum() returns None, not 0, if there's nothing to sum.
+            total_li_sum = fr.my_li_total_sum or Decimal('0.00')
+            if not comp_decimals(total_li_sum, fr.total_amt_local):
+                fr.total_amt_local = total_li_sum
+                fr.save()
+                totals_updated += 1
+        return totals_updated
+
     def _save_records(self, records):
 
         filtered_records = self._filter_records(records)
         self.set_mapping(filtered_records)
         h_processed = self.header_sync()
         i_processed = self.li_sync()
+        h_totals_updated = self.update_fr_totals()
 
         logging.info('tocreate {}'.format(h_processed[1]))
         logging.info('toupdate {}'.format(h_processed[0]))
         logging.info('tocreate li {}'.format(i_processed[1]))
         logging.info('toupdate li {}'.format(i_processed[0]))
+        logging.info('totals_updated {}'.format(h_totals_updated))
         processed = h_processed[0] + i_processed[0] + h_processed[1] + i_processed[1]
+
         return processed
 
 
@@ -280,7 +300,7 @@ class FundCommitmentSynchronizer(VisionDataSynchronizer):
         self.header_records = {}
         self.item_records = {}
         self.fc_headers = {}
-        self.REVERSE_MAPPING = {v: k for k, v in self.MAPPING.iteritems()}
+        self.REVERSE_MAPPING = {v: k for k, v in six.iteritems(self.MAPPING)}
         self.REVERSE_HEADER_FIELDS = [self.REVERSE_MAPPING[v] for v in self.HEADER_FIELDS]
         self.REVERSE_ITEM_FIELDS = [self.REVERSE_MAPPING[v] for v in self.LINE_ITEM_FIELDS]
         super(FundCommitmentSynchronizer, self).__init__(*args, **kwargs)
@@ -304,7 +324,7 @@ class FundCommitmentSynchronizer(VisionDataSynchronizer):
                 return False
             return True
 
-        return filter(bad_record, records)
+        return [rec for rec in records if bad_record(rec)]
 
     def get_value_for_field(self, field, value):
         if field in ['document_date', 'due_date']:
@@ -340,7 +360,7 @@ class FundCommitmentSynchronizer(VisionDataSynchronizer):
         if field in ['commitment_amount', 'commitment_amount_dc', 'amount_changed']:
             return comp_decimals(obj_field, record_field)
         if field == 'line_item':
-            return str(obj_field) == record_field
+            return six.text_type(obj_field) == record_field
         return obj_field == record_field
 
     def update_obj(self, obj, new_record):
@@ -355,7 +375,7 @@ class FundCommitmentSynchronizer(VisionDataSynchronizer):
 
         to_update = []
 
-        fc_numbers_from_records = {k for k in self.header_records.iterkeys()}
+        fc_numbers_from_records = {k for k in six.iterkeys(self.header_records)}
 
         list_of_headers = FundsCommitmentHeader.objects.filter(fc_number__in=fc_numbers_from_records)
         for h in list_of_headers:
@@ -386,7 +406,7 @@ class FundCommitmentSynchronizer(VisionDataSynchronizer):
 
         to_update = []
 
-        fc_line_item_keys = {k for k in self.item_records.iterkeys()}
+        fc_line_item_keys = {k for k in six.iterkeys(self.item_records)}
 
         list_of_line_items = FundsCommitmentItem.objects.filter(fc_ref_number__in=fc_line_item_keys)
 
@@ -427,3 +447,14 @@ class FundCommitmentSynchronizer(VisionDataSynchronizer):
         processed = h_processed[0] + i_processed[0] + h_processed[1] + i_processed[1]
 
         return processed
+
+
+class FileFundReservationsSynchronizer(FileDataSynchronizer, FundReservationsSynchronizer):
+    """
+    >>> from vision.adapters.funding import *
+    >>> from users.models import Country
+    >>> country = Country.objects.get(name='Indonesia')
+    >>> filename = '/home/user/Downloads/fundreservation.json'
+    >>> FileFundReservationsSynchronizer(country, filename=filename).sync()
+    """
+    pass

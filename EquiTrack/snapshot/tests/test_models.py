@@ -1,19 +1,16 @@
-from __future__ import absolute_import
-from __future__ import division
-from __future__ import print_function
-from __future__ import unicode_literals
+from __future__ import absolute_import, division, print_function, unicode_literals
 
-from EquiTrack.factories import (
-    ActivityFactory,
-    InterventionFactory,
-    UserFactory,
-)
-from EquiTrack.tests.cases import EToolsTenantTestCase
-from snapshot.models import Activity
+from django.utils import six
+
+from EquiTrack.tests.cases import BaseTenantTestCase
 from partners.models import WorkspaceFileType
+from partners.tests.factories import InterventionFactory
+from snapshot.models import Activity
+from snapshot.tests.factories import ActivityFactory
+from users.tests.factories import UserFactory
 
 
-class TestActivity(EToolsTenantTestCase):
+class TestActivity(BaseTenantTestCase):
     def test_str(self):
         user = UserFactory()
         intervention = InterventionFactory()
@@ -23,21 +20,21 @@ class TestActivity(EToolsTenantTestCase):
             by_user=user
         )
         self.assertEqual(
-            str(activity),
+            six.text_type(activity),
             "{} {} {}".format(user, Activity.CREATE, intervention)
         )
 
     def test_by_user_display_empty(self):
-        user = UserFactory()
+        user = UserFactory(first_name='', last_name='')
         activity = ActivityFactory(by_user=user)
-        self.assertEqual(str(user), "")
+        self.assertEqual(six.text_type(user), "")
         self.assertEqual(activity.by_user_display(), user.email)
 
     def test_by_user_display(self):
-        user = UserFactory(first_name="First")
+        user = UserFactory(first_name="First", last_name="Second")
         activity = ActivityFactory(by_user=user)
-        self.assertEqual(str(user), "First")
-        self.assertEqual(activity.by_user_display(), "First")
+        self.assertEqual(six.text_type(user), "First Second")
+        self.assertEqual(activity.by_user_display(), "First Second")
 
     def test_delete_target(self):
         workspace = WorkspaceFileType.objects.create(name="Workspace")
@@ -52,6 +49,6 @@ class TestActivity(EToolsTenantTestCase):
         )
         self.assertEqual(
             activity_updated.target_object_id,
-            str(activity.target_object_id)
+            six.text_type(activity.target_object_id)
         )
         self.assertIsNone(activity_updated.target)

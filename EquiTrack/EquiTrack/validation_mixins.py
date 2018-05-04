@@ -1,4 +1,4 @@
-from __future__ import absolute_import, unicode_literals
+from __future__ import absolute_import, division, print_function, unicode_literals
 
 import copy
 import logging
@@ -8,6 +8,7 @@ from django.db.models import ObjectDoesNotExist
 from django.db.models.fields.files import FieldFile
 from django.utils.encoding import python_2_unicode_compatible
 from django.utils.functional import cached_property
+from django.utils import six
 
 from django_fsm import can_proceed, get_all_FIELD_transitions, has_transition_perm
 from rest_framework.exceptions import ValidationError
@@ -124,7 +125,7 @@ class ValidatorViewMixin(object):
     def _parse_data(self, request):
         dt_cp = request.data
         for k in dt_cp:
-            if dt_cp[k] in ['', 'null']:
+            if dt_cp[k] in ["", 'null']:
                 dt_cp[k] = None
             elif dt_cp[k] == 'true':
                 dt_cp[k] = True
@@ -213,7 +214,7 @@ class ValidatorViewMixin(object):
 
         def _get_reverse_for_field(field):
             return main_object.__class__._meta.get_field(field).remote_field.name
-        for k, v in my_relations.iteritems():
+        for k, v in six.iteritems(my_relations):
             self.up_related_field(main_object, v, _get_model_for_field(k), self.SERIALIZER_MAP[k],
                                   k, _get_reverse_for_field(k), partial, nested_related_names)
 
@@ -235,7 +236,7 @@ class ValidatorViewMixin(object):
 
         main_object = main_serializer.save()
 
-        for k in my_relations.iterkeys():
+        for k in six.iterkeys(my_relations):
             try:
                 rel_field_val = getattr(old_instance, k)
             except ObjectDoesNotExist:
@@ -257,7 +258,7 @@ class ValidatorViewMixin(object):
         def _get_reverse_for_field(field):
             return main_object.__class__._meta.get_field(field).remote_field.name
 
-        for k, v in my_relations.iteritems():
+        for k, v in six.iteritems(my_relations):
             self.up_related_field(main_object, v, _get_model_for_field(k), self.SERIALIZER_MAP[k],
                                   k, _get_reverse_for_field(k), partial, nested_related_names)
 
@@ -307,7 +308,7 @@ def error_string(function):
         try:
             valid = function(*args, **kwargs)
         except BasicValidationError as e:
-            return (False, [str(e)])
+            return (False, [six.text_type(e)])
         else:
             if valid and type(valid) is bool:
                 return (True, [])
@@ -321,7 +322,7 @@ def transition_error_string(function):
         try:
             valid = function(*args, **kwargs)
         except TransitionError as e:
-            return (False, [str(e)])
+            return (False, [six.text_type(e)])
 
         if valid and type(valid) is bool:
             return (True, [])
@@ -335,7 +336,7 @@ def state_error_string(function):
         try:
             valid = function(*args, **kwargs)
         except StateValidError as e:
-            return (False, [str(e)])
+            return (False, [six.text_type(e)])
 
         if valid and type(valid) is bool:
             return (True, [])
@@ -345,7 +346,7 @@ def state_error_string(function):
 
 
 def update_object(obj, kwdict):
-    for k, v in kwdict.iteritems():
+    for k, v in six.iteritems(kwdict):
         setattr(obj, k, v)
 
 

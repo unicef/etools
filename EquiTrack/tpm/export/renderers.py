@@ -11,7 +11,7 @@ class TPMActivityCSVRenderer(CSVRenderer):
     labels = {
         'ref': _('Visit Ref. #'),
         'visit': _('Visit'),
-        'activity': _('Activity'),
+        'activity': _('Task'),
         'section': _('Section'),
         'cp_output': _('PD/SSFA output'),
         'partner': _('Partner'),
@@ -31,7 +31,7 @@ class TPMLocationCSVRenderer(CSVRenderer):
     labels = {
         'ref': _('Visit Ref. #'),
         'visit': _('Visit'),
-        'activity': _('Activity'),
+        'activity': _('Task'),
         'section': _('Section'),
         'cp_output': _('PD/SSFA output'),
         'partner': _('Partner'),
@@ -42,6 +42,19 @@ class TPMLocationCSVRenderer(CSVRenderer):
         'offices': _('Offices'),
         'tpm_focal_points': _('Name of TPM Focal Point'),
         'link': _('Hyperlink'),
+    }
+
+
+class TPMActionPointCSVRenderer(CSVRenderer):
+    header = ['person_responsible', 'author', 'section', 'status', 'locations', 'cp_output', 'due_date']
+    labels = {
+        'person_responsible': _('Person Responsible'),
+        'author': _('Assigned By'),
+        'section': _('Section'),
+        'status': _('Status'),
+        'locations': _('Location(s)'),
+        'cp_output': _('CP Output'),
+        'due_date': _('Due Date'),
     }
 
 

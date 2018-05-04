@@ -1,6 +1,7 @@
+from __future__ import absolute_import, division, print_function, unicode_literals
 from django.conf.urls import url
 
-from views_v3 import (
+from users.views_v3 import (
     ChangeUserCountryView,
     CountryView,
     MyProfileAPIView,
@@ -8,8 +9,8 @@ from views_v3 import (
     UsersListAPIView,
 )
 
+app_name = 'users'
 urlpatterns = (
-    # api
     url(r'^profile/$', MyProfileAPIView.as_view(http_method_names=['get', 'patch']), name="myprofile-detail"),
     url(r'^changecountry/$', ChangeUserCountryView.as_view(), name="country-change"),
     url(r'^country/$', CountryView.as_view(http_method_names=['get']), name="country-detail"),

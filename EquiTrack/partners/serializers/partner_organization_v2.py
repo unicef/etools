@@ -1,14 +1,16 @@
-from __future__ import unicode_literals
+from __future__ import absolute_import, division, print_function, unicode_literals
+
 import json
 
 from django.core.exceptions import ValidationError
-from django.db.models import Q, Max, Count, CharField
+from django.db.models import Q
 from django.contrib.auth import get_user_model
-from django.utils import timezone
+from django.utils import six, timezone
 from rest_framework import serializers
 
+from attachments.serializers_fields import AttachmentSingleFileField
 from EquiTrack.serializers import SnapshotModelSerializer
-from partners.serializers.interventions_v2 import InterventionSummaryListSerializer
+from partners.serializers.interventions_v2 import InterventionListSerializer
 
 from partners.models import (
     Assessment,
@@ -132,18 +134,20 @@ class PartnerStaffMemberDetailSerializer(serializers.ModelSerializer):
 
 
 class AssessmentDetailSerializer(serializers.ModelSerializer):
-
+    report_attachment = AttachmentSingleFileField(read_only=True)
     report_file = serializers.FileField(source='report', read_only=True)
+    report = serializers.FileField(required=True)
+    completed_date = serializers.DateField(required=True)
 
     class Meta:
         model = Assessment
         fields = "__all__"
 
-    def validate(self, data):
+    def validate_completed_date(self, completed_date):
         today = timezone.now().date()
-        if data["completed_date"] > today:
-            raise serializers.ValidationError({'completed_date': ['The Date of Report cannot be in the future']})
-        return data
+        if completed_date > today:
+            raise serializers.ValidationError('The Date of Report cannot be in the future')
+        return completed_date
 
 
 class PartnerOrganizationListSerializer(serializers.ModelSerializer):
@@ -192,7 +196,6 @@ class MinimalPartnerOrganizationListSerializer(serializers.ModelSerializer):
 
 class PlannedEngagementSerializer(serializers.ModelSerializer):
 
-    partner = serializers.CharField(source='partner.name', read_only=True)
     spot_check_mr = serializers.SerializerMethodField(read_only=True)
 
     @staticmethod
@@ -211,7 +214,6 @@ class PlannedEngagementSerializer(serializers.ModelSerializer):
         model = PlannedEngagement
         fields = (
             "id",
-            "partner",
             "spot_check_mr",
             "spot_check_follow_up_q1",
             "spot_check_follow_up_q2",
@@ -246,8 +248,15 @@ class PlannedEngagementNestedSerializer(serializers.ModelSerializer):
     def validate_spot_check_mr(self, attrs):
         quarters = []
         for key, value in attrs.items():
-            if value:
-                quarters.append(key)
+            try:
+                value = int(value)
+            except ValueError:
+                raise ValidationError("You can select only MR in one quarter")
+            else:
+                if value:
+                    if value != 1:
+                        raise ValidationError("If selected, the value has to be 1")
+                    quarters.append(key)
         if len(quarters) > 1:
             raise ValidationError("You can select only MR in one quarter")
         elif len(quarters) == 1:
@@ -267,28 +276,22 @@ class PartnerOrganizationDetailSerializer(serializers.ModelSerializer):
     planned_engagement = PlannedEngagementSerializer(read_only=True)
     hact_values = serializers.SerializerMethodField(read_only=True)
     core_values_assessment_file = serializers.FileField(source='core_values_assessment', read_only=True)
+    core_values_assessment_attachment = AttachmentSingleFileField(read_only=True)
     interventions = serializers.SerializerMethodField(read_only=True)
     hact_min_requirements = serializers.JSONField(read_only=True)
     hidden = serializers.BooleanField(read_only=True)
 
     def get_hact_values(self, obj):
-        return json.loads(obj.hact_values) if isinstance(obj.hact_values, str) else obj.hact_values
+        return json.loads(obj.hact_values) if isinstance(obj.hact_values, six.text_type) else obj.hact_values
 
     def get_interventions(self, obj):
-        interventions = InterventionSummaryListSerializer(self.get_related_interventions(obj), many=True)
+        interventions = InterventionListSerializer(self.get_related_interventions(obj), many=True)
         return interventions.data
 
     def get_related_interventions(self, partner):
-        qs = Intervention.objects\
+        qs = Intervention.objects.frs_qs()\
             .filter(agreement__partner=partner)\
-            .exclude(status='draft')\
-            .prefetch_related('planned_budget')
-
-        qs = qs.annotate(
-            Count("frs__currency", distinct=True),
-            max_fr_currency=Max("frs__currency", output_field=CharField(), distinct=True)
-        )
-
+            .exclude(status='draft')
         return qs
 
     class Meta:
@@ -305,7 +308,29 @@ class PartnerOrganizationCreateUpdateSerializer(SnapshotModelSerializer):
     hidden = serializers.BooleanField(read_only=True)
 
     def get_hact_values(self, obj):
-        return json.loads(obj.hact_values) if isinstance(obj.hact_values, str) else obj.hact_values
+        return json.loads(obj.hact_values) if isinstance(obj.hact_values, six.text_type) else obj.hact_values
+
+    def validate(self, data):
+        data = super(PartnerOrganizationCreateUpdateSerializer, self).validate(data)
+
+        type_of_assessment = data.get('type_of_assessment', self.instance.type_of_assessment)
+        rating = data.get('rating', self.instance.rating)
+        basis_for_risk_rating = data.get('basis_for_risk_rating', self.instance.basis_for_risk_rating)
+
+        if basis_for_risk_rating and \
+                type_of_assessment in [PartnerOrganization.HIGH_RISK_ASSUMED, PartnerOrganization.LOW_RISK_ASSUMED]:
+            raise ValidationError(
+                {'basis_for_risk_rating': 'The basis for risk rating has to be blank if Type is Low or High'})
+
+        if basis_for_risk_rating and \
+                rating == PartnerOrganization.RATING_NON_ASSESSED and \
+                type_of_assessment == PartnerOrganization.MICRO_ASSESSMENT:
+            raise ValidationError({
+                'basis_for_risk_rating':
+                    'The basis for risk rating has to be blank if rating is Not Required and type is Micro Assessment'
+            })
+
+        return data
 
     class Meta:
         model = PartnerOrganization
@@ -327,13 +352,14 @@ class PartnerOrganizationHactSerializer(serializers.ModelSerializer):
     rating = serializers.CharField(source='get_rating_display')
 
     def get_hact_values(self, obj):
-        return json.loads(obj.hact_values) if isinstance(obj.hact_values, str) else obj.hact_values
+        return json.loads(obj.hact_values) if isinstance(obj.hact_values, six.text_type) else obj.hact_values
 
     class Meta:
         model = PartnerOrganization
         fields = (
             "id",
             "name",
+            "vendor_number",
             "short_name",
             "type_of_assessment",
             "partner_type",
@@ -349,6 +375,5 @@ class PartnerOrganizationHactSerializer(serializers.ModelSerializer):
             "hact_values",
             "hact_min_requirements",
             "flags",
-            "outstanding_findings",
             "planned_engagement"
         )

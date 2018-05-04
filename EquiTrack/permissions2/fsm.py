@@ -2,6 +2,9 @@ from .models import Permission
 
 
 def has_action_permission(action):
+    """
+    Check availability of fsm action according to defined permissions.
+    """
     def has_perm(instance, user):
         target = Permission.get_target(instance, action)
         context = getattr(user, '_permission_context', [])

@@ -5,16 +5,20 @@ from model_utils.models import TimeStampedModel
 
 from EquiTrack.utils import get_environment
 from firms.models import BaseFirm, BaseStaffMember
-from notification.models import Notification
+from notification.utils import send_notification_using_email_template
 
 
 class AuditorFirm(BaseFirm):
-    pass
+    unicef_users_allowed = models.BooleanField(default=False, verbose_name=_('UNICEF users allowed'),
+                                               help_text=_('Allow UNICEF users to join and act as auditors.'))
 
 
 @python_2_unicode_compatible
 class AuditorStaffMember(BaseStaffMember):
-    auditor_firm = models.ForeignKey(AuditorFirm, verbose_name=_('Auditor'), related_name='staff_members')
+    auditor_firm = models.ForeignKey(
+        AuditorFirm, verbose_name=_('Auditor'), related_name='staff_members',
+        on_delete=models.CASCADE,
+    )
 
     def __str__(self):
         auditor_firm_name = ' ({})'.format(self.auditor_firm.name) if hasattr(self, 'auditor_firm') else ''
@@ -23,16 +27,15 @@ class AuditorStaffMember(BaseStaffMember):
     def send_user_appointed_email(self, engagement):
         context = {
             'environment': get_environment(),
-            'engagement': engagement.get_mail_context(),
+            'engagement': engagement.get_mail_context(user=self.user),
             'staff_member': self.user.get_full_name(),
         }
 
-        notification = Notification.objects.create(
-            sender=self,
-            recipients=[self.user.email], template_name='audit/engagement/submit_to_auditor',
-            template_data=context
+        send_notification_using_email_template(
+            recipients=[self.user.email],
+            email_template_name='audit/engagement/submit_to_auditor',
+            context=context,
         )
-        notification.send_notification()
 
 
 class PurchaseOrderManager(models.Manager):
@@ -49,7 +52,10 @@ class PurchaseOrder(TimeStampedModel, models.Model):
         unique=True,
         max_length=30
     )
-    auditor_firm = models.ForeignKey(AuditorFirm, verbose_name=_('Auditor'), related_name='purchase_orders')
+    auditor_firm = models.ForeignKey(
+        AuditorFirm, verbose_name=_('Auditor'), related_name='purchase_orders',
+        on_delete=models.CASCADE,
+    )
     contract_start_date = models.DateField(verbose_name=_('PO Date'), null=True, blank=True)
     contract_end_date = models.DateField(verbose_name=_('Contract Expiry Date'), null=True, blank=True)
 
@@ -68,7 +74,10 @@ class PurchaseOrderItemManager(models.Manager):
 
 
 class PurchaseOrderItem(models.Model):
-    purchase_order = models.ForeignKey(PurchaseOrder, related_name='items', verbose_name=_('Purchase Order'))
+    purchase_order = models.ForeignKey(
+        PurchaseOrder, related_name='items', verbose_name=_('Purchase Order'),
+        on_delete=models.CASCADE,
+    )
     number = models.IntegerField(verbose_name=_('PO Item Number'))
 
     objects = PurchaseOrderItemManager()

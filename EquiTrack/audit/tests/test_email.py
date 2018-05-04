@@ -3,13 +3,18 @@ from __future__ import division
 from __future__ import print_function
 from __future__ import unicode_literals
 
+from django.core.management import call_command
 from post_office.models import EmailTemplate
 
-from EquiTrack.tests.cases import EToolsTenantTestCase
+from EquiTrack.tests.cases import BaseTenantTestCase
 
 
-class TestEmail(EToolsTenantTestCase):
-    fixtures = ('emails.json', )
+class TestEmail(BaseTenantTestCase):
+    @classmethod
+    def setUpTestData(cls):
+        call_command('update_notifications')
+
+        super(TestEmail, cls).setUpTestData()
 
     def test_expected_email_templates_exist(self):
         '''Ensure the email templates for this app exist and have content'''

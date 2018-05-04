@@ -1,19 +1,20 @@
-from __future__ import unicode_literals
+from __future__ import absolute_import, division, print_function, unicode_literals
 
 import logging
 from collections import defaultdict
 from decimal import Decimal
 from functools import wraps
 
+from django.conf import settings
 from django.contrib.auth import get_user_model
-from django.core.exceptions import ObjectDoesNotExist, ValidationError
-from django.core.mail.message import EmailMultiAlternatives
+from django.core.exceptions import ObjectDoesNotExist
 from django.core.urlresolvers import reverse
 from django.db import connection
 from django.db.models.query_utils import Q
-from django.template.loader import render_to_string
 from django.utils.datastructures import MultiValueDict
+from django.utils import six
 
+from notification.utils import send_notification_using_templates
 from t2f.models import Invoice
 from users.models import Country as Workspace
 
@@ -75,7 +76,7 @@ class InvoiceExport(object):
 
     def generate_vendor_node(self, main, invoice):
         vendor = ET.SubElement(main, 'vendor')
-        ET.SubElement(vendor, 'amount').text = str(invoice.amount.quantize(Decimal('1.000')))
+        ET.SubElement(vendor, 'amount').text = six.text_type(invoice.amount.quantize(Decimal('1.000')))
         ET.SubElement(vendor, 'posting_key').text = self.get_posting_key(invoice.amount)
         ET.SubElement(vendor, 'vendor').text = invoice.vendor_number
         ET.SubElement(vendor, 'payment_terms')
@@ -89,8 +90,8 @@ class InvoiceExport(object):
 
     def _generate_expense_node(self, main, invoice_item, item_no):
         expense = ET.SubElement(main, 'expense')
-        ET.SubElement(expense, 'amount').text = str(invoice_item.amount.quantize(Decimal('1.000')))
-        ET.SubElement(expense, 'item_no').text = str(item_no)
+        ET.SubElement(expense, 'amount').text = six.text_type(invoice_item.amount.quantize(Decimal('1.000')))
+        ET.SubElement(expense, 'item_no').text = six.text_type(item_no)
         ET.SubElement(expense, 'posting_key').text = self.get_posting_key(invoice_item.amount)
         ET.SubElement(expense, 'wbs').text = invoice_item.wbs.name
         ET.SubElement(expense, 'grant').text = invoice_item.grant.name
@@ -105,7 +106,13 @@ class InvoiceExport(object):
 
     def generate_tree(self, root):
         # https://docs.python.org/2/library/xml.etree.elementtree.html
-        return ET.tostring(root, encoding='UTF-8', method='xml')
+        # https://docs.python.org/3/library/xml.etree.elementtree.html#xml.etree.ElementTree.ElementTree.write
+        # root is an Element
+        # Doing it this way makes the results consistent between Python 2 & 3
+        tree = ET.ElementTree(root)
+        buffer = six.BytesIO()
+        tree.write(buffer, xml_declaration=True, encoding='utf-8')
+        return buffer.getvalue()
 
     @staticmethod
     def get_posting_key(amount):
@@ -198,19 +205,14 @@ class InvoiceUpdater(object):
     def send_mail_for_error(self, workspace, invoice):
         url = reverse('t2f:invoices:details', kwargs={'invoice_pk': invoice.id})
 
-        html_content = render_to_string('emails/failed_invoice_sync.html', {'invoice': invoice, 'url': url})
-
         recipients = User.objects.filter(profile__country=workspace,
                                          groups__name='Finance Focal Point').values_list('email', flat=True)
 
-        # TODO what should it be?
-        sender = ''
-        msg = EmailMultiAlternatives('[Travel2Field VISION Error] {}'.format(invoice.reference_number),
-                                     '',
-                                     sender, recipients)
-        msg.attach_alternative(html_content, 'text/html')
-
-        try:
-            msg.send(fail_silently=False)
-        except ValidationError as exc:
-            log.error('Was not able to send the email. Exception: %s', exc.message)
+        # TODO what should sender be?
+        send_notification_using_templates(
+            recipients=[u.email for u in recipients],
+            from_address=settings.DEFAULT_FROM_EMAIL,  # TODO what should sender be?
+            subject_template_content='[Travel2Field VISION Error] {}'.format(invoice.reference_number),
+            html_template_filename='emails/failed_invoice_sync.html',
+            context={'invoice': invoice, 'url': url}
+        )

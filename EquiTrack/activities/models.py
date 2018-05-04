@@ -8,10 +8,19 @@ from model_utils.managers import InheritanceManager
 
 
 class Activity(models.Model):
-    partner = models.ForeignKey('partners.PartnerOrganization', verbose_name=_('Implementing Partner'), null=True)
-    intervention = models.ForeignKey('partners.Intervention', verbose_name=_('Intervention'), null=True)
-    cp_output = models.ForeignKey('reports.Result', verbose_name=_('CP Output'),
-                                  null=True, blank=True)
+    partner = models.ForeignKey(
+        'partners.PartnerOrganization', verbose_name=_('Implementing Partner'), null=True,
+        on_delete=models.CASCADE,
+    )
+    intervention = models.ForeignKey(
+        'partners.Intervention', verbose_name=_('Intervention'), null=True,
+        on_delete=models.CASCADE,
+    )
+    cp_output = models.ForeignKey(
+        'reports.Result', verbose_name=_('CP Output'),
+        null=True, blank=True,
+        on_delete=models.CASCADE,
+    )
     locations = models.ManyToManyField('locations.Location', verbose_name=_('Locations'), related_name='+')
     date = models.DateField(verbose_name=_('Date'), blank=True, null=True)
 
@@ -26,7 +35,7 @@ class Activity(models.Model):
 
     @staticmethod
     def _validate_cp_output(intervention, cp_output):
-        if cp_output and intervention and cp_output.intervention_links.intervention != intervention:
+        if cp_output and intervention and not cp_output.intervention_links.filter(intervention=intervention).exists():
             raise ValidationError(_('CP Output should be within the {intervention}.').format(
                 intervention=intervention
             ))

@@ -1,5 +1,3 @@
-from __future__ import absolute_import
-
 from rest_framework import serializers
 from rest_framework.utils import model_meta
 from rest_framework_recursive.fields import RecursiveField
@@ -26,6 +24,7 @@ class PermissionsBasedSerializerMixin(object):
                 continue
 
             if isinstance(node, RecursiveField):
+                # stop too deep recursion
                 node_fields = []
             else:
                 node_fields = node.fields.values()
@@ -53,8 +52,7 @@ class PermissionsBasedSerializerMixin(object):
         targets = self._collect_permissions_targets()
         perms = self._get_permissions_queryset(targets)
         context = self._get_permission_context()
-        if context:
-            perms = perms.filter_by_context(context)
+        perms = perms.filter_by_context(context)
         return perms
 
     def _get_permissions_queryset(self, targets):
@@ -72,14 +70,15 @@ class PermissionsBasedSerializerMixin(object):
         if not hasattr(self.root, '_permissions'):
             self.root._permissions = list(self._collect_permissions())
 
-        permissions = self.root._permissions
+        return self.root._permissions
 
-        context = set(self._get_permission_context())
-        permissions = filter(lambda p: set(p.condition).issubset(context), permissions)
-
-        return permissions
-
-    def _filter_fields_by_permissions(self, fields, permission):
+    def _filter_fields_by_permissions(self, fields, permissions_kind):
+        """
+        Filter serializer fields by permissions kind
+        :param fields: serializer fields list
+        :param permissions_kind: edit/view
+        :return: fields allowed to interact with
+        """
         model = self.Meta.model
         targets_map = {Permission.get_target(model, field): field for field in fields}
 
@@ -93,9 +92,9 @@ class PermissionsBasedSerializerMixin(object):
         if pk_target in targets_map:
             pk_fields.append(targets_map.pop(pk_target))
 
-        allowed_targets = Permission.apply_permissions(self.permissions, targets_map.keys(), permission)
+        allowed_targets = Permission.apply_permissions(self.permissions, targets_map.keys(), permissions_kind)
 
-        allowed_fields = map(lambda target: targets_map[target], allowed_targets)
+        allowed_fields = list(map(lambda target: targets_map[target], allowed_targets))
 
         if allowed_fields:
             allowed_fields.extend(pk_fields)

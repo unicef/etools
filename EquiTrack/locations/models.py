@@ -1,3 +1,6 @@
+# -*- coding: utf-8 -*-
+from __future__ import absolute_import, division, print_function, unicode_literals
+
 import logging
 import random
 
@@ -29,8 +32,8 @@ class GatewayType(models.Model):
     Represents an Admin Type in location-related models.
     """
 
-    name = models.CharField(max_length=64, unique=True)
-    admin_level = models.PositiveSmallIntegerField(null=True, unique=True)
+    name = models.CharField(max_length=64, unique=True, verbose_name=_('Name'))
+    admin_level = models.PositiveSmallIntegerField(null=True, unique=True, verbose_name=_('Admin Level'))
 
     class Meta:
         ordering = ['name']
@@ -56,7 +59,10 @@ class Location(MPTTModel):
     """
 
     name = models.CharField(verbose_name=_("Name"), max_length=254)
-    gateway = models.ForeignKey(GatewayType, verbose_name=_('Location Type'))
+    gateway = models.ForeignKey(
+        GatewayType, verbose_name=_('Location Type'),
+        on_delete=models.CASCADE,
+    )
     latitude = models.FloatField(
         verbose_name=_("Latitude"),
         null=True,
@@ -71,7 +77,7 @@ class Location(MPTTModel):
         verbose_name=_("P Code"),
         max_length=32,
         blank=True,
-        null=True,
+        default='',
     )
 
     parent = TreeForeignKey(
@@ -81,6 +87,7 @@ class Location(MPTTModel):
         blank=True,
         related_name='children',
         db_index=True,
+        on_delete=models.CASCADE
     )
     geom = models.MultiPolygonField(
         verbose_name=_("Geo Point"),
@@ -136,16 +143,23 @@ class CartoDBTable(MPTTModel):
     Relates to :model:`locations.GatewayType`
     """
 
-    domain = models.CharField(max_length=254)
-    api_key = models.CharField(max_length=254)
-    table_name = models.CharField(max_length=254)
-    display_name = models.CharField(max_length=254, null=True, blank=True)
-    location_type = models.ForeignKey(GatewayType)
-    name_col = models.CharField(max_length=254, default='name')
-    pcode_col = models.CharField(max_length=254, default='pcode')
-    parent_code_col = models.CharField(max_length=254, null=True, blank=True)
-    parent = TreeForeignKey('self', null=True, blank=True, related_name='children', db_index=True)
-    color = models.CharField(null=True, blank=True, default=get_random_color, max_length=7)
+    domain = models.CharField(max_length=254, verbose_name=_('Domain'))
+    api_key = models.CharField(max_length=254, verbose_name=_('API Key'))
+    table_name = models.CharField(max_length=254, verbose_name=_('Table Name'))
+    display_name = models.CharField(max_length=254, default='', blank=True, verbose_name=_('Display Name'))
+    location_type = models.ForeignKey(
+        GatewayType, verbose_name=_('Location Type'),
+        on_delete=models.CASCADE,
+    )
+    name_col = models.CharField(max_length=254, default='name', verbose_name=_('Name Column'))
+    pcode_col = models.CharField(max_length=254, default='pcode', verbose_name=_('Pcode Column'))
+    parent_code_col = models.CharField(max_length=254, default='', blank=True, verbose_name=_('Parent Code Column'))
+    parent = TreeForeignKey(
+        'self', null=True, blank=True, related_name='children', db_index=True,
+        verbose_name=_('Parent'),
+        on_delete=models.CASCADE,
+    )
+    color = models.CharField(blank=True, default=get_random_color, max_length=7, verbose_name=_('Color'))
 
     def __str__(self):
         return self.table_name

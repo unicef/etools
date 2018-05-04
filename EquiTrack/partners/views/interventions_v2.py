@@ -3,8 +3,10 @@ import functools
 import logging
 import copy
 
+from django.contrib.contenttypes.models import ContentType
 from django.db import transaction
-from django.db.models import Q, Max, Min, Sum, Count, CharField
+from django.db.models import Q
+from django.shortcuts import get_object_or_404
 
 from rest_framework import status
 from rest_framework.response import Response
@@ -12,6 +14,7 @@ from rest_framework.exceptions import ValidationError
 from rest_framework.permissions import IsAdminUser
 from rest_framework_csv import renderers as r
 
+from rest_framework.views import APIView
 from rest_framework.generics import (
     ListAPIView,
     ListCreateAPIView,
@@ -19,7 +22,7 @@ from rest_framework.generics import (
     DestroyAPIView,
 )
 
-from EquiTrack.mixins import ExportModelMixin
+from EquiTrack.mixins import ExportModelMixin, QueryStringFilterMixin
 from EquiTrack.renderers import CSVFlatRenderer
 from EquiTrack.validation_mixins import ValidatorViewMixin
 from environment.helpers import tenant_switch_is_active
@@ -60,6 +63,8 @@ from partners.serializers.interventions_v2 import (
     InterventionReportingPeriodSerializer,
     InterventionSectorLocationCUSerializer,
     PlannedVisitsCUSerializer,
+    InterventionReportingRequirementCreateSerializer,
+    InterventionReportingRequirementListSerializer
 )
 from partners.exports_v2 import InterventionCSVRenderer
 from partners.filters import (
@@ -70,38 +75,18 @@ from partners.filters import (
 )
 from partners.validation.interventions import InterventionValid
 from partners.permissions import PartnershipManagerRepPermission, PartnershipManagerPermission
-from reports.models import LowerResult, AppliedIndicator
+from reports.models import LowerResult, AppliedIndicator, ReportingRequirement
 from reports.serializers.v2 import LowerResultSimpleCUSerializer, AppliedIndicatorSerializer
+from snapshot.models import Activity
 
 
 class InterventionListBaseView(ValidatorViewMixin, ListCreateAPIView):
     def get_queryset(self):
-        qs = Intervention.objects.prefetch_related(
-            'agreement__partner',
-            'planned_budget',
-            'offices',
-            'sections',
-            # TODO: Figure out a way in which to add locations that is more performant
-            # 'flat_locations',
-            'result_links__cp_output',
-            'unicef_focal_points',
-        )
-
-        qs = qs.annotate(
-            Max("frs__end_date"),
-            Min("frs__start_date"),
-            Sum("frs__total_amt"),
-            Sum("frs__intervention_amt"),
-            Sum("frs__outstanding_amt"),
-            Sum("frs__actual_amt"),
-            Count("frs__currency", distinct=True),
-            max_fr_currency=Max("frs__currency", output_field=CharField(), distinct=True)
-        )
-
+        qs = Intervention.objects.frs_qs()
         return qs
 
 
-class InterventionListAPIView(ExportModelMixin, InterventionListBaseView):
+class InterventionListAPIView(QueryStringFilterMixin, ExportModelMixin, InterventionListBaseView):
     """
     Create new Interventions.
     Returns a list of Interventions.
@@ -193,35 +178,23 @@ class InterventionListAPIView(ExportModelMixin, InterventionListBaseView):
             if query_params.get("my_partnerships", "").lower() == "true":
                 queries.append(Q(unicef_focal_points__in=[self.request.user.id]) |
                                Q(unicef_signatory=self.request.user))
-            if "document_type" in query_params.keys():
-                queries.append(Q(document_type=query_params.get("document_type")))
-            if "country_programme" in query_params.keys():
-                queries.append(Q(agreement__country_programme=query_params.get("country_programme")))
-            if "section" in query_params.keys():
-                queries.append(Q(sections__pk=query_params.get("section")))
-            if "cluster" in query_params.keys():
-                queries.append(Q(
-                    result_links__ll_results__applied_indicators__cluster_indicator_title__icontains=query_params
-                    .get("cluster")))
-            if "status" in query_params.keys():
-                queries.append(Q(status__in=query_params.get("status").split(',')))
-            if "unicef_focal_points" in query_params.keys():
-                queries.append(Q(unicef_focal_points__in=[query_params.get("unicef_focal_points")]))
-            if "start" in query_params.keys():
-                queries.append(Q(start__gte=query_params.get("start")))
-            if "end" in query_params.keys():
-                queries.append(Q(end__lte=query_params.get("end")))
-            if "office" in query_params.keys():
-                queries.append(Q(offices__in=[query_params.get("office")]))
-            if "location" in query_params.keys():
-                queries.append(Q(result_links__ll_results__applied_indicators__locations__name__icontains=query_params
-                                 .get("location")))
-            if "search" in query_params.keys():
-                queries.append(
-                    Q(title__icontains=query_params.get("search")) |
-                    Q(agreement__partner__name__icontains=query_params.get("search")) |
-                    Q(number__icontains=query_params.get("search"))
-                )
+
+            filters = (
+                ('document_type', 'document_type__in'),
+                ('country_programme', 'agreement__country_programme'),
+                ('sections', 'sections__in'),
+                ('cluster', 'result_links__ll_results__applied_indicators__cluster_indicator_title__icontains'),
+                ('status', 'status__in'),
+                ('unicef_focal_points', 'unicef_focal_points__in'),
+                ('start', 'start__gte'),
+                ('end', 'end__lte'),
+                ('office', 'offices__in'),
+                ('location', 'result_links__ll_results__applied_indicators__locations__name__icontains'),
+            )
+            search_terms = ['title__icontains', 'agreement__partner__name__icontains', 'number__icontains']
+            queries.extend(self.filter_params(filters))
+            queries.append(self.search_params(search_terms))
+
             if queries:
                 expression = functools.reduce(operator.and_, queries)
                 q = q.filter(expression)
@@ -499,7 +472,7 @@ class InterventionAmendmentListAPIView(ExportModelMixin, ValidatorViewMixin, Lis
         return q
 
     def create(self, request, *args, **kwargs):
-        raw_data = copy.deepcopy(request.data)
+        raw_data = request.data.copy()
         raw_data['intervention'] = kwargs.get('intervention_pk', None)
         serializer = self.get_serializer(data=raw_data)
         serializer.is_valid(raise_exception=True)
@@ -621,7 +594,7 @@ class InterventionLowerResultListCreateView(ListCreateAPIView):
     queryset = LowerResult.objects.all()
 
     def create(self, request, *args, **kwargs):
-        raw_data = copy.deepcopy(request.data)
+        raw_data = request.data
         raw_data['result_link'] = kwargs.get('result_link_pk', None)
 
         serializer = self.get_serializer(data=raw_data)
@@ -733,3 +706,73 @@ class InterventionIndicatorsUpdateView(RetrieveUpdateDestroyAPIView):
         if not intervention.status == Intervention.DRAFT:
             raise ValidationError(u'Deleting an indicator is only possible in status Draft.')
         return super(InterventionIndicatorsUpdateView, self).delete(request, *args, **kwargs)
+
+
+class InterventionDeleteView(DestroyAPIView):
+    permission_classes = (PartnershipManagerRepPermission,)
+
+    def delete(self, request, *args, **kwargs):
+        try:
+            intervention = Intervention.objects.get(id=int(kwargs['pk']))
+        except Intervention.DoesNotExist:
+            return Response(status=status.HTTP_404_NOT_FOUND)
+
+        if intervention.status != Intervention.DRAFT:
+            raise ValidationError("Cannot delete a PD or SSFA that is not Draft")
+
+        if intervention.travel_activities.count():
+            raise ValidationError("Cannot delete a PD or SSFA that has Planned Trips")
+
+        else:
+            # get the history of this PD and make sure it wasn't manually moved back to draft before allowing deletion
+            act = Activity.objects.filter(target_object_id=intervention.id,
+                                          target_content_type=ContentType.objects.get_for_model(intervention))
+            historical_statuses = set(a.data.get('status', Intervention.DRAFT) for a in act.all())
+            if len(historical_statuses) > 1 or \
+                    (len(historical_statuses) == 1 and historical_statuses.pop() != Intervention.DRAFT):
+                raise ValidationError("Cannot delete a PD or SSFA that was manually moved back to Draft")
+            else:
+                intervention.delete()
+                return Response(status=status.HTTP_204_NO_CONTENT)
+
+
+class InterventionReportingRequirementView(APIView):
+    serializer_create_class = InterventionReportingRequirementCreateSerializer
+    serializer_list_class = InterventionReportingRequirementListSerializer
+    permission_classes = (PartnershipManagerPermission, )
+    renderer_classes = (r.JSONRenderer, )
+
+    def get_data(self):
+        return {
+            "reporting_requirements": ReportingRequirement.objects.filter(
+                intervention=self.intervention,
+                report_type=self.report_type,
+            ).all()
+        }
+
+    def get_object(self, pk):
+        return get_object_or_404(Intervention, pk=pk)
+
+    def get(self, request, intervention_pk, report_type, format=None):
+        self.intervention = self.get_object(intervention_pk)
+        self.report_type = report_type
+        return Response(
+            self.serializer_list_class(self.get_data()).data
+        )
+
+    def post(self, request, intervention_pk, report_type, format=None):
+        self.intervention = self.get_object(intervention_pk)
+        self.report_type = report_type
+        self.request.data["report_type"] = self.report_type
+        serializer = self.serializer_create_class(
+            data=self.request.data,
+            context={
+                "intervention": self.intervention,
+            }
+        )
+        if serializer.is_valid():
+            serializer.save()
+            return Response(
+                self.serializer_list_class(self.get_data()).data
+            )
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)

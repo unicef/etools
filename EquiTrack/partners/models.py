@@ -1,21 +1,22 @@
-from __future__ import absolute_import
-from __future__ import unicode_literals
+# -*- coding: utf-8 -*-
+from __future__ import absolute_import, division, print_function, unicode_literals
+
 import datetime
 import decimal
 import json
 
 from django.conf import settings
 from django.contrib.postgres.fields import JSONField, ArrayField
+from django.core.urlresolvers import reverse
 from django.db import models, connection, transaction
-from django.db.models import F, Sum
-from django.db.models.functions import Coalesce
+from django.db.models import F, Sum, Max, Min, CharField, Count, Case, When
 from django.db.models.signals import post_save, pre_delete
 from django.utils.encoding import python_2_unicode_compatible
+from django.utils import six, timezone
 from django.utils.translation import ugettext as _
 from django.utils.functional import cached_property
 
 from django_fsm import FSMField, transition
-from smart_selects.db_fields import ChainedForeignKey
 from model_utils.models import (
     TimeFramedModel,
     TimeStampedModel,
@@ -23,9 +24,9 @@ from model_utils.models import (
 from model_utils import Choices, FieldTracker
 from dateutil.relativedelta import relativedelta
 
+from attachments.models import Attachment
 from EquiTrack.fields import CurrencyField, QuarterField
 from EquiTrack.utils import import_permissions, get_quarter, get_current_year
-from EquiTrack.mixins import AdminURLMixin
 from environment.helpers import tenant_switch_is_active
 from funds.models import Grant
 from reports.models import (
@@ -36,12 +37,14 @@ from reports.models import (
 )
 from t2f.models import Travel, TravelActivity, TravelType
 from locations.models import Location
+from tpm.models import TPMVisit
 from users.models import Office
 from partners.validation.agreements import (
     agreement_transition_to_ended_valid,
     agreements_illegal_transition,
     agreement_transition_to_signed_valid)
 from partners.validation import interventions as intervention_validation
+from utils.common.models.fields import CodedGenericRelation
 
 
 def _get_partner_base_path(partner):
@@ -49,7 +52,7 @@ def _get_partner_base_path(partner):
         connection.schema_name,
         'file_attachments',
         'partner_organization',
-        str(partner.id),
+        six.text_type(partner.id),
     ])
 
 
@@ -57,7 +60,7 @@ def get_agreement_path(instance, filename):
     return '/'.join([
         _get_partner_base_path(instance.partner),
         'agreements',
-        str(instance.agreement_number),
+        six.text_type(instance.agreement_number),
         filename
     ])
 
@@ -68,7 +71,7 @@ def get_assesment_path(instance, filename):
     return '/'.join([
         _get_partner_base_path(instance.partner),
         'assesments',
-        str(instance.id),
+        six.text_type(instance.id),
         filename
     ])
 
@@ -77,9 +80,9 @@ def get_intervention_file_path(instance, filename):
     return '/'.join([
         _get_partner_base_path(instance.agreement.partner),
         'agreements',
-        str(instance.agreement.id),
+        six.text_type(instance.agreement.id),
         'interventions',
-        str(instance.id),
+        six.text_type(instance.id),
         filename
     ])
 
@@ -88,9 +91,9 @@ def get_prc_intervention_file_path(instance, filename):
     return '/'.join([
         _get_partner_base_path(instance.agreement.partner),
         'agreements',
-        str(instance.agreement.id),
+        six.text_type(instance.agreement.id),
         'interventions',
-        str(instance.id),
+        six.text_type(instance.id),
         'prc',
         filename
     ])
@@ -99,13 +102,13 @@ def get_prc_intervention_file_path(instance, filename):
 def get_intervention_amendment_file_path(instance, filename):
     return '/'.join([
         _get_partner_base_path(instance.intervention.agreement.partner),
-        str(instance.intervention.agreement.partner.id),
+        six.text_type(instance.intervention.agreement.partner.id),
         'agreements',
-        str(instance.intervention.agreement.id),
+        six.text_type(instance.intervention.agreement.id),
         'interventions',
-        str(instance.intervention.id),
+        six.text_type(instance.intervention.id),
         'amendments',
-        str(instance.id),
+        six.text_type(instance.id),
         filename
     ])
 
@@ -114,11 +117,11 @@ def get_intervention_attachments_file_path(instance, filename):
     return '/'.join([
         _get_partner_base_path(instance.intervention.agreement.partner),
         'agreements',
-        str(instance.intervention.agreement.id),
+        six.text_type(instance.intervention.agreement.id),
         'interventions',
-        str(instance.intervention.id),
+        six.text_type(instance.intervention.id),
         'attachments',
-        str(instance.id),
+        six.text_type(instance.id),
         filename
     ])
 
@@ -128,11 +131,11 @@ def get_agreement_amd_file_path(instance, filename):
         connection.schema_name,
         'file_attachments',
         'partner_org',
-        str(instance.agreement.partner.id),
+        six.text_type(instance.agreement.partner.id),
         'agreements',
         instance.agreement.base_number,
         'amendments',
-        str(instance.number),
+        six.text_type(instance.number),
         filename
     ])
 
@@ -143,7 +146,7 @@ class WorkspaceFileType(models.Model):
     Represents a file type
     """
 
-    name = models.CharField(max_length=64, unique=True)
+    name = models.CharField(max_length=64, unique=True, verbose_name=_('Name'))
 
     def __str__(self):
         return self.name
@@ -200,11 +203,12 @@ def hact_default():
                 'total': 0,
             },
         },
+        'outstanding_findings': 0
     }
 
 
 @python_2_unicode_compatible
-class PartnerOrganization(AdminURLMixin, TimeStampedModel):
+class PartnerOrganization(TimeStampedModel):
     """
     Represents a partner organization
 
@@ -218,7 +222,7 @@ class PartnerOrganization(AdminURLMixin, TimeStampedModel):
     EXPIRING_ASSESSMENT_LIMIT_YEAR = 4
     CT_CP_AUDIT_TRIGGER_LEVEL = decimal.Decimal('50000.00')
 
-    CT_MR_AUDIT_TRIGGER_LEVEL = decimal.Decimal('25000.00')
+    CT_MR_AUDIT_TRIGGER_LEVEL = decimal.Decimal('2500.00')
     CT_MR_AUDIT_TRIGGER_LEVEL2 = decimal.Decimal('100000.00')
     CT_MR_AUDIT_TRIGGER_LEVEL3 = decimal.Decimal('500000.00')
 
@@ -234,6 +238,23 @@ class PartnerOrganization(AdminURLMixin, TimeStampedModel):
         (RATING_MODERATE, 'Medium'),
         (RATING_LOW, 'Low'),
         (RATING_NON_ASSESSED, 'Non Required'),
+    )
+
+    MICRO_ASSESSMENT = 'MICRO ASSESSMENT'
+    HIGH_RISK_ASSUMED = 'HIGH RISK ASSUMED'
+    LOW_RISK_ASSUMED = 'LOW RISK ASSUMED'
+    NEGATIVE_AUDIT_RESULTS = 'NEGATIVE AUDIT RESULTS'
+    SIMPLIFIED_CHECKLIST = 'SIMPLIFIED CHECKLIST'
+    OTHERS = 'OTHERS'
+
+    # maybe at some point this can become a type_of_assessment can became a choice
+    TYPE_OF_ASSESSMENT = (
+        (MICRO_ASSESSMENT, 'Micro Assessment'),
+        (HIGH_RISK_ASSUMED, 'High Risk Assumed'),
+        (LOW_RISK_ASSUMED, 'Low Risk Assumed'),
+        (NEGATIVE_AUDIT_RESULTS, 'Negative Audit Results'),
+        (SIMPLIFIED_CHECKLIST, 'Simplified Checklist'),
+        (OTHERS, 'Others'),
     )
 
     AGENCY_CHOICES = Choices(
@@ -353,7 +374,7 @@ class PartnerOrganization(AdminURLMixin, TimeStampedModel):
     vendor_number = models.CharField(
         verbose_name=_("Vendor Number"),
         blank=True,
-        null=True,
+        null=True,  # nullable so it can be optional and not interfere with uniqueness
         unique=True,
         max_length=30
     )
@@ -398,6 +419,14 @@ class PartnerOrganization(AdminURLMixin, TimeStampedModel):
         max_length=1024,
         help_text='Only required for CSO partners'
     )
+    core_values_assessment_attachment = CodedGenericRelation(
+        Attachment,
+        verbose_name=_('Core Values Assessment'),
+        code='partners_partner_assessment',
+        blank=True,
+        null=True,
+        help_text='Only required for CSO partners'
+    )
     vision_synced = models.BooleanField(
         verbose_name=_("VISION Synced"),
         default=False,
@@ -412,7 +441,7 @@ class PartnerOrganization(AdminURLMixin, TimeStampedModel):
     total_ct_cp = models.DecimalField(
         verbose_name=_("Total Cash Transferred for Country Programme"),
         decimal_places=2,
-        max_digits=12,
+        max_digits=20,
         blank=True,
         null=True,
         help_text='Total Cash Transferred for Country Programme'
@@ -420,30 +449,33 @@ class PartnerOrganization(AdminURLMixin, TimeStampedModel):
     total_ct_cy = models.DecimalField(
         verbose_name=_("Total Cash Transferred per Current Year"),
         decimal_places=2,
-        max_digits=12,
+        max_digits=20,
         blank=True,
         null=True,
         help_text='Total Cash Transferred per Current Year'
     )
 
     net_ct_cy = models.DecimalField(
-        decimal_places=2, max_digits=12, blank=True, null=True,
-        help_text='Net Cash Transferred per Current Year'
+        decimal_places=2, max_digits=20, blank=True, null=True,
+        help_text='Net Cash Transferred per Current Year',
+        verbose_name=_('Net Cash Transferred')
     )
 
     reported_cy = models.DecimalField(
-        decimal_places=2, max_digits=12, blank=True, null=True,
-        help_text='Liquidations 1 Oct - 30 Sep'
+        decimal_places=2, max_digits=20, blank=True, null=True,
+        help_text='Liquidations 1 Oct - 30 Sep',
+        verbose_name=_('Liquidation')
     )
 
     total_ct_ytd = models.DecimalField(
-        decimal_places=2, max_digits=12, blank=True, null=True,
-        help_text='Cash Transfers Jan - Dec'
+        decimal_places=2, max_digits=20, blank=True, null=True,
+        help_text='Cash Transfers Jan - Dec',
+        verbose_name=_('Cash Transfer Jan - Dec')
     )
 
     hact_values = JSONField(blank=True, null=True, default=hact_default, verbose_name='HACT')
     basis_for_risk_rating = models.CharField(
-        verbose_name=_("Basis for Risk Rating"), max_length=50, null=True, blank=True)
+        verbose_name=_("Basis for Risk Rating"), max_length=50, default='', blank=True)
 
     tracker = FieldTracker()
 
@@ -459,12 +491,11 @@ class PartnerOrganization(AdminURLMixin, TimeStampedModel):
 
     def save(self, *args, **kwargs):
         # JSONFIELD has an issue where it keeps escaping characters
-        hact_is_string = isinstance(self.hact_values, str)
+        hact_is_string = isinstance(self.hact_values, six.text_type)
         try:
-
             self.hact_values = json.loads(self.hact_values) if hact_is_string else self.hact_values
         except ValueError as e:
-            e.message = 'hact_values needs to be a valid format (dict)'
+            e.args = ['hact_values needs to be a valid format (dict)']
             raise e
 
         super(PartnerOrganization, self).save(*args, **kwargs)
@@ -501,8 +532,10 @@ class PartnerOrganization(AdminURLMixin, TimeStampedModel):
 
     @cached_property
     def approaching_threshold_flag(self):
-        return self.rating == PartnerOrganization.RATING_NON_ASSESSED and \
-               self.total_ct_ytd > PartnerOrganization.CT_CP_AUDIT_TRIGGER_LEVEL
+        total_ct_ytd = self.total_ct_ytd or 0
+        non_assessed = self.rating == PartnerOrganization.RATING_NON_ASSESSED
+        ct_year_overflow = total_ct_ytd > PartnerOrganization.CT_CP_AUDIT_TRIGGER_LEVEL
+        return non_assessed and ct_year_overflow
 
     @cached_property
     def flags(self):
@@ -514,7 +547,7 @@ class PartnerOrganization(AdminURLMixin, TimeStampedModel):
     @cached_property
     def min_req_programme_visits(self):
         programme_visits = 0
-        ct = self.net_ct_cy
+        ct = self.net_ct_cy or 0  # Must be integer, but net_ct_cy could be None
 
         if ct <= PartnerOrganization.CT_MR_AUDIT_TRIGGER_LEVEL:
             programme_visits = 0
@@ -538,7 +571,9 @@ class PartnerOrganization(AdminURLMixin, TimeStampedModel):
 
     @cached_property
     def min_req_spot_checks(self):
-        return 1 if self.reported_cy > PartnerOrganization.CT_CP_AUDIT_TRIGGER_LEVEL else 0
+        # reported_cy can be None
+        reported_cy = self.reported_cy or 0
+        return 1 if reported_cy > PartnerOrganization.CT_CP_AUDIT_TRIGGER_LEVEL else 0
 
     @cached_property
     def hact_min_requirements(self):
@@ -547,22 +582,6 @@ class PartnerOrganization(AdminURLMixin, TimeStampedModel):
             'programme_visits': self.min_req_programme_visits,
             'spot_checks': self.min_req_spot_checks,
         }
-
-    @cached_property
-    def outstanding_findings(self):
-        # pending_unsupported_amount property
-        from audit.models import Audit, Engagement
-        audits = Audit.objects.filter(partner=self, status=Engagement.FINAL,
-                                      date_of_draft_report_to_unicef__year=datetime.datetime.now().year)
-        ff = audits.filter(financial_findings__isnull=False).aggregate(
-            total=Coalesce(Sum('financial_findings'), 0))['total']
-        ar = audits.filter(amount_refunded__isnull=False).aggregate(
-            total=Coalesce(Sum('amount_refunded'), 0))['total']
-        asdp = audits.filter(additional_supporting_documentation_provided__isnull=False).aggregate(
-            total=Coalesce(Sum('additional_supporting_documentation_provided'), 0))['total']
-        wor = audits.filter(write_off_required__isnull=False).aggregate(
-            total=Coalesce(Sum('write_off_required'), 0))['total']
-        return ff - ar - asdp - wor
 
     @classmethod
     def planned_visits(cls, partner):
@@ -584,7 +603,9 @@ class PartnerOrganization(AdminURLMixin, TimeStampedModel):
             pvq3 = pv.aggregate(models.Sum('programmatic_q3'))['programmatic_q3__sum'] or 0
             pvq4 = pv.aggregate(models.Sum('programmatic_q4'))['programmatic_q4__sum'] or 0
 
-        hact = json.loads(partner.hact_values) if isinstance(partner.hact_values, str) else partner.hact_values
+        hact = json.loads(partner.hact_values) \
+            if isinstance(partner.hact_values, six.text_type) \
+            else partner.hact_values
         hact['programmatic_visits']['planned']['q1'] = pvq1
         hact['programmatic_visits']['planned']['q2'] = pvq2
         hact['programmatic_visits']['planned']['q3'] = pvq3
@@ -594,39 +615,72 @@ class PartnerOrganization(AdminURLMixin, TimeStampedModel):
         partner.save()
 
     @classmethod
-    def programmatic_visits(cls, partner, update_one=False):
+    def programmatic_visits(cls, partner, event_date=None, update_one=False):
         """
         :return: all completed programmatic visits
         """
-        quarter_name = get_quarter()
-        pv = partner.hact_values['programmatic_visits']['completed']['total']
-        pvq = partner.hact_values['programmatic_visits']['completed'][quarter_name]
+        hact = json.loads(partner.hact_values) if isinstance(partner.hact_values, str) else partner.hact_values
 
-        if update_one:
+        pv = hact['programmatic_visits']['completed']['total']
+
+        if update_one and event_date:
+            quarter_name = get_quarter(event_date)
+            pvq = hact['programmatic_visits']['completed'][quarter_name]
             pv += 1
             pvq += 1
-            partner.hact_values['programmatic_visits']['completed'][quarter_name] = pvq
+            hact['programmatic_visits']['completed'][quarter_name] = pvq
+            hact['programmatic_visits']['completed']['total'] = pv
         else:
             pv_year = TravelActivity.objects.filter(
                 travel_type=TravelType.PROGRAMME_MONITORING,
                 travels__traveler=F('primary_traveler'),
                 travels__status__in=[Travel.COMPLETED],
-                travels__completed_at__year=datetime.datetime.now().year,
+                travels__end_date__year=timezone.now().year,
                 partner=partner,
             )
 
             pv = pv_year.count()
-            pvq1 = pv_year.filter(travels__completed_at__month__in=[1, 2, 3]).count()
-            pvq2 = pv_year.filter(travels__completed_at__month__in=[4, 5, 6]).count()
-            pvq3 = pv_year.filter(travels__completed_at__month__in=[7, 8, 9]).count()
-            pvq4 = pv_year.filter(travels__completed_at__month__in=[10, 11, 12]).count()
+            pvq1 = pv_year.filter(travels__end_date__month__in=[1, 2, 3]).count()
+            pvq2 = pv_year.filter(travels__end_date__month__in=[4, 5, 6]).count()
+            pvq3 = pv_year.filter(travels__end_date__month__in=[7, 8, 9]).count()
+            pvq4 = pv_year.filter(travels__end_date__month__in=[10, 11, 12]).count()
 
-            partner.hact_values['programmatic_visits']['completed']['q1'] = pvq1
-            partner.hact_values['programmatic_visits']['completed']['q2'] = pvq2
-            partner.hact_values['programmatic_visits']['completed']['q3'] = pvq3
-            partner.hact_values['programmatic_visits']['completed']['q4'] = pvq4
+            # TPM visit are counted one per month maximum
+            tpmv = TPMVisit.objects.filter(
+                tpm_activities__partner=partner, status=TPMVisit.UNICEF_APPROVED,
+                date_of_unicef_approved__year=datetime.datetime.now().year
+            ).distinct()
 
-        partner.hact_values['programmatic_visits']['completed']['total'] = pv
+            tpmv1 = sum([
+                tpmv.filter(date_of_unicef_approved__month=1).exists(),
+                tpmv.filter(date_of_unicef_approved__month=2).exists(),
+                tpmv.filter(date_of_unicef_approved__month=3).exists()
+            ])
+            tpmv2 = sum([
+                tpmv.filter(date_of_unicef_approved__month=4).exists(),
+                tpmv.filter(date_of_unicef_approved__month=5).exists(),
+                tpmv.filter(date_of_unicef_approved__month=6).exists()
+            ])
+            tpmv3 = sum([
+                tpmv.filter(date_of_unicef_approved__month=7).exists(),
+                tpmv.filter(date_of_unicef_approved__month=8).exists(),
+                tpmv.filter(date_of_unicef_approved__month=9).exists()
+            ])
+            tpmv4 = sum([
+                tpmv.filter(date_of_unicef_approved__month=10).exists(),
+                tpmv.filter(date_of_unicef_approved__month=11).exists(),
+                tpmv.filter(date_of_unicef_approved__month=12).exists()
+            ])
+
+            tpm_total = tpmv1 + tpmv2 + tpmv3 + tpmv4
+
+            hact['programmatic_visits']['completed']['q1'] = pvq1 + tpmv1
+            hact['programmatic_visits']['completed']['q2'] = pvq2 + tpmv2
+            hact['programmatic_visits']['completed']['q3'] = pvq3 + tpmv3
+            hact['programmatic_visits']['completed']['q4'] = pvq4 + tpmv4
+            hact['programmatic_visits']['completed']['total'] = pv + tpm_total
+
+        partner.hact_values = hact
         partner.save()
 
     @classmethod
@@ -703,6 +757,10 @@ class PartnerOrganization(AdminURLMixin, TimeStampedModel):
         partner.hact_values['audits']['completed'] = completed_audit
         partner.save()
 
+    def get_admin_url(self):
+        admin_url_name = 'admin:partners_partnerorganization_change'
+        return reverse(admin_url_name, args=(self.id,))
+
 
 class PartnerStaffMemberManager(models.Manager):
 
@@ -726,7 +784,8 @@ class PartnerStaffMember(TimeStampedModel):
     partner = models.ForeignKey(
         PartnerOrganization,
         verbose_name=_("Partner"),
-        related_name='staff_members'
+        related_name='staff_members',
+        on_delete=models.CASCADE,
     )
     title = models.CharField(
         verbose_name=_("Title"),
@@ -747,6 +806,7 @@ class PartnerStaffMember(TimeStampedModel):
         max_length=64,
         blank=True,
         null=True,
+        default='',
     )
     active = models.BooleanField(
         verbose_name=_("Active"),
@@ -792,8 +852,9 @@ class PartnerStaffMember(TimeStampedModel):
 @python_2_unicode_compatible
 class PlannedEngagement(TimeStampedModel):
     """ class to handle partner's engagement for current year """
-    partner = models.OneToOneField(PartnerOrganization, verbose_name=_("Partner"), related_name='planned_engagement')
-    spot_check_mr = QuarterField()
+    partner = models.OneToOneField(PartnerOrganization, verbose_name=_("Partner"), related_name='planned_engagement',
+                                   on_delete=models.CASCADE)
+    spot_check_mr = QuarterField(verbose_name=_('Spot Check MR'), null=False, default='')
     spot_check_follow_up_q1 = models.IntegerField(verbose_name=_("Spot Check Q1"), default=0)
     spot_check_follow_up_q2 = models.IntegerField(verbose_name=_("Spot Check Q2"), default=0)
     spot_check_follow_up_q3 = models.IntegerField(verbose_name=_("Spot Check Q3"), default=0)
@@ -837,7 +898,7 @@ class Assessment(TimeStampedModel):
     Represents an assessment for a partner organization.
 
     Relates to :model:`partners.PartnerOrganization`
-    Relates to :model:`auth.User`
+    Relates to :model:`AUTH_USER_MODEL`
     """
     HIGH = 'high'
     SIGNIFICANT = 'significant'
@@ -861,7 +922,8 @@ class Assessment(TimeStampedModel):
     partner = models.ForeignKey(
         PartnerOrganization,
         verbose_name=_("Partner"),
-        related_name='assessments'
+        related_name='assessments',
+        on_delete=models.CASCADE,
     )
     type = models.CharField(
         verbose_name=_("Type"),
@@ -871,8 +933,9 @@ class Assessment(TimeStampedModel):
     names_of_other_agencies = models.CharField(
         verbose_name=_("Other Agencies"),
         max_length=255,
-        blank=True, null=True,
-        help_text='List the names of the other agencies they have worked with'
+        blank=True,
+        null=True,
+        help_text='List the names of the other agencies they have worked with',
     )
     expected_budget = models.IntegerField(
         verbose_name=_('Planned amount'),
@@ -894,12 +957,14 @@ class Assessment(TimeStampedModel):
         related_name='requested_assessments',
         blank=True,
         null=True,
+        on_delete=models.CASCADE,
     )
     approving_officer = models.ForeignKey(
         settings.AUTH_USER_MODEL,
         verbose_name=_("Approving Officer"),
         blank=True,
         null=True,
+        on_delete=models.CASCADE,
     )
     planned_date = models.DateField(
         verbose_name=_("Planned Date"),
@@ -924,6 +989,13 @@ class Assessment(TimeStampedModel):
         null=True,
         max_length=1024,
         upload_to=get_assesment_path
+    )
+    report_attachment = CodedGenericRelation(
+        Attachment,
+        verbose_name=_('Report'),
+        code='partners_assessment_report',
+        blank=True,
+        null=True
     )
     # Basis for Risk Rating
     current = models.BooleanField(
@@ -994,13 +1066,17 @@ class Agreement(TimeStampedModel):
         SIGNED: [activity_to_active_side_effects],
     }
 
-    partner = models.ForeignKey(PartnerOrganization, related_name="agreements")
+    partner = models.ForeignKey(
+        PartnerOrganization, related_name="agreements", verbose_name=_('Partner'),
+        on_delete=models.CASCADE,
+    )
     country_programme = models.ForeignKey(
         'reports.CountryProgramme',
         verbose_name=_("Country Programme"),
         related_name='agreements',
         blank=True,
         null=True,
+        on_delete=models.CASCADE,
     )
     authorized_officers = models.ManyToManyField(
         PartnerStaffMember,
@@ -1025,6 +1101,12 @@ class Agreement(TimeStampedModel):
         blank=True,
         max_length=1024
     )
+    attachment = CodedGenericRelation(
+        Attachment,
+        verbose_name=_('Attached Agreement'),
+        code='partners_agreement',
+        blank=True
+    )
     start = models.DateField(
         verbose_name=_("Start Date"),
         null=True,
@@ -1048,7 +1130,8 @@ class Agreement(TimeStampedModel):
         settings.AUTH_USER_MODEL,
         verbose_name=_("Signed By UNICEF"),
         related_name='agreements_signed+',
-        null=True, blank=True
+        null=True, blank=True,
+        on_delete=models.CASCADE,
     )
 
     signed_by_partner_date = models.DateField(
@@ -1058,15 +1141,12 @@ class Agreement(TimeStampedModel):
     )
 
     # Signatory on behalf of the PartnerOrganization
-    partner_manager = ChainedForeignKey(
+    partner_manager = models.ForeignKey(
         PartnerStaffMember,
         related_name='agreements_signed',
         verbose_name=_('Signed by partner'),
-        chained_field="partner",
-        chained_model_field="partner",
-        show_all=False,
-        auto_choose=False,
         blank=True, null=True,
+        on_delete=models.CASCADE,
     )
 
     # TODO: Write a script that sets a status to each existing record
@@ -1090,7 +1170,9 @@ class Agreement(TimeStampedModel):
             self.agreement_type,
             self.partner.name,
             self.start.strftime('%d-%m-%Y') if self.start else '',
-            self.end.strftime('%d-%m-%Y') if self.end else ''
+            self.end.strftime('%d-%m-%Y') if self.end else '',
+            self.signed_by_partner_date,
+            self.signed_by_unicef_date
         )
 
     @classmethod
@@ -1205,13 +1287,15 @@ class Agreement(TimeStampedModel):
             self.update_reference_number(amendment_number)
 
         if self.agreement_type == self.PCA:
+            assert self.country_programme is not None, 'Country Programme is required'
             # set start date
             if self.signed_by_partner_date and self.signed_by_unicef_date:
-                self.start = self.signed_by_unicef_date \
-                    if self.signed_by_unicef_date > self.signed_by_partner_date else self.signed_by_partner_date
+                self.start = max(self.signed_by_unicef_date,
+                                 self.signed_by_partner_date,
+                                 self.country_programme.from_date
+                                 )
 
             # set end date
-            assert self.country_programme is not None, 'Country Programme is required'
             self.end = self.country_programme.to_date
 
         return super(Agreement, self).save()
@@ -1245,6 +1329,7 @@ class AgreementAmendment(TimeStampedModel):
         Agreement,
         verbose_name=_("Agreement"),
         related_name='amendments',
+        on_delete=models.CASCADE,
     )
     signed_amendment = models.FileField(
         verbose_name=_("Signed Amendment"),
@@ -1252,8 +1337,16 @@ class AgreementAmendment(TimeStampedModel):
         null=True, blank=True,
         upload_to=get_agreement_amd_file_path
     )
+    signed_amendment_attachment = CodedGenericRelation(
+        Attachment,
+        verbose_name=_('Signed Amendment'),
+        code='partners_agreement_amendment',
+        blank=True,
+        null=True
+    )
     types = ArrayField(models.CharField(
         max_length=50,
+        verbose_name=_("Types"),
         choices=AMENDMENT_TYPES))
     signed_date = models.DateField(
         verbose_name=_("Signed Date"),
@@ -1325,6 +1418,31 @@ class InterventionManager(models.Manager):
             'flat_locations',
         )
 
+    def frs_qs(self):
+        qs = self.get_queryset().prefetch_related(
+            'agreement__partner',
+            'planned_budget',
+            'offices',
+            'sections',
+            # TODO: Figure out a way in which to add locations that is more performant
+            # 'flat_locations',
+            'result_links__cp_output',
+            'unicef_focal_points',
+        )
+        qs = qs.annotate(
+            Max("frs__end_date"),
+            Min("frs__start_date"),
+            Sum("frs__total_amt_local"),
+            Sum("frs__outstanding_amt_local"),
+            Sum("frs__actual_amt_local"),
+            Sum("frs__intervention_amt"),
+            Count("frs__currency", distinct=True),
+            max_fr_currency=Max("frs__currency", output_field=CharField(), distinct=True),
+            multi_curr_flag=Count(Case(When(frs__multi_curr_flag=True, then=1)))
+        )
+
+        return qs
+
 
 def side_effect_one(i, old_instance=None, user=None):
     pass
@@ -1342,7 +1460,7 @@ class Intervention(TimeStampedModel):
     Relates to :model:`partners.PartnerOrganization`
     Relates to :model:`partners.Agreement`
     Relates to :model:`reports.CountryProgramme`
-    Relates to :model:`auth.User`
+    Relates to :model:`AUTH_USER_MODEL`
     Relates to :model:`partners.PartnerStaffMember`
     Relates to :model:`users.Office`
     """
@@ -1401,15 +1519,17 @@ class Intervention(TimeStampedModel):
     agreement = models.ForeignKey(
         Agreement,
         verbose_name=_("Agreement"),
-        related_name='interventions'
+        related_name='interventions',
+        on_delete=models.CASCADE,
     )
     # Even though CP is defined at the Agreement Level, for a particular intervention this can be different.
     country_programme = models.ForeignKey(
         CountryProgramme,
         verbose_name=_("Country Programme"),
         related_name='interventions',
-        blank=True, null=True, on_delete=models.DO_NOTHING,
-        help_text='Which Country Programme does this Intervention belong to?'
+        blank=True, null=True,
+        on_delete=models.DO_NOTHING,
+        help_text='Which Country Programme does this Intervention belong to?',
     )
     number = models.CharField(
         verbose_name=_('Reference Number'),
@@ -1464,12 +1584,26 @@ class Intervention(TimeStampedModel):
         blank=True,
         upload_to=get_prc_intervention_file_path
     )
+    prc_review_attachment = CodedGenericRelation(
+        Attachment,
+        verbose_name=_('Review Document by PRC'),
+        code='partners_intervention_prc_review',
+        blank=True,
+        null=True
+    )
     signed_pd_document = models.FileField(
         verbose_name=_("Signed PD Document"),
         max_length=1024,
         null=True,
         blank=True,
         upload_to=get_prc_intervention_file_path
+    )
+    signed_pd_attachment = CodedGenericRelation(
+        Attachment,
+        verbose_name=_('Signed PD Document'),
+        code='partners_intervention_signed_pd',
+        blank=True,
+        null=True
     )
     signed_by_unicef_date = models.DateField(
         verbose_name=_("Signed by UNICEF Date"),
@@ -1489,6 +1623,7 @@ class Intervention(TimeStampedModel):
         related_name='signed_interventions+',
         blank=True,
         null=True,
+        on_delete=models.CASCADE,
     )
     # part of the Agreement authorized officers
     partner_authorized_officer_signatory = models.ForeignKey(
@@ -1497,6 +1632,7 @@ class Intervention(TimeStampedModel):
         related_name='signed_interventions',
         blank=True,
         null=True,
+        on_delete=models.CASCADE,
     )
     # anyone in unicef country office
     unicef_focal_points = models.ManyToManyField(
@@ -1530,7 +1666,8 @@ class Intervention(TimeStampedModel):
         related_name='office_interventions+',
     )
     # TODO: remove this after PRP flag is on for all countries
-    flat_locations = models.ManyToManyField(Location, related_name="intervention_flat_locations", blank=True)
+    flat_locations = models.ManyToManyField(Location, related_name="intervention_flat_locations", blank=True,
+                                            verbose_name=_('Locations'))
 
     population_focus = models.CharField(
         verbose_name=_("Population Focus"),
@@ -1682,17 +1819,23 @@ class Intervention(TimeStampedModel):
     def total_frs(self):
         r = {
             'total_frs_amt': 0,
+            'total_frs_amt_usd': 0,
             'total_outstanding_amt': 0,
+            'total_outstanding_amt_usd': 0,
             'total_intervention_amt': 0,
             'total_actual_amt': 0,
+            'total_actual_amt_usd': 0,
             'earliest_start_date': None,
             'latest_end_date': None
         }
         for fr in self.frs.all():
-            r['total_frs_amt'] += fr.total_amt
-            r['total_outstanding_amt'] += fr.outstanding_amt
+            r['total_frs_amt'] += fr.total_amt_local
+            r['total_frs_amt_usd'] += fr.total_amt
+            r['total_outstanding_amt'] += fr.outstanding_amt_local
+            r['total_outstanding_amt_usd'] += fr.outstanding_amt
             r['total_intervention_amt'] += fr.intervention_amt
-            r['total_actual_amt'] += fr.actual_amt
+            r['total_actual_amt'] += fr.actual_amt_local
+            r['total_actual_amt_usd'] += fr.actual_amt
             if r['earliest_start_date'] is None:
                 r['earliest_start_date'] = fr.start_date
             elif r['earliest_start_date'] > fr.start_date:
@@ -1755,7 +1898,7 @@ class Intervention(TimeStampedModel):
         pass
 
     @transition(field=status,
-                source=[ACTIVE],
+                source=[ACTIVE, SIGNED],
                 target=[SUSPENDED],
                 conditions=[intervention_validation.transition_to_suspended],
                 permission=intervention_validation.partnership_manager_only)
@@ -1763,7 +1906,7 @@ class Intervention(TimeStampedModel):
         pass
 
     @transition(field=status,
-                source=[ACTIVE, SUSPENDED],
+                source=[ACTIVE, SUSPENDED, SIGNED],
                 target=[TERMINATED],
                 conditions=[intervention_validation.transition_to_terminated],
                 permission=intervention_validation.partnership_manager_only)
@@ -1868,11 +2011,13 @@ class InterventionAmendment(TimeStampedModel):
     intervention = models.ForeignKey(
         Intervention,
         verbose_name=_("Reference Number"),
-        related_name='amendments'
+        related_name='amendments',
+        on_delete=models.CASCADE,
     )
 
     types = ArrayField(models.CharField(
         max_length=50,
+        verbose_name=_('Types'),
         choices=AMENDMENT_TYPES))
 
     other_description = models.CharField(
@@ -1894,6 +2039,12 @@ class InterventionAmendment(TimeStampedModel):
         verbose_name=_("Amendment Document"),
         max_length=1024,
         upload_to=get_intervention_amendment_file_path
+    )
+    signed_amendment_attachment = CodedGenericRelation(
+        Attachment,
+        verbose_name=_('Amendment Document'),
+        code='partners_intervention_amendment_signed',
+        blank=True,
     )
 
     tracker = FieldTracker()
@@ -1931,17 +2082,21 @@ class InterventionPlannedVisits(TimeStampedModel):
     Represents planned visits for the intervention
     """
 
-    intervention = models.ForeignKey(Intervention, related_name='planned_visits')
-    year = models.IntegerField(default=get_current_year)
-    programmatic_q1 = models.IntegerField(default=0)
-    programmatic_q2 = models.IntegerField(default=0)
-    programmatic_q3 = models.IntegerField(default=0)
-    programmatic_q4 = models.IntegerField(default=0)
+    intervention = models.ForeignKey(
+        Intervention, related_name='planned_visits', verbose_name=_('Intervention'),
+        on_delete=models.CASCADE,
+    )
+    year = models.IntegerField(default=get_current_year, verbose_name=_('Year'))
+    programmatic_q1 = models.IntegerField(default=0, verbose_name=_('Programmatic Q1'))
+    programmatic_q2 = models.IntegerField(default=0, verbose_name=_('Programmatic Q2'))
+    programmatic_q3 = models.IntegerField(default=0, verbose_name=_('Programmatic Q3'))
+    programmatic_q4 = models.IntegerField(default=0, verbose_name=_('Programmatic Q4'))
 
     tracker = FieldTracker()
 
     class Meta:
         unique_together = ('intervention', 'year')
+        verbose_name_plural = _('Intervention Planned Visits')
 
     def __str__(self):
         return '{} {}'.format(self.intervention, self.year)
@@ -1949,9 +2104,15 @@ class InterventionPlannedVisits(TimeStampedModel):
 
 @python_2_unicode_compatible
 class InterventionResultLink(TimeStampedModel):
-    intervention = models.ForeignKey(Intervention, related_name='result_links')
-    cp_output = models.ForeignKey(Result, related_name='intervention_links')
-    ram_indicators = models.ManyToManyField(Indicator, blank=True)
+    intervention = models.ForeignKey(
+        Intervention, related_name='result_links', verbose_name=_('Intervention'),
+        on_delete=models.CASCADE,
+    )
+    cp_output = models.ForeignKey(
+        Result, related_name='intervention_links', verbose_name=_('CP Output'),
+        on_delete=models.CASCADE,
+    )
+    ram_indicators = models.ManyToManyField(Indicator, blank=True, verbose_name=_('RAM Indicators'))
 
     tracker = FieldTracker()
 
@@ -1966,26 +2127,30 @@ class InterventionBudget(TimeStampedModel):
     """
     Represents a budget for the intervention
     """
-    intervention = models.OneToOneField(Intervention, related_name='planned_budget', null=True, blank=True)
+    intervention = models.OneToOneField(Intervention, related_name='planned_budget', null=True, blank=True,
+                                        verbose_name=_('Intervention'), on_delete=models.CASCADE)
 
-    partner_contribution = models.DecimalField(max_digits=20, decimal_places=2, default=0)
-    unicef_cash = models.DecimalField(max_digits=20, decimal_places=2, default=0)
+    partner_contribution = models.DecimalField(max_digits=20, decimal_places=2, default=0,
+                                               verbose_name=_('Partner Contribution'))
+    unicef_cash = models.DecimalField(max_digits=20, decimal_places=2, default=0, verbose_name=_('Unicef Cash'))
     in_kind_amount = models.DecimalField(
         max_digits=20,
         decimal_places=2,
         default=0,
         verbose_name=_('UNICEF Supplies')
     )
-    total = models.DecimalField(max_digits=20, decimal_places=2)
+    total = models.DecimalField(max_digits=20, decimal_places=2, verbose_name=_('Total'))
 
-    partner_contribution_local = models.DecimalField(max_digits=20, decimal_places=2, default=0)
-    unicef_cash_local = models.DecimalField(max_digits=20, decimal_places=2, default=0)
+    partner_contribution_local = models.DecimalField(max_digits=20, decimal_places=2, default=0,
+                                                     verbose_name=_('Partner Contribution Local'))
+    unicef_cash_local = models.DecimalField(max_digits=20, decimal_places=2, default=0,
+                                            verbose_name=_('Unicef Cash Local'))
     in_kind_amount_local = models.DecimalField(
         max_digits=20, decimal_places=2, default=0,
         verbose_name=_('UNICEF Supplies Local')
     )
-    currency = CurrencyField()
-    total_local = models.DecimalField(max_digits=20, decimal_places=2)
+    currency = CurrencyField(verbose_name=_('Currency'), null=False, default='')
+    total_local = models.DecimalField(max_digits=20, decimal_places=2, verbose_name=_('Total Local'))
 
     tracker = FieldTracker()
 
@@ -2035,7 +2200,7 @@ class FileType(models.Model):
         (SUPPLY_PLAN, SUPPLY_PLAN),
         (OTHER, OTHER),
     )
-    name = models.CharField(max_length=64, choices=NAME_CHOICES, unique=True)
+    name = models.CharField(max_length=64, choices=NAME_CHOICES, unique=True, verbose_name=_('Name'))
 
     tracker = FieldTracker()
 
@@ -2051,12 +2216,26 @@ class InterventionAttachment(TimeStampedModel):
     Relates to :model:`partners.Intervention`
     Relates to :model:`partners.WorkspaceFileType`
     """
-    intervention = models.ForeignKey(Intervention, related_name='attachments')
-    type = models.ForeignKey(FileType, related_name='+')
+    intervention = models.ForeignKey(
+        Intervention, related_name='attachments', verbose_name=_('Intervention'),
+        on_delete=models.CASCADE,
+    )
+    type = models.ForeignKey(
+        FileType, related_name='+', verbose_name=_('Type'),
+        on_delete=models.CASCADE,
+    )
 
     attachment = models.FileField(
         max_length=1024,
-        upload_to=get_intervention_attachments_file_path
+        upload_to=get_intervention_attachments_file_path,
+        verbose_name=_('Attachment')
+    )
+    attachment_file = CodedGenericRelation(
+        Attachment,
+        verbose_name=_('Intervention Attachment'),
+        code='partners_intervention_attachment',
+        blank=True,
+        null=True,
     )
 
     tracker = FieldTracker()
@@ -2077,7 +2256,10 @@ class InterventionReportingPeriod(TimeStampedModel):
     There can be multiple sets of these dates for each intervention, but
     within each set, start < end < due.
     """
-    intervention = models.ForeignKey(Intervention, related_name='reporting_periods')
+    intervention = models.ForeignKey(
+        Intervention, related_name='reporting_periods', verbose_name=_('Intervention'),
+        on_delete=models.CASCADE,
+    )
     start_date = models.DateField(verbose_name='Reporting Period Start Date')
     end_date = models.DateField(verbose_name='Reporting Period End Date')
     due_date = models.DateField(verbose_name='Report Due Date')
@@ -2093,9 +2275,16 @@ class InterventionReportingPeriod(TimeStampedModel):
 
 # TODO intervention sector locations cleanup
 class InterventionSectorLocationLink(TimeStampedModel):
-    intervention = models.ForeignKey(Intervention, related_name='sector_locations')
-    sector = models.ForeignKey(Sector, related_name='intervention_locations')
-    locations = models.ManyToManyField(Location, related_name='intervention_sector_locations', blank=True)
+    intervention = models.ForeignKey(
+        Intervention, related_name='sector_locations', verbose_name=_('Intervention'),
+        on_delete=models.CASCADE,
+    )
+    sector = models.ForeignKey(
+        Sector, related_name='intervention_locations', verbose_name=_('Sector'),
+        on_delete=models.CASCADE,
+    )
+    locations = models.ManyToManyField(Location, related_name='intervention_sector_locations', blank=True,
+                                       verbose_name=_('Locations'))
 
     tracker = FieldTracker()
 
@@ -2114,20 +2303,23 @@ class FundingCommitment(TimeFramedModel):
     Relates to :model:`funds.Grant`
     """
 
-    grant = models.ForeignKey(Grant, null=True, blank=True)
-    fr_number = models.CharField(max_length=50)
-    wbs = models.CharField(max_length=50)
-    fc_type = models.CharField(max_length=50)
+    grant = models.ForeignKey(
+        Grant, null=True, blank=True, verbose_name=_('Grant'),
+        on_delete=models.CASCADE,
+    )
+    fr_number = models.CharField(max_length=50, verbose_name=_('FR Number'))
+    wbs = models.CharField(max_length=50, verbose_name=_('WBS'))
+    fc_type = models.CharField(max_length=50, verbose_name=_('Type'))
     fc_ref = models.CharField(
-        max_length=50, blank=True, null=True, unique=True)
+        max_length=50, blank=True, null=True, unique=True, verbose_name=_('Reference'))
     fr_item_amount_usd = models.DecimalField(
-        decimal_places=2, max_digits=12, blank=True, null=True)
+        decimal_places=2, max_digits=20, blank=True, null=True, verbose_name=_('Item Amount (USD)'))
     agreement_amount = models.DecimalField(
-        decimal_places=2, max_digits=12, blank=True, null=True)
+        decimal_places=2, max_digits=20, blank=True, null=True, verbose_name=_('Agreement Amount'))
     commitment_amount = models.DecimalField(
-        decimal_places=2, max_digits=12, blank=True, null=True)
+        decimal_places=2, max_digits=20, blank=True, null=True, verbose_name=_('Commitment Amount'))
     expenditure_amount = models.DecimalField(
-        decimal_places=2, max_digits=12, blank=True, null=True)
+        decimal_places=2, max_digits=20, blank=True, null=True, verbose_name=_('Expenditure Amount'))
 
     tracker = FieldTracker()
     objects = FCManager()
@@ -2138,14 +2330,19 @@ class DirectCashTransfer(models.Model):
     Represents a direct cash transfer
     """
 
-    fc_ref = models.CharField(max_length=50)
-    amount_usd = models.DecimalField(decimal_places=2, max_digits=10)
-    liquidation_usd = models.DecimalField(decimal_places=2, max_digits=10)
-    outstanding_balance_usd = models.DecimalField(decimal_places=2, max_digits=10)
-    amount_less_than_3_Months_usd = models.DecimalField(decimal_places=2, max_digits=10)
-    amount_3_to_6_months_usd = models.DecimalField(decimal_places=2, max_digits=10)
-    amount_6_to_9_months_usd = models.DecimalField(decimal_places=2, max_digits=10)
-    amount_more_than_9_Months_usd = models.DecimalField(decimal_places=2, max_digits=10)
+    fc_ref = models.CharField(max_length=50, verbose_name=_('Fund Commitment Reference'))
+    amount_usd = models.DecimalField(decimal_places=2, max_digits=20, verbose_name=_('Amount (USD)'))
+    liquidation_usd = models.DecimalField(decimal_places=2, max_digits=20, verbose_name=_('Liquidation (USD)'))
+    outstanding_balance_usd = models.DecimalField(decimal_places=2, max_digits=20,
+                                                  verbose_name=_('Outstanding Balance (USD)'))
+    amount_less_than_3_Months_usd = models.DecimalField(decimal_places=2, max_digits=20,
+                                                        verbose_name=_('Amount mess than 3 months (USD)'))
+    amount_3_to_6_months_usd = models.DecimalField(decimal_places=2, max_digits=20,
+                                                   verbose_name=_('Amount between 3 and 6 months (USD)'))
+    amount_6_to_9_months_usd = models.DecimalField(decimal_places=2, max_digits=20,
+                                                   verbose_name=_('Amount between 6 and 9 months (USD)'))
+    amount_more_than_9_Months_usd = models.DecimalField(decimal_places=2, max_digits=20,
+                                                        verbose_name=_('Amount more than 9 months (USD)'))
 
     tracker = FieldTracker()
 
@@ -2157,10 +2354,10 @@ def get_file_path(instance, filename):
         [connection.schema_name,
          'file_attachments',
          'partner_org',
-         str(instance.pca.agreement.partner.id),
+         six.text_type(instance.pca.agreement.partner.id),
          'agreements',
-         str(instance.pca.agreement.id),
+         six.text_type(instance.pca.agreement.id),
          'interventions',
-         str(instance.pca.id),
+         six.text_type(instance.pca.id),
          filename]
     )

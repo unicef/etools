@@ -25,6 +25,17 @@ class RiskSerializer(WritableNestedSerializerMixin, serializers.ModelSerializer)
             }
         }
 
+    def __init__(self, *args, **kwargs):
+        super(RiskSerializer, self).__init__(*args, **kwargs)
+        self.risk_choices = None
+
+    def get_extra_kwargs(self):
+        extra_kwargs = super(RiskSerializer, self).get_extra_kwargs()
+        if self.risk_choices:
+            extra_kwargs['value']['choices'] = self.risk_choices
+
+        return extra_kwargs
+
     def validate_extra(self, value):
         if isinstance(value, six.string_types):
             raise serializers.ValidationError('Invalid data type.')
@@ -65,7 +76,7 @@ class RiskBlueprintNestedSerializer(WritableNestedSerializerMixin, serializers.M
                 if risk:
                     field.update(risk, data)
                 else:
-                    data['engagement'] = self.context.get('instance', None)
+                    data['engagement'] = self.root.instance
                     data['blueprint'] = instance
                     field.create(data)
             except serializers.ValidationError as exc:
@@ -124,7 +135,12 @@ class RiskRootSerializer(WritableNestedSerializerMixin, serializers.ModelSeriali
 
     def __init__(self, code, *args, **kwargs):
         self.code = code
+        self.risk_choices = kwargs.pop('risk_choices', None)
+
         super(RiskRootSerializer, self).__init__(*args, **kwargs)
+
+        if self.risk_choices:
+            self.fields['blueprints'].child.fields['risk'].risk_choices = self.risk_choices
 
     def get_attribute(self, instance):
         """
@@ -214,7 +230,10 @@ class KeyInternalWeaknessSerializer(BaseAggregatedRiskRootSerializer):
 
     @staticmethod
     def _get_bluerprint_count_by_risk_value(category, field_name, risk_value):
-        values_count = len(filter(lambda b: b._risk and b._risk.value == risk_value, category.blueprints.all()))
+        values_count = len([
+            b for b in category.blueprints.all()
+            if b._risk and b._risk.value == risk_value
+        ])
         setattr(category, field_name, values_count)
 
         for child in category.children.all():
@@ -288,22 +307,21 @@ class AggregatedRiskRootSerializer(BaseAggregatedRiskRootSerializer):
             category.blueprint_count += child.blueprint_count
 
         category.applicable_questions = len(
-            filter(
-                lambda b: not b._risk or b._risk.risk_point, category.blueprints.all()
-            )
+            [b for b in category.blueprints.all() if not b._risk or b._risk.risk_point]
         )
         for child in category.children.all():
             category.applicable_questions += child.applicable_questions
 
         category.applicable_key_questions = len(
-            filter(
-                lambda b: b.is_key and (not b._risk or b._risk.risk_point), category.blueprints.all()
-            )
+            [b for b in category.blueprints.all() if b.is_key and (not b._risk or b._risk.risk_point)]
         )
         for child in category.children.all():
             category.applicable_key_questions += child.applicable_key_questions
 
-        category.risk_points = sum(map(lambda b: b._risk.risk_point if b._risk else 0, category.blueprints.all()))
+        category.risk_points = sum([
+            b._risk.risk_point if b._risk else 0
+            for b in category.blueprints.all()
+        ])
         for child in category.children.all():
             category.risk_points += child.risk_points
         category.total_number_risk_points = category.risk_points

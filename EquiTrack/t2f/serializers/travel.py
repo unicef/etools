@@ -10,6 +10,7 @@ from django.db.models.fields.related import ManyToManyField
 from django.db.models.query_utils import Q
 from django.utils.functional import cached_property
 from django.utils.itercompat import is_iterable
+from django.utils import six
 from django.utils.translation import ugettext
 from rest_framework import serializers
 from rest_framework.exceptions import ValidationError
@@ -24,7 +25,6 @@ from t2f.models import (
     TravelAttachment, TravelType,)
 from t2f.serializers import CostSummarySerializer
 
-User = get_user_model()
 
 itineraryItemSortKey = operator.attrgetter('departure_date')
 
@@ -82,7 +82,7 @@ class ActionPointSerializer(serializers.ModelSerializer):
 
     description = serializers.CharField(required=True)
     due_date = serializers.DateTimeField(required=True)
-    person_responsible = serializers.PrimaryKeyRelatedField(queryset=User.objects.all())
+    person_responsible = serializers.PrimaryKeyRelatedField(queryset=get_user_model().objects.all())
     person_responsible_name = serializers.CharField(source='person_responsible.get_full_name', read_only=True)
     status = serializers.CharField(required=True)
 
@@ -121,7 +121,7 @@ class ActionPointSerializer(serializers.ModelSerializer):
     def validate_status(self, value):
         statuses = dict(ActionPoint.STATUS).keys()
         if value not in statuses:
-            raise ValidationError('Invalid status. Possible choices: {}'.format(', '.join(statuses)))
+            raise ValidationError('Invalid status. Possible choices: {}'.format(', '.join(sorted(statuses))))
         return value
 
 
@@ -180,7 +180,11 @@ class TravelActivitySerializer(PermissionBasedModelSerializer):
                                                    allow_null=True)
     travel_type = LowerTitleField(required=False, allow_null=True)
     is_primary_traveler = serializers.BooleanField(required=False)
-    primary_traveler = serializers.PrimaryKeyRelatedField(queryset=User.objects.all(), allow_null=True, required=False)
+    primary_traveler = serializers.PrimaryKeyRelatedField(
+        queryset=get_user_model().objects.all(),
+        allow_null=True,
+        required=False
+    )
 
     class Meta:
         model = TravelActivity
@@ -221,7 +225,7 @@ class TravelAttachmentSerializer(serializers.ModelSerializer):
         return super(TravelAttachmentSerializer, self).create(validated_data)
 
     def get_url(self, obj):
-        return obj.file.url.decode("utf8")
+        return obj.file.url
 
 
 class TravelDetailsSerializer(PermissionBasedModelSerializer):
@@ -293,7 +297,7 @@ class TravelDetailsSerializer(PermissionBasedModelSerializer):
         # Check date integrity
         dates_iterator = chain.from_iterable((i['departure_date'], i['arrival_date']) for i in value)
 
-        current_date = dates_iterator.next()
+        current_date = six.next(dates_iterator)
         for date in dates_iterator:
             if date is None:
                 continue
@@ -410,7 +414,7 @@ class TravelDetailsSerializer(PermissionBasedModelSerializer):
         new_models = []
         for data in related_data:
             data = dict(data)
-            m2m_fields = {k: data.pop(k, []) for k in data.keys()
+            m2m_fields = {k: data.pop(k, []) for k in list(data.keys())
                           if isinstance(model._meta.get_field(k), ManyToManyField)}
             data.update(kwargs)
 
@@ -451,7 +455,7 @@ class TravelDetailsSerializer(PermissionBasedModelSerializer):
         return instance
 
     def update_object(self, obj, data):
-        m2m_fields = {k: data.pop(k, []) for k in data.keys()
+        m2m_fields = {k: data.pop(k, []) for k in list(data.keys())
                       if isinstance(obj._meta.get_field(k), ManyToManyField)}
         for attr, value in data.items():
             setattr(obj, attr, value)
@@ -527,25 +531,13 @@ class TravelListSerializer(TravelDetailsSerializer):
 class TravelActivityByPartnerSerializer(serializers.ModelSerializer):
     locations = serializers.SlugRelatedField(slug_field='name', many=True, read_only=True)
     primary_traveler = serializers.CharField(source='primary_traveler.get_full_name')
-    reference_number = serializers.SerializerMethodField()
-    status = serializers.SerializerMethodField()
-    trip_id = serializers.SerializerMethodField()
+    reference_number = serializers.ReadOnlyField()
+    status = serializers.ReadOnlyField()
+    trip_id = serializers.ReadOnlyField()
 
     class Meta:
         model = TravelActivity
         fields = ('primary_traveler', 'travel_type', 'date', 'locations', 'reference_number', 'status', 'trip_id')
-
-    def get_status(self, obj):
-        return obj.status
-        # return obj.travels.get(traveler=obj.primary_traveler).status
-
-    def get_reference_number(self, obj):
-        return obj.reference_number
-        # return obj.travels.get(traveler=obj.primary_traveler).reference_number
-
-    def get_trip_id(self, obj):
-        return obj.trip_id
-        # return obj.travels.get(traveler=obj.primary_traveler).id
 
 
 class CloneOutputSerializer(TravelDetailsSerializer):
@@ -555,7 +547,7 @@ class CloneOutputSerializer(TravelDetailsSerializer):
 
 
 class CloneParameterSerializer(serializers.Serializer):
-    traveler = serializers.PrimaryKeyRelatedField(queryset=User.objects.all())
+    traveler = serializers.PrimaryKeyRelatedField(queryset=get_user_model().objects.all())
 
     class Meta:
         fields = ('traveler',)

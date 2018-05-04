@@ -1,8 +1,8 @@
-from __future__ import unicode_literals
+from __future__ import absolute_import, division, print_function, unicode_literals
 
 from django.contrib.auth import get_user_model
 from rest_framework import serializers
-from serializers import GroupSerializer, SimpleCountrySerializer
+from users.serializers import GroupSerializer, SimpleCountrySerializer
 
 from t2f.serializers.user_data import T2FUserDataSerializer
 from users.models import Country, UserProfile
@@ -103,7 +103,7 @@ class ProfileRetrieveUpdateSerializer(serializers.ModelSerializer):
         """If user is within one of the allowed countries then
         show_ap is True, otherwise False
         """
-        if obj.country.name in AP_ALLOWED_COUNTRIES:
+        if obj.country and obj.country.name in AP_ALLOWED_COUNTRIES:
             return True
         return False
 

@@ -1,33 +1,60 @@
 import datetime
-
-from unittest import TestCase
+from operator import itemgetter
 
 from django.core.urlresolvers import reverse
+from django.test import SimpleTestCase
+from django.utils import six
 from rest_framework import status
 from partners.tests.test_utils import setup_intervention_test_data
 from tablib.core import Dataset
 
-from reports.models import ResultType, CountryProgramme, Disaggregation, DisaggregationValue
-from EquiTrack.factories import (
-    AppliedIndicatorFactory,
-    IndicatorBlueprintFactory,
+from EquiTrack.tests.cases import BaseTenantTestCase
+from EquiTrack.tests.mixins import URLAssertionMixin
+from partners.models import Intervention
+from partners.tests.factories import (
+    InterventionFactory,
     InterventionResultLinkFactory,
-    LowerResultFactory,
-    UserFactory,
-    ResultFactory,
+)
+from reports.models import (
+    CountryProgramme,
+    Disaggregation,
+    DisaggregationValue,
+    LowerResult,
+    ResultType,
+)
+from reports.serializers.v2 import DisaggregationSerializer
+from reports.tests.factories import (
+    AppliedIndicatorFactory,
     CountryProgrammeFactory,
     DisaggregationFactory,
     DisaggregationValueFactory,
+    IndicatorBlueprintFactory,
+    IndicatorFactory,
+    LowerResultFactory,
+    ResultFactory,
+    ResultTypeFactory,
 )
-from EquiTrack.tests.mixins import APITenantTestCase, URLAssertionMixin
-from reports.serializers.v2 import DisaggregationSerializer
+from users.tests.factories import GroupFactory, UserFactory
 
 
-class TestReportViews(APITenantTestCase):
-    fixtures = ['initial_data.json']
+class UrlsTestCase(URLAssertionMixin, SimpleTestCase):
+    '''Simple test case to verify URL reversal'''
+    def test_urls(self):
+        '''Verify URL pattern names generate the URLs we expect them to.'''
+        names_and_paths = (
+            ('reports:applied-indicator', 'applied-indicators/', {}),
+            ('reports:country-programme-list', 'countryprogramme/', {}),
+            ('reports:lower-results', 'lower_results/', {}),
+            ('reports:report-result-list', 'results/', {}),
+        )
+        self.assertReversal(names_and_paths, '', '/api/v2/reports/')
 
+
+class TestReportViews(BaseTenantTestCase):
     @classmethod
     def setUpTestData(cls):
+        for name, _ in ResultType.NAME_CHOICES:
+            ResultTypeFactory(name=name)
         cls.user = UserFactory(is_staff=True)  # UNICEF staff user
         cls.result_type = ResultType.objects.get(name=ResultType.OUTPUT)
 
@@ -46,7 +73,7 @@ class TestReportViews(APITenantTestCase):
             result_type=cls.result_type,
             country_programme=cls.country_programme
         )
-        cls.v2_results_url = reverse('report-result-list')
+        cls.v2_results_url = reverse('reports:report-result-list')
 
     def test_api_resulttypes_list(self):
         url = reverse('resulttypes-list')
@@ -67,7 +94,11 @@ class TestReportViews(APITenantTestCase):
         url = reverse('results-list')
         response = self.forced_auth_req('get', url)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(int(response.data[0]["id"]), self.result1.id)
+        six.assertCountEqual(
+            self,
+            [int(r["id"]) for r in response.data],
+            [self.result1.pk, self.result2.pk]
+        )
 
     def test_api_results_patch(self):
         url = reverse('results-detail', args=[self.result1.id])
@@ -81,70 +112,154 @@ class TestReportViews(APITenantTestCase):
         response = self.forced_auth_req('get', url)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
 
-    # V2 URLs
-    def test_apiv2_results_list(self):
-        response = self.forced_auth_req('get', self.v2_results_url)
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(int(response.data[0]["id"]), self.result1.id)
 
-    def test_apiv2_results_list_minimal(self):
+class TestOutputListAPIView(BaseTenantTestCase):
+    @classmethod
+    def setUpTestData(cls):
+        cls.user = UserFactory(is_staff=True)  # UNICEF staff user
+        cls.result_type = ResultTypeFactory(name=ResultType.OUTPUT)
+
+        today = datetime.date.today()
+        cls.country_programme = CountryProgrammeFactory(
+            wbs='0000/A0/01',
+            from_date=datetime.date(today.year - 1, 1, 1),
+            to_date=datetime.date(today.year + 1, 1, 1))
+
+        cls.result1 = ResultFactory(
+            result_type=cls.result_type,
+            country_programme=cls.country_programme,
+        )
+
+        cls.result2 = ResultFactory(
+            result_type=cls.result_type,
+            country_programme=cls.country_programme
+        )
+        cls.url = reverse('reports:report-result-list')
+
+    def test_get(self):
+        response = self.forced_auth_req('get', self.url)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        six.assertCountEqual(
+            self,
+            [int(r["id"]) for r in response.data],
+            [self.result1.pk, self.result2.pk]
+        )
+
+    def test_minimal(self):
         data = {"verbosity": "minimal"}
-        response = self.forced_auth_req('get', self.v2_results_url, data=data)
+        response = self.forced_auth_req('get', self.url, data=data)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(response.data[0].keys(), ["id", "name"])
+        first_response = sorted(response.data, key=itemgetter("id"))[0]
+        keys = sorted(first_response.keys())
+        six.assertCountEqual(self, keys, ['id', 'name'])
 
-    def test_apiv2_results_retrieve(self):
-        detail_url = reverse('report-result-detail', args=[self.result1.id])
-        response = self.forced_auth_req('get', detail_url)
+    def test_current_cp(self):
+        response = self.forced_auth_req('get', self.url)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(int(response.data["id"]), self.result1.id)
+        self.assertEqual(
+            int(sorted(response.data, key=itemgetter("id"))[0]["country_programme"]),
+            CountryProgramme.objects.all_active.first().id)
 
-    def test_apiv2_results_list_current_cp(self):
-        response = self.forced_auth_req('get', self.v2_results_url)
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(int(response.data[0]["country_programme"]), CountryProgramme.objects.all_active.first().id)
-
-    def test_apiv2_results_list_filter_year(self):
+    def test_filter_year(self):
         data = {"year": datetime.date.today().year}
-        response = self.forced_auth_req('get', self.v2_results_url, data=data)
+        response = self.forced_auth_req('get', self.url, data=data)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(len(response.data), 2)
 
-    def test_apiv2_results_list_filter_cp(self):
+    def test_filter_cp(self):
         data = {"country_programme": self.result1.country_programme.id}
-        response = self.forced_auth_req('get', self.v2_results_url, data=data)
+        response = self.forced_auth_req('get', self.url, data=data)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(int(response.data[0]["id"]), self.result1.id)
+        six.assertCountEqual(
+            self,
+            [int(r["id"]) for r in response.data],
+            [self.result1.pk, self.result2.pk]
+        )
 
-    def test_apiv2_results_list_filter_result_type(self):
+    def test_filter_result_type(self):
         data = {"result_type": self.result_type.name}
-        response = self.forced_auth_req('get', self.v2_results_url, data=data)
+        response = self.forced_auth_req('get', self.url, data=data)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(int(response.data[0]["id"]), self.result1.id)
+        six.assertCountEqual(
+            self,
+            [int(r["id"]) for r in response.data],
+            [self.result1.pk, self.result2.pk]
+        )
 
-    def test_apiv2_results_list_filter_values(self):
+    def test_filter_values(self):
         data = {"values": '{},{}'.format(self.result1.id, self.result2.id)}
-        response = self.forced_auth_req('get', self.v2_results_url, data=data)
+        response = self.forced_auth_req('get', self.url, data=data)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(len(response.data), 2)
 
-    def test_apiv2_results_list_filter_values_bad(self):
+    def test_filter_values_bad(self):
         data = {"values": '{},{}'.format('23fg', 'aasd67')}
-        response = self.forced_auth_req('get', self.v2_results_url, data=data)
+        response = self.forced_auth_req('get', self.url, data=data)
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertEqual(response.data, ['ID values must be integers'])
 
-    def test_apiv2_results_list_filter_combined(self):
+    def test_filter_combined(self):
         data = {
             "result_type": self.result_type.name,
             "year": datetime.date.today().year,
         }
-        response = self.forced_auth_req('get', self.v2_results_url, data=data)
+        response = self.forced_auth_req('get', self.url, data=data)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertIn(self.result1.id, [int(i["id"]) for i in response.data])
+        response_ids = [int(item['id']) for item in response.data]
+        result_ids = [self.result1.id, self.result2.id]
+        self.assertEqual(sorted(response_ids), sorted(result_ids))
+
+    def test_dropdown(self):
+        data = {"dropdown": "true"}
+        response = self.forced_auth_req('get', self.url, data=data)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        six.assertCountEqual(
+            self,
+            response.data, [
+                {
+                    "wbs": self.result1.wbs,
+                    "id": self.result1.pk,
+                    "name": self.result1.name
+                },
+                {
+                    "wbs": self.result2.wbs,
+                    "id": self.result2.pk,
+                    "name": self.result2.name
+                },
+            ]
+        )
 
 
-class TestDisaggregationListCreateViews(APITenantTestCase):
+class TestOutputDetailAPIView(BaseTenantTestCase):
+    @classmethod
+    def setUpTestData(cls):
+        cls.user = UserFactory(is_staff=True)  # UNICEF staff user
+        cls.result_type = ResultTypeFactory(name=ResultType.OUTPUT)
+
+        today = datetime.date.today()
+        cls.country_programme = CountryProgrammeFactory(
+            wbs='0000/A0/01',
+            from_date=datetime.date(today.year - 1, 1, 1),
+            to_date=datetime.date(today.year + 1, 1, 1))
+
+        cls.result1 = ResultFactory(
+            result_type=cls.result_type,
+            country_programme=cls.country_programme,
+        )
+
+        cls.result2 = ResultFactory(
+            result_type=cls.result_type,
+            country_programme=cls.country_programme
+        )
+        cls.url = reverse('reports:report-result-detail', args=[cls.result1.pk])
+
+    def test_results_retrieve(self):
+        response = self.forced_auth_req('get', self.url)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(int(response.data["id"]), self.result1.id)
+
+
+class TestDisaggregationListCreateViews(BaseTenantTestCase):
     """
     Very minimal testing, just to make sure things work.
     """
@@ -152,7 +267,10 @@ class TestDisaggregationListCreateViews(APITenantTestCase):
     @classmethod
     def setUpTestData(cls):
         cls.user = UserFactory(is_staff=True)
-        cls.url = reverse('disaggregation-list-create')
+        cls.pme_user = UserFactory()
+        cls.group = GroupFactory(name="PME")
+        cls.pme_user.groups.add(cls.group)
+        cls.url = reverse('reports:disaggregation-list-create')
 
     def test_get(self):
         """
@@ -163,6 +281,18 @@ class TestDisaggregationListCreateViews(APITenantTestCase):
         response = self.forced_auth_req('get', self.url)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(len(response.data), num_instances)
+
+    def test_post_non_pme_user(self):
+        data = {
+            'name': 'Gender',
+            'disaggregation_values': [
+                {'value': 'Female'},
+                {'value': 'Male'},
+                {'value': 'Other'},
+            ]
+        }
+        response = self.forced_auth_req('post', self.url, data=data)
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
 
     def test_post(self):
         """
@@ -176,7 +306,12 @@ class TestDisaggregationListCreateViews(APITenantTestCase):
                 {'value': 'Other'},
             ]
         }
-        response = self.forced_auth_req('post', self.url, data=data)
+        response = self.forced_auth_req(
+            'post',
+            self.url,
+            user=self.pme_user,
+            data=data
+        )
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         disaggregation = Disaggregation.objects.get()
         self.assertEqual(disaggregation.name, 'Gender')
@@ -189,11 +324,16 @@ class TestDisaggregationListCreateViews(APITenantTestCase):
                 {'id': 999, 'value': 'Female'},
             ]
         }
-        response = self.forced_auth_req('post', self.url, data=data)
+        response = self.forced_auth_req(
+            'post',
+            self.url,
+            user=self.pme_user,
+            data=data
+        )
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
 
-class TestDisaggregationRetrieveUpdateViews(APITenantTestCase):
+class TestDisaggregationRetrieveUpdateViews(BaseTenantTestCase):
     """
     Very minimal testing, just to make sure things work.
     """
@@ -201,10 +341,13 @@ class TestDisaggregationRetrieveUpdateViews(APITenantTestCase):
     @classmethod
     def setUpTestData(cls):
         cls.user = UserFactory(is_staff=True)
+        cls.pme_user = UserFactory()
+        cls.group = GroupFactory(name="PME")
+        cls.pme_user.groups.add(cls.group)
 
     @staticmethod
     def _get_url(dissagregation):
-        return reverse('disaggregation-retrieve-update', args=[dissagregation.pk])
+        return reverse('reports:disaggregation-retrieve-update', args=[dissagregation.pk])
 
     def test_get(self):
         """
@@ -219,17 +362,40 @@ class TestDisaggregationRetrieveUpdateViews(APITenantTestCase):
         self.assertEqual(disaggregation.name, response.data['name'])
         self.assertEqual(num_values, len(response.data['disaggregation_values']))
 
+    def test_update_non_pme_user(self):
+        disaggregation = DisaggregationFactory()
+        new_name = 'updated via API'
+        response = self.forced_auth_req(
+            'put',
+            self._get_url(disaggregation),
+            data={'name': new_name, 'disaggregation_values': []}
+        )
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+
     def test_update_metadata(self):
         """
         Test updating a disaggregation's metadata
         """
         disaggregation = DisaggregationFactory()
         new_name = 'updated via API'
-        response = self.forced_auth_req('put', self._get_url(disaggregation),
-                                        data={'name': new_name, 'disaggregation_values': []})
+        response = self.forced_auth_req(
+            'put',
+            self._get_url(disaggregation),
+            user=self.pme_user,
+            data={'name': new_name, 'disaggregation_values': []}
+        )
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         disaggregation = Disaggregation.objects.get(pk=disaggregation.pk)
         self.assertEqual(new_name, disaggregation.name)
+
+    def test_patch_non_pme_user(self):
+        disaggregation = DisaggregationFactory()
+        new_name = 'patched via API'
+        response = self.forced_auth_req(
+            'patch',
+            self._get_url(disaggregation),
+            data={'name': new_name})
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
 
     def test_patch_metadata(self):
         """
@@ -237,8 +403,12 @@ class TestDisaggregationRetrieveUpdateViews(APITenantTestCase):
         """
         disaggregation = DisaggregationFactory()
         new_name = 'patched via API'
-        response = self.forced_auth_req('patch', self._get_url(disaggregation),
-                                        data={'name': new_name})
+        response = self.forced_auth_req(
+            'patch',
+            self._get_url(disaggregation),
+            user=self.pme_user,
+            data={'name': new_name}
+        )
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         disaggregation = Disaggregation.objects.get(pk=disaggregation.pk)
         self.assertEqual(new_name, disaggregation.name)
@@ -252,7 +422,12 @@ class TestDisaggregationRetrieveUpdateViews(APITenantTestCase):
         new_value = 'updated value'
         data = DisaggregationSerializer(instance=disaggregation).data
         data['disaggregation_values'][0]['value'] = new_value
-        response = self.forced_auth_req('put', self._get_url(disaggregation), data=data)
+        response = self.forced_auth_req(
+            'put',
+            self._get_url(disaggregation),
+            user=self.pme_user,
+            data=data
+        )
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         disaggregation = Disaggregation.objects.get(pk=disaggregation.pk)
         self.assertEqual(1, disaggregation.disaggregation_values.count())
@@ -264,10 +439,20 @@ class TestDisaggregationRetrieveUpdateViews(APITenantTestCase):
         # this bootstraps a bunch of stuff, including self.disaggregation referenced by an AppliedIndicator
         setup_intervention_test_data(self, include_results_and_indicators=True)
         data = DisaggregationSerializer(instance=self.disaggregation).data
-        response = self.forced_auth_req('put', self._get_url(self.disaggregation), data=data)
+        response = self.forced_auth_req(
+            'put',
+            self._get_url(self.disaggregation),
+            user=self.pme_user,
+            data=data
+        )
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         # also try with patch
-        response = self.forced_auth_req('patch', self._get_url(self.disaggregation), data=data)
+        response = self.forced_auth_req(
+            'patch',
+            self._get_url(self.disaggregation),
+            user=self.pme_user,
+            data=data
+        )
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
     def test_create_values(self):
@@ -281,7 +466,12 @@ class TestDisaggregationRetrieveUpdateViews(APITenantTestCase):
             "value": "a new value",
             "active": False
         })
-        response = self.forced_auth_req('put', self._get_url(disaggregation), data=data)
+        response = self.forced_auth_req(
+            'put',
+            self._get_url(disaggregation),
+            user=self.pme_user,
+            data=data
+        )
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         disaggregation = Disaggregation.objects.get(pk=disaggregation.pk)
         self.assertEqual(2, disaggregation.disaggregation_values.count())
@@ -293,7 +483,12 @@ class TestDisaggregationRetrieveUpdateViews(APITenantTestCase):
         value = DisaggregationValueFactory(disaggregation=disaggregation)
         data = DisaggregationSerializer(instance=disaggregation).data
         data['disaggregation_values'] = []
-        response = self.forced_auth_req('put', self._get_url(disaggregation), data=data)
+        response = self.forced_auth_req(
+            'put',
+            self._get_url(disaggregation),
+            user=self.pme_user,
+            data=data
+        )
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         disaggregation = Disaggregation.objects.get(pk=disaggregation.pk)
         self.assertEqual(0, disaggregation.disaggregation_values.count())
@@ -317,7 +512,12 @@ class TestDisaggregationRetrieveUpdateViews(APITenantTestCase):
             "value": "a new value",
             "active": False
         })
-        response = self.forced_auth_req('put', self._get_url(disaggregation), data=data)
+        response = self.forced_auth_req(
+            'put',
+            self._get_url(disaggregation),
+            user=self.pme_user,
+            data=data
+        )
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         disaggregation = Disaggregation.objects.get(pk=disaggregation.pk)
         self.assertEqual(2, disaggregation.disaggregation_values.count())
@@ -333,10 +533,20 @@ class TestDisaggregationRetrieveUpdateViews(APITenantTestCase):
             "id": value.pk,
             "value": "not allowed",
         })
-        response = self.forced_auth_req('put', self._get_url(disaggregation), data=data)
+        response = self.forced_auth_req(
+            'put',
+            self._get_url(disaggregation),
+            user=self.pme_user,
+            data=data
+        )
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         # also try with patch
-        response = self.forced_auth_req('patch', self._get_url(disaggregation), data=data)
+        response = self.forced_auth_req(
+            'patch',
+            self._get_url(disaggregation),
+            user=self.pme_user,
+            data=data
+        )
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
     def test_delete(self):
@@ -344,35 +554,163 @@ class TestDisaggregationRetrieveUpdateViews(APITenantTestCase):
         Test deleting a disaggregation is not allowed
         """
         disaggregation = DisaggregationFactory()
-        response = self.forced_auth_req('delete', self._get_url(disaggregation))
+        response = self.forced_auth_req(
+            'delete',
+            self._get_url(disaggregation),
+            user=self.pme_user
+        )
         self.assertEqual(response.status_code, status.HTTP_405_METHOD_NOT_ALLOWED)
         self.assertTrue(Disaggregation.objects.filter(pk=disaggregation.pk).exists())
 
 
-class UrlsTestCase(URLAssertionMixin, TestCase):
-    '''Simple test case to verify URL reversal'''
-    def test_urls(self):
-        '''Verify URL pattern names generate the URLs we expect them to.'''
-        names_and_paths = (
-            ('applied-indicator', 'applied-indicators/', {}),
-            ('lower-results', 'lower_results/', {}),
+class TestResultIndicatorListAPIView(BaseTenantTestCase):
+    @classmethod
+    def setUpTestData(cls):
+        cls.unicef_staff = UserFactory(is_staff=True)
+        cls.result = ResultFactory()
+        cls.indicator = IndicatorFactory(result=cls.result)
+        cls.url = reverse("reports:result-indicator-list", args=[cls.result.pk])
+
+    def test_get(self):
+        response = self.forced_auth_req(
+            "get",
+            self.url,
+            user=self.unicef_staff
         )
-        self.assertReversal(names_and_paths, '', '/api/v2/reports/')
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(
+            [int(x["id"]) for x in response.data],
+            [self.indicator.pk]
+        )
+
+    def test_get_empty(self):
+        response = self.forced_auth_req(
+            "get",
+            reverse("reports:result-indicator-list", args=[404]),
+            user=self.unicef_staff
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual([int(x["id"]) for x in response.data], [])
 
 
-class TestLowerResultExportList(APITenantTestCase):
+class TestLowerResultListAPIView(BaseTenantTestCase):
+    @classmethod
+    def setUpTestData(cls):
+        cls.unicef_staff = UserFactory(is_staff=True)
+        cls.url = reverse("reports:lower-results")
+        cls.intervention = InterventionFactory()
+        cls.result_link = InterventionResultLinkFactory(
+            intervention=cls.intervention,
+        )
+        cls.lower_result = LowerResultFactory(
+            name="LL Name",
+            result_link=cls.result_link,
+        )
+
+    def test_search_number(self):
+        response = self.forced_auth_req(
+            "get",
+            self.url,
+            user=self.unicef_staff,
+            data={"search": self.intervention.number[:4]}
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertIn(
+            self.lower_result.pk,
+            [int(x["id"]) for x in response.data]
+        )
+
+    def test_search_name(self):
+        response = self.forced_auth_req(
+            "get",
+            self.url,
+            user=self.unicef_staff,
+            data={"search": "LL Name"}
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertIn(
+            self.lower_result.pk,
+            [int(x["id"]) for x in response.data]
+        )
+
+    def test_search_empty(self):
+        response = self.forced_auth_req(
+            "get",
+            self.url,
+            user=self.unicef_staff,
+            data={"search": "wrong"}
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data, [])
+
+
+class TestLowerResultDeleteView(BaseTenantTestCase):
+    @classmethod
+    def setUpTestData(cls):
+        cls.unicef_staff = UserFactory(is_staff=True)
+        cls.intervention = InterventionFactory()
+        cls.result_link = InterventionResultLinkFactory(
+            intervention=cls.intervention,
+        )
+
     def setUp(self):
-        super(TestLowerResultExportList, self).setUp()
-        self.unicef_staff = UserFactory(is_staff=True)
-        self.result_link = InterventionResultLinkFactory()
         self.lower_result = LowerResultFactory(
-            result_link=self.result_link
+            result_link=self.result_link,
+        )
+        self.url = reverse("reports:lower-results-del", args=[self.lower_result.pk])
+
+    def test_delete(self):
+        self.intervention.unicef_focal_points.add(self.unicef_staff)
+        response = self.forced_auth_req(
+            "delete",
+            self.url,
+            user=self.unicef_staff
+        )
+        self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
+        self.assertFalse(
+            LowerResult.objects.filter(pk=self.lower_result.pk).exists()
+        )
+
+    def test_delete_not_found(self):
+        response = self.forced_auth_req(
+            "delete",
+            reverse("reports:lower-results-del", args=[404]),
+            user=self.unicef_staff
+        )
+        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
+        self.assertTrue(
+            LowerResult.objects.filter(pk=self.lower_result.pk).exists()
+        )
+
+    def test_delete_bad_request(self):
+        """If user does not have permissions, expect 400 response"""
+        user = UserFactory()
+        self.intervention.status = Intervention.ENDED
+        self.intervention.save()
+        response = self.forced_auth_req(
+            "delete",
+            self.url,
+            user=user
+        )
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertTrue(
+            LowerResult.objects.filter(pk=self.lower_result.pk).exists()
+        )
+
+
+class TestLowerResultExportList(BaseTenantTestCase):
+    @classmethod
+    def setUpTestData(cls):
+        cls.unicef_staff = UserFactory(is_staff=True)
+        cls.result_link = InterventionResultLinkFactory()
+        cls.lower_result = LowerResultFactory(
+            result_link=cls.result_link
         )
 
     def test_invalid_format_export_api(self):
         response = self.forced_auth_req(
             'get',
-            reverse('lower-results'),
+            reverse('reports:lower-results'),
             user=self.unicef_staff,
             data={"format": "unknown"},
         )
@@ -381,13 +719,13 @@ class TestLowerResultExportList(APITenantTestCase):
     def test_csv_export_api(self):
         response = self.forced_auth_req(
             'get',
-            reverse('lower-results'),
+            reverse('reports:lower-results'),
             user=self.unicef_staff,
             data={"format": "csv"},
         )
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        dataset = Dataset().load(response.content, 'csv')
+        dataset = Dataset().load(response.content.decode('utf-8'), 'csv')
         self.assertEqual(dataset.height, 1)
         self.assertEqual(len(dataset._get_headers()), 6)
         self.assertEqual(len(dataset[0]), 6)
@@ -395,36 +733,104 @@ class TestLowerResultExportList(APITenantTestCase):
     def test_csv_flat_export_api(self):
         response = self.forced_auth_req(
             'get',
-            reverse('lower-results'),
+            reverse('reports:lower-results'),
             user=self.unicef_staff,
             data={"format": "csv_flat"},
         )
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        dataset = Dataset().load(response.content, 'csv')
+        dataset = Dataset().load(response.content.decode('utf-8'), 'csv')
         self.assertEqual(dataset.height, 1)
         self.assertEqual(len(dataset._get_headers()), 6)
         self.assertEqual(len(dataset[0]), 6)
 
 
-class TestAppliedIndicatorExportList(APITenantTestCase):
-    def setUp(self):
-        super(TestAppliedIndicatorExportList, self).setUp()
-        self.unicef_staff = UserFactory(is_staff=True)
-        self.result_link = InterventionResultLinkFactory()
-        self.lower_result = LowerResultFactory(
-            result_link=self.result_link
+class TestAppliedIndicatorListAPIView(BaseTenantTestCase):
+    @classmethod
+    def setUpTestData(cls):
+        cls.unicef_staff = UserFactory(is_staff=True)
+        cls.intervention = InterventionFactory()
+        cls.result_link = InterventionResultLinkFactory()
+        cls.lower_result = LowerResultFactory(
+            name="LL Name",
+            result_link=cls.result_link,
         )
-        self.indicator = IndicatorBlueprintFactory()
-        self.applied = AppliedIndicatorFactory(
-            indicator=self.indicator,
-            lower_result=self.lower_result
+        cls.indicator = IndicatorBlueprintFactory()
+        cls.applied = AppliedIndicatorFactory(
+            context_code="CC321",
+            indicator=cls.indicator,
+            lower_result=cls.lower_result
+        )
+        cls.url = reverse("reports:applied-indicator")
+
+    def test_search_number(self):
+        response = self.forced_auth_req(
+            "get",
+            self.url,
+            user=self.unicef_staff,
+            data={"search": self.intervention.number[:4]}
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(
+            [int(x["id"]) for x in response.data],
+            [self.applied.pk]
+        )
+
+    def test_search_name(self):
+        response = self.forced_auth_req(
+            "get",
+            self.url,
+            user=self.unicef_staff,
+            data={"search": "LL Name"}
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(
+            [int(x["id"]) for x in response.data],
+            [self.applied.pk]
+        )
+
+    def test_search_context_code(self):
+        response = self.forced_auth_req(
+            "get",
+            self.url,
+            user=self.unicef_staff,
+            data={"search": "CC321"}
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(
+            [int(x["id"]) for x in response.data],
+            [self.applied.pk]
+        )
+
+    def test_search_empty(self):
+        response = self.forced_auth_req(
+            "get",
+            self.url,
+            user=self.unicef_staff,
+            data={"search": "wrong"}
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data, [])
+
+
+class TestAppliedIndicatorExportList(BaseTenantTestCase):
+    @classmethod
+    def setUpTestData(cls):
+        cls.unicef_staff = UserFactory(is_staff=True)
+        cls.result_link = InterventionResultLinkFactory()
+        cls.lower_result = LowerResultFactory(
+            result_link=cls.result_link
+        )
+        cls.indicator = IndicatorBlueprintFactory()
+        cls.applied = AppliedIndicatorFactory(
+            indicator=cls.indicator,
+            lower_result=cls.lower_result
         )
 
     def test_invalid_format_export_api(self):
         response = self.forced_auth_req(
             'get',
-            reverse('applied-indicator'),
+            reverse('reports:applied-indicator'),
             user=self.unicef_staff,
             data={"format": "unknown"},
         )
@@ -433,27 +839,27 @@ class TestAppliedIndicatorExportList(APITenantTestCase):
     def test_csv_export_api(self):
         response = self.forced_auth_req(
             'get',
-            reverse('applied-indicator'),
+            reverse('reports:applied-indicator'),
             user=self.unicef_staff,
             data={"format": "csv"},
         )
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        dataset = Dataset().load(response.content, 'csv')
+        dataset = Dataset().load(response.content.decode('utf-8'), 'csv')
         self.assertEqual(dataset.height, 1)
-        self.assertEqual(len(dataset._get_headers()), 24)
-        self.assertEqual(len(dataset[0]), 24)
+        self.assertEqual(len(dataset._get_headers()), 26)
+        self.assertEqual(len(dataset[0]), 26)
 
     def test_csv_flat_export_api(self):
         response = self.forced_auth_req(
             'get',
-            reverse('applied-indicator'),
+            reverse('reports:applied-indicator'),
             user=self.unicef_staff,
             data={"format": "csv_flat"},
         )
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        dataset = Dataset().load(response.content, 'csv')
+        dataset = Dataset().load(response.content.decode('utf-8'), 'csv')
         self.assertEqual(dataset.height, 1)
-        self.assertEqual(len(dataset._get_headers()), 24)
-        self.assertEqual(len(dataset[0]), 24)
+        self.assertEqual(len(dataset._get_headers()), 26)
+        self.assertEqual(len(dataset[0]), 26)

@@ -12,7 +12,10 @@ https://docs.djangoproject.com/en/1.9/topics/settings/
 For the full list of settings and their values, see
 https://docs.djangoproject.com/en/1.9/ref/settings/
 """
-from __future__ import absolute_import
+from __future__ import absolute_import, division, print_function, unicode_literals
+
+import yaml
+from django.utils import six
 
 import datetime
 import os
@@ -30,7 +33,7 @@ def str2bool(value):
 
     This assumes that 'value' is one of a list of some common possible Truthy string values.
     """
-    return str(value).lower() in ("yes", "true", "t", "1")
+    return six.text_type(value).lower() in ("yes", "true", "t", "1")
 
 
 # Absolute filesystem path to the Django project directory:
@@ -43,19 +46,34 @@ SITE_NAME = basename(DJANGO_ROOT)
 # DJANGO CORE SETTINGS ################################
 # organized per https://docs.djangoproject.com/en/1.9/ref/settings/#core-settings-topical-index
 
+SECRETS_FILE_LOCATION = os.environ.get('SECRETS_FILE_LOCATION', join(DJANGO_ROOT, 'secrets.yml'))
+
+try:
+    with open(SECRETS_FILE_LOCATION, 'r') as secrets_file:
+        SECRETS = yaml.load(secrets_file)['ENVIRONMENT']
+except FileNotFoundError:
+    # pass, for now we default trying to get the secrets from env vars as well
+    SECRETS = {}
+
+
+def get_from_secrets_or_env(var_name, default=None):
+    """Attempts to get variables from secrets file, if it fails, tries env, returns default"""
+    return SECRETS.get(var_name, os.environ.get(var_name, default))
+
+
 # DJANGO: CACHE
 CACHES = {
     'default': {
         'BACKEND': 'redis_cache.RedisCache',
-        'LOCATION': os.environ.get('REDIS_URL', 'redis://localhost:6379/0')
+        'LOCATION': get_from_secrets_or_env('REDIS_URL', 'redis://localhost:6379/0')
     }
 }
 
 # DJANGO: DATABASE
 db_config = dj_database_url.config(
-    env="DATABASE_URL",
-    default='postgis:///etools'
+    default=get_from_secrets_or_env('DATABASE_URL', 'postgis:///etools')
 )
+
 ORIGINAL_BACKEND = 'django.contrib.gis.db.backends.postgis'
 db_config['ENGINE'] = 'tenant_schemas.postgresql_backend'
 db_config['CONN_MAX_AGE'] = 0
@@ -67,16 +85,16 @@ DATABASE_ROUTERS = (
 )
 
 # DJANGO: DEBUGGING
-DEBUG = str2bool(os.environ.get('DJANGO_DEBUG'))
+DEBUG = str2bool(get_from_secrets_or_env('DJANGO_DEBUG'))
 
 # DJANGO: EMAIL
 DEFAULT_FROM_EMAIL = "no-reply@unicef.org"
 EMAIL_BACKEND = 'post_office.EmailBackend'  # Will send email via our template system
-EMAIL_HOST = os.environ.get('EMAIL_HOST', '')
-EMAIL_HOST_USER = os.environ.get('EMAIL_HOST_USER', '')
-EMAIL_HOST_PASSWORD = os.environ.get('EMAIL_HOST_PASSWORD', '')
-EMAIL_PORT = os.environ.get('EMAIL_HOST_PORT', 587)
-EMAIL_USE_TLS = str2bool(os.environ.get('EMAIL_USE_TLS'))  # set True if using TLS
+EMAIL_HOST = get_from_secrets_or_env('EMAIL_HOST', '')
+EMAIL_HOST_USER = get_from_secrets_or_env('EMAIL_HOST_USER', '')
+EMAIL_HOST_PASSWORD = get_from_secrets_or_env('EMAIL_HOST_PASSWORD', '')
+EMAIL_PORT = get_from_secrets_or_env('EMAIL_HOST_PORT', 587)
+EMAIL_USE_TLS = str2bool(get_from_secrets_or_env('EMAIL_USE_TLS'))  # set True if using TLS
 
 # DJANGO: ERROR REPORTING
 
@@ -92,16 +110,17 @@ USE_L10N = True
 USE_TZ = True
 
 # DJANGO: HTTP
-MIDDLEWARE_CLASSES = (
+MIDDLEWARE = (
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.contrib.auth.middleware.SessionAuthenticationMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
+    'email_auth.middleware.TokenAuthenticationMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
     'corsheaders.middleware.CorsMiddleware',
-    'EquiTrack.mixins.EToolsTenantMiddleware',
+    'EquiTrack.middleware.EToolsTenantMiddleware',
     'waffle.middleware.WaffleMiddleware',  # needs request.tenant from EToolsTenantMiddleware
 )
 WSGI_APPLICATION = '%s.wsgi.application' % SITE_NAME
@@ -109,7 +128,7 @@ WSGI_APPLICATION = '%s.wsgi.application' % SITE_NAME
 # DJANGO: LOGGING
 LOGGING = {
     'version': 1,
-    'disable_existing_loggers': str2bool(os.environ.get('DJANGO_DISABLE_EXISTING_LOGGERS', 'True')),
+    'disable_existing_loggers': str2bool(get_from_secrets_or_env('DJANGO_DISABLE_EXISTING_LOGGERS', 'True')),
     'handlers': {
         # Send all messages to console
         'console': {
@@ -151,7 +170,6 @@ SHARED_APPS = (
     'rest_framework.authtoken',
     'drfpasswordless',
     'import_export',
-    'smart_selects',
     'gunicorn',
     'post_office',
     'django_celery_beat',
@@ -160,13 +178,6 @@ SHARED_APPS = (
     'leaflet',
     'corsheaders',
     'djangosaml2',
-    'allauth',
-    'allauth.account',
-    'allauth.socialaccount',
-    # allauth providers you want to enable:
-    # 'allauth.socialaccount.providers.facebook',
-    'allauth.socialaccount.providers.google',
-    # 'allauth.socialaccount.providers.twitter',
     'analytical',
     'mptt',
     'easy_pdf',
@@ -191,29 +202,28 @@ SHARED_APPS = (
 )
 TENANT_APPS = (
     'django_fsm',
+    'django_comments',
     'logentry_admin',
     'funds',
     'locations',
     'reports',
     'partners',
     'hact',
-    'trips',
-    'supplies',
     'activities',
     't2f',
-    'workplan',
     'attachments',
     'tpm',
     'audit',
     'firms',
     'management',
     'snapshot',
+    'action_points',
 )
 INSTALLED_APPS = ('tenant_schemas',) + SHARED_APPS + TENANT_APPS
 
 # DJANGO: SECURITY
 ALLOWED_HOSTS = [
-    os.environ.get('DJANGO_ALLOWED_HOST', '127.0.0.1'),
+    get_from_secrets_or_env('DJANGO_ALLOWED_HOST', '127.0.0.1'),
 ]
 SECRET_KEY = r"j8%#f%3t@9)el9jh4f0ug4*mm346+wwwti#6(^@_ksf@&k^ob1"  # only used locally
 
@@ -238,7 +248,6 @@ TEMPLATES = [
             'context_processors': [
                 # Already defined Django-related contexts here
 
-                # `allauth` needs this from django
                 'django.contrib.auth.context_processors.auth',
                 'django.template.context_processors.request',
                 'django.template.context_processors.debug',
@@ -265,7 +274,6 @@ ROOT_URLCONF = '%s.urls' % SITE_NAME
 AUTHENTICATION_BACKENDS = (
     'django.contrib.auth.backends.ModelBackend',
     'djangosaml2.backends.Saml2Backend',
-    'allauth.account.auth_backends.AuthenticationBackend',
 )
 AUTH_USER_MODEL = 'auth.User'
 LOGIN_REDIRECT_URL = '/'
@@ -307,10 +315,10 @@ POST_OFFICE = {
 
 # celery: http://docs.celeryproject.org/en/latest/userguide/configuration.html
 CELERY_ACCEPT_CONTENT = ['pickle', 'json', 'application/text']
-CELERY_BROKER_URL = os.environ.get('REDIS_URL', 'redis://localhost:6379/0')
-CELERY_BROKER_VISIBILITY_VAR = os.environ.get('CELERY_VISIBILITY_TIMEOUT', 1800)  # in seconds
+CELERY_BROKER_URL = get_from_secrets_or_env('REDIS_URL', 'redis://localhost:6379/0')
+CELERY_BROKER_VISIBILITY_VAR = get_from_secrets_or_env('CELERY_VISIBILITY_TIMEOUT', 1800)  # in seconds
 CELERY_BROKER_TRANSPORT_OPTIONS = {'visibility_timeout': int(CELERY_BROKER_VISIBILITY_VAR)}
-CELERY_RESULT_BACKEND = 'django_celery_results.backends.database:DatabaseBackend'
+CELERY_RESULT_BACKEND = 'django-db'
 CELERY_BEAT_SCHEDULER = 'django_celery_beat.schedulers.DatabaseScheduler'
 # Sensible settings for celery
 CELERY_TASK_ALWAYS_EAGER = False
@@ -321,15 +329,22 @@ CELERY_WORKER_DISABLE_RATE_LIMITS = False
 # By default we will ignore result
 # If you want to see results and try out tasks interactively, change it to False
 # Or change this setting on tasks level
+
+CELERY_IMPORTS = (
+    'vision.tasks',
+    'hact.tasks',
+)
+
 CELERY_TASK_IGNORE_RESULT = True
 CELERY_SEND_TASK_ERROR_EMAILS = False
 CELERY_RESULT_EXPIRES = 600
 CELERY_WORKER_PREFETCH_MULTIPLIER = 1
 
 # django-celery-email: https://github.com/pmclanahan/django-celery-email
-CELERY_EMAIL_BACKEND = os.environ.get('EMAIL_BACKEND', 'django.core.mail.backends.smtp.EmailBackend')
-CELERY_ROUTES = {
-    'vision.tasks.sync_handler': {'queue': 'vision_queue'}
+CELERY_EMAIL_BACKEND = get_from_secrets_or_env('EMAIL_BACKEND', 'django.core.mail.backends.smtp.EmailBackend')
+CELERY_TASK_ROUTES = {
+    'vision.tasks.sync_handler': {'queue': 'vision_queue'},
+    'hact.tasks.update_hact_for_country': {'queue': 'vision_queue'}
 }
 
 # djangorestframework: http://www.django-rest-framework.org/api-guide/settings/
@@ -345,8 +360,8 @@ REST_FRAMEWORK = {
     ),
     'DEFAULT_AUTHENTICATION_CLASSES': (
         'rest_framework.authentication.SessionAuthentication',
-        'EquiTrack.mixins.EToolsTenantJWTAuthentication',
-        'EquiTrack.mixins.EtoolsTokenAuthentication',
+        'EquiTrack.auth.EToolsTenantJWTAuthentication',
+        'EquiTrack.auth.EtoolsTokenAuthentication',
     ),
     'TEST_REQUEST_RENDERER_CLASSES': (
         'rest_framework.renderers.JSONRenderer',
@@ -366,24 +381,7 @@ SWAGGER_SETTINGS = {
 }
 
 # django-analytical: https://pythonhosted.org/django-analytical/
-USERVOICE_WIDGET_KEY = os.getenv('USERVOICE_KEY', '')
-
-# django-allauth: https://github.com/pennersr/django-allauth
-ACCOUNT_ADAPTER = 'EquiTrack.mixins.CustomAccountAdapter'
-ACCOUNT_AUTHENTICATION_METHOD = 'email'
-ACCOUNT_DEFAULT_HTTP_PROTOCOL = "https"
-ACCOUNT_EMAIL_REQUIRED = True
-ACCOUNT_EMAIL_VERIFICATION = "none"  # "optional", "mandatory" or "none"
-ACCOUNT_LOGOUT_REDIRECT_URL = "/login"
-ACCOUNT_LOGOUT_ON_GET = True
-ACCOUNT_UNIQUE_EMAIL = True
-SOCIALACCOUNT_AUTO_SIGNUP = True
-SOCIALACCOUNT_ADAPTER = 'EquiTrack.mixins.CustomSocialAccountAdapter'
-SOCIALACCOUNT_PROVIDERS = \
-    {'google':
-        {'SCOPE': ['profile', 'email'],
-         'AUTH_PARAMS': {'access_type': 'online'}}}
-SOCIALACCOUNT_STORE_TOKENS = True
+USERVOICE_WIDGET_KEY = get_from_secrets_or_env('USERVOICE_KEY', '')
 
 # django-mptt: https://github.com/django-mptt/django-mptt
 MPTT_ADMIN_LEVEL_INDENT = 20
@@ -399,8 +397,12 @@ LEAFLET_CONFIG = {
 # django-tenant-schemas: https://github.com/bernardopires/django-tenant-schemas
 TENANT_MODEL = "users.Country"  # app.Model
 
+# don't call set search_path so much
+# https://django-tenant-schemas.readthedocs.io/en/latest/use.html#performance-considerations
+TENANT_LIMIT_SET_CALLS = True
+
 # django-saml2: https://github.com/robertavram/djangosaml2
-HOST = os.environ.get('DJANGO_ALLOWED_HOST', 'localhost:8000')
+HOST = get_from_secrets_or_env('DJANGO_ALLOWED_HOST', 'localhost:8000')
 SAML_ATTRIBUTE_MAPPING = {
     'upn': ('username',),
     'emailAddress': ('email',),
@@ -521,31 +523,35 @@ JWT_AUTH = {
 
 # eTools settings ################################
 
-COUCHBASE_URL = os.environ.get('COUCHBASE_URL')
-COUCHBASE_USER = os.environ.get('COUCHBASE_USER')
-COUCHBASE_PASS = os.environ.get('COUCHBASE_PASS')
+COUCHBASE_URL = get_from_secrets_or_env('COUCHBASE_URL')
+COUCHBASE_USER = get_from_secrets_or_env('COUCHBASE_USER')
+COUCHBASE_PASS = get_from_secrets_or_env('COUCHBASE_PASS')
 
-DISABLE_INVOICING = str2bool(os.getenv('DISABLE_INVOICING'))
+DISABLE_INVOICING = str2bool(get_from_secrets_or_env('DISABLE_INVOICING'))
 
-ENVIRONMENT = os.environ.get('ENVIRONMENT', '')
-ETRIPS_VERSION = os.environ.get('ETRIPS_VERSION')
+ENVIRONMENT = get_from_secrets_or_env('ENVIRONMENT', '')
+ETRIPS_VERSION = get_from_secrets_or_env('ETRIPS_VERSION')
 
-INACTIVE_BUSINESS_AREAS = os.environ.get('INACTIVE_BUSINESS_AREAS', '').split(',')
+INACTIVE_BUSINESS_AREAS = get_from_secrets_or_env('INACTIVE_BUSINESS_AREAS', '').split(',')
+if INACTIVE_BUSINESS_AREAS == ['']:
+    # 'split' splits an empty string into an array with one empty string, which isn't
+    # really what we want
+    INACTIVE_BUSINESS_AREAS = []
 
-SLACK_URL = os.environ.get('SLACK_URL')
+SLACK_URL = get_from_secrets_or_env('SLACK_URL')
 
-TASK_ADMIN_USER = os.environ.get('TASK_ADMIN_USER', 'etools_task_admin')
+TASK_ADMIN_USER = get_from_secrets_or_env('TASK_ADMIN_USER', 'etools_task_admin')
 
-VISION_URL = os.getenv('VISION_URL', 'invalid_vision_url')
-VISION_USER = os.getenv('VISION_USER', 'invalid_vision_user')
-VISION_PASSWORD = os.getenv('VISION_PASSWORD', 'invalid_vision_password')
+VISION_URL = get_from_secrets_or_env('VISION_URL', 'invalid_vision_url')
+VISION_USER = get_from_secrets_or_env('VISION_USER', 'invalid_vision_user')
+VISION_PASSWORD = get_from_secrets_or_env('VISION_PASSWORD', 'invalid_vision_password')
 
 
 # ALLOW BASIC AUTH FOR DEMO SITE
-ALLOW_BASIC_AUTH = os.getenv('ALLOW_BASIC_AUTH', False)
+ALLOW_BASIC_AUTH = get_from_secrets_or_env('ALLOW_BASIC_AUTH', False)
 if ALLOW_BASIC_AUTH:
     REST_FRAMEWORK['DEFAULT_AUTHENTICATION_CLASSES'] += (
-        'EquiTrack.mixins.DRFBasicAuthMixin',
+        'EquiTrack.auth.DRFBasicAuthMixin',
     )
 
 ISSUE_CHECKS = [
@@ -557,10 +563,16 @@ ISSUE_CHECKS = [
     'management.issues.project_checks.PCAAmendmentsMissingFilesCheck',
 ]
 
-EMAIL_FOR_USER_RESPONSIBLE_FOR_INVESTIGATION_ESCALATIONS = os.getenv(
+EMAIL_FOR_USER_RESPONSIBLE_FOR_INVESTIGATION_ESCALATIONS = get_from_secrets_or_env(
     'EMAIL_FOR_USER_RESPONSIBLE_FOR_INVESTIGATION_ESCALATIONS', 'integrity1@unicef.org'
 )
 
+AZURE_CLIENT_ID = get_from_secrets_or_env('AZURE_CLIENT_ID', 'invalid_azure_client_id')
+AZURE_CLIENT_SECRET = get_from_secrets_or_env('AZURE_CLIENT_SECRET', 'invalid_azure_client_secret')
+AZURE_TOKEN_URL = 'https://login.microsoftonline.com/unicef.org/oauth2/token'
+AZURE_GRAPH_API_BASE_URL = 'https://graph.microsoft.com'
+AZURE_GRAPH_API_VERSION = 'beta'
+AZURE_GRAPH_API_PAGE_SIZE = 250
 
 # drfpaswordless: https://github.com/aaronn/django-rest-framework-passwordless
 
@@ -571,3 +583,11 @@ PASSWORDLESS_AUTH = {
     # username is better choice as it can be only 30 symbols max and unique.
     'PASSWORDLESS_USER_EMAIL_FIELD_NAME': 'username'
 }
+
+REPORT_EMAILS = get_from_secrets_or_env('REPORT_EMAILS', 'etools@unicef.org').replace(' ', '').split(',')
+
+USERVOICE_WIDGET_KEY = 'defaultVoiceKey'
+
+
+# email auth settings
+EMAIL_AUTH_TOKEN_NAME = os.getenv('EMAIL_AUTH_TOKEN_NAME', 'url_auth_token')

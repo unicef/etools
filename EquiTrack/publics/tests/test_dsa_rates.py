@@ -10,27 +10,35 @@ from django.utils.timezone import now
 from freezegun import freeze_time
 from pytz import UTC
 
-from EquiTrack.factories import UserFactory
-from EquiTrack.tests.mixins import APITenantTestCase
+from EquiTrack.tests.cases import BaseTenantTestCase
 from publics.models import DSARate
-from publics.tests.factories import BusinessAreaFactory, CountryFactory, DSARateFactory, DSARegionFactory
+from publics.tests.factories import (
+    PublicsBusinessAreaFactory,
+    PublicsCountryFactory,
+    PublicsDSARateFactory,
+    PublicsDSARegionFactory,
+)
+from users.tests.factories import UserFactory
 
 
-class DSARateTest(APITenantTestCase):
-
-    def setUp(self):
-        super(DSARateTest, self).setUp()
-        self.unicef_staff = UserFactory(is_staff=True)
+class DSARateTest(BaseTenantTestCase):
+    @classmethod
+    def setUpTestData(cls):
+        cls.unicef_staff = UserFactory(is_staff=True)
 
     def test_new_rate_addition(self):
-        region = DSARegionFactory(rates=[])
+        region = PublicsDSARegionFactory(rates=[])
 
-        rate_1 = DSARateFactory(region=region,
-                                effective_from_date=date(2017, 4, 17))
+        rate_1 = PublicsDSARateFactory(
+            region=region,
+            effective_from_date=date(2017, 4, 17)
+        )
         self.assertEqual(rate_1.effective_to_date, DSARate.DEFAULT_EFFECTIVE_TILL)
 
-        rate_2 = DSARateFactory(region=region,
-                                effective_from_date=date(2017, 4, 18))
+        rate_2 = PublicsDSARateFactory(
+            region=region,
+            effective_from_date=date(2017, 4, 18)
+        )
         rate_1.refresh_from_db()
 
         self.assertNotEqual(rate_1.effective_to_date, DSARate.DEFAULT_EFFECTIVE_TILL)
@@ -42,20 +50,20 @@ class DSARateTest(APITenantTestCase):
         workspace.business_area_code = '1234'
         workspace.save()
 
-        business_area = BusinessAreaFactory(code=workspace.business_area_code)
-        country = CountryFactory(business_area=business_area)
+        business_area = PublicsBusinessAreaFactory(code=workspace.business_area_code)
+        country = PublicsCountryFactory(business_area=business_area)
 
-        region = DSARegionFactory(country=country, rates=[])
+        region = PublicsDSARegionFactory(country=country, rates=[])
 
         with self.assertNumQueries(1):
-            response = self.forced_auth_req('get', reverse('public:dsa_regions'),
+            response = self.forced_auth_req('get', reverse('publics:dsa_regions'),
                                             user=self.unicef_staff)
         response_json = json.loads(response.rendered_content)
         self.assertEqual(len(response_json), 0)
 
-        rate = DSARateFactory(region=region)
+        rate = PublicsDSARateFactory(region=region)
 
-        response = self.forced_auth_req('get', reverse('public:dsa_regions'),
+        response = self.forced_auth_req('get', reverse('publics:dsa_regions'),
                                         user=self.unicef_staff)
         response_json = json.loads(response.rendered_content)
         self.assertEqual(len(response_json), 1)
@@ -64,7 +72,7 @@ class DSARateTest(APITenantTestCase):
         # Expire rate - region should be excluded
         rate.delete()
 
-        response = self.forced_auth_req('get', reverse('public:dsa_regions'),
+        response = self.forced_auth_req('get', reverse('publics:dsa_regions'),
                                         user=self.unicef_staff)
         response_json = json.loads(response.rendered_content)
         self.assertEqual(len(response_json), 0)
@@ -74,35 +82,38 @@ class DSARateTest(APITenantTestCase):
         workspace.business_area_code = '1234'
         workspace.save()
 
-        business_area = BusinessAreaFactory(code=workspace.business_area_code)
-        country = CountryFactory(business_area=business_area)
+        business_area = PublicsBusinessAreaFactory(code=workspace.business_area_code)
+        country = PublicsCountryFactory(business_area=business_area)
 
-        region = DSARegionFactory(country=country,
-                                  rates=[])
+        region = PublicsDSARegionFactory(country=country, rates=[])
 
         with freeze_time('2017-04-01'):
-            rate_1 = DSARateFactory(region=region,
-                                    effective_from_date=date(2017, 4, 1),
-                                    dsa_amount_usd=50)
+            rate_1 = PublicsDSARateFactory(
+                region=region,
+                effective_from_date=date(2017, 4, 1),
+                dsa_amount_usd=50
+            )
         with freeze_time('2017-04-10'):
-            rate_2 = DSARateFactory(region=region,
-                                    effective_from_date=date(2017, 4, 10),
-                                    dsa_amount_usd=80)
+            rate_2 = PublicsDSARateFactory(
+                region=region,
+                effective_from_date=date(2017, 4, 10),
+                dsa_amount_usd=80
+            )
 
         date_str = date(2017, 4, 12).isoformat()
-        response = self.forced_auth_req('get', reverse('public:dsa_regions'),
+        response = self.forced_auth_req('get', reverse('publics:dsa_regions'),
                                         data={'values_at': date_str}, user=self.unicef_staff)
         response_json = json.loads(response.rendered_content)
         self.assertEqual(Decimal(response_json[0]['dsa_amount_usd']), rate_2.dsa_amount_usd)
 
         date_str = date(2017, 4, 6).isoformat()
-        response = self.forced_auth_req('get', reverse('public:dsa_regions'),
+        response = self.forced_auth_req('get', reverse('publics:dsa_regions'),
                                         data={'values_at': date_str}, user=self.unicef_staff)
         response_json = json.loads(response.rendered_content)
         self.assertEqual(Decimal(response_json[0]['dsa_amount_usd']), rate_1.dsa_amount_usd)
 
         date_str = date(2017, 3, 31).isoformat()
-        response = self.forced_auth_req('get', reverse('public:dsa_regions'),
+        response = self.forced_auth_req('get', reverse('publics:dsa_regions'),
                                         data={'values_at': date_str}, user=self.unicef_staff)
         response_json = json.loads(response.rendered_content)
         self.assertEqual(len(response_json), 0)
@@ -111,22 +122,26 @@ class DSARateTest(APITenantTestCase):
         rate_2.save()
 
         date_str = datetime(2017, 4, 16, tzinfo=UTC).isoformat()
-        response = self.forced_auth_req('get', reverse('public:dsa_regions'),
+        response = self.forced_auth_req('get', reverse('publics:dsa_regions'),
                                         data={'values_at': date_str}, user=self.unicef_staff)
         response_json = json.loads(response.rendered_content)
         self.assertEqual(len(response_json), 0)
 
     def test_effective_from_date(self):
-        region = DSARegionFactory(rates=[])
+        region = PublicsDSARegionFactory(rates=[])
 
         now_date = now().date()
-        rate_1 = DSARateFactory(region=region,
-                                effective_from_date=None)
+        rate_1 = PublicsDSARateFactory(
+            region=region,
+            effective_from_date=None
+        )
 
         self.assertEqual(rate_1.effective_from_date, now_date)
 
         effective_from_date = date(2017, 4, 1)
-        rate_2 = DSARateFactory(region=region,
-                                effective_from_date=effective_from_date)
+        rate_2 = PublicsDSARateFactory(
+            region=region,
+            effective_from_date=effective_from_date
+        )
 
         self.assertEqual(rate_2.effective_from_date, effective_from_date)

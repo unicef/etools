@@ -5,6 +5,7 @@ import six
 from django.core.exceptions import ValidationError as CoreValidationError
 from django.db import ProgrammingError
 from django.http import Http404
+
 from django_fsm import can_proceed, has_transition_perm
 
 from rest_framework import exceptions
@@ -163,7 +164,7 @@ class NestedViewSetMixin(object):
 
     def get_parent_object(self):
         parent = self.get_parent()
-        if not parent:
+        if not parent or not self.kwargs:
             return
         return parent.get_object()
 

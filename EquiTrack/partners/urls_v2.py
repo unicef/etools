@@ -12,31 +12,38 @@ from partners.views.partner_organization_v2 import (
     PartnerOrganizationHactAPIView,
     PartnerOrganizationListAPIView,
     PartnerStaffMemberListAPIVIew,
-    PlannedEngagementAPIView
+    PlannedEngagementAPIView,
+    PartnerOrganizationSimpleHactAPIView
 )
 from partners.views.agreements_v2 import (
     AgreementAmendmentListAPIView,
     AgreementListAPIView,
     AgreementDetailAPIView,
     AgreementAmendmentDeleteView,
-)
+    AgreementDeleteView)
 from partners.views.interventions_v2 import (
+    InterventionAmendmentDeleteView,
     InterventionAmendmentListAPIView,
-    InterventionListAPIView,
-    InterventionListDashView,
+    InterventionAttachmentDeleteView,
+    InterventionDeleteView,
     InterventionDetailAPIView,
     InterventionIndicatorListAPIView,
+    InterventionIndicatorsListView,
+    InterventionIndicatorsUpdateView,
+    InterventionListAPIView,
+    InterventionListDashView,
+    InterventionListMapView,
+    InterventionLowerResultListCreateView,
+    InterventionLowerResultUpdateView,
     InterventionPlannedVisitsDeleteView,
-    InterventionAttachmentDeleteView,
+    InterventionReportingPeriodDetailView,
+    InterventionReportingPeriodListCreateView,
+    InterventionReportingRequirementView,
     InterventionResultLinkDeleteView,
     InterventionResultListAPIView,
-    InterventionAmendmentDeleteView,
+    InterventionResultLinkListCreateView,
+    InterventionResultLinkUpdateView,
     InterventionSectorLocationLinkListAPIView,
-    InterventionListMapView,
-    InterventionLowerResultListCreateView, InterventionLowerResultUpdateView, InterventionResultLinkListCreateView,
-    InterventionResultLinkUpdateView, InterventionIndicatorsListView, InterventionIndicatorsUpdateView,
-    InterventionReportingPeriodListCreateView,
-    InterventionReportingPeriodDetailView,
 )
 
 from partners.views.v2 import (
@@ -46,10 +53,16 @@ from partners.views.v2 import (
 
 # http://www.django-rest-framework.org/api-guide/format-suffixes/
 
+app_name = 'partners'
 urlpatterns = (
 
     url(r'^agreements/$', view=AgreementListAPIView.as_view(), name='agreement-list'),
-    url(r'^agreements/(?P<pk>\d+)/$', view=AgreementDetailAPIView.as_view(), name='agreement-detail'),
+    url(r'^agreements/(?P<pk>\d+)/$', view=AgreementDetailAPIView.as_view(http_method_names=['get', 'patch']),
+        name='agreement-detail'),
+
+    url(r'^agreements/delete/(?P<pk>\d+)/$', view=AgreementDeleteView.as_view(http_method_names=['delete']),
+        name='agreement-delete'),
+
     url(r'^agreements/(?P<agr>\d+)/generate_doc/$', PCAPDFView.as_view(), name='pca_pdf'),
     url(r'^agreements/amendments/$',
         view=AgreementAmendmentListAPIView.as_view(),
@@ -64,6 +77,9 @@ urlpatterns = (
     url(r'^partners/hact/$',
         view=PartnerOrganizationHactAPIView.as_view(http_method_names=['get', ]),
         name='partner-hact'),
+    url(r'^partners/hact/simple/$',
+        view=PartnerOrganizationSimpleHactAPIView.as_view(http_method_names=['get', ]),
+        name='partner-hact-simple'),
     url(r'^partners/engagements/$',
         view=PlannedEngagementAPIView.as_view(http_method_names=['get', ]),
         name='partner-engagements'),
@@ -81,22 +97,9 @@ urlpatterns = (
         name='partner-assessment-del'),
     url(r'^partners/add/$', view=PartnerOrganizationAddView.as_view(http_method_names=['post']), name='partner-add'),
 
-    # url(r'^partners/(?P<partner_pk>\d+)/agreements/$',
-    #     view=AgreementListAPIView.as_view(),
-    #     name='parter-agreement-list'),
-
     url(r'^partners/(?P<partner_pk>\d+)/staff-members/$',
         view=PartnerStaffMemberListAPIVIew.as_view(http_method_names=['get']),
         name='partner-staff-members-list'),
-    # url(r'^staff-members/$', view=PartnerStaffMemberListAPIVIew.as_view(), name='staff-member-list'),
-    # url(r'^staff-members/(?P<pk>\d+)/$', view=PartnerStaffMemberDetailAPIView.as_view(), name='staff-member-detail'),
-    # url(r'^partnership-dash/(?P<ct_pk>\d+)/(?P<office_pk>\d+)/$',
-    #     view=PartnershipDashboardAPIView.as_view(),
-    #     name='partnership-dash-with-ct-office'),
-    # url(r'^partnership-dash/(?P<ct_pk>\d+)/$',
-    #     view=PartnershipDashboardAPIView.as_view(),
-    #     name='partnership-dash-with-ct'),
-    # url(r'^partnership-dash/$', view=PartnershipDashboardAPIView.as_view(), name='partnership-dash'),
 
     url(r'^interventions/$',
         view=InterventionListAPIView.as_view(http_method_names=['get', 'post']),
@@ -135,6 +138,10 @@ urlpatterns = (
     url(r'^interventions/(?P<pk>\d+)/$',
         view=InterventionDetailAPIView.as_view(http_method_names=['get', 'patch']),
         name='intervention-detail'),
+    url(r'^interventions/delete/(?P<pk>\d+)/$',
+        view=InterventionDeleteView.as_view(http_method_names=['delete']),
+        name='intervention-delete'),
+
     url(r'^interventions/planned-visits/(?P<pk>\d+)/$',
         view=InterventionPlannedVisitsDeleteView.as_view(http_method_names=['delete', ]),
         name='intervention-visits-del'),
@@ -175,6 +182,13 @@ urlpatterns = (
     url(r'^interventions/reporting-periods/(?P<pk>\d+)/$',
         view=InterventionReportingPeriodDetailView.as_view(http_method_names=['get', 'patch', 'delete']),
         name='intervention-reporting-periods-detail'),
+    url(
+        r'^interventions/(?P<intervention_pk>\d+)/reporting-requirements/(?P<report_type>\w+)/$',
+        view=InterventionReportingRequirementView.as_view(
+            http_method_names=['get', 'post']
+        ),
+        name='intervention-reporting-requirements'
+    ),
 
     # TODO: figure this out
     # url(r'^partners/interventions/$', view=InterventionsView.as_view()),

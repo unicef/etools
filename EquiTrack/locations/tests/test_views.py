@@ -5,20 +5,21 @@ from django.db import connection
 from rest_framework import status
 from tenant_schemas.test.client import TenantClient
 
-from EquiTrack.factories import LocationFactory, UserFactory
-from EquiTrack.tests.mixins import APITenantTestCase
-from EquiTrack.tests.cases import EToolsTenantTestCase
+from EquiTrack.tests.cases import BaseTenantTestCase
 from locations.models import Location
+from locations.tests.factories import LocationFactory
+from users.tests.factories import UserFactory
 
 
-class TestLocationViews(APITenantTestCase):
-
-    def setUp(self):
-        self.unicef_staff = UserFactory(is_staff=True)
-        self.locations = [LocationFactory() for x in range(5)]
+class TestLocationViews(BaseTenantTestCase):
+    @classmethod
+    def setUpTestData(cls):
+        cls.unicef_staff = UserFactory(is_staff=True)
+        cls.locations = [LocationFactory() for x in range(5)]
         # heavy_detail_expected_keys are the keys that should be in response.data.keys()
-        self.heavy_detail_expected_keys = sorted(('id', 'name', 'p_code', 'location_type',
-                                                  'location_type_admin_level', 'parent', 'geo_point'))
+        cls.heavy_detail_expected_keys = sorted(
+            ('id', 'name', 'p_code', 'location_type', 'location_type_admin_level', 'parent', 'geo_point')
+        )
 
     def test_api_locationtypes_list(self):
         response = self.forced_auth_req('get', reverse('locationtypes-list'), user=self.unicef_staff)
@@ -26,9 +27,10 @@ class TestLocationViews(APITenantTestCase):
 
     def test_api_location_light_list(self):
         response = self.forced_auth_req('get', reverse('locations-light-list'), user=self.unicef_staff)
-
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(response.data[0].keys(), ["id", "name", "p_code"])
+        self.assertEqual(sorted(response.data[0].keys()), ["id", "name", "p_code"])
+        # sort the expected locations by name, the same way the API results are sorted
+        self.locations.sort(key=lambda location: location.name)
         self.assertEqual(response.data[0]["name"], '{} [{} - {}]'.format(
             self.locations[0].name, self.locations[0].gateway.name, self.locations[0].p_code))
 
@@ -105,30 +107,30 @@ class TestLocationViews(APITenantTestCase):
         assert etag_before != etag_after
 
     def test_api_location_autocomplete(self):
-        response = self.forced_auth_req('get', reverse('locations_autocomplete'),
+        response = self.forced_auth_req('get', reverse('locations:locations_autocomplete'),
                                         user=self.unicef_staff, data={"q": "Loc"})
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(len(response.data), 5)
-        self.assertEqual(response.data[0].keys(), ["id", "name", "p_code"])
+        self.assertEqual(sorted(response.data[0].keys()), ["id", "name", "p_code"])
         self.assertIn("Loc", response.data[0]["name"])
 
 
-class TestLocationAutocompleteView(EToolsTenantTestCase):
+class TestLocationAutocompleteView(BaseTenantTestCase):
     def setUp(self):
         super(TestLocationAutocompleteView, self).setUp()
-        self.unicef_staff = UserFactory(is_staff=True)
+        self.unicef_staff = UserFactory(is_staff=True, username='TestLocationAutocompleteView')
         self.client = TenantClient(self.tenant)
 
     def test_non_auth(self):
         LocationFactory()
-        response = self.client.get(reverse("locations-autocomplete-light"))
+        response = self.client.get(reverse("locations:locations-autocomplete-light"))
         self.assertEqual(response.status_code, status.HTTP_302_FOUND)
 
     def test_get(self):
         LocationFactory()
         self.client.force_login(self.unicef_staff)
-        response = self.client.get(reverse("locations-autocomplete-light"))
+        response = self.client.get(reverse("locations:locations-autocomplete-light"))
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         data = response.json()
         self.assertEqual(len(data["results"]), 1)
@@ -138,7 +140,7 @@ class TestLocationAutocompleteView(EToolsTenantTestCase):
         LocationFactory(name="Other")
         self.client.force_login(self.unicef_staff)
         response = self.client.get("{}?q=te".format(
-            reverse("locations-autocomplete-light")
+            reverse("locations:locations-autocomplete-light")
         ))
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         data = response.json()

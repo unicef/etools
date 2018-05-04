@@ -1,4 +1,6 @@
-from __future__ import unicode_literals
+# -*- coding: utf-8 -*-
+from __future__ import absolute_import, division, print_function, unicode_literals
+
 from datetime import date
 
 from django.db import models, transaction
@@ -27,10 +29,10 @@ class Quarter(models.Model):
         (Q4, 'Quarter 4'),
     )
 
-    name = models.CharField(max_length=64, choices=QUARTER_CHOICES)
-    year = models.CharField(max_length=4)
-    start_date = models.DateTimeField()
-    end_date = models.DateTimeField()
+    name = models.CharField(max_length=64, choices=QUARTER_CHOICES, verbose_name=_('Name'))
+    year = models.CharField(max_length=4, verbose_name=_('Year'))
+    start_date = models.DateTimeField(verbose_name=_('Start Date'))
+    end_date = models.DateTimeField(verbose_name=_('End Date'))
 
     def __repr__(self):
         return '{}-{}'.format(self.name, self.year)
@@ -61,11 +63,11 @@ class CountryProgramme(models.Model):
     """
     Represents a country programme cycle
     """
-    name = models.CharField(max_length=150)
-    wbs = models.CharField(max_length=30, unique=True)
-    invalid = models.BooleanField(default=False)
-    from_date = models.DateField()
-    to_date = models.DateField()
+    name = models.CharField(max_length=150, verbose_name=_('Name'))
+    wbs = models.CharField(max_length=30, unique=True, verbose_name=_('WBS'))
+    invalid = models.BooleanField(default=False, verbose_name=_('Invalid'))
+    from_date = models.DateField(verbose_name=_('From Date'))
+    to_date = models.DateField(verbose_name=_('To Date'))
 
     objects = CountryProgrammeManager()
 
@@ -127,7 +129,7 @@ class ResultType(models.Model):
         (OUTPUT, 'Output'),
         (ACTIVITY, 'Activity'),
     )
-    name = models.CharField(max_length=150, unique=True, choices=NAME_CHOICES)
+    name = models.CharField(max_length=150, unique=True, choices=NAME_CHOICES, verbose_name=_('Name'))
 
     def __str__(self):
         return self.name
@@ -139,25 +141,12 @@ class Sector(TimeStampedModel):
     Represents a sector
     """
 
-    name = models.CharField(max_length=45, unique=True)
-    description = models.CharField(
-        max_length=256,
-        blank=True,
-        null=True
-    )
-    alternate_id = models.IntegerField(
-        blank=True,
-        null=True
-    )
-    alternate_name = models.CharField(
-        max_length=255,
-        blank=True,
-        null=True
-    )
-    dashboard = models.BooleanField(
-        default=False
-    )
-    color = models.CharField(max_length=7, null=True, blank=True)
+    name = models.CharField(max_length=45, unique=True, verbose_name=_('Name'))
+    description = models.CharField(max_length=256, blank=True, null=True, verbose_name=_('Description'))
+    alternate_id = models.IntegerField(blank=True, null=True, verbose_name=_('Alternate ID'))
+    alternate_name = models.CharField(max_length=255, null=True, default='', verbose_name=_('Alternate Name'))
+    dashboard = models.BooleanField(default=False, verbose_name=_('Dashboard'))
+    color = models.CharField(max_length=7, null=True, blank=True, verbose_name=_('Color'))
 
     class Meta:
         ordering = ['name']
@@ -195,13 +184,18 @@ class Result(MPTTModel):
         verbose_name=_("Country Programme"),
         null=True,
         blank=True,
+        on_delete=models.CASCADE,
     )
-    result_type = models.ForeignKey(ResultType, verbose_name=_("Result Type"))
+    result_type = models.ForeignKey(
+        ResultType, verbose_name=_("Result Type"),
+        on_delete=models.CASCADE,
+    )
     sector = models.ForeignKey(
         Sector,
         verbose_name=_("Section"),
         null=True,
         blank=True,
+        on_delete=models.CASCADE,
     )
     name = models.TextField(verbose_name=_("Name"))
     code = models.CharField(
@@ -226,7 +220,8 @@ class Result(MPTTModel):
         null=True,
         blank=True,
         related_name='children',
-        db_index=True
+        db_index=True,
+        on_delete=models.CASCADE,
     )
 
     # activity level attributes
@@ -234,6 +229,8 @@ class Result(MPTTModel):
         verbose_name=_("Humanitarian Tag"),
         default=False,
     )
+    # This must be nullable so it can be optional without breaking
+    # uniqueness
     wbs = models.CharField(
         verbose_name=_("WBS"),
         max_length=50,
@@ -354,6 +351,8 @@ class LowerResult(TimeStampedModel):
     result_link = models.ForeignKey(
         'partners.InterventionResultLink',
         related_name='ll_results',
+        verbose_name=_('Result Link'),
+        on_delete=models.CASCADE,
     )
 
     name = models.CharField(verbose_name=_("Name"), max_length=500)
@@ -390,7 +389,7 @@ class Unit(models.Model):
     """
     Represents an unit of measurement
     """
-    type = models.CharField(max_length=45, unique=True)
+    type = models.CharField(max_length=45, unique=True, verbose_name=_('Type'))
 
     class Meta:
         ordering = ['type']
@@ -515,8 +514,8 @@ class Disaggregation(TimeStampedModel):
     As an example, the Disaggregation could be <Age>, and it would have multiple "categories"
     such as: <1, 1-5, 5-18, 18-64, 65+. Each of those categories would be a DisaggregationValue.
     """
-    name = models.CharField(max_length=255, unique=True)
-    active = models.BooleanField(default=False)
+    name = models.CharField(max_length=255, unique=True, verbose_name=_('Name'))
+    active = models.BooleanField(default=False, verbose_name=_('Active'))
 
     def __str__(self):
         return self.name
@@ -530,9 +529,13 @@ class DisaggregationValue(TimeStampedModel):
     related models:
         Disaggregation (ForeignKey): "disaggregation"
     """
-    disaggregation = models.ForeignKey(Disaggregation, related_name="disaggregation_values")
-    value = models.CharField(max_length=15)
-    active = models.BooleanField(default=False)
+    disaggregation = models.ForeignKey(
+        Disaggregation, related_name="disaggregation_values",
+        verbose_name=_('Disaggregation'),
+        on_delete=models.CASCADE,
+    )
+    value = models.CharField(max_length=15, verbose_name=_('Value'))
+    active = models.BooleanField(default=False, verbose_name=_('Active'))
 
     def __str__(self):
         return "Disaggregation Value {} -> {}".format(self.disaggregation, self.value)
@@ -554,6 +557,7 @@ class AppliedIndicator(TimeStampedModel):
         verbose_name=_("Indicator"),
         null=True,
         blank=True,
+        on_delete=models.CASCADE,
     )
 
     section = models.ForeignKey(
@@ -561,6 +565,7 @@ class AppliedIndicator(TimeStampedModel):
         verbose_name=_("Section"),
         null=True,
         blank=True,
+        on_delete=models.CASCADE,
     )
 
     cluster_indicator_id = models.PositiveIntegerField(
@@ -592,6 +597,7 @@ class AppliedIndicator(TimeStampedModel):
         LowerResult,
         verbose_name=_("PD Result"),
         related_name='applied_indicators',
+        on_delete=models.CASCADE,
     )
 
     # unique code for this indicator within the current context
@@ -641,6 +647,8 @@ class AppliedIndicator(TimeStampedModel):
         verbose_name=_("Location"),
         related_name='applied_indicators',
     )
+    is_high_frequency = models.BooleanField(default=False)
+    is_active = models.BooleanField(default=True)
 
     class Meta:
         unique_together = (("indicator", "lower_result"),)
@@ -659,7 +667,8 @@ class Indicator(TimeStampedModel):
     sector = models.ForeignKey(
         Sector,
         verbose_name=_("Section"),
-        blank=True, null=True
+        blank=True, null=True,
+        on_delete=models.CASCADE,
     )
 
     result = models.ForeignKey(
@@ -667,6 +676,7 @@ class Indicator(TimeStampedModel):
         verbose_name=_("Result"),
         null=True,
         blank=True,
+        on_delete=models.CASCADE,
     )
     name = models.CharField(verbose_name=_("Name"), max_length=1024)
     code = models.CharField(
@@ -680,6 +690,7 @@ class Indicator(TimeStampedModel):
         verbose_name=_("Unit"),
         null=True,
         blank=True,
+        on_delete=models.CASCADE,
     )
 
     total = models.IntegerField(
@@ -747,5 +758,49 @@ class Indicator(TimeStampedModel):
     def save(self, *args, **kwargs):
         # Prevent from saving empty strings as code because of the unique together constraint
         if not self.code:
-            self.code = None
+            self.code = ''
         super(Indicator, self).save(*args, **kwargs)
+
+
+@python_2_unicode_compatible
+class ReportingRequirement(TimeStampedModel):
+    TYPE_QPR = "QPR"
+    TYPE_HR = "HR"
+    TYPE_SPECIAL = "SPECIAL"
+    TYPE_CHOICES = (
+        (TYPE_QPR, _("Standard Quarterly Progress Report")),
+        (TYPE_HR, _("Humanitarian Report")),
+        (TYPE_SPECIAL, _("Special/Ad hoc Report")),
+    )
+
+    intervention = models.ForeignKey(
+        "partners.Intervention",
+        on_delete=models.CASCADE,
+        verbose_name=_("Intervention"),
+        related_name="reporting_requirements"
+    )
+    start_date = models.DateField(
+        null=True,
+        verbose_name=_('Start Date')
+    )
+    end_date = models.DateField(
+        null=True,
+        verbose_name=_('End Date')
+    )
+    due_date = models.DateField(verbose_name=_('Due Date'))
+    report_type = models.CharField(max_length=50, choices=TYPE_CHOICES)
+    description = models.CharField(
+        blank=True,
+        max_length=256,
+        verbose_name=_("Description")
+    )
+
+    class Meta:
+        ordering = ("-end_date", )
+
+    def __str__(self):
+        return "{} ({}) {}".format(
+            self.get_report_type_display,
+            self.report_type,
+            self.due_date
+        )

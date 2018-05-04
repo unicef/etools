@@ -1,126 +1,113 @@
 from __future__ import absolute_import, division, print_function, unicode_literals
 
-import sys
-from unittest import skipIf, TestCase
+from django.test import SimpleTestCase
+from django.utils import six
 
-from EquiTrack.factories import (
-    AirlineCompanyFactory, BusinessAreaFactory, BusinessRegionFactory, CurrencyFactory, DSARateFactory,
-    DSARegionFactory, FundFactory, PublicsCountryFactory, PublicsGrantFactory, TravelExpenseTypeFactory, WBSFactory,)
+from publics.tests.factories import (
+    PublicsAirlineCompanyFactory,
+    PublicsBusinessAreaFactory,
+    PublicsBusinessRegionFactory,
+    PublicsCountryFactory,
+    PublicsCurrencyFactory,
+    PublicsDSARateFactory,
+    PublicsDSARegionFactory,
+    PublicsFundFactory,
+    PublicsGrantFactory,
+    PublicsTravelExpenseTypeFactory,
+    PublicsWBSFactory,
+)
 
 
-@skipIf(sys.version_info.major == 3, "This test can be deleted under Python 3")
-class TestStrUnicode(TestCase):
-    '''Ensure calling str() on model instances returns UTF8-encoded text and unicode() returns unicode.'''
+class TestStrUnicode(SimpleTestCase):
+    '''Ensure calling six.text_type() on model instances returns the right text.'''
     def test_travel_expense_type(self):
-        instance = TravelExpenseTypeFactory.build(title=b'xyz')
-        self.assertEqual(str(instance), b'xyz')
-        self.assertEqual(unicode(instance), u'xyz')
+        instance = PublicsTravelExpenseTypeFactory.build(title='xyz')
+        self.assertEqual(six.text_type(instance), u'xyz')
 
-        instance = TravelExpenseTypeFactory.build(title=u'R\xe4dda Barnen')
-        self.assertEqual(str(instance), b'R\xc3\xa4dda Barnen')
-        self.assertEqual(unicode(instance), u'R\xe4dda Barnen')
+        instance = PublicsTravelExpenseTypeFactory.build(title=u'R\xe4dda Barnen')
+        self.assertEqual(six.text_type(instance), u'R\xe4dda Barnen')
 
     def test_currency(self):
-        instance = CurrencyFactory.build(name=b'xyz')
-        self.assertEqual(str(instance), b'xyz')
-        self.assertEqual(unicode(instance), u'xyz')
+        instance = PublicsCurrencyFactory.build(name='xyz')
+        self.assertEqual(six.text_type(instance), u'xyz')
 
         # Polish Zloty
-        instance = CurrencyFactory.build(name=u'z\u0142oty')
-        self.assertEqual(str(instance), b'z\xc5\x82oty')
-        self.assertEqual(unicode(instance), u'z\u0142oty')
+        instance = PublicsCurrencyFactory.build(name='z\u0142oty')
+        self.assertEqual(six.text_type(instance), 'z\u0142oty')
 
     def test_airline(self):
-        instance = AirlineCompanyFactory.build(name=b'xyz')
-        self.assertEqual(str(instance), b'xyz')
-        self.assertEqual(unicode(instance), u'xyz')
+        instance = PublicsAirlineCompanyFactory.build(name='xyz')
+        self.assertEqual(six.text_type(instance), u'xyz')
 
         # Myflug (Iceland)
-        instance = AirlineCompanyFactory.build(name=u'M\xfdflug')
-        self.assertEqual(str(instance), b'M\xc3\xbdflug')
-        self.assertEqual(unicode(instance), u'M\xfdflug')
+        instance = PublicsAirlineCompanyFactory.build(name='M\xfdflug')
+        self.assertEqual(six.text_type(instance), 'M\xfdflug')
 
     def test_business_region(self):
-        instance = BusinessRegionFactory.build(name=b'xyz')
-        self.assertEqual(str(instance), b'xyz')
-        self.assertEqual(unicode(instance), u'xyz')
+        instance = PublicsBusinessRegionFactory.build(name='xyz')
+        self.assertEqual(six.text_type(instance), u'xyz')
 
         # Ost (East)
-        instance = BusinessRegionFactory.build(name=u'\xd6st')
-        self.assertEqual(str(instance), b'\xc3\x96st')
-        self.assertEqual(unicode(instance), u'\xd6st')
+        instance = PublicsBusinessRegionFactory.build(name=u'\xd6st')
+        self.assertEqual(six.text_type(instance), u'\xd6st')
 
     def test_business_area(self):
-        instance = BusinessAreaFactory.build(name=b'xyz')
-        self.assertEqual(str(instance), b'xyz')
-        self.assertEqual(unicode(instance), u'xyz')
+        instance = PublicsBusinessAreaFactory.build(name='xyz')
+        self.assertEqual(six.text_type(instance), u'xyz')
 
         # Ost (East)
-        instance = BusinessAreaFactory.build(name=u'\xd6st')
-        self.assertEqual(str(instance), b'\xc3\x96st')
-        self.assertEqual(unicode(instance), u'\xd6st')
+        instance = PublicsBusinessAreaFactory.build(name=u'\xd6st')
+        self.assertEqual(six.text_type(instance), u'\xd6st')
 
     def test_wbs(self):
-        instance = WBSFactory.build(name=b'xyz')
-        self.assertEqual(str(instance), b'xyz')
-        self.assertEqual(unicode(instance), u'xyz')
+        instance = PublicsWBSFactory.build(name='xyz')
+        self.assertEqual(six.text_type(instance), u'xyz')
 
         # Ost (East)
-        instance = WBSFactory.build(name=u'\xd6st')
-        self.assertEqual(str(instance), b'\xc3\x96st')
-        self.assertEqual(unicode(instance), u'\xd6st')
+        instance = PublicsWBSFactory.build(name=u'\xd6st')
+        self.assertEqual(six.text_type(instance), u'\xd6st')
 
     def test_fund(self):
-        instance = FundFactory.build(name=b'xyz')
-        self.assertEqual(str(instance), b'xyz')
-        self.assertEqual(unicode(instance), u'xyz')
+        instance = PublicsFundFactory.build(name='xyz')
+        self.assertEqual(six.text_type(instance), u'xyz')
 
         # Ost (East)
-        instance = FundFactory.build(name=u'\xd6st')
-        self.assertEqual(str(instance), b'\xc3\x96st')
-        self.assertEqual(unicode(instance), u'\xd6st')
+        instance = PublicsFundFactory.build(name=u'\xd6st')
+        self.assertEqual(six.text_type(instance), u'\xd6st')
 
     def test_grant(self):
-        instance = PublicsGrantFactory.build(name=b'xyz')
-        self.assertEqual(str(instance), b'xyz')
-        self.assertEqual(unicode(instance), u'xyz')
+        instance = PublicsGrantFactory.build(name='xyz')
+        self.assertEqual(six.text_type(instance), u'xyz')
 
         # Ost (East)
         instance = PublicsGrantFactory.build(name=u'\xd6st')
-        self.assertEqual(str(instance), b'\xc3\x96st')
-        self.assertEqual(unicode(instance), u'\xd6st')
+        self.assertEqual(six.text_type(instance), u'\xd6st')
 
     def test_country(self):
-        instance = PublicsCountryFactory.build(name=b'xyz')
-        self.assertEqual(str(instance), b'xyz')
-        self.assertEqual(unicode(instance), u'xyz')
+        instance = PublicsCountryFactory.build(name='xyz')
+        self.assertEqual(six.text_type(instance), u'xyz')
 
         # Island (Iceland)
         instance = PublicsCountryFactory.build(name=u'\xccsland')
-        self.assertEqual(str(instance), b'\xc3\x8csland')
-        self.assertEqual(unicode(instance), u'\xccsland')
+        self.assertEqual(six.text_type(instance), u'\xccsland')
 
     def test_dsa_region(self):
-        country = PublicsCountryFactory.build(name=b'xyz')
-        instance = DSARegionFactory.build(area_name=b'xyz', country=country)
-        self.assertEqual(str(instance), b'xyz - xyz')
-        self.assertEqual(unicode(instance), u'xyz - xyz')
+        country = PublicsCountryFactory.build(name='xyz')
+        instance = PublicsDSARegionFactory.build(area_name='xyz', country=country)
+        self.assertEqual(six.text_type(instance), u'xyz - xyz')
 
         # Island (Iceland)
         country = PublicsCountryFactory.build(name=u'\xccsland')
-        instance = DSARegionFactory.build(area_name=b'xyz', country=country)
-        self.assertEqual(str(instance), b'\xc3\x8csland - xyz')
-        self.assertEqual(unicode(instance), u'\xccsland - xyz')
+        instance = PublicsDSARegionFactory.build(area_name='xyz', country=country)
+        self.assertEqual(six.text_type(instance), u'\xccsland - xyz')
 
     def test_dsa_rate(self):
-        country = PublicsCountryFactory.build(name=b'xyz')
-        region = DSARegionFactory.build(area_name=b'xyz', country=country)
-        instance = DSARateFactory.build(region=region)
-        self.assertTrue(str(instance).startswith(b'xyz - xyz'))
-        self.assertTrue(unicode(instance).startswith(u'xyz - xyz'))
+        country = PublicsCountryFactory.build(name='xyz')
+        region = PublicsDSARegionFactory.build(area_name='xyz', country=country)
+        instance = PublicsDSARateFactory.build(region=region)
+        self.assertTrue(six.text_type(instance).startswith(u'xyz - xyz'))
 
         country = PublicsCountryFactory.build(name=u'\xccsland')
-        region = DSARegionFactory.build(area_name=b'xyz', country=country)
-        instance = DSARateFactory.build(region=region)
-        self.assertTrue(str(instance).startswith(b'\xc3\x8csland - xyz'))
-        self.assertTrue(unicode(instance).startswith(u'\xccsland - xyz'))
+        region = PublicsDSARegionFactory.build(area_name='xyz', country=country)
+        instance = PublicsDSARateFactory.build(region=region)
+        self.assertTrue(six.text_type(instance).startswith(u'\xccsland - xyz'))

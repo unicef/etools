@@ -6,13 +6,18 @@ from django.utils.translation import ugettext as _
 
 from rest_framework import status
 
-from EquiTrack.tests.mixins import APITenantTestCase
+from EquiTrack.tests.cases import BaseTenantTestCase
 from tpm.models import TPMVisit
 from tpm.tests.base import TPMTestCaseMixin
 from tpm.tests.factories import TPMVisitFactory, UserFactory
 
 
-class TPMTransitionTestCase(TPMTestCaseMixin, APITenantTestCase):
+class TPMTransitionTestCase(TPMTestCaseMixin, BaseTenantTestCase):
+    @classmethod
+    def setUpTestData(cls):
+        call_command('update_tpm_permissions', verbosity=0)
+        call_command('update_notifications')
+
     def _do_transition(self, visit, action, user, data=None):
         data = data or {}
         return self.forced_auth_req(
@@ -39,8 +44,7 @@ class TestTPMTransitionConditions(TPMTransitionTestCase):
 
     def test_assign_without_activities(self):
         visit = TPMVisitFactory(status='draft',
-                                tpm_activities__count=0,
-                                unicef_focal_points__count=3)
+                                tpm_activities__count=0)
 
         response = self._do_transition(visit, 'assign', self.pme_user)
         self.assertEquals(response.status_code, status.HTTP_400_BAD_REQUEST)
@@ -51,7 +55,7 @@ class TestTPMTransitionConditions(TPMTransitionTestCase):
     def test_assign_without_focal_points(self):
         visit = TPMVisitFactory(status='draft',
                                 tpm_activities__count=3,
-                                unicef_focal_points__count=0)
+                                tpm_activities__unicef_focal_points__count=0)
 
         response = self._do_transition(visit, 'assign', self.pme_user)
         self.assertEquals(response.status_code, status.HTTP_400_BAD_REQUEST)
@@ -62,7 +66,7 @@ class TestTPMTransitionConditions(TPMTransitionTestCase):
     def test_success_assign(self):
         visit = TPMVisitFactory(status='draft',
                                 tpm_activities__count=3,
-                                unicef_focal_points__count=3,
+                                tpm_activities__unicef_focal_points__count=3,
                                 tpm_partner_focal_points__count=3)
 
         response = self._do_transition(visit, 'assign', self.pme_user)
@@ -71,10 +75,17 @@ class TestTPMTransitionConditions(TPMTransitionTestCase):
         visit = self._refresh_tpm_visit_instance(visit)
         self.assertEquals(visit.status, 'assigned')
 
-    def test_success_cancel(self):
+    def test_cancel_without_msg(self):
         visit = TPMVisitFactory(status='draft')
 
         response = self._do_transition(visit, 'cancel', self.pme_user)
+        self.assertEquals(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn('cancel_comment', response.data)
+
+    def test_success_cancel(self):
+        visit = TPMVisitFactory(status='draft')
+
+        response = self._do_transition(visit, 'cancel', self.pme_user, data={'cancel_comment': 'Just because'})
         self.assertEquals(response.status_code, status.HTTP_200_OK)
 
         visit = self._refresh_tpm_visit_instance(visit)
@@ -193,7 +204,7 @@ class TransitionPermissionTestCaseMetaclass(type):
 
         newclass.transitions = cls._collect_transitions(newclass.model)
         newclass.status_field = getattr(newclass.model, newclass.transitions[0])._django_fsm.field
-        newclass.statuses = zip(*newclass.status_field.choices)[0]
+        newclass.statuses = list(zip(*newclass.status_field.choices))[0]
 
         for obj_status in newclass.statuses:
             for transition in newclass.transitions:
@@ -237,10 +248,10 @@ class TPMTransitionPermissionsTestCase(TransitionPermissionsTestCaseMixin, TPMTr
         opts = {}
 
         if transition == 'assign':
-            opts['unicef_focal_points__count'] = 1
-            opts['offices__count'] = 1
             opts['tpm_partner_focal_points__count'] = 1
             opts['tpm_activities__count'] = 1
+            opts['tpm_activities__unicef_focal_points__count'] = 1
+            opts['tpm_activities__offices__count'] = 1
 
         if transition == 'send_report':
             opts['tpm_activities__report_attachments__count'] = 1
@@ -254,6 +265,9 @@ class TPMTransitionPermissionsTestCase(TransitionPermissionsTestCaseMixin, TPMTr
 
         if transition in ['reject', 'reject_report']:
             extra_data['reject_comment'] = 'Just because.'
+
+        if transition in ['cancel']:
+            extra_data['cancel_comment'] = 'Just because.'
 
         if transition == 'approve':
             extra_data['mark_as_programmatic_visit'] = []
@@ -314,7 +328,7 @@ class FPPermissionsForTpmTransitionTestCase(TPMTransitionPermissionsTestCase):
 
     def create_object(self, transition, **kwargs):
         opts = {
-            'unicef_focal_points': [self.user],
+            'tpm_activities__unicef_focal_points': [self.user],
         }
 
         opts.update(kwargs)

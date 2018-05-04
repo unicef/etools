@@ -1,7 +1,7 @@
 import datetime
 import operator
 
-from django.contrib.auth import models
+from django.contrib.auth import get_user_model
 from django.db.models.functions import Concat
 from django.db.models import Value
 from model_utils import Choices
@@ -12,8 +12,8 @@ from rest_framework.generics import RetrieveUpdateDestroyAPIView
 from rest_framework.permissions import IsAdminUser
 from rest_framework.views import APIView
 
+from attachments.models import FileType as AttachmentFileType
 from EquiTrack.fields import CURRENCIES
-
 from reports.models import (
     CountryProgramme,
     Result,
@@ -53,7 +53,8 @@ class PartnerStaffMemberDetailAPIView(RetrieveUpdateDestroyAPIView):
         return super(PartnerStaffMemberDetailAPIView, self).get_serializer_class()
 
 
-def choices_to_json_ready(choices):
+# TODO move in EquiTrack (after utils package has been merged in EquiTrack)
+def choices_to_json_ready(choices, sort_choices=True):
     if isinstance(choices, dict):
         choice_list = [(k, v) for k, v in choices.items()]
     elif isinstance(choices, Choices):
@@ -68,6 +69,8 @@ def choices_to_json_ready(choices):
     else:
         choice_list = choices
 
+    if sort_choices:
+        choice_list = sorted(choice_list, key=lambda tup: tup[1])
     return [{'label': choice[1], 'value': choice[0]} for choice in choice_list]
 
 
@@ -88,13 +91,30 @@ class PMPStaticDropdownsListAPIView(APIView):
         agency_choices = choices_to_json_ready(PartnerOrganization.AGENCY_CHOICES)
         assessment_types = choices_to_json_ready(Assessment.ASSESSMENT_TYPES)
         agreement_types = choices_to_json_ready(Agreement.AGREEMENT_TYPES)
-        agreement_status = choices_to_json_ready(Agreement.STATUS_CHOICES)
+        agreement_status = choices_to_json_ready(Agreement.STATUS_CHOICES, sort_choices=False)
         agreement_amendment_types = choices_to_json_ready(AgreementAmendment.AMENDMENT_TYPES)
         intervention_doc_type = choices_to_json_ready(Intervention.INTERVENTION_TYPES)
-        intervention_status = choices_to_json_ready(Intervention.INTERVENTION_STATUS)
+        intervention_status = choices_to_json_ready(Intervention.INTERVENTION_STATUS, sort_choices=False)
         intervention_amendment_types = choices_to_json_ready(InterventionAmendment.AMENDMENT_TYPES)
         location_types = GatewayType.objects.values('id', 'name', 'admin_level').order_by('id')
         currencies = choices_to_json_ready(CURRENCIES)
+        # hardcoded to partners app attachments for now
+        # once tpm and audit come online we can remove the filter
+        # on attachment file types
+        attachment_types = AttachmentFileType.objects.values_list(
+            'label',
+            flat=True
+        ).filter(code__in=[
+            "partners_agreement",
+            "partners_partner_assessment",
+            "partners_assessment_report",
+            "partners_agreement_amendment",
+            "partners_intervention_prc_review",
+            "partners_intervention_signed_pd",
+            "partners_intervention_amendment_signed",
+            "partners_intervention_attachment",
+        ])
+        partner_file_types = FileType.objects.values_list("name", flat=True)
 
         local_currency = local_workspace.local_currency.id if local_workspace.local_currency else None
 
@@ -112,7 +132,9 @@ class PMPStaticDropdownsListAPIView(APIView):
                 'intervention_amendment_types': intervention_amendment_types,
                 'currencies': currencies,
                 'local_currency': local_currency,
-                'location_types': location_types
+                'location_types': location_types,
+                'attachment_types': attachment_types,
+                'partner_file_types': partner_file_types,
             },
             status=status.HTTP_200_OK
         )
@@ -125,7 +147,7 @@ class PMPDropdownsListApiView(APIView):
         """
         Return All dropdown values used for Agreements form
         """
-        signed_by_unicef = list(models.User.objects.filter(
+        signed_by_unicef = list(get_user_model().objects.filter(
             groups__name__in=['Senior Management Team'],
             profile__country=request.tenant
         ).annotate(

@@ -1,5 +1,3 @@
-from __future__ import unicode_literals
-
 from django.apps import apps
 from django.contrib.postgres.fields import ArrayField
 from django.db import models
@@ -13,6 +11,7 @@ from .utils import collect_child_models, collect_parent_models
 
 class PermissionQuerySet(models.QuerySet):
     def filter_by_context(self, context):
+        context = list(context)
         i = 0
         while i < len(context):
             if isinstance(context[i], BaseCondition):
@@ -53,6 +52,13 @@ class PermissionQuerySet(models.QuerySet):
 
 @six.python_2_unicode_compatible
 class Permission(models.Model):
+    """
+    Model describes field-level permissions.
+    Main idea is to provide different set of readable/writable fields in dependency from current context.
+    User roles and target state are defined in conditions, so we don't need to strongly determine user role.
+    Then can be combined to grant more privileges for user in special cases.
+    """
+
     PERMISSIONS = Choices(
         ('view', 'View'),
         ('edit', 'Edit'),
@@ -86,7 +92,7 @@ class Permission(models.Model):
         elif hasattr(field, 'field_name'):
             field = field.field_name
 
-        return '{}.{}.{}'.format(model._meta.app_label, model._meta.model_name, field)
+        return '.'.join([model._meta.app_label, model._meta.model_name, field])
 
     @staticmethod
     def parse_target(target):
@@ -96,6 +102,13 @@ class Permission(models.Model):
 
     @classmethod
     def apply_permissions(cls, permissions, targets, kind):
+        """
+        apply permissions to targets
+        :param permissions:
+        :param targets:
+        :param kind:
+        :return:
+        """
         permissions = list(permissions)
 
         i = 0
@@ -110,12 +123,15 @@ class Permission(models.Model):
                 children = collect_child_models(model, levels=1)
                 children_map[model] = children
 
+            # apply permissions to childs, in case of inheritance
             imaginary_permissions = [Permission(permission=perm.permission,
                                                 permission_type=perm.permission_type,
                                                 condition=perm.condition,
                                                 target=Permission.get_target(child, field_name))
                                      for child in children]
 
+            # permissions can be defined both for children and parent, so we need to priority
+            # children permissions from automatically generated parent-based permissions.
             perm.image_level = getattr(perm, 'image_level', 0)
             for imaginary_perm in imaginary_permissions:
                 imaginary_perm.image_level = perm.image_level + 1
@@ -124,6 +140,7 @@ class Permission(models.Model):
 
             i += 1
 
+        # order permissions in dependency from their level and complexity of condition
         permissions.sort(key=lambda perm: (perm.image_level, -len(perm.condition), '*' in perm.target))
 
         allowed_targets = []

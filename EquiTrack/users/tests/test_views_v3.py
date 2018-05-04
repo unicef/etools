@@ -5,19 +5,42 @@ from __future__ import unicode_literals
 
 import json
 
+from django.contrib.auth import get_user_model
 from django.core.urlresolvers import reverse
 from rest_framework import status
 
-from EquiTrack.factories import GroupFactory, UserFactory
-from EquiTrack.tests.mixins import APITenantTestCase
+from EquiTrack.tests.cases import BaseTenantTestCase
 from users.models import UserProfile
 from users.serializers_v3 import AP_ALLOWED_COUNTRIES
+from users.tests.factories import GroupFactory, UserFactory
 
 
-class TestUsersDetailAPIView(APITenantTestCase):
-    def setUp(self):
-        super(TestUsersDetailAPIView, self).setUp()
-        self.unicef_staff = UserFactory(is_staff=True)
+class TestCountryView(BaseTenantTestCase):
+    def test_get(self):
+        user = UserFactory(is_staff=True)
+        response = self.forced_auth_req(
+            "get",
+            reverse("users_v3:country-detail"),
+            user=user
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data[0]["id"], user.profile.country.pk)
+
+    def test_get_no_result(self):
+        user = UserFactory(is_staff=True, profile__country=None)
+        response = self.forced_auth_req(
+            "get",
+            reverse("users_v3:country-detail"),
+            user=user
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(response.data), 0)
+
+
+class TestUsersDetailAPIView(BaseTenantTestCase):
+    @classmethod
+    def setUpTestData(cls):
+        cls.unicef_staff = UserFactory(is_staff=True)
 
     def test_get_not_staff(self):
         user = UserFactory()
@@ -49,7 +72,7 @@ class TestUsersDetailAPIView(APITenantTestCase):
         self.assertEqual(response.data, {})
 
 
-class TestUsersListAPIView(APITenantTestCase):
+class TestUsersListAPIView(BaseTenantTestCase):
     def setUp(self):
         self.unicef_staff = UserFactory(is_staff=True)
         self.unicef_superuser = UserFactory(is_superuser=True)
@@ -141,7 +164,7 @@ class TestUsersListAPIView(APITenantTestCase):
         self.assertEqual(len(response_json), 2)
 
 
-class TestMyProfileAPIView(APITenantTestCase):
+class TestMyProfileAPIView(BaseTenantTestCase):
     def setUp(self):
         super(TestMyProfileAPIView, self).setUp()
         self.unicef_staff = UserFactory(is_staff=True)
@@ -163,17 +186,28 @@ class TestMyProfileAPIView(APITenantTestCase):
 
     def test_get_no_profile(self):
         """Ensure profile is created for user, if it does not exist"""
-        user = UserFactory()
+        user = self.unicef_staff
         UserProfile.objects.get(user=user).delete()
         self.assertFalse(UserProfile.objects.filter(user=user).exists())
+
+        # We need user.profile to NOT return a profile, otherwise the view will
+        # still see the deleted one and not create a new one.  (This is only a
+        # problem for this test, not in real usage.)
+        # ``user.refresh_from_db()`` does not seem sufficient to stop user.profile from
+        # returning the now-deleted profile object, so do it the hard way.
+        # (Hopefully this is fixed, but here in Django 1.10.8 it's a problem.
+        # And I don't see any mention of a fix in release notes up through
+        # 2.0.3.)
+        user = get_user_model().objects.get(pk=user.pk)
+
         response = self.forced_auth_req(
             "get",
             self.url,
-            user=self.unicef_staff,
+            user=user,
         )
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response.data["name"], user.get_full_name())
-        self.assertFalse(UserProfile.objects.filter(user=user).exists())
+        self.assertTrue(UserProfile.objects.filter(user=user).exists())
 
     def test_patch(self):
         self.assertNotEqual(

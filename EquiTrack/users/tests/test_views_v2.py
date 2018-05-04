@@ -2,15 +2,16 @@ from __future__ import unicode_literals
 
 import json
 
+from django.contrib.auth import get_user_model
 from django.core.urlresolvers import reverse
 from rest_framework import status
 
-from EquiTrack.factories import GroupFactory, UserFactory
-from EquiTrack.tests.mixins import APITenantTestCase
+from EquiTrack.tests.cases import BaseTenantTestCase
 from users.models import UserProfile
+from users.tests.factories import GroupFactory, UserFactory
 
 
-class TestMyProfileAPIView(APITenantTestCase):
+class TestMyProfileAPIView(BaseTenantTestCase):
     def setUp(self):
         self.unicef_staff = UserFactory(is_staff=True)
         self.unicef_superuser = UserFactory(is_superuser=True)
@@ -31,17 +32,28 @@ class TestMyProfileAPIView(APITenantTestCase):
 
     def test_get_no_profile(self):
         """Ensure profile is created for user, if it does not exist"""
-        user = UserFactory()
+        user = self.unicef_staff
         UserProfile.objects.get(user=user).delete()
         self.assertFalse(UserProfile.objects.filter(user=user).exists())
+
+        # We need user.profile to NOT return a profile, otherwise the view will
+        # still see the deleted one and not create a new one.  (This is only a
+        # problem for this test, not in real usage.)
+        # ``user.refresh_from_db()`` does not seem sufficient to stop user.profile from
+        # returning the now-deleted profile object, so do it the hard way.
+        # (Hopefully this is fixed, but here in Django 1.10.8 it's a problem.
+        # And I don't see any mention of a fix in release notes up through
+        # 2.0.3.)
+        user = get_user_model().objects.get(pk=user.pk)
+
         response = self.forced_auth_req(
             "get",
             self.url,
-            user=self.unicef_staff,
+            user=user,
         )
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response.data["name"], user.get_full_name())
-        self.assertFalse(UserProfile.objects.filter(user=user).exists())
+        self.assertTrue(UserProfile.objects.filter(user=user).exists())
 
     def test_patch(self):
         self.assertNotEqual(
@@ -71,7 +83,7 @@ class TestMyProfileAPIView(APITenantTestCase):
         self.assertEqual(response.data["oic"], self.unicef_superuser.id)
 
 
-class TestCountryView(APITenantTestCase):
+class TestCountryView(BaseTenantTestCase):
     def test_get(self):
         user = UserFactory(is_staff=True)
         response = self.forced_auth_req(
@@ -94,7 +106,7 @@ class TestCountryView(APITenantTestCase):
         self.assertEqual(len(response.data), 0)
 
 
-class TestCountriesViewSet(APITenantTestCase):
+class TestCountriesViewSet(BaseTenantTestCase):
     def setUp(self):
         self.unicef_superuser = UserFactory(is_superuser=True)
         self.partnership_manager_user = UserFactory(is_staff=True)

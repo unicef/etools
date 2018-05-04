@@ -2,6 +2,7 @@ from __future__ import absolute_import, division, print_function, unicode_litera
 
 from django.contrib.contenttypes.models import ContentType
 from django.db import models
+from django.utils.translation import ugettext_lazy as _
 
 from utils.common.models.fields import CodedGenericRelation
 
@@ -9,10 +10,13 @@ from utils.common.models.fields import CodedGenericRelation
 class CodedGenericChild(models.Model):
     field = models.IntegerField()
 
-    content_type = models.ForeignKey(ContentType)
+    content_type = models.ForeignKey(ContentType, on_delete=models.CASCADE)
     object_id = models.IntegerField()
 
     code = models.CharField(max_length=20, blank=True)
+
+    class Meta:
+        verbose_name_plural = _('Coded Generic Children')
 
 
 class Parent(models.Model):
@@ -25,4 +29,7 @@ class Parent(models.Model):
 class Child1(models.Model):
     field = models.IntegerField()
 
-    parent = models.ForeignKey(Parent)
+    parent = models.ForeignKey(Parent, on_delete=models.CASCADE)
+
+    class Meta:
+        verbose_name_plural = _('Children1')

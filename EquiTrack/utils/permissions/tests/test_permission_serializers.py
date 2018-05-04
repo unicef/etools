@@ -1,11 +1,12 @@
 from __future__ import absolute_import, division, print_function, unicode_literals
 
-from django.contrib.auth.models import Group, User
 from django.db import IntegrityError
 from django.test import TestCase
+from django.utils import six
 
 from rest_framework import serializers
 
+from users.tests.factories import GroupFactory, UserFactory
 from utils.permissions.serializers import PermissionsBasedSerializerMixin
 from utils.permissions.tests.models import Child2, Parent, Permission
 from utils.writable_serializers.serializers import WritableNestedSerializerMixin
@@ -14,11 +15,11 @@ from utils.writable_serializers.serializers import WritableNestedSerializerMixin
 class PermissionsBasedSerializerTestCase(TestCase):
     @classmethod
     def setUpTestData(cls):
-        group1 = Group.objects.create(name='Group1')
-        group2 = Group.objects.create(name='Group2')
+        group1 = GroupFactory(name='Group1')
+        group2 = GroupFactory(name='Group2')
 
-        cls.user1 = User.objects.create(username='user1')
-        cls.user2 = User.objects.create(username='user2')
+        cls.user1 = UserFactory(username='user1')
+        cls.user2 = UserFactory(username='user2')
 
         cls.user1.groups = [group1]
         cls.user2.groups = [group2]
@@ -109,7 +110,7 @@ class PermissionsBasedSerializerTestCase(TestCase):
         serializer.is_valid(raise_exception=True)
         with self.assertRaises(IntegrityError) as cm:
             serializer.save()
-        self.assertIn('null value in column "field" violates not-null constraint', str(cm.exception))
+        self.assertIn('null value in column "field" violates not-null constraint', six.text_type(cm.exception))
 
     def test_updating(self):
         serializer = self.ParentSerializer(self.parent, context={'user': self.user1}, data={

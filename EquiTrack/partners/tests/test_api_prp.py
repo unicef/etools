@@ -2,29 +2,26 @@ import json
 import os
 import datetime
 
-from django.contrib.auth.models import Group
 from django.core.urlresolvers import reverse, resolve
+from django.utils import timezone
 
 from rest_framework import status
 from rest_framework.test import APIRequestFactory
 
-from EquiTrack.factories import (
-    GatewayTypeFactory,
-    InterventionFactory,
-    LocationFactory,
-    ResultFactory,
-    UserFactory,
-)
-from EquiTrack.tests.mixins import APITenantTestCase, WorkspaceRequiredAPITestMixIn
+from partners.models import PartnerOrganization
+from EquiTrack.tests.cases import BaseTenantTestCase
+from EquiTrack.tests.mixins import WorkspaceRequiredAPITestMixIn
+from locations.tests.factories import GatewayTypeFactory, LocationFactory
 from partners.models import InterventionResultLink
 from partners.permissions import READ_ONLY_API_GROUP_NAME
+from partners.tests.factories import InterventionFactory
 from partners.tests.test_utils import setup_intervention_test_data
 from reports.models import LowerResult, AppliedIndicator, IndicatorBlueprint
+from reports.tests.factories import ResultFactory
+from users.tests.factories import UserFactory, GroupFactory
 
 
-class TestInterventionsAPI(WorkspaceRequiredAPITestMixIn, APITenantTestCase):
-    fixtures = ['initial_data.json']
-
+class TestInterventionsAPI(WorkspaceRequiredAPITestMixIn, BaseTenantTestCase):
     def setUp(self):
         super(TestInterventionsAPI, self).setUp()
         setup_intervention_test_data(self, include_results_and_indicators=True)
@@ -46,7 +43,7 @@ class TestInterventionsAPI(WorkspaceRequiredAPITestMixIn, APITenantTestCase):
         response = response['results']
 
         # uncomment if you need to see the response json / regenerate the test file
-        # print json.dumps(response, indent=2)
+        # print(json.dumps(response, indent=2))
         # TODO: think of how to improve this test without having to dig through the object to delete ids
         json_filename = os.path.join(os.path.dirname(__file__), 'data', 'prp-intervention-list.json')
         with open(json_filename) as f:
@@ -60,6 +57,8 @@ class TestInterventionsAPI(WorkspaceRequiredAPITestMixIn, APITenantTestCase):
                 del expected_intervention[dynamic_key]
                 del actual_intervention[dynamic_key]
 
+            partner_org = PartnerOrganization.objects.get(id=actual_intervention['partner_org']['id'])
+            expected_intervention['partner_org']['unicef_vendor_number'] = partner_org.vendor_number
             del actual_intervention['partner_org']['id']
             del actual_intervention['agreement']
             del expected_intervention['partner_org']['id']
@@ -88,8 +87,8 @@ class TestInterventionsAPI(WorkspaceRequiredAPITestMixIn, APITenantTestCase):
         self.assertEqual(response, expected_interventions)
 
     def test_prp_api_modified_queries(self):
-        yesterday = (datetime.datetime.today() - datetime.timedelta(days=1)).isoformat()
-        tomorrow = (datetime.datetime.today() + datetime.timedelta(days=1)).isoformat()
+        yesterday = (timezone.now() - datetime.timedelta(days=1)).isoformat()
+        tomorrow = (timezone.now() + datetime.timedelta(days=1)).isoformat()
         checks = [
             ({'updated_before': yesterday}, 0),
             ({'updated_before': tomorrow}, 3),
@@ -133,8 +132,13 @@ class TestInterventionsAPI(WorkspaceRequiredAPITestMixIn, APITenantTestCase):
             )
 
 
-class TestInterventionsAPIListPermissions(APITenantTestCase):
+class TestInterventionsAPIListPermissions(BaseTenantTestCase):
     '''Exercise permissions on the PRPIntervention list view'''
+
+    @classmethod
+    def setUpTestData(cls):
+        cls.readonly_group = GroupFactory(name=READ_ONLY_API_GROUP_NAME)
+
     def setUp(self):
         self.url = reverse('prp_api_v1:prp-intervention-list')
         self.query_param_data = {'workspace': self.tenant.business_area_code}
@@ -155,7 +159,7 @@ class TestInterventionsAPIListPermissions(APITenantTestCase):
     def test_group_member_has_access(self):
         '''Ensure a non-staff user in the correct group has access'''
         user = UserFactory()
-        user.groups.add(Group.objects.get(name=READ_ONLY_API_GROUP_NAME))
+        user.groups.add(self.readonly_group)
         response = self.forced_auth_req('get', self.url, user=user, data=self.query_param_data)
         self.assertEquals(response.status_code, status.HTTP_200_OK)
 

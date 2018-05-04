@@ -1,38 +1,48 @@
-from __future__ import unicode_literals
+from __future__ import absolute_import, division, print_function, unicode_literals
 
 import json
+from operator import itemgetter
 
 from django.core.urlresolvers import reverse
 from django.contrib.auth import get_user_model
 from django.contrib.auth.models import Permission
+from django.utils import six
 from rest_framework import status
 from tenant_schemas.test.client import TenantClient
 from unittest import skip
 
-from EquiTrack.factories import CountryFactory, GroupFactory, OfficeFactory, SectionFactory, UserFactory
-from EquiTrack.tests.mixins import APITenantTestCase
-from EquiTrack.tests.cases import EToolsTenantTestCase
-from publics.tests.factories import BusinessAreaFactory
-from users.models import Group, User, UserProfile
+from EquiTrack.tests.cases import BaseTenantTestCase
+from publics.tests.factories import PublicsBusinessAreaFactory
+from users.models import Group, UserProfile
+from users.tests.factories import (
+    CountryFactory,
+    GroupFactory,
+    OfficeFactory,
+    SectionFactory,
+    UserFactory,
+)
 
 
-class TestUserAuthAPIView(APITenantTestCase):
+class TestUserAuthAPIView(BaseTenantTestCase):
     def test_get(self):
         self.user = UserFactory()
         response = self.forced_auth_req(
             "get",
-            reverse("user-api-profile"),
+            reverse("users:user-api-profile"),
             user=self.user
         )
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response.data["id"], self.user.pk)
 
 
-class TestChangeUserCountry(APITenantTestCase):
+class TestChangeUserCountry(BaseTenantTestCase):
+    @classmethod
+    def setUpTestData(cls):
+        cls.unicef_staff = UserFactory(is_staff=True)
+
     def setUp(self):
         super(TestChangeUserCountry, self).setUp()
-        self.unicef_staff = UserFactory(is_staff=True)
-        self.url = reverse("country-change")
+        self.url = reverse("users:country-change")
 
     def test_post(self):
         self.unicef_staff.profile.countries_available.add(
@@ -66,10 +76,11 @@ class TestChangeUserCountry(APITenantTestCase):
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
 
 
-class TestSectionViews(APITenantTestCase):
-    def setUp(self):
-        self.unicef_staff = UserFactory(is_staff=True)
-        self.url = '/api/sections/'
+class TestSectionViews(BaseTenantTestCase):
+    @classmethod
+    def setUpTestData(cls):
+        cls.unicef_staff = UserFactory(is_staff=True)
+        cls.url = '/api/sections/'
 
     def test_api_section_list_values(self):
         s1 = SectionFactory()
@@ -92,10 +103,11 @@ class TestSectionViews(APITenantTestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
 
 
-class TestOfficeViews(APITenantTestCase):
-    def setUp(self):
-        self.unicef_staff = UserFactory(is_staff=True)
-        self.url = '/api/offices/'
+class TestOfficeViews(BaseTenantTestCase):
+    @classmethod
+    def setUpTestData(cls):
+        cls.unicef_staff = UserFactory(is_staff=True)
+        cls.url = '/api/offices/'
 
     def test_api_office_list_values(self):
         o1 = OfficeFactory()
@@ -118,13 +130,14 @@ class TestOfficeViews(APITenantTestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
 
 
-class TestStaffUsersView(APITenantTestCase):
-    def setUp(self):
-        self.unicef_staff = UserFactory(is_staff=True)
-        self.unicef_superuser = UserFactory(is_superuser=True)
-        self.partnership_manager_user = UserFactory(is_staff=True)
-        self.group = GroupFactory()
-        self.partnership_manager_user.groups.add(self.group)
+class TestUserViews(BaseTenantTestCase):
+    @classmethod
+    def setUpTestData(cls):
+        cls.unicef_staff = UserFactory(is_staff=True)
+        cls.unicef_superuser = UserFactory(is_superuser=True)
+        cls.partnership_manager_user = UserFactory(is_staff=True)
+        cls.group = GroupFactory()
+        cls.partnership_manager_user.groups.add(cls.group)
 
     def test_api_users_list(self):
         response = self.forced_auth_req('get', '/api/users/', user=self.unicef_staff)
@@ -168,8 +181,8 @@ class TestStaffUsersView(APITenantTestCase):
         workspace_override = CountryFactory(schema_name='test2', business_area_code='0002')
         workspace_invalid_business_area = CountryFactory(schema_name='test3', business_area_code='0003')
 
-        business_area_0001 = BusinessAreaFactory(code='0001')
-        business_area_0002 = BusinessAreaFactory(code='0002')
+        business_area_0001 = PublicsBusinessAreaFactory(code='0001')
+        business_area_0002 = PublicsBusinessAreaFactory(code='0002')
 
         profile = self.unicef_staff.profile
 
@@ -204,12 +217,12 @@ class TestStaffUsersView(APITenantTestCase):
         self.assertEqual(response_json['t2f']['business_area'], None)
 
 
-class TestMyProfileAPIView(APITenantTestCase):
+class TestMyProfileAPIView(BaseTenantTestCase):
     def setUp(self):
         super(TestMyProfileAPIView, self).setUp()
         self.unicef_staff = UserFactory(is_staff=True)
         self.unicef_superuser = UserFactory(is_superuser=True)
-        self.url = reverse("myprofile-detail")
+        self.url = reverse("users:myprofile-detail")
 
     def test_get(self):
         response = self.forced_auth_req(
@@ -225,17 +238,29 @@ class TestMyProfileAPIView(APITenantTestCase):
 
     def test_get_no_profile(self):
         """Ensure profile is created for user, if it does not exist"""
-        user = UserFactory()
-        UserProfile.objects.get(user=user).delete()
+        user = self.unicef_staff
+        UserProfile.objects.filter(user=user).delete()
         self.assertFalse(UserProfile.objects.filter(user=user).exists())
+
+        # We need user.profile to NOT return a profile, otherwise the view will
+        # still see the deleted one and not create a new one.  (This is only a
+        # problem for this test, not in real usage.)
+        # ``user.refresh_from_db()`` does not seem sufficient to stop user.profile from
+        # returning the now-deleted profile object, so do it the hard way.
+        # (Hopefully this is fixed, but here in Django 1.10.8 it's a problem.
+        # And I don't see any mention of a fix in release notes up through
+        # 2.0.3.)
+        user = get_user_model().objects.get(pk=user.pk)
+
+        # View MyProfileDetail.  We expect it to create a new profile for this user.
         response = self.forced_auth_req(
             "get",
             self.url,
-            user=self.unicef_staff,
+            user=user,
         )
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response.data["name"], user.get_full_name())
-        self.assertFalse(UserProfile.objects.filter(user=user).exists())
+        self.assertTrue(UserProfile.objects.filter(user=user).exists())
 
     def test_patch(self):
         self.assertNotEqual(
@@ -265,46 +290,49 @@ class TestMyProfileAPIView(APITenantTestCase):
         self.assertEqual(response.data["oic"], self.unicef_superuser.id)
 
 
-class TestUsersDetailAPIView(APITenantTestCase):
-    def setUp(self):
-        super(TestUsersDetailAPIView, self).setUp()
-        self.unicef_staff = UserFactory(is_staff=True)
+class TestUsersDetailAPIView(BaseTenantTestCase):
+    @classmethod
+    def setUpTestData(cls):
+        cls.unicef_staff = UserFactory(is_staff=True)
 
     def test_get_not_staff(self):
         user = UserFactory()
         response = self.forced_auth_req(
             "get",
-            reverse("user-detail", args=[self.unicef_staff.pk]),
+            reverse("users:user-detail", args=[self.unicef_staff.pk]),
             user=user,
         )
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(response.data["user_id"], str(self.unicef_staff.pk))
+        self.assertEqual(response.data["user_id"], six.text_type(self.unicef_staff.pk))
 
     def test_get(self):
         user = UserFactory()
         response = self.forced_auth_req(
             "get",
-            reverse("user-detail", args=[user.pk]),
+            reverse("users:user-detail", args=[user.pk]),
             user=self.unicef_staff,
         )
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(response.data["user_id"], str(user.pk))
+        self.assertEqual(response.data["user_id"], six.text_type(user.pk))
 
     def test_get_not_found(self):
         response = self.forced_auth_req(
             "get",
-            reverse("user-detail", args=[404]),
+            reverse("users:user-detail", args=[404]),
             user=self.unicef_staff,
         )
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response.data, {})
 
 
-class TestProfileEdit(EToolsTenantTestCase):
+class TestProfileEdit(BaseTenantTestCase):
+    @classmethod
+    def setUpTestData(cls):
+        cls.client = TenantClient(cls.tenant)
+
     def setUp(self):
         super(TestProfileEdit, self).setUp()
-        self.client = TenantClient(self.tenant)
-        self.url = reverse("user_profile")
+        self.url = reverse("users:user_profile")
 
     def test_get_non_staff(self):
         user = UserFactory()
@@ -341,21 +369,25 @@ class TestProfileEdit(EToolsTenantTestCase):
         self.assertEqual(profile.phone_number, "123-546-7890")
 
 
-class TestGroupViewSet(APITenantTestCase):
+class TestGroupViewSet(BaseTenantTestCase):
+    @classmethod
+    def setUpTestData(cls):
+        cls.unicef_staff = UserFactory(is_staff=True)
+
     def setUp(self):
         super(TestGroupViewSet, self).setUp()
-        self.unicef_staff = UserFactory(is_staff=True)
         self.url = "/api/groups/"
 
     def test_get(self):
-        group = Group.objects.first()
+        group = Group.objects.order_by('id').first()
         response = self.forced_auth_req(
             "get",
             self.url,
             user=self.unicef_staff,
         )
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(response.data[0]["id"], str(group.pk))
+        groups = sorted(response.data, key=itemgetter('id'))
+        self.assertEqual(groups[0]['id'], six.text_type(group.pk))
 
     def test_api_groups_list(self):
         response = self.forced_auth_req(
@@ -398,14 +430,17 @@ class TestGroupViewSet(APITenantTestCase):
         self.assertIn(permission, group.permissions.all())
 
 
-class TestUserViewSet(APITenantTestCase):
+class TestUserViewSet(BaseTenantTestCase):
+    @classmethod
+    def setUpTestData(cls):
+        cls.unicef_staff = UserFactory(is_staff=True)
+        cls.unicef_superuser = UserFactory(is_superuser=True)
+        cls.partnership_manager_user = UserFactory(is_staff=True)
+        cls.group = GroupFactory()
+        cls.partnership_manager_user.groups.add(cls.group)
+
     def setUp(self):
         super(TestUserViewSet, self).setUp()
-        self.unicef_staff = UserFactory(is_staff=True)
-        self.unicef_superuser = UserFactory(is_superuser=True)
-        self.partnership_manager_user = UserFactory(is_staff=True)
-        self.group = GroupFactory()
-        self.partnership_manager_user.groups.add(self.group)
         self.url = "/api/users/"
 
     def test_api_users_list(self):
@@ -415,7 +450,7 @@ class TestUserViewSet(APITenantTestCase):
             user=self.unicef_staff,
         )
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(len(response.data), User.objects.count())
+        self.assertEqual(len(response.data), get_user_model().objects.count())
 
     def test_api_users_list_managers(self):
         response = self.forced_auth_req(
@@ -438,29 +473,6 @@ class TestUserViewSet(APITenantTestCase):
         self.assertEqual(len(response_json), 1)
 
     def test_post(self):
-        """Ensure user object is created"""
-        username = "new@example.com"
-        response = self.forced_auth_req(
-            "post",
-            self.url,
-            user=self.unicef_staff,
-            data={
-                "username": username,
-                "profile": {
-                    "guid": "123",
-                    "country": None,
-                    "office": None,
-                    "section": None,
-                    "job_title": "New Job",
-                    "phone_number": "123-546-7890",
-                    "country_override": None,
-                }
-            }
-        )
-        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
-        self.assertTrue(User.objects.filter(username=username).exists())
-
-    def test_post_with_groups(self):
         """Ensure user object is created, and associated with groups"""
         username = "new@example.com"
         response = self.forced_auth_req(
@@ -481,7 +493,7 @@ class TestUserViewSet(APITenantTestCase):
                 "groups": [self.group.pk]
             }
         )
-        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
-        self.assertTrue(User.objects.filter(username=username).exists())
-        user_created = User.objects.get(username=username)
-        self.assertIn(self.group, user_created.groups.all())
+        self.assertEqual(
+            response.status_code,
+            status.HTTP_405_METHOD_NOT_ALLOWED
+        )

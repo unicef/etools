@@ -2,7 +2,7 @@ from __future__ import unicode_literals
 
 from django.conf.urls import url
 
-from views import (
+from funds.views import (
     DonorListAPIView,
     FRsView,
     FundsCommitmentHeaderListAPIView,
@@ -12,6 +12,7 @@ from views import (
     GrantListAPIView,
 )
 
+app_name = 'funds'
 urlpatterns = (
     url(r'^frs/$', view=FRsView.as_view(), name='frs'),
     url(r'^commitment-header/$',

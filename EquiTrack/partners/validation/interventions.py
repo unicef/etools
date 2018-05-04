@@ -1,7 +1,9 @@
-from __future__ import unicode_literals
+from __future__ import absolute_import, division, print_function, unicode_literals
+
 from datetime import date
 import logging
 
+from django.utils import six
 from django.utils.translation import ugettext as _
 
 from EquiTrack.validation_mixins import TransitionError, CompleteValidation, StateValidError, \
@@ -30,24 +32,30 @@ def transition_to_closed(i):
     # TODO: find a sol for invalidating the cache on related .all() -has to do with prefetch_related in the validator
     r = {
         'total_frs_amt': 0,
+        'total_frs_amt_usd': 0,
         'total_outstanding_amt': 0,
+        'total_outstanding_amt_usd': 0,
         'total_intervention_amt': 0,
         'total_actual_amt': 0,
+        'total_actual_amt_usd': 0,
         'earliest_start_date': None,
         'latest_end_date': None
     }
     for fr in i.frs.filter():
-        r['total_frs_amt'] += fr.total_amt
-        r['total_outstanding_amt'] += fr.outstanding_amt
+        r['total_frs_amt'] += fr.total_amt_local
+        r['total_frs_amt_usd'] += fr.total_amt
+        r['total_outstanding_amt'] += fr.outstanding_amt_local
+        r['total_outstanding_amt_usd'] += fr.outstanding_amt
         r['total_intervention_amt'] += fr.intervention_amt
-        r['total_actual_amt'] += fr.actual_amt
+        r['total_actual_amt'] += fr.actual_amt_local
+        r['total_actual_amt_usd'] += fr.actual_amt
         if r['earliest_start_date'] is None:
             r['earliest_start_date'] = fr.start_date
-        elif r['earliest_start_date'] < fr.start_date:
+        elif r['earliest_start_date'] > fr.start_date:
             r['earliest_start_date'] = fr.start_date
         if r['latest_end_date'] is None:
             r['latest_end_date'] = fr.end_date
-        elif r['latest_end_date'] > fr.end_date:
+        elif r['latest_end_date'] < fr.end_date:
             r['latest_end_date'] = fr.end_date
     # hack
     i.total_frs = r
@@ -57,14 +65,14 @@ def transition_to_closed(i):
     if i.end > today:
         raise TransitionError([_('End date is in the future')])
 
-    if i.total_frs['total_intervention_amt'] != i.total_frs['total_actual_amt'] or \
+    if i.total_frs['total_frs_amt'] != i.total_frs['total_actual_amt'] or \
             i.total_frs['total_outstanding_amt'] != 0:
         raise TransitionError([_('Total FR amount needs to equal total actual amount, and '
                                  'Total Outstanding DCTs need to equal to 0')])
 
-    # If total_actual_amt >100,000 then attachments has to include
+    # If total_actual_amt_usd >100,000 then attachments has to include
     # at least 1 record with type: "Final Partnership Review"
-    if i.total_frs['total_actual_amt'] >= 100000:
+    if i.total_frs['total_actual_amt_usd'] >= 100000:
         if i.attachments.filter(type__name='Final Partnership Review').count() < 1:
             raise TransitionError([_('Total amount transferred greater than 100,000 and no Final Partnership Review '
                                      'was attached')])
@@ -199,7 +207,6 @@ def sections_valid(i):
         raise BasicValidationError(_('The following sections have been selected on '
                                      'the PD/SSFA indicators and cannot be removed{}: '.format(draft_status_err)) +
                                    ', '.join([s.name for s in ind_sections - intervention_sections]))
-        # return False
     return True
 
 
@@ -214,7 +221,16 @@ def locations_valid(i):
         raise BasicValidationError(_('The following locations have been selected on '
                                      'the PD/SSFA indicators and cannot be removed'
                                      ' without removing them from the indicators first: ') +
-                                   ', '.join([str(l) for l in ind_locations - intervention_locations]))
+                                   ', '.join([six.text_type(l) for l in ind_locations - intervention_locations]))
+    return True
+
+
+def cp_structure_valid(i):
+    if i.country_programme and i.agreement.agreement_type == i.agreement.PCA \
+            and i.country_programme != i.agreement.country_programme:
+        raise BasicValidationError(_('The Country Programme selected on this PD is not the same as the '
+                                     'Country Programme selected on the Agreement, '
+                                     'please select "{}"'.format(i.agreement.country_programme)))
     return True
 
 
@@ -230,7 +246,8 @@ class InterventionValid(CompleteValidation):
         document_type_pca_valid,
         rigid_in_amendment_flag,
         sections_valid,
-        locations_valid
+        locations_valid,
+        cp_structure_valid,
     ]
 
     VALID_ERRORS = {
@@ -248,7 +265,7 @@ class InterventionValid(CompleteValidation):
         'sections_valid': "The sections selected on the PD/SSFA are not a subset of all sections selected "
                           "for this PD/SSFA's indicators",
         'locations_valid': "The locations selected on the PD/SSFA are not a subset of all locations selected "
-                          "for this PD/SSFA's indicators"
+                          "for this PD/SSFA's indicators",
     }
 
     PERMISSIONS_CLASS = InterventionPermissions

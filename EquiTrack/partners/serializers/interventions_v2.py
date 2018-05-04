@@ -1,9 +1,15 @@
 from __future__ import unicode_literals
 
+from operator import itemgetter
+
+from datetime import date
 from django.core.exceptions import ValidationError
 from django.db import transaction
+from django.db.models import Q
+from django.utils.translation import ugettext as _
 from rest_framework import serializers
 
+from attachments.serializers_fields import AttachmentSingleFileField
 from EquiTrack.serializers import SnapshotModelSerializer
 from funds.models import FundsCommitmentItem, FundsReservationHeader
 from funds.serializers import FRsSerializer
@@ -20,12 +26,13 @@ from partners.models import (
     InterventionResultLink,
     InterventionReportingPeriod,
 )
-from reports.models import LowerResult
+from reports.models import AppliedIndicator, LowerResult, ReportingRequirement
 from reports.serializers.v1 import SectorSerializer
 from reports.serializers.v2 import (
     IndicatorSerializer,
     LowerResultCUSerializer,
     LowerResultSerializer,
+    ReportingRequirementSerializer,
 )
 
 
@@ -49,10 +56,22 @@ class InterventionBudgetCUSerializer(serializers.ModelSerializer):
 class InterventionAmendmentCUSerializer(serializers.ModelSerializer):
     amendment_number = serializers.CharField(read_only=True)
     signed_amendment_file = serializers.FileField(source="signed_amendment", read_only=True)
+    signed_amendment_attachment = AttachmentSingleFileField(read_only=True)
 
     class Meta:
         model = InterventionAmendment
         fields = "__all__"
+
+    def validate(self, data):
+        data = super(InterventionAmendmentCUSerializer, self).validate(data)
+
+        if 'signed_date' in data and data['signed_date'] > date.today():
+            raise ValidationError("Date cannot be in the future!")
+
+        if 'intervention' in data and data['intervention'].in_amendment is True:
+            raise ValidationError("Cannot add a new amendment while another amendment is in progress.")
+
+        return data
 
 
 class PlannedVisitsCUSerializer(serializers.ModelSerializer):
@@ -87,15 +106,12 @@ class BaseInterventionListSerializer(serializers.ModelSerializer):
 
     section_names = serializers.SerializerMethodField()
     flagged_sections = serializers.SerializerMethodField()
-    # locations = serializers.SerializerMethodField()
-    # location_names = serializers.SerializerMethodField()
-    # cluster_names = serializers.SerializerMethodField()
     cp_outputs = serializers.SerializerMethodField()
     offices_names = serializers.SerializerMethodField()
     frs_earliest_start_date = serializers.DateField(source='frs__start_date__min', read_only=True)
     frs_latest_end_date = serializers.DateField(source='frs__end_date__max', read_only=True)
     frs_total_frs_amt = serializers.DecimalField(
-        source='frs__total_amt__sum',
+        source='frs__total_amt_local__sum',
         read_only=True,
         max_digits=20,
         decimal_places=2
@@ -107,13 +123,13 @@ class BaseInterventionListSerializer(serializers.ModelSerializer):
         decimal_places=2
     )
     frs_total_outstanding_amt = serializers.DecimalField(
-        source='frs__outstanding_amt__sum',
+        source='frs__outstanding_amt_local__sum',
         read_only=True,
         max_digits=20,
         decimal_places=2
     )
     actual_amount = serializers.DecimalField(
-        source='frs__actual_amt__sum',
+        source='frs__actual_amt_local__sum',
         read_only=True,
         max_digits=20,
         decimal_places=2
@@ -130,18 +146,6 @@ class BaseInterventionListSerializer(serializers.ModelSerializer):
 
     def get_flagged_sections(self, obj):
         return [l.pk for l in obj.sections.all()]
-
-    # def get_locations(self, obj):
-    #     return [l.pk for l in obj.flat_locations.all()]
-
-    # def get_location_names(self, obj):
-    #     return [
-    #         '{} [{} - {}]'.format(l.name, l.gateway.name, l.p_code)
-    #         for l in obj.flat_locations.all()
-    #     ]
-
-    # def get_cluster_names(self, obj):
-    #     return [c for c in obj.intervention_clusters]
 
     class Meta:
         model = Intervention
@@ -181,6 +185,7 @@ class InterventionListSerializer(BaseInterventionListSerializer):
     fr_currencies_are_consistent = serializers.SerializerMethodField()
     all_currencies_are_consistent = serializers.SerializerMethodField()
     fr_currency = serializers.SerializerMethodField()
+    multi_curr_flag = serializers.BooleanField()
 
     def fr_currencies_ok(self, obj):
         return obj.frs__currency__count == 1 if obj.frs__currency__count else None
@@ -194,13 +199,11 @@ class InterventionListSerializer(BaseInterventionListSerializer):
         return self.fr_currencies_ok(obj) and obj.max_fr_currency == obj.planned_budget.currency
 
     def get_fr_currency(self, obj):
-        return obj.max_fr_currency if self.fr_currencies_ok(obj) else None
+        return obj.max_fr_currency if self.fr_currencies_ok(obj) else ''
 
     class Meta(BaseInterventionListSerializer.Meta):
-        fields = BaseInterventionListSerializer.Meta.fields + \
-                 ('fr_currencies_are_consistent',
-                  'all_currencies_are_consistent',
-                  'fr_currency')
+        fields = BaseInterventionListSerializer.Meta.fields + (
+            'fr_currencies_are_consistent', 'all_currencies_are_consistent', 'fr_currency', 'multi_curr_flag')
 
 
 class MinimalInterventionListSerializer(serializers.ModelSerializer):
@@ -236,18 +239,23 @@ class InterventionSectorLocationCUSerializer(serializers.ModelSerializer):
 
 class InterventionAttachmentSerializer(serializers.ModelSerializer):
     attachment_file = serializers.FileField(source="attachment", read_only=True)
+    attachment_document = AttachmentSingleFileField(source="attachment_file", read_only=True)
 
     class Meta:
         model = InterventionAttachment
         fields = (
-            'id', 'intervention', 'created', 'type', 'attachment', "attachment_file"
+            'id',
+            'intervention',
+            'created',
+            'type',
+            'attachment',
+            'attachment_file',
+            'attachment_document',
         )
 
 
 class InterventionResultNestedSerializer(serializers.ModelSerializer):
-    # cp_output = ResultLightSerializer()
-    # ram_indicators = RAMIndicatorLightSerializer(many=True, read_only=True)
-    cp_output_name = serializers.CharField(source="cp_output.name", read_only=True)
+    cp_output_name = serializers.CharField(source="cp_output.output_name", read_only=True)
     ram_indicator_names = serializers.SerializerMethodField(read_only=True)
     ll_results = LowerResultSerializer(many=True, read_only=True)
 
@@ -429,7 +437,9 @@ class InterventionCreateUpdateSerializer(SnapshotModelSerializer):
     planned_budget = InterventionBudgetCUSerializer(read_only=True)
     partner = serializers.CharField(source='agreement.partner.name', read_only=True)
     prc_review_document_file = serializers.FileField(source='prc_review_document', read_only=True)
+    prc_review_attachment = AttachmentSingleFileField(read_only=True)
     signed_pd_document_file = serializers.FileField(source='signed_pd_document', read_only=True)
+    signed_pd_attachment = AttachmentSingleFileField(read_only=True)
     planned_visits = PlannedVisitsNestedSerializer(many=True, read_only=True, required=False)
     attachments = InterventionAttachmentSerializer(many=True, read_only=True, required=False)
     result_links = InterventionResultCUSerializer(many=True, read_only=True, required=False)
@@ -475,7 +485,9 @@ class InterventionDetailSerializer(serializers.ModelSerializer):
     partner = serializers.CharField(source='agreement.partner.name')
     partner_id = serializers.CharField(source='agreement.partner.id', read_only=True)
     prc_review_document_file = serializers.FileField(source='prc_review_document', read_only=True)
+    prc_review_attachment = AttachmentSingleFileField(read_only=True)
     signed_pd_document_file = serializers.FileField(source='signed_pd_document', read_only=True)
+    signed_pd_attachment = AttachmentSingleFileField(read_only=True)
     amendments = InterventionAmendmentCUSerializer(many=True, read_only=True, required=False)
     planned_visits = PlannedVisitsNestedSerializer(many=True, read_only=True, required=False)
     attachments = InterventionAttachmentSerializer(many=True, read_only=True, required=False)
@@ -521,77 +533,7 @@ class InterventionDetailSerializer(serializers.ModelSerializer):
             "planned_budget", "result_links", 'country_programme', 'metadata', 'contingency_pd', "amendments",
             "planned_visits", "attachments", 'permissions', 'partner_id', "sections",
             "locations", "location_names", "cluster_names", "flat_locations", "flagged_sections", "section_names",
-            "in_amendment"
-        )
-
-
-class InterventionSummaryListSerializer(serializers.ModelSerializer):
-    partner_name = serializers.CharField(source='agreement.partner.name')
-    unicef_cash = serializers.DecimalField(source='total_unicef_cash', read_only=True, max_digits=20, decimal_places=2)
-    cso_contribution = serializers.DecimalField(source='total_partner_contribution', read_only=True, max_digits=20,
-                                                decimal_places=2)
-    total_unicef_budget = serializers.DecimalField(read_only=True, max_digits=20, decimal_places=2)
-    total_budget = serializers.DecimalField(read_only=True, max_digits=20, decimal_places=2)
-    budget_currency = serializers.CharField(source='planned_budget.currency', read_only=True)
-
-    section_names = serializers.SerializerMethodField()
-    flagged_sections = serializers.SerializerMethodField()
-    cp_outputs = serializers.SerializerMethodField()
-    offices_names = serializers.SerializerMethodField()
-    frs_earliest_start_date = serializers.DateField(source='total_frs.earliest_start_date', read_only=True)
-    frs_latest_end_date = serializers.DateField(source='total_frs.latest_end_date', read_only=True)
-    frs_total_frs_amt = serializers.DecimalField(source='total_frs.total_frs_amt', read_only=True,
-                                                 max_digits=20,
-                                                 decimal_places=2)
-    frs_total_intervention_amt = serializers.DecimalField(source='total_frs.total_intervention_amt', read_only=True,
-                                                          max_digits=20,
-                                                          decimal_places=2)
-    frs_total_outstanding_amt = serializers.DecimalField(source='total_frs.total_outstanding_amt', read_only=True,
-                                                         max_digits=20,
-                                                         decimal_places=2)
-    actual_amount = serializers.DecimalField(source='total_frs.total_actual_amt', read_only=True,
-                                                    max_digits=20,
-                                                    decimal_places=2)
-
-    fr_currencies_are_consistent = serializers.SerializerMethodField()
-    all_currencies_are_consistent = serializers.SerializerMethodField()
-    fr_currency = serializers.SerializerMethodField()
-
-    def fr_currencies_ok(self, obj):
-        return obj.frs__currency__count == 1 if obj.frs__currency__count else None
-
-    def get_fr_currencies_are_consistent(self, obj):
-        return self.fr_currencies_ok(obj)
-
-    def get_all_currencies_are_consistent(self, obj):
-        if not hasattr(obj, 'planned_budget'):
-            return False
-        return self.fr_currencies_ok(obj) and obj.max_fr_currency == obj.planned_budget.currency
-
-    def get_fr_currency(self, obj):
-        return obj.max_fr_currency if self.fr_currencies_ok(obj) else None
-
-    def get_offices_names(self, obj):
-        return [o.name for o in obj.offices.all()]
-
-    def get_cp_outputs(self, obj):
-        return [rl.cp_output.id for rl in obj.result_links.all()]
-
-    def get_section_names(self, obj):
-        return [l.name for l in obj.flagged_sections]
-
-    def get_flagged_sections(self, obj):
-        return [l.id for l in obj.flagged_sections]
-
-    class Meta:
-        model = Intervention
-        fields = (
-            'id', 'number', 'partner_name', 'status', 'title', 'start', 'end', 'unicef_cash', 'cso_contribution',
-            'total_unicef_budget', 'total_budget', 'sections', 'section_names',
-            'cp_outputs', 'offices_names', 'frs_earliest_start_date', 'frs_latest_end_date',
-            'frs_total_frs_amt', 'frs_total_intervention_amt', 'frs_total_outstanding_amt', 'actual_amount',
-            'flagged_sections', 'budget_currency', 'fr_currencies_are_consistent', 'all_currencies_are_consistent',
-            'fr_currency'
+            "in_amendment", "prc_review_attachment", "signed_pd_attachment",
         )
 
 
@@ -613,3 +555,164 @@ class InterventionListMapSerializer(serializers.ModelSerializer):
             "id", "partner_id", "partner_name", "agreement", "document_type", "number", "title", "status",
             "start", "end", "offices", "sections", "locations"
         )
+
+
+class InterventionReportingRequirementListSerializer(serializers.ModelSerializer):
+    reporting_requirements = ReportingRequirementSerializer(
+        many=True,
+        read_only=True
+    )
+
+    class Meta:
+        model = Intervention
+        fields = ("reporting_requirements", )
+
+
+class InterventionReportingRequirementCreateSerializer(serializers.ModelSerializer):
+    report_type = serializers.ChoiceField(
+        choices=ReportingRequirement.TYPE_CHOICES
+    )
+    reporting_requirements = ReportingRequirementSerializer(many=True)
+
+    class Meta:
+        model = Intervention
+        fields = ("reporting_requirements", "report_type", )
+
+    def _validate_qpr(self, requirements):
+        # Ensure that the first reporting requirement start date
+        # is on or after PD start date
+        if requirements[0]["start_date"] < self.intervention.start:
+            raise serializers.ValidationError({
+                "reporting_requirements": {
+                    "start_date": _(
+                        "Start date needs to be on or after PD start date."
+                    )
+                }
+            })
+
+        # Ensure start date is after previous end date
+        for i in range(1, len(requirements)):
+            if requirements[i]["start_date"] <= requirements[i - 1]["end_date"]:
+                raise serializers.ValidationError({
+                    "reporting_requirements": {
+                        "start_date": _(
+                            "Start date needs to be after previous end date."
+                        )
+                    }
+                })
+
+    def _validate_hr(self):
+        # Ensure intervention has high frequency or cluster indicators
+        indicator_qs = AppliedIndicator.objects.filter(
+            lower_result__result_link__intervention=self.intervention
+        ).filter(
+            Q(is_high_frequency=True) |
+            Q(cluster_indicator_id__isnull=False)
+        )
+        if not indicator_qs.count():
+            raise serializers.ValidationError(
+                _("Indicator needs to be either cluster or high frequency.")
+            )
+
+    def _merge_data(self, data):
+        current_reqs = ReportingRequirement.objects.values(
+            "id",
+            "start_date",
+            "end_date",
+            "due_date",
+        ).filter(
+            intervention=self.intervention,
+            report_type=data["report_type"],
+        )
+
+        current_reqs_dict = {}
+        for r in current_reqs:
+            current_reqs_dict[r["id"]] = r
+
+        report_type = data["report_type"]
+        for r in data["reporting_requirements"]:
+            if r.get("id") in current_reqs_dict:
+                current_reqs_dict.pop(r["id"])
+            r["intervention"] = self.intervention
+            r["report_type"] = report_type
+            if report_type == ReportingRequirement.TYPE_HR:
+                r["end_date"] = r["due_date"]
+                r["start_date"] = None
+                r["description"] = ""
+            elif report_type == ReportingRequirement.TYPE_SPECIAL:
+                r["start_date"] = None
+                r["end_date"] = r["due_date"]
+
+        # We need all reporting requirements in end date order
+        merged_reqs = list(current_reqs_dict.values()) + data["reporting_requirements"]
+        data["reporting_requirements"] = sorted(
+            merged_reqs,
+            key=itemgetter("end_date")
+        )
+        return data
+
+    def run_validation(self, initial_data):
+        serializer = self.fields["reporting_requirements"].child
+        report_type = initial_data.get("report_type")
+        if report_type == ReportingRequirement.TYPE_QPR:
+            serializer.fields["start_date"].required = True
+            serializer.fields["end_date"].required = True
+        elif report_type == ReportingRequirement.TYPE_SPECIAL:
+            serializer.fields["description"].required = True
+        return super().run_validation(initial_data)
+
+    def validate(self, data):
+        """The first reporting requirement's start date needs to be
+        on or after the PD start date.
+        Subsequent reporting requirements start date needs to be after the
+        previous reporting requirement end date.
+        """
+        self.intervention = self.context["intervention"]
+
+        # Only able to change reporting requirements when PD
+        # is in amendment status
+        if self.intervention.status not in [self.intervention.DRAFT]:
+            raise serializers.ValidationError(
+                _("Changes not allowed when PD not in amendment state.")
+            )
+        if not self.intervention.start:
+            raise serializers.ValidationError(
+                _("PD needs to have a start date.")
+            )
+
+        # Validate reporting requirements first
+        if not len(data["reporting_requirements"]):
+            raise serializers.ValidationError({
+                "reporting_requirements": _("This field cannot be empty.")
+            })
+
+        self._merge_data(data)
+
+        if data["report_type"] == ReportingRequirement.TYPE_QPR:
+            self._validate_qpr(data["reporting_requirements"])
+        elif data["report_type"] == ReportingRequirement.TYPE_HR:
+            self._validate_hr()
+
+        return data
+
+    def create(self, validated_data):
+        current_reqs = ReportingRequirement.objects.values_list(
+            "id",
+            flat=True
+        ).filter(
+            intervention=self.intervention,
+            report_type=validated_data["report_type"]
+        )
+        new_reqs = [
+            r["id"] for r in validated_data["reporting_requirements"]
+            if "id" in r
+        ]
+        delete_reqs = [r for r in current_reqs if r not in new_reqs]
+        ReportingRequirement.objects.filter(id__in=delete_reqs).delete()
+        for r in validated_data["reporting_requirements"]:
+            if r.get("id"):
+                pk = r.pop("id")
+                ReportingRequirement.objects.filter(pk=pk).update(**r)
+            else:
+                ReportingRequirement.objects.create(**r)
+        return self.intervention

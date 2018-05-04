@@ -1,7 +1,5 @@
 import operator
 import functools
-import datetime
-from decimal import Decimal
 
 from django.db import transaction
 from django.db.models import Q
@@ -18,7 +16,7 @@ from rest_framework.generics import (
     CreateAPIView,
     ListAPIView)
 
-from EquiTrack.mixins import ExportModelMixin
+from EquiTrack.mixins import ExportModelMixin, QueryStringFilterMixin
 from EquiTrack.renderers import CSVFlatRenderer
 from EquiTrack.utils import get_data_from_insight
 from EquiTrack.validation_mixins import ValidatorViewMixin
@@ -56,10 +54,11 @@ from partners.filters import PartnerScopeFilter
 from partners.exports_v2 import (
     PartnerOrganizationCSVRenderer,
     PartnerOrganizationHactCsvRenderer,
-)
+    PartnerOrganizationSimpleHactCsvRenderer)
+from vision.adapters.partner import PartnerSynchronizer
 
 
-class PartnerOrganizationListAPIView(ExportModelMixin, ListCreateAPIView):
+class PartnerOrganizationListAPIView(QueryStringFilterMixin, ExportModelMixin, ListCreateAPIView):
     """
     Create new Partners.
     Returns a list of Partners.
@@ -76,7 +75,7 @@ class PartnerOrganizationListAPIView(ExportModelMixin, ListCreateAPIView):
 
     def get_serializer_class(self, format=None):
         """
-        Use restriceted field set for listing
+        Use restricted field set for listing
         """
         query_params = self.request.query_params
         if "format" in query_params.keys():
@@ -97,8 +96,6 @@ class PartnerOrganizationListAPIView(ExportModelMixin, ListCreateAPIView):
             set_tenant_or_fail(workspace)
 
         if query_params:
-            queries = []
-
             if "values" in query_params.keys():
                 # Used for ghost data - filter in all(), and return straight away.
                 try:
@@ -107,10 +104,15 @@ class PartnerOrganizationListAPIView(ExportModelMixin, ListCreateAPIView):
                     raise ValidationError("ID values must be integers")
                 else:
                     return PartnerOrganization.objects.filter(id__in=ids)
-            if "partner_type" in query_params.keys():
-                queries.append(Q(partner_type=query_params.get("partner_type")))
-            if "cso_type" in query_params.keys():
-                queries.append(Q(cso_type=query_params.get("cso_type")))
+            queries = []
+            filters = (
+                ('partner_type', 'partner_type__in'),
+                ('cso_type', 'cso_type__in'),
+            )
+            search_terms = ['name__icontains', 'vendor_number__icontains', 'short_name__icontains']
+            queries.extend(self.filter_params(filters))
+            queries.append(self.search_params(search_terms))
+
             if "hidden" in query_params.keys():
                 hidden = None
                 if query_params.get("hidden").lower() == "true":
@@ -122,12 +124,7 @@ class PartnerOrganizationListAPIView(ExportModelMixin, ListCreateAPIView):
                     hidden = False
                 if hidden is not None:
                     queries.append(Q(hidden=hidden))
-            if "search" in query_params.keys():
-                queries.append(
-                    Q(name__icontains=query_params.get("search")) |
-                    Q(vendor_number__icontains=query_params.get("search")) |
-                    Q(short_name__icontains=query_params.get("search"))
-                )
+
             if queries:
                 expression = functools.reduce(operator.and_, queries)
                 q = q.filter(expression)
@@ -151,10 +148,9 @@ class PartnerOrganizationDetailAPIView(ValidatorViewMixin, RetrieveUpdateDestroy
     """
     Retrieve and Update PartnerOrganization.
     """
-    queryset = PartnerOrganization.objects.all()
+    queryset = PartnerOrganization.objects.select_related('planned_engagement')
     serializer_class = PartnerOrganizationDetailSerializer
     permission_classes = (IsAdminUser,)
-    # parser_classes = (FormParser, MultiPartParser)
 
     SERIALIZER_MAP = {
         'assessments': AssessmentDetailSerializer,
@@ -192,7 +188,8 @@ class PartnerOrganizationHactAPIView(ListAPIView):
     Returns a list of Partners.
     """
     permission_classes = (IsAdminUser,)
-    queryset = PartnerOrganization.objects.filter(Q(reported_cy__gt=0) | Q(total_ct_cy__gt=0))
+    queryset = PartnerOrganization.objects.select_related('planned_engagement').prefetch_related(
+        'staff_members', 'assessments').filter(Q(reported_cy__gt=0) | Q(total_ct_cy__gt=0))
     serializer_class = PartnerOrganizationHactSerializer
     renderer_classes = (r.JSONRenderer, PartnerOrganizationHactCsvRenderer)
 
@@ -207,6 +204,10 @@ class PartnerOrganizationHactAPIView(ListAPIView):
             if query_params.get("format") == 'csv':
                 response['Content-Disposition'] = "attachment;filename=hact_dashboard.csv"
         return response
+
+
+class PartnerOrganizationSimpleHactAPIView(PartnerOrganizationHactAPIView):
+    renderer_classes = (r.JSONRenderer, PartnerOrganizationSimpleHactCsvRenderer)
 
 
 class PlannedEngagementAPIView(ListAPIView):
@@ -296,53 +297,6 @@ class PartnerOrganizationAddView(CreateAPIView):
     serializer_class = PartnerOrganizationCreateUpdateSerializer
     permission_classes = (PartnershipManagerPermission,)
 
-    # TODO: let's aim to standardize where mapping goes
-    MAPPING = {
-        'vendor_number': "VENDOR_CODE",
-        'name': "VENDOR_NAME",
-        'partner_type': 'PARTNER_TYPE_DESC',
-        'cso_type': 'CSO_TYPE',
-        'core_values_assessment_date': "CORE_VALUE_ASSESSMENT_DT",
-        'rating': 'RISK_RATING',
-        'type_of_assessment': "TYPE_OF_ASSESSMENT",
-        'last_assessment_date': "DATE_OF_ASSESSMENT",
-        'address': "STREET",
-        'postal_code': "POSTAL_CODE",
-        'city': "CITY",
-        'country': "COUNTRY",
-        'phone_number': 'PHONE_NUMBER',
-        'email': "EMAIL",
-        'total_ct_cp': "TOTAL_CASH_TRANSFERRED_CP",
-        'total_ct_cy': "TOTAL_CASH_TRANSFERRED_CY",
-        'deleted_flag': "MARKED_FOR_DELETION",
-        'blocked': "POSTING_BLOCK",
-    }
-
-    cso_type_mapping = {
-        "International NGO": u'International',
-        "National NGO": u'National',
-        "Community based organization": u'Community Based Organization',
-        "Academic Institution": u'Academic Institution'
-    }
-
-    type_mapping = {
-        "BILATERAL / MULTILATERAL": u'Bilateral / Multilateral',
-        "CIVIL SOCIETY ORGANIZATION": u'Civil Society Organization',
-        "GOVERNMENT": u'Government',
-        "UN AGENCY": u'UN Agency',
-    }
-
-    def get_value_for_field(self, field, value):
-        if field in ['core_values_assessment_date', 'last_assessment_date']:
-            return datetime.datetime.strptime(value, '%d-%b-%y').date()
-        if field in ['partner_type']:
-            return self.type_mapping[value]
-        if field in ['cso_type']:
-            return self.cso_type_mapping[value]
-        if field in ['total_ct_cp', 'total_ct_cy']:
-            return Decimal(value.replace(",", ""))
-        return value
-
     @transaction.atomic
     def create(self, request, *args, **kwargs):
         vendor = self.request.query_params.get('vendor', None)
@@ -357,25 +311,18 @@ class PartnerOrganizationAddView(CreateAPIView):
 
         partner_resp = response["ROWSET"]["ROW"]
         try:
-            partner_org = PartnerOrganization.objects.get(vendor_number=partner_resp[self.MAPPING['vendor_number']])
-            # TODO standardize error keys and abstract error messages where possible
+            PartnerOrganization.objects.get(vendor_number=partner_resp[PartnerSynchronizer.MAPPING['vendor_number']])
             return Response({"error": 'Partner Organization already exists with this vendor number'},
                             status=status.HTTP_400_BAD_REQUEST)
         except PartnerOrganization.DoesNotExist:
-            partner_org = {
-                k: self.get_value_for_field(
-                    k,
-                    partner_resp[v]) if v in partner_resp.keys() else None for k,
-                v in self.MAPPING.items()}
-            partner_org['vision_synced'] = True
-            partner_org['deleted_flag'] = True if self.MAPPING['deleted_flag'] in partner_resp.keys() else False
-            partner_org['blocked'] = True if self.MAPPING['blocked'] in partner_resp.keys() else False
-            po_serializer = self.get_serializer(data=partner_org)
-            po_serializer.is_valid(raise_exception=True)
-            po_serializer.save()
+            country = request.user.profile.country
+            partner_sync = PartnerSynchronizer(country=country)
+            partner_sync._partner_save(partner_resp, full_sync=False)
 
-            headers = self.get_success_headers(po_serializer.data)
-            return Response(po_serializer.data, status=status.HTTP_201_CREATED, headers=headers)
+            partner = PartnerOrganization.objects.get(
+                vendor_number=partner_resp[PartnerSynchronizer.MAPPING['vendor_number']])
+            po_serializer = PartnerOrganizationDetailSerializer(partner)
+            return Response(po_serializer.data, status=status.HTTP_201_CREATED)
 
 
 class PartnerOrganizationDeleteView(DestroyAPIView):
@@ -391,7 +338,7 @@ class PartnerOrganizationDeleteView(DestroyAPIView):
                                   "against this partner. The Partner record cannot be deleted")
         elif TravelActivity.objects.filter(partner=partner).count() > 0:
             raise ValidationError("This partner has trips associated to it")
-        elif partner.total_ct_cp > 0:
+        elif (partner.total_ct_cp or 0) > 0:
             raise ValidationError("This partner has cash transactions associated to it")
         else:
             partner.delete()

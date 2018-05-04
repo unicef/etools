@@ -13,35 +13,28 @@ from django.db.transaction import atomic
 from django.utils import timezone
 from django.utils.encoding import python_2_unicode_compatible, force_text
 from django.utils.translation import ugettext_lazy as _
+
 from django_fsm import FSMField, transition
 from model_utils import Choices, FieldTracker
 from model_utils.managers import InheritanceManager
 from model_utils.models import TimeStampedModel
 from ordered_model.models import OrderedModel
 
-from EquiTrack.utils import get_environment
 from attachments.models import Attachment
 from audit.purchase_order.models import AuditorStaffMember, PurchaseOrder, PurchaseOrderItem
 from audit.transitions.conditions import (
     AuditSubmitReportRequiredFieldsCheck, EngagementHasReportAttachmentsCheck,
     EngagementSubmitReportRequiredFieldsCheck, SpecialAuditSubmitRelatedModelsCheck, SPSubmitReportRequiredFieldsCheck,
-    ValidateAuditRiskCategories, ValidateMARiskCategories, ValidateMARiskExtra, )
+    ValidateAuditRiskCategories, ValidateMARiskCategories, ValidateMARiskExtra,
+    SpecialAuditSubmitReportRequiredFieldsCheck)
 from audit.transitions.serializers import EngagementCancelSerializer
-from notification.models import Notification
+from EquiTrack.utils import get_environment
+from notification.utils import send_notification_using_email_template
 from partners.models import PartnerStaffMember, PartnerOrganization
 from utils.common.models.fields import CodedGenericRelation
 from utils.common.urlresolvers import build_frontend_url
 from utils.groups.wrappers import GroupWrapper
-from utils.permissions.models.models import StatusBasePermission
-from utils.permissions.models.query import StatusBasePermissionQueryset
-from utils.permissions.utils import has_action_permission
-
-
-def _has_action_permission(action):
-    return lambda instance=None, user=None: \
-        has_action_permission(
-            AuditPermission, instance=instance, user=user, action=action
-        )
+from permissions2.fsm import has_action_permission
 
 
 @python_2_unicode_compatible
@@ -92,16 +85,28 @@ class Engagement(TimeStampedModel, models.Model):
                       protected=True)
 
     # auditor - partner organization from agreement
-    agreement = models.ForeignKey(PurchaseOrder, verbose_name=_('Purchase Order'))
-    po_item = models.ForeignKey(PurchaseOrderItem, verbose_name=_('PO Item Number'), null=True)
+    agreement = models.ForeignKey(
+        PurchaseOrder, verbose_name=_('Purchase Order'),
+        on_delete=models.CASCADE,
+    )
+    po_item = models.ForeignKey(
+        PurchaseOrderItem, verbose_name=_('PO Item Number'), null=True,
+        on_delete=models.CASCADE,
+    )
 
-    partner = models.ForeignKey('partners.PartnerOrganization', verbose_name=_('Partner'))
+    partner = models.ForeignKey(
+        'partners.PartnerOrganization', verbose_name=_('Partner'),
+        on_delete=models.CASCADE,
+    )
     partner_contacted_at = models.DateField(verbose_name=_('Date IP was contacted'), blank=True, null=True)
     engagement_type = models.CharField(verbose_name=_('Engagement Type'), max_length=10, choices=TYPES)
     start_date = models.DateField(verbose_name=_('Period Start Date'), blank=True, null=True)
     end_date = models.DateField(verbose_name=_('Period End Date'), blank=True, null=True)
     total_value = models.DecimalField(
         verbose_name=_('Total value of selected FACE form(s)'), blank=True, null=True, decimal_places=2, max_digits=20
+    )
+    exchange_rate = models.DecimalField(
+        verbose_name=_('Exchange Rate'), blank=True, null=True, decimal_places=2, max_digits=20
     )
 
     engagement_attachments = CodedGenericRelation(
@@ -150,7 +155,7 @@ class Engagement(TimeStampedModel, models.Model):
     joint_audit = models.BooleanField(verbose_name=_('Joint Audit'), default=False, blank=True)
     shared_ip_with = ArrayField(models.CharField(
         max_length=20, choices=PartnerOrganization.AGENCY_CHOICES
-    ), blank=True, default=[], verbose_name=_('Shared IP with'))
+    ), blank=True, default=[], verbose_name=_('Shared Audit with'))
 
     staff_members = models.ManyToManyField(AuditorStaffMember, verbose_name=_('Staff Members'))
 
@@ -165,6 +170,7 @@ class Engagement(TimeStampedModel, models.Model):
     objects = InheritanceManager()
 
     class Meta:
+        ordering = ('id',)
         verbose_name = _('Engagement')
         verbose_name_plural = _('Engagements')
 
@@ -206,74 +212,59 @@ class Engagement(TimeStampedModel, models.Model):
             self.id
         )
 
-    def get_mail_context(self):
+    def get_mail_context(self, user=None):
+        object_url = self.get_object_url()
+
+        if user:
+            from email_auth.utils import update_url_with_auth_token
+            object_url = update_url_with_auth_token(object_url, user)
+
         return {
             'unique_id': self.unique_id,
             'engagement_type': self.get_engagement_type_display(),
-            'object_url': self.get_object_url(),
+            'object_url': object_url,
             'partner': force_text(self.partner),
             'auditor_firm': force_text(self.agreement.auditor_firm),
         }
 
-    def _send_email(self, recipients, template_name, context=None, **kwargs):
-        context = context or {}
-
-        base_context = {
-            'engagement': self.get_mail_context(),
-            'environment': get_environment(),
-        }
-        base_context.update(context)
-        context = base_context
-
-        recipients = list(recipients)
-        # assert recipients
-
-        if recipients:
-            notification = Notification.objects.create(
-                sender=self,
-                recipients=recipients, template_name=template_name,
-                template_data=context
-            )
-            notification.send_notification()
-
-    def _notify_auditors(self, template_name, context=None, **kwargs):
-        self._send_email(
-            self.staff_members.values_list('user__email', flat=True),
-            template_name,
-            context,
-            **kwargs
-        )
-
-    def _notify_focal_points(self, template_name, context=None, **kwargs):
+    def _notify_focal_points(self, template_name, context=None):
         for focal_point in get_user_model().objects.filter(groups=UNICEFAuditFocalPoint.as_group()):
+            # Build the context in the same order the previous version of the code did,
+            # just in case something relies on it (intentionally or not).
             ctx = {
                 'focal_point': focal_point.get_full_name(),
             }
             if context:
                 ctx.update(context)
-            self._send_email(
-                [focal_point.email],
-                template_name,
-                ctx,
-                **kwargs
+            base_context = {
+                'engagement': self.get_mail_context(user=focal_point),
+                'environment': get_environment(),
+            }
+            base_context.update(ctx)
+            context = base_context
+
+            send_notification_using_email_template(
+                recipients=[focal_point.email],
+                email_template_name=template_name,
+                context=context,
             )
 
     @transition(status, source=STATUSES.partner_contacted, target=STATUSES.report_submitted,
-                permission=_has_action_permission(action='submit'))
+                permission=has_action_permission(action='submit'))
     def submit(self):
         self.date_of_report_submit = timezone.now()
 
         self._notify_focal_points('audit/engagement/reported_by_auditor')
 
     @transition(status, source=[STATUSES.partner_contacted, STATUSES.report_submitted], target=STATUSES.cancelled,
-                permission=_has_action_permission(action='cancel'),
+                permission=has_action_permission(action='cancel'),
                 custom={'serializer': EngagementCancelSerializer})
     def cancel(self, cancel_comment):
         self.date_of_cancel = timezone.now()
         self.cancel_comment = cancel_comment
 
     @transition(status, source=STATUSES.report_submitted, target=STATUSES.final,
-                permission=_has_action_permission(action='finalize'))
+                permission=has_action_permission(action='finalize'))
     def finalize(self):
         self.date_of_final_report = timezone.now()
 
@@ -290,7 +281,8 @@ class RiskCategory(OrderedModel, models.Model):
 
     header = models.CharField(verbose_name=_('Header'), max_length=255)
     parent = models.ForeignKey(
-        'self', verbose_name=_('Parent'), null=True, blank=True, related_name='children', db_index=True
+        'self', verbose_name=_('Parent'), null=True, blank=True, related_name='children', db_index=True,
+        on_delete=models.CASCADE,
     )
     category_type = models.CharField(
         verbose_name=_('Category Type'), max_length=20, choices=TYPES, default=TYPES.default,
@@ -300,6 +292,9 @@ class RiskCategory(OrderedModel, models.Model):
     code_tracker = FieldTracker()
 
     order_with_respect_to = 'parent'
+
+    class Meta(OrderedModel.Meta):
+        verbose_name_plural = _('Risk Categories')
 
     def __str__(self):
         text = 'RiskCategory {}'.format(self.header)
@@ -334,9 +329,15 @@ class RiskBluePrint(OrderedModel, models.Model):
     is_key = models.BooleanField(default=False, verbose_name=_('Is Key'))
     header = models.TextField(verbose_name=_('Header'))
     description = models.TextField(blank=True, verbose_name=_('Description'))
-    category = models.ForeignKey(RiskCategory, verbose_name=_('Category'), related_name='blueprints')
+    category = models.ForeignKey(
+        RiskCategory, verbose_name=_('Category'), related_name='blueprints',
+        on_delete=models.CASCADE,
+    )
 
     order_with_respect_to = 'category'
+
+    class Meta(OrderedModel.Meta):
+        verbose_name_plural = _('Risk Blueprints')
 
     def __str__(self):
         return 'RiskBluePrint at {}'.format(self.category.header)
@@ -344,17 +345,26 @@ class RiskBluePrint(OrderedModel, models.Model):
 
 @python_2_unicode_compatible
 class Risk(models.Model):
-    VALUES = Choices(
-        (0, 'na', _('N/A')),
+    POSITIVE_VALUES = Choices(
         (1, 'low', _('Low')),
         (2, 'medium', _('Medium')),
         (3, 'significant', _('Significant')),
         (4, 'high', _('High')),
     )
 
-    engagement = models.ForeignKey(Engagement, related_name='risks', verbose_name=_('Engagement'))
+    VALUES = Choices(
+        (0, 'na', _('N/A')),
+    ) + POSITIVE_VALUES
 
-    blueprint = models.ForeignKey(RiskBluePrint, related_name='risks', verbose_name=_('Blueprint'))
+    engagement = models.ForeignKey(
+        Engagement, related_name='risks', verbose_name=_('Engagement'),
+        on_delete=models.CASCADE,
+    )
+
+    blueprint = models.ForeignKey(
+        RiskBluePrint, related_name='risks', verbose_name=_('Blueprint'),
+        on_delete=models.CASCADE,
+    )
     value = models.SmallIntegerField(choices=VALUES, null=True, blank=True, verbose_name=_('Value'))
     extra = JSONField(blank=True, null=True, verbose_name=_('Extra'))
 
@@ -362,6 +372,7 @@ class Risk(models.Model):
         return 'Risk at {}, {}'.format(self.engagement, self.value)
 
     class Meta:
+        ordering = ('id', )
         unique_together = [['engagement', 'blueprint', ]]
 
 
@@ -376,7 +387,10 @@ class SpotCheck(Engagement):
 
     internal_controls = models.TextField(verbose_name=_('Internal Controls'), blank=True)
 
+    objects = models.Manager()
+
     class Meta:
+        ordering = ('id', )
         verbose_name = _('Spot Check')
         verbose_name_plural = _('Spot Checks')
 
@@ -399,13 +413,13 @@ class SpotCheck(Engagement):
             SPSubmitReportRequiredFieldsCheck.as_condition(),
             EngagementHasReportAttachmentsCheck.as_condition(),
         ],
-        permission=_has_action_permission(action='submit')
+        permission=has_action_permission(action='submit')
     )
     def submit(self, *args, **kwargs):
         return super(SpotCheck, self).submit(*args, **kwargs)
 
     @transition('status', source=Engagement.STATUSES.report_submitted, target=Engagement.STATUSES.final,
-                permission=_has_action_permission(action='finalize'))
+                permission=has_action_permission(action='finalize'))
     def finalize(self, *args, **kwargs):
         PartnerOrganization.spot_checks(self.partner, update_one=True, event_date=self.date_of_draft_report_to_unicef)
         return super(SpotCheck, self).finalize(*args, **kwargs)
@@ -463,16 +477,24 @@ class Finding(models.Model):
         ("other", _("Other")),
     )
 
-    spot_check = models.ForeignKey(SpotCheck, verbose_name=_('Spot Check'), related_name='findings')
+    spot_check = models.ForeignKey(
+        SpotCheck, verbose_name=_('Spot Check'), related_name='findings',
+        on_delete=models.CASCADE,
+    )
 
     priority = models.CharField(verbose_name=_('Priority'), max_length=4, choices=PRIORITIES)
 
     category_of_observation = models.CharField(
         verbose_name=_('Category of Observation'), max_length=100, choices=CATEGORIES,
     )
-    recommendation = models.TextField(verbose_name=_('Recommendation'), blank=True)
+    recommendation = models.TextField(verbose_name=_('Finding and Recommendation'), blank=True)
     agreed_action_by_ip = models.TextField(verbose_name=_('Agreed Action by IP'), blank=True)
     deadline_of_action = models.DateField(verbose_name=_('Deadline of Action'), null=True, blank=True)
+
+    class Meta:
+        ordering = ('id', )
+        verbose_name = _('Finding')
+        verbose_name_plural = _('Findings')
 
     def __str__(self):
         return 'Finding for {}'.format(self.spot_check)
@@ -480,7 +502,10 @@ class Finding(models.Model):
 
 @python_2_unicode_compatible
 class MicroAssessment(Engagement):
+    objects = models.Manager()
+
     class Meta:
+        ordering = ('id',)
         verbose_name = _('Micro Assessment')
         verbose_name_plural = _('Micro Assessments')
 
@@ -497,7 +522,7 @@ class MicroAssessment(Engagement):
             ValidateMARiskExtra.as_condition(),
             EngagementHasReportAttachmentsCheck.as_condition(),
         ],
-        permission=_has_action_permission(action='submit')
+        permission=has_action_permission(action='submit')
     )
     def submit(self, *args, **kwargs):
         return super(MicroAssessment, self).submit(*args, **kwargs)
@@ -516,7 +541,15 @@ class DetailedFindingInfo(models.Model):
     finding = models.TextField(verbose_name=_('Description of Finding'))
     recommendation = models.TextField(verbose_name=_('Recommendation and IP Management Response'))
 
-    micro_assesment = models.ForeignKey(MicroAssessment, verbose_name=_('Micro Assessment'), related_name='findings')
+    micro_assesment = models.ForeignKey(
+        MicroAssessment, verbose_name=_('Micro Assessment'), related_name='findings',
+        on_delete=models.CASCADE,
+    )
+
+    class Meta:
+        ordering = ('id', )
+        verbose_name = _('Detailed Finding Info')
+        verbose_name_plural = _('Detailed Findings Info')
 
     def __str__(self):
         return 'Finding for {}'.format(self.micro_assesment)
@@ -542,10 +575,13 @@ class Audit(Engagement):
     financial_findings = models.DecimalField(verbose_name=_('Financial Findings $'), null=True, blank=True,
                                              decimal_places=2, max_digits=20)
     audit_opinion = models.CharField(
-        verbose_name=_('Audit Opinion'), max_length=20, choices=OPTIONS, null=True, blank=True,
+        verbose_name=_('Audit Opinion'), max_length=20, choices=OPTIONS, default='', blank=True,
     )
 
+    objects = models.Manager()
+
     class Meta:
+        ordering = ('id',)
         verbose_name = _('Audit')
         verbose_name_plural = _('Audits')
 
@@ -577,13 +613,13 @@ class Audit(Engagement):
             ValidateAuditRiskCategories.as_condition(),
             EngagementHasReportAttachmentsCheck.as_condition(),
         ],
-        permission=_has_action_permission(action='submit')
+        permission=has_action_permission(action='submit')
     )
     def submit(self, *args, **kwargs):
         return super(Audit, self).submit(*args, **kwargs)
 
     @transition('status', source=Engagement.STATUSES.report_submitted, target=Engagement.STATUSES.final,
-                permission=_has_action_permission(action='finalize'))
+                permission=has_action_permission(action='finalize'))
     def finalize(self, *args, **kwargs):
         PartnerOrganization.audits_completed(self.partner, update_one=True)
         return super(Audit, self).finalize(*args, **kwargs)
@@ -616,7 +652,10 @@ class FinancialFinding(models.Model):
         ('ineligible-costs-other', _('Ineligible costs (other)')),
     )
 
-    audit = models.ForeignKey(Audit, verbose_name=_('Audit'), related_name='financial_finding_set')
+    audit = models.ForeignKey(
+        Audit, verbose_name=_('Audit'), related_name='financial_finding_set',
+        on_delete=models.CASCADE,
+    )
 
     title = models.CharField(verbose_name=_('Title (Category)'), max_length=255, choices=TITLE_CHOICES)
     local_amount = models.DecimalField(verbose_name=_('Amount (local)'), decimal_places=2, max_digits=20)
@@ -634,7 +673,10 @@ class FinancialFinding(models.Model):
 
 @python_2_unicode_compatible
 class KeyInternalControl(models.Model):
-    audit = models.ForeignKey(Audit, verbose_name=_('Audit'), related_name='key_internal_controls')
+    audit = models.ForeignKey(
+        Audit, verbose_name=_('Audit'), related_name='key_internal_controls',
+        on_delete=models.CASCADE,
+    )
 
     recommendation = models.TextField(verbose_name=_('Recommendation'), blank=True)
     audit_observation = models.TextField(verbose_name=_('Audit Observation'), blank=True)
@@ -649,6 +691,13 @@ class KeyInternalControl(models.Model):
 
 @python_2_unicode_compatible
 class SpecialAudit(Engagement):
+    objects = models.Manager()
+
+    class Meta:
+        ordering = ('id', )
+        verbose_name = _('Special Audit')
+        verbose_name_plural = _('Special Audits')
+
     def save(self, *args, **kwargs):
         self.engagement_type = Engagement.TYPES.sa
         return super(SpecialAudit, self).save(*args, **kwargs)
@@ -657,16 +706,17 @@ class SpecialAudit(Engagement):
         'status',
         source=Engagement.STATUSES.partner_contacted, target=Engagement.STATUSES.report_submitted,
         conditions=[
+            SpecialAuditSubmitReportRequiredFieldsCheck.as_condition(),
             SpecialAuditSubmitRelatedModelsCheck.as_condition(),
             EngagementHasReportAttachmentsCheck.as_condition(),
         ],
-        permission=_has_action_permission(action='submit')
+        permission=has_action_permission(action='submit')
     )
     def submit(self, *args, **kwargs):
         return super(SpecialAudit, self).submit(*args, **kwargs)
 
     @transition('status', source=Engagement.STATUSES.report_submitted, target=Engagement.STATUSES.final,
-                permission=_has_action_permission(action='finalize'))
+                permission=has_action_permission(action='finalize'))
     def finalize(self, *args, **kwargs):
         PartnerOrganization.audits_completed(self.partner, update_one=True)
         return super(SpecialAudit, self).finalize(*args, **kwargs)
@@ -680,10 +730,18 @@ class SpecialAudit(Engagement):
 
 @python_2_unicode_compatible
 class SpecificProcedure(models.Model):
-    audit = models.ForeignKey(SpecialAudit, verbose_name=_('Special Audit'), related_name='specific_procedures')
+    audit = models.ForeignKey(
+        SpecialAudit, verbose_name=_('Special Audit'), related_name='specific_procedures',
+        on_delete=models.CASCADE,
+    )
 
     description = models.TextField()
     finding = models.TextField(blank=True)
+
+    class Meta:
+        ordering = ('id', )
+        verbose_name = _('Specific Procedure')
+        verbose_name_plural = _('Specific Procedures')
 
     def __str__(self):
         return '{}: {}'.format(self.audit.unique_id, self.description)
@@ -691,9 +749,17 @@ class SpecificProcedure(models.Model):
 
 @python_2_unicode_compatible
 class SpecialAuditRecommendation(models.Model):
-    audit = models.ForeignKey(SpecialAudit, verbose_name=_('Special Audit'), related_name='other_recommendations')
+    audit = models.ForeignKey(
+        SpecialAudit, verbose_name=_('Special Audit'), related_name='other_recommendations',
+        on_delete=models.CASCADE,
+    )
 
     description = models.TextField()
+
+    class Meta:
+        ordering = ('id', )
+        verbose_name = _('Special Audit Recommendation')
+        verbose_name_plural = _('Special Audit Recommendations')
 
     def __str__(self):
         return '{}: {}'.format(self.audit.unique_id, self.description)
@@ -726,24 +792,34 @@ class EngagementActionPoint(models.Model):
         ('closed', _('Closed')),
     )
 
-    engagement = models.ForeignKey(Engagement, related_name='action_points', verbose_name=_('Engagement'))
+    engagement = models.ForeignKey(
+        Engagement, related_name='action_points', verbose_name=_('Engagement'),
+        on_delete=models.CASCADE,
+    )
     category = models.CharField(verbose_name=_('Category'), max_length=100, choices=CATEGORY_CHOICES)
     description = models.TextField(verbose_name=_('Description'), blank=True)
     due_date = models.DateField(verbose_name=_('Due Date'))
     author = models.ForeignKey(
         settings.AUTH_USER_MODEL,
         related_name='created_engagement_action_points',
-        verbose_name=_('Author')
+        verbose_name=_('Author'),
+        on_delete=models.CASCADE,
     )
     person_responsible = models.ForeignKey(
         settings.AUTH_USER_MODEL,
         related_name='engagement_action_points',
-        verbose_name=_('Person Responsible')
+        verbose_name=_('Person Responsible'),
+        on_delete=models.CASCADE,
     )
     action_taken = models.TextField(verbose_name=_('Action Taken'), blank=True)
     status = models.CharField(verbose_name=_('Status'), max_length=10,
                               choices=STATUS_CHOICES, default=STATUS_CHOICES.open)
     high_priority = models.BooleanField(verbose_name=_('High Priority'), default=False)
+
+    class Meta:
+        ordering = ('id', )
+        verbose_name = _('Engagement Action Point')
+        verbose_name_plural = _('Engagement Action Points')
 
     def __str__(self):
         return '{} on {}'.format(self.get_category_display(), self.engagement)
@@ -763,12 +839,12 @@ class EngagementActionPoint(models.Model):
             'action_point': self.get_mail_context(),
         }
 
-        notification = Notification.objects.create(
-            sender=self,
-            recipients=[self.person_responsible.email], template_name=template_name,
-            template_data=context
+        send_notification_using_email_template(
+            recipients=[self.person_responsible.email],
+            cc=[self.author.email],
+            email_template_name=template_name,
+            context=context,
         )
-        notification.send_notification()
 
 
 UNICEFAuditFocalPoint = GroupWrapper(code='unicef_audit_focal_point',
@@ -779,42 +855,3 @@ Auditor = GroupWrapper(code='auditor',
 
 UNICEFUser = GroupWrapper(code='unicef_user',
                           name='UNICEF User')
-
-
-class AuditPermissionQueryset(StatusBasePermissionQueryset):
-    def filter(self, *args, **kwargs):
-        if 'user' in kwargs and 'instance' in kwargs and kwargs['instance']:
-            kwargs['user_type'] = self.model._get_user_type(kwargs.pop('user'), kwargs['instance'])
-            return self.filter(*args, **kwargs)
-
-        return super(AuditPermissionQueryset, self).filter(*args, **kwargs)
-
-
-@python_2_unicode_compatible
-class AuditPermission(StatusBasePermission):
-    STATUSES = StatusBasePermission.STATUSES + Engagement.STATUSES
-
-    USER_TYPES = Choices(
-        UNICEFAuditFocalPoint.as_choice(),
-        Auditor.as_choice(),
-        UNICEFUser.as_choice(),
-    )
-
-    objects = AuditPermissionQueryset.as_manager()
-
-    def __str__(self):
-        return '{} can {} {} on {} engagement'.format(self.user_type, self.permission, self.target,
-                                                      self.instance_status)
-
-    @classmethod
-    def _get_user_type(cls, user, engagement=None):
-        user_type = super(AuditPermission, cls)._get_user_type(user)
-
-        if user_type == Auditor and engagement:
-            try:
-                if user.purchase_order_auditorstaffmember not in engagement.staff_members.all():
-                    return None
-            except AuditorStaffMember.DoesNotExist:
-                return None
-
-        return user_type

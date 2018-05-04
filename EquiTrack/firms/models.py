@@ -18,7 +18,7 @@ class BaseFirm(TimeStampedModel, models.Model):
     vendor_number = models.CharField(
         verbose_name=_('Vendor Number'),
         blank=True,
-        null=True,
+        default='',
         unique=True,
         max_length=30
     )
@@ -30,33 +30,33 @@ class BaseFirm(TimeStampedModel, models.Model):
     street_address = models.CharField(
         verbose_name=_('Address'),
         max_length=500,
-        blank=True, null=True
+        blank=True, default=''
     )
     city = models.CharField(
         verbose_name=_('City'),
         max_length=255,
-        blank=True, null=True
+        blank=True, default=''
     )
     postal_code = models.CharField(
         verbose_name=_('Postal Code'),
         max_length=32,
-        blank=True, null=True
+        blank=True, default=''
     )
     country = models.CharField(
         verbose_name=_('Country'),
         max_length=255,
-        blank=True, null=True
+        blank=True, default=''
     )
 
     email = models.CharField(
         verbose_name=_('Email'),
         max_length=255,
-        blank=True, null=True
+        blank=True, default=''
     )
     phone_number = models.CharField(
         verbose_name=_('Phone Number'),
         max_length=32,
-        blank=True, null=True
+        blank=True, default=''
     )
 
     vision_synced = models.BooleanField(verbose_name=_('Synced from VISION'), default=False)
@@ -68,6 +68,7 @@ class BaseFirm(TimeStampedModel, models.Model):
 
     class Meta:
         abstract = True
+        ordering = ('id',)
         verbose_name = _('Organization')
         verbose_name_plural = _('Organizations')
 
@@ -75,7 +76,7 @@ class BaseFirm(TimeStampedModel, models.Model):
         return self.name
 
     def natural_key(self):
-        return (self.vendor_number, )
+        return self.vendor_number,
 
 
 @python_2_unicode_compatible
@@ -83,11 +84,13 @@ class BaseStaffMember(models.Model):
     user = models.OneToOneField(
         settings.AUTH_USER_MODEL,
         verbose_name=_('User'),
-        related_name='%(app_label)s_%(class)s'
+        related_name='%(app_label)s_%(class)s',
+        on_delete=models.CASCADE
     )
 
     class Meta:
         abstract = True
+        ordering = ('id',)
         verbose_name = _('Staff Member')
         verbose_name_plural = _('Staff Members')
 
