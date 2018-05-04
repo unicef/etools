@@ -5,8 +5,14 @@ from django.db.models.signals import post_save, post_delete
 from django.dispatch import receiver
 
 from users.models import Country
-from tpm.models import TPMActionPoint, TPMVisit
+from tpm.models import TPMActionPoint, TPMVisit, ThirdPartyMonitor
 from tpm.tpmpartners.models import TPMPartnerStaffMember
+
+
+@receiver(post_save, sender=TPMPartnerStaffMember)
+def create_user_receiver(instance, created, **kwargs):
+    if created:
+        instance.user.groups.add(ThirdPartyMonitor.as_group())
 
 
 @receiver(post_delete, sender=TPMPartnerStaffMember)
