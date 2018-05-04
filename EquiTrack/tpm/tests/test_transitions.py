@@ -1,5 +1,6 @@
 from __future__ import absolute_import, division, print_function, unicode_literals
 
+from django.core.management import call_command
 from django.core.urlresolvers import reverse
 from django.utils import six
 from django.utils.translation import ugettext as _
@@ -15,6 +16,7 @@ from tpm.tests.factories import TPMVisitFactory, UserFactory
 class TPMTransitionTestCase(TPMTestCaseMixin, BaseTenantTestCase):
     @classmethod
     def setUpTestData(cls):
+        super(TPMTransitionTestCase, cls).setUpTestData()
         call_command('update_tpm_permissions', verbosity=0)
         call_command('update_notifications')
 

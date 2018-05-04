@@ -59,7 +59,6 @@ class FSMTransitionActionMetadataMixin(object):
             return actions
 
         allowed_FSM_transitions = []
-        current_state = instance.status
         for action in self._collect_actions(instance):
             meta = action._django_fsm
 

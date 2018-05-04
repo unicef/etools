@@ -17,10 +17,9 @@ from tpm.models import (
 from tpm.tpmpartners.models import TPMPartnerStaffMember
 from tpm.serializers.attachments import TPMAttachmentsSerializer, TPMReportAttachmentsSerializer, TPMReportSerializer
 from tpm.serializers.partner import TPMPartnerLightSerializer, TPMPartnerStaffMemberSerializer
-from utils.permissions.serializers import StatusPermissionsBasedRootSerializerMixin
 from utils.common.serializers.fields import SeparatedReadWriteField
 from utils.common.serializers.mixins import UserContextSerializerMixin
-from utils.writable_serializers.serializers import WritableNestedSerializerMixin
+from utils.writable_serializers.serializers import WritableNestedSerializerMixin, WritableNestedParentSerializerMixin
 from users.serializers import MinimalUserSerializer, OfficeSerializer
 from locations.serializers import LocationLightSerializer
 from reports.serializers.v1 import ResultSerializer, SectorSerializer
@@ -36,16 +35,14 @@ class InterventionResultLinkVisitSerializer(serializers.ModelSerializer):
         ]
 
 
-class TPMVisitReportRejectCommentSerializer(PermissionsBasedSerializerMixin,
-                                            WritableNestedSerializerMixin,
+class TPMVisitReportRejectCommentSerializer(WritableNestedSerializerMixin,
                                             serializers.ModelSerializer):
     class Meta(WritableNestedSerializerMixin.Meta):
         model = TPMVisitReportRejectComment
         fields = ['id', 'rejected_at', 'reject_reason', ]
 
 
-class TPMActionPointSerializer(PermissionsBasedSerializerMixin,
-                               WritableNestedSerializerMixin,
+class TPMActionPointSerializer(WritableNestedSerializerMixin,
                                UserContextSerializerMixin,
                                serializers.ModelSerializer):
     author = MinimalUserSerializer(read_only=True, label=_('Assigned By'))
@@ -145,9 +142,7 @@ class TPMActivitySerializer(PermissionsBasedSerializerMixin, WritableNestedSeria
         }
 
 
-class TPMVisitLightSerializer(WritableNestedSerializerMixin,
-                              PermissionsBasedSerializerMixin,
-                              serializers.ModelSerializer):
+class TPMVisitLightSerializer(PermissionsBasedSerializerMixin, serializers.ModelSerializer):
     tpm_partner = SeparatedReadWriteField(
         read_field=TPMPartnerLightSerializer(label=_('TPM Partner'), read_only=True),
     )
@@ -189,7 +184,7 @@ class TPMVisitLightSerializer(WritableNestedSerializerMixin,
             many=True
         ).data
 
-    class Meta(StatusPermissionsBasedRootSerializerMixin.Meta, WritableNestedSerializerMixin.Meta):
+    class Meta:
         model = TPMVisit
         fields = [
             'id', 'start_date', 'end_date', 'tpm_partner',
@@ -207,7 +202,8 @@ class TPMVisitLightSerializer(WritableNestedSerializerMixin,
         }
 
 
-class TPMVisitSerializer(TPMVisitLightSerializer):
+class TPMVisitSerializer(WritableNestedParentSerializerMixin,
+                         TPMVisitLightSerializer):
     tpm_activities = TPMActivitySerializer(many=True, required=False, label=_('Site Visit Schedule'))
 
     report_attachments = TPMReportAttachmentsSerializer(many=True, required=False, label=_('Overall Visit Reports'))

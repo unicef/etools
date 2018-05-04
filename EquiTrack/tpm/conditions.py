@@ -24,7 +24,7 @@ class TPMVisitUNICEFFocalPointCondition(SimpleCondition):
         self.user = user
 
     def is_satisfied(self):
-        return self.user in self.visit.unicef_focal_points.all()
+        return self.user in self.visit.unicef_focal_points
 
 
 class TPMVisitTPMFocalPointCondition(SimpleCondition):

@@ -25,7 +25,7 @@ from tpm.export.serializers import (
     TPMVisitExportSerializer, TPMActionPointExportSerializer)
 from tpm.filters import ReferenceNumberOrderingFilter
 from tpm.metadata import TPMBaseMetadata, TPMPermissionBasedMetadata
-from tpm.models import TPMVisit, ThirdPartyMonitor, TPMActivity, TPMActionPoint
+from tpm.models import TPMVisit, ThirdPartyMonitor, TPMActivity, TPMActionPoint, UNICEFUser, PME
 from tpm.tpmpartners.models import TPMPartner, TPMPartnerStaffMember
 from tpm.serializers.partner import TPMPartnerLightSerializer, TPMPartnerSerializer, TPMPartnerStaffMemberSerializer
 from tpm.serializers.visit import TPMVisitLightSerializer, TPMVisitSerializer, TPMVisitDraftSerializer, \
@@ -90,8 +90,15 @@ class TPMPartnerViewSet(
         if getattr(self, 'action', None) == 'list':
             queryset = queryset.country_partners()
 
-        if ThirdPartyMonitor.as_group() in self.request.user.groups.all():
+        user_groups = self.request.user.groups.all()
+
+        if UNICEFUser.as_group() in user_groups or PME.as_group() in user_groups:
+            # no need to filter queryset
+            pass
+        elif ThirdPartyMonitor.as_group() in user_groups:
             queryset = queryset.filter(staff_members__user=self.request.user)
+        else:
+            queryset = queryset.none()
 
         return queryset
 
@@ -100,14 +107,16 @@ class TPMPartnerViewSet(
 
         if ThirdPartyMonitor.as_group() in self.request.user.groups.all():
             context += [
-                TPMStaffMemberCondition(self.request.user.tpm_tpmpartnerstaffmember.tpm_partner, self.request.user),
+                TPMStaffMemberCondition(
+                    self.request.user.tpmpartners_tpmpartnerstaffmember.tpm_partner,
+                    self.request.user
+                ),
             ]
 
         return context
 
     def get_obj_permission_context(self, obj):
         return [
-            ObjectStatusCondition(obj),
             TPMStaffMemberCondition(obj, self.request.user),
         ]
 
@@ -284,10 +293,17 @@ class TPMVisitViewSet(
     def get_queryset(self):
         queryset = super(TPMVisitViewSet, self).get_queryset()
 
-        if ThirdPartyMonitor.as_group() in self.request.user.groups.all():
+        user_groups = self.request.user.groups.all()
+
+        if UNICEFUser.as_group() in user_groups or PME.as_group() in user_groups:
+            # no need to filter queryset
+            pass
+        elif ThirdPartyMonitor.as_group() in user_groups:
             queryset = queryset.filter(
-                tpm_partner=self.request.user.tpmpartners_tpmpartnerstaffmember.tpm_partner,
+                tpm_partner=self.request.user.tpmpartners_tpmpartnerstaffmember.tpm_partner
             ).exclude(status=TPMVisit.STATUSES.draft)
+        else:
+            queryset = queryset.none()
 
         return queryset
 
@@ -330,7 +346,10 @@ class TPMVisitViewSet(
 
         if ThirdPartyMonitor.as_group() in self.request.user.groups.all():
             context += [
-                TPMStaffMemberCondition(self.request.user.tpm_tpmpartnerstaffmember.tpm_partner, self.request.user),
+                TPMStaffMemberCondition(
+                    self.request.user.tpmpartners_tpmpartnerstaffmember.tpm_partner,
+                    self.request.user
+                ),
             ]
 
         return context

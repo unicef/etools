@@ -1,6 +1,7 @@
 from __future__ import absolute_import, division, print_function, unicode_literals
 
 from django.core.management import BaseCommand
+from django.db.models import Q
 from django.utils import six
 
 from permissions2.models import Permission
@@ -13,8 +14,8 @@ from ...models import UNICEFUser, PME, ThirdPartyMonitor, TPMVisit
 
 class Command(BaseCommand):
     tpm_partner = [
-        'tpm.tpmpartner.*',
-        'tpm.tpmpartnerstaffmember.*',
+        'tpmpartners.tpmpartner.*',
+        'tpmpartners.tpmpartnerstaffmember.*',
     ]
 
     tpm_visit_list = [
@@ -48,9 +49,11 @@ class Command(BaseCommand):
         'tpm.tpmvisit.date_of_unicef_approved',
 
 
-        'tpm.tpmactivity.implementing_partner',
+        'tpm.tpmactivity.partner',
         'tpm.tpmactivity.partnership',
         'tpm.tpmactivity.cp_output',
+        'tpm.tpmactivity.offices',
+        'tpm.tpmactivity.unicef_staff_members',
         'tpm.tpmactivity.locations',
         'tpm.tpmactivity.section',
         'tpm.tpmactivity.additional_information',
@@ -138,62 +141,12 @@ class Command(BaseCommand):
                 'Generating new permissions...'
             )
 
-        # todo: re-check permissions
-        self.add_permission([self.unicef_user, self.third_party_monitor], 'view', self.tpm_partner)
-        self.add_permission(self.pme, 'edit', self.tpm_partner)
+        self.assign_permissions()
 
-        self.add_permission(self.pme, 'action', ['tpm.tpmpartner.activate', 'tpm.tpmpartner.cancel'])
-
-        self.add_permission([self.unicef_user, self.third_party_monitor], 'view',
-                            self.tpm_visit_list + self.tpm_visit_details)
-
-        self.add_permission(self.pme, 'edit', self.tpm_visit_details,
-                            condition=self.new_visit())
-
-        self.add_permission(self.pme, 'edit', self.tpm_visit_details,
-                            condition=self.visit_status(TPMVisit.STATUSES.draft))
-        self.revoke_permission(self.third_party_monitor, 'view', self.tpm_visit_details,
-                               condition=self.visit_status(TPMVisit.STATUSES.draft))
-
-        self.add_permission([self.unicef_user, self.third_party_monitor], 'view', ['tpm.tpmvisit.reject_comment'],
-                            condition=self.visit_status(TPMVisit.STATUSES.tpm_rejected))
-        self.add_permission(self.pme, 'edit', self.tpm_visit_details,
-                            condition=self.visit_status(TPMVisit.STATUSES.tpm_rejected))
-
-        self.add_permission(self.third_party_monitor, 'edit', self.tpm_visit_report,
-                            condition=self.visit_status(TPMVisit.STATUSES.tpm_accepted))
-
-        self.add_permission([self.unicef_user, self.third_party_monitor], 'view', self.tpm_visit_report,
-                            condition=self.visit_status(TPMVisit.STATUSES.tpm_reported))
-
-        self.add_permission([self.unicef_user, self.third_party_monitor], 'view',
-                            ['tpm.tpmvisit.report_reject_comments', 'tpm.tpmvisitreportrejectcomment.*'],
-                            condition=self.visit_status(TPMVisit.STATUSES.tpm_report_rejected))
-        self.add_permission(self.unicef_user, 'view', self.tpm_visit_report,
-                            condition=self.visit_status(TPMVisit.STATUSES.tpm_report_rejected))
-        self.add_permission(self.third_party_monitor, 'edit', self.tpm_visit_report,
-                            condition=self.visit_status(TPMVisit.STATUSES.tpm_report_rejected))
-
-        self.add_permission([self.unicef_user, self.third_party_monitor], 'view', self.tpm_visit_report,
-                            condition=self.visit_status(TPMVisit.STATUSES.unicef_approved))
-
-        self.add_permission([self.pme, self.focal_point], 'edit', 'tpm.tpmvisit.action_points',
-                            condition=self.visit_status(TPMVisit.STATUSES.tpm_reported))
-        self.add_permission(self.unicef_user, 'view', 'tpm.tpmvisit.action_points',
-                            condition=self.visit_status(TPMVisit.STATUSES.tpm_reported))
-        self.add_permission(self.unicef_user, 'view', 'tpm.tpmvisit.action_points',
-                            condition=self.visit_status(TPMVisit.STATUSES.unicef_approved))
-
-        self.add_permission(self.pme, 'action', 'tpm.tpmvisit.cancel')
-        self.add_permission(self.pme, 'action', 'tpm.tpmvisit.assign')
-        self.add_permission(self.third_party_monitor, 'action', ['tpm.tpmvisit.accept', 'tpm.tpmvisit.reject'])
-        self.add_permission(self.third_party_monitor, 'action', 'tpm.tpmvisit.send_report')
-        self.add_permission(self.pme, 'action', ['tpm.tpmvisit.approve', 'tpm.tpmvisit.reject_report'])
-        self.add_permission(self.third_party_monitor, 'action', 'tpm.tpmvisit.send_report')
-
-        self.add_permission([self.pme, self.focal_point], 'edit', 'tpm.tpmactionpoint.*')
-
-        old_permissions = Permission.objects.filter(target__startswith='tpm.')
+        old_permissions = Permission.objects.filter(
+            Q(target__startswith='tpm.') |
+            Q(target__startswith='tpmpartners.')
+        )
         old_permissions_count = old_permissions.count()
 
         if self.verbosity >= 2:
@@ -212,3 +165,94 @@ class Command(BaseCommand):
             self.stdout.write(
                 'TPM permissions updated ({}) -> ({}).'.format(old_permissions_count, len(self.permissions))
             )
+
+    def assign_permissions(self):
+        # common permissions
+        # everybody can view partner details, pme can edit
+        self.add_permission([self.unicef_user, self.third_party_monitor], 'view', self.tpm_partner)
+        self.add_permission(self.pme, 'edit', self.tpm_partner)
+
+        # unicef users can view all, tpm can view list fields
+        self.add_permission(self.unicef_user, 'view', self.tpm_visit_list + self.tpm_visit_details)
+        self.add_permission(self.third_party_monitor, 'view', self.tpm_visit_list)
+
+        # new visit
+        self.add_permission(self.pme, 'edit', self.tpm_visit_details,
+                            condition=self.new_visit())
+
+        # draft visit
+        self.add_permission(self.pme, 'edit', self.tpm_visit_details,
+                            condition=self.visit_status(TPMVisit.STATUSES.draft))
+        self.add_permission(self.third_party_monitor, 'view', self.tpm_visit_details,
+                            condition=self.visit_status(TPMVisit.STATUSES.draft))
+        self.add_permission(self.pme, 'action', ['tpm.tpmvisit.assign', 'tpm.tpmvisit.cancel'],
+                            condition=self.visit_status(TPMVisit.STATUSES.draft))
+
+        # visit cancelled
+        self.add_permission([self.unicef_user, self.third_party_monitor], 'view', ['tpm.tpmvisit.cancel_comment'],
+                            condition=self.visit_status(TPMVisit.STATUSES.cancelled))
+
+        # visit assigned
+        self.add_permission(self.third_party_monitor, 'view', self.tpm_visit_details,
+                            condition=self.visit_status(TPMVisit.STATUSES.assigned))
+        self.add_permission(self.pme, 'action', 'tpm.tpmvisit.cancel',
+                            condition=self.visit_status(TPMVisit.STATUSES.assigned))
+        self.add_permission(self.third_party_monitor, 'action', ['tpm.tpmvisit.accept', 'tpm.tpmvisit.reject'],
+                            condition=self.visit_status(TPMVisit.STATUSES.assigned))
+
+        # tpm rejected
+        self.add_permission([self.unicef_user, self.third_party_monitor], 'view', ['tpm.tpmvisit.reject_comment'],
+                            condition=self.visit_status(TPMVisit.STATUSES.tpm_rejected))
+        self.add_permission(self.pme, 'edit', self.tpm_visit_details,
+                            condition=self.visit_status(TPMVisit.STATUSES.tpm_rejected))
+        self.add_permission(self.third_party_monitor, 'view', self.tpm_visit_details,
+                            condition=self.visit_status(TPMVisit.STATUSES.tpm_rejected))
+        self.add_permission(self.pme, 'action', ['tpm.tpmvisit.assign', 'tpm.tpmvisit.cancel'],
+                            condition=self.visit_status(TPMVisit.STATUSES.tpm_rejected))
+
+        # tpm accepted
+        self.add_permission(self.third_party_monitor, 'view', self.tpm_visit_details,
+                            condition=self.visit_status(TPMVisit.STATUSES.tpm_accepted))
+        self.add_permission(self.third_party_monitor, 'edit', self.tpm_visit_report,
+                            condition=self.visit_status(TPMVisit.STATUSES.tpm_accepted))
+        self.add_permission(self.pme, 'action', 'tpm.tpmvisit.cancel',
+                            condition=self.visit_status(TPMVisit.STATUSES.tpm_accepted))
+        self.add_permission(self.third_party_monitor, 'action', 'tpm.tpmvisit.send_report',
+                            condition=self.visit_status(TPMVisit.STATUSES.tpm_accepted))
+
+        # tpm reported
+        self.add_permission(self.third_party_monitor, 'view', self.tpm_visit_details,
+                            condition=self.visit_status(TPMVisit.STATUSES.tpm_reported))
+        self.add_permission([self.unicef_user, self.third_party_monitor], 'view', self.tpm_visit_report,
+                            condition=self.visit_status(TPMVisit.STATUSES.tpm_reported))
+
+        self.add_permission([self.pme, self.focal_point], 'edit', 'tpm.tpmvisit.action_points',
+                            condition=self.visit_status(TPMVisit.STATUSES.tpm_reported))
+        self.add_permission(self.unicef_user, 'view', 'tpm.tpmvisit.action_points',
+                            condition=self.visit_status(TPMVisit.STATUSES.tpm_reported))
+
+        self.add_permission(self.pme, 'action',
+                            ['tpm.tpmvisit.approve', 'tpm.tpmvisit.reject_report'],
+                            condition=self.visit_status(TPMVisit.STATUSES.tpm_reported))
+
+        # report rejected
+        self.add_permission([self.unicef_user, self.third_party_monitor], 'view',
+                            ['tpm.tpmvisit.report_reject_comments'],
+                            condition=self.visit_status(TPMVisit.STATUSES.tpm_report_rejected))
+        self.add_permission(self.unicef_user, 'view', self.tpm_visit_report,
+                            condition=self.visit_status(TPMVisit.STATUSES.tpm_report_rejected))
+
+        self.add_permission(self.third_party_monitor, 'view', self.tpm_visit_details,
+                            condition=self.visit_status(TPMVisit.STATUSES.tpm_report_rejected))
+        self.add_permission(self.third_party_monitor, 'edit', self.tpm_visit_report,
+                            condition=self.visit_status(TPMVisit.STATUSES.tpm_report_rejected))
+        self.add_permission(self.third_party_monitor, 'action', 'tpm.tpmvisit.send_report',
+                            condition=self.visit_status(TPMVisit.STATUSES.tpm_report_rejected))
+
+        # unicef approved
+        self.add_permission(self.third_party_monitor, 'view', self.tpm_visit_details,
+                            condition=self.visit_status(TPMVisit.STATUSES.unicef_approved))
+        self.add_permission([self.unicef_user, self.third_party_monitor], 'view', self.tpm_visit_report,
+                            condition=self.visit_status(TPMVisit.STATUSES.unicef_approved))
+        self.add_permission(self.unicef_user, 'view', 'tpm.tpmvisit.action_points',
+                            condition=self.visit_status(TPMVisit.STATUSES.unicef_approved))

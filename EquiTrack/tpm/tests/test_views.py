@@ -3,6 +3,7 @@ from __future__ import absolute_import, division, print_function, unicode_litera
 import base64
 from datetime import timedelta, datetime
 
+from django.core.management import call_command
 from django.core.urlresolvers import reverse
 from django.utils import six
 from django.utils.translation import ugettext_lazy as _
