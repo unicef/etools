@@ -74,7 +74,7 @@ class AuditUsersViewSet(generics.ListAPIView):
 
     permission_classes = (IsAuthenticated, )
     filter_backends = (SearchFilter, DjangoFilterBackend)
-    filter_fields = ('purchase_order_auditorstaffmember__auditor_firm__unicef_users_allowed', )
+    filter_fields = ('email', 'purchase_order_auditorstaffmember__auditor_firm__unicef_users_allowed', )
     search_fields = ('email',)
     queryset = get_user_model().objects.all()
     serializer_class = AuditUserSerializer
