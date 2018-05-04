@@ -10,7 +10,6 @@ from django.utils.translation import ugettext_lazy as _
 
 from rest_framework import serializers
 
-from attachments.serializers import BaseAttachmentSerializer
 from audit.models import (
     Audit, Engagement, EngagementActionPoint, MicroAssessment, SpotCheck, Finding, SpecificProcedure,
     SpecialAuditRecommendation, Risk)
