@@ -3,7 +3,7 @@ from __future__ import absolute_import, division, print_function, unicode_litera
 import itertools
 from collections import OrderedDict
 
-from attachments.models import Attachment
+from attachments.serializers import AttachmentPDFSerializer
 from audit.serializers.auditor import PurchaseOrderItemSerializer
 
 from django.utils.translation import ugettext_lazy as _
@@ -17,7 +17,7 @@ from audit.purchase_order.models import AuditorFirm, AuditorStaffMember, Purchas
 from audit.serializers.engagement import DetailedFindingInfoSerializer, KeyInternalControlSerializer
 from audit.serializers.risks import KeyInternalWeaknessSerializer, AggregatedRiskRootSerializer, RiskRootSerializer
 from partners.models import PartnerOrganization
-from tpm.export.serializers import CommaSeparatedExportField
+from utils.common.serializers.fields import CommaSeparatedExportField
 
 
 class AuditorPDFSerializer(serializers.ModelSerializer):
@@ -79,17 +79,6 @@ class EngagementActionPointPDFSerializer(serializers.ModelSerializer):
 
             'id', 'category', 'description', 'due_date', 'person_responsible', 'action_taken',
             'status', 'high_priority',
-        ]
-
-
-class AttachmentPDFSerializer(serializers.ModelSerializer):
-    file_type_display = serializers.ReadOnlyField(source='file_type.label')
-    created = serializers.DateTimeField(format='%d %b %Y')
-
-    class Meta:
-        model = Attachment
-        fields = [
-            'file_type_display', 'filename', 'url', 'created',
         ]
 
 

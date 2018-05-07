@@ -1,9 +1,11 @@
 from __future__ import absolute_import, division, print_function, unicode_literals
 
+from rest_framework import serializers
 from rest_framework.fields import empty, Field, SkipField
 from rest_framework.utils import model_meta
 from rest_framework_recursive.fields import RecursiveField
 
+from utils.common.utils import get_attribute_smart
 from utils.writable_serializers.serializers import WritableListSerializer
 
 
@@ -112,3 +114,40 @@ class RecursiveListSerializer(WritableListSerializer):
         if hasattr(self.child, 'proxied'):
             self.child = self.child.proxied
         return super(RecursiveListSerializer, self).update(instance, validated_data)
+
+
+class CommaSeparatedExportField(serializers.Field):
+    export_attr = None
+
+    def __init__(self, *args, **kwargs):
+        self.export_attr = kwargs.pop('export_attr', None)
+        super(CommaSeparatedExportField, self).__init__(*args, **kwargs)
+
+    def get_attribute(self, instance):
+        try:
+            return get_attribute_smart(instance, self.source_attrs)
+        except (KeyError, AttributeError) as exc:
+            if not self.required and self.default is empty:
+                raise SkipField()
+            msg = (
+                'Got {exc_type} when attempting to get a value for field '
+                '`{field}` on serializer `{serializer}`.\nThe serializer '
+                'field might be named incorrectly and not match '
+                'any attribute or key on the `{instance}` instance.\n'
+                'Original exception text was: {exc}.'.format(
+                    exc_type=type(exc).__name__,
+                    field=self.field_name,
+                    serializer=self.parent.__class__.__name__,
+                    instance=instance.__class__.__name__,
+                    exc=exc
+                )
+            )
+            raise type(exc)(msg)
+
+    def to_representation(self, value):
+        value = set(value)
+
+        if self.export_attr:
+            value = map(lambda x: get_attribute_smart(x, self.export_attr), value)
+
+        return ', '.join(map(str, filter(lambda x: x, value)))
