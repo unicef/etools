@@ -45,7 +45,7 @@ packer_cache
 *.box
 
 Vagrantfile
-EquiTrack/EquiTrack/saml/FederationMetadata.xml
+saml/FederationMetadata.xml
 
 *.tar
 
@@ -113,6 +113,8 @@ docs/_build/
 .DS_Store
 
 # custom settings files
-EquiTrack/EquiTrack/settings/custom.py
+config/settings/custom.py
 
 *secrets.yml
+/dist
+.tox
