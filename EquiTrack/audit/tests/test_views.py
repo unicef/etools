@@ -692,12 +692,12 @@ class TestAuditorStaffMembersViewSet(AuditTestCaseMixin, BaseTenantTestCase):
 
     def test_staff_search(self):
         UserFactory(auditor=True, partner_firm=self.auditor_firm)
-        user = UserFactory(auditor=True, partner_firm=self.auditor_firm, email='test@unique_example.com')
+        user = UserFactory(auditor=True, partner_firm=self.auditor_firm, email='test_unique@example.com')
 
         response = self.forced_auth_req(
             'get',
             '/api/audit/audit-firms/{}/staff-members/'.format(self.auditor_firm.id),
-            data={'search': 'unique_example.com'},
+            data={'search': 'test_unique'},
             user=self.unicef_focal_point,
         )
         self.assertEqual(response.status_code, status.HTTP_200_OK)
