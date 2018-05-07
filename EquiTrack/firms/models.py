@@ -7,6 +7,8 @@ from django.utils.translation import ugettext_lazy as _
 
 from model_utils.models import TimeStampedModel
 
+from utils.common.models.mixins import ModelHavingTenantRelationsMixin
+
 
 class BaseFirmManager(models.Manager):
     def get_by_natural_key(self, vendor_number):
@@ -80,7 +82,8 @@ class BaseFirm(TimeStampedModel, models.Model):
 
 
 @python_2_unicode_compatible
-class BaseStaffMember(models.Model):
+class BaseStaffMember(ModelHavingTenantRelationsMixin,
+                      models.Model):
     user = models.OneToOneField(
         settings.AUTH_USER_MODEL,
         verbose_name=_('User'),
