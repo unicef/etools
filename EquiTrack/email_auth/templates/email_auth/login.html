@@ -109,7 +109,7 @@
                            autovalidate="true" required>
               </paper-input>
             {% else %}
-              <input type="hidden" name="{{ field.name }}" value="{{ field.value }}">
+              <input type="hidden" name="{{ field.name }}" value="{{ field.value|default_if_none:"" }}">
             {% endif %}
           {% else %}
             <br>
