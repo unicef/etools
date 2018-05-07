@@ -412,7 +412,6 @@ class AuditSerializer(ActivePDValidationMixin, RiskCategoriesUpdateMixin, Engage
             'explanation_for_additional_information',
         ]
         fields.remove('specific_procedures')
-        fields.remove('exchange_rate')
         extra_kwargs = EngagementSerializer.Meta.extra_kwargs.copy()
         extra_kwargs.update({
             'engagement_type': {'read_only': True},
@@ -439,6 +438,7 @@ class SpecialAuditSerializer(EngagementSerializer):
         fields = EngagementSerializer.Meta.fields + [
             'other_recommendations',
         ]
+        fields.remove('exchange_rate')
         extra_kwargs = EngagementSerializer.Meta.extra_kwargs.copy()
         extra_kwargs.update({
             'start_date': {'required': False},
