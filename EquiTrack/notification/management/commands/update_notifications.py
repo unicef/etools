@@ -704,8 +704,7 @@ class Command(BaseCommand):
             name='audit/engagement/submit_to_auditor',
             defaults={
                 'description': 'Email that send to auditor when engagement have been created.',
-                'subject': '[Auditor Portal] ACCESS GRANTED for {{ engagement.engagement_type }}, '
-                           '{{ engagement.unique_id }}',
+                'subject': 'Access to eTools Financial Assurance Module',
 
                 'content': strip_text("""
                     Dear {{ staff_member }},
