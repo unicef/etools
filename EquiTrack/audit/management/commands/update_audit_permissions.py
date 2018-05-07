@@ -16,13 +16,15 @@ class Command(BaseCommand):
     focal_point = 'focal_point'
     unicef_user = 'unicef_user'
     auditor = 'auditor'
-    engagement_staff = 'auditor'
+    engagement_staff_auditor = 'engagement_staff_auditor'
     user_roles = {
         focal_point: [GroupCondition.predicate_template.format(group=UNICEFAuditFocalPoint.name)],
         unicef_user: [GroupCondition.predicate_template.format(group=UNICEFUser.name)],
         auditor: [GroupCondition.predicate_template.format(group=Auditor.name),
                   AuditStaffMemberCondition.predicate],
-        engagement_staff: [EngagementStaffMemberCondition.predicate]
+        engagement_staff_auditor: [GroupCondition.predicate_template.format(group=Auditor.name),
+                                   AuditStaffMemberCondition.predicate,
+                                   EngagementStaffMemberCondition.predicate]
     }
 
     all_unicef_users = [focal_point, unicef_user]
@@ -256,19 +258,19 @@ class Command(BaseCommand):
 
         # ip_contacted: auditor can edit, everybody else can view, focal point can cancel and edit staff members
         self.add_permissions(
-            self.engagement_staff, 'view',
+            self.engagement_staff_auditor, 'view',
             self.report_readonly_block,
             condition=self.engagement_status(Engagement.STATUSES.partner_contacted)
         )
         self.add_permissions(
-            self.engagement_staff, 'edit',
+            self.engagement_staff_auditor, 'edit',
             self.staff_members_block +
             self.engagement_status_editable_date_fields +
             self.report_editable_block,
             condition=self.engagement_status(Engagement.STATUSES.partner_contacted)
         )
         self.add_permissions(
-            self.engagement_staff, 'action',
+            self.engagement_staff_auditor, 'action',
             'audit.engagement.submit',
             condition=self.engagement_status(Engagement.STATUSES.partner_contacted)
         )
