@@ -14,3 +14,15 @@ class AuditStaffMemberCondition(SimpleCondition):
 
     def is_satisfied(self):
         return self.user.pk in self.partner.staff_members.values_list('user', flat=True)
+
+
+class EngagementStaffMemberCondition(SimpleCondition):
+    predicate = 'user in audit_engagement.staff_members'
+
+    def __init__(self, engagement, user):
+        self.engagement = engagement
+        self.user = user
+
+    def is_satisfied(self):
+        return hasattr(self.user, 'purchase_order_auditorstaffmember') and \
+               self.user.purchase_order_auditorstaffmember in self.engagement.staff_members.all()
