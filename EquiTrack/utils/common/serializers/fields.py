@@ -148,6 +148,6 @@ class CommaSeparatedExportField(serializers.Field):
         value = set(value)
 
         if self.export_attr:
-            value = map(lambda x: get_attribute_smart(x, self.export_attr), value)
+            value = [get_attribute_smart(item, self.export_attr) for item in value]
 
-        return ', '.join(map(str, filter(lambda x: x, value)))
+        return ', '.join([str(item) for item in value if item])
