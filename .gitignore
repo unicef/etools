@@ -113,7 +113,7 @@ docs/_build/
 .DS_Store
 
 # custom settings files
-config/settings/custom.py
+src/etools/config/settings/custom.py
 
 *secrets.yml
 /dist
