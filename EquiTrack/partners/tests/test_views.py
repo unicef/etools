@@ -1664,7 +1664,7 @@ class TestInterventionViews(BaseTenantTestCase):
             response.data,
             ["Planned budget is required if Intervention status is ACTIVE or IMPLEMENTED."])
 
-    @skip('Add test back after reintroducing active validations')
+    @skip('TODO: Add test back after reintroducing active validations')
     def test_intervention_active_update_planned_budget_rigid(self):
         intervention_obj = Intervention.objects.get(id=self.intervention_data["id"])
         intervention_obj.status = Intervention.ACTIVE

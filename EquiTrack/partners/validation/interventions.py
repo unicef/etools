@@ -131,6 +131,27 @@ def transition_to_active(i):
     return True
 
 
+def amendments_valid(i):
+    if i.status == i.DRAFT:
+        # Drafts cannot have amendments
+        if i.amendments.exists():
+            return False
+
+    if i.status not in [i.ACTIVE, i.SIGNED]:
+        # this prevents any changes in amendments if the status is not in Signed or Active
+        if not rigid_in_amendment_flag(i):
+            return False
+
+    for a in i.amendments.all():
+        if a.OTHER in a.types and a.other_description is None:
+            return False
+        if not a.signed_date:
+            return False
+        if not getattr(a.signed_amendment, 'name'):
+            return False
+    return True
+
+
 def start_end_dates_valid(i):
     # i = intervention
     if i.start and i.end and \
