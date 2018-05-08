@@ -65,3 +65,14 @@ class AttachmentFlatSerializer(serializers.ModelSerializer):
     class Meta:
         model = AttachmentFlat
         exclude = ("attachment", )
+
+
+class AttachmentPDFSerializer(serializers.ModelSerializer):
+    file_type_display = serializers.ReadOnlyField(source='file_type.label')
+    created = serializers.DateTimeField(format='%d %b %Y')
+
+    class Meta:
+        model = Attachment
+        fields = [
+            'file_type_display', 'filename', 'url', 'created',
+        ]

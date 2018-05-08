@@ -1,5 +1,4 @@
 {% extends "easy_pdf/base.html" %}
-{% load humanize %}
 
 {% block style_base %}
   {% comment %}
@@ -45,7 +44,7 @@
       line-height: 15pt;
       font-weight: bold;
       padding: 7pt 5pt 5pt;
-      background: #0099ff;
+      background-color: #0099ff;
       color: #ffffff;
       margin: 0;
     }
@@ -397,7 +396,7 @@
                 {% for attachment in engagement.engagement_attachments %}
                   <tr>
                     <td>{{ attachment.created }}</td>
-                    <td>{{ attachment.file_type }}</td>
+                    <td>{{ attachment.file_type_display }}</td>
                     <td colspan="5"><a href="{{ attachment.url }}" target="_blank">{{ attachment.filename }}</a></td>
                   </tr>
                 {% endfor %}
@@ -426,7 +425,7 @@
                 {% for attachment in engagement.report_attachments %}
                   <tr>
                     <td>{{ attachment.created }}</td>
-                    <td>{{ attachment.file_type }}</td>
+                    <td>{{ attachment.file_type_display }}</td>
                     <td colspan="5"><a href="{{ attachment.url }}" target="_blank">{{ attachment.filename }}</a></td>
                   </tr>
                 {% endfor %}
