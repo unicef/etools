@@ -121,6 +121,7 @@ class Command(BaseCommand):
         'audit.audit.financial_finding_set',
         'audit.audit.key_internal_controls',
         'audit.audit.key_internal_weakness',
+        'audit.audit.exchange_rate',
     ]
 
     spot_check_report_block = [
@@ -134,7 +135,6 @@ class Command(BaseCommand):
     special_audit_report_block = [
         'audit.specialaudit.other_recommendations',
         'audit.specialaudit.specific_procedures',
-        'audit.specialaudit.exchange_rate',
     ]
 
     report_readonly_block = [

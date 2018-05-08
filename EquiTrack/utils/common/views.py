@@ -2,7 +2,7 @@ from __future__ import absolute_import, division, print_function, unicode_litera
 
 from django.core.exceptions import ValidationError as CoreValidationError
 from django.db import ProgrammingError
-from django.http import Http404
+from django.http import Http404, QueryDict
 
 from django_fsm import can_proceed, has_transition_perm
 
@@ -161,22 +161,40 @@ class NestedViewSetMixin(object):
         )
 
     def get_parent_object(self):
-        parent = self.get_parent()
-        if not parent or not self.kwargs:
-            return
-        return parent.get_object()
+        # remove request query for a while to prevent incorrect filter results for parent view
+        query = self.request._request.GET
+        self.request._request.GET = QueryDict()
+
+        try:
+            parent = self.get_parent()
+            if not parent or not self.kwargs:
+                return
+            parent_object = parent.get_object()
+        finally:
+            self.request._request.GET = query
+
+        return parent_object
 
     def get_root_object(self):
-        parents = self._get_parents()
-        if not parents:
-            return
+        # remove request query for a while to prevent incorrect filter results for parent view
+        query = self.request._request.GET
+        self.request._request.GET = QueryDict()
 
-        pre_root = parents[-2] if len(parents) > 1 else self
-        root = parents[-1](
-            request=self.request, kwargs=self.kwargs, lookup_url_kwarg=pre_root.parent_lookup_kwarg
-        )
+        try:
+            parents = self._get_parents()
+            if not parents:
+                return
 
-        return root.get_object()
+            pre_root = parents[-2] if len(parents) > 1 else self
+            root = parents[-1](
+                request=self.request, kwargs=self.kwargs, lookup_url_kwarg=pre_root.parent_lookup_kwarg
+            )
+
+            root_object = root.get_object()
+        finally:
+            self.request._request.GET = query
+
+        return root_object
 
     def filter_queryset(self, queryset):
         queryset = super(NestedViewSetMixin, self).filter_queryset(queryset)
