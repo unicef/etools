@@ -6,7 +6,7 @@ from decimal import Decimal
 
 from django.contrib.postgres.fields import JSONField
 from django.db import models
-from django.db.models import Count, Q, Sum
+from django.db.models import Count, Sum
 from django.db.models.functions import Coalesce
 from django.utils.translation import ugettext_lazy as _
 
@@ -48,6 +48,7 @@ class AggregateHact(TimeStampedModel):
     def update(self):
         self.partner_values = json.dumps({
             'assurance_activities': self.get_assurance_activities(),
+            'assurance_coverage': self.get_assurance_coverage(),
             'financial_findings': self.get_financial_findings(),
             'financial_findings_numbers': self.get_financial_findings_numbers(),
             'charts': {
@@ -59,22 +60,23 @@ class AggregateHact(TimeStampedModel):
         }, cls=HactEncoder)
         self.save()
 
-    def get_queryset(self):
-        return PartnerOrganization.objects.filter(Q(reported_cy__gt=0) | Q(total_ct_cy__gt=0))
+    @staticmethod
+    def get_queryset():
+        return PartnerOrganization.objects.active()
 
-    def _sum_json_values(self, filters, filter_dict={}):
+    def _sum_json_values(self, qs_filters, filter_dict={}):
         partners = self.get_queryset().filter(**filter_dict)
 
-        def get_value(obj, filters):
-            filters = filters.split('__')
-            json_field_name = filters.pop(0)
+        def get_value(obj, qs_filters):
+            qs_filters = qs_filters.split('__')
+            json_field_name = qs_filters.pop(0)
             json_field = getattr(obj, json_field_name)
             json_field = json_field if type(json_field) is dict else json.loads(json_field)
-            for filter in filters:
-                json_field = json_field[filter]
+            for qs_filter in qs_filters:
+                json_field = json_field[qs_filter]
             return json_field
 
-        return sum([get_value(p, filters) for p in partners])
+        return sum([get_value(p, qs_filters) for p in partners])
 
     def cash_transfers_amounts(self):
         FIRST_LEVEL = Decimal(50000.00)
@@ -210,9 +212,9 @@ class AggregateHact(TimeStampedModel):
             ['GOV', gov['total'], '#F05656', gov['count']],
         ]
 
-    def get_spot_checks_completed(self):
-        qs = SpotCheck.objects.filter(status=Engagement.FINAL,
-                                      date_of_draft_report_to_unicef__year=datetime.now().year)
+    @staticmethod
+    def get_spot_checks_completed():
+        qs = SpotCheck.objects.filter(status=Engagement.FINAL, date_of_draft_report_to_unicef__year=datetime.now().year)
         return [
             ['Completed by', 'Count'],
             ['Staff', qs.filter(partner__vendor_number='0000000000').count()],
@@ -236,12 +238,12 @@ class AggregateHact(TimeStampedModel):
                 status=Engagement.FINAL, date_of_draft_report_to_unicef__year=datetime.now().year).count(),
             'micro_assessment': MicroAssessment.objects.filter(
                 status=Engagement.FINAL, date_of_draft_report_to_unicef__year=datetime.now().year).count(),
-            'missing_micro_assessment': PartnerOrganization.objects.filter(
-                Q(reported_cy__gt=0) | Q(total_ct_cy__gt=0), hidden=False, last_assessment_date__isnull=False,
-                last_assessment_date__year__lte=year_limit).count(),
+            'missing_micro_assessment': PartnerOrganization.objects.active(
+                last_assessment_date__isnull=False, last_assessment_date__year__lte=year_limit).count(),
         }
 
-    def get_financial_findings(self):
+    @staticmethod
+    def get_financial_findings():
         refunds = Audit.objects.filter(amount_refunded__isnull=False, status=Engagement.FINAL,
                                        date_of_draft_report_to_unicef__year=datetime.now().year).aggregate(
             total=Coalesce(Sum('amount_refunded'), 0))['total']
@@ -323,7 +325,8 @@ class AggregateHact(TimeStampedModel):
             }
         ]
 
-    def get_financial_findings_numbers(self):
+    @staticmethod
+    def get_financial_findings_numbers():
         return [
             {
                 'name': 'Number of High Priority Findings',
@@ -366,3 +369,46 @@ class AggregateHact(TimeStampedModel):
                 ],
             }
         ]
+
+    @staticmethod
+    def get_assurance_coverage():
+        qs = PartnerOrganization.objects.all()
+
+        no_coverage = qs.active(hact_values__programmatic_visits__completed__total=0,
+                                hact_values__spot_checks__completed__total=0,
+                                hact_values__audits__completed=0)
+
+        coverage_ok = qs.active().exclude(hact_values__programmatic_visits__completed__total=0,
+                                          hact_values__spot_checks__completed__total=0,
+                                          hact_values__audits__completed=0)
+
+        return {
+            # API placeholders for now
+            'coverage_by_number_of_ips': [
+                ['Coverage by number of IPs', 'Count'],
+                ['No Coverage', no_coverage.count()],
+                ['Partially Met Requirements', coverage_ok.count()],
+                ['Met Requirements', coverage_ok.count()]
+            ],
+            'coverage_by_cash_transfer': [
+                ['Coverage by Cash Transfer (USD) (Total)', 'Count'],
+                ['No Coverage', no_coverage.aggregate(total=Coalesce(Sum('total_ct_cy'), 0))['total']],
+                ['Partially Met Requirements', coverage_ok.aggregate(total=Coalesce(Sum('total_ct_cy'), 0))['total']],
+                ['Met Requirements', coverage_ok.aggregate(total=Coalesce(Sum('total_ct_cy'), 0))['total']],
+
+            ],
+            'table': [
+                {
+                    'label': 'IPs without required PV',
+                    'value': PartnerOrganization.objects.not_programmatic_visit_compliant().count()
+                },
+                {
+                    'label': 'IPs without required SC',
+                    'value': PartnerOrganization.objects.not_spot_check_compliant().count()
+                },
+                {
+                    'label': 'IPs without required assurance',
+                    'value': PartnerOrganization.objects.not_assurance_compliant().count()
+                }
+            ]
+        }

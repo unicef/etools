@@ -2,7 +2,7 @@
 import json
 from datetime import datetime
 
-from django.db import connection
+from django.db import connection, transaction
 from django.db.models import Q
 
 from celery.utils.log import get_task_logger
@@ -28,6 +28,7 @@ def update_hact_for_country(country_name):
                                       date_of_draft_report_to_unicef__year=datetime.now().year)
         hact['outstanding_findings'] = sum([
             audit.pending_unsupported_amount for audit in audits if audit.pending_unsupported_amount])
+        hact['assurance_coverage'] = partner.assurance_coverage
 
         PartnerOrganization.programmatic_visits(partner)
         partner.hact_values = json.dumps(hact, cls=HactEncoder)
@@ -35,22 +36,33 @@ def update_hact_for_country(country_name):
 
 
 @app.task
-def update_hact_values():
+def update_hact_values(*args, **kwargs):
+
+    schema_names = kwargs.get('schema_names', [None])[0]
     logger.info('Hact Freeze Task process started')
-    for country in Country.objects.exclude(schema_name='public'):
+    countries = Country.objects.exclude(schema_name='public')
+    if schema_names:
+        countries = countries.filter(schema_name__in=schema_names.split(','))
+    for country in countries:
         update_hact_for_country.delay(country.name)
     logger.info('Hact Freeze Task generated all tasks')
 
 
 @app.task
-def update_aggregate_hact_values():
+def update_aggregate_hact_values(*args, **kwargs):
     logger.info('Hact Aggregator Task process started')
-    for country in Country.objects.exclude(schema_name='public'):
+
+    schema_names = kwargs.get('schema_names', [None])[0]
+    countries = Country.objects.exclude(schema_name='public')
+    if schema_names:
+        countries = countries.filter(schema_name__in=schema_names.split(','))
+    for country in countries:
         connection.set_tenant(country)
-        aggregate_hact, _ = AggregateHact.objects.get_or_create(year=datetime.today().year)
-        try:
-            aggregate_hact.update()
-        except Exception:
-            logger.exception(country)
+        with transaction.atomic():
+            aggregate_hact, _ = AggregateHact.objects.get_or_create(year=datetime.today().year)
+            try:
+                aggregate_hact.update()
+            except BaseException:
+                logger.exception(country)
 
     logger.info('Hact Aggregator Task process finished')
