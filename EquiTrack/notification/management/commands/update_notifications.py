@@ -704,8 +704,7 @@ class Command(BaseCommand):
             name='audit/engagement/submit_to_auditor',
             defaults={
                 'description': 'Email that send to auditor when engagement have been created.',
-                'subject': '[Auditor Portal] ACCESS GRANTED for {{ engagement.engagement_type }}, '
-                           '{{ engagement.unique_id }}',
+                'subject': 'Access to eTools Financial Assurance Module',
 
                 'content': strip_text("""
                     Dear {{ staff_member }},
@@ -748,7 +747,7 @@ class Command(BaseCommand):
                            '{{ engagement.engagement_type }}, {{ engagement.unique_id }}',
 
                 'content': strip_text("""
-                    Dear {{ focal_point }},
+                    Dear Audit Focal Point,
 
                     {{ engagement.auditor_firm }} has completed the final report for {{ engagement.engagement_type }}.
                     Please refer below for additional information.
@@ -765,7 +764,7 @@ class Command(BaseCommand):
                     {% extends "email-templates/base" %}
 
                     {% block content %}
-                    Dear {{ focal_point }},<br/><br/>
+                    Dear Audit Focal Point,<br/><br/>
 
                     {{ engagement.auditor_firm }} has completed the final report for {{ engagement.engagement_type }}.
                     Please refer below for additional information.<br/><br/>
