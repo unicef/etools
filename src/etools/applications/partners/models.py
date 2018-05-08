@@ -618,9 +618,11 @@ class PartnerOrganization(TimeStampedModel):
     @cached_property
     def assurance_coverage(self):
 
-        pv = self.hact_values['programmatic_visits']['completed']['total']
-        sc = self.hact_values['spot_checks']['completed']['total']
-        au = self.hact_values['audits']['completed']
+        hact = json.loads(self.hact_values) if isinstance(self.hact_values, str) else self.hact_values
+
+        pv = hact['programmatic_visits']['completed']['total']
+        sc = hact['spot_checks']['completed']['total']
+        au = hact['audits']['completed']
 
         if pv + sc + au == 0:
             return 'void'

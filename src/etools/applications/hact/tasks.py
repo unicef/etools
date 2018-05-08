@@ -21,7 +21,7 @@ def update_hact_for_country(country_name):
     country = Country.objects.get(name=country_name)
     connection.set_tenant(country)
     logger.info('Set country {}'.format(country_name))
-    for partner in PartnerOrganization.objects.filter(Q(reported_cy__gt=0) | Q(total_ct_cy__gt=0)):
+    for partner in PartnerOrganization.objects.active():
         logger.debug('Updating Partner {}'.format(partner.name))
         hact = json.loads(partner.hact_values) if isinstance(partner.hact_values, str) else partner.hact_values
         audits = Audit.objects.filter(partner=partner, status=Engagement.FINAL,
