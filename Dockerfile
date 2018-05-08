@@ -41,14 +41,16 @@ ENV CPLUS_INCLUDE_PATH /usr/include/gdal
 ENV C_INCLUDE_PATH /usr/include/gdal
 ENV REQUIREMENTS_FILE production.txt
 
-ADD ./EquiTrack/requirements/*.txt /pip/
-ADD ./EquiTrack/requirements/$REQUIREMENTS_FILE /pip/app_requirements.txt
+ADD src/requirements/*.txt /pip/
+ADD src/requirements/$REQUIREMENTS_FILE /pip/app_requirements.txt
 RUN pip install -f /pip -r /pip/app_requirements.txt
 
 ENV PYTHONUNBUFFERED 1
-ADD EquiTrack /code/
+ADD src /code/
+ADD manage.py /code/manage.py 
+ENV PYTHONPATH /code/src 
 
 WORKDIR /code/
 
-ENV DJANGO_SETTINGS_MODULE EquiTrack.settings.production
+ENV DJANGO_SETTINGS_MODULE etools.config.settings.production
 RUN SECRET_KEY=not-so-secret-key-just-for-collectstatic DISABLE_JWT_LOGIN=1 python manage.py collectstatic --noinput
