@@ -404,6 +404,7 @@ class TestInterventionReportingRequirementCreateSerializer(BaseTenantTestCase):
             intervention=self.intervention,
             report_type=report_type,
             start_date=datetime.date(2001, 1, 3),
+            due_date=datetime.date(2001, 4, 15),
         )
         requirement_qs = ReportingRequirement.objects.filter(
             intervention=self.intervention,
@@ -413,7 +414,6 @@ class TestInterventionReportingRequirementCreateSerializer(BaseTenantTestCase):
         data = {
             "report_type": report_type,
             "reporting_requirements": [{
-                "id": requirement.pk,
                 "start_date": datetime.date(2001, 1, 1),
                 "end_date": datetime.date(2001, 3, 31),
                 "due_date": datetime.date(2001, 4, 15),
@@ -441,6 +441,7 @@ class TestInterventionReportingRequirementCreateSerializer(BaseTenantTestCase):
         requirement = ReportingRequirementFactory(
             intervention=self.intervention,
             report_type=report_type,
+            due_date=datetime.date(2001, 4, 15),
         )
         requirement_qs = ReportingRequirement.objects.filter(
             intervention=self.intervention,
@@ -450,7 +451,6 @@ class TestInterventionReportingRequirementCreateSerializer(BaseTenantTestCase):
         data = {
             "report_type": report_type,
             "reporting_requirements": [{
-                "id": requirement.pk,
                 "due_date": datetime.date(2001, 4, 15),
             }]
         }
@@ -471,6 +471,7 @@ class TestInterventionReportingRequirementCreateSerializer(BaseTenantTestCase):
         report_type = ReportingRequirement.TYPE_SPECIAL
         requirement = ReportingRequirementFactory(
             intervention=self.intervention,
+            due_date=datetime.date(2001, 4, 15),
             report_type=report_type,
         )
         requirement_qs = ReportingRequirement.objects.filter(
@@ -481,7 +482,6 @@ class TestInterventionReportingRequirementCreateSerializer(BaseTenantTestCase):
         data = {
             "report_type": report_type,
             "reporting_requirements": [{
-                "id": requirement.pk,
                 "due_date": datetime.date(2001, 4, 15),
                 "description": "some description goes here"
             }]
@@ -506,6 +506,7 @@ class TestInterventionReportingRequirementCreateSerializer(BaseTenantTestCase):
             intervention=self.intervention,
             report_type=report_type,
             start_date=datetime.date(2001, 1, 3),
+            due_date=datetime.date(2001, 4, 15),
         )
         requirement_qs = ReportingRequirement.objects.filter(
             intervention=self.intervention,
@@ -515,7 +516,6 @@ class TestInterventionReportingRequirementCreateSerializer(BaseTenantTestCase):
         data = {
             "report_type": report_type,
             "reporting_requirements": [{
-                "id": requirement.pk,
                 "start_date": datetime.date(2001, 1, 1),
                 "end_date": datetime.date(2001, 3, 31),
                 "due_date": datetime.date(2001, 4, 15),
@@ -547,6 +547,7 @@ class TestInterventionReportingRequirementCreateSerializer(BaseTenantTestCase):
         requirement = ReportingRequirementFactory(
             intervention=self.intervention,
             report_type=report_type,
+            due_date=datetime.date(2001, 4, 15),
         )
         requirement_qs = ReportingRequirement.objects.filter(
             intervention=self.intervention,
@@ -556,7 +557,6 @@ class TestInterventionReportingRequirementCreateSerializer(BaseTenantTestCase):
         data = {
             "report_type": report_type,
             "reporting_requirements": [{
-                "id": requirement.pk,
                 "due_date": datetime.date(2001, 4, 15),
             }, {
                 "due_date": datetime.date(2001, 6, 15),
@@ -580,6 +580,7 @@ class TestInterventionReportingRequirementCreateSerializer(BaseTenantTestCase):
         requirement = ReportingRequirementFactory(
             intervention=self.intervention,
             report_type=report_type,
+            due_date=datetime.date(2001, 3, 15),
         )
         requirement_qs = ReportingRequirement.objects.filter(
             intervention=self.intervention,
@@ -589,7 +590,6 @@ class TestInterventionReportingRequirementCreateSerializer(BaseTenantTestCase):
         data = {
             "report_type": report_type,
             "reporting_requirements": [{
-                "id": requirement.pk,
                 "due_date": datetime.date(2001, 3, 15),
                 "description": "some description goes here"
             }, {

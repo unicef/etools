@@ -627,12 +627,15 @@ class InterventionReportingRequirementCreateSerializer(serializers.ModelSerializ
 
         current_reqs_dict = {}
         for r in current_reqs:
-            current_reqs_dict[r["id"]] = r
+            current_reqs_dict[r["due_date"]] = r
 
         report_type = data["report_type"]
         for r in data["reporting_requirements"]:
-            if r.get("id") in current_reqs_dict:
-                current_reqs_dict.pop(r["id"])
+            # not expecting ids, so match based on due date
+            if r.get("due_date") in current_reqs_dict:
+                r["id"] = current_reqs_dict[r.get("due_date")]["id"]
+                current_reqs_dict.pop(r["due_date"])
+
             r["intervention"] = self.intervention
             r["report_type"] = report_type
             if report_type == ReportingRequirement.TYPE_HR:
@@ -644,9 +647,8 @@ class InterventionReportingRequirementCreateSerializer(serializers.ModelSerializ
                 r["end_date"] = r["due_date"]
 
         # We need all reporting requirements in end date order
-        merged_reqs = list(current_reqs_dict.values()) + data["reporting_requirements"]
         data["reporting_requirements"] = sorted(
-            merged_reqs,
+            data["reporting_requirements"],
             key=itemgetter("end_date")
         )
         return data
