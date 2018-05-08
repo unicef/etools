@@ -50,9 +50,9 @@
     <div class="content-section__wrapper">
       <table class="content-section__table">
         <tr class="content-section__table__header">
-          <td>{{ serializer.fields.key_internal_controls.recommendation.label }}</td>
-          <td>{{ serializer.fields.key_internal_controls.audit_observation.label }}</td>
-          <td>{{ serializer.fields.key_internal_controls.ip_response.label }}</td>
+          <td>{{ serializer.fields.key_internal_controls.child.fields.recommendation.label }}</td>
+          <td>{{ serializer.fields.key_internal_controls.child.fields.audit_observation.label }}</td>
+          <td>{{ serializer.fields.key_internal_controls.child.fields.ip_response.label }}</td>
         </tr>
         {% for control in engagement.key_internal_controls %}
           <tr>
