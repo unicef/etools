@@ -1874,7 +1874,8 @@ class TestInterventionReportingRequirementView(BaseTenantTestCase):
         _add_user_to_partnership_manager_group(cls.unicef_staff)
         cls.intervention = InterventionFactory(
             start=datetime.date(2001, 1, 1),
-            status=Intervention.DRAFT
+            status=Intervention.DRAFT,
+            in_amendment=True,
         )
         cls.result_link = InterventionResultLinkFactory(
             intervention=cls.intervention

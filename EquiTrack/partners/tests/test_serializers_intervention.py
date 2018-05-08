@@ -20,7 +20,10 @@ from reports.tests.factories import (
 class TestInterventionReportingRequirementCreateSerializer(BaseTenantTestCase):
     @classmethod
     def setUpTestData(cls):
-        cls.intervention = InterventionFactory(start=datetime.date(2001, 1, 1))
+        cls.intervention = InterventionFactory(
+            start=datetime.date(2001, 1, 1),
+            in_amendment=True,
+        )
         cls.result_link = InterventionResultLinkFactory(
             intervention=cls.intervention
         )
@@ -80,7 +83,7 @@ class TestInterventionReportingRequirementCreateSerializer(BaseTenantTestCase):
         )
 
     def test_validation_pd_has_no_start(self):
-        intervention = InterventionFactory()
+        intervention = InterventionFactory(in_amendment=True)
         result_link = InterventionResultLinkFactory(intervention=intervention)
         lower_result = LowerResultFactory(result_link=result_link)
         AppliedIndicatorFactory(lower_result=lower_result)
