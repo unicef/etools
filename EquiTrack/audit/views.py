@@ -82,7 +82,8 @@ class AuditUsersViewSet(generics.ListAPIView):
     """
 
     permission_classes = (IsAuthenticated, )
-    filter_backends = (SearchFilter,)
+    filter_backends = (SearchFilter, DjangoFilterBackend)
+    filter_fields = ('email', 'purchase_order_auditorstaffmember__auditor_firm__unicef_users_allowed', )
     search_fields = ('email',)
     queryset = get_user_model().objects.all()
     serializer_class = AuditUserSerializer
@@ -110,8 +111,15 @@ class AuditorFirmViewSet(
     def get_queryset(self):
         queryset = super(AuditorFirmViewSet, self).get_queryset()
 
-        if Auditor.as_group() in self.request.user.groups.all():
+        user_groups = self.request.user.groups.all()
+
+        if UNICEFUser.as_group() in user_groups or UNICEFAuditFocalPoint.as_group() in user_groups:
+            # no need to filter queryset
+            pass
+        elif Auditor.as_group() in user_groups:
             queryset = queryset.filter(staff_members__user=self.request.user)
+        else:
+            queryset = queryset.none()
 
         return queryset
 
@@ -146,6 +154,7 @@ class PurchaseOrderViewSet(
     metadata_class = AuditPermissionBasedMetadata
     queryset = PurchaseOrder.objects.all()
     serializer_class = PurchaseOrderSerializer
+    permission_classes = (IsAuthenticated, )
 
     @list_route(methods=['get'], url_path='sync/(?P<order_number>[^/]+)')
     def sync(self, request, *args, **kwargs):
@@ -217,7 +226,8 @@ class EngagementViewSet(
     search_fields = ('partner__name', 'agreement__auditor_firm__name')
     ordering_fields = ('agreement__order_number', 'agreement__auditor_firm__name',
                        'partner__name', 'engagement_type', 'status')
-    filter_fields = ('agreement', 'agreement__auditor_firm', 'partner', 'engagement_type', 'joint_audit')
+    filter_fields = ('agreement', 'agreement__auditor_firm', 'partner', 'engagement_type', 'joint_audit',
+                     'agreement__auditor_firm__unicef_users_allowed', 'staff_members__user')
 
     ENGAGEMENT_MAPPING = {
         Engagement.TYPES.audit: {
@@ -309,20 +319,21 @@ class EngagementViewSet(
         obj = self.get_object()
 
         engagement_params = self.ENGAGEMENT_MAPPING.get(obj.engagement_type, {})
-        serializer_class = engagement_params.get('pdf_serializer_class', None)
+        pdf_serializer_class = engagement_params.get('pdf_serializer_class', None)
         template = engagement_params.get('pdf_template', None)
 
-        if not serializer_class or not template:
+        if not pdf_serializer_class or not template:
             raise NotImplementedError
 
-        pdf_serializer = self.get_serializer(
-            instance=obj, many=True, serializer_class=engagement_params.get('serializer_class', None)
+        # we use original serializer here for correct field labels
+        serializer = self.get_serializer(
+            instance=obj, serializer_class=engagement_params.get('serializer_class', None)
         )
 
         return render_to_pdf_response(
             request, template,
-            context={'engagement': serializer_class(obj).data,
-                     'serializer': pdf_serializer},
+            context={'engagement': pdf_serializer_class(obj).data,
+                     'serializer': serializer},
             filename='engagement_{}.pdf'.format(obj.unique_id),
         )
 

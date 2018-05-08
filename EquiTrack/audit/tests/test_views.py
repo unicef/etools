@@ -674,7 +674,35 @@ class TestAuditorStaffMembersViewSet(AuditTestCaseMixin, BaseTenantTestCase):
             '/api/audit/audit-firms/{0}/staff-members/'.format(self.auditor_firm.id),
             user=self.usual_user
         )
-        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
+
+    def test_global_search(self):
+        UserFactory()
+        user = UserFactory()
+
+        response = self.forced_auth_req(
+            'get',
+            '/api/audit/audit-firms/users/',
+            data={'email': user.email},
+            user=self.unicef_focal_point,
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(response.data), 1)
+        self.assertEqual(response.data[0]['email'], user.email)
+
+    def test_staff_search(self):
+        UserFactory(auditor=True, partner_firm=self.auditor_firm)
+        user = UserFactory(auditor=True, partner_firm=self.auditor_firm, email='test_unique@example.com')
+
+        response = self.forced_auth_req(
+            'get',
+            '/api/audit/audit-firms/{}/staff-members/'.format(self.auditor_firm.id),
+            data={'search': 'test_unique'},
+            user=self.unicef_focal_point,
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data['count'], 1)
+        self.assertEqual(response.data['results'][0]['user']['email'], user.email)
 
     def test_detail_view(self):
         response = self.forced_auth_req(
@@ -695,7 +723,7 @@ class TestAuditorStaffMembersViewSet(AuditTestCaseMixin, BaseTenantTestCase):
             ),
             user=self.usual_user
         )
-        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
 
     def test_unicef_create_view(self):
         response = self.forced_auth_req(
@@ -765,7 +793,7 @@ class TestAuditorStaffMembersViewSet(AuditTestCaseMixin, BaseTenantTestCase):
             },
             user=self.usual_user
         )
-        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
 
     def test_unicef_update_view(self):
         response = self.forced_auth_req(
@@ -799,7 +827,7 @@ class TestAuditorStaffMembersViewSet(AuditTestCaseMixin, BaseTenantTestCase):
             },
             user=self.usual_user
         )
-        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
 
 
 class TestEngagementSpecialPDFExportViewSet(EngagementTransitionsTestCaseMixin, BaseTenantTestCase):

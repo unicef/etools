@@ -32,6 +32,9 @@ class Command(BaseCommand):
         'audit.engagement.status',
         'audit.engagement.status_date',
 
+        'audit.spotcheck.face_form_start_date',
+        'audit.spotcheck.face_form_end_date',
+
         'purchase_order.purchaseorder.*',
         'purchase_order.auditorfirm.*',
     ]
@@ -47,7 +50,6 @@ class Command(BaseCommand):
         'audit.engagement.joint_audit',
         'audit.engagement.shared_ip_with',
         'audit.engagement.related_agreement',
-        'purchase_order.purchaseorder.contract_end_date',
     ]
 
     engagement_status_editable_date_fields = [
@@ -119,6 +121,7 @@ class Command(BaseCommand):
         'audit.audit.financial_finding_set',
         'audit.audit.key_internal_controls',
         'audit.audit.key_internal_weakness',
+        'audit.audit.exchange_rate',
     ]
 
     spot_check_report_block = [
@@ -132,7 +135,6 @@ class Command(BaseCommand):
     special_audit_report_block = [
         'audit.specialaudit.other_recommendations',
         'audit.specialaudit.specific_procedures',
-        'audit.specialaudit.exchange_rate',
     ]
 
     report_readonly_block = [
@@ -229,6 +231,7 @@ class Command(BaseCommand):
         self.add_permissions([self.focal_point, self.auditor], 'edit', [
             'purchase_order.auditorfirm.staff_members',
             'purchase_order.auditorstaffmember.*',
+            'purchase_order.purchaseorder.contract_end_date',
         ])
 
         self.add_permissions(

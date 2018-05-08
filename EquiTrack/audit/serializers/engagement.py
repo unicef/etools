@@ -64,7 +64,7 @@ class ReportBase64AttachmentSerializer(WritableNestedSerializerMixin, Base64Atta
 class EngagementActionPointSerializer(UserContextSerializerMixin,
                                       WritableNestedSerializerMixin,
                                       serializers.ModelSerializer):
-    person_responsible = SeparatedReadWriteField(MinimalUserSerializer(read_only=True, label=_('Person Responsible')))
+    person_responsible = SeparatedReadWriteField(MinimalUserSerializer(read_only=True), label=_('Person Responsible'))
 
     class Meta(WritableNestedSerializerMixin.Meta):
         model = EngagementActionPoint
@@ -132,10 +132,10 @@ class EngagementExportSerializer(serializers.ModelSerializer):
 
 class EngagementLightSerializer(PermissionsBasedSerializerMixin, serializers.ModelSerializer):
     agreement = SeparatedReadWriteField(
-        read_field=PurchaseOrderSerializer(read_only=True, label=_('Purchase Order')),
+        read_field=PurchaseOrderSerializer(read_only=True), label=_('Purchase Order')
     )
     po_item = SeparatedReadWriteField(
-        read_field=PurchaseOrderItemSerializer(read_only=True, label=_('PO Item')),
+        read_field=PurchaseOrderItemSerializer(read_only=True), label=_('PO Item')
     )
     related_agreement = PurchaseOrderSerializer(write_only=True, required=False)
     partner = SeparatedReadWriteField(
@@ -186,15 +186,14 @@ class EngagementSerializer(EngagementDatesValidation,
                            WritableNestedParentSerializerMixin,
                            EngagementLightSerializer):
     staff_members = SeparatedReadWriteField(
-        read_field=AuditorStaffMemberSerializer(many=True, required=False, label=_('Audit Staff Team Members')),
+        read_field=AuditorStaffMemberSerializer(many=True, required=False), label=_('Audit Staff Team Members')
     )
     active_pd = SeparatedReadWriteField(
-        read_field=BaseInterventionListSerializer(many=True, required=False,
-                                                  label=_('Programme Document(s) or SSFA(s)')),
-        required=False
+        read_field=BaseInterventionListSerializer(many=True, required=False),
+        label=_('Programme Document(s) or SSFA(s)'), required=False
     )
     authorized_officers = SeparatedReadWriteField(
-        read_field=PartnerStaffMemberNestedSerializer(many=True, read_only=True, label=_('Authorized Officers'))
+        read_field=PartnerStaffMemberNestedSerializer(many=True, read_only=True), label=_('Authorized Officers')
     )
 
     specific_procedures = SpecificProcedureSerializer(many=True, label=_('Specific Procedure To Be Performed'))
@@ -416,7 +415,6 @@ class AuditSerializer(ActivePDValidationMixin, RiskCategoriesUpdateMixin, Engage
             'explanation_for_additional_information',
         ]
         fields.remove('specific_procedures')
-        fields.remove('exchange_rate')
         extra_kwargs = EngagementSerializer.Meta.extra_kwargs.copy()
         extra_kwargs.update({
             'engagement_type': {'read_only': True},
@@ -443,6 +441,7 @@ class SpecialAuditSerializer(EngagementSerializer):
         fields = EngagementSerializer.Meta.fields + [
             'other_recommendations',
         ]
+        fields.remove('exchange_rate')
         extra_kwargs = EngagementSerializer.Meta.extra_kwargs.copy()
         extra_kwargs.update({
             'start_date': {'required': False},

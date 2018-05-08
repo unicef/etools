@@ -2,57 +2,21 @@ from __future__ import absolute_import, division, print_function, unicode_litera
 
 import itertools
 
+from django.db.models import QuerySet, Manager
 from future.backports.urllib.parse import urljoin
 
-from django.utils import six
-
 from rest_framework import serializers
-from rest_framework.fields import empty, SkipField
 
 from EquiTrack.urlresolvers import build_frontend_url, site_url
-from rest_extra.utils import get_attribute_smart
+from rest_extra.fields import CommaSeparatedExportField
 
 
 class UsersExportField(serializers.Field):
     def to_representation(self, value):
-        return ','.join(map(lambda u: u.get_full_name(), value.all()))
+        if isinstance(value, (QuerySet, Manager)):
+            value = value.all()
 
-
-class CommaSeparatedExportField(serializers.Field):
-    export_attr = None
-
-    def __init__(self, *args, **kwargs):
-        self.export_attr = kwargs.pop('export_attr', None)
-        super(CommaSeparatedExportField, self).__init__(*args, **kwargs)
-
-    def get_attribute(self, instance):
-        try:
-            return get_attribute_smart(instance, self.source_attrs)
-        except (KeyError, AttributeError) as exc:
-            if not self.required and self.default is empty:
-                raise SkipField()
-            msg = (
-                'Got {exc_type} when attempting to get a value for field '
-                '`{field}` on serializer `{serializer}`.\nThe serializer '
-                'field might be named incorrectly and not match '
-                'any attribute or key on the `{instance}` instance.\n'
-                'Original exception text was: {exc}.'.format(
-                    exc_type=type(exc).__name__,
-                    field=self.field_name,
-                    serializer=self.parent.__class__.__name__,
-                    instance=instance.__class__.__name__,
-                    exc=exc
-                )
-            )
-            raise type(exc)(msg)
-
-    def to_representation(self, value):
-        value = set(value)
-
-        if self.export_attr:
-            value = map(lambda x: get_attribute_smart(x, self.export_attr), value)
-
-        return ', '.join(map(six.text_type, filter(lambda x: x, value)))
+        return ','.join(map(lambda u: u.get_full_name(), value))
 
 
 class TPMActivityExportSerializer(serializers.Serializer):
@@ -65,8 +29,8 @@ class TPMActivityExportSerializer(serializers.Serializer):
     intervention = serializers.CharField()
     locations = CommaSeparatedExportField()
     date = serializers.DateField(format='%d/%m/%Y')
-    unicef_focal_points = UsersExportField(source='tpm_visit.unicef_focal_points')
-    offices = CommaSeparatedExportField(source='tpm_visit.offices')
+    unicef_focal_points = UsersExportField()
+    offices = CommaSeparatedExportField()
     tpm_focal_points = UsersExportField(source='tpm_visit.tpm_partner_focal_points')
     link = serializers.CharField(source='tpm_visit.get_object_url')
 
@@ -84,8 +48,8 @@ class TPMLocationExportSerializer(serializers.Serializer):
     intervention = serializers.CharField(source='activity.tpmactivity.intervention')
     location = serializers.CharField()
     date = serializers.DateField(source='activity.tpmactivity.date', format='%d/%m/%Y')
-    unicef_focal_points = UsersExportField(source='activity.tpmactivity.tpm_visit.unicef_focal_points')
-    offices = CommaSeparatedExportField(source='activity.tpmactivity.tpm_visit.offices')
+    unicef_focal_points = UsersExportField(source='activity.tpmactivity.unicef_focal_points')
+    offices = CommaSeparatedExportField(source='activity.tpmactivity.offices')
     tpm_focal_points = UsersExportField(source='activity.tpmactivity.tpm_visit.tpm_partner_focal_points')
     link = serializers.CharField(source='activity.tpmactivity.tpm_visit.get_object_url')
 
