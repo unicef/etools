@@ -158,20 +158,6 @@ class DSACalculator(object):
         self.paid_to_traveler = None
         self.detailed_dsa = None
 
-    def _cast_datetime(self, dt):
-        """
-        :type dt: datetime.datetime
-        :rtype: datetime.datetime
-        """
-        return dt
-
-    def _cast_date(self, d):
-        """
-        :type d: datetime.date
-        :rtype: datetime.date
-        """
-        return d
-
     def calculate_dsa(self):
         # If TA not required, dsa amounts should be zero
         dsa_should_be_zero = False
@@ -220,18 +206,18 @@ class DSACalculator(object):
         """
         mapping = {}
 
-        itinerary_item_list = list(self.travel.itinerary.order_by('arrival_date'))
+        itinerary_item_list = list(self.travel.itinerary.order_by('arrival_datetime'))
 
         # To few elements, cannot calculate properly
         if len(itinerary_item_list) < 2:
             return []
 
         for itinerary_item in itinerary_item_list[:-1]:
-            arrival_date = self._cast_datetime(itinerary_item.arrival_date).date()
+            arrival_date = itinerary_item.arrival_datetime.date()
             mapping[arrival_date] = itinerary_item
 
-        start_date = self._cast_datetime(itinerary_item_list[0].arrival_date).date()
-        end_date = self._cast_datetime(itinerary_item_list[-1].departure_date).date()
+        start_date = itinerary_item_list[0].arrival_datetime.date()
+        end_date = itinerary_item_list[-1].departure_datetime.date()
 
         tmp_date = start_date
         previous_itinerary = None
@@ -261,8 +247,8 @@ class DSACalculator(object):
             same_day_travels = list(self.travel.itinerary.all())
             for i, sdt in enumerate(same_day_travels[:-1], start=1):
                 # If it was less than 8 hours long, skip it
-                arrival = sdt.arrival_date
-                departure = same_day_travels[i].departure_date
+                arrival = sdt.arrival_datetime
+                departure = same_day_travels[i].departure_datetime
                 if (departure - arrival) >= timedelta(hours=8):
                     break
             else:
@@ -275,7 +261,7 @@ class DSACalculator(object):
         day_counter = 1
 
         for dto in dsa_dto_list:
-            departure_date = self._cast_datetime(dto.itinerary_item.departure_date).date()
+            departure_date = dto.itinerary_item.departure_datetime.date()
             if departure_date != dto.date or not dto.itinerary_item.overnight_travel:
                 over_60 = day_counter > 60
                 dto.dsa_amount += self.get_dsa_amount(dto.region, over_60)
@@ -291,17 +277,17 @@ class DSACalculator(object):
     def add_same_day_travels(self, dto, day_counter):
         # Check if there were any extra travel on that day
         same_day_travels = self.travel.itinerary.exclude(dsa_region=dto.region)
-        same_day_travels = same_day_travels.filter(departure_date__year=dto.date.year,
-                                                   departure_date__month=dto.date.month,
-                                                   departure_date__day=dto.date.day)
+        same_day_travels = same_day_travels.filter(departure_datetime__year=dto.date.year,
+                                                   departure_datetime__month=dto.date.month,
+                                                   departure_datetime__day=dto.date.day)
 
         over_60 = day_counter > 60
         same_day_travels = list(same_day_travels)
         same_day_travels.append(dto.itinerary_item)
         for i, sdt in enumerate(same_day_travels[:-1], start=1):
             # If it was less than 8 hours long, skip it
-            arrival = sdt.arrival_date
-            departure = same_day_travels[i].departure_date
+            arrival = sdt.arrival_datetime
+            departure = same_day_travels[i].departure_datetime
             if (departure - arrival) < timedelta(hours=8):
                 continue
 
@@ -324,11 +310,11 @@ class DSACalculator(object):
             return dsa_dto_list
 
         last_dto = dsa_dto_list[-1]
-        last_day_departure_count = self.travel.itinerary.filter(departure_date__year=last_dto.date.year,
-                                                                departure_date__month=last_dto.date.month,
-                                                                departure_date__day=last_dto.date.day).count()
+        last_day_departure_count = self.travel.itinerary.filter(departure_datetime__year=last_dto.date.year,
+                                                                departure_datetime__month=last_dto.date.month,
+                                                                departure_datetime__day=last_dto.date.day).count()
 
-        itinerary = self.travel.itinerary.order_by('-departure_date')
+        itinerary = self.travel.itinerary.order_by('-departure_datetime')
         if last_day_departure_count and itinerary.count() > last_day_departure_count:
             first_departure = itinerary[last_day_departure_count]
 

@@ -94,8 +94,8 @@ class TravelList(URLAssertionMixin, BaseTenantTestCase):
                 user=self.unicef_staff,
                 data={
                     "office_id": self.travel.office.id,
-                    "year": self.travel.start_date.year,
-                    "months": '{month:02d}'.format(month=self.travel.start_date.month)
+                    "year": self.travel.start_datetime.year,
+                    "months": '{month:02d}'.format(month=self.travel.start_datetime.month)
                 }
             )
 
@@ -124,8 +124,8 @@ class TravelList(URLAssertionMixin, BaseTenantTestCase):
                 user=self.unicef_staff,
                 data={
                     "office_id": travel.office.id,
-                    "year": travel.start_date.year,
-                    "months": '{month:02d}'.format(month=travel.start_date.month)
+                    "year": travel.start_datetime.year,
+                    "months": '{month:02d}'.format(month=travel.start_datetime.month)
                 }
             )
 
@@ -259,7 +259,7 @@ class TravelList(URLAssertionMixin, BaseTenantTestCase):
 
         data = {
             'f_travel_type': TravelType.PROGRAMME_MONITORING,
-            'f_month': t2.start_date.month - 1,  # Frontend sends 0-11
+            'f_month': t2.start_datetime.month - 1,  # Frontend sends 0-11
             'f_cp_output': result.id,
         }
         response = self.forced_auth_req('get', reverse('t2f:travels:list:index'),

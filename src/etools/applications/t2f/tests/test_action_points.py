@@ -324,7 +324,7 @@ class ActionPoints(URLAssertionMixin, BaseTenantTestCase):
 
     def test_due_date_validation(self):
         action_point = ActionPointFactory(travel=self.travel,
-                                          due_date=datetime(2017, 6, 15, 12, tzinfo=UTC))
+                                          due_datetime=datetime(2017, 6, 15, 12, tzinfo=UTC))
         data = {'due_date': datetime(2017, 6, 15, 12, tzinfo=UTC),
                 'completed_at': datetime(2017, 6, 16, 11, tzinfo=UTC),
                 'actions_taken': 'stuff'}

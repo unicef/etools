@@ -35,7 +35,6 @@ class TravelActivityList(BaseTenantTestCase):
             response = self.forced_auth_req('get', reverse('t2f:travels:list:activities',
                                                            kwargs={'partner_organization_pk': partner_id}),
                                             user=self.unicef_staff)
-
         response_json = json.loads(response.rendered_content)
         expected_keys = ['primary_traveler', 'travel_type', 'date', 'locations', 'status', 'reference_number',
                          'trip_id']

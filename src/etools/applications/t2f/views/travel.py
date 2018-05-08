@@ -198,6 +198,8 @@ class ActionPointViewSet(mixins.ListModelMixin,
         queryset = self.filter_queryset(self.get_queryset())
         serializer = ActionPointExportSerializer(queryset, many=True, context=self.get_serializer_context())
 
-        response = Response(data=serializer.data, status=status.HTTP_200_OK)
+        data = serializer.data
+
+        response = Response(data=data, status=status.HTTP_200_OK)
         response['Content-Disposition'] = 'attachment; filename="ActionPointExport.csv"'
         return response

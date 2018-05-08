@@ -14,7 +14,7 @@ class VisionSyncLogAdmin(admin.ModelAdmin):
         'country',
         'handler_name',
         'successful',
-        'date_processed',
+        'datetime_processed',
     )
     list_display = (
         'country',
@@ -22,7 +22,7 @@ class VisionSyncLogAdmin(admin.ModelAdmin):
         'total_records',
         'total_processed',
         'successful',
-        'date_processed',
+        'datetime_processed',
     )
     readonly_fields = (
         'country',
@@ -32,7 +32,7 @@ class VisionSyncLogAdmin(admin.ModelAdmin):
         'total_processed',
         'successful',
         'exception_message',
-        'date_processed',
+        'datetime_processed',
     )
 
 

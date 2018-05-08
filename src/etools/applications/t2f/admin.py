@@ -19,8 +19,8 @@ class TravelAdmin(admin.ModelAdmin):
         'reference_number',
         'traveler',
         'status',
-        'start_date',
-        'end_date',
+        'start_datetime',
+        'end_datetime',
         'section',
         'sector'
     )
@@ -34,7 +34,7 @@ class TravelActivityAdmin(admin.ModelAdmin):
     list_filter = (
         'travel_type',
         'partner',
-        'date',
+        'datetime',
         'travels'
     )
     search_fields = (
@@ -44,7 +44,7 @@ class TravelActivityAdmin(admin.ModelAdmin):
     list_display = (
         'primary_traveler',
         'travel_type',
-        'date'
+        'datetime'
     )
 
 
@@ -52,8 +52,8 @@ class ItineraryItemAdmin(admin.ModelAdmin):
     model = models.ItineraryItem
     list_filter = (
         'travel',
-        'departure_date',
-        'arrival_date',
+        'departure_datetime',
+        'arrival_datetime',
         'origin',
         'destination'
     )
@@ -62,8 +62,8 @@ class ItineraryItemAdmin(admin.ModelAdmin):
     )
     list_display = (
         'travel',
-        'departure_date',
-        'arrival_date',
+        'departure_datetime',
+        'arrival_datetime',
         'origin',
         'destination'
     )

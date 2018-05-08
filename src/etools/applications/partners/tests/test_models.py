@@ -459,7 +459,7 @@ class TestPartnerOrganizationModel(BaseTenantTestCase):
         travel = TravelFactory(
             traveler=traveller,
             status=Travel.COMPLETED,
-            end_date=datetime.datetime(datetime.datetime.today().year, 9, 1, tzinfo=tz)
+            end_datetime=datetime.datetime(datetime.datetime.today().year, 9, 1, tzinfo=tz)
         )
         TravelActivityFactory(
             travels=[travel],
@@ -478,11 +478,11 @@ class TestPartnerOrganizationModel(BaseTenantTestCase):
         self.assertEqual(self.partner_organization.hact_values['programmatic_visits']['completed']['total'], 0)
         visit = TPMVisitFactory(
             status=TPMVisit.UNICEF_APPROVED,
-            date_of_unicef_approved=datetime.datetime(datetime.datetime.today().year, 5, 1)
+            date_of_unicef_approved=datetime.datetime(datetime.datetime.today().year, 5, 1).date()
         )
         visit2 = TPMVisitFactory(
             status=TPMVisit.UNICEF_APPROVED,
-            date_of_unicef_approved=datetime.datetime(datetime.datetime.today().year, 5, 20)
+            date_of_unicef_approved=datetime.datetime(datetime.datetime.today().year, 5, 20).date()
         )
         TPMActivityFactory(
             tpm_visit=visit,

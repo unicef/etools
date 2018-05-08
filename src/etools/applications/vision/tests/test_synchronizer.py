@@ -210,7 +210,7 @@ class TestVisionDataSynchronizerSync(BaseTenantTestCase):
             self.assertIn(sync_log.exception_message, ('', None))
         # date_processed is a datetime; there's no way to know the exact microsecond it should contain. As long as
         # it's within a few seconds of now, that's good enough.
-        delta = django_now() - sync_log.date_processed
+        delta = django_now() - sync_log.datetime_processed
         self.assertLess(delta.seconds, 5)
 
     def setUp(self):

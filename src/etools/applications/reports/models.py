@@ -14,29 +14,6 @@ from mptt.models import MPTTModel, TreeForeignKey
 from etools.applications.locations.models import Location
 
 
-class Quarter(models.Model):
-
-    Q1 = 'Q1'
-    Q2 = 'Q2'
-    Q3 = 'Q3'
-    Q4 = 'Q4'
-
-    QUARTER_CHOICES = (
-        (Q1, 'Quarter 1'),
-        (Q2, 'Quarter 2'),
-        (Q3, 'Quarter 3'),
-        (Q4, 'Quarter 4'),
-    )
-
-    name = models.CharField(max_length=64, choices=QUARTER_CHOICES, verbose_name=_('Name'))
-    year = models.CharField(max_length=4, verbose_name=_('Year'))
-    start_date = models.DateTimeField(verbose_name=_('Start Date'))
-    end_date = models.DateTimeField(verbose_name=_('End Date'))
-
-    def __repr__(self):
-        return '{}-{}'.format(self.name, self.year)
-
-
 class CountryProgrammeManager(models.Manager):
     def get_queryset(self):
         return super(CountryProgrammeManager, self).get_queryset().filter(invalid=False)

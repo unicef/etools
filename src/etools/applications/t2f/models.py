@@ -143,7 +143,7 @@ class Travel(models.Model):
     canceled_at = models.DateTimeField(null=True, blank=True, verbose_name=_('Canceled At'))
     submitted_at = models.DateTimeField(null=True, blank=True, verbose_name=_('Submitted At'))
     # Required to calculate with proper dsa values
-    first_submission_date = models.DateTimeField(null=True, blank=True, verbose_name=_('First Submission Date'))
+    first_submission_datetime = models.DateTimeField(null=True, blank=True, verbose_name=_('First Submission Date'))
     rejected_at = models.DateTimeField(null=True, blank=True, verbose_name=_('Rejected At'))
     approved_at = models.DateTimeField(null=True, blank=True, verbose_name=_('Approved At'))
 
@@ -176,8 +176,8 @@ class Travel(models.Model):
         'reports.Sector', null=True, blank=True, related_name='+', verbose_name=_('Sector'),
         on_delete=models.CASCADE,
     )
-    start_date = models.DateTimeField(null=True, blank=True, verbose_name=_('Start Date'))
-    end_date = models.DateTimeField(null=True, blank=True, verbose_name=_('End Date'))
+    start_datetime = models.DateTimeField(null=True, blank=True, verbose_name=_('Start Date'))
+    end_datetime = models.DateTimeField(null=True, blank=True, verbose_name=_('End Date'))
     purpose = models.CharField(max_length=500, default='', blank=True, verbose_name=_('Purpose'))
     additional_note = models.TextField(default='', blank=True, verbose_name=_('Additional Note'))
     international_travel = models.NullBooleanField(default=False, null=True, blank=True,
@@ -291,7 +291,7 @@ class Travel(models.Model):
             raise TransitionError('Maximum 3 open travels are allowed.')
 
         end_date_limit = timezone_now() - timedelta(days=15)
-        if travels.filter(end_date__lte=end_date_limit).exclude(id=self.id).exists():
+        if travels.filter(end_datetime__lte=end_date_limit).exclude(id=self.id).exists():
             raise TransitionError(ugettext('Another of your trips ended more than 15 days ago, but was not completed '
                                            'yet. Please complete that before creating a new trip.'))
 
@@ -310,8 +310,8 @@ class Travel(models.Model):
                 conditions=[validate_itinerary, has_supervisor, check_pending_invoices, check_travel_count])
     def submit_for_approval(self):
         self.submitted_at = timezone_now()
-        if not self.first_submission_date:
-            self.first_submission_date = timezone_now()
+        if not self.first_submission_datetime:
+            self.first_submission_datetime = timezone_now()
         self.send_notification_email('Travel #{} was sent for approval.'.format(self.reference_number),
                                      self.supervisor.email,
                                      'emails/submit_for_approval.html')
@@ -426,7 +426,7 @@ class Travel(models.Model):
             from etools.applications.partners.models import PartnerOrganization
             for act in self.activities.filter(primary_traveler=self.traveler,
                                               travel_type=TravelType.PROGRAMME_MONITORING):
-                PartnerOrganization.programmatic_visits(act.partner, event_date=self.end_date, update_one=True)
+                PartnerOrganization.programmatic_visits(act.partner, event_date=self.end_datetime, update_one=True)
 
             for act in self.activities.filter(primary_traveler=self.traveler,
                                               travel_type=TravelType.SPOT_CHECK):
@@ -483,7 +483,7 @@ class TravelActivity(models.Model):
     locations = models.ManyToManyField('locations.Location', related_name='+', verbose_name=_('Locations'))
     primary_traveler = models.ForeignKey(
         settings.AUTH_USER_MODEL, verbose_name=_('Primary Traveler'), on_delete=models.CASCADE)
-    date = models.DateTimeField(null=True, blank=True, verbose_name=_('Date'))
+    datetime = models.DateTimeField(null=True, blank=True, verbose_name=_('Date'))
 
     class Meta:
         verbose_name_plural = _("Travel Activities")
@@ -501,8 +501,8 @@ class ItineraryItem(models.Model):
     )
     origin = models.CharField(max_length=255, verbose_name=_('Origin'))
     destination = models.CharField(max_length=255, verbose_name=_('Destination'))
-    departure_date = models.DateTimeField(verbose_name=_('Departure Date'))
-    arrival_date = models.DateTimeField(verbose_name=_('Arrival Date'))
+    departure_datetime = models.DateTimeField(verbose_name=_('Departure Date'))
+    arrival_datetime = models.DateTimeField(verbose_name=_('Arrival Date'))
     dsa_region = models.ForeignKey(
         'publics.DSARegion', related_name='+', null=True, blank=True,
         verbose_name=_('DSA Region'),
@@ -687,7 +687,7 @@ class ActionPoint(models.Model):
     action_point_number = models.CharField(max_length=11, default=make_action_point_number, unique=True,
                                            verbose_name=_('Action Point Number'))
     description = models.CharField(max_length=254, verbose_name=_('Description'))
-    due_date = models.DateTimeField(verbose_name=_('Due Date'))
+    due_datetime = models.DateTimeField(verbose_name=_('Due Date'))
     person_responsible = models.ForeignKey(
         settings.AUTH_USER_MODEL, related_name='+',
         verbose_name=_('Responsible Person'),

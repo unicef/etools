@@ -28,6 +28,9 @@ class User(AbstractBaseUser):
     password = models.CharField(_("password"), max_length=128)
     first_name = models.CharField(_('first name'), max_length=30, blank=True)
     last_name = models.CharField(_('last name'), max_length=30, blank=True)
+    # The next field should be called datetime_joined (or something like that),
+    # but unfortunately django.contrib.auth assumes users have a date_joined
+    # field in some places.
     date_joined = models.DateTimeField(_('date joined'), auto_now_add=True)
     last_login = models.DateTimeField(_('last login'), blank=True, null=True)
     is_active = models.BooleanField(_('active'), default=True)

@@ -1,7 +1,7 @@
 
 from django.utils.translation import ugettext
 
-from rest_framework import serializers
+from rest_framework import serializers, ISO_8601
 
 
 class YesOrEmptyField(serializers.BooleanField):
@@ -31,8 +31,8 @@ class TravelActivityExportSerializer(serializers.Serializer):
     partnership = serializers.CharField(source='activity.partnership.title')
     results = serializers.CharField(source='activity.result.name')
     locations = serializers.SerializerMethodField()
-    start_date = serializers.DateTimeField(source='travel.start_date', format='%d-%b-%Y')
-    end_date = serializers.DateTimeField(source='travel.end_date', format='%d-%b-%Y')
+    start_date = serializers.DateTimeField(source='travel.start_datetime', format='%d-%b-%Y')
+    end_date = serializers.DateTimeField(source='travel.end_datetime', format='%d-%b-%Y')
     is_secondary_traveler = serializers.SerializerMethodField()
     primary_traveler_name = serializers.SerializerMethodField()
 
@@ -64,8 +64,8 @@ class FinanceExportSerializer(serializers.Serializer):
     section = serializers.CharField(source='sector.name')
     status = serializers.CharField()
     supervisor = serializers.CharField(source='supervisor.get_full_name')
-    start_date = serializers.DateTimeField(format='%d-%b-%Y')
-    end_date = serializers.DateTimeField(format='%d-%b-%Y')
+    start_date = serializers.DateTimeField(format='%d-%b-%Y', source='start_datetime')
+    end_date = serializers.DateTimeField(format='%d-%b-%Y', source='end_datetime')
     purpose_of_travel = serializers.CharField(source='purpose')
     mode_of_travel = serializers.SerializerMethodField()
     international_travel = YesOrNoField()
@@ -104,8 +104,8 @@ class TravelAdminExportSerializer(serializers.Serializer):
     status = serializers.CharField(source='travel.status')
     origin = serializers.CharField()
     destination = serializers.CharField()
-    departure_time = serializers.DateTimeField(source='departure_date', format='%d-%b-%Y %I:%M %p')
-    arrival_time = serializers.DateTimeField(source='arrival_date', format='%d-%b-%Y %I:%M %p')
+    departure_time = serializers.DateTimeField(source='departure_datetime', format='%d-%b-%Y %I:%M %p')
+    arrival_time = serializers.DateTimeField(source='arrival_datetime', format='%d-%b-%Y %I:%M %p')
     dsa_area = serializers.CharField(source='dsa_region.area_code')
     overnight_travel = YesOrEmptyField()
     mode_of_travel = serializers.CharField()
@@ -148,7 +148,7 @@ class ActionPointExportSerializer(serializers.Serializer):
     action_point_number = serializers.CharField()
     trip_reference_number = serializers.CharField(source='travel.reference_number')
     description = serializers.CharField()
-    due_date = serializers.DateTimeField()
+    due_date = serializers.DateTimeField(source='due_datetime', format=ISO_8601)
     person_responsible = serializers.CharField(source='person_responsible.get_full_name')
     status = serializers.CharField()
     completed_date = serializers.DateTimeField(source='completed_at')

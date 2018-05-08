@@ -1,28 +1,9 @@
-
 import datetime
-
-from django.utils import timezone
 
 import factory
 from factory import fuzzy
 
 from etools.applications.reports import models
-
-
-class FuzzyQuarterChoice(factory.fuzzy.BaseFuzzyAttribute):
-    def fuzz(self):
-        return factory.fuzzy._random.choice(
-            [q[0] for q in models.Quarter.QUARTER_CHOICES]
-        )
-
-
-class QuarterFactory(factory.django.DjangoModelFactory):
-    class Meta:
-        model = models.Quarter
-
-    name = FuzzyQuarterChoice()
-    start_date = datetime.datetime(datetime.date.today().year, 1, 1, tzinfo=timezone.get_default_timezone())
-    end_date = datetime.datetime(datetime.date.today().year, 3, 31, tzinfo=timezone.get_default_timezone())
 
 
 class CountryProgrammeFactory(factory.DjangoModelFactory):

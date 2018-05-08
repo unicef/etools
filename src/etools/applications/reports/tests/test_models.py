@@ -7,9 +7,9 @@ from django.utils import six
 from etools.applications.EquiTrack.tests.cases import BaseTenantTestCase
 from etools.applications.partners.models import Agreement
 from etools.applications.partners.tests.factories import AgreementFactory
-from etools.applications.reports.models import CountryProgramme, Indicator, IndicatorBlueprint, Quarter
+from etools.applications.reports.models import CountryProgramme, Indicator, IndicatorBlueprint
 from etools.applications.reports.tests.factories import (CountryProgrammeFactory, IndicatorBlueprintFactory,
-                                                         IndicatorFactory, LowerResultFactory, QuarterFactory,
+                                                         IndicatorFactory, LowerResultFactory,
                                                          ResultFactory, ResultTypeFactory, SectorFactory, UnitFactory,)
 
 
@@ -77,12 +77,6 @@ class TestStrUnicode(SimpleTestCase):
 
         instance = IndicatorFactory.build(name=u'\xccsland', active=True)
         self.assertEqual(six.text_type(instance), u'\xccsland  ')
-
-
-class TestQuarter(BaseTenantTestCase):
-    def test_repr(self):
-        quarter = QuarterFactory(name=Quarter.Q1, year=2001)
-        self.assertEqual(repr(quarter), "Q1-2001")
 
 
 class TestCountryProgramme(BaseTenantTestCase):

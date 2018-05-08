@@ -181,18 +181,6 @@ class TestDSACalculator(BaseTenantTestCase):
         self.assertIsNone(dsa.paid_to_traveler)
         self.assertIsNone(dsa.detailed_dsa)
 
-    def test_cast_datetime(self):
-        """Nothing happens _cast_datetime"""
-        dsa = DSACalculator(self.travel)
-        today = date.today()
-        self.assertEqual(dsa._cast_datetime(today), today)
-
-    def test_cast_date(self):
-        """Nothing happens _cast_date"""
-        dsa = DSACalculator(self.travel)
-        today = date.today()
-        self.assertEqual(dsa._cast_date(today), today)
-
     def test_get_dsa_amount_usd(self):
         """If currency code is USD and NOT 60 plus
         then get region rate for USD
@@ -294,8 +282,8 @@ class TestDSACalculator(BaseTenantTestCase):
         """
         ItineraryItemFactory(
             travel=self.travel,
-            arrival_date=datetime(2017, 1, 1, 1, 0, tzinfo=UTC),
-            departure_date=datetime(2017, 1, 1, 2, 0, tzinfo=UTC),
+            arrival_datetime=datetime(2017, 1, 1, 1, 0, tzinfo=UTC),
+            departure_datetime=datetime(2017, 1, 1, 2, 0, tzinfo=UTC),
             dsa_region=self.budapest
         )
         self.assertEqual(self.travel.itinerary.count(), 1)
@@ -308,15 +296,15 @@ class TestDSACalculator(BaseTenantTestCase):
         """
         ItineraryItemFactory(
             travel=self.travel,
-            arrival_date=datetime(2017, 1, 1, 1, 0, tzinfo=UTC),
-            departure_date=datetime(2017, 1, 1, 2, 0, tzinfo=UTC),
+            arrival_datetime=datetime(2017, 1, 1, 1, 0, tzinfo=UTC),
+            departure_datetime=datetime(2017, 1, 1, 2, 0, tzinfo=UTC),
             dsa_region=self.amsterdam
         )
 
         ItineraryItemFactory(
             travel=self.travel,
-            arrival_date=datetime(2017, 1, 2, 10, 0, tzinfo=UTC),
-            departure_date=datetime(2017, 1, 3, 15, 0, tzinfo=UTC),
+            arrival_datetime=datetime(2017, 1, 2, 10, 0, tzinfo=UTC),
+            departure_datetime=datetime(2017, 1, 3, 15, 0, tzinfo=UTC),
             dsa_region=self.amsterdam
         )
         dsa = DSACalculator(self.travel)
@@ -335,20 +323,20 @@ class TestDSACalculator(BaseTenantTestCase):
         """
         ItineraryItemFactory(
             travel=self.travel,
-            arrival_date=datetime(2017, 1, 1, 1, 0, tzinfo=UTC),
-            departure_date=datetime(2017, 1, 1, 2, 0, tzinfo=UTC),
+            arrival_datetime=datetime(2017, 1, 1, 1, 0, tzinfo=UTC),
+            departure_datetime=datetime(2017, 1, 1, 2, 0, tzinfo=UTC),
             dsa_region=self.amsterdam
         )
         ItineraryItemFactory(
             travel=self.travel,
-            arrival_date=datetime(2017, 1, 1, 2, 0, tzinfo=UTC),
-            departure_date=datetime(2017, 1, 1, 3, 0, tzinfo=UTC),
+            arrival_datetime=datetime(2017, 1, 1, 2, 0, tzinfo=UTC),
+            departure_datetime=datetime(2017, 1, 1, 3, 0, tzinfo=UTC),
             dsa_region=self.amsterdam
         )
         ItineraryItemFactory(
             travel=self.travel,
-            arrival_date=datetime(2017, 1, 1, 6, 0, tzinfo=UTC),
-            departure_date=datetime(2017, 1, 1, 8, 0, tzinfo=UTC),
+            arrival_datetime=datetime(2017, 1, 1, 6, 0, tzinfo=UTC),
+            departure_datetime=datetime(2017, 1, 1, 8, 0, tzinfo=UTC),
             dsa_region=self.amsterdam
         )
         dsa = DSACalculator(self.travel)
@@ -365,15 +353,15 @@ class TestDSACalculator(BaseTenantTestCase):
         """
         ItineraryItemFactory(
             travel=self.travel,
-            arrival_date=datetime(2017, 1, 1, 1, 0, tzinfo=UTC),
-            departure_date=datetime(2017, 1, 1, 2, 0, tzinfo=UTC),
+            arrival_datetime=datetime(2017, 1, 1, 1, 0, tzinfo=UTC),
+            departure_datetime=datetime(2017, 1, 1, 2, 0, tzinfo=UTC),
             dsa_region=self.amsterdam
         )
 
         ItineraryItemFactory(
             travel=self.travel,
-            arrival_date=datetime(2017, 1, 2, 15, 0, tzinfo=UTC),
-            departure_date=datetime(2017, 4, 3, 10, 0, tzinfo=UTC),
+            arrival_datetime=datetime(2017, 1, 2, 15, 0, tzinfo=UTC),
+            departure_datetime=datetime(2017, 4, 3, 10, 0, tzinfo=UTC),
             dsa_region=self.amsterdam
         )
         dsa = DSACalculator(self.travel)
@@ -407,14 +395,14 @@ class TestDSACalculator(BaseTenantTestCase):
         """
         itinerary = ItineraryItemFactory(
             travel=self.travel,
-            arrival_date=datetime(2017, 1, 1, 1, 0, tzinfo=UTC),
-            departure_date=datetime(2017, 1, 1, 3, 0, tzinfo=UTC),
+            arrival_datetime=datetime(2017, 1, 1, 1, 0, tzinfo=UTC),
+            departure_datetime=datetime(2017, 1, 1, 3, 0, tzinfo=UTC),
             dsa_region=self.amsterdam
         )
         ItineraryItemFactory(
             travel=self.travel,
-            arrival_date=datetime(2017, 1, 1, 4, 0, tzinfo=UTC),
-            departure_date=datetime(2017, 1, 1, 11, 0, tzinfo=UTC),
+            arrival_datetime=datetime(2017, 1, 1, 4, 0, tzinfo=UTC),
+            departure_datetime=datetime(2017, 1, 1, 11, 0, tzinfo=UTC),
             dsa_region=self.amsterdam
         )
         dsa_dto_list = [DSAdto(date(2017, 1, 1), itinerary)]
@@ -436,20 +424,20 @@ class TestDSACalculator(BaseTenantTestCase):
         """
         itinerary = ItineraryItemFactory(
             travel=self.travel,
-            arrival_date=datetime(2017, 1, 1, 1, 0, tzinfo=UTC),
-            departure_date=datetime(2017, 1, 1, 3, 0, tzinfo=UTC),
+            arrival_datetime=datetime(2017, 1, 1, 1, 0, tzinfo=UTC),
+            departure_datetime=datetime(2017, 1, 1, 3, 0, tzinfo=UTC),
             dsa_region=self.amsterdam
         )
         ItineraryItemFactory(
             travel=self.travel,
-            arrival_date=datetime(2017, 1, 1, 4, 0, tzinfo=UTC),
-            departure_date=datetime(2017, 1, 1, 8, 0, tzinfo=UTC),
+            arrival_datetime=datetime(2017, 1, 1, 4, 0, tzinfo=UTC),
+            departure_datetime=datetime(2017, 1, 1, 8, 0, tzinfo=UTC),
             dsa_region=self.amsterdam
         )
         ItineraryItemFactory(
             travel=self.travel,
-            arrival_date=datetime(2017, 1, 1, 9, 0, tzinfo=UTC),
-            departure_date=datetime(2017, 1, 1, 11, 0, tzinfo=UTC),
+            arrival_datetime=datetime(2017, 1, 1, 9, 0, tzinfo=UTC),
+            departure_datetime=datetime(2017, 1, 1, 11, 0, tzinfo=UTC),
             dsa_region=self.amsterdam
         )
         dsa_dto_list = [DSAdto(date(2017, 1, 1), itinerary)]
@@ -463,8 +451,8 @@ class TestDSACalculator(BaseTenantTestCase):
         today = datetime(2017, 1, 1, 1, 0, tzinfo=UTC)
         itinerary = ItineraryItemFactory(
             travel=self.travel,
-            arrival_date=today,
-            departure_date=today + timedelta(hours=6),
+            arrival_datetime=today,
+            departure_datetime=today + timedelta(hours=6),
             dsa_region=self.amsterdam
         )
         dsa_dto_list = [DSAdto(today.date(), itinerary)]
@@ -481,8 +469,8 @@ class TestDSACalculator(BaseTenantTestCase):
         today = datetime(2017, 1, 1, 1, 0, tzinfo=UTC)
         itinerary = ItineraryItemFactory(
             travel=self.travel,
-            arrival_date=today,
-            departure_date=today + timedelta(hours=10),
+            arrival_datetime=today,
+            departure_datetime=today + timedelta(hours=10),
             dsa_region=self.amsterdam
         )
         dsa_dto_list = [DSAdto(today.date(), itinerary)]
@@ -493,14 +481,14 @@ class TestDSACalculator(BaseTenantTestCase):
         """If same region, then no change"""
         itinerary = ItineraryItemFactory(
             travel=self.travel,
-            arrival_date=datetime(2017, 1, 1, 1, 0, tzinfo=UTC),
-            departure_date=datetime(2017, 1, 1, 4, 0, tzinfo=UTC),
+            arrival_datetime=datetime(2017, 1, 1, 1, 0, tzinfo=UTC),
+            departure_datetime=datetime(2017, 1, 1, 4, 0, tzinfo=UTC),
             dsa_region=self.amsterdam
         )
         ItineraryItemFactory(
             travel=self.travel,
-            arrival_date=datetime(2017, 1, 1, 5, 0, tzinfo=UTC),
-            departure_date=datetime(2017, 1, 1, 12, 0, tzinfo=UTC),
+            arrival_datetime=datetime(2017, 1, 1, 5, 0, tzinfo=UTC),
+            departure_datetime=datetime(2017, 1, 1, 12, 0, tzinfo=UTC),
             dsa_region=self.amsterdam
         )
         dsa = DSACalculator(self.travel)
@@ -513,14 +501,14 @@ class TestDSACalculator(BaseTenantTestCase):
         """If different region, and time is less than 8 hrs, then no change"""
         itinerary = ItineraryItemFactory(
             travel=self.travel,
-            arrival_date=datetime(2017, 1, 1, 1, 0, tzinfo=UTC),
-            departure_date=datetime(2017, 1, 1, 4, 0, tzinfo=UTC),
+            arrival_datetime=datetime(2017, 1, 1, 1, 0, tzinfo=UTC),
+            departure_datetime=datetime(2017, 1, 1, 4, 0, tzinfo=UTC),
             dsa_region=self.amsterdam
         )
         ItineraryItemFactory(
             travel=self.travel,
-            arrival_date=datetime(2017, 1, 1, 5, 0, tzinfo=UTC),
-            departure_date=datetime(2017, 1, 1, 12, 0, tzinfo=UTC),
+            arrival_datetime=datetime(2017, 1, 1, 5, 0, tzinfo=UTC),
+            departure_datetime=datetime(2017, 1, 1, 12, 0, tzinfo=UTC),
             dsa_region=self.budapest
         )
         dsa = DSACalculator(self.travel)
@@ -539,14 +527,14 @@ class TestDSACalculator(BaseTenantTestCase):
         """
         itinerary = ItineraryItemFactory(
             travel=self.travel,
-            arrival_date=datetime(2017, 1, 1, 1, 0, tzinfo=UTC),
-            departure_date=datetime(2017, 1, 1, 4, 0, tzinfo=UTC),
+            arrival_datetime=datetime(2017, 1, 1, 1, 0, tzinfo=UTC),
+            departure_datetime=datetime(2017, 1, 1, 4, 0, tzinfo=UTC),
             dsa_region=self.budapest
         )
         ItineraryItemFactory(
             travel=self.travel,
-            arrival_date=datetime(2017, 1, 1, 5, 0, tzinfo=UTC),
-            departure_date=datetime(2017, 1, 1, 14, 0, tzinfo=UTC),
+            arrival_datetime=datetime(2017, 1, 1, 5, 0, tzinfo=UTC),
+            departure_datetime=datetime(2017, 1, 1, 14, 0, tzinfo=UTC),
             dsa_region=self.amsterdam
         )
         dsa = DSACalculator(self.travel)
@@ -562,20 +550,20 @@ class TestDSACalculator(BaseTenantTestCase):
         dsa = DSACalculator(self.travel)
         itinerary = ItineraryItemFactory(
             travel=self.travel,
-            arrival_date=datetime(2017, 1, 1, 1, 0, tzinfo=UTC),
-            departure_date=datetime(2017, 1, 1, 4, 0, tzinfo=UTC),
+            arrival_datetime=datetime(2017, 1, 1, 1, 0, tzinfo=UTC),
+            departure_datetime=datetime(2017, 1, 1, 4, 0, tzinfo=UTC),
             dsa_region=self.budapest
         )
         ItineraryItemFactory(
             travel=self.travel,
-            arrival_date=datetime(2017, 1, 1, 5, 0, tzinfo=UTC),
-            departure_date=datetime(2017, 1, 1, 8, 0, tzinfo=UTC),
+            arrival_datetime=datetime(2017, 1, 1, 5, 0, tzinfo=UTC),
+            departure_datetime=datetime(2017, 1, 1, 8, 0, tzinfo=UTC),
             dsa_region=self.amsterdam
         )
         ItineraryItemFactory(
             travel=self.travel,
-            arrival_date=datetime(2017, 1, 1, 9, 0, tzinfo=UTC),
-            departure_date=datetime(2017, 1, 1, 14, 0, tzinfo=UTC),
+            arrival_datetime=datetime(2017, 1, 1, 9, 0, tzinfo=UTC),
+            departure_datetime=datetime(2017, 1, 1, 14, 0, tzinfo=UTC),
             dsa_region=self.amsterdam
         )
         dto = DSAdto(date(2017, 1, 1), itinerary)
@@ -592,20 +580,20 @@ class TestDSACalculator(BaseTenantTestCase):
         """
         itinerary = ItineraryItemFactory(
             travel=self.travel,
-            arrival_date=datetime(2017, 1, 1, 1, 0, tzinfo=UTC),
-            departure_date=datetime(2017, 1, 1, 4, 0, tzinfo=UTC),
+            arrival_datetime=datetime(2017, 1, 1, 1, 0, tzinfo=UTC),
+            departure_datetime=datetime(2017, 1, 1, 4, 0, tzinfo=UTC),
             dsa_region=self.budapest
         )
         ItineraryItemFactory(
             travel=self.travel,
-            arrival_date=datetime(2017, 1, 1, 5, 0, tzinfo=UTC),
-            departure_date=datetime(2017, 1, 1, 8, 0, tzinfo=UTC),
+            arrival_datetime=datetime(2017, 1, 1, 5, 0, tzinfo=UTC),
+            departure_datetime=datetime(2017, 1, 1, 8, 0, tzinfo=UTC),
             dsa_region=self.amsterdam
         )
         ItineraryItemFactory(
             travel=self.travel,
-            arrival_date=datetime(2017, 1, 1, 9, 0, tzinfo=UTC),
-            departure_date=datetime(2017, 1, 1, 14, 0, tzinfo=UTC),
+            arrival_datetime=datetime(2017, 1, 1, 9, 0, tzinfo=UTC),
+            departure_datetime=datetime(2017, 1, 1, 14, 0, tzinfo=UTC),
             dsa_region=self.amsterdam
         )
         dsa = DSACalculator(self.travel)
@@ -626,8 +614,8 @@ class TestDSACalculator(BaseTenantTestCase):
         """If departure date matches dto date and overnight, then no change"""
         itinerary = ItineraryItemFactory(
             travel=self.travel,
-            arrival_date=datetime(2017, 1, 1, 1, 0, tzinfo=UTC),
-            departure_date=datetime(2017, 1, 1, 4, 0, tzinfo=UTC),
+            arrival_datetime=datetime(2017, 1, 1, 1, 0, tzinfo=UTC),
+            departure_datetime=datetime(2017, 1, 1, 4, 0, tzinfo=UTC),
             dsa_region=self.amsterdam,
             overnight_travel=True,
         )
@@ -643,8 +631,8 @@ class TestDSACalculator(BaseTenantTestCase):
         """
         itinerary = ItineraryItemFactory(
             travel=self.travel,
-            arrival_date=datetime(2017, 1, 1, 1, 0, tzinfo=UTC),
-            departure_date=datetime(2017, 1, 1, 4, 0, tzinfo=UTC),
+            arrival_datetime=datetime(2017, 1, 1, 1, 0, tzinfo=UTC),
+            departure_datetime=datetime(2017, 1, 1, 4, 0, tzinfo=UTC),
             dsa_region=self.amsterdam,
             overnight_travel=False,
         )
@@ -660,8 +648,8 @@ class TestDSACalculator(BaseTenantTestCase):
         """
         itinerary = ItineraryItemFactory(
             travel=self.travel,
-            arrival_date=datetime(2017, 1, 1, 1, 0, tzinfo=UTC),
-            departure_date=datetime(2017, 1, 2, 1, 0, tzinfo=UTC),
+            arrival_datetime=datetime(2017, 1, 1, 1, 0, tzinfo=UTC),
+            departure_datetime=datetime(2017, 1, 2, 1, 0, tzinfo=UTC),
             dsa_region=self.amsterdam,
             overnight_travel=True,
         )
@@ -684,15 +672,15 @@ class TestDSACalculator(BaseTenantTestCase):
         """
         ItineraryItemFactory(
             travel=self.travel,
-            arrival_date=datetime(2017, 1, 1, 1, 0, tzinfo=UTC),
-            departure_date=datetime(2017, 1, 2, 1, 0, tzinfo=UTC),
+            arrival_datetime=datetime(2017, 1, 1, 1, 0, tzinfo=UTC),
+            departure_datetime=datetime(2017, 1, 2, 1, 0, tzinfo=UTC),
             dsa_region=self.amsterdam,
             overnight_travel=True,
         )
         ItineraryItemFactory(
             travel=self.travel,
-            arrival_date=datetime(2017, 1, 2, 1, 0, tzinfo=UTC),
-            departure_date=datetime(2017, 5, 5, 1, 0, tzinfo=UTC),
+            arrival_datetime=datetime(2017, 1, 2, 1, 0, tzinfo=UTC),
+            departure_datetime=datetime(2017, 5, 5, 1, 0, tzinfo=UTC),
             dsa_region=self.amsterdam,
             overnight_travel=True,
         )
@@ -728,21 +716,21 @@ class TestDSACalculator(BaseTenantTestCase):
         and same day travel, then update dsa amount"""
         itinerary = ItineraryItemFactory(
             travel=self.travel,
-            arrival_date=datetime(2017, 1, 1, 1, 0, tzinfo=UTC),
-            departure_date=datetime(2017, 1, 2, 4, 0, tzinfo=UTC),
+            arrival_datetime=datetime(2017, 1, 1, 1, 0, tzinfo=UTC),
+            departure_datetime=datetime(2017, 1, 2, 4, 0, tzinfo=UTC),
             dsa_region=self.budapest,
             overnight_travel=False,
         )
         ItineraryItemFactory(
             travel=self.travel,
-            arrival_date=datetime(2017, 1, 1, 5, 0, tzinfo=UTC),
-            departure_date=datetime(2017, 1, 1, 8, 0, tzinfo=UTC),
+            arrival_datetime=datetime(2017, 1, 1, 5, 0, tzinfo=UTC),
+            departure_datetime=datetime(2017, 1, 1, 8, 0, tzinfo=UTC),
             dsa_region=self.amsterdam,
         )
         ItineraryItemFactory(
             travel=self.travel,
-            arrival_date=datetime(2017, 1, 1, 9, 0, tzinfo=UTC),
-            departure_date=datetime(2017, 1, 1, 14, 0, tzinfo=UTC),
+            arrival_datetime=datetime(2017, 1, 1, 9, 0, tzinfo=UTC),
+            departure_datetime=datetime(2017, 1, 1, 14, 0, tzinfo=UTC),
             dsa_region=self.amsterdam,
         )
         dsa = DSACalculator(self.travel)
@@ -775,8 +763,8 @@ class TestDSACalculator(BaseTenantTestCase):
         otherwise set to 0"""
         itinerary = ItineraryItemFactory(
             travel=self.travel,
-            arrival_date=datetime(2017, 1, 1, 1, 0, tzinfo=UTC),
-            departure_date=datetime(2017, 1, 2, 4, 0, tzinfo=UTC),
+            arrival_datetime=datetime(2017, 1, 1, 1, 0, tzinfo=UTC),
+            departure_datetime=datetime(2017, 1, 2, 4, 0, tzinfo=UTC),
             dsa_region=self.budapest,
         )
         DeductionFactory(travel=self.travel, date=date(2017, 1, 1), lunch=True)
@@ -797,8 +785,8 @@ class TestDSACalculator(BaseTenantTestCase):
         """If single dto, then expect that dto last day attribute to be True"""
         itinerary = ItineraryItemFactory(
             travel=self.travel,
-            arrival_date=datetime(2017, 1, 1, 1, 0, tzinfo=UTC),
-            departure_date=datetime(2017, 1, 2, 4, 0, tzinfo=UTC),
+            arrival_datetime=datetime(2017, 1, 1, 1, 0, tzinfo=UTC),
+            departure_datetime=datetime(2017, 1, 2, 4, 0, tzinfo=UTC),
             dsa_region=self.budapest,
         )
         dsa = DSACalculator(self.travel)
@@ -813,8 +801,8 @@ class TestDSACalculator(BaseTenantTestCase):
         """
         itinerary = ItineraryItemFactory(
             travel=self.travel,
-            arrival_date=datetime(2017, 1, 1, 1, 0, tzinfo=UTC),
-            departure_date=datetime(2017, 1, 2, 4, 0, tzinfo=UTC),
+            arrival_datetime=datetime(2017, 1, 1, 1, 0, tzinfo=UTC),
+            departure_datetime=datetime(2017, 1, 2, 4, 0, tzinfo=UTC),
             dsa_region=self.budapest,
         )
         dsa = DSACalculator(self.travel)
@@ -832,14 +820,14 @@ class TestDSACalculator(BaseTenantTestCase):
         """
         itinerary_1 = ItineraryItemFactory(
             travel=self.travel,
-            arrival_date=datetime(2017, 1, 1, 1, 0, tzinfo=UTC),
-            departure_date=datetime(2017, 1, 4, 4, 0, tzinfo=UTC),
+            arrival_datetime=datetime(2017, 1, 1, 1, 0, tzinfo=UTC),
+            departure_datetime=datetime(2017, 1, 4, 4, 0, tzinfo=UTC),
             dsa_region=self.budapest,
         )
         itinerary_2 = ItineraryItemFactory(
             travel=self.travel,
-            arrival_date=datetime(2017, 1, 2, 1, 0, tzinfo=UTC),
-            departure_date=datetime(2017, 1, 2, 4, 0, tzinfo=UTC),
+            arrival_datetime=datetime(2017, 1, 2, 1, 0, tzinfo=UTC),
+            departure_datetime=datetime(2017, 1, 2, 4, 0, tzinfo=UTC),
             dsa_region=self.budapest,
         )
         dsa = DSACalculator(self.travel)
@@ -876,14 +864,14 @@ class TestDSACalculator(BaseTenantTestCase):
         """
         itinerary = ItineraryItemFactory(
             travel=self.travel,
-            arrival_date=datetime(2017, 1, 1, 1, 0, tzinfo=UTC),
-            departure_date=datetime(2017, 1, 2, 4, 0, tzinfo=UTC),
+            arrival_datetime=datetime(2017, 1, 1, 1, 0, tzinfo=UTC),
+            departure_datetime=datetime(2017, 1, 2, 4, 0, tzinfo=UTC),
             dsa_region=self.amsterdam,
         )
         ItineraryItemFactory(
             travel=self.travel,
-            arrival_date=datetime(2017, 1, 3, 1, 0, tzinfo=UTC),
-            departure_date=datetime(2017, 1, 4, 4, 0, tzinfo=UTC),
+            arrival_datetime=datetime(2017, 1, 3, 1, 0, tzinfo=UTC),
+            departure_datetime=datetime(2017, 1, 4, 4, 0, tzinfo=UTC),
             dsa_region=self.amsterdam,
         )
         dsa = DSACalculator(self.travel)
@@ -912,14 +900,14 @@ class TestDSACalculator(BaseTenantTestCase):
         """
         itinerary = ItineraryItemFactory(
             travel=self.travel,
-            arrival_date=datetime(2017, 1, 1, 1, 0, tzinfo=UTC),
-            departure_date=datetime(2017, 1, 2, 4, 0, tzinfo=UTC),
+            arrival_datetime=datetime(2017, 1, 1, 1, 0, tzinfo=UTC),
+            departure_datetime=datetime(2017, 1, 2, 4, 0, tzinfo=UTC),
             dsa_region=self.amsterdam,
         )
         ItineraryItemFactory(
             travel=self.travel,
-            arrival_date=datetime(2017, 1, 3, 1, 0, tzinfo=UTC),
-            departure_date=datetime(2017, 1, 4, 4, 0, tzinfo=UTC),
+            arrival_datetime=datetime(2017, 1, 3, 1, 0, tzinfo=UTC),
+            departure_datetime=datetime(2017, 1, 4, 4, 0, tzinfo=UTC),
             dsa_region=self.amsterdam,
         )
         dsa = DSACalculator(self.travel)
@@ -948,14 +936,14 @@ class TestDSACalculator(BaseTenantTestCase):
         """
         itinerary = ItineraryItemFactory(
             travel=self.travel,
-            arrival_date=datetime(2017, 1, 1, 1, 0, tzinfo=UTC),
-            departure_date=datetime(2017, 1, 2, 4, 0, tzinfo=UTC),
+            arrival_datetime=datetime(2017, 1, 1, 1, 0, tzinfo=UTC),
+            departure_datetime=datetime(2017, 1, 2, 4, 0, tzinfo=UTC),
             dsa_region=self.amsterdam,
         )
         ItineraryItemFactory(
             travel=self.travel,
-            arrival_date=datetime(2017, 1, 3, 1, 0, tzinfo=UTC),
-            departure_date=datetime(2017, 5, 4, 4, 0, tzinfo=UTC),
+            arrival_datetime=datetime(2017, 1, 3, 1, 0, tzinfo=UTC),
+            departure_datetime=datetime(2017, 5, 4, 4, 0, tzinfo=UTC),
             dsa_region=self.amsterdam,
         )
         dsa = DSACalculator(self.travel)
@@ -1004,8 +992,8 @@ class TestDSACalculator(BaseTenantTestCase):
         self.assertTrue(self.travel.ta_required)
         ItineraryItemFactory(
             travel=self.travel,
-            arrival_date=datetime(2017, 1, 1, 1, 0, tzinfo=UTC),
-            departure_date=datetime(2017, 1, 2, 4, 0, tzinfo=UTC),
+            arrival_datetime=datetime(2017, 1, 1, 1, 0, tzinfo=UTC),
+            departure_datetime=datetime(2017, 1, 2, 4, 0, tzinfo=UTC),
             dsa_region=None,
         )
         dsa = DSACalculator(self.travel)
@@ -1019,8 +1007,8 @@ class TestDSACalculator(BaseTenantTestCase):
         """If single itinerary then should be zero and empty detailed dsa"""
         ItineraryItemFactory(
             travel=self.travel,
-            arrival_date=datetime(2017, 1, 1, 1, 0, tzinfo=UTC),
-            departure_date=datetime(2017, 1, 2, 4, 0, tzinfo=UTC),
+            arrival_datetime=datetime(2017, 1, 1, 1, 0, tzinfo=UTC),
+            departure_datetime=datetime(2017, 1, 2, 4, 0, tzinfo=UTC),
             dsa_region=self.amsterdam,
         )
         dsa = DSACalculator(self.travel)
@@ -1034,14 +1022,14 @@ class TestDSACalculator(BaseTenantTestCase):
         """If itinerary less than 60 days totals should be multiples of days"""
         itinerary = ItineraryItemFactory(
             travel=self.travel,
-            arrival_date=datetime(2017, 1, 1, 1, 0, tzinfo=UTC),
-            departure_date=datetime(2017, 1, 2, 4, 0, tzinfo=UTC),
+            arrival_datetime=datetime(2017, 1, 1, 1, 0, tzinfo=UTC),
+            departure_datetime=datetime(2017, 1, 2, 4, 0, tzinfo=UTC),
             dsa_region=self.amsterdam,
         )
         ItineraryItemFactory(
             travel=self.travel,
-            arrival_date=datetime(2017, 1, 3, 1, 0, tzinfo=UTC),
-            departure_date=datetime(2017, 1, 4, 4, 0, tzinfo=UTC),
+            arrival_datetime=datetime(2017, 1, 3, 1, 0, tzinfo=UTC),
+            departure_datetime=datetime(2017, 1, 4, 4, 0, tzinfo=UTC),
             dsa_region=self.amsterdam,
         )
         dsa = DSACalculator(self.travel)
@@ -1068,14 +1056,14 @@ class TestDSACalculator(BaseTenantTestCase):
         multiples of days and change after 60 days"""
         itinerary = ItineraryItemFactory(
             travel=self.travel,
-            arrival_date=datetime(2017, 1, 1, 1, 0, tzinfo=UTC),
-            departure_date=datetime(2017, 1, 2, 4, 0, tzinfo=UTC),
+            arrival_datetime=datetime(2017, 1, 1, 1, 0, tzinfo=UTC),
+            departure_datetime=datetime(2017, 1, 2, 4, 0, tzinfo=UTC),
             dsa_region=self.amsterdam,
         )
         ItineraryItemFactory(
             travel=self.travel,
-            arrival_date=datetime(2017, 1, 3, 1, 0, tzinfo=UTC),
-            departure_date=datetime(2017, 5, 4, 4, 0, tzinfo=UTC),
+            arrival_datetime=datetime(2017, 1, 3, 1, 0, tzinfo=UTC),
+            departure_datetime=datetime(2017, 5, 4, 4, 0, tzinfo=UTC),
             dsa_region=self.amsterdam,
         )
         dsa = DSACalculator(self.travel)
@@ -1112,13 +1100,13 @@ class TestDSACalculator(BaseTenantTestCase):
 
     def test_case_1(self):
         ItineraryItemFactory(travel=self.travel,
-                             departure_date=datetime(2017, 1, 1, 1, 0, tzinfo=UTC),
-                             arrival_date=datetime(2017, 1, 1, 2, 0, tzinfo=UTC),
+                             departure_datetime=datetime(2017, 1, 1, 1, 0, tzinfo=UTC),
+                             arrival_datetime=datetime(2017, 1, 1, 2, 0, tzinfo=UTC),
                              dsa_region=self.budapest)
 
         ItineraryItemFactory(travel=self.travel,
-                             departure_date=datetime(2017, 1, 1, 10, 0, tzinfo=UTC),
-                             arrival_date=datetime(2017, 1, 1, 15, 0, tzinfo=UTC),
+                             departure_datetime=datetime(2017, 1, 1, 10, 0, tzinfo=UTC),
+                             arrival_datetime=datetime(2017, 1, 1, 15, 0, tzinfo=UTC),
                              dsa_region=self.amsterdam)
 
         DeductionFactory(travel=self.travel,
@@ -1145,23 +1133,23 @@ class TestDSACalculator(BaseTenantTestCase):
 
     def test_case_2(self):
         ItineraryItemFactory(travel=self.travel,
-                             departure_date=datetime(2017, 1, 1, 1, 0, tzinfo=UTC),
-                             arrival_date=datetime(2017, 1, 1, 2, 0, tzinfo=UTC),
+                             departure_datetime=datetime(2017, 1, 1, 1, 0, tzinfo=UTC),
+                             arrival_datetime=datetime(2017, 1, 1, 2, 0, tzinfo=UTC),
                              dsa_region=self.budapest)
 
         ItineraryItemFactory(travel=self.travel,
-                             departure_date=datetime(2017, 1, 1, 10, 0, tzinfo=UTC),
-                             arrival_date=datetime(2017, 1, 1, 11, 0, tzinfo=UTC),
+                             departure_datetime=datetime(2017, 1, 1, 10, 0, tzinfo=UTC),
+                             arrival_datetime=datetime(2017, 1, 1, 11, 0, tzinfo=UTC),
                              dsa_region=self.copenhagen)
 
         ItineraryItemFactory(travel=self.travel,
-                             departure_date=datetime(2017, 1, 1, 22, 0, tzinfo=UTC),
-                             arrival_date=datetime(2017, 1, 1, 23, 0, tzinfo=UTC),
+                             departure_datetime=datetime(2017, 1, 1, 22, 0, tzinfo=UTC),
+                             arrival_datetime=datetime(2017, 1, 1, 23, 0, tzinfo=UTC),
                              dsa_region=self.dusseldorf)
 
         ItineraryItemFactory(travel=self.travel,
-                             departure_date=datetime(2017, 1, 3, 10, 0, tzinfo=UTC),
-                             arrival_date=datetime(2017, 1, 3, 13, 0, tzinfo=UTC),
+                             departure_datetime=datetime(2017, 1, 3, 10, 0, tzinfo=UTC),
+                             arrival_datetime=datetime(2017, 1, 3, 13, 0, tzinfo=UTC),
                              dsa_region=self.amsterdam)
 
         DeductionFactory(travel=self.travel,
@@ -1198,18 +1186,18 @@ class TestDSACalculator(BaseTenantTestCase):
 
     def test_case_3(self):
         ItineraryItemFactory(travel=self.travel,
-                             departure_date=datetime(2017, 1, 1, 1, 0, tzinfo=UTC),
-                             arrival_date=datetime(2017, 1, 1, 2, 0, tzinfo=UTC),
+                             departure_datetime=datetime(2017, 1, 1, 1, 0, tzinfo=UTC),
+                             arrival_datetime=datetime(2017, 1, 1, 2, 0, tzinfo=UTC),
                              dsa_region=self.budapest)
 
         ItineraryItemFactory(travel=self.travel,
-                             departure_date=datetime(2017, 1, 3, 1, 0, tzinfo=UTC),
-                             arrival_date=datetime(2017, 1, 3, 2, 0, tzinfo=UTC),
+                             departure_datetime=datetime(2017, 1, 3, 1, 0, tzinfo=UTC),
+                             arrival_datetime=datetime(2017, 1, 3, 2, 0, tzinfo=UTC),
                              dsa_region=self.copenhagen)
 
         ItineraryItemFactory(travel=self.travel,
-                             departure_date=datetime(2017, 1, 3, 11, 0, tzinfo=UTC),
-                             arrival_date=datetime(2017, 1, 3, 11, 30, tzinfo=UTC),
+                             departure_datetime=datetime(2017, 1, 3, 11, 0, tzinfo=UTC),
+                             arrival_datetime=datetime(2017, 1, 3, 11, 30, tzinfo=UTC),
                              dsa_region=self.amsterdam)
 
         DeductionFactory(travel=self.travel,
@@ -1240,23 +1228,23 @@ class TestDSACalculator(BaseTenantTestCase):
 
     def test_case_4(self):
         ItineraryItemFactory(travel=self.travel,
-                             departure_date=datetime(2017, 1, 1, 10, 0, tzinfo=UTC),
-                             arrival_date=datetime(2017, 1, 1, 11, 0, tzinfo=UTC),
+                             departure_datetime=datetime(2017, 1, 1, 10, 0, tzinfo=UTC),
+                             arrival_datetime=datetime(2017, 1, 1, 11, 0, tzinfo=UTC),
                              dsa_region=self.budapest)
 
         ItineraryItemFactory(travel=self.travel,
-                             departure_date=datetime(2017, 3, 4, 10, 0, tzinfo=UTC),
-                             arrival_date=datetime(2017, 3, 4, 11, 0, tzinfo=UTC),
+                             departure_datetime=datetime(2017, 3, 4, 10, 0, tzinfo=UTC),
+                             arrival_datetime=datetime(2017, 3, 4, 11, 0, tzinfo=UTC),
                              dsa_region=self.copenhagen)
 
         ItineraryItemFactory(travel=self.travel,
-                             departure_date=datetime(2017, 3, 5, 10, 0, tzinfo=UTC),
-                             arrival_date=datetime(2017, 3, 5, 10, 0, tzinfo=UTC),
+                             departure_datetime=datetime(2017, 3, 5, 10, 0, tzinfo=UTC),
+                             arrival_datetime=datetime(2017, 3, 5, 10, 0, tzinfo=UTC),
                              dsa_region=self.budapest)
 
         ItineraryItemFactory(travel=self.travel,
-                             departure_date=datetime(2017, 3, 7, 10, 0, tzinfo=UTC),
-                             arrival_date=datetime(2017, 3, 7, 11, 0, tzinfo=UTC),
+                             departure_datetime=datetime(2017, 3, 7, 10, 0, tzinfo=UTC),
+                             arrival_datetime=datetime(2017, 3, 7, 11, 0, tzinfo=UTC),
                              dsa_region=self.amsterdam)
 
         DeductionFactory(travel=self.travel,
@@ -1322,14 +1310,14 @@ class TestDSACalculator(BaseTenantTestCase):
 
     def test_case_5(self):
         ItineraryItemFactory(travel=self.travel,
-                             departure_date=datetime(2016, 12, 31, 22, 0, tzinfo=UTC),
-                             arrival_date=datetime(2017, 1, 1, 3, 0, tzinfo=UTC),
+                             departure_datetime=datetime(2016, 12, 31, 22, 0, tzinfo=UTC),
+                             arrival_datetime=datetime(2017, 1, 1, 3, 0, tzinfo=UTC),
                              dsa_region=self.budapest,
                              overnight_travel=True)
 
         ItineraryItemFactory(travel=self.travel,
-                             departure_date=datetime(2017, 1, 3, 23, 0, tzinfo=UTC),
-                             arrival_date=datetime(2017, 1, 4, 4, 0, tzinfo=UTC),
+                             departure_datetime=datetime(2017, 1, 3, 23, 0, tzinfo=UTC),
+                             arrival_datetime=datetime(2017, 1, 4, 4, 0, tzinfo=UTC),
                              dsa_region=self.amsterdam,
                              overnight_travel=True)
 
@@ -1361,13 +1349,13 @@ class TestDSACalculator(BaseTenantTestCase):
 
     def test_case_6(self):
         ItineraryItemFactory(travel=self.travel,
-                             departure_date=datetime(2017, 1, 1, 1, 0, tzinfo=UTC),
-                             arrival_date=datetime(2017, 1, 1, 3, 0, tzinfo=UTC),
+                             departure_datetime=datetime(2017, 1, 1, 1, 0, tzinfo=UTC),
+                             arrival_datetime=datetime(2017, 1, 1, 3, 0, tzinfo=UTC),
                              dsa_region=self.budapest)
 
         ItineraryItemFactory(travel=self.travel,
-                             departure_date=datetime(2017, 1, 3, 12, 0, tzinfo=UTC),
-                             arrival_date=datetime(2017, 1, 3, 14, 0, tzinfo=UTC),
+                             departure_datetime=datetime(2017, 1, 3, 12, 0, tzinfo=UTC),
+                             arrival_datetime=datetime(2017, 1, 3, 14, 0, tzinfo=UTC),
                              dsa_region=self.amsterdam)
 
         DeductionFactory(travel=self.travel,
@@ -1394,18 +1382,18 @@ class TestDSACalculator(BaseTenantTestCase):
 
     def test_case_7(self):
         ItineraryItemFactory(travel=self.travel,
-                             departure_date=datetime(2017, 1, 1, 1, 0, tzinfo=UTC),
-                             arrival_date=datetime(2017, 1, 1, 3, 0, tzinfo=UTC),
+                             departure_datetime=datetime(2017, 1, 1, 1, 0, tzinfo=UTC),
+                             arrival_datetime=datetime(2017, 1, 1, 3, 0, tzinfo=UTC),
                              dsa_region=self.budapest)
 
         ItineraryItemFactory(travel=self.travel,
-                             departure_date=datetime(2017, 1, 1, 10, 0, tzinfo=UTC),
-                             arrival_date=datetime(2017, 1, 1, 14, 0, tzinfo=UTC),
+                             departure_datetime=datetime(2017, 1, 1, 10, 0, tzinfo=UTC),
+                             arrival_datetime=datetime(2017, 1, 1, 14, 0, tzinfo=UTC),
                              dsa_region=self.amsterdam)
 
         ItineraryItemFactory(travel=self.travel,
-                             departure_date=datetime(2017, 1, 1, 21, 0, tzinfo=UTC),
-                             arrival_date=datetime(2017, 1, 1, 22, 0, tzinfo=UTC),
+                             departure_datetime=datetime(2017, 1, 1, 21, 0, tzinfo=UTC),
+                             arrival_datetime=datetime(2017, 1, 1, 22, 0, tzinfo=UTC),
                              dsa_region=self.budapest)
 
         calculator = DSACalculator(self.travel)
@@ -1422,13 +1410,13 @@ class TestDSACalculator(BaseTenantTestCase):
         self.travel.save()
 
         ItineraryItemFactory(travel=self.travel,
-                             departure_date=datetime(2017, 1, 1, 1, 0, tzinfo=UTC),
-                             arrival_date=datetime(2017, 1, 1, 2, 0, tzinfo=UTC),
+                             departure_datetime=datetime(2017, 1, 1, 1, 0, tzinfo=UTC),
+                             arrival_datetime=datetime(2017, 1, 1, 2, 0, tzinfo=UTC),
                              dsa_region=self.budapest)
 
         ItineraryItemFactory(travel=self.travel,
-                             departure_date=datetime(2017, 1, 1, 10, 0, tzinfo=UTC),
-                             arrival_date=datetime(2017, 1, 1, 15, 0, tzinfo=UTC),
+                             departure_datetime=datetime(2017, 1, 1, 10, 0, tzinfo=UTC),
+                             arrival_datetime=datetime(2017, 1, 1, 15, 0, tzinfo=UTC),
                              dsa_region=self.amsterdam)
 
         DeductionFactory(travel=self.travel,

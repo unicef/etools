@@ -11,8 +11,7 @@ from django.utils import six
 from django.utils.functional import cached_property
 from django.utils.itercompat import is_iterable
 from django.utils.translation import ugettext
-
-from rest_framework import serializers
+from rest_framework import serializers, ISO_8601
 from rest_framework.exceptions import ValidationError
 
 from etools.applications.locations.models import Location
@@ -24,7 +23,7 @@ from etools.applications.t2f.models import (ActionPoint, Clearances, CostAssignm
                                             ItineraryItem, Travel, TravelActivity, TravelAttachment, TravelType,)
 from etools.applications.t2f.serializers import CostSummarySerializer
 
-itineraryItemSortKey = operator.attrgetter('departure_date')
+itineraryItemSortKey = operator.attrgetter('departure_datetime')
 
 
 def order_itineraryitems(instance, items):
@@ -79,7 +78,7 @@ class ActionPointSerializer(serializers.ModelSerializer):
     assigned_by_name = serializers.CharField(source='assigned_by.get_full_name', read_only=True)
 
     description = serializers.CharField(required=True)
-    due_date = serializers.DateTimeField(required=True)
+    due_date = serializers.DateTimeField(required=True, source='due_datetime')
     person_responsible = serializers.PrimaryKeyRelatedField(queryset=get_user_model().objects.all())
     person_responsible_name = serializers.CharField(source='person_responsible.get_full_name', read_only=True)
     status = serializers.CharField(required=True)
@@ -91,8 +90,10 @@ class ActionPointSerializer(serializers.ModelSerializer):
                   'assigned_by_name', 'person_responsible_name', 'trip_id')
 
     def validate_due_date(self, value):
+        if type(value) != datetime:
+            raise ValidationError("ActionPoint.due_datetime must be a datetime but %s is a %s" % (value, type(value)))
         if self.instance:
-            existing_due_date = self.instance.due_date.date()
+            existing_due_date = self.instance.due_datetime.date()
         else:
             existing_due_date = None
         if (not existing_due_date or existing_due_date != value.date()) and value.date() < datetime.utcnow().date():
@@ -128,6 +129,8 @@ class ItineraryItemSerializer(PermissionBasedModelSerializer):
     airlines = serializers.PrimaryKeyRelatedField(many=True, queryset=AirlineCompany.admin_objects.all(),
                                                   required=False, allow_null=True)
     mode_of_travel = LowerTitleField(required=False)
+    arrival_date = serializers.DateTimeField(source='arrival_datetime', format=ISO_8601)
+    departure_date = serializers.DateTimeField(source='departure_datetime', format=ISO_8601)
 
     class Meta:
         model = ItineraryItem
@@ -183,6 +186,7 @@ class TravelActivitySerializer(PermissionBasedModelSerializer):
         allow_null=True,
         required=False
     )
+    date = serializers.DateTimeField(source='datetime', format=ISO_8601, required=False, allow_null=True)
 
     class Meta:
         model = TravelActivity
@@ -240,6 +244,9 @@ class TravelDetailsSerializer(PermissionBasedModelSerializer):
     action_points = ActionPointSerializer(many=True, required=False)
     section = serializers.PrimaryKeyRelatedField(source='sector', queryset=Sector.objects.all(),
                                                  allow_null=True, required=False)
+    start_date = serializers.DateTimeField(source='start_datetime', format=ISO_8601, required=False, allow_null=True)
+    end_date = serializers.DateTimeField(source='end_datetime', format=ISO_8601, required=False, allow_null=True)
+    first_submission_date = serializers.DateTimeField(source='first_submission_datetime', format=ISO_8601, required=False, allow_null=True)
 
     # Fix because of a frontend validation failure (fix it on the frontend first)
     estimated_travel_cost = serializers.DecimalField(max_digits=18, decimal_places=2, required=False)
@@ -293,7 +300,7 @@ class TravelDetailsSerializer(PermissionBasedModelSerializer):
             previous_destination = itinerary_item['destination']
 
         # Check date integrity
-        dates_iterator = chain.from_iterable((i['departure_date'], i['arrival_date']) for i in value)
+        dates_iterator = chain.from_iterable((i['departure_datetime'], i['arrival_datetime']) for i in value)
 
         current_date = six.next(dates_iterator)
         for date in dates_iterator:
@@ -307,6 +314,7 @@ class TravelDetailsSerializer(PermissionBasedModelSerializer):
         return value
 
     def validate(self, attrs):
+        # Note: These 'attrs' use the model field names, not the serializer field names.
         if 'mode_of_travel' in attrs and attrs['mode_of_travel'] is None:
             attrs['mode_of_travel'] = []
 
@@ -315,15 +323,15 @@ class TravelDetailsSerializer(PermissionBasedModelSerializer):
             if not traveler and self.instance:
                 traveler = self.instance.traveler
 
-            start_date = attrs.get('start_date', getattr(self.instance, 'start_date', None))
-            end_date = attrs.get('end_date', getattr(self.instance, 'end_date', None))
+            start_datetime = attrs.get('start_datetime', getattr(self.instance, 'start_datetime', None))
+            end_datetime = attrs.get('end_datetime', getattr(self.instance, 'end_datetime', None))
 
-            if start_date and end_date:
+            if start_datetime and end_datetime:
                 # All travels which shares the same traveller, not planned or cancelled and has start
                 # or end date between the range of the start and end date of the current trip
                 travel_q = Q(traveler=traveler)
                 travel_q &= ~Q(status__in=[Travel.PLANNED, Travel.CANCELLED])
-                travel_q &= Q(start_date__range=(start_date, end_date)) | Q(end_date__range=(start_date, end_date))
+                travel_q &= Q(start_datetime__range=(start_datetime, end_datetime)) | Q(end_datetime__range=(start_datetime, end_datetime))
 
                 # In case of first save, no id present
                 if self.instance:
@@ -518,6 +526,8 @@ class TravelListSerializer(TravelDetailsSerializer):
     supervisor_name = serializers.CharField(source='supervisor.get_full_name')
     section = serializers.PrimaryKeyRelatedField(source='sector', queryset=Sector.objects.all(),
                                                  allow_null=True, required=False)
+    start_date = serializers.DateTimeField(source='start_datetime', format=ISO_8601, required=False, allow_null=True)
+    end_date = serializers.DateTimeField(source='end_datetime', format=ISO_8601, required=False, allow_null=True)
 
     class Meta:
         model = Travel
@@ -532,6 +542,7 @@ class TravelActivityByPartnerSerializer(serializers.ModelSerializer):
     reference_number = serializers.ReadOnlyField()
     status = serializers.ReadOnlyField()
     trip_id = serializers.ReadOnlyField()
+    date = serializers.DateTimeField(source='datetime', format=ISO_8601, required=False, allow_null=True)
 
     class Meta:
         model = TravelActivity

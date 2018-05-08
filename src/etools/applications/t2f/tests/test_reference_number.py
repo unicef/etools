@@ -18,6 +18,7 @@ class TestReferenceNumber(BaseTenantTestCase):
         data = {'traveler': self.unicef_staff.id}
         response = self.forced_auth_req('post', reverse('t2f:travels:list:index'), data=data, user=self.unicef_staff)
         response_json = json.loads(response.rendered_content)
+        self.assertEqual(201, response.status_code, response_json)
         return response_json
 
     @freeze_time('2016-12-09')
