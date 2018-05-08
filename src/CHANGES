@@ -1,0 +1,138 @@
+Release 5.0
+==============
+* upgrade to Polymer2
+* upgrade to Python3
+* upgrade Infrastructure
+
+
+Release 4.5.2
+==============
+* Partnership Dash Hotfix
+
+
+Release 4.5.1
+==============
+* Document Library and PMP changes
+
+
+Release 4.5
+==============
+* Migration to Django 1.10
+* Major PMP Changes
+* Financial Assurance Module
+* HACT improvements
+
+
+Release 4.0.4
+==============
+* Freeze 2017 data
+* New HAct calculations and fields on the dashboard
+
+
+Release 4.0.3
+==============
+* Vision Synchronizers and Sections
+
+
+Release 4.0.2
+==============
+* PMP and Trips Fixes
+
+
+Release 4.0.1
+==============
+* PMP and Trips Fixes
+
+
+Release 4.0
+==============
+* PMP Remediation
+
+
+Release 3.0.6
+==============
+* Fixes to trips and pmp
+
+
+Release 3.0.5
+==============
+* Bugfix
+
+
+Release 3.0.4
+==============
+* Bugfix
+
+
+Release 3.0.3
+==============
+* Fixes to PMP and T2F
+
+
+Release 3.0.2
+==============
+* Fixes and small improvements
+
+
+Release 3.0.1
+==============
+* Major release
+
+
+Release 2.3.4
+==============
+* eTrips login cert update (#306)
+
+
+Release 2.3.3
+==============
+* Partners Export
+* Agreements Export
+* Interventions Export
+* Government Intervention Export
+* Trips Export
+* Docker / build updates
+
+
+Release 2.3.1
+==============
+* Update to django 1.9
+* Locations read only fields for regular user
+* Locations list now using eTags
+* Added integration tests for Agreements and Partners
+
+
+Release 2.3
+==============
+* Introduces a country programme model and all of the existing results have been mapped to the corresponding country programme result structures according to their WBS. The result structures should be used only in the context of the Response Plan Result Structures
+* Fixes VISION synchroniser for all of the results, funds and indicators for every country programme
+* Fixes hidden partners and hidden results issue which are now hidden in the drop-down menus
+* Removes the association to RAM indicator in interventions. As per business requirements, it is kept at the output level
+
+
+Release 2.2.2
+==============
+* Maps errors fix
+* E-trip login fix
+* Lat Long accepts 3 digits and validates
+* UNICEF login fix
+* Improved Large Exports (more to come)
+* Improved Vision Sync for certain business areas (more to come)
+* Added ability to hide Partners
+
+
+Release 2.2.1
+==============
+* Locations Map update
+* IE compatibility notification
+
+
+Release 2.2
+==============
+* Government In Simple refinement
+* Trips now connect to Government Interventions and results
+* Trips Links to Partners now reflect lower level results
+* HACT dashboard now Accurately reflects planned amounts for Government Partners and NGOs
+* HACT dashboard has changed to show planned trips from the actual trips that are planned
+* Significant performance improvements
+* Minor bug fixes
