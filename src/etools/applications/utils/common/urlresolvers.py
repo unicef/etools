@@ -14,7 +14,7 @@ def site_url():
 
 
 def build_frontend_url(*parts):
-    from email_auth.utils import update_url_with_kwargs
+    from etools.applications.email_auth.utils import update_url_with_kwargs
 
     token_auth_view = reverse('email_auth:login')
     change_country_view = urlquote(update_url_with_kwargs(
