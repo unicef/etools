@@ -156,6 +156,7 @@ class TPMVisitLightSerializer(PermissionsBasedSerializerMixin, serializers.Model
     implementing_partners = serializers.SerializerMethodField(label=_('Implementing Partners'))
     locations = serializers.SerializerMethodField(label=_('Locations'))
     sections = serializers.SerializerMethodField(label=_('Sections'))
+    unicef_focal_points = MinimalUserSerializer(label=_('UNICEF Focal Points'), many=True)
 
     def get_implementing_partners(self, obj):
         return MinimalPartnerOrganizationListSerializer(
@@ -190,7 +191,7 @@ class TPMVisitLightSerializer(PermissionsBasedSerializerMixin, serializers.Model
             'id', 'start_date', 'end_date', 'tpm_partner',
             'implementing_partners', 'locations', 'sections',
             'status', 'status_date', 'reference_number',
-            'tpm_partner_focal_points',
+            'unicef_focal_points', 'tpm_partner_focal_points',
             'date_created', 'date_of_assigned', 'date_of_tpm_accepted',
             'date_of_tpm_rejected', 'date_of_tpm_reported', 'date_of_unicef_approved',
             'date_of_tpm_report_rejected', 'date_of_cancelled',
