@@ -6,6 +6,7 @@ import logging
 from collections import OrderedDict
 
 from django.db import connection
+from django.db.models import NOT_PROVIDED
 from django.utils import six
 
 from vision.exceptions import VisionException
@@ -13,6 +14,10 @@ from vision.utils import wcf_json_date_as_datetime
 from vision.vision_data_synchronizer import VisionDataLoader, VisionDataSynchronizer
 
 logger = logging.getLogger(__name__)
+
+
+class Empty(object):
+    pass
 
 
 class ManualDataLoader(VisionDataLoader):
@@ -75,8 +80,13 @@ class MultiModelDataSynchronizer(VisionDataSynchronizer):
                     reversed_dict[field_json_code]: json_item.get(field_json_code, None)
                 })
         else:
-            # field can be used as it is without custom mappings.
-            result = json_item.get(field_json_code, None)
+            # field can be used as it is without custom mappings. if field has default, it should be used
+            result = json_item.get(field_json_code, Empty)
+            if result is Empty:
+                # try to get default for field
+                field_default = model._meta.get_field(field_name).default
+                if field_default is not NOT_PROVIDED:
+                    result = field_default
 
         # additional logic on field may be applied
         value_handler = self.FIELD_HANDLERS.get(

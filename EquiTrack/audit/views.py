@@ -13,7 +13,7 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.renderers import JSONRenderer
 from rest_framework.response import Response
 
-from audit.conditions import AuditModuleCondition, AuditStaffMemberCondition
+from audit.conditions import AuditModuleCondition, AuditStaffMemberCondition, EngagementStaffMemberCondition
 from audit.exports import AuditorFirmCSVRenderer, EngagementCSVRenderer, MicroAssessmentDetailCSVRenderer, \
     AuditDetailCSVRenderer, SpotCheckDetailCSVRenderer, SpecialAuditDetailCSVRenderer
 from audit.filters import DisplayStatusFilter, UniqueIDOrderingFilter
@@ -286,6 +286,7 @@ class EngagementViewSet(
         return [
             ObjectStatusCondition(obj),
             AuditStaffMemberCondition(obj.agreement.auditor_firm, self.request.user),
+            EngagementStaffMemberCondition(obj, self.request.user),
         ]
 
     @list_route(methods=['get'], url_path='partners')
