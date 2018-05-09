@@ -2,7 +2,8 @@
 from django.core.management import BaseCommand
 from django.db.models import Q
 
-from etools.applications.audit.conditions import AuditModuleCondition, AuditStaffMemberCondition
+from etools.applications.audit.conditions import (AuditModuleCondition, AuditStaffMemberCondition,
+                                                  EngagementStaffMemberCondition,)
 from etools.applications.audit.models import Auditor, Engagement, UNICEFAuditFocalPoint, UNICEFUser
 from etools.applications.permissions2.conditions import GroupCondition, NewObjectCondition, ObjectStatusCondition
 from etools.applications.permissions2.models import Permission
@@ -15,11 +16,15 @@ class Command(BaseCommand):
     focal_point = 'focal_point'
     unicef_user = 'unicef_user'
     auditor = 'auditor'
+    engagement_staff_auditor = 'engagement_staff_auditor'
     user_roles = {
         focal_point: [GroupCondition.predicate_template.format(group=UNICEFAuditFocalPoint.name)],
         unicef_user: [GroupCondition.predicate_template.format(group=UNICEFUser.name)],
         auditor: [GroupCondition.predicate_template.format(group=Auditor.name),
-                  AuditStaffMemberCondition.predicate]
+                  AuditStaffMemberCondition.predicate],
+        engagement_staff_auditor: [GroupCondition.predicate_template.format(group=Auditor.name),
+                                   AuditStaffMemberCondition.predicate,
+                                   EngagementStaffMemberCondition.predicate]
     }
 
     all_unicef_users = [focal_point, unicef_user]
@@ -227,12 +232,6 @@ class Command(BaseCommand):
 
     def assign_permissions(self):
         # common permissions: unicef users can view everything, auditor can view everything except follow up
-        self.add_permissions([self.focal_point, self.auditor], 'edit', [
-            'purchase_order.auditorfirm.staff_members',
-            'purchase_order.auditorstaffmember.*',
-            'purchase_order.purchaseorder.contract_end_date',
-        ])
-
         self.add_permissions(
             self.everybody, 'view',
             self.engagement_overview_page +
@@ -240,6 +239,15 @@ class Command(BaseCommand):
             self.engagement_status_editable_date_fields +
             self.engagement_attachments_block
         )
+
+        self.add_permissions([self.focal_point, self.auditor], 'edit', [
+            'purchase_order.auditorfirm.staff_members',
+            'purchase_order.auditorstaffmember.*',
+        ])
+
+        self.add_permissions(self.focal_point, 'edit', [
+            'purchase_order.purchaseorder.contract_end_date',
+        ])
 
         # new object: focal point can add
         self.add_permissions(
@@ -250,19 +258,19 @@ class Command(BaseCommand):
 
         # ip_contacted: auditor can edit, everybody else can view, focal point can cancel and edit staff members
         self.add_permissions(
-            self.auditor, 'view',
+            self.engagement_staff_auditor, 'view',
             self.report_readonly_block,
             condition=self.engagement_status(Engagement.STATUSES.partner_contacted)
         )
         self.add_permissions(
-            self.auditor, 'edit',
+            self.engagement_staff_auditor, 'edit',
             self.staff_members_block +
             self.engagement_status_editable_date_fields +
             self.report_editable_block,
             condition=self.engagement_status(Engagement.STATUSES.partner_contacted)
         )
         self.add_permissions(
-            self.auditor, 'action',
+            self.engagement_staff_auditor, 'action',
             'audit.engagement.submit',
             condition=self.engagement_status(Engagement.STATUSES.partner_contacted)
         )
