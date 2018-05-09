@@ -25,7 +25,6 @@ from etools.applications.audit.transitions.conditions import (AuditSubmitReportR
                                                               EngagementHasReportAttachmentsCheck,
                                                               EngagementSubmitReportRequiredFieldsCheck,
                                                               SpecialAuditSubmitRelatedModelsCheck,
-                                                              SpecialAuditSubmitReportRequiredFieldsCheck,
                                                               SPSubmitReportRequiredFieldsCheck,
                                                               ValidateAuditRiskCategories, ValidateMARiskCategories,
                                                               ValidateMARiskExtra,)
@@ -708,7 +707,7 @@ class SpecialAudit(Engagement):
         'status',
         source=Engagement.STATUSES.partner_contacted, target=Engagement.STATUSES.report_submitted,
         conditions=[
-            SpecialAuditSubmitReportRequiredFieldsCheck.as_condition(),
+            EngagementSubmitReportRequiredFieldsCheck.as_condition(),
             SpecialAuditSubmitRelatedModelsCheck.as_condition(),
             EngagementHasReportAttachmentsCheck.as_condition(),
         ],
