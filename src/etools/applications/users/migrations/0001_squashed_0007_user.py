@@ -11,7 +11,7 @@ import django.db.migrations.operations.special
 import django.db.models.deletion
 import tenant_schemas.postgresql_backend.base
 
-from utils.common.migrating import fix_null_values
+from etools.applications.utils.common.migrating import fix_null_values
 
 # Functions from the following migrations need manual copying.
 # Move them and any dependencies into this file, then update the
