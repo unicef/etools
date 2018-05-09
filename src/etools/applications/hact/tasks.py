@@ -3,7 +3,6 @@ import json
 from datetime import datetime
 
 from django.db import connection, transaction
-from django.db.models import Q
 
 from celery.utils.log import get_task_logger
 

@@ -604,7 +604,7 @@ class PartnerOrganization(TimeStampedModel):
 
     @cached_property
     def min_req_audits(self):
-        return self.planned_engagement.required_audit
+        return self.planned_engagement.required_audit if getattr(self, 'planned_engagement', None) else 0
 
     @cached_property
     def hact_min_requirements(self):
