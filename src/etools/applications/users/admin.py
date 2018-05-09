@@ -237,7 +237,6 @@ class CountryAdmin(admin.ModelAdmin):
 
     list_display = (
         'name',
-        'schema_name',
         'country_short_code',
         'business_area_code',
         'vision_sync_enabled',
