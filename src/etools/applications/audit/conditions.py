@@ -24,5 +24,5 @@ class EngagementStaffMemberCondition(SimpleCondition):
         self.user = user
 
     def is_satisfied(self):
-        return hasattr(self.user, 'purchase_order_auditorstaffmember') and \
-               self.user.purchase_order_auditorstaffmember in self.engagement.staff_members.all()
+        return hasattr(self.user, 'purchase_order_auditorstaffmember'
+                       ) and self.user.purchase_order_auditorstaffmember in self.engagement.staff_members.all()
