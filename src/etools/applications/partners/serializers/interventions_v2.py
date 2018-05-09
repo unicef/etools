@@ -698,12 +698,22 @@ class InterventionReportingRequirementCreateSerializer(serializers.ModelSerializ
             r["id"] for r in validated_data["reporting_requirements"]
             if "id" in r
         ]
-        delete_reqs = [r for r in current_reqs if r not in new_reqs]
-        ReportingRequirement.objects.filter(id__in=delete_reqs).delete()
+
+        # Delete records individually for Special types
+        if validated_data["report_type"] != ReportingRequirement.TYPE_SPECIAL:
+            delete_reqs = [r for r in current_reqs if r not in new_reqs]
+            ReportingRequirement.objects.filter(id__in=delete_reqs).delete()
+
         for r in validated_data["reporting_requirements"]:
             if r.get("id"):
                 pk = r.pop("id")
                 ReportingRequirement.objects.filter(pk=pk).update(**r)
             else:
                 ReportingRequirement.objects.create(**r)
+        return self.intervention
+
+    def delete(self, validated_data):
+        for r in validated_data["reporting_requirements"]:
+            if r.get("id"):
+                ReportingRequirement.objects.filter(pk=r.get("id")).delete()
         return self.intervention

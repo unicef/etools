@@ -173,7 +173,7 @@ urlpatterns = (
     url(
         r'^interventions/(?P<intervention_pk>\d+)/reporting-requirements/(?P<report_type>\w+)/$',
         view=InterventionReportingRequirementView.as_view(
-            http_method_names=['get', 'post']
+            http_method_names=['get', 'post', 'patch', 'delete']
         ),
         name='intervention-reporting-requirements'
     ),
