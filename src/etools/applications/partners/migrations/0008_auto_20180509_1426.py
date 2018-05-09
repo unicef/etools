@@ -28,5 +28,5 @@ class Migration(migrations.Migration):
     ]
 
     operations = [
-        migrations.RunPython(update_hact_values_for_non_active_partners),
+        migrations.RunPython(update_hact_values_for_non_active_partners, migrations.RunPython.noop),
     ]
