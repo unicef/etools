@@ -1,11 +1,15 @@
 
 from unittest import skip
 
+from django.contrib import messages
 from django.contrib.admin.sites import AdminSite
+from django.urls import reverse
 
-from mock import Mock
+from mock import Mock, patch, ANY
+from tenant_schemas.utils import schema_context
 
 from etools.applications.EquiTrack.tests.cases import BaseTenantTestCase
+from etools.applications.hact.tasks import update_hact_for_country
 from etools.applications.users.admin import CountryAdmin, ProfileAdmin, ProfileInline, UserAdminPlus
 from etools.applications.users.models import Country, User, UserProfile
 from etools.applications.users.tests.factories import ProfileFactory, UserFactory
@@ -138,6 +142,44 @@ class TestCountryAdmin(BaseTenantTestCase):
         site = AdminSite()
         cls.admin = CountryAdmin(Country, site)
         cls.request = MockRequest()
+        cls.superuser = UserFactory(is_superuser=True, is_staff=True)
+
+    def setUp(self):
+        self.client.force_login(self.superuser)
 
     def test_has_add_permission(self):
         self.assertFalse(self.admin.has_add_permission(self.request))
+
+    def test_update_hact_button_on_change_page(self):
+        country = Country.objects.exclude(schema_name='public').first()
+        url = reverse('admin:users_country_change', args=[country.pk])
+        response = self.client.get(url)
+        self.assertContains(response, text=">Update HACT<", msg_prefix=response.content.decode('utf-8'))
+        self.assertTemplateUsed('admin/users/country/change_form.html')
+
+    def test_update_hact_action_nonpublic_country(self):
+        country = Country.objects.exclude(schema_name='public').first()
+        url = reverse('admin:users_country_update_hact', args=[country.pk])
+        with patch.object(update_hact_for_country, 'delay') as mock_delay:
+            with patch.object(messages, 'info') as mock_info:
+                response = self.client.get(url)
+        self.assertRedirects(response, reverse('admin:users_country_change', args=[country.pk]))
+        mock_delay.assert_called()
+        mock_info.assert_called_with(ANY, "HACT update has been started for %s" % country.name)
+
+    def test_update_hact_action_public_country(self):
+        country = Country.objects.filter(schema_name='public').first()
+        if country is None:
+            country = Country.objects.first()
+            country.schema_name = 'public'
+            with schema_context('public'):
+                country.save()
+            country.refresh_from_db()
+            self.assertEqual(country.schema_name, 'public')
+        url = reverse('admin:users_country_update_hact', args=[country.pk])
+        with patch('etools.applications.users.admin.update_hact_values') as mock_update:
+            with patch.object(messages, 'info') as mock_info:
+                response = self.client.get(url)
+        self.assertRedirects(response, reverse('admin:users_country_change', args=[country.pk]))
+        mock_info.assert_called_with(ANY, "HACT update has been scheduled for all countries")
+        mock_update.assert_called()

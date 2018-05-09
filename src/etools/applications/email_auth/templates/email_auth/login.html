@@ -96,17 +96,21 @@
         {{ form.NON_FIELD_ERRORS }}
         {% for field in form %}
           {% if field.field.widget.input_type %}
-            <paper-input name="{{ field.name }}"
-                         error-message="{% for error in field.errors %}{{ error }}{% endfor %}"
-                {% for error in field.errors %}
-                  {% if error %}
-                         invalid="true"
-                  {% endif %}
-                {% endfor %}
-                         label="{{ field.label }}"
-                         type="{{ field.field.widget.input_type }}"
-                         autovalidate="true" required>
-            </paper-input>
+            {% if field.field.widget.input_type != 'hidden' %}
+              <paper-input name="{{ field.name }}"
+                           error-message="{% for error in field.errors %}{{ error }}{% endfor %}"
+                  {% for error in field.errors %}
+                    {% if error %}
+                           invalid="true"
+                    {% endif %}
+                  {% endfor %}
+                           label="{{ field.label }}"
+                           type="{{ field.field.widget.input_type }}"
+                           autovalidate="true" required>
+              </paper-input>
+            {% else %}
+              <input type="hidden" name="{{ field.name }}" value="{{ field.value|default_if_none:"" }}">
+            {% endif %}
           {% else %}
             <br>
             <paper-checkbox name="{{ field.name }}">{{ field.label }}</paper-checkbox>
