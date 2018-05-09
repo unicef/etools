@@ -1,6 +1,6 @@
 coverage
 factory-boy
-Faker=
+Faker
 flake8
 freezegun
 mock
