@@ -1,6 +1,3 @@
-
-from unittest import skip
-
 from django.core.urlresolvers import reverse
 
 from mock import patch
