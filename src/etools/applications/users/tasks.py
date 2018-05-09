@@ -414,5 +414,5 @@ def user_report():
             ).count(),
         })
     mail = EmailMessage('Report Latest Users', 'Report generated', 'etools-reports@unicef.org', settings.REPORT_EMAILS)
-    mail.attach('users.csv', csvfile.getvalue(), 'text/csv')
+    mail.attach('users.csv', csvfile.getvalue().encode('utf-8'), 'text/csv')
     mail.send()
