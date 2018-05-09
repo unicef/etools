@@ -2,8 +2,8 @@
 from django.conf import settings
 from django.contrib.contenttypes.fields import GenericRelation
 from django.db import models
-from django.utils import six
-from django.utils.six import python_2_unicode_compatible
+
+
 from django.utils.translation import ugettext_lazy as _
 
 from django_fsm import FSMField, transition
@@ -16,7 +16,6 @@ from etools.applications.EquiTrack.utils import get_environment
 from etools.applications.notification.models import Notification
 
 
-@python_2_unicode_compatible
 class ActionPoint(TimeStampedModel):
     MODULE_CHOICES = Choices(
         ('t2f', _('Trip Management')),
@@ -143,7 +142,7 @@ class ActionPoint(TimeStampedModel):
             'person_responsible': self.assigned_to.get_full_name(),
             'assigned_by': self.assigned_by.get_full_name(),
             'reference_number': self.reference_number,
-            'implementing_partner': six.text_type(self.partner),
+            'implementing_partner': str(self.partner),
             'description': self.description,
             'due_date': self.due_date.strftime('%d %b %Y'),
             'object_url': 'link to follow up',

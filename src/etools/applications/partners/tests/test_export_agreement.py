@@ -2,7 +2,7 @@
 import datetime
 
 from django.core.urlresolvers import reverse
-from django.utils import six
+
 
 from rest_framework import status
 from tablib.core import Dataset
@@ -83,8 +83,8 @@ class TestAgreementModelExport(BaseAgreementModelExportTestCase):
         exported_agreement = dataset[0]
         self.assertEqual(exported_agreement, (
             self.agreement.agreement_number,
-            six.text_type(self.agreement.status),
-            six.text_type(self.agreement.partner.name),
+            str(self.agreement.status),
+            str(self.agreement.partner.name),
             self.agreement.agreement_type,
             '{}'.format(self.agreement.start),
             '{}'.format(self.agreement.end),

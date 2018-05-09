@@ -2,7 +2,7 @@
 import datetime
 
 from django.core.urlresolvers import reverse
-from django.utils import six
+
 
 from rest_framework import status
 from tablib.core import Dataset
@@ -153,25 +153,25 @@ class TestInterventionModelExport(BaseInterventionModelExportTestCase):
         ])
 
         self.assertEqual(dataset[0], (
-            six.text_type(self.intervention.agreement.partner.name),
-            six.text_type(self.intervention.agreement.partner.vendor_number),
+            str(self.intervention.agreement.partner.name),
+            str(self.intervention.agreement.partner.vendor_number),
             self.intervention.status,
             self.intervention.agreement.partner.partner_type,
             self.intervention.agreement.agreement_number,
-            six.text_type(self.intervention.country_programme.name),
+            str(self.intervention.country_programme.name),
             self.intervention.document_type,
             self.intervention.number,
-            six.text_type(self.intervention.title),
+            str(self.intervention.title),
             '{}'.format(self.intervention.start),
             '{}'.format(self.intervention.end),
             u'',
             u'',
             u'',
-            six.text_type("Yes" if self.intervention.contingency_pd else "No"),
+            str("Yes" if self.intervention.contingency_pd else "No"),
             u'',
             u'',
             u'',
-            six.text_type(self.ib.currency),
+            str(self.ib.currency),
             u'{:.2f}'.format(self.intervention.total_partner_contribution),
             u'{:.2f}'.format(self.intervention.total_unicef_cash),
             u'{:.2f}'.format(self.intervention.total_in_kind_amount),
@@ -196,10 +196,10 @@ class TestInterventionModelExport(BaseInterventionModelExportTestCase):
             '{}'.format(self.intervention.signed_by_partner_date),
             '{}'.format(self.intervention.days_from_submission_to_signed),
             '{}'.format(self.intervention.days_from_review_to_signed),
-            six.text_type(self.intervention.amendments.count()),
+            str(self.intervention.amendments.count()),
             u'',
-            six.text_type(', '.join(['{}'.format(att.type.name) for att in self.intervention.attachments.all()])),
-            six.text_type(self.intervention.attachments.count()),
+            str(', '.join(['{}'.format(att.type.name) for att in self.intervention.attachments.all()])),
+            str(self.intervention.attachments.count()),
             u'',
             u'https://testserver/pmp/interventions/{}/details/'.format(self.intervention.id),
         ))

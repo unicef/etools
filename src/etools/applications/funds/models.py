@@ -1,8 +1,6 @@
 # -*- coding: utf-8 -*-
-
 from django.db import models
 from django.utils import timezone
-from django.utils.encoding import python_2_unicode_compatible
 from django.utils.translation import ugettext as _
 
 from model_utils.models import TimeStampedModel
@@ -10,7 +8,6 @@ from model_utils.models import TimeStampedModel
 from etools.applications.EquiTrack.fields import CurrencyField
 
 
-@python_2_unicode_compatible
 class Donor(TimeStampedModel):
     """
     Represents Donor for a Grant.
@@ -30,7 +27,6 @@ class GrantManager(models.Manager):
         return super(GrantManager, self).get_queryset().select_related('donor')
 
 
-@python_2_unicode_compatible
 class Grant(TimeStampedModel):
     """
     Represents the name of a Grant with expiration date, and Donor name.
@@ -67,7 +63,6 @@ class Grant(TimeStampedModel):
         )
 
 
-@python_2_unicode_compatible
 class FundsReservationHeader(TimeStampedModel):
     intervention = models.ForeignKey(
         'partners.Intervention',
@@ -189,7 +184,6 @@ class FundsReservationHeader(TimeStampedModel):
         return self.end_date < today
 
 
-@python_2_unicode_compatible
 class FundsReservationItem(TimeStampedModel):
     fund_reservation = models.ForeignKey(
         FundsReservationHeader,
@@ -262,7 +256,6 @@ class FundsReservationItem(TimeStampedModel):
         return super(FundsReservationItem, self).save(**kwargs)
 
 
-@python_2_unicode_compatible
 class FundsCommitmentHeader(TimeStampedModel):
     vendor_code = models.CharField(
         verbose_name=_("Vendor Code"),
@@ -315,7 +308,6 @@ class FundsCommitmentHeader(TimeStampedModel):
         )
 
 
-@python_2_unicode_compatible
 class FundsCommitmentItem(TimeStampedModel):
     fund_commitment = models.ForeignKey(
         FundsCommitmentHeader,

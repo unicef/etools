@@ -6,7 +6,7 @@ from decimal import Decimal, InvalidOperation
 
 from django.core.exceptions import ObjectDoesNotExist
 from django.db.transaction import atomic
-from django.utils import six
+
 from django.utils.encoding import force_text
 
 from celery.utils.log import get_task_logger
@@ -267,7 +267,7 @@ class DSARateUploader(object):
             try:
                 day, month, year = map(int, row[field].split('/'))
                 # If year is coming in a 2 digit format
-                if len(six.text_type(year)) == 2:
+                if len(str(year)) == 2:
                     year += 2000
                 d = date(year, month, day)
             except ValueError as e:

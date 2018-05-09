@@ -3,7 +3,7 @@ from django.apps import apps
 from django.db import connection
 from django.test import TestCase
 from django.test.utils import override_settings
-from django.utils import six
+
 
 from mock import Mock
 
@@ -19,7 +19,7 @@ class IssueCheckConfigTest(TestCase):
     def test_str_method(self):
         issue_check_config = IssueCheckConfigFactory()
         expected = '{}: {}'.format(issue_check_config.check_id, issue_check_config.is_active)
-        self.assertEqual(six.text_type(issue_check_config), expected)
+        self.assertEqual(str(issue_check_config), expected)
 
 
 class EnvironmentConfigTest(TestCase):
@@ -46,7 +46,7 @@ class TenantFlagTest(TestCase):
         self.tenant_flag.flush()
 
     def test_str_method(self):
-        self.assertEqual(six.text_type(self.tenant_flag), self.tenant_flag.name)
+        self.assertEqual(str(self.tenant_flag), self.tenant_flag.name)
 
     def test_request_has_no_tenant(self):
         "We should not raise Exception if request doesn't have a tenant."
@@ -243,7 +243,7 @@ class TenantSwitchTest(TestCase):
         self.tenant_switch.flush()
 
     def test_str_method(self):
-        self.assertEqual(six.text_type(self.tenant_switch), self.tenant_switch.name)
+        self.assertEqual(str(self.tenant_switch), self.tenant_switch.name)
 
     def test_blank_countries(self):
         "Return False if TenantSwitch has no countries."

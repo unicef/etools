@@ -1,4 +1,3 @@
-
 import logging
 from decimal import Decimal
 
@@ -8,7 +7,6 @@ from django.core.mail import send_mail
 from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db import connection, models
 from django.db.models.signals import post_save
-from django.utils.encoding import python_2_unicode_compatible
 from django.utils.translation import ugettext_lazy as _
 
 from djangosaml2.signals import pre_user_save
@@ -62,7 +60,6 @@ class User(AbstractBaseUser):
         send_mail(subject, message, from_email, [self.email], **kwargs)
 
 
-@python_2_unicode_compatible
 class Country(TenantMixin):
     """
     Tenant Schema
@@ -115,7 +112,6 @@ class Country(TenantMixin):
         verbose_name_plural = _('Countries')
 
 
-@python_2_unicode_compatible
 class WorkspaceCounter(models.Model):
     TRAVEL_REFERENCE = 'travel_reference_number_counter'
     TRAVEL_INVOICE_REFERENCE = 'travel_invoice_reference_number_counter'
@@ -170,7 +166,6 @@ class CountryOfficeManager(models.Manager):
             return super(CountryOfficeManager, self).get_queryset()
 
 
-@python_2_unicode_compatible
 class Office(models.Model):
     """
     Represents an office for the country
@@ -207,7 +202,6 @@ class CountrySectionManager(models.Manager):
             return super(CountrySectionManager, self).get_queryset()
 
 
-@python_2_unicode_compatible
 class Section(models.Model):
     """
     Represents a section for the country
@@ -227,7 +221,6 @@ class UserProfileManager(models.Manager):
         return super(UserProfileManager, self).get_queryset().select_related('country')
 
 
-@python_2_unicode_compatible
 class UserProfile(models.Model):
     """
     Represents a user profile that can have access to many Countries but to one active Country at a time

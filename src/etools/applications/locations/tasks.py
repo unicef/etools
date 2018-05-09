@@ -1,6 +1,6 @@
 
 from django.db import IntegrityError
-from django.utils import six
+
 from django.utils.encoding import force_text
 
 from carto.auth import APIKeyAuthClient
@@ -120,7 +120,7 @@ def update_sites_from_cartodb(carto_table_pk):
     else:
 
         for row in sites['rows']:
-            pcode = six.text_type(row[carto_table.pcode_col]).strip()
+            pcode = str(row[carto_table.pcode_col]).strip()
             site_name = row[carto_table.name_col]
 
             if not site_name or site_name.isspace():

@@ -4,14 +4,14 @@ import datetime
 import json
 from decimal import Decimal
 from unittest import skip
+from urllib.parse import urlparse
 
 from django.conf import settings
 from django.core.files.uploadedfile import SimpleUploadedFile
 from django.core.urlresolvers import resolve, reverse
 from django.db import connection
 from django.test import SimpleTestCase
-from django.utils import six, timezone
-from django.utils.six.moves.urllib_parse import urlparse
+from django.utils import timezone
 
 import mock
 from model_utils import Choices
@@ -273,7 +273,7 @@ class TestAPIPartnerOrganizationListView(BaseTenantTestCase):
             self.assertIsInstance(list_element, dict)
             ids_in_response.append(list_element.get('id'))
 
-        six.assertCountEqual(self, ids_in_response, (p1.id, p2.id))
+        self.assertCountEqual(ids_in_response, (p1.id, p2.id))
 
     def test_values_negative(self):
         '''Ensure that garbage values are handled properly'''
@@ -327,7 +327,7 @@ class TestPartnerOrganizationListViewForCSV(BaseTenantTestCase):
 
         response_content = response.rendered_content.decode('utf-8')
 
-        self.assertIsInstance(response_content, six.text_type)
+        self.assertIsInstance(response_content, str)
 
         # The response should *not* look like JSON.
         with self.assertRaises(ValueError):
@@ -688,8 +688,7 @@ class TestPartnerOrganizationRetrieveUpdateDeleteViews(BaseTenantTestCase):
                          sorted(response.data['hact_min_requirements'].keys()))
         self.assertEqual(['audits', 'outstanding_findings', 'programmatic_visits', 'spot_checks'],
                          sorted(response.data['hact_values'].keys()))
-        six.assertCountEqual(
-            self,
+        self.assertCountEqual(
             ['completed', 'minimum_requirements'],
             response.data['hact_values']['audits'].keys())
         self.assertEqual(response.data['interventions'], [])
@@ -810,7 +809,7 @@ class TestPartnershipViews(BaseTenantTestCase):
     @skip("different endpoint")
     def test_api_agreements_list(self):
 
-        response = self.forced_auth_req('get', '/api/partners/' + six.text_type(self.partner.id) +
+        response = self.forced_auth_req('get', '/api/partners/' + str(self.partner.id) +
                                         '/agreements/', user=self.unicef_staff)
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
@@ -934,7 +933,7 @@ class TestAgreementAPIFileAttachments(BaseTenantTestCase):
                                     connection.schema_name,
                                     'file_attachments',
                                     'partner_organization',
-                                    six.text_type(self.agreement.partner.id),
+                                    str(self.agreement.partner.id),
                                     'agreements',
                                     # Note that slashes have to be stripped from the agreement number to match the
                                     # normalized path.
@@ -975,7 +974,7 @@ class TestAgreementAPIFileAttachments(BaseTenantTestCase):
                                     connection.schema_name,
                                     'file_attachments',
                                     'partner_org',
-                                    six.text_type(self.agreement.partner.id),
+                                    str(self.agreement.partner.id),
                                     'agreements',
                                     self.agreement.base_number.strip('/'),
                                     'amendments',
@@ -1596,7 +1595,7 @@ class TestInterventionViews(BaseTenantTestCase):
         r_data = json.loads(response.rendered_content)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(len(r_data["frs_details"]['frs']), 2)
-        six.assertCountEqual(self, r_data["frs"], [self.fr_header_2.id, self.fr_header_1.id])
+        self.assertCountEqual(r_data["frs"], [self.fr_header_2.id, self.fr_header_1.id])
 
     def test_intervention_active_update_population_focus(self):
         intervention_obj = Intervention.objects.get(id=self.intervention_data["id"])
@@ -1915,7 +1914,7 @@ class TestInterventionReportingPeriodViews(BaseTenantTestCase):
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         data = json.loads(response.content)
         for key in ['start_date', 'end_date', 'due_date', 'intervention']:
-            self.assertEqual(six.text_type(data[key]), six.text_type(self.params[key]))
+            self.assertEqual(str(data[key]), str(self.params[key]))
 
     def test_create_required_fields(self):
         params = {}
@@ -2034,7 +2033,7 @@ class TestInterventionReportingPeriodViews(BaseTenantTestCase):
         response = self.forced_auth_req('patch', self.detail_url, data=params)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         data = json.loads(response.content)
-        self.assertEqual(data['due_date'], six.text_type(params['due_date']))
+        self.assertEqual(data['due_date'], str(params['due_date']))
 
     def test_patch_change_multiple_fields(self):
         params = {
@@ -2044,8 +2043,8 @@ class TestInterventionReportingPeriodViews(BaseTenantTestCase):
         response = self.forced_auth_req('patch', self.detail_url, data=params)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         data = json.loads(response.content)
-        self.assertEqual(data['end_date'], six.text_type(params['end_date']))
-        self.assertEqual(data['due_date'], six.text_type(params['due_date']))
+        self.assertEqual(data['end_date'], str(params['end_date']))
+        self.assertEqual(data['due_date'], str(params['due_date']))
 
     def test_patch_order_must_still_be_valid(self):
         params = {

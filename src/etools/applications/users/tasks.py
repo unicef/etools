@@ -1,7 +1,7 @@
-
 import csv
 import json
 from datetime import date
+from io import StringIO
 
 from django.conf import settings
 from django.contrib.auth import get_user_model
@@ -10,13 +10,12 @@ from django.core.exceptions import ObjectDoesNotExist
 from django.core.mail.message import EmailMessage
 from django.db import IntegrityError, transaction
 from django.db.models import Q
-from django.utils import six
+
 from django.utils.encoding import force_text
 
 import requests
 from celery.utils.log import get_task_logger
 from dateutil.relativedelta import relativedelta
-from six import StringIO
 
 from etools.applications.users.models import Country, Section, UserProfile
 from etools.applications.vision.exceptions import VisionException
@@ -175,7 +174,7 @@ class UserMapper(object):
                 logger.info(u'Group added to user {}'.format(user))
 
             # most attributes are direct maps.
-            for attr, attr_val in six.iteritems(ad_user):
+            for attr, attr_val in ad_user.items():
                 mapped_attribute = self.ATTR_MAP.get(attr, 'unusable_attr')
                 value = ad_user[attr]
 
@@ -290,10 +289,10 @@ def sync_users_remote():
     storage = AzureStorage()
     user_sync = UserMapper()
     with storage.open('saml/etools.dat') as csvfile:
-        reader = csv.DictReader(csvfile, delimiter=six.binary_type('|'))
+        reader = csv.DictReader(csvfile, delimiter=bytes('|'))
         for row in reader:
             uni_row = {
-                six.text_type(key, 'latin-1'): six.text_type(value, 'latin-1') for key, value in six.iteritems(row)}
+                str(key, 'latin-1'): str(value, 'latin-1') for key, value in row.items()}
             user_sync.create_or_update_user(uni_row)
 
 

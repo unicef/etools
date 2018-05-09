@@ -1,6 +1,4 @@
 # -*- coding: utf-8 -*-
-
-
 from decimal import DivisionByZero, InvalidOperation
 
 from django.conf import settings
@@ -10,7 +8,7 @@ from django.core.exceptions import ValidationError
 from django.db import models
 from django.db.transaction import atomic
 from django.utils import timezone
-from django.utils.encoding import force_text, python_2_unicode_compatible
+from django.utils.encoding import force_text
 from django.utils.translation import ugettext_lazy as _
 
 from django_fsm import FSMField, transition
@@ -38,7 +36,6 @@ from etools.applications.utils.common.urlresolvers import build_frontend_url
 from etools.applications.utils.groups.wrappers import GroupWrapper
 
 
-@python_2_unicode_compatible
 class Engagement(TimeStampedModel, models.Model):
     TYPES = Choices(
         ('audit', _('Audit')),
@@ -273,7 +270,6 @@ class Engagement(TimeStampedModel, models.Model):
         return build_frontend_url('ap', 'engagements', self.id, 'overview')
 
 
-@python_2_unicode_compatible
 class RiskCategory(OrderedModel, models.Model):
     TYPES = Choices(
         ('default', _('Default')),
@@ -324,7 +320,6 @@ class RiskCategory(OrderedModel, models.Model):
         super(RiskCategory, self).save(**kwargs)
 
 
-@python_2_unicode_compatible
 class RiskBluePrint(OrderedModel, models.Model):
     weight = models.PositiveSmallIntegerField(default=1, verbose_name=_('Weight'))
     is_key = models.BooleanField(default=False, verbose_name=_('Is Key'))
@@ -344,7 +339,6 @@ class RiskBluePrint(OrderedModel, models.Model):
         return 'RiskBluePrint at {}'.format(self.category.header)
 
 
-@python_2_unicode_compatible
 class Risk(models.Model):
     POSITIVE_VALUES = Choices(
         (1, 'low', _('Low')),
@@ -377,7 +371,6 @@ class Risk(models.Model):
         unique_together = [['engagement', 'blueprint', ]]
 
 
-@python_2_unicode_compatible
 class SpotCheck(Engagement):
     total_amount_tested = models.DecimalField(verbose_name=_('Total Amount Tested'), null=True, blank=True,
                                               decimal_places=2, max_digits=20)
@@ -432,7 +425,6 @@ class SpotCheck(Engagement):
         return build_frontend_url('ap', 'spot-checks', self.id, 'overview')
 
 
-@python_2_unicode_compatible
 class Finding(models.Model):
     PRIORITIES = Choices(
         ('high', _('High')),
@@ -501,7 +493,6 @@ class Finding(models.Model):
         return 'Finding for {}'.format(self.spot_check)
 
 
-@python_2_unicode_compatible
 class MicroAssessment(Engagement):
     objects = models.Manager()
 
@@ -537,7 +528,6 @@ class MicroAssessment(Engagement):
         return build_frontend_url('ap', 'micro-assessments', self.id, 'overview')
 
 
-@python_2_unicode_compatible
 class DetailedFindingInfo(models.Model):
     finding = models.TextField(verbose_name=_('Description of Finding'))
     recommendation = models.TextField(verbose_name=_('Recommendation and IP Management Response'))
@@ -556,7 +546,6 @@ class DetailedFindingInfo(models.Model):
         return 'Finding for {}'.format(self.micro_assesment)
 
 
-@python_2_unicode_compatible
 class Audit(Engagement):
 
     OPTION_UNQUALIFIED = "unqualified"
@@ -632,7 +621,6 @@ class Audit(Engagement):
         return build_frontend_url('ap', 'audits', self.id, 'overview')
 
 
-@python_2_unicode_compatible
 class FinancialFinding(models.Model):
     TITLE_CHOICES = Choices(
         ('no-supporting-documentation', _('No supporting documentation')),
@@ -672,7 +660,6 @@ class FinancialFinding(models.Model):
         return '{}: {}'.format(self.audit.unique_id, self.get_title_display())
 
 
-@python_2_unicode_compatible
 class KeyInternalControl(models.Model):
     audit = models.ForeignKey(
         Audit, verbose_name=_('Audit'), related_name='key_internal_controls',
@@ -690,7 +677,6 @@ class KeyInternalControl(models.Model):
         return '{}: {}'.format(self.audit.unique_id, self.audit_observation)
 
 
-@python_2_unicode_compatible
 class SpecialAudit(Engagement):
     objects = models.Manager()
 
@@ -729,7 +715,6 @@ class SpecialAudit(Engagement):
         return build_frontend_url('ap', 'special-audits', self.id, 'overview')
 
 
-@python_2_unicode_compatible
 class SpecificProcedure(models.Model):
     audit = models.ForeignKey(
         SpecialAudit, verbose_name=_('Special Audit'), related_name='specific_procedures',
@@ -748,7 +733,6 @@ class SpecificProcedure(models.Model):
         return '{}: {}'.format(self.audit.unique_id, self.description)
 
 
-@python_2_unicode_compatible
 class SpecialAuditRecommendation(models.Model):
     audit = models.ForeignKey(
         SpecialAudit, verbose_name=_('Special Audit'), related_name='other_recommendations',
@@ -766,7 +750,6 @@ class SpecialAuditRecommendation(models.Model):
         return '{}: {}'.format(self.audit.unique_id, self.description)
 
 
-@python_2_unicode_compatible
 class EngagementActionPoint(models.Model):
     CATEGORY_CHOICES = Choices(
         ("Invoice and receive reimbursement of ineligible expenditure",
