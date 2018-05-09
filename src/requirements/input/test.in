@@ -1,0 +1,11 @@
+coverage==4.5.1
+factory-boy==2.8
+Faker==0.8.12
+flake8==3.5.0
+freezegun==0.3.10
+mock==2.0.0
+responses==0.8.1
+isort
+ipython
+pdbpp
+tox
