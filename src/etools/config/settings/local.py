@@ -71,7 +71,6 @@ elif 'runserver' in sys.argv or 'shell_plus' in sys.argv:
         'debug_toolbar.middleware.DebugToolbarMiddleware',
     )
     DEBUG_TOOLBAR_CONFIG = {
-        'INTERCEPT_REDIRECTS': False,
         'SHOW_TEMPLATE_CONTEXT': True,
     }
 
