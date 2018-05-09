@@ -372,29 +372,24 @@ class AggregateHact(TimeStampedModel):
 
     @staticmethod
     def get_assurance_coverage():
-        qs = PartnerOrganization.objects.all()
+        qs = PartnerOrganization.objects.active()
 
-        no_coverage = qs.active(hact_values__programmatic_visits__completed__total=0,
-                                hact_values__spot_checks__completed__total=0,
-                                hact_values__audits__completed=0)
-
-        coverage_ok = qs.active().exclude(hact_values__programmatic_visits__completed__total=0,
-                                          hact_values__spot_checks__completed__total=0,
-                                          hact_values__audits__completed=0)
-
+        no_coverage = qs.filter(hact_values__assurance_coverage=PartnerOrganization.ASSURANCE_VOID)
+        partial_coverage = qs.filter(hact_values__assurance_coverage=PartnerOrganization.ASSURANCE_PARTIAL)
+        full_coverage = qs.filter(hact_values__assurance_coverage=PartnerOrganization.ASSURANCE_COMPLETE)
         return {
-            # API placeholders for now
             'coverage_by_number_of_ips': [
                 ['Coverage by number of IPs', 'Count'],
                 ['No Coverage', no_coverage.count()],
-                ['Partially Met Requirements', coverage_ok.count()],
-                ['Met Requirements', coverage_ok.count()]
+                ['Partially Met Requirements', partial_coverage.count()],
+                ['Met Requirements', full_coverage.count()]
             ],
             'coverage_by_cash_transfer': [
                 ['Coverage by Cash Transfer (USD) (Total)', 'Count'],
                 ['No Coverage', no_coverage.aggregate(total=Coalesce(Sum('total_ct_cy'), 0))['total']],
-                ['Partially Met Requirements', coverage_ok.aggregate(total=Coalesce(Sum('total_ct_cy'), 0))['total']],
-                ['Met Requirements', coverage_ok.aggregate(total=Coalesce(Sum('total_ct_cy'), 0))['total']],
+                ['Partially Met Requirements', partial_coverage.aggregate(
+                    total=Coalesce(Sum('total_ct_cy'), 0))['total']],
+                ['Met Requirements', full_coverage.aggregate(total=Coalesce(Sum('total_ct_cy'), 0))['total']],
 
             ],
             'table': [

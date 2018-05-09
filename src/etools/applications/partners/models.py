@@ -194,7 +194,7 @@ def hact_default():
             },
         },
         'outstanding_findings': 0,
-        'assurance_coverage': 'void'
+        'assurance_coverage': PartnerOrganization.ASSURANCE_VOID
     }
 
 
@@ -316,6 +316,10 @@ class PartnerOrganization(TimeStampedModel):
         'Community Based Organization',
         'Academic Institution',
     )
+
+    ASSURANCE_VOID = 'void'
+    ASSURANCE_PARTIAL = 'partial'
+    ASSURANCE_COMPLETE = 'complete'
 
     partner_type = models.CharField(
         verbose_name=_("Partner Type"),
@@ -625,11 +629,11 @@ class PartnerOrganization(TimeStampedModel):
         au = hact['audits']['completed']
 
         if pv + sc + au == 0:
-            return 'void'
+            return PartnerOrganization.ASSURANCE_VOID
         elif pv + sc + au < self.min_req_programme_visits + self.min_req_spot_checks + self.min_req_audits:
-            return 'partial'
+            return PartnerOrganization.ASSURANCE_PARTIAL
         else:
-            return 'complete'
+            return PartnerOrganization.ASSURANCE_COMPLETE
 
     @classmethod
     def planned_visits(cls, partner):
