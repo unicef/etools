@@ -2022,3 +2022,110 @@ class TestInterventionReportingRequirementView(BaseTenantTestCase):
                 {"start_date": ["This field is required."]}
             ]}
         )
+
+    def test_patch_invalid(self):
+        for report_type, _ in ReportingRequirement.TYPE_CHOICES:
+            if report_type != ReportingRequirement.TYPE_SPECIAL:
+                response = self.forced_auth_req(
+                    "patch",
+                    self._get_url(report_type),
+                    user=self.unicef_staff,
+                    data={
+                        "reporting_requirements": [{
+                            "due_date": datetime.date(2001, 4, 15),
+                            "description": "New"
+                        }]
+                    }
+                )
+                self.assertEqual(
+                    response.status_code,
+                    status.HTTP_400_BAD_REQUEST
+                )
+
+    def test_patch_special(self):
+        report_type = ReportingRequirement.TYPE_SPECIAL
+        requirement = ReportingRequirementFactory(
+            intervention=self.intervention,
+            report_type=report_type,
+            due_date=datetime.date(2001, 4, 15),
+            description="Old",
+        )
+        requirement_qs = ReportingRequirement.objects.filter(
+            intervention=self.intervention,
+            report_type=report_type,
+        )
+        init_count = requirement_qs.count()
+        response = self.forced_auth_req(
+            "patch",
+            self._get_url(report_type),
+            user=self.unicef_staff,
+            data={
+                "reporting_requirements": [{
+                    "due_date": datetime.date(2001, 4, 15),
+                    "description": "New"
+                }]
+            }
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(requirement_qs.count(), init_count)
+        self.assertEqual(
+            len(response.data["reporting_requirements"]),
+            init_count
+        )
+        requirement_update = ReportingRequirement.objects.get(
+            pk=requirement.pk
+        )
+        self.assertEqual(requirement_update.description, "New")
+
+    def test_delete_invalid(self):
+        for report_type, _ in ReportingRequirement.TYPE_CHOICES:
+            if report_type != ReportingRequirement.TYPE_SPECIAL:
+                response = self.forced_auth_req(
+                    "delete",
+                    self._get_url(report_type),
+                    user=self.unicef_staff,
+                    data={
+                        "reporting_requirements": [{
+                            "due_date": datetime.date(2001, 4, 15),
+                            "description": "New"
+                        }]
+                    }
+                )
+                self.assertEqual(
+                    response.status_code,
+                    status.HTTP_400_BAD_REQUEST
+                )
+
+    def test_delete_special(self):
+        report_type = ReportingRequirement.TYPE_SPECIAL
+        requirement = ReportingRequirementFactory(
+            intervention=self.intervention,
+            report_type=report_type,
+            due_date=datetime.date(2001, 4, 15),
+            description="Old",
+        )
+        requirement_qs = ReportingRequirement.objects.filter(
+            intervention=self.intervention,
+            report_type=report_type,
+        )
+        init_count = requirement_qs.count()
+        response = self.forced_auth_req(
+            "delete",
+            self._get_url(report_type),
+            user=self.unicef_staff,
+            data={
+                "reporting_requirements": [{
+                    "due_date": datetime.date(2001, 4, 15),
+                    "description": "New"
+                }]
+            }
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(requirement_qs.count(), init_count - 1)
+        self.assertEqual(
+            len(response.data["reporting_requirements"]),
+            init_count - 1
+        )
+        self.assertFalse(ReportingRequirement.objects.filter(
+            pk=requirement.pk
+        ).exists())
