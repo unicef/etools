@@ -1,13 +1,15 @@
 from functools import update_wrapper
 
 from django.conf.urls import url
-from django.contrib import admin
+from django.contrib import admin, messages
 from django.contrib.auth import get_user_model
 from django.contrib.auth.admin import UserAdmin
 from django.core.urlresolvers import reverse
 from django.http.response import HttpResponseRedirect
 from django.shortcuts import get_object_or_404
+from tenant_schemas.utils import get_public_schema_name
 
+from etools.applications.hact.tasks import update_hact_for_country, update_hact_values
 from etools.applications.users.models import Country, Office, Section, UserProfile, WorkspaceCounter
 from etools.applications.vision.tasks import sync_handler, vision_sync_task
 from etools.libraries.azure_graph_api.tasks import sync_user
@@ -235,6 +237,7 @@ class CountryAdmin(admin.ModelAdmin):
 
     list_display = (
         'name',
+        'schema_name',
         'country_short_code',
         'business_area_code',
         'vision_sync_enabled',
@@ -262,6 +265,7 @@ class CountryAdmin(admin.ModelAdmin):
             url(r'^(?P<pk>\d+)/sync_partners/$', wrap(self.sync_partners), name='users_country_partners'),
             url(r'^(?P<pk>\d+)/sync_programme/$', wrap(self.sync_programme), name='users_country_programme'),
             url(r'^(?P<pk>\d+)/sync_ram/$', wrap(self.sync_ram), name='users_country_ram'),
+            url(r'^(?P<pk>\d+)/update_hact/$', wrap(self.update_hact), name='users_country_update_hact'),
         ]
         return custom_urls + urls
 
@@ -287,6 +291,16 @@ class CountryAdmin(admin.ModelAdmin):
             vision_sync_task(synchronizers=[synchronizer, ])
         else:
             sync_handler.delay(country.name, synchronizer)
+        return HttpResponseRedirect(reverse('admin:users_country_change', args=[country.pk]))
+
+    def update_hact(self, request, pk):
+        country = Country.objects.get(pk=pk)
+        if country.schema_name == get_public_schema_name():
+            update_hact_values()
+            messages.info(request, "HACT update has been scheduled for all countries")
+        else:
+            update_hact_for_country.delay(country_name=country.name)
+            messages.info(request, "HACT update has been started for %s" % country.name)
         return HttpResponseRedirect(reverse('admin:users_country_change', args=[country.pk]))
 
 
