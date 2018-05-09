@@ -286,7 +286,7 @@ class CountryAdmin(admin.ModelAdmin):
     @staticmethod
     def execute_sync(country_pk, synchronizer):
         country = Country.objects.get(pk=country_pk)
-        if country.schema_name == 'public':
+        if country.schema_name == get_public_schema_name():
             vision_sync_task(synchronizers=[synchronizer, ])
         else:
             sync_handler.delay(country.name, synchronizer)
