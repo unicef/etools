@@ -272,6 +272,7 @@ class TestUpdateSitesFromCartoDB(BaseTenantTestCase):
             "the_geom": "Point(20 20)",
             "name": "New Location",
             "pcode": "123",
+            "max": 1,
         }]}
         carto = CartoDBTableFactory()
         self.assertFalse(
@@ -291,6 +292,7 @@ class TestUpdateSitesFromCartoDB(BaseTenantTestCase):
             "the_geom": "Point(20 20)",
             "name": " ",
             "pcode": "123",
+            "max": 1,
         }]}
         carto = CartoDBTableFactory()
         self.assertFalse(
@@ -311,7 +313,8 @@ class TestUpdateSitesFromCartoDB(BaseTenantTestCase):
             "the_geom": "Point(20 20)",
             "name": "New Location",
             "pcode": "123",
-            "parent": "456"
+            "parent": "456",
+            "max": 1,
         }]}
         carto = CartoDBTableFactory(
             parent=carto_parent,
@@ -339,7 +342,8 @@ class TestUpdateSitesFromCartoDB(BaseTenantTestCase):
             "the_geom": "Point(20 20)",
             "name": "New Location",
             "pcode": "123",
-            "parent": "456"
+            "parent": "456",
+            "max": 1,
         }]}
         carto = CartoDBTableFactory(
             parent=carto_parent,
@@ -364,7 +368,8 @@ class TestUpdateSitesFromCartoDB(BaseTenantTestCase):
             "the_geom": "Point(20 20)",
             "name": "New Location",
             "pcode": "123",
-            "parent": "654"
+            "parent": "654",
+            "max": 1,
         }]}
         carto = CartoDBTableFactory(
             parent=carto_parent,
