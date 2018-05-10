@@ -757,7 +757,7 @@ class InterventionReportingRequirementView(APIView):
         """Only special reporting types can patch"""
         if report_type != ReportingRequirement.TYPE_SPECIAL:
             return Response(
-                _("Invalid reporting type"),
+                _("Invalid report type"),
                 status=status.HTTP_400_BAD_REQUEST
             )
 
@@ -781,7 +781,7 @@ class InterventionReportingRequirementView(APIView):
         """Only special reporting types can delete"""
         if report_type != ReportingRequirement.TYPE_SPECIAL:
             return Response(
-                _("Invalid reporting type"),
+                _("Invalid report type"),
                 status=status.HTTP_400_BAD_REQUEST
             )
 
