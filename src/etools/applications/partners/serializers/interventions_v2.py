@@ -1,4 +1,3 @@
-
 from datetime import date
 from operator import itemgetter
 
@@ -603,6 +602,18 @@ class InterventionReportingRequirementCreateSerializer(serializers.ModelSerializ
                 _("Indicator needs to be either cluster or high frequency.")
             )
 
+    def _validate_special(self, data):
+        # if delete action, can only delete dates in the future
+        if data.get("method") == "DELETE":
+            data = self.to_internal_value(data)
+            for req in data.get("reporting_requirements"):
+                if req.get("due_date") < date.today():
+                    raise serializers.ValidationError({
+                        "reporting_requirements": _(
+                            "Cannot delete reporting requirements in the past."
+                        )
+                    })
+
     def _merge_data(self, data):
         current_reqs = ReportingRequirement.objects.values(
             "id",
@@ -616,12 +627,15 @@ class InterventionReportingRequirementCreateSerializer(serializers.ModelSerializ
 
         current_reqs_dict = {}
         for r in current_reqs:
-            current_reqs_dict[r["id"]] = r
+            current_reqs_dict[r["due_date"]] = r
 
         report_type = data["report_type"]
         for r in data["reporting_requirements"]:
-            if r.get("id") in current_reqs_dict:
-                current_reqs_dict.pop(r["id"])
+            # not expecting ids, so match based on due date
+            if r.get("due_date") in current_reqs_dict:
+                r["id"] = current_reqs_dict[r.get("due_date")]["id"]
+                current_reqs_dict.pop(r["due_date"])
+
             r["intervention"] = self.intervention
             r["report_type"] = report_type
             if report_type == ReportingRequirement.TYPE_HR:
@@ -633,9 +647,8 @@ class InterventionReportingRequirementCreateSerializer(serializers.ModelSerializ
                 r["end_date"] = r["due_date"]
 
         # We need all reporting requirements in end date order
-        merged_reqs = list(current_reqs_dict.values()) + data["reporting_requirements"]
         data["reporting_requirements"] = sorted(
-            merged_reqs,
+            data["reporting_requirements"],
             key=itemgetter("end_date")
         )
         return data
@@ -648,6 +661,7 @@ class InterventionReportingRequirementCreateSerializer(serializers.ModelSerializ
             serializer.fields["end_date"].required = True
         elif report_type == ReportingRequirement.TYPE_SPECIAL:
             serializer.fields["description"].required = True
+            self._validate_special(initial_data)
         return super().run_validation(initial_data)
 
     def validate(self, data):
@@ -660,7 +674,7 @@ class InterventionReportingRequirementCreateSerializer(serializers.ModelSerializ
 
         # Only able to change reporting requirements when PD
         # is in amendment status
-        if self.intervention.status not in [self.intervention.DRAFT]:
+        if not self.intervention.in_amendment and self.intervention.status != Intervention.DRAFT:
             raise serializers.ValidationError(
                 _("Changes not allowed when PD not in amendment state.")
             )
@@ -696,12 +710,22 @@ class InterventionReportingRequirementCreateSerializer(serializers.ModelSerializ
             r["id"] for r in validated_data["reporting_requirements"]
             if "id" in r
         ]
-        delete_reqs = [r for r in current_reqs if r not in new_reqs]
-        ReportingRequirement.objects.filter(id__in=delete_reqs).delete()
+
+        # Delete records individually for Special types
+        if validated_data["report_type"] != ReportingRequirement.TYPE_SPECIAL:
+            delete_reqs = [r for r in current_reqs if r not in new_reqs]
+            ReportingRequirement.objects.filter(id__in=delete_reqs).delete()
+
         for r in validated_data["reporting_requirements"]:
             if r.get("id"):
                 pk = r.pop("id")
                 ReportingRequirement.objects.filter(pk=pk).update(**r)
             else:
                 ReportingRequirement.objects.create(**r)
+        return self.intervention
+
+    def delete(self, validated_data):
+        for r in validated_data["reporting_requirements"]:
+            if r.get("id"):
+                ReportingRequirement.objects.filter(pk=r.get("id")).delete()
         return self.intervention
