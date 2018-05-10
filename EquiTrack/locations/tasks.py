@@ -112,6 +112,7 @@ def update_sites_from_cartodb(carto_table_pk):
         row_count = query_row_count['rows'][0]['count']
 
         # do not spam Carto with requests, wait 1 second
+        time.sleep(1)
         query_max_id = sql_client.send('select MAX({}) from {}'.format(cartodb_id_col, carto_table.table_name))
         max_id = query_max_id['rows'][0]['max']
 
