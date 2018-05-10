@@ -322,6 +322,7 @@ class PartnerAdmin(ExportMixin, admin.ModelAdmin):
         u'name',
         u'vendor_number',
         u'partner_type',
+        u'rating',
         u'type_of_assessment',
         u'email',
         u'phone_number',
