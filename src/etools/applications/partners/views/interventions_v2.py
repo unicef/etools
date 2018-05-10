@@ -28,10 +28,10 @@ from etools.applications.partners.models import (Intervention, InterventionAmend
                                                  InterventionResultLink, InterventionSectorLocationLink,)
 from etools.applications.partners.permissions import PartnershipManagerPermission, PartnershipManagerRepPermission
 from etools.applications.partners.serializers.exports.interventions import (
-    InterventionAmendmentExportFlatSerializer, InterventionAmendmentExportSerializer, InterventionExportFlatSerializer,
-    InterventionExportSerializer, InterventionIndicatorExportFlatSerializer, InterventionIndicatorExportSerializer,
-    InterventionResultExportFlatSerializer, InterventionResultExportSerializer,
-    InterventionSectorLocationLinkExportFlatSerializer, InterventionSectorLocationLinkExportSerializer,)
+    InterventionAmendmentExportFlatSerializer, InterventionAmendmentExportSerializer,
+    InterventionExportFlatSerializer, InterventionExportSerializer, InterventionIndicatorExportFlatSerializer,
+    InterventionIndicatorExportSerializer, InterventionResultExportFlatSerializer, InterventionResultExportSerializer,
+    InterventionSectorLocationLinkExportFlatSerializer, InterventionSectorLocationLinkExportSerializer)
 from etools.applications.partners.serializers.interventions_v2 import (InterventionAmendmentCUSerializer,
                                                                        InterventionAttachmentSerializer,
                                                                        InterventionBudgetCUSerializer,

@@ -13,7 +13,8 @@ from dal import autocomplete
 from etools.applications.EquiTrack.forms import AutoSizeTextForm
 from etools.applications.partners.models import (
     InterventionSectorLocationLink,  # TODO intervention sector locations cleanup
-    PartnerOrganization, PartnerStaffMember, PartnerType,)
+    PartnerOrganization, PartnerStaffMember, PartnerType
+)
 
 logger = logging.getLogger('partners.forms')
 

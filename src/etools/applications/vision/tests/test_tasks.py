@@ -172,7 +172,9 @@ class TestVisionSyncTask(SimpleTestCase):
     @override_settings(CELERY_ALWAYS_EAGER=True, CELERY_EAGER_PROPAGATES_EXCEPTIONS=True)
     def test_sync_country_filter_args(self, mock_logger, mock_django_db_connection, mock_handler, mock_send_to_slack,
                                       CountryMock):
-        """Exercise etools.applications.vision.tasks.vision_sync_task() called with passing as argument a specific country"""
+        """
+        Exercise etools.applications.vision.tasks.vision_sync_task() called with passing as argument a specific country
+        """
 
         selected_countries = [self.tenant_countries[0], ]
         CountryMock.objects.filter = mock.Mock(return_value=selected_countries)
@@ -190,7 +192,10 @@ class TestVisionSyncTask(SimpleTestCase):
     @override_settings(CELERY_ALWAYS_EAGER=True, CELERY_EAGER_PROPAGATES_EXCEPTIONS=True)
     def test_sync_synchronizer_filter_args(self, mock_logger, mock_django_db_connection, mock_handler,
                                            mock_send_to_slack, CountryMock):
-        """Exercise etools.applications.vision.tasks.vision_sync_task() called with passing as argument a specific synchronizer"""
+        """
+        Exercise etools.applications.vision.tasks.vision_sync_task()
+        called with passing as argument a specific synchronizer
+        """
         selected_synchronizers = ['programme', ]
         CountryMock.objects.filter = mock.Mock(return_value=self.tenant_countries)
         # Mock connection.set_tenant() so we can verify calls to it.
@@ -208,7 +213,10 @@ class TestVisionSyncTask(SimpleTestCase):
     @override_settings(CELERY_ALWAYS_EAGER=True, CELERY_EAGER_PROPAGATES_EXCEPTIONS=True)
     def test_sync_country_and_synchronizer_filter_args(self, mock_logger, mock_django_db_connection, mock_handler,
                                                        mock_send_to_slack, CountryMock):
-        """Exercise etools.applications.vision.tasks.vision_sync_task() called with passing a specific country and a synchronizer"""
+        """
+        Exercise etools.applications.vision.tasks.vision_sync_task()
+        called with passing a specific country and a synchronizer
+        """
         selected_synchronizers = ['programme', ]
         selected_countries = [self.tenant_countries[0], ]
 
@@ -277,7 +285,9 @@ class TestSyncHandlerTask(BaseTenantTestCase):
     @mock.patch('etools.applications.vision.tasks.logger.error')
     @override_settings(CELERY_ALWAYS_EAGER=True, CELERY_EAGER_PROPAGATES_EXCEPTIONS=True)
     def test_sync_country_does_not_exist(self, mock_logger):
-        """Exercise etools.applications.vision.tasks.sync_handler() called with a country name that doesn't match a country."""
+        """
+        Exercise etools.applications.vision.tasks.sync_handler() called with a country name that doesn't match a country
+        """
         etools.applications.vision.tasks.sync_handler.delay('random', 'programme')
         self.assertEqual(mock_logger.call_count, 1)
         expected_msg = '{} sync failed, Could not find a Country with this name: {}'.format(

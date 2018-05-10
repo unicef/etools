@@ -258,6 +258,7 @@ class TestPartnerOrganizationModel(BaseTenantTestCase):
         """common assert for minimum requirement calculation"""
         hact_min_req = self.partner_organization.hact_min_requirements
         data = {
+            "audits": 0,
             "programme_visits": programmatic_visit,
             "spot_checks": spot_check,
         }
@@ -293,6 +294,7 @@ class TestPartnerOrganizationModel(BaseTenantTestCase):
         self.partner_organization.reported_cy = 0
         hact_min_req = self.partner_organization.hact_min_requirements
         data = {
+            "audits": 0,
             "programme_visits": 0,
             "spot_checks": 0,
         }

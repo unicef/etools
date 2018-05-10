@@ -40,11 +40,17 @@ from etools.applications.utils.groups.wrappers import GroupWrapper
 
 @python_2_unicode_compatible
 class Engagement(TimeStampedModel, models.Model):
+
+    TYPE_AUDIT = 'audit'
+    TYPE_MICRO_ASSESSMENT = 'ma'
+    TYPE_SPOT_CHECK = 'sc'
+    TYPE_SPECIAL_AUDIT = 'sa'
+
     TYPES = Choices(
-        ('audit', _('Audit')),
-        ('ma', _('Micro Assessment')),
-        ('sc', _('Spot Check')),
-        ('sa', _('Special Audit')),
+        (TYPE_AUDIT, _('Audit')),
+        (TYPE_MICRO_ASSESSMENT, _('Micro Assessment')),
+        (TYPE_SPOT_CHECK, _('Spot Check')),
+        (TYPE_SPECIAL_AUDIT, _('Special Audit')),
     )
 
     PARTNER_CONTACTED = 'partner_contacted'

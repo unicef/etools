@@ -7,7 +7,7 @@ from django.conf import settings
 from django.contrib.postgres.fields import ArrayField, JSONField
 from django.core.urlresolvers import reverse
 from django.db import connection, models, transaction
-from django.db.models import Case, CharField, Count, Max, Min, Sum, When
+from django.db.models import Case, CharField, Count, Max, Min, Q, Sum, When
 from django.db.models.signals import post_save, pre_delete
 from django.utils import six
 from django.utils.encoding import python_2_unicode_compatible
@@ -190,8 +190,44 @@ def hact_default():
                 'total': 0,
             },
         },
-        'outstanding_findings': 0
+        'outstanding_findings': 0,
+        'assurance_coverage': PartnerOrganization.ASSURANCE_VOID
     }
+
+
+class PartnerOrganizationQuerySet(models.QuerySet):
+
+    def active(self, *args, **kwargs):
+        return self.filter(Q(reported_cy__gt=0) | Q(total_ct_cy__gt=0), hidden=False, *args, **kwargs)
+
+    def not_programmatic_visit_compliant(self, *args, **kwargs):
+        return self.filter(net_ct_cy__gt=PartnerOrganization.CT_MR_AUDIT_TRIGGER_LEVEL,
+                           hact_values__programmatic_visits__completed__total__gt=0,
+                           *args, **kwargs)
+
+    def not_spot_check_compliant(self, *args, **kwargs):
+        return self.filter(Q(reported_cy__gt=PartnerOrganization.CT_CP_AUDIT_TRIGGER_LEVEL) |
+                           Q(planned_engagement__spot_check_follow_up_q1__gt=0) |
+                           Q(planned_engagement__spot_check_follow_up_q2__gt=0) |
+                           Q(planned_engagement__spot_check_follow_up_q3__gt=0) |
+                           Q(planned_engagement__spot_check_follow_up_q4__gt=0),  # aka required
+                           hact_values__spot_checks__completed__total=0,
+                           hact_values__audit__completed__total=0, *args, **kwargs)
+
+    def not_assurance_compliant(self, *args, **kwargs):
+        return self.filter(Q(reported_cy__gt=PartnerOrganization.CT_CP_AUDIT_TRIGGER_LEVEL) |
+                           Q(
+                               Q(hact_values__spot_checks__completed__total__gt=0) |
+                               Q(planned_engagement__spot_check_follow_up_q1__gt=0) |
+                               Q(planned_engagement__spot_check_follow_up_q2__gt=0) |
+                               Q(planned_engagement__spot_check_follow_up_q3__gt=0) |
+                               Q(planned_engagement__spot_check_follow_up_q4__gt=0) |
+                               Q(planned_engagement__scheduled_audit=True) |
+                               Q(planned_engagement__special_audit=True)) |
+                           Q(planned_engagement__spot_check_follow_up_q4__gt=0),
+                           hact_values__programmatic_visits__completed__total=0,
+                           hact_values__spot_checks__completed__total=0,
+                           hact_values__audits__completed__total=0, *args, **kwargs)
 
 
 @python_2_unicode_compatible
@@ -277,6 +313,10 @@ class PartnerOrganization(TimeStampedModel):
         'Community Based Organization',
         'Academic Institution',
     )
+
+    ASSURANCE_VOID = 'void'
+    ASSURANCE_PARTIAL = 'partial'
+    ASSURANCE_COMPLETE = 'complete'
 
     partner_type = models.CharField(
         verbose_name=_("Partner Type"),
@@ -465,6 +505,7 @@ class PartnerOrganization(TimeStampedModel):
         verbose_name=_("Basis for Risk Rating"), max_length=50, default='', blank=True)
 
     tracker = FieldTracker()
+    objects = PartnerOrganizationQuerySet.as_manager()
 
     class Meta:
         ordering = ['name']
@@ -563,12 +604,33 @@ class PartnerOrganization(TimeStampedModel):
         return 1 if reported_cy > PartnerOrganization.CT_CP_AUDIT_TRIGGER_LEVEL else 0
 
     @cached_property
+    def min_req_audits(self):
+        return self.planned_engagement.required_audit if getattr(self, 'planned_engagement', None) else 0
+
+    @cached_property
     def hact_min_requirements(self):
 
         return {
             'programme_visits': self.min_req_programme_visits,
             'spot_checks': self.min_req_spot_checks,
+            'audits': self.min_req_audits,
         }
+
+    @cached_property
+    def assurance_coverage(self):
+
+        hact = json.loads(self.hact_values) if isinstance(self.hact_values, str) else self.hact_values
+
+        pv = hact['programmatic_visits']['completed']['total']
+        sc = hact['spot_checks']['completed']['total']
+        au = hact['audits']['completed']
+
+        if pv + sc + au == 0:
+            return PartnerOrganization.ASSURANCE_VOID
+        elif pv + sc + au < self.min_req_programme_visits + self.min_req_spot_checks + self.min_req_audits:
+            return PartnerOrganization.ASSURANCE_PARTIAL
+        else:
+            return PartnerOrganization.ASSURANCE_COMPLETE
 
     def get_admin_url(self):
         admin_url_name = 'admin:partners_partnerorganization_change'

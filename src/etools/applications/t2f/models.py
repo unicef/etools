@@ -432,8 +432,8 @@ class Travel(models.Model):
                                               travel_type=TravelType.SPOT_CHECK):
                 PartnerOrganization.spot_checks(act.partner, update_one=True)
 
-        except Exception as e:
-            logging.info(u'Exception while trying to update hact values {}'.format(e))
+        except Exception:
+            log.exception('Exception while trying to update hact values.')
 
     @transition(status, target=PLANNED)
     def reset_status(self):
