@@ -7,8 +7,8 @@ import json
 from django.conf import settings
 from django.contrib.postgres.fields import ArrayField, JSONField
 from django.core.urlresolvers import reverse
-from django.db import models, connection, transaction
-from django.db.models import Case, Count, CharField, F, Max, Min, Q, Sum, When
+from django.db import connection, models, transaction
+from django.db.models import Case, CharField, Count, F, Max, Min, Q, Sum, When
 from django.db.models.signals import post_save, pre_delete
 from django.utils import six, timezone
 from django.utils.encoding import python_2_unicode_compatible

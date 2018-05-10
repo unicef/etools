@@ -9,11 +9,11 @@ from import_export.admin import ExportMixin
 
 from etools.applications.EquiTrack.admin import ActivityInline, SnapshotModelAdmin
 from etools.applications.partners.exports import PartnerExport
-from etools.applications.partners.forms import (PartnersAdminForm,  # TODO intervention sector locations cleanup
-                                                PartnerStaffMemberForm, SectorLocationForm,)
+from etools.applications.partners.forms import PartnersAdminForm  # TODO intervention sector locations cleanup
+from etools.applications.partners.forms import PartnerStaffMemberForm, SectorLocationForm
 from etools.applications.partners.mixins import CountryUsersAdminMixin, HiddenPartnerMixin
-from etools.applications.partners.models import (Agreement,  # TODO intervention sector locations cleanup
-                                                 AgreementAmendment, Assessment, FileType, FundingCommitment,
+from etools.applications.partners.models import Agreement  # TODO intervention sector locations cleanup
+from etools.applications.partners.models import (AgreementAmendment, Assessment, FileType, FundingCommitment,
                                                  Intervention, InterventionAmendment, InterventionAttachment,
                                                  InterventionBudget, InterventionPlannedVisits, InterventionResultLink,
                                                  InterventionSectorLocationLink, PartnerOrganization,
