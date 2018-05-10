@@ -273,6 +273,7 @@ class TestUpdateSitesFromCartoDB(BaseTenantTestCase):
             "name": "New Location",
             "pcode": "123",
             "max": 1,
+            "count": 1,
         }]}
         carto = CartoDBTableFactory()
         self.assertFalse(
@@ -293,6 +294,7 @@ class TestUpdateSitesFromCartoDB(BaseTenantTestCase):
             "name": " ",
             "pcode": "123",
             "max": 1,
+            "count": 1,
         }]}
         carto = CartoDBTableFactory()
         self.assertFalse(
@@ -315,6 +317,7 @@ class TestUpdateSitesFromCartoDB(BaseTenantTestCase):
             "pcode": "123",
             "parent": "456",
             "max": 1,
+            "count": 1,
         }]}
         carto = CartoDBTableFactory(
             parent=carto_parent,
@@ -344,6 +347,7 @@ class TestUpdateSitesFromCartoDB(BaseTenantTestCase):
             "pcode": "123",
             "parent": "456",
             "max": 1,
+            "count": 1,
         }]}
         carto = CartoDBTableFactory(
             parent=carto_parent,
@@ -370,6 +374,7 @@ class TestUpdateSitesFromCartoDB(BaseTenantTestCase):
             "pcode": "123",
             "parent": "654",
             "max": 1,
+            "count": 1,
         }]}
         carto = CartoDBTableFactory(
             parent=carto_parent,
