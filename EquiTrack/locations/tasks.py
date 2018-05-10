@@ -108,9 +108,6 @@ def update_sites_from_cartodb(carto_table_pk):
         rows = []
         cartodb_id_col = 'cartodb_id'
 
-        query_row_count = sql_client.send('select count(*) from {}'.format(carto_table.table_name))
-        row_count = query_row_count['rows'][0]['count']
-
         query_max_id = sql_client.send('select MAX({}) from {}'.format(cartodb_id_col, carto_table.table_name))
         max_id = query_max_id['rows'][0]['max']
 
@@ -129,27 +126,22 @@ def update_sites_from_cartodb(carto_table_pk):
                 carto_table.pcode_col,
                 carto_table.table_name)
 
-        #while offset <= row_count:
         while offset <= max_id:
-            #paged_qry = qry + ' ORDER BY cartodb_id ASC OFFSET {} LIMIT {}'.format(offset, limit)
             paged_qry = qry + ' WHERE {} > {} AND {} <= {}'.format(
                 cartodb_id_col,
                 offset,
                 cartodb_id_col,
                 offset + limit
             )
+
             offset += limit
-
-            print("")
-            print (paged_qry)
-            print("")
-
-            sites = sql_client.send(paged_qry, do_post=True)
-            time.sleep(1)
+            sites = sql_client.send(paged_qry)
             rows += sites['rows']
 
             if 'error' in sites:
                 raise CartoException(sites['error'])
+
+            time.sleep(1)
 
     except CartoException as exc:
         logger.exception("CartoDB exception occured {}".format(exc))
