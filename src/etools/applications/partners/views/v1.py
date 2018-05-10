@@ -67,6 +67,7 @@ class PCAPDFView(PDFTemplateView):
         for b in banks_records:
             if isinstance(b, dict):
                 b["BANK_ADDRESS"] = ', '.join(b[key] for key in ['STREET', 'CITY'] if key in b)
+                b["ACCT_HOLDER"] = b["ACCT_HOLDER"] if "ACCT_HOLDER" in b else ""
                 bank_objects.append(Bank(*[b[i[1]] for i in bank_key_values]))
 
         officers_list = []
