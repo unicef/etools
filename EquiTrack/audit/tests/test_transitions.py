@@ -11,8 +11,7 @@ from audit.tests.base import EngagementTransitionsTestCaseMixin
 from audit.tests.factories import AuditFactory, MicroAssessmentFactory, SpecialAuditFactory, SpotCheckFactory, \
     KeyInternalControlFactory
 from audit.transitions.conditions import (
-    AuditSubmitReportRequiredFieldsCheck, EngagementSubmitReportRequiredFieldsCheck, SPSubmitReportRequiredFieldsCheck,
-    SpecialAuditSubmitReportRequiredFieldsCheck)
+    AuditSubmitReportRequiredFieldsCheck, EngagementSubmitReportRequiredFieldsCheck, SPSubmitReportRequiredFieldsCheck)
 from EquiTrack.tests.cases import BaseTenantTestCase
 
 
@@ -57,6 +56,7 @@ class AuditTransitionsTestCaseMixin(EngagementTransitionsTestCaseMixin):
         self.engagement.audited_expenditure = random.randint(1, 22)
         self.engagement.financial_findings = random.randint(1, 22)
         self.engagement.audit_opinion = fuzzy.FuzzyText(length=20).fuzz()
+        self.engagement.exchange_rate = fuzzy.FuzzyDecimal(0.5, 400).fuzz()
         self.engagement.key_internal_controls.add(*[KeyInternalControlFactory(audit=self.engagement) for _ in range(3)])
         self.engagement.save()
 
@@ -78,13 +78,8 @@ class SpecialAuditTransitionsTestCaseMixin(EngagementTransitionsTestCaseMixin):
             sp.finding = 'Test'
             sp.save()
 
-    def _fill_special_audit_specified_fields(self):
-        self.engagement.exchange_rate = fuzzy.FuzzyDecimal(0.5, 400).fuzz()
-        self.engagement.save()
-
     def _init_filled_engagement(self):
         super(SpecialAuditTransitionsTestCaseMixin, self)._init_filled_engagement()
-        self._fill_special_audit_specified_fields()
         self._init_specific_procedure()
         self._fill_specific_procedure()
 
@@ -166,18 +161,16 @@ class TestSATransitionsTestCase(
     EngagementCheckTransitionsTestCaseMixin, SpecialAuditTransitionsTestCaseMixin, BaseTenantTestCase
 ):
     def test_submit_for_dummy_object(self):
-        errors_fields = SpecialAuditSubmitReportRequiredFieldsCheck.fields
+        errors_fields = EngagementSubmitReportRequiredFieldsCheck.fields
         self._test_submit(self.auditor, status.HTTP_400_BAD_REQUEST, errors=errors_fields)
 
     def test_submit_without_finding_object(self):
         self._fill_date_fields()
-        self._fill_special_audit_specified_fields()
         self._init_specific_procedure()
         self._test_submit(self.auditor, status.HTTP_400_BAD_REQUEST, errors=['specific_procedures'])
 
     def test_attachments_required(self):
         self._fill_date_fields()
-        self._fill_special_audit_specified_fields()
         self._init_specific_procedure()
         self._fill_specific_procedure()
         self._test_submit(self.auditor, status.HTTP_400_BAD_REQUEST, errors=['report_attachments'])

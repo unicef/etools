@@ -5,13 +5,10 @@ import itertools
 from django.db.models import QuerySet, Manager
 from future.backports.urllib.parse import urljoin
 
-from django.utils import six
-
 from rest_framework import serializers
-from rest_framework.fields import empty, SkipField
 
+from utils.common.serializers.fields import CommaSeparatedExportField
 from utils.common.urlresolvers import build_frontend_url, site_url
-from utils.common.utils import get_attribute_smart
 
 
 class UsersExportField(serializers.Field):
@@ -20,43 +17,6 @@ class UsersExportField(serializers.Field):
             value = value.all()
 
         return ','.join(map(lambda u: u.get_full_name(), value))
-
-
-class CommaSeparatedExportField(serializers.Field):
-    export_attr = None
-
-    def __init__(self, *args, **kwargs):
-        self.export_attr = kwargs.pop('export_attr', None)
-        super(CommaSeparatedExportField, self).__init__(*args, **kwargs)
-
-    def get_attribute(self, instance):
-        try:
-            return get_attribute_smart(instance, self.source_attrs)
-        except (KeyError, AttributeError) as exc:
-            if not self.required and self.default is empty:
-                raise SkipField()
-            msg = (
-                'Got {exc_type} when attempting to get a value for field '
-                '`{field}` on serializer `{serializer}`.\nThe serializer '
-                'field might be named incorrectly and not match '
-                'any attribute or key on the `{instance}` instance.\n'
-                'Original exception text was: {exc}.'.format(
-                    exc_type=type(exc).__name__,
-                    field=self.field_name,
-                    serializer=self.parent.__class__.__name__,
-                    instance=instance.__class__.__name__,
-                    exc=exc
-                )
-            )
-            raise type(exc)(msg)
-
-    def to_representation(self, value):
-        value = set(value)
-
-        if self.export_attr:
-            value = map(lambda x: get_attribute_smart(x, self.export_attr), value)
-
-        return ', '.join(map(six.text_type, filter(lambda x: x, value)))
 
 
 class TPMActivityExportSerializer(serializers.Serializer):

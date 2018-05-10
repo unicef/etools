@@ -13,7 +13,7 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.renderers import JSONRenderer
 from rest_framework.response import Response
 
-from audit.conditions import AuditModuleCondition, AuditStaffMemberCondition
+from audit.conditions import AuditModuleCondition, AuditStaffMemberCondition, EngagementStaffMemberCondition
 from audit.exports import AuditorFirmCSVRenderer, EngagementCSVRenderer, MicroAssessmentDetailCSVRenderer, \
     AuditDetailCSVRenderer, SpotCheckDetailCSVRenderer, SpecialAuditDetailCSVRenderer
 from audit.filters import DisplayStatusFilter, UniqueIDOrderingFilter
@@ -74,7 +74,7 @@ class AuditUsersViewSet(generics.ListAPIView):
 
     permission_classes = (IsAuthenticated, )
     filter_backends = (SearchFilter, DjangoFilterBackend)
-    filter_fields = ('purchase_order_auditorstaffmember__auditor_firm__unicef_users_allowed', )
+    filter_fields = ('email', 'purchase_order_auditorstaffmember__auditor_firm__unicef_users_allowed', )
     search_fields = ('email',)
     queryset = get_user_model().objects.all()
     serializer_class = AuditUserSerializer
@@ -286,6 +286,7 @@ class EngagementViewSet(
         return [
             ObjectStatusCondition(obj),
             AuditStaffMemberCondition(obj.agreement.auditor_firm, self.request.user),
+            EngagementStaffMemberCondition(obj, self.request.user),
         ]
 
     @list_route(methods=['get'], url_path='partners')
@@ -310,20 +311,21 @@ class EngagementViewSet(
         obj = self.get_object()
 
         engagement_params = self.ENGAGEMENT_MAPPING.get(obj.engagement_type, {})
-        serializer_class = engagement_params.get('pdf_serializer_class', None)
+        pdf_serializer_class = engagement_params.get('pdf_serializer_class', None)
         template = engagement_params.get('pdf_template', None)
 
-        if not serializer_class or not template:
+        if not pdf_serializer_class or not template:
             raise NotImplementedError
 
-        pdf_serializer = self.get_serializer(
-            instance=obj, many=True, serializer_class=engagement_params.get('serializer_class', None)
+        # we use original serializer here for correct field labels
+        serializer = self.get_serializer(
+            instance=obj, serializer_class=engagement_params.get('serializer_class', None)
         )
 
         return render_to_pdf_response(
             request, template,
-            context={'engagement': serializer_class(obj).data,
-                     'serializer': pdf_serializer},
+            context={'engagement': pdf_serializer_class(obj).data,
+                     'serializer': serializer},
             filename='engagement_{}.pdf'.format(obj.unique_id),
         )
 
