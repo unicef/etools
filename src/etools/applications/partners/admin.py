@@ -316,6 +316,7 @@ class PartnerAdmin(ExportMixin, admin.ModelAdmin):
     )
     list_filter = (
         u'partner_type',
+        u'rating',
         HiddenPartnerFilter,
     )
     list_display = (
