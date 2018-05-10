@@ -1,5 +1,6 @@
 import functools
 import operator
+from datetime import datetime
 
 from django.db import transaction
 from django.db.models import Q
@@ -194,7 +195,7 @@ class PartnerOrganizationHactAPIView(ListAPIView):
     """
     permission_classes = (IsAdminUser,)
     queryset = PartnerOrganization.objects.select_related('planned_engagement').prefetch_related(
-        'staff_members', 'assessments').filter(Q(reported_cy__gt=0) | Q(total_ct_cy__gt=0))
+        'staff_members', 'assessments').active()
     serializer_class = PartnerOrganizationHactSerializer
     renderer_classes = (r.JSONRenderer, PartnerOrganizationHactCsvRenderer)
 
@@ -315,19 +316,20 @@ class PartnerOrganizationAddView(CreateAPIView):
             return Response({"error": response}, status=status.HTTP_400_BAD_REQUEST)
 
         partner_resp = response["ROWSET"]["ROW"]
-        try:
-            PartnerOrganization.objects.get(vendor_number=partner_resp[PartnerSynchronizer.MAPPING['vendor_number']])
+
+        if PartnerOrganization.objects.filter(
+                vendor_number=partner_resp[PartnerSynchronizer.MAPPING['vendor_number']]).exists():
             return Response({"error": 'Partner Organization already exists with this vendor number'},
                             status=status.HTTP_400_BAD_REQUEST)
-        except PartnerOrganization.DoesNotExist:
-            country = request.user.profile.country
-            partner_sync = PartnerSynchronizer(country=country)
-            partner_sync._partner_save(partner_resp, full_sync=False)
 
-            partner = PartnerOrganization.objects.get(
-                vendor_number=partner_resp[PartnerSynchronizer.MAPPING['vendor_number']])
-            po_serializer = PartnerOrganizationDetailSerializer(partner)
-            return Response(po_serializer.data, status=status.HTTP_201_CREATED)
+        country = request.user.profile.country
+        partner_sync = PartnerSynchronizer(country=country)
+        partner_sync._partner_save(partner_resp, full_sync=False)
+
+        partner = PartnerOrganization.objects.get(
+            vendor_number=partner_resp[PartnerSynchronizer.MAPPING['vendor_number']])
+        po_serializer = PartnerOrganizationDetailSerializer(partner)
+        return Response(po_serializer.data, status=status.HTTP_201_CREATED)
 
 
 class PartnerOrganizationDeleteView(DestroyAPIView):
@@ -348,3 +350,36 @@ class PartnerOrganizationDeleteView(DestroyAPIView):
         else:
             partner.delete()
             return Response(status=status.HTTP_204_NO_CONTENT)
+
+
+class PartnerNotProgrammaticVisitCompliant(PartnerOrganizationListAPIView):
+    def get_queryset(self, format=None):
+        return PartnerOrganization.objects.not_programmatic_visit_compliant()
+
+
+class PartnerNotSpotCheckCompliant(PartnerOrganizationListAPIView):
+    def get_queryset(self, format=None):
+        return PartnerOrganization.objects.not_spot_check_compliant()
+
+
+class PartnerNotAssuranceCompliant(PartnerOrganizationListAPIView):
+    def get_queryset(self, format=None):
+        return PartnerOrganization.objects.not_assurance_compliant()
+
+
+class PartnerWithSpecialAuditCompleted(PartnerOrganizationListAPIView):
+    def get_queryset(self, format=None):
+        from etools.applications.audit.models import Engagement
+        return PartnerOrganization.objects.filter(
+            engagement__engagement_type=Engagement.TYPE_SPECIAL_AUDIT,
+            engagement__status=Engagement.FINAL,
+            engagement__date_of_draft_report_to_unicef__year=datetime.now().year)
+
+
+class PartnerWithScheduledAuditCompleted(PartnerOrganizationListAPIView):
+    def get_queryset(self, format=None):
+        from etools.applications.audit.models import Engagement
+        return PartnerOrganization.objects.filter(
+            engagement__engagement_type=Engagement.TYPE_AUDIT,
+            engagement__status=Engagement.FINAL,
+            engagement__date_of_draft_report_to_unicef__year=datetime.now().year)
