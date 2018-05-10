@@ -1,4 +1,3 @@
-
 import csv
 import datetime
 import itertools
@@ -269,6 +268,7 @@ def pmp_indicator_report():
         'In kind Amount',
         'Total',
         'FR numbers against PD / SSFA',
+        'FR currencies',
         'Sum of all FR planned amount',
         'Core value attached',
         'Partner Link',
@@ -285,6 +285,7 @@ def pmp_indicator_report():
             for intervention in Intervention.objects.filter(
                     agreement__partner=partner).select_related('planned_budget'):
                 planned_budget = getattr(intervention, 'planned_budget', None)
+                fr_currencies = intervention.frs.all().values_list('currency', flat=True).distinct()
                 writer.writerow({
                     'Country': country,
                     'Partner Name': str(partner),
@@ -304,8 +305,9 @@ def pmp_indicator_report():
                     'In kind Amount': intervention.planned_budget.in_kind_amount if planned_budget else '-',
                     'Total': intervention.planned_budget.total if planned_budget else '-',
                     'FR numbers against PD / SSFA': u' - '.join([fh.fr_number for fh in intervention.frs.all()]),
+                    'FR currencies': ', '.join(fr for fr in fr_currencies),
                     'Sum of all FR planned amount': intervention.frs.aggregate(
-                        total=Coalesce(Sum('intervention_amt'), 0))['total'],
+                        total=Coalesce(Sum('intervention_amt'), 0))['total'] if fr_currencies.count() <= 1 else '-',
                     'Core value attached': True if partner.core_values_assessment else False,
                     'Partner Link': '{}/pmp/partners/{}/details'.format(base_url, partner.pk),
                     'Intervention Link': '{}/pmp/interventions/{}/details'.format(base_url, intervention.pk),
@@ -313,7 +315,7 @@ def pmp_indicator_report():
 
     mail = EmailMessage('PMP Indicator Report', 'Report generated',
                         'etools-reports@unicef.org', settings.REPORT_EMAILS)
-    mail.attach('pmp_indicators.csv', csvfile.getvalue(), 'text/csv')
+    mail.attach('pmp_indicators.csv', csvfile.getvalue().encode('utf-8'), 'text/csv')
     mail.send()
 
 

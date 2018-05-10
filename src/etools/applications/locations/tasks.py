@@ -48,8 +48,8 @@ def create_location(pcode, carto_table, parent, parent_instance,
         sites_created += 1
         try:
             location = Location.objects.create(**create_args)
-        except IntegrityError as e:
-            logger.info('Not Added: {}', e)
+        except IntegrityError:
+            logger.exception('Error while creating location: %s', site_name)
 
         logger.info('{}: {} ({})'.format(
             'Added',
@@ -72,8 +72,8 @@ def create_location(pcode, carto_table, parent, parent_instance,
 
         try:
             location.save()
-        except IntegrityError as e:
-            logger.exception('Error whilst saving location: {}'.format(site_name))
+        except IntegrityError:
+            logger.exception('Error while saving location: %s', site_name)
             return False, sites_not_added, sites_created, sites_updated
 
         sites_updated += 1
@@ -92,31 +92,32 @@ def update_sites_from_cartodb(carto_table_pk):
     try:
         carto_table = CartoDBTable.objects.get(pk=carto_table_pk)
     except CartoDBTable.DoesNotExist:
-        logger.exception('Cannot retrieve CartoDBTable with pk: {}'.format(carto_table_pk))
+        logger.exception('Cannot retrieve CartoDBTable with pk: %s', carto_table_pk)
         return
 
     auth_client = APIKeyAuthClient(api_key=carto_table.api_key,
                                    base_url="https://{}.carto.com/".format(carto_table.domain))
     sql_client = SQLClient(auth_client)
     sites_created = sites_updated = sites_not_added = 0
-    try:
-        # query for cartodb
-        qry = ''
-        if carto_table.parent_code_col and carto_table.parent:
-            qry = 'select st_AsGeoJSON(the_geom) as the_geom, {}, {}, {} from {}'.format(
-                carto_table.name_col,
-                carto_table.pcode_col,
-                carto_table.parent_code_col,
-                carto_table.table_name)
-        else:
-            qry = 'select st_AsGeoJSON(the_geom) as the_geom, {}, {} from {}'.format(
-                carto_table.name_col,
-                carto_table.pcode_col,
-                carto_table.table_name)
 
+    # query for cartodb
+    qry = ''
+    if carto_table.parent_code_col and carto_table.parent:
+        qry = 'select st_AsGeoJSON(the_geom) as the_geom, {}, {}, {} from {}'.format(
+            carto_table.name_col,
+            carto_table.pcode_col,
+            carto_table.parent_code_col,
+            carto_table.table_name)
+    else:
+        qry = 'select st_AsGeoJSON(the_geom) as the_geom, {}, {} from {}'.format(
+            carto_table.name_col,
+            carto_table.pcode_col,
+            carto_table.table_name)
+
+    try:
         sites = sql_client.send(qry)
-    except CartoException as exc:
-        logger.exception("CartoDB exception occured {}".format(exc))
+    except CartoException:
+        logger.exception("CartoDB exception occured")
     else:
 
         for row in sites['rows']:
@@ -135,16 +136,16 @@ def update_sites_from_cartodb(carto_table_pk):
             # attempt to reference the parent of this location
             if carto_table.parent_code_col and carto_table.parent:
                 msg = None
+                parent = carto_table.parent.__class__
+                parent_code = row[carto_table.parent_code_col]
                 try:
-                    parent = carto_table.parent.__class__
-                    parent_code = row[carto_table.parent_code_col]
                     parent_instance = Location.objects.get(p_code=parent_code)
                 except Location.MultipleObjectsReturned:
-                    msg = u"Multiple locations found for parent code: {}".format(
+                    msg = "Multiple locations found for parent code: {}".format(
                         parent_code
                     )
                 except Location.DoesNotExist:
-                    msg = u"No locations found for parent code: {}".format(
+                    msg = "No locations found for parent code: {}".format(
                         parent_code
                     )
                 except Exception as exp:
