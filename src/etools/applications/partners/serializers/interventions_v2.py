@@ -1,4 +1,3 @@
-
 from datetime import date
 from operator import itemgetter
 
@@ -603,6 +602,18 @@ class InterventionReportingRequirementCreateSerializer(serializers.ModelSerializ
                 _("Indicator needs to be either cluster or high frequency.")
             )
 
+    def _validate_special(self, data):
+        # if delete action, can only delete dates in the future
+        if data.get("method") == "DELETE":
+            data = self.to_internal_value(data)
+            for req in data.get("reporting_requirements"):
+                if req.get("due_date") < date.today():
+                    raise serializers.ValidationError({
+                        "reporting_requirements": _(
+                            "Cannot delete reporting requirements in the past."
+                        )
+                    })
+
     def _merge_data(self, data):
         current_reqs = ReportingRequirement.objects.values(
             "id",
@@ -650,6 +661,7 @@ class InterventionReportingRequirementCreateSerializer(serializers.ModelSerializ
             serializer.fields["end_date"].required = True
         elif report_type == ReportingRequirement.TYPE_SPECIAL:
             serializer.fields["description"].required = True
+            self._validate_special(initial_data)
         return super().run_validation(initial_data)
 
     def validate(self, data):

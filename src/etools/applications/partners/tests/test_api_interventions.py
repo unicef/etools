@@ -2121,7 +2121,8 @@ class TestInterventionReportingRequirementView(BaseTenantTestCase):
         )
         self.assertEqual(requirement_update.description, "New")
 
-    def test_delete_invalid(self):
+    def test_delete_invalid_report_type(self):
+        """Delete is only available for reporting type Special"""
         for report_type, _ in ReportingRequirement.TYPE_CHOICES:
             if report_type != ReportingRequirement.TYPE_SPECIAL:
                 response = self.forced_auth_req(
@@ -2141,7 +2142,8 @@ class TestInterventionReportingRequirementView(BaseTenantTestCase):
                 )
                 self.assertEqual(response.data, "Invalid report type")
 
-    def test_delete_special(self):
+    def test_delete_invalid_old(self):
+        """Cannot delete special reporting requirements in the past"""
         report_type = ReportingRequirement.TYPE_SPECIAL
         requirement = ReportingRequirementFactory(
             intervention=self.intervention,
@@ -2161,6 +2163,40 @@ class TestInterventionReportingRequirementView(BaseTenantTestCase):
             data={
                 "reporting_requirements": [{
                     "due_date": datetime.date(2001, 4, 15),
+                    "description": "New"
+                }]
+            }
+        )
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertEqual(response.data, {
+            "reporting_requirements": "Cannot delete reporting requirements in the past."
+        })
+        self.assertEqual(requirement_qs.count(), init_count)
+        self.assertTrue(ReportingRequirement.objects.filter(
+            pk=requirement.pk
+        ).exists())
+
+    def test_delete_special(self):
+        report_type = ReportingRequirement.TYPE_SPECIAL
+        date = datetime.date.today() + datetime.timedelta(days=10)
+        requirement = ReportingRequirementFactory(
+            intervention=self.intervention,
+            report_type=report_type,
+            due_date=date,
+            description="Old",
+        )
+        requirement_qs = ReportingRequirement.objects.filter(
+            intervention=self.intervention,
+            report_type=report_type,
+        )
+        init_count = requirement_qs.count()
+        response = self.forced_auth_req(
+            "delete",
+            self._get_url(report_type),
+            user=self.unicef_staff,
+            data={
+                "reporting_requirements": [{
+                    "due_date": date,
                     "description": "New"
                 }]
             }
