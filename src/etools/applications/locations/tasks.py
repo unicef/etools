@@ -116,8 +116,12 @@ def update_sites_from_cartodb(carto_table_pk):
         query_max_id = sql_client.send('select MAX({}) from {}'.format(cartodb_id_col, carto_table.table_name))
         max_id = query_max_id['rows'][0]['max']
     except CartoException as exc:
-        logger.exception("CartoDB exception occured: {}".format(exc))
-        return
+        logger.exception("Cannot fetch pagination prequisites from CartoDB for {}: {}".format(
+            carto_table.table_name, exc
+        ))
+        return "Table name {}: {} sites created, {} sites updated, {} sites skipped".format(
+            carto_table.table_name, 0, 0, 0
+        )
 
     offset = 0
     limit = 100
@@ -161,7 +165,8 @@ def update_sites_from_cartodb(carto_table_pk):
             rows += sites['rows']
 
             if 'error' in sites:
-                raise CartoException(sites['error'])
+                # it seems we can have both valid results and error messages in the same CartoDB response
+                logger.exception("CartoDB exception occured: {}".format(sites['error']))
     except CartoException as exc:
         logger.exception("CartoDB exception occured: {}".format(exc))
     else:
