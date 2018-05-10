@@ -120,7 +120,7 @@ def update_sites_from_cartodb(carto_table_pk):
         limit = 100
 
         # failsafe in the case when cartodb id's are too much off compared to the nr. of records
-        if True or max_id > (5 * row_count):
+        if max_id > (5 * row_count):
             limit = max_id + 1
             logger.exception("The CartoDB primary key seemf off, pagination is not possible")
 
