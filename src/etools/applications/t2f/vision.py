@@ -1,5 +1,6 @@
 
 import logging
+import xml.etree.ElementTree as ET
 from collections import defaultdict
 from decimal import Decimal
 from functools import wraps
@@ -16,12 +17,6 @@ from django.utils.datastructures import MultiValueDict
 from etools.applications.notification.utils import send_notification_using_templates
 from etools.applications.t2f.models import Invoice
 from etools.applications.users.models import Country as Workspace
-
-try:
-    import xml.etree.cElementTree as ET
-except ImportError:
-    import xml.etree.ElementTree as ET
-
 
 log = logging.getLogger(__name__)
 
@@ -189,8 +184,7 @@ class InvoiceUpdater(object):
             try:
                 invoice = Invoice.objects.get(reference_number=invoice_number)
             except ObjectDoesNotExist:
-                # TODO refine error handling
-                log.error('Cannot find invoice with reference number %s', invoice_number)
+                log.exception('Cannot find invoice with reference number %s', invoice_number)
                 continue
 
             invoice.status = invoice_data[self.STATUS_FIELD]

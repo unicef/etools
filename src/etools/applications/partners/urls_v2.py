@@ -35,7 +35,12 @@ from etools.applications.partners.views.partner_organization_v2 import (PartnerO
                                                                         PartnerOrganizationListAPIView,
                                                                         PartnerOrganizationSimpleHactAPIView,
                                                                         PartnerStaffMemberListAPIVIew,
-                                                                        PlannedEngagementAPIView,)
+                                                                        PlannedEngagementAPIView,
+                                                                        PartnerNotAssuranceCompliant,
+                                                                        PartnerNotSpotCheckCompliant,
+                                                                        PartnerNotProgrammaticVisitCompliant,
+                                                                        PartnerWithSpecialAuditCompleted,
+                                                                        PartnerWithScheduledAuditCompleted)
 from etools.applications.partners.views.v1 import PCAPDFView
 from etools.applications.partners.views.v2 import PMPDropdownsListApiView, PMPStaticDropdownsListAPIView
 
@@ -62,6 +67,22 @@ urlpatterns = (
     url(r'^partners/$',
         view=PartnerOrganizationListAPIView.as_view(http_method_names=['get']),
         name='partner-list'),
+    url(r'^partners/not_programmatic_visit/$',
+        view=PartnerNotProgrammaticVisitCompliant.as_view(http_method_names=['get']),
+        name='partner-list-not-programmatic-visit'),
+    url(r'^partners/not_spot_check/$',
+        view=PartnerNotSpotCheckCompliant.as_view(http_method_names=['get']),
+        name='partner-list-not-spot-check'),
+    url(r'^partners/not_assurance/$',
+        view=PartnerNotAssuranceCompliant.as_view(http_method_names=['get']),
+        name='partner-list-not-assurance'),
+    url(r'^partners/special_audit_completed/$',
+        view=PartnerWithSpecialAuditCompleted.as_view(http_method_names=['get']),
+        name='partner-special-audit-completed'),
+    url(r'^partners/scheduled_audit_completed/$',
+        view=PartnerWithScheduledAuditCompleted.as_view(http_method_names=['get']),
+        name='partner-scheduled-audit-completed'),
+
     url(r'^partners/hact/$',
         view=PartnerOrganizationHactAPIView.as_view(http_method_names=['get', ]),
         name='partner-hact'),

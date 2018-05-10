@@ -6,7 +6,7 @@ from django.core.checks import Error, register
 
 def assert_isdir(path):
     if not os.path.isdir(path):
-        raise OSError(f"SAML configuration issue.'{path}' does not exists")
+        raise OSError(1, "SAML configuration issue: path does not exists", path)
 
 
 @register('etools')
