@@ -26,7 +26,10 @@ from etools.applications.partners.views.interventions_v2 import (InterventionAme
                                                                  InterventionResultLinkUpdateView,
                                                                  InterventionResultListAPIView,
                                                                  InterventionSectorLocationLinkListAPIView,)
-from etools.applications.partners.views.partner_organization_v2 import (PartnerOrganizationAddView,
+from etools.applications.partners.views.partner_organization_v2 import (PartnerNotAssuranceCompliant,
+                                                                        PartnerNotProgrammaticVisitCompliant,
+                                                                        PartnerNotSpotCheckCompliant,
+                                                                        PartnerOrganizationAddView,
                                                                         PartnerOrganizationAssessmentDeleteView,
                                                                         PartnerOrganizationAssessmentListView,
                                                                         PartnerOrganizationDeleteView,
@@ -35,12 +38,9 @@ from etools.applications.partners.views.partner_organization_v2 import (PartnerO
                                                                         PartnerOrganizationListAPIView,
                                                                         PartnerOrganizationSimpleHactAPIView,
                                                                         PartnerStaffMemberListAPIVIew,
-                                                                        PlannedEngagementAPIView,
-                                                                        PartnerNotAssuranceCompliant,
-                                                                        PartnerNotSpotCheckCompliant,
-                                                                        PartnerNotProgrammaticVisitCompliant,
+                                                                        PartnerWithScheduledAuditCompleted,
                                                                         PartnerWithSpecialAuditCompleted,
-                                                                        PartnerWithScheduledAuditCompleted)
+                                                                        PlannedEngagementAPIView,)
 from etools.applications.partners.views.v1 import PCAPDFView
 from etools.applications.partners.views.v2 import PMPDropdownsListApiView, PMPStaticDropdownsListAPIView
 

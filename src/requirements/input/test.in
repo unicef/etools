@@ -9,3 +9,10 @@ isort
 ipython
 pdbpp
 tox
+flake8-html
+pytest
+pytest-cov
+pytest-django
+pytest-echo
+pytest-html
+pytest-pythonpath
