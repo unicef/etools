@@ -1,0 +1,55 @@
+include README.md
+include MANIFEST.in
+include CONTRIBUTING.md
+include LICENSE
+include *.py
+
+recursive-include docs *
+recursive-include src/etools *
+
+recursive-include src/requirements *.txt
+
+exclude src/etools/settings/custom.*.py
+exclude .coverage
+exclude .coveragerc
+exclude .flake8
+exclude .isort.cfg
+exclude .gitignore
+exclude .dockerignore
+exclude conftest.py
+exclude Dockerfile
+exclude Dockerfile-dev
+exclude Procfile
+exclude tox.ini
+exclude tests
+exclude ~*
+
+exclude .circleci
+exclude db
+exclude db_dumps
+exclude dev_environ_setup.md
+exclude dev_environ_setup_linux.md
+exclude docker-compose.yml
+exclude docker-compose_v2.yml
+exclude docs
+exclude runtests.sh
+exclude screenshots
+exclude src/requirements/input
+exclude wait-for-it.sh
+exclude requirements.txt
+
+exclude refactor.sh
+exclude setup.in
+exclude src/etools/media
+
+recursive-exclude src/etools/media *
+recursive-exclude .circleci *
+recursive-exclude .virtualenv_hooks *
+recursive-exclude tests *
+recursive-exclude dist *
+recursive-exclude docs *
+recursive-exclude db *
+recursive-exclude db_dumps *
+recursive-exclude screenshots *
+recursive-exclude src *.in
+recursive-exclude .tox *
