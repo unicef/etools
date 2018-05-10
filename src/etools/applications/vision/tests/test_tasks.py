@@ -9,7 +9,6 @@ import mock
 
 import etools.applications.vision.tasks
 from etools.applications.EquiTrack.tests.cases import BaseTenantTestCase
-from etools.applications.partners.tests.factories import PartnerFactory
 from etools.applications.users.models import Country
 from etools.applications.users.tests.factories import CountryFactory
 from etools.applications.vision.exceptions import VisionException

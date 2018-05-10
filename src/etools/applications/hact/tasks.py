@@ -2,7 +2,7 @@
 import json
 from datetime import datetime, date
 
-from django.db.models import Q, Sum, F
+from django.db.models import F, Sum
 from django.db import connection, transaction
 
 from celery.utils.log import get_task_logger
