@@ -47,7 +47,8 @@ RUN pip install -f /pip -r /pip/app_requirements.txt
 
 ENV PYTHONUNBUFFERED 1
 ADD src /code/
-ADD manage.py /code/manage.py 
+ADD manage.py /code/manage.py
+ADD pytest.ini /code/pytest.ini
 ENV PYTHONPATH /code
 
 WORKDIR /code/
