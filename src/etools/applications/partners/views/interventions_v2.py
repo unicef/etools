@@ -788,6 +788,7 @@ class InterventionReportingRequirementView(APIView):
         self.intervention = self.get_object(intervention_pk)
         self.report_type = report_type
         self.request.data["report_type"] = self.report_type
+        self.request.data["method"] = self.request.method
         serializer = self.serializer_create_class(
             data=self.request.data,
             context={
