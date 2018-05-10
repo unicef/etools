@@ -1,5 +1,7 @@
 from __future__ import absolute_import, division, print_function, unicode_literals
 
+import time
+
 from django.db import IntegrityError
 from django.utils import six
 
@@ -103,6 +105,25 @@ def update_sites_from_cartodb(carto_table_pk):
     try:
         # query for cartodb
         qry = ''
+        rows = []
+        cartodb_id_col = 'cartodb_id'
+
+        query_row_count = sql_client.send('select count(*) from {}'.format(carto_table.table_name))
+        row_count = query_row_count['rows'][0]['count']
+
+        # do not spam Carto with requests, wait 1 second
+        time.sleep(1)
+        query_max_id = sql_client.send('select MAX({}) from {}'.format(cartodb_id_col, carto_table.table_name))
+        max_id = query_max_id['rows'][0]['max']
+
+        offset = 0
+        limit = 100
+
+        # failsafe in the case when cartodb id's are too much off compared to the nr. of records
+        if max_id > (5 * row_count):
+            limit = max_id + 1
+            logger.exception("The CartoDB primary key seemf off, pagination is not possible")
+
         if carto_table.parent_code_col and carto_table.parent:
             qry = 'select st_AsGeoJSON(the_geom) as the_geom, {}, {}, {} from {}'.format(
                 carto_table.name_col,
@@ -115,12 +136,29 @@ def update_sites_from_cartodb(carto_table_pk):
                 carto_table.pcode_col,
                 carto_table.table_name)
 
-        sites = sql_client.send(qry)
+        while offset <= max_id:
+            paged_qry = qry + ' WHERE {} > {} AND {} <= {}'.format(
+                cartodb_id_col,
+                offset,
+                cartodb_id_col,
+                offset + limit
+            )
+
+            offset += limit
+
+            # do not spam Carto with requests, wait 1 second
+            time.sleep(1)
+            sites = sql_client.send(paged_qry)
+            rows += sites['rows']
+
+            if 'error' in sites:
+                raise CartoException(sites['error'])
+
     except CartoException as exc:
         logger.exception("CartoDB exception occured {}".format(exc))
     else:
 
-        for row in sites['rows']:
+        for row in rows:
             pcode = six.text_type(row[carto_table.pcode_col]).strip()
             site_name = row[carto_table.name_col]
 
