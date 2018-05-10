@@ -328,7 +328,7 @@ class UserProfile(models.Model):
             try:
                 g = Group.objects.get(name='UNICEF User')
             except Group.DoesNotExist:
-                logger.error(u'Can not find main group UNICEF User')
+                logger.exception('Cannot find main group UNICEF User')
             else:
                 g.user_set.add(sender)
 
@@ -344,7 +344,7 @@ class UserProfile(models.Model):
             try:
                 new_country = Country.objects.get(business_area_code=adfs_country[0])
             except Country.DoesNotExist:
-                logger.error(u"Login - Business Area: {} not found for user {}".format(adfs_country[0], sender.email))
+                logger.exception("Login - Business Area: %s not found for user %s", adfs_country[0], sender.email)
                 return False
 
         if new_country and new_country != sender.profile.country:

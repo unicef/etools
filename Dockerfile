@@ -48,7 +48,7 @@ RUN pip install -f /pip -r /pip/app_requirements.txt
 ENV PYTHONUNBUFFERED 1
 ADD src /code/
 ADD manage.py /code/manage.py 
-ENV PYTHONPATH /code/src 
+ENV PYTHONPATH /code
 
 WORKDIR /code/
 

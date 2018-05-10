@@ -129,27 +129,16 @@ class CurrencySynchronizer(VisionDataSynchronizer):
             valid_from = datetime.strptime(row['VALID_FROM'], '%d-%b-%y')
             valid_to = datetime.strptime(row['VALID_TO'], '%d-%b-%y')
 
-            try:
-                currency = Currency.objects.get(code=currency_code)
-            except ObjectDoesNotExist:
-                currency = Currency(code=currency_code)
-                log.debug('Currency %s created.', currency_name)
-
-            currency.name = currency_name
-            currency.decimal_places = decimal_places
-            currency.save()
+            currency, created = Currency.objects.update_or_create(
+                code=currency_code,
+                defaults={'name': currency_name, 'decimal_places': decimal_places}
+            )
             log.info('Currency %s was updated.', currency_name)
 
-            try:
-                exchange_rate = ExchangeRate.objects.get(currency=currency)
-            except ObjectDoesNotExist:
-                exchange_rate = ExchangeRate(currency=currency)
-                log.debug('Exchange rate created for currency %s', currency_code)
-
-            exchange_rate.x_rate = x_rate
-            exchange_rate.valid_from = valid_from
-            exchange_rate.valid_to = valid_to
-            exchange_rate.save()
+            exchange_rate, created = ExchangeRate.objects.update_or_create(
+                currency=currency,
+                defaults={'x_rate': x_rate, 'valid_from': valid_from, 'valid_to': valid_to}
+            )
             log.info('Exchange rate %s was updated.', currency_name)
             processed += 1
 
