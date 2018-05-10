@@ -143,6 +143,11 @@ def update_sites_from_cartodb(carto_table_pk):
                 cartodb_id_col,
                 offset + limit
             )
+            logger.info('Requesting rows between {} and {} for {}'.format(
+                offset,
+                offset + limit,
+                carto_table.table_name
+            ))
 
             offset += limit
 
