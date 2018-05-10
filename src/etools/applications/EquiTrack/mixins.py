@@ -1,6 +1,3 @@
-"""
-Project wide mixins for models and classes
-"""
 from django.db import connection
 from django.db.models import Q
 
@@ -56,6 +53,8 @@ class ExportSerializerMixin(object):
 
 class QueryStringFilterMixin(object):
 
+    search_param = 'search'
+
     def filter_params(self, filters):
         queries = []
         for param_filter, query_filter in filters:
@@ -66,10 +65,10 @@ class QueryStringFilterMixin(object):
                 queries.append(Q(**{query_filter: value}))
         return queries
 
-    def search_params(self, filters, param_name='search'):
-        search_term = self.request.query_params.get(param_name)
+    def search_params(self, filters):
+        search_term = self.request.query_params.get(self.search_param)
         search_query = Q()
-        if param_name in self.request.query_params:
+        if self.search_param in self.request.query_params:
             for param_filter in filters:
                 q = Q(**{param_filter: search_term})
                 search_query = search_query | q
