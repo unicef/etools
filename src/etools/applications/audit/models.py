@@ -25,7 +25,6 @@ from etools.applications.audit.transitions.conditions import (AuditSubmitReportR
                                                               EngagementHasReportAttachmentsCheck,
                                                               EngagementSubmitReportRequiredFieldsCheck,
                                                               SpecialAuditSubmitRelatedModelsCheck,
-                                                              SpecialAuditSubmitReportRequiredFieldsCheck,
                                                               SPSubmitReportRequiredFieldsCheck,
                                                               ValidateAuditRiskCategories, ValidateMARiskCategories,
                                                               ValidateMARiskExtra,)
@@ -41,11 +40,17 @@ from etools.applications.utils.groups.wrappers import GroupWrapper
 
 @python_2_unicode_compatible
 class Engagement(TimeStampedModel, models.Model):
+
+    TYPE_AUDIT = 'audit'
+    TYPE_MICRO_ASSESSMENT = 'ma'
+    TYPE_SPOT_CHECK = 'sc'
+    TYPE_SPECIAL_AUDIT = 'sa'
+
     TYPES = Choices(
-        ('audit', _('Audit')),
-        ('ma', _('Micro Assessment')),
-        ('sc', _('Spot Check')),
-        ('sa', _('Special Audit')),
+        (TYPE_AUDIT, _('Audit')),
+        (TYPE_MICRO_ASSESSMENT, _('Micro Assessment')),
+        (TYPE_SPOT_CHECK, _('Spot Check')),
+        (TYPE_SPECIAL_AUDIT, _('Special Audit')),
     )
 
     PARTNER_CONTACTED = 'partner_contacted'
@@ -708,7 +713,7 @@ class SpecialAudit(Engagement):
         'status',
         source=Engagement.STATUSES.partner_contacted, target=Engagement.STATUSES.report_submitted,
         conditions=[
-            SpecialAuditSubmitReportRequiredFieldsCheck.as_condition(),
+            EngagementSubmitReportRequiredFieldsCheck.as_condition(),
             SpecialAuditSubmitRelatedModelsCheck.as_condition(),
             EngagementHasReportAttachmentsCheck.as_condition(),
         ],

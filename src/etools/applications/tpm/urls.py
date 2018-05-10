@@ -7,9 +7,9 @@ from etools.applications.tpm.views import TPMPartnerViewSet, TPMStaffMembersView
 from etools.applications.utils.common.routers import NestedComplexRouter
 
 tpm_partners_api = routers.SimpleRouter()
-tpm_partners_api.register(r'etools.applications.partners', TPMPartnerViewSet, base_name='partners')
+tpm_partners_api.register(r'partners', TPMPartnerViewSet, base_name='partners')
 
-tpm_staffmember_api = NestedComplexRouter(tpm_partners_api, r'etools.applications.partners', lookup='tpm_partner')
+tpm_staffmember_api = NestedComplexRouter(tpm_partners_api, r'partners', lookup='tpm_partner')
 tpm_staffmember_api.register(r'staff-members', TPMStaffMembersViewSet, base_name='tpmstaffmembers')
 
 tpm_visits_api = routers.SimpleRouter()

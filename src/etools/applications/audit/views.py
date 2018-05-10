@@ -12,7 +12,8 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.renderers import JSONRenderer
 from rest_framework.response import Response
 
-from etools.applications.audit.conditions import AuditModuleCondition, AuditStaffMemberCondition
+from etools.applications.audit.conditions import (AuditModuleCondition, AuditStaffMemberCondition,
+                                                  EngagementStaffMemberCondition,)
 from etools.applications.audit.exports import (AuditDetailCSVRenderer, AuditorFirmCSVRenderer,
                                                EngagementCSVRenderer, MicroAssessmentDetailCSVRenderer,
                                                SpecialAuditDetailCSVRenderer, SpotCheckDetailCSVRenderer,)
@@ -287,6 +288,7 @@ class EngagementViewSet(
         return [
             ObjectStatusCondition(obj),
             AuditStaffMemberCondition(obj.agreement.auditor_firm, self.request.user),
+            EngagementStaffMemberCondition(obj, self.request.user),
         ]
 
     @list_route(methods=['get'], url_path='partners')
