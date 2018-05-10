@@ -1,1 +1,8 @@
 .git
+screenshots
+.tox
+build
+db
+db_dumps
+docs
+
