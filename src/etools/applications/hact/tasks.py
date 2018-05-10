@@ -157,7 +157,7 @@ class PartnerHactSynchronizer(object):
         self.partner.hact_values['audits']['completed'] = completed_audit
         self.partner.save()
 
-    def outstanding_findings(self):
+    def hact_properties(self):
 
         hact = json.loads(self.partner.hact_values) if isinstance(
             self.partner.hact_values, (str, bytes)) else self.partner.hact_values
@@ -165,7 +165,9 @@ class PartnerHactSynchronizer(object):
                                       date_of_draft_report_to_unicef__year=datetime.now().year)
         hact['outstanding_findings'] = sum([
             audit.pending_unsupported_amount for audit in audits if audit.pending_unsupported_amount])
+        hact['assurance_coverage'] = self.partner.assurance_coverage
         self.partner.hact_values = json.dumps(hact, cls=HactEncoder)
+        self.partner.save()
 
 
 @app.task
@@ -175,16 +177,12 @@ def update_hact_for_country(country_name):
     logger.info('Set country {}'.format(country_name))
     for partner in PartnerOrganization.objects.active():
         logger.debug('Updating Partner {}'.format(partner.name))
-        hact = json.loads(partner.hact_values) if isinstance(partner.hact_values, str) else partner.hact_values
-        audits = Audit.objects.filter(partner=partner, status=Engagement.FINAL,
-                                      date_of_draft_report_to_unicef__year=datetime.now().year)
-        hact['outstanding_findings'] = sum([
-            audit.pending_unsupported_amount for audit in audits if audit.pending_unsupported_amount])
-        hact['assurance_coverage'] = partner.assurance_coverage
-
-        PartnerOrganization.programmatic_visits(partner)
-        partner.hact_values = json.dumps(hact, cls=HactEncoder)
-        partner.save()
+        partner_sync = PartnerHactSynchronizer(partner)
+        partner_sync.programmatic_visits()
+        partner_sync.planned_visits()
+        partner_sync.spot_checks()
+        partner_sync.audits_completed()
+        partner_sync.hact_properties()
 
 
 @app.task
