@@ -1859,7 +1859,8 @@ class TestInterventionReportingRequirementView(BaseTenantTestCase):
         _add_user_to_partnership_manager_group(cls.unicef_staff)
         cls.intervention = InterventionFactory(
             start=datetime.date(2001, 1, 1),
-            status=Intervention.DRAFT
+            status=Intervention.DRAFT,
+            in_amendment=True,
         )
         cls.result_link = InterventionResultLinkFactory(
             intervention=cls.intervention
@@ -1867,10 +1868,11 @@ class TestInterventionReportingRequirementView(BaseTenantTestCase):
         cls.lower_result = LowerResultFactory(result_link=cls.result_link)
         cls.indicator = AppliedIndicatorFactory(lower_result=cls.lower_result)
 
-    def _get_url(self, report_type):
+    def _get_url(self, report_type, intervention=None):
+        intervention = self.intervention if intervention is None else intervention
         return reverse(
             "partners_api:intervention-reporting-requirements",
-            args=[self.intervention.pk, report_type]
+            args=[intervention.pk, report_type]
         )
 
     def test_get(self):
@@ -1995,7 +1997,8 @@ class TestInterventionReportingRequirementView(BaseTenantTestCase):
             init_count + 2
         )
 
-    def test_post_invalid(self):
+    def test_post_invalid_no_report_type(self):
+        """Missing report type value"""
         report_type = ReportingRequirement.TYPE_QPR
         requirement_qs = ReportingRequirement.objects.filter(
             intervention=self.intervention,
@@ -2021,3 +2024,189 @@ class TestInterventionReportingRequirementView(BaseTenantTestCase):
                 {"start_date": ["This field is required."]}
             ]}
         )
+
+    def test_post_invalid_not_amendment_state(self):
+        """Intervention is not in amendment state"""
+        intervention = InterventionFactory(
+            start=datetime.date(2001, 1, 1),
+            status=Intervention.ENDED,
+            in_amendment=False,
+        )
+        result_link = InterventionResultLinkFactory(
+            intervention=intervention
+        )
+        lower_result = LowerResultFactory(result_link=result_link)
+        AppliedIndicatorFactory(lower_result=lower_result)
+
+        report_type = ReportingRequirement.TYPE_QPR
+        requirement_qs = ReportingRequirement.objects.filter(
+            intervention=intervention,
+            report_type=report_type,
+        )
+        init_count = requirement_qs.count()
+        response = self.forced_auth_req(
+            "post",
+            self._get_url(report_type, intervention=intervention),
+            user=self.unicef_staff,
+            data={
+                "report_type": ReportingRequirement.TYPE_HR,
+                "reporting_requirements": [{
+                    "start_date": datetime.date(2001, 2, 1),
+                    "end_date": datetime.date(2001, 3, 31),
+                    "due_date": datetime.date(2001, 4, 15),
+                }]
+            }
+        )
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertEqual(requirement_qs.count(), init_count)
+        self.assertEqual(
+            response.data,
+            {"non_field_errors": [
+                "Changes not allowed when PD not in amendment state."
+            ]}
+        )
+
+    def test_patch_invalid(self):
+        for report_type, _ in ReportingRequirement.TYPE_CHOICES:
+            if report_type != ReportingRequirement.TYPE_SPECIAL:
+                response = self.forced_auth_req(
+                    "patch",
+                    self._get_url(report_type),
+                    user=self.unicef_staff,
+                    data={
+                        "reporting_requirements": [{
+                            "due_date": datetime.date(2001, 4, 15),
+                            "description": "New"
+                        }]
+                    }
+                )
+                self.assertEqual(
+                    response.status_code,
+                    status.HTTP_400_BAD_REQUEST
+                )
+                self.assertEqual(response.data, "Invalid report type")
+
+    def test_patch_special(self):
+        report_type = ReportingRequirement.TYPE_SPECIAL
+        requirement = ReportingRequirementFactory(
+            intervention=self.intervention,
+            report_type=report_type,
+            due_date=datetime.date(2001, 4, 15),
+            description="Old",
+        )
+        requirement_qs = ReportingRequirement.objects.filter(
+            intervention=self.intervention,
+            report_type=report_type,
+        )
+        init_count = requirement_qs.count()
+        response = self.forced_auth_req(
+            "patch",
+            self._get_url(report_type),
+            user=self.unicef_staff,
+            data={
+                "reporting_requirements": [{
+                    "due_date": datetime.date(2001, 4, 15),
+                    "description": "New"
+                }]
+            }
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(requirement_qs.count(), init_count)
+        self.assertEqual(
+            len(response.data["reporting_requirements"]),
+            init_count
+        )
+        requirement_update = ReportingRequirement.objects.get(
+            pk=requirement.pk
+        )
+        self.assertEqual(requirement_update.description, "New")
+
+    def test_delete_invalid_report_type(self):
+        """Delete is only available for reporting type Special"""
+        for report_type, _ in ReportingRequirement.TYPE_CHOICES:
+            if report_type != ReportingRequirement.TYPE_SPECIAL:
+                response = self.forced_auth_req(
+                    "delete",
+                    self._get_url(report_type),
+                    user=self.unicef_staff,
+                    data={
+                        "reporting_requirements": [{
+                            "due_date": datetime.date(2001, 4, 15),
+                            "description": "New"
+                        }]
+                    }
+                )
+                self.assertEqual(
+                    response.status_code,
+                    status.HTTP_400_BAD_REQUEST
+                )
+                self.assertEqual(response.data, "Invalid report type")
+
+    def test_delete_invalid_old(self):
+        """Cannot delete special reporting requirements in the past"""
+        report_type = ReportingRequirement.TYPE_SPECIAL
+        requirement = ReportingRequirementFactory(
+            intervention=self.intervention,
+            report_type=report_type,
+            due_date=datetime.date(2001, 4, 15),
+            description="Old",
+        )
+        requirement_qs = ReportingRequirement.objects.filter(
+            intervention=self.intervention,
+            report_type=report_type,
+        )
+        init_count = requirement_qs.count()
+        response = self.forced_auth_req(
+            "delete",
+            self._get_url(report_type),
+            user=self.unicef_staff,
+            data={
+                "reporting_requirements": [{
+                    "due_date": datetime.date(2001, 4, 15),
+                    "description": "New"
+                }]
+            }
+        )
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertEqual(response.data, {
+            "reporting_requirements": "Cannot delete reporting requirements in the past."
+        })
+        self.assertEqual(requirement_qs.count(), init_count)
+        self.assertTrue(ReportingRequirement.objects.filter(
+            pk=requirement.pk
+        ).exists())
+
+    def test_delete_special(self):
+        report_type = ReportingRequirement.TYPE_SPECIAL
+        date = datetime.date.today() + datetime.timedelta(days=10)
+        requirement = ReportingRequirementFactory(
+            intervention=self.intervention,
+            report_type=report_type,
+            due_date=date,
+            description="Old",
+        )
+        requirement_qs = ReportingRequirement.objects.filter(
+            intervention=self.intervention,
+            report_type=report_type,
+        )
+        init_count = requirement_qs.count()
+        response = self.forced_auth_req(
+            "delete",
+            self._get_url(report_type),
+            user=self.unicef_staff,
+            data={
+                "reporting_requirements": [{
+                    "due_date": date,
+                    "description": "New"
+                }]
+            }
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(requirement_qs.count(), init_count - 1)
+        self.assertEqual(
+            len(response.data["reporting_requirements"]),
+            init_count - 1
+        )
+        self.assertFalse(ReportingRequirement.objects.filter(
+            pk=requirement.pk
+        ).exists())
