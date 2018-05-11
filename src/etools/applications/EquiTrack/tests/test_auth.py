@@ -5,10 +5,7 @@ from django.test import SimpleTestCase
 
 from etools.applications.EquiTrack import auth
 from etools.applications.EquiTrack.tests.cases import BaseTenantTestCase
-from etools.applications.users.tests.factories import (
-    CountryFactory,
-    UserFactory,
-)
+from etools.applications.users.tests.factories import UserFactory
 
 SOCIAL_AUTH_PATH = "etools.applications.EquiTrack.auth.social_auth"
 SOCIAL_USER_PATH = "etools.applications.EquiTrack.auth.social_core_user"
