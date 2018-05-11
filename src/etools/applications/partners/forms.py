@@ -11,10 +11,9 @@ from django.utils.translation import ugettext as _
 from dal import autocomplete
 
 from etools.applications.EquiTrack.forms import AutoSizeTextForm
-from etools.applications.partners.models import (
-    InterventionSectorLocationLink,  # TODO intervention sector locations cleanup
-    PartnerOrganization, PartnerStaffMember, PartnerType
-)
+from etools.applications.partners.models import \
+    InterventionSectorLocationLink  # TODO intervention sector locations cleanup
+from etools.applications.partners.models import PartnerOrganization, PartnerStaffMember, PartnerType
 
 logger = logging.getLogger('partners.forms')
 

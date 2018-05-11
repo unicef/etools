@@ -16,6 +16,7 @@ class CodedGenericChild(models.Model):
 
     class Meta:
         verbose_name_plural = _('Coded Generic Children')
+        app_label = 'tests'
 
 
 class Parent(models.Model):
@@ -32,3 +33,4 @@ class Child1(models.Model):
 
     class Meta:
         verbose_name_plural = _('Children1')
+        app_label = 'tests'

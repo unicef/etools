@@ -3,8 +3,9 @@ from django.conf.urls import url
 
 from etools.applications.management.views.general import InvalidateCache, SyncFRs
 from etools.applications.management.views.reports import LoadResultStructure
-from etools.applications.management.views.tasks_endpoints import (
-    TestSendEmailAPIView, UpdateAggregateHactValuesAPIView, UpdateHactValuesAPIView,)
+from etools.applications.management.views.tasks_endpoints import (TestSendEmailAPIView,
+                                                                  UpdateAggregateHactValuesAPIView,
+                                                                  UpdateHactValuesAPIView,)
 from etools.applications.management.views.v1 import ActiveUsersSection, AgreementsStatisticsView, PortalDashView
 
 app_name = 'management'
