@@ -7,7 +7,12 @@ import rest_framework_jwt.views
 from rest_framework_nested import routers
 from rest_framework_swagger.renderers import OpenAPIRenderer
 
-from etools.applications.EquiTrack.views import IssueJWTRedirectView, MainView, OutdatedBrowserView
+from etools.applications.EquiTrack.views import (
+    IssueJWTRedirectView,
+    logout_view,
+    MainView,
+    OutdatedBrowserView
+)
 from etools.applications.locations.views import LocationsLightViewSet, LocationsViewSet, LocationTypesViewSet
 from etools.applications.management.urls import urlpatterns as management_urls
 from etools.applications.partners.views.v1 import FileTypeViewSet
@@ -52,6 +57,7 @@ urlpatterns = [
     # Used for admin and dashboard pages in django
     url(r'^$', ModuleRedirectView.as_view(), name='dashboard'),
     url(r'^login/$', MainView.as_view(), name='main'),
+    url(r'^saml2/logout/$', logout_view, name='saml2_logout'),
     url(r'^email-auth/', include('etools.applications.email_auth.urls')),
 
     url(r'^api/static_data/$', StaticDataView.as_view({'get': 'list'}), name='public_static'),
