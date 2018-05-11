@@ -18,7 +18,6 @@ ANONYMOUS_ALLOWED_URL_FRAGMENTS = [
     'api',
     'social',
     'login',
-    'saml',
     'accounts',
     'monitoring',
 ]

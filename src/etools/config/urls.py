@@ -1,10 +1,8 @@
-
 from django.conf import settings
 from django.conf.urls import include, url
 from django.contrib import admin
 from django.views.generic import TemplateView
 
-import djangosaml2.views
 import rest_framework_jwt.views
 from rest_framework_nested import routers
 from rest_framework_swagger.renderers import OpenAPIRenderer
@@ -95,7 +93,6 @@ urlpatterns = [
     url(r'^admin/', admin.site.urls),
 
     # helper urls
-    url(r'^saml2/', include('djangosaml2.urls')),
     url(r'^login/token-auth/', rest_framework_jwt.views.obtain_jwt_token),
     # TODO: remove this when eTrips is deployed needed
     url(r'^api-token-auth/', rest_framework_jwt.views.obtain_jwt_token),
@@ -115,5 +112,4 @@ if settings.DEBUG:
 
     urlpatterns += [
         url(r'^__debug__/', include(debug_toolbar.urls)),
-        url(r'^test/', djangosaml2.views.echo_attributes),
     ]
