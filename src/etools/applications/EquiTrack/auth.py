@@ -26,14 +26,12 @@ def social_details(backend, details, response, *args, **kwargs):
     r['details']['idp'] = response.get('idp')
     if not r['details'].get('email'):
         r['details']['email'] = response.get('email')
-        return r
+    return r
 
 
 def get_username(strategy, details, backend, user=None, *args, **kwargs):
     username = details.get('email')
-    try:
-        get_user_model().objects.get(username=username)
-    except get_user_model().DoesNotExist:
+    if not get_user_model().objects.filter(username=username).exists():
         return
         # return HttpResponseRedirect("/workspace_inactive/")
     return {'username': details.get('email')}
@@ -42,34 +40,28 @@ def get_username(strategy, details, backend, user=None, *args, **kwargs):
 def user_details(strategy, details, user=None, *args, **kwargs):
     # This is where we update the user
     # see what the property to map by is here
-    updates_available = False
     if user:
         user_groups = [group.name for group in user.groups.all()]
         business_area_code = details.get("business_area_code", 'defaultBA1235')
 
+        try:
+            country = Country.objects.get(business_area_code=business_area_code)
+        except Country.DoesNotExist:
+            country = Country.objects.get(name='UAT')
+
         if details.get("idp") == "UNICEF Azure AD" and "UNICEF User" not in user_groups:
             user.groups.add(Group.objects.get(name='UNICEF User'))
             user.is_staff = True
-            updates_available = True
-
-        def update_user_country():
-            try:
-                user.profile.country = Country.objects.get(business_area_code=business_area_code)
-            except Country.DoesNotExist:
-                user.profile.country = Country.objects.get(name='UAT')
+            user.save()
 
         if not user.profile.country:
-            update_user_country()
-            updates_available = True
+            user.profile.country = country
+            user.profile.save()
         elif not user.profile.country_override:
             # make sure that we update the workspace based business area
             if business_area_code != user.profile.country.business_area_code:
-                update_user_country()
-                updates_available = True
-
-        if updates_available:
-            user.save()
-            user.profile.save()
+                user.profile.country = country
+                user.profile.save()
 
     return social_core_user.user_details(strategy, details, user, *args, **kwargs)
 
