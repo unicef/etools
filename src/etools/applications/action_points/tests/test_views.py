@@ -166,6 +166,7 @@ class TestActionPointsListViewMetadada(TestActionPointsViewMetadata, BaseTenantT
                 'description',
                 'due_date',
                 'assigned_to',
+                'high_priority',
 
                 # pme related fields
                 'cp_output',
@@ -213,6 +214,7 @@ class TestOpenActionPointDetailViewMetadata(TestActionPointsDetailViewMetadata, 
     editable_fields = [
         'due_date',
         'assigned_to',
+        'high_priority',
         'action_taken',
 
         'cp_output',
