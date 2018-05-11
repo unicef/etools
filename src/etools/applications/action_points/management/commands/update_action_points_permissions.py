@@ -22,6 +22,7 @@ class Command(BaseCommand):
         'action_points.actionpoint.description',
         'action_points.actionpoint.due_date',
         'action_points.actionpoint.assigned_to',
+        'action_points.actionpoint.priority',
     ] + action_point_pmp_relations
 
     # editable fields on edit
@@ -29,6 +30,7 @@ class Command(BaseCommand):
         'action_points.actionpoint.due_date',
         'action_points.actionpoint.assigned_to',
         'action_points.actionpoint.action_taken',
+        'action_points.actionpoint.priority',
     ] + action_point_pmp_relations
 
     # common fields, should be visible always
@@ -40,6 +42,7 @@ class Command(BaseCommand):
         'action_points.actionpoint.assigned_to',
         'action_points.actionpoint.author',
         'action_points.actionpoint.assigned_by',
+        'action_points.actionpoint.priority',
 
         'action_points.actionpoint.status',
         'action_points.actionpoint.status_date',
@@ -130,15 +133,7 @@ class Command(BaseCommand):
                 'Generating new permissions...'
             )
 
-        self.add_permission([self.unicef_user, self.pme], 'view',
-                            self.action_point_list + self.action_point_details)
-
-        self.add_permission(self.unicef_user, 'edit', self.action_point_create,
-                            condition=self.new_action_point())
-
-        self.add_permission([self.pme, self.author, self.assigned_by, self.assignee], 'edit', self.action_point_edit,
-                            condition=self.action_point_status(ActionPoint.STATUSES.open))
-        self.add_permission([self.pme, self.assignee], 'action', 'action_points.actionpoint.complete')
+        self.assign_permissions()
 
         old_permissions = Permission.objects.filter(target__startswith='action_points.')
         old_permissions_count = old_permissions.count()
@@ -159,3 +154,14 @@ class Command(BaseCommand):
             self.stdout.write(
                 'Action Points permissions updated ({}) -> ({}).'.format(old_permissions_count, len(self.permissions))
             )
+
+    def assign_permissions(self):
+        self.add_permission([self.unicef_user, self.pme], 'view',
+                            self.action_point_list + self.action_point_details)
+
+        self.add_permission(self.unicef_user, 'edit', self.action_point_create,
+                            condition=self.new_action_point())
+
+        self.add_permission([self.pme, self.author, self.assigned_by, self.assignee], 'edit', self.action_point_edit,
+                            condition=self.action_point_status(ActionPoint.STATUSES.open))
+        self.add_permission([self.pme, self.assignee], 'action', 'action_points.actionpoint.complete')
