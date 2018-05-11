@@ -1,4 +1,3 @@
-
 from django.core.management import call_command
 
 import factory.fuzzy
@@ -29,8 +28,7 @@ class TestActionPointModel(BaseTenantTestCase):
             action_point.complete()
 
     def test_complete(self):
-        action_point = ActionPointFactory()
-        action_point.action_taken = factory.fuzzy.FuzzyText()
+        action_point = ActionPointFactory(status='pre_completed')
         action_point.complete()
 
     def test_audit_related(self):

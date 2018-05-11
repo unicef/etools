@@ -1,8 +1,6 @@
-
 from django.conf import settings
 from django.contrib.contenttypes.fields import GenericRelation
 from django.db import models
-from django.utils import six
 from django.utils.six import python_2_unicode_compatible
 from django.utils.translation import ugettext_lazy as _
 
@@ -11,9 +9,11 @@ from model_utils import Choices, FieldTracker
 from model_utils.fields import MonitorField
 from model_utils.models import TimeStampedModel
 
-from etools.applications.action_points.conditions import ActionPointCompleteRequiredFieldsCheck
+from etools.applications.action_points.transitions.conditions import ActionPointCompleteRequiredFieldsCheck
 from etools.applications.EquiTrack.utils import get_environment
 from etools.applications.notification.models import Notification
+from etools.applications.permissions2.fsm import has_action_permission
+from etools.applications.utils.groups.wrappers import GroupWrapper
 
 
 @python_2_unicode_compatible
@@ -105,6 +105,15 @@ class ActionPoint(TimeStampedModel):
 
     tracker = FieldTracker(fields=['assigned_to'])
 
+    class Meta:
+        ordering = ('id', )
+        verbose_name = _('Action Point')
+        verbose_name_plural = _('Action Points')
+
+    @property
+    def related_object(self):
+        return self.engagement or self.tpm_activity or self.travel_activity
+
     @property
     def related_module(self):
         if self.engagement:
@@ -143,7 +152,7 @@ class ActionPoint(TimeStampedModel):
             'person_responsible': self.assigned_to.get_full_name(),
             'assigned_by': self.assigned_by.get_full_name(),
             'reference_number': self.reference_number,
-            'implementing_partner': six.text_type(self.partner),
+            'implementing_partner': str(self.partner),
             'description': self.description,
             'due_date': self.due_date.strftime('%d %b %Y'),
             'object_url': 'link to follow up',
@@ -164,8 +173,16 @@ class ActionPoint(TimeStampedModel):
         notification.send_notification()
 
     @transition(status, source=STATUSES.open, target=STATUSES.completed,
+                permission=has_action_permission(action='complete'),
                 conditions=[
                     ActionPointCompleteRequiredFieldsCheck.as_condition()
                 ])
     def complete(self):
         self.send_email(self.assigned_by, 'action_points/action_point/completed')
+
+
+PME = GroupWrapper(code='pme',
+                   name='PME')
+
+UNICEFUser = GroupWrapper(code='unicef_user',
+                          name='UNICEF User')
