@@ -74,7 +74,7 @@ class ActionPointLightSerializer(UserContextSerializerMixin,
             'section', 'office', 'location',
             'partner', 'cp_output', 'intervention',
 
-            'priority', 'due_date', 'description', 'action_taken',
+            'high_priority', 'due_date', 'description', 'action_taken',
 
             'created', 'date_of_completion',
             'status', 'status_date',

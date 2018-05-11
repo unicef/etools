@@ -22,7 +22,7 @@ class Command(BaseCommand):
         'action_points.actionpoint.description',
         'action_points.actionpoint.due_date',
         'action_points.actionpoint.assigned_to',
-        'action_points.actionpoint.priority',
+        'action_points.actionpoint.high_priority',
     ] + action_point_pmp_relations
 
     # editable fields on edit
@@ -30,7 +30,7 @@ class Command(BaseCommand):
         'action_points.actionpoint.due_date',
         'action_points.actionpoint.assigned_to',
         'action_points.actionpoint.action_taken',
-        'action_points.actionpoint.priority',
+        'action_points.actionpoint.high_priority',
     ] + action_point_pmp_relations
 
     # common fields, should be visible always
@@ -42,7 +42,7 @@ class Command(BaseCommand):
         'action_points.actionpoint.assigned_to',
         'action_points.actionpoint.author',
         'action_points.actionpoint.assigned_by',
-        'action_points.actionpoint.priority',
+        'action_points.actionpoint.high_priority',
 
         'action_points.actionpoint.status',
         'action_points.actionpoint.status_date',

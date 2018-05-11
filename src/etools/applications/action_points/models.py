@@ -29,12 +29,6 @@ class ActionPoint(TimeStampedModel):
         ('completed', _('Completed')),
     )
 
-    PRIORITY_CHOICES = Choices(
-        ('low', _('Low')),
-        ('normal', _('Normal')),
-        ('high', _('High')),
-    )
-
     STATUSES_DATES = {
         STATUSES.open: 'created',
         STATUSES.completed: 'date_of_completion'
@@ -61,8 +55,7 @@ class ActionPoint(TimeStampedModel):
 
     description = models.TextField(verbose_name=_('Description'))
     due_date = models.DateField(verbose_name=_('Due Date'), blank=True, null=True)
-    priority = models.CharField(choices=PRIORITY_CHOICES, default=PRIORITY_CHOICES.normal, max_length=10,
-                                verbose_name=_('Priority'))
+    high_priority = models.BooleanField(default=False, verbose_name=_('High Priority'))
 
     action_taken = models.TextField(verbose_name=_('Action Taken'), blank=True)
 
