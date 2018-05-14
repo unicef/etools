@@ -6,7 +6,7 @@ class PartnerOrganizationCSVRenderer(r.CSVRenderer):
               'short_name', 'alternate_name', 'partner_type', 'shared_with', 'address',
               'phone_number', 'email_address', 'risk_rating', 'date_last_assessment_against_core_values',
               'actual_cash_transfer_for_cp', 'actual_cash_transfer_for_current_year', 'marked_for_deletion', 'blocked',
-              'type_of_assessment', 'date_assessed', 'assessments', 'staff_members', 'url', ]
+              'type_of_assessment', 'date_assessed', 'assessments', 'staff_members', 'url', 'planned_visits', ]
 
     labels = {
         'vendor_number': 'Vendor Number',
@@ -29,6 +29,7 @@ class PartnerOrganizationCSVRenderer(r.CSVRenderer):
         'assessments': 'Assessment Type (Date Assessed)',
         'staff_members': 'Staff Members',
         'url': 'URL',
+        'planned_visits': "Planned Programmatic Visits",
     }
 
 

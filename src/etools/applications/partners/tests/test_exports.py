@@ -8,13 +8,14 @@ from rest_framework import status
 from tablib.core import Dataset
 
 from etools.applications.EquiTrack.tests.cases import BaseTenantTestCase
-from etools.applications.partners.models import PartnerOrganization
+from etools.applications.partners.models import PartnerOrganization, PartnerType
 from etools.applications.partners.tests.factories import (
     AgreementFactory,
     CountryProgrammeFactory,
     InterventionBudgetFactory,
     InterventionFactory,
     PartnerFactory,
+    PartnerPlannedVisitsFactory,
     PartnerStaffFactory,
 )
 from etools.applications.reports.models import ResultType
@@ -27,7 +28,7 @@ class TestModelExport(BaseTenantTestCase):
     def setUpTestData(cls):
         cls.unicef_staff = UserFactory(is_staff=True)
         cls.partner = PartnerFactory(
-            partner_type='Government',
+            partner_type=PartnerType.UN_AGENCY,
             vendor_number='Vendor No',
             short_name="Short Name",
             alternate_name="Alternate Name",
@@ -80,6 +81,7 @@ class TestModelExport(BaseTenantTestCase):
             country_programme=cls.agreement.country_programme,
         )
         cls.ib = InterventionBudgetFactory(intervention=cls.intervention, currency="USD")
+        cls.planned_visit = PartnerPlannedVisitsFactory(partner=cls.partner)
 
         output_res_type, _ = ResultType.objects.get_or_create(name='Output')
         cls.result = ResultFactory(result_type=output_res_type)
@@ -214,7 +216,7 @@ class TestModelExport(BaseTenantTestCase):
             'Signed By UNICEF Date',
             'Partner Authorized Officer',
             'Amendments',
-            'URL'
+            'URL',
         ])
 
         # we're interested in the first agreement, so it will be last in the exported list
@@ -232,7 +234,7 @@ class TestModelExport(BaseTenantTestCase):
             '{}'.format(self.agreement.signed_by_unicef_date),
             ', '.join([sm.get_full_name() for sm in self.agreement.authorized_officers.all()]),
             u'',
-            u'https://testserver/pmp/agreements/{}/details/'.format(self.agreement.id)
+            u'https://testserver/pmp/agreements/{}/details/'.format(self.agreement.id),
         )
         )
 
@@ -267,7 +269,8 @@ class TestModelExport(BaseTenantTestCase):
             'Date Assessed',
             'Assessment Type (Date Assessed)',
             'Staff Members',
-            'URL'
+            'URL',
+            'Planned Programmatic Visits'
         ])
         deleted_flag = "Yes" if self.partner.deleted_flag else "No"
         blocked = "Yes" if self.partner.blocked else "No"
@@ -294,6 +297,12 @@ class TestModelExport(BaseTenantTestCase):
             u'',
             ', '.join(["{} ({})".format(sm.get_full_name(), sm.email)
                        for sm in self.partner.staff_members.filter(active=True).all()]),
-            u'https://testserver/pmp/partners/{}/details/'.format(self.partner.id)
-        )
-        )
+            u'https://testserver/pmp/partners/{}/details/'.format(self.partner.id),
+            u'{} (Q1:{} Q2:{}, Q3:{}, Q4:{})'.format(
+                self.planned_visit.year,
+                self.planned_visit.programmatic_q1,
+                self.planned_visit.programmatic_q2,
+                self.planned_visit.programmatic_q3,
+                self.planned_visit.programmatic_q4,
+            ),
+        ))
