@@ -1,0 +1,132 @@
+{% extends "audit/engagement_pdf.html" %}
+
+{% block extra_content %}
+  <div class="content-section">
+    <div class="content-section__header">
+      <div class="content-section__header__title">Summary of audit findings</div>
+    </div>
+    <div class="content-section__wrapper">
+      <table class="content-section__table">
+        <tr class="content-section__table__header">
+          <td colspan="2">Partner Name</td>
+          <td>{{ serializer.fields.audited_expenditure.label }}</td>
+          <td>{{ serializer.fields.financial_findings.label }}</td>
+          <td>{{ serializer.fields.percent_of_audited_expenditure.label }}</td>
+          <td>{{ serializer.fields.audit_opinion.label }}</td>
+          <td>No. of Financial Findings</td>
+          <td colspan="3" style="padding: 0">
+            <table>
+              <tr style="border-bottom: none;">
+                <td colspan="3">No. of Key Control Weaknesses</td>
+              </tr>
+              <tr style="border-bottom: none;">
+                <td>High risk</td>
+                <td>Medium risk</td>
+                <td>Low risk</td>
+              </tr>
+            </table>
+          </td>
+        </tr>
+        <tr>
+          <td colspan="2">{{ engagement.partner.name }}</td>
+          <td>{{ engagement.audited_expenditure|default_if_none:"0.00" }}</td>
+          <td>{{ engagement.financial_findings|default_if_none:"0.00" }}</td>
+          <td>{{ engagement.percent_of_audited_expenditure|default_if_none:"0.00" }}</td>
+          <td>{{ engagement.audit_opinion|default:"-"|title }}</td>
+          <td>{{ engagement.financial_finding_set|length }}</td>
+          <td>{{ engagement.key_internal_weakness.high_risk_count }}</td>
+          <td>{{ engagement.key_internal_weakness.medium_risk_count }}</td>
+          <td>{{ engagement.key_internal_weakness.low_risk_count }}</td>
+        </tr>
+      </table>
+    </div>
+  </div>
+
+
+  <div class="content-section">
+    <div class="content-section__header">
+      <div class="content-section__header__title">{{ serializer.fields.key_internal_controls.label }}</div>
+    </div>
+    <div class="content-section__wrapper">
+      <table class="content-section__table">
+        <tr class="content-section__table__header">
+          <td>{{ serializer.fields.key_internal_controls.child.fields.recommendation.label }}</td>
+          <td>{{ serializer.fields.key_internal_controls.child.fields.audit_observation.label }}</td>
+          <td>{{ serializer.fields.key_internal_controls.child.fields.ip_response.label }}</td>
+        </tr>
+        {% for control in engagement.key_internal_controls %}
+          <tr>
+            <td>{{ control.recommendation|default:"-" }}</td>
+            <td>{{ control.audit_observation|default:"-" }}</td>
+            <td>{{ control.ip_response|default:"-" }}</td>
+          </tr>
+        {% endfor %}
+      </table>
+    </div>
+  </div>
+
+  <pdf:nextpage></pdf:nextpage>
+
+  <div class="content-section">
+    <div class="content-section__header">
+      <div class="content-section__header__title">Financial Findings</div>
+    </div>
+    <table class="content-section__wrapper">
+      <tr>
+        <td class="input-container">
+          <div class="input-container__label">{{ serializer.fields.audit_opinion.label }}</div>
+          <div class="input-container__value">
+            {{ engagement.audit_opinion|default:"-"|title }}</div>
+        </td>
+      </tr>
+      <tr>
+        <td class="input-container">
+          <div class="input-container__label">{{ serializer.fields.audited_expenditure.label }}</div>
+          <div class="input-container__value">
+            $ {{ engagement.audited_expenditure|default:"0.00" }}</div>
+        </td>
+        <td class="input-container">
+          <div class="input-container__label">{{ serializer.fields.financial_findings.label }}</div>
+          <div class="input-container__value">
+            $ {{ engagement.financial_findings|default_if_none:"0.00" }}</div>
+        </td>
+        <td class="input-container">
+          <div class="input-container__label">{{ serializer.fields.amount_refunded.label }}</div>
+          <div class="input-container__value">
+            $ {{ engagement.amount_refunded|default:"0.00" }}</div>
+        </td>
+      </tr>
+      <tr>
+        <td class="input-container">
+          <div class="input-container__label">{{ serializer.fields.additional_supporting_documentation_provided.label }}</div>
+          <div class="input-container__value">
+            $ {{ engagement.additional_supporting_documentation_provided|default:"0.00" }}</div>
+        </td>
+        <td class="input-container">
+          <div class="input-container__label">{{ serializer.fields.justification_provided_and_accepted.label }}</div>
+          <div class="input-container__value">
+            $ {{ engagement.justification_provided_and_accepted|default:"0.00" }}</div>
+        </td>
+        <td class="input-container">
+          <div class="input-container__label">{{ serializer.fields.write_off_required.label }}</div>
+          <div class="input-container__value">
+            $ {{ engagement.write_off_required|default:"0.00" }}</div>
+        </td>
+      </tr>
+      <tr>
+        <td class="input-container">
+          <div class="input-container__label">{{ serializer.fields.pending_unsupported_amount.label }}</div>
+          <div class="input-container__value">
+            $ {{ engagement.pending_unsupported_amount|default:"0.00" }}</div>
+        </td>
+      </tr>
+      <tr>
+        <td class="input-container" colspan="3">
+          <div class="input-container__label">{{ serializer.fields.explanation_for_additional_information.label }}</div>
+          <div class="input-container__value">
+            {{ engagement.explanation_for_additional_information|default:"-" }}</div>
+        </td>
+      </tr>
+    </table>
+  </div>
+{% endblock %}
