@@ -1,4 +1,3 @@
-
 import copy
 import datetime
 from unittest import skip
@@ -17,16 +16,24 @@ from etools.applications.EquiTrack.tests.cases import BaseTenantTestCase
 from etools.applications.funds.tests.factories import DonorFactory, FundsReservationHeaderFactory, GrantFactory
 from etools.applications.locations.tests.factories import LocationFactory
 from etools.applications.partners import models
-from etools.applications.partners.tests.factories import (AgreementAmendmentFactory, AgreementFactory,
-                                                          AssessmentFactory, FileTypeFactory,
-                                                          InterventionAmendmentFactory,
-                                                          InterventionAttachmentFactory, InterventionBudgetFactory,
-                                                          InterventionFactory, InterventionPlannedVisitsFactory,
-                                                          InterventionReportingPeriodFactory,
-                                                          InterventionResultLinkFactory,
-                                                          InterventionSectorLocationLinkFactory, PartnerFactory,
-                                                          PartnerStaffFactory, PlannedEngagementFactory,
-                                                          WorkspaceFileTypeFactory,)
+from etools.applications.partners.tests.factories import (
+    AgreementAmendmentFactory,
+    AgreementFactory,
+    AssessmentFactory,
+    FileTypeFactory,
+    InterventionAmendmentFactory,
+    InterventionAttachmentFactory,
+    InterventionBudgetFactory,
+    InterventionFactory,
+    InterventionReportingPeriodFactory,
+    InterventionResultLinkFactory,
+    InterventionSectorLocationLinkFactory,
+    PartnerFactory,
+    PartnerPlannedVisitsFactory,
+    PartnerStaffFactory,
+    PlannedEngagementFactory,
+    WorkspaceFileTypeFactory,
+)
 from etools.applications.reports.tests.factories import (AppliedIndicatorFactory, CountryProgrammeFactory,
                                                          LowerResultFactory, ResultFactory, SectorFactory,)
 from etools.applications.t2f.models import Travel, TravelType
@@ -369,76 +376,41 @@ class TestPartnerOrganizationModel(BaseTenantTestCase):
     def test_planned_visits_gov(self):
         self.partner_organization.partner_type = models.PartnerType.GOVERNMENT
         self.partner_organization.save()
-        intervention = InterventionFactory(
-            agreement=self.pca_signed1,
-            status=models.Intervention.ACTIVE
-        )
         year = datetime.date.today().year
-        InterventionPlannedVisitsFactory(
-            intervention=intervention,
+        PartnerPlannedVisitsFactory(
+            partner=self.partner_organization,
             year=year,
             programmatic_q1=3
         )
-        InterventionPlannedVisitsFactory(
-            intervention=intervention,
+        PartnerPlannedVisitsFactory(
+            partner=self.partner_organization,
             year=year - 1,
             programmatic_q3=2
         )
-        self.assertEqual(self.partner_organization.hact_values['programmatic_visits']['planned']['total'], 0)
+        self.assertEqual(
+            self.partner_organization.hact_values['programmatic_visits']['planned']['total'],
+            0
+        )
 
     def test_planned_visits_non_gov(self):
         self.partner_organization.partner_type = models.PartnerType.UN_AGENCY
         self.partner_organization.save()
-        intervention = InterventionFactory(
-            agreement=self.pca_signed1,
-            status=models.Intervention.ACTIVE
-        )
         year = datetime.date.today().year
-        InterventionPlannedVisitsFactory(
-            intervention=intervention,
+        PartnerPlannedVisitsFactory(
+            partner=self.partner_organization,
             year=year,
             programmatic_q1=3,
             programmatic_q4=4,
         )
-        InterventionPlannedVisitsFactory(
-            intervention=intervention,
+        PartnerPlannedVisitsFactory(
+            partner=self.partner_organization,
             year=year - 1,
             programmatic_q2=2
         )
-        models.PartnerOrganization.planned_visits(
-            self.partner_organization
-        )
-        self.assertEqual(self.partner_organization.hact_values['programmatic_visits']['planned']['total'], 7)
-
-    def test_planned_visits_non_gov_no_pv_intervention(self):
-        self.partner_organization.partner_type = models.PartnerType.UN_AGENCY
-        self.partner_organization.save()
-        intervention1 = InterventionFactory(
-            agreement=self.pca_signed1,
-            status=models.Intervention.ACTIVE
-        )
-        intervention2 = InterventionFactory(
-            agreement=self.pca_signed1,
-            status=models.Intervention.ACTIVE
-        )
-        year = datetime.date.today().year
-        InterventionPlannedVisitsFactory(
-            intervention=intervention1,
-            year=year,
-            programmatic_q1=1,
-            programmatic_q3=3,
-        )
-        InterventionPlannedVisitsFactory(
-            intervention=intervention2,
-            year=year - 1,
-            programmatic_q4=2
-        )
-        models.PartnerOrganization.planned_visits(
-            self.partner_organization
-        )
+        self.partner_organization.planned_visits_to_hact()
         self.assertEqual(
             self.partner_organization.hact_values['programmatic_visits']['planned']['total'],
-            4
+            7
         )
 
     def test_programmatic_visits_update_one(self):
@@ -1648,3 +1620,20 @@ class TestPlannedEngagement(BaseTenantTestCase):
         self.assertEquals(self.engagement.total_spot_check_follow_up_required, 3)
         self.assertEquals(self.engagement.spot_check_required, 4)
         self.assertEquals(self.engagement.required_audit, 1)
+
+
+class TestPartnerPlannedVisits(BaseTenantTestCase):
+    @classmethod
+    def setUpTestData(cls):
+        cls.partner = PartnerFactory(name="Partner")
+        cls.visit = PartnerPlannedVisitsFactory(
+            partner=cls.partner,
+            year=datetime.date.today().year,
+            programmatic_q1=1,
+            programmatic_q2=2,
+            programmatic_q3=3,
+            programmatic_q4=4,
+        )
+
+    def test_str(self):
+        self.assertEqual(str(self.visit), "Partner {}".format(self.visit.year))

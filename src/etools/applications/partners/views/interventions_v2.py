@@ -33,23 +33,24 @@ from etools.applications.partners.serializers.exports.interventions import (
     InterventionExportFlatSerializer, InterventionExportSerializer, InterventionIndicatorExportFlatSerializer,
     InterventionIndicatorExportSerializer, InterventionResultExportFlatSerializer, InterventionResultExportSerializer,
     InterventionSectorLocationLinkExportFlatSerializer, InterventionSectorLocationLinkExportSerializer)
-from etools.applications.partners.serializers.interventions_v2 import (InterventionAmendmentCUSerializer,
-                                                                       InterventionAttachmentSerializer,
-                                                                       InterventionBudgetCUSerializer,
-                                                                       InterventionCreateUpdateSerializer,
-                                                                       InterventionDetailSerializer,
-                                                                       InterventionIndicatorSerializer,
-                                                                       InterventionListMapSerializer,
-                                                                       InterventionListSerializer,
-                                                                       InterventionReportingPeriodSerializer,
-                                                                       InterventionReportingRequirementCreateSerializer,
-                                                                       InterventionReportingRequirementListSerializer,
-                                                                       InterventionResultCUSerializer,
-                                                                       InterventionResultLinkSimpleCUSerializer,
-                                                                       InterventionResultSerializer,
-                                                                       InterventionSectorLocationCUSerializer,
-                                                                       MinimalInterventionListSerializer,
-                                                                       PlannedVisitsCUSerializer,)
+from etools.applications.partners.serializers.interventions_v2 import (
+    InterventionAmendmentCUSerializer,
+    InterventionAttachmentSerializer,
+    InterventionBudgetCUSerializer,
+    InterventionCreateUpdateSerializer,
+    InterventionDetailSerializer,
+    InterventionIndicatorSerializer,
+    InterventionListMapSerializer,
+    InterventionListSerializer,
+    InterventionReportingPeriodSerializer,
+    InterventionReportingRequirementCreateSerializer,
+    InterventionReportingRequirementListSerializer,
+    InterventionResultCUSerializer,
+    InterventionResultLinkSimpleCUSerializer,
+    InterventionResultSerializer,
+    InterventionSectorLocationCUSerializer,
+    MinimalInterventionListSerializer,
+)
 from etools.applications.partners.validation.interventions import InterventionValid
 from etools.applications.reports.models import AppliedIndicator, LowerResult, ReportingRequirement
 from etools.applications.reports.serializers.v2 import AppliedIndicatorSerializer, LowerResultSimpleCUSerializer
@@ -78,7 +79,6 @@ class InterventionListAPIView(QueryStringFilterMixin, ExportModelMixin, Interven
 
     SERIALIZER_MAP = {
         'planned_budget': InterventionBudgetCUSerializer,
-        'planned_visits': PlannedVisitsCUSerializer,
         'attachments': InterventionAttachmentSerializer,
         'result_links': InterventionResultCUSerializer
     }
@@ -109,7 +109,6 @@ class InterventionListAPIView(QueryStringFilterMixin, ExportModelMixin, Interven
         """
         related_fields = [
             'planned_budget',
-            'planned_visits',
             'attachments',
             'result_links'
         ]
@@ -222,7 +221,6 @@ class InterventionDetailAPIView(ValidatorViewMixin, RetrieveUpdateDestroyAPIView
 
     SERIALIZER_MAP = {
         'planned_budget': InterventionBudgetCUSerializer,
-        'planned_visits': PlannedVisitsCUSerializer,
         'attachments': InterventionAttachmentSerializer,
         'result_links': InterventionResultCUSerializer
     }
@@ -237,7 +235,7 @@ class InterventionDetailAPIView(ValidatorViewMixin, RetrieveUpdateDestroyAPIView
 
     @transaction.atomic
     def update(self, request, *args, **kwargs):
-        related_fields = ['planned_budget', 'planned_visits',
+        related_fields = ['planned_budget',
                           'attachments',
                           'result_links']
         nested_related_names = ['ll_results']
