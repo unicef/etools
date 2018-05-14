@@ -556,11 +556,13 @@
                     A Transferência de Dinheiro para além dos Pagamentos Directos devem ser feitas pelo UNICEF
                     para a seguinte conta bancária do PI:
                 </li>
+                {% for bank_detail in bank_details %}
                 <table class="bordered">
+                    {% if forloop.counter == 1  %}
                     <tr>
                         <td colspan="2" class="bordered" style="text-align: center;">Conta</td>
                     </tr>
-                    {% for bank_detail in bank_details %}
+                    {% endif %}
                     <tr>
                         <td class="bordered" style="width: 45%;">Nome do banco:</td>
                         <td class="bordered">{{ bank_detail.bank_name }}</td>
@@ -591,8 +593,8 @@
                         <td class="bordered" style="width: 45%;">Pessoa de Contacto no Banco:</td>
                         <td class="bordered">{{ bank_detail.bank_contact_person }}</td>
                     </tr>
-                    {% endfor %}
                 </table>
+                {% endfor %}
 
                 <div class="" style="padding-top: 24px;">
                     <p><b>(B) Transferência de suprimentos /equipamentos pelo UNICEF para o PI</b></p>

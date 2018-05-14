@@ -566,12 +566,13 @@
                     Tout Transfert de fonds autre qu’un Paiement direct est réalisé par
                     l’UNICEF sur le compte bancaire suivant de l’IP
                 </li>
-
+                {% for bank_detail in bank_details %}
                 <table class="bordered">
+                    {% if forloop.counter == 1  %}
                     <tr>
                         <td colspan="2" class="bordered" style="text-align: center;">Compte</td>
                     </tr>
-                    {% for bank_detail in bank_details %}
+                    {% endif %}
                     <tr>
                         <td class="bordered" style="width: 45%;">Nom de la banque</td>
                         <td class="bordered">{{ bank_detail.bank_name }}</td>
@@ -600,8 +601,8 @@
                         <td class="bordered" style="width: 45%;">Chargé(e) de clientèle responsable du compte</td>
                         <td class="bordered">{{bank_detail.bank_contact_person}}</td>
                     </tr>
-                    {% endfor %}
                 </table>
+                {% endfor %}
 
                 <div class="" style="padding-top: 24px;">
                     <p><b>(B) Transferts de fournitures/d’équipements à l’IP par l’UNICEF</b></p>

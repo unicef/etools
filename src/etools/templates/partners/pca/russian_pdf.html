@@ -558,11 +558,13 @@
                 <li class="">
                     ЮНИСЕФ осуществляет Перевод денежных средств (за исключением Прямых платежей) на следующий банковский счет ПРП:
                 </li>
+                {% for bank_detail in bank_details %}
                 <table class="bordered">
+                    {% if forloop.counter == 1  %}
                     <tr>
                         <td colspan="2" class="bordered" style="text-align: center;">банковский счет</td>
                     </tr>
-                    {% for bank_detail in bank_details %}
+                    {% endif %}
                     <tr>
                         <td class="bordered" style="width: 45%;">Наименование банка</td>
                         <td class="bordered">{{ bank_detail.bank_name }}</td>
@@ -593,8 +595,8 @@
                         <td class="bordered" style="width: 45%;">Контактное лицо в банке</td>
                         <td class="bordered">{{ bank_detail.bank_contact_person }}</td>
                     </tr>
-                    {% endfor %}
                 </table>
+                {% endfor %}
 
                 <div class="" style="padding-top: 24px;">
                     <p><b>(B) Передача ПРП предметов снабжения и оборудования ЮНИСЕФ</b></p>

@@ -547,11 +547,13 @@
                 <li class="">
                     The Cash Transfer other than Direct Payments shall be made by UNICEF to the following bank account of the IP:
                 </li>
+                {% for bank_detail in bank_details %}
                 <table class="bordered">
+                    {% if forloop.counter == 1  %}
                     <tr>
                         <td colspan="2" class="bordered" style="text-align: center;">Account</td>
                     </tr>
-                    {% for bank_detail in bank_details %}
+                    {% endif %}
                     <tr>
                         <td class="bordered" style="width: 45%;">Bank Name</td>
                         <td class="bordered">{{ bank_detail.bank_name }}</td>
@@ -580,8 +582,8 @@
                         <td class="bordered" style="width: 45%;">Bank Contact Person</td>
                         <td class="bordered">{{ bank_detail.bank_contact_person }}</td>
                     </tr>
-                    {% endfor %}
                 </table>
+                {% endfor %}
 
                 <div class="" style="padding-top: 24px;">
                     <p><b>(B) Transfer of supplies/equipment by UNICEF to IP</b></p>
