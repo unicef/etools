@@ -45,9 +45,7 @@ def collect_child_models(model, levels=None):
     ]
     related_objects = [
         rel for rel in related_objects
-        if isinstance(rel.field, OneToOneField)
-        and issubclass(rel.field.model, model)
-        and model is not rel.field.model
+        if isinstance(rel.field, OneToOneField) and issubclass(rel.field.model, model) and model is not rel.field.model
     ]
 
     for rel in related_objects:
