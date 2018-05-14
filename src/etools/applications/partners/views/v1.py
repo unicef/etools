@@ -45,7 +45,6 @@ class PCAPDFView(PDFTemplateView):
         if not agreement.partner.vendor_number:
             return {"error": "Partner Organization has no vendor number stored, please report to an etools focal point"}
 
-        # 2500232146
         valid_response, response = get_data_from_insight('GetPartnerDetailsInfo_json/{vendor_code}',
                                                          {"vendor_code": agreement.partner.vendor_number})
 
@@ -70,6 +69,7 @@ class PCAPDFView(PDFTemplateView):
             if isinstance(b, dict):
                 b["BANK_ADDRESS"] = ', '.join(b[key] for key in ['STREET', 'CITY'] if key in b)
                 b["ACCT_HOLDER"] = b["ACCT_HOLDER"] if "ACCT_HOLDER" in b else ""
+                # TODO: fix currency field name when we have it
                 b["BANK_ACCOUNT_CURRENCY"] = b["BANK_ACCOUNT_CURRENCY"] if "BANK_ACCOUNT_CURRENCY" in b else ""
                 bank_objects.append(Bank(*[b[i[1]] for i in bank_key_values]))
 
