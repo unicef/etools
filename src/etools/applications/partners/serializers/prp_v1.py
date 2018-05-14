@@ -8,7 +8,7 @@ from etools.applications.locations.models import Location
 from etools.applications.partners.models import (Intervention, InterventionAmendment, InterventionReportingPeriod,
                                                  PartnerOrganization, PartnerStaffMember,)
 from etools.applications.reports.models import (AppliedIndicator, Disaggregation,
-                                                DisaggregationValue, LowerResult, Result,)
+                                                DisaggregationValue, LowerResult, Result, ReportingRequirement)
 from etools.applications.reports.serializers.v1 import SectorSerializer
 
 
@@ -173,6 +173,12 @@ class ReportingPeriodsSerializer(serializers.ModelSerializer):
         fields = ('id', 'start_date', 'end_date', 'due_date')
 
 
+class ReportingRequirementsSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = ReportingRequirement
+        fields = ('id', 'start_date', 'end_date', 'due_date', 'report_type', 'description')
+
+
 class PRPInterventionListSerializer(serializers.ModelSerializer):
 
     # todo: do these need to be lowercased?
@@ -202,6 +208,7 @@ class PRPInterventionListSerializer(serializers.ModelSerializer):
     expected_results = PRPResultSerializer(many=True, read_only=True, source='all_lower_results')
     update_date = serializers.DateTimeField(source='modified')
     reporting_periods = ReportingPeriodsSerializer(many=True, read_only=True)
+    reporting_requirements = ReportingRequirementsSerializer(many=True, read_only=True)
     sections = SectorSerializer(source="combined_sections", many=True, read_only=True)
     locations = PRPLocationSerializer(source="flat_locations", many=True, read_only=True)
 
@@ -237,6 +244,7 @@ class PRPInterventionListSerializer(serializers.ModelSerializer):
             'cso_budget', 'cso_budget_currency',
             'unicef_budget', 'unicef_budget_currency',
             'reporting_periods',
+            'reporting_requirements',
             'expected_results',
             'update_date',
             'amendments',
