@@ -17,6 +17,7 @@ from etools.applications.partners.views.helpers import set_tenant_or_fail
 class PRPInterventionPagination(LimitOffsetPagination):
     default_limit = 100
 
+
 class PRPPartnerPagination(LimitOffsetPagination):
     default_limit = 300
 
