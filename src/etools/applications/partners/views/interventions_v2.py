@@ -7,6 +7,7 @@ from django.contrib.contenttypes.models import ContentType
 from django.db import transaction
 from django.db.models import Q
 from django.shortcuts import get_object_or_404
+from django.utils.translation import ugettext as _
 
 from rest_framework import status
 from rest_framework.exceptions import ValidationError
@@ -781,6 +782,55 @@ class InterventionReportingRequirementView(APIView):
         )
         if serializer.is_valid():
             serializer.save()
+            return Response(
+                self.serializer_list_class(self.get_data()).data
+            )
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+    def patch(self, request, intervention_pk, report_type, format=None):
+        """Only special reporting types can patch"""
+        if report_type != ReportingRequirement.TYPE_SPECIAL:
+            return Response(
+                _("Invalid report type"),
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        self.intervention = self.get_object(intervention_pk)
+        self.report_type = report_type
+        self.request.data["report_type"] = self.report_type
+        serializer = self.serializer_create_class(
+            data=self.request.data,
+            context={
+                "intervention": self.intervention,
+            }
+        )
+        if serializer.is_valid():
+            serializer.save()
+            return Response(
+                self.serializer_list_class(self.get_data()).data
+            )
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+    def delete(self, request, intervention_pk, report_type, format=None):
+        """Only special reporting types can delete"""
+        if report_type != ReportingRequirement.TYPE_SPECIAL:
+            return Response(
+                _("Invalid report type"),
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        self.intervention = self.get_object(intervention_pk)
+        self.report_type = report_type
+        self.request.data["report_type"] = self.report_type
+        self.request.data["method"] = self.request.method
+        serializer = self.serializer_create_class(
+            data=self.request.data,
+            context={
+                "intervention": self.intervention,
+            }
+        )
+        if serializer.is_valid():
+            serializer.delete(serializer.validated_data)
             return Response(
                 self.serializer_list_class(self.get_data()).data
             )
