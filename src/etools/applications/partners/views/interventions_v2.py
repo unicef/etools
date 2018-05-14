@@ -24,9 +24,14 @@ from etools.applications.EquiTrack.validation_mixins import ValidatorViewMixin
 from etools.applications.partners.exports_v2 import InterventionCSVRenderer
 from etools.applications.partners.filters import (AppliedIndicatorsFilter, InterventionFilter,
                                                   InterventionResultLinkFilter, PartnerScopeFilter,)
-from etools.applications.partners.models import (Intervention, InterventionAmendment, InterventionAttachment,
-                                                 InterventionPlannedVisits, InterventionReportingPeriod,
-                                                 InterventionResultLink, InterventionSectorLocationLink,)
+from etools.applications.partners.models import (
+    Intervention,
+    InterventionAmendment,
+    InterventionAttachment,
+    InterventionReportingPeriod,
+    InterventionResultLink,
+    InterventionSectorLocationLink,
+)
 from etools.applications.partners.permissions import PartnershipManagerPermission, PartnershipManagerRepPermission
 from etools.applications.partners.serializers.exports.interventions import (
     InterventionAmendmentExportFlatSerializer, InterventionAmendmentExportSerializer,
@@ -257,24 +262,6 @@ class InterventionDetailAPIView(ValidatorViewMixin, RetrieveUpdateDestroyAPIView
             instance = self.get_object()
 
         return Response(InterventionDetailSerializer(instance, context=self.get_serializer_context()).data)
-
-
-class InterventionPlannedVisitsDeleteView(DestroyAPIView):
-    permission_classes = (PartnershipManagerRepPermission,)
-
-    def delete(self, request, *args, **kwargs):
-        try:
-            intervention_planned_visit = InterventionPlannedVisits.objects.get(id=int(kwargs['pk']))
-        except InterventionPlannedVisits.DoesNotExist:
-            return Response(status=status.HTTP_404_NOT_FOUND)
-        if intervention_planned_visit.intervention.status in [Intervention.DRAFT] or \
-            request.user in intervention_planned_visit.intervention.unicef_focal_points.all() or \
-            request.user.groups.filter(name__in=['Partnership Manager',
-                                                 'Senior Management Team']).exists():
-            intervention_planned_visit.delete()
-            return Response(status=status.HTTP_204_NO_CONTENT)
-        else:
-            raise ValidationError("You do not have permissions to delete a planned visit")
 
 
 class InterventionAttachmentDeleteView(DestroyAPIView):

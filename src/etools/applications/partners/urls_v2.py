@@ -17,7 +17,6 @@ from etools.applications.partners.views.interventions_v2 import (InterventionAme
                                                                  InterventionListMapView,
                                                                  InterventionLowerResultListCreateView,
                                                                  InterventionLowerResultUpdateView,
-                                                                 InterventionPlannedVisitsDeleteView,
                                                                  InterventionReportingPeriodDetailView,
                                                                  InterventionReportingPeriodListCreateView,
                                                                  InterventionReportingRequirementView,
@@ -151,9 +150,6 @@ urlpatterns = (
         view=InterventionDeleteView.as_view(http_method_names=['delete']),
         name='intervention-delete'),
 
-    url(r'^interventions/planned-visits/(?P<pk>\d+)/$',
-        view=InterventionPlannedVisitsDeleteView.as_view(http_method_names=['delete', ]),
-        name='intervention-visits-del'),
     url(r'^interventions/attachments/(?P<pk>\d+)/$',
         view=InterventionAttachmentDeleteView.as_view(http_method_names=['delete', ]),
         name='intervention-attachments-del'),
