@@ -34,6 +34,15 @@ class TestInterventionsAPI(WorkspaceRequiredAPITestMixIn, BaseTenantTestCase):
         )
         return response.status_code, json.loads(response.rendered_content)
 
+    def run_prp_partners_v1(self, user=None, method='get', data=None):
+        response = self.forced_auth_req(
+            method,
+            reverse('prp_api_v1:prp-partner-list'),
+            user=user or self.unicef_staff,
+            data=data,
+        )
+        return response.status_code, json.loads(response.rendered_content)
+
     def test_prp_api(self):
         status_code, response = self.run_prp_v1(
             user=self.unicef_staff, method='get'
@@ -84,6 +93,14 @@ class TestInterventionsAPI(WorkspaceRequiredAPITestMixIn, BaseTenantTestCase):
                 del actual_intervention['expected_results'][j]['indicators'][0]['locations'][0]['admin_level']
 
         self.assertEqual(response, expected_interventions)
+
+    def test_prp_partners_api(self):
+        status_code, response = self.run_prp_partners_v1(
+            user=self.unicef_staff, method='get'
+        )
+        self.assertEqual(status_code, status.HTTP_200_OK)
+        response = response['results']
+        self.assertEqual(len(response), 2)
 
     def test_prp_api_modified_queries(self):
         yesterday = (timezone.now() - datetime.timedelta(days=1)).isoformat()

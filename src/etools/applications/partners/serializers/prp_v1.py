@@ -12,13 +12,30 @@ from etools.applications.reports.models import (AppliedIndicator, Disaggregation
 from etools.applications.reports.serializers.v1 import SectorSerializer
 
 
-class PartnerSerializer(serializers.ModelSerializer):
+class PRPPartnerOrganizationListSerializer(serializers.ModelSerializer):
+    rating = serializers.CharField(source='get_rating_display')
     unicef_vendor_number = serializers.CharField(source='vendor_number', read_only=True)
 
     class Meta:
         model = PartnerOrganization
-        depth = 1
-        fields = ('id', 'name', 'unicef_vendor_number', 'short_name')
+        fields = (
+            "short_name",
+            "street_address",
+            "last_assessment_date",
+            "address",
+            "city",
+            "postal_code",
+            "country",
+            "id",
+            "unicef_vendor_number",
+            "name",
+            "alternate_name",
+            "rating",
+            "email",
+            "phone_number",
+            "basis_for_risk_rating",
+            "core_values_assessment_date"
+        )
 
 
 class AuthOfficerSerializer(serializers.ModelSerializer):
@@ -162,7 +179,7 @@ class PRPInterventionListSerializer(serializers.ModelSerializer):
     amendments = InterventionAmendmentSerializer(read_only=True, many=True)
     offices = serializers.SlugRelatedField(many=True, read_only=True, slug_field='name')
     business_area_code = serializers.SerializerMethodField()
-    partner_org = PartnerSerializer(read_only=True, source='agreement.partner')
+    partner_org = PRPPartnerOrganizationListSerializer(read_only=True, source='agreement.partner')
     agreement = serializers.CharField(read_only=True, source='agreement.agreement_number')
     unicef_focal_points = UserFocalPointSerializer(many=True, read_only=True)
     agreement_auth_officers = AuthOfficerSerializer(many=True, read_only=True,

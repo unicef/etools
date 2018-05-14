@@ -7,14 +7,18 @@ from rest_framework.generics import ListAPIView
 from rest_framework.pagination import LimitOffsetPagination
 
 from etools.applications.partners.filters import PartnerScopeFilter
-from etools.applications.partners.models import Intervention
+from etools.applications.partners.models import Intervention, PartnerOrganization
 from etools.applications.partners.permissions import ListCreateAPIMixedPermission
-from etools.applications.partners.serializers.prp_v1 import PRPInterventionListSerializer
+from etools.applications.partners.serializers.prp_v1 import PRPInterventionListSerializer, \
+    PRPPartnerOrganizationListSerializer
 from etools.applications.partners.views.helpers import set_tenant_or_fail
 
 
 class PRPInterventionPagination(LimitOffsetPagination):
     default_limit = 100
+
+class PRPPartnerPagination(LimitOffsetPagination):
+    default_limit = 300
 
 
 class PRPInterventionListAPIView(ListAPIView):
@@ -68,5 +72,27 @@ class PRPInterventionListAPIView(ListAPIView):
             if queries:
                 expression = functools.reduce(operator.and_, queries)
                 q = q.filter(expression).distinct()
+
+        return q
+
+
+class PRPPartnerListAPIView(ListAPIView):
+    """
+    Create new Interventions.
+    Returns a list of Interventions.
+    """
+    serializer_class = PRPPartnerOrganizationListSerializer
+    permission_classes = (ListCreateAPIMixedPermission, )
+    pagination_class = PRPPartnerPagination
+
+    def paginate_queryset(self, queryset):
+        return super(PRPPartnerListAPIView, self).paginate_queryset(queryset)
+
+    def get_queryset(self, format=None):
+        q = PartnerOrganization.objects.all()
+
+        query_params = self.request.query_params
+        workspace = query_params.get('workspace', None)
+        set_tenant_or_fail(workspace)
 
         return q
