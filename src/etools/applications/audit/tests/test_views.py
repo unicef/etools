@@ -574,13 +574,11 @@ class TestEngagementsUpdateViewSet(EngagementTransitionsTestCaseMixin, BaseTenan
         )
 
 
-class TestMicroAssessmentMetadataDetailViewSet(EngagementTransitionsTestCaseMixin, BaseTenantTestCase):
-    engagement_factory = MicroAssessmentFactory
-
+class TestMetadataDetailViewSet(EngagementTransitionsTestCaseMixin):
     def _test_risk_choices(self, field, expected_choices):
         response = self.forced_auth_req(
             'options',
-            '/api/audit/micro-assessments/{}/'.format(self.engagement.id),
+            '/api/audit/{}/{}/'.format(self.endpoint, self.engagement.id),
             user=self.auditor
         )
         self.assertIn('GET', response.data['actions'])
@@ -588,19 +586,39 @@ class TestMicroAssessmentMetadataDetailViewSet(EngagementTransitionsTestCaseMixi
 
         self.assertIn(field, get)
         self.assertIn('blueprints', get[field]['children'])
-        self.assertIn('risk', get[field]['children']['blueprints']['child']['children'])
-        risk_fields = get[field]['children']['blueprints']['child']['children']['risk']['children']
+
+        blueprint_data = get[field]['children']['blueprints']['child']['children']
+        if 'risk' in blueprint_data:
+            risk_fields = blueprint_data['risk']['children']
+        elif 'risks' in blueprint_data:
+            risk_fields = blueprint_data['risks']['child']['children']
+        else:
+            self.fail('risk choices not found')
+
         self.assertIn('choices', risk_fields['value'])
         self.assertListEqual(
             [{'value': c, 'display_name': str(v)} for c, v in expected_choices],
             risk_fields['value']['choices']
         )
 
+
+class TestMicroAssessmentMetadataDetailViewSet(TestMetadataDetailViewSet, BaseTenantTestCase):
+    engagement_factory = MicroAssessmentFactory
+    endpoint = 'micro-assessments'
+
     def test_overall_choices(self):
         self._test_risk_choices('overall_risk_assessment', Risk.POSITIVE_VALUES)
 
     def test_subject_areas_choices(self):
         self._test_risk_choices('test_subject_areas', Risk.VALUES)
+
+
+class TestAuditMetadataDetailViewSet(TestMetadataDetailViewSet, BaseTenantTestCase):
+    engagement_factory = AuditFactory
+    endpoint = 'audits'
+
+    def test_weaknesses_choices(self):
+        self._test_risk_choices('key_internal_weakness', Risk.AUDIT_VALUES)
 
 
 class TestAuditorFirmViewSet(AuditTestCaseMixin, BaseTenantTestCase):

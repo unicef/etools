@@ -1,5 +1,6 @@
 
 import itertools
+from collections import OrderedDict
 
 from django.db import models
 from django.utils import six
@@ -9,12 +10,14 @@ from rest_framework import serializers
 
 from etools.applications.audit.models import Risk, RiskBluePrint, RiskCategory
 from etools.applications.utils.common.serializers.fields import (RecursiveListSerializer,
-                                                                 WriteListSerializeFriendlyRecursiveField,)
+                                                                 WriteListSerializeFriendlyRecursiveField,
+                                                                 DynamicChoicesField)
 from etools.applications.utils.writable_serializers.serializers import (WritableListSerializer,
                                                                         WritableNestedSerializerMixin,)
 
 
 class BaseRiskSerializer(WritableNestedSerializerMixin, serializers.ModelSerializer):
+    value = DynamicChoicesField(choices=Risk.VALUES, required=True)
     value_display = serializers.SerializerMethodField()
 
     class Meta(WritableNestedSerializerMixin.Meta):
@@ -22,27 +25,9 @@ class BaseRiskSerializer(WritableNestedSerializerMixin, serializers.ModelSeriali
         fields = [
             'value', 'value_display', 'extra',
         ]
-        extra_kwargs = {
-            'value': {
-                'required': True,
-            }
-        }
 
     def get_value_display(self, obj):
-        if self.risk_choices:
-            return dict(self.risk_choices).get(obj.value)
-        return obj.get_value_display()
-
-    def __init__(self, *args, **kwargs):
-        super(BaseRiskSerializer, self).__init__(*args, **kwargs)
-        self.risk_choices = None
-
-    def get_extra_kwargs(self):
-        extra_kwargs = super(BaseRiskSerializer, self).get_extra_kwargs()
-        if self.risk_choices:
-            extra_kwargs['value']['choices'] = self.risk_choices
-
-        return extra_kwargs
+        return self.fields['value'].choices.get(obj.value)
 
     def validate_extra(self, value):
         if isinstance(value, six.string_types):
@@ -195,9 +180,9 @@ class RiskRootSerializer(WritableNestedSerializerMixin, serializers.ModelSeriali
         if self.risk_choices:
             blueprint_fields = self.fields['blueprints'].child.fields
             if 'risk' in blueprint_fields:
-                blueprint_fields['risk'].risk_choices = self.risk_choices
+                blueprint_fields['risk'].fields['value'].choices = OrderedDict(self.risk_choices)
             if 'risks' in blueprint_fields:
-                blueprint_fields['risks'].child.risk_choices = self.risk_choices
+                blueprint_fields['risks'].child.fields['value'].choices = OrderedDict(self.risk_choices)
 
     def get_attribute(self, instance):
         """
