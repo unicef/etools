@@ -1,4 +1,4 @@
-from permissions2.conditions import ModuleCondition, SimpleCondition
+from etools.applications.permissions2.conditions import ModuleCondition, SimpleCondition
 
 
 class TPMModuleCondition(ModuleCondition):

@@ -26,9 +26,6 @@ from etools.applications.tpm.transitions.serializers import (TPMVisitApproveSeri
 from etools.applications.utils.common.models.fields import CodedGenericRelation
 from etools.applications.utils.common.urlresolvers import build_frontend_url
 from etools.applications.utils.groups.wrappers import GroupWrapper
-from etools.applications.utils.permissions.models.models import StatusBasePermission
-from etools.applications.utils.permissions.models.query import StatusBasePermissionQueryset
-from etools.applications.utils.permissions.utils import has_action_permission
 
 
 @python_2_unicode_compatible

@@ -11,26 +11,30 @@ from rest_framework.response import Response
 
 from etools.applications.partners.models import PartnerOrganization
 from etools.applications.partners.serializers.partner_organization_v2 import MinimalPartnerOrganizationListSerializer
+from etools.applications.permissions2.conditions import GroupCondition, NewObjectCondition, ObjectStatusCondition
+from etools.applications.permissions2.drf_permissions import NestedPermission
+from etools.applications.permissions2.views import PermittedFSMActionMixin, PermittedSerializerMixin
 from etools.applications.reports.models import Result, Sector
 from etools.applications.reports.serializers.v1 import ResultLightSerializer, SectorSerializer
-from etools.applications.tpm.export.renderers import (TPMActionPointCSVRenderer, TPMActivityCSVRenderer,
-                                                      TPMLocationCSVRenderer, TPMPartnerContactsCSVRenderer,
-                                                      TPMPartnerCSVRenderer, TPMVisitCSVRenderer,)
-from etools.applications.tpm.export.serializers import (TPMActionPointExportSerializer, TPMActivityExportSerializer,
-                                                        TPMLocationExportSerializer, TPMPartnerContactsSerializer,
-                                                        TPMPartnerExportSerializer, TPMVisitExportSerializer,)
+from etools.applications.tpm.conditions import (
+    TPMModuleCondition, TPMStaffMemberCondition, TPMVisitTPMFocalPointCondition, TPMVisitUNICEFFocalPointCondition,)
+from etools.applications.tpm.export.renderers import (
+    TPMActionPointCSVRenderer, TPMActivityCSVRenderer, TPMLocationCSVRenderer, TPMPartnerContactsCSVRenderer,
+    TPMPartnerCSVRenderer, TPMVisitCSVRenderer,)
+from etools.applications.tpm.export.serializers import (
+    TPMActionPointExportSerializer, TPMActivityExportSerializer, TPMLocationExportSerializer,
+    TPMPartnerContactsSerializer, TPMPartnerExportSerializer, TPMVisitExportSerializer,)
 from etools.applications.tpm.filters import ReferenceNumberOrderingFilter
 from etools.applications.tpm.metadata import TPMBaseMetadata, TPMPermissionBasedMetadata
-from etools.applications.tpm.models import ThirdPartyMonitor, TPMActivity, TPMPermission, TPMVisit
-from etools.applications.tpm.permissions import IsPMEorReadonlyPermission
-from etools.applications.tpm.serializers.partner import (TPMPartnerLightSerializer, TPMPartnerSerializer,
-                                                         TPMPartnerStaffMemberSerializer,)
-from etools.applications.tpm.serializers.visit import (TPMVisitDraftSerializer,
-                                                       TPMVisitLightSerializer, TPMVisitSerializer,)
+from etools.applications.tpm.models import PME, ThirdPartyMonitor, TPMActionPoint, TPMActivity, TPMVisit, UNICEFUser
+from etools.applications.tpm.serializers.partner import (
+    TPMPartnerLightSerializer, TPMPartnerSerializer, TPMPartnerStaffMemberSerializer,)
+from etools.applications.tpm.serializers.visit import (
+    TPMActionPointSerializer, TPMVisitDraftSerializer, TPMVisitLightSerializer, TPMVisitSerializer,)
 from etools.applications.tpm.tpmpartners.models import TPMPartner, TPMPartnerStaffMember
 from etools.applications.utils.common.pagination import DynamicPageNumberPagination
-from etools.applications.utils.common.views import (FSMTransitionActionMixin, MultiSerializerViewSetMixin,
-                                                    NestedViewSetMixin, SafeTenantViewSetMixin,)
+from etools.applications.utils.common.views import (
+    MultiSerializerViewSetMixin, NestedViewSetMixin, SafeTenantViewSetMixin,)
 from etools.applications.vision.adapters.tpm_adapter import TPMPartnerManualSynchronizer
 
 
