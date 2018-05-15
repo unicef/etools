@@ -73,7 +73,7 @@ class TestPartnerOrganizationDetailAPIView(BaseTenantTestCase):
         response_json = json.loads(response.rendered_content)
         self.assertEqual(self.intervention.id, response_json.get("interventions")[0].id)
 
-    def test_update_planned_visits(self):
+    def test_add_planned_visits(self):
         response = self.forced_auth_req(
             'get',
             reverse('partners_api:partner-detail', args=[self.partner.pk]),
@@ -108,6 +108,57 @@ class TestPartnerOrganizationDetailAPIView(BaseTenantTestCase):
             response.data["planned_visits"][0]["year"],
             datetime.date.today().year
         )
+
+    def test_update_planned_visits(self):
+        planned_visit = PartnerPlannedVisitsFactory(
+            partner=self.partner,
+            year=datetime.date.today().year,
+            programmatic_q1=1,
+            programmatic_q2=2,
+            programmatic_q3=3,
+            programmatic_q4=4,
+        )
+        response = self.forced_auth_req(
+            'get',
+            reverse('partners_api:partner-detail', args=[self.partner.pk]),
+            user=self.unicef_staff,
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(response.data["planned_visits"]), 1)
+        data = response.data["planned_visits"][0]
+        self.assertEqual(data["programmatic_q1"], 1)
+        self.assertEqual(data["programmatic_q2"], 2)
+        self.assertEqual(data["programmatic_q3"], 3)
+        self.assertEqual(data["programmatic_q4"], 4)
+
+        planned_visits = [{
+            "id": planned_visit.pk,
+            "year": planned_visit.year,
+            "programmatic_q1": 4,
+            "programmatic_q2": 3,
+            "programmatic_q3": 2,
+            "programmatic_q4": 1,
+        }]
+        data = {
+            "name": self.partner.name + ' Updated',
+            "partner_type": self.partner.partner_type,
+            "vendor_number": self.partner.vendor_number,
+            "planned_visits": planned_visits,
+        }
+        response = self.forced_auth_req(
+            'patch',
+            reverse('partners_api:partner-detail', args=[self.partner.pk]),
+            user=self.unicef_staff,
+            data=data,
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(response.data["planned_visits"]), 1)
+        data = response.data["planned_visits"][0]
+        self.assertEqual(data["programmatic_q1"], 4)
+        self.assertEqual(data["programmatic_q2"], 3)
+        self.assertEqual(data["programmatic_q3"], 2)
+        self.assertEqual(data["programmatic_q4"], 1)
 
 
 class TestPartnerOrganizationHactAPIView(BaseTenantTestCase):
