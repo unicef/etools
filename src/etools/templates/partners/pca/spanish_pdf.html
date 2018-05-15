@@ -557,11 +557,9 @@
                 </li>
                 {% for bank_detail in bank_details %}
                 <table class="bordered">
-                    {% if forloop.counter == 1  %}
                     <tr>
                         <td colspan="2" class="bordered" style="text-align: center;">Cuenta</td>
                     </tr>
-                    {% endif %}
                     <tr>
                         <td class="bordered" style="width: 45%;">Nombre del banco:</td>
                         <td class="bordered">{{ bank_detail.bank_name }}</td>
