@@ -1,6 +1,6 @@
 
 from django.conf import settings
-from django.core.urlresolvers import reverse
+from django.urls import reverse
 
 from drfpasswordless.utils import create_callback_token_for_user
 from future.backports.urllib.parse import parse_qsl, urlencode, urljoin, urlparse, urlunparse
