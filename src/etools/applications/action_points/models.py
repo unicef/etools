@@ -9,7 +9,7 @@ from model_utils import Choices, FieldTracker
 from model_utils.fields import MonitorField
 from model_utils.models import TimeStampedModel
 
-from etools.applications.action_points.transitions.conditions import ActionPointCompleteRequiredFieldsCheck
+from etools.applications.action_points.transitions.conditions import ActionPointCompleteActionsTakenCheck
 from etools.applications.EquiTrack.utils import get_environment
 from etools.applications.notification.models import Notification
 from etools.applications.permissions2.fsm import has_action_permission
@@ -56,8 +56,6 @@ class ActionPoint(TimeStampedModel):
     description = models.TextField(verbose_name=_('Description'))
     due_date = models.DateField(verbose_name=_('Due Date'), blank=True, null=True)
     high_priority = models.BooleanField(default=False, verbose_name=_('High Priority'))
-
-    action_taken = models.TextField(verbose_name=_('Action Taken'), blank=True)
 
     section = models.ForeignKey('reports.Sector', verbose_name=_('Section'),
                                 on_delete=models.CASCADE,
@@ -168,7 +166,7 @@ class ActionPoint(TimeStampedModel):
     @transition(status, source=STATUSES.open, target=STATUSES.completed,
                 permission=has_action_permission(action='complete'),
                 conditions=[
-                    ActionPointCompleteRequiredFieldsCheck.as_condition()
+                    ActionPointCompleteActionsTakenCheck.as_condition()
                 ])
     def complete(self):
         self.send_email(self.assigned_by, 'action_points/action_point/completed')
