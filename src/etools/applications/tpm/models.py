@@ -401,6 +401,8 @@ class TPMActivity(Activity):
 
     is_pv = models.BooleanField(default=False, verbose_name=_('HACT Programmatic Visit'))
 
+    objects = models.Manager()
+
     def __str__(self):
         return 'Task #{0} for {1}'.format(self.id, self.tpm_visit)
 
