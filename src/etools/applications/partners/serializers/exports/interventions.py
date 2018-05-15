@@ -410,8 +410,9 @@ class InterventionExportSerializer(serializers.ModelSerializer):
         return obj.frs__outstanding_amt_local__sum
 
     def get_planned_visits(self, obj):
-        return ', '.join(['{} (Q1:{} Q2:{}, Q3:{}, Q4:{})'.format(pv.year, pv.programmatic_q1, pv.programmatic_q2,
-                                                                  pv.programmatic_q3, pv.programmatic_q4) for pv in obj.planned_visits.all()])
+        return ', '.join(['{} (Q1:{} Q2:{}, Q3:{}, Q4:{})'.format(
+            pv.year, pv.programmatic_q1, pv.programmatic_q2, pv.programmatic_q3, pv.programmatic_q4
+        ) for pv in obj.planned_visits.all()])
 
     def get_url(self, obj):
         return 'https://{}/pmp/interventions/{}/details/'.format(self.context['request'].get_host(), obj.id)

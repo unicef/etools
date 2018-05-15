@@ -188,7 +188,8 @@ class TestInterventionsAssociatedSSFACheck(BaseTenantTestCase):
             issue_id="interventions_associated_ssfa"
         )
 
-    @override_settings(ISSUE_CHECKS=['etools.applications.management.issues.project_checks.InterventionsAssociatedSSFACheck'])
+    @override_settings(ISSUE_CHECKS=[
+        'etools.applications.management.issues.project_checks.InterventionsAssociatedSSFACheck'])
     def test_document_type_pd(self):
         """Check that if agreement type SSFA but document type PD
         then issue is raised
@@ -205,7 +206,8 @@ class TestInterventionsAssociatedSSFACheck(BaseTenantTestCase):
         issue = self.qs_issue.first()
         self.assertIn("type {}".format(Intervention.PD), issue.message)
 
-    @override_settings(ISSUE_CHECKS=['etools.applications.management.issues.project_checks.InterventionsAssociatedSSFACheck'])
+    @override_settings(ISSUE_CHECKS=[
+        'etools.applications.management.issues.project_checks.InterventionsAssociatedSSFACheck'])
     def test_document_type_ssfa(self):
         """Check that if agreement type PCA but document type SSFA
         then issue is raised
@@ -222,7 +224,8 @@ class TestInterventionsAssociatedSSFACheck(BaseTenantTestCase):
         issue = self.qs_issue.first()
         self.assertIn("type {}".format(Intervention.SSFA), issue.message)
 
-    @override_settings(ISSUE_CHECKS=['etools.applications.management.issues.project_checks.InterventionsAssociatedSSFACheck'])
+    @override_settings(ISSUE_CHECKS=[
+        'etools.applications.management.issues.project_checks.InterventionsAssociatedSSFACheck'])
     def test_no_issue_pd(self):
         """Check that if agreement type SSFA and document type PD
         then issue is NOT raised
@@ -237,7 +240,8 @@ class TestInterventionsAssociatedSSFACheck(BaseTenantTestCase):
         checks.run_all_checks()
         self.assertFalse(self.qs_issue.exists())
 
-    @override_settings(ISSUE_CHECKS=['etools.applications.management.issues.project_checks.InterventionsAssociatedSSFACheck'])
+    @override_settings(ISSUE_CHECKS=[
+        'etools.applications.management.issues.project_checks.InterventionsAssociatedSSFACheck'])
     def test_no_issue_ssfa(self):
         """Check that if agreement type PCA and document type SSFA
         then issue is NOT raised
