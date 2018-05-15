@@ -26,8 +26,7 @@ from etools.applications.audit.transitions.conditions import (AuditSubmitReportR
                                                               EngagementSubmitReportRequiredFieldsCheck,
                                                               SpecialAuditSubmitRelatedModelsCheck,
                                                               SPSubmitReportRequiredFieldsCheck,
-                                                              ValidateAuditRiskCategories, ValidateMARiskCategories,
-                                                              ValidateMARiskExtra,)
+                                                              ValidateMARiskCategories, ValidateMARiskExtra,)
 from etools.applications.audit.transitions.serializers import EngagementCancelSerializer
 from etools.applications.EquiTrack.utils import get_environment
 from etools.applications.notification.utils import send_notification_using_email_template
@@ -623,7 +622,6 @@ class Audit(Engagement):
         source=Engagement.STATUSES.partner_contacted, target=Engagement.STATUSES.report_submitted,
         conditions=[
             AuditSubmitReportRequiredFieldsCheck.as_condition(),
-            ValidateAuditRiskCategories.as_condition(),
             EngagementHasReportAttachmentsCheck.as_condition(),
         ],
         permission=has_action_permission(action='submit')
