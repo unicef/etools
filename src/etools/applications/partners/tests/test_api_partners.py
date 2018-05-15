@@ -10,11 +10,16 @@ from rest_framework import status
 
 from etools.applications.EquiTrack.tests.cases import BaseTenantTestCase
 from etools.applications.EquiTrack.tests.mixins import URLAssertionMixin
-from etools.applications.partners.models import PartnerOrganization, PartnerType
+from etools.applications.partners.models import (
+    PartnerOrganization,
+    PartnerPlannedVisits,
+    PartnerType,
+)
 from etools.applications.partners.tests.factories import (
     AgreementFactory,
     InterventionFactory,
     PartnerFactory,
+    PartnerPlannedVisitsFactory,
 )
 from etools.applications.partners.views.partner_organization_v2 import PartnerOrganizationAddView
 from etools.applications.t2f.tests.factories import TravelActivityFactory
@@ -340,3 +345,49 @@ class TestPartnerOrganizationDeleteView(BaseTenantTestCase):
         self.assertTrue(
             PartnerOrganization.objects.filter(pk=partner.pk).exists()
         )
+
+
+class TestPartnerPlannedVisitsDeleteView(BaseTenantTestCase):
+    @classmethod
+    def setUpTestData(cls):
+        cls.unicef_staff = UserFactory(is_staff=True)
+        cls.unicef_staff.groups.add(GroupFactory(name='Partnership Manager'))
+        cls.partner = PartnerFactory()
+        cls.planned_visit = PartnerPlannedVisitsFactory(
+            partner=cls.partner,
+        )
+        cls.url = reverse(
+            "partners_api:partner-planned-visits-del",
+            args=[cls.planned_visit.pk]
+        )
+
+    def test_delete(self):
+        self.assertTrue(PartnerPlannedVisits.objects.filter(
+            pk=self.planned_visit.pk
+        ).exists())
+        response = self.forced_auth_req(
+            'delete',
+            self.url,
+            user=self.unicef_staff,
+        )
+        self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
+        self.assertFalse(PartnerPlannedVisits.objects.filter(
+            pk=self.planned_visit.pk
+        ).exists())
+
+    def test_delete_permission(self):
+        user = UserFactory()
+        response = self.forced_auth_req(
+            'delete',
+            self.url,
+            user=user,
+        )
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+
+    def test_delete_not_found(self):
+        response = self.forced_auth_req(
+            'delete',
+            reverse("partners_api:partner-planned-visits-del", args=[404]),
+            user=self.unicef_staff,
+        )
+        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)

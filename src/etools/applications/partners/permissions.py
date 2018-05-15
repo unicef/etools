@@ -1,6 +1,6 @@
-
 from django.apps import apps
 from django.utils.lru_cache import lru_cache
+from django.utils.translation import ugettext as _
 
 from rest_framework import permissions
 
@@ -231,6 +231,27 @@ class PartnershipManagerRepPermission(permissions.BasePermission):
                     'Senior Management Team',
                     'Representative Office'
                 ]
+            )
+
+
+class PartnershipSeniorManagerPermission(permissions.BasePermission):
+    message = _('Accessing this item is not allowed.')
+
+    def _has_access_permissions(self, user, object):
+        if user.is_staff or \
+                user.profile.partner_staff_member in \
+                object.partner.staff_members.values_list('id', flat=True):
+            return True
+
+    def has_object_permission(self, request, view, obj):
+        if request.user.is_superuser:
+            # Check permissions for read-only request
+            return self._has_access_permissions(request.user, obj)
+        else:
+            # Check permissions for write request
+            return self._has_access_permissions(request.user, obj) and is_user_in_groups(
+                request.user,
+                ['Partnership Manager', 'Senior Management Team']
             )
 
 
