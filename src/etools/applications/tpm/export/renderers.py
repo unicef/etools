@@ -1,3 +1,4 @@
+from copy import copy
 
 from django.utils.translation import ugettext_lazy as _
 
@@ -55,6 +56,14 @@ class TPMActionPointCSVRenderer(CSVRenderer):
         'cp_output': _('CP Output'),
         'due_date': _('Due Date'),
     }
+
+
+class TPMActionPointFullCSVRenderer(TPMActionPointCSVRenderer):
+    header = ['ref'] + TPMActionPointCSVRenderer.header
+    labels = copy(TPMActionPointCSVRenderer.labels)
+    labels.update({
+        'ref': _('Visit Ref. #')
+    })
 
 
 class TPMVisitCSVRenderer(CSVRenderer):

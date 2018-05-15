@@ -15,13 +15,15 @@ from etools.applications.reports.models import Result, Sector
 from etools.applications.reports.serializers.v1 import ResultLightSerializer, SectorSerializer
 from etools.applications.tpm.export.renderers import (TPMActionPointCSVRenderer, TPMActivityCSVRenderer,
                                                       TPMLocationCSVRenderer, TPMPartnerContactsCSVRenderer,
-                                                      TPMPartnerCSVRenderer, TPMVisitCSVRenderer,)
+                                                      TPMPartnerCSVRenderer, TPMVisitCSVRenderer,
+                                                      TPMActionPointFullCSVRenderer)
 from etools.applications.tpm.export.serializers import (TPMActionPointExportSerializer, TPMActivityExportSerializer,
                                                         TPMLocationExportSerializer, TPMPartnerContactsSerializer,
-                                                        TPMPartnerExportSerializer, TPMVisitExportSerializer,)
+                                                        TPMPartnerExportSerializer, TPMVisitExportSerializer,
+                                                        TPMActionPointFullExportSerializer)
 from etools.applications.tpm.filters import ReferenceNumberOrderingFilter
 from etools.applications.tpm.metadata import TPMBaseMetadata, TPMPermissionBasedMetadata
-from etools.applications.tpm.models import ThirdPartyMonitor, TPMActivity, TPMPermission, TPMVisit
+from etools.applications.tpm.models import ThirdPartyMonitor, TPMActivity, TPMPermission, TPMVisit, TPMActionPoint
 from etools.applications.tpm.permissions import IsPMEorReadonlyPermission
 from etools.applications.tpm.serializers.partner import (TPMPartnerLightSerializer, TPMPartnerSerializer,
                                                          TPMPartnerStaffMemberSerializer,)
@@ -315,6 +317,15 @@ class TPMVisitViewSet(
         serializer = TPMLocationExportSerializer(tpm_locations, many=True)
         return Response(serializer.data, headers={
             'Content-Disposition': 'attachment;filename=tpm_locations_{}.csv'.format(timezone.now().date())
+        })
+
+    @list_route(methods=['get'], url_path='action-points/export', renderer_classes=(TPMActionPointFullCSVRenderer,))
+    def full_action_points_export(self, request, *args, **kwargs):
+        action_points = TPMActionPoint.objects.filter(tpm_visit__in=self.get_queryset()).order_by('id')
+
+        serializer = TPMActionPointFullExportSerializer(action_points, many=True)
+        return Response(serializer.data, headers={
+            'Content-Disposition': 'attachment;filename=tpm_action_points_{}.csv'.format(timezone.now().date())
         })
 
     @detail_route(methods=['get'], url_path='action-points/export', renderer_classes=(TPMActionPointCSVRenderer,))
