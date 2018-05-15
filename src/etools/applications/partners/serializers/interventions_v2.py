@@ -13,7 +13,7 @@ from etools.applications.EquiTrack.serializers import SnapshotModelSerializer
 from etools.applications.funds.models import FundsCommitmentItem, FundsReservationHeader
 from etools.applications.funds.serializers import FRsSerializer
 from etools.applications.locations.serializers import LocationLightSerializer, LocationSerializer
-from etools.applications.partners.models import (Intervention,  # TODO intervention sector locations cleanup
+from etools.applications.partners.models import (Intervention,
                                                  InterventionAmendment, InterventionAttachment, InterventionBudget,
                                                  InterventionPlannedVisits, InterventionReportingPeriod,
                                                  InterventionResultLink, InterventionSectorLocationLink,)
@@ -123,6 +123,24 @@ class BaseInterventionListSerializer(serializers.ModelSerializer):
         decimal_places=2
     )
 
+    donors = serializers.SerializerMethodField()
+    donor_codes = serializers.SerializerMethodField()
+    grants = serializers.SerializerMethodField()
+
+    location_p_codes = serializers.SerializerMethodField()
+
+    def get_location_p_codes(self, obj):
+        return obj.location_p_codes.split('|') if obj.location_p_codes else []
+
+    def get_donors(self, obj):
+        return obj.donors.split('|') if obj.donors else []
+
+    def get_donor_codes(self, obj):
+        return obj.donor_codes.split('|') if obj.donor_codes else []
+
+    def get_grants(self, obj):
+        return obj.grants.split('|') if obj.grants else []
+
     def get_offices_names(self, obj):
         return [o.name for o in obj.offices.all()]
 
@@ -140,6 +158,9 @@ class BaseInterventionListSerializer(serializers.ModelSerializer):
         fields = (
             'id',
             'number',
+            'donors',
+            'donor_codes',
+            'grants',
             'document_type',
             'partner_name',
             'status',
@@ -165,7 +186,8 @@ class BaseInterventionListSerializer(serializers.ModelSerializer):
             'total_budget',
             'metadata',
             'flagged_sections',
-            'budget_currency'
+            'budget_currency',
+            'location_p_codes',
         )
 
 
@@ -489,6 +511,24 @@ class InterventionDetailSerializer(serializers.ModelSerializer):
     location_names = serializers.SerializerMethodField()
     cluster_names = serializers.SerializerMethodField()
 
+    donors = serializers.SerializerMethodField()
+    donor_codes = serializers.SerializerMethodField()
+    grants = serializers.SerializerMethodField()
+
+    location_p_codes = serializers.SerializerMethodField()
+
+    def get_location_p_codes(self, obj):
+        return obj.location_p_codes.split('|') if obj.location_p_codes else []
+
+    def get_donors(self, obj):
+        return obj.donors.split('|') if obj.donors else []
+
+    def get_donor_codes(self, obj):
+        return obj.donor_codes.split('|') if obj.donor_codes else []
+
+    def get_grants(self, obj):
+        return obj.grants.split('|') if obj.grants else []
+
     def get_permissions(self, obj):
         user = self.context['request'].user
         ps = Intervention.permission_structure()
@@ -521,7 +561,8 @@ class InterventionDetailSerializer(serializers.ModelSerializer):
             "planned_budget", "result_links", 'country_programme', 'metadata', 'contingency_pd', "amendments",
             "planned_visits", "attachments", 'permissions', 'partner_id', "sections",
             "locations", "location_names", "cluster_names", "flat_locations", "flagged_sections", "section_names",
-            "in_amendment", "prc_review_attachment", "signed_pd_attachment",
+            "in_amendment", "prc_review_attachment", "signed_pd_attachment", "donors", "donor_codes", "grants",
+            "location_p_codes"
         )
 
 
