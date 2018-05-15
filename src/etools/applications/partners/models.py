@@ -1,16 +1,15 @@
 # -*- coding: utf-8 -*-
-
 import datetime
 import decimal
 import json
 
 from django.conf import settings
 from django.contrib.postgres.fields import ArrayField, JSONField
-from django.db import models, connection, transaction
-from django.db.models import Case, Count, CharField, F, Max, Min, Q, Sum, When
+from django.db import connection, models, transaction
+from django.db.models import Case, CharField, Count, Max, Min, Q, Sum, When
 from django.db.models.signals import post_save, pre_delete
 from django.urls import reverse
-from django.utils import six, timezone
+from django.utils import six
 from django.utils.encoding import python_2_unicode_compatible
 from django.utils.functional import cached_property
 from django.utils.translation import ugettext as _
@@ -23,7 +22,7 @@ from model_utils.models import TimeFramedModel, TimeStampedModel
 from etools.applications.attachments.models import Attachment
 from etools.applications.environment.helpers import tenant_switch_is_active
 from etools.applications.EquiTrack.fields import CurrencyField, QuarterField
-from etools.applications.EquiTrack.utils import get_current_year, get_quarter, import_permissions
+from etools.applications.EquiTrack.utils import get_current_year, import_permissions
 from etools.applications.funds.models import Grant
 from etools.applications.locations.models import Location
 from etools.applications.partners.validation import interventions as intervention_validation
@@ -31,8 +30,6 @@ from etools.applications.partners.validation.agreements import (agreement_transi
                                                                 agreement_transition_to_signed_valid,
                                                                 agreements_illegal_transition,)
 from etools.applications.reports.models import CountryProgramme, Indicator, Result, Sector
-from etools.applications.t2f.models import Travel, TravelActivity, TravelType
-from etools.applications.tpm.models import TPMVisit
 from etools.applications.users.models import Office
 from etools.applications.utils.common.models.fields import CodedGenericRelation
 
@@ -634,180 +631,6 @@ class PartnerOrganization(TimeStampedModel):
             return PartnerOrganization.ASSURANCE_PARTIAL
         else:
             return PartnerOrganization.ASSURANCE_COMPLETE
-
-    @classmethod
-    def planned_visits(cls, partner):
-        """For current year sum all programmatic values of planned visits
-        records for partner
-
-        If partner type is Government, then default to 0 planned visits
-        """
-        year = datetime.date.today().year
-        if partner.partner_type == 'Government':
-            pvq1 = pvq2 = pvq3 = pvq4 = 0
-        else:
-            pv = InterventionPlannedVisits.objects.filter(
-                intervention__agreement__partner=partner, year=year,
-                intervention__status__in=[Intervention.ACTIVE, Intervention.CLOSED, Intervention.ENDED]
-            )
-            pvq1 = pv.aggregate(models.Sum('programmatic_q1'))['programmatic_q1__sum'] or 0
-            pvq2 = pv.aggregate(models.Sum('programmatic_q2'))['programmatic_q2__sum'] or 0
-            pvq3 = pv.aggregate(models.Sum('programmatic_q3'))['programmatic_q3__sum'] or 0
-            pvq4 = pv.aggregate(models.Sum('programmatic_q4'))['programmatic_q4__sum'] or 0
-
-        hact = json.loads(partner.hact_values) \
-            if isinstance(partner.hact_values, six.text_type) \
-            else partner.hact_values
-        hact['programmatic_visits']['planned']['q1'] = pvq1
-        hact['programmatic_visits']['planned']['q2'] = pvq2
-        hact['programmatic_visits']['planned']['q3'] = pvq3
-        hact['programmatic_visits']['planned']['q4'] = pvq4
-        hact['programmatic_visits']['planned']['total'] = pvq1 + pvq2 + pvq3 + pvq4
-        partner.hact_values = hact
-        partner.save()
-
-    @classmethod
-    def programmatic_visits(cls, partner, event_date=None, update_one=False):
-        """
-        :return: all completed programmatic visits
-        """
-        hact = json.loads(partner.hact_values) if isinstance(partner.hact_values, str) else partner.hact_values
-
-        pv = hact['programmatic_visits']['completed']['total']
-
-        if update_one and event_date:
-            quarter_name = get_quarter(event_date)
-            pvq = hact['programmatic_visits']['completed'][quarter_name]
-            pv += 1
-            pvq += 1
-            hact['programmatic_visits']['completed'][quarter_name] = pvq
-            hact['programmatic_visits']['completed']['total'] = pv
-        else:
-            pv_year = TravelActivity.objects.filter(
-                travel_type=TravelType.PROGRAMME_MONITORING,
-                travels__traveler=F('primary_traveler'),
-                travels__status__in=[Travel.COMPLETED],
-                travels__end_date__year=timezone.now().year,
-                partner=partner,
-            )
-
-            pv = pv_year.count()
-            pvq1 = pv_year.filter(travels__end_date__month__in=[1, 2, 3]).count()
-            pvq2 = pv_year.filter(travels__end_date__month__in=[4, 5, 6]).count()
-            pvq3 = pv_year.filter(travels__end_date__month__in=[7, 8, 9]).count()
-            pvq4 = pv_year.filter(travels__end_date__month__in=[10, 11, 12]).count()
-
-            # TPM visit are counted one per month maximum
-            tpmv = TPMVisit.objects.filter(
-                tpm_activities__partner=partner, status=TPMVisit.UNICEF_APPROVED,
-                date_of_unicef_approved__year=datetime.datetime.now().year
-            ).distinct()
-
-            tpmv1 = sum([
-                tpmv.filter(date_of_unicef_approved__month=1).exists(),
-                tpmv.filter(date_of_unicef_approved__month=2).exists(),
-                tpmv.filter(date_of_unicef_approved__month=3).exists()
-            ])
-            tpmv2 = sum([
-                tpmv.filter(date_of_unicef_approved__month=4).exists(),
-                tpmv.filter(date_of_unicef_approved__month=5).exists(),
-                tpmv.filter(date_of_unicef_approved__month=6).exists()
-            ])
-            tpmv3 = sum([
-                tpmv.filter(date_of_unicef_approved__month=7).exists(),
-                tpmv.filter(date_of_unicef_approved__month=8).exists(),
-                tpmv.filter(date_of_unicef_approved__month=9).exists()
-            ])
-            tpmv4 = sum([
-                tpmv.filter(date_of_unicef_approved__month=10).exists(),
-                tpmv.filter(date_of_unicef_approved__month=11).exists(),
-                tpmv.filter(date_of_unicef_approved__month=12).exists()
-            ])
-
-            tpm_total = tpmv1 + tpmv2 + tpmv3 + tpmv4
-
-            hact['programmatic_visits']['completed']['q1'] = pvq1 + tpmv1
-            hact['programmatic_visits']['completed']['q2'] = pvq2 + tpmv2
-            hact['programmatic_visits']['completed']['q3'] = pvq3 + tpmv3
-            hact['programmatic_visits']['completed']['q4'] = pvq4 + tpmv4
-            hact['programmatic_visits']['completed']['total'] = pv + tpm_total
-
-        partner.hact_values = hact
-        partner.save()
-
-    @classmethod
-    def spot_checks(cls, partner, event_date=None, update_one=False):
-        """
-        :return: all completed spot checks
-        """
-        from etools.applications.audit.models import Engagement, SpotCheck
-        if not event_date:
-            event_date = datetime.datetime.today()
-        quarter_name = get_quarter(event_date)
-        sc = partner.hact_values['spot_checks']['completed']['total']
-        scq = partner.hact_values['spot_checks']['completed'][quarter_name]
-
-        if update_one:
-            sc += 1
-            scq += 1
-            partner.hact_values['spot_checks']['completed'][quarter_name] = scq
-        else:
-            trip = TravelActivity.objects.filter(
-                travel_type=TravelType.SPOT_CHECK,
-                travels__traveler=F('primary_traveler'),
-                travels__status__in=[Travel.COMPLETED],
-                travels__completed_at__year=datetime.datetime.now().year,
-                partner=partner,
-            )
-
-            trq1 = trip.filter(travels__completed_at__month__in=[1, 2, 3]).count()
-            trq2 = trip.filter(travels__completed_at__month__in=[4, 5, 6]).count()
-            trq3 = trip.filter(travels__completed_at__month__in=[7, 8, 9]).count()
-            trq4 = trip.filter(travels__completed_at__month__in=[10, 11, 12]).count()
-
-            audit_spot_check = SpotCheck.objects.filter(
-                partner=partner, status=Engagement.FINAL,
-                date_of_draft_report_to_unicef__year=datetime.datetime.now().year
-            )
-
-            asc1 = audit_spot_check.filter(date_of_draft_report_to_unicef__month__in=[1, 2, 3]).count()
-            asc2 = audit_spot_check.filter(date_of_draft_report_to_unicef__month__in=[4, 5, 6]).count()
-            asc3 = audit_spot_check.filter(date_of_draft_report_to_unicef__month__in=[7, 8, 9]).count()
-            asc4 = audit_spot_check.filter(date_of_draft_report_to_unicef__month__in=[10, 11, 12]).count()
-
-            partner.hact_values['spot_checks']['completed']['q1'] = trq1 + asc1
-            partner.hact_values['spot_checks']['completed']['q2'] = trq2 + asc2
-            partner.hact_values['spot_checks']['completed']['q3'] = trq3 + asc3
-            partner.hact_values['spot_checks']['completed']['q4'] = trq4 + asc4
-
-            sc = trip.count() + audit_spot_check.count()  # TODO 1.1.9c add spot checks from field monitoring
-
-        partner.hact_values['spot_checks']['completed']['total'] = sc
-        partner.save()
-
-    @classmethod
-    def audits_completed(cls, partner, update_one=False):
-        """
-        :param partner: Partner Organization
-        :param update_one: if True will increase by one the value, if False would recalculate the value
-        :return: all completed audit (including special audit)
-        """
-        from etools.applications.audit.models import Audit, Engagement, SpecialAudit
-        completed_audit = partner.hact_values['audits']['completed']
-        if update_one:
-            completed_audit += 1
-        else:
-            audits = Audit.objects.filter(
-                partner=partner,
-                status=Engagement.FINAL,
-                date_of_draft_report_to_unicef__year=datetime.datetime.now().year).count()
-            s_audits = SpecialAudit.objects.filter(
-                partner=partner,
-                status=Engagement.FINAL,
-                date_of_draft_report_to_unicef__year=datetime.datetime.now().year).count()
-            completed_audit = audits + s_audits
-        partner.hact_values['audits']['completed'] = completed_audit
-        partner.save()
 
     def get_admin_url(self):
         admin_url_name = 'admin:partners_partnerorganization_change'
@@ -2035,9 +1858,6 @@ class Intervention(TimeStampedModel):
         self.update_ssfa_properties()
 
         super(Intervention, self).save()
-
-        if self.status == Intervention.ACTIVE:
-            PartnerOrganization.planned_visits(partner=self.agreement.partner)
 
 
 @python_2_unicode_compatible

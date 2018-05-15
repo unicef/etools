@@ -1,10 +1,8 @@
-
 import json
 
 from django.core.urlresolvers import reverse
 
 from etools.applications.EquiTrack.tests.cases import BaseTenantTestCase
-from etools.applications.partners.models import PartnerOrganization
 from etools.applications.publics.tests.factories import (PublicsBusinessAreaFactory, PublicsCurrencyFactory,
                                                          PublicsDSARegionFactory, PublicsTravelExpenseTypeFactory,
                                                          PublicsWBSFactory,)
@@ -116,19 +114,10 @@ class TravelActivityList(BaseTenantTestCase):
         act2 = TravelActivityFactory(travel_type=TravelType.SPOT_CHECK, primary_traveler=traveler)
         act1.travels.add(travel)
         act2.travels.add(travel)
-        partner_programmatic_visits = PartnerOrganization.objects.get(id=act1.partner.id)
-        partner_spot_checks = PartnerOrganization.objects.get(id=act2.partner.id)
         response = self.forced_auth_req('post', reverse('t2f:travels:details:state_change',
                                                         kwargs={'travel_pk': travel.id,
                                                                 'transition_name': 'mark_as_completed'}),
                                         user=traveler, data=data)
 
         response_json = json.loads(response.rendered_content)
-        partner_programmatic_visits_after_complete = PartnerOrganization.objects.get(id=act1.partner.id)
-        partner_spot_checks_after_complete = PartnerOrganization.objects.get(id=act2.partner.id)
         self.assertEqual(response_json['status'], Travel.COMPLETED)
-        self.assertEqual(partner_programmatic_visits.hact_values['programmatic_visits']['completed']['total'] + 1,
-                         partner_programmatic_visits_after_complete.hact_values[
-                             'programmatic_visits']['completed']['total'])
-        self.assertEqual(partner_spot_checks.hact_values['spot_checks']['completed']['total'] + 1,
-                         partner_spot_checks_after_complete.hact_values['spot_checks']['completed']['total'])
