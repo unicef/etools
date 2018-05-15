@@ -518,16 +518,28 @@ class InterventionDetailSerializer(serializers.ModelSerializer):
     location_p_codes = serializers.SerializerMethodField()
 
     def get_location_p_codes(self, obj):
-        return obj.location_p_codes.split('|') if obj.location_p_codes else []
+        return [location.p_code for location in obj.flat_locations.all()]
 
     def get_donors(self, obj):
-        return obj.donors.split('|') if obj.donors else []
+        donors = set()
+        for fr_item_qs in obj.frs.all():
+            for fr_li in fr_item_qs.fr_items.all():
+                donors.add(fr_li.donor)
+        return donors
 
     def get_donor_codes(self, obj):
-        return obj.donor_codes.split('|') if obj.donor_codes else []
+        donor_codes = set()
+        for fr_item_qs in obj.frs.all():
+            for fr_li in fr_item_qs.fr_items.all():
+                donor_codes.add(fr_li.donor_code)
+        return donor_codes
 
     def get_grants(self, obj):
-        return obj.grants.split('|') if obj.grants else []
+        grants = set()
+        for fr_item_qs in obj.frs.all():
+            for fr_li in fr_item_qs.fr_items.all():
+                grants.add(fr_li.grant_number)
+        return grants
 
     def get_permissions(self, obj):
         user = self.context['request'].user

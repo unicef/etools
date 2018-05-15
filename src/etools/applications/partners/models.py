@@ -1464,12 +1464,6 @@ class InterventionManager(models.Manager):
             'result_links__ll_results__applied_indicators__locations',
             'flat_locations',
         )
-        qs = qs.annotate(
-            location_p_codes=StringConcat("flat_locations__p_code", separator="|", distinct=True),
-            donors=StringConcat("frs__fr_items__donor", separator="|", distinct=True),
-            donor_codes=StringConcat("frs__fr_items__donor_code", separator="|", distinct=True),
-            grants=StringConcat("frs__fr_items__grant_number", separator="|", distinct=True),
-        )
         return qs
 
     def frs_qs(self):
