@@ -14,6 +14,8 @@ from etools.applications.partners.models import Intervention, InterventionPlanne
 from etools.applications.t2f.models import Travel, TravelActivity, TravelType
 from etools.applications.tpm.models import TPMVisit
 from etools.applications.users.models import Country
+from etools.applications.vision.exceptions import VisionException
+from etools.applications.vision.models import VisionSyncLog
 from etools.config.celery import app
 
 logger = get_task_logger(__name__)
@@ -173,16 +175,32 @@ class PartnerHactSynchronizer(object):
 @app.task
 def update_hact_for_country(country_name):
     country = Country.objects.get(name=country_name)
+    log = VisionSyncLog(
+        country=country,
+        handler_name='HactSynchronizer'
+    )
     connection.set_tenant(country)
     logger.info('Set country {}'.format(country_name))
-    for partner in PartnerOrganization.objects.active():
-        logger.debug('Updating Partner {}'.format(partner.name))
-        partner_sync = PartnerHactSynchronizer(partner)
-        partner_sync.programmatic_visits()
-        partner_sync.planned_visits()
-        partner_sync.spot_checks()
-        partner_sync.audits_completed()
-        partner_sync.hact_properties()
+    try:
+        partners = PartnerOrganization.objects.active()
+        for partner in partners:
+            logger.debug('Updating Partner {}'.format(partner.name))
+            partner_sync = PartnerHactSynchronizer(partner)
+            partner_sync.programmatic_visits()
+            partner_sync.planned_visits()
+            partner_sync.spot_checks()
+            partner_sync.audits_completed()
+            partner_sync.hact_properties()
+    except Exception as e:
+        logger.info('HACT Sync', exc_info=True)
+        log.exception_message = e
+        raise VisionException
+    else:
+        log.total_records = partners.count()
+        log.total_processed = partners.count()
+        log.successful = True
+    finally:
+        log.save()
 
 
 @app.task
