@@ -39,7 +39,6 @@ def agreement_transition_to_signed_valid(agreement):
 
 def agreement_transition_to_ended_valid(agreement):
     today = date.today()
-    logging.debug('I GOT CALLED to ended')
     if agreement.status == agreement.SIGNED and agreement.end and agreement.end < today:
         return True
     raise TransitionError(['agreement_transition_to_ended_invalid'])
@@ -90,13 +89,10 @@ def signatures_valid(agreement):
         if any(unicef_signing_requirements + partner_signing_requirements):
             raise BasicValidationError(_('SSFA signatures are captured at the Document (TOR) level, please clear the '
                                          'signatures and dates and add them to the TOR'))
-    unicef_signing_requirements = [agreement.signed_by_unicef_date, agreement.signed_by]
-    partner_signing_requirements = [agreement.signed_by_partner_date, agreement.partner_manager]
-    if (any(unicef_signing_requirements) and not all(unicef_signing_requirements)) or \
-            (any(partner_signing_requirements) and not all(partner_signing_requirements)) or \
-            (agreement.signed_by_partner_date and agreement.signed_by_partner_date > today) or \
+
+    if (agreement.signed_by_partner_date and agreement.signed_by_partner_date > today) or \
             (agreement.signed_by_unicef_date and agreement.signed_by_unicef_date > today):
-        return False
+        raise BasicValidationError(_('None of the signatures can be dated in the future'))
     return True
 
 
@@ -150,8 +146,6 @@ class AgreementValid(CompleteValidation):
         'one_pca_per_cp_per_partner': 'A PCA with this partner already exists for this Country Programme Cycle. '
                                       'If the record is in "Draft" status please edit that record.',
         'start_end_dates_valid': 'Agreement start date needs to be earlier than or the same as the end date',
-        'signatures_valid': 'None of the dates can be in the future; '
-                            'If dates are set, signatories are required',
         'generic_transition_fail': 'GENERIC TRANSITION FAIL',
         'agreement_transition_to_active_invalid_PCA': "You cannot have more than 1 PCA active per Partner within 1 CP",
         'partner_type_valid_cso': 'Partner type must be CSO for PCA or SSFA agreement types.',
