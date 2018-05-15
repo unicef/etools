@@ -123,24 +123,6 @@ class BaseInterventionListSerializer(serializers.ModelSerializer):
         decimal_places=2
     )
 
-    donors = serializers.SerializerMethodField()
-    donor_codes = serializers.SerializerMethodField()
-    grants = serializers.SerializerMethodField()
-
-    location_p_codes = serializers.SerializerMethodField()
-
-    def get_location_p_codes(self, obj):
-        return obj.location_p_codes.split('|') if obj.location_p_codes else []
-
-    def get_donors(self, obj):
-        return obj.donors.split('|') if obj.donors else []
-
-    def get_donor_codes(self, obj):
-        return obj.donor_codes.split('|') if obj.donor_codes else []
-
-    def get_grants(self, obj):
-        return obj.grants.split('|') if obj.grants else []
-
     def get_offices_names(self, obj):
         return [o.name for o in obj.offices.all()]
 
@@ -158,9 +140,6 @@ class BaseInterventionListSerializer(serializers.ModelSerializer):
         fields = (
             'id',
             'number',
-            'donors',
-            'donor_codes',
-            'grants',
             'document_type',
             'partner_name',
             'status',
@@ -186,8 +165,7 @@ class BaseInterventionListSerializer(serializers.ModelSerializer):
             'total_budget',
             'metadata',
             'flagged_sections',
-            'budget_currency',
-            'location_p_codes',
+            'budget_currency'
         )
 
 
@@ -196,6 +174,24 @@ class InterventionListSerializer(BaseInterventionListSerializer):
     all_currencies_are_consistent = serializers.SerializerMethodField()
     fr_currency = serializers.SerializerMethodField()
     multi_curr_flag = serializers.BooleanField()
+
+    donors = serializers.SerializerMethodField()
+    donor_codes = serializers.SerializerMethodField()
+    grants = serializers.SerializerMethodField()
+
+    location_p_codes = serializers.SerializerMethodField()
+
+    def get_location_p_codes(self, obj):
+        return obj.location_p_codes.split('|') if obj.location_p_codes else []
+
+    def get_donors(self, obj):
+        return obj.donors.split('|') if obj.donors else []
+
+    def get_donor_codes(self, obj):
+        return obj.donor_codes.split('|') if obj.donor_codes else []
+
+    def get_grants(self, obj):
+        return obj.grants.split('|') if obj.grants else []
 
     def fr_currencies_ok(self, obj):
         return obj.frs__currency__count == 1 if obj.frs__currency__count else None
@@ -213,7 +209,12 @@ class InterventionListSerializer(BaseInterventionListSerializer):
 
     class Meta(BaseInterventionListSerializer.Meta):
         fields = BaseInterventionListSerializer.Meta.fields + (
-            'fr_currencies_are_consistent', 'all_currencies_are_consistent', 'fr_currency', 'multi_curr_flag')
+            'fr_currencies_are_consistent', 'all_currencies_are_consistent', 'fr_currency', 'multi_curr_flag',
+            'location_p_codes',
+            'donors',
+            'donor_codes',
+            'grants',
+        )
 
 
 class MinimalInterventionListSerializer(serializers.ModelSerializer):
