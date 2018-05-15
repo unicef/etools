@@ -316,12 +316,14 @@ class PartnerAdmin(ExportMixin, admin.ModelAdmin):
     )
     list_filter = (
         u'partner_type',
+        u'rating',
         HiddenPartnerFilter,
     )
     list_display = (
         u'name',
         u'vendor_number',
         u'partner_type',
+        u'rating',
         u'type_of_assessment',
         u'email',
         u'phone_number',

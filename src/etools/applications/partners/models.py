@@ -6,11 +6,12 @@ import json
 
 from django.conf import settings
 from django.contrib.postgres.fields import ArrayField, JSONField
-from django.core.urlresolvers import reverse
 from django.db import models, connection, transaction
 from django.db.models import Case, Count, CharField, F, Max, Min, Q, Sum, When
 from django.db.models.signals import post_save, pre_delete
-from django.utils import timezone
+from django.urls import reverse
+from django.utils import six, timezone
+from django.utils.encoding import python_2_unicode_compatible
 from django.utils.functional import cached_property
 from django.utils.translation import ugettext as _
 
@@ -251,9 +252,9 @@ class PartnerOrganization(TimeStampedModel):
 
     RATING_HIGH = 'High'
     RATING_SIGNIFICANT = 'Significant'
-    RATING_MODERATE = 'Moderate'
+    RATING_MODERATE = 'Medium'
     RATING_LOW = 'Low'
-    RATING_NON_ASSESSED = 'Non-Assessed'
+    RATING_NON_ASSESSED = 'Non Required'
 
     RISK_RATINGS = (
         (RATING_HIGH, 'High'),
