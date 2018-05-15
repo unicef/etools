@@ -133,7 +133,7 @@ class PartnerSynchronizer(VisionDataSynchronizer):
             partner_org, new = PartnerOrganization.objects.get_or_create(vendor_number=partner['VENDOR_CODE'])
 
             if not self.get_partner_type(partner):
-                logger.info('Partner {} skipped, because PartnerType ={}'.format(
+                logger.info('Partner {} skipped, because PartnerType is {}'.format(
                     partner['VENDOR_NAME'], partner['PARTNER_TYPE_DESC']
                 ))
                 if partner_org.id:
@@ -243,10 +243,16 @@ class PartnerSynchronizer(VisionDataSynchronizer):
 
     @staticmethod
     def get_partner_rating(partner):
-        allowed_risk_rating = [rr[0] for rr in PartnerOrganization.RISK_RATINGS]
-        if partner.get('RISK_RATING') in allowed_risk_rating:
-            return partner['RISK_RATING']
-        return ''
+
+        allowed_risk_rating = {
+            'High': PartnerOrganization.RATING_HIGH,
+            'Significant': PartnerOrganization.RATING_SIGNIFICANT,
+            'Moderate': PartnerOrganization.RATING_MODERATE,
+            'Low': PartnerOrganization.RATING_LOW,
+            'Non-Assessed': PartnerOrganization.RATING_NON_ASSESSED,
+        }
+
+        return allowed_risk_rating.get(partner.get('RISK_RATING', ''), '')
 
     @staticmethod
     def get_type_of_assessment(partner):
