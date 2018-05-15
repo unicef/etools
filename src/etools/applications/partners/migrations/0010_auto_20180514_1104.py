@@ -31,7 +31,7 @@ def migrate_data(apps, schema):
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('partners', '0007_auto_20180424_1916'),
+        ('partners', '0009_auto_20180510_1940'),
     ]
 
     operations = [
