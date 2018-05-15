@@ -10,8 +10,7 @@ from django.db import models, connection, transaction
 from django.db.models import Case, Count, CharField, F, Max, Min, Q, Sum, When
 from django.db.models.signals import post_save, pre_delete
 from django.urls import reverse
-from django.utils import six, timezone
-from django.utils.encoding import python_2_unicode_compatible
+from django.utils import timezone
 from django.utils.functional import cached_property
 from django.utils.translation import ugettext as _
 
