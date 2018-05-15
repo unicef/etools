@@ -16,7 +16,7 @@ tpm_visits_api = routers.SimpleRouter()
 tpm_visits_api.register(r'visits', TPMVisitViewSet, base_name='visits')
 
 tpm_action_points_api = NestedComplexRouter(tpm_visits_api, r'visits', lookup='tpm_visit')
-tpm_action_points_api.register(r'action-points', ActionPointViewSet, base_name='tpmactionpoint')
+tpm_action_points_api.register(r'nested-action-points', ActionPointViewSet, base_name='tpmactionpoint')
 
 
 app_name = 'tpm'
