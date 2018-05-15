@@ -1,18 +1,17 @@
 
 import json
-from datetime import datetime, date
+from datetime import date, datetime
 
-from django.db.models import F, Sum
 from django.db import connection, transaction
 from django.db.models import F, Sum
-
-from celery.utils.log import get_task_logger
 from django.utils import timezone
 
-from etools.applications.audit.models import Audit, Engagement, SpotCheck, SpecialAudit
+from celery.utils.log import get_task_logger
+
+from etools.applications.audit.models import Audit, Engagement, SpecialAudit, SpotCheck
 from etools.applications.hact.models import AggregateHact, HactEncoder
-from etools.applications.partners.models import PartnerOrganization, InterventionPlannedVisits, Intervention
-from etools.applications.t2f.models import TravelActivity, TravelType, Travel
+from etools.applications.partners.models import Intervention, InterventionPlannedVisits, PartnerOrganization
+from etools.applications.t2f.models import Travel, TravelActivity, TravelType
 from etools.applications.tpm.models import TPMVisit
 from etools.applications.users.models import Country
 from etools.config.celery import app
