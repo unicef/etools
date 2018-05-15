@@ -36,12 +36,12 @@ class TestActionPointsTransitionConditions(ActionPointTransitionTestCase):
 
         cls.pme_user = UserFactory(pme=True)
 
-    def test_complete_without_action_taken(self):
+    def test_complete_without_comments(self):
         action_point = ActionPointFactory(status='open')
 
         response = self._do_transition(action_point, 'complete', self.pme_user)
         self.assertEquals(response.status_code, status.HTTP_400_BAD_REQUEST)
-        self.assertIn('action_taken', response.data)
+        self.assertIn('comments', response.data)
 
         action_point = self._refresh_instance(action_point)
         self.assertEquals(action_point.status, 'open')
@@ -70,7 +70,7 @@ class ActionPointTransitionPermissionsTestCase(TransitionPermissionsTestCaseMixi
         opts = {}
 
         if transition == 'complete':
-            opts['action_taken'] = 'some action was taken'
+            opts['comments__count'] = 3
 
         opts.update(kwargs)
         return super(ActionPointTransitionPermissionsTestCase, self).create_object(transition, **opts)

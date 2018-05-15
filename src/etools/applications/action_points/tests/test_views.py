@@ -3,6 +3,7 @@ from datetime import date
 from django.core.management import call_command
 from django.core.urlresolvers import reverse
 from django.utils import six
+from factory import fuzzy
 
 from rest_framework import status
 
@@ -127,6 +128,23 @@ class TestActionPointViewSet(ActionPointsTestCaseMixin, BaseTenantTestCase):
         self.assertEqual(response.data['assigned_to']['id'], new_assignee.id)
         self.assertEqual(response.data['assigned_by']['id'], assignee.id)
 
+    def test_add_comment(self):
+        action_point = ActionPointFactory(status='open', comments__count=0)
+
+        response = self.forced_auth_req(
+            'patch',
+            reverse('action-points:action-points-detail', args=(action_point.id,)),
+            user=action_point.author,
+            data={
+                'comments': [{
+                    'comment': fuzzy.FuzzyText().fuzz()
+                }]
+            }
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(response.data['comments']), 1)
+
 
 class TestActionPointsViewMetadata(ActionPointsTestCaseMixin):
     @classmethod
@@ -215,7 +233,7 @@ class TestOpenActionPointDetailViewMetadata(TestActionPointsDetailViewMetadata, 
         'due_date',
         'assigned_to',
         'high_priority',
-        'action_taken',
+        'comments',
 
         'cp_output',
         'partner',

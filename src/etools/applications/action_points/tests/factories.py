@@ -4,7 +4,9 @@ from django.contrib.auth.models import Group
 from django.utils import timezone
 
 import factory.fuzzy
+from django_comments.models import Comment
 
+from etools.applications.EquiTrack.utils import get_current_site
 from etools.applications.action_points.models import ActionPoint
 from etools.applications.firms.tests.factories import BaseUserFactory
 from etools.applications.locations.tests.factories import LocationFactory
@@ -37,6 +39,16 @@ class UserFactory(BaseUserFactory):
             self.groups.add(*extracted)
 
 
+class ActionPointCommentFactory(factory.DjangoModelFactory):
+    class Meta:
+        model = Comment
+
+    user = factory.SubFactory(UserFactory, unicef_user=True)
+    comment = factory.fuzzy.FuzzyText()
+    submit_date = factory.LazyAttribute(lambda o: timezone.now())
+    site = factory.LazyAttribute(lambda o: get_current_site())
+
+
 class ActionPointFactory(factory.DjangoModelFactory):
     class Meta:
         model = ActionPoint
@@ -56,6 +68,8 @@ class ActionPointFactory(factory.DjangoModelFactory):
 
     assigned_to = factory.SubFactory(UserFactory)
 
+    comments__count = 0
+
     class Params:
         open = factory.Trait(
             status=ActionPoint.STATUSES.open
@@ -63,7 +77,7 @@ class ActionPointFactory(factory.DjangoModelFactory):
 
         pre_completed = InheritedTrait(
             open,
-            action_taken=factory.fuzzy.FuzzyText()
+            comments__count=3
         )
 
         completed = InheritedTrait(
@@ -78,3 +92,11 @@ class ActionPointFactory(factory.DjangoModelFactory):
             status = extra.pop('status')
             extra[status] = True
         return super(ActionPointFactory, cls).attributes(create, extra)
+
+    @factory.post_generation
+    def comments(self, create, extracted, count, **kwargs):
+        if not create:
+            return
+
+        for i in range(count):
+            ActionPointCommentFactory(content_object=self, **kwargs)

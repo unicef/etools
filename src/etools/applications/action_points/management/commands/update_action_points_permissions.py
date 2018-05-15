@@ -29,8 +29,8 @@ class Command(BaseCommand):
     action_point_edit = [
         'action_points.actionpoint.due_date',
         'action_points.actionpoint.assigned_to',
-        'action_points.actionpoint.action_taken',
         'action_points.actionpoint.high_priority',
+        'action_points.actionpoint.comments',
     ] + action_point_pmp_relations
 
     # common fields, should be visible always
@@ -53,11 +53,9 @@ class Command(BaseCommand):
         'action_points.actionpoint.related_object_str',
         'action_points.actionpoint.related_object_url',
 
-        'action_points.actionpoint.action_taken',
         'action_points.actionpoint.created',
         'action_points.actionpoint.date_of_completion',
 
-        'action_points.actionpoint.comments',
         'action_points.actionpoint.history',
     ]
 

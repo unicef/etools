@@ -1,6 +1,5 @@
 from django.core.management import call_command
 
-import factory.fuzzy
 from rest_framework.exceptions import ValidationError
 
 from etools.applications.action_points.models import ActionPoint
@@ -24,8 +23,9 @@ class TestActionPointModel(BaseTenantTestCase):
 
     def test_complete_fail(self):
         action_point = ActionPointFactory()
-        with self.assertRaises(ValidationError):
+        with self.assertRaises(ValidationError) as ex:
             action_point.complete()
+        self.assertIn('comments', ex.exception.detail)
 
     def test_complete(self):
         action_point = ActionPointFactory(status='pre_completed')
@@ -48,11 +48,10 @@ class TestActionPointModel(BaseTenantTestCase):
         self.assertEqual(action_point.related_module, None)
 
     def test_additional_data(self):
-        action_point = ActionPointFactory()
+        action_point = ActionPointFactory(status='pre_completed')
         initial_data = create_dict_with_relations(action_point)
 
         action_point.assigned_to = UserFactory()
-        action_point.action_taken = factory.fuzzy.FuzzyText().fuzz()
         action_point.complete()
         action_point.save()
 

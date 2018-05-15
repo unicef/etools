@@ -1,8 +1,10 @@
+from django.utils import timezone
 from django.utils.translation import ugettext_lazy as _
 
 from django_comments.models import Comment
 from rest_framework import serializers
 
+from etools.applications.EquiTrack.utils import get_current_site
 from etools.applications.action_points.models import ActionPoint
 from etools.applications.EquiTrack.serializers import SnapshotModelSerializer
 from etools.applications.locations.serializers import LocationLightSerializer
@@ -16,6 +18,7 @@ from etools.applications.users.serializers import OfficeSerializer
 from etools.applications.users.serializers_v3 import MinimalUserSerializer
 from etools.applications.utils.common.serializers.fields import SeparatedReadWriteField
 from etools.applications.utils.common.serializers.mixins import UserContextSerializerMixin
+from etools.applications.utils.writable_serializers.serializers import WritableNestedSerializerMixin
 
 
 class SectionSerializer(serializers.ModelSerializer):
@@ -74,7 +77,7 @@ class ActionPointLightSerializer(UserContextSerializerMixin,
             'section', 'office', 'location',
             'partner', 'cp_output', 'intervention',
 
-            'high_priority', 'due_date', 'description', 'action_taken',
+            'high_priority', 'due_date', 'description',
 
             'created', 'date_of_completion',
             'status', 'status_date',
@@ -82,31 +85,37 @@ class ActionPointLightSerializer(UserContextSerializerMixin,
 
 
 class CommentSerializer(UserContextSerializerMixin,
+                        WritableNestedSerializerMixin,
                         serializers.ModelSerializer):
     user = MinimalUserSerializer(read_only=True, label=_('Author'))
 
-    class Meta:
+    class Meta(WritableNestedSerializerMixin.Meta):
         model = Comment
         fields = (
             'id', 'user', 'comment', 'submit_date'
         )
         extra_kwargs = {
-            'user': {'read_only': True}
+            'user': {'read_only': True},
+            'submit_date': {'read_only': True},
         }
 
     def create(self, validated_data):
-        validated_data['user'] = self.get_user()
+        validated_data.update({
+            'user': self.get_user(),
+            'submit_date': timezone.now(),
+            'site': get_current_site(),
+        })
         return super(CommentSerializer, self).create(validated_data)
 
 
-class ActionPointSerializer(ActionPointLightSerializer):
+class ActionPointSerializer(WritableNestedSerializerMixin, ActionPointLightSerializer):
     comments = CommentSerializer(many=True, label=_('Comments'))
     history = ActivitySerializer(many=True, label=_('History'))
 
     related_object_str = serializers.SerializerMethodField(label=_('Reference'))
     related_object_url = serializers.SerializerMethodField()
 
-    class Meta(ActionPointLightSerializer.Meta):
+    class Meta(WritableNestedSerializerMixin.Meta, ActionPointLightSerializer.Meta):
         fields = ActionPointLightSerializer.Meta.fields + [
             'comments', 'history', 'related_object_str', 'related_object_url',
         ]
