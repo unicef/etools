@@ -92,6 +92,7 @@ class PartnerOrganizationListAPIView(QueryStringFilterMixin, ExportModelMixin, L
             filters = (
                 ('partner_type', 'partner_type__in'),
                 ('cso_type', 'cso_type__in'),
+                ('rating', 'rating__in'),
             )
             search_terms = ['name__icontains', 'vendor_number__icontains', 'short_name__icontains']
             queries.extend(self.filter_params(filters))
