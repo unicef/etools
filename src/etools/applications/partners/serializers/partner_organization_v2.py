@@ -271,14 +271,7 @@ class PlannedEngagementNestedSerializer(serializers.ModelSerializer):
 class PartnerPlannedVisitsSerializer(serializers.ModelSerializer):
     class Meta:
         model = PartnerPlannedVisits
-        fields = (
-            "id",
-            "year",
-            "programmatic_q1",
-            "programmatic_q2",
-            "programmatic_q3",
-            "programmatic_q4",
-        )
+        fields = "__all__"
 
 
 class PartnerOrganizationDetailSerializer(serializers.ModelSerializer):

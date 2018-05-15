@@ -1,4 +1,3 @@
-
 import datetime
 import json
 from unittest import skip
@@ -12,7 +11,11 @@ from rest_framework import status
 from etools.applications.EquiTrack.tests.cases import BaseTenantTestCase
 from etools.applications.EquiTrack.tests.mixins import URLAssertionMixin
 from etools.applications.partners.models import PartnerOrganization, PartnerType
-from etools.applications.partners.tests.factories import AgreementFactory, InterventionBudgetFactory, PartnerFactory
+from etools.applications.partners.tests.factories import (
+    AgreementFactory,
+    InterventionFactory,
+    PartnerFactory,
+)
 from etools.applications.partners.views.partner_organization_v2 import PartnerOrganizationAddView
 from etools.applications.t2f.tests.factories import TravelActivityFactory
 from etools.applications.users.tests.factories import GroupFactory, UserFactory
@@ -33,21 +36,26 @@ class URLsTestCase(URLAssertionMixin, SimpleTestCase):
 
 
 class TestPartnerOrganizationDetailAPIView(BaseTenantTestCase):
-    def setUp(self):
-        super(TestPartnerOrganizationDetailAPIView, self).setUp()
-        self.unicef_staff = UserFactory(is_staff=True)
-        self.interventionbudget = InterventionBudgetFactory()
+    @classmethod
+    def setUpTestData(cls):
+        cls.unicef_staff = UserFactory(is_staff=True)
+        cls.partner = PartnerFactory(
+            partner_type=PartnerType.CIVIL_SOCIETY_ORGANIZATION,
+            cso_type="International",
+            hidden=False,
+            vendor_number="DDD",
+            short_name="Short name",
+        )
+        agreement = AgreementFactory(
+            partner=cls.partner,
+            signed_by_unicef_date=datetime.date.today())
 
-        self.intervention = self.interventionbudget.intervention
-        self.intervention.save()
+        cls.intervention = InterventionFactory(agreement=agreement)
 
-        self.agreement = self.interventionbudget.intervention.agreement
-        self.agreement.save()
-
-        self.partner = self.interventionbudget.intervention.agreement.partner
-        self.partner.save()
-
-        self.url = reverse("partners_api:partner-detail", kwargs={'pk': self.partner.id})
+        cls.url = reverse(
+            "partners_api:partner-detail",
+            kwargs={'pk': cls.partner.pk}
+        )
 
     @skip("This will be done in a separate PR")
     def test_get_partner_details(self):
@@ -59,6 +67,42 @@ class TestPartnerOrganizationDetailAPIView(BaseTenantTestCase):
 
         response_json = json.loads(response.rendered_content)
         self.assertEqual(self.intervention.id, response_json.get("interventions")[0].id)
+
+    def test_update_planned_visits(self):
+        response = self.forced_auth_req(
+            'get',
+            reverse('partners_api:partner-detail', args=[self.partner.pk]),
+            user=self.unicef_staff,
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(response.data["planned_visits"]), 0)
+
+        planned_visits = [{
+            "year": datetime.date.today().year,
+            "programmatic_q1": 1,
+            "programmatic_q2": 2,
+            "programmatic_q3": 3,
+            "programmatic_q4": 4,
+        }]
+        data = {
+            "name": self.partner.name + ' Updated',
+            "partner_type": self.partner.partner_type,
+            "vendor_number": self.partner.vendor_number,
+            "planned_visits": planned_visits,
+        }
+        response = self.forced_auth_req(
+            'patch',
+            reverse('partners_api:partner-detail', args=[self.partner.pk]),
+            user=self.unicef_staff,
+            data=data,
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(response.data["planned_visits"]), 1)
+        self.assertEqual(
+            response.data["planned_visits"][0]["year"],
+            datetime.date.today().year
+        )
 
 
 class TestPartnerOrganizationHactAPIView(BaseTenantTestCase):

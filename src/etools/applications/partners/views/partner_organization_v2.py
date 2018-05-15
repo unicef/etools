@@ -27,16 +27,19 @@ from etools.applications.partners.permissions import (ListCreateAPIMixedPermissi
 from etools.applications.partners.serializers.exports.partner_organization import (
     AssessmentExportFlatSerializer, AssessmentExportSerializer, PartnerOrganizationExportFlatSerializer,
     PartnerOrganizationExportSerializer, PartnerStaffMemberExportFlatSerializer, PartnerStaffMemberExportSerializer,)
-from etools.applications.partners.serializers.partner_organization_v2 import (AssessmentDetailSerializer,
-                                                                              MinimalPartnerOrganizationListSerializer,
-                                                                              PartnerOrganizationCreateUpdateSerializer,
-                                                                              PartnerOrganizationDetailSerializer,
-                                                                              PartnerOrganizationHactSerializer,
-                                                                              PartnerOrganizationListSerializer,
-                                                                              PartnerStaffMemberCreateUpdateSerializer,
-                                                                              PartnerStaffMemberDetailSerializer,
-                                                                              PlannedEngagementNestedSerializer,
-                                                                              PlannedEngagementSerializer,)
+from etools.applications.partners.serializers.partner_organization_v2 import (
+    AssessmentDetailSerializer,
+    MinimalPartnerOrganizationListSerializer,
+    PartnerOrganizationCreateUpdateSerializer,
+    PartnerOrganizationDetailSerializer,
+    PartnerOrganizationHactSerializer,
+    PartnerOrganizationListSerializer,
+    PartnerPlannedVisitsSerializer,
+    PartnerStaffMemberCreateUpdateSerializer,
+    PartnerStaffMemberDetailSerializer,
+    PlannedEngagementNestedSerializer,
+    PlannedEngagementSerializer,
+)
 from etools.applications.partners.views.helpers import set_tenant_or_fail
 from etools.applications.t2f.models import TravelActivity
 from etools.applications.vision.adapters.partner import PartnerSynchronizer
@@ -139,6 +142,7 @@ class PartnerOrganizationDetailAPIView(ValidatorViewMixin, RetrieveUpdateDestroy
 
     SERIALIZER_MAP = {
         'assessments': AssessmentDetailSerializer,
+        'planned_visits': PartnerPlannedVisitsSerializer,
         'staff_members': PartnerStaffMemberCreateUpdateSerializer,
         'planned_engagement': PlannedEngagementNestedSerializer
     }
@@ -151,7 +155,12 @@ class PartnerOrganizationDetailAPIView(ValidatorViewMixin, RetrieveUpdateDestroy
 
     @transaction.atomic
     def update(self, request, *args, **kwargs):
-        related_fields = ['assessments', 'staff_members', 'planned_engagement']
+        related_fields = [
+            'assessments',
+            'staff_members',
+            'planned_engagement',
+            'planned_visits',
+        ]
 
         instance, old_instance, serializer = self.my_update(
             request,
