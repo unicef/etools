@@ -76,6 +76,7 @@ class Command(BaseCommand):
 
     visit_report = [
         'tpm.tpmvisit.report_attachments',
+        'tpm.tpmvisit.tpm_activities',
         'tpm.tpmactivity.report_attachments',
     ]
 
