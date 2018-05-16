@@ -1,7 +1,8 @@
 from datetime import date
 from operator import itemgetter
 
-from django.core.exceptions import ValidationError
+
+from rest_framework.serializers import ValidationError
 from django.db import transaction
 from django.db.models import Q
 from django.utils.translation import ugettext as _
@@ -60,9 +61,11 @@ class InterventionAmendmentCUSerializer(serializers.ModelSerializer):
         if 'signed_date' in data and data['signed_date'] > date.today():
             raise ValidationError("Date cannot be in the future!")
 
-        if 'intervention' in data and data['intervention'].in_amendment is True:
-            raise ValidationError("Cannot add a new amendment while another amendment is in progress.")
-
+        if 'intervention' in data:
+            if data['intervention'].in_amendment is True:
+                raise ValidationError("Cannot add a new amendment while another amendment is in progress.")
+            if data['intervention'].agreement.partner.blocked is True:
+                raise ValidationError("Cannot add a new amendment while the partner is blocked in Vision.")
         return data
 
 
@@ -294,6 +297,19 @@ class InterventionResultLinkSimpleCUSerializer(serializers.ModelSerializer):
     def get_ram_indicator_names(self, obj):
         return [i.name for i in obj.ram_indicators.all()]
 
+    def update(self, instance, validated_data):
+        intervention = validated_data.get('intervention', instance.intervention)
+        if intervention and intervention.agreement.partner.blocked is True:
+            raise ValidationError("An Output cannot be updated for a partner that is blocked in Vision")
+
+        return super(InterventionResultLinkSimpleCUSerializer, self).update(instance, validated_data)
+
+    def create(self, validated_data):
+        intervention = validated_data.get('intervention')
+        if intervention and intervention.agreement.partner.blocked is True:
+            raise ValidationError("An Output cannot be updated for a partner that is blocked in Vision")
+        return super(InterventionResultLinkSimpleCUSerializer, self).create(validated_data)
+
     class Meta:
         model = InterventionResultLink
         fields = "__all__"
@@ -477,8 +493,8 @@ class InterventionCreateUpdateSerializer(SnapshotModelSerializer):
         for fr in frs:
             if fr.intervention:
                 if (self.instance is None) or (not self.instance.id) or (fr.intervention.id != self.instance.id):
-                    raise ValidationError({'error': 'One or more of the FRs selected is related to a different PD/SSFA,'
-                                                    ' {}'.format(fr.fr_number)})
+                    raise ValidationError(['One or more of the FRs selected is related to a different PD/SSFA,'
+                                           ' {}'.format(fr.fr_number)])
             else:
                 pass
                 # unicef/etools-issues:779
