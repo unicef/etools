@@ -7,9 +7,9 @@ from unittest import skip
 
 from django.conf import settings
 from django.core.files.uploadedfile import SimpleUploadedFile
-from django.core.urlresolvers import resolve, reverse
 from django.db import connection
 from django.test import SimpleTestCase
+from django.urls import resolve, reverse
 from django.utils import six, timezone
 from django.utils.six.moves.urllib_parse import urlparse
 
@@ -1769,32 +1769,6 @@ class TestInterventionViews(BaseTenantTestCase):
 
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertEqual(response.data, ['Start date must precede end date'])
-
-    def test_intervention_update_planned_visits(self):
-        import copy
-        a = copy.deepcopy(self.intervention_data["planned_visits"])
-        a.append({
-            "year": 2015,
-            "programmatic": 2,
-            "spot_checks": 1,
-            "audit": 1,
-            "quarter": 'q3'
-        })
-        data = {
-            "planned_visits": a,
-        }
-
-        response = self.forced_auth_req(
-            'patch',
-            reverse(
-                "partners_api:intervention-detail",
-                args=[self.intervention["id"]]
-            ),
-            user=self.partnership_manager_user,
-            data=data,
-        )
-
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
 
     def test_intervention_filter(self):
         country_programme = CountryProgrammeFactory()

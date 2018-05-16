@@ -1,8 +1,8 @@
-
 from datetime import date
 from operator import itemgetter
 
-from django.core.exceptions import ValidationError
+
+from rest_framework.serializers import ValidationError
 from django.db import transaction
 from django.db.models import Q
 from django.utils.translation import ugettext as _
@@ -14,12 +14,16 @@ from etools.applications.EquiTrack.serializers import SnapshotModelSerializer
 from etools.applications.funds.models import FundsCommitmentItem, FundsReservationHeader
 from etools.applications.funds.serializers import FRsSerializer
 from etools.applications.locations.serializers import LocationLightSerializer, LocationSerializer
-from etools.applications.partners.models import (Intervention,  # TODO intervention sector locations cleanup
+from etools.applications.partners.models import (Intervention,
                                                  InterventionAmendment, InterventionAttachment, InterventionBudget,
                                                  InterventionPlannedVisits, InterventionReportingPeriod,
                                                  InterventionResultLink, InterventionSectorLocationLink,)
 from etools.applications.partners.permissions import InterventionPermissions
-from etools.applications.reports.models import AppliedIndicator, LowerResult, ReportingRequirement
+from etools.applications.reports.models import (
+    AppliedIndicator,
+    LowerResult,
+    ReportingRequirement,
+)
 from etools.applications.reports.serializers.v1 import SectorSerializer
 from etools.applications.reports.serializers.v2 import (IndicatorSerializer, LowerResultCUSerializer,
                                                         LowerResultSerializer, ReportingRequirementSerializer,)
@@ -57,9 +61,11 @@ class InterventionAmendmentCUSerializer(serializers.ModelSerializer):
         if 'signed_date' in data and data['signed_date'] > date.today():
             raise ValidationError("Date cannot be in the future!")
 
-        if 'intervention' in data and data['intervention'].in_amendment is True:
-            raise ValidationError("Cannot add a new amendment while another amendment is in progress.")
-
+        if 'intervention' in data:
+            if data['intervention'].in_amendment is True:
+                raise ValidationError("Cannot add a new amendment while another amendment is in progress.")
+            if data['intervention'].agreement.partner.blocked is True:
+                raise ValidationError("Cannot add a new amendment while the partner is blocked in Vision.")
         return data
 
 
@@ -176,6 +182,24 @@ class InterventionListSerializer(BaseInterventionListSerializer):
     fr_currency = serializers.SerializerMethodField()
     multi_curr_flag = serializers.BooleanField()
 
+    donors = serializers.SerializerMethodField()
+    donor_codes = serializers.SerializerMethodField()
+    grants = serializers.SerializerMethodField()
+
+    location_p_codes = serializers.SerializerMethodField()
+
+    def get_location_p_codes(self, obj):
+        return obj.location_p_codes.split('|') if obj.location_p_codes else []
+
+    def get_donors(self, obj):
+        return obj.donors.split('|') if obj.donors else []
+
+    def get_donor_codes(self, obj):
+        return obj.donor_codes.split('|') if obj.donor_codes else []
+
+    def get_grants(self, obj):
+        return obj.grants.split('|') if obj.grants else []
+
     def fr_currencies_ok(self, obj):
         return obj.frs__currency__count == 1 if obj.frs__currency__count else None
 
@@ -192,7 +216,12 @@ class InterventionListSerializer(BaseInterventionListSerializer):
 
     class Meta(BaseInterventionListSerializer.Meta):
         fields = BaseInterventionListSerializer.Meta.fields + (
-            'fr_currencies_are_consistent', 'all_currencies_are_consistent', 'fr_currency', 'multi_curr_flag')
+            'fr_currencies_are_consistent', 'all_currencies_are_consistent', 'fr_currency', 'multi_curr_flag',
+            'location_p_codes',
+            'donors',
+            'donor_codes',
+            'grants',
+        )
 
 
 class MinimalInterventionListSerializer(serializers.ModelSerializer):
@@ -267,6 +296,19 @@ class InterventionResultLinkSimpleCUSerializer(serializers.ModelSerializer):
 
     def get_ram_indicator_names(self, obj):
         return [i.name for i in obj.ram_indicators.all()]
+
+    def update(self, instance, validated_data):
+        intervention = validated_data.get('intervention', instance.intervention)
+        if intervention and intervention.agreement.partner.blocked is True:
+            raise ValidationError("An Output cannot be updated for a partner that is blocked in Vision")
+
+        return super(InterventionResultLinkSimpleCUSerializer, self).update(instance, validated_data)
+
+    def create(self, validated_data):
+        intervention = validated_data.get('intervention')
+        if intervention and intervention.agreement.partner.blocked is True:
+            raise ValidationError("An Output cannot be updated for a partner that is blocked in Vision")
+        return super(InterventionResultLinkSimpleCUSerializer, self).create(validated_data)
 
     class Meta:
         model = InterventionResultLink
@@ -429,7 +471,6 @@ class InterventionCreateUpdateSerializer(SnapshotModelSerializer):
     prc_review_attachment = AttachmentSingleFileField(read_only=True)
     signed_pd_document_file = serializers.FileField(source='signed_pd_document', read_only=True)
     signed_pd_attachment = AttachmentSingleFileField(read_only=True)
-    planned_visits = PlannedVisitsNestedSerializer(many=True, read_only=True, required=False)
     attachments = InterventionAttachmentSerializer(many=True, read_only=True, required=False)
     result_links = InterventionResultCUSerializer(many=True, read_only=True, required=False)
     frs = serializers.PrimaryKeyRelatedField(many=True,
@@ -451,8 +492,8 @@ class InterventionCreateUpdateSerializer(SnapshotModelSerializer):
         for fr in frs:
             if fr.intervention:
                 if (self.instance is None) or (not self.instance.id) or (fr.intervention.id != self.instance.id):
-                    raise ValidationError({'error': 'One or more of the FRs selected is related to a different PD/SSFA,'
-                                                    ' {}'.format(fr.fr_number)})
+                    raise ValidationError(['One or more of the FRs selected is related to a different PD/SSFA,'
+                                           ' {}'.format(fr.fr_number)])
             else:
                 pass
                 # unicef/etools-issues:779
@@ -478,7 +519,6 @@ class InterventionDetailSerializer(serializers.ModelSerializer):
     signed_pd_document_file = serializers.FileField(source='signed_pd_document', read_only=True)
     signed_pd_attachment = AttachmentSingleFileField(read_only=True)
     amendments = InterventionAmendmentCUSerializer(many=True, read_only=True, required=False)
-    planned_visits = PlannedVisitsNestedSerializer(many=True, read_only=True, required=False)
     attachments = InterventionAttachmentSerializer(many=True, read_only=True, required=False)
     result_links = InterventionResultNestedSerializer(many=True, read_only=True, required=False)
     submitted_to_prc = serializers.ReadOnlyField()
@@ -489,6 +529,36 @@ class InterventionDetailSerializer(serializers.ModelSerializer):
     locations = serializers.SerializerMethodField()
     location_names = serializers.SerializerMethodField()
     cluster_names = serializers.SerializerMethodField()
+
+    donors = serializers.SerializerMethodField()
+    donor_codes = serializers.SerializerMethodField()
+    grants = serializers.SerializerMethodField()
+
+    location_p_codes = serializers.SerializerMethodField()
+
+    def get_location_p_codes(self, obj):
+        return [location.p_code for location in obj.flat_locations.all()]
+
+    def get_donors(self, obj):
+        donors = set()
+        for fr_item_qs in obj.frs.all():
+            for fr_li in fr_item_qs.fr_items.all():
+                donors.add(fr_li.donor)
+        return donors
+
+    def get_donor_codes(self, obj):
+        donor_codes = set()
+        for fr_item_qs in obj.frs.all():
+            for fr_li in fr_item_qs.fr_items.all():
+                donor_codes.add(fr_li.donor_code)
+        return donor_codes
+
+    def get_grants(self, obj):
+        grants = set()
+        for fr_item_qs in obj.frs.all():
+            for fr_li in fr_item_qs.fr_items.all():
+                grants.add(fr_li.grant_number)
+        return grants
 
     def get_permissions(self, obj):
         user = self.context['request'].user
@@ -518,11 +588,12 @@ class InterventionDetailSerializer(serializers.ModelSerializer):
             "signed_pd_document_file", "title", "status", "start", "end", "submission_date_prc", "review_date_prc",
             "submission_date", "prc_review_document", "submitted_to_prc", "signed_pd_document", "signed_by_unicef_date",
             "unicef_signatory", "unicef_focal_points", "partner_focal_points", "partner_authorized_officer_signatory",
-            "offices", "planned_visits", "population_focus", "signed_by_partner_date", "created", "modified",
+            "offices", "population_focus", "signed_by_partner_date", "created", "modified",
             "planned_budget", "result_links", 'country_programme', 'metadata', 'contingency_pd', "amendments",
-            "planned_visits", "attachments", 'permissions', 'partner_id', "sections",
+            "attachments", 'permissions', 'partner_id', "sections",
             "locations", "location_names", "cluster_names", "flat_locations", "flagged_sections", "section_names",
-            "in_amendment", "prc_review_attachment", "signed_pd_attachment",
+            "in_amendment", "prc_review_attachment", "signed_pd_attachment", "donors", "donor_codes", "grants",
+            "location_p_codes"
         )
 
 
@@ -616,26 +687,24 @@ class InterventionReportingRequirementCreateSerializer(serializers.ModelSerializ
 
         current_reqs_dict = {}
         for r in current_reqs:
-            current_reqs_dict[r["id"]] = r
+            current_reqs_dict[r["due_date"]] = r
 
         report_type = data["report_type"]
         for r in data["reporting_requirements"]:
-            if r.get("id") in current_reqs_dict:
-                current_reqs_dict.pop(r["id"])
+            # not expecting ids, so match based on due date
+            if r.get("due_date") in current_reqs_dict:
+                r["id"] = current_reqs_dict[r.get("due_date")]["id"]
+                current_reqs_dict.pop(r["due_date"])
+
             r["intervention"] = self.intervention
             r["report_type"] = report_type
             if report_type == ReportingRequirement.TYPE_HR:
                 r["end_date"] = r["due_date"]
                 r["start_date"] = None
-                r["description"] = ""
-            elif report_type == ReportingRequirement.TYPE_SPECIAL:
-                r["start_date"] = None
-                r["end_date"] = r["due_date"]
 
         # We need all reporting requirements in end date order
-        merged_reqs = list(current_reqs_dict.values()) + data["reporting_requirements"]
         data["reporting_requirements"] = sorted(
-            merged_reqs,
+            data["reporting_requirements"],
             key=itemgetter("end_date")
         )
         return data
@@ -646,8 +715,6 @@ class InterventionReportingRequirementCreateSerializer(serializers.ModelSerializ
         if report_type == ReportingRequirement.TYPE_QPR:
             serializer.fields["start_date"].required = True
             serializer.fields["end_date"].required = True
-        elif report_type == ReportingRequirement.TYPE_SPECIAL:
-            serializer.fields["description"].required = True
         return super().run_validation(initial_data)
 
     def validate(self, data):
@@ -660,7 +727,7 @@ class InterventionReportingRequirementCreateSerializer(serializers.ModelSerializ
 
         # Only able to change reporting requirements when PD
         # is in amendment status
-        if self.intervention.status not in [self.intervention.DRAFT]:
+        if not self.intervention.in_amendment and self.intervention.status != Intervention.DRAFT:
             raise serializers.ValidationError(
                 _("Changes not allowed when PD not in amendment state.")
             )
@@ -685,23 +752,16 @@ class InterventionReportingRequirementCreateSerializer(serializers.ModelSerializ
         return data
 
     def create(self, validated_data):
-        current_reqs = ReportingRequirement.objects.values_list(
-            "id",
-            flat=True
-        ).filter(
-            intervention=self.intervention,
-            report_type=validated_data["report_type"]
-        )
-        new_reqs = [
-            r["id"] for r in validated_data["reporting_requirements"]
-            if "id" in r
-        ]
-        delete_reqs = [r for r in current_reqs if r not in new_reqs]
-        ReportingRequirement.objects.filter(id__in=delete_reqs).delete()
         for r in validated_data["reporting_requirements"]:
             if r.get("id"):
                 pk = r.pop("id")
                 ReportingRequirement.objects.filter(pk=pk).update(**r)
             else:
                 ReportingRequirement.objects.create(**r)
+        return self.intervention
+
+    def delete(self, validated_data):
+        for r in validated_data["reporting_requirements"]:
+            if r.get("id"):
+                ReportingRequirement.objects.filter(pk=r.get("id")).delete()
         return self.intervention
