@@ -2,8 +2,8 @@ import datetime
 import json
 from unittest import skip
 
-from django.core.urlresolvers import reverse
 from django.test import SimpleTestCase
+from django.urls import reverse
 
 from mock import Mock, patch
 from rest_framework import status

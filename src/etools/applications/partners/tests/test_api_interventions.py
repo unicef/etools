@@ -4,9 +4,9 @@ from unittest import skip
 
 from django.core.cache import cache
 from django.core.files.uploadedfile import SimpleUploadedFile
-from django.core.urlresolvers import resolve, reverse
 from django.db import connection
 from django.test import SimpleTestCase
+from django.urls import reverse, resolve
 from django.utils import six, timezone
 
 from rest_framework import status
