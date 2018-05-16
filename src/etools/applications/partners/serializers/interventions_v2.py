@@ -308,6 +308,7 @@ class InterventionResultLinkSimpleCUSerializer(serializers.ModelSerializer):
         intervention = validated_data.get('intervention')
         if intervention and intervention.agreement.partner.blocked is True:
             raise ValidationError("An Output cannot be updated for a partner that is blocked in Vision")
+        return super(InterventionResultLinkSimpleCUSerializer, self).create(validated_data)
 
     class Meta:
         model = InterventionResultLink
@@ -492,8 +493,8 @@ class InterventionCreateUpdateSerializer(SnapshotModelSerializer):
         for fr in frs:
             if fr.intervention:
                 if (self.instance is None) or (not self.instance.id) or (fr.intervention.id != self.instance.id):
-                    raise ValidationError({'error': 'One or more of the FRs selected is related to a different PD/SSFA,'
-                                                    ' {}'.format(fr.fr_number)})
+                    raise ValidationError(['One or more of the FRs selected is related to a different PD/SSFA,'
+                                           ' {}'.format(fr.fr_number)])
             else:
                 pass
                 # unicef/etools-issues:779
