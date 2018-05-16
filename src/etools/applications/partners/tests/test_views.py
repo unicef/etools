@@ -6,9 +6,9 @@ from unittest import skip
 
 from django.conf import settings
 from django.core.files.uploadedfile import SimpleUploadedFile
-from django.core.urlresolvers import resolve, reverse
 from django.db import connection
 from django.test import SimpleTestCase
+from django.urls import resolve, reverse
 from django.utils import six, timezone
 from django.utils.six.moves.urllib_parse import urlparse
 

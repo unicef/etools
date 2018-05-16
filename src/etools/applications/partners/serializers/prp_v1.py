@@ -8,17 +8,34 @@ from etools.applications.locations.models import Location
 from etools.applications.partners.models import (Intervention, InterventionAmendment, InterventionReportingPeriod,
                                                  PartnerOrganization, PartnerStaffMember,)
 from etools.applications.reports.models import (AppliedIndicator, Disaggregation,
-                                                DisaggregationValue, LowerResult, Result,)
+                                                DisaggregationValue, LowerResult, Result, ReportingRequirement)
 from etools.applications.reports.serializers.v1 import SectorSerializer
 
 
-class PartnerSerializer(serializers.ModelSerializer):
+class PRPPartnerOrganizationListSerializer(serializers.ModelSerializer):
+    rating = serializers.CharField(source='get_rating_display')
     unicef_vendor_number = serializers.CharField(source='vendor_number', read_only=True)
 
     class Meta:
         model = PartnerOrganization
-        depth = 1
-        fields = ('id', 'name', 'unicef_vendor_number', 'short_name')
+        fields = (
+            "short_name",
+            "street_address",
+            "last_assessment_date",
+            "address",
+            "city",
+            "postal_code",
+            "country",
+            "id",
+            "unicef_vendor_number",
+            "name",
+            "alternate_name",
+            "rating",
+            "email",
+            "phone_number",
+            "basis_for_risk_rating",
+            "core_values_assessment_date"
+        )
 
 
 class AuthOfficerSerializer(serializers.ModelSerializer):
@@ -156,13 +173,19 @@ class ReportingPeriodsSerializer(serializers.ModelSerializer):
         fields = ('id', 'start_date', 'end_date', 'due_date')
 
 
+class ReportingRequirementsSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = ReportingRequirement
+        fields = ('id', 'start_date', 'end_date', 'due_date', 'report_type', 'description')
+
+
 class PRPInterventionListSerializer(serializers.ModelSerializer):
 
     # todo: do these need to be lowercased?
     amendments = InterventionAmendmentSerializer(read_only=True, many=True)
     offices = serializers.SlugRelatedField(many=True, read_only=True, slug_field='name')
     business_area_code = serializers.SerializerMethodField()
-    partner_org = PartnerSerializer(read_only=True, source='agreement.partner')
+    partner_org = PRPPartnerOrganizationListSerializer(read_only=True, source='agreement.partner')
     agreement = serializers.CharField(read_only=True, source='agreement.agreement_number')
     unicef_focal_points = UserFocalPointSerializer(many=True, read_only=True)
     agreement_auth_officers = AuthOfficerSerializer(many=True, read_only=True,
@@ -185,6 +208,7 @@ class PRPInterventionListSerializer(serializers.ModelSerializer):
     expected_results = PRPResultSerializer(many=True, read_only=True, source='all_lower_results')
     update_date = serializers.DateTimeField(source='modified')
     reporting_periods = ReportingPeriodsSerializer(many=True, read_only=True)
+    reporting_requirements = ReportingRequirementsSerializer(many=True, read_only=True)
     sections = SectorSerializer(source="combined_sections", many=True, read_only=True)
     locations = PRPLocationSerializer(source="flat_locations", many=True, read_only=True)
 
@@ -220,6 +244,7 @@ class PRPInterventionListSerializer(serializers.ModelSerializer):
             'cso_budget', 'cso_budget_currency',
             'unicef_budget', 'unicef_budget_currency',
             'reporting_periods',
+            'reporting_requirements',
             'expected_results',
             'update_date',
             'amendments',
