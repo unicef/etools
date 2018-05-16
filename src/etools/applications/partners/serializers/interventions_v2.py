@@ -471,7 +471,6 @@ class InterventionCreateUpdateSerializer(SnapshotModelSerializer):
     prc_review_attachment = AttachmentSingleFileField(read_only=True)
     signed_pd_document_file = serializers.FileField(source='signed_pd_document', read_only=True)
     signed_pd_attachment = AttachmentSingleFileField(read_only=True)
-    planned_visits = PlannedVisitsNestedSerializer(many=True, read_only=True, required=False)
     attachments = InterventionAttachmentSerializer(many=True, read_only=True, required=False)
     result_links = InterventionResultCUSerializer(many=True, read_only=True, required=False)
     frs = serializers.PrimaryKeyRelatedField(many=True,
@@ -520,7 +519,6 @@ class InterventionDetailSerializer(serializers.ModelSerializer):
     signed_pd_document_file = serializers.FileField(source='signed_pd_document', read_only=True)
     signed_pd_attachment = AttachmentSingleFileField(read_only=True)
     amendments = InterventionAmendmentCUSerializer(many=True, read_only=True, required=False)
-    planned_visits = PlannedVisitsNestedSerializer(many=True, read_only=True, required=False)
     attachments = InterventionAttachmentSerializer(many=True, read_only=True, required=False)
     result_links = InterventionResultNestedSerializer(many=True, read_only=True, required=False)
     submitted_to_prc = serializers.ReadOnlyField()
@@ -590,9 +588,9 @@ class InterventionDetailSerializer(serializers.ModelSerializer):
             "signed_pd_document_file", "title", "status", "start", "end", "submission_date_prc", "review_date_prc",
             "submission_date", "prc_review_document", "submitted_to_prc", "signed_pd_document", "signed_by_unicef_date",
             "unicef_signatory", "unicef_focal_points", "partner_focal_points", "partner_authorized_officer_signatory",
-            "offices", "planned_visits", "population_focus", "signed_by_partner_date", "created", "modified",
+            "offices", "population_focus", "signed_by_partner_date", "created", "modified",
             "planned_budget", "result_links", 'country_programme', 'metadata', 'contingency_pd', "amendments",
-            "planned_visits", "attachments", 'permissions', 'partner_id', "sections",
+            "attachments", 'permissions', 'partner_id', "sections",
             "locations", "location_names", "cluster_names", "flat_locations", "flagged_sections", "section_names",
             "in_amendment", "prc_review_attachment", "signed_pd_attachment", "donors", "donor_codes", "grants",
             "location_p_codes"

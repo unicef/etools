@@ -19,11 +19,15 @@ from etools.applications.EquiTrack.tests.cases import BaseTenantTestCase
 from etools.applications.EquiTrack.tests.mixins import URLAssertionMixin
 from etools.applications.locations.tests.factories import LocationFactory
 from etools.applications.partners.models import Intervention, InterventionAmendment, InterventionResultLink
-from etools.applications.partners.tests.factories import (AgreementFactory, InterventionAmendmentFactory,
-                                                          InterventionAttachmentFactory, InterventionFactory,
-                                                          InterventionPlannedVisitsFactory,
-                                                          InterventionResultLinkFactory,
-                                                          InterventionSectorLocationLinkFactory, PartnerFactory,)
+from etools.applications.partners.tests.factories import (
+    AgreementFactory,
+    InterventionAmendmentFactory,
+    InterventionAttachmentFactory,
+    InterventionFactory,
+    InterventionResultLinkFactory,
+    InterventionSectorLocationLinkFactory,
+    PartnerFactory,
+)
 from etools.applications.partners.tests.test_utils import setup_intervention_test_data
 from etools.applications.reports.models import AppliedIndicator, ReportingRequirement
 from etools.applications.reports.tests.factories import (AppliedIndicatorFactory, CountryProgrammeFactory,
@@ -49,7 +53,6 @@ class URLsTestCase(URLAssertionMixin, SimpleTestCase):
             ('intervention-list', '', {}),
             ('intervention-list-dash', 'dash/', {}),
             ('intervention-detail', '1/', {'pk': 1}),
-            ('intervention-visits-del', 'planned-visits/1/', {'pk': 1}),
             ('intervention-attachments-del', 'attachments/1/', {'pk': 1}),
             ('intervention-indicators', 'indicators/', {}),
             ('intervention-results', 'results/', {}),
@@ -1231,47 +1234,6 @@ class TestAPInterventionIndicatorsUpdateView(BaseTenantTestCase):
         self.assertFalse(indicator_updated.is_active)
 
 
-class TestInterventionPlannedVisitsDeleteView(BaseTenantTestCase):
-    @classmethod
-    def setUpTestData(cls):
-        cls.unicef_staff = UserFactory(is_staff=True)
-        cls.intervention = InterventionFactory()
-        cls.planned_visit = InterventionPlannedVisitsFactory(
-            intervention=cls.intervention,
-        )
-        cls.url = reverse(
-            "partners_api:intervention-visits-del",
-            args=[cls.planned_visit.pk]
-        )
-
-    def test_delete(self):
-        response = self.forced_auth_req(
-            'delete',
-            self.url,
-            user=self.unicef_staff,
-        )
-        self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
-
-    def test_delete_invalid(self):
-        self.intervention.status = Intervention.ACTIVE
-        self.intervention.save()
-        response = self.forced_auth_req(
-            'delete',
-            self.url,
-            user=self.unicef_staff,
-        )
-        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
-        self.assertEqual(response.data, ["You do not have permissions to delete a planned visit"])
-
-    def test_delete_not_found(self):
-        response = self.forced_auth_req(
-            'delete',
-            reverse("partners_api:intervention-visits-del", args=[404]),
-            user=self.unicef_staff,
-        )
-        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
-
-
 class TestInterventionAttachmentDeleteView(BaseTenantTestCase):
     @classmethod
     def setUpTestData(cls):
@@ -1304,14 +1266,6 @@ class TestInterventionAttachmentDeleteView(BaseTenantTestCase):
         )
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertEqual(response.data, ["You do not have permissions to delete an attachment"])
-
-    def test_delete_not_found(self):
-        response = self.forced_auth_req(
-            'delete',
-            reverse("partners_api:intervention-attachments-del", args=[404]),
-            user=self.unicef_staff,
-        )
-        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
 
 
 class TestInterventionResultListAPIView(BaseTenantTestCase):
