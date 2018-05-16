@@ -61,7 +61,7 @@ class TPMLocationExportSerializer(serializers.Serializer):
 
 
 class TPMActionPointExportSerializer(serializers.Serializer):
-    pd_ssfa = serializers.CharField(source='tpm_visit.intervention')
+    pd_ssfa = CommaSeparatedExportField(source='tpm_visit.tpm_activities.intervention')
     person_responsible = serializers.CharField(source='person_responsible.get_full_name')
     author = serializers.CharField(source='author.get_full_name')
     section = CommaSeparatedExportField(source='tpm_visit.tpm_activities', export_attr='section')
