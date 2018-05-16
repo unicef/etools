@@ -182,11 +182,7 @@ def start_date_related_agreement_valid(i):
 def signed_date_valid(i):
     # i = intervention
     today = date.today()
-    unicef_signing_requirements = [i.signed_by_unicef_date, i.unicef_signatory]
-    partner_signing_requirements = [i.signed_by_partner_date, i.partner_authorized_officer_signatory]
-    if (any(unicef_signing_requirements) and not all(unicef_signing_requirements)) or \
-            (any(partner_signing_requirements) and not all(partner_signing_requirements)) or \
-            (i.signed_by_partner_date and i.signed_by_partner_date > today) or \
+    if (i.signed_by_partner_date and i.signed_by_partner_date > today) or \
             (i.signed_by_unicef_date and i.signed_by_unicef_date > today):
         return False
     return True
@@ -278,8 +274,7 @@ class InterventionValid(CompleteValidation):
         'suspended_expired_error': 'State suspended cannot be modified since the end date of '
                                    'the intervention surpasses today',
         'start_end_dates_valid': 'Start date must precede end date',
-        'signed_date_valid': 'Unicef signatory and partner signatory as well as dates required, '
-                             'signatures cannot be dated in the future',
+        'signed_date_valid': 'Signatures cannot be dated in the future',
         'document_type_pca_valid': 'Document type PD or SHPD can only be associated with a PCA agreement.',
         'ssfa_agreement_has_no_other_intervention': 'The agreement selected has at least one '
                                                     'other SSFA Document connected',

@@ -4,8 +4,17 @@ from django.utils.translation import ugettext as _
 from rest_framework import serializers
 from rest_framework.exceptions import ValidationError
 
-from etools.applications.reports.models import (AppliedIndicator, Disaggregation, DisaggregationValue, Indicator,
-                                                IndicatorBlueprint, LowerResult, ReportingRequirement, Result,)
+from etools.applications.reports.models import (
+    AppliedIndicator,
+    Disaggregation,
+    DisaggregationValue,
+    Indicator,
+    IndicatorBlueprint,
+    LowerResult,
+    ReportingRequirement,
+    Result,
+    SpecialReportingRequirement,
+)
 
 
 class OutputListSerializer(serializers.ModelSerializer):
@@ -290,4 +299,10 @@ class ReportingRequirementSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = ReportingRequirement
-        fields = ("id", "start_date", "end_date", "due_date", "description", )
+        fields = ("id", "start_date", "end_date", "due_date", )
+
+
+class SpecialReportingRequirementSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = SpecialReportingRequirement
+        fields = "__all__"
