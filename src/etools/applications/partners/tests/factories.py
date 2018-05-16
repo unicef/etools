@@ -210,3 +210,12 @@ class PlannedEngagementFactory(factory.django.DjangoModelFactory):
         model = models.PlannedEngagement
 
     partner = factory.SubFactory(PartnerFactory)
+
+
+class PartnerPlannedVisitsFactory(factory.django.DjangoModelFactory):
+    class Meta:
+        model = models.PartnerPlannedVisits
+        django_get_or_create = ("partner", "year")
+
+    partner = factory.SubFactory(PartnerFactory)
+    year = datetime.date.today().year
