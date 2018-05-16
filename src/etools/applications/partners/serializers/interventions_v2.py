@@ -13,7 +13,7 @@ from etools.applications.EquiTrack.serializers import SnapshotModelSerializer
 from etools.applications.funds.models import FundsCommitmentItem, FundsReservationHeader
 from etools.applications.funds.serializers import FRsSerializer
 from etools.applications.locations.serializers import LocationLightSerializer, LocationSerializer
-from etools.applications.partners.models import (Intervention,  # TODO intervention sector locations cleanup
+from etools.applications.partners.models import (Intervention,
                                                  InterventionAmendment, InterventionAttachment, InterventionBudget,
                                                  InterventionPlannedVisits, InterventionReportingPeriod,
                                                  InterventionResultLink, InterventionSectorLocationLink,)
@@ -179,6 +179,24 @@ class InterventionListSerializer(BaseInterventionListSerializer):
     fr_currency = serializers.SerializerMethodField()
     multi_curr_flag = serializers.BooleanField()
 
+    donors = serializers.SerializerMethodField()
+    donor_codes = serializers.SerializerMethodField()
+    grants = serializers.SerializerMethodField()
+
+    location_p_codes = serializers.SerializerMethodField()
+
+    def get_location_p_codes(self, obj):
+        return obj.location_p_codes.split('|') if obj.location_p_codes else []
+
+    def get_donors(self, obj):
+        return obj.donors.split('|') if obj.donors else []
+
+    def get_donor_codes(self, obj):
+        return obj.donor_codes.split('|') if obj.donor_codes else []
+
+    def get_grants(self, obj):
+        return obj.grants.split('|') if obj.grants else []
+
     def fr_currencies_ok(self, obj):
         return obj.frs__currency__count == 1 if obj.frs__currency__count else None
 
@@ -195,7 +213,12 @@ class InterventionListSerializer(BaseInterventionListSerializer):
 
     class Meta(BaseInterventionListSerializer.Meta):
         fields = BaseInterventionListSerializer.Meta.fields + (
-            'fr_currencies_are_consistent', 'all_currencies_are_consistent', 'fr_currency', 'multi_curr_flag')
+            'fr_currencies_are_consistent', 'all_currencies_are_consistent', 'fr_currency', 'multi_curr_flag',
+            'location_p_codes',
+            'donors',
+            'donor_codes',
+            'grants',
+        )
 
 
 class MinimalInterventionListSerializer(serializers.ModelSerializer):
@@ -493,6 +516,36 @@ class InterventionDetailSerializer(serializers.ModelSerializer):
     location_names = serializers.SerializerMethodField()
     cluster_names = serializers.SerializerMethodField()
 
+    donors = serializers.SerializerMethodField()
+    donor_codes = serializers.SerializerMethodField()
+    grants = serializers.SerializerMethodField()
+
+    location_p_codes = serializers.SerializerMethodField()
+
+    def get_location_p_codes(self, obj):
+        return [location.p_code for location in obj.flat_locations.all()]
+
+    def get_donors(self, obj):
+        donors = set()
+        for fr_item_qs in obj.frs.all():
+            for fr_li in fr_item_qs.fr_items.all():
+                donors.add(fr_li.donor)
+        return donors
+
+    def get_donor_codes(self, obj):
+        donor_codes = set()
+        for fr_item_qs in obj.frs.all():
+            for fr_li in fr_item_qs.fr_items.all():
+                donor_codes.add(fr_li.donor_code)
+        return donor_codes
+
+    def get_grants(self, obj):
+        grants = set()
+        for fr_item_qs in obj.frs.all():
+            for fr_li in fr_item_qs.fr_items.all():
+                grants.add(fr_li.grant_number)
+        return grants
+
     def get_permissions(self, obj):
         user = self.context['request'].user
         ps = Intervention.permission_structure()
@@ -525,7 +578,8 @@ class InterventionDetailSerializer(serializers.ModelSerializer):
             "planned_budget", "result_links", 'country_programme', 'metadata', 'contingency_pd', "amendments",
             "planned_visits", "attachments", 'permissions', 'partner_id', "sections",
             "locations", "location_names", "cluster_names", "flat_locations", "flagged_sections", "section_names",
-            "in_amendment", "prc_review_attachment", "signed_pd_attachment",
+            "in_amendment", "prc_review_attachment", "signed_pd_attachment", "donors", "donor_codes", "grants",
+            "location_p_codes"
         )
 
 
