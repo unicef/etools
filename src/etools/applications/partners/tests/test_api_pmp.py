@@ -1,8 +1,8 @@
 import json
 from operator import itemgetter
 
-from django.core.urlresolvers import reverse
 from django.test import SimpleTestCase
+from django.urls import reverse
 from django.utils import six
 
 from rest_framework import status
