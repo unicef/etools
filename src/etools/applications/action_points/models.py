@@ -146,7 +146,7 @@ class ActionPoint(TimeStampedModel):
             'implementing_partner': str(self.partner),
             'description': self.description,
             'due_date': self.due_date.strftime('%d %b %Y'),
-            'object_url': 'link to follow up',
+            'object_url': self.related_object.get_object_url() if self.related_object else '',
         }
 
     def send_email(self, recipient, template_name):

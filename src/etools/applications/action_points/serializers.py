@@ -68,6 +68,20 @@ class ActionPointLightSerializer(UserContextSerializerMixin,
     )
     status_date = serializers.DateTimeField(read_only=True, label=_('Status Date'))
 
+    def create(self, validated_data):
+        validated_data.update({
+            'author': self.get_user(),
+            'assigned_by': self.get_user()
+        })
+
+        return super(ActionPointLightSerializer, self).create(validated_data)
+
+    def update(self, instance, validated_data):
+        if 'assigned_to' in validated_data:
+            validated_data['assigned_by'] = self.get_user()
+
+        return super(ActionPointLightSerializer, self).update(instance, validated_data)
+
     class Meta:
         model = ActionPoint
         fields = [
@@ -119,21 +133,6 @@ class ActionPointSerializer(WritableNestedSerializerMixin, ActionPointLightSeria
         fields = ActionPointLightSerializer.Meta.fields + [
             'comments', 'history', 'related_object_str', 'related_object_url',
         ]
-        extra_kwargs = {
-            'author': {'read_only': True}
-        }
-
-    def create(self, validated_data):
-        validated_data['author'] = self.get_user()
-        validated_data['assigned_by'] = self.get_user()
-
-        return super(ActionPointSerializer, self).create(validated_data)
-
-    def update(self, instance, validated_data):
-        if 'assigned_to' in validated_data:
-            validated_data['assigned_by'] = self.get_user()
-
-        return super(ActionPointSerializer, self).update(instance, validated_data)
 
     def get_related_object_str(self, obj):
         return str(obj.related_object) if obj.related_object else None
