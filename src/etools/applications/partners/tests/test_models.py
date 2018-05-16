@@ -1,11 +1,10 @@
-
 import copy
 import datetime
 from unittest import skip
 
 from django.core.files.uploadedfile import SimpleUploadedFile
-from django.core.urlresolvers import reverse
 from django.test import SimpleTestCase
+from django.urls import reverse
 from django.utils import six, timezone
 
 from freezegun import freeze_time
