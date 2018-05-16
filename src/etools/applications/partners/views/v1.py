@@ -45,6 +45,9 @@ class PCAPDFView(PDFTemplateView):
         if not agreement.partner.vendor_number:
             return {"error": "Partner Organization has no vendor number stored, please report to an etools focal point"}
 
+        if not agreement.authorized_officers.exists():
+            return {"error": 'Partner Organization has no "Authorized Officers selected" selected'}
+
         valid_response, response = get_data_from_insight('GetPartnerDetailsInfo_json/{vendor_code}',
                                                          {"vendor_code": agreement.partner.vendor_number})
 
