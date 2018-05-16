@@ -5,9 +5,9 @@ from unittest import skip
 
 from django.core.cache import cache
 from django.core.files.uploadedfile import SimpleUploadedFile
-from django.core.urlresolvers import resolve, reverse
 from django.db import connection
 from django.test import SimpleTestCase
+from django.urls import reverse, resolve
 from django.utils import six, timezone
 
 from rest_framework import status
@@ -450,7 +450,7 @@ class TestInterventionsAPI(BaseTenantTestCase):
                              [perm for perm in required_permissions if required_permissions[perm]])
 
     def test_list_interventions(self):
-        EXPECTED_QUERIES = 10
+        EXPECTED_QUERIES = 9
         with self.assertNumQueries(EXPECTED_QUERIES):
             status_code, response = self.run_request_list_ep(user=self.unicef_staff, method='get')
 
@@ -483,7 +483,7 @@ class TestInterventionsAPI(BaseTenantTestCase):
         self.ts = TenantSwitchFactory(name="prp_mode_off", countries=[connection.tenant])
         self.assertTrue(tenant_switch_is_active(self.ts.name))
 
-        EXPECTED_QUERIES = 10
+        EXPECTED_QUERIES = 9
         with self.assertNumQueries(EXPECTED_QUERIES):
             status_code, response = self.run_request_list_ep(user=self.unicef_staff, method='get')
 
@@ -492,6 +492,7 @@ class TestInterventionsAPI(BaseTenantTestCase):
 
         section1 = SectorFactory()
         section2 = SectorFactory()
+
         EXTRA_INTERVENTIONS = 15
         for i in range(0, EXTRA_INTERVENTIONS + 1):
             intervention = InterventionFactory(

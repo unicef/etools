@@ -1,6 +1,6 @@
 
-from django.core.urlresolvers import reverse
 from django.db import connection
+from django.urls import reverse
 from django.utils.http import urlquote
 
 from etools.applications.EquiTrack.utils import get_current_site

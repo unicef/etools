@@ -6,10 +6,10 @@ import json
 
 from django.conf import settings
 from django.contrib.postgres.fields import ArrayField, JSONField
-from django.core.urlresolvers import reverse
 from django.db import models, connection, transaction
 from django.db.models import Case, Count, CharField, F, Max, Min, Q, Sum, When
 from django.db.models.signals import post_save, pre_delete
+from django.urls import reverse
 from django.utils import six, timezone
 from django.utils.encoding import python_2_unicode_compatible
 from django.utils.functional import cached_property
@@ -20,6 +20,7 @@ from django_fsm import FSMField, transition
 from model_utils import Choices, FieldTracker
 from model_utils.models import TimeFramedModel, TimeStampedModel
 
+from etools.applications.EquiTrack.serializers import StringConcat
 from etools.applications.attachments.models import Attachment
 from etools.applications.environment.helpers import tenant_switch_is_active
 from etools.applications.EquiTrack.fields import CurrencyField, QuarterField
@@ -254,9 +255,9 @@ class PartnerOrganization(TimeStampedModel):
 
     RATING_HIGH = 'High'
     RATING_SIGNIFICANT = 'Significant'
-    RATING_MODERATE = 'Moderate'
+    RATING_MODERATE = 'Medium'
     RATING_LOW = 'Low'
-    RATING_NON_ASSESSED = 'Non-Assessed'
+    RATING_NON_ASSESSED = 'Non Required'
 
     RISK_RATINGS = (
         (RATING_HIGH, 'High'),
@@ -1445,7 +1446,6 @@ class InterventionManager(models.Manager):
     def get_queryset(self):
         return super(InterventionManager, self).get_queryset().prefetch_related(
             'agreement__partner',
-            'frs',
             'partner_focal_points',
             'unicef_focal_points',
             'offices',
@@ -1454,14 +1454,9 @@ class InterventionManager(models.Manager):
         )
 
     def detail_qs(self):
-        return self.get_queryset().prefetch_related(
-            'agreement__partner',
+        qs = self.get_queryset().prefetch_related(
             'frs',
-            'partner_focal_points',
-            'unicef_focal_points',
-            'offices',
-            'planned_budget',
-            'sections',
+            'frs__fr_items',
             'result_links__cp_output',
             'result_links__ll_results',
             'result_links__ll_results__applied_indicators__indicator',
@@ -1469,6 +1464,7 @@ class InterventionManager(models.Manager):
             'result_links__ll_results__applied_indicators__locations',
             'flat_locations',
         )
+        return qs
 
     def frs_qs(self):
         qs = self.get_queryset().prefetch_related(
@@ -1476,6 +1472,7 @@ class InterventionManager(models.Manager):
             'planned_budget',
             'offices',
             'sections',
+            # 'frs__fr_items',
             # TODO: Figure out a way in which to add locations that is more performant
             # 'flat_locations',
             'result_links__cp_output',
@@ -1489,6 +1486,10 @@ class InterventionManager(models.Manager):
             Sum("frs__actual_amt_local"),
             Sum("frs__intervention_amt"),
             Count("frs__currency", distinct=True),
+            location_p_codes=StringConcat("flat_locations__p_code", separator="|", distinct=True),
+            donors=StringConcat("frs__fr_items__donor", separator="|", distinct=True),
+            donor_codes=StringConcat("frs__fr_items__donor_code", separator="|", distinct=True),
+            grants=StringConcat("frs__fr_items__grant_number", separator="|", distinct=True),
             max_fr_currency=Max("frs__currency", output_field=CharField(), distinct=True),
             multi_curr_flag=Count(Case(When(frs__multi_curr_flag=True, then=1)))
         )

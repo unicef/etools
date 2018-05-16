@@ -69,7 +69,7 @@ class FundsReservationItemFactory(factory.DjangoModelFactory):
         model = models.FundsReservationItem
 
     fund_reservation = factory.SubFactory(FundsReservationHeaderFactory)
-    line_item = fuzzy.FuzzyText(length=5)
+    line_item = fuzzy.FuzzyInteger(low=1, high=300)
 
 
 class FundsCommitmentHeaderFactory(factory.DjangoModelFactory):

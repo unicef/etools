@@ -344,24 +344,6 @@ class TestAgreementCreateUpdateSerializer(AgreementCreateUpdateSerializerBase):
 
         self.assertTrue(serializer.is_valid(raise_exception=True))
 
-        # This should fail because signed_by_unicef_date is set but not signed_by
-        data = {
-            "agreement_type": Agreement.MOU,
-            "partner": self.partner,
-            "signed_by_unicef_date": self.today,
-        }
-        serializer = AgreementCreateUpdateSerializer()
-        serializer.context['request'] = self.fake_request
-
-        with self.assertRaises(serializers.ValidationError) as context_manager:
-            serializer.validate(data=data)
-
-        self.assertSimpleExceptionFundamentals(
-            context_manager,
-            'None of the dates can be in the future; '
-            'If dates are set, signatories are required'
-        )
-
         # This should fail because signed_by_unicef_date and signed_by are both set, but the signed by date is
         # in the future.
         data = {
@@ -376,23 +358,7 @@ class TestAgreementCreateUpdateSerializer(AgreementCreateUpdateSerializerBase):
 
         self.assertSimpleExceptionFundamentals(
             context_manager,
-            'None of the dates can be in the future; '
-            'If dates are set, signatories are required'
-        )
-
-        # This should fail because signed_by_partner_date is set but not partner_manager
-        data = {
-            "agreement_type": Agreement.MOU,
-            "partner": self.partner,
-            "signed_by_partner_date": self.today,
-        }
-        with self.assertRaises(serializers.ValidationError) as context_manager:
-            serializer.validate(data=data)
-
-        self.assertSimpleExceptionFundamentals(
-            context_manager,
-            'None of the dates can be in the future; '
-            'If dates are set, signatories are required'
+            'None of the signatures can be dated in the future'
         )
 
         # This should fail because signed_by_partner_date and partner_manager are both set, but the signed by date is
@@ -409,8 +375,7 @@ class TestAgreementCreateUpdateSerializer(AgreementCreateUpdateSerializerBase):
 
         self.assertSimpleExceptionFundamentals(
             context_manager,
-            'None of the dates can be in the future; '
-            'If dates are set, signatories are required'
+            'None of the signatures can be dated in the future'
         )
 
     def test_update_intervention(self):
