@@ -80,6 +80,11 @@ def transition_to_closed(i):
 
     if i.in_amendment is True:
         raise TransitionError([_('Cannot Transition status while adding an amendment')])
+
+    if i.agreement.partner.blocked:
+        raise TransitionError([
+            _('PD cannot be closed if the Partner is Blocked in Vision')
+        ])
     return True
 
 
@@ -94,12 +99,22 @@ def transition_to_ended(i):
     if i.in_amendment is True:
         raise TransitionError([_('Cannot Transition status while adding an amendment')])
 
+    if i.agreement.partner.blocked:
+        raise TransitionError([
+            _('PD cannot transition to ended if the Partner is Blocked in Vision')
+        ])
+
     return True
 
 
 def transition_to_suspended(i):
     if i.in_amendment is True:
         raise TransitionError([_('Cannot Transition status while adding an amendment')])
+
+    if i.agreement.partner.blocked:
+        raise TransitionError([
+            _('PD cannot be suspended if the Partner is Blocked in Vision')
+        ])
 
     return True
 
@@ -116,6 +131,11 @@ def transition_to_signed(i):
     if i.in_amendment is True:
         raise TransitionError([_('Cannot Transition status while adding an amendment')])
 
+    if i.agreement.partner.blocked:
+        raise TransitionError([
+            _('PD cannot transition to signed if the Partner is Blocked in Vision')
+        ])
+
     return True
 
 
@@ -126,6 +146,11 @@ def transition_to_active(i):
     if i.document_type in [i.PD, i.SHPD] and i.agreement.status != i.agreement.SIGNED:
         raise TransitionError([
             _('PD cannot be activated if the associated Agreement is not active')
+        ])
+
+    if i.agreement.partner.blocked:
+        raise TransitionError([
+            _('PD cannot be activated if the Partner is Blocked in Vision')
         ])
     return True
 
