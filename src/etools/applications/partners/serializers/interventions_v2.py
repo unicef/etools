@@ -18,7 +18,11 @@ from etools.applications.partners.models import (Intervention,
                                                  InterventionPlannedVisits, InterventionReportingPeriod,
                                                  InterventionResultLink, InterventionSectorLocationLink,)
 from etools.applications.partners.permissions import InterventionPermissions
-from etools.applications.reports.models import AppliedIndicator, LowerResult, ReportingRequirement
+from etools.applications.reports.models import (
+    AppliedIndicator,
+    LowerResult,
+    ReportingRequirement,
+)
 from etools.applications.reports.serializers.v1 import SectorSerializer
 from etools.applications.reports.serializers.v2 import (IndicatorSerializer, LowerResultCUSerializer,
                                                         LowerResultSerializer, ReportingRequirementSerializer,)
@@ -656,18 +660,6 @@ class InterventionReportingRequirementCreateSerializer(serializers.ModelSerializ
                 _("Indicator needs to be either cluster or high frequency.")
             )
 
-    def _validate_special(self, data):
-        # if delete action, can only delete dates in the future
-        if data.get("method") == "DELETE":
-            data = self.to_internal_value(data)
-            for req in data.get("reporting_requirements"):
-                if req.get("due_date") < date.today():
-                    raise serializers.ValidationError({
-                        "reporting_requirements": _(
-                            "Cannot delete reporting requirements in the past."
-                        )
-                    })
-
     def _merge_data(self, data):
         current_reqs = ReportingRequirement.objects.values(
             "id",
@@ -695,10 +687,6 @@ class InterventionReportingRequirementCreateSerializer(serializers.ModelSerializ
             if report_type == ReportingRequirement.TYPE_HR:
                 r["end_date"] = r["due_date"]
                 r["start_date"] = None
-                r["description"] = ""
-            elif report_type == ReportingRequirement.TYPE_SPECIAL:
-                r["start_date"] = None
-                r["end_date"] = r["due_date"]
 
         # We need all reporting requirements in end date order
         data["reporting_requirements"] = sorted(
@@ -713,9 +701,6 @@ class InterventionReportingRequirementCreateSerializer(serializers.ModelSerializ
         if report_type == ReportingRequirement.TYPE_QPR:
             serializer.fields["start_date"].required = True
             serializer.fields["end_date"].required = True
-        elif report_type == ReportingRequirement.TYPE_SPECIAL:
-            serializer.fields["description"].required = True
-            self._validate_special(initial_data)
         return super().run_validation(initial_data)
 
     def validate(self, data):
@@ -753,23 +738,6 @@ class InterventionReportingRequirementCreateSerializer(serializers.ModelSerializ
         return data
 
     def create(self, validated_data):
-        current_reqs = ReportingRequirement.objects.values_list(
-            "id",
-            flat=True
-        ).filter(
-            intervention=self.intervention,
-            report_type=validated_data["report_type"]
-        )
-        new_reqs = [
-            r["id"] for r in validated_data["reporting_requirements"]
-            if "id" in r
-        ]
-
-        # Delete records individually for Special types
-        if validated_data["report_type"] != ReportingRequirement.TYPE_SPECIAL:
-            delete_reqs = [r for r in current_reqs if r not in new_reqs]
-            ReportingRequirement.objects.filter(id__in=delete_reqs).delete()
-
         for r in validated_data["reporting_requirements"]:
             if r.get("id"):
                 pk = r.pop("id")
