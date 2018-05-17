@@ -14,8 +14,8 @@
 
 {% if app_list %}
     {% for app in app_list %}
-        {% tenant_model_filter app.app_label as tenant_app %}
-        {% tenant_app_filter app.app_label as tenant_app_filter %}
+        {% tenant_model_filter app as tenant_app %}
+        {% tenant_app_filter app as tenant_app_filter %}
         <div class="app-{{ app.app_label }} module">
         <table id="change-history">
         {% if tenant_app %}

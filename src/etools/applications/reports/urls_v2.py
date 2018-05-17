@@ -1,11 +1,19 @@
 from django.conf.urls import url
 
 from etools.applications.reports.views.v1 import CountryProgrammeListView, CountryProgrammeRetrieveView
-from etools.applications.reports.views.v2 import (AppliedIndicatorListAPIView, DisaggregationListCreateView,
-                                                  DisaggregationRetrieveUpdateView,
-                                                  ExportAppliedIndicatorLocationListView, LowerResultsDeleteView,
-                                                  LowerResultsListAPIView, OutputDetailAPIView, OutputListAPIView,
-                                                  ResultIndicatorListAPIView,)
+from etools.applications.reports.views.v2 import (
+    AppliedIndicatorListAPIView,
+    DisaggregationListCreateView,
+    DisaggregationRetrieveUpdateView,
+    ExportAppliedIndicatorLocationListView,
+    LowerResultsDeleteView,
+    LowerResultsListAPIView,
+    OutputDetailAPIView,
+    OutputListAPIView,
+    ResultIndicatorListAPIView,
+    SpecialReportingRequirementListCreateView,
+    SpecialReportingRequirementRetrieveUpdateDestroyView,
+)
 
 app_name = 'reports'
 urlpatterns = (
@@ -34,4 +42,14 @@ urlpatterns = (
         name='disaggregation-list-create'),
     url(r'disaggregations/(?P<pk>\d+)/$', view=DisaggregationRetrieveUpdateView.as_view(),
         name='disaggregation-retrieve-update'),
+    url(
+        r'interventions/special-reporting-requirements/$',
+        view=SpecialReportingRequirementListCreateView.as_view(),
+        name="interventions-special-reporting-requirements",
+    ),
+    url(
+        r'interventions/special-reporting-requirements/(?P<pk>\d+)/$',
+        view=SpecialReportingRequirementRetrieveUpdateDestroyView.as_view(),
+        name="interventions-special-reporting-requirements-update",
+    )
 )
