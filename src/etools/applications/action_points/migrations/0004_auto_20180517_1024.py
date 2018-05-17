@@ -23,4 +23,16 @@ class Migration(migrations.Migration):
             name='section',
             field=models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.CASCADE, to='reports.Sector', verbose_name='Section'),
         ),
+        migrations.AlterField(
+            model_name='actionpoint',
+            name='engagement',
+            field=models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.CASCADE,
+                                    related_name='action_points', to='audit.Engagement', verbose_name='Engagement'),
+        ),
+        migrations.AlterField(
+            model_name='actionpoint',
+            name='tpm_activity',
+            field=models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.CASCADE,
+                                    related_name='action_points', to='tpm.TPMActivity', verbose_name='TPM Activity'),
+        ),
     ]

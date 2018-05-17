@@ -77,10 +77,10 @@ class ActionPoint(TimeStampedModel):
                                      on_delete=models.CASCADE,
                                      )
     engagement = models.ForeignKey('audit.Engagement', verbose_name=_('Engagement'), blank=True, null=True,
-                                   on_delete=models.CASCADE,
+                                   related_name='action_points', on_delete=models.CASCADE,
                                    )
     tpm_activity = models.ForeignKey('tpm.TPMActivity', verbose_name=_('TPM Activity'), blank=True, null=True,
-                                     on_delete=models.CASCADE,
+                                     related_name='action_points', on_delete=models.CASCADE,
                                      )
     travel_activity = models.ForeignKey('t2f.TravelActivity', verbose_name=_('Travel Activity'), blank=True, null=True,
                                         on_delete=models.CASCADE,
