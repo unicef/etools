@@ -742,11 +742,9 @@ class Indicator(TimeStampedModel):
 class ReportingRequirement(TimeStampedModel):
     TYPE_QPR = "QPR"
     TYPE_HR = "HR"
-    TYPE_SPECIAL = "SPECIAL"
     TYPE_CHOICES = (
         (TYPE_QPR, _("Standard Quarterly Progress Report")),
         (TYPE_HR, _("Humanitarian Report")),
-        (TYPE_SPECIAL, _("Special/Ad hoc Report")),
     )
 
     intervention = models.ForeignKey(
@@ -765,11 +763,6 @@ class ReportingRequirement(TimeStampedModel):
     )
     due_date = models.DateField(verbose_name=_('Due Date'))
     report_type = models.CharField(max_length=50, choices=TYPE_CHOICES)
-    description = models.CharField(
-        blank=True,
-        max_length=256,
-        verbose_name=_("Description")
-    )
 
     class Meta:
         ordering = ("-end_date", )
@@ -780,3 +773,24 @@ class ReportingRequirement(TimeStampedModel):
             self.report_type,
             self.due_date
         )
+
+
+class SpecialReportingRequirement(TimeStampedModel):
+    intervention = models.ForeignKey(
+        "partners.Intervention",
+        on_delete=models.CASCADE,
+        verbose_name=_("Intervention"),
+        related_name="special_reporting_requirements"
+    )
+    description = models.CharField(
+        blank=True,
+        max_length=256,
+        verbose_name=_("Description")
+    )
+    due_date = models.DateField(verbose_name=_('Due Date'))
+
+    class Meta:
+        ordering = ("-due_date", )
+
+    def __str__(self):
+        return str(self.due_date)
