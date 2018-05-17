@@ -22,6 +22,7 @@ def migrate_action_points(apps, schema_editor):
     for action_point in EngagementActionPoint.objects.all():
         new_action_point = ActionPoint(
             engagement=action_point.engagement,
+            partner=action_point.engagement.partner,
             description=action_point.description,
             due_date=action_point.due_date,
             author=action_point.author,
