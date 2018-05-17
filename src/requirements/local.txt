@@ -36,7 +36,6 @@ django-extensions==1.9.7
 django-filter==1.0.2
 django-fsm==2.4.0
 django-generic-links==0.4.0
-django-geojson==2.11
 django-hstore==1.4.2
 django-import-export==1.0
 django-js-asset==1.1.0
