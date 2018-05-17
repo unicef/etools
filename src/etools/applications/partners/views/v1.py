@@ -45,6 +45,9 @@ class PCAPDFView(PDFTemplateView):
         if not agreement.partner.vendor_number:
             return {"error": "Partner Organization has no vendor number stored, please report to an etools focal point"}
 
+        if not agreement.authorized_officers.exists():
+            return {"error": 'Partner Organization has no "Authorized Officers selected" selected'}
+
         valid_response, response = get_data_from_insight('GetPartnerDetailsInfo_json/{vendor_code}',
                                                          {"vendor_code": agreement.partner.vendor_number})
 
@@ -60,13 +63,17 @@ class PCAPDFView(PDFTemplateView):
             ('bank_name', 'BANK_NAME'),
             ('account_title', "ACCT_HOLDER"),
             ('routing_details', "SWIFT_CODE"),
-            ('account_number', "BANK_ACCOUNT_NO")
+            ('account_number', "BANK_ACCOUNT_NO"),
+            ('account_currency', "BANK_ACCOUNT_CURRENCY"),
         ]
         Bank = namedtuple('Bank', ' '.join([i[0] for i in bank_key_values]))
         bank_objects = []
         for b in banks_records:
             if isinstance(b, dict):
                 b["BANK_ADDRESS"] = ', '.join(b[key] for key in ['STREET', 'CITY'] if key in b)
+                b["ACCT_HOLDER"] = b["ACCT_HOLDER"] if "ACCT_HOLDER" in b else ""
+                # TODO: fix currency field name when we have it
+                b["BANK_ACCOUNT_CURRENCY"] = b["BANK_ACCOUNT_CURRENCY"] if "BANK_ACCOUNT_CURRENCY" in b else ""
                 bank_objects.append(Bank(*[b[i[1]] for i in bank_key_values]))
 
         officers_list = []
