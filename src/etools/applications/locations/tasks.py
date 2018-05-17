@@ -201,7 +201,7 @@ def update_sites_from_cartodb(carto_table_pk):
                     logger.warning("Invalid new_pcode found in the remap table: {}" .format(','.join(bad_new_pcodes)))
                     validation_failed = True
 
-                if validation_failed == True:
+                if validation_failed is True:
                     return
 
         for row in sites['rows']:
