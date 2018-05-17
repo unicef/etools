@@ -6,7 +6,7 @@ class PartnerOrganizationCSVRenderer(r.CSVRenderer):
               'short_name', 'alternate_name', 'partner_type', 'shared_with', 'address',
               'phone_number', 'email_address', 'risk_rating', 'date_last_assessment_against_core_values',
               'actual_cash_transfer_for_cp', 'actual_cash_transfer_for_current_year', 'marked_for_deletion', 'blocked',
-              'type_of_assessment', 'date_assessed', 'assessments', 'staff_members', 'url', ]
+              'type_of_assessment', 'date_assessed', 'assessments', 'staff_members', 'url', 'planned_visits', ]
 
     labels = {
         'vendor_number': 'Vendor Number',
@@ -29,6 +29,7 @@ class PartnerOrganizationCSVRenderer(r.CSVRenderer):
         'assessments': 'Assessment Type (Date Assessed)',
         'staff_members': 'Staff Members',
         'url': 'URL',
+        'planned_visits': "Planned Programmatic Visits",
     }
 
 
@@ -190,7 +191,7 @@ class InterventionCSVRenderer(r.CSVRenderer):
         "document_type", "number", "title", "start", "end", "offices", "sectors", "locations", "contingency_pd",
         "intervention_clusters", "unicef_focal_points", "partner_focal_points", "budget_currency", "cso_contribution",
         "unicef_budget", "unicef_supply", "total_planned_budget", "fr_numbers", "fr_currency", "fr_posting_date",
-        "fr_amount", "fr_actual_amount", "fr_outstanding_amt", "planned_visits", "submission_date",
+        "fr_amount", "fr_actual_amount", "fr_outstanding_amt", "submission_date",
         "submission_date_prc", "review_date_prc", "partner_authorized_officer_signatory", "signed_by_partner_date",
         "unicef_signatory", "signed_by_unicef_date", "days_from_submission_to_signed", "days_from_review_to_signed",
         "amendment_sum", "last_amendment_date", "attachment_type", "total_attachments", "cp_outputs", "url",
@@ -226,7 +227,6 @@ class InterventionCSVRenderer(r.CSVRenderer):
         "fr_amount": "FR Amount",
         "fr_actual_amount": "FR Actual CT",
         "fr_outstanding_amt": "Outstanding DCT",
-        "planned_visits": "Planned Programmatic Visits",
         "spot_checks": "Planned Spot Checks",
         "audit": "Planned Audits",
         "submission_date": "Document Submission Date by CSO",

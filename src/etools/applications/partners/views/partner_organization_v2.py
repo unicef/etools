@@ -4,6 +4,7 @@ from datetime import datetime
 
 from django.db import transaction
 from django.db.models import Q
+from django.shortcuts import get_object_or_404
 
 from rest_framework import status
 from rest_framework.exceptions import ValidationError
@@ -30,6 +31,7 @@ from etools.applications.partners.filters import PartnerScopeFilter
 from etools.applications.partners.models import (
     Assessment,
     PartnerOrganization,
+    PartnerPlannedVisits,
     PartnerStaffMember,
     PlannedEngagement,
 )
@@ -37,6 +39,7 @@ from etools.applications.partners.permissions import (
     ListCreateAPIMixedPermission,
     PartnershipManagerPermission,
     PartnershipManagerRepPermission,
+    PartnershipSeniorManagerPermission,
 )
 from etools.applications.partners.serializers.exports.partner_organization import (
     AssessmentExportFlatSerializer,
@@ -53,6 +56,7 @@ from etools.applications.partners.serializers.partner_organization_v2 import (
     PartnerOrganizationDetailSerializer,
     PartnerOrganizationHactSerializer,
     PartnerOrganizationListSerializer,
+    PartnerPlannedVisitsSerializer,
     PartnerStaffMemberCreateUpdateSerializer,
     PartnerStaffMemberDetailSerializer,
     PlannedEngagementNestedSerializer,
@@ -161,6 +165,7 @@ class PartnerOrganizationDetailAPIView(ValidatorViewMixin, RetrieveUpdateDestroy
 
     SERIALIZER_MAP = {
         'assessments': AssessmentDetailSerializer,
+        'planned_visits': PartnerPlannedVisitsSerializer,
         'staff_members': PartnerStaffMemberCreateUpdateSerializer,
         'planned_engagement': PlannedEngagementNestedSerializer
     }
@@ -173,7 +178,12 @@ class PartnerOrganizationDetailAPIView(ValidatorViewMixin, RetrieveUpdateDestroy
 
     @transaction.atomic
     def update(self, request, *args, **kwargs):
-        related_fields = ['assessments', 'staff_members', 'planned_engagement']
+        related_fields = [
+            'assessments',
+            'staff_members',
+            'planned_engagement',
+            'planned_visits',
+        ]
 
         instance, old_instance, serializer = self.my_update(
             request,
@@ -384,3 +394,16 @@ class PartnerWithScheduledAuditCompleted(PartnerOrganizationListAPIView):
             engagement__engagement_type=Engagement.TYPE_AUDIT,
             engagement__status=Engagement.FINAL,
             engagement__date_of_draft_report_to_unicef__year=datetime.now().year)
+
+
+class PartnerPlannedVisitsDeleteView(DestroyAPIView):
+    permission_classes = (PartnershipSeniorManagerPermission,)
+
+    def delete(self, request, *args, **kwargs):
+        partner_planned_visit = get_object_or_404(
+            PartnerPlannedVisits,
+            pk=int(kwargs['pk'])
+        )
+        self.check_object_permissions(request, partner_planned_visit)
+        partner_planned_visit.delete()
+        return Response(status=status.HTTP_204_NO_CONTENT)

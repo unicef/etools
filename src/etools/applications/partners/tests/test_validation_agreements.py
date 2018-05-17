@@ -204,7 +204,9 @@ class TestSignaturesValid(BaseTenantTestCase):
             signed_by_partner_date=tomorrow,
             partner_manager=staff,
         )
-        self.assertFalse(agreements.signatures_valid(agreement))
+
+        with self.assertRaises(BasicValidationError):
+            self.assertFalse(agreements.signatures_valid(agreement))
 
     def test_valid(self):
         partner = PartnerFactory()
