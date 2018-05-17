@@ -157,12 +157,11 @@ def update_sites_from_cartodb(carto_table_pk):
                 carto_table.table_name
             ))
 
-            offset += limit
-
             # do not spam Carto with requests, wait 1 second
             time.sleep(1)
             sites = sql_client.send(paged_qry)
             rows += sites['rows']
+            offset += limit
 
             if 'error' in sites:
                 # it seems we can have both valid results and error messages in the same CartoDB response
