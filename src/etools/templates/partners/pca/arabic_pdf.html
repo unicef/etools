@@ -499,11 +499,11 @@ http://www.unicef.org/about/partnerships/files/9_Annex_J_FACE.xlsx
                     تقدم اليونيسف التحويلات النقدية غير الدفعات المباشرة إلى الحساب المصرفي التالي المملوك للشريك المنفذ:
                 </li>
 
+                {% for bank_detail in bank_details %}
                 <table style="border: 1px solid black;margin-top: 12px;">
                     <tr>
                         <td colspan="2" style="text-align: center;vertical-align: middle"><br>الحساب المصرفي</td>
                     </tr>
-                    {% for bank_detail in bank_details %}
                     <tr>
                         <td style="width: 33%;">اسم البنك</td>
                         <td>{{ bank_detail.bank_name }}</td>
@@ -522,7 +522,7 @@ http://www.unicef.org/about/partnerships/files/9_Annex_J_FACE.xlsx
                     </tr>
                     <tr>
                         <td style="width: 33%;">عملة الحساب</td>
-                        <td></td>
+                        <td style="width: 33%;">{{ bank_detail.account_currency }}</td>
                     </tr>
                     <tr>
                         <td style="width: 33%;">تفاصيل التوجيه، بما في ذلك السويفت SWIFT/ رقم IBAN</td>
@@ -532,8 +532,8 @@ http://www.unicef.org/about/partnerships/files/9_Annex_J_FACE.xlsx
                         <td style="width: 33%;">مسؤول الاتصال في البنك</td>
                         <td>{{ bank_detail.bank_contact_person }}</td>
                     </tr>
-                    {% endfor %}
                 </table>
+                {% endfor %}
 
                 <div class="page-break"></div>
                 <div class="keep-with-next" style="padding-top: 24px;">

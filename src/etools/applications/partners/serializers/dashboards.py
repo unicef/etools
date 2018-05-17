@@ -46,6 +46,7 @@ class InterventionDashSerializer(serializers.ModelSerializer):
     outstanding_dct_usd = serializers.DecimalField(source='frs__outstanding_amt__sum',
                                                    read_only=True, max_digits=20, decimal_places=2)
     multi_curr_flag = serializers.BooleanField()
+    has_final_partnership_review = serializers.BooleanField()
 
     def fr_currencies_ok(self, obj):
         return obj.frs__currency__count == 1 if obj.frs__currency__count else None
@@ -83,19 +84,36 @@ class InterventionDashSerializer(serializers.ModelSerializer):
     def get_sections(self, obj):
         return ",".join([l.name for l in obj.sections.all()])
 
-    def get_partner_name(self, obj):
-        return obj.partner_name
-
     class Meta:
         model = Intervention
-        fields = ('intervention_id', 'partner_id', 'partner_name', 'number', 'status', 'start', 'end',
-                  'sections', 'offices_names',
-                  'total_budget', 'cso_contribution', 'unicef_cash', 'unicef_supplies',
-                  'frs_total_frs_amt', 'disbursement', 'disbursement_percent', 'last_pv_date', 'days_last_pv',
-                  'fr_currencies_are_consistent', 'all_currencies_are_consistent', 'fr_currency', 'budget_currency',
-                  'partner_vendor_number',
-                  'outstanding_dct',
-                  'frs_total_frs_amt_usd',
-                  'disbursement_usd',
-                  'outstanding_dct_usd',
-                  'multi_curr_flag')
+        fields = (
+            'intervention_id',
+            'partner_id',
+            'partner_name',
+            'number',
+            'status',
+            'start',
+            'end',
+            'sections',
+            'offices_names',
+            'total_budget',
+            'cso_contribution',
+            'unicef_cash',
+            'unicef_supplies',
+            'frs_total_frs_amt',
+            'disbursement',
+            'disbursement_percent',
+            'last_pv_date',
+            'days_last_pv',
+            'fr_currencies_are_consistent',
+            'all_currencies_are_consistent',
+            'fr_currency',
+            'budget_currency',
+            'partner_vendor_number',
+            'outstanding_dct',
+            'frs_total_frs_amt_usd',
+            'disbursement_usd',
+            'outstanding_dct_usd',
+            'multi_curr_flag',
+            'has_final_partnership_review',
+        )
