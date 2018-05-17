@@ -3,8 +3,7 @@ from copy import copy
 from django.utils.translation import ugettext as _
 from rest_framework import serializers
 
-from etools.applications.action_points.serializers import ActionPointLightSerializer, ActionPointSerializer, \
-    ActionPointBaseSerializer
+from etools.applications.action_points.serializers import ActionPointBaseSerializer
 from etools.applications.attachments.models import FileType
 from etools.applications.attachments.serializers import Base64AttachmentSerializer
 from etools.applications.attachments.serializers_fields import FileTypeModelChoiceField

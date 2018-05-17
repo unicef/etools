@@ -1,5 +1,4 @@
 
-import datetime
 import random
 
 from django.contrib.auth.models import Group
@@ -8,7 +7,7 @@ import factory
 from factory import fuzzy
 
 from etools.applications.audit.models import (Audit, Auditor, DetailedFindingInfo, Engagement,
-                                              EngagementActionPoint, Finding, KeyInternalControl, MicroAssessment,
+                                              Finding, KeyInternalControl, MicroAssessment,
                                               Risk, RiskBluePrint, RiskCategory, SpecialAudit, SpecificProcedure,
                                               SpotCheck, UNICEFAuditFocalPoint, UNICEFUser,)
 from etools.applications.audit.purchase_order.models import (AuditorFirm, AuditorStaffMember,
