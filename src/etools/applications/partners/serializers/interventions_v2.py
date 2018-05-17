@@ -1,29 +1,24 @@
 from datetime import date
 from operator import itemgetter
 
-
-from rest_framework.serializers import ValidationError
 from django.db import transaction
 from django.db.models import Q
 from django.utils.translation import ugettext as _
 
 from rest_framework import serializers
+from rest_framework.serializers import ValidationError
 
 from etools.applications.attachments.serializers_fields import AttachmentSingleFileField
 from etools.applications.EquiTrack.serializers import SnapshotModelSerializer
 from etools.applications.funds.models import FundsCommitmentItem, FundsReservationHeader
 from etools.applications.funds.serializers import FRsSerializer
 from etools.applications.locations.serializers import LocationLightSerializer, LocationSerializer
-from etools.applications.partners.models import (Intervention,
-                                                 InterventionAmendment, InterventionAttachment, InterventionBudget,
-                                                 InterventionPlannedVisits, InterventionReportingPeriod,
-                                                 InterventionResultLink, InterventionSectorLocationLink,)
+from etools.applications.partners.models import (Intervention, InterventionAmendment, InterventionAttachment,
+                                                 InterventionBudget, InterventionPlannedVisits,
+                                                 InterventionReportingPeriod, InterventionResultLink,
+                                                 InterventionSectorLocationLink,)
 from etools.applications.partners.permissions import InterventionPermissions
-from etools.applications.reports.models import (
-    AppliedIndicator,
-    LowerResult,
-    ReportingRequirement,
-)
+from etools.applications.reports.models import AppliedIndicator, LowerResult, ReportingRequirement
 from etools.applications.reports.serializers.v1 import SectorSerializer
 from etools.applications.reports.serializers.v2 import (IndicatorSerializer, LowerResultCUSerializer,
                                                         LowerResultSerializer, ReportingRequirementSerializer,)

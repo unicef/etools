@@ -3,9 +3,10 @@ from django.test import TestCase
 
 from rest_framework import serializers
 
-from ..models import Permission
+from etools.applications.permissions2.models import Permission
+from etools.applications.permissions2.tests.models import Parent, Parent2
+
 from ..serializers import PermissionsBasedSerializerMixin
-from .models import Parent, Parent2
 
 
 class TestPermissionModel(TestCase):

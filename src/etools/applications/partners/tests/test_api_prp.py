@@ -2,7 +2,7 @@ import datetime
 import json
 import os
 
-from django.urls import reverse, resolve
+from django.urls import resolve, reverse
 from django.utils import timezone
 
 from rest_framework import status

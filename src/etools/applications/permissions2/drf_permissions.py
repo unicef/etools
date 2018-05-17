@@ -1,6 +1,6 @@
 from rest_framework.permissions import BasePermission, SAFE_METHODS
 
-from .models import Permission
+from etools.applications.permissions2.models import Permission
 
 
 class NestedPermission(BasePermission):

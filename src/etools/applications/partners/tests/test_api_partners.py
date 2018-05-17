@@ -10,17 +10,9 @@ from rest_framework import status
 
 from etools.applications.EquiTrack.tests.cases import BaseTenantTestCase
 from etools.applications.EquiTrack.tests.mixins import URLAssertionMixin
-from etools.applications.partners.models import (
-    PartnerOrganization,
-    PartnerPlannedVisits,
-    PartnerType,
-)
-from etools.applications.partners.tests.factories import (
-    AgreementFactory,
-    InterventionFactory,
-    PartnerFactory,
-    PartnerPlannedVisitsFactory,
-)
+from etools.applications.partners.models import PartnerOrganization, PartnerPlannedVisits, PartnerType
+from etools.applications.partners.tests.factories import (AgreementFactory, InterventionFactory,
+                                                          PartnerFactory, PartnerPlannedVisitsFactory,)
 from etools.applications.partners.views.partner_organization_v2 import PartnerOrganizationAddView
 from etools.applications.t2f.tests.factories import TravelActivityFactory
 from etools.applications.users.tests.factories import GroupFactory, UserFactory

@@ -10,6 +10,7 @@ from etools.applications.management.models import (FlaggedIssue, ISSUE_STATUS_NE
 from etools.applications.management.tests.factories import FlaggedIssueFactory
 from etools.applications.partners.models import PartnerOrganization
 from etools.applications.partners.tests.factories import PartnerFactory
+from etools.libraries.utils import fqn
 
 
 class PartnersMustHaveShortNameTestCheck(checks.BaseIssueCheck):
@@ -69,36 +70,35 @@ class TestInvalidSubClass(object):
 
 
 class IssueCheckTest(BaseTenantTestCase):
-
     def tearDown(self):
         FlaggedIssue.objects.all().delete()
         IssueCheckConfig.objects.all().delete()
         super(IssueCheckTest, self).tearDown()
 
-    @override_settings(ISSUE_CHECKS=['etools.applications.management.tests.test_issue_checks.TestMissingRunCheck'])
+    @override_settings(ISSUE_CHECKS=[fqn(TestMissingRunCheck)])
     def test_missing_run_check(self):
         with self.assertRaisesRegexp(TypeError, "with abstract methods run_check"):
             checks.run_all_checks()
 
-    @override_settings(ISSUE_CHECKS=['etools.applications.management.tests.test_issue_checks.TestMissingModelCheck'])
+    @override_settings(ISSUE_CHECKS=[fqn(TestMissingModelCheck)])
     def test_missing_model(self):
         with self.assertRaisesRegexp(ImproperlyConfigured, "Issue checks must define a model class"):
             checks.run_all_checks()
 
-    @override_settings(ISSUE_CHECKS=['etools.applications.management.tests.test_issue_checks.TestMissingCheckIDCheck'])
+    @override_settings(ISSUE_CHECKS=[fqn(TestMissingCheckIDCheck)])
     def test_missing_check_id(self):
         with self.assertRaisesRegexp(ImproperlyConfigured, "Issue checks must define a unique ID!"):
             checks.run_all_checks()
 
     @override_settings(ISSUE_CHECKS=[
-        'etools.applications.management.tests.test_issue_checks.PartnersMustHaveShortNameTestCheck'])
+        fqn(PartnersMustHaveShortNameTestCheck)])
     def test_get_available_issue_checks(self):
         check_list = list(checks.get_available_issue_checks())
         self.assertEqual(1, len(check_list))
         self.assertTrue(type(check_list[0]) == PartnersMustHaveShortNameTestCheck)
 
     @override_settings(ISSUE_CHECKS=[
-        'etools.applications.management.tests.test_issue_checks.PartnersMustHaveShortNameTestCheck'])
+        fqn(PartnersMustHaveShortNameTestCheck)])
     def test_bootstrap_checks(self):
         checks.bootstrap_checks()
         self.assertEqual(1, IssueCheckConfig.objects.count())
@@ -112,7 +112,7 @@ class IssueCheckTest(BaseTenantTestCase):
                          IssueCheckConfig.objects.get(check_id='partners_must_have_short_name').is_active)
 
     @override_settings(ISSUE_CHECKS=[
-        'etools.applications.management.tests.test_issue_checks.PartnersMustHaveShortNameTestCheck'])
+        fqn(PartnersMustHaveShortNameTestCheck)])
     def test_get_active_issue_checks(self):
         checks.bootstrap_checks(default_is_active=False)
         self.assertEqual([], list(checks.get_active_issue_checks()))
@@ -124,31 +124,31 @@ class IssueCheckTest(BaseTenantTestCase):
         self.assertTrue(type(check_list[0]) == PartnersMustHaveShortNameTestCheck)
 
     @override_settings(ISSUE_CHECKS=[
-        'etools.applications.management.tests.test_issue_checks.PartnersMustHaveShortNameTestCheck',
-        'etools.applications.management.tests.test_issue_checks.PartnersMustHaveShortNameTestCheck'])
+        fqn(PartnersMustHaveShortNameTestCheck),
+        fqn(PartnersMustHaveShortNameTestCheck)])
     def test_get_available_issue_checks_disallows_duplicates(self):
         with self.assertRaises(ImproperlyConfigured):
             list(checks.get_available_issue_checks())
 
     @override_settings(ISSUE_CHECKS=[
-        'etools.applications.management.tests.test_issue_checks.PartnersMustHaveShortNameTestCheck'])
+        fqn(PartnersMustHaveShortNameTestCheck)])
     def test_get_issue_check_by_id(self):
         check = checks.get_issue_check_by_id(PartnersMustHaveShortNameTestCheck.check_id)
         self.assertTrue(type(check) == PartnersMustHaveShortNameTestCheck)
 
     @override_settings(ISSUE_CHECKS=[
-        'etools.applications.management.tests.test_issue_checks.PartnersMustHaveShortNameTestCheck'])
+        fqn(PartnersMustHaveShortNameTestCheck)])
     def test_get_issue_check_by_id_not_found(self):
         with self.assertRaises(IssueCheckNotFoundException):
             checks.get_issue_check_by_id('not_found')
 
-    @override_settings(ISSUE_CHECKS=['etools.applications.management.tests.test_issue_checks.TestInvalidSubClass'])
+    @override_settings(ISSUE_CHECKS=[fqn(TestInvalidSubClass)])
     def test_get_issue_check_invalid(self):
         with self.assertRaisesRegexp(ImproperlyConfigured, "is not a subclass"):
-            checks.get_issue_check('etools.applications.management.tests.test_issue_checks.TestInvalidSubClass')
+            checks.get_issue_check(fqn(TestInvalidSubClass))
 
     @override_settings(ISSUE_CHECKS=[
-        'etools.applications.management.tests.test_issue_checks.PartnersMustHaveShortNameTestCheck'])
+        fqn(PartnersMustHaveShortNameTestCheck)])
     def test_run_all_checks(self):
         PartnerFactory(short_name='A name')  # make a good one as well just to ensure it's not flagging everything
         partner_bad = PartnerFactory()
@@ -160,7 +160,7 @@ class IssueCheckTest(BaseTenantTestCase):
         self.assertEqual(partner_bad, issue.content_object)
 
     @override_settings(ISSUE_CHECKS=[
-        'etools.applications.management.tests.test_issue_checks.PartnersMustHaveShortNameTestCheck'])
+        fqn(PartnersMustHaveShortNameTestCheck)])
     def test_recheck(self):
         partner_bad = PartnerFactory()
         checks.bootstrap_checks(default_is_active=True)
@@ -177,7 +177,6 @@ class IssueCheckTest(BaseTenantTestCase):
         self.assertEqual(ISSUE_STATUS_NEW, issue.issue_status)
         self.assertNotEqual(update_date, issue.date_updated)
         update_date = issue.date_updated
-
         # recheck after fixing the issue should update the status to resolved
         partner_bad.short_name = 'Name added'
         partner_bad.save()
@@ -186,7 +185,6 @@ class IssueCheckTest(BaseTenantTestCase):
         self.assertEqual(ISSUE_STATUS_RESOLVED, issue.issue_status)
         self.assertNotEqual(update_date, issue.date_updated)
         update_date = issue.date_updated
-
         # recheck after re-creating the issue should update the status to reactivated
         partner_bad.short_name = ''
         partner_bad.save()
@@ -196,7 +194,7 @@ class IssueCheckTest(BaseTenantTestCase):
         self.assertNotEqual(update_date, issue.date_updated)
 
     @override_settings(ISSUE_CHECKS=[
-        'etools.applications.management.tests.test_issue_checks.PartnersNameMustBeFooTestCheck'])
+        fqn(PartnersNameMustBeFooTestCheck)])
     def test_recheck_with_metadata(self):
         partner_bad = PartnerFactory(name='bar')
         checks.bootstrap_checks(default_is_active=True)
@@ -206,7 +204,6 @@ class IssueCheckTest(BaseTenantTestCase):
         self.assertEqual(PartnersNameMustBeFooTestCheck.check_id, issue.issue_id)
         self.assertEqual(partner_bad, issue.content_object)
         self.assertEqual(ISSUE_STATUS_NEW, issue.issue_status)
-
         partner_bad.name = 'foo'
         partner_bad.save()
         issue = FlaggedIssue.objects.get(pk=issue.pk)
@@ -214,7 +211,7 @@ class IssueCheckTest(BaseTenantTestCase):
         self.assertEqual(ISSUE_STATUS_RESOLVED, issue.issue_status)
 
     @override_settings(ISSUE_CHECKS=[
-        'etools.applications.management.tests.test_issue_checks.PartnersMustHaveShortNameTestCheck'])
+        fqn(PartnersMustHaveShortNameTestCheck)])
     def test_recheck_all_open_issues(self):
         """Check that recheck_all_open_issues call changes those issues
         that are not resolved

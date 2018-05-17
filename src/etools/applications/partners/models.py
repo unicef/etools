@@ -6,8 +6,8 @@ import json
 
 from django.conf import settings
 from django.contrib.postgres.fields import ArrayField, JSONField
-from django.db import models, connection, transaction
-from django.db.models import Case, Count, CharField, F, Max, Min, Q, Sum, When
+from django.db import connection, models, transaction
+from django.db.models import Case, CharField, Count, F, Max, Min, Q, Sum, When
 from django.db.models.signals import post_save, pre_delete
 from django.urls import reverse
 from django.utils import six, timezone
@@ -20,10 +20,10 @@ from django_fsm import FSMField, transition
 from model_utils import Choices, FieldTracker
 from model_utils.models import TimeFramedModel, TimeStampedModel
 
-from etools.applications.EquiTrack.serializers import StringConcat
 from etools.applications.attachments.models import Attachment
 from etools.applications.environment.helpers import tenant_switch_is_active
 from etools.applications.EquiTrack.fields import CurrencyField, QuarterField
+from etools.applications.EquiTrack.serializers import StringConcat
 from etools.applications.EquiTrack.utils import get_current_year, get_quarter, import_permissions
 from etools.applications.funds.models import Grant
 from etools.applications.locations.models import Location

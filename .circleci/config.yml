@@ -21,16 +21,28 @@ jobs:
       - run:
           name: Run Tests
           command: |
-            pip install tox
-            tox -re d110,report
+            pip install tox codacy-coverage
+            tox -re d110
       - save_cache:
           key: deps2-{{ .Branch }}--{{ checksum "src/requirements/test.txt" }}-{{ checksum ".circleci/config.yml" }}
           paths:
             - "env1"
             - /root/.cache/pip
+
+      - store_test_results:
+          path: build/
+
       - store_artifacts:
           path: build/coverage
           destination: coverage
+
+      - store_artifacts:
+          path: build/report
+          destination: report
+
+    post:
+      - bash <(curl -s https://codecov.io/bash)
+      - python-codacy-coverage -r coverage.xml
 
   build_and_deploy:
     working_directory: ~/code
@@ -89,7 +101,7 @@ jobs:
           command: |
             TAG=${CIRCLE_BRANCH}
             HOSTIP=`/sbin/ip route|awk '/default/ { print $3 }'`
-            echo "Skipping tests in image for now... to be fixed"
+            docker run --network container:docker-postgres -it -e "DJANGO_SETTINGS_MODULE=etools.config.settings.local" -e "DATABASE_URL=postgis://postgres:postgres@localhost:5432/circle_test" -e "DISABLE_JWT_LOGIN=1" -e SECRET_KEY unicef/etools:$TAG /bin/bash -c "pip install -r requirements/test.txt; python manage.py test --noinput"
       - run:
           name: Pushing to Docker Hub
           command: |

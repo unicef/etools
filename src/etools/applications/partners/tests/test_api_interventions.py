@@ -6,7 +6,7 @@ from django.core.cache import cache
 from django.core.files.uploadedfile import SimpleUploadedFile
 from django.db import connection
 from django.test import SimpleTestCase
-from django.urls import reverse, resolve
+from django.urls import resolve, reverse
 from django.utils import six, timezone
 
 from rest_framework import status
@@ -19,15 +19,10 @@ from etools.applications.EquiTrack.tests.cases import BaseTenantTestCase
 from etools.applications.EquiTrack.tests.mixins import URLAssertionMixin
 from etools.applications.locations.tests.factories import LocationFactory
 from etools.applications.partners.models import Intervention, InterventionAmendment, InterventionResultLink
-from etools.applications.partners.tests.factories import (
-    AgreementFactory,
-    InterventionAmendmentFactory,
-    InterventionAttachmentFactory,
-    InterventionFactory,
-    InterventionResultLinkFactory,
-    InterventionSectorLocationLinkFactory,
-    PartnerFactory,
-)
+from etools.applications.partners.tests.factories import (AgreementFactory, InterventionAmendmentFactory,
+                                                          InterventionAttachmentFactory, InterventionFactory,
+                                                          InterventionResultLinkFactory,
+                                                          InterventionSectorLocationLinkFactory, PartnerFactory,)
 from etools.applications.partners.tests.test_utils import setup_intervention_test_data
 from etools.applications.reports.models import AppliedIndicator, ReportingRequirement
 from etools.applications.reports.tests.factories import (AppliedIndicatorFactory, CountryProgrammeFactory,

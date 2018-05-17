@@ -5,7 +5,7 @@ from django.contrib import messages
 from django.contrib.admin.sites import AdminSite
 from django.urls import reverse
 
-from mock import Mock, patch, ANY
+from mock import ANY, Mock, patch
 from tenant_schemas.utils import schema_context
 
 from etools.applications.EquiTrack.tests.cases import BaseTenantTestCase
