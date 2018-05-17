@@ -92,23 +92,23 @@ class PMEPermissionsForActionPointTransitionTestCase(ActionPointTransitionPermis
         cls.user_role = 'PME'
 
 
-class UnicefUserPermissionsForActionPoitTransitionTestCase(ActionPointTransitionPermissionsTestCase):
+class UnicefUserPermissionsForActionPointTransitionTestCase(ActionPointTransitionPermissionsTestCase):
     ALLOWED_TRANSITION = []
 
     @classmethod
     def setUpTestData(cls):
-        super(UnicefUserPermissionsForActionPoitTransitionTestCase, cls).setUpTestData()
+        super(UnicefUserPermissionsForActionPointTransitionTestCase, cls).setUpTestData()
 
         cls.user = UserFactory(unicef_user=True)
         cls.user_role = 'UNICEF User'
 
 
-class AuthorPermissionsForActionPoitTransitionTestCase(ActionPointTransitionPermissionsTestCase):
+class AuthorPermissionsForActionPointTransitionTestCase(ActionPointTransitionPermissionsTestCase):
     ALLOWED_TRANSITION = []
 
     @classmethod
     def setUpTestData(cls):
-        super(AuthorPermissionsForActionPoitTransitionTestCase, cls).setUpTestData()
+        super(AuthorPermissionsForActionPointTransitionTestCase, cls).setUpTestData()
 
         cls.user = UserFactory(unicef_user=True)
         cls.assigned_by = UserFactory(unicef_user=True)
@@ -121,15 +121,15 @@ class AuthorPermissionsForActionPoitTransitionTestCase(ActionPointTransitionPerm
         }
 
         opts.update(kwargs)
-        return super(AuthorPermissionsForActionPoitTransitionTestCase, self).create_object(transition, **opts)
+        return super(AuthorPermissionsForActionPointTransitionTestCase, self).create_object(transition, **opts)
 
 
-class AssignedByPermissionsForActionPoitTransitionTestCase(ActionPointTransitionPermissionsTestCase):
+class AssignedByPermissionsForActionPointTransitionTestCase(ActionPointTransitionPermissionsTestCase):
     ALLOWED_TRANSITION = []
 
     @classmethod
     def setUpTestData(cls):
-        super(AssignedByPermissionsForActionPoitTransitionTestCase, cls).setUpTestData()
+        super(AssignedByPermissionsForActionPointTransitionTestCase, cls).setUpTestData()
 
         cls.author = UserFactory(unicef_user=True)
         cls.user = UserFactory(unicef_user=True)
@@ -142,17 +142,17 @@ class AssignedByPermissionsForActionPoitTransitionTestCase(ActionPointTransition
         }
 
         opts.update(kwargs)
-        return super(AssignedByPermissionsForActionPoitTransitionTestCase, self).create_object(transition, **opts)
+        return super(AssignedByPermissionsForActionPointTransitionTestCase, self).create_object(transition, **opts)
 
 
-class AssigneePermissionsForActionPoitTransitionTestCase(ActionPointTransitionPermissionsTestCase):
+class AssigneePermissionsForActionPointTransitionTestCase(ActionPointTransitionPermissionsTestCase):
     ALLOWED_TRANSITION = [
         ('open', 'complete'),
     ]
 
     @classmethod
     def setUpTestData(cls):
-        super(AssigneePermissionsForActionPoitTransitionTestCase, cls).setUpTestData()
+        super(AssigneePermissionsForActionPointTransitionTestCase, cls).setUpTestData()
 
         cls.user = UserFactory(unicef_user=True)
         cls.user_role = 'Assignee'
@@ -163,4 +163,4 @@ class AssigneePermissionsForActionPoitTransitionTestCase(ActionPointTransitionPe
         }
 
         opts.update(kwargs)
-        return super(AssigneePermissionsForActionPoitTransitionTestCase, self).create_object(transition, **opts)
+        return super(AssigneePermissionsForActionPointTransitionTestCase, self).create_object(transition, **opts)
