@@ -4,17 +4,9 @@ from django.utils.translation import ugettext as _
 from rest_framework import serializers
 from rest_framework.exceptions import ValidationError
 
-from etools.applications.reports.models import (
-    AppliedIndicator,
-    Disaggregation,
-    DisaggregationValue,
-    Indicator,
-    IndicatorBlueprint,
-    LowerResult,
-    ReportingRequirement,
-    Result,
-    SpecialReportingRequirement,
-)
+from etools.applications.reports.models import (AppliedIndicator, Disaggregation, DisaggregationValue,
+                                                Indicator, IndicatorBlueprint, LowerResult,
+                                                ReportingRequirement, Result, SpecialReportingRequirement,)
 
 
 class OutputListSerializer(serializers.ModelSerializer):

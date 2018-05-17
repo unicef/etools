@@ -13,27 +13,14 @@ from etools.applications.EquiTrack.tests.mixins import URLAssertionMixin
 from etools.applications.partners.models import Intervention
 from etools.applications.partners.tests.factories import InterventionFactory, InterventionResultLinkFactory
 from etools.applications.partners.tests.test_utils import setup_intervention_test_data
-from etools.applications.reports.models import (
-    CountryProgramme,
-    Disaggregation,
-    DisaggregationValue,
-    LowerResult,
-    ResultType,
-    SpecialReportingRequirement,
-)
+from etools.applications.reports.models import (CountryProgramme, Disaggregation, DisaggregationValue,
+                                                LowerResult, ResultType, SpecialReportingRequirement,)
 from etools.applications.reports.serializers.v2 import DisaggregationSerializer
-from etools.applications.reports.tests.factories import (
-    AppliedIndicatorFactory,
-    CountryProgrammeFactory,
-    DisaggregationFactory,
-    DisaggregationValueFactory,
-    IndicatorBlueprintFactory,
-    IndicatorFactory,
-    LowerResultFactory,
-    ResultFactory,
-    ResultTypeFactory,
-    SpecialReportingRequirementFactory,
-)
+from etools.applications.reports.tests.factories import (AppliedIndicatorFactory, CountryProgrammeFactory,
+                                                         DisaggregationFactory, DisaggregationValueFactory,
+                                                         IndicatorBlueprintFactory, IndicatorFactory,
+                                                         LowerResultFactory, ResultFactory, ResultTypeFactory,
+                                                         SpecialReportingRequirementFactory,)
 from etools.applications.users.tests.factories import GroupFactory, UserFactory
 
 

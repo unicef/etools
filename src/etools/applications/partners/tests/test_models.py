@@ -16,24 +16,15 @@ from etools.applications.EquiTrack.tests.cases import BaseTenantTestCase
 from etools.applications.funds.tests.factories import DonorFactory, FundsReservationHeaderFactory, GrantFactory
 from etools.applications.locations.tests.factories import LocationFactory
 from etools.applications.partners import models
-from etools.applications.partners.tests.factories import (
-    AgreementAmendmentFactory,
-    AgreementFactory,
-    AssessmentFactory,
-    FileTypeFactory,
-    InterventionAmendmentFactory,
-    InterventionAttachmentFactory,
-    InterventionBudgetFactory,
-    InterventionFactory,
-    InterventionReportingPeriodFactory,
-    InterventionResultLinkFactory,
-    InterventionSectorLocationLinkFactory,
-    PartnerFactory,
-    PartnerPlannedVisitsFactory,
-    PartnerStaffFactory,
-    PlannedEngagementFactory,
-    WorkspaceFileTypeFactory,
-)
+from etools.applications.partners.tests.factories import (AgreementAmendmentFactory, AgreementFactory,
+                                                          AssessmentFactory, FileTypeFactory,
+                                                          InterventionAmendmentFactory, InterventionAttachmentFactory,
+                                                          InterventionBudgetFactory, InterventionFactory,
+                                                          InterventionReportingPeriodFactory,
+                                                          InterventionResultLinkFactory,
+                                                          InterventionSectorLocationLinkFactory, PartnerFactory,
+                                                          PartnerPlannedVisitsFactory, PartnerStaffFactory,
+                                                          PlannedEngagementFactory, WorkspaceFileTypeFactory,)
 from etools.applications.reports.tests.factories import (AppliedIndicatorFactory, CountryProgrammeFactory,
                                                          LowerResultFactory, ResultFactory, SectorFactory,)
 from etools.applications.t2f.models import Travel, TravelType
