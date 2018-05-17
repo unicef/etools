@@ -65,6 +65,8 @@ class TestFundReservationsSynchronizer(BaseTenantTestCase):
         self.expected_line_item = {
             "line_item": "987",
             "fr_number": "123",
+            "donor": None,
+            "donor_code": None,
             "wbs": "WBS",
             "grant_number": "456",
             "fund": "Fund",

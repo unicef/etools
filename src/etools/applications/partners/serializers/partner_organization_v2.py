@@ -14,6 +14,7 @@ from etools.applications.partners.models import (
     Assessment,
     Intervention,
     PartnerOrganization,
+    PartnerPlannedVisits,
     PartnerStaffMember,
     PlannedEngagement,
 )
@@ -268,6 +269,12 @@ class PlannedEngagementNestedSerializer(serializers.ModelSerializer):
         fields = '__all__'
 
 
+class PartnerPlannedVisitsSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = PartnerPlannedVisits
+        fields = "__all__"
+
+
 class PartnerOrganizationDetailSerializer(serializers.ModelSerializer):
 
     staff_members = PartnerStaffMemberDetailSerializer(many=True, read_only=True)
@@ -279,6 +286,7 @@ class PartnerOrganizationDetailSerializer(serializers.ModelSerializer):
     interventions = serializers.SerializerMethodField(read_only=True)
     hact_min_requirements = serializers.JSONField(read_only=True)
     hidden = serializers.BooleanField(read_only=True)
+    planned_visits = PartnerPlannedVisitsSerializer(many=True, read_only=True, required=False)
 
     def get_hact_values(self, obj):
         return json.loads(obj.hact_values) if isinstance(obj.hact_values, six.text_type) else obj.hact_values
@@ -306,6 +314,7 @@ class PartnerOrganizationCreateUpdateSerializer(AttachmentSerializerMixin, Snaps
     core_values_assessment_file = serializers.FileField(source='core_values_assessment', read_only=True)
     core_values_assessment_attachment = AttachmentSingleFileField()
     hidden = serializers.BooleanField(read_only=True)
+    planned_visits = PartnerPlannedVisitsSerializer(many=True, read_only=True, required=False)
 
     def get_hact_values(self, obj):
         return json.loads(obj.hact_values) if isinstance(obj.hact_values, six.text_type) else obj.hact_values
