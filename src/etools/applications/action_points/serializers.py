@@ -27,19 +27,49 @@ class SectionSerializer(serializers.ModelSerializer):
         fields = ('id', 'name')
 
 
-class ActionPointLightSerializer(UserContextSerializerMixin,
-                                 PermissionsBasedSerializerMixin,
-                                 SnapshotModelSerializer,
-                                 serializers.ModelSerializer):
-    related_module = serializers.ReadOnlyField(label=_('Related Module'))
-    reference_number = serializers.ReadOnlyField(label=_('Reference Number'))
-
+class ActionPointBaseSerializer(UserContextSerializerMixin, SnapshotModelSerializer, serializers.ModelSerializer):
     author = MinimalUserSerializer(read_only=True, label=_('Author'))
     assigned_by = MinimalUserSerializer(read_only=True, label=_('Assigned By'))
     assigned_to = SeparatedReadWriteField(
         read_field=MinimalUserSerializer(read_only=True, label=_('Assigned To')),
         required=True
     )
+
+    status_date = serializers.DateTimeField(read_only=True, label=_('Status Date'))
+
+    class Meta:
+        model = ActionPoint
+        fields = [
+            'id', 'author', 'assigned_by', 'assigned_to',
+
+            'high_priority', 'due_date', 'description',
+
+            'created', 'date_of_completion',
+            'status', 'status_date',
+        ]
+        extra_kwargs = {
+            'status': {'read_only': True},
+            'date_of_completion': {'read_only': True}
+        }
+
+    def create(self, validated_data):
+        validated_data.update({
+            'author': self.get_user(),
+            'assigned_by': self.get_user()
+        })
+
+        return super(ActionPointBaseSerializer, self).create(validated_data)
+
+    def update(self, instance, validated_data):
+        if 'assigned_to' in validated_data:
+            validated_data['assigned_by'] = self.get_user()
+
+        return super(ActionPointBaseSerializer, self).update(instance, validated_data)
+
+
+class ActionPointLightSerializer(PermissionsBasedSerializerMixin, ActionPointBaseSerializer):
+    related_module = serializers.ReadOnlyField(label=_('Related Module'))
+    reference_number = serializers.ReadOnlyField(label=_('Reference Number'))
 
     partner = SeparatedReadWriteField(
         read_field=MinimalPartnerOrganizationListSerializer(read_only=True, label=_('Partner')),
@@ -66,41 +96,17 @@ class ActionPointLightSerializer(UserContextSerializerMixin,
         read_field=OfficeSerializer(read_only=True, label=_('Office')),
         required=True
     )
-    status_date = serializers.DateTimeField(read_only=True, label=_('Status Date'))
 
-    def create(self, validated_data):
-        validated_data.update({
-            'author': self.get_user(),
-            'assigned_by': self.get_user()
-        })
-
-        return super(ActionPointLightSerializer, self).create(validated_data)
-
-    def update(self, instance, validated_data):
-        if 'assigned_to' in validated_data:
-            validated_data['assigned_by'] = self.get_user()
-
-        return super(ActionPointLightSerializer, self).update(instance, validated_data)
-
-    class Meta:
-        model = ActionPoint
-        fields = [
-            'id', 'reference_number', 'related_module',
-            'author', 'assigned_by', 'assigned_to',
+    class Meta(ActionPointBaseSerializer.Meta):
+        fields = ActionPointBaseSerializer.Meta.fields + [
+            'reference_number', 'related_module',
 
             'section', 'office', 'location',
             'partner', 'cp_output', 'intervention',
-
-            'high_priority', 'due_date', 'description',
-
-            'created', 'date_of_completion',
-            'status', 'status_date',
         ]
 
 
-class CommentSerializer(UserContextSerializerMixin,
-                        WritableNestedSerializerMixin,
-                        serializers.ModelSerializer):
+class CommentSerializer(UserContextSerializerMixin, WritableNestedSerializerMixin, serializers.ModelSerializer):
     user = MinimalUserSerializer(read_only=True, label=_('Author'))
 
     class Meta(WritableNestedSerializerMixin.Meta):
@@ -124,7 +130,7 @@ class CommentSerializer(UserContextSerializerMixin,
 
 class ActionPointSerializer(WritableNestedSerializerMixin, ActionPointLightSerializer):
     comments = CommentSerializer(many=True, label=_('Comments'))
-    history = ActivitySerializer(many=True, label=_('History'))
+    history = ActivitySerializer(many=True, label=_('History'), read_only=True)
 
     related_object_str = serializers.SerializerMethodField(label=_('Reference'))
     related_object_url = serializers.SerializerMethodField()

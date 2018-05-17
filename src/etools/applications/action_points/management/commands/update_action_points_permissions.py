@@ -1,10 +1,12 @@
 from django.core.management import BaseCommand
 
 from etools.applications.action_points.conditions import (
-    ActionPointAssignedByCondition, ActionPointAssigneeCondition, ActionPointAuthorCondition,)
+    ActionPointAssignedByCondition, ActionPointAssigneeCondition, ActionPointAuthorCondition,
+    ActionPointModuleCondition)
 from etools.applications.action_points.models import ActionPoint, PME, UNICEFUser
 from etools.applications.permissions2.conditions import GroupCondition, NewObjectCondition, ObjectStatusCondition
 from etools.applications.permissions2.models import Permission
+from etools.applications.permissions2.utils import get_model_target
 
 
 class Command(BaseCommand):
@@ -82,12 +84,7 @@ class Command(BaseCommand):
         if isinstance(targets, str):
             targets = [targets]
 
-        if condition is None:
-            condition = []
-        else:
-            condition = condition[:]
-
-        condition.extend(self.user_roles[role])
+        condition = (condition or []) + [ActionPointModuleCondition()] + self.user_roles[role]
 
         if self.verbosity >= 3:
             for target in targets:
@@ -102,7 +99,7 @@ class Command(BaseCommand):
                     )
                 )
 
-        self.permissions.extend([
+        self.defined_permissions.extend([
             Permission(target=target, permission=perm, permission_type=perm_type, condition=condition)
             for target in targets
         ])
@@ -114,17 +111,17 @@ class Command(BaseCommand):
         self._update_permissions(role, perm, targets, 'disallow', condition)
 
     def action_point_status(self, status):
-        obj = '{}_{}'.format(ActionPoint._meta.app_label, ActionPoint._meta.model_name)
+        obj = get_model_target(ActionPoint)
         return [ObjectStatusCondition.predicate_template.format(obj=obj, status=status)]
 
     def new_action_point(self):
-        model = '{}_{}'.format(ActionPoint._meta.app_label, ActionPoint._meta.model_name)
+        model = get_model_target(ActionPoint)
         return [NewObjectCondition.predicate_template.format(model=model)]
 
     def handle(self, *args, **options):
         self.verbosity = options.get('verbosity', 1)
 
-        self.permissions = []
+        self.defined_permissions = []
 
         if self.verbosity >= 2:
             print(
@@ -146,11 +143,11 @@ class Command(BaseCommand):
             self.stdout.write(
                 'Creating new permissions...'
             )
-        Permission.objects.bulk_create(self.permissions)
+        Permission.objects.bulk_create(self.defined_permissions)
 
         if self.verbosity >= 1:
             self.stdout.write(
-                'Action Points permissions updated ({}) -> ({}).'.format(old_permissions_count, len(self.permissions))
+                'Action Points permissions updated ({}) -> ({}).'.format(old_permissions_count, len(self.defined_permissions))
             )
 
     def assign_permissions(self):
