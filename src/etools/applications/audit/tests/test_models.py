@@ -13,7 +13,7 @@ from django.utils import six
 from etools.applications.audit.models import Auditor, Engagement, RiskCategory
 from etools.applications.audit.purchase_order.models import AuditorStaffMember, PurchaseOrder, PurchaseOrderItem
 from etools.applications.audit.tests.factories import (AuditFactory, AuditorStaffMemberFactory, AuditPartnerFactory,
-                                                       DetailedFindingInfoFactory, EngagementActionPointFactory,
+                                                       DetailedFindingInfoFactory,
                                                        EngagementFactory, FindingFactory, MicroAssessmentFactory,
                                                        PurchaseOrderFactory, PurchaseOrderItemFactory,
                                                        RiskBluePrintFactory, RiskCategoryFactory, RiskFactory,
@@ -175,17 +175,6 @@ class TestStrUnicode(SimpleTestCase):
 
         purchase_order = PurchaseOrderFactory.build(order_number='tv\xe5')
         instance = SpecialAuditFactory.build(agreement=purchase_order)
-        self.assertIn(' tv\xe5,', six.text_type(instance))
-
-    def test_engagement_action_point(self):
-        purchase_order = PurchaseOrderFactory.build(order_number='two')
-        engagement = EngagementFactory.build(agreement=purchase_order)
-        instance = EngagementActionPointFactory.build(engagement=engagement)
-        self.assertIn(' two,', six.text_type(instance))
-
-        purchase_order = PurchaseOrderFactory.build(order_number='tv\xe5')
-        engagement = EngagementFactory.build(agreement=purchase_order)
-        instance = EngagementActionPointFactory.build(engagement=engagement)
         self.assertIn(' tv\xe5,', six.text_type(instance))
 
 

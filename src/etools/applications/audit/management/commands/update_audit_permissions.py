@@ -2,9 +2,11 @@
 from django.core.management import BaseCommand
 from django.db.models import Q
 
+from etools.applications.action_points.models import ActionPoint
 from etools.applications.audit.conditions import (AuditModuleCondition, AuditStaffMemberCondition,
                                                   EngagementStaffMemberCondition,)
-from etools.applications.audit.models import Auditor, Engagement, UNICEFAuditFocalPoint, UNICEFUser
+from etools.applications.audit.models import Auditor, Engagement, UNICEFAuditFocalPoint, UNICEFUser, \
+    EngagementActionPoint
 from etools.applications.permissions2.conditions import GroupCondition, NewObjectCondition, ObjectStatusCondition
 from etools.applications.permissions2.models import Permission
 from etools.applications.permissions2.utils import get_model_target
@@ -95,6 +97,7 @@ class Command(BaseCommand):
     ]
 
     follow_up_page = follow_up_editable_page + [
+        'audit.engagementactionpoint.*',
         'audit.spotcheck.total_amount_tested',
         'audit.spotcheck.total_amount_of_ineligible_expenditure',
     ]
@@ -195,6 +198,15 @@ class Command(BaseCommand):
         model = get_model_target(Engagement)
         return [NewObjectCondition.predicate_template.format(model=model)]
 
+    def new_action_point(self):
+        model = get_model_target(EngagementActionPoint)
+        return [NewObjectCondition.predicate_template.format(model=model)]
+
+    def action_point_status(self, status):
+        # root status class should be used here for proper condition work
+        obj = get_model_target(ActionPoint)
+        return [ObjectStatusCondition.predicate_template.format(obj=obj, status=status)]
+
     def handle(self, *args, **options):
         self.verbosity = options.get('verbosity', 1)
 
@@ -257,60 +269,83 @@ class Command(BaseCommand):
         )
 
         # ip_contacted: auditor can edit, everybody else can view, focal point can cancel and edit staff members
+        partner_contacted_condition = self.engagement_status(Engagement.STATUSES.partner_contacted)
         self.add_permissions(
             self.engagement_staff_auditor, 'view',
             self.report_readonly_block,
-            condition=self.engagement_status(Engagement.STATUSES.partner_contacted)
+            condition=partner_contacted_condition
         )
         self.add_permissions(
             self.engagement_staff_auditor, 'edit',
             self.staff_members_block +
             self.engagement_status_editable_date_fields +
             self.report_editable_block,
-            condition=self.engagement_status(Engagement.STATUSES.partner_contacted)
+            condition=partner_contacted_condition
         )
         self.add_permissions(
             self.engagement_staff_auditor, 'action',
             'audit.engagement.submit',
-            condition=self.engagement_status(Engagement.STATUSES.partner_contacted)
+            condition=partner_contacted_condition
         )
 
         self.add_permissions(
             self.focal_point, 'edit',
             self.partner_block + self.staff_members_block + self.engagement_attachments_block,
-            condition=self.engagement_status(Engagement.STATUSES.partner_contacted)
+            condition=partner_contacted_condition
         )
         self.add_permissions(
             self.focal_point, 'action',
             'audit.engagement.cancel',
-            condition=self.engagement_status(Engagement.STATUSES.partner_contacted)
+            condition=partner_contacted_condition
         )
 
         # report submitted. focal point can finalize. all can view
+        report_submitted_condition = self.engagement_status(Engagement.STATUSES.report_submitted)
         self.add_permissions(
             self.focal_point, 'action',
             'audit.engagement.finalize',
-            condition=self.engagement_status(Engagement.STATUSES.report_submitted)
+            condition=report_submitted_condition
         )
         self.add_permissions(
             self.everybody, 'view',
             self.report_block,
-            condition=self.engagement_status(Engagement.STATUSES.report_submitted)
+            condition=report_submitted_condition
         )
 
         # final report. everybody can view. focal point can add action points
+        final_engagement_condition = self.engagement_status(Engagement.STATUSES.final)
         self.add_permissions(
             self.everybody, 'view',
             self.report_block,
-            condition=self.engagement_status(Engagement.STATUSES.final)
+            condition=final_engagement_condition
         )
         self.add_permissions(
             self.all_unicef_users, 'view',
             self.follow_up_page,
-            condition=self.engagement_status(Engagement.STATUSES.final)
+            condition=final_engagement_condition
         )
         self.add_permissions(
             self.focal_point, 'edit',
             self.follow_up_editable_page,
-            condition=self.engagement_status(Engagement.STATUSES.final)
+            condition=final_engagement_condition
+        )
+
+        # action points are editable for audit focal point as before.
+        # not sure if it's correct with action points dashboard permissions logic,
+        # but would be better to keep old logic for a while.
+        opened_actionpoint_condition = self.action_point_status(EngagementActionPoint.STATUSES.open)
+        self.add_permissions(
+            self.focal_point, 'edit',
+            'audit.engagementactionpoint.*',
+            condition=final_engagement_condition + self.new_action_point()
+        )
+        self.add_permissions(
+            self.focal_point, 'edit',
+            'audit.engagementactionpoint.*',
+            condition=final_engagement_condition + opened_actionpoint_condition
+        )
+        self.add_permissions(
+            self.focal_point, 'action',
+            'audit.engagementactionpoint.complete',
+            condition=final_engagement_condition + opened_actionpoint_condition
         )

@@ -3,7 +3,6 @@
 
 from decimal import DivisionByZero, InvalidOperation
 
-from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.contrib.postgres.fields import ArrayField, JSONField
 from django.core.exceptions import ValidationError
@@ -19,6 +18,7 @@ from model_utils.managers import InheritanceManager
 from model_utils.models import TimeStampedModel
 from ordered_model.models import OrderedModel
 
+from etools.applications.action_points.models import ActionPoint
 from etools.applications.attachments.models import Attachment
 from etools.applications.audit.purchase_order.models import AuditorStaffMember, PurchaseOrder, PurchaseOrderItem
 from etools.applications.audit.transitions.conditions import (AuditSubmitReportRequiredFieldsCheck,
@@ -772,86 +772,23 @@ class SpecialAuditRecommendation(models.Model):
         return '{}: {}'.format(self.audit.unique_id, self.description)
 
 
+class EngagementActionPointManager(models.Manager):
+    def get_queryset(self):
+        queryset = super(EngagementActionPointManager, self).get_queryset()
+        return queryset.filter(engagement__isnull=False)
+
+
 @python_2_unicode_compatible
-class EngagementActionPoint(models.Model):
-    CATEGORY_CHOICES = Choices(
-        ("Invoice and receive reimbursement of ineligible expenditure",
-         _("Invoice and receive reimbursement of ineligible expenditure")),
-        ("Change cash transfer modality (DCT, reimbursement or direct payment)",
-         _("Change cash transfer modality (DCT, reimbursement or direct payment)")),
-        ("IP to incur and report on additional expenditure", _("IP to incur and report on additional expenditure")),
-        ("Review and amend ICE or budget", _("Review and amend ICE or budget")),
-        ("IP to correct FACE form or Statement of Expenditure",
-         _("IP to correct FACE form or Statement of Expenditure")),
-        ("Schedule a programmatic visit", _("Schedule a programmatic visit")),
-        ("Schedule a follow-up spot check", _("Schedule a follow-up spot check")),
-        ("Schedule an audit", _("Schedule an audit")),
-        ("Block future cash transfers", _("Block future cash transfers")),
-        ("Block or mark vendor for deletion", _("Block or mark vendor for deletion")),
-        ("Escalate to Chief of Operations, Dep Rep, or Rep", _("Escalate to Chief of Operations, Dep Rep, or Rep")),
-        ("Escalate to Investigation", _("Escalate to Investigation")),
-        ("Capacity building / Discussion with partner", _("Capacity building / Discussion with partner")),
-        ("Change IP risk rating", _("Change IP risk rating")),
-        ("Other", _("Other")),
-    )
-    STATUS_CHOICES = Choices(
-        ('open', _('Open')),
-        ('closed', _('Closed')),
-    )
+class EngagementActionPoint(ActionPoint):
+    """
+    This proxy class is for more easy permissions assigning.
+    """
+    objects = EngagementActionPointManager()
 
-    engagement = models.ForeignKey(
-        Engagement, related_name='action_points', verbose_name=_('Engagement'),
-        on_delete=models.CASCADE,
-    )
-    category = models.CharField(verbose_name=_('Category'), max_length=100, choices=CATEGORY_CHOICES)
-    description = models.TextField(verbose_name=_('Description'), blank=True)
-    due_date = models.DateField(verbose_name=_('Due Date'))
-    author = models.ForeignKey(
-        settings.AUTH_USER_MODEL,
-        related_name='created_engagement_action_points',
-        verbose_name=_('Author'),
-        on_delete=models.CASCADE,
-    )
-    person_responsible = models.ForeignKey(
-        settings.AUTH_USER_MODEL,
-        related_name='engagement_action_points',
-        verbose_name=_('Person Responsible'),
-        on_delete=models.CASCADE,
-    )
-    action_taken = models.TextField(verbose_name=_('Action Taken'), blank=True)
-    status = models.CharField(verbose_name=_('Status'), max_length=10,
-                              choices=STATUS_CHOICES, default=STATUS_CHOICES.open)
-    high_priority = models.BooleanField(verbose_name=_('High Priority'), default=False)
-
-    class Meta:
-        ordering = ('id', )
+    class Meta(ActionPoint.Meta):
         verbose_name = _('Engagement Action Point')
         verbose_name_plural = _('Engagement Action Points')
-
-    def __str__(self):
-        return '{} on {}'.format(self.get_category_display(), self.engagement)
-
-    def get_mail_context(self):
-        return {
-            'person_responsible': self.person_responsible.get_full_name(),
-            'author': self.author.get_full_name(),
-            'category': self.get_category_display(),
-            'due_date': self.due_date.strftime('%d %b %Y'),
-        }
-
-    def notify_person_responsible(self, template_name):
-        context = {
-            'environment': get_environment(),
-            'engagement': Engagement.objects.get_subclass(action_points__id=self.id).get_mail_context(),
-            'action_point': self.get_mail_context(),
-        }
-
-        send_notification_using_email_template(
-            recipients=[self.person_responsible.email],
-            cc=[self.author.email],
-            email_template_name=template_name,
-            context=context,
-        )
+        proxy = True
 
 
 UNICEFAuditFocalPoint = GroupWrapper(code='unicef_audit_focal_point',

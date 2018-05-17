@@ -38,4 +38,4 @@ def delete_user_receiver(instance, **kwargs):
 @receiver(post_save, sender=EngagementActionPoint)
 def action_point_updated_receiver(instance, created, **kwargs):
     if created:
-        instance.notify_person_responsible('audit/engagement/action_point_assigned')
+        instance.send_email(instance.assigned_to, 'audit/engagement/action_point_assigned')
