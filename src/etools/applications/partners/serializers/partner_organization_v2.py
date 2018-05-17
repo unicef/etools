@@ -1,3 +1,4 @@
+import datetime
 import json
 
 from django.contrib.auth import get_user_model
@@ -272,6 +273,25 @@ class PartnerPlannedVisitsSerializer(serializers.ModelSerializer):
     class Meta:
         model = PartnerPlannedVisits
         fields = "__all__"
+
+    def is_valid(self, **kwargs):
+        """If no year provided, default to current year
+
+        Do not expect id to be provided, so check if object exists already
+        for partner and year provided and if so,
+        set instance to this object
+        """
+        if not self.initial_data.get("year"):
+            self.initial_data["year"] = datetime.date.today().year
+        try:
+            self.instance = self.Meta.model.objects.get(
+                partner=self.initial_data.get("partner"),
+                year=self.initial_data.get("year"),
+            )
+        except self.Meta.model.DoesNotExist:
+            self.instance = None
+
+        return super().is_valid(**kwargs)
 
 
 class PartnerOrganizationDetailSerializer(serializers.ModelSerializer):
