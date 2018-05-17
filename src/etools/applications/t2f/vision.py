@@ -8,10 +8,9 @@ from io import BytesIO
 from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.core.exceptions import ObjectDoesNotExist
-from django.core.urlresolvers import reverse
 from django.db import connection
 from django.db.models.query_utils import Q
-
+from django.urls import reverse
 from django.utils.datastructures import MultiValueDict
 
 from etools.applications.notification.utils import send_notification_using_templates

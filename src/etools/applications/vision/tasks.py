@@ -112,7 +112,7 @@ def update_all_partners(country_name=None):
         partners = PartnerOrganization.objects.all()
         for partner in partners:
             try:
-                PartnerOrganization.planned_visits(partner)
+                partner.planned_visits_to_hact()
                 PartnerOrganization.programmatic_visits(partner)
                 PartnerOrganization.spot_checks(partner)
                 PartnerOrganization.audits_completed(partner)

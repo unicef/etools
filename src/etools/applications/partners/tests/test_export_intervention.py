@@ -1,20 +1,23 @@
-
 import datetime
 
-from django.core.urlresolvers import reverse
-
+from django.urls import reverse
 
 from rest_framework import status
 from tablib.core import Dataset
 
 from etools.applications.EquiTrack.tests.cases import BaseTenantTestCase
 from etools.applications.locations.tests.factories import LocationFactory
-from etools.applications.partners.tests.factories import (AgreementFactory, InterventionAmendmentFactory,
-                                                          InterventionAttachmentFactory, InterventionBudgetFactory,
-                                                          InterventionFactory, InterventionPlannedVisitsFactory,
-                                                          InterventionResultLinkFactory,
-                                                          InterventionSectorLocationLinkFactory, PartnerFactory,
-                                                          PartnerStaffFactory,)
+from etools.applications.partners.tests.factories import (
+    AgreementFactory,
+    InterventionAmendmentFactory,
+    InterventionAttachmentFactory,
+    InterventionBudgetFactory,
+    InterventionFactory,
+    InterventionResultLinkFactory,
+    InterventionSectorLocationLinkFactory,
+    PartnerFactory,
+    PartnerStaffFactory,
+)
 from etools.applications.reports.tests.factories import CountryProgrammeFactory, IndicatorFactory
 from etools.applications.users.tests.factories import UserFactory
 
@@ -75,9 +78,6 @@ class BaseInterventionModelExportTestCase(BaseTenantTestCase):
             intervention=cls.intervention,
             currency="USD"
         )
-        cls.planned_visit = InterventionPlannedVisitsFactory(
-            intervention=cls.intervention,
-        )
         cls.attachment = InterventionAttachmentFactory(
             intervention=cls.intervention,
         )
@@ -134,7 +134,6 @@ class TestInterventionModelExport(BaseInterventionModelExportTestCase):
             "FR Amount",
             "FR Actual CT",
             "Outstanding DCT",
-            "Planned Programmatic Visits",
             "Document Submission Date by CSO",
             "Submission Date to PRC",
             "Review Date by PRC",
@@ -182,11 +181,6 @@ class TestInterventionModelExport(BaseInterventionModelExportTestCase):
             u'',
             u'',
             u'',
-            u'{} (Q1:{} Q2:{}, Q3:{}, Q4:{})'.format(self.planned_visit.year,
-                                                     self.planned_visit.programmatic_q1,
-                                                     self.planned_visit.programmatic_q2,
-                                                     self.planned_visit.programmatic_q3,
-                                                     self.planned_visit.programmatic_q4, ),
             '{}'.format(self.intervention.submission_date),
             '{}'.format(self.intervention.submission_date_prc),
             '{}'.format(self.intervention.review_date_prc),
@@ -215,8 +209,8 @@ class TestInterventionModelExport(BaseInterventionModelExportTestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         dataset = Dataset().load(response.content.decode('utf-8'), 'csv')
         self.assertEqual(dataset.height, 1)
-        self.assertEqual(len(dataset._get_headers()), 62)
-        self.assertEqual(len(dataset[0]), 62)
+        self.assertEqual(len(dataset._get_headers()), 61)
+        self.assertEqual(len(dataset[0]), 61)
 
 
 class TestInterventionAmendmentModelExport(BaseInterventionModelExportTestCase):

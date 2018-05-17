@@ -28,12 +28,14 @@ def show_country_select(context, profile):
 
 
 @register.simple_tag(takes_context=True)
-def tenant_model_filter(context, app_name):
+def tenant_model_filter(context, app):
     if hasattr(context.request, 'tenant'):
-        return not (context.request.tenant.schema_name == 'public' and app_name in settings.TENANT_APPS)
+        tenant_app_labels = [tenant_app.split('.')[-1] for tenant_app in settings.TENANT_APPS]
+        return not (context.request.tenant.schema_name == 'public' and app['app_label'] in tenant_app_labels)
     return True
 
 
 @register.simple_tag()
-def tenant_app_filter(app_name):
-    return app_name in settings.TENANT_APPS
+def tenant_app_filter(app):
+    tenant_app_labels = [tenant_app.split('.')[-1] for tenant_app in settings.TENANT_APPS]
+    return app['app_label'] in tenant_app_labels

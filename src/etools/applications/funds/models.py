@@ -197,14 +197,25 @@ class FundsReservationItem(TimeStampedModel):
         default='',
         blank=True,
     )
-    line_item = models.CharField(verbose_name=_("Line Item"), max_length=5)
-
+    line_item = models.PositiveSmallIntegerField(verbose_name=_("Line Item"))
     # grant and fund will be needed for filtering in the future
     wbs = models.CharField(
         verbose_name=_("WBS"),
         max_length=30,
         default='',
         blank=True,
+    )
+    donor = models.CharField(
+        verbose_name=_("Donor Name"),
+        max_length=256,
+        blank=True,
+        null=True,
+    )
+    donor_code = models.CharField(
+        verbose_name=_("Donor Code"),
+        max_length=30,
+        blank=True,
+        null=True,
     )
     grant_number = models.CharField(
         verbose_name=_("Grant Number"),
@@ -249,6 +260,7 @@ class FundsReservationItem(TimeStampedModel):
 
     class Meta:
         unique_together = ('fund_reservation', 'line_item')
+        ordering = ('line_item',)
 
     def save(self, **kwargs):
         if not self.fr_ref_number:

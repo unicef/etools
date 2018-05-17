@@ -52,6 +52,8 @@ class FundReservationsSynchronizer(VisionDataSynchronizer):
         "line_item": "LINE_ITEM",
         "wbs": "WBS_ELEMENT",
         "grant_number": "GRANT_NBR",
+        "donor": "DONOR_NAME",
+        "donor_code": "DONOR_CODE",
         "fund": "FUND",
         "overall_amount": "OVERALL_AMOUNT",
         "overall_amount_dc": "OVERALL_AMOUNT_DC",
@@ -72,7 +74,7 @@ class FundReservationsSynchronizer(VisionDataSynchronizer):
 
     LINE_ITEM_FIELDS = ['LINE_ITEM', 'FR_NUMBER', 'WBS_ELEMENT', 'GRANT_NBR',
                         'FUND', 'OVERALL_AMOUNT', 'OVERALL_AMOUNT_DC',
-                        'DUE_DATE', 'FR_LINE_ITEM_TEXT']
+                        'DUE_DATE', 'FR_LINE_ITEM_TEXT', 'DONOR_NAME', 'DONOR_CODE']
 
     def __init__(self, *args, **kwargs):
         self.header_records = {}

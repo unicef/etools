@@ -1,8 +1,30 @@
 import json
 
+from django.db.models import Aggregate, CharField, Value
+
 from rest_framework import serializers
 
 from etools.applications.snapshot.utils import create_dict_with_relations, create_snapshot
+
+
+class StringConcat(Aggregate):
+    """ A custom aggregation function that returns "," separated strings """
+
+    function = 'GROUP_CONCAT'
+    template = '%(function)s(%(distinct)s%(expressions)s)'
+
+    def __init__(self, expression, separator=",", distinct=False, **extra):
+        super(StringConcat, self).__init__(
+            expression,
+            Value(separator),
+            distinct='DISTINCT ' if distinct else '',
+            output_field=CharField(),
+            **extra
+        )
+
+    def as_postgresql(self, compiler, connection):
+        self.function = 'STRING_AGG'
+        return super(StringConcat, self).as_sql(compiler, connection)
 
 
 class JsonFieldSerializer(serializers.Field):
