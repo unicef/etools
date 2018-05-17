@@ -159,4 +159,5 @@ class Command(BaseCommand):
 
         self.add_permission([self.pme, self.author, self.assigned_by, self.assignee], 'edit', self.action_point_edit,
                             condition=self.action_point_status(ActionPoint.STATUSES.open))
-        self.add_permission([self.pme, self.assignee], 'action', 'action_points.actionpoint.complete')
+        self.add_permission([self.pme, self.assignee], 'action', 'action_points.actionpoint.complete',
+                            condition=self.action_point_status(ActionPoint.STATUSES.open))
