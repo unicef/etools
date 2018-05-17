@@ -115,9 +115,9 @@ def update_sites_from_cartodb(carto_table_pk):
         time.sleep(1)
         query_max_id = sql_client.send('select MAX({}) from {}'.format(cartodb_id_col, carto_table.table_name))
         max_id = query_max_id['rows'][0]['max']
-    except CartoException as exc:
-        logger.exception("Cannot fetch pagination prequisites from CartoDB for {}: {}".format(
-            carto_table.table_name, exc
+    except CartoException:
+        logger.exception("Cannot fetch pagination prequisites from CartoDB for table {}".format(
+            carto_table.table_name
         ))
         return "Table name {}: {} sites created, {} sites updated, {} sites skipped".format(
             carto_table.table_name, 0, 0, 0
@@ -166,9 +166,11 @@ def update_sites_from_cartodb(carto_table_pk):
 
             if 'error' in sites:
                 # it seems we can have both valid results and error messages in the same CartoDB response
-                logger.exception("CartoDB exception occured: {}".format(sites['error']))
-    except CartoException as exc:
-        logger.exception("CartoDB exception occured: {}".format(exc))
+                logger.exception("CartoDB API error received: {}".format(sites['error']))
+                # When this error occurs, we receive truncated locations, probably it's better to not continue to import
+                return
+    except CartoException:
+        logger.exception("CartoDB exception occured")
     else:
         for row in rows:
             pcode = six.text_type(row[carto_table.pcode_col]).strip()
