@@ -17,8 +17,8 @@ logger = get_task_logger(__name__)
 
 
 def create_location(pcode, carto_table, parent, parent_instance,
-                    remapped_old_pcode, site_name, row,
-                    sites_not_added, sites_created, sites_updated):
+                    remapped_old_pcode, site_name, row, sites_not_added,
+                    sites_created, sites_remapped, sites_updated):
     try:
         should_remap = False
         # TODO: figure out what we do if the new pcode already exists without remap
@@ -101,14 +101,22 @@ def create_location(pcode, carto_table, parent, parent_instance,
             logger.exception('Error while saving location: %s', site_name)
             return False, sites_not_added, sites_created, sites_updated
 
-        sites_updated += 1
+        if should_remap is True:
+            sites_remapped += 1
+            logger.info('{}: {} ({})'.format(
+                'Remapped',
+                location.name,
+                carto_table.location_type.name
+            ))
+        else:
+            sites_updated += 1
+            logger.info('{}: {} ({})'.format(
+                'Updated',
+                location.name,
+                carto_table.location_type.name
+            ))
 
-        logger.info('{}: {} ({})'.format(
-            'Updated',
-            location.name,
-            carto_table.location_type.name
-        ))
-        return True, sites_not_added, sites_created, sites_updated
+        return True, sites_not_added, sites_created, sites_remapped, sites_updated
 
 
 @app.task
@@ -123,7 +131,7 @@ def update_sites_from_cartodb(carto_table_pk):
     auth_client = APIKeyAuthClient(api_key=carto_table.api_key,
                                    base_url="https://{}.carto.com/".format(carto_table.domain))
     sql_client = SQLClient(auth_client)
-    sites_created = sites_updated = sites_not_added = 0
+    sites_created = sites_updated = sites_remapped = sites_not_added = 0
 
     # query for cartodb
     qry = ''
@@ -181,6 +189,7 @@ def update_sites_from_cartodb(carto_table_pk):
                     # check for non-existing remap pcodes in the database
                     if remap_row['old_pcode'] not in database_pcodes:
                         bad_old_pcodes.append(remap_row['old_pcode'])
+                    # check for non-existing remap pcodes in the Carto dataset
                     if remap_row['new_pcode'] not in new_pcodes:
                         bad_new_pcodes.append(remap_row['new_pcode'])
 
@@ -239,12 +248,12 @@ def update_sites_from_cartodb(carto_table_pk):
                         remapped_old_pcode = remap_row['old_pcode']
 
             # create the actual location or retrieve existing based on type and code
-            succ, sites_not_added, sites_created, sites_updated = create_location(
+            succ, sites_not_added, sites_created, sites_remapped, sites_updated = create_location(
                 pcode, carto_table,
                 parent, parent_instance, remapped_old_pcode,
                 site_name, row,
                 sites_not_added, sites_created,
-                sites_updated)
+                sites_remapped, sites_updated)
 
-    return "Table name {}: {} sites created, {} sites updated, {} sites skipped".format(
-        carto_table.table_name, sites_created, sites_updated, sites_not_added)
+    return "Table name {}: {} sites created, {} sites updated, {} sites remapped, {} sites skipped".format(
+        carto_table.table_name, sites_created, sites_updated, sites_remapped, sites_not_added)
