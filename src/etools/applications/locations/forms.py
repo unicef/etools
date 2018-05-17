@@ -28,6 +28,7 @@ class CartoDBTableForm(forms.ModelForm):
         name_col = self.cleaned_data['name_col']
         pcode_col = self.cleaned_data['pcode_col']
         parent_code_col = self.cleaned_data['parent_code_col']
+        remap_table_name = self.cleaned_data['remap_table_name']
 
         auth_client = APIKeyAuthClient(api_key=api_key, base_url="https://{}.carto.com/".format(six.text_type(domain)))
         sql_client = SQLClient(auth_client)
@@ -50,5 +51,24 @@ class CartoDBTableForm(forms.ModelForm):
                 raise ValidationError('The Parent Code column ({}) is not in table: {}'.format(
                     parent_code_col, table_name
                 ))
+
+        if remap_table_name:
+            try:
+                remap_table = sql_client.send('select * from {} limit 1'.format(remap_table_name))
+            except CartoException:
+                logger.exception("CartoDB exception occured")
+                raise ValidationError("Couldn't connect to the CartoDB remap table: {}".format(remap_table_name))
+            else:
+                row = remap_table['rows'][0]
+
+                if 'old_pcode' not in row.keys():
+                    raise ValidationError('The Old PCode column ({}) is not in table: {}'.format(
+                        'old_pcode', remap_table_name
+                    ))
+
+                if 'new_pcode' not in row.keys():
+                    raise ValidationError('The PCode column ({}) is not in table: {}'.format(
+                        'new_pcode', remap_table_name
+                    ))
 
         return self.cleaned_data

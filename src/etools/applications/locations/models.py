@@ -94,6 +94,13 @@ class Location(MPTTModel):
         blank=True,
     )
     point = models.PointField(verbose_name=_("Point"), null=True, blank=True)
+
+    # fields where previous data is backed up on pcode remap
+    date_remapped = models.DateTimeField(verbose_name=_('Remap date and time'), null=True)
+    prev_name = models.CharField(verbose_name=_("Previous name"), max_length=254, null=True)
+    prev_pcode = models.CharField(verbose_name=_("Previous Pcode"), max_length=32, null=True, db_index=True)
+    prev_geom = models.MultiPolygonField(verbose_name=_("Previous geo Point"), null=True, blank=True)
+
     created = AutoCreatedField(_('created'))
     modified = AutoLastModifiedField(_('modified'))
 
@@ -152,6 +159,8 @@ class CartoDBTable(MPTTModel):
     )
     name_col = models.CharField(max_length=254, default='name', verbose_name=_('Name Column'))
     pcode_col = models.CharField(max_length=254, default='pcode', verbose_name=_('Pcode Column'))
+    # Cartodb table name used to remap old pcodes to new pcodes
+    remap_table_name = models.CharField(max_length=254, verbose_name=_('Remap Table Name'), blank=True, null=True)
     parent_code_col = models.CharField(max_length=254, default='', blank=True, verbose_name=_('Parent Code Column'))
     parent = TreeForeignKey(
         'self', null=True, blank=True, related_name='children', db_index=True,
