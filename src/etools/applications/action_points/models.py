@@ -57,10 +57,10 @@ class ActionPoint(TimeStampedModel):
     due_date = models.DateField(verbose_name=_('Due Date'), blank=True, null=True)
     high_priority = models.BooleanField(default=False, verbose_name=_('High Priority'))
 
-    section = models.ForeignKey('reports.Sector', verbose_name=_('Section'),
+    section = models.ForeignKey('reports.Sector', verbose_name=_('Section'), blank=True, null=True,
                                 on_delete=models.CASCADE,
                                 )
-    office = models.ForeignKey('users.Office', verbose_name=_('Office'),
+    office = models.ForeignKey('users.Office', verbose_name=_('Office'), blank=True, null=True,
                                on_delete=models.CASCADE,
                                )
 
@@ -77,10 +77,10 @@ class ActionPoint(TimeStampedModel):
                                      on_delete=models.CASCADE,
                                      )
     engagement = models.ForeignKey('audit.Engagement', verbose_name=_('Engagement'), blank=True, null=True,
-                                   on_delete=models.CASCADE,
+                                   related_name='action_points', on_delete=models.CASCADE,
                                    )
     tpm_activity = models.ForeignKey('tpm.TPMActivity', verbose_name=_('TPM Activity'), blank=True, null=True,
-                                     on_delete=models.CASCADE,
+                                     related_name='action_points', on_delete=models.CASCADE,
                                      )
     travel_activity = models.ForeignKey('t2f.TravelActivity', verbose_name=_('Travel Activity'), blank=True, null=True,
                                         on_delete=models.CASCADE,
