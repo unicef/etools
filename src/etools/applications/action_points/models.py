@@ -103,7 +103,7 @@ class ActionPoint(TimeStampedModel):
 
     @property
     def related_object(self):
-        return self.engagement or self.tpm_activity or self.travel_activity
+        return self.engagement or self.tpm_activity or self.travel
 
     @property
     def related_module(self):
