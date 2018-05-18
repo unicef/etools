@@ -63,6 +63,7 @@ class Command(BaseCommand):
         'action_points.actionpoint.created',
         'action_points.actionpoint.date_of_completion',
 
+        'action_points.actionpoint.comments',
         'action_points.actionpoint.history',
     ]
 
