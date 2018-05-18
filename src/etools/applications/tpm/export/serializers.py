@@ -71,6 +71,10 @@ class TPMActionPointExportSerializer(serializers.Serializer):
         )
 
 
+class TPMActionPointFullExportSerializer(TPMActionPointExportSerializer):
+    ref = serializers.CharField(source='tpm_visit.reference_number')
+
+
 class TPMVisitExportSerializer(serializers.Serializer):
     ref = serializers.CharField(source='reference_number')
     visit = serializers.CharField(source='*')
