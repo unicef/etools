@@ -1,6 +1,3 @@
-
-from unittest import skip
-
 from django.core.urlresolvers import reverse
 
 from mock import patch
@@ -180,8 +177,33 @@ class TestGisLocationViews(BaseTenantTestCase):
         response = self.client.get(reverse("locations-gis-in-use"))
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
 
+    def test_invalid_geoformat(self):
+        self.client.force_login(self.unicef_staff)
+        url = reverse("locations-gis-geom-list")
+
+        response = self.client.get(
+            # geo_format should be either geojson or wkt
+            "%s?country_id=%s&geo_format=%s" % (url, self.country.id, 'asdf'),
+            user=self.unicef_staff
+        )
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+
+        url = reverse("locations-gis-get-by-pcode", kwargs={"pcode": self.location_with_geom.p_code})
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+
+        url = reverse("locations-gis-get-by-id", kwargs={"id": self.location_with_geom.id})
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+
     def test_intervention_locations_in_use(self):
         self.client.force_login(self.unicef_staff)
+        url = reverse("locations-gis-in-use")
+
+        # test with missing country, expect error
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+
         response = self.client.get(
             "%s?country_id=%s" % (reverse("locations-gis-in-use"), self.country.id),
             user=self.unicef_staff
@@ -204,17 +226,134 @@ class TestGisLocationViews(BaseTenantTestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(sorted(response.data[0].keys()), ["gateway_id", "id", "level", "name", "p_code"])
 
-    @skip("figure out what is missing, the travel locations aren't returned back by the API")
     def test_travel_locations_in_use(self):
         self.client.force_login(self.unicef_staff)
+
+        # test with missing country, expect error
+        url = reverse("locations-gis-in-use")
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+
         response = self.client.get(
-            "%s?country_id=%s" % (reverse("locations-gis-in-use"), self.country.id),
+            "%s?country_id=%s" % (url, self.country.id),
             user=self.unicef_staff
         )
 
         # see if no location are in use yet
         self.assertEqual(len(response.json()), 0)
 
+        # add travel locations to the DB
+        self.addTravelLocations()
+
+        response = self.client.get(
+            "%s?country_id=%s" % (reverse("locations-gis-in-use"), self.country.id),
+            user=self.unicef_staff
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(sorted(response.data[0].keys()), ["gateway_id", "id", "level", "name", "p_code"])
+
+    def test_intervention_locations_geom(self):
+        self.client.force_login(self.unicef_staff)
+
+        # test with missing country, expect error
+        url = reverse("locations-gis-geom-list")
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+
+        # test with WKT format
+        response = self.client.get(
+            "%s?country_id=%s&geo_format=%s" % (url, self.country.id, 'wkt'),
+            user=self.unicef_staff
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        # only one of the test locations has GEOM
+        self.assertEqual(len(response.json()), 1)
+        self.assertEqual(sorted(response.data[0].keys()), ["gateway_id", "geom", "id", "level", "name", "p_code"])
+        self.assertEqual(response.data[0]["geom"], self.location_with_geom.geom.wkt)
+
+        # test with GEOJSON format
+        response = self.client.get(
+            "%s?country_id=%s&geo_format=%s" % (url, self.country.id, 'geojson'),
+            user=self.unicef_staff
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        # only one of the test locations has GEOM
+        self.assertEqual(len(response.json()), 1)
+        self.assertEqual(sorted(response.data[0].keys()), ["gateway_id", "geom", "id", "level", "name", "p_code"])
+        self.assertEqual(response.data[0]["geom"], self.location_with_geom.geom.json)
+
+        # if no geo_format is specified, GEOJSON is expected
+        response = self.client.get("%s?country_id=%s" % (url, self.country.id), user=self.unicef_staff)
+        self.assertEqual(response.data[0]["geom"], self.location_with_geom.geom.json)
+
+    def test_intervention_locations_geom_by_pcode(self):
+        self.client.force_login(self.unicef_staff)
+        url = reverse("locations-gis-get-by-pcode", kwargs={"pcode": self.location_with_geom.p_code})
+
+        # test with missing country, expect error
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+
+        response = self.client.get(
+            "%s?country_id=%s&geo_format=%s" % (url, self.country.id, 'wkt'),
+            user=self.unicef_staff,
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(sorted(response.data.keys()), ["gateway_id", "geom", "id", "level", "name", "p_code"])
+        self.assertEqual(response.data["id"], str(self.location_with_geom.id))
+        self.assertEqual(response.data["geom"], self.location_with_geom.geom.wkt)
+
+        response = self.client.get(
+            "%s?country_id=%s&geo_format=%s" % (url, self.country.id, 'geojson'),
+            user=self.unicef_staff,
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(sorted(response.data.keys()), ["gateway_id", "geom", "id", "level", "name", "p_code"])
+        self.assertEqual(response.data["id"], str(self.location_with_geom.id))
+        self.assertEqual(response.data["geom"], self.location_with_geom.geom.json)
+
+        # if no geo_format is specified, GEOJSON is expected
+        response = self.client.get("%s?country_id=%s" % (url, self.country.id), user=self.unicef_staff)
+        self.assertEqual(response.data["geom"], self.location_with_geom.geom.json)
+
+    def test_intervention_locations_geom_by_id(self):
+        self.client.force_login(self.unicef_staff)
+        url = reverse("locations-gis-get-by-id", kwargs={"id": self.location_with_geom.id})
+
+        # test with missing country, expect error
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+
+        response = self.client.get(
+            "%s?country_id=%s&geo_format=%s" % (url, self.country.id, 'wkt'),
+            user=self.unicef_staff,
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(sorted(response.data.keys()), ["gateway_id", "geom", "id", "level", "name", "p_code"])
+        self.assertEqual(response.data["id"], str(self.location_with_geom.id))
+        self.assertEqual(response.data["geom"], self.location_with_geom.geom.wkt)
+
+        response = self.client.get(
+            "%s?country_id=%s&geo_format=%s" % (url, self.country.id, 'geojson'),
+            user=self.unicef_staff,
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(sorted(response.data.keys()), ["gateway_id", "geom", "id", "level", "name", "p_code"])
+        self.assertEqual(response.data["id"], str(self.location_with_geom.id))
+        self.assertEqual(response.data["geom"], self.location_with_geom.geom.json)
+
+        # if no geo_format is specified, GEOJSON is expected
+        response = self.client.get("%s?country_id=%s" % (url, self.country.id), user=self.unicef_staff)
+        self.assertEqual(response.data["geom"], self.location_with_geom.geom.json)
+
+    def addTravelLocations(self):
         # add travel locations and test the response
         traveller = UserFactory()
         travel = TravelFactory(
@@ -228,50 +367,3 @@ class TestGisLocationViews(BaseTenantTestCase):
         )
         travel_activity.locations.add(self.location_no_geom.id, self.location_with_geom.id)
         travel_activity.save()
-
-        response = self.client.get(
-            "%s?country_id=%s" % (reverse("locations-gis-in-use"), self.country.id),
-            user=self.unicef_staff
-        )
-
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(sorted(response.data[0].keys()), ["gateway_id", "id", "level", "name", "p_code"])
-
-    def test_intervention_locations_geom(self):
-        self.client.force_login(self.unicef_staff)
-        response = self.client.get(
-            "%s?country_id=%s" % (reverse("locations-gis-geom-list"), self.country.id),
-            user=self.unicef_staff
-        )
-
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
-        # only one of the two test locations have GEOM, so the response is expected to have 1 eleemnt
-        self.assertEqual(len(response.json()), 1)
-        self.assertEqual(sorted(response.data[0].keys()), ["gateway_id", "geom", "id", "level", "name", "p_code"])
-        self.assertEqual(response.data[0]["geom"], self.location_with_geom.geom)
-
-    def test_intervention_locations_geom_by_pcode(self):
-        self.client.force_login(self.unicef_staff)
-        url = reverse("locations-gis-get-by-pcode", kwargs={"pcode": self.location_with_geom.p_code})
-        response = self.client.get(
-            "%s?country_id=%s" % (url, self.country.id),
-            user=self.unicef_staff,
-        )
-
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(sorted(response.data.keys()), ["gateway_id", "geom", "id", "level", "name", "p_code"])
-        self.assertEqual(response.data["id"], str(self.location_with_geom.id))
-        self.assertEqual(response.data["geom"], self.location_with_geom.geom)
-
-    def test_intervention_locations_geom_by_id(self):
-        self.client.force_login(self.unicef_staff)
-        url = reverse("locations-gis-get-by-id", kwargs={"id": self.location_with_geom.id})
-        response = self.client.get(
-            "%s?country_id=%s" % (url, self.country.id),
-            user=self.unicef_staff,
-        )
-
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(sorted(response.data.keys()), ["gateway_id", "geom", "id", "level", "name", "p_code"])
-        self.assertEqual(response.data["id"], str(self.location_with_geom.id))
-        self.assertEqual(response.data["geom"], self.location_with_geom.geom)
