@@ -1,4 +1,3 @@
-
 import json
 
 from django.contrib.auth import get_user_model
@@ -10,8 +9,14 @@ from rest_framework import serializers
 
 from etools.applications.attachments.serializers_fields import AttachmentSingleFileField
 from etools.applications.EquiTrack.serializers import SnapshotModelSerializer
-from etools.applications.partners.models import (Assessment, Intervention, PartnerOrganization,
-                                                 PartnerStaffMember, PlannedEngagement,)
+from etools.applications.partners.models import (
+    Assessment,
+    Intervention,
+    PartnerOrganization,
+    PartnerPlannedVisits,
+    PartnerStaffMember,
+    PlannedEngagement,
+)
 from etools.applications.partners.serializers.interventions_v2 import InterventionListSerializer
 
 
@@ -263,6 +268,12 @@ class PlannedEngagementNestedSerializer(serializers.ModelSerializer):
         fields = '__all__'
 
 
+class PartnerPlannedVisitsSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = PartnerPlannedVisits
+        fields = "__all__"
+
+
 class PartnerOrganizationDetailSerializer(serializers.ModelSerializer):
 
     staff_members = PartnerStaffMemberDetailSerializer(many=True, read_only=True)
@@ -274,6 +285,7 @@ class PartnerOrganizationDetailSerializer(serializers.ModelSerializer):
     interventions = serializers.SerializerMethodField(read_only=True)
     hact_min_requirements = serializers.JSONField(read_only=True)
     hidden = serializers.BooleanField(read_only=True)
+    planned_visits = PartnerPlannedVisitsSerializer(many=True, read_only=True, required=False)
 
     def get_hact_values(self, obj):
         return json.loads(obj.hact_values) if isinstance(obj.hact_values, six.text_type) else obj.hact_values
@@ -300,6 +312,7 @@ class PartnerOrganizationCreateUpdateSerializer(SnapshotModelSerializer):
     hact_values = serializers.SerializerMethodField(read_only=True)
     core_values_assessment_file = serializers.FileField(source='core_values_assessment', read_only=True)
     hidden = serializers.BooleanField(read_only=True)
+    planned_visits = PartnerPlannedVisitsSerializer(many=True, read_only=True, required=False)
 
     def get_hact_values(self, obj):
         return json.loads(obj.hact_values) if isinstance(obj.hact_values, six.text_type) else obj.hact_values

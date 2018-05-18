@@ -13,13 +13,27 @@ from etools.applications.EquiTrack.tests.mixins import URLAssertionMixin
 from etools.applications.partners.models import Intervention
 from etools.applications.partners.tests.factories import InterventionFactory, InterventionResultLinkFactory
 from etools.applications.partners.tests.test_utils import setup_intervention_test_data
-from etools.applications.reports.models import (CountryProgramme, Disaggregation,
-                                                DisaggregationValue, LowerResult, ResultType,)
+from etools.applications.reports.models import (
+    CountryProgramme,
+    Disaggregation,
+    DisaggregationValue,
+    LowerResult,
+    ResultType,
+    SpecialReportingRequirement,
+)
 from etools.applications.reports.serializers.v2 import DisaggregationSerializer
-from etools.applications.reports.tests.factories import (AppliedIndicatorFactory, CountryProgrammeFactory,
-                                                         DisaggregationFactory, DisaggregationValueFactory,
-                                                         IndicatorBlueprintFactory, IndicatorFactory,
-                                                         LowerResultFactory, ResultFactory, ResultTypeFactory,)
+from etools.applications.reports.tests.factories import (
+    AppliedIndicatorFactory,
+    CountryProgrammeFactory,
+    DisaggregationFactory,
+    DisaggregationValueFactory,
+    IndicatorBlueprintFactory,
+    IndicatorFactory,
+    LowerResultFactory,
+    ResultFactory,
+    ResultTypeFactory,
+    SpecialReportingRequirementFactory,
+)
 from etools.applications.users.tests.factories import GroupFactory, UserFactory
 
 
@@ -850,3 +864,154 @@ class TestAppliedIndicatorExportList(BaseTenantTestCase):
         self.assertEqual(dataset.height, 1)
         self.assertEqual(len(dataset._get_headers()), 26)
         self.assertEqual(len(dataset[0]), 26)
+
+
+class TestSpecialReportingRequirementListCreateView(BaseTenantTestCase):
+    @classmethod
+    def setUpTestData(cls):
+        cls.unicef_staff = UserFactory(is_staff=True)
+        group = GroupFactory(name='Partnership Manager')
+        cls.unicef_staff.groups.add(group)
+        cls.intervention = InterventionFactory(
+            start=datetime.date(2001, 1, 1),
+            status=Intervention.DRAFT,
+            in_amendment=True,
+        )
+        cls.url = reverse(
+            "reports:interventions-special-reporting-requirements"
+        )
+
+    def test_get(self):
+        requirement = SpecialReportingRequirementFactory(
+            intervention=self.intervention,
+            due_date=datetime.date(2001, 4, 15),
+            description="Current",
+        )
+        response = self.forced_auth_req(
+            "get",
+            self.url,
+            user=self.unicef_staff,
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(response.data), 1)
+        data = response.data[0]
+        self.assertEqual(data["id"], requirement.pk)
+        self.assertEqual(data["intervention"], self.intervention.pk)
+        self.assertEqual(data["due_date"], str(requirement.due_date))
+        self.assertEqual(data["description"], "Current")
+
+    def test_post(self):
+        requirement_qs = SpecialReportingRequirement.objects.filter(
+            intervention=self.intervention,
+        )
+        init_count = requirement_qs.count()
+        response = self.forced_auth_req(
+            "post",
+            self.url,
+            user=self.unicef_staff,
+            data={
+                "intervention": self.intervention.pk,
+                "due_date": datetime.date(2001, 4, 15),
+                "description": "Randomness"
+            }
+        )
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        self.assertEqual(requirement_qs.count(), init_count + 1)
+        self.assertEqual(response.data["intervention"], self.intervention.pk)
+        self.assertEqual(response.data["description"], "Randomness")
+
+
+class TestSpecialReportingRequirementRetrieveUpdateDestroyView(BaseTenantTestCase):
+    @classmethod
+    def setUpTestData(cls):
+        cls.unicef_staff = UserFactory(is_staff=True)
+        group = GroupFactory(name='Partnership Manager')
+        cls.unicef_staff.groups.add(group)
+        cls.intervention = InterventionFactory(
+            start=datetime.date(2001, 1, 1),
+            status=Intervention.DRAFT,
+            in_amendment=True,
+        )
+
+    def _get_url(self, requirement):
+        return reverse(
+            "reports:interventions-special-reporting-requirements-update",
+            args=[requirement.pk]
+        )
+
+    def test_get(self):
+        requirement = SpecialReportingRequirementFactory(
+            intervention=self.intervention,
+            due_date=datetime.date(2001, 4, 15),
+            description="Current",
+        )
+        response = self.forced_auth_req(
+            "get",
+            self._get_url(requirement),
+            user=self.unicef_staff,
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data["id"], requirement.pk)
+        self.assertEqual(response.data["intervention"], self.intervention.pk)
+        self.assertEqual(response.data["due_date"], str(requirement.due_date))
+        self.assertEqual(response.data["description"], "Current")
+
+    def test_patch(self):
+        requirement = SpecialReportingRequirementFactory(
+            intervention=self.intervention,
+            due_date=datetime.date(2001, 4, 15),
+            description="Old",
+        )
+        response = self.forced_auth_req(
+            "patch",
+            self._get_url(requirement),
+            user=self.unicef_staff,
+            data={
+                "due_date": datetime.date(2001, 4, 15),
+                "description": "New"
+            }
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data["description"], "New")
+        requirement_update = SpecialReportingRequirement.objects.get(
+            pk=requirement.pk
+        )
+        self.assertEqual(requirement_update.description, "New")
+
+    def test_delete_invalid_old(self):
+        """Cannot delete special reporting requirements in the past"""
+        requirement = SpecialReportingRequirementFactory(
+            intervention=self.intervention,
+            due_date=datetime.date(2001, 4, 15),
+            description="Old",
+        )
+        response = self.forced_auth_req(
+            "delete",
+            self._get_url(requirement),
+            user=self.unicef_staff,
+        )
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertEqual(
+            response.data,
+            ["Cannot delete special reporting requirements in the past."]
+        )
+        self.assertTrue(SpecialReportingRequirement.objects.filter(
+            pk=requirement.pk
+        ).exists())
+
+    def test_delete(self):
+        date = datetime.date.today() + datetime.timedelta(days=10)
+        requirement = SpecialReportingRequirementFactory(
+            intervention=self.intervention,
+            due_date=date,
+            description="Old",
+        )
+        response = self.forced_auth_req(
+            "delete",
+            self._get_url(requirement),
+            user=self.unicef_staff,
+        )
+        self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
+        self.assertFalse(SpecialReportingRequirement.objects.filter(
+            pk=requirement.pk
+        ).exists())

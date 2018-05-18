@@ -4,9 +4,10 @@ from datetime import datetime
 from decimal import Decimal
 
 from etools.applications.partners.models import PartnerOrganization, PlannedEngagement
+from etools.applications.partners.tasks import notify_partner_hidden
 from etools.applications.vision.utils import comp_decimals
-from etools.applications.vision.vision_data_synchronizer import (FileDataSynchronizer, VISION_NO_DATA_MESSAGE,
-                                                                 VisionDataSynchronizer,)
+from etools.applications.vision.vision_data_synchronizer import (
+    FileDataSynchronizer, VISION_NO_DATA_MESSAGE, VisionDataSynchronizer,)
 
 logger = logging.getLogger(__name__)
 
@@ -101,6 +102,7 @@ class PartnerSynchronizer(VisionDataSynchronizer):
             'postal_code',
             'rating',
             'type_of_assessment',
+            'blocked',
         ]
         for field in fields:
             mapped_key = self.MAPPING[field]
@@ -127,9 +129,10 @@ class PartnerSynchronizer(VisionDataSynchronizer):
 
     def _partner_save(self, partner, full_sync=True):
         processed = 0
+        saving = False
+        notify_block = False
 
         try:
-            saving = False
             partner_org, new = PartnerOrganization.objects.get_or_create(vendor_number=partner['VENDOR_CODE'])
 
             if not self.get_partner_type(partner):
@@ -161,7 +164,12 @@ class PartnerSynchronizer(VisionDataSynchronizer):
                     partner['DATE_OF_ASSESSMENT'], '%d-%b-%y') if 'DATE_OF_ASSESSMENT' in partner else None
                 partner_org.partner_type = self.get_partner_type(partner)
                 partner_org.deleted_flag = True if 'MARKED_FOR_DELETION' in partner else False
-                partner_org.blocked = True if 'POSTING_BLOCK' in partner else False
+                posting_block = True if 'POSTING_BLOCK' in partner else False
+
+                if posting_block and not partner_org.blocked:  # i'm blocking the partner now
+                    notify_block = True
+                partner_org.blocked = posting_block
+
                 if not partner_org.hidden:
                     partner_org.hidden = partner_org.deleted_flag or partner_org.blocked
                 partner_org.vision_synced = True
@@ -200,6 +208,9 @@ class PartnerSynchronizer(VisionDataSynchronizer):
                 ):
                     partner_org.basis_for_risk_rating = ''
                 partner_org.save()
+
+                if notify_block:
+                    notify_partner_hidden.delay(partner_org.pk)
 
             if new:
                 PlannedEngagement.objects.get_or_create(partner=partner_org)
