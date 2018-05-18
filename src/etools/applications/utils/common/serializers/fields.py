@@ -150,3 +150,28 @@ class CommaSeparatedExportField(serializers.Field):
             value = [get_attribute_smart(item, self.export_attr) for item in value]
 
         return ', '.join([str(item) for item in value if item])
+
+
+class DynamicChoicesField(serializers.ChoiceField):
+    def __init__(self, *args, **kwargs):
+        self._current_choices = {}
+        super(DynamicChoicesField, self).__init__(*args, **kwargs)
+
+    @property
+    def choices(self):
+        return self._current_choices
+
+    @choices.setter
+    def choices(self, value):
+        self._current_choices = value
+
+    @property
+    def choice_strings_to_values(self):
+        return {
+            str(key): key for key in self.choices.keys()
+        }
+
+    @choice_strings_to_values.setter
+    def choice_strings_to_values(self, value):
+        # no need to do here anything
+        return
