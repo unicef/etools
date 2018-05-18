@@ -7,8 +7,8 @@ from rest_framework import serializers
 from etools.applications.locations.models import Location
 from etools.applications.partners.models import (Intervention, InterventionAmendment, InterventionReportingPeriod,
                                                  PartnerOrganization, PartnerStaffMember,)
-from etools.applications.reports.models import (AppliedIndicator, Disaggregation,
-                                                DisaggregationValue, LowerResult, Result, ReportingRequirement)
+from etools.applications.reports.models import (AppliedIndicator, Disaggregation, DisaggregationValue,
+                                                LowerResult, ReportingRequirement, Result,)
 from etools.applications.reports.serializers.v1 import SectorSerializer
 
 

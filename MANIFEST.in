@@ -3,6 +3,9 @@ include MANIFEST.in
 include CONTRIBUTING.md
 include LICENSE
 include *.py
+include pytest.ini
+exclude __pycache__
+global-exclude __pycache__ *
 
 recursive-include docs *
 recursive-include src/etools *

@@ -7,14 +7,8 @@ from django.utils.translation import ugettext as _
 
 from rest_framework import status
 from rest_framework.exceptions import ValidationError
-from rest_framework.generics import (
-    DestroyAPIView,
-    ListAPIView,
-    ListCreateAPIView,
-    RetrieveAPIView,
-    RetrieveUpdateAPIView,
-    RetrieveUpdateDestroyAPIView,
-)
+from rest_framework.generics import (DestroyAPIView, ListAPIView, ListCreateAPIView, RetrieveAPIView,
+                                     RetrieveUpdateAPIView, RetrieveUpdateDestroyAPIView,)
 from rest_framework.permissions import IsAdminUser
 from rest_framework.response import Response
 from rest_framework_csv.renderers import CSVRenderer, JSONRenderer
@@ -25,15 +19,8 @@ from etools.applications.partners.filters import PartnerScopeFilter
 from etools.applications.partners.models import Intervention
 from etools.applications.partners.permissions import PartnershipManagerPermission, PartnershipManagerRepPermission
 from etools.applications.reports.exports import AppliedIndicatorLocationCSVRenderer
-from etools.applications.reports.models import (
-    AppliedIndicator,
-    CountryProgramme,
-    Disaggregation,
-    Indicator,
-    LowerResult,
-    Result,
-    SpecialReportingRequirement,
-)
+from etools.applications.reports.models import (AppliedIndicator, CountryProgramme, Disaggregation,
+                                                Indicator, LowerResult, Result, SpecialReportingRequirement,)
 from etools.applications.reports.permissions import PMEPermission
 from etools.applications.reports.serializers.exports import (AppliedIndicatorExportFlatSerializer,
                                                              AppliedIndicatorExportSerializer,
@@ -41,14 +28,9 @@ from etools.applications.reports.serializers.exports import (AppliedIndicatorExp
                                                              LowerResultExportFlatSerializer,
                                                              LowerResultExportSerializer,)
 from etools.applications.reports.serializers.v1 import IndicatorSerializer
-from etools.applications.reports.serializers.v2 import (
-    AppliedIndicatorSerializer,
-    DisaggregationSerializer,
-    LowerResultSerializer,
-    MinimalOutputListSerializer,
-    OutputListSerializer,
-    SpecialReportingRequirementSerializer,
-)
+from etools.applications.reports.serializers.v2 import (AppliedIndicatorSerializer, DisaggregationSerializer,
+                                                        LowerResultSerializer, MinimalOutputListSerializer,
+                                                        OutputListSerializer, SpecialReportingRequirementSerializer,)
 
 
 class OutputListAPIView(ListAPIView):

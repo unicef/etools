@@ -1,19 +1,13 @@
 from django.conf.urls import url
 
 from etools.applications.reports.views.v1 import CountryProgrammeListView, CountryProgrammeRetrieveView
-from etools.applications.reports.views.v2 import (
-    AppliedIndicatorListAPIView,
-    DisaggregationListCreateView,
-    DisaggregationRetrieveUpdateView,
-    ExportAppliedIndicatorLocationListView,
-    LowerResultsDeleteView,
-    LowerResultsListAPIView,
-    OutputDetailAPIView,
-    OutputListAPIView,
-    ResultIndicatorListAPIView,
-    SpecialReportingRequirementListCreateView,
-    SpecialReportingRequirementRetrieveUpdateDestroyView,
-)
+from etools.applications.reports.views.v2 import (AppliedIndicatorListAPIView, DisaggregationListCreateView,
+                                                  DisaggregationRetrieveUpdateView,
+                                                  ExportAppliedIndicatorLocationListView, LowerResultsDeleteView,
+                                                  LowerResultsListAPIView, OutputDetailAPIView, OutputListAPIView,
+                                                  ResultIndicatorListAPIView,
+                                                  SpecialReportingRequirementListCreateView,
+                                                  SpecialReportingRequirementRetrieveUpdateDestroyView,)
 
 app_name = 'reports'
 urlpatterns = (

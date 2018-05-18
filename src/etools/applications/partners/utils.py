@@ -3,7 +3,7 @@ import logging
 
 from django.contrib.contenttypes.models import ContentType
 from django.db.models import Q
-from django.utils.timezone import now, make_aware
+from django.utils.timezone import make_aware, now
 
 from etools.applications.attachments.models import Attachment, FileType
 from etools.applications.partners.models import (Agreement, AgreementAmendment, Assessment, Intervention,

@@ -17,7 +17,6 @@ from etools.applications.publics.models import (BusinessArea, Country, Currency,
                                                 ExchangeRate, Fund, Grant, TravelAgent, TravelExpenseType, WBS,)
 from etools.config.celery import app
 
-
 logger = get_task_logger(__name__)
 
 

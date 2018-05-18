@@ -15,6 +15,7 @@ class Migration(migrations.Migration):
         migrations.AlterField(
             model_name='partnerorganization',
             name='rating',
-            field=models.CharField(blank=True, choices=[('High', 'High'), ('Significant', 'Significant'), ('Medium', 'Medium'), ('Low', 'Low'), ('Non Required', 'Non Required')], max_length=50, null=True, verbose_name='Risk Rating'),
+            field=models.CharField(blank=True, choices=[('High', 'High'), ('Significant', 'Significant'), ('Medium', 'Medium'), (
+                'Low', 'Low'), ('Non Required', 'Non Required')], max_length=50, null=True, verbose_name='Risk Rating'),
         ),
     ]

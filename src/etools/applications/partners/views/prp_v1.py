@@ -9,8 +9,8 @@ from rest_framework.pagination import LimitOffsetPagination
 from etools.applications.partners.filters import PartnerScopeFilter
 from etools.applications.partners.models import Intervention, PartnerOrganization
 from etools.applications.partners.permissions import ListCreateAPIMixedPermission
-from etools.applications.partners.serializers.prp_v1 import PRPInterventionListSerializer, \
-    PRPPartnerOrganizationListSerializer
+from etools.applications.partners.serializers.prp_v1 import (PRPInterventionListSerializer,
+                                                             PRPPartnerOrganizationListSerializer,)
 from etools.applications.partners.views.helpers import set_tenant_or_fail
 
 

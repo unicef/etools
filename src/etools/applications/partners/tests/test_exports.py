@@ -9,15 +9,10 @@ from tablib.core import Dataset
 
 from etools.applications.EquiTrack.tests.cases import BaseTenantTestCase
 from etools.applications.partners.models import PartnerOrganization, PartnerType
-from etools.applications.partners.tests.factories import (
-    AgreementFactory,
-    CountryProgrammeFactory,
-    InterventionBudgetFactory,
-    InterventionFactory,
-    PartnerFactory,
-    PartnerPlannedVisitsFactory,
-    PartnerStaffFactory,
-)
+from etools.applications.partners.tests.factories import (AgreementFactory, CountryProgrammeFactory,
+                                                          InterventionBudgetFactory, InterventionFactory,
+                                                          PartnerFactory, PartnerPlannedVisitsFactory,
+                                                          PartnerStaffFactory,)
 from etools.applications.reports.models import ResultType
 from etools.applications.reports.tests.factories import ResultFactory
 from etools.applications.users.tests.factories import UserFactory

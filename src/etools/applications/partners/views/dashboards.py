@@ -2,8 +2,8 @@ import functools
 import operator
 from datetime import datetime
 
-from django.db.models import (
-    Case, CharField, Count, DateTimeField, DurationField, ExpressionWrapper, F, Max, Min, Sum, When,)
+from django.db.models import (Case, CharField, Count, DateTimeField, DurationField,
+                              ExpressionWrapper, F, Max, Min, Sum, When,)
 
 from rest_framework.generics import ListCreateAPIView
 from rest_framework.permissions import IsAdminUser
@@ -12,7 +12,7 @@ from rest_framework_csv import renderers as r
 
 from etools.applications.EquiTrack.mixins import QueryStringFilterMixin
 from etools.applications.partners.exports_v2 import PartnershipDashCSVRenderer
-from etools.applications.partners.models import Intervention, FileType
+from etools.applications.partners.models import FileType, Intervention
 from etools.applications.partners.serializers.dashboards import InterventionDashSerializer
 from etools.applications.t2f.models import Travel, TravelType
 
@@ -39,7 +39,8 @@ class InterventionPartnershipDashView(QueryStringFilterMixin, ListCreateAPIView)
             Count("frs__currency", distinct=True),
             max_fr_currency=Max("frs__currency", output_field=CharField(), distinct=True),
             multi_curr_flag=Count(Case(When(frs__multi_curr_flag=True, then=1))),
-            has_final_partnership_review=Count(Case(When(attachments__type__name=FileType.FINAL_PARTNERSHIP_REVIEW, then=1))),
+            has_final_partnership_review=Count(
+                Case(When(attachments__type__name=FileType.FINAL_PARTNERSHIP_REVIEW, then=1))),
         )
         query_params = self.request.query_params
         if query_params:

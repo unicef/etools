@@ -22,35 +22,28 @@ from etools.applications.partners.exports_v2 import (PartnerOrganizationCSVRende
                                                      PartnerOrganizationHactCsvRenderer,
                                                      PartnerOrganizationSimpleHactCsvRenderer,)
 from etools.applications.partners.filters import PartnerScopeFilter
-from etools.applications.partners.models import (
-    Assessment,
-    PartnerOrganization,
-    PartnerPlannedVisits,
-    PartnerStaffMember,
-    PlannedEngagement,
-)
-from etools.applications.partners.permissions import (
-    ListCreateAPIMixedPermission,
-    PartnershipManagerPermission,
-    PartnershipManagerRepPermission,
-    PartnershipSeniorManagerPermission,
-)
-from etools.applications.partners.serializers.exports.partner_organization import (
-    AssessmentExportFlatSerializer, AssessmentExportSerializer, PartnerOrganizationExportFlatSerializer,
-    PartnerOrganizationExportSerializer, PartnerStaffMemberExportFlatSerializer, PartnerStaffMemberExportSerializer,)
-from etools.applications.partners.serializers.partner_organization_v2 import (
-    AssessmentDetailSerializer,
-    MinimalPartnerOrganizationListSerializer,
-    PartnerOrganizationCreateUpdateSerializer,
-    PartnerOrganizationDetailSerializer,
-    PartnerOrganizationHactSerializer,
-    PartnerOrganizationListSerializer,
-    PartnerPlannedVisitsSerializer,
-    PartnerStaffMemberCreateUpdateSerializer,
-    PartnerStaffMemberDetailSerializer,
-    PlannedEngagementNestedSerializer,
-    PlannedEngagementSerializer,
-)
+from etools.applications.partners.models import (Assessment, PartnerOrganization, PartnerPlannedVisits,
+                                                 PartnerStaffMember, PlannedEngagement,)
+from etools.applications.partners.permissions import (ListCreateAPIMixedPermission, PartnershipManagerPermission,
+                                                      PartnershipManagerRepPermission,
+                                                      PartnershipSeniorManagerPermission,)
+from etools.applications.partners.serializers.exports.partner_organization import (AssessmentExportFlatSerializer,
+                                                                                   AssessmentExportSerializer,
+                                                                                   PartnerOrganizationExportFlatSerializer,
+                                                                                   PartnerOrganizationExportSerializer,
+                                                                                   PartnerStaffMemberExportFlatSerializer,
+                                                                                   PartnerStaffMemberExportSerializer,)
+from etools.applications.partners.serializers.partner_organization_v2 import (AssessmentDetailSerializer,
+                                                                              MinimalPartnerOrganizationListSerializer,
+                                                                              PartnerOrganizationCreateUpdateSerializer,
+                                                                              PartnerOrganizationDetailSerializer,
+                                                                              PartnerOrganizationHactSerializer,
+                                                                              PartnerOrganizationListSerializer,
+                                                                              PartnerPlannedVisitsSerializer,
+                                                                              PartnerStaffMemberCreateUpdateSerializer,
+                                                                              PartnerStaffMemberDetailSerializer,
+                                                                              PlannedEngagementNestedSerializer,
+                                                                              PlannedEngagementSerializer,)
 from etools.applications.partners.views.helpers import set_tenant_or_fail
 from etools.applications.t2f.models import TravelActivity
 from etools.applications.vision.adapters.partner import PartnerSynchronizer

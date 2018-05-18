@@ -8,12 +8,8 @@ from tablib.core import Dataset
 
 from etools.applications.EquiTrack.tests.cases import BaseTenantTestCase
 from etools.applications.partners.models import PartnerType
-from etools.applications.partners.tests.factories import (
-    AssessmentFactory,
-    PartnerFactory,
-    PartnerPlannedVisitsFactory,
-    PartnerStaffFactory,
-)
+from etools.applications.partners.tests.factories import (AssessmentFactory, PartnerFactory,
+                                                          PartnerPlannedVisitsFactory, PartnerStaffFactory,)
 from etools.applications.users.tests.factories import UserFactory
 
 
