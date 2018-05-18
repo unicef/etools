@@ -20,7 +20,9 @@ class UsersExportField(serializers.Field):
 
 class TPMActivityExportSerializer(serializers.Serializer):
     ref = serializers.CharField(source='tpm_visit.reference_number')
+    pd_ssfa = serializers.CharField(source='intervention')
     visit = serializers.CharField(source='tpm_visit')
+    visit_status = serializers.CharField(source='tpm_visit.get_status_display')
     activity = serializers.SerializerMethodField()
     section = serializers.CharField()
     cp_output = serializers.CharField()
@@ -39,7 +41,9 @@ class TPMActivityExportSerializer(serializers.Serializer):
 
 class TPMLocationExportSerializer(serializers.Serializer):
     ref = serializers.CharField(source='activity.tpmactivity.tpm_visit.reference_number')
+    pd_ssfa = serializers.CharField(source='activity.tpmactivity.intervention')
     visit = serializers.CharField(source='activity.tpmactivity.tpm_visit')
+    visit_status = serializers.CharField(source='activity.tpmactivity.tpm_visit.get_status_display')
     activity = serializers.SerializerMethodField()
     section = serializers.CharField(source='activity.tpmactivity.section')
     cp_output = serializers.CharField(source='activity.tpmactivity.cp_output')
@@ -57,6 +61,7 @@ class TPMLocationExportSerializer(serializers.Serializer):
 
 
 class TPMActionPointExportSerializer(serializers.Serializer):
+    pd_ssfa = CommaSeparatedExportField(source='tpm_visit.tpm_activities.intervention')
     person_responsible = serializers.CharField(source='person_responsible.get_full_name')
     author = serializers.CharField(source='author.get_full_name')
     section = CommaSeparatedExportField(source='tpm_visit.tpm_activities', export_attr='section')
@@ -77,6 +82,7 @@ class TPMActionPointFullExportSerializer(TPMActionPointExportSerializer):
 
 class TPMVisitExportSerializer(serializers.Serializer):
     ref = serializers.CharField(source='reference_number')
+    pd_ssfa = CommaSeparatedExportField(source='tpm_activities.intervention')
     visit = serializers.CharField(source='*')
     status = serializers.CharField(source='get_status_display')
     activities = CommaSeparatedExportField(source='tpm_activities')

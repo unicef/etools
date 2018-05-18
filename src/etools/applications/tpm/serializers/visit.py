@@ -100,6 +100,7 @@ class TPMActivitySerializer(PermissionsBasedSerializerMixin, WritableNestedSeria
 
     offices = SeparatedReadWriteField(
         read_field=OfficeSerializer(read_only=True, many=True, label=_('Office(s) of UNICEF Focal Point(s)')),
+        required=True,
     )
 
     attachments = TPMAttachmentsSerializer(many=True, required=False, label=_('Related Documents'))

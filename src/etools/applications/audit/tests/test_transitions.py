@@ -1,8 +1,6 @@
 
 import random
 
-from django.utils import six
-
 from factory import fuzzy
 from rest_framework import status
 
@@ -26,7 +24,7 @@ class EngagementCheckTransitionsTestCaseMixin(object):
 
         self.assertEqual(response.status_code, expected_response)
         if errors:
-            six.assertCountEqual(self, response.data.keys(), errors or [])
+            self.assertListEqual(list(response.data.keys()), errors or [])
 
     def _test_submit(self, user, expected_response, errors=None, data=None):
         return self._test_transition(user, 'submit', expected_response, errors=errors, data=data)
@@ -143,10 +141,12 @@ class TestAuditTransitionsTestCase(
         errors_fields = AuditSubmitReportRequiredFieldsCheck.fields
         self._test_submit(self.auditor, status.HTTP_400_BAD_REQUEST, errors=errors_fields)
 
-    def test_filled_questionnaire(self):
+    def test_unfilled_questionnaire(self):
         self._fill_date_fields()
         self._fill_audit_specified_fields()
-        self._test_submit(self.auditor, status.HTTP_400_BAD_REQUEST, errors=['key_internal_weakness'])
+        # no key internal weaknesses added
+        self._add_attachment('audit_report', name='report')
+        self._test_submit(self.auditor, status.HTTP_200_OK)
 
     def test_attachments_required(self):
         self._fill_date_fields()
@@ -240,7 +240,7 @@ class EngagementCheckTransitionsMetadataTestCaseMixin(object):
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         action_codes = [action['code'] for action in response.data['actions']['allowed_FSM_transitions']]
-        six.assertCountEqual(self, action_codes, actions)
+        self.assertListEqual(action_codes, actions)
 
 
 class TestSCTransitionsMetadataTestCase(

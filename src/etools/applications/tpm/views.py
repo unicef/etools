@@ -16,6 +16,7 @@ from etools.applications.permissions2.drf_permissions import NestedPermission
 from etools.applications.permissions2.views import PermittedFSMActionMixin, PermittedSerializerMixin
 from etools.applications.reports.models import Result, Sector
 from etools.applications.reports.serializers.v1 import ResultLightSerializer, SectorSerializer
+
 from etools.applications.tpm.conditions import (
     TPMModuleCondition, TPMStaffMemberCondition, TPMVisitTPMFocalPointCondition, TPMVisitUNICEFFocalPointCondition,)
 from etools.applications.tpm.export.renderers import (
@@ -31,6 +32,7 @@ from etools.applications.tpm.serializers.partner import (
     TPMPartnerLightSerializer, TPMPartnerSerializer, TPMPartnerStaffMemberSerializer,)
 from etools.applications.tpm.serializers.visit import (
     TPMActionPointSerializer, TPMVisitDraftSerializer, TPMVisitLightSerializer, TPMVisitSerializer,)
+
 from etools.applications.tpm.tpmpartners.models import TPMPartner, TPMPartnerStaffMember
 from etools.applications.utils.common.pagination import DynamicPageNumberPagination
 from etools.applications.utils.common.views import (
@@ -373,7 +375,7 @@ class TPMVisitViewSet(
         ).order_by('tpm_visit', 'id')
         serializer = TPMActivityExportSerializer(tpm_activities, many=True)
         return Response(serializer.data, headers={
-            'Content-Disposition': 'attachment;filename=tpm_activities_{}.csv'.format(timezone.now().date())
+            'Content-Disposition': 'attachment;filename=tpm_tasks_{}.csv'.format(timezone.now().date())
         })
 
     @list_route(methods=['get'], url_path='locations/export', renderer_classes=(TPMLocationCSVRenderer,))

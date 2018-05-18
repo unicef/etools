@@ -137,6 +137,10 @@ class TPMVisit(SoftDeleteMixin, TimeStampedModel, models.Model):
     def unicef_focal_points_with_emails(self):
         return list(filter(lambda u: u.email and u.is_active, self.unicef_focal_points))
 
+    @property
+    def unicef_focal_points_and_pme(self):
+        return set(itertools.chain(self.unicef_focal_points_with_emails, PME.as_group().user_set.exclude(email='')))
+
     def __str__(self):
         return 'Visit ({} to {} at {} - {})'.format(
             self.tpm_partner, ', '.join(filter(
@@ -192,19 +196,15 @@ class TPMVisit(SoftDeleteMixin, TimeStampedModel, models.Model):
     def _get_unicef_focal_points_as_email_recipients(self):
         return list(map(lambda u: u.email, self.unicef_focal_points_with_emails))
 
+    def _get_unicef_focal_points_and_pme_as_email_recipients(self):
+        return list(map(lambda u: u.email, self.unicef_focal_points_and_pme))
+
     def _get_tpm_focal_points_as_email_recipients(self):
         return list(
             self.tpm_partner_focal_points.filter(
                 user__email__isnull=False,
                 user__is_active=True
             ).values_list('user__email', flat=True)
-        )
-
-    def _get_ip_focal_points_as_email_recipients(self):
-        return list(
-            self.tpm_activities.filter(
-                intervention__partner_focal_points__email__isnull=False
-            ).values_list('intervention__partner_focal_points__email', flat=True)
         )
 
     @transition(
@@ -224,7 +224,7 @@ class TPMVisit(SoftDeleteMixin, TimeStampedModel, models.Model):
         if self.tpm_partner.email:
             self._send_email(
                 self.tpm_partner.email, 'tpm/visit/assign',
-                cc=self._get_unicef_focal_points_as_email_recipients()
+                cc=self._get_unicef_focal_points_and_pme_as_email_recipients()
             )
 
         for staff_member in self.tpm_partner_focal_points.filter(user__email__isnull=False, user__is_active=True):
@@ -255,7 +255,7 @@ class TPMVisit(SoftDeleteMixin, TimeStampedModel, models.Model):
         self.date_of_tpm_rejected = timezone.now()
         self.reject_comment = reject_comment
 
-        for recipient in self.unicef_focal_points_with_emails:
+        for recipient in self.unicef_focal_points_and_pme:
             self._send_email(
                 recipient.email, 'tpm/visit/reject',
                 cc=self._get_tpm_focal_points_as_email_recipients(),
@@ -266,13 +266,6 @@ class TPMVisit(SoftDeleteMixin, TimeStampedModel, models.Model):
                 permission=has_action_permission(action='accept'))
     def accept(self):
         self.date_of_tpm_accepted = timezone.now()
-
-        for recipient in self.unicef_focal_points_with_emails:
-            self._send_email(
-                recipient.email, 'tpm/visit/accept',
-                cc=self._get_tpm_focal_points_as_email_recipients(),
-                context={'recipient': recipient.get_full_name()}
-            )
 
     @transition(
         status, source=[STATUSES.tpm_accepted, STATUSES.tpm_report_rejected], target=STATUSES.tpm_reported,
@@ -287,7 +280,7 @@ class TPMVisit(SoftDeleteMixin, TimeStampedModel, models.Model):
     def send_report(self):
         self.date_of_tpm_reported = timezone.now()
 
-        for recipient in self.unicef_focal_points_with_emails:
+        for recipient in self.unicef_focal_points_and_pme:
             self._send_email(
                 recipient.email, 'tpm/visit/report',
                 cc=self._get_tpm_focal_points_as_email_recipients(),

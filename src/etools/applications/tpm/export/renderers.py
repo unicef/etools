@@ -6,11 +6,13 @@ from rest_framework_csv.renderers import CSVRenderer
 
 
 class TPMActivityCSVRenderer(CSVRenderer):
-    header = ['ref', 'visit', 'activity', 'section', 'cp_output', 'partner', 'intervention',
+    header = ['ref', 'pd_ssfa', 'visit', 'visit_status', 'activity', 'section', 'cp_output', 'partner', 'intervention',
               'locations', 'date', 'unicef_focal_points', 'offices', 'tpm_focal_points', 'link']
     labels = {
         'ref': _('Visit Ref. #'),
+        'pd_ssfa': _('PD/SSFA'),
         'visit': _('Visit'),
+        'visit_status': _('Status of Visit'),
         'activity': _('Task'),
         'section': _('Section'),
         'cp_output': _('PD/SSFA output'),
@@ -26,11 +28,13 @@ class TPMActivityCSVRenderer(CSVRenderer):
 
 
 class TPMLocationCSVRenderer(CSVRenderer):
-    header = ['ref', 'visit', 'activity', 'section', 'cp_output', 'partner', 'intervention',
+    header = ['ref', 'pd_ssfa', 'visit', 'visit_status', 'activity', 'section', 'cp_output', 'partner', 'intervention',
               'location', 'date', 'unicef_focal_points', 'offices', 'tpm_focal_points', 'link']
     labels = {
         'ref': _('Visit Ref. #'),
+        'pd_ssfa': _('PD/SSFA'),
         'visit': _('Visit'),
+        'visit_status': _('Status of Visit'),
         'activity': _('Task'),
         'section': _('Section'),
         'cp_output': _('PD/SSFA output'),
@@ -68,16 +72,17 @@ class TPMActionPointFullCSVRenderer(TPMActionPointCSVRenderer):
 
 class TPMVisitCSVRenderer(CSVRenderer):
     header = [
-        'ref', 'visit', 'status', 'activities',
+        'ref', 'pd_ssfa', 'visit', 'status', 'activities',
         'sections', 'partners', 'interventions', 'locations',
         'start_date', 'end_date', 'unicef_focal_points',
         'tpm_partner_focal_points', 'report_link', 'attachments', 'link',
     ]
     labels = {
         'ref': _('Visit Ref. #'),
+        'pd_ssfa': _('PD/SSFA'),
         'visit': _('Visit'),
-        'status': _('Status'),
-        'activities': _('Activities'),
+        'status': _('Status of Visit'),
+        'activities': _('Tasks'),
         'sections': _('Sections'),
         'partners': _('Partners'),
         'interventions': _('Partnerships'),
