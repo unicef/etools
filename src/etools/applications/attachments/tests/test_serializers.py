@@ -4,6 +4,8 @@ import os
 
 from django.utils.translation import ugettext as _
 
+from rest_framework.exceptions import ValidationError
+
 from etools.applications.attachments.serializers import Base64AttachmentSerializer
 from etools.applications.attachments.tests.factories import AttachmentFileTypeFactory
 from etools.applications.EquiTrack.tests.cases import BaseTenantTestCase
@@ -21,9 +23,13 @@ class TestAttachmentsSerializer(BaseTenantTestCase):
         invalid_serializer = Base64AttachmentSerializer(data={
             'file_type': self.file_type.pk,
         })
-        self.assertFalse(invalid_serializer.is_valid())
-        self.assertIn('non_field_errors', invalid_serializer.errors)
-        self.assertIn(_('Please provide file or hyperlink.'), invalid_serializer.errors['non_field_errors'])
+
+        self.assertTrue(invalid_serializer.is_valid())
+        # file and hyperlink validation were moved to save in fact
+        with self.assertRaises(ValidationError) as ex:
+            invalid_serializer.save()
+
+        self.assertIn(_('Please provide file or hyperlink.'), ex.exception.detail)
 
     def test_valid(self):
         valid_serializer = Base64AttachmentSerializer(data={
