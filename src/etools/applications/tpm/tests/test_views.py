@@ -255,6 +255,14 @@ class TestTPMVisitViewSet(TestExportMixin, TPMTestCaseMixin, BaseTenantTestCase)
     def test_locations_csv(self):
         self._test_export(self.pme_user, 'tpm:visits-locations/export')
 
+    def test_action_points_csv(self):
+        TPMVisitFactory(status='unicef_approved', action_points__count=3)
+        self._test_export(self.pme_user, 'tpm:visits-action-points/export')
+
+    def test_visit_action_points_csv(self):
+        visit = TPMVisitFactory(status='unicef_approved', action_points__count=3)
+        self._test_export(self.pme_user, 'tpm:visits-action-points/export', args=(visit.id,))
+
     def test_visit_letter(self):
         visit = TPMVisitFactory(status='tpm_accepted')
         self._test_export(self.pme_user, 'tpm:visits-visit-letter', args=(visit.id,))
