@@ -82,9 +82,9 @@ class ActionPoint(TimeStampedModel):
     tpm_activity = models.ForeignKey('tpm.TPMActivity', verbose_name=_('TPM Activity'), blank=True, null=True,
                                      related_name='action_points', on_delete=models.CASCADE,
                                      )
-    travel_activity = models.ForeignKey('t2f.TravelActivity', verbose_name=_('Travel Activity'), blank=True, null=True,
-                                        on_delete=models.CASCADE,
-                                        )
+    travel = models.ForeignKey('t2f.Travel', verbose_name=_('Travel'), blank=True, null=True,
+                               on_delete=models.CASCADE,
+                               )
 
     date_of_completion = MonitorField(verbose_name=_('Date Action Point Completed'), null=True, blank=True,
                                       monitor='status', when=[STATUSES.completed])
@@ -103,7 +103,7 @@ class ActionPoint(TimeStampedModel):
 
     @property
     def related_object(self):
-        return self.engagement or self.tpm_activity or self.travel_activity
+        return self.engagement or self.tpm_activity or self.travel
 
     @property
     def related_module(self):
@@ -111,7 +111,7 @@ class ActionPoint(TimeStampedModel):
             return self.MODULE_CHOICES.audit
         if self.tpm_activity:
             return self.MODULE_CHOICES.tpm
-        if self.travel_activity:
+        if self.travel:
             return self.MODULE_CHOICES.t2f
         return None
 

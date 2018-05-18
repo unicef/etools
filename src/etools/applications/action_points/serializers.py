@@ -129,7 +129,7 @@ class CommentSerializer(UserContextSerializerMixin, WritableNestedSerializerMixi
 
 
 class ActionPointSerializer(WritableNestedSerializerMixin, ActionPointLightSerializer):
-    comments = CommentSerializer(many=True, label=_('Comments'))
+    comments = CommentSerializer(many=True, label=_('Actions Taken'))
     history = ActivitySerializer(many=True, label=_('History'), read_only=True)
 
     related_object_str = serializers.SerializerMethodField(label=_('Reference'))
