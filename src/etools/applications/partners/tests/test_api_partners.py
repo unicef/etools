@@ -1,18 +1,26 @@
-
 import datetime
 import json
 from unittest import skip
 
-from django.core.urlresolvers import reverse
 from django.test import SimpleTestCase
+from django.urls import reverse
 
 from mock import Mock, patch
 from rest_framework import status
 
 from etools.applications.EquiTrack.tests.cases import BaseTenantTestCase
 from etools.applications.EquiTrack.tests.mixins import URLAssertionMixin
-from etools.applications.partners.models import PartnerOrganization, PartnerType
-from etools.applications.partners.tests.factories import AgreementFactory, InterventionBudgetFactory, PartnerFactory
+from etools.applications.partners.models import (
+    PartnerOrganization,
+    PartnerPlannedVisits,
+    PartnerType,
+)
+from etools.applications.partners.tests.factories import (
+    AgreementFactory,
+    InterventionFactory,
+    PartnerFactory,
+    PartnerPlannedVisitsFactory,
+)
 from etools.applications.partners.views.partner_organization_v2 import PartnerOrganizationAddView
 from etools.applications.t2f.tests.factories import TravelActivityFactory
 from etools.applications.users.tests.factories import GroupFactory, UserFactory
@@ -33,21 +41,26 @@ class URLsTestCase(URLAssertionMixin, SimpleTestCase):
 
 
 class TestPartnerOrganizationDetailAPIView(BaseTenantTestCase):
-    def setUp(self):
-        super(TestPartnerOrganizationDetailAPIView, self).setUp()
-        self.unicef_staff = UserFactory(is_staff=True)
-        self.interventionbudget = InterventionBudgetFactory()
+    @classmethod
+    def setUpTestData(cls):
+        cls.unicef_staff = UserFactory(is_staff=True)
+        cls.partner = PartnerFactory(
+            partner_type=PartnerType.CIVIL_SOCIETY_ORGANIZATION,
+            cso_type="International",
+            hidden=False,
+            vendor_number="DDD",
+            short_name="Short name",
+        )
+        agreement = AgreementFactory(
+            partner=cls.partner,
+            signed_by_unicef_date=datetime.date.today())
 
-        self.intervention = self.interventionbudget.intervention
-        self.intervention.save()
+        cls.intervention = InterventionFactory(agreement=agreement)
 
-        self.agreement = self.interventionbudget.intervention.agreement
-        self.agreement.save()
-
-        self.partner = self.interventionbudget.intervention.agreement.partner
-        self.partner.save()
-
-        self.url = reverse("partners_api:partner-detail", kwargs={'pk': self.partner.id})
+        cls.url = reverse(
+            "partners_api:partner-detail",
+            kwargs={'pk': cls.partner.pk}
+        )
 
     @skip("This will be done in a separate PR")
     def test_get_partner_details(self):
@@ -59,6 +72,197 @@ class TestPartnerOrganizationDetailAPIView(BaseTenantTestCase):
 
         response_json = json.loads(response.rendered_content)
         self.assertEqual(self.intervention.id, response_json.get("interventions")[0].id)
+
+    def test_add_planned_visits(self):
+        response = self.forced_auth_req(
+            'get',
+            reverse('partners_api:partner-detail', args=[self.partner.pk]),
+            user=self.unicef_staff,
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(response.data["planned_visits"]), 0)
+
+        planned_visits = [{
+            "year": datetime.date.today().year,
+            "programmatic_q1": 1,
+            "programmatic_q2": 2,
+            "programmatic_q3": 3,
+            "programmatic_q4": 4,
+        }]
+        data = {
+            "name": self.partner.name + ' Updated',
+            "partner_type": self.partner.partner_type,
+            "vendor_number": self.partner.vendor_number,
+            "planned_visits": planned_visits,
+        }
+        response = self.forced_auth_req(
+            'patch',
+            reverse('partners_api:partner-detail', args=[self.partner.pk]),
+            user=self.unicef_staff,
+            data=data,
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(response.data["planned_visits"]), 1)
+        self.assertEqual(
+            response.data["planned_visits"][0]["year"],
+            datetime.date.today().year
+        )
+
+    def test_update_planned_visits(self):
+        planned_visit = PartnerPlannedVisitsFactory(
+            partner=self.partner,
+            year=datetime.date.today().year,
+            programmatic_q1=1,
+            programmatic_q2=2,
+            programmatic_q3=3,
+            programmatic_q4=4,
+        )
+        response = self.forced_auth_req(
+            'get',
+            reverse('partners_api:partner-detail', args=[self.partner.pk]),
+            user=self.unicef_staff,
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(response.data["planned_visits"]), 1)
+        data = response.data["planned_visits"][0]
+        self.assertEqual(data["programmatic_q1"], 1)
+        self.assertEqual(data["programmatic_q2"], 2)
+        self.assertEqual(data["programmatic_q3"], 3)
+        self.assertEqual(data["programmatic_q4"], 4)
+
+        planned_visits = [{
+            "id": planned_visit.pk,
+            "year": planned_visit.year,
+            "programmatic_q1": 4,
+            "programmatic_q2": 3,
+            "programmatic_q3": 2,
+            "programmatic_q4": 1,
+        }]
+        data = {
+            "name": self.partner.name + ' Updated',
+            "partner_type": self.partner.partner_type,
+            "vendor_number": self.partner.vendor_number,
+            "planned_visits": planned_visits,
+        }
+        response = self.forced_auth_req(
+            'patch',
+            reverse('partners_api:partner-detail', args=[self.partner.pk]),
+            user=self.unicef_staff,
+            data=data,
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(response.data["planned_visits"]), 1)
+        data = response.data["planned_visits"][0]
+        self.assertEqual(data["programmatic_q1"], 4)
+        self.assertEqual(data["programmatic_q2"], 3)
+        self.assertEqual(data["programmatic_q3"], 2)
+        self.assertEqual(data["programmatic_q4"], 1)
+
+    def test_update_planned_visits_no_id(self):
+        """Ensure update happens if no id value provided"""
+        planned_visit = PartnerPlannedVisitsFactory(
+            partner=self.partner,
+            year=datetime.date.today().year,
+            programmatic_q1=1,
+            programmatic_q2=2,
+            programmatic_q3=3,
+            programmatic_q4=4,
+        )
+        response = self.forced_auth_req(
+            'get',
+            reverse('partners_api:partner-detail', args=[self.partner.pk]),
+            user=self.unicef_staff,
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(response.data["planned_visits"]), 1)
+        data = response.data["planned_visits"][0]
+        self.assertEqual(data["programmatic_q1"], 1)
+        self.assertEqual(data["programmatic_q2"], 2)
+        self.assertEqual(data["programmatic_q3"], 3)
+        self.assertEqual(data["programmatic_q4"], 4)
+
+        planned_visits = [{
+            "year": planned_visit.year,
+            "programmatic_q1": 4,
+            "programmatic_q2": 3,
+            "programmatic_q3": 2,
+            "programmatic_q4": 1,
+        }]
+        data = {
+            "name": self.partner.name + ' Updated',
+            "partner_type": self.partner.partner_type,
+            "vendor_number": self.partner.vendor_number,
+            "planned_visits": planned_visits,
+        }
+        response = self.forced_auth_req(
+            'patch',
+            reverse('partners_api:partner-detail', args=[self.partner.pk]),
+            user=self.unicef_staff,
+            data=data,
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(response.data["planned_visits"]), 1)
+        data = response.data["planned_visits"][0]
+        self.assertEqual(data["programmatic_q1"], 4)
+        self.assertEqual(data["programmatic_q2"], 3)
+        self.assertEqual(data["programmatic_q3"], 2)
+        self.assertEqual(data["programmatic_q4"], 1)
+
+    def test_update_planned_visits_no_year(self):
+        """Ensure update happens if no id value provided"""
+        current_year = datetime.date.today().year
+        planned_visit = PartnerPlannedVisitsFactory(
+            partner=self.partner,
+            year=current_year,
+            programmatic_q1=1,
+            programmatic_q2=2,
+            programmatic_q3=3,
+            programmatic_q4=4,
+        )
+        response = self.forced_auth_req(
+            'get',
+            reverse('partners_api:partner-detail', args=[self.partner.pk]),
+            user=self.unicef_staff,
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(response.data["planned_visits"]), 1)
+        data = response.data["planned_visits"][0]
+        self.assertEqual(data["programmatic_q1"], 1)
+        self.assertEqual(data["programmatic_q2"], 2)
+        self.assertEqual(data["programmatic_q3"], 3)
+        self.assertEqual(data["programmatic_q4"], 4)
+
+        planned_visits = [{
+            "programmatic_q1": 4,
+            "programmatic_q2": 3,
+            "programmatic_q3": 2,
+            "programmatic_q4": 1,
+        }]
+        data = {
+            "name": self.partner.name + ' Updated',
+            "partner_type": self.partner.partner_type,
+            "vendor_number": self.partner.vendor_number,
+            "planned_visits": planned_visits,
+        }
+        response = self.forced_auth_req(
+            'patch',
+            reverse('partners_api:partner-detail', args=[self.partner.pk]),
+            user=self.unicef_staff,
+            data=data,
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(response.data["planned_visits"]), 1)
+        data = response.data["planned_visits"][0]
+        self.assertEqual(data["id"], planned_visit.pk)
+        self.assertEqual(data["year"], current_year)
+        self.assertEqual(data["programmatic_q1"], 4)
+        self.assertEqual(data["programmatic_q2"], 3)
+        self.assertEqual(data["programmatic_q3"], 2)
+        self.assertEqual(data["programmatic_q4"], 1)
 
 
 class TestPartnerOrganizationHactAPIView(BaseTenantTestCase):
@@ -296,3 +500,49 @@ class TestPartnerOrganizationDeleteView(BaseTenantTestCase):
         self.assertTrue(
             PartnerOrganization.objects.filter(pk=partner.pk).exists()
         )
+
+
+class TestPartnerPlannedVisitsDeleteView(BaseTenantTestCase):
+    @classmethod
+    def setUpTestData(cls):
+        cls.unicef_staff = UserFactory(is_staff=True)
+        cls.unicef_staff.groups.add(GroupFactory(name='Partnership Manager'))
+        cls.partner = PartnerFactory()
+        cls.planned_visit = PartnerPlannedVisitsFactory(
+            partner=cls.partner,
+        )
+        cls.url = reverse(
+            "partners_api:partner-planned-visits-del",
+            args=[cls.planned_visit.pk]
+        )
+
+    def test_delete(self):
+        self.assertTrue(PartnerPlannedVisits.objects.filter(
+            pk=self.planned_visit.pk
+        ).exists())
+        response = self.forced_auth_req(
+            'delete',
+            self.url,
+            user=self.unicef_staff,
+        )
+        self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
+        self.assertFalse(PartnerPlannedVisits.objects.filter(
+            pk=self.planned_visit.pk
+        ).exists())
+
+    def test_delete_permission(self):
+        user = UserFactory()
+        response = self.forced_auth_req(
+            'delete',
+            self.url,
+            user=user,
+        )
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+
+    def test_delete_not_found(self):
+        response = self.forced_auth_req(
+            'delete',
+            reverse("partners_api:partner-planned-visits-del", args=[404]),
+            user=self.unicef_staff,
+        )
+        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)

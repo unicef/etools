@@ -2,8 +2,9 @@
 from rest_framework.metadata import SimpleMetadata
 
 from etools.applications.attachments.metadata import ModelChoiceFieldMixin
-from etools.applications.utils.common.metadata import (CRUActionsMetadataMixin, FSMTransitionActionMetadataMixin,
-                                                       ReadOnlyFieldWithChoicesMixin, SeparatedReadWriteFieldMetadata,)
+from etools.applications.permissions2.metadata import PermittedFSMTransitionActionMetadataMixin
+from etools.applications.utils.common.metadata import (
+    CRUActionsMetadataMixin, ReadOnlyFieldWithChoicesMixin, SeparatedReadWriteFieldMetadata,)
 from etools.applications.utils.permissions.metadata import PermissionsBasedMetadataMixin
 
 
@@ -18,7 +19,7 @@ class TPMBaseMetadata(
 
 
 class TPMPermissionBasedMetadata(
-    FSMTransitionActionMetadataMixin,
+    PermittedFSMTransitionActionMetadataMixin,
     PermissionsBasedMetadataMixin,
     TPMBaseMetadata
 ):

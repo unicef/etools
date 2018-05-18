@@ -1,4 +1,4 @@
-
+import datetime
 import json
 
 from django.contrib.auth import get_user_model
@@ -10,8 +10,14 @@ from rest_framework import serializers
 
 from etools.applications.attachments.serializers_fields import AttachmentSingleFileField
 from etools.applications.EquiTrack.serializers import SnapshotModelSerializer
-from etools.applications.partners.models import (Assessment, Intervention, PartnerOrganization,
-                                                 PartnerStaffMember, PlannedEngagement,)
+from etools.applications.partners.models import (
+    Assessment,
+    Intervention,
+    PartnerOrganization,
+    PartnerPlannedVisits,
+    PartnerStaffMember,
+    PlannedEngagement,
+)
 from etools.applications.partners.serializers.interventions_v2 import InterventionListSerializer
 
 
@@ -263,6 +269,31 @@ class PlannedEngagementNestedSerializer(serializers.ModelSerializer):
         fields = '__all__'
 
 
+class PartnerPlannedVisitsSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = PartnerPlannedVisits
+        fields = "__all__"
+
+    def is_valid(self, **kwargs):
+        """If no year provided, default to current year
+
+        Do not expect id to be provided, so check if object exists already
+        for partner and year provided and if so,
+        set instance to this object
+        """
+        if not self.initial_data.get("year"):
+            self.initial_data["year"] = datetime.date.today().year
+        try:
+            self.instance = self.Meta.model.objects.get(
+                partner=self.initial_data.get("partner"),
+                year=self.initial_data.get("year"),
+            )
+        except self.Meta.model.DoesNotExist:
+            self.instance = None
+
+        return super().is_valid(**kwargs)
+
+
 class PartnerOrganizationDetailSerializer(serializers.ModelSerializer):
 
     staff_members = PartnerStaffMemberDetailSerializer(many=True, read_only=True)
@@ -274,6 +305,7 @@ class PartnerOrganizationDetailSerializer(serializers.ModelSerializer):
     interventions = serializers.SerializerMethodField(read_only=True)
     hact_min_requirements = serializers.JSONField(read_only=True)
     hidden = serializers.BooleanField(read_only=True)
+    planned_visits = PartnerPlannedVisitsSerializer(many=True, read_only=True, required=False)
 
     def get_hact_values(self, obj):
         return json.loads(obj.hact_values) if isinstance(obj.hact_values, six.text_type) else obj.hact_values
@@ -300,6 +332,7 @@ class PartnerOrganizationCreateUpdateSerializer(SnapshotModelSerializer):
     hact_values = serializers.SerializerMethodField(read_only=True)
     core_values_assessment_file = serializers.FileField(source='core_values_assessment', read_only=True)
     hidden = serializers.BooleanField(read_only=True)
+    planned_visits = PartnerPlannedVisitsSerializer(many=True, read_only=True, required=False)
 
     def get_hact_values(self, obj):
         return json.loads(obj.hact_values) if isinstance(obj.hact_values, six.text_type) else obj.hact_values

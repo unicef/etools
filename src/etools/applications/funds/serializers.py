@@ -5,7 +5,23 @@ from etools.applications.funds.models import (Donor, FundsCommitmentHeader, Fund
                                               FundsReservationHeader, FundsReservationItem, Grant,)
 
 
+class FRLineItemSerializer(serializers.ModelSerializer):
+    value = serializers.DecimalField(source='overall_amount_dc', decimal_places=2, max_digits=20)
+
+    class Meta:
+        model = FundsReservationItem
+        fields = ('donor',
+                  'donor_code',
+                  'line_item',
+                  'grant_number',
+                  'fund',
+                  'wbs',
+                  'value')
+
+
 class FRHeaderSerializer(serializers.ModelSerializer):
+    line_item_details = FRLineItemSerializer(source='fr_items', read_only=True, many=True)
+
     class Meta:
         model = FundsReservationHeader
         fields = '__all__'
