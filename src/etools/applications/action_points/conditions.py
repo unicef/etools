@@ -36,3 +36,23 @@ class ActionPointAssignedByCondition(SimpleCondition):
 
     def is_satisfied(self):
         return self.user == self.action_point.assigned_by
+
+
+class RelatedActionPointCondition(SimpleCondition):
+    predicate = 'action_points_actionpoint.related_object'
+
+    def __init__(self, action_point):
+        self.action_point = action_point
+
+    def is_satisfied(self):
+        return self.action_point.related_object is not None
+
+
+class UnRelatedActionPointCondition(SimpleCondition):
+    predicate = '!action_points_actionpoint.related_object'
+
+    def __init__(self, action_point):
+        self.action_point = action_point
+
+    def is_satisfied(self):
+        return self.action_point.related_object is None
