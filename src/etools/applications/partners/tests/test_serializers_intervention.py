@@ -253,59 +253,6 @@ class TestInterventionReportingRequirementCreateSerializer(BaseTenantTestCase):
         )
         self.assertTrue(serializer.is_valid())
 
-    def test_validation_special_missing_fields(self):
-        data = {
-            "report_type": ReportingRequirement.TYPE_SPECIAL,
-            "reporting_requirements": [{
-                "due_date": datetime.date(2001, 4, 15),
-            }]
-        }
-        serializer = InterventionReportingRequirementCreateSerializer(
-            data=data,
-            context=self.context
-        )
-        self.assertFalse(serializer.is_valid())
-        self.assertEqual(
-            serializer.errors['reporting_requirements'],
-            [{"description": ['This field is required.']}]
-        )
-
-    def test_validation_special_description_long(self):
-        data = {
-            "report_type": ReportingRequirement.TYPE_SPECIAL,
-            "reporting_requirements": [{
-                "due_date": datetime.date(2001, 4, 15),
-                "description": "long" * 256
-            }]
-        }
-        serializer = InterventionReportingRequirementCreateSerializer(
-            data=data,
-            context=self.context
-        )
-        self.assertFalse(serializer.is_valid())
-        self.assertEqual(
-            serializer.errors['reporting_requirements'],
-            [{
-                "description": [
-                    "Ensure this field has no more than 256 characters."
-                ]
-            }]
-        )
-
-    def test_validation_special(self):
-        data = {
-            "report_type": ReportingRequirement.TYPE_SPECIAL,
-            "reporting_requirements": [{
-                "due_date": datetime.date(2001, 4, 15),
-                "description": "some description goes here"
-            }]
-        }
-        serializer = InterventionReportingRequirementCreateSerializer(
-            data=data,
-            context=self.context
-        )
-        self.assertTrue(serializer.is_valid())
-
     def test_create_qpr(self):
         """Creating new qpr reporting requirements
 
@@ -364,30 +311,6 @@ class TestInterventionReportingRequirementCreateSerializer(BaseTenantTestCase):
         self.assertTrue(serializer.is_valid())
         serializer.create(serializer.validated_data)
         self.assertEqual(requirement_qs.count(), init_count + 2)
-
-    def test_create_special(self):
-        """Creating new special reporting requirements
-
-        When none currently existing"""
-        requirement_qs = ReportingRequirement.objects.filter(
-            intervention=self.intervention,
-            report_type=ReportingRequirement.TYPE_SPECIAL,
-        )
-        init_count = requirement_qs.count()
-        data = {
-            "report_type": ReportingRequirement.TYPE_SPECIAL,
-            "reporting_requirements": [{
-                "due_date": datetime.date(2001, 4, 15),
-                "description": "some description goes here"
-            }]
-        }
-        serializer = InterventionReportingRequirementCreateSerializer(
-            data=data,
-            context=self.context
-        )
-        self.assertTrue(serializer.is_valid())
-        serializer.create(serializer.validated_data)
-        self.assertEqual(requirement_qs.count(), init_count + 1)
 
     def test_update_qpr(self):
         """Updating existing qpr reporting requirements"""
@@ -457,39 +380,6 @@ class TestInterventionReportingRequirementCreateSerializer(BaseTenantTestCase):
         self.assertEqual(req_updated.start_date, None)
         self.assertEqual(req_updated.end_date, req_updated.due_date)
         self.assertEqual(req_updated.due_date, datetime.date(2001, 4, 15))
-
-    def test_update_special(self):
-        """Updating existing special reporting requirements"""
-        report_type = ReportingRequirement.TYPE_SPECIAL
-        requirement = ReportingRequirementFactory(
-            intervention=self.intervention,
-            due_date=datetime.date(2001, 4, 15),
-            report_type=report_type,
-        )
-        requirement_qs = ReportingRequirement.objects.filter(
-            intervention=self.intervention,
-            report_type=report_type,
-        )
-        init_count = requirement_qs.count()
-        data = {
-            "report_type": report_type,
-            "reporting_requirements": [{
-                "due_date": datetime.date(2001, 4, 15),
-                "description": "some description goes here"
-            }]
-        }
-        serializer = InterventionReportingRequirementCreateSerializer(
-            data=data,
-            context=self.context
-        )
-        self.assertTrue(serializer.is_valid())
-        serializer.create(serializer.validated_data)
-        self.assertEqual(requirement_qs.count(), init_count)
-        req_updated = ReportingRequirement.objects.get(pk=requirement.pk)
-        self.assertEqual(req_updated.start_date, None)
-        self.assertEqual(req_updated.end_date, req_updated.due_date)
-        self.assertEqual(req_updated.due_date, datetime.date(2001, 4, 15))
-        self.assertEqual(req_updated.description, "some description goes here")
 
     def test_update_create_qpr(self):
         """Updating existing qpr reporting requirements and create new"""
@@ -565,39 +455,3 @@ class TestInterventionReportingRequirementCreateSerializer(BaseTenantTestCase):
         self.assertEqual(req_updated.start_date, None)
         self.assertEqual(req_updated.end_date, req_updated.due_date)
         self.assertEqual(req_updated.due_date, datetime.date(2001, 4, 15))
-
-    def test_update_create_special(self):
-        """Updating existing special reporting requirements and create new"""
-        report_type = ReportingRequirement.TYPE_SPECIAL
-        requirement = ReportingRequirementFactory(
-            intervention=self.intervention,
-            report_type=report_type,
-            due_date=datetime.date(2001, 3, 15),
-        )
-        requirement_qs = ReportingRequirement.objects.filter(
-            intervention=self.intervention,
-            report_type=report_type,
-        )
-        init_count = requirement_qs.count()
-        data = {
-            "report_type": report_type,
-            "reporting_requirements": [{
-                "due_date": datetime.date(2001, 3, 15),
-                "description": "some description goes here"
-            }, {
-                "due_date": datetime.date(2001, 6, 15),
-                "description": "more random thoughts"
-            }]
-        }
-        serializer = InterventionReportingRequirementCreateSerializer(
-            data=data,
-            context=self.context
-        )
-        self.assertTrue(serializer.is_valid())
-        serializer.create(serializer.validated_data)
-        self.assertEqual(requirement_qs.count(), init_count + 1)
-        req_updated = ReportingRequirement.objects.get(pk=requirement.pk)
-        self.assertEqual(req_updated.start_date, None)
-        self.assertEqual(req_updated.end_date, req_updated.due_date)
-        self.assertEqual(req_updated.due_date, datetime.date(2001, 3, 15))
-        self.assertEqual(req_updated.description, "some description goes here")

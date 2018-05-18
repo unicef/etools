@@ -4,8 +4,17 @@ from django.utils.translation import ugettext as _
 from rest_framework import serializers
 from rest_framework.exceptions import ValidationError
 
-from etools.applications.reports.models import (AppliedIndicator, Disaggregation, DisaggregationValue, Indicator,
-                                                IndicatorBlueprint, LowerResult, ReportingRequirement, Result,)
+from etools.applications.reports.models import (
+    AppliedIndicator,
+    Disaggregation,
+    DisaggregationValue,
+    Indicator,
+    IndicatorBlueprint,
+    LowerResult,
+    ReportingRequirement,
+    Result,
+    SpecialReportingRequirement,
+)
 
 
 class OutputListSerializer(serializers.ModelSerializer):
@@ -167,6 +176,8 @@ class AppliedIndicatorSerializer(serializers.ModelSerializer):
             if lower_result.applied_indicators.filter(indicator__id=attrs['indicator'].id).exists():
                 raise ValidationError(_('This indicator is already being monitored for this Result'))
 
+        if lower_result.result_link.intervention.agreement.partner.blocked is True:
+            raise ValidationError(_('The Indicators cannot be updated while the Partner is blocked in Vision'))
         return super(AppliedIndicatorSerializer, self).validate(attrs)
 
     def create(self, validated_data):
@@ -185,11 +196,19 @@ class LowerResultSimpleCUSerializer(serializers.ModelSerializer):
     code = serializers.CharField(read_only=True)
 
     def update(self, instance, validated_data):
-        new_result_link = validated_data.get('result_link')
+        new_result_link = validated_data.get('result_link', instance.result_link)
         if new_result_link.pk != instance.result_link.pk:
             raise ValidationError("You can't associate this PD Output to a different CP Result")
+        if new_result_link and new_result_link.intervention.agreement.partner.blocked is True:
+            raise ValidationError("A PD Output cannot be updated for a partner that is blocked in Vision")
 
         return super(LowerResultSimpleCUSerializer, self).update(instance, validated_data)
+
+    def create(self, validated_data):
+        result_link = validated_data.get('result_link')
+        if result_link and result_link.intervention.agreement.partner.blocked is True:
+            raise ValidationError("A PD Output cannot be created for a partner that is blocked in Vision")
+        return super(LowerResultSimpleCUSerializer, self).create(validated_data)
 
     class Meta:
         model = LowerResult
@@ -280,4 +299,10 @@ class ReportingRequirementSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = ReportingRequirement
-        fields = ("id", "start_date", "end_date", "due_date", "description", )
+        fields = ("id", "start_date", "end_date", "due_date", )
+
+
+class SpecialReportingRequirementSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = SpecialReportingRequirement
+        fields = "__all__"
