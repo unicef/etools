@@ -965,43 +965,6 @@ class Command(BaseCommand):
         )
 
         EmailTemplate.objects.update_or_create(
-            name='tpm/visit/accept',
-            defaults={
-                "description": "TPM accepted visit. Notify focal points & PME.",
-                "subject": "{{ visit.tpm_partner }} has accepted the Monitoring/Verification Visit Request "
-                           "{{ visit.reference_number }}",
-
-                "content": strip_text("""
-                    Dear {{ recipient }},
-
-                    TPM {{ visit.tpm_partner }} has accepted your request for a Monitoring/Verifcation visit to
-                    Implementing Partner{% if visit.multiple_tpm_activities %}s{% endif %} {{ visit.partners }}
-
-                    Please click this link for additional information {{ visit.object_url }}
-
-                    Thank you.
-                """),
-
-                "html_content": """
-                    {% extends "email-templates/base" %}
-
-                    {% block content %}
-                    Dear {{ recipient }},<br/><br/>
-
-                    TPM <b>{{ visit.tpm_partner }}</b> has accepted your request for a Monitoring/Verifcation visit to
-                    Implementing Partner{% if visit.multiple_tpm_activities %}s{% endif %} <b>{{ visit.partners }}</b>.
-                    <br/><br/>
-
-                    Please click this link for additional information
-                    <a href="{{ visit.object_url }}">{{ visit.object_url }}</a><br/><br/>
-
-                    Thank you.
-                    {% endblock %}
-                """,
-            }
-        )
-
-        EmailTemplate.objects.update_or_create(
             name='tpm/visit/report',
             defaults={
                 'description': 'TPM finished with visit report.  Notify PME & focal points.',
