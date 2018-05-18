@@ -42,6 +42,8 @@ class ActionPointViewSet(
         'status', 'intervention__title', 'location__name', 'partner__name', 'cp_output__name',
     )
     ordering_fields = (
+        'cp_output__name', 'partner__name', 'section__name', 'assigned_to__first_name',
+        'assigned_to__last_name', 'due_date', 'status'
     )
     filter_fields = (
         'assigned_to', 'high_priority', 'author', 'section',
