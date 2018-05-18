@@ -179,7 +179,6 @@ SHARED_APPS = (
     'leaflet',
     'corsheaders',
     'djangosaml2',
-    'analytical',
     'mptt',
     'easy_pdf',
     'ordered_model',
@@ -377,9 +376,6 @@ SWAGGER_SETTINGS = {
     'is_authenticated': True,
     'is_superuser': True,
 }
-
-# django-analytical: https://pythonhosted.org/django-analytical/
-USERVOICE_WIDGET_KEY = get_from_secrets_or_env('USERVOICE_KEY', '')
 
 # django-mptt: https://github.com/django-mptt/django-mptt
 MPTT_ADMIN_LEVEL_INDENT = 20
@@ -583,9 +579,6 @@ PASSWORDLESS_AUTH = {
 }
 
 REPORT_EMAILS = get_from_secrets_or_env('REPORT_EMAILS', 'etools@unicef.org').replace(' ', '').split(',')
-
-USERVOICE_WIDGET_KEY = 'defaultVoiceKey'
-
 
 # email auth settings
 EMAIL_AUTH_TOKEN_NAME = os.getenv('EMAIL_AUTH_TOKEN_NAME', 'url_auth_token')
