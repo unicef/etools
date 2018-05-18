@@ -23,9 +23,8 @@ class TestActionPointModel(BaseTenantTestCase):
 
     def test_complete_fail(self):
         action_point = ActionPointFactory()
-        with self.assertRaises(ValidationError) as ex:
+        with self.assertRaisesRegex(ValidationError, "comments"):
             action_point.complete()
-        self.assertIn('comments', ex.exception.detail)
 
     def test_complete(self):
         action_point = ActionPointFactory(status='pre_completed')
