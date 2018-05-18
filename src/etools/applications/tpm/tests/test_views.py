@@ -33,6 +33,7 @@ class TestExportMixin(object):
 class TestTPMVisitViewSet(TestExportMixin, TPMTestCaseMixin, BaseTenantTestCase):
     @classmethod
     def setUpTestData(cls):
+        super(TestTPMVisitViewSet, cls).setUpTestData()
         call_command('update_tpm_permissions', verbosity=0)
         call_command('update_notifications')
 
@@ -271,6 +272,8 @@ class TestTPMVisitViewSet(TestExportMixin, TPMTestCaseMixin, BaseTenantTestCase)
 class TestTPMStaffMembersViewSet(TestExportMixin, TPMTestCaseMixin, BaseTenantTestCase):
     @classmethod
     def setUpTestData(cls):
+        super(TestTPMStaffMembersViewSet, cls).setUpTestData()
+
         cls.tpm_partner = TPMPartnerFactory()
 
         cls.pme_user = UserFactory(pme=True)
@@ -399,6 +402,8 @@ class TestTPMStaffMembersViewSet(TestExportMixin, TPMTestCaseMixin, BaseTenantTe
 class TestTPMPartnerViewSet(TestExportMixin, TPMTestCaseMixin, BaseTenantTestCase):
     @classmethod
     def setUpTestData(cls):
+        super(TestTPMPartnerViewSet, cls).setUpTestData()
+
         cls.tpm_partner = TPMPartnerFactory()
         cls.second_tpm_partner = TPMPartnerFactory()
 

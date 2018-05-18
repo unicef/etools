@@ -11,23 +11,18 @@ from etools.applications.locations.serializers import LocationLightSerializer
 from etools.applications.partners.models import InterventionResultLink, PartnerType
 from etools.applications.partners.serializers.interventions_v2 import InterventionCreateUpdateSerializer
 from etools.applications.partners.serializers.partner_organization_v2 import MinimalPartnerOrganizationListSerializer
+from etools.applications.permissions2.serializers import PermissionsBasedSerializerMixin
 from etools.applications.reports.serializers.v1 import ResultSerializer, SectorSerializer
-from etools.applications.tpm.models import (TPMActionPoint, TPMActivity, TPMPermission,
-                                            TPMVisit, TPMVisitReportRejectComment,)
-from etools.applications.tpm.serializers.attachments import (TPMAttachmentsSerializer,
-                                                             TPMReportAttachmentsSerializer, TPMReportSerializer,)
+from etools.applications.tpm.models import TPMActionPoint, TPMActivity, TPMVisit, TPMVisitReportRejectComment
+from etools.applications.tpm.serializers.attachments import (
+    TPMAttachmentsSerializer, TPMReportAttachmentsSerializer, TPMReportSerializer,)
 from etools.applications.tpm.serializers.partner import TPMPartnerLightSerializer, TPMPartnerStaffMemberSerializer
 from etools.applications.tpm.tpmpartners.models import TPMPartnerStaffMember
 from etools.applications.users.serializers import MinimalUserSerializer, OfficeSerializer
 from etools.applications.utils.common.serializers.fields import SeparatedReadWriteField
-from etools.applications.utils.permissions.serializers import (StatusPermissionsBasedRootSerializerMixin,
-                                                               StatusPermissionsBasedSerializerMixin,)
-from etools.applications.utils.writable_serializers.serializers import WritableNestedSerializerMixin
-
-
-class TPMPermissionsBasedSerializerMixin(StatusPermissionsBasedSerializerMixin):
-    class Meta(StatusPermissionsBasedSerializerMixin.Meta):
-        permission_class = TPMPermission
+from etools.applications.utils.common.serializers.mixins import UserContextSerializerMixin
+from etools.applications.utils.writable_serializers.serializers import (
+    WritableNestedParentSerializerMixin, WritableNestedSerializerMixin,)
 
 
 class InterventionResultLinkVisitSerializer(serializers.ModelSerializer):
@@ -40,16 +35,15 @@ class InterventionResultLinkVisitSerializer(serializers.ModelSerializer):
         ]
 
 
-class TPMVisitReportRejectCommentSerializer(TPMPermissionsBasedSerializerMixin,
-                                            WritableNestedSerializerMixin,
+class TPMVisitReportRejectCommentSerializer(WritableNestedSerializerMixin,
                                             serializers.ModelSerializer):
-    class Meta(TPMPermissionsBasedSerializerMixin.Meta, WritableNestedSerializerMixin.Meta):
+    class Meta(WritableNestedSerializerMixin.Meta):
         model = TPMVisitReportRejectComment
         fields = ['id', 'rejected_at', 'reject_reason', ]
 
 
-class TPMActionPointSerializer(TPMPermissionsBasedSerializerMixin,
-                               WritableNestedSerializerMixin,
+class TPMActionPointSerializer(WritableNestedSerializerMixin,
+                               UserContextSerializerMixin,
                                serializers.ModelSerializer):
     author = MinimalUserSerializer(read_only=True, label=_('Assigned By'))
 
@@ -60,22 +54,22 @@ class TPMActionPointSerializer(TPMPermissionsBasedSerializerMixin,
 
     is_responsible = serializers.SerializerMethodField()
 
-    def get_is_responsible(self, obj):
-        return self.get_user() == obj.person_responsible
-
-    class Meta(TPMPermissionsBasedSerializerMixin.Meta, WritableNestedSerializerMixin.Meta):
+    class Meta(WritableNestedSerializerMixin.Meta):
         model = TPMActionPoint
         fields = [
             'id', 'author', 'person_responsible', 'is_responsible',
             'due_date', 'status', 'description', 'comments',
         ]
 
+    def get_is_responsible(self, obj):
+        return self.get_user() == obj.person_responsible
+
     def create(self, validated_data):
         validated_data['author'] = self.get_user()
         return super(TPMActionPointSerializer, self).create(validated_data)
 
 
-class TPMActivitySerializer(TPMPermissionsBasedSerializerMixin, WritableNestedSerializerMixin,
+class TPMActivitySerializer(PermissionsBasedSerializerMixin, WritableNestedSerializerMixin,
                             ActivitySerializer):
     partner = SeparatedReadWriteField(
         read_field=MinimalPartnerOrganizationListSerializer(read_only=True, label=_('Implementing Partner')),
@@ -135,7 +129,7 @@ class TPMActivitySerializer(TPMPermissionsBasedSerializerMixin, WritableNestedSe
         self._validate_partner_intervention(validated_data, instance=instance)
         return super(TPMActivitySerializer, self).update(instance, validated_data)
 
-    class Meta(TPMPermissionsBasedSerializerMixin.Meta, WritableNestedSerializerMixin.Meta):
+    class Meta(WritableNestedSerializerMixin.Meta):
         model = TPMActivity
         fields = [
             'id', 'partner', 'intervention', 'cp_output', 'section', 'unicef_focal_points',
@@ -149,8 +143,7 @@ class TPMActivitySerializer(TPMPermissionsBasedSerializerMixin, WritableNestedSe
         }
 
 
-class TPMVisitLightSerializer(StatusPermissionsBasedRootSerializerMixin, WritableNestedSerializerMixin,
-                              serializers.ModelSerializer):
+class TPMVisitLightSerializer(PermissionsBasedSerializerMixin, serializers.ModelSerializer):
     tpm_partner = SeparatedReadWriteField(
         read_field=TPMPartnerLightSerializer(label=_('TPM Partner'), read_only=True),
     )
@@ -164,6 +157,7 @@ class TPMVisitLightSerializer(StatusPermissionsBasedRootSerializerMixin, Writabl
     implementing_partners = serializers.SerializerMethodField(label=_('Implementing Partners'))
     locations = serializers.SerializerMethodField(label=_('Locations'))
     sections = serializers.SerializerMethodField(label=_('Sections'))
+    unicef_focal_points = MinimalUserSerializer(label=_('UNICEF Focal Points'), many=True)
 
     def get_implementing_partners(self, obj):
         return MinimalPartnerOrganizationListSerializer(
@@ -192,14 +186,13 @@ class TPMVisitLightSerializer(StatusPermissionsBasedRootSerializerMixin, Writabl
             many=True
         ).data
 
-    class Meta(StatusPermissionsBasedRootSerializerMixin.Meta, WritableNestedSerializerMixin.Meta):
+    class Meta:
         model = TPMVisit
-        permission_class = TPMPermission
         fields = [
             'id', 'start_date', 'end_date', 'tpm_partner',
             'implementing_partners', 'locations', 'sections',
             'status', 'status_date', 'reference_number',
-            'tpm_partner_focal_points',
+            'unicef_focal_points', 'tpm_partner_focal_points',
             'date_created', 'date_of_assigned', 'date_of_tpm_accepted',
             'date_of_tpm_rejected', 'date_of_tpm_reported', 'date_of_unicef_approved',
             'date_of_tpm_report_rejected', 'date_of_cancelled',
@@ -211,7 +204,8 @@ class TPMVisitLightSerializer(StatusPermissionsBasedRootSerializerMixin, Writabl
         }
 
 
-class TPMVisitSerializer(TPMVisitLightSerializer):
+class TPMVisitSerializer(WritableNestedParentSerializerMixin,
+                         TPMVisitLightSerializer):
     tpm_activities = TPMActivitySerializer(many=True, required=False, label=_('Site Visit Schedule'))
 
     report_attachments = TPMReportAttachmentsSerializer(many=True, required=False, label=_('Overall Visit Reports'))
