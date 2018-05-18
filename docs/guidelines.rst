@@ -29,7 +29,6 @@ Organizing imports
 We organize imports into the following groups, in the following order. (This is an extension of
 `PEP-8's guidance <https://www.python.org/dev/peps/pep-0008/#imports>`_).
 
-* Imports from ``__future__``
 * Imports from the Python standard library
 * Anything not in the other categories goes here - possibly subdivided.
 * Imports from code in the same project/repository.
@@ -51,20 +50,6 @@ Author annotations
 Some editors add author annotations to files when they are created: ``__author__ = 'vkurup'`` We
 prefer that those not be added to new files, and they can be removed from existing files.
 
-
-Python 3 Prep
--------------
-
-To make your code easier to port to Python 3, add the following to the top of
-all new files::
-
-	from __future__ import absolute_import
-	from __future__ import division
-	from __future__ import print_function
-	from __future__ import unicode_literals
-
-You can also add them to existing files, but be aware that they may change
-the behavior of your code (particularly the default use of unicode literals).
 
 
 Testing
