@@ -158,8 +158,6 @@ SHARED_APPS = (
     'django.contrib.sites',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    'dal',
-    'dal_select2',
     'django.contrib.gis',
     'django.contrib.postgres',
     'django.contrib.admin',
