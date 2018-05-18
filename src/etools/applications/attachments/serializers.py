@@ -13,14 +13,8 @@ class BaseAttachmentSerializer(serializers.ModelSerializer):
         file_attachment = validated_data.get('file', None) or (instance.file if instance else None)
         hyperlink = validated_data.get('hyperlink', None) or (instance.hyperlink if instance else None)
 
-        print(instance, file_attachment, hyperlink)
-
-        if not instance:
-            if bool(file_attachment) == bool(hyperlink):
-                raise ValidationError(_('Please provide file or hyperlink.'))
-        else:
-            if not file_attachment and not hyperlink:
-                raise ValidationError(_('Please provide file or hyperlink.'))
+        if bool(file_attachment) == bool(hyperlink):
+            raise ValidationError(_('Please provide file or hyperlink.'))
 
     def create(self, validated_data):
         self._validate_attachment(validated_data)
