@@ -342,7 +342,7 @@ class TestPartnerOrganizationAddView(BaseTenantTestCase):
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertEqual(
             response.data,
-            {"error": "Partner Organization already exists with this vendor number"}
+            {"error": "This vendor number already exists in eTools"}
         )
 
     def test_post(self):
