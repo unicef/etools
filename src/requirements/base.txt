@@ -29,7 +29,6 @@ django-debug-toolbar==1.9.1
 django-easy-pdf==0.1.1
 django-filter==1.0.2
 django-fsm==2.4.0
-django-generic-links==0.4.0
 django-geojson==2.11
 django-hstore==1.4.2      # via djangorestframework-hstore
 django-import-export==1.0
@@ -51,7 +50,6 @@ djangorestframework-jwt==1.11.0
 djangorestframework-recursive==0.1.2
 djangorestframework-xml==1.3
 djangorestframework==3.5.3
-djrill==2.1.0
 drf-nested-routers==0.90.2
 drfpasswordless==1.1.5
 et-xmlfile==1.0.1         # via openpyxl
@@ -88,7 +86,7 @@ raven==6.2.1
 redis==2.10.6             # via django-redis-cache
 reportlab==3.3.0          # via django-easy-pdf, xhtml2pdf
 repoze.who==2.3           # via pysaml2
-requests==2.11.1          # via azure-storage, carto, coreapi, djrill, pyrestcli, pysaml2
+requests==2.11.1          # via azure-storage, carto, coreapi, pyrestcli, pysaml2
 simplejson==3.13.2        # via django-rest-swagger
 six==1.11.0               # via cryptography, django-geojson, djangorestframework-csv, html5lib, paste, pyopenssl, pysaml2, python-dateutil, xhtml2pdf
 sqlparse==0.2.4           # via django-debug-toolbar
