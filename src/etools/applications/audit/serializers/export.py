@@ -8,7 +8,7 @@ from rest_framework import serializers
 
 from etools.applications.attachments.serializers import AttachmentPDFSerializer
 from etools.applications.audit.models import (Audit, Engagement, EngagementActionPoint, Finding, MicroAssessment,
-                                              Risk, SpecialAuditRecommendation, SpecificProcedure, SpotCheck,)
+                                              SpecialAuditRecommendation, SpecificProcedure, SpotCheck, Risk)
 from etools.applications.audit.purchase_order.models import AuditorFirm, AuditorStaffMember, PurchaseOrder
 from etools.applications.audit.serializers.auditor import PurchaseOrderItemSerializer
 from etools.applications.audit.serializers.engagement import (DetailedFindingInfoSerializer,
@@ -152,7 +152,8 @@ class MicroAssessmentPDFSerializer(EngagementPDFSerializer):
 class AuditPDFSerializer(EngagementPDFSerializer):
     pending_unsupported_amount = serializers.DecimalField(20, 2, label=_('Pending Unsupported Amount'), read_only=True)
     key_internal_weakness = KeyInternalWeaknessSerializer(
-        code='audit_key_weakness', required=False, label=_('Key Internal Control Weaknesses')
+        code='audit_key_weakness', required=False, label=_('Key Internal Control Weaknesses'),
+        risk_choices=Risk.AUDIT_VALUES
     )
     key_internal_controls = KeyInternalControlSerializer(many=True, required=False,
                                                          label=_('Assessment of Key Internal Controls'))
@@ -283,7 +284,7 @@ class AuditDetailCSVSerializer(EngagementBaseDetailCSVSerializer):
         weaknesses = serializer.to_representation(serializer.get_attribute(instance=obj))
 
         return OrderedDict(
-            (b['id'], Risk.VALUES[b['risk']['value']] if b['risk'] else 'N/A')
+            (b['id'], ', '.join([risk['value_display'] for risk in b['risks']]) or '-')
             for b in weaknesses['blueprints']
         )
 
@@ -298,14 +299,14 @@ class MicroAssessmentDetailCSVSerializer(EngagementBaseDetailCSVSerializer):
         overall_risk_assessment = serializer.to_representation(serializer.get_attribute(instance=obj))
         overall_blueprint = overall_risk_assessment['blueprints'][0]
 
-        return Risk.VALUES[overall_blueprint['risk']['value']] if overall_blueprint['risk'] else 'N/A'
+        return overall_blueprint['risk']['value_display'] if overall_blueprint['risk'] else 'N/A'
 
     def get_subject_areas(self, obj):
         serializer = RiskRootSerializer(code='ma_subject_areas')
         subject_areas = serializer.to_representation(serializer.get_attribute(instance=obj))
 
         return OrderedDict(
-            (b['id'], Risk.VALUES[b['risk']['value']] if b['risk'] else 'N/A')
+            (b['id'], b['risk']['value_display'] if b['risk'] else 'N/A')
             for b in itertools.chain(*map(lambda c: c['blueprints'], subject_areas['children']))
         )
 
@@ -314,7 +315,7 @@ class MicroAssessmentDetailCSVSerializer(EngagementBaseDetailCSVSerializer):
         questionnaire = serializer.to_representation(serializer.get_attribute(instance=obj))
 
         return OrderedDict(
-            (b['id'], Risk.VALUES[b['risk']['value']] if b['risk'] else 'N/A')
+            (b['id'], b['risk']['value_display'] if b['risk'] else 'N/A')
             for b in itertools.chain(*map(
                 lambda c: itertools.chain(itertools.chain(*map(
                     lambda sc: sc['blueprints'], c['children']

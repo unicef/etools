@@ -21,7 +21,8 @@ class ResultStructureSynchronizer(object):
         self.outputs = {}
         self.activities = {}
 
-    def _update_changes(self, local, remote):
+    @staticmethod
+    def _update_changes(local, remote):
         updated = False
         for k in remote:
             if getattr(local, k) != remote[k]:
@@ -68,7 +69,7 @@ class ResultStructureSynchronizer(object):
 
     def update_outcomes(self):
         remote_outcomes = self.data['outcomes']
-        OUTCOME_TYPE = ResultType.objects.get(name=ResultType.OUTCOME)
+        outcome_type = ResultType.objects.get(name=ResultType.OUTCOME)
         total_data = len(remote_outcomes)
         total_updated = 0
 
@@ -86,7 +87,7 @@ class ResultStructureSynchronizer(object):
         new_outcomes = {}
         for remote_outcome in remote_outcomes.values():
             remote_outcome['country_programme'] = self._get_local_parent(remote_outcome['wbs'], 'cp')
-            remote_outcome['result_type'] = OUTCOME_TYPE
+            remote_outcome['result_type'] = outcome_type
 
             new_outcomes[remote_outcome['wbs']], _ = Result.objects.get_or_create(**remote_outcome)
 
@@ -97,7 +98,7 @@ class ResultStructureSynchronizer(object):
 
     def update_outputs(self):
         rem_outputs = self.data['outputs']
-        OUTPUT_TYPE = ResultType.objects.get(name=ResultType.OUTPUT)
+        output_type = ResultType.objects.get(name=ResultType.OUTPUT)
         total_data = len(rem_outputs)
         total_updated = 0
 
@@ -115,7 +116,7 @@ class ResultStructureSynchronizer(object):
         for rem_output in rem_outputs.values():
             rem_output['country_programme'] = self._get_local_parent(rem_output['wbs'], 'cp')
             rem_output['parent'] = self._get_local_parent(rem_output['wbs'], 'outcome')
-            rem_output['result_type'] = OUTPUT_TYPE
+            rem_output['result_type'] = output_type
 
             new_outputs[rem_output['wbs']], _ = Result.objects.get_or_create(**rem_output)
 
@@ -126,7 +127,7 @@ class ResultStructureSynchronizer(object):
 
     def update_activities(self):
         rem_activities = self.data['activities']
-        ACTIVITY_TYPE = ResultType.objects.get(name=ResultType.ACTIVITY)
+        activity_type = ResultType.objects.get(name=ResultType.ACTIVITY)
         total_data = len(rem_activities)
         total_updated = 0
 
@@ -144,7 +145,7 @@ class ResultStructureSynchronizer(object):
         for rem_activity in rem_activities.values():
             rem_activity['country_programme'] = self._get_local_parent(rem_activity['wbs'], 'cp')
             rem_activity['parent'] = self._get_local_parent(rem_activity['wbs'], 'output')
-            rem_activity['result_type'] = ACTIVITY_TYPE
+            rem_activity['result_type'] = activity_type
 
             new_activities[rem_activity['wbs']], _ = Result.objects.get_or_create(**rem_activity)
 
@@ -257,7 +258,8 @@ class ProgrammeSynchronizer(VisionDataSynchronizer):
         ("HUMANITARIAN_TAG", "humanitarian_tag"),
     )
 
-    def _get_json(self, data):
+    @staticmethod
+    def _get_json(data):
         return [] if data == VISION_NO_DATA_MESSAGE else data
 
     def _filter_by_time_range(self, records):
