@@ -5,10 +5,10 @@ import argparse
 import json
 import logging
 import os
-
-from django.utils.six.moves.urllib_parse import urljoin
+from urllib.parse import urljoin
 
 import requests
+from django.conf import settings
 from requests.auth import HTTPDigestAuth
 
 logger = logging.getLogger(__name__)
@@ -21,7 +21,7 @@ class VisionAPIClient(object):
     def __init__(self,
                  username=None,
                  password=None,  # TODO: make configurable
-                 base_url='https://devapis.unicef.org/BIService/BIWebService.svc/'):
+                 base_url=settings.VISION_URL):
         self.base_url = base_url
         if username and password:
             self.auth = HTTPDigestAuth(username, password)
@@ -50,11 +50,11 @@ class VisionAPIClient(object):
         )
         return response
 
-    def call_command(self, type, **properties):
+    def call_command(self, command_type, **properties):
 
         payload = json.dumps(
             {
-                'type': type,
+                'type': command_type,
                 'command': {
                     'properties': properties
                 }

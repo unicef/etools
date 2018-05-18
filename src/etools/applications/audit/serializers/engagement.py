@@ -391,7 +391,8 @@ class KeyInternalControlSerializer(WritableNestedSerializerMixin, serializers.Mo
 class AuditSerializer(ActivePDValidationMixin, RiskCategoriesUpdateMixin, EngagementSerializer):
     financial_finding_set = FinancialFindingSerializer(many=True, required=False, label=_('Financial Findings'))
     key_internal_weakness = KeyInternalWeaknessSerializer(
-        code='audit_key_weakness', required=False, label=_('Key Internal Control Weaknesses')
+        code='audit_key_weakness', required=False, label=_('Key Internal Control Weaknesses'),
+        risk_choices=Risk.AUDIT_VALUES
     )
     key_internal_controls = KeyInternalControlSerializer(many=True, required=False,
                                                          label=_('Assessment of Key Internal Controls'))
