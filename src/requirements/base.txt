@@ -32,7 +32,6 @@ django-filter==1.0.2
 django-fsm==2.4.0
 django-generic-links==0.4.0
 django-geojson==2.11
-django-hstore==1.4.2      # via djangorestframework-hstore
 django-import-export==1.0
 django-js-asset==1.1.0    # via django-mptt
 django-leaflet==0.23
@@ -47,7 +46,6 @@ django-tenant-schemas==1.9.0
 django-waffle==0.14
 django==1.10.8
 djangorestframework-csv==2.1.0
-djangorestframework-hstore==1.3
 djangorestframework-jwt==1.11.0
 djangorestframework-recursive==0.1.2
 djangorestframework-xml==1.3
