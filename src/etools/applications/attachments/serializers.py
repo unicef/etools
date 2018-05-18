@@ -9,19 +9,26 @@ from etools.applications.attachments.serializers_fields import Base64FileField
 
 
 class BaseAttachmentSerializer(serializers.ModelSerializer):
-    def validate(self, attrs):
-        data = super(BaseAttachmentSerializer, self).validate(attrs)
+    def _validate_attachment(self, validated_data, instance=None):
+        file_attachment = validated_data.get('file', None) or (instance.file if instance else None)
+        hyperlink = validated_data.get('hyperlink', None) or (instance.hyperlink if instance else None)
 
-        if not self.partial and bool(data.get('file')) == bool(data.get('hyperlink')):
-            raise ValidationError(_('Please provide file or hyperlink.'))
+        print(instance, file_attachment, hyperlink)
 
-        if self.partial and 'file' in data and not data['file']:
-            raise ValidationError(_('Please provide file or hyperlink.'))
+        if not instance:
+            if bool(file_attachment) == bool(hyperlink):
+                raise ValidationError(_('Please provide file or hyperlink.'))
+        else:
+            if not file_attachment and not hyperlink:
+                raise ValidationError(_('Please provide file or hyperlink.'))
 
-        if self.partial and 'link' in data and not data['link']:
-            raise ValidationError(_('Please provide file or hyperlink.'))
+    def create(self, validated_data):
+        self._validate_attachment(validated_data)
+        return super(BaseAttachmentSerializer, self).create(validated_data)
 
-        return data
+    def update(self, instance, validated_data):
+        self._validate_attachment(validated_data, instance=instance)
+        return super(BaseAttachmentSerializer, self).update(instance, validated_data)
 
     class Meta:
         model = Attachment
