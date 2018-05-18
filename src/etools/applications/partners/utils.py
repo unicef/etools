@@ -1,9 +1,9 @@
-
 import datetime
 import logging
 
 from django.contrib.contenttypes.models import ContentType
 from django.db.models import Q
+from django.utils.timezone import now, make_aware
 
 from etools.applications.attachments.models import Attachment, FileType
 from etools.applications.partners.models import (Agreement, AgreementAmendment, Assessment, Intervention,
@@ -26,23 +26,26 @@ def update_or_create_attachment(file_type, content_type, object_id, filename):
     )
 
 
-def get_from_date(**kwargs):
-    """Return from date to use
+def get_from_datetime(**kwargs):
+    """Return from datetime to use
 
     If `all` provided, ignore and process since beginning of time,
     Otherwise process days and hours accordingly
     """
     if kwargs.get("all"):
-        return datetime.date(1970, 1, 1)
+        return make_aware(datetime.datetime(1970, 1, 1))
 
-    from_date = datetime.date.today()
+    # Start with midnight this morning, timezone-aware
+    from_datetime = now().replace(hour=0, minute=0, second=0, microsecond=0)
+
+    # Adjust per the arguments
     if kwargs.get("days"):
-        from_date = from_date - datetime.timedelta(days=kwargs.get("days"))
+        from_datetime = from_datetime - datetime.timedelta(days=kwargs.get("days"))
 
     if kwargs.get("hours"):
-        from_date = from_date - datetime.timedelta(hours=kwargs.get("hours"))
+        from_datetime = from_datetime - datetime.timedelta(hours=kwargs.get("hours"))
 
-    return from_date
+    return from_datetime
 
 
 def copy_attached_agreements(**kwargs):
@@ -61,7 +64,7 @@ def copy_attached_agreements(**kwargs):
 
     for agreement in Agreement.view_objects.filter(
             attached_agreement__isnull=False,
-            modified__gte=get_from_date(**kwargs)
+            modified__gte=get_from_datetime(**kwargs)
     ).all():
         update_or_create_attachment(
             file_type,
@@ -87,7 +90,7 @@ def copy_core_values_assessments(**kwargs):
 
     for partner in PartnerOrganization.objects.filter(
             core_values_assessment__isnull=False,
-            modified__gte=get_from_date(**kwargs)
+            modified__gte=get_from_datetime(**kwargs)
     ).all():
         update_or_create_attachment(
             file_type,
@@ -112,7 +115,7 @@ def copy_reports(**kwargs):
 
     for assessment in Assessment.objects.filter(
             report__isnull=False,
-            modified__gte=get_from_date(**kwargs)
+            modified__gte=get_from_datetime(**kwargs)
     ).all():
         update_or_create_attachment(
             file_type,
@@ -137,7 +140,7 @@ def copy_signed_amendments(**kwargs):
 
     for amendment in AgreementAmendment.view_objects.filter(
             signed_amendment__isnull=False,
-            modified__gte=get_from_date(**kwargs)
+            modified__gte=get_from_datetime(**kwargs)
     ).all():
         update_or_create_attachment(
             file_type,
@@ -171,7 +174,7 @@ def copy_interventions(**kwargs):
     for intervention in Intervention.objects.filter(
             Q(prc_review_document__isnull=False) |
             Q(signed_pd_document__isnull=False),
-            modified__gte=get_from_date(**kwargs)
+            modified__gte=get_from_datetime(**kwargs)
     ).all():
         if intervention.prc_review_document:
             update_or_create_attachment(
@@ -204,7 +207,7 @@ def copy_intervention_amendments(**kwargs):
 
     for amendment in InterventionAmendment.objects.filter(
             signed_amendment__isnull=False,
-            modified__gte=get_from_date(**kwargs)
+            modified__gte=get_from_datetime(**kwargs)
     ).all():
         if amendment.signed_amendment:
             update_or_create_attachment(
@@ -230,7 +233,7 @@ def copy_intervention_attachments(**kwargs):
 
     for attachment in InterventionAttachment.objects.filter(
             attachment__isnull=False,
-            modified__gte=get_from_date(**kwargs)
+            modified__gte=get_from_datetime(**kwargs)
     ).all():
         if attachment.attachment:
             update_or_create_attachment(

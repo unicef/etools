@@ -12,6 +12,7 @@ from django.db.models.functions import Coalesce
 
 from celery.utils.log import get_task_logger
 
+from etools.applications.EquiTrack.utils import get_environment
 from etools.applications.notification.utils import send_notification_using_email_template
 from etools.applications.partners.models import Agreement, Intervention, PartnerOrganization
 from etools.applications.partners.utils import copy_all_attachments
@@ -323,3 +324,26 @@ def pmp_indicator_report():
 def copy_attachments(hours=25):
     """Copy all partner app attachments"""
     copy_all_attachments(hours=hours)
+
+
+@app.task
+def notify_partner_hidden(partner_pk):
+    partner = PartnerOrganization.objects.get(pk=partner_pk)
+    pds = Intervention.objects.filter(
+        agreement__partner__name=partner.name,
+        status__in=[Intervention.SIGNED, Intervention.ACTIVE, Intervention.ENDED]
+    )
+    if pds:
+        email_context = {
+            'partner_name': partner.name,
+            'pds': ', '.join(pd.number for pd in pds),
+            'environment': get_environment(),
+        }
+        emails_to_pd = [pd.unicef_focal_points.values_list('email', flat=True) for pd in pds]
+        recipients = set(itertools.chain.from_iterable(emails_to_pd))
+
+        send_notification_using_email_template(
+            recipients=list(recipients),
+            email_template_name='partners/blocked_partner',
+            context=email_context
+        )
