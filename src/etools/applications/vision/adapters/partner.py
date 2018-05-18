@@ -84,7 +84,8 @@ class PartnerSynchronizer(VisionDataSynchronizer):
 
         return [rec for rec in records if bad_record(rec)]
 
-    def _get_json(self, data):
+    @staticmethod
+    def _get_json(data):
         return [] if data == VISION_NO_DATA_MESSAGE else data
 
     def _changed_fields(self, local_obj, api_obj):
@@ -275,7 +276,7 @@ class PartnerSynchronizer(VisionDataSynchronizer):
 
 class FilePartnerSynchronizer(FileDataSynchronizer, PartnerSynchronizer):
     """
-    >>> from etools.applications.vision.adapters.partner import *
+    >>> from etools.applications.vision.adapters.partner import FilePartnerSynchronizer
     >>> from etools.applications.users.models import Country
     >>> country = Country.objects.get(name='Indonesia')
     >>> filename = '/home/user/Downloads/partners.json'

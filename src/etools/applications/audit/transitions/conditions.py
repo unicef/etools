@@ -154,9 +154,3 @@ class ValidateMARiskExtra(ValidateRiskExtra):
         'ma_global_assessment': 'overall_risk_assessment',
     }
     REQUIRED_EXTRA_FIELDS = ['comments']
-
-
-class ValidateAuditRiskCategories(ValidateRiskCategories):
-    VALIDATE_CATEGORIES_BEFORE_SUBMIT = {
-        'audit_key_weakness': 'key_internal_weakness'
-    }
