@@ -31,6 +31,13 @@ class TestActionPointModel(BaseTenantTestCase):
         action_point = ActionPointFactory(status='pre_completed')
         action_point.complete()
 
+    def test_completion_date(self):
+        action_point = ActionPointFactory(status='pre_completed')
+        self.assertIsNone(action_point.date_of_completion)
+        action_point.complete()
+        action_point.save()
+        self.assertIsNotNone(action_point.date_of_completion)
+
     def test_audit_related(self):
         action_point = ActionPointFactory(engagement=MicroAssessmentFactory())
         self.assertEqual(action_point.related_module, ActionPoint.MODULE_CHOICES.audit)

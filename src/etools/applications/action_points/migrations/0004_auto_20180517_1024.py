@@ -4,6 +4,7 @@ from __future__ import unicode_literals
 
 from django.db import migrations, models
 import django.db.models.deletion
+import model_utils.fields
 
 
 class Migration(migrations.Migration):
@@ -22,5 +23,11 @@ class Migration(migrations.Migration):
             model_name='actionpoint',
             name='section',
             field=models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.CASCADE, to='reports.Sector', verbose_name='Section'),
+        ),
+        migrations.AlterField(
+            model_name='actionpoint',
+            name='date_of_completion',
+            field=model_utils.fields.MonitorField(blank=True, default=None, monitor='status', null=True,
+                                                  verbose_name='Date Action Point Completed', when=set(['completed'])),
         ),
     ]

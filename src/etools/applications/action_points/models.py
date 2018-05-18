@@ -87,7 +87,7 @@ class ActionPoint(TimeStampedModel):
                                )
 
     date_of_completion = MonitorField(verbose_name=_('Date Action Point Completed'), null=True, blank=True,
-                                      monitor='status', when=[STATUSES.completed])
+                                      default=None, monitor='status', when=[STATUSES.completed])
 
     comments = GenericRelation('django_comments.Comment', object_id_field='object_pk')
 
