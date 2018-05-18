@@ -231,6 +231,7 @@ class TestActionPointsDetailViewMetadata(TestActionPointsViewMetadata):
 class TestOpenActionPointDetailViewMetadata(TestActionPointsDetailViewMetadata, BaseTenantTestCase):
     status = 'open'
     editable_fields = [
+        'description',
         'due_date',
         'assigned_to',
         'high_priority',
@@ -262,6 +263,7 @@ class TestOpenActionPointDetailViewMetadata(TestActionPointsDetailViewMetadata, 
 
 class TestRelatedOpenActionPointDetailViewMetadata(TestOpenActionPointDetailViewMetadata):
     editable_fields = [
+        'description',
         'due_date',
         'assigned_to',
         'high_priority',

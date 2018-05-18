@@ -29,6 +29,7 @@ class Command(BaseCommand):
 
     # editable fields on edit
     action_point_base_edit = [
+        'action_points.actionpoint.description',
         'action_points.actionpoint.due_date',
         'action_points.actionpoint.assigned_to',
         'action_points.actionpoint.high_priority',
