@@ -1,4 +1,3 @@
-
 from django.utils.translation import ugettext as _
 
 from rest_framework import serializers
@@ -66,6 +65,9 @@ class PartnerOrganizationExportSerializer(serializers.ModelSerializer):
     url = serializers.SerializerMethodField(label=_("URL"))
     shared_with = serializers.SerializerMethodField(label=_("Shared Partner"))
     partner_type = serializers.SerializerMethodField(label=_("Partner Type"))
+    planned_visits = serializers.SerializerMethodField(
+        label=_("Planned Programmatic Visits")
+    )
 
     class Meta:
 
@@ -76,7 +78,7 @@ class PartnerOrganizationExportSerializer(serializers.ModelSerializer):
                   'short_name', 'alternate_name', 'partner_type', 'shared_with', 'address',
                   'email_address', 'phone_number', 'risk_rating', 'type_of_assessment', 'date_assessed',
                   'actual_cash_transfer_for_cp', 'actual_cash_transfer_for_current_year', 'staff_members',
-                  'date_last_assessment_against_core_values', 'assessments', 'url', 'basis_for_risk_rating')
+                  'date_last_assessment_against_core_values', 'assessments', 'url', 'basis_for_risk_rating', 'planned_visits')
 
     def get_staff_members(self, obj):
         return ', '.join(['{} ({})'.format(sm.get_full_name(), sm.email)
@@ -101,6 +103,15 @@ class PartnerOrganizationExportSerializer(serializers.ModelSerializer):
         if obj.partner_type == PartnerType.CIVIL_SOCIETY_ORGANIZATION and obj.cso_type:
             return "{}/{}".format(obj.partner_type, obj.cso_type)
         return "{}".format(obj.partner_type)
+
+    def get_planned_visits(self, obj):
+        return ', '.join(['{} (Q1:{} Q2:{}, Q3:{}, Q4:{})'.format(
+            pv.year,
+            pv.programmatic_q1,
+            pv.programmatic_q2,
+            pv.programmatic_q3,
+            pv.programmatic_q4
+        ) for pv in obj.planned_visits.all()])
 
 
 class PartnerOrganizationExportFlatSerializer(
