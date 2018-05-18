@@ -17,7 +17,6 @@ from etools.applications.partners.views.interventions_v2 import (InterventionAme
                                                                  InterventionListMapView,
                                                                  InterventionLowerResultListCreateView,
                                                                  InterventionLowerResultUpdateView,
-                                                                 InterventionPlannedVisitsDeleteView,
                                                                  InterventionReportingPeriodDetailView,
                                                                  InterventionReportingPeriodListCreateView,
                                                                  InterventionReportingRequirementView,
@@ -26,21 +25,24 @@ from etools.applications.partners.views.interventions_v2 import (InterventionAme
                                                                  InterventionResultLinkUpdateView,
                                                                  InterventionResultListAPIView,
                                                                  InterventionSectorLocationLinkListAPIView,)
-from etools.applications.partners.views.partner_organization_v2 import (PartnerOrganizationAddView,
-                                                                        PartnerOrganizationAssessmentDeleteView,
-                                                                        PartnerOrganizationAssessmentListView,
-                                                                        PartnerOrganizationDeleteView,
-                                                                        PartnerOrganizationDetailAPIView,
-                                                                        PartnerOrganizationHactAPIView,
-                                                                        PartnerOrganizationListAPIView,
-                                                                        PartnerOrganizationSimpleHactAPIView,
-                                                                        PartnerStaffMemberListAPIVIew,
-                                                                        PlannedEngagementAPIView,
-                                                                        PartnerNotAssuranceCompliant,
-                                                                        PartnerNotSpotCheckCompliant,
-                                                                        PartnerNotProgrammaticVisitCompliant,
-                                                                        PartnerWithSpecialAuditCompleted,
-                                                                        PartnerWithScheduledAuditCompleted)
+from etools.applications.partners.views.partner_organization_v2 import (
+    PartnerOrganizationAddView,
+    PartnerOrganizationAssessmentDeleteView,
+    PartnerOrganizationAssessmentListView,
+    PartnerOrganizationDeleteView,
+    PartnerOrganizationDetailAPIView,
+    PartnerOrganizationHactAPIView,
+    PartnerOrganizationListAPIView,
+    PartnerOrganizationSimpleHactAPIView,
+    PartnerStaffMemberListAPIVIew,
+    PlannedEngagementAPIView,
+    PartnerNotAssuranceCompliant,
+    PartnerNotSpotCheckCompliant,
+    PartnerNotProgrammaticVisitCompliant,
+    PartnerPlannedVisitsDeleteView,
+    PartnerWithSpecialAuditCompleted,
+    PartnerWithScheduledAuditCompleted,
+)
 from etools.applications.partners.views.v1 import PCAPDFView
 from etools.applications.partners.views.v2 import PMPDropdownsListApiView, PMPStaticDropdownsListAPIView
 
@@ -82,6 +84,11 @@ urlpatterns = (
     url(r'^partners/scheduled_audit_completed/$',
         view=PartnerWithScheduledAuditCompleted.as_view(http_method_names=['get']),
         name='partner-scheduled-audit-completed'),
+    url(
+        r'^partners/planned-visits/(?P<pk>\d+)/$',
+        view=PartnerPlannedVisitsDeleteView.as_view(http_method_names=['delete', ]),
+        name='partner-planned-visits-del'
+    ),
 
     url(r'^partners/hact/$',
         view=PartnerOrganizationHactAPIView.as_view(http_method_names=['get', ]),
@@ -151,9 +158,6 @@ urlpatterns = (
         view=InterventionDeleteView.as_view(http_method_names=['delete']),
         name='intervention-delete'),
 
-    url(r'^interventions/planned-visits/(?P<pk>\d+)/$',
-        view=InterventionPlannedVisitsDeleteView.as_view(http_method_names=['delete', ]),
-        name='intervention-visits-del'),
     url(r'^interventions/attachments/(?P<pk>\d+)/$',
         view=InterventionAttachmentDeleteView.as_view(http_method_names=['delete', ]),
         name='intervention-attachments-del'),
