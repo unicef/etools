@@ -1,8 +1,6 @@
-
 import time
 
 from django.db import IntegrityError
-from django.utils import six
 from django.utils.encoding import force_text
 
 from carto.auth import APIKeyAuthClient
@@ -166,13 +164,13 @@ def update_sites_from_cartodb(carto_table_pk):
             if 'error' in sites:
                 # it seems we can have both valid results and error messages in the same CartoDB response
                 logger.exception("CartoDB API error received: {}".format(sites['error']))
-                # When this error occurs, we receive truncated locations, probably it's better to not continue to import
+                # When this error occurs, we receive truncated locations, probably it's better to interrupt the import
                 return
     except CartoException:
         logger.exception("CartoDB exception occured")
     else:
         for row in rows:
-            pcode = six.text_type(row[carto_table.pcode_col]).strip()
+            pcode = str(row[carto_table.pcode_col]).strip()
             site_name = row[carto_table.name_col]
 
             if not site_name or site_name.isspace():
