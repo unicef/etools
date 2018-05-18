@@ -53,6 +53,11 @@ class TransitionPermissionTestCaseMetaclass(type):
 
 @six.add_metaclass(TransitionPermissionTestCaseMetaclass)
 class TransitionPermissionsTestCaseMixin(object):
+    """
+    TestCase mixin for dynamic transitions testing.
+    All you need is to specify list of allowed transitions and user to be used.
+    All tests will be generated automatically with correct output depending from user role.
+    """
     abstract = True
     model = NotImplemented
     factory = NotImplemented
