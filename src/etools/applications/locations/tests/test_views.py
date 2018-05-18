@@ -3,7 +3,6 @@ from django.core.urlresolvers import reverse
 from django.db import connection
 
 from rest_framework import status
-from tenant_schemas.test.client import TenantClient
 
 from etools.applications.EquiTrack.tests.cases import BaseTenantTestCase
 from etools.applications.locations.models import Location
