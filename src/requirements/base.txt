@@ -29,7 +29,6 @@ django-debug-toolbar==1.9.1
 django-easy-pdf==0.1.1
 django-filter==1.0.2
 django-fsm==2.4.0
-django-geojson==2.11
 django-import-export==1.0
 django-js-asset==1.1.0    # via django-mptt
 django-leaflet==0.23
@@ -86,7 +85,7 @@ reportlab==3.3.0          # via django-easy-pdf, xhtml2pdf
 repoze.who==2.3           # via pysaml2
 requests==2.11.1          # via azure-storage, carto, coreapi, pyrestcli, pysaml2
 simplejson==3.13.2        # via django-rest-swagger
-six==1.11.0               # via cryptography, django-geojson, djangorestframework-csv, html5lib, paste, pyopenssl, pysaml2, python-dateutil, xhtml2pdf
+six==1.11.0               # via cryptography, djangorestframework-csv, html5lib, paste, pyopenssl, pysaml2, python-dateutil, xhtml2pdf
 sqlparse==0.2.4           # via django-debug-toolbar
 static3==0.7.0            # via dj-static
 tablib==0.12.1            # via django-import-export
