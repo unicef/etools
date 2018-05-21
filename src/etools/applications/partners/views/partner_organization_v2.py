@@ -318,7 +318,7 @@ class PartnerOrganizationAddView(CreateAPIView):
 
         if PartnerOrganization.objects.filter(
                 vendor_number=partner_resp[PartnerSynchronizer.MAPPING['vendor_number']]).exists():
-            return Response({"error": 'Partner Organization already exists with this vendor number'},
+            return Response({"error": 'This vendor number already exists in eTools'},
                             status=status.HTTP_400_BAD_REQUEST)
 
         country = request.user.profile.country

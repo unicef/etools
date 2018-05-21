@@ -14,7 +14,7 @@ from rest_framework.views import APIView
 
 from etools.applications.attachments.models import FileType as AttachmentFileType
 from etools.applications.EquiTrack.fields import CURRENCIES
-from etools.applications.funds.models import Donor
+from etools.applications.funds.models import Donor, Grant
 from etools.applications.locations.models import GatewayType
 from etools.applications.partners.filters import PartnerScopeFilter
 from etools.applications.partners.models import (Agreement, AgreementAmendment, Assessment, FileType,
@@ -146,6 +146,7 @@ class PMPDropdownsListApiView(APIView):
         file_types = list(FileType.objects.filter(name__in=[i[0] for i in FileType.NAME_CHOICES])
                           .all().values())
         donors = list(Donor.objects.all().values())
+        grants = list(Grant.objects.all().values())
 
         return Response(
             {
@@ -154,6 +155,7 @@ class PMPDropdownsListApiView(APIView):
                 'cp_outputs': cp_outputs,
                 'file_types': file_types,
                 'donors': donors,
+                'grants': grants,
 
             },
             status=status.HTTP_200_OK

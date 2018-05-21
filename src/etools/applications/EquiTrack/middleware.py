@@ -2,10 +2,10 @@ import logging
 
 from django.conf import settings
 from django.contrib.contenttypes.models import ContentType
-from django.core.urlresolvers import reverse
 from django.db import connection
 from django.http.response import HttpResponseRedirect
 from django.template.response import SimpleTemplateResponse
+from django.urls import reverse
 
 from tenant_schemas.middleware import TenantMiddleware
 from tenant_schemas.utils import get_public_schema_name
