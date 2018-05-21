@@ -25,4 +25,4 @@ class TestVisionClient(SimpleTestCase):
 
     def test_build_path(self):
         path = self.client.build_path("api")
-        self.assertEqual(path, "{}api".format(self.client.base_url))
+        self.assertEqual(path, "{}/api".format(self.client.base_url))

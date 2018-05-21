@@ -15,9 +15,7 @@ EXCLUDED_PACKAGES = (
     'django',
     'django_celery_beat',
     'django_celery_results',
-    'easy_thumbnails',
     'rest_framework',
-    'generic_links',
     'post_office',
     'drfpasswordless',
 )

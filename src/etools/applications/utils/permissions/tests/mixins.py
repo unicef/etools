@@ -1,4 +1,3 @@
-from django.utils import six
 from rest_framework import status
 
 
@@ -51,8 +50,12 @@ class TransitionPermissionTestCaseMetaclass(type):
         return newclass
 
 
-@six.add_metaclass(TransitionPermissionTestCaseMetaclass)
-class TransitionPermissionsTestCaseMixin(object):
+class TransitionPermissionsTestCaseMixin(object, metaclass=TransitionPermissionTestCaseMetaclass):
+    """
+    TestCase mixin for dynamic transitions testing.
+    All you need is to specify list of allowed transitions and user to be used.
+    All tests will be generated automatically with correct output depending from user role.
+    """
     abstract = True
     model = NotImplemented
     factory = NotImplemented

@@ -1,7 +1,6 @@
 {% extends "admin/base.html" %}
 {% load i18n static %}
 {% load userprofile_tags %}
-{% load uservoice %}
 
 {% block extrahead %}
     <script src="{{ STATIC_URL }}js/jquery-1.10.2.min.js"></script>
@@ -173,5 +172,4 @@
             <span>© Copyright 2015-{% now "Y" %} UNICEF. All Rights Reserved. Country: {{ request.tenant.name }}</span>
         </div>
     </footer>
-    {% uservoice %}
 {% endblock footer %}

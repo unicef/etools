@@ -10,9 +10,10 @@ from rest_framework import status
 from etools.applications.action_points.tests.base import ActionPointsTestCaseMixin
 from etools.applications.action_points.tests.factories import ActionPointFactory
 from etools.applications.EquiTrack.tests.cases import BaseTenantTestCase
+from etools.applications.audit.tests.factories import EngagementFactory
 from etools.applications.partners.tests.factories import PartnerFactory
 from etools.applications.reports.tests.factories import SectorFactory
-from etools.applications.tpm.tests.factories import TPMVisitFactory, UserFactory
+from etools.applications.tpm.tests.factories import UserFactory
 
 
 class TestActionPointViewSet(ActionPointsTestCaseMixin, BaseTenantTestCase):
@@ -45,7 +46,7 @@ class TestActionPointViewSet(ActionPointsTestCaseMixin, BaseTenantTestCase):
         self._test_list_view(self.unicef_user, action_points)
 
     def test_unknown_user_list_view(self):
-        TPMVisitFactory()
+        ActionPointFactory()
 
         response = self.forced_auth_req(
             'get',
@@ -230,6 +231,7 @@ class TestActionPointsDetailViewMetadata(TestActionPointsViewMetadata):
 class TestOpenActionPointDetailViewMetadata(TestActionPointsDetailViewMetadata, BaseTenantTestCase):
     status = 'open'
     editable_fields = [
+        'description',
         'due_date',
         'assigned_to',
         'high_priority',
@@ -257,6 +259,24 @@ class TestOpenActionPointDetailViewMetadata(TestActionPointsDetailViewMetadata, 
 
     def test_assignee_editable_fields(self):
         self._test_detail_options(self.assignee, writable_fields=self.editable_fields)
+
+
+class TestRelatedOpenActionPointDetailViewMetadata(TestOpenActionPointDetailViewMetadata):
+    editable_fields = [
+        'description',
+        'due_date',
+        'assigned_to',
+        'high_priority',
+        'comments',
+
+        'section',
+        'office',
+    ]
+
+    def setUp(self):
+        super(TestRelatedOpenActionPointDetailViewMetadata, self).setUp()
+        self.action_point.engagement = EngagementFactory()
+        self.action_point.save()
 
 
 class TestClosedActionPointDetailViewMetadata(TestActionPointsDetailViewMetadata, BaseTenantTestCase):

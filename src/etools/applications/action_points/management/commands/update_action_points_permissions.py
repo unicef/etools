@@ -2,7 +2,7 @@ from django.core.management import BaseCommand
 
 from etools.applications.action_points.conditions import (
     ActionPointAssignedByCondition, ActionPointAssigneeCondition, ActionPointAuthorCondition,
-    ActionPointModuleCondition)
+    ActionPointModuleCondition, RelatedActionPointCondition, UnRelatedActionPointCondition)
 from etools.applications.action_points.models import ActionPoint, PME, UNICEFUser
 from etools.applications.permissions2.conditions import GroupCondition, NewObjectCondition, ObjectStatusCondition
 from etools.applications.permissions2.models import Permission
@@ -15,8 +15,6 @@ class Command(BaseCommand):
         'action_points.actionpoint.partner',
         'action_points.actionpoint.intervention',
         'action_points.actionpoint.location',
-        'action_points.actionpoint.section',
-        'action_points.actionpoint.office',
     ]
 
     # editable fields on create
@@ -25,15 +23,23 @@ class Command(BaseCommand):
         'action_points.actionpoint.due_date',
         'action_points.actionpoint.assigned_to',
         'action_points.actionpoint.high_priority',
+        'action_points.actionpoint.section',
+        'action_points.actionpoint.office',
     ] + action_point_pmp_relations
 
     # editable fields on edit
-    action_point_edit = [
+    action_point_base_edit = [
+        'action_points.actionpoint.description',
         'action_points.actionpoint.due_date',
         'action_points.actionpoint.assigned_to',
         'action_points.actionpoint.high_priority',
         'action_points.actionpoint.comments',
-    ] + action_point_pmp_relations
+        'action_points.actionpoint.section',
+        'action_points.actionpoint.office',
+    ]
+
+    related_action_point_edit = action_point_base_edit
+    not_related_action_point_edit = action_point_base_edit + action_point_pmp_relations
 
     # common fields, should be visible always
     action_point_list = [
@@ -58,6 +64,7 @@ class Command(BaseCommand):
         'action_points.actionpoint.created',
         'action_points.actionpoint.date_of_completion',
 
+        'action_points.actionpoint.comments',
         'action_points.actionpoint.history',
     ]
 
@@ -118,6 +125,12 @@ class Command(BaseCommand):
         model = get_model_target(ActionPoint)
         return [NewObjectCondition.predicate_template.format(model=model)]
 
+    def related_action_point(self):
+        return [RelatedActionPointCondition.predicate]
+
+    def not_related_action_point(self):
+        return [UnRelatedActionPointCondition.predicate]
+
     def handle(self, *args, **options):
         self.verbosity = options.get('verbosity', 1)
 
@@ -157,7 +170,18 @@ class Command(BaseCommand):
         self.add_permission(self.unicef_user, 'edit', self.action_point_create,
                             condition=self.new_action_point())
 
-        self.add_permission([self.pme, self.author, self.assigned_by, self.assignee], 'edit', self.action_point_edit,
-                            condition=self.action_point_status(ActionPoint.STATUSES.open))
+        self.add_permission(
+            [self.pme, self.author, self.assigned_by, self.assignee],
+            'edit',
+            self.related_action_point_edit,
+            condition=self.action_point_status(ActionPoint.STATUSES.open) + self.related_action_point()
+        )
+        self.add_permission(
+            [self.pme, self.author, self.assigned_by, self.assignee],
+            'edit',
+            self.not_related_action_point_edit,
+            condition=self.action_point_status(ActionPoint.STATUSES.open) + self.not_related_action_point()
+        )
+
         self.add_permission([self.pme, self.assignee], 'action', 'action_points.actionpoint.complete',
                             condition=self.action_point_status(ActionPoint.STATUSES.open))

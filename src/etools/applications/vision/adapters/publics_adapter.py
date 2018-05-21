@@ -65,10 +65,12 @@ class CostAssignmentSynch(VisionDataSynchronizer):
     def _convert_records(self, records):
         return json.loads(records)
 
-    def _map_object(self, record):
-        r = {}
-        r['wbs'] = record['WBS_ELEMENT_EX']
-        r['grants'] = []
+    @staticmethod
+    def _map_object(record):
+        r = {
+            'wbs': record['WBS_ELEMENT_EX'],
+            'grants': []
+        }
         if record['FUND']:
             for g in record['FUND']['FUND_ROW']:
                 r['grants'].append({
@@ -135,7 +137,7 @@ class CurrencySynchronizer(VisionDataSynchronizer):
             )
             log.info('Currency %s was updated.', currency_name)
 
-            exchange_rate, created = ExchangeRate.objects.update_or_create(
+            ExchangeRate.objects.update_or_create(
                 currency=currency,
                 defaults={'x_rate': x_rate, 'valid_from': valid_from, 'valid_to': valid_to}
             )

@@ -3,7 +3,8 @@ from rest_framework.filters import OrderingFilter, SearchFilter, DjangoFilterBac
 from rest_framework.permissions import IsAuthenticated
 
 from etools.applications.action_points.conditions import ActionPointModuleCondition, ActionPointAssigneeCondition, \
-    ActionPointAuthorCondition, ActionPointAssignedByCondition
+    ActionPointAuthorCondition, ActionPointAssignedByCondition, RelatedActionPointCondition, \
+    UnRelatedActionPointCondition
 from etools.applications.action_points.filters import ReferenceNumberOrderingFilter, RelatedModuleFilter
 from etools.applications.action_points.metadata import ActionPointMetadata
 from etools.applications.action_points.models import ActionPoint
@@ -67,4 +68,6 @@ class ActionPointViewSet(
             ActionPointAuthorCondition(obj, self.request.user),
             ActionPointAssignedByCondition(obj, self.request.user),
             ActionPointAssigneeCondition(obj, self.request.user),
+            RelatedActionPointCondition(obj),
+            UnRelatedActionPointCondition(obj),
         ]
