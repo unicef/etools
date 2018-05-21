@@ -16,6 +16,9 @@ from etools.applications.utils.common.tests.factories import InheritedTrait
 
 
 class UserFactory(BaseUserFactory):
+    """
+    User factory with ability to quickly assign action points module-related groups.
+    """
     class Params:
         unicef_user = factory.Trait(
             groups=['UNICEF User'],

@@ -150,6 +150,9 @@ class TPMActivityFactory(factory.DjangoModelFactory):
 
 
 class UserFactory(BaseUserFactory):
+    """
+    User factory with ability to quickly assign tpm related groups with special logic for tpm partner.
+    """
     class Params:
         unicef_user = factory.Trait(
             groups=['UNICEF User'],
