@@ -19,7 +19,7 @@ class ReferenceNumberOrderingFilter(BaseFilterBackend):
 class RelatedModuleFilter(BaseFilterBackend):
     def filter_queryset(self, request, queryset, view):
         related_module = request.query_params.get('related_module', '')
-        if related_module:
+        if not related_module:
             return queryset
 
         related_instance_fields = {
