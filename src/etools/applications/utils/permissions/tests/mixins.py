@@ -51,8 +51,7 @@ class TransitionPermissionTestCaseMetaclass(type):
         return newclass
 
 
-@six.add_metaclass(TransitionPermissionTestCaseMetaclass)
-class TransitionPermissionsTestCaseMixin(object):
+class TransitionPermissionsTestCaseMixin(object, metaclass=TransitionPermissionTestCaseMetaclass):
     """
     TestCase mixin for dynamic transitions testing.
     All you need is to specify list of allowed transitions and user to be used.
