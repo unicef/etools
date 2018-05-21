@@ -12,7 +12,7 @@ from rest_framework import status
 from etools.applications.attachments.tests.factories import AttachmentFileTypeFactory
 from etools.applications.EquiTrack.tests.cases import BaseTenantTestCase
 from etools.applications.partners.models import PartnerType
-from etools.applications.tpm.models import TPMActionPoint
+from etools.applications.tpm.models import TPMActionPoint, TPMVisit
 from etools.applications.tpm.tests.base import TPMTestCaseMixin
 from etools.applications.tpm.tests.factories import TPMPartnerFactory, TPMVisitFactory, UserFactory
 
@@ -223,6 +223,19 @@ class TestTPMVisitViewSet(TestExportMixin, TPMTestCaseMixin, BaseTenantTestCase)
         self.assertIn('tpm_activities', response.data)
         self.assertIn('intervention', response.data['tpm_activities'][0])
         self.assertEqual(response.data['tpm_activities'][0]['intervention'][0], _('This field is required.'))
+
+    def test_author(self):
+        create_response = self.forced_auth_req(
+            'post',
+            reverse('tpm:visits-list'),
+            user=self.pme_user,
+            data={}
+        )
+
+        self.assertEquals(create_response.status_code, status.HTTP_201_CREATED)
+
+        visit = TPMVisit.objects.get(id=create_response.data['id'])
+        self.assertEquals(visit.author, self.pme_user)
 
     def _test_partner(self, expected_status=status.HTTP_201_CREATED, **kwargs):
         partner = TPMPartnerFactory(**kwargs)
