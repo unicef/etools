@@ -286,9 +286,6 @@ class InterventionExportSerializer(serializers.ModelSerializer):
         label=_("Signed by Partner"),
     )
     cp_outputs = serializers.SerializerMethodField(label=_("CP Outputs"))
-    planned_visits = serializers.SerializerMethodField(
-        label=_("Planned Programmatic Visits"),
-    )
     url = serializers.SerializerMethodField(label=_("URL"))
     days_from_submission_to_signed = serializers.SerializerMethodField(
         label=_("Days from Submission to Signed"),
@@ -341,7 +338,6 @@ class InterventionExportSerializer(serializers.ModelSerializer):
             "fr_amount",
             "fr_actual_amount",
             "fr_outstanding_amt",
-            "planned_visits",
             "submission_date",
             "submission_date_prc",
             "review_date_prc",
@@ -410,11 +406,6 @@ class InterventionExportSerializer(serializers.ModelSerializer):
     def get_fr_outstanding_amt(self, obj):
         return obj.frs__outstanding_amt_local__sum
 
-    def get_planned_visits(self, obj):
-        return ', '.join(['{} (Q1:{} Q2:{}, Q3:{}, Q4:{})'.format(
-            pv.year, pv.programmatic_q1, pv.programmatic_q2, pv.programmatic_q3, pv.programmatic_q4
-        ) for pv in obj.planned_visits.all()])
-
     def get_url(self, obj):
         return 'https://{}/pmp/interventions/{}/details/'.format(self.context['request'].get_host(), obj.id)
 
@@ -442,9 +433,6 @@ class InterventionExportSerializer(serializers.ModelSerializer):
 
 
 class InterventionExportFlatSerializer(ExportSerializerMixin, InterventionExportSerializer):
-    planned_visits = serializers.SerializerMethodField(
-        label=_("Planned Programmatic Visits"),
-    )
     attachments = serializers.SerializerMethodField(label=_("Attachments"))
     country_programme = serializers.CharField(
         label=_("Country Programme"),
@@ -486,20 +474,6 @@ class InterventionExportFlatSerializer(ExportSerializerMixin, InterventionExport
     class Meta:
         model = Intervention
         fields = "__all__"
-
-    def get_planned_visits(self, obj):
-        planned_visits = []
-        for planned_visit in obj.planned_visits.all():
-            planned_visits.append(
-                "Year: {}: {} {} {} {}".format(
-                    planned_visit.year,
-                    planned_visit.programmatic_q1,
-                    planned_visit.programmatic_q2,
-                    planned_visit.programmatic_q3,
-                    planned_visit.programmatic_q4,
-                )
-            )
-        return "\n".join(planned_visits)
 
     def get_attachments(self, obj):
         return "\n".join(

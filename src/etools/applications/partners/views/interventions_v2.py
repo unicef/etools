@@ -7,7 +7,6 @@ from django.contrib.contenttypes.models import ContentType
 from django.db import transaction
 from django.db.models import Q
 from django.shortcuts import get_object_or_404
-from django.utils.translation import ugettext as _
 
 from rest_framework import status
 from rest_framework.exceptions import ValidationError
@@ -24,32 +23,38 @@ from etools.applications.EquiTrack.validation_mixins import ValidatorViewMixin
 from etools.applications.partners.exports_v2 import InterventionCSVRenderer
 from etools.applications.partners.filters import (AppliedIndicatorsFilter, InterventionFilter,
                                                   InterventionResultLinkFilter, PartnerScopeFilter,)
-from etools.applications.partners.models import (Intervention, InterventionAmendment, InterventionAttachment,
-                                                 InterventionPlannedVisits, InterventionReportingPeriod,
-                                                 InterventionResultLink, InterventionSectorLocationLink,)
+from etools.applications.partners.models import (
+    Intervention,
+    InterventionAmendment,
+    InterventionAttachment,
+    InterventionReportingPeriod,
+    InterventionResultLink,
+    InterventionSectorLocationLink,
+)
 from etools.applications.partners.permissions import PartnershipManagerPermission, PartnershipManagerRepPermission
 from etools.applications.partners.serializers.exports.interventions import (
     InterventionAmendmentExportFlatSerializer, InterventionAmendmentExportSerializer,
     InterventionExportFlatSerializer, InterventionExportSerializer, InterventionIndicatorExportFlatSerializer,
     InterventionIndicatorExportSerializer, InterventionResultExportFlatSerializer, InterventionResultExportSerializer,
     InterventionSectorLocationLinkExportFlatSerializer, InterventionSectorLocationLinkExportSerializer)
-from etools.applications.partners.serializers.interventions_v2 import (InterventionAmendmentCUSerializer,
-                                                                       InterventionAttachmentSerializer,
-                                                                       InterventionBudgetCUSerializer,
-                                                                       InterventionCreateUpdateSerializer,
-                                                                       InterventionDetailSerializer,
-                                                                       InterventionIndicatorSerializer,
-                                                                       InterventionListMapSerializer,
-                                                                       InterventionListSerializer,
-                                                                       InterventionReportingPeriodSerializer,
-                                                                       InterventionReportingRequirementCreateSerializer,
-                                                                       InterventionReportingRequirementListSerializer,
-                                                                       InterventionResultCUSerializer,
-                                                                       InterventionResultLinkSimpleCUSerializer,
-                                                                       InterventionResultSerializer,
-                                                                       InterventionSectorLocationCUSerializer,
-                                                                       MinimalInterventionListSerializer,
-                                                                       PlannedVisitsCUSerializer,)
+from etools.applications.partners.serializers.interventions_v2 import (
+    InterventionAmendmentCUSerializer,
+    InterventionAttachmentSerializer,
+    InterventionBudgetCUSerializer,
+    InterventionCreateUpdateSerializer,
+    InterventionDetailSerializer,
+    InterventionIndicatorSerializer,
+    InterventionListMapSerializer,
+    InterventionListSerializer,
+    InterventionReportingPeriodSerializer,
+    InterventionReportingRequirementCreateSerializer,
+    InterventionReportingRequirementListSerializer,
+    InterventionResultCUSerializer,
+    InterventionResultLinkSimpleCUSerializer,
+    InterventionResultSerializer,
+    InterventionSectorLocationCUSerializer,
+    MinimalInterventionListSerializer,
+)
 from etools.applications.partners.validation.interventions import InterventionValid
 from etools.applications.reports.models import AppliedIndicator, LowerResult, ReportingRequirement
 from etools.applications.reports.serializers.v2 import AppliedIndicatorSerializer, LowerResultSimpleCUSerializer
@@ -78,7 +83,6 @@ class InterventionListAPIView(QueryStringFilterMixin, ExportModelMixin, Interven
 
     SERIALIZER_MAP = {
         'planned_budget': InterventionBudgetCUSerializer,
-        'planned_visits': PlannedVisitsCUSerializer,
         'attachments': InterventionAttachmentSerializer,
         'result_links': InterventionResultCUSerializer
     }
@@ -109,7 +113,6 @@ class InterventionListAPIView(QueryStringFilterMixin, ExportModelMixin, Interven
         """
         related_fields = [
             'planned_budget',
-            'planned_visits',
             'attachments',
             'result_links'
         ]
@@ -222,7 +225,6 @@ class InterventionDetailAPIView(ValidatorViewMixin, RetrieveUpdateDestroyAPIView
 
     SERIALIZER_MAP = {
         'planned_budget': InterventionBudgetCUSerializer,
-        'planned_visits': PlannedVisitsCUSerializer,
         'attachments': InterventionAttachmentSerializer,
         'result_links': InterventionResultCUSerializer
     }
@@ -237,7 +239,7 @@ class InterventionDetailAPIView(ValidatorViewMixin, RetrieveUpdateDestroyAPIView
 
     @transaction.atomic
     def update(self, request, *args, **kwargs):
-        related_fields = ['planned_budget', 'planned_visits',
+        related_fields = ['planned_budget',
                           'attachments',
                           'result_links']
         nested_related_names = ['ll_results']
@@ -259,24 +261,6 @@ class InterventionDetailAPIView(ValidatorViewMixin, RetrieveUpdateDestroyAPIView
             instance = self.get_object()
 
         return Response(InterventionDetailSerializer(instance, context=self.get_serializer_context()).data)
-
-
-class InterventionPlannedVisitsDeleteView(DestroyAPIView):
-    permission_classes = (PartnershipManagerRepPermission,)
-
-    def delete(self, request, *args, **kwargs):
-        try:
-            intervention_planned_visit = InterventionPlannedVisits.objects.get(id=int(kwargs['pk']))
-        except InterventionPlannedVisits.DoesNotExist:
-            return Response(status=status.HTTP_404_NOT_FOUND)
-        if intervention_planned_visit.intervention.status in [Intervention.DRAFT] or \
-            request.user in intervention_planned_visit.intervention.unicef_focal_points.all() or \
-            request.user.groups.filter(name__in=['Partnership Manager',
-                                                 'Senior Management Team']).exists():
-            intervention_planned_visit.delete()
-            return Response(status=status.HTTP_204_NO_CONTENT)
-        else:
-            raise ValidationError("You do not have permissions to delete a planned visit")
 
 
 class InterventionAttachmentDeleteView(DestroyAPIView):
@@ -448,7 +432,7 @@ class InterventionAmendmentListAPIView(ExportModelMixin, ValidatorViewMixin, Lis
         return q
 
     def create(self, request, *args, **kwargs):
-        raw_data = request.data.copy()
+        raw_data = request.data
         raw_data['intervention'] = kwargs.get('intervention_pk', None)
         serializer = self.get_serializer(data=raw_data)
         serializer.is_valid(raise_exception=True)
@@ -748,55 +732,6 @@ class InterventionReportingRequirementView(APIView):
         )
         if serializer.is_valid():
             serializer.save()
-            return Response(
-                self.serializer_list_class(self.get_data()).data
-            )
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-
-    def patch(self, request, intervention_pk, report_type, format=None):
-        """Only special reporting types can patch"""
-        if report_type != ReportingRequirement.TYPE_SPECIAL:
-            return Response(
-                _("Invalid report type"),
-                status=status.HTTP_400_BAD_REQUEST
-            )
-
-        self.intervention = self.get_object(intervention_pk)
-        self.report_type = report_type
-        self.request.data["report_type"] = self.report_type
-        serializer = self.serializer_create_class(
-            data=self.request.data,
-            context={
-                "intervention": self.intervention,
-            }
-        )
-        if serializer.is_valid():
-            serializer.save()
-            return Response(
-                self.serializer_list_class(self.get_data()).data
-            )
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-
-    def delete(self, request, intervention_pk, report_type, format=None):
-        """Only special reporting types can delete"""
-        if report_type != ReportingRequirement.TYPE_SPECIAL:
-            return Response(
-                _("Invalid report type"),
-                status=status.HTTP_400_BAD_REQUEST
-            )
-
-        self.intervention = self.get_object(intervention_pk)
-        self.report_type = report_type
-        self.request.data["report_type"] = self.report_type
-        self.request.data["method"] = self.request.method
-        serializer = self.serializer_create_class(
-            data=self.request.data,
-            context={
-                "intervention": self.intervention,
-            }
-        )
-        if serializer.is_valid():
-            serializer.delete(serializer.validated_data)
             return Response(
                 self.serializer_list_class(self.get_data()).data
             )

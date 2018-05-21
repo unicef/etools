@@ -123,7 +123,7 @@ class TestPartnerSynchronizer(BaseTenantTestCase):
         """Check that partner organization record is updated,
         deleted_flag changed
         """
-        self.data["MARKED_FOR_DELETION"] = True
+        self.data["MARKED_FOR_DELETION"] = 'X'
         partner = PartnerFactory(
             name=self.data["VENDOR_NAME"],
             vendor_number=self.data["VENDOR_CODE"],
