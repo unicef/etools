@@ -17,7 +17,7 @@ class TestCreateLocations(BaseTenantTestCase):
         LocationFactory(p_code="123")
         LocationFactory(p_code="123")
 
-        success, not_added, created, updated = tasks.create_location(
+        success, not_added, created, remapped, updated = tasks.create_location(
             "123",
             carto,
             None,
@@ -31,6 +31,7 @@ class TestCreateLocations(BaseTenantTestCase):
         self.assertFalse(success)
         self.assertEqual(not_added, 1)
         self.assertEqual(created, 0)
+        self.assertEqual(remapped, 0)
         self.assertEqual(updated, 0)
 
     def test_exists_no_geom(self):
