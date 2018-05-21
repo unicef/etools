@@ -1,4 +1,3 @@
-from django.utils import six
 from rest_framework import status
 
 
