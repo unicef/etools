@@ -259,9 +259,6 @@ TEMPLATES = [
     },
 ]
 
-# DJANGO: TESTING
-TEST_RUNNER = 'etools.applications.EquiTrack.tests.runners.TestRunner'
-
 # DJANGO: URLS
 ROOT_URLCONF = 'etools.config.urls'
 
