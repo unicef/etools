@@ -965,43 +965,6 @@ class Command(BaseCommand):
         )
 
         EmailTemplate.objects.update_or_create(
-            name='tpm/visit/accept',
-            defaults={
-                "description": "TPM accepted visit. Notify focal points & PME.",
-                "subject": "{{ visit.tpm_partner }} has accepted the Monitoring/Verification Visit Request "
-                           "{{ visit.reference_number }}",
-
-                "content": strip_text("""
-                    Dear {{ recipient }},
-
-                    TPM {{ visit.tpm_partner }} has accepted your request for a Monitoring/Verifcation visit to
-                    Implementing Partner{% if visit.multiple_tpm_activities %}s{% endif %} {{ visit.partners }}
-
-                    Please click this link for additional information {{ visit.object_url }}
-
-                    Thank you.
-                """),
-
-                "html_content": """
-                    {% extends "email-templates/base" %}
-
-                    {% block content %}
-                    Dear {{ recipient }},<br/><br/>
-
-                    TPM <b>{{ visit.tpm_partner }}</b> has accepted your request for a Monitoring/Verifcation visit to
-                    Implementing Partner{% if visit.multiple_tpm_activities %}s{% endif %} <b>{{ visit.partners }}</b>.
-                    <br/><br/>
-
-                    Please click this link for additional information
-                    <a href="{{ visit.object_url }}">{{ visit.object_url }}</a><br/><br/>
-
-                    Thank you.
-                    {% endblock %}
-                """,
-            }
-        )
-
-        EmailTemplate.objects.update_or_create(
             name='tpm/visit/report',
             defaults={
                 'description': 'TPM finished with visit report.  Notify PME & focal points.',
@@ -1315,6 +1278,40 @@ class Command(BaseCommand):
                 Description: {{ action_point.description }}<br/>
                 Due Date: {{ action_point.due_date }}<br/>
                 Link: <a href="{{ action_point.object_url }}">{{ action_point.reference_number }}</a>
+                {% endblock %}
+                """
+            }
+        )
+
+        EmailTemplate.objects.update_or_create(
+            name='partners/blocked_partner',
+            defaults={
+                'description': 'Unicef Partner Blocked',
+                'subject': 'eTools {{environment}} - Unicef Partner Blocked: {{partner_name}}',
+                'content': """
+                Dear Colleague,
+
+                Please note that Partner {{partner_name}} has been blocked in VISION.
+                At the same time the partner has a following PDs/SSFA that is either Signed, Active or Ended:
+                {{pds}}
+
+                Please discuss follow up actions with UNICEF Authorized Officer including SSFA/PCA Termination.
+
+                Please note that this is an automated message and replies to this address not monitored.
+                """,
+                'html_content': """
+                {% extends "email-templates/base" %}
+
+                {% block content %}
+                Dear Colleague,<br/><br/>
+
+                Please note that Partner {{partner_name}} has been blocked in VISION.<br/>
+                At the same time the partner has a following PDs/SSFA that is either Signed, Active or Ended:<br/>
+                {{pds}}<br/>
+
+                Please discuss follow up actions with UNICEF Authorized Officer including SSFA/PCA Termination.<br/>
+
+                Please note that this is an automated message and replies to this address not monitored.<br/>
                 {% endblock %}
                 """
             }

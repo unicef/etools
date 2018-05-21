@@ -1,7 +1,7 @@
+import time
 from datetime import datetime
 
 from django.db import IntegrityError
-from django.utils import six
 from django.utils.encoding import force_text
 from django.utils import timezone
 
@@ -135,6 +135,33 @@ def update_sites_from_cartodb(carto_table_pk):
 
     # query for cartodb
     qry = ''
+    rows = []
+    cartodb_id_col = 'cartodb_id'
+
+    try:
+        query_row_count = sql_client.send('select count(*) from {}'.format(carto_table.table_name))
+        row_count = query_row_count['rows'][0]['count']
+
+        # do not spam Carto with requests, wait 1 second
+        time.sleep(1)
+        query_max_id = sql_client.send('select MAX({}) from {}'.format(cartodb_id_col, carto_table.table_name))
+        max_id = query_max_id['rows'][0]['max']
+    except CartoException:
+        logger.exception("Cannot fetch pagination prequisites from CartoDB for table {}".format(
+            carto_table.table_name
+        ))
+        return "Table name {}: {} sites created, {} sites updated, {} sites skipped".format(
+            carto_table.table_name, 0, 0, 0
+        )
+
+    offset = 0
+    limit = 100
+
+    # failsafe in the case when cartodb id's are too much off compared to the nr. of records
+    if max_id > (5 * row_count):
+        limit = max_id + 1
+        logger.warning("The CartoDB primary key seemf off, pagination is not possible")
+
     if carto_table.parent_code_col and carto_table.parent:
         qry = 'select st_AsGeoJSON(the_geom) as the_geom, {}, {}, {} from {}'.format(
             carto_table.name_col,
@@ -148,7 +175,30 @@ def update_sites_from_cartodb(carto_table_pk):
             carto_table.table_name)
 
     try:
-        sites = sql_client.send(qry)
+        while offset <= max_id:
+            paged_qry = qry + ' WHERE {} > {} AND {} <= {}'.format(
+                cartodb_id_col,
+                offset,
+                cartodb_id_col,
+                offset + limit
+            )
+            logger.info('Requesting rows between {} and {} for {}'.format(
+                offset,
+                offset + limit,
+                carto_table.table_name
+            ))
+
+            # do not spam Carto with requests, wait 1 second
+            time.sleep(1)
+            sites = sql_client.send(paged_qry)
+            rows += sites['rows']
+            offset += limit
+
+            if 'error' in sites:
+                # it seems we can have both valid results and error messages in the same CartoDB response
+                logger.exception("CartoDB API error received: {}".format(sites['error']))
+                # When this error occurs, we receive truncated locations, probably it's better to interrupt the import
+                return
     except CartoException:
         logger.exception("CartoDB exception occured")
     else:
@@ -204,8 +254,8 @@ def update_sites_from_cartodb(carto_table_pk):
                 if validation_failed is True:
                     return
 
-        for row in sites['rows']:
-            pcode = six.text_type(row[carto_table.pcode_col]).strip()
+        for row in rows:
+            pcode = str(row[carto_table.pcode_col]).strip()
             site_name = row[carto_table.name_col]
 
             if not site_name or site_name.isspace():

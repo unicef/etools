@@ -17,10 +17,11 @@ from etools.applications.vision.exceptions import VisionException
 
 
 def _build_country(name):
-    '''Given a name (e.g. 'test1'), creates a Country object via FactoryBoy. The object is not saved to the database.
+    """
+    Given a name (e.g. 'test1'), creates a Country object via FactoryBoy. The object is not saved to the database.
     It exists only in memory. We must be careful not to save this because creating a new Country in the database
     complicates schemas.
-    '''
+    """
     country = CountryFactory.build(name='Country {}'.format(name.title()), schema_name=name,
                                    domain_url='{}.example.com'.format(name))
     country.vision_sync_enabled = True
@@ -47,9 +48,9 @@ class TestVisionSyncTask(SimpleTestCase):
         self.public_country.vision_sync_enabled = False
         self.tenant_countries = [_build_country('test{}'.format(i)) for i in range(3)]
 
-    def _assertCountryMockCalls(self, CountryMock):
+    def _assertCountryMockCalls(self, countryMock):
         """Ensure vision_sync_task() called Country.objects.filter()"""
-        self.assertEqual(CountryMock.objects.filter.call_count, 1)
+        self.assertEqual(countryMock.objects.filter.call_count, 1)
 
     def _assertVisionLastSynced(self, tenant_countries_used=None):
         """Ensure vision_sync_task() set vision_last_synced on countries as expected.
@@ -154,15 +155,15 @@ class TestVisionSyncTask(SimpleTestCase):
 
     @override_settings(CELERY_ALWAYS_EAGER=True, CELERY_EAGER_PROPAGATES_EXCEPTIONS=True)
     def test_sync_no_args_success_case(self, mock_logger, mock_django_db_connection, mock_handler, mock_send_to_slack,
-                                       CountryMock):
+                                       countryMock):
         """Exercise etools.applications.vision.tasks.vision_sync_task() called without passing any argument"""
 
-        CountryMock.objects.filter = mock.Mock(return_value=self.tenant_countries)
+        countryMock.objects.filter = mock.Mock(return_value=self.tenant_countries)
         # Mock connection.set_tenant() so we can verify calls to it.
         mock_django_db_connection.set_tenant = mock.Mock()
         etools.applications.vision.tasks.vision_sync_task()
 
-        self._assertCountryMockCalls(CountryMock)
+        self._assertCountryMockCalls(countryMock)
         self._assertGlobalHandlersSynced(mock_handler)
         self._assertTenantHandlersSynced(mock_handler)
         self._assertConnectionTenantSet(mock_django_db_connection)
@@ -172,17 +173,17 @@ class TestVisionSyncTask(SimpleTestCase):
 
     @override_settings(CELERY_ALWAYS_EAGER=True, CELERY_EAGER_PROPAGATES_EXCEPTIONS=True)
     def test_sync_country_filter_args(self, mock_logger, mock_django_db_connection, mock_handler, mock_send_to_slack,
-                                      CountryMock):
+                                      countryMock):
         """
         Exercise etools.applications.vision.tasks.vision_sync_task() called with passing as argument a specific country
         """
 
         selected_countries = [self.tenant_countries[0], ]
-        CountryMock.objects.filter = mock.Mock(return_value=selected_countries)
+        countryMock.objects.filter = mock.Mock(return_value=selected_countries)
         mock_django_db_connection.set_tenant = mock.Mock()
         etools.applications.vision.tasks.vision_sync_task(country_name='Country Test0')
 
-        self._assertCountryMockCalls(CountryMock)
+        self._assertCountryMockCalls(countryMock)
         self._assertGlobalHandlersSynced(mock_handler, all_sync_task=5)
         self._assertTenantHandlersSynced(mock_handler, 5, 5, 0, 0)
         self._assertConnectionTenantSet(mock_django_db_connection, selected_countries)
@@ -192,18 +193,18 @@ class TestVisionSyncTask(SimpleTestCase):
 
     @override_settings(CELERY_ALWAYS_EAGER=True, CELERY_EAGER_PROPAGATES_EXCEPTIONS=True)
     def test_sync_synchronizer_filter_args(self, mock_logger, mock_django_db_connection, mock_handler,
-                                           mock_send_to_slack, CountryMock):
+                                           mock_send_to_slack, countryMock):
         """
         Exercise etools.applications.vision.tasks.vision_sync_task()
         called with passing as argument a specific synchronizer
         """
         selected_synchronizers = ['programme', ]
-        CountryMock.objects.filter = mock.Mock(return_value=self.tenant_countries)
+        countryMock.objects.filter = mock.Mock(return_value=self.tenant_countries)
         # Mock connection.set_tenant() so we can verify calls to it.
         mock_django_db_connection.set_tenant = mock.Mock()
         etools.applications.vision.tasks.vision_sync_task(synchronizers=selected_synchronizers)
 
-        self._assertCountryMockCalls(CountryMock)
+        self._assertCountryMockCalls(countryMock)
         self._assertGlobalHandlersSynced(mock_handler, all_sync_task=3, public_task=0)
         self._assertTenantHandlersSynced(mock_handler, all_sync_task=3, sync_t0=1, sync_t1=1, sync_t2=1)
         self._assertConnectionTenantSet(mock_django_db_connection)
@@ -213,7 +214,7 @@ class TestVisionSyncTask(SimpleTestCase):
 
     @override_settings(CELERY_ALWAYS_EAGER=True, CELERY_EAGER_PROPAGATES_EXCEPTIONS=True)
     def test_sync_country_and_synchronizer_filter_args(self, mock_logger, mock_django_db_connection, mock_handler,
-                                                       mock_send_to_slack, CountryMock):
+                                                       mock_send_to_slack, countryMock):
         """
         Exercise etools.applications.vision.tasks.vision_sync_task()
         called with passing a specific country and a synchronizer
@@ -221,13 +222,13 @@ class TestVisionSyncTask(SimpleTestCase):
         selected_synchronizers = ['programme', ]
         selected_countries = [self.tenant_countries[0], ]
 
-        CountryMock.objects.filter = mock.Mock(return_value=selected_countries)
+        countryMock.objects.filter = mock.Mock(return_value=selected_countries)
         # Mock connection.set_tenant() so we can verify calls to it.
         mock_django_db_connection.set_tenant = mock.Mock()
         etools.applications.vision.tasks.vision_sync_task(
             country_name='Country Test0', synchronizers=selected_synchronizers)
 
-        self._assertCountryMockCalls(CountryMock)
+        self._assertCountryMockCalls(countryMock)
         self._assertGlobalHandlersSynced(mock_handler, all_sync_task=1, public_task=0)
         self._assertTenantHandlersSynced(mock_handler, all_sync_task=1, sync_t0=1, sync_t1=0, sync_t2=0)
         self._assertConnectionTenantSet(mock_django_db_connection, selected_countries)
