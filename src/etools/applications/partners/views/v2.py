@@ -74,6 +74,7 @@ class PMPStaticDropdownsListAPIView(APIView):
         cso_types = choices_to_json_ready(list(cso_types))
         partner_types = choices_to_json_ready(PartnerType.CHOICES)
         agency_choices = choices_to_json_ready(PartnerOrganization.AGENCY_CHOICES)
+        partner_risk_rating = choices_to_json_ready(PartnerOrganization.RISK_RATINGS)
         assessment_types = choices_to_json_ready(Assessment.ASSESSMENT_TYPES)
         agreement_types = choices_to_json_ready(Agreement.AGREEMENT_TYPES)
         agreement_status = choices_to_json_ready(Agreement.STATUS_CHOICES, sort_choices=False)
@@ -108,6 +109,7 @@ class PMPStaticDropdownsListAPIView(APIView):
                 'cso_types': cso_types,
                 'partner_types': partner_types,
                 'agency_choices': agency_choices,
+                'partner_risk_rating': partner_risk_rating,
                 'assessment_types': assessment_types,
                 'agreement_types': agreement_types,
                 'agreement_status': agreement_status,
