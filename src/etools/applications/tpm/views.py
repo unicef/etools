@@ -8,9 +8,11 @@ from rest_framework.filters import DjangoFilterBackend, OrderingFilter, SearchFi
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 
-from etools.applications.EquiTrack.views import FSMTransitionActionMixin
 from etools.applications.partners.models import PartnerOrganization
 from etools.applications.partners.serializers.partner_organization_v2 import MinimalPartnerOrganizationListSerializer
+from etools.applications.permissions2.conditions import GroupCondition, NewObjectCondition, ObjectStatusCondition
+from etools.applications.permissions2.drf_permissions import NestedPermission
+from etools.applications.permissions2.views import PermittedFSMActionMixin, PermittedSerializerMixin
 from etools.applications.reports.models import Result, Sector
 from etools.applications.reports.serializers.v1 import ResultLightSerializer, SectorSerializer
 from etools.applications.rest_extra.pagination import DynamicPageNumberPagination
@@ -19,8 +21,15 @@ from etools.applications.rest_extra.views import (
     NestedViewSetMixin,
     SafeTenantViewSetMixin,
 )
+from etools.applications.tpm.conditions import (
+    TPMModuleCondition,
+    TPMStaffMemberCondition,
+    TPMVisitTPMFocalPointCondition,
+    TPMVisitUNICEFFocalPointCondition,
+)
 from etools.applications.tpm.export.renderers import (
     TPMActionPointCSVRenderer,
+    TPMActionPointFullCSVRenderer,
     TPMActivityCSVRenderer,
     TPMLocationCSVRenderer,
     TPMPartnerContactsCSVRenderer,
@@ -29,6 +38,7 @@ from etools.applications.tpm.export.renderers import (
 )
 from etools.applications.tpm.export.serializers import (
     TPMActionPointExportSerializer,
+    TPMActionPointFullExportSerializer,
     TPMActivityExportSerializer,
     TPMLocationExportSerializer,
     TPMPartnerContactsSerializer,
@@ -37,14 +47,21 @@ from etools.applications.tpm.export.serializers import (
 )
 from etools.applications.tpm.filters import ReferenceNumberOrderingFilter
 from etools.applications.tpm.metadata import TPMBaseMetadata, TPMPermissionBasedMetadata
-from etools.applications.tpm.models import ThirdPartyMonitor, TPMActivity, TPMPermission, TPMVisit
-from etools.applications.tpm.permissions import IsPMEorReadonlyPermission
+from etools.applications.tpm.models import (
+    PME,
+    ThirdPartyMonitor,
+    TPMActionPoint,
+    TPMActivity,
+    TPMVisit,
+    UNICEFUser,
+)
 from etools.applications.tpm.serializers.partner import (
     TPMPartnerLightSerializer,
     TPMPartnerSerializer,
     TPMPartnerStaffMemberSerializer,
 )
 from etools.applications.tpm.serializers.visit import (
+    TPMActionPointSerializer,
     TPMVisitDraftSerializer,
     TPMVisitLightSerializer,
     TPMVisitSerializer,
@@ -56,10 +73,24 @@ from etools.applications.vision.adapters.tpm_adapter import TPMPartnerManualSync
 class BaseTPMViewSet(
     SafeTenantViewSetMixin,
     MultiSerializerViewSetMixin,
+    PermittedSerializerMixin,
 ):
     metadata_class = TPMBaseMetadata
     pagination_class = DynamicPageNumberPagination
-    permission_classes = (IsAuthenticated, )
+    permission_classes = [IsAuthenticated]
+
+    def get_permission_context(self):
+        context = [
+            TPMModuleCondition(),
+            GroupCondition(self.request.user),
+        ]
+
+        if getattr(self, 'action', None) == 'create':
+            context.append(
+                NewObjectCondition(self.queryset.model),
+            )
+
+        return context
 
 
 class TPMPartnerViewSet(
@@ -69,6 +100,7 @@ class TPMPartnerViewSet(
     mixins.RetrieveModelMixin,
     mixins.UpdateModelMixin,
     mixins.DestroyModelMixin,
+    PermittedFSMActionMixin,
     viewsets.GenericViewSet
 ):
     metadata_class = TPMPermissionBasedMetadata
@@ -77,7 +109,6 @@ class TPMPartnerViewSet(
     serializer_action_classes = {
         'list': TPMPartnerLightSerializer
     }
-    permission_classes = (IsAuthenticated, IsPMEorReadonlyPermission,)
     filter_backends = (SearchFilter, OrderingFilter, DjangoFilterBackend)
     search_fields = ('vendor_number', 'name')
     ordering_fields = ('vendor_number', 'name', 'phone_number', 'email')
@@ -91,11 +122,35 @@ class TPMPartnerViewSet(
         if getattr(self, 'action', None) == 'list':
             queryset = queryset.country_partners()
 
-        user_type = TPMPermission._get_user_type(self.request.user)
-        if not user_type or user_type == ThirdPartyMonitor:
+        user_groups = self.request.user.groups.all()
+
+        if UNICEFUser.as_group() in user_groups or PME.as_group() in user_groups:
+            # no need to filter queryset
+            pass
+        elif ThirdPartyMonitor.as_group() in user_groups:
             queryset = queryset.filter(staff_members__user=self.request.user)
+        else:
+            queryset = queryset.none()
 
         return queryset
+
+    def get_permission_context(self):
+        context = super(TPMPartnerViewSet, self).get_permission_context()
+
+        if ThirdPartyMonitor.as_group() in self.request.user.groups.all():
+            context += [
+                TPMStaffMemberCondition(
+                    self.request.user.tpmpartners_tpmpartnerstaffmember.tpm_partner,
+                    self.request.user
+                ),
+            ]
+
+        return context
+
+    def get_obj_permission_context(self, obj):
+        return [
+            TPMStaffMemberCondition(obj, self.request.user),
+        ]
 
     @list_route(methods=['get'], url_path='sync/(?P<vendor_number>[^/]+)')
     def sync(self, request, *args, **kwargs):
@@ -147,15 +202,19 @@ class TPMStaffMembersViewSet(
     NestedViewSetMixin,
     viewsets.GenericViewSet
 ):
+    metadata_class = TPMPermissionBasedMetadata
     queryset = TPMPartnerStaffMember.objects.all()
     serializer_class = TPMPartnerStaffMemberSerializer
-    permission_classes = (IsAuthenticated, IsPMEorReadonlyPermission, )
+    permission_classes = BaseTPMViewSet.permission_classes + [NestedPermission]
+
     filter_backends = (OrderingFilter, SearchFilter, DjangoFilterBackend, )
     ordering_fields = ('user__email', 'user__first_name', 'id', )
     search_fields = ('user__first_name', 'user__email', 'user__last_name', )
     filter_fields = ('user__is_active', )
 
     def perform_create(self, serializer, **kwargs):
+        self.check_serializer_permissions(serializer, edit=True)
+
         instance = serializer.save(tpm_partner=self.get_parent_object(), **kwargs)
         instance.user.profile.country = self.request.user.profile.country
         instance.user.profile.save()
@@ -236,9 +295,9 @@ class TPMVisitViewSet(
     mixins.ListModelMixin,
     mixins.CreateModelMixin,
     mixins.RetrieveModelMixin,
-    FSMTransitionActionMixin,
     mixins.UpdateModelMixin,
     mixins.DestroyModelMixin,
+    PermittedFSMActionMixin,
     viewsets.GenericViewSet
 ):
     metadata_class = TPMPermissionBasedMetadata
@@ -268,13 +327,18 @@ class TPMVisitViewSet(
     def get_queryset(self):
         queryset = super(TPMVisitViewSet, self).get_queryset()
 
-        user_type = TPMPermission._get_user_type(self.request.user)
-        if not user_type:
-            return queryset.none()
-        if user_type == ThirdPartyMonitor:
+        user_groups = self.request.user.groups.all()
+
+        if UNICEFUser.as_group() in user_groups or PME.as_group() in user_groups:
+            # no need to filter queryset
+            pass
+        elif ThirdPartyMonitor.as_group() in user_groups:
             queryset = queryset.filter(
-                tpm_partner=self.request.user.tpmpartners_tpmpartnerstaffmember.tpm_partner,
+                tpm_partner=self.request.user.tpmpartners_tpmpartnerstaffmember.tpm_partner
             ).exclude(status=TPMVisit.STATUSES.draft)
+        else:
+            queryset = queryset.none()
+
         return queryset
 
     def get_serializer_class(self):
@@ -311,6 +375,27 @@ class TPMVisitViewSet(
             'Content-Disposition': 'attachment;filename=tpm_visits_{}.csv'.format(timezone.now().date())
         })
 
+    def get_permission_context(self):
+        context = super(TPMVisitViewSet, self).get_permission_context()
+
+        if ThirdPartyMonitor.as_group() in self.request.user.groups.all():
+            context += [
+                TPMStaffMemberCondition(
+                    self.request.user.tpmpartners_tpmpartnerstaffmember.tpm_partner,
+                    self.request.user
+                ),
+            ]
+
+        return context
+
+    def get_obj_permission_context(self, obj):
+        return [
+            ObjectStatusCondition(obj),
+            TPMStaffMemberCondition(obj.tpm_partner, self.request.user),
+            TPMVisitUNICEFFocalPointCondition(obj, self.request.user),
+            TPMVisitTPMFocalPointCondition(obj, self.request.user),
+        ]
+
     @list_route(methods=['get'], url_path='activities/export', renderer_classes=(TPMActivityCSVRenderer,))
     def activities_export(self, request, *args, **kwargs):
         tpm_activities = TPMActivity.objects.filter(
@@ -320,7 +405,7 @@ class TPMVisitViewSet(
         ).order_by('tpm_visit', 'id')
         serializer = TPMActivityExportSerializer(tpm_activities, many=True)
         return Response(serializer.data, headers={
-            'Content-Disposition': 'attachment;filename=tpm_activities_{}.csv'.format(timezone.now().date())
+            'Content-Disposition': 'attachment;filename=tpm_tasks_{}.csv'.format(timezone.now().date())
         })
 
     @list_route(methods=['get'], url_path='locations/export', renderer_classes=(TPMLocationCSVRenderer,))
@@ -334,6 +419,15 @@ class TPMVisitViewSet(
         serializer = TPMLocationExportSerializer(tpm_locations, many=True)
         return Response(serializer.data, headers={
             'Content-Disposition': 'attachment;filename=tpm_locations_{}.csv'.format(timezone.now().date())
+        })
+
+    @list_route(methods=['get'], url_path='action-points/export', renderer_classes=(TPMActionPointFullCSVRenderer,))
+    def full_action_points_export(self, request, *args, **kwargs):
+        action_points = TPMActionPoint.objects.filter(tpm_visit__in=self.get_queryset()).order_by('id')
+
+        serializer = TPMActionPointFullExportSerializer(action_points, many=True)
+        return Response(serializer.data, headers={
+            'Content-Disposition': 'attachment;filename=tpm_action_points_{}.csv'.format(timezone.now().date())
         })
 
     @detail_route(methods=['get'], url_path='action-points/export', renderer_classes=(TPMActionPointCSVRenderer,))
@@ -363,3 +457,19 @@ class TPMVisitViewSet(
             },
             filename="visit_letter_{}.pdf".format(visit.reference_number)
         )
+
+
+class ActionPointViewSet(BaseTPMViewSet,
+                         mixins.ListModelMixin,
+                         mixins.CreateModelMixin,
+                         mixins.RetrieveModelMixin,
+                         NestedViewSetMixin,
+                         viewsets.GenericViewSet):
+    metadata_class = TPMPermissionBasedMetadata
+    queryset = TPMActionPoint.objects.all()
+    serializer_class = TPMActionPointSerializer
+
+    permission_classes = BaseTPMViewSet.permission_classes + [NestedPermission]
+
+    def perform_create(self, serializer):
+        serializer.save(tpm_visit=self.get_parent_object())

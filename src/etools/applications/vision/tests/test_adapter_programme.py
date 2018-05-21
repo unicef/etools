@@ -65,9 +65,7 @@ class TestResultStructureSynchronizer(BaseTenantTestCase):
         self.assertIsNone(res)
 
     def test_update_cps_updated(self):
-        """If CountryProgramme exists with WBS value, and attributes
-        have changed then update
-        """
+        """If CountryProgramme exists with WBS value, and attributes have changed then update"""
         cp = CountryProgrammeFactory(name="New", wbs="C1")
         self.data["cps"] = {"C1": {"name": "Changed"}}
         self.adapter.data = self.data

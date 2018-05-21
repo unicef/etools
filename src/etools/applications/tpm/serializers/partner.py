@@ -4,12 +4,13 @@ from rest_framework import serializers
 
 from etools.applications.firms.serializers import BaseStaffMemberSerializer
 from etools.applications.rest_extra.serializers import WritableNestedSerializerMixin
+from etools.applications.permissions2.serializers import PermissionsBasedSerializerMixin
 from etools.applications.tpm.models import TPMPartnerStaffMember
 from etools.applications.tpm.serializers.attachments import TPMPartnerAttachmentsSerializer
 from etools.applications.tpm.tpmpartners.models import TPMPartner
 
 
-class TPMPartnerStaffMemberSerializer(BaseStaffMemberSerializer):
+class TPMPartnerStaffMemberSerializer(PermissionsBasedSerializerMixin, BaseStaffMemberSerializer):
     class Meta(BaseStaffMemberSerializer.Meta):
         model = TPMPartnerStaffMember
         fields = BaseStaffMemberSerializer.Meta.fields + [
@@ -17,7 +18,7 @@ class TPMPartnerStaffMemberSerializer(BaseStaffMemberSerializer):
         ]
 
 
-class TPMPartnerLightSerializer(serializers.ModelSerializer):
+class TPMPartnerLightSerializer(PermissionsBasedSerializerMixin, serializers.ModelSerializer):
     class Meta:
         model = TPMPartner
         fields = [

@@ -1,7 +1,13 @@
+from django.core.management import call_command
+
 from etools.applications.EquiTrack.wrappers import GroupWrapper
 
 
 class TPMTestCaseMixin(object):
+    @classmethod
+    def setUpTestData(cls):
+        call_command('update_tpm_permissions', verbosity=0)
+
     def setUp(self):
         super(TPMTestCaseMixin, self).setUp()
 
