@@ -813,7 +813,6 @@ class SpecialReportingRequirement(TimeStampedModel):
     due_date = models.DateField(verbose_name=_('Due Date'))
 
     class Meta:
-        unique_together = ("intervention", "due_date")
         ordering = ("-due_date", )
 
     def __str__(self):
