@@ -265,14 +265,14 @@ class PartnerOrganization(TimeStampedModel):
     RATING_SIGNIFICANT = 'Significant'
     RATING_MODERATE = 'Medium'
     RATING_LOW = 'Low'
-    RATING_NON_ASSESSED = 'Non Required'
+    RATING_NON_ASSESSED = 'Not Required'
 
     RISK_RATINGS = (
         (RATING_HIGH, 'High'),
         (RATING_SIGNIFICANT, 'Significant'),
         (RATING_MODERATE, 'Medium'),
         (RATING_LOW, 'Low'),
-        (RATING_NON_ASSESSED, 'Non Required'),
+        (RATING_NON_ASSESSED, 'Not Required'),
     )
 
     MICRO_ASSESSMENT = 'MICRO ASSESSMENT'
