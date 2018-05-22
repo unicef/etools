@@ -161,7 +161,6 @@ class PMPDropdownsListApiView(APIView):
                 'file_types': file_types,
                 'donors': choices_to_json_ready(list(donors), sort_choices=False),
                 'grants': choices_to_json_ready(list(grants), sort_choices=False)
-
             },
             status=status.HTTP_200_OK
         )
