@@ -14,7 +14,6 @@ from etools.applications.users.models import (
     Country,
     Office,
     Section,
-    User,
     UserProfile,
     WorkspaceCounter,
 )
@@ -319,7 +318,7 @@ class SectionAdmin(admin.ModelAdmin):
 
 
 # Re-register UserAdmin
-admin.site.register(User, UserAdminPlus)
+admin.site.register(get_user_model(), UserAdminPlus)
 admin.site.register(UserProfile, ProfileAdmin)
 admin.site.register(Country, CountryAdmin)
 admin.site.register(Office)
