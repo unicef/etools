@@ -67,7 +67,7 @@ class ActionPointBaseSerializer(UserContextSerializerMixin, SnapshotModelSeriali
         return super(ActionPointBaseSerializer, self).update(instance, validated_data)
 
 
-class ActionPointLightSerializer(PermissionsBasedSerializerMixin, ActionPointBaseSerializer):
+class ActionPointListSerializer(PermissionsBasedSerializerMixin, ActionPointBaseSerializer):
     related_module = serializers.ReadOnlyField(label=_('Related Module'))
     reference_number = serializers.ReadOnlyField(label=_('Reference Number'))
 
@@ -128,15 +128,15 @@ class CommentSerializer(UserContextSerializerMixin, WritableNestedSerializerMixi
         return super(CommentSerializer, self).create(validated_data)
 
 
-class ActionPointSerializer(WritableNestedSerializerMixin, ActionPointLightSerializer):
+class ActionPointSerializer(WritableNestedSerializerMixin, ActionPointListSerializer):
     comments = CommentSerializer(many=True, label=_('Actions Taken'))
     history = ActivitySerializer(many=True, label=_('History'), read_only=True)
 
     related_object_str = serializers.SerializerMethodField(label=_('Reference'))
     related_object_url = serializers.SerializerMethodField()
 
-    class Meta(WritableNestedSerializerMixin.Meta, ActionPointLightSerializer.Meta):
-        fields = ActionPointLightSerializer.Meta.fields + [
+    class Meta(WritableNestedSerializerMixin.Meta, ActionPointListSerializer.Meta):
+        fields = ActionPointListSerializer.Meta.fields + [
             'comments', 'history', 'related_object_str', 'related_object_url',
         ]
 
