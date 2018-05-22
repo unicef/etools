@@ -878,13 +878,15 @@ class TestSpecialReportingRequirementListCreateView(BaseTenantTestCase):
             in_amendment=True,
         )
         cls.url = reverse(
-            "reports:interventions-special-reporting-requirements"
+            "reports:interventions-special-reporting-requirements",
+            kwargs={'intervention_pk': cls.intervention.id}
         )
+        cls.sr_due_date = datetime.date(2001, 4, 15)
 
     def test_get(self):
         requirement = SpecialReportingRequirementFactory(
             intervention=self.intervention,
-            due_date=datetime.date(2001, 4, 15),
+            due_date=self.sr_due_date,
             description="Current",
         )
         response = self.forced_auth_req(
@@ -910,8 +912,7 @@ class TestSpecialReportingRequirementListCreateView(BaseTenantTestCase):
             self.url,
             user=self.unicef_staff,
             data={
-                "intervention": self.intervention.pk,
-                "due_date": datetime.date(2001, 4, 15),
+                "due_date": self.sr_due_date,
                 "description": "Randomness"
             }
         )
@@ -919,6 +920,27 @@ class TestSpecialReportingRequirementListCreateView(BaseTenantTestCase):
         self.assertEqual(requirement_qs.count(), init_count + 1)
         self.assertEqual(response.data["intervention"], self.intervention.pk)
         self.assertEqual(response.data["description"], "Randomness")
+
+    def test_post_duplicate_due_date(self):
+        response = self.forced_auth_req(
+            "post",
+            self.url,
+            user=self.unicef_staff,
+            data={"due_date": self.sr_due_date}
+        )
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        # try to duplicate the same special requirement, it should fail
+        response = self.forced_auth_req(
+            "post",
+            self.url,
+            user=self.unicef_staff,
+            data={"due_date": self.sr_due_date}
+        )
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertEqual(
+            response.data,
+            {'non_field_errors': ['Special requirement with the same due date already exists']}
+        )
 
 
 class TestSpecialReportingRequirementRetrieveUpdateDestroyView(BaseTenantTestCase):

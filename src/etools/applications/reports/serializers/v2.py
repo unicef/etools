@@ -306,3 +306,10 @@ class SpecialReportingRequirementSerializer(serializers.ModelSerializer):
     class Meta:
         model = SpecialReportingRequirement
         fields = "__all__"
+        validators = [
+            serializers.UniqueTogetherValidator(
+                queryset=model.objects.all(),
+                fields=('intervention', 'due_date'),
+                message=_('Special requirement with the same due date already exists')
+            )
+        ]
