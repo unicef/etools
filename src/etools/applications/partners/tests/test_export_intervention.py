@@ -1,4 +1,5 @@
 import datetime
+from pprint import pformat
 
 from django.urls import reverse
 from django.utils import six
@@ -19,8 +20,13 @@ from etools.applications.partners.tests.factories import (
     PartnerFactory,
     PartnerStaffFactory,
 )
-from etools.applications.reports.tests.factories import CountryProgrammeFactory, IndicatorFactory
+from etools.applications.reports.models import Result
+from etools.applications.reports.tests.factories import CountryProgrammeFactory, IndicatorFactory, AppliedIndicatorFactory, LowerResultFactory, ResultFactory, SectorFactory
 from etools.applications.users.tests.factories import UserFactory
+
+
+DATE1 = datetime.date(2013, 1, 6)
+DATE2 = datetime.date(2013, 3, 20)
 
 
 class BaseInterventionModelExportTestCase(BaseTenantTestCase):
@@ -37,39 +43,39 @@ class BaseInterventionModelExportTestCase(BaseTenantTestCase):
             phone_number="Phone no 1234567",
             email="email@address.com",
             rating="High",
-            core_values_assessment_date=datetime.date.today(),
+            core_values_assessment_date=DATE1,
             total_ct_cp=10000,
             total_ct_cy=20000,
             deleted_flag=False,
             blocked=False,
             type_of_assessment="Type of Assessment",
-            last_assessment_date=datetime.date.today(),
+            last_assessment_date=DATE2,
         )
         partnerstaff = PartnerStaffFactory(partner=partner)
         agreement = AgreementFactory(
             partner=partner,
             country_programme=CountryProgrammeFactory(wbs="random WBS"),
             attached_agreement="fake_attachment.pdf",
-            start=datetime.date.today(),
-            end=datetime.date.today(),
-            signed_by_unicef_date=datetime.date.today(),
+            start=DATE1,
+            end=DATE2,
+            signed_by_unicef_date=DATE1,
             signed_by=cls.unicef_staff,
-            signed_by_partner_date=datetime.date.today()
+            signed_by_partner_date=DATE1
         )
         agreement.authorized_officers.add(partnerstaff)
         agreement.save()
-        AgreementFactory(signed_by_unicef_date=datetime.date.today())
+        AgreementFactory(signed_by_unicef_date=DATE1)
         cls.intervention = InterventionFactory(
             agreement=agreement,
             document_type='SHPD',
             status='draft',
-            start=datetime.date.today(),
-            end=datetime.date.today(),
-            submission_date=datetime.date.today(),
-            submission_date_prc=datetime.date.today(),
-            review_date_prc=datetime.date.today(),
-            signed_by_unicef_date=datetime.date.today(),
-            signed_by_partner_date=datetime.date.today(),
+            start=DATE1,
+            end=DATE2,
+            submission_date=DATE1,
+            submission_date_prc=DATE1,
+            review_date_prc=DATE1,
+            signed_by_unicef_date=DATE1,
+            signed_by_partner_date=DATE1,
             unicef_signatory=cls.unicef_staff,
             population_focus="Population focus",
             partner_authorized_officer_signatory=partnerstaff,
@@ -403,3 +409,84 @@ class TestInterventionSectorLocationLinkModelExport(BaseInterventionModelExportT
         self.assertEqual(dataset.height, 1)
         self.assertEqual(len(dataset._get_headers()), 18)
         self.assertEqual(len(dataset[0]), 18)
+
+
+class TestInterventionLocationExport(BaseInterventionModelExportTestCase):
+    """
+    API to export a list of interventions, and for each one, iterate
+    over its locations and sections to provide a row for each
+    location/section combination for each intervention.
+
+    """
+    def test1(self):
+        partner_name = self.intervention.agreement.partner.name
+
+        result_link = InterventionResultLinkFactory(intervention=self.intervention, cp_output__name='Result 0')
+        self.lr1 = LowerResultFactory(result_link=result_link)
+
+        self.loc1 = LocationFactory(name='Location 0')
+        self.loc2 = LocationFactory(name='Location 1')
+        self.loc3 = LocationFactory(name='Location 2')
+        self.sec1 = SectorFactory(name='Sector 0')
+        self.sec2 = SectorFactory(name='Sector 1')
+        self.applied_indicator1 = AppliedIndicatorFactory(lower_result=self.lr1, section=self.sec1)
+        self.applied_indicator1.locations.add(self.loc1, self.loc2)
+        self.applied_indicator2 = AppliedIndicatorFactory(lower_result=self.lr1, section=self.sec2)
+        self.applied_indicator2.locations.add(self.loc3)
+
+        self.intervention.unicef_focal_points.add(
+            UserFactory(first_name='Jack', last_name='Bennie'),
+            UserFactory(first_name='Phil', last_name='Silver')
+        )
+
+        InterventionResultLinkFactory(cp_output=ResultFactory(sector=self.sec1, name='Result A'), intervention=self.intervention)
+        InterventionResultLinkFactory(cp_output=ResultFactory(sector=self.sec1, name='Result B'), intervention=self.intervention)
+
+        # Intervention with no locations
+        self.intervention2 = InterventionFactory(agreement=AgreementFactory(partner=PartnerFactory(name='Partner 2')))
+        sec = SectorFactory(name='Sector 2')
+        self.intervention2.sections.add(sec)
+        InterventionResultLinkFactory(cp_output=ResultFactory(sector=sec, name='Result C'), intervention=self.intervention2)
+        InterventionResultLinkFactory(cp_output=ResultFactory(sector=sec, name='Result D'), intervention=self.intervention2)
+
+        # Intervention with no sectors
+        self.intervention3 = InterventionFactory(agreement=AgreementFactory(partner=PartnerFactory(name='Partner 3')))
+        result_link = InterventionResultLinkFactory(intervention=self.intervention3, cp_output=ResultFactory(name='Result Fred'))
+        self.lr2 = LowerResultFactory(result_link=result_link)
+        AppliedIndicatorFactory(lower_result=self.lr2, section=None)
+
+        self.url = reverse(
+            'partners_api:intervention-locations-list',
+        )
+
+        response = self.forced_auth_req(
+            'get',
+            self.url,
+            user=self.unicef_staff,
+            data={"format": "csv"},
+        )
+        self.assertEqual(200, response.status_code, msg=response.content.decode('utf-8'))
+        result = response.content.decode('utf-8')
+
+        # Leave this here to easily comment out for debugging.
+        # print("RESULT:")
+        # for line in result.split('\r\n'):
+        #     print('f' + repr(line + '\r\n'))
+        #
+
+        pd_ref_number0 = self.intervention.number
+        agreement_number_1 = self.intervention.agreement.agreement_number
+        agreement_number_2 = self.intervention2.agreement.agreement_number
+        agreement_number_3 = self.intervention3.agreement.agreement_number
+        self.assertEqual(
+            result,
+            f'Partner,PD Ref Number,Partnership,Status,Location,Section,CP output,Start Date,End Date,Name of UNICEF Focal Point,Hyperlink\r\n'
+            f'{partner_name},{self.intervention.number},{agreement_number_1},draft,Location 0,Sector 0,"Result 0, Result A, Result B",2013-01-06,2013-03-20,"Jack Bennie, Phil Silver",https://testserver/pmp/interventions/{self.intervention.id}/details/\r\n'
+            f'{partner_name},{self.intervention.number},{agreement_number_1},draft,Location 1,Sector 0,"Result 0, Result A, Result B",2013-01-06,2013-03-20,"Jack Bennie, Phil Silver",https://testserver/pmp/interventions/{self.intervention.id}/details/\r\n'
+            f'{partner_name},{self.intervention.number},{agreement_number_1},draft,Location 2,Sector 0,"Result 0, Result A, Result B",2013-01-06,2013-03-20,"Jack Bennie, Phil Silver",https://testserver/pmp/interventions/{self.intervention.id}/details/\r\n'
+            f'{partner_name},{self.intervention.number},{agreement_number_1},draft,Location 0,Sector 1,"Result 0, Result A, Result B",2013-01-06,2013-03-20,"Jack Bennie, Phil Silver",https://testserver/pmp/interventions/{self.intervention.id}/details/\r\n'
+            f'{partner_name},{self.intervention.number},{agreement_number_1},draft,Location 1,Sector 1,"Result 0, Result A, Result B",2013-01-06,2013-03-20,"Jack Bennie, Phil Silver",https://testserver/pmp/interventions/{self.intervention.id}/details/\r\n'
+            f'{partner_name},{self.intervention.number},{agreement_number_1},draft,Location 2,Sector 1,"Result 0, Result A, Result B",2013-01-06,2013-03-20,"Jack Bennie, Phil Silver",https://testserver/pmp/interventions/{self.intervention.id}/details/\r\n'
+            f'Partner 2,{self.intervention2.number},{agreement_number_2},draft,,Sector 2,"Result C, Result D",,,,https://testserver/pmp/interventions/{self.intervention2.id}/details/\r\n'
+            f'Partner 3,{self.intervention3.number},{agreement_number_3},draft,,,Result Fred,,,,https://testserver/pmp/interventions/{self.intervention3.id}/details/\r\n'
+        )

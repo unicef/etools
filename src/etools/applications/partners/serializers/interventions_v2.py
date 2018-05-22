@@ -22,8 +22,7 @@ from etools.applications.partners.permissions import InterventionPermissions
 from etools.applications.reports.models import (
     AppliedIndicator,
     LowerResult,
-    ReportingRequirement,
-)
+    ReportingRequirement)
 from etools.applications.reports.serializers.v1 import SectorSerializer
 from etools.applications.reports.serializers.v2 import (IndicatorSerializer, LowerResultCUSerializer,
                                                         LowerResultSerializer, ReportingRequirementSerializer,)
@@ -765,3 +764,22 @@ class InterventionReportingRequirementCreateSerializer(serializers.ModelSerializ
             if r.get("id"):
                 ReportingRequirement.objects.filter(pk=r.get("id")).delete()
         return self.intervention
+
+
+class InterventionLocationExportSerializer(serializers.Serializer):
+    # Column headers:
+    # Partner	PD Ref Number	Partnership	Status	Location	Section	CP output	Start Date	End Date	Name of UNICEF Focal Point	Hyperlink
+    partner = serializers.CharField(source="intervention.agreement.partner.name")
+    pd_ref_number = serializers.CharField(source="intervention.number")
+    partnership = serializers.CharField(source="intervention.agreement.agreement_number")
+    status = serializers.CharField(source="intervention.status")
+    location = serializers.CharField(source="selected_location.name")
+    section = serializers.CharField(source="section.name")
+    cp_output = serializers.CharField(source="intervention.cp_output_names")
+    start = serializers.CharField(source="intervention.start")
+    end = serializers.CharField(source="intervention.end")
+    focal_point = serializers.CharField(source="intervention.focal_point_names")
+    hyperlink = serializers.SerializerMethodField()
+
+    def get_hyperlink(self, obj):
+        return 'https://{}/pmp/interventions/{}/details/'.format(self.context['request'].get_host(), obj.intervention.id)

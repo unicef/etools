@@ -9,3 +9,5 @@ isort
 ipython
 pdbpp
 tox
+pyflakes>=2.0.0
+pycodestyle>=2.4.0
