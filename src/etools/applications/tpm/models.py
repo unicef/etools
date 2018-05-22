@@ -17,6 +17,7 @@ from etools.applications.attachments.models import Attachment
 from etools.applications.EquiTrack.utils import get_environment
 from etools.applications.notification.utils import send_notification_using_email_template
 from etools.applications.publics.models import SoftDeleteMixin
+from etools.applications.permissions2.fsm import has_action_permission
 from etools.applications.tpm.tpmpartners.models import TPMPartner, TPMPartnerStaffMember
 from etools.applications.tpm.transitions.conditions import (TPMVisitAssignRequiredFieldsCheck,
                                                             TPMVisitReportValidations, ValidateTPMVisitActivities,)
@@ -25,14 +26,6 @@ from etools.applications.tpm.transitions.serializers import (TPMVisitApproveSeri
 from etools.applications.utils.common.models.fields import CodedGenericRelation
 from etools.applications.utils.common.urlresolvers import build_frontend_url
 from etools.applications.utils.groups.wrappers import GroupWrapper
-from etools.applications.utils.permissions.models.models import StatusBasePermission
-from etools.applications.utils.permissions.models.query import StatusBasePermissionQueryset
-from etools.applications.utils.permissions.utils import has_action_permission
-
-
-def _has_action_permission(action):
-    return lambda instance=None, user=None: \
-        has_action_permission(TPMPermission, instance=instance, user=user, action=action)
 
 
 @python_2_unicode_compatible
@@ -68,6 +61,8 @@ class TPMVisit(SoftDeleteMixin, TimeStampedModel, models.Model):
         STATUSES.tpm_report_rejected: 'date_of_tpm_report_rejected',
         STATUSES.unicef_approved: 'date_of_unicef_approved',
     }
+
+    author = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, blank=True, null=True)
 
     tpm_partner = models.ForeignKey(
         TPMPartner, verbose_name=_('TPM Vendor'), null=True,
@@ -144,6 +139,14 @@ class TPMVisit(SoftDeleteMixin, TimeStampedModel, models.Model):
     def unicef_focal_points_with_emails(self):
         return list(filter(lambda u: u.email and u.is_active, self.unicef_focal_points))
 
+    @property
+    def unicef_focal_points_and_pme(self):
+        users = self.unicef_focal_points_with_emails
+        if self.author and self.author.is_active and self.author.email:
+            users += [self.author]
+
+        return users
+
     def __str__(self):
         return 'Visit ({} to {} at {} - {})'.format(
             self.tpm_partner, ', '.join(filter(
@@ -152,9 +155,6 @@ class TPMVisit(SoftDeleteMixin, TimeStampedModel, models.Model):
             )),
             self.start_date, self.end_date
         )
-
-    def has_action_permission(self, user=None, action=None):
-        return _has_action_permission(self, user, action)
 
     def get_mail_context(self, user=None):
         object_url = self.get_object_url()
@@ -202,6 +202,9 @@ class TPMVisit(SoftDeleteMixin, TimeStampedModel, models.Model):
     def _get_unicef_focal_points_as_email_recipients(self):
         return list(map(lambda u: u.email, self.unicef_focal_points_with_emails))
 
+    def _get_unicef_focal_points_and_pme_as_email_recipients(self):
+        return list(map(lambda u: u.email, self.unicef_focal_points_and_pme))
+
     def _get_tpm_focal_points_as_email_recipients(self):
         return list(
             self.tpm_partner_focal_points.filter(
@@ -210,20 +213,13 @@ class TPMVisit(SoftDeleteMixin, TimeStampedModel, models.Model):
             ).values_list('user__email', flat=True)
         )
 
-    def _get_ip_focal_points_as_email_recipients(self):
-        return list(
-            self.tpm_activities.filter(
-                intervention__partner_focal_points__email__isnull=False
-            ).values_list('intervention__partner_focal_points__email', flat=True)
-        )
-
     @transition(
         status, source=[STATUSES.draft, STATUSES.tpm_rejected], target=STATUSES.assigned,
         conditions=[
             TPMVisitAssignRequiredFieldsCheck.as_condition(),
             ValidateTPMVisitActivities.as_condition(),
         ],
-        permission=_has_action_permission(action='assign'),
+        permission=has_action_permission(action='assign'),
         custom={
             'name': lambda obj: _('Re-assign') if obj.status == TPMVisit.STATUSES.tpm_rejected else _('Assign')
         }
@@ -234,7 +230,7 @@ class TPMVisit(SoftDeleteMixin, TimeStampedModel, models.Model):
         if self.tpm_partner.email:
             self._send_email(
                 self.tpm_partner.email, 'tpm/visit/assign',
-                cc=self._get_unicef_focal_points_as_email_recipients()
+                cc=self._get_unicef_focal_points_and_pme_as_email_recipients()
             )
 
         for staff_member in self.tpm_partner_focal_points.filter(user__email__isnull=False, user__is_active=True):
@@ -248,7 +244,7 @@ class TPMVisit(SoftDeleteMixin, TimeStampedModel, models.Model):
         status, source=[
             STATUSES.draft, STATUSES.assigned, STATUSES.tpm_accepted, STATUSES.tpm_rejected,
             STATUSES.tpm_reported, STATUSES.tpm_report_rejected,
-        ], target=STATUSES.cancelled, permission=_has_action_permission(action='cancel'),
+        ], target=STATUSES.cancelled, permission=has_action_permission(action='cancel'),
         custom={
             'serializer': TPMVisitCancelSerializer,
             'name': _('Cancel Visit')
@@ -259,13 +255,13 @@ class TPMVisit(SoftDeleteMixin, TimeStampedModel, models.Model):
         self.date_of_cancelled = timezone.now()
 
     @transition(status, source=[STATUSES.assigned], target=STATUSES.tpm_rejected,
-                permission=_has_action_permission(action='reject'),
+                permission=has_action_permission(action='reject'),
                 custom={'serializer': TPMVisitRejectSerializer})
     def reject(self, reject_comment):
         self.date_of_tpm_rejected = timezone.now()
         self.reject_comment = reject_comment
 
-        for recipient in self.unicef_focal_points_with_emails:
+        for recipient in self.unicef_focal_points_and_pme:
             self._send_email(
                 recipient.email, 'tpm/visit/reject',
                 cc=self._get_tpm_focal_points_as_email_recipients(),
@@ -273,23 +269,16 @@ class TPMVisit(SoftDeleteMixin, TimeStampedModel, models.Model):
             )
 
     @transition(status, source=[STATUSES.assigned], target=STATUSES.tpm_accepted,
-                permission=_has_action_permission(action='accept'))
+                permission=has_action_permission(action='accept'))
     def accept(self):
         self.date_of_tpm_accepted = timezone.now()
-
-        for recipient in self.unicef_focal_points_with_emails:
-            self._send_email(
-                recipient.email, 'tpm/visit/accept',
-                cc=self._get_tpm_focal_points_as_email_recipients(),
-                context={'recipient': recipient.get_full_name()}
-            )
 
     @transition(
         status, source=[STATUSES.tpm_accepted, STATUSES.tpm_report_rejected], target=STATUSES.tpm_reported,
         conditions=[
             TPMVisitReportValidations.as_condition(),
         ],
-        permission=_has_action_permission(action='send_report'),
+        permission=has_action_permission(action='send_report'),
         custom={
             'name': _('Submit Report')
         }
@@ -297,7 +286,7 @@ class TPMVisit(SoftDeleteMixin, TimeStampedModel, models.Model):
     def send_report(self):
         self.date_of_tpm_reported = timezone.now()
 
-        for recipient in self.unicef_focal_points_with_emails:
+        for recipient in self.unicef_focal_points_and_pme:
             self._send_email(
                 recipient.email, 'tpm/visit/report',
                 cc=self._get_tpm_focal_points_as_email_recipients(),
@@ -306,7 +295,7 @@ class TPMVisit(SoftDeleteMixin, TimeStampedModel, models.Model):
 
     @transition(
         status, source=[STATUSES.tpm_reported], target=STATUSES.tpm_report_rejected,
-        permission=_has_action_permission(action='reject_report'),
+        permission=has_action_permission(action='reject_report'),
         custom={
             'serializer': TPMVisitRejectSerializer,
             'name': _('Send back to TPM')
@@ -324,7 +313,7 @@ class TPMVisit(SoftDeleteMixin, TimeStampedModel, models.Model):
 
     @transition(status, source=[STATUSES.tpm_reported], target=STATUSES.unicef_approved,
                 custom={'serializer': TPMVisitApproveSerializer},
-                permission=_has_action_permission(action='approve'))
+                permission=has_action_permission(action='approve'))
     def approve(self, mark_as_programmatic_visit=None, approval_comment=None, notify_focal_point=True,
                 notify_tpm_partner=True):
         mark_as_programmatic_visit = mark_as_programmatic_visit or []
@@ -400,6 +389,8 @@ class TPMActivity(Activity):
                                               code='activity_report', blank=True)
 
     is_pv = models.BooleanField(default=False, verbose_name=_('HACT Programmatic Visit'))
+
+    objects = models.Manager()
 
     def __str__(self):
         return 'Task #{0} for {1}'.format(self.id, self.tpm_visit)
@@ -502,59 +493,3 @@ ThirdPartyMonitor = GroupWrapper(code='third_party_monitor',
 
 UNICEFUser = GroupWrapper(code='unicef_user',
                           name='UNICEF User')
-
-
-class TPMPermissionsQueryset(StatusBasePermissionQueryset):
-    def filter(self, *args, **kwargs):
-        instance = kwargs.get('instance', None)
-        if 'user' in kwargs and instance:
-            kwargs['user_type'] = self.model._get_user_type(kwargs.pop('user'), instance=instance)
-            return self.filter(**kwargs)
-
-        if 'user' in kwargs and 'instance__in' in kwargs:
-            user_type = self.model._get_user_type(kwargs.pop('user'))
-            if user_type == UNICEFUser:
-                return self.filter(models.Q(user_type=UNICEFUser.code) | models.Q(
-                    user_type=self.model.USER_TYPES.unicef_focal_point)).filter(**kwargs)
-
-            kwargs['user_type'] = user_type
-            return self.filter(**kwargs)
-
-        return super(TPMPermissionsQueryset, self).filter(**kwargs)
-
-
-@python_2_unicode_compatible
-class TPMPermission(StatusBasePermission):
-    STATUSES = StatusBasePermission.STATUSES + TPMVisit.STATUSES
-
-    USER_TYPES = Choices(
-        ('unicef_focal_point', _('UNICEF Focal Point')),
-        PME.as_choice(),
-        ThirdPartyMonitor.as_choice(),
-        UNICEFUser.as_choice(),
-    )
-
-    objects = TPMPermissionsQueryset.as_manager()
-
-    def __str__(self):
-        return '{} can {} {} in {} visit'.format(self.user_type, self.permission, self.target, self.instance_status)
-
-    @classmethod
-    def _get_user_type(cls, user, instance=None):
-        if instance and TPMActivity.objects.filter(tpm_visit=instance, unicef_focal_points=user).exists():
-            return cls.USER_TYPES.unicef_focal_point
-
-        user_type = super(TPMPermission, cls)._get_user_type(user)
-        if user_type == ThirdPartyMonitor:
-            if not instance:
-                return user_type
-
-            try:
-                member = user.tpmpartners_tpmpartnerstaffmember
-            except TPMPartnerStaffMember.DoesNotExist:
-                return None
-            else:
-                if member not in instance.tpm_partner.staff_members.all():
-                    return None
-
-        return user_type

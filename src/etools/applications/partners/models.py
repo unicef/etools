@@ -6,10 +6,10 @@ import json
 
 from django.conf import settings
 from django.contrib.postgres.fields import ArrayField, JSONField
-from django.core.urlresolvers import reverse
 from django.db import models, connection, transaction
 from django.db.models import Case, Count, CharField, F, Max, Min, Q, Sum, When
 from django.db.models.signals import post_save, pre_delete
+from django.urls import reverse
 from django.utils import six, timezone
 from django.utils.encoding import python_2_unicode_compatible
 from django.utils.functional import cached_property
@@ -20,6 +20,7 @@ from django_fsm import FSMField, transition
 from model_utils import Choices, FieldTracker
 from model_utils.models import TimeFramedModel, TimeStampedModel
 
+from etools.applications.EquiTrack.serializers import StringConcat
 from etools.applications.attachments.models import Attachment
 from etools.applications.environment.helpers import tenant_switch_is_active
 from etools.applications.EquiTrack.fields import CurrencyField, QuarterField
@@ -254,16 +255,16 @@ class PartnerOrganization(TimeStampedModel):
 
     RATING_HIGH = 'High'
     RATING_SIGNIFICANT = 'Significant'
-    RATING_MODERATE = 'Moderate'
+    RATING_MODERATE = 'Medium'
     RATING_LOW = 'Low'
-    RATING_NON_ASSESSED = 'Non-Assessed'
+    RATING_NON_ASSESSED = 'Not Required'
 
     RISK_RATINGS = (
         (RATING_HIGH, 'High'),
         (RATING_SIGNIFICANT, 'Significant'),
         (RATING_MODERATE, 'Medium'),
         (RATING_LOW, 'Low'),
-        (RATING_NON_ASSESSED, 'Non Required'),
+        (RATING_NON_ASSESSED, 'Not Required'),
     )
 
     MICRO_ASSESSMENT = 'MICRO ASSESSMENT'
@@ -635,36 +636,35 @@ class PartnerOrganization(TimeStampedModel):
         else:
             return PartnerOrganization.ASSURANCE_COMPLETE
 
-    @classmethod
-    def planned_visits(cls, partner):
+    def planned_visits_to_hact(self):
         """For current year sum all programmatic values of planned visits
         records for partner
 
         If partner type is Government, then default to 0 planned visits
         """
         year = datetime.date.today().year
-        if partner.partner_type == 'Government':
+        if self.partner_type == 'Government':
             pvq1 = pvq2 = pvq3 = pvq4 = 0
         else:
-            pv = InterventionPlannedVisits.objects.filter(
-                intervention__agreement__partner=partner, year=year,
-                intervention__status__in=[Intervention.ACTIVE, Intervention.CLOSED, Intervention.ENDED]
-            )
-            pvq1 = pv.aggregate(models.Sum('programmatic_q1'))['programmatic_q1__sum'] or 0
-            pvq2 = pv.aggregate(models.Sum('programmatic_q2'))['programmatic_q2__sum'] or 0
-            pvq3 = pv.aggregate(models.Sum('programmatic_q3'))['programmatic_q3__sum'] or 0
-            pvq4 = pv.aggregate(models.Sum('programmatic_q4'))['programmatic_q4__sum'] or 0
+            try:
+                pv = self.planned_visits.get(year=year)
+                pvq1 = pv.programmatic_q1
+                pvq2 = pv.programmatic_q2
+                pvq3 = pv.programmatic_q3
+                pvq4 = pv.programmatic_q4
+            except PartnerPlannedVisits.DoesNotExist:
+                pvq1 = pvq2 = pvq3 = pvq4 = 0
 
-        hact = json.loads(partner.hact_values) \
-            if isinstance(partner.hact_values, six.text_type) \
-            else partner.hact_values
+        hact = json.loads(self.hact_values) \
+            if isinstance(self.hact_values, six.text_type) \
+            else self.hact_values
         hact['programmatic_visits']['planned']['q1'] = pvq1
         hact['programmatic_visits']['planned']['q2'] = pvq2
         hact['programmatic_visits']['planned']['q3'] = pvq3
         hact['programmatic_visits']['planned']['q4'] = pvq4
         hact['programmatic_visits']['planned']['total'] = pvq1 + pvq2 + pvq3 + pvq4
-        partner.hact_values = hact
-        partner.save()
+        self.hact_values = hact
+        self.save()
 
     @classmethod
     def programmatic_visits(cls, partner, event_date=None, update_one=False):
@@ -1445,7 +1445,6 @@ class InterventionManager(models.Manager):
     def get_queryset(self):
         return super(InterventionManager, self).get_queryset().prefetch_related(
             'agreement__partner',
-            'frs',
             'partner_focal_points',
             'unicef_focal_points',
             'offices',
@@ -1454,14 +1453,9 @@ class InterventionManager(models.Manager):
         )
 
     def detail_qs(self):
-        return self.get_queryset().prefetch_related(
-            'agreement__partner',
+        qs = self.get_queryset().prefetch_related(
             'frs',
-            'partner_focal_points',
-            'unicef_focal_points',
-            'offices',
-            'planned_budget',
-            'sections',
+            'frs__fr_items',
             'result_links__cp_output',
             'result_links__ll_results',
             'result_links__ll_results__applied_indicators__indicator',
@@ -1469,6 +1463,7 @@ class InterventionManager(models.Manager):
             'result_links__ll_results__applied_indicators__locations',
             'flat_locations',
         )
+        return qs
 
     def frs_qs(self):
         qs = self.get_queryset().prefetch_related(
@@ -1476,6 +1471,7 @@ class InterventionManager(models.Manager):
             'planned_budget',
             'offices',
             'sections',
+            # 'frs__fr_items',
             # TODO: Figure out a way in which to add locations that is more performant
             # 'flat_locations',
             'result_links__cp_output',
@@ -1489,6 +1485,10 @@ class InterventionManager(models.Manager):
             Sum("frs__actual_amt_local"),
             Sum("frs__intervention_amt"),
             Count("frs__currency", distinct=True),
+            location_p_codes=StringConcat("flat_locations__p_code", separator="|", distinct=True),
+            donors=StringConcat("frs__fr_items__donor", separator="|", distinct=True),
+            donor_codes=StringConcat("frs__fr_items__donor_code", separator="|", distinct=True),
+            grants=StringConcat("frs__fr_items__grant_number", separator="|", distinct=True),
             max_fr_currency=Max("frs__currency", output_field=CharField(), distinct=True),
             multi_curr_flag=Count(Case(When(frs__multi_curr_flag=True, then=1)))
         )
@@ -2036,9 +2036,6 @@ class Intervention(TimeStampedModel):
 
         super(Intervention, self).save()
 
-        if self.status == Intervention.ACTIVE:
-            PartnerOrganization.planned_visits(partner=self.agreement.partner)
-
 
 @python_2_unicode_compatible
 class InterventionAmendment(TimeStampedModel):
@@ -2413,3 +2410,42 @@ def get_file_path(instance, filename):
          six.text_type(instance.pca.id),
          filename]
     )
+
+
+class PartnerPlannedVisits(TimeStampedModel):
+    """Represents planned visits for the partner"""
+
+    partner = models.ForeignKey(
+        PartnerOrganization,
+        related_name='planned_visits',
+        verbose_name=_('Partner'),
+        on_delete=models.CASCADE,
+    )
+    year = models.IntegerField(default=get_current_year, verbose_name=_('Year'))
+    programmatic_q1 = models.IntegerField(default=0, verbose_name=_('Programmatic Q1'))
+    programmatic_q2 = models.IntegerField(default=0, verbose_name=_('Programmatic Q2'))
+    programmatic_q3 = models.IntegerField(default=0, verbose_name=_('Programmatic Q3'))
+    programmatic_q4 = models.IntegerField(default=0, verbose_name=_('Programmatic Q4'))
+
+    tracker = FieldTracker()
+
+    class Meta:
+        unique_together = ('partner', 'year')
+        verbose_name_plural = _('Partner Planned Visits')
+
+    def __str__(self):
+        return '{} {}'.format(self.partner, self.year)
+
+    @property
+    def total(self):
+        return (
+            self.programmatic_q1 +
+            self.programmatic_q2 +
+            self.programmatic_q3 +
+            self.programmatic_q4
+        )
+
+    @transaction.atomic
+    def save(self, **kwargs):
+        super().save(**kwargs)
+        self.partner.planned_visits_to_hact()

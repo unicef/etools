@@ -14,7 +14,7 @@ from rest_framework.views import APIView
 
 from etools.applications.attachments.models import FileType as AttachmentFileType
 from etools.applications.EquiTrack.fields import CURRENCIES
-from etools.applications.funds.models import Donor
+from etools.applications.funds.models import Donor, Grant
 from etools.applications.locations.models import GatewayType
 from etools.applications.partners.filters import PartnerScopeFilter
 from etools.applications.partners.models import (Agreement, AgreementAmendment, Assessment, FileType,
@@ -74,6 +74,7 @@ class PMPStaticDropdownsListAPIView(APIView):
         cso_types = choices_to_json_ready(list(cso_types))
         partner_types = choices_to_json_ready(PartnerType.CHOICES)
         agency_choices = choices_to_json_ready(PartnerOrganization.AGENCY_CHOICES)
+        partner_risk_rating = choices_to_json_ready(PartnerOrganization.RISK_RATINGS)
         assessment_types = choices_to_json_ready(Assessment.ASSESSMENT_TYPES)
         agreement_types = choices_to_json_ready(Agreement.AGREEMENT_TYPES)
         agreement_status = choices_to_json_ready(Agreement.STATUS_CHOICES, sort_choices=False)
@@ -108,6 +109,7 @@ class PMPStaticDropdownsListAPIView(APIView):
                 'cso_types': cso_types,
                 'partner_types': partner_types,
                 'agency_choices': agency_choices,
+                'partner_risk_rating': partner_risk_rating,
                 'assessment_types': assessment_types,
                 'agreement_types': agreement_types,
                 'agreement_status': agreement_status,
@@ -146,6 +148,7 @@ class PMPDropdownsListApiView(APIView):
         file_types = list(FileType.objects.filter(name__in=[i[0] for i in FileType.NAME_CHOICES])
                           .all().values())
         donors = list(Donor.objects.all().values())
+        grants = list(Grant.objects.all().values())
 
         return Response(
             {
@@ -154,6 +157,7 @@ class PMPDropdownsListApiView(APIView):
                 'cp_outputs': cp_outputs,
                 'file_types': file_types,
                 'donors': donors,
+                'grants': grants,
 
             },
             status=status.HTTP_200_OK

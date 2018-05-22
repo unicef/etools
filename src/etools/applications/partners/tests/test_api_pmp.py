@@ -1,8 +1,8 @@
 import json
 from operator import itemgetter
 
-from django.core.urlresolvers import reverse
 from django.test import SimpleTestCase
+from django.urls import reverse
 from django.utils import six
 
 from rest_framework import status
@@ -59,6 +59,7 @@ class TestPMPStaticDropdownsListApiView(BaseTenantTestCase):
                                      'location_types',
                                      'attachment_types',
                                      'partner_file_types',
+                                     'partner_risk_rating',
                                      ))
 
     def _assertResponseFundamentals(self, response):
@@ -231,11 +232,12 @@ class TestPMPDropdownsListApiView(BaseTenantTestCase):
     def setUp(self):
         super(TestPMPDropdownsListApiView, self).setUp()
         self.expected_keys = sorted((
-            u'signed_by_unicef_users',
-            u'cp_outputs',
-            u'country_programmes',
-            u'file_types',
-            u'donors'
+            'signed_by_unicef_users',
+            'cp_outputs',
+            'country_programmes',
+            'file_types',
+            'donors',
+            'grants',
         ))
 
     def test_get(self):

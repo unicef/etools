@@ -52,6 +52,8 @@ class FundReservationsSynchronizer(VisionDataSynchronizer):
         "line_item": "LINE_ITEM",
         "wbs": "WBS_ELEMENT",
         "grant_number": "GRANT_NBR",
+        "donor": "DONOR_NAME",
+        "donor_code": "DONOR_CODE",
         "fund": "FUND",
         "overall_amount": "OVERALL_AMOUNT",
         "overall_amount_dc": "OVERALL_AMOUNT_DC",
@@ -72,7 +74,7 @@ class FundReservationsSynchronizer(VisionDataSynchronizer):
 
     LINE_ITEM_FIELDS = ['LINE_ITEM', 'FR_NUMBER', 'WBS_ELEMENT', 'GRANT_NBR',
                         'FUND', 'OVERALL_AMOUNT', 'OVERALL_AMOUNT_DC',
-                        'DUE_DATE', 'FR_LINE_ITEM_TEXT']
+                        'DUE_DATE', 'FR_LINE_ITEM_TEXT', 'DONOR_NAME', 'DONOR_CODE']
 
     def __init__(self, *args, **kwargs):
         self.header_records = {}
@@ -103,7 +105,8 @@ class FundReservationsSynchronizer(VisionDataSynchronizer):
 
         return [rec for rec in records if bad_record(rec)]
 
-    def get_value_for_field(self, field, value):
+    @staticmethod
+    def get_value_for_field(field, value):
         if field in ['start_date', 'end_date', 'document_date', 'due_date']:
             return datetime.datetime.strptime(value, '%d-%b-%y').date()
         if field == 'multi_curr_flag':
@@ -132,7 +135,8 @@ class FundReservationsSynchronizer(VisionDataSynchronizer):
 
             self.item_records[self.get_fr_item_number(r)] = self.map_line_item_record(r)
 
-    def equal_fields(self, field, obj_field, record_field):
+    @staticmethod
+    def equal_fields(field, obj_field, record_field):
         if field in ['overall_amount', 'overall_amount_dc',
                      'intervention_amt',
                      'total_amt',
@@ -212,7 +216,8 @@ class FundReservationsSynchronizer(VisionDataSynchronizer):
 
         return updated, len(to_create)
 
-    def update_fr_totals(self):
+    @staticmethod
+    def update_fr_totals():
         totals_updated = 0
         qs = FundsReservationHeader.objects
         qs = qs.annotate(my_li_total_sum=Sum('fr_items__overall_amount_dc'))
@@ -327,7 +332,8 @@ class FundCommitmentSynchronizer(VisionDataSynchronizer):
 
         return [rec for rec in records if bad_record(rec)]
 
-    def get_value_for_field(self, field, value):
+    @staticmethod
+    def get_value_for_field(field, value):
         if field in ['document_date', 'due_date']:
             return datetime.datetime.strptime(value, '%d-%b-%y').date()
 
@@ -357,7 +363,8 @@ class FundCommitmentSynchronizer(VisionDataSynchronizer):
 
             self.item_records[self.get_fc_item_number(r)] = self.map_line_item_record(r)
 
-    def equal_fields(self, field, obj_field, record_field):
+    @staticmethod
+    def equal_fields(field, obj_field, record_field):
         if field in ['commitment_amount', 'commitment_amount_dc', 'amount_changed']:
             return comp_decimals(obj_field, record_field)
         if field == 'line_item':

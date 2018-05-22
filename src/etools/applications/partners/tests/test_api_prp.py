@@ -2,7 +2,7 @@ import datetime
 import json
 import os
 
-from django.core.urlresolvers import resolve, reverse
+from django.urls import reverse, resolve
 from django.utils import timezone
 
 from rest_framework import status
@@ -29,6 +29,15 @@ class TestInterventionsAPI(WorkspaceRequiredAPITestMixIn, BaseTenantTestCase):
         response = self.forced_auth_req(
             method,
             reverse('prp_api_v1:prp-intervention-list'),
+            user=user or self.unicef_staff,
+            data=data,
+        )
+        return response.status_code, json.loads(response.rendered_content)
+
+    def run_prp_partners_v1(self, user=None, method='get', data=None):
+        response = self.forced_auth_req(
+            method,
+            reverse('prp_api_v1:prp-partner-list'),
             user=user or self.unicef_staff,
             data=data,
         )
@@ -85,6 +94,14 @@ class TestInterventionsAPI(WorkspaceRequiredAPITestMixIn, BaseTenantTestCase):
 
         self.assertEqual(response, expected_interventions)
 
+    def test_prp_partners_api(self):
+        status_code, response = self.run_prp_partners_v1(
+            user=self.unicef_staff, method='get'
+        )
+        self.assertEqual(status_code, status.HTTP_200_OK)
+        response = response['results']
+        self.assertEqual(len(response), 2)
+
     def test_prp_api_modified_queries(self):
         yesterday = (timezone.now() - datetime.timedelta(days=1)).isoformat()
         tomorrow = (timezone.now() + datetime.timedelta(days=1)).isoformat()
@@ -103,7 +120,7 @@ class TestInterventionsAPI(WorkspaceRequiredAPITestMixIn, BaseTenantTestCase):
             self.assertEqual(expected_results, len(response['results']))
 
     def test_prp_api_performance(self):
-        EXPECTED_QUERIES = 23
+        EXPECTED_QUERIES = 24
         with self.assertNumQueries(EXPECTED_QUERIES):
             self.run_prp_v1(
                 user=self.unicef_staff, method='get'

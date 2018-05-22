@@ -10,7 +10,7 @@ from import_export.admin import ExportMixin
 from etools.applications.EquiTrack.admin import ActivityInline, SnapshotModelAdmin
 from etools.applications.partners.exports import PartnerExport
 from etools.applications.partners.forms import (PartnersAdminForm,  # TODO intervention sector locations cleanup
-                                                PartnerStaffMemberForm, SectorLocationForm,)
+                                                PartnerStaffMemberForm,)
 from etools.applications.partners.mixins import CountryUsersAdminMixin, HiddenPartnerMixin
 from etools.applications.partners.models import (Agreement,  # TODO intervention sector locations cleanup
                                                  AgreementAmendment, Assessment, FileType, FundingCommitment,
@@ -135,7 +135,6 @@ class InterventionResultsLinkAdmin(admin.ModelAdmin):
 
 # TODO intervention sector locations cleanup
 class InterventionSectorLocationAdmin(admin.ModelAdmin):
-    form = SectorLocationForm
     model = InterventionSectorLocationLink
     fields = (
         'intervention',
@@ -152,6 +151,9 @@ class InterventionSectorLocationAdmin(admin.ModelAdmin):
     list_filter = (
         'sector',
     )
+    filter_horizontal = [
+        'locations',
+    ]
 
 
 class InterventionAdmin(CountryUsersAdminMixin, HiddenPartnerMixin, SnapshotModelAdmin):
@@ -316,12 +318,14 @@ class PartnerAdmin(ExportMixin, admin.ModelAdmin):
     )
     list_filter = (
         u'partner_type',
+        u'rating',
         HiddenPartnerFilter,
     )
     list_display = (
         u'name',
         u'vendor_number',
         u'partner_type',
+        u'rating',
         u'type_of_assessment',
         u'email',
         u'phone_number',

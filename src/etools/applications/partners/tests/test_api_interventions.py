@@ -1,13 +1,12 @@
-
 import datetime
 import json
 from unittest import skip
 
 from django.core.cache import cache
 from django.core.files.uploadedfile import SimpleUploadedFile
-from django.core.urlresolvers import resolve, reverse
 from django.db import connection
 from django.test import SimpleTestCase
+from django.urls import reverse, resolve
 from django.utils import six, timezone
 
 from rest_framework import status
@@ -20,11 +19,15 @@ from etools.applications.EquiTrack.tests.cases import BaseTenantTestCase
 from etools.applications.EquiTrack.tests.mixins import URLAssertionMixin
 from etools.applications.locations.tests.factories import LocationFactory
 from etools.applications.partners.models import Intervention, InterventionAmendment, InterventionResultLink
-from etools.applications.partners.tests.factories import (AgreementFactory, InterventionAmendmentFactory,
-                                                          InterventionAttachmentFactory, InterventionFactory,
-                                                          InterventionPlannedVisitsFactory,
-                                                          InterventionResultLinkFactory,
-                                                          InterventionSectorLocationLinkFactory, PartnerFactory,)
+from etools.applications.partners.tests.factories import (
+    AgreementFactory,
+    InterventionAmendmentFactory,
+    InterventionAttachmentFactory,
+    InterventionFactory,
+    InterventionResultLinkFactory,
+    InterventionSectorLocationLinkFactory,
+    PartnerFactory,
+)
 from etools.applications.partners.tests.test_utils import setup_intervention_test_data
 from etools.applications.reports.models import AppliedIndicator, ReportingRequirement
 from etools.applications.reports.tests.factories import (AppliedIndicatorFactory, CountryProgrammeFactory,
@@ -50,7 +53,6 @@ class URLsTestCase(URLAssertionMixin, SimpleTestCase):
             ('intervention-list', '', {}),
             ('intervention-list-dash', 'dash/', {}),
             ('intervention-detail', '1/', {'pk': 1}),
-            ('intervention-visits-del', 'planned-visits/1/', {'pk': 1}),
             ('intervention-attachments-del', 'attachments/1/', {'pk': 1}),
             ('intervention-indicators', 'indicators/', {}),
             ('intervention-results', 'results/', {}),
@@ -91,7 +93,7 @@ class TestInterventionsAPI(BaseTenantTestCase):
                   "offices", "population_focus", "country_programme_id", "engagement", "sections",
                   "sections_present", "flat_locations", "reporting_periods", "activity",
                   "prc_review_attachment", "signed_pd_attachment", "actionpoint",
-                  "reporting_requirements", ],
+                  "reporting_requirements", "special_reporting_requirements", ],
         'signed': [],
         'active': ['']
     }
@@ -450,7 +452,7 @@ class TestInterventionsAPI(BaseTenantTestCase):
                              [perm for perm in required_permissions if required_permissions[perm]])
 
     def test_list_interventions(self):
-        EXPECTED_QUERIES = 10
+        EXPECTED_QUERIES = 9
         with self.assertNumQueries(EXPECTED_QUERIES):
             status_code, response = self.run_request_list_ep(user=self.unicef_staff, method='get')
 
@@ -483,7 +485,7 @@ class TestInterventionsAPI(BaseTenantTestCase):
         self.ts = TenantSwitchFactory(name="prp_mode_off", countries=[connection.tenant])
         self.assertTrue(tenant_switch_is_active(self.ts.name))
 
-        EXPECTED_QUERIES = 10
+        EXPECTED_QUERIES = 9
         with self.assertNumQueries(EXPECTED_QUERIES):
             status_code, response = self.run_request_list_ep(user=self.unicef_staff, method='get')
 
@@ -492,6 +494,7 @@ class TestInterventionsAPI(BaseTenantTestCase):
 
         section1 = SectorFactory()
         section2 = SectorFactory()
+
         EXTRA_INTERVENTIONS = 15
         for i in range(0, EXTRA_INTERVENTIONS + 1):
             intervention = InterventionFactory(
@@ -1231,47 +1234,6 @@ class TestAPInterventionIndicatorsUpdateView(BaseTenantTestCase):
         self.assertFalse(indicator_updated.is_active)
 
 
-class TestInterventionPlannedVisitsDeleteView(BaseTenantTestCase):
-    @classmethod
-    def setUpTestData(cls):
-        cls.unicef_staff = UserFactory(is_staff=True)
-        cls.intervention = InterventionFactory()
-        cls.planned_visit = InterventionPlannedVisitsFactory(
-            intervention=cls.intervention,
-        )
-        cls.url = reverse(
-            "partners_api:intervention-visits-del",
-            args=[cls.planned_visit.pk]
-        )
-
-    def test_delete(self):
-        response = self.forced_auth_req(
-            'delete',
-            self.url,
-            user=self.unicef_staff,
-        )
-        self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
-
-    def test_delete_invalid(self):
-        self.intervention.status = Intervention.ACTIVE
-        self.intervention.save()
-        response = self.forced_auth_req(
-            'delete',
-            self.url,
-            user=self.unicef_staff,
-        )
-        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
-        self.assertEqual(response.data, ["You do not have permissions to delete a planned visit"])
-
-    def test_delete_not_found(self):
-        response = self.forced_auth_req(
-            'delete',
-            reverse("partners_api:intervention-visits-del", args=[404]),
-            user=self.unicef_staff,
-        )
-        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
-
-
 class TestInterventionAttachmentDeleteView(BaseTenantTestCase):
     @classmethod
     def setUpTestData(cls):
@@ -1304,14 +1266,6 @@ class TestInterventionAttachmentDeleteView(BaseTenantTestCase):
         )
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertEqual(response.data, ["You do not have permissions to delete an attachment"])
-
-    def test_delete_not_found(self):
-        response = self.forced_auth_req(
-            'delete',
-            reverse("partners_api:intervention-attachments-del", args=[404]),
-            user=self.unicef_staff,
-        )
-        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
 
 
 class TestInterventionResultListAPIView(BaseTenantTestCase):
@@ -1859,7 +1813,8 @@ class TestInterventionReportingRequirementView(BaseTenantTestCase):
         _add_user_to_partnership_manager_group(cls.unicef_staff)
         cls.intervention = InterventionFactory(
             start=datetime.date(2001, 1, 1),
-            status=Intervention.DRAFT
+            status=Intervention.DRAFT,
+            in_amendment=True,
         )
         cls.result_link = InterventionResultLinkFactory(
             intervention=cls.intervention
@@ -1867,10 +1822,11 @@ class TestInterventionReportingRequirementView(BaseTenantTestCase):
         cls.lower_result = LowerResultFactory(result_link=cls.result_link)
         cls.indicator = AppliedIndicatorFactory(lower_result=cls.lower_result)
 
-    def _get_url(self, report_type):
+    def _get_url(self, report_type, intervention=None):
+        intervention = self.intervention if intervention is None else intervention
         return reverse(
             "partners_api:intervention-reporting-requirements",
-            args=[self.intervention.pk, report_type]
+            args=[intervention.pk, report_type]
         )
 
     def test_get(self):
@@ -1967,35 +1923,8 @@ class TestInterventionReportingRequirementView(BaseTenantTestCase):
             init_count + 2
         )
 
-    def test_post_special(self):
-        report_type = ReportingRequirement.TYPE_SPECIAL
-        requirement_qs = ReportingRequirement.objects.filter(
-            intervention=self.intervention,
-            report_type=report_type,
-        )
-        init_count = requirement_qs.count()
-        response = self.forced_auth_req(
-            "post",
-            self._get_url(report_type),
-            user=self.unicef_staff,
-            data={
-                "reporting_requirements": [{
-                    "due_date": datetime.date(2001, 4, 15),
-                    "description": "Randomness"
-                }, {
-                    "due_date": datetime.date(2001, 5, 15),
-                    "description": "Short description"
-                }]
-            }
-        )
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(requirement_qs.count(), init_count + 2)
-        self.assertEqual(
-            len(response.data["reporting_requirements"]),
-            init_count + 2
-        )
-
-    def test_post_invalid(self):
+    def test_post_invalid_no_report_type(self):
+        """Missing report type value"""
         report_type = ReportingRequirement.TYPE_QPR
         requirement_qs = ReportingRequirement.objects.filter(
             intervention=self.intervention,
@@ -2021,3 +1950,78 @@ class TestInterventionReportingRequirementView(BaseTenantTestCase):
                 {"start_date": ["This field is required."]}
             ]}
         )
+
+    def test_post_invalid_not_amendment_state(self):
+        """Intervention is not in amendment state"""
+        intervention = InterventionFactory(
+            start=datetime.date(2001, 1, 1),
+            status=Intervention.ENDED,
+            in_amendment=False,
+        )
+        result_link = InterventionResultLinkFactory(
+            intervention=intervention
+        )
+        lower_result = LowerResultFactory(result_link=result_link)
+        AppliedIndicatorFactory(lower_result=lower_result)
+
+        report_type = ReportingRequirement.TYPE_QPR
+        requirement_qs = ReportingRequirement.objects.filter(
+            intervention=intervention,
+            report_type=report_type,
+        )
+        init_count = requirement_qs.count()
+        response = self.forced_auth_req(
+            "post",
+            self._get_url(report_type, intervention=intervention),
+            user=self.unicef_staff,
+            data={
+                "report_type": ReportingRequirement.TYPE_HR,
+                "reporting_requirements": [{
+                    "start_date": datetime.date(2001, 2, 1),
+                    "end_date": datetime.date(2001, 3, 31),
+                    "due_date": datetime.date(2001, 4, 15),
+                }]
+            }
+        )
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertEqual(requirement_qs.count(), init_count)
+        self.assertEqual(
+            response.data,
+            {"non_field_errors": [
+                "Changes not allowed when PD not in amendment state."
+            ]}
+        )
+
+    def test_patch_invalid(self):
+        for report_type, _ in ReportingRequirement.TYPE_CHOICES:
+            response = self.forced_auth_req(
+                "patch",
+                self._get_url(report_type),
+                user=self.unicef_staff,
+                data={
+                    "reporting_requirements": [{
+                        "due_date": datetime.date(2001, 4, 15),
+                    }]
+                }
+            )
+            self.assertEqual(
+                response.status_code,
+                status.HTTP_405_METHOD_NOT_ALLOWED
+            )
+
+    def test_delete_invalid_report_type(self):
+        for report_type, _ in ReportingRequirement.TYPE_CHOICES:
+            response = self.forced_auth_req(
+                "delete",
+                self._get_url(report_type),
+                user=self.unicef_staff,
+                data={
+                    "reporting_requirements": [{
+                        "due_date": datetime.date(2001, 4, 15),
+                    }]
+                }
+            )
+            self.assertEqual(
+                response.status_code,
+                status.HTTP_405_METHOD_NOT_ALLOWED
+            )
