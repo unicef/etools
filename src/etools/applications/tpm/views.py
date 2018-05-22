@@ -9,7 +9,6 @@ from rest_framework.filters import DjangoFilterBackend, OrderingFilter, SearchFi
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 
-from etools.applications.action_points.serializers import ActionPointListSerializer
 from etools.applications.partners.models import PartnerOrganization
 from etools.applications.partners.serializers.partner_organization_v2 import MinimalPartnerOrganizationListSerializer
 from etools.applications.permissions2.conditions import GroupCondition, NewObjectCondition, ObjectStatusCondition
@@ -439,9 +438,6 @@ class ActionPointViewSet(BaseTPMViewSet,
     metadata_class = TPMPermissionBasedMetadata
     queryset = TPMActionPoint.objects.all()
     serializer_class = TPMActionPointSerializer
-    serializer_action_classes = {
-        'list': ActionPointListSerializer,
-    }
 
     permission_classes = BaseTPMViewSet.permission_classes + [NestedPermission]
 
