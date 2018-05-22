@@ -335,7 +335,16 @@ class SpecialReportingRequirementListCreateView(ListCreateAPIView):
     serializer_class = SpecialReportingRequirementSerializer
     permission_classes = (PartnershipManagerPermission, )
     renderer_classes = (JSONRenderer, )
-    queryset = SpecialReportingRequirement.objects.all()
+
+    def create(self, request, *args, **kwargs):
+        request.data["intervention"] = kwargs.get('intervention_pk', None)
+        return super().create(request, *args, **kwargs)
+
+    def get_queryset(self, format=None):
+        q = SpecialReportingRequirement.objects.filter(
+            intervention=self.kwargs.get("intervention_pk")
+        )
+        return q
 
 
 class SpecialReportingRequirementRetrieveUpdateDestroyView(RetrieveUpdateDestroyAPIView):
