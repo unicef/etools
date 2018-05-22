@@ -23,6 +23,7 @@ class TravelFilterBoxSerializer(serializers.Serializer):
     f_travel_type = serializers.CharField(source='activities__travel_type', required=False)
     f_status = serializers.CharField(source='status', required=False)
     f_partner = serializers.IntegerField(source='activities__partner__pk', required=False)
+    f_location = serializers.IntegerField(source='activities__locations__pk', required=False)
     f_cp_output = serializers.IntegerField(source='cp_output', required=False)
 
     def to_internal_value(self, data):
