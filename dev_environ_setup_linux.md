@@ -35,7 +35,6 @@ have installed some commonly used extensions into your template1 database.
 
 ```bash
 $ sudo -u postgres createuser <your-username> --createdb
-$ sudo -u postgres psql template1 -c "create extension hstore;"
 $ sudo -u postgres psql template1 -c "create extension postgis;"
 $ sudo -u postgres psql template1 -c "create extension pg_trgm;"
 ```
