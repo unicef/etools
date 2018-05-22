@@ -42,7 +42,7 @@ def migrate_action_points_backward(apps, schema_editor):
 
     action_points_to_create = []
 
-    for action_point in ActionPoint.objects.filter(engagement__isnull=True):
+    for action_point in ActionPoint.objects.filter(engagement__isnull=False):
         new_action_point = EngagementActionPoint(
             category="Other",
             engagement=action_point.engagement,
