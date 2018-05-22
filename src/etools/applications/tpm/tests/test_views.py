@@ -33,6 +33,7 @@ class TestExportMixin(object):
 class TestTPMVisitViewSet(TestExportMixin, TPMTestCaseMixin, BaseTenantTestCase):
     @classmethod
     def setUpTestData(cls):
+        super(TestTPMVisitViewSet, cls).setUpTestData()
         call_command('update_tpm_permissions', verbosity=0)
         call_command('update_notifications')
 
@@ -255,6 +256,14 @@ class TestTPMVisitViewSet(TestExportMixin, TPMTestCaseMixin, BaseTenantTestCase)
     def test_locations_csv(self):
         self._test_export(self.pme_user, 'tpm:visits-locations-export')
 
+    def test_action_points_csv(self):
+        TPMVisitFactory(status='unicef_approved', action_points__count=3)
+        self._test_export(self.pme_user, 'tpm:visits-action-points/export')
+
+    def test_visit_action_points_csv(self):
+        visit = TPMVisitFactory(status='unicef_approved', action_points__count=3)
+        self._test_export(self.pme_user, 'tpm:visits-action-points/export', args=(visit.id,))
+
     def test_visit_letter(self):
         visit = TPMVisitFactory(status='tpm_accepted')
         self._test_export(self.pme_user, 'tpm:visits-tpm-visit-letter', args=(visit.id,))
@@ -263,6 +272,8 @@ class TestTPMVisitViewSet(TestExportMixin, TPMTestCaseMixin, BaseTenantTestCase)
 class TestTPMStaffMembersViewSet(TestExportMixin, TPMTestCaseMixin, BaseTenantTestCase):
     @classmethod
     def setUpTestData(cls):
+        super(TestTPMStaffMembersViewSet, cls).setUpTestData()
+
         cls.tpm_partner = TPMPartnerFactory()
 
         cls.pme_user = UserFactory(pme=True)
@@ -391,6 +402,8 @@ class TestTPMStaffMembersViewSet(TestExportMixin, TPMTestCaseMixin, BaseTenantTe
 class TestTPMPartnerViewSet(TestExportMixin, TPMTestCaseMixin, BaseTenantTestCase):
     @classmethod
     def setUpTestData(cls):
+        super(TestTPMPartnerViewSet, cls).setUpTestData()
+
         cls.tpm_partner = TPMPartnerFactory()
         cls.second_tpm_partner = TPMPartnerFactory()
 
