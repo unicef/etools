@@ -179,7 +179,7 @@ urlpatterns = (
     url(r'^interventions/amendments/(?P<pk>\d+)/$',
         view=InterventionAmendmentDeleteView.as_view(http_method_names=['delete', ]),
         name='intervention-amendments-del'),
-    url(r'^interventions//locations/$',
+    url(r'^interventions/locations/$',
         view=InterventionLocationListAPIView.as_view(http_method_names=['get', ]),
         name='intervention-locations-list'),
     url(r'^interventions/sector-locations/$',

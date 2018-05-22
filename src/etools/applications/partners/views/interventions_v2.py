@@ -1,10 +1,11 @@
 import copy
+import datetime
 import functools
 import logging
 import operator
 
 from django.contrib.contenttypes.models import ContentType
-from django.db import transaction
+from django.db import transaction, connection
 from django.db.models import Q
 from django.shortcuts import get_object_or_404
 
@@ -60,6 +61,7 @@ from etools.applications.partners.validation.interventions import InterventionVa
 from etools.applications.reports.models import AppliedIndicator, LowerResult, ReportingRequirement
 from etools.applications.reports.serializers.v2 import AppliedIndicatorSerializer, LowerResultSimpleCUSerializer
 from etools.applications.snapshot.models import Activity
+from etools.applications.users.models import Country
 
 
 class InterventionListBaseView(ValidatorViewMixin, ListCreateAPIView):
@@ -716,10 +718,9 @@ class InterventionLocationListAPIView(ListAPIView):
 
     Some notes:
     * This is all one intervention (PD Ref Number never changes)
-    * The intervention has two partners (how? that doesn't seem possible) <<<<<<<<<<<<<<<< ANSWER NEEDED
+    * The intervention has two partners in this example, but that's not actually possible.
     * There's at least one row for each section
     * For each section, there's one row for each location.
-
     """
     serializer_class = InterventionLocationExportSerializer
     queryset = Intervention.objects.all()
@@ -732,14 +733,14 @@ class InterventionLocationListAPIView(ListAPIView):
 
     def list(self, request, *args, **kwargs):
         rows = []
-        for intervention in self.get_queryset().order_by('agreement__partner__name'):
+        for intervention in self.get_queryset():
             # We want to do a separate row for each intervention/location/sector combination,
             # but if the intervention has no locations or no sectors, we still want
             # to include it in the results.
             sections = intervention.combined_sections
             if not sections:
                 sections = [None]
-            locations = intervention.intervention_locations
+            locations = intervention.flat_locations.all()
             if not locations:
                 locations = [None]
 
@@ -752,8 +753,11 @@ class InterventionLocationListAPIView(ListAPIView):
         response = Response(serializer.data)
 
         query_params = self.request.query_params
-        if query_params.get("format") == 'csv':
-            response['Content-Disposition'] = "attachment;filename=PD_Indicators_Location.csv"
+        if query_params.get("format") in ['csv', 'csv_flat']:
+            country = Country.objects.get(schema_name=connection.schema_name)
+            today = datetime.date.today()
+            filename = f"{today.year}_{today.month}_{today.day}_{country.country_short_code}_Interventions"
+            response['Content-Disposition'] = "attachment;filename=%s.csv" % filename
 
         return response
 

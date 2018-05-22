@@ -19,7 +19,6 @@ from dateutil.relativedelta import relativedelta
 from django_fsm import FSMField, transition
 from model_utils import Choices, FieldTracker
 from model_utils.models import TimeFramedModel, TimeStampedModel
-from typing import List, Set
 
 from etools.applications.EquiTrack.serializers import StringConcat
 from etools.applications.attachments.models import Attachment
@@ -32,7 +31,7 @@ from etools.applications.partners.validation import interventions as interventio
 from etools.applications.partners.validation.agreements import (agreement_transition_to_ended_valid,
                                                                 agreement_transition_to_signed_valid,
                                                                 agreements_illegal_transition,)
-from etools.applications.reports.models import CountryProgramme, Indicator, Result, Sector, LowerResult
+from etools.applications.reports.models import CountryProgramme, Indicator, Result, Sector
 from etools.applications.t2f.models import Travel, TravelActivity, TravelType
 from etools.applications.tpm.models import TPMVisit
 from etools.applications.users.models import Office
@@ -1718,7 +1717,6 @@ class Intervention(TimeStampedModel):
         blank=True,
         related_name='office_interventions+',
     )
-    # TODO: remove this after PRP flag is on for all countries
     flat_locations = models.ManyToManyField(Location, related_name="intervention_flat_locations", blank=True,
                                             verbose_name=_('Locations'))
 
@@ -1784,7 +1782,6 @@ class Intervention(TimeStampedModel):
 
     @property
     def cp_output_names(self):
-        result_links = self.result_links.all()
         return ', '.join(link.cp_output.name for link in self.result_links.all())
 
     @property
@@ -1792,7 +1789,7 @@ class Intervention(TimeStampedModel):
         return ', '.join(user.get_full_name() for user in self.unicef_focal_points.all())
 
     @property
-    def combined_sections(self) -> Set[Sector]:
+    def combined_sections(self):
         # sections defined on the indicators + sections selected at the pd level
         # In the case in which on the pd there are more sections selected then all the indicators
         # the reason for the loops is to avoid creating new db queries
@@ -1804,7 +1801,7 @@ class Intervention(TimeStampedModel):
         return sections
 
     @property
-    def sections_present(self) -> bool:
+    def sections_present(self):
         # for permissions validation. the name of this def needs to remain the same as defined in the permission matrix.
         # /assets/partner/intervention_permission.csv
         return True if len(self.combined_sections) > 0 else None
@@ -1830,28 +1827,24 @@ class Intervention(TimeStampedModel):
         return self.total_unicef_cash + self.total_in_kind_amount
 
     @cached_property
-    def all_lower_results(self) -> List[LowerResult]:
+    def all_lower_results(self):
         # todo: it'd be nice to be able to do this as a queryset but that may not be possible
         # with prefetch_related
         return [
-            lower_result
-            for link in self.result_links.all()
+            lower_result for link in self.result_links.all()
             for lower_result in link.ll_results.all()
         ]
 
     @cached_property
-    def intervention_locations(self) -> Set[Location]:
+    def intervention_locations(self):
         if tenant_switch_is_active("prp_mode_off"):
             locations = set(self.flat_locations.all())
         else:
             # return intervention locations as a set of Location objects
             locations = set()
             for lower_result in self.all_lower_results:
-                # lower_result: LowerResult
                 for applied_indicator in lower_result.applied_indicators.all():
-                    # applied_indicator: AppliedIndicator
                     for location in applied_indicator.locations.all():
-                        # location: Location
                         locations.add(location)
 
         return locations

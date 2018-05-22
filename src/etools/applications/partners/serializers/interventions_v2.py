@@ -22,7 +22,8 @@ from etools.applications.partners.permissions import InterventionPermissions
 from etools.applications.reports.models import (
     AppliedIndicator,
     LowerResult,
-    ReportingRequirement)
+    ReportingRequirement,
+)
 from etools.applications.reports.serializers.v1 import SectorSerializer
 from etools.applications.reports.serializers.v2 import (IndicatorSerializer, LowerResultCUSerializer,
                                                         LowerResultSerializer, ReportingRequirementSerializer,)
@@ -767,8 +768,6 @@ class InterventionReportingRequirementCreateSerializer(serializers.ModelSerializ
 
 
 class InterventionLocationExportSerializer(serializers.Serializer):
-    # Column headers:
-    # Partner	PD Ref Number	Partnership	Status	Location	Section	CP output	Start Date	End Date	Name of UNICEF Focal Point	Hyperlink
     partner = serializers.CharField(source="intervention.agreement.partner.name")
     pd_ref_number = serializers.CharField(source="intervention.number")
     partnership = serializers.CharField(source="intervention.agreement.agreement_number")
