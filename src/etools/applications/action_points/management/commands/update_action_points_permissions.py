@@ -51,6 +51,8 @@ class Command(BaseCommand):
         'action_points.actionpoint.author',
         'action_points.actionpoint.assigned_by',
         'action_points.actionpoint.high_priority',
+        'action_points.actionpoint.section',
+        'action_points.actionpoint.office',
 
         'action_points.actionpoint.status',
         'action_points.actionpoint.status_date',
