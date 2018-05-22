@@ -224,6 +224,24 @@ class TestTPMVisitViewSet(TestExportMixin, TPMTestCaseMixin, BaseTenantTestCase)
         self.assertIn('intervention', response.data['tpm_activities'][0])
         self.assertEqual(response.data['tpm_activities'][0]['intervention'][0], _('This field is required.'))
 
+    def test_delete_activity(self):
+        visit = TPMVisitFactory(tpm_activities__count=2, status='draft')
+
+        response = self.forced_auth_req(
+            'patch',
+            reverse('tpm:visits-detail', args=(visit.id,)),
+            user=self.pme_user,
+            data={
+                'tpm_activities': [{
+                    'id': visit.tpm_activities.first().id,
+                    '_delete': True
+                }]
+            }
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(visit.tpm_activities.count(), 1)
+
     def test_author(self):
         create_response = self.forced_auth_req(
             'post',

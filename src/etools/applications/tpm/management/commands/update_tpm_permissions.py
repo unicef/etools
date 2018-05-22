@@ -67,6 +67,8 @@ class Command(BaseCommand):
         'tpm.tpmactivity.additional_information',
         'tpm.tpmactivity.offices',
         'tpm.tpmactivity.unicef_focal_points',
+
+        'tpm.tpmactivity._delete',
     ]
 
     visit_attachments = [
