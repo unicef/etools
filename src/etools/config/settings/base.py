@@ -157,8 +157,6 @@ SHARED_APPS = (
     'django.contrib.sites',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    'dal',
-    'dal_select2',
     'django.contrib.gis',
     'django.contrib.postgres',
     'django.contrib.admin',
@@ -262,9 +260,6 @@ TEMPLATES = [
         },
     },
 ]
-
-# DJANGO: TESTING
-TEST_RUNNER = 'etools.applications.EquiTrack.tests.runners.TestRunner'
 
 # DJANGO: URLS
 ROOT_URLCONF = 'etools.config.urls'

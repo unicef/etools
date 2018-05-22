@@ -20,7 +20,7 @@ $ brew install postgresql
 In case of failing initdb during install, change the ownership of the postgres dir, and re-run postinstall to make initdb work:
 
 ```bash
-$ sudo chown -R `whoami` /usr/local/var/postgres  
+$ sudo chown -R `whoami` /usr/local/var/postgres
 $ brew postinstall postgresql
 ```
 
@@ -44,14 +44,7 @@ Step 4. Create Postgres user and PostGIS required extensions:
 # CREATE EXTENSION postgis;
 # CREATE EXTENSION postgis_topology;
 # CREATE EXTENSION fuzzystrmatch;
-# CREATE EXTENSION hstore;
 # \q
-```
-
-Modifiy the base template so all newly created test databases will have hstore extension:
-
-```bash
-$ psql -d template1 -c 'CREATE EXTENSION hstore;'
 ```
 
 Step 5. Install Redis:
