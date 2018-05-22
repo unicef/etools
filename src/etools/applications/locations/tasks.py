@@ -39,7 +39,7 @@ def create_location(pcode, carto_table, parent, parent_instance,
             carto_table.location_type, site_name, pcode
         ))
         sites_not_added += 1
-        return False, sites_not_added, sites_created, sites_updated
+        return False, sites_not_added, sites_created, sites_remapped, sites_updated
 
     except Location.DoesNotExist:
         # try to create the location
@@ -52,7 +52,7 @@ def create_location(pcode, carto_table, parent, parent_instance,
             create_args['parent'] = parent_instance
 
         if not row['the_geom']:
-            return False, sites_not_added, sites_created, sites_updated
+            return False, sites_not_added, sites_created, sites_remapped, sites_updated
 
         if 'Point' in row['the_geom']:
             create_args['point'] = row['the_geom']
@@ -70,11 +70,11 @@ def create_location(pcode, carto_table, parent, parent_instance,
             location.name,
             carto_table.location_type.name
         ))
-        return True, sites_not_added, sites_created, sites_updated
+        return True, sites_not_added, sites_created, sites_remapped, sites_updated
 
     else:
         if not row['the_geom']:
-            return False, sites_not_added, sites_created, sites_updated
+            return False, sites_not_added, sites_created, sites_remapped, sites_updated
 
         # do the pcode remap if necessary
         if should_remap is True:
@@ -95,11 +95,14 @@ def create_location(pcode, carto_table, parent, parent_instance,
         else:
             location.geom = row['the_geom']
 
+        if parent and parent_instance:
+            location.parent = parent_instance
+
         try:
             location.save()
         except IntegrityError:
             logger.exception('Error while saving location: %s', site_name)
-            return False, sites_not_added, sites_created, sites_updated
+            return False, sites_not_added, sites_created, sites_remapped, sites_updated
 
         if should_remap is True:
             sites_remapped += 1
