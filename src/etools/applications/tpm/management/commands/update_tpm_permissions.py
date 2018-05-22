@@ -256,7 +256,7 @@ class Command(BaseCommand):
 
         self.add_permission(self.pme, 'view', 'tpm.tpmactivity.pv_applicable',
                             condition=self.visit_status(TPMVisit.STATUSES.tpm_reported))
-        self.add_permission(self.pme, 'edit', 'tpm.tpmvisit.approval_comment',
+        self.add_permission(self.pme, 'edit', ['tpm.tpmvisit.approval_comment', 'tpm.tpmvisit.report_reject_comments'],
                             condition=self.visit_status(TPMVisit.STATUSES.tpm_reported))
         self.add_permission(self.pme, 'action',
                             ['tpm.tpmvisit.approve', 'tpm.tpmvisit.reject_report'],
