@@ -28,7 +28,7 @@ def migrate_action_points(apps, schema_editor):
             author=action_point.author,
             assigned_by=action_point.author,
             assigned_to=action_point.person_responsible,
-            status=statuses_mapping[action_point.status],
+            status=statuses_mapping.get(action_point.status, 'open'),
             high_priority=action_point.high_priority,
         )
         action_points_to_create.append(new_action_point)
