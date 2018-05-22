@@ -16,7 +16,6 @@ from etools.applications.partners.forms import (
     PartnersAdminForm,
     # TODO intervention sector locations cleanup
     PartnerStaffMemberForm,
-    SectorLocationForm,
 )
 from etools.applications.partners.mixins import CountryUsersAdminMixin, HiddenPartnerMixin
 from etools.applications.partners.models import (
@@ -183,7 +182,6 @@ class InterventionResultsLinkAdmin(admin.ModelAdmin):
 
 # TODO intervention sector locations cleanup
 class InterventionSectorLocationAdmin(admin.ModelAdmin):
-    form = SectorLocationForm
     model = InterventionSectorLocationLink
     fields = (
         'intervention',
@@ -200,6 +198,9 @@ class InterventionSectorLocationAdmin(admin.ModelAdmin):
     list_filter = (
         'sector',
     )
+    filter_horizontal = [
+        'locations',
+    ]
 
 
 class PRCReviewAttachmentInline(AttachmentSingleInline):
