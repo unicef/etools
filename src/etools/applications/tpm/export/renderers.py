@@ -6,11 +6,10 @@ from rest_framework_csv.renderers import CSVRenderer
 
 
 class TPMActivityCSVRenderer(CSVRenderer):
-    header = ['ref', 'pd_ssfa', 'visit', 'visit_status', 'activity', 'section', 'cp_output', 'partner', 'intervention',
+    header = ['ref', 'visit', 'visit_status', 'activity', 'section', 'cp_output', 'partner', 'intervention', 'pd_ssfa',
               'locations', 'date', 'unicef_focal_points', 'offices', 'tpm_focal_points', 'link']
     labels = {
         'ref': _('Visit Ref. #'),
-        'pd_ssfa': _('PD/SSFA'),
         'visit': _('Visit'),
         'visit_status': _('Status of Visit'),
         'activity': _('Task'),
@@ -18,6 +17,7 @@ class TPMActivityCSVRenderer(CSVRenderer):
         'cp_output': _('PD/SSFA output'),
         'partner': _('Partner'),
         'intervention': _('Partnership'),
+        'pd_ssfa': _('PD/SSFA'),
         'locations': _('Locations'),
         'date': _('Date'),
         'unicef_focal_points': _('Name of UNICEF Focal Point'),
@@ -28,11 +28,10 @@ class TPMActivityCSVRenderer(CSVRenderer):
 
 
 class TPMLocationCSVRenderer(CSVRenderer):
-    header = ['ref', 'pd_ssfa', 'visit', 'visit_status', 'activity', 'section', 'cp_output', 'partner', 'intervention',
+    header = ['ref', 'visit', 'visit_status', 'activity', 'section', 'cp_output', 'partner', 'intervention', 'pd_ssfa',
               'location', 'date', 'unicef_focal_points', 'offices', 'tpm_focal_points', 'link']
     labels = {
         'ref': _('Visit Ref. #'),
-        'pd_ssfa': _('PD/SSFA'),
         'visit': _('Visit'),
         'visit_status': _('Status of Visit'),
         'activity': _('Task'),
@@ -40,6 +39,7 @@ class TPMLocationCSVRenderer(CSVRenderer):
         'cp_output': _('PD/SSFA output'),
         'partner': _('Partner'),
         'intervention': _('Partnership'),
+        'pd_ssfa': _('PD/SSFA'),
         'location': _('Location'),
         'date': _('Date'),
         'unicef_focal_points': _('Name of UNICEF Focal Point'),
@@ -72,20 +72,20 @@ class TPMActionPointFullCSVRenderer(TPMActionPointCSVRenderer):
 
 class TPMVisitCSVRenderer(CSVRenderer):
     header = [
-        'ref', 'pd_ssfa', 'visit', 'status', 'activities',
-        'sections', 'partners', 'interventions', 'locations',
+        'ref', 'visit', 'status', 'activities',
+        'sections', 'partners', 'interventions', 'pd_ssfa', 'locations',
         'start_date', 'end_date', 'unicef_focal_points',
         'tpm_partner_focal_points', 'report_link', 'attachments', 'link',
     ]
     labels = {
         'ref': _('Visit Ref. #'),
-        'pd_ssfa': _('PD/SSFA'),
         'visit': _('Visit'),
         'status': _('Status of Visit'),
         'activities': _('Tasks'),
         'sections': _('Sections'),
         'partners': _('Partners'),
         'interventions': _('Partnerships'),
+        'pd_ssfa': _('PD/SSFA'),
         'locations': _('Locations'),
         'start_date': _('Start Date'),
         'end_date': _('End Date'),
