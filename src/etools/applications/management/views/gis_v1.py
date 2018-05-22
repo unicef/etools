@@ -110,15 +110,24 @@ class GisLocationsGeomListViewset(ListAPIView):
             return Response(status=400, data={'error': 'Country not found'})
         else:
             if geom_type is None:
+                response = {
+                    "type": "FeatureCollection",
+                    "features": []
+                }
+
                 polygons = Location.objects.filter(geom__isnull=False).all()
                 self.get_serializer_class().Meta.geo_field = 'geom'
                 serialized_polygons = self.get_serializer(polygons, many=True, context={'request': request})
+
+                response["features"] += serialized_polygons.data["features"]
 
                 points = Location.objects.filter(point__isnull=False).all()
                 self.get_serializer_class().Meta.geo_field = 'point'
                 serialized_points = self.get_serializer(points, many=True, context={'request': request})
 
-                return Response({**serialized_polygons.data, **serialized_points.data})
+                response["features"] += serialized_points.data["features"]
+
+                return Response(response)
 
             if geom_type == 'polygon':
                 locations = Location.objects.filter(geom__isnull=False).all()
