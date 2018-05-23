@@ -124,7 +124,7 @@ uritemplate==3.0.0
 vine==1.1.4
 webencodings==0.5.1
 webob==1.7.4
-xhtml2pdf==0.2.1
+xhtml2pdf==0.2.2
 xlrd==1.0.0
 xlwt==1.3.0
 zope.interface==4.4.3
