@@ -89,7 +89,7 @@ redis==2.10.6             # via django-redis-cache
 reportlab==3.3.0          # via django-easy-pdf, xhtml2pdf
 repoze.who==2.3           # via pysaml2
 requests==2.11.1          # via azure-storage, carto, coreapi, djrill, pyrestcli, pysaml2
-simplejson==3.13.2        # via django-rest-swagger
+simplejson==3.15.0        # via django-rest-swagger
 six==1.11.0               # via cryptography, django-geojson, djangorestframework-csv, html5lib, paste, pyopenssl, pysaml2, python-dateutil, xhtml2pdf
 sqlparse==0.2.4           # via django-debug-toolbar
 static3==0.7.0            # via dj-static
