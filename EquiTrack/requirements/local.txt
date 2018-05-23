@@ -94,7 +94,7 @@ pycryptodomex==3.4.12
 pyflakes==1.6.0
 pygments==2.2.0           # via sphinx
 pyjwt==1.5.3
-pyopenssl==17.5.0
+pyopenssl==18.0.0
 pypdf2==1.26.0
 pyrestcli==0.6.4
 pysaml2==4.4.0
