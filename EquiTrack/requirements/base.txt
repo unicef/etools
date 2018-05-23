@@ -60,7 +60,7 @@ future==0.15.2            # via pyrestcli, pysaml2
 gdal==1.10.0
 gunicorn==19.6.0
 html5lib==1.0b10          # via xhtml2pdf
-httplib2==0.10.3          # via xhtml2pdf
+httplib2==0.11.3          # via xhtml2pdf
 idna==2.6                 # via cryptography
 itypes==1.1.0             # via coreapi
 jdcal==1.3                # via openpyxl
