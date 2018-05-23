@@ -325,7 +325,3 @@ class InterventionLocationCSVRenderer(r.CSVRenderer):
         'start': 'Start Date',
         'status': 'Status'
     }
-
-
-class InterventionLocationCSVFlatRenderer(InterventionLocationCSVRenderer):
-    format = 'csv_flat'

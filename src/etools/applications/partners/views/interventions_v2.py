@@ -22,7 +22,7 @@ from etools.applications.environment.helpers import tenant_switch_is_active
 from etools.applications.EquiTrack.mixins import ExportModelMixin, QueryStringFilterMixin
 from etools.applications.EquiTrack.renderers import CSVFlatRenderer
 from etools.applications.EquiTrack.validation_mixins import ValidatorViewMixin
-from etools.applications.partners.exports_v2 import InterventionCSVRenderer, InterventionLocationCSVRenderer, InterventionLocationCSVFlatRenderer
+from etools.applications.partners.exports_v2 import InterventionCSVRenderer, InterventionLocationCSVRenderer
 from etools.applications.partners.filters import (AppliedIndicatorsFilter, InterventionFilter,
                                                   InterventionResultLinkFilter, PartnerScopeFilter,)
 from etools.applications.partners.models import (
@@ -695,32 +695,7 @@ class InterventionLocationListAPIView(ListAPIView):
 
     "Partner","PD Ref Number","Partnership","Status","Location","Section","CP output","Start Date","End Date","Name of UNICEF Focal Point","Hyperlink"
     "Partner 1.1.1.1.1","Ref#1","Partnership 1.1.1.1.1.1.1","Active","Location 1.1.1.1.1","Section 1.1.1","CP output 1.1.1.1","DD/MM/YYYY","DD/MM/YYYY","Name1, Name2","http://xxxxxx"
-    "Partner 1.1.1.1.1","Ref#1","Partnership 1.1.1.1.1.1.1","Active","Location 1.1.1.1.2","Section 1.1.1","CP output 1.1.1.1","DD/MM/YYYY","DD/MM/YYYY","Name1, Name2","http://xxxxxx"
-    "Partner 1.1.1.1.1","Ref#1","Partnership 1.1.1.1.1.1.1","Active","Location 1.1.1.1.3","Section 1.1.1","CP output 1.1.1.1","DD/MM/YYYY","DD/MM/YYYY","Name1, Name2","http://xxxxxx"
-    "Partner 1.1.1.1.1","Ref#1","Partnership 1.1.1.1.1.1.1","Active","Location 1.1.1.1.4","Section 1.1.1","CP output 1.1.1.1","DD/MM/YYYY","DD/MM/YYYY","Name1, Name2","http://xxxxxx"
-    "Partner 1.1.1.1.1","Ref#1","Partnership 1.1.1.1.1.1.1","Active","Location 1.1.1.1.1","Section 1.1.2","CP output 1.1.1.1","DD/MM/YYYY","DD/MM/YYYY","Name1, Name2","http://xxxxxx"
-    "Partner 1.2.1.1.1","Ref#1","Partnership 1.2.1.1.1.1.1","Active","Location 1.2.1.1.1","Section 1.2.1","CP output 1.2.1.1","DD/MM/YYYY","DD/MM/YYYY","Name3, Name4","http://xxxxxx"
-    "Partner 1.2.1.1.1","Ref#1","Partnership 1.2.1.1.1.1.1","Active","Location 1.2.1.1.2","Section 1.2.1","CP output 1.2.1.1","DD/MM/YYYY","DD/MM/YYYY","Name3, Name4","http://xxxxxx"
-    "Partner 1.2.1.1.1","Ref#1","Partnership 1.2.1.1.1.1.1","Active","Location 1.2.1.1.3","Section 1.2.1","CP output 1.2.1.1","DD/MM/YYYY","DD/MM/YYYY","Name3, Name4","http://xxxxxx"
 
-    Let's blank out fields that don't change from one row to the next, to help us see what
-    data will control which rows are in the output:
-
-    "Partner","PD Ref Number","Partnership","Status","Location","Section","CP output","Start Date","End Date","Name of UNICEF Focal Point","Hyperlink"
-    "Partner 1.1.1.1.1","Ref#1","Partnership 1.1.1.1.1.1.1","Active","Location 1.1.1.1.1","Section 1.1.1","CP output 1.1.1.1","DD/MM/YYYY","DD/MM/YYYY","Name1, Name2","http://xxxxxx"
-                                                                    ,"Location 1.1.1.1.2",
-                                                                    ,"Location 1.1.1.1.3",
-                                                                    ,"Location 1.1.1.1.4",
-                                                                    ,"Location 1.1.1.1.1","Section 1.1.2","CP output 1.1.1.1",
-    "Partner 1.2.1.1.1",       ,"Partnership 1.2.1.1.1.1.1",        ,"Location 1.2.1.1.1","Section 1.2.1","CP output 1.2.1.1",
-                                                                    ,"Location 1.2.1.1.2",
-                                                                    ,"Location 1.2.1.1.3",
-
-    Some notes:
-    * This is all one intervention (PD Ref Number never changes)
-    * The intervention has two partners in this example, but that's not actually possible.
-    * There's at least one row for each section
-    * For each section, there's one row for each location.
     """
     serializer_class = InterventionLocationExportSerializer
     queryset = Intervention.objects.all()
@@ -728,7 +703,6 @@ class InterventionLocationListAPIView(ListAPIView):
     renderer_classes = (
         JSONRenderer,
         InterventionLocationCSVRenderer,
-        InterventionLocationCSVFlatRenderer,
     )
 
     def list(self, request, *args, **kwargs):
@@ -737,12 +711,8 @@ class InterventionLocationListAPIView(ListAPIView):
             # We want to do a separate row for each intervention/location/sector combination,
             # but if the intervention has no locations or no sectors, we still want
             # to include it in the results.
-            sections = intervention.combined_sections
-            if not sections:
-                sections = [None]
-            locations = intervention.flat_locations.all()
-            if not locations:
-                locations = [None]
+            sections = intervention.combined_sections or [None]
+            locations = intervention.flat_locations.all() or [None]
 
             for section in sections:
                 for loc in locations:
