@@ -435,7 +435,7 @@ class InterventionAmendmentListAPIView(ExportModelMixin, ValidatorViewMixin, Lis
         return q
 
     def create(self, request, *args, **kwargs):
-        raw_data = request.data.copy()
+        raw_data = request.data
         raw_data['intervention'] = kwargs.get('intervention_pk', None)
         serializer = self.get_serializer(data=raw_data)
         serializer.is_valid(raise_exception=True)

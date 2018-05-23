@@ -2,7 +2,7 @@ from django.core import mail
 from django.core.management import call_command
 
 from etools.applications.EquiTrack.tests.cases import BaseTenantTestCase
-from etools.applications.tpm.tests.factories import TPMVisitFactory
+from etools.applications.tpm.tests.factories import TPMVisitFactory, UserFactory
 
 
 class TPMVisitEmailsTestCase(BaseTenantTestCase):
@@ -35,22 +35,31 @@ class TPMVisitEmailsTestCase(BaseTenantTestCase):
         self.assertEqual(len(mail.outbox), 0)
 
     def test_reject(self):
+        UserFactory(pme=True)
         visit = TPMVisitFactory(status='pre_tpm_rejected')
 
         visit.reject('Just because')
-        self.assertEqual(len(mail.outbox), len(visit.unicef_focal_points_with_emails))
+        self.assertEqual(len(mail.outbox), len(visit.unicef_focal_points_and_pme))
 
     def test_accept(self):
         visit = TPMVisitFactory(status='pre_tpm_accepted')
 
         visit.accept()
-        self.assertEqual(len(mail.outbox), len(visit.unicef_focal_points_with_emails))
+        self.assertEqual(len(mail.outbox), 0)
 
     def test_send_report(self):
+        UserFactory(pme=True)
         visit = TPMVisitFactory(status='pre_tpm_reported')
 
         visit.send_report()
-        self.assertEqual(len(mail.outbox), len(visit.unicef_focal_points_with_emails))
+        self.assertEqual(len(mail.outbox), len(visit.unicef_focal_points) + 1)
+
+    def test_send_report_inactive_author(self):
+        UserFactory(pme=True)
+        visit = TPMVisitFactory(status='pre_tpm_reported', author__is_active=False)
+
+        visit.send_report()
+        self.assertEqual(len(mail.outbox), len(visit.unicef_focal_points))
 
     def test_report_rejected(self):
         visit = TPMVisitFactory(status='pre_tpm_report_rejected')
