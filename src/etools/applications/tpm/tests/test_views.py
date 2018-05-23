@@ -343,7 +343,7 @@ class TestEngagementActionPointViewSet(TPMTestCaseMixin, BaseTenantTestCase):
     def test_action_point_complete(self):
         visit = TPMVisitFactory(status='tpm_reported', tpm_activities__count=1)
         activity = visit.tpm_activities.first()
-        action_point = ActionPointFactory(tpm_activity=activity, status='pre_completed')
+        action_point = ActionPointFactory(tpm_activity=activity, status='pre_completed', comments__count=0)
 
         response = self.forced_auth_req(
             'post',

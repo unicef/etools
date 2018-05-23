@@ -163,13 +163,16 @@ class ActionPoint(TimeStampedModel):
         )
         notification.send_notification()
 
+    def _do_complete(self):
+        self.send_email(self.assigned_by, 'action_points/action_point/completed')
+
     @transition(status, source=STATUSES.open, target=STATUSES.completed,
                 permission=has_action_permission(action='complete'),
                 conditions=[
                     ActionPointCompleteActionsTakenCheck.as_condition()
                 ])
     def complete(self):
-        self.send_email(self.assigned_by, 'action_points/action_point/completed')
+        self._do_complete()
 
 
 PME = GroupWrapper(code='pme',
