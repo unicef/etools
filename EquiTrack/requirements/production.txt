@@ -71,7 +71,7 @@ markupsafe==1.0
 newrelic==2.94.0.79
 odfpy==1.3.6
 openapi-codec==1.3.2
-openpyxl==2.5.0
+openpyxl==2.5.2
 paste==2.0.3
 pillow==5.0.0
 psycopg2==2.7.4
