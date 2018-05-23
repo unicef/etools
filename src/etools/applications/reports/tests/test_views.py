@@ -878,7 +878,8 @@ class TestSpecialReportingRequirementListCreateView(BaseTenantTestCase):
             in_amendment=True,
         )
         cls.url = reverse(
-            "reports:interventions-special-reporting-requirements"
+            "reports:interventions-special-reporting-requirements",
+            kwargs={'intervention_pk': cls.intervention.id}
         )
 
     def test_get(self):
@@ -910,7 +911,6 @@ class TestSpecialReportingRequirementListCreateView(BaseTenantTestCase):
             self.url,
             user=self.unicef_staff,
             data={
-                "intervention": self.intervention.pk,
                 "due_date": datetime.date(2001, 4, 15),
                 "description": "Randomness"
             }
