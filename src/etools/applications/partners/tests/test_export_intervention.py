@@ -19,7 +19,7 @@ from etools.applications.partners.tests.factories import (
     PartnerFactory,
     PartnerStaffFactory,
 )
-from etools.applications.reports.tests.factories import CountryProgrammeFactory, IndicatorFactory
+from etools.applications.reports.tests.factories import CountryProgrammeFactory, IndicatorFactory, ResultFactory, SectorFactory
 from etools.applications.users.tests.factories import UserFactory
 
 
@@ -403,3 +403,92 @@ class TestInterventionSectorLocationLinkModelExport(BaseInterventionModelExportT
         self.assertEqual(dataset.height, 1)
         self.assertEqual(len(dataset._get_headers()), 18)
         self.assertEqual(len(dataset[0]), 18)
+
+
+class TestInterventionLocationExport(BaseInterventionModelExportTestCase):
+    """
+    API to export a list of interventions, and for each one, iterate
+    over its locations and sections to provide a row for each
+    location/section combination for each intervention.
+
+    """
+    def test_intervention_location_export(self):
+        # First intervention was already created for us in setUpTestData
+        partner_name = self.intervention.agreement.partner.name
+
+        # Assign known dates that we can test for in the output later on
+        self.intervention.start = datetime.date(2013, 1, 6)
+        self.intervention.end = datetime.date(2013, 3, 20)
+        self.intervention.save()
+
+        # Some locations
+        self.intervention.flat_locations.add(LocationFactory(name='Location 0'), LocationFactory(name='Location 1'))
+
+        # Some sections
+        sec = SectorFactory(name='Sector 0')
+        sec1 = SectorFactory(name='Sector 1')
+        self.intervention.sections.add(sec, sec1)
+
+        # Some focal points
+        self.intervention.unicef_focal_points.add(
+            UserFactory(first_name='Jack', last_name='Bennie'),
+            UserFactory(first_name='Phil', last_name='Silver')
+        )
+
+        # Some results
+        InterventionResultLinkFactory(cp_output=ResultFactory(sector=sec1, name='Result A'), intervention=self.intervention)
+        InterventionResultLinkFactory(cp_output=ResultFactory(sector=sec1, name='Result B'), intervention=self.intervention)
+
+        # Another intervention, with no locations
+        self.intervention2 = InterventionFactory(agreement=AgreementFactory(partner=PartnerFactory(name='Partner 2')))
+        # Sections
+        sec2 = SectorFactory(name='Sector 2')
+        sec3 = SectorFactory(name='Sector 3')
+        self.intervention2.sections.add(sec2, sec3)
+        # Results
+        InterventionResultLinkFactory(cp_output=ResultFactory(sector=sec2, name='Result C'), intervention=self.intervention2)
+        InterventionResultLinkFactory(cp_output=ResultFactory(sector=sec3, name='Result D'), intervention=self.intervention2)
+
+        # Intervention with no sectors
+        self.intervention3 = InterventionFactory(agreement=AgreementFactory(partner=PartnerFactory(name='Partner 3')))
+        self.intervention3.flat_locations.add(LocationFactory(name='Location 2'))
+        InterventionResultLinkFactory(intervention=self.intervention3, cp_output=ResultFactory(name='Result Fred'))
+
+        self.url = reverse(
+            'partners_api:intervention-locations-list',
+        )
+
+        response = self.forced_auth_req(
+            'get',
+            self.url,
+            user=self.unicef_staff,
+            data={"format": "csv"},
+        )
+        self.assertEqual(200, response.status_code, msg=response.content.decode('utf-8'))
+        result = response.content.decode('utf-8')
+
+        today = datetime.date.today()
+        self.assertEqual(
+            f'attachment;filename={today.year}_{today.month}_{today.day}_TST_Interventions.csv',
+            response['Content-Disposition'],
+        )
+
+        # Leave this here to easily uncomment for debugging.
+        # print("RESULT:")
+        # for line in result.split('\r\n'):
+        #     print('f' + repr(line + '\r\n'))
+
+        agreement_number_1 = self.intervention.agreement.agreement_number
+        agreement_number_2 = self.intervention2.agreement.agreement_number
+        agreement_number_3 = self.intervention3.agreement.agreement_number
+        self.assertEqual(
+            f'Partner,PD Ref Number,Partnership,Status,Location,Section,CP output,Start Date,End Date,Name of UNICEF Focal Point,Hyperlink\r\n'
+            f'{partner_name},{self.intervention.number},{agreement_number_1},draft,Location 0,Sector 0,"Result A, Result B",2013-01-06,2013-03-20,"Jack Bennie, Phil Silver",https://testserver/pmp/interventions/{self.intervention.id}/details/\r\n'
+            f'{partner_name},{self.intervention.number},{agreement_number_1},draft,Location 1,Sector 0,"Result A, Result B",2013-01-06,2013-03-20,"Jack Bennie, Phil Silver",https://testserver/pmp/interventions/{self.intervention.id}/details/\r\n'
+            f'{partner_name},{self.intervention.number},{agreement_number_1},draft,Location 0,Sector 1,"Result A, Result B",2013-01-06,2013-03-20,"Jack Bennie, Phil Silver",https://testserver/pmp/interventions/{self.intervention.id}/details/\r\n'
+            f'{partner_name},{self.intervention.number},{agreement_number_1},draft,Location 1,Sector 1,"Result A, Result B",2013-01-06,2013-03-20,"Jack Bennie, Phil Silver",https://testserver/pmp/interventions/{self.intervention.id}/details/\r\n'
+            f'Partner 2,{self.intervention2.number},{agreement_number_2},draft,,Sector 2,"Result C, Result D",,,,https://testserver/pmp/interventions/{self.intervention2.id}/details/\r\n'
+            f'Partner 2,{self.intervention2.number},{agreement_number_2},draft,,Sector 3,"Result C, Result D",,,,https://testserver/pmp/interventions/{self.intervention2.id}/details/\r\n'
+            f'Partner 3,{self.intervention3.number},{agreement_number_3},draft,Location 2,,Result Fred,,,,https://testserver/pmp/interventions/{self.intervention3.id}/details/\r\n',
+            result,
+        )

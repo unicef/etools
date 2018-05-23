@@ -15,6 +15,7 @@ from etools.applications.partners.views.interventions_v2 import (InterventionAme
                                                                  InterventionIndicatorsUpdateView,
                                                                  InterventionListAPIView, InterventionListDashView,
                                                                  InterventionListMapView,
+                                                                 InterventionLocationListAPIView,
                                                                  InterventionLowerResultListCreateView,
                                                                  InterventionLowerResultUpdateView,
                                                                  InterventionReportingPeriodDetailView,
@@ -24,7 +25,7 @@ from etools.applications.partners.views.interventions_v2 import (InterventionAme
                                                                  InterventionResultLinkListCreateView,
                                                                  InterventionResultLinkUpdateView,
                                                                  InterventionResultListAPIView,
-                                                                 InterventionSectorLocationLinkListAPIView,)
+                                                                 InterventionSectorLocationLinkListAPIView, )
 from etools.applications.partners.views.partner_organization_v2 import (
     PartnerOrganizationAddView,
     PartnerOrganizationAssessmentDeleteView,
@@ -146,7 +147,6 @@ urlpatterns = (
         view=InterventionIndicatorsUpdateView.as_view(http_method_names=['get', 'patch', 'delete']),
         name='intervention-indicators-update'),
 
-
     url(r'^interventions/dash/$',
         view=InterventionListDashView.as_view(http_method_names=['get', 'post']),
         name='intervention-list-dash'),
@@ -179,6 +179,9 @@ urlpatterns = (
     url(r'^interventions/amendments/(?P<pk>\d+)/$',
         view=InterventionAmendmentDeleteView.as_view(http_method_names=['delete', ]),
         name='intervention-amendments-del'),
+    url(r'^interventions/locations/$',
+        view=InterventionLocationListAPIView.as_view(http_method_names=['get', ]),
+        name='intervention-locations-list'),
     url(r'^interventions/sector-locations/$',
         view=InterventionSectorLocationLinkListAPIView.as_view(http_method_names=['get', ]),
         name='intervention-sector-locations'),
