@@ -4,7 +4,7 @@ amqp==2.2.2
 asn1crypto==0.24.0
 azure-common==1.1.8
 azure-nspkg==2.0.0
-azure-storage==0.20.2
+azure-storage==0.36.0
 babel==2.5.3
 billiard==3.5.0.3
 carto==1.0.1
