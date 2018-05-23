@@ -75,7 +75,7 @@ paste==2.0.3              # via pysaml2
 pillow==5.0.0             # via reportlab, xhtml2pdf
 psycopg2==2.7.4
 pycparser==2.18           # via cffi
-pycryptodomex==3.4.12     # via pysaml2
+pycryptodomex==3.6.1     # via pysaml2
 pyjwt==1.5.3              # via djangorestframework-jwt
 pyopenssl==17.5.0         # via pysaml2
 pypdf2==1.26.0            # via xhtml2pdf
