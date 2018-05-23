@@ -794,6 +794,12 @@ class EngagementActionPoint(ActionPoint):
         verbose_name_plural = _('Engagement Action Points')
         proxy = True
 
+    @transition('status', source=ActionPoint.STATUSES.open, target=ActionPoint.STATUSES.completed,
+                permission=has_action_permission(action='complete'),
+                conditions=[])
+    def complete(self):
+        self._do_complete()
+
 
 UNICEFAuditFocalPoint = GroupWrapper(code='unicef_audit_focal_point',
                                      name='UNICEF Audit Focal Point')

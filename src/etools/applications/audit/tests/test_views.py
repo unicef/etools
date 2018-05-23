@@ -560,7 +560,7 @@ class TestEngagementActionPointViewSet(EngagementTransitionsTestCaseMixin, BaseT
 
     def test_action_point_complete(self):
         self._init_finalized_engagement()
-        action_point = ActionPointFactory(engagement=self.engagement, status='pre_completed')
+        action_point = ActionPointFactory(engagement=self.engagement, status='pre_completed', comments__count=0)
 
         response = self.forced_auth_req(
             'post',
