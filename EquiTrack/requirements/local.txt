@@ -71,7 +71,7 @@ gunicorn==19.6.0
 html5lib==1.0b10
 httplib2==0.10.3
 idna==2.6
-imagesize==0.7.1          # via sphinx
+imagesize==1.0.0          # via sphinx
 invoke==0.22.1
 itypes==1.1.0
 jdcal==1.3
