@@ -63,7 +63,7 @@ html5lib==1.0b10
 httplib2==0.10.3
 idna==2.6
 itypes==1.1.0
-jdcal==1.3
+jdcal==1.4
 jinja2==2.10
 jsonfield==2.0.2
 kombu==4.1.0
