@@ -34,7 +34,7 @@ django-generic-links==0.4.0
 django-geojson==2.9.1
 django-hstore==1.4.2      # via djangorestframework-hstore
 django-import-export==0.5.1
-django-leaflet==0.19.0
+django-leaflet==0.23.0
 django-logentry-admin==1.0.2
 django-model-utils==2.6
 django-mptt==0.8.6
