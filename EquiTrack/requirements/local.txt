@@ -58,7 +58,7 @@ djangorestframework==3.5.3
 djrill==2.1.0
 docutils==0.14            # via sphinx
 drf-nested-routers==0.11.1
-drfpasswordless==1.1.5
+drfpasswordless==1.2.0
 et-xmlfile==1.0.1
 factory-boy==2.8
 faker==0.8.12
