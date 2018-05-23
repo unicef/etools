@@ -17,7 +17,7 @@ class TestCreateLocations(BaseTenantTestCase):
         LocationFactory(p_code="123")
         LocationFactory(p_code="123")
 
-        success, not_added, created, remapped, updated = tasks.create_location(
+        success, not_added, created, updated, remapped = tasks.create_location(
             "123",
             carto,
             None,
@@ -43,7 +43,7 @@ class TestCreateLocations(BaseTenantTestCase):
         carto = CartoDBTableFactory()
         LocationFactory(p_code="123")
 
-        success, not_added, created, remapped, updated = tasks.create_location(
+        success, not_added, created, updated, remapped = tasks.create_location(
             "123",
             carto,
             None,
@@ -74,7 +74,7 @@ class TestCreateLocations(BaseTenantTestCase):
         self.assertIsNone(location.point)
         self.assertNotEqual(location.name, site_name)
 
-        success, not_added, created, remapped, updated = tasks.create_location(
+        success, not_added, created, updated, remapped = tasks.create_location(
             "123",
             carto,
             None,
@@ -108,7 +108,7 @@ class TestCreateLocations(BaseTenantTestCase):
         self.assertIsNone(location.geom)
         self.assertNotEqual(location.name, site_name)
 
-        success, not_added, created, remapped, updated = tasks.create_location(
+        success, not_added, created, updated, remapped = tasks.create_location(
             "123",
             carto,
             None,
@@ -138,7 +138,7 @@ class TestCreateLocations(BaseTenantTestCase):
         self.assertFalse(Location.objects.filter(p_code="123").exists())
         name = "Test"
 
-        success, not_added, created, remapped, updated = tasks.create_location(
+        success, not_added, created, updated, remapped = tasks.create_location(
             "123",
             carto,
             None,
@@ -165,7 +165,7 @@ class TestCreateLocations(BaseTenantTestCase):
         self.assertFalse(Location.objects.filter(p_code="123").exists())
         name = "Test"
 
-        success, not_added, created, remapped, updated = tasks.create_location(
+        success, not_added, created, updated, remapped = tasks.create_location(
             "123",
             carto,
             None,
@@ -196,7 +196,7 @@ class TestCreateLocations(BaseTenantTestCase):
         self.assertFalse(Location.objects.filter(p_code="123").exists())
         name = "Test"
 
-        success, not_added, created, remapped, updated = tasks.create_location(
+        success, not_added, created, updated, remapped = tasks.create_location(
             "123",
             carto,
             None,
@@ -228,7 +228,7 @@ class TestCreateLocations(BaseTenantTestCase):
         self.assertFalse(Location.objects.filter(p_code="123").exists())
         name = "Test"
 
-        success, not_added, created, remapped, updated = tasks.create_location(
+        success, not_added, created, updated, remapped = tasks.create_location(
             "123",
             carto,
             True,
