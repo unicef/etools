@@ -68,7 +68,8 @@ class ActionPointBaseSerializer(UserContextSerializerMixin, SnapshotModelSeriali
 
 
 class ActionPointListSerializer(PermissionsBasedSerializerMixin, ActionPointBaseSerializer):
-    related_module = serializers.ReadOnlyField(label=_('Related Module'))
+    related_module = serializers.ChoiceField(label=_('Related Module'), choices=ActionPoint.MODULE_CHOICES,
+                                             read_only=True)
     reference_number = serializers.ReadOnlyField(label=_('Reference Number'))
 
     partner = SeparatedReadWriteField(
