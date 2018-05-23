@@ -54,7 +54,7 @@ djangorestframework-hstore==1.3
 djangorestframework-jwt==1.11.0
 djangorestframework-recursive==0.1.2
 djangorestframework-xml==1.3
-djangorestframework==3.5.3
+djangorestframework==3.8.2
 djrill==2.1.0
 docutils==0.14            # via sphinx
 drf-nested-routers==0.11.1
