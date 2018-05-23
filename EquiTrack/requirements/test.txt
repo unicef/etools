@@ -108,7 +108,7 @@ static3==0.7.0
 tablib==0.12.1
 tenant-schemas-celery==0.1.7
 text-unidecode==1.2       # via faker
-tornado==4.2.0
+tornado==5.0.2
 unicodecsv==0.14.1
 uritemplate==3.0.0
 vine==1.1.4
