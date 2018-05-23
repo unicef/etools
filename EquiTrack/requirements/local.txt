@@ -110,7 +110,7 @@ responses==0.8.1
 simplejson==3.13.2
 six==1.11.0
 snowballstemmer==1.2.1    # via sphinx
-sphinx==1.6.5
+sphinx==1.7.4
 sphinxcontrib-websupport==1.0.1  # via sphinx
 sqlparse==0.2.4
 static3==0.7.0
