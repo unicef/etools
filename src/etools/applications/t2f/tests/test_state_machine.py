@@ -131,7 +131,7 @@ class StateMachineTest(BaseTenantTestCase):
 
         travel = Travel.objects.get(id=travel_id)
         self.assertIsNotNone(travel.submitted_at)
-        self.assertIsNotNone(travel.first_submission_date)
+        self.assertIsNotNone(travel.first_submission_datetime)
 
         response = self.forced_auth_req('post', reverse('t2f:travels:details:state_change',
                                                         kwargs={'travel_pk': travel_id,
@@ -254,7 +254,7 @@ class StateMachineTest(BaseTenantTestCase):
 
         travel = Travel.objects.get(id=travel_id)
         self.assertIsNotNone(travel.submitted_at)
-        self.assertIsNotNone(travel.first_submission_date)
+        self.assertIsNotNone(travel.first_submission_datetime)
 
         response = self.forced_auth_req('post', reverse('t2f:travels:details:state_change',
                                                         kwargs={'travel_pk': travel_id,

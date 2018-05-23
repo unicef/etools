@@ -14,8 +14,8 @@ from etools.applications.reports.tests.factories import ResultFactory, SectorFac
 from etools.applications.t2f import models
 from etools.applications.users.tests.factories import OfficeFactory, UserFactory
 
-_FUZZY_START_DATE = timezone.datetime(timezone.now().year, 1, 1, tzinfo=timezone.now().tzinfo)
-_FUZZY_END_DATE = timezone.datetime(timezone.now().year, 12, 31, tzinfo=timezone.now().tzinfo)
+FUZZY_START_DATETIME = timezone.datetime(timezone.now().year, 1, 1, tzinfo=timezone.now().tzinfo)
+FUZZY_END_DATETIME = timezone.datetime(timezone.now().year, 12, 31, tzinfo=timezone.now().tzinfo)
 
 
 class FuzzyTravelType(factory.fuzzy.BaseFuzzyAttribute):
@@ -31,7 +31,7 @@ class TravelActivityFactory(factory.django.DjangoModelFactory):
     partnership = factory.SubFactory(InterventionFactory)
     result = factory.SubFactory(ResultFactory)
     primary_traveler = factory.SubFactory(UserFactory)
-    date = factory.LazyAttribute(lambda o: timezone.now())
+    datetime = factory.LazyAttribute(lambda o: timezone.now())
 
     class Meta:
         model = models.TravelActivity
@@ -54,8 +54,8 @@ class TravelActivityFactory(factory.django.DjangoModelFactory):
 class ItineraryItemFactory(factory.DjangoModelFactory):
     origin = fuzzy.FuzzyText(length=32)
     destination = fuzzy.FuzzyText(length=32)
-    departure_date = fuzzy.FuzzyDateTime(start_dt=_FUZZY_START_DATE, end_dt=timezone.now())
-    arrival_date = fuzzy.FuzzyDateTime(start_dt=timezone.now(), end_dt=_FUZZY_END_DATE)
+    departure_datetime = fuzzy.FuzzyDateTime(start_dt=FUZZY_START_DATETIME, end_dt=timezone.now())
+    arrival_datetime = fuzzy.FuzzyDateTime(start_dt=timezone.now(), end_dt=FUZZY_END_DATETIME)
     dsa_region = factory.SubFactory(PublicsDSARegionFactory)
     overnight_travel = False
     mode_of_travel = models.ModeOfTravel.BOAT
@@ -79,7 +79,7 @@ class ExpenseFactory(factory.DjangoModelFactory):
 
 
 class DeductionFactory(factory.DjangoModelFactory):
-    date = fuzzy.FuzzyDateTime(start_dt=_FUZZY_START_DATE, end_dt=_FUZZY_END_DATE)
+    date = fuzzy.FuzzyDateTime(start_dt=FUZZY_START_DATETIME, end_dt=FUZZY_END_DATETIME)
     breakfast = False
     lunch = False
     dinner = False
@@ -112,7 +112,7 @@ class ClearanceFactory(factory.DjangoModelFactory):
 class ActionPointFactory(factory.DjangoModelFactory):
     action_point_number = factory.Sequence(lambda n: models.make_action_point_number())
     description = fuzzy.FuzzyText(length=128)
-    due_date = fuzzy.FuzzyDateTime(start_dt=_FUZZY_START_DATE, end_dt=timezone.now())
+    due_datetime = fuzzy.FuzzyDateTime(start_dt=FUZZY_START_DATETIME, end_dt=timezone.now())
     person_responsible = factory.SubFactory(UserFactory)
     assigned_by = factory.SubFactory(UserFactory)
     status = 'open'
@@ -127,8 +127,8 @@ class TravelFactory(factory.DjangoModelFactory):
     supervisor = factory.SubFactory(UserFactory)
     office = factory.SubFactory(OfficeFactory)
     sector = factory.SubFactory(SectorFactory)
-    start_date = fuzzy.FuzzyDateTime(start_dt=_FUZZY_START_DATE, end_dt=timezone.now())
-    end_date = fuzzy.FuzzyDateTime(start_dt=timezone.now(), end_dt=_FUZZY_END_DATE)
+    start_datetime = fuzzy.FuzzyDateTime(start_dt=FUZZY_START_DATETIME, end_dt=timezone.now())
+    end_datetime = fuzzy.FuzzyDateTime(start_dt=timezone.now(), end_dt=FUZZY_END_DATETIME)
     purpose = factory.Sequence(lambda n: 'Purpose #{}'.format(n))
     international_travel = False
     ta_required = True

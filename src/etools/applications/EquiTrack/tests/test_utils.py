@@ -57,7 +57,7 @@ class TestSerialization(BaseTenantTestCase):
 
         # Recreate how a datetime ends up embedded in a string in the JSON,
         # which is not quite isoformat().
-        serialized_date_joined = json.loads(json.dumps(user.date_joined, cls=DjangoJSONEncoder))
+        serialized_datetime_joined = json.loads(json.dumps(user.date_joined, cls=DjangoJSONEncoder))
 
         self.assertEqual(
             result,
@@ -75,7 +75,7 @@ class TestSerialization(BaseTenantTestCase):
                 'model': 'auth.user',
                 'password': '',
                 'email': 'fred@example.com',
-                'date_joined': serialized_date_joined,
+                'date_joined': serialized_datetime_joined,
             }
         )
 

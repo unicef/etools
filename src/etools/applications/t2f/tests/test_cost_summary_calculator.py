@@ -159,23 +159,23 @@ class CostSummaryTest(BaseTenantTestCase):
 
     def test_calculations(self):
         ItineraryItemFactory(travel=self.travel,
-                             departure_date=datetime(2017, 1, 1, 1, 0, tzinfo=UTC),
-                             arrival_date=datetime(2017, 1, 1, 2, 0, tzinfo=UTC),
+                             departure_datetime=datetime(2017, 1, 1, 1, 0, tzinfo=UTC),
+                             arrival_datetime=datetime(2017, 1, 1, 2, 0, tzinfo=UTC),
                              dsa_region=self.budapest)
 
         ItineraryItemFactory(travel=self.travel,
-                             departure_date=datetime(2017, 1, 1, 10, 0, tzinfo=UTC),
-                             arrival_date=datetime(2017, 1, 1, 11, 0, tzinfo=UTC),
+                             departure_datetime=datetime(2017, 1, 1, 10, 0, tzinfo=UTC),
+                             arrival_datetime=datetime(2017, 1, 1, 11, 0, tzinfo=UTC),
                              dsa_region=self.copenhagen)
 
         ItineraryItemFactory(travel=self.travel,
-                             departure_date=datetime(2017, 1, 1, 22, 0, tzinfo=UTC),
-                             arrival_date=datetime(2017, 1, 1, 23, 0, tzinfo=UTC),
+                             departure_datetime=datetime(2017, 1, 1, 22, 0, tzinfo=UTC),
+                             arrival_datetime=datetime(2017, 1, 1, 23, 0, tzinfo=UTC),
                              dsa_region=self.dusseldorf)
 
         ItineraryItemFactory(travel=self.travel,
-                             departure_date=datetime(2017, 1, 3, 10, 0, tzinfo=UTC),
-                             arrival_date=datetime(2017, 1, 3, 13, 0, tzinfo=UTC),
+                             departure_datetime=datetime(2017, 1, 3, 10, 0, tzinfo=UTC),
+                             arrival_datetime=datetime(2017, 1, 3, 13, 0, tzinfo=UTC),
                              dsa_region=self.amsterdam)
 
         ExpenseFactory(travel=self.travel,
@@ -233,8 +233,8 @@ class CostSummaryTest(BaseTenantTestCase):
         """Check calculations for a single itinerary"""
         ItineraryItemFactory(
             travel=self.travel,
-            arrival_date=datetime(2017, 1, 1, 1, 0, tzinfo=UTC),
-            departure_date=datetime(2017, 1, 2, 4, 0, tzinfo=UTC),
+            arrival_datetime=datetime(2017, 1, 1, 1, 0, tzinfo=UTC),
+            departure_datetime=datetime(2017, 1, 2, 4, 0, tzinfo=UTC),
             dsa_region=self.budapest
         )
 
@@ -254,15 +254,15 @@ class CostSummaryTest(BaseTenantTestCase):
         """
         itinerary = ItineraryItemFactory(
             travel=self.travel,
-            arrival_date=datetime(2017, 1, 1, 1, 0, tzinfo=UTC),
-            departure_date=datetime(2017, 1, 2, 4, 0, tzinfo=UTC),
+            arrival_datetime=datetime(2017, 1, 1, 1, 0, tzinfo=UTC),
+            departure_datetime=datetime(2017, 1, 2, 4, 0, tzinfo=UTC),
             dsa_region=self.budapest
         )
 
         ItineraryItemFactory(
             travel=self.travel,
-            arrival_date=datetime(2017, 1, 3, 1, 0, tzinfo=UTC),
-            departure_date=datetime(2017, 5, 4, 4, 0, tzinfo=UTC),
+            arrival_datetime=datetime(2017, 1, 3, 1, 0, tzinfo=UTC),
+            departure_datetime=datetime(2017, 5, 4, 4, 0, tzinfo=UTC),
             dsa_region=self.budapest
         )
 
@@ -314,15 +314,15 @@ class CostSummaryTest(BaseTenantTestCase):
         """If expense mapping has empty key, allocate to parking money"""
         itinerary = ItineraryItemFactory(
             travel=self.travel,
-            arrival_date=datetime(2017, 1, 1, 1, 0, tzinfo=UTC),
-            departure_date=datetime(2017, 1, 2, 4, 0, tzinfo=UTC),
+            arrival_datetime=datetime(2017, 1, 1, 1, 0, tzinfo=UTC),
+            departure_datetime=datetime(2017, 1, 2, 4, 0, tzinfo=UTC),
             dsa_region=self.budapest
         )
 
         ItineraryItemFactory(
             travel=self.travel,
-            arrival_date=datetime(2017, 1, 3, 1, 0, tzinfo=UTC),
-            departure_date=datetime(2017, 1, 4, 4, 0, tzinfo=UTC),
+            arrival_datetime=datetime(2017, 1, 3, 1, 0, tzinfo=UTC),
+            departure_datetime=datetime(2017, 1, 4, 4, 0, tzinfo=UTC),
             dsa_region=self.budapest
         )
         parking_money_type = PublicsTravelExpenseTypeFactory(
@@ -367,15 +367,15 @@ class CostSummaryTest(BaseTenantTestCase):
         self.travel.preserved_expenses_usd = Decimal("275")
         itinerary = ItineraryItemFactory(
             travel=self.travel,
-            arrival_date=datetime(2017, 1, 1, 1, 0, tzinfo=UTC),
-            departure_date=datetime(2017, 1, 2, 4, 0, tzinfo=UTC),
+            arrival_datetime=datetime(2017, 1, 1, 1, 0, tzinfo=UTC),
+            departure_datetime=datetime(2017, 1, 2, 4, 0, tzinfo=UTC),
             dsa_region=self.budapest
         )
 
         ItineraryItemFactory(
             travel=self.travel,
-            arrival_date=datetime(2017, 1, 3, 1, 0, tzinfo=UTC),
-            departure_date=datetime(2017, 1, 4, 4, 0, tzinfo=UTC),
+            arrival_datetime=datetime(2017, 1, 3, 1, 0, tzinfo=UTC),
+            departure_datetime=datetime(2017, 1, 4, 4, 0, tzinfo=UTC),
             dsa_region=self.budapest
         )
         expense_huf = ExpenseFactory(

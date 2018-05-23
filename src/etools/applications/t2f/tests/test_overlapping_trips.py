@@ -37,8 +37,8 @@ class OverlappingTravelsTest(BaseTenantTestCase):
         cls.travel = TravelFactory(reference_number=make_travel_reference_number(),
                                    traveler=cls.traveler,
                                    supervisor=cls.unicef_staff,
-                                   start_date=datetime(2017, 4, 4, 12, 00, tzinfo=UTC),
-                                   end_date=datetime(2017, 4, 14, 16, 00, tzinfo=UTC))
+                                   start_datetime=datetime(2017, 4, 4, 12, 00, tzinfo=UTC),
+                                   end_datetime=datetime(2017, 4, 14, 16, 00, tzinfo=UTC))
         cls.travel.expenses.all().delete()
         ItineraryItemFactory(travel=cls.travel)
         ItineraryItemFactory(travel=cls.travel)
@@ -168,8 +168,15 @@ class OverlappingTravelsTest(BaseTenantTestCase):
         self.assertEqual(response.status_code, 200)
 
     def test_edit_to_overlap(self):
+        # Note: There's already one Travel object created in setUpTestData
+        # Start = 2017-04-04 12:00 UTC
+        # End   = 2017-04-14 16:00 UTC
         currency = PublicsCurrencyFactory()
         dsa_region = PublicsDSARegionFactory()
+
+        # Will create a new one that does not overlap
+        # Start = 2017-04-14 16:05 UTC
+        # End   = 2017-05-22 15:02:13 UTC
 
         data = {'deductions': [],
                 'itinerary': [{'origin': 'Berlin',
@@ -204,9 +211,11 @@ class OverlappingTravelsTest(BaseTenantTestCase):
                 'purpose': 'Purpose',
                 'additional_note': 'Notes'}
 
+        # Create a second Travel object, submit for approval, and reject (why?)
         response = self.forced_auth_req('post', reverse('t2f:travels:list:index'),
                                         data=data, user=self.traveler)
         response_json = json.loads(response.rendered_content)
+        self.assertEqual(201, response.status_code, response_json)
 
         with freeze_time(datetime(2017, 4, 14, 16, 00, tzinfo=UTC)):
             response = self.forced_auth_req('post', reverse('t2f:travels:details:state_change',
@@ -222,6 +231,8 @@ class OverlappingTravelsTest(BaseTenantTestCase):
 
         data = response_json
         # Adjust it to overlap
+        # Start: 2017-04-10 16:05:00 UTC  <<<<<< Overlaps first travel (2017-04-04 12:00 UTC -- 2017-04-14 16:00 UTC)
+        # End:   2017-05-21 12:05:55 (time zone not specified)
         data['itinerary'] = [
             {
                 'origin': 'Berlin',
@@ -245,11 +256,13 @@ class OverlappingTravelsTest(BaseTenantTestCase):
             }
         ]
 
+        # Try to edit and and submit it for approval again, all at once?
         response = self.forced_auth_req('patch', reverse('t2f:travels:details:state_change',
                                                          kwargs={'travel_pk': response_json['id'],
                                                                  'transition_name': 'submit_for_approval'}),
                                         data=response_json, user=self.traveler)
         response_json = json.loads(response.rendered_content)
+        self.assertEqual(response.status_code, 400, response_json)
         self.assertEqual(response_json,
                          {'non_field_errors': ['You have an existing trip with overlapping dates. '
                                                'Please adjust your trip accordingly.']})

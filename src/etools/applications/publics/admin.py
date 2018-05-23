@@ -51,7 +51,7 @@ class DSARateUploadAdmin(admin.ModelAdmin):
         'id',
         'dsa_file',
         'status',
-        'upload_date',
+        'upload_datetime',
         'errors',
     )
 
@@ -61,7 +61,7 @@ class DSARateUploadAdmin(admin.ModelAdmin):
             self.exclude = (
                 'id',
                 'status',
-                'upload_date',
+                'upload_datetime',
                 'errors',
             )
         else:
@@ -69,7 +69,7 @@ class DSARateUploadAdmin(admin.ModelAdmin):
                 'id',
                 'dsa_file',
                 'status',
-                'upload_date',
+                'upload_datetime',
                 'errors',
             )
             self.exclude = (

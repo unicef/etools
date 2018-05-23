@@ -170,13 +170,13 @@ class IssueCheckTest(BaseTenantTestCase):
         self.assertEqual(PartnersMustHaveShortNameTestCheck.check_id, issue.issue_id)
         self.assertEqual(partner_bad, issue.content_object)
         self.assertEqual(ISSUE_STATUS_NEW, issue.issue_status)
-        update_date = issue.date_updated
+        update_datetime = issue.datetime_updated
         # initial recheck should not do anything except modify timestamps
         issue = FlaggedIssue.objects.get(pk=issue.pk)
         issue.recheck()
         self.assertEqual(ISSUE_STATUS_NEW, issue.issue_status)
-        self.assertNotEqual(update_date, issue.date_updated)
-        update_date = issue.date_updated
+        self.assertNotEqual(update_datetime, issue.datetime_updated)
+        update_datetime = issue.datetime_updated
 
         # recheck after fixing the issue should update the status to resolved
         partner_bad.short_name = 'Name added'
@@ -184,8 +184,8 @@ class IssueCheckTest(BaseTenantTestCase):
         issue = FlaggedIssue.objects.get(pk=issue.pk)
         issue.recheck()
         self.assertEqual(ISSUE_STATUS_RESOLVED, issue.issue_status)
-        self.assertNotEqual(update_date, issue.date_updated)
-        update_date = issue.date_updated
+        self.assertNotEqual(update_datetime, issue.datetime_updated)
+        update_datetime = issue.datetime_updated
 
         # recheck after re-creating the issue should update the status to reactivated
         partner_bad.short_name = ''
@@ -193,7 +193,7 @@ class IssueCheckTest(BaseTenantTestCase):
         issue = FlaggedIssue.objects.get(pk=issue.pk)
         issue.recheck()
         self.assertEqual(ISSUE_STATUS_REACTIVATED, issue.issue_status)
-        self.assertNotEqual(update_date, issue.date_updated)
+        self.assertNotEqual(update_datetime, issue.datetime_updated)
 
     @override_settings(ISSUE_CHECKS=[
         'etools.applications.management.tests.test_issue_checks.PartnersNameMustBeFooTestCheck'])
@@ -238,16 +238,16 @@ class IssueCheckTest(BaseTenantTestCase):
         checks.recheck_all_open_issues()
         issue_resolved_updated = FlaggedIssue.objects.get(pk=issue_resolved.pk)
         self.assertEqual(
-            issue_resolved_updated.date_updated,
-            issue_resolved.date_updated
+            issue_resolved_updated.datetime_updated,
+            issue_resolved.datetime_updated
         )
         issue_new_updated = FlaggedIssue.objects.get(pk=issue_new.pk)
         self.assertNotEqual(
-            issue_new_updated.date_updated,
-            issue_new.date_updated
+            issue_new_updated.datetime_updated,
+            issue_new.datetime_updated
         )
         issue_bad_updated = FlaggedIssue.objects.get(pk=issue_bad.pk)
         self.assertEqual(
-            issue_bad_updated.date_updated,
-            issue_bad.date_updated
+            issue_bad_updated.datetime_updated,
+            issue_bad.datetime_updated
         )

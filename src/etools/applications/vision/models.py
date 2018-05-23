@@ -21,7 +21,7 @@ class VisionSyncLog(models.Model):
     successful = models.BooleanField(default=False, verbose_name=_('Successful'))
     details = models.CharField(max_length=2048, blank=True, default='', verbose_name=_('Details'))
     exception_message = models.TextField(blank=True, default='', verbose_name=_('Exception Message'))
-    date_processed = models.DateTimeField(auto_now=True, verbose_name=_('Date Processed'))
+    datetime_processed = models.DateTimeField(auto_now=True, verbose_name=_('Date Processed'))
 
     def __str__(self):
-        return u'{0.country} {0.date_processed}:{0.successful} {0.total_processed}'.format(self)
+        return u'{0.country} {0.datetime_processed}:{0.successful} {0.total_processed}'.format(self)

@@ -20,12 +20,12 @@ class TravelDashboardViewSet(mixins.ListModelMixin,
         office_id = request.query_params.get("office_id", None)
         try:
             travels_all = Travel.objects.filter(
-                start_date__year=year,
-                start_date__month__in=months,
+                start_datetime__year=year,
+                start_datetime__month__in=months,
             )
         except ValueError:
             travels_all = Travel.objects.filter(
-                start_date__year=year,
+                start_datetime__year=year,
             )
 
         if office_id:

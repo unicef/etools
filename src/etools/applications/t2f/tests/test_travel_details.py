@@ -428,6 +428,7 @@ class TravelDetails(URLAssertionMixin, BaseTenantTestCase):
         response = self.forced_auth_req('post', reverse('t2f:travels:list:index'), data=data,
                                         user=self.traveler)
         response_json = json.loads(response.rendered_content)
+        self.assertEqual(201, response.status_code, response_json)
 
         data = response_json
         data['activities'].append({'locations': [location_3.id],
@@ -436,6 +437,7 @@ class TravelDetails(URLAssertionMixin, BaseTenantTestCase):
                                                          kwargs={'travel_pk': response_json['id']}),
                                         data=data, user=self.traveler)
         response_json = json.loads(response.rendered_content)
+        self.assertEqual(200, response.status_code, response_json)
 
         six.assertCountEqual(self, response_json['activities'][0]['locations'], [location.id, location_2.id])
         self.assertEqual(response_json['activities'][1]['locations'], [location_3.id])
@@ -841,28 +843,28 @@ class TravelDetails(URLAssertionMixin, BaseTenantTestCase):
     def test_travel_count_at_approval(self):
         TravelFactory(traveler=self.traveler,
                       supervisor=self.unicef_staff,
-                      start_date=datetime(2017, 1, 1, 1, 0, tzinfo=UTC),
-                      end_date=datetime(2017, 1, 5, 1, 0, tzinfo=UTC),
+                      start_datetime=datetime(2017, 1, 1, 1, 0, tzinfo=UTC),
+                      end_datetime=datetime(2017, 1, 5, 1, 0, tzinfo=UTC),
                       status=Travel.SENT_FOR_PAYMENT)
         TravelFactory(traveler=self.traveler,
                       supervisor=self.unicef_staff,
-                      start_date=datetime(2017, 2, 1, 1, 0, tzinfo=UTC),
-                      end_date=datetime(2017, 2, 5, 1, 0, tzinfo=UTC),
+                      start_datetime=datetime(2017, 2, 1, 1, 0, tzinfo=UTC),
+                      end_datetime=datetime(2017, 2, 5, 1, 0, tzinfo=UTC),
                       status=Travel.SENT_FOR_PAYMENT)
         TravelFactory(traveler=self.traveler,
                       supervisor=self.unicef_staff,
-                      start_date=datetime(2017, 3, 1, 1, 0, tzinfo=UTC),
-                      end_date=datetime(2017, 3, 5, 1, 0, tzinfo=UTC),
+                      start_datetime=datetime(2017, 3, 1, 1, 0, tzinfo=UTC),
+                      end_datetime=datetime(2017, 3, 5, 1, 0, tzinfo=UTC),
                       status=Travel.SENT_FOR_PAYMENT)
         TravelFactory(traveler=self.traveler,
                       supervisor=self.unicef_staff,
-                      start_date=datetime(2017, 4, 1, 1, 0, tzinfo=UTC),
-                      end_date=datetime(2017, 4, 5, 1, 0, tzinfo=UTC),
+                      start_datetime=datetime(2017, 4, 1, 1, 0, tzinfo=UTC),
+                      end_datetime=datetime(2017, 4, 5, 1, 0, tzinfo=UTC),
                       status=Travel.SENT_FOR_PAYMENT)
 
         extra_travel = TravelFactory(traveler=self.traveler,
-                                     start_date=datetime(2017, 5, 1, 1, 0, tzinfo=UTC),
-                                     end_date=datetime(2017, 5, 5, 1, 0, tzinfo=UTC),
+                                     start_datetime=datetime(2017, 5, 1, 1, 0, tzinfo=UTC),
+                                     end_datetime=datetime(2017, 5, 5, 1, 0, tzinfo=UTC),
                                      supervisor=self.unicef_staff)
         ItineraryItemFactory(travel=extra_travel)
         ItineraryItemFactory(travel=extra_travel)
@@ -878,13 +880,13 @@ class TravelDetails(URLAssertionMixin, BaseTenantTestCase):
     def test_too_old_open_travel(self):
         TravelFactory(traveler=self.traveler,
                       supervisor=self.unicef_staff,
-                      start_date=datetime(2017, 1, 1, 1, 0, tzinfo=UTC),
-                      end_date=datetime(2017, 1, 5, 1, 0, tzinfo=UTC),
+                      start_datetime=datetime(2017, 1, 1, 1, 0, tzinfo=UTC),
+                      end_datetime=datetime(2017, 1, 5, 1, 0, tzinfo=UTC),
                       status=Travel.SENT_FOR_PAYMENT)
 
         extra_travel = TravelFactory(traveler=self.traveler,
-                                     start_date=datetime(2017, 5, 1, 1, 0, tzinfo=UTC),
-                                     end_date=datetime(2017, 5, 5, 1, 0, tzinfo=UTC),
+                                     start_datetime=datetime(2017, 5, 1, 1, 0, tzinfo=UTC),
+                                     end_datetime=datetime(2017, 5, 5, 1, 0, tzinfo=UTC),
                                      supervisor=self.unicef_staff)
         ItineraryItemFactory(travel=extra_travel)
         ItineraryItemFactory(travel=extra_travel)

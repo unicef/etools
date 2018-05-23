@@ -35,8 +35,8 @@ class FlaggedIssue(models.Model):
     object_id = models.PositiveIntegerField(db_index=True, verbose_name=_('Object ID'))
     content_object = GenericForeignKey('content_type', 'object_id')
 
-    date_created = models.DateTimeField(auto_now_add=True, verbose_name=_('Creation Date'))
-    date_updated = models.DateTimeField(auto_now=True, verbose_name=_('Updated Date'))
+    datetime_created = models.DateTimeField(auto_now_add=True, verbose_name=_('Creation Date'))
+    datetime_updated = models.DateTimeField(auto_now=True, verbose_name=_('Updated Date'))
     issue_category = models.CharField(max_length=32, choices=ISSUE_CATEGORY_CHOICES, default=ISSUE_CATEGORY_DATA,
                                       db_index=True, verbose_name=_('Issue Category'))
     issue_status = models.CharField(max_length=32, choices=ISSUE_STATUS_CHOICES, default=ISSUE_STATUS_NEW,

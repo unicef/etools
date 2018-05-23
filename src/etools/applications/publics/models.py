@@ -363,7 +363,7 @@ class DSARateUpload(models.Model):
         choices=STATUS,
         verbose_name=_('Status')
     )
-    upload_date = models.DateTimeField(auto_now_add=True, verbose_name=_('Upload Date'))
+    upload_datetime = models.DateTimeField(auto_now_add=True, verbose_name=_('Upload Date'))
     errors = JSONField(blank=True, null=True, default=dict, verbose_name=_('Errors'))
 
     def save(self, *args, **kwargs):

@@ -86,12 +86,12 @@ class InvoiceMaking(BaseTenantTestCase):
                                             currency=self.huf)
 
         ItineraryItemFactory(travel=self.travel,
-                             departure_date=datetime(2017, 5, 10, tzinfo=UTC),
-                             arrival_date=datetime(2017, 5, 11, tzinfo=UTC),
+                             departure_datetime=datetime(2017, 5, 10, tzinfo=UTC),
+                             arrival_datetime=datetime(2017, 5, 11, tzinfo=UTC),
                              dsa_region=dsa_region)
         ItineraryItemFactory(travel=self.travel,
-                             departure_date=datetime(2017, 5, 20, tzinfo=UTC),
-                             arrival_date=datetime(2017, 5, 21, tzinfo=UTC),
+                             departure_datetime=datetime(2017, 5, 20, tzinfo=UTC),
+                             arrival_datetime=datetime(2017, 5, 21, tzinfo=UTC),
                              dsa_region=dsa_region)
 
     def update_invoices(self, status='success'):

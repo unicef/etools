@@ -74,7 +74,7 @@ class InterventionPartnershipDashView(QueryStringFilterMixin, ListCreateAPIView)
                             'travel_activities__primary_traveler'
                         ),
                         travel_activities__travels__status=Travel.COMPLETED,
-                        then=F('travel_activities__date')
+                        then=F('travel_activities__datetime')
                     ),
                     output_field=DateTimeField()
                 )
