@@ -67,6 +67,8 @@ class Command(BaseCommand):
         'tpm.tpmactivity.additional_information',
         'tpm.tpmactivity.offices',
         'tpm.tpmactivity.unicef_focal_points',
+
+        'tpm.tpmactivity._delete',
     ]
 
     visit_attachments = [
@@ -254,6 +256,10 @@ class Command(BaseCommand):
         self.add_permission(self.unicef_user, 'view', 'tpm.tpmvisit.action_points',
                             condition=self.visit_status(TPMVisit.STATUSES.tpm_reported))
 
+        self.add_permission(self.pme, 'view', 'tpm.tpmactivity.pv_applicable',
+                            condition=self.visit_status(TPMVisit.STATUSES.tpm_reported))
+        self.add_permission(self.pme, 'edit', ['tpm.tpmvisit.approval_comment', 'tpm.tpmvisit.report_reject_comments'],
+                            condition=self.visit_status(TPMVisit.STATUSES.tpm_reported))
         self.add_permission(self.pme, 'action',
                             ['tpm.tpmvisit.approve', 'tpm.tpmvisit.reject_report'],
                             condition=self.visit_status(TPMVisit.STATUSES.tpm_reported))
@@ -277,5 +283,5 @@ class Command(BaseCommand):
                             condition=self.visit_status(TPMVisit.STATUSES.unicef_approved))
         self.add_permission([self.unicef_user, self.third_party_monitor], 'view', self.visit_report,
                             condition=self.visit_status(TPMVisit.STATUSES.unicef_approved))
-        self.add_permission(self.unicef_user, 'view', 'tpm.tpmvisit.action_points',
+        self.add_permission(self.unicef_user, 'view', ['tpm.tpmvisit.action_points', 'tpm.tpmvisit.approval_comment'],
                             condition=self.visit_status(TPMVisit.STATUSES.unicef_approved))
