@@ -26,7 +26,8 @@ class InterventionPartnershipDashView(QueryStringFilterMixin, ListCreateAPIView)
     search_param = 'qs'
 
     def get_queryset(self):
-        qs = Intervention.objects.exclude(status=Intervention.DRAFT).annotate(
+        qs = Intervention.objects.exclude(status=Intervention.DRAFT).prefetch_related('agreement__partner')
+        qs = qs.annotate(
             Max("frs__end_date"),
             Min("frs__start_date"),
             Sum("frs__total_amt"),
