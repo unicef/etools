@@ -7,7 +7,7 @@ azure-nspkg==2.0.0
 azure-storage==0.20.2
 babel==2.5.3
 billiard==3.5.0.3
-carto==1.0.1
+carto==1.2.2
 celery==4.1.0
 cffi==1.11.4
 coreapi==2.3.3
