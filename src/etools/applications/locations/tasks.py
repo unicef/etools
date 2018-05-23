@@ -18,7 +18,7 @@ logger = get_task_logger(__name__)
 
 def create_location(pcode, carto_table, parent, parent_instance,
                     remapped_old_pcode, site_name, row, sites_not_added,
-                    sites_created, sites_remapped, sites_updated):
+                    sites_created, sites_updated, sites_remapped):
     try:
         should_remap = False
         # TODO: figure out what we do if the new pcode already exists without remap
@@ -39,7 +39,7 @@ def create_location(pcode, carto_table, parent, parent_instance,
             carto_table.location_type, site_name, pcode
         ))
         sites_not_added += 1
-        return False, sites_not_added, sites_created, sites_remapped, sites_updated
+        return False, sites_not_added, sites_created, sites_updated, sites_remapped
 
     except Location.DoesNotExist:
         # try to create the location
@@ -52,7 +52,7 @@ def create_location(pcode, carto_table, parent, parent_instance,
             create_args['parent'] = parent_instance
 
         if not row['the_geom']:
-            return False, sites_not_added, sites_created, sites_remapped, sites_updated
+            return False, sites_not_added, sites_created, sites_updated, sites_remapped
 
         if 'Point' in row['the_geom']:
             create_args['point'] = row['the_geom']
@@ -70,11 +70,11 @@ def create_location(pcode, carto_table, parent, parent_instance,
             location.name,
             carto_table.location_type.name
         ))
-        return True, sites_not_added, sites_created, sites_remapped, sites_updated
+        return True, sites_not_added, sites_created, sites_updated, sites_remapped
 
     else:
         if not row['the_geom']:
-            return False, sites_not_added, sites_created, sites_remapped, sites_updated
+            return False, sites_not_added, sites_created, sites_updated, sites_remapped
 
         # do the pcode remap if necessary
         if should_remap is True:
@@ -102,7 +102,7 @@ def create_location(pcode, carto_table, parent, parent_instance,
             location.save()
         except IntegrityError:
             logger.exception('Error while saving location: %s', site_name)
-            return False, sites_not_added, sites_created, sites_remapped, sites_updated
+            return False, sites_not_added, sites_created, sites_updated, sites_remapped
 
         if should_remap is True:
             sites_remapped += 1
@@ -119,7 +119,7 @@ def create_location(pcode, carto_table, parent, parent_instance,
                 carto_table.location_type.name
             ))
 
-        return True, sites_not_added, sites_created, sites_remapped, sites_updated
+        return True, sites_not_added, sites_created, sites_updated, sites_remapped
 
 
 @app.task
@@ -153,8 +153,8 @@ def update_sites_from_cartodb(carto_table_pk):
         logger.exception("Cannot fetch pagination prequisites from CartoDB for table {}".format(
             carto_table.table_name
         ))
-        return "Table name {}: {} sites created, {} sites updated, {} sites skipped".format(
-            carto_table.table_name, 0, 0, 0
+        return "Table name {}: {} sites created, {} sites updated, {} sites remapped, {} sites skipped".format(
+            carto_table.table_name, 0, 0, 0, 0
         )
 
     offset = 0
@@ -301,12 +301,12 @@ def update_sites_from_cartodb(carto_table_pk):
                         remapped_old_pcode = remap_row['old_pcode']
 
             # create the actual location or retrieve existing based on type and code
-            succ, sites_not_added, sites_created, sites_remapped, sites_updated = create_location(
+            succ, sites_not_added, sites_created, sites_updated, sites_remapped = create_location(
                 pcode, carto_table,
                 parent, parent_instance, remapped_old_pcode,
                 site_name, row,
                 sites_not_added, sites_created,
-                sites_remapped, sites_updated)
+                sites_updated, sites_remapped)
 
     return "Table name {}: {} sites created, {} sites updated, {} sites remapped, {} sites skipped".format(
         carto_table.table_name, sites_created, sites_updated, sites_remapped, sites_not_added)
