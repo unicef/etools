@@ -81,7 +81,7 @@ openapi-codec==1.3.2
 openpyxl==2.5.0
 paste==2.0.3
 pbr==3.1.1                # via mock
-pillow==5.0.0
+pillow==5.1.0
 psycopg2==2.7.4
 pycodestyle==2.3.1        # via flake8
 pycparser==2.18
