@@ -67,6 +67,8 @@ class TPMVisit(SoftDeleteMixin, TimeStampedModel, models.Model):
         STATUSES.unicef_approved: 'date_of_unicef_approved',
     }
 
+    author = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, blank=True, null=True)
+
     tpm_partner = models.ForeignKey(
         TPMPartner, verbose_name=_('TPM Vendor'), null=True,
         on_delete=models.CASCADE,
@@ -144,7 +146,11 @@ class TPMVisit(SoftDeleteMixin, TimeStampedModel, models.Model):
 
     @property
     def unicef_focal_points_and_pme(self):
-        return set(itertools.chain(self.unicef_focal_points_with_emails, PME.as_group().user_set.exclude(email='')))
+        users = self.unicef_focal_points_with_emails
+        if self.author and self.author.is_active and self.author.email:
+            users += [self.author]
+
+        return users
 
     def __str__(self):
         return 'Visit ({} to {} at {} - {})'.format(

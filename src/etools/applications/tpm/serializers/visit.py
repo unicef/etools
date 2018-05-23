@@ -217,6 +217,7 @@ class TPMVisitLightSerializer(PermissionsBasedSerializerMixin, serializers.Model
 
 
 class TPMVisitSerializer(WritableNestedParentSerializerMixin,
+                         UserContextSerializerMixin,
                          TPMVisitLightSerializer):
     tpm_activities = TPMActivitySerializer(many=True, required=False, label=_('Site Visit Schedule'))
 
@@ -225,6 +226,10 @@ class TPMVisitSerializer(WritableNestedParentSerializerMixin,
     report_reject_comments = TPMVisitReportRejectCommentSerializer(many=True, read_only=True)
 
     action_points = TPMActionPointSerializer(label=_('Task Information'), many=True, required=False)
+
+    def create(self, validated_data):
+        validated_data['author'] = self.get_user()
+        return super(TPMVisitSerializer, self).create(validated_data)
 
     def validate(self, attrs):
         validated_data = super(TPMVisitSerializer, self).validate(attrs)

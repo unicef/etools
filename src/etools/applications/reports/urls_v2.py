@@ -43,7 +43,7 @@ urlpatterns = (
     url(r'disaggregations/(?P<pk>\d+)/$', view=DisaggregationRetrieveUpdateView.as_view(),
         name='disaggregation-retrieve-update'),
     url(
-        r'interventions/special-reporting-requirements/$',
+        r'interventions/(?P<intervention_pk>\d+)/special-reporting-requirements/$',
         view=SpecialReportingRequirementListCreateView.as_view(),
         name="interventions-special-reporting-requirements",
     ),
