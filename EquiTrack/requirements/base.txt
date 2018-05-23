@@ -9,7 +9,7 @@ babel==2.5.3              # via flower
 billiard==3.5.0.3         # via celery
 carto==1.0.1
 celery==4.1.0
-cffi==1.11.4              # via cryptography
+cffi==1.11.5              # via cryptography
 coreapi==2.3.3            # via django-rest-swagger, openapi-codec
 coreschema==0.0.4         # via coreapi
 cryptography==2.1.4       # via pyopenssl
