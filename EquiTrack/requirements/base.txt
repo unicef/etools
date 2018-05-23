@@ -81,7 +81,7 @@ pyopenssl==17.5.0         # via pysaml2
 pypdf2==1.26.0            # via xhtml2pdf
 pyrestcli==0.6.4          # via carto
 pysaml2==4.4.0
-python-dateutil==2.5.3    # via azure-storage, pyrestcli, pysaml2
+python-dateutil==2.7.3    # via azure-storage, pyrestcli, pysaml2
 pytz==2018.3              # via babel, celery, flower, pysaml2
 pyyaml==3.12
 raven==6.2.1
