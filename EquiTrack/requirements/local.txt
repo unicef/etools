@@ -103,7 +103,7 @@ pytz==2018.3
 pyyaml==3.12
 raven==6.2.1
 redis==2.10.6
-reportlab==3.3.0
+reportlab==3.4.0
 repoze.who==2.3
 requests==2.11.1
 responses==0.8.1
