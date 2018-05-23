@@ -100,7 +100,7 @@ unicodecsv==0.14.1        # via djangorestframework-csv, tablib
 uritemplate==3.0.0        # via coreapi
 vine==1.1.4               # via amqp
 webencodings==0.5.1       # via html5lib
-webob==1.7.4              # via repoze.who
+webob==1.8.1              # via repoze.who
 xhtml2pdf==0.2.1          # via django-easy-pdf
 xlrd==1.0.0               # via tablib
 xlwt==1.3.0               # via tablib
