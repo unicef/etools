@@ -193,17 +193,6 @@ class UserFactory(BaseUserFactory):
         TPMPartnerStaffMemberFactory(tpm_partner=extracted, user=self)
 
 
-class TPMActionPointFactory(factory.DjangoModelFactory):
-    class Meta:
-        model = TPMActionPoint
-
-    author = factory.SubFactory(UserFactory, unicef_user=True)
-    person_responsible = factory.SubFactory(UserFactory, unicef_user=True)
-
-    due_date = fuzzy.FuzzyDate(_FUZZY_START_DATE, _FUZZY_END_DATE)
-    description = fuzzy.FuzzyText()
-
-
 class TPMVisitFactory(factory.DjangoModelFactory):
     class Meta:
         model = TPMVisit

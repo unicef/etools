@@ -4,17 +4,19 @@ from datetime import datetime, timedelta
 
 from django.core.management import call_command
 from django.core.urlresolvers import reverse
-from django.utils import six
+from django.utils import six, timezone
 from django.utils.translation import ugettext_lazy as _
+from factory import fuzzy
 
 from rest_framework import status
 
+from etools.applications.action_points.tests.factories import ActionPointFactory
 from etools.applications.attachments.tests.factories import AttachmentFileTypeFactory
 from etools.applications.EquiTrack.tests.cases import BaseTenantTestCase
 from etools.applications.partners.models import PartnerType
 from etools.applications.tpm.models import TPMActionPoint, TPMVisit
 from etools.applications.tpm.tests.base import TPMTestCaseMixin
-from etools.applications.tpm.tests.factories import TPMPartnerFactory, TPMVisitFactory, UserFactory
+from etools.applications.tpm.tests.factories import TPMPartnerFactory, TPMVisitFactory, UserFactory, _FUZZY_END_DATE
 
 
 class TestExportMixin(object):
@@ -117,28 +119,6 @@ class TestTPMVisitViewSet(TestExportMixin, TPMTestCaseMixin, BaseTenantTestCase)
         self.assertEquals(response.status_code, status.HTTP_200_OK)
         self.assertTrue(len(response.data["tpm_activities"][0]["attachments"]))
         self.assertEqual(activity.attachments.count(), 1)
-
-    def test_action_points(self):
-        visit = TPMVisitFactory(status='tpm_reported', tpm_activities__unicef_focal_points__count=1)
-        unicef_focal_point = visit.tpm_activities.first().unicef_focal_points.first()
-        self.assertFalse(TPMActionPoint.objects.filter(tpm_visit=visit).exists())
-
-        response = self.forced_auth_req(
-            'patch',
-            reverse('tpm:visits-detail', args=(visit.id,)),
-            user=unicef_focal_point,
-            data={
-                'action_points': [
-                    {
-                        "person_responsible": visit.tpm_partner.staff_members.first().user.id,
-                        "due_date": (datetime.now().date() + timedelta(days=5)).strftime('%Y-%m-%d'),
-                        "description": "Description",
-                    }
-                ]
-            }
-        )
-        self.assertEquals(response.status_code, status.HTTP_200_OK)
-        self.assertTrue(TPMActionPoint.objects.filter(tpm_visit=visit).exists())
 
     def test_intervention_bilateral_partner(self):
         visit = TPMVisitFactory(
@@ -298,6 +278,81 @@ class TestTPMVisitViewSet(TestExportMixin, TPMTestCaseMixin, BaseTenantTestCase)
     def test_visit_letter(self):
         visit = TPMVisitFactory(status='tpm_accepted')
         self._test_export(self.pme_user, 'tpm:visits-visit-letter', args=(visit.id,))
+
+
+class TestEngagementActionPointViewSet(TPMTestCaseMixin, BaseTenantTestCase):
+    @classmethod
+    def setUpTestData(cls):
+        super(TestEngagementActionPointViewSet, cls).setUpTestData()
+        call_command('update_tpm_permissions', verbosity=0)
+        call_command('update_notifications')
+
+        cls.pme_user = UserFactory(pme=True)
+        cls.unicef_user = UserFactory(unicef_user=True)
+        cls.tpm_user = UserFactory(tpm=True)
+
+    def test_action_point_added(self):
+        visit = TPMVisitFactory(status='tpm_reported', tpm_activities__count=1)
+        activity = visit.tpm_activities.first()
+        self.assertEqual(activity.action_points.count(), 0)
+
+        response = self.forced_auth_req(
+            'post',
+            '/api/tpm/visits/{}/activities/{}/action-points/'.format(visit.id, activity.id),
+            user=self.pme_user,
+            data={
+                'description': fuzzy.FuzzyText(length=100).fuzz(),
+                'due_date': fuzzy.FuzzyDate(timezone.now().date(), _FUZZY_END_DATE).fuzz(),
+                'assigned_to': self.unicef_user.id
+            }
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        self.assertEqual(activity.action_points.count(), 1)
+
+    def test_action_point_editable(self):
+        visit = TPMVisitFactory(status='tpm_reported', tpm_activities__count=1)
+        activity = visit.tpm_activities.first()
+        action_point = ActionPointFactory(tpm_activity=activity, status='pre_completed')
+
+        response = self.forced_auth_req(
+            'options',
+            '/api/audit/visits/{}/activities/{}/action-points/{}/'.format(visit.id, activity.id, action_point.id),
+            user=self.pme_user
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertIn('PUT', response.data['actions'].keys())
+        self.assertListEqual(
+            ['assigned_to', 'high_priority', 'due_date', 'description'],
+            list(response.data['actions']['PUT'].keys())
+        )
+
+    def test_action_point_readonly_on_complete(self):
+        visit = TPMVisitFactory(status='unicef_approved', tpm_activities__count=1)
+        activity = visit.tpm_activities.first()
+        action_point = ActionPointFactory(tpm_activity=activity, status='completed')
+
+        response = self.forced_auth_req(
+            'options',
+            '/api/audit/visits/{}/activities/{}/action-points/{}/'.format(visit.id, activity.id, action_point.id),
+            user=self.pme_user
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertNotIn('PUT', response.data['actions'].keys())
+
+    def test_action_point_complete(self):
+        visit = TPMVisitFactory(status='tpm_reported', tpm_activities__count=1)
+        activity = visit.tpm_activities.first()
+        action_point = ActionPointFactory(tpm_activity=activity, status='pre_completed')
+
+        response = self.forced_auth_req(
+            'post',
+            '/api/audit/visits/{}/activities/{}/action-points/{}/complete/'.format(visit.id, activity.id,
+                                                                                   action_point.id),
+            user=self.pme_user
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data['status'], 'completed')
 
 
 class TestTPMStaffMembersViewSet(TestExportMixin, TPMTestCaseMixin, BaseTenantTestCase):

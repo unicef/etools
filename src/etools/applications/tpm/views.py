@@ -31,7 +31,8 @@ from etools.applications.tpm.models import PME, ThirdPartyMonitor, TPMActionPoin
 from etools.applications.tpm.serializers.partner import (
     TPMPartnerLightSerializer, TPMPartnerSerializer, TPMPartnerStaffMemberSerializer,)
 from etools.applications.tpm.serializers.visit import (
-    TPMActionPointSerializer, TPMVisitDraftSerializer, TPMVisitLightSerializer, TPMVisitSerializer,)
+    TPMActionPointSerializer, TPMVisitDraftSerializer, TPMVisitLightSerializer, TPMVisitSerializer,
+    TPMActivitySerializer)
 
 from etools.applications.tpm.tpmpartners.models import TPMPartner, TPMPartnerStaffMember
 from etools.applications.utils.common.pagination import DynamicPageNumberPagination
@@ -429,17 +430,39 @@ class TPMVisitViewSet(
         )
 
 
-class ActionPointViewSet(BaseTPMViewSet,
-                         mixins.ListModelMixin,
-                         mixins.CreateModelMixin,
+class TPMActivityViewSet(BaseTPMViewSet,
                          mixins.RetrieveModelMixin,
                          NestedViewSetMixin,
                          viewsets.GenericViewSet):
     metadata_class = TPMPermissionBasedMetadata
-    queryset = TPMActionPoint.objects.all()
-    serializer_class = TPMActionPointSerializer
-
+    queryset = TPMActivity.objects.all()
+    serializer_class = TPMActivitySerializer
     permission_classes = BaseTPMViewSet.permission_classes + [NestedPermission]
 
+
+class TPMActionPointViewSet(BaseTPMViewSet,
+                            PermittedFSMActionMixin,
+                            mixins.ListModelMixin,
+                            mixins.CreateModelMixin,
+                            mixins.RetrieveModelMixin,
+                            mixins.UpdateModelMixin,
+                            NestedViewSetMixin,
+                            viewsets.GenericViewSet):
+    metadata_class = TPMPermissionBasedMetadata
+    queryset = TPMActionPoint.objects.all()
+    serializer_class = TPMActionPointSerializer
+    permission_classes = BaseTPMViewSet.permission_classes + [NestedPermission]
+
+    def get_obj_permission_context(self, obj):
+        return [
+            ObjectStatusCondition(obj),
+        ]
+
     def perform_create(self, serializer):
-        serializer.save(tpm_visit=self.get_parent_object())
+        activity = self.get_parent_object()
+        serializer.save(
+            tpm_activity=activity,
+            partner_id=activity.partner_id,
+            intervention_id=activity.intervention_id,
+            cp_output_id=activity.cp_output_id
+        )

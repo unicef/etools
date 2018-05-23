@@ -24,7 +24,7 @@ def delete_user_receiver(instance, **kwargs):
 @receiver(post_save, sender=TPMActionPoint)
 def action_point_updated_receiver(instance, created, **kwargs):
     if created:
-        instance.notify_person_responsible('tpm/visit/action_point_assigned')
+        instance.send_email(instance.assigned_to, 'tpm/visit/action_point_assigned')
 
 
 @receiver(post_save, sender=TPMVisit)
