@@ -95,7 +95,7 @@ sqlparse==0.2.4           # via django-debug-toolbar
 static3==0.7.0            # via dj-static
 tablib==0.12.1            # via django-import-export
 tenant-schemas-celery==0.1.7
-tornado==4.2.0            # via flower
+tornado==5.0.2            # via flower
 unicodecsv==0.14.1        # via djangorestframework-csv, tablib
 uritemplate==3.0.0        # via coreapi
 vine==1.1.4               # via amqp
