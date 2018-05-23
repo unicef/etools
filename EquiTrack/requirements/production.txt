@@ -77,7 +77,7 @@ pillow==5.0.0
 psycopg2==2.7.4
 pycparser==2.18
 pycryptodomex==3.4.12
-pyjwt==1.5.3
+pyjwt==1.6.3
 pyopenssl==17.5.0
 pypdf2==1.26.0
 pyrestcli==0.6.4
