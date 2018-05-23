@@ -80,7 +80,7 @@ pyjwt==1.5.3              # via djangorestframework-jwt
 pyopenssl==17.5.0         # via pysaml2
 pypdf2==1.26.0            # via xhtml2pdf
 pyrestcli==0.6.4          # via carto
-pysaml2==4.4.0
+pysaml2==4.5.0
 python-dateutil==2.5.3    # via azure-storage, pyrestcli, pysaml2
 pytz==2018.3              # via babel, celery, flower, pysaml2
 pyyaml==3.12
