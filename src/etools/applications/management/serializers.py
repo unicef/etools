@@ -56,4 +56,6 @@ class GisLocationGeojsonSerializer(GeoFeatureModelSerializer):
             'p_code',
             'gateway_id',
             'level',
+            'geom',
+            'point'
         )

@@ -22,8 +22,10 @@ class TestCreateLocations(BaseTenantTestCase):
             carto,
             None,
             None,
+            None,
             "test",
             {},
+            0,
             0,
             0,
             0,
@@ -41,9 +43,10 @@ class TestCreateLocations(BaseTenantTestCase):
         carto = CartoDBTableFactory()
         LocationFactory(p_code="123")
 
-        success, not_added, created, updated = tasks.create_location(
+        success, not_added, created, remapped, updated = tasks.create_location(
             "123",
             carto,
+            None,
             None,
             None,
             "test",
@@ -51,10 +54,12 @@ class TestCreateLocations(BaseTenantTestCase):
             0,
             0,
             0,
+            0,
         )
         self.assertFalse(success)
         self.assertEqual(not_added, 0)
         self.assertEqual(created, 0)
+        self.assertEqual(remapped, 0)
         self.assertEqual(updated, 0)
 
     def test_exists_point(self):
@@ -69,9 +74,10 @@ class TestCreateLocations(BaseTenantTestCase):
         self.assertIsNone(location.point)
         self.assertNotEqual(location.name, site_name)
 
-        success, not_added, created, updated = tasks.create_location(
+        success, not_added, created, remapped, updated = tasks.create_location(
             "123",
             carto,
+            None,
             None,
             None,
             site_name,
@@ -79,10 +85,12 @@ class TestCreateLocations(BaseTenantTestCase):
             0,
             0,
             0,
+            0,
         )
         self.assertTrue(success)
         self.assertEqual(not_added, 0)
         self.assertEqual(created, 0)
+        self.assertEqual(remapped, 0)
         self.assertEqual(updated, 1)
         location_updated = Location.objects.get(pk=location.pk)
         self.assertIsNotNone(location_updated.point)
@@ -100,9 +108,10 @@ class TestCreateLocations(BaseTenantTestCase):
         self.assertIsNone(location.geom)
         self.assertNotEqual(location.name, site_name)
 
-        success, not_added, created, updated = tasks.create_location(
+        success, not_added, created, remapped, updated = tasks.create_location(
             "123",
             carto,
+            None,
             None,
             None,
             "test",
@@ -110,10 +119,12 @@ class TestCreateLocations(BaseTenantTestCase):
             0,
             0,
             0,
+            0,
         )
         self.assertTrue(success)
         self.assertEqual(not_added, 0)
         self.assertEqual(created, 0)
+        self.assertEqual(remapped, 0)
         self.assertEqual(updated, 1)
         location_updated = Location.objects.get(pk=location.pk)
         self.assertIsNotNone(location_updated.geom)
@@ -127,9 +138,10 @@ class TestCreateLocations(BaseTenantTestCase):
         self.assertFalse(Location.objects.filter(p_code="123").exists())
         name = "Test"
 
-        success, not_added, created, updated = tasks.create_location(
+        success, not_added, created, remapped, updated = tasks.create_location(
             "123",
             carto,
+            None,
             None,
             None,
             name,
@@ -137,10 +149,12 @@ class TestCreateLocations(BaseTenantTestCase):
             0,
             0,
             0,
+            0,
         )
         self.assertFalse(success)
         self.assertEqual(not_added, 0)
         self.assertEqual(created, 0)
+        self.assertEqual(remapped, 0)
         self.assertEqual(updated, 0)
 
     def test_new_point(self):
@@ -151,9 +165,10 @@ class TestCreateLocations(BaseTenantTestCase):
         self.assertFalse(Location.objects.filter(p_code="123").exists())
         name = "Test"
 
-        success, not_added, created, updated = tasks.create_location(
+        success, not_added, created, remapped, updated = tasks.create_location(
             "123",
             carto,
+            None,
             None,
             None,
             name,
@@ -161,10 +176,12 @@ class TestCreateLocations(BaseTenantTestCase):
             0,
             0,
             0,
+            0,
         )
         self.assertTrue(success)
         self.assertEqual(not_added, 0)
         self.assertEqual(created, 1)
+        self.assertEqual(remapped, 0)
         self.assertEqual(updated, 0)
         location = Location.objects.get(p_code="123")
         self.assertIsNotNone(location.point)
@@ -179,9 +196,10 @@ class TestCreateLocations(BaseTenantTestCase):
         self.assertFalse(Location.objects.filter(p_code="123").exists())
         name = "Test"
 
-        success, not_added, created, updated = tasks.create_location(
+        success, not_added, created, remapped, updated = tasks.create_location(
             "123",
             carto,
+            None,
             None,
             None,
             name,
@@ -189,10 +207,12 @@ class TestCreateLocations(BaseTenantTestCase):
             0,
             0,
             0,
+            0,
         )
         self.assertTrue(success)
         self.assertEqual(not_added, 0)
         self.assertEqual(created, 1)
+        self.assertEqual(remapped, 0)
         self.assertEqual(updated, 0)
         location = Location.objects.get(p_code="123")
         self.assertIsNone(location.point)
@@ -208,13 +228,15 @@ class TestCreateLocations(BaseTenantTestCase):
         self.assertFalse(Location.objects.filter(p_code="123").exists())
         name = "Test"
 
-        success, not_added, created, updated = tasks.create_location(
+        success, not_added, created, remapped, updated = tasks.create_location(
             "123",
             carto,
             True,
             parent,
+            None,
             name,
             {"the_geom": "Point(20 20)"},
+            0,
             0,
             0,
             0,
@@ -222,6 +244,7 @@ class TestCreateLocations(BaseTenantTestCase):
         self.assertTrue(success)
         self.assertEqual(not_added, 0)
         self.assertEqual(created, 1)
+        self.assertEqual(remapped, 0)
         self.assertEqual(updated, 0)
         location = Location.objects.get(p_code="123")
         self.assertIsNotNone(location.point)
@@ -239,12 +262,12 @@ class TestUpdateSitesFromCartoDB(BaseTenantTestCase):
         with patch("etools.applications.locations.tasks.SQLClient.send", self.mock_sql):
             return tasks.update_sites_from_cartodb(carto_table_pk)
 
-    def _assert_response(self, response, name, created, updated, not_added):
+    def _assert_response(self, response, name, created, remapped, updated, not_added):
         self.assertEqual(
             response,
             "Table name {}: {} sites created, {} sites updated, {} sites skipped".format(
                 name, created,
-                updated,
+                remapped, updated,
                 not_added,
             )
         )

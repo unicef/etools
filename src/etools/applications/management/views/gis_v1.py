@@ -109,32 +109,47 @@ class GisLocationsGeomListViewset(ListAPIView):
         except Country.DoesNotExist:
             return Response(status=400, data={'error': 'Country not found'})
         else:
-            if geom_type is None:
-                response = {
-                    "type": "FeatureCollection",
-                    "features": []
-                }
+            if geo_format == 'geojson':
+                if geom_type is None:
+                    response = {
+                        "type": "FeatureCollection",
+                        # TODO: add srid to the FeatureCollection
+                        # see https://github.com/djangonauts/django-rest-framework-gis/pull/113/files
+                        # "crs": {},
+                        "features": []
+                    }
 
-                polygons = Location.objects.filter(geom__isnull=False).all()
-                self.get_serializer_class().Meta.geo_field = 'geom'
-                serialized_polygons = self.get_serializer(polygons, many=True, context={'request': request})
+                    # we must specify the proper serializer `geo_field` for both points and polygons, to be able
+                    # to generate a result which is importable in QGis
+                    polygons = Location.objects.filter(geom__isnull=False).all()
+                    self.get_serializer_class().Meta.geo_field = 'geom'
+                    serialized_polygons = self.get_serializer(polygons, many=True, context={'request': request})
 
-                response["features"] += serialized_polygons.data["features"]
+                    if len(serialized_polygons.data) > 0:
+                        response["features"] += serialized_polygons.data["features"]
 
-                points = Location.objects.filter(point__isnull=False).all()
-                self.get_serializer_class().Meta.geo_field = 'point'
-                serialized_points = self.get_serializer(points, many=True, context={'request': request})
+                    points = Location.objects.filter(point__isnull=False).all()
+                    self.get_serializer_class().Meta.geo_field = 'point'
+                    serialized_points = self.get_serializer(points, many=True, context={'request': request})
 
-                response["features"] += serialized_points.data["features"]
+                    if len(serialized_points.data) > 0:
+                        response["features"] += serialized_points.data["features"]
 
-                return Response(response)
+                    return Response(response)
 
-            if geom_type == 'polygon':
-                locations = Location.objects.filter(geom__isnull=False).all()
-                self.get_serializer_class().Meta.geo_field = 'geom'
-            elif geom_type == 'point':
-                locations = Location.objects.filter(point__isnull=False).all()
-                self.get_serializer_class().Meta.geo_field = 'point'
+                if geom_type == 'polygon':
+                    locations = Location.objects.filter(geom__isnull=False).all()
+                    self.get_serializer_class().Meta.geo_field = 'geom'
+                elif geom_type == 'point':
+                    locations = Location.objects.filter(point__isnull=False).all()
+                    self.get_serializer_class().Meta.geo_field = 'point'
+            else:
+                if geom_type is None:
+                    locations = Location.objects.filter(Q(geom__isnull=False) | Q(point__isnull=False)).all()
+                elif geom_type == 'polygon':
+                    locations = Location.objects.filter(geom__isnull=False).all()
+                elif geom_type == 'point':
+                    locations = Location.objects.filter(point__isnull=False).all()
 
             serializer = self.get_serializer(locations, many=True, context={'request': request})
             return Response(serializer.data)
