@@ -1,6 +1,6 @@
 
 import base64
-from datetime import datetime, timedelta
+from datetime import datetime
 
 from django.core.management import call_command
 from django.core.urlresolvers import reverse
@@ -14,7 +14,7 @@ from etools.applications.action_points.tests.factories import ActionPointFactory
 from etools.applications.attachments.tests.factories import AttachmentFileTypeFactory
 from etools.applications.EquiTrack.tests.cases import BaseTenantTestCase
 from etools.applications.partners.models import PartnerType
-from etools.applications.tpm.models import TPMActionPoint, TPMVisit
+from etools.applications.tpm.models import TPMVisit
 from etools.applications.tpm.tests.base import TPMTestCaseMixin
 from etools.applications.tpm.tests.factories import TPMPartnerFactory, TPMVisitFactory, UserFactory, _FUZZY_END_DATE
 
@@ -268,11 +268,11 @@ class TestTPMVisitViewSet(TestExportMixin, TPMTestCaseMixin, BaseTenantTestCase)
         self._test_export(self.pme_user, 'tpm:visits-locations/export')
 
     def test_action_points_csv(self):
-        TPMVisitFactory(status='unicef_approved', action_points__count=3)
+        TPMVisitFactory(status='unicef_approved', tpm_activity__action_points__count=3)
         self._test_export(self.pme_user, 'tpm:visits-action-points/export')
 
     def test_visit_action_points_csv(self):
-        visit = TPMVisitFactory(status='unicef_approved', action_points__count=3)
+        visit = TPMVisitFactory(status='unicef_approved', tpm_activity__action_points__count=3)
         self._test_export(self.pme_user, 'tpm:visits-action-points/export', args=(visit.id,))
 
     def test_visit_letter(self):
