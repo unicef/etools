@@ -60,7 +60,7 @@ future==0.15.2
 gdal==1.10.0
 gunicorn==19.6.0
 html5lib==1.0b10
-httplib2==0.10.3
+httplib2==0.11.3
 idna==2.6
 itypes==1.1.0
 jdcal==1.3
