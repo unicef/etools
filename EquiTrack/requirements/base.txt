@@ -63,7 +63,7 @@ html5lib==1.0b10          # via xhtml2pdf
 httplib2==0.10.3          # via xhtml2pdf
 idna==2.6                 # via cryptography
 itypes==1.1.0             # via coreapi
-jdcal==1.3                # via openpyxl
+jdcal==1.4                # via openpyxl
 jinja2==2.10              # via coreschema
 jsonfield==2.0.2          # via django-post-office
 kombu==4.1.0              # via celery
