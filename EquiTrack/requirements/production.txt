@@ -81,7 +81,7 @@ pyjwt==1.5.3
 pyopenssl==17.5.0
 pypdf2==1.26.0
 pyrestcli==0.6.4
-pysaml2==4.4.0
+pysaml2==4.5.0
 python-dateutil==2.5.3
 pytz==2018.3
 pyyaml==3.12
