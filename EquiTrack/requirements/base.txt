@@ -2,7 +2,7 @@
 -e git+https://github.com/unicef/djangosaml2.git@v0.16.11.2#egg=djangosaml2
 amqp==2.2.2               # via kombu
 asn1crypto==0.24.0        # via cryptography
-azure-common==1.1.8       # via azure-storage
+azure-common==1.1.11       # via azure-storage
 azure-nspkg==2.0.0        # via azure-common, azure-storage
 azure-storage==0.20.2
 babel==2.5.3              # via flower
