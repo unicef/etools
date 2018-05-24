@@ -1,8 +1,10 @@
+import csv
 import datetime
 import functools
 import operator
 
 from django.db.models import Q
+from django.http import HttpResponse
 from django.utils.translation import ugettext as _
 
 from rest_framework import status
@@ -17,6 +19,7 @@ from rest_framework.generics import (
 )
 from rest_framework.permissions import IsAdminUser
 from rest_framework.response import Response
+from rest_framework.views import APIView
 from rest_framework_csv.renderers import CSVRenderer, JSONRenderer
 
 from etools.applications.EquiTrack.mixins import ExportModelMixin, QueryStringFilterMixin
@@ -24,7 +27,6 @@ from etools.applications.EquiTrack.renderers import CSVFlatRenderer
 from etools.applications.partners.filters import PartnerScopeFilter
 from etools.applications.partners.models import Intervention
 from etools.applications.partners.permissions import PartnershipManagerPermission, PartnershipManagerRepPermission
-from etools.applications.reports.exports import AppliedIndicatorLocationCSVRenderer
 from etools.applications.reports.models import (
     AppliedIndicator,
     CountryProgramme,
@@ -35,11 +37,12 @@ from etools.applications.reports.models import (
     SpecialReportingRequirement,
 )
 from etools.applications.reports.permissions import PMEPermission
-from etools.applications.reports.serializers.exports import (AppliedIndicatorExportFlatSerializer,
-                                                             AppliedIndicatorExportSerializer,
-                                                             AppliedIndicatorLocationExportSerializer,
-                                                             LowerResultExportFlatSerializer,
-                                                             LowerResultExportSerializer,)
+from etools.applications.reports.serializers.exports import (
+    AppliedIndicatorExportFlatSerializer,
+    AppliedIndicatorExportSerializer,
+    LowerResultExportFlatSerializer,
+    LowerResultExportSerializer,
+)
 from etools.applications.reports.serializers.v1 import IndicatorSerializer
 from etools.applications.reports.serializers.v2 import (
     AppliedIndicatorSerializer,
@@ -258,77 +261,129 @@ class AppliedIndicatorListAPIView(ExportModelMixin, ListAPIView):
         return q
 
 
-class AppliedIndicatorLoc(object):
-    def __init__(self, indicator, location, **kwargs):
+class AppliedIndicatorLocationExportView(QueryStringFilterMixin, APIView):
 
-        def get_value(obj, filters):
-            filters = filters.split('__')
-            for filter in filters:
-                obj = getattr(obj, filter)
-            return obj
+    def get(self, request, *args, **kwargs):
 
-        # for field in ('indicator', 'location'):
-        #     setattr(self, field, get_value(indicator, field))
-        setattr(self, 'indicator', indicator)
-        setattr(self, 'selected_location', location)
+        fieldnames = {
+            'partner': 'Partner Name',
+            'vendor': 'Vendor',
+            'int_status': 'PD / SSFA status',
+            'int_start_date': 'PD / SSFA start date',
+            'int_end_date': 'PD / SSFA end date',
+            'country_programme': 'Country Programme',
+            'int_ref': 'PD / SSFA ref',
+            'int_locations': 'Locations',
+            'ind_result': 'CP Output',
+            'ind_lower_result': 'Lower Result',
+            'ind_title': 'Indicator',
+            'ind_section': 'Section',
+            'ind_cluster_name': 'Cluster Name',
+            'ind_baseline': 'Baseline',
+            'ind_target': 'Target',
+            'ind_means_of_verification': 'Means of verification',
+            'ind_ram_indicators': 'RAM indicators',
+            'ind_location': 'Location',
+        }
 
+        today = '{:%Y_%m_%d}'.format(datetime.date.today())
+        country_code = self.request.tenant.country_short_code
+        filename = f'{today}_{country_code}_Interventions'
 
-class ExportAppliedIndicatorLocationListView(QueryStringFilterMixin, ListAPIView):
-    serializer_class = AppliedIndicatorLocationExportSerializer
-    renderer_classes = (
-        JSONRenderer,
-        AppliedIndicatorLocationCSVRenderer,
-        CSVFlatRenderer,
-    )
+        response = HttpResponse(content_type='text/csv')
+        response['Content-Disposition'] = f'attachment; filename="{filename}.csv"'
 
-    def get_queryset(self):
-        qs = AppliedIndicator.objects.select_related(
-            "indicator", "section", "lower_result", "lower_result__result_link__intervention__agreement__partner"
-        ).prefetch_related(
-            "locations", "lower_result__result_link__cp_output", "lower_result__result_link__ram_indicators"
-        )
+        writer = csv.DictWriter(response, fieldnames)
+        writer.writerow(fieldnames)
+
+        interventions = self.get_intervetions()
+
+        for intervention in interventions:
+            intervention_dict = {
+                'partner': str(intervention.agreement.partner),
+                'vendor': intervention.agreement.partner.cso_type,
+                'int_status': intervention.get_status_display(),
+                'int_start_date': intervention.start,
+                'int_end_date': intervention.end,
+                'country_programme': str(intervention.agreement.country_programme),
+                'int_ref': intervention.number.replace(',', '-'),
+                'int_locations': ','.join([location.name for location in intervention.flat_locations.all()])
+            }
+
+            indicators = self.get_indicators(intervention)
+
+            if indicators.exists():
+                for indicator in indicators:
+                    indicator_dict = {
+                        'ind_result': indicator.lower_result.result_link.cp_output,
+                        'ind_lower_result': indicator.lower_result.name,
+                        'ind_title': indicator.indicator.title,
+                        'ind_section': indicator.section,
+                        'ind_cluster_name': indicator.cluster_name,
+                        'ind_baseline': indicator.baseline,
+                        'ind_target': indicator.target,
+                        'ind_means_of_verification': indicator.means_of_verification,
+                        'ind_ram_indicators': ', '.join([
+                            ri.name for ri in indicator.lower_result.result_link.ram_indicators.all()])
+                    }
+                    for location in indicator.locations.all():
+                        locations_dict = {
+                            'ind_location': location.name
+                        }
+                        export_dict = {**intervention_dict, **indicator_dict, **locations_dict}
+                        writer.writerow(export_dict)
+            else:
+                writer.writerow(intervention_dict)
+
+        return response
+
+    def get_intervetions(self):
+        qs = Intervention.objects.select_related('agreement__partner')
 
         if self.request.query_params:
             queries = []
             filters = (
-                ('document_type', 'lower_result__result_link__intervention__document_type__in'),
-                ('country_programme', 'lower_result__result_link__intervention__agreement__country_programme'),
-                ('sections', 'section__in'),
-                ('cluster', 'cluster_indicator_title__icontains'),
-                ('status', 'lower_result__result_link__intervention__status__in'),
-                ('unicef_focal_points', 'lower_result__result_link__intervention__unicef_focal_points__in'),
-                ('start', 'lower_result__result_link__intervention__start__gte'),
-                ('end', 'lower_result__result_link__intervention__end__lte'),
-                ('office', 'lower_result__result_link__intervention__offices__in'),
-                ('location', 'locations__name__icontains'),
+                ('document_type', 'document_type__in'),
+                ('country_programme', 'agreement__country_programme'),
+                ('start', 'start__gte'),
+                ('end', 'end__lte'),
+                ('office', 'offices__in'),
+                ('status', 'status__in'),
+                ('unicef_focal_points', 'unicef_focal_points__in'),
             )
-            search_terms = ['lower_result__result_link__intervention__title__icontains',
-                            'lower_result__result_link__intervention__agreement__partner__name__icontains',
-                            'lower_result__result_link__intervention__number__icontains']
+
+            search_terms = ['title__icontains', 'agreement__partner__name__icontains', 'number__icontains']
             queries.extend(self.filter_params(filters))
             queries.append(self.search_params(search_terms))
 
             if queries:
                 expression = functools.reduce(operator.and_, queries)
                 qs = qs.filter(expression)
+
         return qs
 
-    def list(self, request, *args, **kwargs):
-        rows = {}
-        count = 1
-        for indicator in self.get_queryset():
-            for loc in indicator.locations.all():
-                rows[count] = AppliedIndicatorLoc(indicator=indicator, location=loc)
-                count += 1
-        serializer = AppliedIndicatorLocationExportSerializer(instance=rows.values(), many=True)
-        response = Response(serializer.data)
+    def get_indicators(self, intervention):
+        qs = AppliedIndicator.objects.select_related("indicator", "section", "lower_result").prefetch_related(
+            "locations", "lower_result__result_link__cp_output", "lower_result__result_link__ram_indicators"
+        ).filter(lower_result__result_link__intervention=intervention)
 
-        query_params = self.request.query_params
-        if "format" in query_params.keys():
-            if query_params.get("format") in ['csv']:
-                response['Content-Disposition'] = "attachment;filename=PD_Indicators_Location.csv"
+        if self.request.query_params:
+            queries = []
+            filters = (
+                ('cluster', 'cluster_indicator_title__icontains'),
+                ('location', 'locations__name__icontains'),
+                ('sections', 'section__in'),
+            )
 
-        return response
+            search_terms = ['title__icontains', 'agreement__partner__name__icontains', 'number__icontains']
+            queries.extend(self.filter_params(filters))
+            queries.append(self.search_params(search_terms))
+
+            if queries:
+                expression = functools.reduce(operator.and_, queries)
+                qs = qs.filter(expression)
+
+        return qs
 
 
 class SpecialReportingRequirementListCreateView(ListCreateAPIView):
