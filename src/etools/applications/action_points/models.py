@@ -143,9 +143,9 @@ class ActionPoint(TimeStampedModel):
             'person_responsible': self.assigned_to.get_full_name(),
             'assigned_by': self.assigned_by.get_full_name(),
             'reference_number': self.reference_number,
-            'implementing_partner': str(self.partner),
+            'implementing_partner': str(self.partner) if self.partner else '',
             'description': self.description,
-            'due_date': self.due_date.strftime('%d %b %Y'),
+            'due_date': self.due_date.strftime('%d %b %Y') if self.due_date else '',
             'object_url': self.related_object.get_object_url() if self.related_object else '',
         }
 
