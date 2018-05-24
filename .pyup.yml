@@ -1,4 +1,5 @@
 # pyup.io docs: https://pyup.io/docs/bot/config/
+
 # don't send automated PRs when new package updates are available
 update: false
 
