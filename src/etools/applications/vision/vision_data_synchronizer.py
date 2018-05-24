@@ -31,7 +31,7 @@ class VisionDataLoader(object):
         separator = '' if self.URL.endswith('/') else '/'
 
         self.url = '{}{}{}'.format(self.URL, separator, endpoint)
-        if country:
+        if country and country.name != "Global":
             self.url += '/{}'.format(country.business_area_code)
 
         logger.info('About to get data from {}'.format(self.url))
