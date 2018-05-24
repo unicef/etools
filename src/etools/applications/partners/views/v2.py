@@ -17,12 +17,22 @@ from etools.applications.EquiTrack.fields import CURRENCIES
 from etools.applications.funds.models import FundsReservationItem
 from etools.applications.locations.models import GatewayType
 from etools.applications.partners.filters import PartnerScopeFilter
-from etools.applications.partners.models import (Agreement, AgreementAmendment, Assessment, FileType,
-                                                 Intervention, InterventionAmendment,
-                                                 PartnerOrganization, PartnerStaffMember, PartnerType,)
+from etools.applications.partners.models import (
+    Agreement,
+    AgreementAmendment,
+    Assessment,
+    FileType,
+    Intervention,
+    InterventionAmendment,
+    PartnerOrganization,
+    PartnerStaffMember,
+    PartnerType,
+)
 from etools.applications.partners.permissions import PartnershipManagerPermission
-from etools.applications.partners.serializers.partner_organization_v2 import (PartnerStaffMemberCreateUpdateSerializer,
-                                                                              PartnerStaffMemberDetailSerializer,)
+from etools.applications.partners.serializers.partner_organization_v2 import (
+    PartnerStaffMemberCreateUpdateSerializer,
+    PartnerStaffMemberDetailSerializer,
+)
 from etools.applications.reports.models import CountryProgramme, Result, ResultType
 
 

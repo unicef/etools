@@ -9,6 +9,7 @@ class InterventionDashSerializer(serializers.ModelSerializer):
     partner_name = serializers.CharField(source='agreement.partner.name', read_only=True)
     partner_id = serializers.CharField(source='agreement.partner.id', read_only=True)
     partner_blocked = serializers.BooleanField(source='agreement.partner.blocked', read_only=True)
+    partner_marked_for_deletion = serializers.BooleanField(source='agreement.partner.deleted_flag', read_only=True)
     sections = serializers.SerializerMethodField()
     offices_names = serializers.SerializerMethodField()
     budget_currency = serializers.CharField(source='planned_budget.currency', read_only=True)
@@ -92,6 +93,7 @@ class InterventionDashSerializer(serializers.ModelSerializer):
             'partner_blocked',
             'partner_id',
             'partner_name',
+            'partner_marked_for_deletion',
             'number',
             'status',
             'start',
