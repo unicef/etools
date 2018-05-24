@@ -61,22 +61,20 @@ class TPMLocationExportSerializer(serializers.Serializer):
 
 
 class TPMActionPointExportSerializer(serializers.Serializer):
-    person_responsible = serializers.CharField(source='person_responsible.get_full_name')
+    assigned_to = serializers.CharField(source='assigned_to.get_full_name')
     author = serializers.CharField(source='author.get_full_name')
-    section = CommaSeparatedExportField(source='tpm_visit.tpm_activities', export_attr='section')
+    section = serializers.CharField(source='tpm_activity.section')
     status = serializers.CharField(source='get_status_display')
     locations = serializers.SerializerMethodField()
-    cp_output = CommaSeparatedExportField(source='tpm_visit.tpm_activities', export_attr='cp_output')
+    cp_output = serializers.CharField(source='tpm_activity.cp_output')
     due_date = serializers.DateField(format='%d/%m/%Y')
 
     def get_locations(self, obj):
-        return ', '.join(
-            map(str, itertools.chain(*map(lambda a: a.locations.all(), obj.tpm_visit.tpm_activities.all())))
-        )
+        return ', '.join(map(str, obj.tpm_activity.locations.all()))
 
 
 class TPMActionPointFullExportSerializer(TPMActionPointExportSerializer):
-    ref = serializers.CharField(source='tpm_visit.reference_number')
+    ref = serializers.CharField(source='tpm_activity.tpm_visit.reference_number')
 
 
 class TPMVisitExportSerializer(serializers.Serializer):

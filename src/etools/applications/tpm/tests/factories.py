@@ -351,4 +351,3 @@ class TPMVisitFactory(factory.DjangoModelFactory):
 
         for i in range(count):
             AttachmentFactory(code='visit_report', content_object=self, **kwargs)
-

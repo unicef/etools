@@ -457,7 +457,6 @@ class TPMActionPoint(ActionPoint):
         self._do_complete()
 
 
-
 PME = GroupWrapper(code='pme',
                    name='PME')
 

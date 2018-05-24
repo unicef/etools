@@ -50,9 +50,9 @@ class TPMLocationCSVRenderer(CSVRenderer):
 
 
 class TPMActionPointCSVRenderer(CSVRenderer):
-    header = ['person_responsible', 'author', 'section', 'status', 'locations', 'cp_output', 'due_date']
+    header = ['assigned_to', 'author', 'section', 'status', 'locations', 'cp_output', 'due_date']
     labels = {
-        'person_responsible': _('Person Responsible'),
+        'assigned_to': _('Person Responsible'),
         'author': _('Assigned By'),
         'section': _('Section'),
         'status': _('Status'),

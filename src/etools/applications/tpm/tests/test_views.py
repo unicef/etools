@@ -268,11 +268,11 @@ class TestTPMVisitViewSet(TestExportMixin, TPMTestCaseMixin, BaseTenantTestCase)
         self._test_export(self.pme_user, 'tpm:visits-locations/export')
 
     def test_action_points_csv(self):
-        TPMVisitFactory(status='unicef_approved', tpm_activity__action_points__count=3)
+        TPMVisitFactory(status='unicef_approved', tpm_activities__action_points__count=3)
         self._test_export(self.pme_user, 'tpm:visits-action-points/export')
 
     def test_visit_action_points_csv(self):
-        visit = TPMVisitFactory(status='unicef_approved', tpm_activity__action_points__count=3)
+        visit = TPMVisitFactory(status='unicef_approved', tpm_activities__action_points__count=3)
         self._test_export(self.pme_user, 'tpm:visits-action-points/export', args=(visit.id,))
 
     def test_visit_letter(self):
@@ -317,7 +317,7 @@ class TestEngagementActionPointViewSet(TPMTestCaseMixin, BaseTenantTestCase):
 
         response = self.forced_auth_req(
             'options',
-            '/api/audit/visits/{}/activities/{}/action-points/{}/'.format(visit.id, activity.id, action_point.id),
+            '/api/tpm/visits/{}/activities/{}/action-points/{}/'.format(visit.id, activity.id, action_point.id),
             user=self.pme_user
         )
         self.assertEqual(response.status_code, status.HTTP_200_OK)
@@ -334,7 +334,7 @@ class TestEngagementActionPointViewSet(TPMTestCaseMixin, BaseTenantTestCase):
 
         response = self.forced_auth_req(
             'options',
-            '/api/audit/visits/{}/activities/{}/action-points/{}/'.format(visit.id, activity.id, action_point.id),
+            '/api/tpm/visits/{}/activities/{}/action-points/{}/'.format(visit.id, activity.id, action_point.id),
             user=self.pme_user
         )
         self.assertEqual(response.status_code, status.HTTP_200_OK)
@@ -347,8 +347,8 @@ class TestEngagementActionPointViewSet(TPMTestCaseMixin, BaseTenantTestCase):
 
         response = self.forced_auth_req(
             'post',
-            '/api/audit/visits/{}/activities/{}/action-points/{}/complete/'.format(visit.id, activity.id,
-                                                                                   action_point.id),
+            '/api/tpm/visits/{}/activities/{}/action-points/{}/complete/'.format(visit.id, activity.id,
+                                                                                 action_point.id),
             user=self.pme_user
         )
         self.assertEqual(response.status_code, status.HTTP_200_OK)

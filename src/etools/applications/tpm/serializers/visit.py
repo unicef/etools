@@ -211,10 +211,6 @@ class TPMVisitSerializer(WritableNestedParentSerializerMixin,
         validated_data['author'] = self.get_user()
         return super(TPMVisitSerializer, self).create(validated_data)
 
-    def create(self, validated_data):
-        validated_data['author'] = self.get_user()
-        return super(TPMVisitSerializer, self).create(validated_data)
-
     def validate(self, attrs):
         validated_data = super(TPMVisitSerializer, self).validate(attrs)
 

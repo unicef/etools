@@ -394,7 +394,7 @@ class TPMVisitViewSet(
 
     @list_route(methods=['get'], url_path='action-points/export', renderer_classes=(TPMActionPointFullCSVRenderer,))
     def full_action_points_export(self, request, *args, **kwargs):
-        action_points = TPMActionPoint.objects.filter(tpm_visit__in=self.get_queryset()).order_by('id')
+        action_points = TPMActionPoint.objects.filter(tpm_activity__tpm_visit__in=self.get_queryset()).order_by('id')
 
         serializer = TPMActionPointFullExportSerializer(action_points, many=True)
         return Response(serializer.data, headers={
@@ -404,7 +404,7 @@ class TPMVisitViewSet(
     @detail_route(methods=['get'], url_path='action-points/export', renderer_classes=(TPMActionPointCSVRenderer,))
     def action_points_export(self, request, *args, **kwargs):
         visit = self.get_object()
-        action_points = visit.action_points.order_by('id')
+        action_points = TPMActionPoint.objects.filter(tpm_activity__tpm_visit=visit).order_by('id')
 
         serializer = TPMActionPointExportSerializer(action_points, many=True)
         return Response(serializer.data, headers={
