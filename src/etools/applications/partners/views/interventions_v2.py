@@ -1,10 +1,11 @@
 import copy
+import datetime
 import functools
 import logging
 import operator
 
 from django.contrib.contenttypes.models import ContentType
-from django.db import transaction
+from django.db import transaction, connection
 from django.db.models import Q
 from django.shortcuts import get_object_or_404
 
@@ -12,6 +13,7 @@ from rest_framework import status
 from rest_framework.exceptions import ValidationError
 from rest_framework.generics import DestroyAPIView, ListAPIView, ListCreateAPIView, RetrieveUpdateDestroyAPIView
 from rest_framework.permissions import IsAdminUser
+from rest_framework.renderers import JSONRenderer
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework_csv import renderers as r
@@ -20,7 +22,7 @@ from etools.applications.environment.helpers import tenant_switch_is_active
 from etools.applications.EquiTrack.mixins import ExportModelMixin, QueryStringFilterMixin
 from etools.applications.EquiTrack.renderers import CSVFlatRenderer
 from etools.applications.EquiTrack.validation_mixins import ValidatorViewMixin
-from etools.applications.partners.exports_v2 import InterventionCSVRenderer
+from etools.applications.partners.exports_v2 import InterventionCSVRenderer, InterventionLocationCSVRenderer
 from etools.applications.partners.filters import (AppliedIndicatorsFilter, InterventionFilter,
                                                   InterventionResultLinkFilter, PartnerScopeFilter,)
 from etools.applications.partners.models import (
@@ -54,11 +56,12 @@ from etools.applications.partners.serializers.interventions_v2 import (
     InterventionResultSerializer,
     InterventionSectorLocationCUSerializer,
     MinimalInterventionListSerializer,
-)
+    InterventionLocationExportSerializer)
 from etools.applications.partners.validation.interventions import InterventionValid
 from etools.applications.reports.models import AppliedIndicator, LowerResult, ReportingRequirement
 from etools.applications.reports.serializers.v2 import AppliedIndicatorSerializer, LowerResultSimpleCUSerializer
 from etools.applications.snapshot.models import Activity
+from etools.applications.users.models import Country
 
 
 class InterventionListBaseView(ValidatorViewMixin, ListCreateAPIView):
@@ -76,7 +79,7 @@ class InterventionListAPIView(QueryStringFilterMixin, ExportModelMixin, Interven
     permission_classes = (PartnershipManagerPermission,)
     filter_backends = (PartnerScopeFilter,)
     renderer_classes = (
-        r.JSONRenderer,
+        JSONRenderer,
         InterventionCSVRenderer,
         CSVFlatRenderer,
     )
@@ -289,7 +292,7 @@ class InterventionResultListAPIView(ExportModelMixin, ListAPIView):
     permission_classes = (PartnershipManagerPermission,)
     filter_backends = (PartnerScopeFilter,)
     renderer_classes = (
-        r.JSONRenderer,
+        JSONRenderer,
         r.CSVRenderer,
         CSVFlatRenderer,
     )
@@ -332,7 +335,7 @@ class InterventionIndicatorListAPIView(ExportModelMixin, ListAPIView):
     permission_classes = (PartnershipManagerPermission,)
     filter_backends = (PartnerScopeFilter,)
     renderer_classes = (
-        r.JSONRenderer,
+        JSONRenderer,
         r.CSVRenderer,
         CSVFlatRenderer,
     )
@@ -398,7 +401,7 @@ class InterventionAmendmentListAPIView(ExportModelMixin, ValidatorViewMixin, Lis
     permission_classes = (PartnershipManagerPermission,)
     filter_backends = (PartnerScopeFilter,)
     renderer_classes = (
-        r.JSONRenderer,
+        JSONRenderer,
         r.CSVRenderer,
         CSVFlatRenderer,
     )
@@ -467,7 +470,7 @@ class InterventionSectorLocationLinkListAPIView(ExportModelMixin, ListAPIView):
     permission_classes = (PartnershipManagerPermission,)
     filter_backends = (PartnerScopeFilter,)
     renderer_classes = (
-        r.JSONRenderer,
+        JSONRenderer,
         r.CSVRenderer,
         CSVFlatRenderer,
     )
@@ -550,7 +553,7 @@ class InterventionLowerResultListCreateView(ListCreateAPIView):
     serializer_class = LowerResultSimpleCUSerializer
     permission_classes = (PartnershipManagerPermission,)
     filter_backends = (InterventionResultLinkFilter,)
-    renderer_classes = (r.JSONRenderer,)
+    renderer_classes = (JSONRenderer,)
     queryset = LowerResult.objects.all()
 
     def create(self, request, *args, **kwargs):
@@ -569,7 +572,7 @@ class InterventionLowerResultUpdateView(RetrieveUpdateDestroyAPIView):
     serializer_class = LowerResultSimpleCUSerializer
     permission_classes = (PartnershipManagerPermission,)
     filter_backends = (InterventionResultLinkFilter,)
-    renderer_classes = (r.JSONRenderer,)
+    renderer_classes = (JSONRenderer,)
     queryset = LowerResult.objects.all()
 
     def delete(self, request, *args, **kwargs):
@@ -585,7 +588,7 @@ class InterventionResultLinkListCreateView(ListCreateAPIView):
     serializer_class = InterventionResultLinkSimpleCUSerializer
     permission_classes = (PartnershipManagerPermission,)
     filter_backends = (InterventionFilter,)
-    renderer_classes = (r.JSONRenderer,)
+    renderer_classes = (JSONRenderer,)
     queryset = InterventionResultLink.objects.all()
 
     def create(self, request, *args, **kwargs):
@@ -604,7 +607,7 @@ class InterventionResultLinkUpdateView(RetrieveUpdateDestroyAPIView):
     serializer_class = InterventionResultLinkSimpleCUSerializer
     permission_classes = (PartnershipManagerPermission,)
     filter_backends = (InterventionFilter,)
-    renderer_classes = (r.JSONRenderer,)
+    renderer_classes = (JSONRenderer,)
     queryset = InterventionResultLink.objects.all()
 
     def delete(self, request, *args, **kwargs):
@@ -620,7 +623,7 @@ class InterventionReportingPeriodListCreateView(ListCreateAPIView):
     serializer_class = InterventionReportingPeriodSerializer
     permission_classes = (PartnershipManagerPermission,)
     filter_backends = (InterventionFilter,)
-    renderer_classes = (r.JSONRenderer,)
+    renderer_classes = (JSONRenderer,)
     queryset = InterventionReportingPeriod.objects
 
 
@@ -628,7 +631,7 @@ class InterventionReportingPeriodDetailView(RetrieveUpdateDestroyAPIView):
     serializer_class = InterventionReportingPeriodSerializer
     permission_classes = (PartnershipManagerPermission,)
     filter_backends = (InterventionFilter,)
-    renderer_classes = (r.JSONRenderer,)
+    renderer_classes = (JSONRenderer,)
     queryset = InterventionReportingPeriod.objects
 
 
@@ -636,7 +639,7 @@ class InterventionIndicatorsListView(ListCreateAPIView):
     serializer_class = AppliedIndicatorSerializer
     permission_classes = (PartnershipManagerPermission,)
     filter_backends = (AppliedIndicatorsFilter,)
-    renderer_classes = (r.JSONRenderer,)
+    renderer_classes = (JSONRenderer,)
     queryset = AppliedIndicator.objects.all()
 
     @transaction.atomic()
@@ -657,7 +660,7 @@ class InterventionIndicatorsUpdateView(RetrieveUpdateDestroyAPIView):
     serializer_class = AppliedIndicatorSerializer
     permission_classes = (PartnershipManagerPermission,)
     filter_backends = (AppliedIndicatorsFilter,)
-    renderer_classes = (r.JSONRenderer,)
+    renderer_classes = (JSONRenderer,)
     queryset = AppliedIndicator.objects.all()
 
     def delete(self, request, *args, **kwargs):
@@ -666,6 +669,67 @@ class InterventionIndicatorsUpdateView(RetrieveUpdateDestroyAPIView):
         if not intervention.status == Intervention.DRAFT:
             raise ValidationError(u'Deleting an indicator is only possible in status Draft.')
         return super(InterventionIndicatorsUpdateView, self).delete(request, *args, **kwargs)
+
+
+class InterventionLocation(object):
+    """Helper: we'll use one of these per row of output in InterventionLocationListAPIView"""
+    def __init__(self, intervention, location, section):
+        self.intervention = intervention
+        self.selected_location = location
+        self.section = section
+
+    @property
+    def sort_key(self):
+        return (
+            self.intervention.number,
+            self.section.name if self.section else '',
+            self.selected_location.name if self.selected_location else '',
+        )
+
+
+class InterventionLocationListAPIView(ListAPIView):
+    """
+    API to export a list of intervention locations.
+
+    Example desired output:
+
+    "Partner","PD Ref Number","Partnership","Status","Location","Section","CP output","Start Date","End Date","Name of UNICEF Focal Point","Hyperlink"
+    "Partner 1.1.1.1.1","Ref#1","Partnership 1.1.1.1.1.1.1","Active","Location 1.1.1.1.1","Section 1.1.1","CP output 1.1.1.1","DD/MM/YYYY","DD/MM/YYYY","Name1, Name2","http://xxxxxx"
+
+    """
+    serializer_class = InterventionLocationExportSerializer
+    queryset = Intervention.objects.all()
+    permission_classes = (PartnershipManagerPermission,)
+    renderer_classes = (
+        JSONRenderer,
+        InterventionLocationCSVRenderer,
+    )
+
+    def list(self, request, *args, **kwargs):
+        rows = []
+        for intervention in self.get_queryset():
+            # We want to do a separate row for each intervention/location/sector combination,
+            # but if the intervention has no locations or no sectors, we still want
+            # to include it in the results.
+            sections = intervention.combined_sections or [None]
+            locations = intervention.flat_locations.all() or [None]
+
+            for section in sections:
+                for loc in locations:
+                    rows.append(InterventionLocation(intervention=intervention, location=loc, section=section))
+
+        rows = sorted(rows, key=operator.attrgetter('sort_key'))
+        serializer = self.get_serializer(instance=rows, many=True)
+        response = Response(serializer.data)
+
+        query_params = self.request.query_params
+        if query_params.get("format") in ['csv', 'csv_flat']:
+            country = Country.objects.get(schema_name=connection.schema_name)
+            today = datetime.date.today()
+            filename = f"{today.year}_{today.month}_{today.day}_{country.country_short_code}_Interventions"
+            response['Content-Disposition'] = "attachment;filename=%s.csv" % filename
+
+        return response
 
 
 class InterventionDeleteView(DestroyAPIView):
@@ -700,7 +764,7 @@ class InterventionReportingRequirementView(APIView):
     serializer_create_class = InterventionReportingRequirementCreateSerializer
     serializer_list_class = InterventionReportingRequirementListSerializer
     permission_classes = (PartnershipManagerPermission, )
-    renderer_classes = (r.JSONRenderer, )
+    renderer_classes = (JSONRenderer, )
 
     def get_data(self):
         return {

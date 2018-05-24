@@ -962,17 +962,19 @@ class TestAgreementAPIFileAttachments(BaseTenantTestCase):
         self.assertEqual(url.netloc, 'testserver')
 
         # The filename is probably 'hello_world.txt', but Django doesn't guarantee that so I don't test it.
-        expected_path_components = ['',
-                                    settings.MEDIA_URL.strip('/'),
-                                    connection.schema_name,
-                                    'file_attachments',
-                                    'partner_organization',
-                                    six.text_type(self.agreement.partner.id),
-                                    'agreements',
-                                    # Note that slashes have to be stripped from the agreement number to match the
-                                    # normalized path.
-                                    self.agreement.agreement_number.strip('/'),
-                                    ]
+        # Joining and splitting on '/' makes sure we get the same results as urlsplit('/') even
+        # if any components contain '/'.
+        expected_path_components = '/'.join(['',
+                                             settings.MEDIA_URL.strip('/'),
+                                             connection.schema_name,
+                                             'file_attachments',
+                                             'partner_organization',
+                                             six.text_type(self.agreement.partner.id),
+                                             'agreements',
+                                             # Note that slashes have to be stripped from the agreement number to match the
+                                             # normalized path.
+                                             self.agreement.agreement_number.strip('/'),
+                                             ]).split('/')
         self.assertEqual(expected_path_components, url.path.split('/')[:-1])
 
         # Confirm that there are no amendments as of yet.
@@ -1003,17 +1005,19 @@ class TestAgreementAPIFileAttachments(BaseTenantTestCase):
         self.assertEqual(url.netloc, 'testserver')
 
         # The filename is probably 'goodbye_world.txt', but Django doesn't guarantee that so I don't test it.
-        expected_path_components = ['',
-                                    settings.MEDIA_URL.strip('/'),
-                                    connection.schema_name,
-                                    'file_attachments',
-                                    'partner_org',
-                                    six.text_type(self.agreement.partner.id),
-                                    'agreements',
-                                    self.agreement.base_number.strip('/'),
-                                    'amendments',
-                                    amendment.number.strip('/'),
-                                    ]
+        # Joining and splitting on '/' makes sure we get the same results as urlsplit('/') even
+        # if any components contain '/'.
+        expected_path_components = '/'.join(['',
+                                             settings.MEDIA_URL.strip('/'),
+                                             connection.schema_name,
+                                             'file_attachments',
+                                             'partner_org',
+                                             six.text_type(self.agreement.partner.id),
+                                             'agreements',
+                                             self.agreement.base_number.strip('/'),
+                                             'amendments',
+                                             amendment.number.strip('/'),
+                                             ]).split('/')
         self.assertEqual(expected_path_components, url.path.split('/')[:-1])
 
 

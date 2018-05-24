@@ -296,3 +296,32 @@ class PartnershipDashCSVRenderer(r.CSVRenderer):
         "disbursement_percent": "Disbursement To Date (%)",
         "days_last_pv": "Days Since Last PV",
     }
+
+
+class InterventionLocationCSVRenderer(r.CSVRenderer):
+    header = [   # This controls field order in the output
+        'partner',
+        'pd_ref_number',
+        'partnership',
+        'status',
+        'location',
+        'section',
+        'cp_output',
+        'start',
+        'end',
+        'focal_point',
+        'hyperlink',
+    ]
+    labels = {
+        'cp_output': 'CP output',
+        'end': 'End Date',
+        'focal_point': 'Name of UNICEF Focal Point',
+        'hyperlink': 'Hyperlink',
+        'location': 'Location',
+        'partner': 'Partner',
+        'partnership': 'Partnership',
+        'pd_ref_number': 'PD Ref Number',
+        'section': 'Section',
+        'start': 'Start Date',
+        'status': 'Status'
+    }
