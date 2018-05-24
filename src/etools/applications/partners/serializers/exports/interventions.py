@@ -32,6 +32,10 @@ class InterventionAmendmentExportFlatSerializer(
         source="intervention.number",
     )
 
+    class Meta:
+        model = InterventionAmendment
+        exclude = ("signed_amendment_attachment", )
+
 
 class InterventionSectorLocationLinkExportSerializer(LocationExportSerializer):
     intervention = serializers.SerializerMethodField(
