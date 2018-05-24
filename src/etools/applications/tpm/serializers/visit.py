@@ -96,6 +96,7 @@ class TPMActivitySerializer(PermissionsBasedSerializerMixin, WritableNestedSeria
         read_field=OfficeSerializer(read_only=True, many=True, label=_('Office(s) of UNICEF Focal Point(s)')),
         required=True,
     )
+    action_points = TPMActionPointSerializer(label=_('Task Information'), many=True, required=False)
 
     attachments = TPMAttachmentsSerializer(many=True, required=False, label=_('Related Documents'))
     report_attachments = TPMReportSerializer(many=True, required=False, label=_('Reports by Task'))
@@ -115,6 +116,10 @@ class TPMActivitySerializer(PermissionsBasedSerializerMixin, WritableNestedSeria
 
         return instance
 
+    def validate(self, attrs):
+        attrs.pop('action_points', None)
+        return super(TPMActivitySerializer, self).validate(attrs)
+
     def create(self, validated_data):
         self._validate_partner_intervention(validated_data)
         return super(TPMActivitySerializer, self).create(validated_data)
@@ -128,7 +133,7 @@ class TPMActivitySerializer(PermissionsBasedSerializerMixin, WritableNestedSeria
         fields = [
             'id', 'partner', 'intervention', 'cp_output', 'section', 'unicef_focal_points',
             'date', 'locations', 'attachments', 'report_attachments', 'additional_information',
-            'pv_applicable', 'offices',
+            'pv_applicable', 'offices', 'action_points',
         ]
         extra_kwargs = {
             'id': {'label': _('Task ID')},

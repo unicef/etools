@@ -84,6 +84,7 @@ class Command(BaseCommand):
     ]
 
     action_points_block = [
+        'tpm.tpmvisit.tpm_activities',
         'tpm.tpmactivity.action_points',
         'tpm.tpmactionpoint.*',
     ]
@@ -261,6 +262,8 @@ class Command(BaseCommand):
         self.add_permissions([self.unicef_user, self.third_party_monitor], 'view', self.visit_report,
                              condition=self.visit_status(TPMVisit.STATUSES.tpm_reported))
 
+        self.add_permissions([self.pme, self.focal_point], 'edit', self.action_points_block,
+                             condition=self.visit_status(TPMVisit.STATUSES.tpm_reported))
         self.add_permissions(self.unicef_user, 'view', self.action_points_block,
                              condition=self.visit_status(TPMVisit.STATUSES.tpm_reported))
 
