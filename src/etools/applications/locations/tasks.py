@@ -1,9 +1,7 @@
 import time
-from datetime import datetime
 
 from django.db import IntegrityError
 from django.utils.encoding import force_text
-from django.utils import timezone
 
 from carto.auth import APIKeyAuthClient
 from carto.exceptions import CartoException
@@ -292,6 +290,8 @@ def update_sites_from_cartodb(carto_table_pk):
                     if pcode == remap_row['new_pcode']:
                         remapped_old_pcode = remap_row['old_pcode']
 
+            print(remapped_old_pcode)
+            print(remapped_old_pcode)
             # create the actual location or retrieve existing based on type and code
             succ, sites_not_added, sites_created, sites_updated, sites_remapped = create_location(
                 pcode, carto_table,
