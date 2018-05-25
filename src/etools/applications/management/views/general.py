@@ -6,6 +6,7 @@ from rest_framework.views import APIView
 from etools.applications.EquiTrack.permissions import IsSuperUser
 from etools.applications.users.models import Country
 from etools.applications.vision.adapters.funding import FundReservationsSynchronizer
+from etools.applications.vision.adapters.workspaces import CountryLongNameSync
 
 
 class InvalidateCache(APIView):
@@ -39,3 +40,13 @@ class SyncFRs(APIView):
         FundReservationsSynchronizer(country).sync()
 
         return Response({'success': 'Funds Reservation sync for {} successfully performed'.format(country.name)})
+
+
+class SyncCountries(APIView):
+    permission_classes = (IsSuperUser,)
+
+    def get(self, request, format=None):
+        country = Country.objects.get(name='Global')
+        CountryLongNameSync(country).sync()
+
+        return Response({'success': 'Country Long Name synchronizer successfully performed'})
