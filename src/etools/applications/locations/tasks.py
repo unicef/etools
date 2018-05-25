@@ -20,19 +20,16 @@ def create_location(pcode, carto_table, parent, parent_instance,
                     remapped_old_pcode, site_name, row, sites_not_added,
                     sites_created, sites_updated, sites_remapped):
     try:
-        should_remap = False
+        remapped_location = None
         # TODO: figure out what we do if the new pcode already exists without remap
         if remapped_old_pcode is not None:
             try:
-                # first we should check if the remapped location exists in the database
-                location = Location.objects.get(p_code=remapped_old_pcode)
-                should_remap = True
+                # check if the remapped location exists in the database
+                remapped_location = Location.objects.get(p_code=remapped_old_pcode)
             except Location.DoesNotExist:
-                # the remapped pcode may not exist if the locations were imported at least once already
-                # in this case, just update the existing location by the regular Carto pcode
-                location = Location.objects.get(p_code=pcode)
-        else:
-            location = Location.objects.get(p_code=pcode)
+                pass
+
+        location = Location.objects.get(p_code=pcode)
 
     except Location.MultipleObjectsReturned:
         logger.warning("Multiple locations found for: {}, {} ({})".format(
@@ -76,16 +73,11 @@ def create_location(pcode, carto_table, parent, parent_instance,
         if not row['the_geom']:
             return False, sites_not_added, sites_created, sites_updated, sites_remapped
 
-        # do the pcode remap if necessary
-        if should_remap is True:
-            # overwrite the old pcode with the new pcode, so the old location ID is kept, preserving the
-            # references to the related tables(travels, interventions)
-            location.p_code = pcode
-            # back up the current
-            location.prev_pcode = remapped_old_pcode
-            location.prev_name = location.name
-            location.prev_geom = location.geom
-            location.date_remapped = datetime.now(tz=timezone.utc)
+        # save a reference to the old location
+        if remapped_location is not None:
+            location.prev_pcode = remapped_location.p_code
+            location.prev_id = remapped_location.p_code
+            remapped_location.is_active = False
 
         # names can be updated for existing locations with the same code
         location.name = site_name
@@ -104,20 +96,20 @@ def create_location(pcode, carto_table, parent, parent_instance,
             logger.exception('Error while saving location: %s', site_name)
             return False, sites_not_added, sites_created, sites_updated, sites_remapped
 
-        if should_remap is True:
+        if remapped_location is not None:
             sites_remapped += 1
             logger.info('{}: {} ({})'.format(
                 'Remapped',
-                location.name,
+                remapped_location.name,
                 carto_table.location_type.name
             ))
-        else:
-            sites_updated += 1
-            logger.info('{}: {} ({})'.format(
-                'Updated',
-                location.name,
-                carto_table.location_type.name
-            ))
+
+        sites_updated += 1
+        logger.info('{}: {} ({})'.format(
+            'Updated',
+            location.name,
+            carto_table.location_type.name
+        ))
 
         return True, sites_not_added, sites_created, sites_updated, sites_remapped
 
