@@ -16,9 +16,9 @@ FAUX_VISION_PASSWORD = 'password123'
 
 
 class _MySynchronizer(VisionDataSynchronizer):
-    '''Bare bones synchronizer class. Exists because VisionDataSynchronizer is abstract; this is concrete but
+    """Bare bones synchronizer class. Exists because VisionDataSynchronizer is abstract; this is concrete but
     does as little as possible.
-    '''
+    """
     ENDPOINT = 'GetSomeStuff_JSON'
 
     def _convert_records(self, records):
@@ -29,12 +29,12 @@ class _MySynchronizer(VisionDataSynchronizer):
 
 
 class TestVisionDataLoader(BaseTenantTestCase):
-    '''Exercise VisionDataLoader class'''
+    """Exercise VisionDataLoader class"""
     # Note - I don't understand why, but @override_settings(VISION_URL=FAUX_VISION_URL) doesn't work when I apply
     # it at the TestCase class level instead of each individual test case.
 
     def _assertGetFundamentals(self, url, mock_requests, mock_get_response):
-        '''Assert common things about the call to loader.get()'''
+        """Assert common things about the call to loader.get()"""
         # Ensure requests.get() was called as expected
         self.assertEqual(mock_requests.get.call_count, 1)
         self.assertEqual(mock_requests.get.call_args[0], (url, ))
@@ -47,12 +47,12 @@ class TestVisionDataLoader(BaseTenantTestCase):
         self.assertEqual(mock_get_response.json.call_args[1], {})
 
     def test_instantiation_no_country(self):
-        '''Ensure I can create a loader without specifying a country'''
+        """Ensure I can create a loader without specifying a country"""
         loader = VisionDataLoader(endpoint='GetSomeStuff_JSON')
         self.assertEqual(loader.url, '{}/GetSomeStuff_JSON'.format(loader.URL))
 
     def test_instantiation_with_country(self):
-        '''Ensure I can create a loader that specifies a country'''
+        """Ensure I can create a loader that specifies a country"""
         test_country = Country.objects.all()[0]
         test_country.business_area_code = 'ABC'
         test_country.save()
@@ -61,7 +61,7 @@ class TestVisionDataLoader(BaseTenantTestCase):
         self.assertEqual(loader.url, '{}/GetSomeStuff_JSON/ABC'.format(loader.URL))
 
     def test_instantiation_url_construction(self):
-        '''Ensure loader URL is constructed correctly regardless of whether or not base URL ends with a slash'''
+        """Ensure loader URL is constructed correctly regardless of whether or not base URL ends with a slash"""
         loader = VisionDataLoader(endpoint='GetSomeStuff_JSON')
         self.assertEqual(loader.url, '{}/GetSomeStuff_JSON'.format(loader.URL))
 
@@ -70,7 +70,7 @@ class TestVisionDataLoader(BaseTenantTestCase):
     @override_settings(VISION_PASSWORD=FAUX_VISION_PASSWORD)
     @mock.patch('etools.applications.vision.vision_data_synchronizer.requests', spec=['get'])
     def test_get_success_with_response(self, mock_requests):
-        '''Test loader.get() when the response is 200 OK and data is returned'''
+        """Test loader.get() when the response is 200 OK and data is returned"""
         mock_get_response = mock.Mock(spec=['status_code', 'json'])
         mock_get_response.status_code = 200
         mock_get_response.json = mock.Mock(return_value=[42])
@@ -88,7 +88,7 @@ class TestVisionDataLoader(BaseTenantTestCase):
     @override_settings(VISION_PASSWORD=FAUX_VISION_PASSWORD)
     @mock.patch('etools.applications.vision.vision_data_synchronizer.requests', spec=['get'])
     def test_get_success_no_response(self, mock_requests):
-        '''Test loader.get() when the response is 200 OK but no data is returned'''
+        """Test loader.get() when the response is 200 OK but no data is returned"""
         mock_get_response = mock.Mock(spec=['status_code', 'json'])
         mock_get_response.status_code = 200
         mock_get_response.json = mock.Mock(return_value=VISION_NO_DATA_MESSAGE)
@@ -106,7 +106,7 @@ class TestVisionDataLoader(BaseTenantTestCase):
     @override_settings(VISION_PASSWORD=FAUX_VISION_PASSWORD)
     @mock.patch('etools.applications.vision.vision_data_synchronizer.requests', spec=['get'])
     def test_get_failure(self, mock_requests):
-        '''Test loader.get() when the response is something other than 200'''
+        """Test loader.get() when the response is something other than 200"""
         # Note that in contrast to the other mock_get_response variables declared in this test case, this one
         # doesn't have 'json' in the spec. I don't expect the loaderto access response.json during this test, so if
         # it does this configuration ensures the test will fail.
@@ -130,19 +130,19 @@ class TestVisionDataLoader(BaseTenantTestCase):
 
 
 class TestVisionDataSynchronizerInit(BaseTenantTestCase):
-    '''Exercise initialization of VisionDataSynchronizer class'''
+    """Exercise initialization of VisionDataSynchronizer class"""
 
     def test_instantiation_no_country(self):
-        '''Ensure I can't create a synchronizer without specifying a country'''
+        """Ensure I can't create a synchronizer without specifying a country"""
         with self.assertRaises(VisionException) as context_manager:
             _MySynchronizer()
 
         self.assertEqual('Country is required', str(context_manager.exception))
 
     def test_instantiation_no_endpoint(self):
-        '''Ensure I can't create a synchronizer without specifying an endpoint'''
+        """Ensure I can't create a synchronizer without specifying an endpoint"""
         class _MyBadSynchronizer(_MySynchronizer):
-            '''Synchronizer class that doesn't set self.ENDPOINT'''
+            """Synchronizer class that doesn't set self.ENDPOINT"""
             ENDPOINT = None
 
         test_country = Country.objects.all()[0]
@@ -155,7 +155,7 @@ class TestVisionDataSynchronizerInit(BaseTenantTestCase):
     @mock.patch('etools.applications.vision.vision_data_synchronizer.connection', spec=['set_tenant'])
     @mock.patch('etools.applications.vision.vision_data_synchronizer.logger.info')
     def test_instantiation_positive(self, mock_logger_info, mock_connection):
-        '''Exercise successfully creating a synchronizer'''
+        """Exercise successfully creating a synchronizer"""
         test_country = Country.objects.all()[0]
         test_country.business_area_code = 'ABC'
         test_country.save()
@@ -179,13 +179,13 @@ class TestVisionDataSynchronizerInit(BaseTenantTestCase):
 
 
 class TestVisionDataSynchronizerSync(BaseTenantTestCase):
-    '''Exercise the sync() method of VisionDataSynchronizer class'''
+    """Exercise the sync() method of VisionDataSynchronizer class"""
 
     def _assertVisionSyncLogFundamentals(self, total_records, total_processed, details='', exception_message='',
                                          successful=True):
-        '''Assert common properties of the VisionSyncLog record that should have been created during a test. Populate
+        """Assert common properties of the VisionSyncLog record that should have been created during a test. Populate
         the method parameters with what you expect to see in the VisionSyncLog record.
-        '''
+        """
         sync_logs = VisionSyncLog.objects.all()
 
         self.assertEqual(len(sync_logs), 1)
@@ -216,14 +216,14 @@ class TestVisionDataSynchronizerSync(BaseTenantTestCase):
 
     @mock.patch('etools.applications.vision.vision_data_synchronizer.logger.info')
     def test_sync_positive(self, mock_logger_info):
-        '''Test calling sync() for the mainstream case of success. Tests the following --
+        """Test calling sync() for the mainstream case of success. Tests the following --
             - A VisionSyncLog instance is created and has the expected values
             - # of records returned by vision can differ from the # returned by synchronizer._convert_records()
             - synchronizer._save_records() can return an int (instead of a dict)
             - The int returned by synchronizer._save_records() is recorded properly in the VisionSyncLog record
             - logger.info() is called as expected
             - All calls to synchronizer methods have expected args
-        '''
+        """
         synchronizer = _MySynchronizer(country=self.test_country)
 
         # These are the dummy records that vision will "return" via mock_loader.get()
@@ -280,9 +280,9 @@ class TestVisionDataSynchronizerSync(BaseTenantTestCase):
         self._assertVisionSyncLogFundamentals(len(converted_records), 99)
 
     def test_sync_save_records_returns_dict(self):
-        '''Test calling sync() when _save_records() returns a dict. Tests that sync() provides default values
+        """Test calling sync() when _save_records() returns a dict. Tests that sync() provides default values
         as necessary and that values in the dict returned by _save_records() are logged.
-        '''
+        """
         synchronizer = _MySynchronizer(country=self.test_country)
 
         # These are the dummy records that vision will "return" via mock_loader.get()
@@ -324,9 +324,9 @@ class TestVisionDataSynchronizerSync(BaseTenantTestCase):
         self._assertVisionSyncLogFundamentals(200, 100, details='Hello world!')
 
     def test_sync_passes_loader_kwargs(self):
-        '''Test that LOADER_EXTRA_KWARGS on the synchronizer are passed to the loader.'''
+        """Test that LOADER_EXTRA_KWARGS on the synchronizer are passed to the loader."""
         class _MyFancySynchronizer(_MySynchronizer):
-            '''Synchronizer class that uses LOADER_EXTRA_KWARGS'''
+            """Synchronizer class that uses LOADER_EXTRA_KWARGS"""
             LOADER_EXTRA_KWARGS = ['FROBNICATE', 'POTRZEBIE']
             FROBNICATE = True
             POTRZEBIE = 2.2
@@ -357,11 +357,11 @@ class TestVisionDataSynchronizerSync(BaseTenantTestCase):
 
     @mock.patch('etools.applications.vision.vision_data_synchronizer.logger.info')
     def test_sync_exception_handling(self, mock_logger_info):
-        '''Test sync() exception handling behavior.'''
+        """Test sync() exception handling behavior."""
         synchronizer = _MySynchronizer(country=self.test_country)
 
         # Force a failure in the attempt to get vision records
-        def loader_get_side_effect(*args, **kwargs):
+        def loader_get_side_effect():
             raise ValueError('Wrong!')
 
         mock_loader = mock.Mock()

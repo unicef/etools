@@ -6,7 +6,7 @@ from django.db import migrations
 def update_partners_rating(apps, schema_editor):
     PartnerOrganization = apps.get_model("partners", "PartnerOrganization")
     PartnerOrganization.objects.filter(rating='Moderate').update(rating='Medium')
-    PartnerOrganization.objects.filter(rating='Non-Assessed').update(rating='Non Required')
+    PartnerOrganization.objects.filter(rating='Non-Assessed').update(rating='Not Required')
 
 
 class Migration(migrations.Migration):

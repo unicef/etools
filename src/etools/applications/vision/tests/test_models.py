@@ -1,6 +1,4 @@
-
 from django.test import SimpleTestCase
-
 
 from etools.applications.users.tests.factories import CountryFactory
 from etools.applications.vision.models import VisionSyncLog

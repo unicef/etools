@@ -39,7 +39,7 @@ class BaseTestCategoryRisksViewSet(EngagementTransitionsTestCaseMixin):
         self.assertIn('results', response.data)
         self.assertTrue(isinstance(response.data['results'], list))
 
-    def _test_engagement_categories(self, category_code, field_name, allowed_user):
+    def _test_engagement_categories(self, category_code, field_name, allowed_user, many=False):
         '''
         Request example:
 
@@ -92,12 +92,18 @@ class BaseTestCategoryRisksViewSet(EngagementTransitionsTestCaseMixin):
             }
             for blueprint_number in range(0, 4):
                 blueprint = RiskBluePrintFactory(category=nested_category)
-                nested_category_data["blueprints"].append({
+                blueprint_data = {
                     "id": blueprint.id,
-                    "risk": {
-                        "value": random.randint(1, 2),
-                    }
-                })
+                }
+                risk_data = {
+                    "value": random.randint(1, 2),
+                }
+                if not many:
+                    blueprint_data['risk'] = risk_data
+                else:
+                    blueprint_data['risks'] = [risk_data]
+
+                nested_category_data["blueprints"].append(blueprint_data)
             category_dict['children'].append(nested_category_data)
 
         response = self.forced_auth_req(
@@ -113,20 +119,24 @@ class BaseTestCategoryRisksViewSet(EngagementTransitionsTestCaseMixin):
         new_risk_ids = list(self.engagement.risks.values_list('id', flat=True))
         self.assertNotEqual(new_risk_ids, old_risk_ids)
 
-    def _update_unexisted_blueprint(self, field_name, category_code, allowed_user):
+    def _update_unexisted_blueprint(self, field_name, category_code, allowed_user, many=False):
         category = RiskCategoryFactory(code=category_code)
         blueprint = RiskBluePrintFactory(category=category)
 
+        blueprint_data = {
+            "id": blueprint.id + 1,
+        }
+        risk_data = {
+            "value": random.randint(1, 2),
+        }
+        if not many:
+            blueprint_data['risk'] = risk_data
+        else:
+            blueprint_data['risks'] = [risk_data]
+
         data = {
             field_name: {
-                "blueprints": [
-                    {
-                        "id": blueprint.id + 1,
-                        "risk": {
-                            "value": random.randint(0, 4),
-                        }
-                    }
-                ]
+                "blueprints": [blueprint_data]
             }
         }
 
@@ -138,7 +148,7 @@ class BaseTestCategoryRisksViewSet(EngagementTransitionsTestCaseMixin):
         )
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
-    def _test_category_update_by_user_without_permissions(self, category_code, field_name, not_allowed):
+    def _test_category_update_by_user_without_permissions(self, category_code, field_name, not_allowed, many=False):
         old_risk_ids = list(self.engagement.risks.values_list('id', flat=True))
 
         category_dict = {
@@ -153,12 +163,18 @@ class BaseTestCategoryRisksViewSet(EngagementTransitionsTestCaseMixin):
             }
             for blueprint_number in range(0, 4):
                 blueprint = RiskBluePrintFactory(category=nested_category)
-                nested_category_data["blueprints"].append({
+                blueprint_data = {
                     "id": blueprint.id,
-                    "risk": {
-                        "value": random.randint(1, 2),
-                    }
-                })
+                }
+                risk_data = {
+                    "value": random.randint(1, 2),
+                }
+                if not many:
+                    blueprint_data['risk'] = risk_data
+                else:
+                    blueprint_data['risks'] = [risk_data]
+
+                nested_category_data["blueprints"].append(blueprint_data)
             category_dict['children'].append(nested_category_data)
         self.forced_auth_req(
             'patch',
@@ -215,19 +231,19 @@ class TestAuditRisksViewSet(BaseTestCategoryRisksViewSet, BaseTenantTestCase):
     def test_audit_risks(self):
         self._test_engagement_categories(
             category_code='audit_key_weakness', field_name='key_internal_weakness',
-            allowed_user=self.auditor
+            allowed_user=self.auditor, many=True
         )
 
     def test_update_unexisted_blueprint(self):
         self._update_unexisted_blueprint(
             field_name='key_internal_weakness', category_code='audit_key_weakness',
-            allowed_user=self.auditor
+            allowed_user=self.auditor, many=True
         )
 
     def test_audit_risks_update_without_perms(self):
         self._test_category_update_by_user_without_permissions(
             field_name='key_internal_weakness', category_code='audit_key_weakness',
-            not_allowed=self.unicef_focal_point
+            not_allowed=self.unicef_focal_point, many=True
         )
 
 
@@ -556,13 +572,11 @@ class TestEngagementsUpdateViewSet(EngagementTransitionsTestCaseMixin, BaseTenan
         )
 
 
-class TestMicroAssessmentMetadataDetailViewSet(EngagementTransitionsTestCaseMixin, BaseTenantTestCase):
-    engagement_factory = MicroAssessmentFactory
-
+class TestMetadataDetailViewSet(EngagementTransitionsTestCaseMixin):
     def _test_risk_choices(self, field, expected_choices):
         response = self.forced_auth_req(
             'options',
-            '/api/audit/micro-assessments/{}/'.format(self.engagement.id),
+            '/api/audit/{}/{}/'.format(self.endpoint, self.engagement.id),
             user=self.auditor
         )
         self.assertIn('GET', response.data['actions'])
@@ -570,19 +584,39 @@ class TestMicroAssessmentMetadataDetailViewSet(EngagementTransitionsTestCaseMixi
 
         self.assertIn(field, get)
         self.assertIn('blueprints', get[field]['children'])
-        self.assertIn('risk', get[field]['children']['blueprints']['child']['children'])
-        risk_fields = get[field]['children']['blueprints']['child']['children']['risk']['children']
+
+        blueprint_data = get[field]['children']['blueprints']['child']['children']
+        if 'risk' in blueprint_data:
+            risk_fields = blueprint_data['risk']['children']
+        elif 'risks' in blueprint_data:
+            risk_fields = blueprint_data['risks']['child']['children']
+        else:
+            self.fail('risk choices not found')
+
         self.assertIn('choices', risk_fields['value'])
         self.assertListEqual(
             [{'value': c, 'display_name': str(v)} for c, v in expected_choices],
             risk_fields['value']['choices']
         )
 
+
+class TestMicroAssessmentMetadataDetailViewSet(TestMetadataDetailViewSet, BaseTenantTestCase):
+    engagement_factory = MicroAssessmentFactory
+    endpoint = 'micro-assessments'
+
     def test_overall_choices(self):
         self._test_risk_choices('overall_risk_assessment', Risk.POSITIVE_VALUES)
 
     def test_subject_areas_choices(self):
         self._test_risk_choices('test_subject_areas', Risk.VALUES)
+
+
+class TestAuditMetadataDetailViewSet(TestMetadataDetailViewSet, BaseTenantTestCase):
+    engagement_factory = AuditFactory
+    endpoint = 'audits'
+
+    def test_weaknesses_choices(self):
+        self._test_risk_choices('key_internal_weakness', Risk.AUDIT_VALUES)
 
 
 class TestAuditorFirmViewSet(AuditTestCaseMixin, BaseTenantTestCase):

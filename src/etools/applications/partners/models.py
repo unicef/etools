@@ -254,14 +254,14 @@ class PartnerOrganization(TimeStampedModel):
     RATING_SIGNIFICANT = 'Significant'
     RATING_MODERATE = 'Medium'
     RATING_LOW = 'Low'
-    RATING_NON_ASSESSED = 'Non Required'
+    RATING_NON_ASSESSED = 'Not Required'
 
     RISK_RATINGS = (
         (RATING_HIGH, 'High'),
         (RATING_SIGNIFICANT, 'Significant'),
         (RATING_MODERATE, 'Medium'),
         (RATING_LOW, 'Low'),
-        (RATING_NON_ASSESSED, 'Non Required'),
+        (RATING_NON_ASSESSED, 'Not Required'),
     )
 
     MICRO_ASSESSMENT = 'MICRO ASSESSMENT'
@@ -1708,7 +1708,6 @@ class Intervention(TimeStampedModel):
         blank=True,
         related_name='office_interventions+',
     )
-    # TODO: remove this after PRP flag is on for all countries
     flat_locations = models.ManyToManyField(Location, related_name="intervention_flat_locations", blank=True,
                                             verbose_name=_('Locations'))
 
@@ -1771,6 +1770,14 @@ class Intervention(TimeStampedModel):
     def sector_names(self):
         return ', '.join(Sector.objects.filter(intervention_locations__intervention=self).
                          values_list('name', flat=True))
+
+    @property
+    def cp_output_names(self):
+        return ', '.join(link.cp_output.name for link in self.result_links.all())
+
+    @property
+    def focal_point_names(self):
+        return ', '.join(user.get_full_name() for user in self.unicef_focal_points.all())
 
     @property
     def combined_sections(self):

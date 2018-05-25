@@ -31,7 +31,7 @@ class VisionDataLoader(object):
         separator = '' if self.URL.endswith('/') else '/'
 
         self.url = '{}{}{}'.format(self.URL, separator, endpoint)
-        if country:
+        if country and country.name != "Global":
             self.url += '/{}'.format(country.business_area_code)
 
         logger.info('About to get data from {}'.format(self.url))
@@ -74,6 +74,7 @@ class DataSynchronizer(object):
     GLOBAL_CALL = False
     LOADER_CLASS = None
     LOADER_EXTRA_KWARGS = []
+    country = None
 
     @abstractmethod
     def _convert_records(self, records):
@@ -82,6 +83,10 @@ class DataSynchronizer(object):
     @abstractmethod
     def _save_records(self, records):
         pass
+
+    @abstractmethod
+    def _get_kwargs(self):
+        return {}
 
     def _filter_records(self, records):
         def is_valid_record(record):
@@ -137,6 +142,7 @@ class DataSynchronizer(object):
 
 
 class VisionDataSynchronizer(DataSynchronizer):
+    __metaclass__ = ABCMeta
 
     ENDPOINT = None
     LOADER_CLASS = VisionDataLoader
@@ -162,6 +168,8 @@ class VisionDataSynchronizer(DataSynchronizer):
 
 
 class FileDataSynchronizer(DataSynchronizer):
+    __metaclass__ = ABCMeta
+
     LOADER_CLASS = FileDataLoader
     LOADER_EXTRA_KWARGS = ['filename', ]
 
@@ -181,8 +189,3 @@ class FileDataSynchronizer(DataSynchronizer):
         logger.info('Country is {}'.format(country.name))
 
         super(FileDataSynchronizer, self).__init__(country, *args, **kwargs)
-
-    def _get_kwargs(self):
-        return {
-            'filename': self.filename,
-        }

@@ -156,8 +156,6 @@ SHARED_APPS = (
     'django.contrib.sites',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    'dal',
-    'dal_select2',
     'django.contrib.gis',
     'django.contrib.postgres',
     'django.contrib.admin',
@@ -177,7 +175,6 @@ SHARED_APPS = (
     'leaflet',
     'corsheaders',
     'djangosaml2',
-    'analytical',
     'mptt',
     'easy_pdf',
     'ordered_model',
@@ -259,9 +256,6 @@ TEMPLATES = [
         },
     },
 ]
-
-# DJANGO: TESTING
-TEST_RUNNER = 'etools.applications.EquiTrack.tests.runners.TestRunner'
 
 # DJANGO: URLS
 ROOT_URLCONF = 'etools.config.urls'
@@ -378,9 +372,6 @@ SWAGGER_SETTINGS = {
     'is_authenticated': True,
     'is_superuser': True,
 }
-
-# django-analytical: https://pythonhosted.org/django-analytical/
-USERVOICE_WIDGET_KEY = get_from_secrets_or_env('USERVOICE_KEY', '')
 
 # django-mptt: https://github.com/django-mptt/django-mptt
 MPTT_ADMIN_LEVEL_INDENT = 20
@@ -541,7 +532,7 @@ SLACK_URL = get_from_secrets_or_env('SLACK_URL')
 
 TASK_ADMIN_USER = get_from_secrets_or_env('TASK_ADMIN_USER', 'etools_task_admin')
 
-VISION_URL = get_from_secrets_or_env('VISION_URL', 'invalid_vision_url')
+VISION_URL = get_from_secrets_or_env('VISION_URL', 'http://invalid_vision_url')
 VISION_USER = get_from_secrets_or_env('VISION_USER', 'invalid_vision_user')
 VISION_PASSWORD = get_from_secrets_or_env('VISION_PASSWORD', 'invalid_vision_password')
 
@@ -584,9 +575,6 @@ PASSWORDLESS_AUTH = {
 }
 
 REPORT_EMAILS = get_from_secrets_or_env('REPORT_EMAILS', 'etools@unicef.org').replace(' ', '').split(',')
-
-USERVOICE_WIDGET_KEY = 'defaultVoiceKey'
-
 
 # email auth settings
 EMAIL_AUTH_TOKEN_NAME = os.getenv('EMAIL_AUTH_TOKEN_NAME', 'url_auth_token')

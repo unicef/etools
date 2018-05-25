@@ -15,6 +15,7 @@ from etools.applications.tpm.tests.factories import TPMVisitFactory, UserFactory
 class TPMTransitionTestCase(TPMTestCaseMixin, BaseTenantTestCase):
     @classmethod
     def setUpTestData(cls):
+        super(TPMTransitionTestCase, cls).setUpTestData()
         call_command('update_tpm_permissions', verbosity=0)
         call_command('update_notifications')
 
@@ -336,10 +337,6 @@ class FPPermissionsForTpmTransitionTestCase(TPMTransitionPermissionsTestCase):
 
 class TPMPermissionsForTPMTransitionTestCase(TPMTransitionPermissionsTestCase):
     ALLOWED_TRANSITION = [
-        ('assigned', 'accept'),
-        ('assigned', 'reject'),
-        ('tpm_accepted', 'send_report'),
-        ('tpm_report_rejected', 'send_report'),
     ]
 
     @classmethod
@@ -347,12 +344,14 @@ class TPMPermissionsForTPMTransitionTestCase(TPMTransitionPermissionsTestCase):
         super(TPMPermissionsForTPMTransitionTestCase, cls).setUpTestData()
 
         cls.user = UserFactory(tpm=True)
-        cls.user_role = 'Third Party Monitor'
+        cls.user_role = 'Simple Third Party Monitor'
+
+        cls.second_user = UserFactory(tpm=True, tpm_partner=cls.user.tpmpartners_tpmpartnerstaffmember.tpm_partner)
 
     def create_object(self, transition, **kwargs):
         opts = {
             'tpm_partner': self.user.tpmpartners_tpmpartnerstaffmember.tpm_partner,
-            'tpm_partner_focal_points': [self.user.tpmpartners_tpmpartnerstaffmember],
+            'tpm_partner_focal_points': [self.second_user.tpmpartners_tpmpartnerstaffmember],
         }
 
         opts.update(kwargs)
@@ -366,6 +365,40 @@ class TPMPermissionsForTPMTransitionTestCase(TPMTransitionPermissionsTestCase):
             return True, ''
 
         return super(TPMPermissionsForTPMTransitionTestCase, self).check_result(result, obj, transition)
+
+
+class TPMFocalPointPermissionsForTPMTransitionTestCase(TPMTransitionPermissionsTestCase):
+    ALLOWED_TRANSITION = [
+        ('assigned', 'accept'),
+        ('assigned', 'reject'),
+        ('tpm_accepted', 'send_report'),
+        ('tpm_report_rejected', 'send_report'),
+    ]
+
+    @classmethod
+    def setUpTestData(cls):
+        super(TPMFocalPointPermissionsForTPMTransitionTestCase, cls).setUpTestData()
+
+        cls.user = UserFactory(tpm=True)
+        cls.user_role = 'Third Party Focal Point'
+
+    def create_object(self, transition, **kwargs):
+        opts = {
+            'tpm_partner': self.user.tpmpartners_tpmpartnerstaffmember.tpm_partner,
+            'tpm_partner_focal_points': [self.user.tpmpartners_tpmpartnerstaffmember],
+        }
+
+        opts.update(kwargs)
+        return super(TPMFocalPointPermissionsForTPMTransitionTestCase, self).create_object(transition, **opts)
+
+    def check_result(self, result, obj, transition):
+        draft = obj.status == TPMVisit.STATUSES.draft
+        not_found = result.status_code == status.HTTP_404_NOT_FOUND
+
+        if draft and not_found:
+            return True, ''
+
+        return super(TPMFocalPointPermissionsForTPMTransitionTestCase, self).check_result(result, obj, transition)
 
 
 class UserPermissionForTPMTransitionTestCase(TPMTransitionPermissionsTestCase):

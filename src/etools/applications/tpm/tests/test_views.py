@@ -12,7 +12,7 @@ from rest_framework import status
 from etools.applications.attachments.tests.factories import AttachmentFileTypeFactory
 from etools.applications.EquiTrack.tests.cases import BaseTenantTestCase
 from etools.applications.partners.models import PartnerType
-from etools.applications.tpm.models import TPMActionPoint
+from etools.applications.tpm.models import TPMActionPoint, TPMVisit
 from etools.applications.tpm.tests.base import TPMTestCaseMixin
 from etools.applications.tpm.tests.factories import TPMPartnerFactory, TPMVisitFactory, UserFactory
 
@@ -33,6 +33,7 @@ class TestExportMixin(object):
 class TestTPMVisitViewSet(TestExportMixin, TPMTestCaseMixin, BaseTenantTestCase):
     @classmethod
     def setUpTestData(cls):
+        super(TestTPMVisitViewSet, cls).setUpTestData()
         call_command('update_tpm_permissions', verbosity=0)
         call_command('update_notifications')
 
@@ -222,6 +223,37 @@ class TestTPMVisitViewSet(TestExportMixin, TPMTestCaseMixin, BaseTenantTestCase)
         self.assertIn('intervention', response.data['tpm_activities'][0])
         self.assertEqual(response.data['tpm_activities'][0]['intervention'][0], _('This field is required.'))
 
+    def test_delete_activity(self):
+        visit = TPMVisitFactory(tpm_activities__count=2, status='draft')
+
+        response = self.forced_auth_req(
+            'patch',
+            reverse('tpm:visits-detail', args=(visit.id,)),
+            user=self.pme_user,
+            data={
+                'tpm_activities': [{
+                    'id': visit.tpm_activities.first().id,
+                    '_delete': True
+                }]
+            }
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(visit.tpm_activities.count(), 1)
+
+    def test_author(self):
+        create_response = self.forced_auth_req(
+            'post',
+            reverse('tpm:visits-list'),
+            user=self.pme_user,
+            data={}
+        )
+
+        self.assertEquals(create_response.status_code, status.HTTP_201_CREATED)
+
+        visit = TPMVisit.objects.get(id=create_response.data['id'])
+        self.assertEquals(visit.author, self.pme_user)
+
     def _test_partner(self, expected_status=status.HTTP_201_CREATED, **kwargs):
         partner = TPMPartnerFactory(**kwargs)
 
@@ -254,6 +286,14 @@ class TestTPMVisitViewSet(TestExportMixin, TPMTestCaseMixin, BaseTenantTestCase)
     def test_locations_csv(self):
         self._test_export(self.pme_user, 'tpm:visits-locations/export')
 
+    def test_action_points_csv(self):
+        TPMVisitFactory(status='unicef_approved', action_points__count=3)
+        self._test_export(self.pme_user, 'tpm:visits-action-points/export')
+
+    def test_visit_action_points_csv(self):
+        visit = TPMVisitFactory(status='unicef_approved', action_points__count=3)
+        self._test_export(self.pme_user, 'tpm:visits-action-points/export', args=(visit.id,))
+
     def test_visit_letter(self):
         visit = TPMVisitFactory(status='tpm_accepted')
         self._test_export(self.pme_user, 'tpm:visits-visit-letter', args=(visit.id,))
@@ -262,6 +302,8 @@ class TestTPMVisitViewSet(TestExportMixin, TPMTestCaseMixin, BaseTenantTestCase)
 class TestTPMStaffMembersViewSet(TestExportMixin, TPMTestCaseMixin, BaseTenantTestCase):
     @classmethod
     def setUpTestData(cls):
+        super(TestTPMStaffMembersViewSet, cls).setUpTestData()
+
         cls.tpm_partner = TPMPartnerFactory()
 
         cls.pme_user = UserFactory(pme=True)
@@ -390,6 +432,8 @@ class TestTPMStaffMembersViewSet(TestExportMixin, TPMTestCaseMixin, BaseTenantTe
 class TestTPMPartnerViewSet(TestExportMixin, TPMTestCaseMixin, BaseTenantTestCase):
     @classmethod
     def setUpTestData(cls):
+        super(TestTPMPartnerViewSet, cls).setUpTestData()
+
         cls.tpm_partner = TPMPartnerFactory()
         cls.second_tpm_partner = TPMPartnerFactory()
 

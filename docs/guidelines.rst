@@ -29,7 +29,6 @@ Organizing imports
 We organize imports into the following groups, in the following order. (This is an extension of
 `PEP-8's guidance <https://www.python.org/dev/peps/pep-0008/#imports>`_).
 
-* Imports from ``__future__``
 * Imports from the Python standard library
 * Anything not in the other categories goes here - possibly subdivided.
 * Imports from code in the same project/repository.
