@@ -388,6 +388,9 @@ LEAFLET_CONFIG = {
 
 # django-tenant-schemas: https://github.com/bernardopires/django-tenant-schemas
 TENANT_MODEL = "users.Country"  # app.Model
+# don't call set search_path so much
+# https://django-tenant-schemas.readthedocs.io/en/latest/use.html#performance-considerations
+TENANT_LIMIT_SET_CALLS = True
 
 # don't call set search_path so much
 # https://django-tenant-schemas.readthedocs.io/en/latest/use.html#performance-considerations
