@@ -9,6 +9,8 @@ from rest_framework.filters import DjangoFilterBackend, OrderingFilter, SearchFi
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 
+from etools.applications.action_points.conditions import ActionPointAuthorCondition, ActionPointAssignedByCondition, \
+    ActionPointAssigneeCondition
 from etools.applications.partners.models import PartnerOrganization
 from etools.applications.partners.serializers.partner_organization_v2 import MinimalPartnerOrganizationListSerializer
 from etools.applications.permissions2.conditions import GroupCondition, NewObjectCondition, ObjectStatusCondition
@@ -458,6 +460,9 @@ class TPMActionPointViewSet(BaseTPMViewSet,
     def get_obj_permission_context(self, obj):
         return [
             ObjectStatusCondition(obj),
+            ActionPointAuthorCondition(obj, self.request.user),
+            ActionPointAssignedByCondition(obj, self.request.user),
+            ActionPointAssigneeCondition(obj, self.request.user),
         ]
 
     def perform_create(self, serializer):

@@ -1,6 +1,8 @@
 from django.core.management import BaseCommand
 from django.db.models import Q
 
+from etools.applications.action_points.conditions import ActionPointAuthorCondition, ActionPointAssigneeCondition, \
+    ActionPointAssignedByCondition
 from etools.applications.action_points.models import ActionPoint
 from etools.applications.permissions2.models import Permission
 from etools.applications.permissions2.conditions import ObjectStatusCondition, \
@@ -98,6 +100,10 @@ class Command(BaseCommand):
     third_party_monitor = 'third_party_monitor'
     third_party_focal_point = 'third_party_focal_point'
 
+    action_point_author = 'action_point_author'
+    action_point_assignee = 'action_point_assignee'
+    action_point_assigned_by = 'action_point_assigned_by'
+
     user_roles = {
         pme: [GroupCondition.predicate_template.format(group=PME.name)],
 
@@ -111,7 +117,11 @@ class Command(BaseCommand):
 
         third_party_focal_point: [GroupCondition.predicate_template.format(group=ThirdPartyMonitor.name),
                                   TPMStaffMemberCondition.predicate,
-                                  TPMVisitTPMFocalPointCondition.predicate]
+                                  TPMVisitTPMFocalPointCondition.predicate],
+
+        action_point_author: [ActionPointAuthorCondition.predicate],
+        action_point_assignee: [ActionPointAssigneeCondition.predicate],
+        action_point_assigned_by: [ActionPointAssignedByCondition.predicate],
     }
 
     def _update_permissions(self, role, perm, targets, perm_type, condition=None):
@@ -257,23 +267,22 @@ class Command(BaseCommand):
                              condition=self.visit_status(TPMVisit.STATUSES.tpm_accepted))
 
         # tpm reported
+        tpm_reported_condition = self.visit_status(TPMVisit.STATUSES.tpm_reported)
         self.add_permissions(self.third_party_monitor, 'view', self.tpm_visit_details,
-                             condition=self.visit_status(TPMVisit.STATUSES.tpm_reported))
+                             condition=tpm_reported_condition)
         self.add_permissions([self.unicef_user, self.third_party_monitor], 'view', self.visit_report,
-                             condition=self.visit_status(TPMVisit.STATUSES.tpm_reported))
+                             condition=tpm_reported_condition)
 
-        self.add_permissions([self.pme, self.focal_point], 'edit', self.action_points_block,
-                             condition=self.visit_status(TPMVisit.STATUSES.tpm_reported))
         self.add_permissions(self.unicef_user, 'view', self.action_points_block,
-                             condition=self.visit_status(TPMVisit.STATUSES.tpm_reported))
+                             condition=tpm_reported_condition)
 
         self.add_permissions(self.pme, 'view', 'tpm.tpmactivity.pv_applicable',
-                             condition=self.visit_status(TPMVisit.STATUSES.tpm_reported))
+                             condition=tpm_reported_condition)
         self.add_permissions(self.pme, 'edit', ['tpm.tpmvisit.approval_comment', 'tpm.tpmvisit.report_reject_comments'],
-                             condition=self.visit_status(TPMVisit.STATUSES.tpm_reported))
+                             condition=tpm_reported_condition)
         self.add_permissions(self.pme, 'action',
                              ['tpm.tpmvisit.approve', 'tpm.tpmvisit.reject_report'],
-                             condition=self.visit_status(TPMVisit.STATUSES.tpm_reported))
+                             condition=tpm_reported_condition)
 
         # report rejected
         self.add_permissions([self.unicef_user, self.third_party_monitor], 'view',
@@ -290,29 +299,42 @@ class Command(BaseCommand):
                              condition=self.visit_status(TPMVisit.STATUSES.tpm_report_rejected))
 
         # unicef approved
+        unicef_approved_condition = self.visit_status(TPMVisit.STATUSES.unicef_approved)
         self.add_permissions(self.third_party_monitor, 'view', self.tpm_visit_details,
-                             condition=self.visit_status(TPMVisit.STATUSES.unicef_approved))
+                             condition=unicef_approved_condition)
         self.add_permissions([self.unicef_user, self.third_party_monitor], 'view', self.visit_report,
-                             condition=self.visit_status(TPMVisit.STATUSES.unicef_approved))
+                             condition=unicef_approved_condition)
         self.add_permissions(self.unicef_user, 'view', self.action_points_block + [
             'tpm.tpmvisit.approval_comment'
-        ], condition=self.visit_status(TPMVisit.STATUSES.unicef_approved))
+        ], condition=unicef_approved_condition)
 
-        # action points are editable for audit focal point as before.
-        # not sure if it's correct with action points dashboard permissions logic,
-        # but would be better to keep old logic for a while.
-        reported_visit_condition = self.visit_status(TPMVisit.STATUSES.tpm_reported)
-        opened_actionpoint_condition = self.action_point_status(TPMActionPoint.STATUSES.open)
+        # action points specific permissions. pme and action points can do everything.
+        # author, assignee and assigner can edit. assignee can complete.
+        opened_action_point_condition = self.action_point_status(TPMActionPoint.STATUSES.open)
+
+        for editable_condition in [tpm_reported_condition, unicef_approved_condition]:
+            # all unicef users in theory can edit action points, so we need to allow all of them
+            # and then check permissions for some action point.
+            self.add_permissions(
+                self.unicef_user,
+                'edit', self.action_points_block,
+                condition=editable_condition + self.new_action_point()
+            )
+            self.add_permissions(
+                [self.pme, self.focal_point],
+                'edit', self.action_points_block,
+                condition=editable_condition + self.new_action_point()
+            )
+
+            self.add_permissions(
+                [self.pme, self.focal_point, self.action_point_author,
+                 self.action_point_assignee, self.action_point_assigned_by],
+                'edit', self.action_points_block,
+                condition=editable_condition + opened_action_point_condition
+            )
+
         self.add_permissions(
-            [self.pme, self.focal_point], 'edit', self.action_points_block,
-            condition=reported_visit_condition + self.new_action_point()
-        )
-        self.add_permissions(
-            [self.pme, self.focal_point], 'edit', self.action_points_block,
-            condition=reported_visit_condition + opened_actionpoint_condition
-        )
-        self.add_permissions(
-            [self.pme, self.focal_point], 'action',
-            'tpm.tpmactionpoint.complete',
-            condition=reported_visit_condition + opened_actionpoint_condition
+            [self.pme, self.focal_point, self.action_point_assignee],
+            'action', 'tpm.tpmactionpoint.complete',
+            condition=opened_action_point_condition
         )
