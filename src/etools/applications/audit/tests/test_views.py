@@ -530,45 +530,52 @@ class TestEngagementActionPointViewSet(EngagementTransitionsTestCaseMixin, BaseT
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         self.assertEqual(self.engagement.action_points.count(), 1)
 
+    def _test_action_point_editable(self, action_point, user, editable=True):
+        response = self.forced_auth_req(
+            'options',
+            '/api/audit/engagements/{}/action-points/{}/'.format(self.engagement.id, action_point.id),
+            user=user
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+        if editable:
+            self.assertIn('PUT', response.data['actions'].keys())
+            self.assertListEqual(
+                ['assigned_to', 'high_priority', 'due_date', 'description'],
+                list(response.data['actions']['PUT'].keys())
+            )
+        else:
+            self.assertNotIn('PUT', response.data['actions'].keys())
+
     def test_action_point_editable_by_author(self):
         self._init_finalized_engagement()
         action_point = ActionPointFactory(engagement=self.engagement, status='pre_completed')
 
-        response = self.forced_auth_req(
-            'options',
-            '/api/audit/engagements/{}/action-points/{}/'.format(self.engagement.id, action_point.id),
-            user=action_point.author
-        )
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertIn('PUT', response.data['actions'].keys())
-        self.assertListEqual(
-            ['assigned_to', 'high_priority', 'due_date', 'description'],
-            list(response.data['actions']['PUT'].keys())
-        )
+        self._test_action_point_editable(action_point, action_point.author)
+
+    def test_action_point_editable_by_focal_point(self):
+        self._init_finalized_engagement()
+        action_point = ActionPointFactory(engagement=self.engagement, status='pre_completed')
+
+        self._test_action_point_editable(action_point, self.unicef_focal_point)
 
     def test_action_point_readonly_by_simple_unicef_user(self):
         self._init_finalized_engagement()
         action_point = ActionPointFactory(engagement=self.engagement, status='pre_completed')
 
-        response = self.forced_auth_req(
-            'options',
-            '/api/audit/engagements/{}/action-points/{}/'.format(self.engagement.id, action_point.id),
-            user=self.unicef_user
-        )
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertNotIn('PUT', response.data['actions'].keys())
+        self._test_action_point_editable(action_point, self.unicef_user, editable=False)
 
-    def test_action_point_readonly_on_complete(self):
+    def test_action_point_readonly_by_author_on_complete(self):
         self._init_finalized_engagement()
         action_point = ActionPointFactory(engagement=self.engagement, status='completed')
 
-        response = self.forced_auth_req(
-            'options',
-            '/api/audit/engagements/{}/action-points/{}/'.format(self.engagement.id, action_point.id),
-            user=action_point.author
-        )
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertNotIn('PUT', response.data['actions'].keys())
+        self._test_action_point_editable(action_point, action_point.author, editable=False)
+
+    def test_action_point_readonly_by_focal_point_on_complete(self):
+        self._init_finalized_engagement()
+        action_point = ActionPointFactory(engagement=self.engagement, status='completed')
+
+        self._test_action_point_editable(action_point, self.unicef_focal_point, editable=False)
 
     def test_action_point_complete(self):
         self._init_finalized_engagement()

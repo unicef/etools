@@ -42,6 +42,7 @@ class Command(BaseCommand):
 
     all_unicef_users = [focal_point, unicef_user]
     everybody = all_unicef_users + [auditor, ]
+    action_points_editors = [focal_point, action_point_author, action_point_assignee, action_point_assigned_by]
 
     engagement_overview_read_block = [
         'audit.engagement.unique_id',
@@ -97,9 +98,12 @@ class Command(BaseCommand):
         'audit.engagement.staff_members',
     ]
 
-    follow_up_editable_page = [
+    action_points_block = [
         'audit.engagement.action_points',
         'audit.engagementactionpoint.*',
+    ]
+
+    follow_up_editable_page = [
         'audit.engagement.amount_refunded',
         'audit.engagement.additional_supporting_documentation_provided',
         'audit.engagement.explanation_for_additional_information',
@@ -111,7 +115,7 @@ class Command(BaseCommand):
     follow_up_page = follow_up_editable_page + [
         'audit.spotcheck.total_amount_tested',
         'audit.spotcheck.total_amount_of_ineligible_expenditure',
-    ]
+    ] + action_points_block
 
     engagement_overview_editable_page = (engagement_overview_editable_block + special_audit_block +
                                          partner_block + staff_members_block)
@@ -341,20 +345,28 @@ class Command(BaseCommand):
             condition=final_engagement_condition
         )
 
-        # action points. except focal point, can be editable by author, assignee and assigner
-        opened_actionpoint_condition = self.action_point_status(EngagementActionPoint.STATUSES.open)
+        # action points related permissions. editable by focal point, author, assignee and assigner
+        opened_action_point_condition = self.action_point_status(EngagementActionPoint.STATUSES.open)
+
+        # all unicef users in theory can edit action points, so we need to allow all of them
+        # and then check permissions for some action point.
         self.add_permissions(
-            [self.action_point_author, self.action_point_assignee, self.action_point_assigned_by], 'edit',
+            self.unicef_user, 'edit',
             'audit.engagement.action_points',
             condition=final_engagement_condition
         )
         self.add_permissions(
-            [self.action_point_author, self.action_point_assignee, self.action_point_assigned_by], 'edit',
+            self.focal_point, 'edit',
             'audit.engagementactionpoint.*',
-            condition=opened_actionpoint_condition
+            condition=final_engagement_condition + self.new_action_point(),
+        )
+        self.add_permissions(
+            self.action_points_editors, 'edit',
+            'audit.engagementactionpoint.*',
+            condition=opened_action_point_condition
         )
         self.add_permissions(
             [self.focal_point, self.action_point_assignee], 'action',
             'audit.engagementactionpoint.complete',
-            condition=opened_actionpoint_condition
+            condition=opened_action_point_condition
         )
