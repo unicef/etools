@@ -1,7 +1,6 @@
 from django.core.exceptions import ValidationError
 from django.shortcuts import get_object_or_404
 
-from dal import autocomplete
 from rest_framework import mixins, permissions, viewsets
 from rest_framework.generics import ListAPIView
 
@@ -93,17 +92,3 @@ class LocationQuerySetView(ListAPIView):
 
         # return maximum 7 records
         return qs.all()[:7]
-
-
-class LocationAutocompleteView(autocomplete.Select2QuerySetView):
-    def get_queryset(self):
-        # Don't forget to filter out results depending on the visitor !
-        if not self.request.user.is_authenticated:
-            return Location.objects.none()
-
-        qs = Location.objects.all()
-
-        if self.q:
-            qs = qs.filter(name__istartswith=self.q)
-
-        return qs

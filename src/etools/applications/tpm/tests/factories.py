@@ -210,6 +210,8 @@ class TPMVisitFactory(factory.DjangoModelFactory):
 
     status = TPMVisit.STATUSES.draft
 
+    author = factory.SubFactory(UserFactory, pme=True)
+
     tpm_partner = factory.SubFactory(TPMPartnerFactory)
 
     tpm_partner_focal_points__count = 0
