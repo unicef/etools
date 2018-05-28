@@ -12,7 +12,7 @@ from etools.applications.partners.serializers.interventions_v2 import Interventi
 from etools.applications.partners.serializers.partner_organization_v2 import MinimalPartnerOrganizationListSerializer
 from etools.applications.permissions2.serializers import PermissionsBasedSerializerMixin
 from etools.applications.reports.serializers.v1 import ResultSerializer
-from etools.applications.snapshot.serializers import ActivitySerializer
+from etools.applications.snapshot.models import Activity
 from etools.applications.users.models import Section
 from etools.applications.users.serializers import OfficeSerializer
 from etools.applications.users.serializers_v3 import MinimalUserSerializer
@@ -129,9 +129,24 @@ class CommentSerializer(UserContextSerializerMixin, WritableNestedSerializerMixi
         return super(CommentSerializer, self).create(validated_data)
 
 
+class HistorySerializer(serializers.ModelSerializer):
+    by_user_display = serializers.ReadOnlyField(source='by_user.get_full_name', label=_('User'))
+    action = serializers.SerializerMethodField(label=_('Action'))
+
+    class Meta:
+        model = Activity
+        fields = ('id', 'created', 'by_user_display', 'action')
+        extra_kwargs = {
+            'created': {'label': _('Date')},
+        }
+
+    def get_action(self, obj):
+        return ActionPoint.get_snapshot_action_display(obj)
+
+
 class ActionPointSerializer(WritableNestedSerializerMixin, ActionPointListSerializer):
     comments = CommentSerializer(many=True, label=_('Actions Taken'))
-    history = ActivitySerializer(many=True, label=_('History'), read_only=True)
+    history = HistorySerializer(many=True, label=_('History'), read_only=True, source='get_meaningful_history')
 
     related_object_str = serializers.SerializerMethodField(label=_('Reference'))
     related_object_url = serializers.SerializerMethodField()
