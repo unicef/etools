@@ -8,33 +8,12 @@ from django.core.validators import validate_email
 from django.db.models import Q
 from django.utils.translation import ugettext as _
 
-from dal import autocomplete
-
 from etools.applications.EquiTrack.forms import AutoSizeTextForm
 from etools.applications.partners.models import (
-    InterventionSectorLocationLink,  # TODO intervention sector locations cleanup
     PartnerOrganization, PartnerStaffMember, PartnerType
 )
 
 logger = logging.getLogger('partners.forms')
-
-
-# TODO intervention sector locations cleanup
-class SectorLocationForm(forms.ModelForm):
-    class Meta:
-        model = InterventionSectorLocationLink
-        fields = ('sector', 'locations')
-        widgets = {
-            'locations': autocomplete.ModelSelect2Multiple(
-                url='locations-autocomplete-light',
-                attrs={
-                    # Set some placeholder
-                    'data-placeholder': 'Enter Location Name ...',
-                    # Only trigger autocompletion after 3 characters have been typed
-                    'data-minimum-input-length': 3,
-                },
-            )
-        }
 
 
 class PartnersAdminForm(AutoSizeTextForm):
