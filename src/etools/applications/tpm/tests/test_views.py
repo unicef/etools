@@ -310,49 +310,118 @@ class TestEngagementActionPointViewSet(TPMTestCaseMixin, BaseTenantTestCase):
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         self.assertEqual(activity.action_points.count(), 1)
 
-    def test_action_point_editable(self):
+    def _test_action_point_editable(self, action_point, user, editable=True):
+        activity = action_point.tpm_activity
+        visit = activity.tpm_visit
+
+        response = self.forced_auth_req(
+            'options',
+            '/api/tpm/visits/{}/activities/{}/action-points/{}/'.format(visit.id, activity.id, action_point.id),
+            user=user
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        if editable:
+            self.assertIn('PUT', response.data['actions'].keys())
+            self.assertListEqual(
+                ['assigned_to', 'high_priority', 'due_date', 'description'],
+                list(response.data['actions']['PUT'].keys())
+            )
+        else:
+            self.assertNotIn('PUT', response.data['actions'].keys())
+
+    def test_action_point_editable_by_pme(self):
         visit = TPMVisitFactory(status='tpm_reported', tpm_activities__count=1)
         activity = visit.tpm_activities.first()
         action_point = ActionPointFactory(tpm_activity=activity, status='pre_completed')
 
-        response = self.forced_auth_req(
-            'options',
-            '/api/tpm/visits/{}/activities/{}/action-points/{}/'.format(visit.id, activity.id, action_point.id),
-            user=self.pme_user
-        )
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertIn('PUT', response.data['actions'].keys())
-        self.assertListEqual(
-            ['assigned_to', 'high_priority', 'due_date', 'description'],
-            list(response.data['actions']['PUT'].keys())
-        )
+        self._test_action_point_editable(action_point, self.pme_user)
 
-    def test_action_point_readonly_on_complete(self):
+    def test_action_point_editable_by_author(self):
+        visit = TPMVisitFactory(status='tpm_reported', tpm_activities__count=1)
+        activity = visit.tpm_activities.first()
+        action_point = ActionPointFactory(tpm_activity=activity, status='pre_completed')
+
+        self._test_action_point_editable(action_point, action_point.author)
+
+    def test_action_point_readonly_by_unicef_user(self):
+        visit = TPMVisitFactory(status='tpm_reported', tpm_activities__count=1)
+        activity = visit.tpm_activities.first()
+        action_point = ActionPointFactory(tpm_activity=activity, status='pre_completed')
+
+        self._test_action_point_editable(action_point, self.unicef_user, editable=False)
+
+    def test_action_point_editable_by_pme_approved_visit(self):
+        visit = TPMVisitFactory(status='unicef_approved', tpm_activities__count=1)
+        activity = visit.tpm_activities.first()
+        action_point = ActionPointFactory(tpm_activity=activity, status='pre_completed')
+
+        self._test_action_point_editable(action_point, self.pme_user)
+
+    def test_action_point_editable_by_author_approved_visit(self):
+        visit = TPMVisitFactory(status='unicef_approved', tpm_activities__count=1)
+        activity = visit.tpm_activities.first()
+        action_point = ActionPointFactory(tpm_activity=activity, status='pre_completed')
+
+        self._test_action_point_editable(action_point, action_point.author)
+
+    def test_action_point_readonly_by_unicef_user_approved_visit(self):
+        visit = TPMVisitFactory(status='unicef_approved', tpm_activities__count=1)
+        activity = visit.tpm_activities.first()
+        action_point = ActionPointFactory(tpm_activity=activity, status='pre_completed')
+
+        self._test_action_point_editable(action_point, self.unicef_user, editable=False)
+
+    def test_action_point_readonly_on_complete_by_pme(self):
         visit = TPMVisitFactory(status='unicef_approved', tpm_activities__count=1)
         activity = visit.tpm_activities.first()
         action_point = ActionPointFactory(tpm_activity=activity, status='completed')
 
-        response = self.forced_auth_req(
-            'options',
-            '/api/tpm/visits/{}/activities/{}/action-points/{}/'.format(visit.id, activity.id, action_point.id),
-            user=self.pme_user
-        )
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertNotIn('PUT', response.data['actions'].keys())
+        self._test_action_point_editable(action_point, self.pme_user, editable=False)
 
-    def test_action_point_complete(self):
-        visit = TPMVisitFactory(status='tpm_reported', tpm_activities__count=1)
+    def test_action_point_readonly_on_complete_by_author(self):
+        visit = TPMVisitFactory(status='unicef_approved', tpm_activities__count=1)
         activity = visit.tpm_activities.first()
-        action_point = ActionPointFactory(tpm_activity=activity, status='pre_completed', comments__count=0)
+        action_point = ActionPointFactory(tpm_activity=activity, status='completed')
+
+        self._test_action_point_editable(action_point, action_point.assigned_to, editable=False)
+
+    def _test_complete(self, action_point, user, can_complete=True):
+        activity = action_point.tpm_activity
+        visit = activity.tpm_visit
 
         response = self.forced_auth_req(
             'post',
             '/api/tpm/visits/{}/activities/{}/action-points/{}/complete/'.format(visit.id, activity.id,
                                                                                  action_point.id),
-            user=self.pme_user
+            user=user
         )
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(response.data['status'], 'completed')
+
+        if can_complete:
+            self.assertEqual(response.status_code, status.HTTP_200_OK)
+            self.assertEqual(response.data['status'], 'completed')
+        else:
+            self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+
+    def test_action_point_complete_pme(self):
+        visit = TPMVisitFactory(status='tpm_reported', tpm_activities__count=1)
+        activity = visit.tpm_activities.first()
+        action_point = ActionPointFactory(tpm_activity=activity, status='pre_completed', comments__count=0)
+
+        self._test_complete(action_point, self.pme_user)
+
+    def test_action_point_complete_assignee(self):
+        visit = TPMVisitFactory(status='tpm_reported', tpm_activities__count=1)
+        activity = visit.tpm_activities.first()
+        action_point = ActionPointFactory(tpm_activity=activity, status='pre_completed', comments__count=0)
+
+        self._test_complete(action_point, action_point.assigned_to)
+
+    def test_action_point_complete_fail_unicef_user(self):
+        visit = TPMVisitFactory(status='tpm_reported', tpm_activities__count=1)
+        activity = visit.tpm_activities.first()
+        action_point = ActionPointFactory(tpm_activity=activity, status='pre_completed', comments__count=0)
+
+        self._test_complete(action_point, self.unicef_user, can_complete=False)
 
 
 class TestTPMStaffMembersViewSet(TestExportMixin, TPMTestCaseMixin, BaseTenantTestCase):
