@@ -530,14 +530,14 @@ class TestEngagementActionPointViewSet(EngagementTransitionsTestCaseMixin, BaseT
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         self.assertEqual(self.engagement.action_points.count(), 1)
 
-    def test_action_point_editable(self):
+    def test_action_point_editable_by_author(self):
         self._init_finalized_engagement()
         action_point = ActionPointFactory(engagement=self.engagement, status='pre_completed')
 
         response = self.forced_auth_req(
             'options',
             '/api/audit/engagements/{}/action-points/{}/'.format(self.engagement.id, action_point.id),
-            user=self.unicef_focal_point
+            user=action_point.author
         )
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertIn('PUT', response.data['actions'].keys())
@@ -546,6 +546,18 @@ class TestEngagementActionPointViewSet(EngagementTransitionsTestCaseMixin, BaseT
             list(response.data['actions']['PUT'].keys())
         )
 
+    def test_action_point_readonly_by_simple_unicef_user(self):
+        self._init_finalized_engagement()
+        action_point = ActionPointFactory(engagement=self.engagement, status='pre_completed')
+
+        response = self.forced_auth_req(
+            'options',
+            '/api/audit/engagements/{}/action-points/{}/'.format(self.engagement.id, action_point.id),
+            user=self.unicef_user
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertNotIn('PUT', response.data['actions'].keys())
+
     def test_action_point_readonly_on_complete(self):
         self._init_finalized_engagement()
         action_point = ActionPointFactory(engagement=self.engagement, status='completed')
@@ -553,7 +565,7 @@ class TestEngagementActionPointViewSet(EngagementTransitionsTestCaseMixin, BaseT
         response = self.forced_auth_req(
             'options',
             '/api/audit/engagements/{}/action-points/{}/'.format(self.engagement.id, action_point.id),
-            user=self.unicef_focal_point
+            user=action_point.author
         )
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertNotIn('PUT', response.data['actions'].keys())
@@ -565,7 +577,7 @@ class TestEngagementActionPointViewSet(EngagementTransitionsTestCaseMixin, BaseT
         response = self.forced_auth_req(
             'post',
             '/api/audit/engagements/{}/action-points/{}/complete/'.format(self.engagement.id, action_point.id),
-            user=self.unicef_focal_point
+            user=action_point.assigned_to
         )
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response.data['status'], 'completed')

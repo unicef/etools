@@ -12,6 +12,8 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.renderers import JSONRenderer
 from rest_framework.response import Response
 
+from etools.applications.action_points.conditions import ActionPointAuthorCondition, ActionPointAssignedByCondition, \
+    ActionPointAssigneeCondition
 from etools.applications.audit.conditions import (AuditModuleCondition, AuditStaffMemberCondition,
                                                   EngagementStaffMemberCondition,)
 from etools.applications.audit.exports import (AuditDetailCSVRenderer, AuditorFirmCSVRenderer,
@@ -429,6 +431,9 @@ class EngagementActionPointViewSet(BaseAuditViewSet,
     def get_obj_permission_context(self, obj):
         return [
             ObjectStatusCondition(obj),
+            ActionPointAuthorCondition(obj, self.request.user),
+            ActionPointAssignedByCondition(obj, self.request.user),
+            ActionPointAssigneeCondition(obj, self.request.user),
         ]
 
     def perform_create(self, serializer):

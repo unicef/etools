@@ -2,6 +2,8 @@
 from django.core.management import BaseCommand
 from django.db.models import Q
 
+from etools.applications.action_points.conditions import ActionPointAuthorCondition, ActionPointAssignedByCondition, \
+    ActionPointAssigneeCondition
 from etools.applications.action_points.models import ActionPoint
 from etools.applications.audit.conditions import (AuditModuleCondition, AuditStaffMemberCondition,
                                                   EngagementStaffMemberCondition,)
@@ -19,6 +21,11 @@ class Command(BaseCommand):
     unicef_user = 'unicef_user'
     auditor = 'auditor'
     engagement_staff_auditor = 'engagement_staff_auditor'
+
+    action_point_author = 'action_point_author'
+    action_point_assignee = 'action_point_assignee'
+    action_point_assigned_by = 'action_point_assigned_by'
+
     user_roles = {
         focal_point: [GroupCondition.predicate_template.format(group=UNICEFAuditFocalPoint.name)],
         unicef_user: [GroupCondition.predicate_template.format(group=UNICEFUser.name)],
@@ -26,7 +33,11 @@ class Command(BaseCommand):
                   AuditStaffMemberCondition.predicate],
         engagement_staff_auditor: [GroupCondition.predicate_template.format(group=Auditor.name),
                                    AuditStaffMemberCondition.predicate,
-                                   EngagementStaffMemberCondition.predicate]
+                                   EngagementStaffMemberCondition.predicate],
+
+        action_point_author: [ActionPointAuthorCondition.predicate],
+        action_point_assignee: [ActionPointAssigneeCondition.predicate],
+        action_point_assigned_by: [ActionPointAssignedByCondition.predicate],
     }
 
     all_unicef_users = [focal_point, unicef_user]
@@ -88,6 +99,7 @@ class Command(BaseCommand):
 
     follow_up_editable_page = [
         'audit.engagement.action_points',
+        'audit.engagementactionpoint.*',
         'audit.engagement.amount_refunded',
         'audit.engagement.additional_supporting_documentation_provided',
         'audit.engagement.explanation_for_additional_information',
@@ -97,7 +109,6 @@ class Command(BaseCommand):
     ]
 
     follow_up_page = follow_up_editable_page + [
-        'audit.engagementactionpoint.*',
         'audit.spotcheck.total_amount_tested',
         'audit.spotcheck.total_amount_of_ineligible_expenditure',
     ]
@@ -330,22 +341,20 @@ class Command(BaseCommand):
             condition=final_engagement_condition
         )
 
-        # action points are editable for audit focal point as before.
-        # not sure if it's correct with action points dashboard permissions logic,
-        # but would be better to keep old logic for a while.
+        # action points. except focal point, can be editable by author, assignee and assigner
         opened_actionpoint_condition = self.action_point_status(EngagementActionPoint.STATUSES.open)
         self.add_permissions(
-            self.focal_point, 'edit',
-            'audit.engagementactionpoint.*',
-            condition=final_engagement_condition + self.new_action_point()
+            [self.action_point_author, self.action_point_assignee, self.action_point_assigned_by], 'edit',
+            'audit.engagement.action_points',
+            condition=final_engagement_condition
         )
         self.add_permissions(
-            self.focal_point, 'edit',
+            [self.action_point_author, self.action_point_assignee, self.action_point_assigned_by], 'edit',
             'audit.engagementactionpoint.*',
-            condition=final_engagement_condition + opened_actionpoint_condition
+            condition=opened_actionpoint_condition
         )
         self.add_permissions(
-            self.focal_point, 'action',
+            [self.focal_point, self.action_point_assignee], 'action',
             'audit.engagementactionpoint.complete',
-            condition=final_engagement_condition + opened_actionpoint_condition
+            condition=opened_actionpoint_condition
         )
