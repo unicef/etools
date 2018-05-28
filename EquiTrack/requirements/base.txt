@@ -5,7 +5,7 @@ asn1crypto==0.24.0        # via cryptography
 azure-common==1.1.8       # via azure-storage
 azure-nspkg==2.0.0        # via azure-common, azure-storage
 azure-storage==0.20.2
-babel==2.5.3              # via flower
+babel==2.6.0              # via flower
 billiard==3.5.0.3         # via celery
 carto==1.0.1
 celery==4.1.0
