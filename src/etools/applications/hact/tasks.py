@@ -6,8 +6,9 @@ from django.db import connection, transaction
 
 from celery.utils.log import get_task_logger
 
+from etools.applications.EquiTrack.encoders import EToolsEncoder
 from etools.applications.audit.models import Audit, Engagement
-from etools.applications.hact.models import AggregateHact, HactEncoder
+from etools.applications.hact.models import AggregateHact
 from etools.applications.partners.models import PartnerOrganization
 from etools.applications.users.models import Country
 from etools.applications.vision.exceptions import VisionException
@@ -38,7 +39,7 @@ def update_hact_for_country(country_name):
             hact['assurance_coverage'] = partner.assurance_coverage
 
             PartnerOrganization.programmatic_visits(partner)
-            partner.hact_values = json.dumps(hact, cls=HactEncoder)
+            partner.hact_values = json.dumps(hact, cls=EToolsEncoder)
             partner.save()
 
     except Exception as e:
