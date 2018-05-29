@@ -60,6 +60,10 @@
     "partner_org": {
       "id": 0,
       "address": null,
+      "partner_type": "",
+      "cso_type": null,
+      "total_ct_cp": null,
+      "total_ct_cy": null,
       "short_name": "",
       "alternate_name": null,
       "basis_for_risk_rating": "",
@@ -104,6 +108,10 @@
     "partner_org": {
       "id": 0,
       "address": null,
+      "partner_type": "",
+      "cso_type": null,
+      "total_ct_cp": null,
+      "total_ct_cy": null,
       "short_name": "",
       "alternate_name": null,
       "basis_for_risk_rating": "",
@@ -148,6 +156,10 @@
     "partner_org": {
       "id": 0,
       "address": null,
+      "partner_type": "",
+      "cso_type": null,
+      "total_ct_cp": null,
+      "total_ct_cy": null,
       "short_name": "",
       "alternate_name": null,
       "basis_for_risk_rating": "",
