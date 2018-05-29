@@ -19,6 +19,7 @@ from django_fsm import FSMField, transition
 from model_utils import Choices, FieldTracker
 from model_utils.models import TimeFramedModel, TimeStampedModel
 
+from etools.applications.EquiTrack.encoders import EToolsEncoder
 from etools.applications.EquiTrack.serializers import StringConcat
 from etools.applications.attachments.models import Attachment
 from etools.applications.environment.helpers import tenant_switch_is_active
@@ -529,7 +530,7 @@ class PartnerOrganization(TimeStampedModel):
 
         super(PartnerOrganization, self).save(*args, **kwargs)
         if hact_is_string:
-            self.hact_values = json.dumps(self.hact_values)
+            self.hact_values = json.dumps(self.hact_values, cls=EToolsEncoder)
 
     @cached_property
     def partner_type_slug(self):
