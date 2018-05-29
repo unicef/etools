@@ -466,5 +466,6 @@ class TPMActionPointViewSet(BaseTPMViewSet,
             tpm_activity=activity,
             partner_id=activity.partner_id,
             intervention_id=activity.intervention_id,
-            cp_output_id=activity.cp_output_id
+            cp_output_id=activity.cp_output_id,
+            section=activity.section,
         )

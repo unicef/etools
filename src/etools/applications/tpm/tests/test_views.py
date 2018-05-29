@@ -303,12 +303,14 @@ class TestEngagementActionPointViewSet(TPMTestCaseMixin, BaseTenantTestCase):
             data={
                 'description': fuzzy.FuzzyText(length=100).fuzz(),
                 'due_date': fuzzy.FuzzyDate(timezone.now().date(), _FUZZY_END_DATE).fuzz(),
-                'assigned_to': self.unicef_user.id
+                'assigned_to': self.unicef_user.id,
+                'office': self.pme_user.profile.office.id,
             }
         )
 
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         self.assertEqual(activity.action_points.count(), 1)
+        self.assertIsNotNone(activity.action_points.first().section)
 
     def _test_action_point_editable(self, action_point, user, editable=True):
         activity = action_point.tpm_activity
@@ -323,7 +325,7 @@ class TestEngagementActionPointViewSet(TPMTestCaseMixin, BaseTenantTestCase):
         if editable:
             self.assertIn('PUT', response.data['actions'].keys())
             self.assertListEqual(
-                ['assigned_to', 'high_priority', 'due_date', 'description'],
+                ['assigned_to', 'high_priority', 'due_date', 'description', 'office'],
                 list(response.data['actions']['PUT'].keys())
             )
         else:

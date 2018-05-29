@@ -46,13 +46,18 @@ class TPMVisitReportRejectCommentSerializer(WritableNestedSerializerMixin,
 
 
 class TPMActionPointSerializer(ActionPointBaseSerializer):
+    office = SeparatedReadWriteField(
+        read_field=OfficeSerializer(read_only=True, label=_('Office')),
+        required=True
+    )
+
     is_responsible = serializers.SerializerMethodField()
     history = SnapshotSerializer(many=True, label=_('History'), read_only=True)
 
     class Meta(ActionPointBaseSerializer.Meta):
         model = TPMActionPoint
         fields = ActionPointBaseSerializer.Meta.fields + [
-            'history', 'is_responsible'
+            'office', 'history', 'is_responsible'
         ]
         extra_kwargs = copy(ActionPointBaseSerializer.Meta.extra_kwargs)
         extra_kwargs.update({
