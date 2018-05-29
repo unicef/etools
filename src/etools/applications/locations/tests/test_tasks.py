@@ -228,6 +228,39 @@ class TestCreateLocations(BaseTenantTestCase):
         self.assertEqual(location.name, name)
         self.assertEqual(location.parent, parent)
 
+    def test_update_parent(self):
+        """If location does exist then update it
+        and if parent instance provided, set parent value as well
+        """
+        carto = CartoDBTableFactory()
+        parent1 = LocationFactory(p_code="p1")
+        location = LocationFactory(p_code="123", parent=parent1)
+
+        parent2 = LocationFactory(p_code="p2")
+        name = "Test"
+
+        self.assertEqual(location.parent, parent1)
+        success, not_added, created, updated = tasks.create_location(
+            "123",
+            carto,
+            True,
+            parent2,
+            name,
+            {"the_geom": "Point(20 20)"},
+            0,
+            0,
+            0,
+        )
+        self.assertTrue(success)
+        self.assertEqual(not_added, 0)
+        self.assertEqual(created, 0)
+        self.assertEqual(updated, 1)
+        location = Location.objects.get(p_code="123")
+        self.assertIsNotNone(location.point)
+        self.assertIsNone(location.geom)
+        self.assertEqual(location.name, name)
+        self.assertEqual(location.parent, parent2)
+
 
 class TestUpdateSitesFromCartoDB(BaseTenantTestCase):
     def setUp(self):
