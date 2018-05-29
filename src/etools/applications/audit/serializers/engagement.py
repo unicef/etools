@@ -19,7 +19,9 @@ from etools.applications.partners.serializers.interventions_v2 import BaseInterv
 from etools.applications.partners.serializers.partner_organization_v2 import (PartnerOrganizationListSerializer,
                                                                               PartnerStaffMemberNestedSerializer, )
 from etools.applications.permissions2.serializers import PermissionsBasedSerializerMixin
+from etools.applications.reports.serializers.v1 import SectorSerializer
 from etools.applications.snapshot.serializers import ActivitySerializer
+from etools.applications.users.serializers import OfficeSerializer
 from etools.applications.utils.common.serializers.fields import SeparatedReadWriteField
 from etools.applications.utils.writable_serializers.serializers import (WritableNestedParentSerializerMixin,
                                                                         WritableNestedSerializerMixin, )
@@ -59,12 +61,21 @@ class ReportBase64AttachmentSerializer(WritableNestedSerializerMixin, Base64Atta
 
 
 class EngagementActionPointSerializer(PermissionsBasedSerializerMixin, ActionPointBaseSerializer):
+    section = SeparatedReadWriteField(
+        read_field=SectorSerializer(read_only=True, label=_('Section')),
+        required=True,
+    )
+    office = SeparatedReadWriteField(
+        read_field=OfficeSerializer(read_only=True, label=_('Office')),
+        required=True
+    )
+
     history = ActivitySerializer(many=True, label=_('History'), read_only=True)
 
     class Meta(ActionPointBaseSerializer.Meta):
         model = EngagementActionPoint
         fields = ActionPointBaseSerializer.Meta.fields + [
-            'history',
+            'section', 'office', 'history',
         ]
         extra_kwargs = copy(ActionPointBaseSerializer.Meta.extra_kwargs)
         extra_kwargs.update({
