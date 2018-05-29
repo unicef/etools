@@ -8,7 +8,7 @@ from etools.applications.action_points.conditions import ActionPointModuleCondit
 from etools.applications.action_points.filters import ReferenceNumberOrderingFilter, RelatedModuleFilter
 from etools.applications.action_points.metadata import ActionPointMetadata
 from etools.applications.action_points.models import ActionPoint
-from etools.applications.action_points.serializers import ActionPointSerializer, ActionPointLightSerializer
+from etools.applications.action_points.serializers import ActionPointSerializer, ActionPointListSerializer
 from etools.applications.permissions2.conditions import GroupCondition, NewObjectCondition, ObjectStatusCondition
 from etools.applications.permissions2.views import PermittedSerializerMixin, PermittedFSMActionMixin
 from etools.applications.utils.common.pagination import DynamicPageNumberPagination
@@ -33,7 +33,7 @@ class ActionPointViewSet(
     queryset = ActionPoint.objects.all().select_related()
     serializer_class = ActionPointSerializer
     serializer_action_classes = {
-        'list': ActionPointLightSerializer,
+        'list': ActionPointListSerializer,
     }
     filter_backends = (ReferenceNumberOrderingFilter, OrderingFilter, SearchFilter,
                        RelatedModuleFilter, DjangoFilterBackend,)
