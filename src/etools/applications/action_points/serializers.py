@@ -11,20 +11,13 @@ from etools.applications.locations.serializers import LocationLightSerializer
 from etools.applications.partners.serializers.interventions_v2 import InterventionCreateUpdateSerializer
 from etools.applications.partners.serializers.partner_organization_v2 import MinimalPartnerOrganizationListSerializer
 from etools.applications.permissions2.serializers import PermissionsBasedSerializerMixin
-from etools.applications.reports.serializers.v1 import ResultSerializer
+from etools.applications.reports.serializers.v1 import ResultSerializer, SectorSerializer
 from etools.applications.snapshot.models import Activity
-from etools.applications.users.models import Section
 from etools.applications.users.serializers import OfficeSerializer
 from etools.applications.users.serializers_v3 import MinimalUserSerializer
 from etools.applications.utils.common.serializers.fields import SeparatedReadWriteField
 from etools.applications.utils.common.serializers.mixins import UserContextSerializerMixin
 from etools.applications.utils.writable_serializers.serializers import WritableNestedSerializerMixin
-
-
-class SectionSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Section
-        fields = ('id', 'name')
 
 
 class ActionPointBaseSerializer(UserContextSerializerMixin, SnapshotModelSerializer, serializers.ModelSerializer):
@@ -90,7 +83,7 @@ class ActionPointListSerializer(PermissionsBasedSerializerMixin, ActionPointBase
     )
 
     section = SeparatedReadWriteField(
-        read_field=SectionSerializer(read_only=True, label=_('Section')),
+        read_field=SectorSerializer(read_only=True, label=_('Section')),
         required=True,
     )
     office = SeparatedReadWriteField(
