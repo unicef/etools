@@ -50,8 +50,9 @@ class TPMLocationCSVRenderer(CSVRenderer):
 
 
 class TPMActionPointCSVRenderer(CSVRenderer):
-    header = ['assigned_to', 'author', 'section', 'status', 'locations', 'cp_output', 'due_date']
+    header = ['ref', 'assigned_to', 'author', 'section', 'status', 'locations', 'cp_output', 'due_date', 'description']
     labels = {
+        'ref': _('Ref. #'),
         'assigned_to': _('Person Responsible'),
         'author': _('Assigned By'),
         'section': _('Section'),
@@ -59,14 +60,15 @@ class TPMActionPointCSVRenderer(CSVRenderer):
         'locations': _('Location(s)'),
         'cp_output': _('CP Output'),
         'due_date': _('Due Date'),
+        'description': _('Description'),
     }
 
 
 class TPMActionPointFullCSVRenderer(TPMActionPointCSVRenderer):
-    header = ['ref'] + TPMActionPointCSVRenderer.header
+    header = ['visit_ref'] + TPMActionPointCSVRenderer.header
     labels = copy(TPMActionPointCSVRenderer.labels)
     labels.update({
-        'ref': _('Visit Ref. #')
+        'visit_ref': _('Visit Ref. #')
     })
 
 
