@@ -365,6 +365,8 @@ class TPMVisitViewSet(
             TPMStaffMemberCondition(obj.tpm_partner, self.request.user),
             TPMVisitUNICEFFocalPointCondition(obj, self.request.user),
             TPMVisitTPMFocalPointCondition(obj, self.request.user),
+            # should be added to allow granular action points control
+            NewObjectCondition(model=TPMActionPoint),
         ]
 
     @list_route(methods=['get'], url_path='activities/export', renderer_classes=(TPMActivityCSVRenderer,))
