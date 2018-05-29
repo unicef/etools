@@ -2009,19 +2009,30 @@ class TestInterventionReportingRequirementView(BaseTenantTestCase):
                 status.HTTP_405_METHOD_NOT_ALLOWED
             )
 
-    def test_delete_invalid_report_type(self):
+    def test_delete_reporting_requirements(self):
         for report_type, _ in ReportingRequirement.TYPE_CHOICES:
+            report_req = ReportingRequirementFactory(
+                intervention=self.intervention,
+                report_type=report_type,
+            )
+
+            requirement_qs = ReportingRequirement.objects.filter(
+                intervention=self.intervention,
+                report_type=report_type,
+            )
+            init_count = requirement_qs.count()
+
             response = self.forced_auth_req(
                 "delete",
-                self._get_url(report_type),
+                self._get_url(report_type, self.intervention),
                 user=self.unicef_staff,
                 data={
+                    "report_type": report_type,
                     "reporting_requirements": [{
-                        "due_date": datetime.date(2001, 4, 15),
+                        "id": report_req.id
                     }]
                 }
             )
-            self.assertEqual(
-                response.status_code,
-                status.HTTP_405_METHOD_NOT_ALLOWED
-            )
+            
+            self.assertEqual(response.status_code, status.HTTP_200_OK)
+            self.assertEqual(requirement_qs.count(), init_count - 1)

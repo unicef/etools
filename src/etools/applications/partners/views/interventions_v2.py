@@ -811,6 +811,7 @@ class InterventionReportingRequirementView(APIView):
             data=self.request.data,
             context={
                 "intervention": self.intervention,
+                "request_method": self.request.method
             }
         )
 
