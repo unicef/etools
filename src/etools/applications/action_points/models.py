@@ -12,7 +12,6 @@ from model_utils.models import TimeStampedModel
 
 from etools.applications.action_points.transitions.conditions import ActionPointCompleteActionsTakenCheck
 from etools.applications.EquiTrack.utils import get_environment
-from etools.applications.activities.models import Activity
 from etools.applications.notification.models import Notification
 from etools.applications.permissions2.fsm import has_action_permission
 from etools.applications.utils.groups.wrappers import GroupWrapper
