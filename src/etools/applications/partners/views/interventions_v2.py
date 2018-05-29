@@ -788,6 +788,7 @@ class InterventionReportingRequirementView(APIView):
         self.intervention = self.get_object(intervention_pk)
         self.report_type = report_type
         self.request.data["report_type"] = self.report_type
+
         serializer = self.serializer_create_class(
             data=self.request.data,
             context={
@@ -796,6 +797,25 @@ class InterventionReportingRequirementView(APIView):
         )
         if serializer.is_valid():
             serializer.save()
+            return Response(
+                self.serializer_list_class(self.get_data()).data
+            )
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+    def delete(self, request, intervention_pk, report_type, format=None):
+        self.intervention = self.get_object(intervention_pk)
+        self.report_type = report_type
+        self.request.data["report_type"] = self.report_type
+
+        serializer = self.serializer_create_class(
+            data=self.request.data,
+            context={
+                "intervention": self.intervention,
+            }
+        )
+
+        if serializer.is_valid():
+            serializer.delete(serializer.validated_data)
             return Response(
                 self.serializer_list_class(self.get_data()).data
             )
