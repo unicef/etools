@@ -5,8 +5,9 @@ from datetime import datetime
 from django.core.management import BaseCommand
 from django.db import transaction
 
+from etools.applications.EquiTrack.encoders import EToolsEncoder
 from etools.applications.EquiTrack.util_scripts import set_country
-from etools.applications.hact.models import HactEncoder, HactHistory
+from etools.applications.hact.models import HactHistory
 from etools.applications.partners.models import hact_default, PartnerOrganization
 from etools.applications.users.models import Country
 
@@ -50,7 +51,7 @@ class Command(BaseCommand):
             ('Required Scheduled Audit', partner.planned_engagement.scheduled_audit),
             ('Required Special Audit', partner.planned_engagement.special_audit),
         ]
-        hact_history.partner_values = json.dumps(partner_values, cls=HactEncoder)
+        hact_history.partner_values = json.dumps(partner_values, cls=EToolsEncoder)
         hact_history.save()
 
     @transaction.atomic
