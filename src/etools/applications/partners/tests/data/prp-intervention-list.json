@@ -78,7 +78,7 @@
       "rating": null,
       "street_address": null
     },
-    "reporting_periods": [],
+    "special_reports": [],
     "status": "active",
     "cso_budget_currency": "",
     "id": 642,
@@ -126,7 +126,7 @@
       "rating": null,
       "street_address": null
     },
-    "reporting_periods": [],
+    "special_reports": [],
     "status": "draft",
     "cso_budget_currency": "",
     "id": 641,
@@ -174,7 +174,7 @@
       "rating": null,
       "street_address": null
     },
-    "reporting_periods": [],
+    "special_reports": [],
     "status": "draft",
     "cso_budget_currency": "",
     "id": 640,
