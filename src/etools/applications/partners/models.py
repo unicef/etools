@@ -1760,8 +1760,10 @@ class Intervention(TimeStampedModel):
             return 'Not Submitted'
         if not self.signed_by_unicef_date or not self.signed_by_partner_date:
             return 'Not fully signed'
-        signed_date = max([self.signed_by_partner_date, self.signed_by_unicef_date])
-        return relativedelta(signed_date, self.submission_date).days
+        start = self.submission_date
+        end = max([self.signed_by_partner_date, self.signed_by_unicef_date])
+        days = [start + datetime.timedelta(x + 1) for x in range((end - start).days)]
+        return sum(1 for day in days if day.weekday() < 5)
 
     @property
     def submitted_to_prc(self):
@@ -1773,8 +1775,10 @@ class Intervention(TimeStampedModel):
             return 'Not Reviewed'
         if not self.signed_by_unicef_date or not self.signed_by_partner_date:
             return 'Not fully signed'
-        signed_date = max([self.signed_by_partner_date, self.signed_by_unicef_date])
-        return relativedelta(signed_date, self.review_date_prc).days
+        start = self.review_date_prc
+        end = max([self.signed_by_partner_date, self.signed_by_unicef_date])
+        days = [start + datetime.timedelta(x + 1) for x in range((end - start).days)]
+        return sum(1 for day in days if day.weekday() < 5)
 
     @property
     def sector_names(self):
