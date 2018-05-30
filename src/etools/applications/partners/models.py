@@ -15,7 +15,6 @@ from django.utils.encoding import python_2_unicode_compatible
 from django.utils.functional import cached_property
 from django.utils.translation import ugettext as _
 
-from dateutil.relativedelta import relativedelta
 from django_fsm import FSMField, transition
 from model_utils import Choices, FieldTracker
 from model_utils.models import TimeFramedModel, TimeStampedModel
