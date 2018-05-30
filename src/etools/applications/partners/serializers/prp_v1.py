@@ -8,7 +8,8 @@ from etools.applications.locations.models import Location
 from etools.applications.partners.models import (Intervention, InterventionAmendment,
                                                  PartnerOrganization, PartnerStaffMember,)
 from etools.applications.reports.models import (AppliedIndicator, Disaggregation,
-                                                DisaggregationValue, LowerResult, Result, ReportingRequirement)
+                                                DisaggregationValue, LowerResult, Result, ReportingRequirement,
+                                                SpecialReportingRequirement)
 from etools.applications.reports.serializers.v1 import SectorSerializer
 
 
@@ -179,7 +180,7 @@ class ReportingRequirementsSerializer(serializers.ModelSerializer):
 
 class SpecialReportingRequirementsSerializer(serializers.ModelSerializer):
     class Meta:
-        model = ReportingRequirement
+        model = SpecialReportingRequirement
         fields = ('id', 'due_date', 'description')
 
 
