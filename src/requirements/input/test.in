@@ -8,4 +8,5 @@ responses
 isort
 ipython
 pdbpp
+safety
 tox

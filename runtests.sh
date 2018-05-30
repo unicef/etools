@@ -8,6 +8,10 @@ if [[ $DJANGO_SETTINGS_MODULE = '' || $DJANGO_SETTINGS_MODULE = etools.config.se
     export DJANGO_SETTINGS_MODULE=etools.config.settings.local
 fi
 
+# Run 'safety' to look for insecure requirements. https://pyup.io/docs/safety/installation-and-usage/
+# This command exits with code=0 if all is OK, with code=255 if insecure requirements are found.
+safety check
+
 # Ensure there are no errors.
 python -W ignore manage.py check
 python -W ignore manage.py makemigrations --dry-run --check
@@ -21,4 +25,3 @@ fi
 coverage erase
 time coverage run manage.py test --noinput --keepdb "$@"
 coverage report -m
-
