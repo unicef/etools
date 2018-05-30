@@ -98,7 +98,7 @@ class Location(MPTTModel):
     # pcode remap related fields
     prev_id = models.CharField(verbose_name=_("Previous Pcode"), max_length=32, null=True, db_index=True)
     prev_pcode = models.CharField(verbose_name=_("Previous Pcode"), max_length=32, null=True, db_index=True)
-    is_active = models.BooleanField(verbose_name=_("Active"), default=True)
+    is_active = models.BooleanField(verbose_name=_("Active"), default=True, blank=True)
 
     created = AutoCreatedField(_('created'))
     modified = AutoLastModifiedField(_('modified'))
