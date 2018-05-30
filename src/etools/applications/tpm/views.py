@@ -33,8 +33,7 @@ from etools.applications.tpm.models import PME, ThirdPartyMonitor, TPMActionPoin
 from etools.applications.tpm.serializers.partner import (
     TPMPartnerLightSerializer, TPMPartnerSerializer, TPMPartnerStaffMemberSerializer,)
 from etools.applications.tpm.serializers.visit import (
-    TPMActionPointSerializer, TPMVisitDraftSerializer, TPMVisitLightSerializer, TPMVisitSerializer,
-    TPMActivitySerializer)
+    TPMActionPointSerializer, TPMVisitDraftSerializer, TPMVisitLightSerializer, TPMVisitSerializer)
 
 from etools.applications.tpm.tpmpartners.models import TPMPartner, TPMPartnerStaffMember
 from etools.applications.utils.common.pagination import DynamicPageNumberPagination
