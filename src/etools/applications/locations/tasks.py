@@ -70,6 +70,9 @@ def create_location(pcode, carto_table, parent, parent_instance,
         else:
             location.geom = row['the_geom']
 
+        if parent and parent_instance:
+            location.parent = parent_instance
+
         try:
             location.save()
         except IntegrityError:
