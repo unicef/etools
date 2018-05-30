@@ -2,17 +2,11 @@
 import datetime
 import os
 import dill as pickle
-import sys
-from functools import wraps
 import decorator
 from adminactions.export import ForeignKeysCollector
-from deepdiff import DeepDiff
-from django.core.management import color_style
 from django.db import IntegrityError
 from django.test import Client
 from django.urls import resolve
-
-from pytest import fail
 
 from etools.applications.users.tests.factories import UserFactory
 
@@ -139,6 +133,7 @@ class BaseAPIRecorder:
                 else:
                     ret = self._unpickle(filename)
                 return ret
+
             return property(decorator.decorator(wrapper, func))
 
         return inner
@@ -225,7 +220,6 @@ New fields are:
             self._compare(payload, stored, filename, view=view)
         else:
             self._dump(response, filename)
-
 
 # class ViewSetChecher(ApiChecker):
 #     URLS = []
