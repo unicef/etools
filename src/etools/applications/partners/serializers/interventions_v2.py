@@ -725,7 +725,7 @@ class InterventionReportingRequirementCreateSerializer(serializers.ModelSerializ
         """
         self.intervention = self.context["intervention"]
         request_method = self.context["request_method"] if "request_method" in self.context else None
-        validate_for_deletion = True if request_method and str(request_method).lower()=='delete' else False
+        validate_for_deletion = True if request_method and str(request_method).lower() == 'delete' else False
 
         # Only able to change reporting requirements when PD
         # is in amendment status
