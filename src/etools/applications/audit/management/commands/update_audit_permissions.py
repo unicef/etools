@@ -348,10 +348,8 @@ class Command(BaseCommand):
         # action points related permissions. editable by focal point, author, assignee and assigner
         opened_action_point_condition = self.action_point_status(EngagementActionPoint.STATUSES.open)
 
-        # all unicef users in theory can edit action points, so we need to allow all of them
-        # and then check permissions for some action point.
         self.add_permissions(
-            self.unicef_user, 'edit',
+            self.focal_point, 'edit',
             'audit.engagement.action_points',
             condition=final_engagement_condition
         )
@@ -362,7 +360,7 @@ class Command(BaseCommand):
         )
         self.add_permissions(
             self.action_points_editors, 'edit',
-            'audit.engagementactionpoint.*',
+            self.action_points_block,
             condition=opened_action_point_condition
         )
         self.add_permissions(
