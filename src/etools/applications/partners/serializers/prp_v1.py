@@ -5,7 +5,7 @@ from django.db import connection
 from rest_framework import serializers
 
 from etools.applications.locations.models import Location
-from etools.applications.partners.models import (Intervention, InterventionAmendment, InterventionReportingPeriod,
+from etools.applications.partners.models import (Intervention, InterventionAmendment,
                                                  PartnerOrganization, PartnerStaffMember,)
 from etools.applications.reports.models import (AppliedIndicator, Disaggregation,
                                                 DisaggregationValue, LowerResult, Result, ReportingRequirement)
@@ -22,6 +22,10 @@ class PRPPartnerOrganizationListSerializer(serializers.ModelSerializer):
             "short_name",
             "street_address",
             "last_assessment_date",
+            "partner_type",
+            "cso_type",
+            "total_ct_cp",
+            "total_ct_cy",
             "address",
             "city",
             "postal_code",
@@ -167,16 +171,16 @@ class PRPResultSerializer(serializers.ModelSerializer):
         )
 
 
-class ReportingPeriodsSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = InterventionReportingPeriod
-        fields = ('id', 'start_date', 'end_date', 'due_date')
-
-
 class ReportingRequirementsSerializer(serializers.ModelSerializer):
     class Meta:
         model = ReportingRequirement
         fields = ('id', 'start_date', 'end_date', 'due_date', 'report_type', 'description')
+
+
+class SpecialReportingRequirementsSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = ReportingRequirement
+        fields = ('id', 'due_date', 'description')
 
 
 class PRPInterventionListSerializer(serializers.ModelSerializer):
@@ -207,8 +211,9 @@ class PRPInterventionListSerializer(serializers.ModelSerializer):
 
     expected_results = PRPResultSerializer(many=True, read_only=True, source='all_lower_results')
     update_date = serializers.DateTimeField(source='modified')
-    reporting_periods = ReportingPeriodsSerializer(many=True, read_only=True)
     reporting_requirements = ReportingRequirementsSerializer(many=True, read_only=True)
+    special_reports = SpecialReportingRequirementsSerializer(source="special_reporting_requirements",
+                                                             many=True, read_only=True)
     sections = SectorSerializer(source="combined_sections", many=True, read_only=True)
     locations = PRPLocationSerializer(source="flat_locations", many=True, read_only=True)
 
@@ -235,6 +240,7 @@ class PRPInterventionListSerializer(serializers.ModelSerializer):
             'number',
             'status',
             'partner_org',
+            'special_reports',
             'sections',
             'agreement',
             'unicef_focal_points',
@@ -243,7 +249,6 @@ class PRPInterventionListSerializer(serializers.ModelSerializer):
             'start_date', 'end_date',
             'cso_budget', 'cso_budget_currency',
             'unicef_budget', 'unicef_budget_currency',
-            'reporting_periods',
             'reporting_requirements',
             'expected_results',
             'update_date',
