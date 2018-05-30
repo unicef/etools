@@ -98,11 +98,11 @@ class CountryProgramme(models.Model):
         cps = cls.objects.filter(wbs__contains='/A0/', from_date__lt=today, to_date__gt=today).order_by('-to_date')
         return cps.first()
 
-    def save(self, *args, **kwargs):
+    def save(self, force_insert=False, *args, **kwargs):
         if 'A0/99' in self.wbs:
             self.invalid = True
 
-        if self.pk:
+        if self.pk and not force_insert:
             old_version = CountryProgramme.objects.get(id=self.pk)
             if old_version.to_date != self.to_date:
                 from etools.applications.partners.models import Agreement

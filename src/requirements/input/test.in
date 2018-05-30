@@ -1,4 +1,8 @@
 coverage
+dill
+django-adminactions
+deepdiff
+jsonpickle
 factory-boy
 Faker
 flake8
