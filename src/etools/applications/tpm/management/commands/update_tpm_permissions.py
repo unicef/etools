@@ -311,10 +311,8 @@ class Command(BaseCommand):
         # action points specific permissions. pme and action points can do everything.
         # author, assignee and assigner can edit. assignee can complete.
         for editable_condition in [tpm_reported_condition, unicef_approved_condition]:
-            # all unicef users in theory can edit action points, so we need to allow all of them
-            # and then check permissions for some action point.
             self.add_permissions(
-                [self.pme, self.focal_point, self.unicef_user],
+                [self.pme, self.focal_point],
                 'edit', [
                     'tpm.tpmvisit.tpm_activities',
                     'tpm.tpmactivity.action_points',
