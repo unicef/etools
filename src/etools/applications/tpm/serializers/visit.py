@@ -7,7 +7,7 @@ from django.utils.translation import ugettext_lazy as _
 from rest_framework import serializers
 from rest_framework.exceptions import ValidationError
 
-from etools.applications.action_points.serializers import ActionPointBaseSerializer, SectionSerializer
+from etools.applications.action_points.serializers import ActionPointBaseSerializer
 from etools.applications.activities.serializers import ActivitySerializer
 from etools.applications.locations.serializers import LocationLightSerializer
 from etools.applications.partners.models import InterventionResultLink, PartnerType
@@ -47,7 +47,7 @@ class TPMVisitReportRejectCommentSerializer(WritableNestedSerializerMixin,
 
 class TPMActionPointSerializer(PermissionsBasedSerializerMixin, ActionPointBaseSerializer):
     section = SeparatedReadWriteField(
-        read_field=SectionSerializer(read_only=True, label=_('Section')),
+        read_field=SectorSerializer(read_only=True, label=_('Section')),
         read_only=True
     )
     office = SeparatedReadWriteField(
