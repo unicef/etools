@@ -61,15 +61,27 @@ class TPMActionPointSerializer(PermissionsBasedSerializerMixin, ActionPointBaseS
     class Meta(ActionPointBaseSerializer.Meta):
         model = TPMActionPoint
         fields = ActionPointBaseSerializer.Meta.fields + [
-            'section', 'office', 'history', 'is_responsible'
+            'tpm_activity', 'section', 'office', 'history', 'is_responsible'
         ]
         extra_kwargs = copy(ActionPointBaseSerializer.Meta.extra_kwargs)
         extra_kwargs.update({
+            'tpm_activity': {'label': _('Site Visit Schedule')},
             'assigned_to': {'label': _('Person Responsible')}
         })
 
     def get_is_responsible(self, obj):
         return self.get_user() == obj.assigned_to
+
+    def create(self, validated_data):
+        activity = validated_data['tpm_activity']
+
+        validated_data.update({
+            'partner_id': activity.partner_id,
+            'intervention_id': activity.intervention_id,
+            'cp_output_id': activity.cp_output_id,
+            'section': activity.section,
+        })
+        return super(TPMActionPointSerializer, self).create(validated_data)
 
 
 class TPMActivitySerializer(PermissionsBasedSerializerMixin, WritableNestedSerializerMixin,
@@ -105,7 +117,6 @@ class TPMActivitySerializer(PermissionsBasedSerializerMixin, WritableNestedSeria
         read_field=OfficeSerializer(read_only=True, many=True, label=_('Office(s) of UNICEF Focal Point(s)')),
         required=True,
     )
-    action_points = TPMActionPointSerializer(label=_('Task Information'), many=True, required=False)
 
     attachments = TPMAttachmentsSerializer(many=True, required=False, label=_('Related Documents'))
     report_attachments = TPMReportSerializer(many=True, required=False, label=_('Reports by Task'))
@@ -125,10 +136,6 @@ class TPMActivitySerializer(PermissionsBasedSerializerMixin, WritableNestedSeria
 
         return instance
 
-    def validate(self, attrs):
-        attrs.pop('action_points', None)
-        return super(TPMActivitySerializer, self).validate(attrs)
-
     def create(self, validated_data):
         self._validate_partner_intervention(validated_data)
         return super(TPMActivitySerializer, self).create(validated_data)
@@ -142,7 +149,7 @@ class TPMActivitySerializer(PermissionsBasedSerializerMixin, WritableNestedSeria
         fields = [
             'id', 'partner', 'intervention', 'cp_output', 'section', 'unicef_focal_points',
             'date', 'locations', 'attachments', 'report_attachments', 'additional_information',
-            'pv_applicable', 'offices', 'action_points',
+            'pv_applicable', 'offices',
         ]
         extra_kwargs = {
             'id': {'label': _('Task ID')},

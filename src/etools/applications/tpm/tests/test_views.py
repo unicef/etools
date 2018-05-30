@@ -273,7 +273,7 @@ class TestTPMVisitViewSet(TestExportMixin, TPMTestCaseMixin, BaseTenantTestCase)
 
     def test_visit_action_points_csv(self):
         visit = TPMVisitFactory(status='unicef_approved', tpm_activities__action_points__count=3)
-        self._test_export(self.pme_user, 'tpm:visits-action-points/export', args=(visit.id,))
+        self._test_export(self.pme_user, 'tpm:action-points-export', args=(visit.id,))
 
     def test_visit_letter(self):
         visit = TPMVisitFactory(status='tpm_accepted')
@@ -298,9 +298,10 @@ class TestTPMActionPointViewSet(TPMTestCaseMixin, BaseTenantTestCase):
 
         response = self.forced_auth_req(
             'post',
-            '/api/tpm/visits/{}/activities/{}/action-points/'.format(visit.id, activity.id),
+            '/api/tpm/visits/{}/action-points/'.format(visit.id),
             user=self.pme_user,
             data={
+                'tpm_activity': activity.id,
                 'description': fuzzy.FuzzyText(length=100).fuzz(),
                 'due_date': fuzzy.FuzzyDate(timezone.now().date(), _FUZZY_END_DATE).fuzz(),
                 'assigned_to': self.unicef_user.id,
@@ -313,20 +314,19 @@ class TestTPMActionPointViewSet(TPMTestCaseMixin, BaseTenantTestCase):
         self.assertIsNotNone(activity.action_points.first().section)
 
     def _test_action_point_editable(self, action_point, user, editable=True):
-        activity = action_point.tpm_activity
-        visit = activity.tpm_visit
+        visit = action_point.tpm_activity.tpm_visit
 
         response = self.forced_auth_req(
             'options',
-            '/api/tpm/visits/{}/activities/{}/action-points/{}/'.format(visit.id, activity.id, action_point.id),
+            '/api/tpm/visits/{}/action-points/{}/'.format(visit.id, action_point.id),
             user=user
         )
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         if editable:
             self.assertIn('PUT', response.data['actions'].keys())
-            self.assertListEqual(
-                ['assigned_to', 'high_priority', 'due_date', 'description', 'office'],
-                list(response.data['actions']['PUT'].keys())
+            self.assertCountEqual(
+                ['assigned_to', 'high_priority', 'due_date', 'description', 'office', 'tpm_activity'],
+                response.data['actions']['PUT'].keys()
             )
         else:
             self.assertNotIn('PUT', response.data['actions'].keys())
@@ -393,8 +393,7 @@ class TestTPMActionPointViewSet(TPMTestCaseMixin, BaseTenantTestCase):
 
         response = self.forced_auth_req(
             'post',
-            '/api/tpm/visits/{}/activities/{}/action-points/{}/complete/'.format(visit.id, activity.id,
-                                                                                 action_point.id),
+            '/api/tpm/visits/{}/action-points/{}/complete/'.format(visit.id, action_point.id),
             user=user
         )
 

@@ -395,24 +395,12 @@ class TPMVisitViewSet(
         })
 
     @list_route(methods=['get'], url_path='action-points/export', renderer_classes=(TPMActionPointFullCSVRenderer,))
-    def full_action_points_export(self, request, *args, **kwargs):
+    def action_points_export(self, request, *args, **kwargs):
         action_points = TPMActionPoint.objects.filter(tpm_activity__tpm_visit__in=self.get_queryset()).order_by('id')
 
         serializer = TPMActionPointFullExportSerializer(action_points, many=True)
         return Response(serializer.data, headers={
             'Content-Disposition': 'attachment;filename=tpm_action_points_{}.csv'.format(timezone.now().date())
-        })
-
-    @detail_route(methods=['get'], url_path='action-points/export', renderer_classes=(TPMActionPointCSVRenderer,))
-    def action_points_export(self, request, *args, **kwargs):
-        visit = self.get_object()
-        action_points = TPMActionPoint.objects.filter(tpm_activity__tpm_visit=visit).order_by('id')
-
-        serializer = TPMActionPointExportSerializer(action_points, many=True)
-        return Response(serializer.data, headers={
-            'Content-Disposition': 'attachment;filename={}_action_points_{}.csv'.format(
-                visit.reference_number, timezone.now().date()
-            )
         })
 
     @detail_route(methods=['get'])
@@ -430,16 +418,6 @@ class TPMVisitViewSet(
             },
             filename="visit_letter_{}.pdf".format(visit.reference_number)
         )
-
-
-class TPMActivityViewSet(BaseTPMViewSet,
-                         mixins.RetrieveModelMixin,
-                         NestedViewSetMixin,
-                         viewsets.GenericViewSet):
-    metadata_class = TPMPermissionBasedMetadata
-    queryset = TPMActivity.objects.all()
-    serializer_class = TPMActivitySerializer
-    permission_classes = BaseTPMViewSet.permission_classes + [NestedPermission]
 
 
 class TPMActionPointViewSet(BaseTPMViewSet,
@@ -463,12 +441,11 @@ class TPMActionPointViewSet(BaseTPMViewSet,
             ActionPointAssigneeCondition(obj, self.request.user),
         ]
 
-    def perform_create(self, serializer):
-        activity = self.get_parent_object()
-        serializer.save(
-            tpm_activity=activity,
-            partner_id=activity.partner_id,
-            intervention_id=activity.intervention_id,
-            cp_output_id=activity.cp_output_id,
-            section=activity.section,
-        )
+    @list_route(methods=['get'], url_path='export', renderer_classes=(TPMActionPointCSVRenderer,))
+    def csv_export(self, request, *args, **kwargs):
+        serializer = TPMActionPointExportSerializer(self.filter_queryset(self.get_queryset()), many=True)
+        return Response(serializer.data, headers={
+            'Content-Disposition': 'attachment;filename={}_action_points_{}.csv'.format(
+                self.get_root_object().reference_number, timezone.now().date()
+            )
+        })
