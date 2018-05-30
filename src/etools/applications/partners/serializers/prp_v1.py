@@ -174,7 +174,7 @@ class PRPResultSerializer(serializers.ModelSerializer):
 class ReportingRequirementsSerializer(serializers.ModelSerializer):
     class Meta:
         model = ReportingRequirement
-        fields = ('id', 'start_date', 'end_date', 'due_date', 'report_type', 'description')
+        fields = ('id', 'start_date', 'end_date', 'due_date', 'report_type')
 
 
 class SpecialReportingRequirementsSerializer(serializers.ModelSerializer):
