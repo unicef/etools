@@ -280,10 +280,10 @@ class TestTPMVisitViewSet(TestExportMixin, TPMTestCaseMixin, BaseTenantTestCase)
         self._test_export(self.pme_user, 'tpm:visits-visit-letter', args=(visit.id,))
 
 
-class TestEngagementActionPointViewSet(TPMTestCaseMixin, BaseTenantTestCase):
+class TestTPMActionPointViewSet(TPMTestCaseMixin, BaseTenantTestCase):
     @classmethod
     def setUpTestData(cls):
-        super(TestEngagementActionPointViewSet, cls).setUpTestData()
+        super(TestTPMActionPointViewSet, cls).setUpTestData()
         call_command('update_tpm_permissions', verbosity=0)
         call_command('update_notifications')
 

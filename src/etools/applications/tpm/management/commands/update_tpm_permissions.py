@@ -310,31 +310,33 @@ class Command(BaseCommand):
 
         # action points specific permissions. pme and action points can do everything.
         # author, assignee and assigner can edit. assignee can complete.
-        opened_action_point_condition = self.action_point_status(TPMActionPoint.STATUSES.open)
-
         for editable_condition in [tpm_reported_condition, unicef_approved_condition]:
             # all unicef users in theory can edit action points, so we need to allow all of them
             # and then check permissions for some action point.
             self.add_permissions(
-                self.unicef_user,
-                'edit', self.action_points_block,
-                condition=editable_condition + self.new_action_point()
-            )
-            self.add_permissions(
-                [self.pme, self.focal_point],
-                'edit', self.action_points_block,
-                condition=editable_condition + self.new_action_point()
+                [self.pme, self.focal_point, self.unicef_user],
+                'edit', [
+                    'tpm.tpmvisit.tpm_activities',
+                    'tpm.tpmactivity.action_points',
+                ],
+                condition=editable_condition
             )
 
             self.add_permissions(
-                [self.pme, self.focal_point, self.action_point_author,
-                 self.action_point_assignee, self.action_point_assigned_by],
-                'edit', self.action_points_block,
-                condition=editable_condition + opened_action_point_condition
+                [self.pme, self.focal_point],
+                'edit', 'tpm.tpmactionpoint.*',
+                condition=editable_condition + self.new_action_point()
             )
+
+        self.add_permissions(
+            [self.pme, self.focal_point, self.action_point_author,
+             self.action_point_assignee, self.action_point_assigned_by],
+            'edit', self.action_points_block,
+            condition=self.action_point_status(TPMActionPoint.STATUSES.open)
+        )
 
         self.add_permissions(
             [self.pme, self.focal_point, self.action_point_assignee],
             'action', 'tpm.tpmactionpoint.complete',
-            condition=opened_action_point_condition
+            condition=self.action_point_status(TPMActionPoint.STATUSES.open)
         )

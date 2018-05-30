@@ -7,7 +7,7 @@ from django.utils.translation import ugettext_lazy as _
 from rest_framework import serializers
 from rest_framework.exceptions import ValidationError
 
-from etools.applications.action_points.serializers import ActionPointBaseSerializer
+from etools.applications.action_points.serializers import ActionPointBaseSerializer, SectionSerializer
 from etools.applications.activities.serializers import ActivitySerializer
 from etools.applications.locations.serializers import LocationLightSerializer
 from etools.applications.partners.models import InterventionResultLink, PartnerType
@@ -45,7 +45,11 @@ class TPMVisitReportRejectCommentSerializer(WritableNestedSerializerMixin,
         fields = ['id', 'rejected_at', 'reject_reason', ]
 
 
-class TPMActionPointSerializer(ActionPointBaseSerializer):
+class TPMActionPointSerializer(PermissionsBasedSerializerMixin, ActionPointBaseSerializer):
+    section = SeparatedReadWriteField(
+        read_field=SectionSerializer(read_only=True, label=_('Section')),
+        read_only=True
+    )
     office = SeparatedReadWriteField(
         read_field=OfficeSerializer(read_only=True, label=_('Office')),
         required=True
@@ -57,7 +61,7 @@ class TPMActionPointSerializer(ActionPointBaseSerializer):
     class Meta(ActionPointBaseSerializer.Meta):
         model = TPMActionPoint
         fields = ActionPointBaseSerializer.Meta.fields + [
-            'office', 'history', 'is_responsible'
+            'section', 'office', 'history', 'is_responsible'
         ]
         extra_kwargs = copy(ActionPointBaseSerializer.Meta.extra_kwargs)
         extra_kwargs.update({
