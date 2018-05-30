@@ -14,15 +14,25 @@ from rest_framework.views import APIView
 
 from etools.applications.attachments.models import FileType as AttachmentFileType
 from etools.applications.EquiTrack.fields import CURRENCIES
-from etools.applications.funds.models import Donor, Grant
+from etools.applications.funds.models import FundsReservationItem
 from etools.applications.locations.models import GatewayType
 from etools.applications.partners.filters import PartnerScopeFilter
-from etools.applications.partners.models import (Agreement, AgreementAmendment, Assessment, FileType,
-                                                 Intervention, InterventionAmendment,
-                                                 PartnerOrganization, PartnerStaffMember, PartnerType,)
+from etools.applications.partners.models import (
+    Agreement,
+    AgreementAmendment,
+    Assessment,
+    FileType,
+    Intervention,
+    InterventionAmendment,
+    PartnerOrganization,
+    PartnerStaffMember,
+    PartnerType,
+)
 from etools.applications.partners.permissions import PartnershipManagerPermission
-from etools.applications.partners.serializers.partner_organization_v2 import (PartnerStaffMemberCreateUpdateSerializer,
-                                                                              PartnerStaffMemberDetailSerializer,)
+from etools.applications.partners.serializers.partner_organization_v2 import (
+    PartnerStaffMemberCreateUpdateSerializer,
+    PartnerStaffMemberDetailSerializer,
+)
 from etools.applications.reports.models import CountryProgramme, Result, ResultType
 
 
@@ -147,8 +157,11 @@ class PMPDropdownsListApiView(APIView):
                       for r in Result.objects.filter(result_type__name=ResultType.OUTPUT, wbs__isnull=False)]
         file_types = list(FileType.objects.filter(name__in=[i[0] for i in FileType.NAME_CHOICES])
                           .all().values())
-        donors = list(Donor.objects.all().values())
-        grants = list(Grant.objects.all().values())
+
+        donors = FundsReservationItem.objects.filter(donor__isnull=False).\
+            order_by('donor').values_list('donor', flat=True).distinct('donor')
+        grants = FundsReservationItem.objects.filter(donor__isnull=False).\
+            order_by('grant_number').values_list('grant_number', flat=True).distinct('grant_number')
 
         return Response(
             {
@@ -156,9 +169,8 @@ class PMPDropdownsListApiView(APIView):
                 'country_programmes': country_programmes,
                 'cp_outputs': cp_outputs,
                 'file_types': file_types,
-                'donors': donors,
-                'grants': grants,
-
+                'donors': choices_to_json_ready(list(donors), sort_choices=False),
+                'grants': choices_to_json_ready(list(grants), sort_choices=False)
             },
             status=status.HTTP_200_OK
         )

@@ -1,4 +1,5 @@
 from django.conf import settings
+from django.contrib.auth import get_user_model
 from django.contrib.contenttypes.fields import GenericRelation
 from django.db import models
 from django.utils.six import python_2_unicode_compatible
@@ -129,6 +130,9 @@ class ActionPoint(TimeStampedModel):
     def __str__(self):
         return self.reference_number
 
+    def get_meaningful_history(self):
+        return self.history.exclude(change={})
+
     def snapshot_additional_data(self, diff):
         key_events = []
         if 'status' in diff:
@@ -137,6 +141,19 @@ class ActionPoint(TimeStampedModel):
             key_events.append(self.KEY_EVENTS.reassign)
 
         return {'key_events': key_events}
+
+    @classmethod
+    def get_snapshot_action_display(cls, activity):
+        key_events = activity.data.get('key_events')
+        if key_events:
+            if cls.KEY_EVENTS.status_update in key_events:
+                return _('Changed status to {}').format(cls.STATUSES[activity.change['status']['after']])
+            elif cls.KEY_EVENTS.reassign in key_events:
+                return _('Reassigned to {}').format(
+                    get_user_model().objects.get(pk=activity.change['assigned_to']['after']).get_full_name()
+                )
+
+        return activity.get_action_display()
 
     def get_mail_context(self):
         return {

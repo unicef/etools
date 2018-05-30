@@ -11,20 +11,13 @@ from etools.applications.locations.serializers import LocationLightSerializer
 from etools.applications.partners.serializers.interventions_v2 import InterventionCreateUpdateSerializer
 from etools.applications.partners.serializers.partner_organization_v2 import MinimalPartnerOrganizationListSerializer
 from etools.applications.permissions2.serializers import PermissionsBasedSerializerMixin
-from etools.applications.reports.serializers.v1 import ResultSerializer
-from etools.applications.snapshot.serializers import ActivitySerializer
-from etools.applications.users.models import Section
+from etools.applications.reports.serializers.v1 import ResultSerializer, SectorSerializer
+from etools.applications.snapshot.models import Activity
 from etools.applications.users.serializers import OfficeSerializer
 from etools.applications.users.serializers_v3 import MinimalUserSerializer
 from etools.applications.utils.common.serializers.fields import SeparatedReadWriteField
 from etools.applications.utils.common.serializers.mixins import UserContextSerializerMixin
 from etools.applications.utils.writable_serializers.serializers import WritableNestedSerializerMixin
-
-
-class SectionSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Section
-        fields = ('id', 'name')
 
 
 class ActionPointBaseSerializer(UserContextSerializerMixin, SnapshotModelSerializer, serializers.ModelSerializer):
@@ -69,7 +62,8 @@ class ActionPointBaseSerializer(UserContextSerializerMixin, SnapshotModelSeriali
 
 
 class ActionPointListSerializer(PermissionsBasedSerializerMixin, ActionPointBaseSerializer):
-    related_module = serializers.ReadOnlyField(label=_('Related Module'))
+    related_module = serializers.ChoiceField(label=_('Related Module'), choices=ActionPoint.MODULE_CHOICES,
+                                             read_only=True)
     reference_number = serializers.ReadOnlyField(label=_('Reference Number'))
 
     partner = SeparatedReadWriteField(
@@ -90,7 +84,7 @@ class ActionPointListSerializer(PermissionsBasedSerializerMixin, ActionPointBase
     )
 
     section = SeparatedReadWriteField(
-        read_field=SectionSerializer(read_only=True, label=_('Section')),
+        read_field=SectorSerializer(read_only=True, label=_('Section')),
         required=True,
     )
     office = SeparatedReadWriteField(
@@ -129,9 +123,24 @@ class CommentSerializer(UserContextSerializerMixin, WritableNestedSerializerMixi
         return super(CommentSerializer, self).create(validated_data)
 
 
+class HistorySerializer(serializers.ModelSerializer):
+    by_user_display = serializers.ReadOnlyField(source='by_user.get_full_name', label=_('User'))
+    action = serializers.SerializerMethodField(label=_('Action'))
+
+    class Meta:
+        model = Activity
+        fields = ('id', 'created', 'by_user_display', 'action')
+        extra_kwargs = {
+            'created': {'label': _('Date')},
+        }
+
+    def get_action(self, obj):
+        return ActionPoint.get_snapshot_action_display(obj)
+
+
 class ActionPointSerializer(WritableNestedSerializerMixin, ActionPointListSerializer):
     comments = CommentSerializer(many=True, label=_('Actions Taken'))
-    history = ActivitySerializer(many=True, label=_('History'), read_only=True)
+    history = HistorySerializer(many=True, label=_('History'), read_only=True, source='get_meaningful_history')
 
     related_object_str = serializers.SerializerMethodField(label=_('Reference'))
     related_object_url = serializers.SerializerMethodField()
