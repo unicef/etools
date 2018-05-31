@@ -27,6 +27,47 @@ This module can also intercept when a field is added to the new Response,
 in this case it is mandatory recreate stored test data, simply delete them from the disk
 and run the test again.
 
+How To use it:
+
+```
+class TestAPIAgreements(ApiChecker, AssertTimeStampedMixin, BaseTenantTestCase):
+
+    def get_fixtures(self):
+        return {'agreement': AgreementFactory(signed_by_unicef_date=datetime.date.today())}
+
+    def test_agreement_detail(self):
+        url = reverse("partners_api:agreement-detail", args=[self.get_fixture('agreement').pk])
+        self.assertAPI(url)
+
+    def test_agreement_list(self):
+        url = reverse("partners_api:agreement-list")
+        self.assertAPI(url)
+```
+
+or using ViewSetChecker
+
+
+```
+
+class TestAPIIntervention(BaseTenantTestCase, metaclass=ViewSetChecker):
+
+    def get_fixtures(cls):
+        return {'intervention': InterventionFactory(id=101),
+                'amendment': InterventionAmendmentFactory(),
+                'result': InterventionResultLinkFactory(),
+                }
+
+    @classmethod
+    def get_urls(self):
+        return [
+            reverse("partners_api:intervention-list"),
+            reverse("partners_api:intervention-detail", args=[101]),
+            reverse("partners_api:intervention-indicators"),
+            reverse("partners_api:intervention-amendments"),
+            reverse("partners_api:intervention-map"),
+        ]
+
+```
 
 """
 import datetime
