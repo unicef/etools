@@ -807,6 +807,10 @@ class InterventionReportingRequirementView(APIView):
 
         try:
             deleted_ids = [rr["id"] for rr in request.data["reporting_requirements"] if "id" in rr]
+
+            if len(deleted_ids) == 0:
+                return Response(status=status.HTTP_400_BAD_REQUEST)
+
             ReportingRequirement.objects.filter(
                 intervention=intervention_pk,
                 report_type=report_type,
