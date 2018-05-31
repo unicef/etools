@@ -513,6 +513,7 @@ class InterventionCreateUpdateSerializer(SnapshotModelSerializer):
 class InterventionDetailSerializer(serializers.ModelSerializer):
     planned_budget = InterventionBudgetCUSerializer(read_only=True)
     partner = serializers.CharField(source='agreement.partner.name')
+    partner_vendor = serializers.CharField(source='agreement.partner.vendor_number')
     partner_id = serializers.CharField(source='agreement.partner.id', read_only=True)
     prc_review_document_file = serializers.FileField(source='prc_review_document', read_only=True)
     prc_review_attachment = AttachmentSingleFileField(read_only=True)
@@ -598,6 +599,7 @@ class InterventionDetailSerializer(serializers.ModelSerializer):
             "location_p_codes",
             "days_from_submission_to_signed",
             "days_from_review_to_signed",
+            "partner_vendor"
         )
 
 
