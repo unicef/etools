@@ -1,17 +1,16 @@
-
 from django.conf import settings
 from django.shortcuts import redirect
 from django.utils.translation import ugettext_lazy as _
 from django.views.generic import FormView
 
-from etools.applications.email_auth.forms import EmailLoginForm
-from etools.applications.email_auth.utils import get_token_auth_link, update_url_with_kwargs
+from etools.applications.tokens.forms import EmailLoginForm
+from etools.applications.tokens.utils import get_token_auth_link, update_url_with_kwargs
 from etools.applications.notification.utils import send_notification_using_email_template
 
 
 class TokenAuthView(FormView):
     form_class = EmailLoginForm
-    template_name = 'email_auth/login.html'
+    template_name = 'tokens/login.html'
 
     def get(self, request, *args, **kwargs):
         if request.user.is_authenticated:

@@ -13,14 +13,14 @@ class TestTokenAuthenticationMiddleware(BaseTenantTestCase):
         self.client =  Client()
 
     def test_no_token(self):
-        response = self.client.get(reverse("email_auth:login"))
+        response = self.client.get(reverse("tokens:login"))
         self.assertEquals(response.status_code, status.HTTP_200_OK)
 
     def test_token(self):
         user = UserFactory()
         token = create_callback_token_for_user(user, "email")
         response = self.client.get("{}?{}={}".format(
-            reverse("email_auth:login"),
+            reverse("tokens:login"),
             settings.EMAIL_AUTH_TOKEN_NAME,
             token,
         ))
@@ -28,7 +28,7 @@ class TestTokenAuthenticationMiddleware(BaseTenantTestCase):
 
     def test_token_invalid(self):
         response = self.client.get("{}?{}={}".format(
-            reverse("email_auth:login"),
+            reverse("tokens:login"),
             settings.EMAIL_AUTH_TOKEN_NAME,
             "wrong",
         ))

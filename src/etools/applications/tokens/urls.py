@@ -1,9 +1,8 @@
-
 from django.conf.urls import url
 
-from etools.applications.email_auth import views
+from etools.applications.tokens import views
 
-app_name = 'email_auth'
+app_name = 'tokens'
 urlpatterns = [
     url(r"^login/$", views.TokenAuthView.as_view(), name="login"),
 ]

@@ -1,4 +1,3 @@
-
 import itertools
 
 from django.conf import settings
@@ -160,7 +159,7 @@ class TPMVisit(SoftDeleteMixin, TimeStampedModel, models.Model):
         object_url = self.get_object_url()
 
         if user:
-            from etools.applications.email_auth.utils import update_url_with_auth_token
+            from etools.applications.tokens.utils import update_url_with_auth_token
             object_url = update_url_with_auth_token(object_url, user)
 
         activities = self.tpm_activities.all()

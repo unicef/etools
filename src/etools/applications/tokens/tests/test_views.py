@@ -9,7 +9,7 @@ from rest_framework.test import APIRequestFactory
 from etools.applications.EquiTrack.tests.cases import BaseTenantTestCase
 from etools.applications.users.tests.factories import UserFactory
 
-SEND_PATH = "etools.applications.email_auth.views.send_notification_using_email_template"
+SEND_PATH = "etools.applications.tokens.views.send_notification_using_email_template"
 
 
 class TestTokenAuthView(BaseTenantTestCase):
@@ -21,7 +21,7 @@ class TestTokenAuthView(BaseTenantTestCase):
         self.client =  Client()
 
     def test_get(self):
-        response = self.client.get(reverse("email_auth:login"))
+        response = self.client.get(reverse("tokens:login"))
         self.assertEquals(response.status_code, status.HTTP_200_OK)
 
     def test_post(self):
@@ -30,7 +30,7 @@ class TestTokenAuthView(BaseTenantTestCase):
         mock_send = Mock()
         with patch(SEND_PATH, mock_send):
             response = self.client.post(
-                reverse("email_auth:login"),
+                reverse("tokens:login"),
                 data={"email": email}
             )
         self.assertEquals(response.status_code, status.HTTP_200_OK)
@@ -42,7 +42,7 @@ class TestTokenAuthView(BaseTenantTestCase):
         mock_send = Mock()
         with patch(SEND_PATH, mock_send):
             response = self.client.post(
-                reverse("email_auth:login"),
+                reverse("tokens:login"),
                 data={"email": email}
             )
         self.assertEquals(response.status_code, status.HTTP_200_OK)
@@ -58,7 +58,7 @@ class TestTokenAuthView(BaseTenantTestCase):
         mock_send = Mock()
         with patch(SEND_PATH, mock_send):
             response = self.client.post(
-                reverse("email_auth:login"),
+                reverse("tokens:login"),
                 data={"email": email}
             )
         self.assertEquals(response.status_code, status.HTTP_200_OK)

@@ -1,6 +1,4 @@
 # -*- coding: utf-8 -*-
-
-
 from decimal import DivisionByZero, InvalidOperation
 
 from django.conf import settings
@@ -222,7 +220,7 @@ class Engagement(TimeStampedModel, models.Model):
         object_url = self.get_object_url()
 
         if user:
-            from etools.applications.email_auth.utils import update_url_with_auth_token
+            from etools.applications.tokens.utils import update_url_with_auth_token
             object_url = update_url_with_auth_token(object_url, user)
 
         return {
