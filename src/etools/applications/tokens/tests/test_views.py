@@ -2,9 +2,8 @@ from unittest.mock import Mock, patch
 
 from django.core.management import call_command
 from django.test import Client
-from django.urls import resolve, reverse
+from django.urls import reverse
 from rest_framework import status
-from rest_framework.test import APIRequestFactory
 
 from etools.applications.EquiTrack.tests.cases import BaseTenantTestCase
 from etools.applications.users.tests.factories import UserFactory
@@ -18,7 +17,7 @@ class TestTokenAuthView(BaseTenantTestCase):
         call_command("update_notifications")
 
     def setUp(self):
-        self.client =  Client()
+        self.client = Client()
 
     def test_get(self):
         response = self.client.get(reverse("tokens:login"))
@@ -26,7 +25,7 @@ class TestTokenAuthView(BaseTenantTestCase):
 
     def test_post(self):
         email = "test-email-auth@example.com"
-        user = UserFactory(email=email)
+        UserFactory(email=email)
         mock_send = Mock()
         with patch(SEND_PATH, mock_send):
             response = self.client.post(
@@ -38,7 +37,7 @@ class TestTokenAuthView(BaseTenantTestCase):
 
     def test_post_invalid_email(self):
         email = "test-email-auth@example.com"
-        user = UserFactory()
+        UserFactory()
         mock_send = Mock()
         with patch(SEND_PATH, mock_send):
             response = self.client.post(
@@ -52,9 +51,9 @@ class TestTokenAuthView(BaseTenantTestCase):
         )
         self.assertEqual(mock_send.call_count, 0)
 
-    def test_post_invalid_emailinactive_user(self):
+    def test_post_invalid_inactive_user(self):
         email = "test-email-auth@example.com"
-        user = UserFactory(email=email, is_active=False)
+        UserFactory(email=email, is_active=False)
         mock_send = Mock()
         with patch(SEND_PATH, mock_send):
             response = self.client.post(

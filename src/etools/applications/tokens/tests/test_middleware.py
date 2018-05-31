@@ -10,7 +10,7 @@ from etools.applications.users.tests.factories import UserFactory
 
 class TestTokenAuthenticationMiddleware(BaseTenantTestCase):
     def setUp(self):
-        self.client =  Client()
+        self.client = Client()
 
     def test_no_token(self):
         response = self.client.get(reverse("tokens:login"))
