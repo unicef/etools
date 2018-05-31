@@ -731,7 +731,6 @@ class InterventionReportingRequirementCreateSerializer(serializers.ModelSerializ
             raise serializers.ValidationError(
                 _("Changes not allowed when PD not in amendment state.")
             )
-
         if not self.intervention.start:
             raise serializers.ValidationError(
                 _("PD needs to have a start date.")

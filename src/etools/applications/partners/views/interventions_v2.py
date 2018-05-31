@@ -788,7 +788,6 @@ class InterventionReportingRequirementView(APIView):
         self.intervention = self.get_object(intervention_pk)
         self.report_type = report_type
         self.request.data["report_type"] = self.report_type
-
         serializer = self.serializer_create_class(
             data=self.request.data,
             context={
@@ -816,5 +815,5 @@ class InterventionReportingRequirementView(APIView):
             return Response(
                 self.serializer_list_class(self.get_data()).data
             )
-        except LowerResult.DoesNotExist:
+        except ReportingRequirement.DoesNotExist:
             return Response(status=status.HTTP_404_NOT_FOUND)
