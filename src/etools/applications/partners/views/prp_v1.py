@@ -42,7 +42,7 @@ class PRPInterventionListAPIView(ListAPIView):
             'result_links__ll_results__applied_indicators__indicator',
             'result_links__ll_results__applied_indicators__disaggregation__disaggregation_values',
             'result_links__ll_results__applied_indicators__locations__gateway',
-            'reporting_periods',
+            'special_reporting_requirements',
             'reporting_requirements',
             'frs',
             'partner_focal_points',

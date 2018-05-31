@@ -526,6 +526,8 @@ class InterventionDetailSerializer(serializers.ModelSerializer):
     permissions = serializers.SerializerMethodField(read_only=True)
     flagged_sections = serializers.SerializerMethodField(read_only=True)
     section_names = serializers.SerializerMethodField(read_only=True)
+    days_from_submission_to_signed = serializers.CharField(read_only=True)
+    days_from_review_to_signed = serializers.CharField(read_only=True)
     locations = serializers.SerializerMethodField()
     location_names = serializers.SerializerMethodField()
     cluster_names = serializers.SerializerMethodField()
@@ -593,7 +595,9 @@ class InterventionDetailSerializer(serializers.ModelSerializer):
             "attachments", 'permissions', 'partner_id', "sections",
             "locations", "location_names", "cluster_names", "flat_locations", "flagged_sections", "section_names",
             "in_amendment", "prc_review_attachment", "signed_pd_attachment", "donors", "donor_codes", "grants",
-            "location_p_codes"
+            "location_p_codes",
+            "days_from_submission_to_signed",
+            "days_from_review_to_signed",
         )
 
 
