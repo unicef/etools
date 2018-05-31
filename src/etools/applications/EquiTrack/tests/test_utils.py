@@ -8,11 +8,10 @@ from django.test import RequestFactory, SimpleTestCase
 
 import mock
 from freezegun import freeze_time
-from tenant_schemas.utils import get_tenant_model
 
 from etools.applications.EquiTrack import utils
 from etools.applications.EquiTrack.tests.cases import BaseTenantTestCase
-from etools.applications.users.tests.factories import UserFactory, CountryFactory
+from etools.applications.users.tests.factories import UserFactory
 
 PATH_SET_TENANT = "etools.applications.EquiTrack.utils.connection.set_tenant"
 
