@@ -29,57 +29,7 @@ This module can also intercept when a field is added,
 in this case it is mandatory recreate stored test data; simply delete them from the disk
 or set `API_CHECKER_RESET` environment variable and run the test again,
 
-How To use it:
 
-```
-class TestAPIAgreements(ApiChecker, AssertTimeStampedMixin, BaseTenantTestCase):
-
-    def get_fixtures(self):
-        return {'agreement': AgreementFactory(signed_by_unicef_date=datetime.date.today())}
-
-    def test_agreement_detail(self):
-        url = reverse("partners_api:agreement-detail", args=[self.get_fixture('agreement').pk])
-        self.assertAPI(url)
-
-    def test_agreement_list(self):
-        url = reverse("partners_api:agreement-list")
-        self.assertAPI(url)
-```
-
-or using ViewSetChecker
-
-ViewSetChecker is custom test _type_, intended to be used as metaclass.
-It will create a test for each url returned  by `get_urls()` in the format
-`test__<normalized_url_path>`,  if a method with the same name is found the
-creation is skipped reading this as an intention to have a custom test for that url.
-
-```
-
-class TestAPIIntervention(BaseTenantTestCase, metaclass=ViewSetChecker):
-
-    def get_fixtures(cls):
-        return {'intervention': InterventionFactory(id=101),
-                'amendment': InterventionAmendmentFactory(),
-                'result': InterventionResultLinkFactory(),
-                }
-
-    @classmethod
-    def get_urls(self):
-        return [
-            reverse("partners_api:intervention-list"),
-            reverse("partners_api:intervention-detail", args=[101]),
-   §     ]
-
-```
-running this code will produce...
-
-```
-...
-test_url__api_v2_interventions (etools.applications.partners.tests.test_api.TestAPIIntervention) ... ok
-test_url__api_v2_interventions_101 (etools.applications.partners.tests.test_api.TestAPIIntervention) ... ok
-...
-
-```
 in case something goes wrong the output will be
 
 Field values mismatch:
@@ -101,6 +51,13 @@ Action needed api_v2_agreements.response.json need rebuild.
 New fields are:
 `['country_programme']`
 
+How To use it:
+
+- add ApiCheckerMixin to your Test base classes
+- use ViewSetChecker as your Test metaclass
+
+ViewSetChecker can produce API test with minimum effort but it is offers less flexibility
+than the use of ApiCheckerMixin.
 
 """
 import datetime
@@ -236,8 +193,24 @@ def clean_url(url):
     return url[1:-1].replace('/', '_')
 
 
-class ApiChecker:
+class ApiCheckerMixin:
     """
+    Mixin to enable API contract check
+
+    How to use it:
+
+    - implement get_fixtures() to create data for test. It should returns a dictionary
+    - use self.assertAPI(url) to check urls contract
+
+    Example:
+
+    class TestAPIAgreements(ApiCheckerMixin, AssertTimeStampedMixin, BaseTenantTestCase):
+        def get_fixtures(self):
+            return {'agreement': AgreementFactory(signed_by_unicef_date=datetime.date.today())}
+
+        def test_agreement_detail(self):
+            url = reverse("partners_api:agreement-detail", args=[self.get_fixture('agreement').pk])
+            self.assertAPI(url)
 
     """
 
@@ -270,11 +243,11 @@ class ApiChecker:
 
     def get_fixtures(self):
         """ returns test fixtures.
-        Should returns a dictionary where any key will be transformed in a
-        test property and the value should be a Model instance.
+        Should returns a dictionary where any key is a fixture name
+        the value should be a Model instance (or a list).
 
         {'user' : UserFactory(username='user'),
-         'partner': PartnerFactory(),
+         'partners': [PartnerFactory(), PartnerFactory()],
         }
 
         fixtures can be accessed using `get_fixture(<name>)`
@@ -336,6 +309,16 @@ New fields are:
         return True
 
     def assertAPI(self, url, allow_empty=False, headers=True, status=True):
+        """
+        check url for response changes
+
+        :param url: url to check
+        :param allow_empty: if True ignore empty response and 404 errors
+        :param headers: check response headers
+        :param status: check response status code
+        :raises: ValueError
+        :raises: AssertionError
+        """
         match = resolve(url)
         view = match.func.cls
 
@@ -345,6 +328,8 @@ New fields are:
         payload = response.data
         if not allow_empty and not payload:
             raise ValueError(f"View {view} returned and empty json. Check your test")
+        if not allow_empty and response.status_code == 404:
+            raise ValueError(f"View {view} returned 404 status code. Check your test")
 
         if not os.path.exists(filename) or OVEWRITE:
             dump_response(response, filename)
@@ -362,8 +347,34 @@ New fields are:
 
 
 class ViewSetChecker(type):
+    """
+Custom _type_, intended to be used as metaclass.
+It will create a test for each url defined in URLS in the format
+`test__<normalized_url_path>`,  if a method with the same name is found the
+creation is skipped reading this as an intention to have a custom test for that url.
+
+    class TestAPIIntervention(BaseTenantTestCase, metaclass=ViewSetChecker):
+        URLS = [
+                reverse("partners_api:intervention-list"),
+                reverse("partners_api:intervention-detail", args=[101]),
+               ]
+        def get_fixtures(cls):
+            return {'intervention': InterventionFactory(id=101),
+               'amendment': InterventionAmendmentFactory(),
+               'result': InterventionResultLinkFactory(),
+               }
+
+running this code will produce...
+
+...
+test_url__api_v2_interventions (etools.applications.partners.tests.test_api.TestAPIIntervention) ... ok
+test_url__api_v2_interventions_101 (etools.applications.partners.tests.test_api.TestAPIIntervention) ... ok
+...
+
+    """
+
     def __new__(cls, clsname, superclasses, attributedict):
-        superclasses = (ApiChecker,) + superclasses
+        superclasses = (ApiCheckerMixin,) + superclasses
         clazz = type.__new__(cls, clsname, superclasses, attributedict)
 
         def check_url(url):
@@ -373,7 +384,11 @@ class ViewSetChecker(type):
             _inner.__name__ = "test_url__" + clean_url(u)
             return _inner
 
-        for u in clazz.get_urls():
+        if not 'URLS' in attributedict:
+            raise ValueError(f"Error creatine {clsname}. "
+                             f"ViewSetChecker requires URLS attribute ")
+
+        for u in attributedict['URLS']:
             m = check_url(u)
             if not hasattr(clazz, m.__name__):
                 setattr(clazz, m.__name__, m)
