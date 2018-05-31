@@ -1,0 +1,29 @@
+{
+    "status_code": 200,
+    "headers": {
+        "content-type": [
+            "Content-Type",
+            "application/json"
+        ],
+        "allow": [
+            "Allow",
+            "GET"
+        ],
+        "vary": [
+            "Vary",
+            "Accept, Cookie"
+        ],
+        "x-frame-options": [
+            "X-Frame-Options",
+            "SAMEORIGIN"
+        ]
+    },
+    "content": "[{\"intervention\":19,\"ram_indicators\":[]}]",
+    "data": [
+        {
+            "intervention": 19,
+            "ram_indicators": []
+        }
+    ],
+    "content_type": null
+}
