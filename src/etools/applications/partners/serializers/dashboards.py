@@ -48,7 +48,7 @@ class InterventionDashSerializer(serializers.ModelSerializer):
     outstanding_dct_usd = serializers.DecimalField(source='frs__outstanding_amt__sum',
                                                    read_only=True, max_digits=20, decimal_places=2)
     multi_curr_flag = serializers.BooleanField()
-    has_final_partnership_review = serializers.BooleanField()
+    has_final_partnership_review = serializers.SerializerMethodField()
 
     def fr_currencies_ok(self, obj):
         return obj.frs__currency__count == 1 if obj.frs__currency__count else None
@@ -79,6 +79,9 @@ class InterventionDashSerializer(serializers.ModelSerializer):
 
     def get_last_pv_date(self, obj):
         return ""  # obj.last_pv_date
+
+    def get_has_final_partnership_review(self, obj):
+        return ""
 
     def get_offices_names(self, obj):
         return ",".join(o.name for o in obj.offices.all())
