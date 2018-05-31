@@ -13,6 +13,7 @@ from django.contrib.sites.models import Site
 from django.core import serializers
 from django.core.cache import cache
 from django.db import connection, models
+from django.db.models import Q
 from django.utils import six
 from django.utils.cache import patch_cache_control
 
@@ -30,8 +31,22 @@ def get_current_site():
 
 
 def set_country(user, request):
+    from etools.applications.users.models import Country
 
-    request.tenant = user.profile.country or user.profile.country_override
+    country = request.GET.get("country", None)
+    if country:
+        try:
+            country = Country.objects.get(
+                Q(name=country) | Q(country_short_code=country)
+            )
+            if country in user.profile.countries_available.all():
+                country = country
+            else:
+                country = None
+        except Country.DoesNotExist:
+            country = None
+
+    request.tenant = country or user.profile.country or user.profile.country_override
     connection.set_tenant(request.tenant)
 
 
