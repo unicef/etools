@@ -167,7 +167,7 @@ def serialize_response(response: Response):
     try:
         data = {'status_code': response.status_code,
                 'headers': response._headers,
-                'content': response.content.decode('utf8'),
+                # 'content': response.content.decode('utf8'),
                 'data': response.data,
                 'content_type': response.content_type,
                 }

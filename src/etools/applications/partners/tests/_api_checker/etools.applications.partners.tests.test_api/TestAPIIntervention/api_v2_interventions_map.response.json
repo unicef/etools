@@ -18,7 +18,6 @@
             "SAMEORIGIN"
         ]
     },
-    "content": "[{\"id\":19,\"partner_id\":\"63\",\"partner_name\":\"Partner 2\",\"agreement\":58,\"document_type\":\"\",\"number\":\"TST/PCA201858/201819\",\"title\":\"Intervention Title 2\",\"status\":\"draft\",\"start\":null,\"end\":null,\"offices\":[],\"sections\":[],\"locations\":[]},{\"id\":18,\"partner_id\":\"62\",\"partner_name\":\"Partner 1\",\"agreement\":57,\"document_type\":\"\",\"number\":\"TST/PCA201857/201818-1\",\"title\":\"Intervention Title 1\",\"status\":\"draft\",\"start\":null,\"end\":null,\"offices\":[],\"sections\":[],\"locations\":[]},{\"id\":101,\"partner_id\":\"61\",\"partner_name\":\"Partner 0\",\"agreement\":56,\"document_type\":\"\",\"number\":\"TST/PCA201856/2018101\",\"title\":\"Intervention Title 0\",\"status\":\"draft\",\"start\":null,\"end\":null,\"offices\":[],\"sections\":[],\"locations\":[]}]",
     "data": [
         {
             "id": 19,
