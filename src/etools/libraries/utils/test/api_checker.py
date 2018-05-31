@@ -18,14 +18,16 @@ Contract violations can happen when:
 
 How it works:
 
-    First time the test executed the response and model instances are saved on the disk,
-and any other execution is checked against this first response.
-Fields that cannot be checked by value can be tested writing custom `assert_<field_name>`
-methods. (see AssertModifiedMixin)
+    The First time the test is ran, the response and model instances are serialized and
+    saved on the disk; any further execution is checked against this first response. Model instances are saved as well,  to guarantee the same response's content.
+Test data are saved in the same directory where the module test  lives, under `_api_checker/<module_fqn>/<test_class>`
 
-This module can also intercept when a field is added to the new Response,
-in this case it is mandatory recreate stored test data, simply delete them from the disk
-and run the test again.
+Fields that cannot be checked by value can be tested writing custom `assert_<field_name>` methods. (see AssertModifiedMixin)
+In case of nested objects, method must follow the field "path". (ie. `assert_permission_modified` vs `assert_modified`)
+
+This module can also intercept when a field is added,
+in this case it is mandatory recreate stored test data; simply delete them from the disk
+or set `API_CHECKER_RESET` environment variable and run the test again,
 
 How To use it:
 
@@ -46,6 +48,10 @@ class TestAPIAgreements(ApiChecker, AssertTimeStampedMixin, BaseTenantTestCase):
 
 or using ViewSetChecker
 
+ViewSetChecker is custom test _type_, intended to be used as metaclass.
+It will create a test for each url returned  by `get_urls()` in the format
+`test__<normalized_url_path>`,  if a method with the same name is found the
+creation is skipped reading this as an intention to have a custom test for that url.
 
 ```
 
@@ -62,12 +68,39 @@ class TestAPIIntervention(BaseTenantTestCase, metaclass=ViewSetChecker):
         return [
             reverse("partners_api:intervention-list"),
             reverse("partners_api:intervention-detail", args=[101]),
-            reverse("partners_api:intervention-indicators"),
-            reverse("partners_api:intervention-amendments"),
-            reverse("partners_api:intervention-map"),
-        ]
+   §     ]
 
 ```
+running this code will produce...
+
+```
+...
+test_url__api_v2_interventions (etools.applications.partners.tests.test_api.TestAPIIntervention) ... ok
+test_url__api_v2_interventions_101 (etools.applications.partners.tests.test_api.TestAPIIntervention) ... ok
+...
+
+```
+in case something goes wrong the output will be
+
+Field values mismatch:
+
+AssertionError: View `<class 'etools.applications.partners.views.agreements_v2.AgreementListAPIView'>` breaks the contract.
+Field `partner_name` does not match.
+- expected: `Partner 0`
+- received: `Partner 11`
+
+Field removed:
+
+AssertionError: View `<class 'etools.applications.partners.views.agreements_v2.AgreementListAPIView'>` breaks the contract.
+Field `id` is missing in the new response
+
+Field added:
+
+AssertionError: View `<class 'etools.applications.partners.views.agreements_v2.AgreementListAPIView'>` returned more field than expected.
+Action needed api_v2_agreements.response.json need rebuild.
+New fields are:
+`['country_programme']`
+
 
 """
 import datetime
@@ -86,7 +119,14 @@ from rest_framework.response import Response
 from etools.applications.users.tests.factories import UserFactory
 
 BASE_DATADIR = '_api_checker'
-OVEWRITE = False
+OVEWRITE = os.environ.get('API_CHECKER_RESET', False)
+
+
+class ResponseEncoder(json.JSONEncoder):
+    def default(self, obj):
+        if isinstance(obj, set):
+            return list(obj)
+        return json.JSONEncoder.default(self, obj)
 
 
 def mktree(newdir):
@@ -141,7 +181,7 @@ def dump_fixtures(fixtures, destination):
             data[k] = {'master': json.loads(ret)[0],
                        'deps': json.loads(ret)[1:]}
 
-    _write(destination, json.dumps(data, indent=4).encode('utf8'))
+    _write(destination, json.dumps(data, indent=4, cls=ResponseEncoder).encode('utf8'))
 
 
 def load_fixtures(file, ignorenonexistent=False, using=DEFAULT_DB_ALIAS):
@@ -171,9 +211,10 @@ def serialize_response(response: Response):
         data = {'status_code': response.status_code,
                 'headers': response._headers,
                 'content': response.content.decode('utf8'),
+                'data': response.data,
                 'content_type': response.content_type,
                 }
-        return json.dumps(data, indent=4).encode('utf8')
+        return json.dumps(data, indent=4, cls=ResponseEncoder).encode('utf8')
     except Exception as e:
         raise e
 
@@ -184,7 +225,7 @@ def dump_response(response: Response, file):
 
 def load_response(file_or_stream):
     c = json.loads(_read(file_or_stream))
-    r = Response(json.loads(c['content']),
+    r = Response(c['data'],
                  status=c['status_code'],
                  content_type=c['content_type'])
     r._headers = c['headers']
@@ -268,7 +309,7 @@ class ApiChecker:
                     if isinstance(v, set):
                         v = list(v)
 
-                    if v != stored[field_name]:
+                    if field_name in stored and v != stored[field_name]:
                         raise AssertionError(rf"""View `{view}` breaks the contract.
 Field `{field_name}` does not match.
 - expected: `{stored[field_name]}`
@@ -289,7 +330,7 @@ Field `{field}` is missing in the new response""")
         self._compare_dict(response, stored, view=view)
         if not sorted(response.keys()) == sorted(stored.keys()):
             raise AssertionError(f"""View `{view}` returned more field than expected.
-Test succeed but action needed {filename} tape need rebuild.
+Action needed {os.path.basename(filename)} need rebuild.
 New fields are:
 `%s`""" % [f for f in response.keys() if f not in stored.keys()])
         return True
@@ -305,15 +346,15 @@ New fields are:
         if not allow_empty and not payload:
             raise ValueError(f"View {view} returned and empty json. Check your test")
 
-        if os.path.exists(filename) and not OVEWRITE:
-            stored = load_response(filename)
-            if status:
-                assert response.status_code == stored.status_code
-            if headers:
-                self._assert_headers(response, stored)
-            self._compare(payload, stored.data, filename, view=view)
-        else:
+        if not os.path.exists(filename) or OVEWRITE:
             dump_response(response, filename)
+
+        stored = load_response(filename)
+        if status:
+            assert response.status_code == stored.status_code
+        if headers:
+            self._assert_headers(response, stored)
+        self._compare(payload, stored.data, filename, view=view)
 
     def _assert_headers(self, response, stored):
         assert response['Content-Type'] == stored['Content-Type']
