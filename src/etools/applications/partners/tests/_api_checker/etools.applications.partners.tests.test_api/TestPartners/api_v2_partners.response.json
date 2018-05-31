@@ -1,0 +1,52 @@
+{
+    "status_code": 200,
+    "headers": {
+        "content-type": [
+            "Content-Type",
+            "application/json"
+        ],
+        "allow": [
+            "Allow",
+            "GET"
+        ],
+        "vary": [
+            "Vary",
+            "Accept, Cookie"
+        ],
+        "x-frame-options": [
+            "X-Frame-Options",
+            "SAMEORIGIN"
+        ]
+    },
+    "content": "[{\"street_address\":null,\"last_assessment_date\":null,\"address\":null,\"city\":null,\"postal_code\":null,\"country\":null,\"id\":65,\"vendor_number\":\"DDD\",\"deleted_flag\":false,\"blocked\":false,\"name\":\"Partner 1\",\"short_name\":\"Short name\",\"partner_type\":\"Civil Society Organization\",\"cso_type\":\"International\",\"rating\":null,\"shared_with\":null,\"email\":null,\"phone_number\":null,\"total_ct_cp\":null,\"total_ct_cy\":null,\"net_ct_cy\":null,\"reported_cy\":null,\"total_ct_ytd\":null,\"hidden\":false,\"basis_for_risk_rating\":\"\"}]",
+    "data": [
+        {
+            "street_address": null,
+            "last_assessment_date": null,
+            "address": null,
+            "city": null,
+            "postal_code": null,
+            "country": null,
+            "id": 65,
+            "vendor_number": "DDD",
+            "deleted_flag": false,
+            "blocked": false,
+            "name": "Partner 1",
+            "short_name": "Short name",
+            "partner_type": "Civil Society Organization",
+            "cso_type": "International",
+            "rating": null,
+            "shared_with": null,
+            "email": null,
+            "phone_number": null,
+            "total_ct_cp": null,
+            "total_ct_cy": null,
+            "net_ct_cy": null,
+            "reported_cy": null,
+            "total_ct_ytd": null,
+            "hidden": false,
+            "basis_for_risk_rating": ""
+        }
+    ],
+    "content_type": null
+}

@@ -1,0 +1,40 @@
+{
+    "status_code": 200,
+    "headers": {
+        "content-type": [
+            "Content-Type",
+            "application/json"
+        ],
+        "allow": [
+            "Allow",
+            "GET"
+        ],
+        "vary": [
+            "Vary",
+            "Accept, Cookie"
+        ],
+        "x-frame-options": [
+            "X-Frame-Options",
+            "SAMEORIGIN"
+        ]
+    },
+    "content": "[{\"id\":9,\"amendment_number\":\"1\",\"signed_amendment_file\":\"http://testserver/media/test/file_attachments/partner_organization/62/62/agreements/57/interventions/18/amendments/None/test_file.pdf\",\"signed_amendment_attachment\":null,\"created\":\"2018-05-31T09:52:37.794000Z\",\"modified\":\"2018-05-31T09:52:37.867000Z\",\"types\":[\"Change IP name\"],\"other_description\":\"kQGucgRttKLmtfmVonxsfHYWehvlLJGzFuwTngRiwRXtGWUFPu\",\"signed_date\":\"2018-05-31\",\"signed_amendment\":\"http://testserver/media/test/file_attachments/partner_organization/62/62/agreements/57/interventions/18/amendments/None/test_file.pdf\",\"intervention\":18}]",
+    "data": [
+        {
+            "id": 9,
+            "amendment_number": "1",
+            "signed_amendment_file": "http://testserver/media/test/file_attachments/partner_organization/62/62/agreements/57/interventions/18/amendments/None/test_file.pdf",
+            "signed_amendment_attachment": null,
+            "created": "2018-05-31T09:52:37.794000Z",
+            "modified": "2018-05-31T09:52:37.867000Z",
+            "types": [
+                "Change IP name"
+            ],
+            "other_description": "kQGucgRttKLmtfmVonxsfHYWehvlLJGzFuwTngRiwRXtGWUFPu",
+            "signed_date": "2018-05-31",
+            "signed_amendment": "http://testserver/media/test/file_attachments/partner_organization/62/62/agreements/57/interventions/18/amendments/None/test_file.pdf",
+            "intervention": 18
+        }
+    ],
+    "content_type": null
+}
