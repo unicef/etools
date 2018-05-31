@@ -724,14 +724,17 @@ class InterventionReportingRequirementCreateSerializer(serializers.ModelSerializ
         previous reporting requirement end date.
         """
         self.intervention = self.context["intervention"]
-        request_method = self.context["request_method"] if "request_method" in self.context else None
-        validate_for_deletion = True if request_method and str(request_method).lower() == 'delete' else False
 
         # Only able to change reporting requirements when PD
         # is in amendment status
         if not self.intervention.in_amendment and self.intervention.status != Intervention.DRAFT:
             raise serializers.ValidationError(
                 _("Changes not allowed when PD not in amendment state.")
+            )
+
+        if not self.intervention.start:
+            raise serializers.ValidationError(
+                _("PD needs to have a start date.")
             )
 
         # Validate reporting requirements first
@@ -741,15 +744,6 @@ class InterventionReportingRequirementCreateSerializer(serializers.ModelSerializ
             })
 
         self._merge_data(data)
-
-        # skip the rest of the validations if we are deleting
-        if validate_for_deletion:
-            return data
-
-        if not self.intervention.start:
-            raise serializers.ValidationError(
-                _("PD needs to have a start date.")
-            )
 
         if data["report_type"] == ReportingRequirement.TYPE_QPR:
             self._validate_qpr(data["reporting_requirements"])
