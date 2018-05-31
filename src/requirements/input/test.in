@@ -1,5 +1,5 @@
 coverage
-dill
+
 django-adminactions
 deepdiff
 jsonpickle
