@@ -1,21 +1,21 @@
 # -*- coding: utf-8 -*-
 import datetime
+import inspect
+import json
 import os
-import dill as pickle
-import decorator
-from adminactions.export import ForeignKeysCollector
-from django.db import IntegrityError
+
+from django.core import serializers as ser
+from django.db import DEFAULT_DB_ALIAS, router
 from django.test import Client
 from django.urls import resolve
 
+from adminactions.export import ForeignKeysCollector
+from rest_framework.response import Response
+
 from etools.applications.users.tests.factories import UserFactory
 
-try:
-    from concurrency.api import disable_concurrency
-except ImportError:
-    disable_concurrency = lambda z: True  # noqa
-
-FILENAME_BASE_RESPONSE = FILENAME_BASE_FIXTURE = '_recorder'
+BASE_DATADIR = '_recorder'
+OVEWRITE = False
 
 
 def mktree(newdir):
@@ -33,128 +33,145 @@ def mktree(newdir):
         os.makedirs(newdir)
 
 
-class Dummy(object):
-    def __init__(self, **kwargs):
-        for k, v in kwargs.items():
-            setattr(self, k, v)
+def asdict(response: Response):
+    return {'status_code': response.status_code,
+            'headers': response._headers,
+            'data': response.data,
+            'content_type': response['Content-Type']
+            }
 
 
-class BaseAPIRecorder:
-    def __init__(self, basedir) -> None:
-        super().__init__()
-        self.basedir = os.path.dirname(basedir)
+def serialize(response: Response):
+    return json.dumps(asdict(response), indent=4).encode('utf8')
 
-    def get_filename(self, func=None, url=None, name=''):
-        if func:
-            filename = os.path.join(self.basedir, '_recorder',
-                                    func.__module__,
-                                    *func.__qualname__.split('.')) + '.pickle'
-        elif url:
-            filename = os.path.join(self.basedir, '_recorder',
-                                    url[1:-1].replace('/', '-')) + '.pickle'
+
+def deserialize(self, json):
+    return json
+
+
+def dump_fixtures(fixtures, fb):
+    data = {}
+    j = ser.get_serializer('json')()
+
+    for k, instances in fixtures.items():
+        collector = ForeignKeysCollector(None)
+        if isinstance(instances, (list, tuple)):
+            data[k] = {'master': [],
+                       'deps': []}
+            for r in instances:
+                collector.collect([r])
+                ret = j.serialize(collector.data, use_natural_foreign_keys=False)
+                data[k]['master'].append(json.loads(ret)[0])
+                data[k]['deps'].append(json.loads(ret)[1:])
         else:
-            filename = os.path.join(self.basedir, '_recorder', name + '.pickle')
+            collector.collect([instances])
+            ret = j.serialize(collector.data, use_natural_foreign_keys=False)
+            data[k] = {'master': json.loads(ret)[0],
+                       'deps': json.loads(ret)[1:]}
 
-        if not os.path.exists(filename):
-            mktree(os.path.dirname(filename))
-        return filename
-
-    def memoize(self, func, *args, **kwargs):
-        filename = self.get_filename(func)
-        if not os.path.exists(filename):
-            values = func(*args, **kwargs)
-            collector = ForeignKeysCollector(None)
-            collector.collect(values)
-            pickle.dump(collector.data, open(filename, 'wb'))
-
-    def _pickle(self, filename, values):
-        if not os.path.exists(filename):
-            print(f"Creating pickle file: `{filename}`")
-            collector = ForeignKeysCollector(None)
-            collector.collect(values)
-            pickle.dump(collector.data, open(filename, 'wb'))
-        try:
-            # print(f"Loading pickle file: `{filename}`")
-            values = pickle.load(open(filename, 'rb'))
-            _visited = []
-            for e in reversed(values):
-                if e.__class__ not in _visited:
-                    e.__class__.objects.all().delete()
-                    _visited.append(e.__class__)
-                if hasattr(e.__class__, 'tracker'):
-                    e.__class__.tracker = None
-
-                if hasattr(e.__class__, '_concurrencymeta'):
-                    with disable_concurrency(e.__class__):
-                        e.save()
-                else:
-                    e.save(force_insert=True)
-            str(values[0])  # force unmarshall
-            return values[0]
-        except IntegrityError as e:
-            raise IntegrityError('Invalid fixture {}: {}'.format(filename, e))
-        except AttributeError as e:
-            raise AttributeError('Invalid fixture {}: {}'.format(filename, e))
-
-    def _unpickle(self, filename):
-        try:
-            # print(f"Loading pickle file: `{filename}`")
-            values = pickle.load(open(filename, 'rb'))
-            _visited = []
-            for e in reversed(values):
-                if e.__class__ not in _visited:
-                    e.__class__.objects.all().delete()
-                    _visited.append(e.__class__)
-                if hasattr(e.__class__, 'tracker'):
-                    e.__class__.tracker = None
-
-                if hasattr(e.__class__, '_concurrencymeta'):
-                    with disable_concurrency(e.__class__):
-                        e.save()
-                else:
-                    e.save(force_insert=True)
-            str(values[0])  # force unmarshall
-            return values[0]
-        except IntegrityError as e:
-            raise IntegrityError('Invalid fixture {}: {}'.format(filename, e))
-        except AttributeError as e:
-            raise AttributeError('Invalid fixture {}: {}'.format(filename, e)) from e
-
-    def record(self, factory):
-        def inner(func):
-            filename = self.get_filename(func)
-
-            def wrapper(func, *args, **kwargs):
-                factory._meta.model.tracker = None
-                if not os.path.exists(filename):
-                    args = func(*args, **kwargs)
-                    ret = factory(**args)
-                    self._pickle(filename, [ret])
-                else:
-                    ret = self._unpickle(filename)
-                return ret
-
-            return property(decorator.decorator(wrapper, func))
-
-        return inner
+    fb.write(json.dumps(data, indent=4).encode('utf8'))
 
 
-class AssertModifiedMixin(BaseAPIRecorder):
+def load_fixtures(file, ignorenonexistent=False, using=DEFAULT_DB_ALIAS):
+    content = json.load(file)
+    ret = {}
+    for name, struct in content.items():
+        master = struct['master']
+        deps = struct['deps']
+
+        objects = ser.deserialize(
+            'json', json.dumps([master] + deps), using=using, ignorenonexistent=ignorenonexistent,
+        )
+        saved = []
+        for obj in objects:
+            if router.allow_migrate_model(using, obj.object.__class__):
+                obj.save(using=using)
+                saved.append(obj.object)
+        if isinstance(master, (list, tuple)):
+            ret[name] = saved[:len(master)]
+        else:
+            ret[name] = saved[0]
+    return ret
+
+
+def dump_response(response: Response, file):
+    file.write(serialize(response))
+
+
+def load_response(file):
+    c = json.load(file)
+    return Response(c['data'], status=c['status_code'], content_type=c['content_type'])
+
+
+class AssertModifiedMixin:
     def assert_modified(self, value):
         assert datetime.datetime.strptime(value, '%Y-%m-%dT%H:%M:%S.%fZ')
 
 
-class StandardAPIRecorder(AssertModifiedMixin, BaseAPIRecorder):
-    pass
+def clean_url(url):
+    return url[1:-1].replace('/', '_')
 
 
 class ApiChecker:
+    """
+
+    """
 
     def setUp(self):
         super().setUp()
         self.user = UserFactory(username='user', is_staff=True)
         self.client = Client()
         self.client.login(username='user', password='test')
+        self._process_fixtures()
+
+    @classmethod
+    def setUpClass(cls):
+        super().setUpClass()
+        cls.data_dir = os.path.join(os.path.dirname(inspect.getfile(cls)),
+                                    BASE_DATADIR,
+                                    cls.__module__, cls.__name__,
+                                    )
+
+    def _get_filename(self, name):
+        filename = os.path.join(self.data_dir, name)
+        if not os.path.exists(filename):
+            mktree(os.path.dirname(filename))
+        return filename
+
+    def get_response_filename(self, url):
+        return self._get_filename(clean_url(url) + '.response.json')
+
+    def get_fixtures_filename(self, basename='fixtures'):
+        return self._get_filename(f'{basename}.json')
+
+    def get_fixtures(self):
+        """ returns test fixtures.
+        Should returns a dictionary where any key will be transformed in a
+        test property and the value should be a Model instance.
+
+        {'user' : UserFactory(username='user'),
+         'partner': PartnerFactory(),
+        }
+
+        fixtures can be accessed using `get_fixture(<name>)`
+        """
+        return {}
+
+    def get_fixture(self, name):
+        """
+        returns fixture `name` loaded by `get_fixtures()`
+        """
+        return self.__fixtures[name]
+
+    def _process_fixtures(self):
+        """ store or retrieve test fixtures """
+        fname = self.get_fixtures_filename()
+        if os.path.exists(fname):
+            self.__fixtures = load_fixtures(open(fname, 'rb'))
+        else:
+            self.__fixtures = self.get_fixtures()
+            if self.__fixtures:
+                dump_fixtures(self.__fixtures, open(fname, 'wb'))
 
     def _compare_dict(self, response, stored, path='', view='unknown'):
         for field_name, v in response.items():
@@ -162,22 +179,19 @@ class ApiChecker:
                 self._compare_dict(v, stored[field_name], f"{path}[{field_name}]", view=view)
             else:
                 if v != stored[field_name]:
-                    if hasattr(self.recorder, f'assert_{field_name}'):
-                        asserter = getattr(self.recorder, f'assert_{field_name}')
+                    if hasattr(self, f'assert_{field_name}'):
+                        asserter = getattr(self, f'assert_{field_name}')
                         asserter(response[field_name])
                     else:
                         raise AssertionError(rf"""View `{view}` breaks the contract.
 Field `{field_name}` does not match.
 - expected: `{stored[field_name]}`
 - received: `{response[field_name]}`""")
-                        #
-                        # # FIXME: remove me (print)
-                        # print(111, "aaaaaaaaaaaa", path, field_name, v, stored[field_name])
 
     def _compare(self, response, stored, filename, ignore_fields=None, view='unknown'):
 
-        ignore_fields = ignore_fields or []
-        assert isinstance(response, type(stored)), "response and stored do not match"
+        # ignore_fields = ignore_fields or []
+        # assert isinstance(response, type(stored)), "response and stored do not match"
         if isinstance(response, (list, tuple)):
             response = response[0]
             stored = stored[0]
@@ -194,67 +208,36 @@ New fields are:
 `%s`""" % [f for f in response.keys() if f not in stored.keys()])
         return True
 
-    def _dump(self, response, filename):
-        payload = response.json()
-        c = Dummy(status_code=response.status_code,
-                  content=response.content,
-                  json=payload)
-        pickle.dump(c, open(filename, 'wb'), -1)
-
     def assertAPI(self, url, allow_empty=False):
         match = resolve(url)
         view = match.func.cls
 
-        name = os.path.join(self.__module__, self.__class__.__name__,
-                            url[1:-1].replace('/', '-')
-                            )
-
-        filename = self.recorder.get_filename(name=name)
+        filename = self.get_response_filename(url)
         response = self.client.get(url)
-        payload = response.json()
+        payload = response.data
         if not allow_empty and not payload:
             raise ValueError(f"View {view} returned and empty json. Check your test")
 
-        if os.path.exists(filename):
-            stored = pickle.load(open(filename, 'rb')).json
-            self._compare(payload, stored, filename, view=view)
+        if os.path.exists(filename) and not OVEWRITE:
+            stored = load_response(open(filename, 'rb'))
+            self._compare(payload, stored.data, filename, view=view)
         else:
-            self._dump(response, filename)
+            dump_response(response, open(filename, 'wb'))
 
-# class ViewSetChecher(ApiChecker):
-#     URLS = []
-#
-#     def get_urls(self):
-#         if self.URLS:
-#             return self.URLS
-#         raise ValueError("set URLS attribute or override `get_urls()`")
-#
-#     def get_fixtures(self):
-#         pass
-#
-#     def testUrls(self):
-#         style = color_style()
-#         errors = []
-#
-#         print(f"{self.__class__.__name__}: - Check API contract")
-#         for i, url in enumerate(self.get_urls()):
-#             try:
-#                 self.get_fixtures()
-#                 sys.stdout.write(url)
-#                 self.assertAPI(url)
-#                 sys.stdout.write(style.SUCCESS(" PASSED\n"))
-#             except AssertionError as e:
-#                 errors.append(str(e))
-#                 sys.stdout.write(style.ERROR(" FAIL\n"))
-#             except Exception as e:
-#                 sys.stdout.write(style.ERROR(" ERROR\n"))
-#                 errors.append(str(e))
-#
-#         if errors:
-#             assert False, "\n".join(errors)
-#
-#     def setUp(self):
-#         super().setUp()
-#         self.user = UserFactory(username='user', is_staff=True)
-#         self.client = Client()
-#         self.client.login(username='user', password='test')
+
+class ViewSetChecker(type):
+    def __new__(cls, clsname, superclasses, attributedict):
+        clazz = type.__new__(cls, clsname, superclasses, attributedict)
+
+        def check_url(url):
+            def _inner(self):
+                self.assertAPI(url)
+
+            _inner.__name__ = "test_url__" + clean_url(u)
+            return _inner
+
+        for u in clazz.get_urls():
+            m = check_url(u)
+            setattr(clazz, m.__name__, m)
+
+        return clazz
