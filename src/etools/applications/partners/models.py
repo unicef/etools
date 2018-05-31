@@ -1319,10 +1319,10 @@ class Agreement(TimeStampedModel):
         pass
 
     @transaction.atomic
-    def save(self, **kwargs):
+    def save(self, force_insert=False, **kwargs):
 
         oldself = None
-        if self.pk:
+        if self.pk and not force_insert:
             # load from DB
             oldself = Agreement.objects.get(pk=self.pk)
 
@@ -2024,13 +2024,13 @@ class Intervention(TimeStampedModel):
                 self.agreement.save()
 
     @transaction.atomic
-    def save(self, **kwargs):
+    def save(self, force_insert=False, **kwargs):
         # check status auto updates
         # TODO: move this outside of save in the future to properly check transitions
         # self.check_status_auto_updates()
 
         oldself = None
-        if self.pk:
+        if self.pk and not force_insert:
             # load from DB
             oldself = Intervention.objects.filter(pk=self.pk).first()
 

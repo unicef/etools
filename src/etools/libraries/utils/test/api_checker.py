@@ -1,8 +1,39 @@
 # -*- coding: utf-8 -*-
+"""
+    DRF API Checker
+
+This module offers some utilities to check DjangoRestFramework API endpoints variation.
+
+The purpose is to guarantee that any code changes never introduce 'contract violations'
+changing the Serialization behaviour.
+
+
+Contract violations can happen when:
+
+- fields are removed from Serializer
+- field representation changes ( ie. date format)
+- Response status code changes
+- Response headers changes
+
+
+How it works:
+
+    First time the test executed the response and model instances are saved on the disk,
+and any other execution is checked against this first response.
+Fields that cannot be checked by value can be tested writing custom `assert_<field_name>`
+methods. (see AssertModifiedMixin)
+
+This module can also intercept when a field is added to the new Response,
+in this case it is mandatory recreate stored test data, simply delete them from the disk
+and run the test again.
+
+
+"""
 import datetime
 import inspect
 import json
 import os
+import pickle
 
 from django.core import serializers as ser
 from django.db import DEFAULT_DB_ALIAS, router
@@ -10,12 +41,15 @@ from django.test import Client
 from django.urls import resolve
 
 from adminactions.export import ForeignKeysCollector
+from django.utils.module_loading import import_string
 from rest_framework.response import Response
 
 from etools.applications.users.tests.factories import UserFactory
+from unicef_commonlib.reflect import fqn
 
-BASE_DATADIR = '_recorder'
+BASE_DATADIR = '_api_checker'
 OVEWRITE = False
+
 
 
 def mktree(newdir):
@@ -33,23 +67,24 @@ def mktree(newdir):
         os.makedirs(newdir)
 
 
-def asdict(response: Response):
-    return {'status_code': response.status_code,
-            'headers': response._headers,
-            'data': response.data,
-            'content_type': response['Content-Type']
-            }
+def _write(dest, content):
+    if isinstance(dest, str):
+        open(dest, 'wb').write(content)
+    elif hasattr(dest, 'write'):
+        dest.write(content)
+    else:
+        raise ValueError(f"'dest' must be a filepath or file-like object.It is {type(dest)}")
 
 
-def serialize(response: Response):
-    return json.dumps(asdict(response), indent=4).encode('utf8')
+def _read(source):
+    if isinstance(source, str):
+        return open(source, 'rb').read()
+    elif hasattr(source, 'read'):
+        return source.read()
+    raise ValueError("'source' must be a filepath or file-like object")
 
 
-def deserialize(self, json):
-    return json
-
-
-def dump_fixtures(fixtures, fb):
+def dump_fixtures(fixtures, destination):
     data = {}
     j = ser.get_serializer('json')()
 
@@ -69,11 +104,11 @@ def dump_fixtures(fixtures, fb):
             data[k] = {'master': json.loads(ret)[0],
                        'deps': json.loads(ret)[1:]}
 
-    fb.write(json.dumps(data, indent=4).encode('utf8'))
+    _write(destination, json.dumps(data, indent=4).encode('utf8'))
 
 
 def load_fixtures(file, ignorenonexistent=False, using=DEFAULT_DB_ALIAS):
-    content = json.load(file)
+    content = json.loads(_read(file))
     ret = {}
     for name, struct in content.items():
         master = struct['master']
@@ -94,18 +129,29 @@ def load_fixtures(file, ignorenonexistent=False, using=DEFAULT_DB_ALIAS):
     return ret
 
 
+def serialize_response(response: Response):
+    try:
+        data = {'status_code': response.status_code,
+                'headers': response._headers,
+                'content': response.content.decode('utf8'),
+                'content_type': response.content_type,
+                }
+        return json.dumps(data, indent=4).encode('utf8')
+    except Exception as e:
+        raise e
+
+
 def dump_response(response: Response, file):
-    file.write(serialize(response))
+    _write(file, serialize_response(response))
 
 
-def load_response(file):
-    c = json.load(file)
-    return Response(c['data'], status=c['status_code'], content_type=c['content_type'])
-
-
-class AssertModifiedMixin:
-    def assert_modified(self, value):
-        assert datetime.datetime.strptime(value, '%Y-%m-%dT%H:%M:%S.%fZ')
+def load_response(file_or_stream):
+    c = json.loads(_read(file_or_stream))
+    r = Response(json.loads(c['content']),
+                    status=c['status_code'],
+                    content_type=c['content_type'])
+    r._headers = c['headers']
+    return r
 
 
 def clean_url(url):
@@ -167,22 +213,25 @@ class ApiChecker:
         """ store or retrieve test fixtures """
         fname = self.get_fixtures_filename()
         if os.path.exists(fname):
-            self.__fixtures = load_fixtures(open(fname, 'rb'))
+            self.__fixtures = load_fixtures(fname)
         else:
             self.__fixtures = self.get_fixtures()
             if self.__fixtures:
-                dump_fixtures(self.__fixtures, open(fname, 'wb'))
+                dump_fixtures(self.__fixtures, fname)
 
     def _compare_dict(self, response, stored, path='', view='unknown'):
         for field_name, v in response.items():
             if isinstance(v, dict):
-                self._compare_dict(v, stored[field_name], f"{path}[{field_name}]", view=view)
+                self._compare_dict(v, stored[field_name], f"{path}_{field_name}", view=view)
             else:
-                if v != stored[field_name]:
-                    if hasattr(self, f'assert_{field_name}'):
-                        asserter = getattr(self, f'assert_{field_name}')
-                        asserter(response[field_name])
-                    else:
+                if hasattr(self, f'assert_{path or field_name}'):
+                    asserter = getattr(self, f'assert_{path or field_name}')
+                    asserter(response, stored, path)
+                else:
+                    if isinstance(v, set):
+                        v = list(v)
+
+                    if v != stored[field_name]:
                         raise AssertionError(rf"""View `{view}` breaks the contract.
 Field `{field_name}` does not match.
 - expected: `{stored[field_name]}`
@@ -208,25 +257,35 @@ New fields are:
 `%s`""" % [f for f in response.keys() if f not in stored.keys()])
         return True
 
-    def assertAPI(self, url, allow_empty=False):
+    def assertAPI(self, url, allow_empty=False, headers=True, status=True):
         match = resolve(url)
         view = match.func.cls
 
         filename = self.get_response_filename(url)
         response = self.client.get(url)
+        assert response.accepted_renderer
         payload = response.data
         if not allow_empty and not payload:
             raise ValueError(f"View {view} returned and empty json. Check your test")
 
         if os.path.exists(filename) and not OVEWRITE:
-            stored = load_response(open(filename, 'rb'))
+            stored = load_response(filename)
+            if status:
+                assert response.status_code == stored.status_code
+            if headers:
+                self._assert_headers(response, stored)
             self._compare(payload, stored.data, filename, view=view)
         else:
-            dump_response(response, open(filename, 'wb'))
+            dump_response(response, filename)
+
+    def _assert_headers(self, response, stored):
+        assert response['Content-Type'] == stored['Content-Type']
+        assert sorted(response['Allow']) == sorted(stored['Allow'])
 
 
 class ViewSetChecker(type):
     def __new__(cls, clsname, superclasses, attributedict):
+        superclasses= (ApiChecker,) + superclasses
         clazz = type.__new__(cls, clsname, superclasses, attributedict)
 
         def check_url(url):
@@ -238,6 +297,17 @@ class ViewSetChecker(type):
 
         for u in clazz.get_urls():
             m = check_url(u)
-            setattr(clazz, m.__name__, m)
+            if not hasattr(clazz, m.__name__):
+                setattr(clazz, m.__name__, m)
 
         return clazz
+
+
+class AssertTimeStampedMixin:
+    def assert_modified(self, response: Response, stored: Response, path:str):
+        value = response['modified']
+        assert datetime.datetime.strptime(value, '%Y-%m-%dT%H:%M:%S.%fZ')
+
+    def assert_created(self, response: Response, stored: Response, path:str):
+        value = response['created']
+        assert datetime.datetime.strptime(value, '%Y-%m-%dT%H:%M:%S.%fZ')
