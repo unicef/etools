@@ -18,7 +18,6 @@
             "SAMEORIGIN"
         ]
     },
-    "content": "[{\"id\":59,\"partner\":64,\"agreement_number\":\"TST/PCA201859\",\"partner_name\":\"Partner 0\",\"agreement_type\":\"PCA\",\"end\":\"2018-12-31\",\"start\":\"2018-05-31\",\"signed_by_unicef_date\":\"2018-05-31\",\"signed_by_partner_date\":\"2018-05-31\",\"status\":\"signed\",\"signed_by\":null}]",
     "data": [
         {
             "id": 59,
