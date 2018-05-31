@@ -2,13 +2,13 @@
     "partner": {
         "master": {
             "model": "partners.partnerorganization",
-            "pk": 65,
+            "pk": 101,
             "fields": {
-                "created": "2018-05-31T10:51:52.070Z",
-                "modified": "2018-05-31T10:51:52.079Z",
+                "created": "2018-05-31T14:31:45.831Z",
+                "modified": "2018-05-31T14:31:45.835Z",
                 "partner_type": "Civil Society Organization",
                 "cso_type": "International",
-                "name": "Partner 1",
+                "name": "Partner 0",
                 "short_name": "Short name",
                 "description": "",
                 "shared_with": null,
