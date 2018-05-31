@@ -39,7 +39,6 @@ class TestAPIIntervention(BaseTenantTestCase, metaclass=ViewSetChecker):
                 }
 
 
-
 class TestPartners(BaseTenantTestCase, metaclass=ViewSetChecker):
     URLS = [
         reverse("partners_api:partner-list"),
@@ -55,4 +54,3 @@ class TestPartners(BaseTenantTestCase, metaclass=ViewSetChecker):
                                           short_name="Short name",
                                           modified=datetime.datetime.today()
                                           )}
-

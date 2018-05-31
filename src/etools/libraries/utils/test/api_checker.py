@@ -384,7 +384,7 @@ test_url__api_v2_interventions_101 (etools.applications.partners.tests.test_api.
             _inner.__name__ = "test_url__" + clean_url(u)
             return _inner
 
-        if not 'URLS' in attributedict:
+        if 'URLS' not in attributedict:
             raise ValueError(f"Error creatine {clsname}. "
                              f"ViewSetChecker requires URLS attribute ")
 

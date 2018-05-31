@@ -355,6 +355,7 @@ class InterventionIndicatorListAPIView(ExportModelMixin, ListAPIView):
     def get_queryset(self, format=None):
         q = InterventionResultLink.objects.all()
         query_params = self.request.query_params
+
         if query_params:
             queries = []
             if "search" in query_params.keys():
