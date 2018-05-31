@@ -806,7 +806,7 @@ class InterventionReportingRequirementView(APIView):
         self.report_type = report_type
 
         try:
-            deleted_ids = [rr["id"] for rr in request.data["reporting_requirements"] if "id" in rr]
+            deleted_ids = [int(rr["id"]) for rr in request.data["reporting_requirements"] if "id" in rr]
 
             if len(deleted_ids) == 0:
                 return Response(status=status.HTTP_400_BAD_REQUEST)
