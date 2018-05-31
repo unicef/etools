@@ -33,7 +33,6 @@ import datetime
 import inspect
 import json
 import os
-import pickle
 
 from django.core import serializers as ser
 from django.db import DEFAULT_DB_ALIAS, router
@@ -41,15 +40,12 @@ from django.test import Client
 from django.urls import resolve
 
 from adminactions.export import ForeignKeysCollector
-from django.utils.module_loading import import_string
 from rest_framework.response import Response
 
 from etools.applications.users.tests.factories import UserFactory
-from unicef_commonlib.reflect import fqn
 
 BASE_DATADIR = '_api_checker'
 OVEWRITE = False
-
 
 
 def mktree(newdir):
@@ -148,8 +144,8 @@ def dump_response(response: Response, file):
 def load_response(file_or_stream):
     c = json.loads(_read(file_or_stream))
     r = Response(json.loads(c['content']),
-                    status=c['status_code'],
-                    content_type=c['content_type'])
+                 status=c['status_code'],
+                 content_type=c['content_type'])
     r._headers = c['headers']
     return r
 
@@ -285,7 +281,7 @@ New fields are:
 
 class ViewSetChecker(type):
     def __new__(cls, clsname, superclasses, attributedict):
-        superclasses= (ApiChecker,) + superclasses
+        superclasses = (ApiChecker,) + superclasses
         clazz = type.__new__(cls, clsname, superclasses, attributedict)
 
         def check_url(url):
@@ -304,10 +300,10 @@ class ViewSetChecker(type):
 
 
 class AssertTimeStampedMixin:
-    def assert_modified(self, response: Response, stored: Response, path:str):
+    def assert_modified(self, response: Response, stored: Response, path: str):
         value = response['modified']
         assert datetime.datetime.strptime(value, '%Y-%m-%dT%H:%M:%S.%fZ')
 
-    def assert_created(self, response: Response, stored: Response, path:str):
+    def assert_created(self, response: Response, stored: Response, path: str):
         value = response['created']
         assert datetime.datetime.strptime(value, '%Y-%m-%dT%H:%M:%S.%fZ')
