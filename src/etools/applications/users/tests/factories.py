@@ -45,7 +45,6 @@ class CountryFactory(factory.django.DjangoModelFactory):
 class ProfileFactory(factory.django.DjangoModelFactory):
     class Meta:
         model = models.UserProfile
-        django_get_or_create = ('user',)
 
     country = factory.SubFactory(CountryFactory)
     office = factory.SubFactory(OfficeFactory)
@@ -64,7 +63,6 @@ class ProfileFactory(factory.django.DjangoModelFactory):
 class UserFactory(factory.django.DjangoModelFactory):
     class Meta:
         model = get_user_model()
-        django_get_or_create = ('username',)
 
     username = FuzzyText()
     email = factory.Sequence(lambda n: "user{}@example.com".format(n))
