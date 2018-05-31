@@ -1,7 +1,7 @@
 
 from django.conf.urls import url
 
-from etools.applications.management.views.general import InvalidateCache, SyncFRs
+from etools.applications.management.views.general import InvalidateCache, SyncFRs, SyncCountries
 from etools.applications.management.views.reports import LoadResultStructure
 from etools.applications.management.views.tasks_endpoints import (
     TestSendEmailAPIView, UpdateAggregateHactValuesAPIView, UpdateHactValuesAPIView,)
@@ -13,6 +13,7 @@ urlpatterns = ((
     url(r'^load-results/$', LoadResultStructure.as_view(), name='load_result_structure'),
     url(r'^invalidate-cache/$', InvalidateCache.as_view(), name='invalidate_cache'),
     url(r'^sync-frs/$', SyncFRs.as_view(), name='sync_frs'),
+    url(r'^sync-countries/$', SyncCountries.as_view(), name='sync_frs'),
     url(r'^api/stats/usercounts/$', ActiveUsersSection.as_view(), name='stats_user_counts'),
     url(r'^api/stats/agreements/$', AgreementsStatisticsView.as_view(), name='stats_agreements'),
     url(r'^tasks/update_hact_values/$', UpdateHactValuesAPIView.as_view(), name='tasks_update_hact_values'),
