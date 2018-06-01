@@ -1,4 +1,5 @@
 import datetime
+import json
 
 from django.urls import reverse
 
@@ -37,6 +38,7 @@ class PartnerModelExportTestCase(BaseTenantTestCase):
             blocked=False,
             type_of_assessment="Type of Assessment",
             last_assessment_date=datetime.date.today(),
+            hact_values='{"outstanding_findings": 0, "audits": {"completed": 0, "minimum_requirements": 0}, "programmatic_visits": {"completed": {"q1": 0, "total": 0, "q3": 0, "q2": 0, "q4": 0}, "planned": {"q1": 0, "total": 0, "q3": 0, "q2": 0, "q4": 0}}, "spot_checks": {"completed": {"q1": 0, "total": 0, "q3": 0, "q2": 0, "q4": 0}, "planned": {"q1": 0, "total": 0, "q3": 0, "q2": 0, "q4": 0}, "follow_up_required": 0}}',
         )
         cls.partnerstaff = PartnerStaffFactory(partner=cls.partner)
         cls.planned_visit = PartnerPlannedVisitsFactory(partner=cls.partner)
@@ -139,6 +141,25 @@ class TestPartnerOrganizationModelExport(PartnerModelExportTestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         dataset = Dataset().load(response.content.decode('utf-8'), 'csv')
         self.assertEqual(dataset.height, 1)
+        self.assertEqual(len(dataset._get_headers()), 47)
+        self.assertEqual(len(dataset[0]), 47)
+
+    def test_csv_flat_export_api_hact_value_string(self):
+        partner = self.partner
+        partner.pk = None
+        partner.vendor_number = "Vendor New Num"
+        partner.hact_values = json.dumps('{"key": "random string"}')
+        partner.save()
+        response = self.forced_auth_req(
+            'get',
+            reverse('partners_api:partner-list'),
+            user=self.unicef_staff,
+            data={"format": "csv_flat"},
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        dataset = Dataset().load(response.content.decode('utf-8'), 'csv')
+        self.assertEqual(dataset.height, 2)
         self.assertEqual(len(dataset._get_headers()), 47)
         self.assertEqual(len(dataset[0]), 47)
 
