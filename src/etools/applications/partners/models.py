@@ -602,7 +602,9 @@ class PartnerOrganization(TimeStampedModel):
     def min_req_spot_checks(self):
         # reported_cy can be None
         reported_cy = self.reported_cy or 0
-        return 1 if reported_cy > PartnerOrganization.CT_CP_AUDIT_TRIGGER_LEVEL else 0
+        if self.type_of_assessment == 'Low Risk Assumed' or reported_cy <= PartnerOrganization.CT_CP_AUDIT_TRIGGER_LEVEL:
+            return 0
+        return 1
 
     @cached_property
     def min_req_audits(self):

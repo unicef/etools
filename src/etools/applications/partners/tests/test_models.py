@@ -325,6 +325,12 @@ class TestPartnerOrganizationModel(BaseTenantTestCase):
         self.partner_organization.reported_cy = 99000.00
         self.assert_min_requirements(1, 1)
 
+    def test_hact_min_requirements_ct_between_25k_and_100k_low_risk(self):
+        self.partner_organization.net_ct_cy = 99000.00
+        self.partner_organization.reported_cy = 99000.00
+        self.partner_organization.type_of_assessment = 'Low Risk Assumed'
+        self.assert_min_requirements(1, 0)
+
     def test_hact_min_requirements_ct_between_100k_and_500k_high(self):
         self.partner_organization.net_ct_cy = 490000.00
         self.partner_organization.reported_cy = 490000.00
