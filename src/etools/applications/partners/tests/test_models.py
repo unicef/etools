@@ -389,7 +389,7 @@ class TestPartnerOrganizationModel(BaseTenantTestCase):
         )
         self.assertEqual(
             self.partner_organization.hact_values['programmatic_visits']['planned']['total'],
-            0
+            3
         )
 
     def test_planned_visits_non_gov(self):
