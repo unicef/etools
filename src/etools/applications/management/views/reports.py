@@ -1,4 +1,4 @@
-from django.utils import six
+
 
 from rest_framework.response import Response
 from rest_framework.views import APIView
@@ -23,7 +23,7 @@ class LoadResultStructure(APIView):
             p.sync()
         except BaseException as e:
             set_country(request.user, request)
-            return Response(status=500, data=six.text_type(e))
+            return Response(status=500, data=str(e))
 
         set_country(request.user, request)
         return Response({'success': 'Country = {}'.format(workspace.name)})
