@@ -9,7 +9,7 @@ from django.contrib.auth import get_user_model
 from django.contrib.auth.models import Group
 from django.db import connection
 from django.db.models import Count
-from django.utils import six
+
 
 from etools.applications.partners.models import (Agreement, Assessment, FundingCommitment, Intervention,
                                                  InterventionPlannedVisits, PartnerOrganization, PartnerStaffMember,)
@@ -23,7 +23,7 @@ logger = logging.getLogger(__name__)
 
 def printtf(*args):
     file_name = 'mylogs.txt'
-    args_list = [six.text_type(arg) for arg in args]
+    args_list = [str(arg) for arg in args]
     logger.info(args_list)
     with open(file_name, 'ab') as f:
         f.write(', '.join(args_list))
@@ -211,7 +211,7 @@ def cp_fix(country_name):
         today = today + timedelta(days=i)
         tomorrow = today + timedelta(days=365)
         CountryProgramme.objects.get_or_create(
-            wbs=locpwbs[i], name='Country Programme ' + six.text_type(i), from_date=today, to_date=tomorrow)
+            wbs=locpwbs[i], name='Country Programme ' + str(i), from_date=today, to_date=tomorrow)
 
     time.sleep(5)
 

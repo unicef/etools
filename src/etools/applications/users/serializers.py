@@ -74,7 +74,7 @@ class UserSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = get_user_model()
-        exclude = ('password', 'groups', 'user_permissions')
+        exclude = ('password', 'user_permissions')
 
 
 class UserProfileCreationSerializer(serializers.ModelSerializer):
