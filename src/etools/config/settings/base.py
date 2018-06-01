@@ -17,8 +17,6 @@ import datetime
 import os
 from os.path import abspath, basename, dirname, join, normpath
 
-from django.utils import six
-
 import dj_database_url
 import saml2
 import yaml
@@ -34,7 +32,7 @@ def str2bool(value):
 
     This assumes that 'value' is one of a list of some common possible Truthy string values.
     """
-    return six.text_type(value).lower() in ("yes", "true", "t", "1")
+    return str(value).lower() in ("yes", "true", "t", "1")
 
 
 # Absolute filesystem path to the Django project directory:

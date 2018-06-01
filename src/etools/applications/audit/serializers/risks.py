@@ -1,9 +1,8 @@
-
 import itertools
 from collections import OrderedDict
 
 from django.db import models
-from django.utils import six
+
 from django.utils.translation import ugettext_lazy as _
 
 from rest_framework import serializers
@@ -30,7 +29,7 @@ class BaseRiskSerializer(WritableNestedSerializerMixin, serializers.ModelSeriali
         return self.fields['value'].choices.get(obj.value)
 
     def validate_extra(self, value):
-        if isinstance(value, six.string_types):
+        if isinstance(value, str):
             raise serializers.ValidationError('Invalid data type.')
         return value
 
