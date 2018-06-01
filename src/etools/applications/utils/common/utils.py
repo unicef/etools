@@ -5,7 +5,7 @@ from itertools import chain
 from django.contrib.contenttypes.fields import GenericForeignKey
 from django.db import connection
 from django.db.models import Manager, QuerySet
-from django.utils import six
+
 
 from rest_framework.fields import get_attribute
 
@@ -80,10 +80,10 @@ def get_attribute_smart(instance, attrs):
     if instance is None or not attrs:
         return instance
 
-    if isinstance(attrs, six.string_types):
+    if isinstance(attrs, str):
         attrs = attrs.split('.')
 
-    if isinstance(instance, (Iterable, QuerySet)) and not isinstance(instance, (Mapping, six.string_types)):
+    if isinstance(instance, (Iterable, QuerySet)) and not isinstance(instance, (Mapping, str)):
         instance = list([get_attribute_smart(obj, [attrs[0]]) for obj in instance])
         if all(map(lambda obj: isinstance(obj, QuerySet), instance)):
             instance = chain(*instance)

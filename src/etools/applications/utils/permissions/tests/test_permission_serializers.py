@@ -1,7 +1,7 @@
 
 from django.db import IntegrityError
 from django.test import TestCase
-from django.utils import six
+
 
 from rest_framework import serializers
 
@@ -109,7 +109,7 @@ class PermissionsBasedSerializerTestCase(TestCase):
         serializer.is_valid(raise_exception=True)
         with self.assertRaises(IntegrityError) as cm:
             serializer.save()
-        self.assertIn('null value in column "field" violates not-null constraint', six.text_type(cm.exception))
+        self.assertIn('null value in column "field" violates not-null constraint', str(cm.exception))
 
     def test_updating(self):
         serializer = self.ParentSerializer(self.parent, context={'user': self.user1}, data={

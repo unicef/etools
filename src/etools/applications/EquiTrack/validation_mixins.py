@@ -5,8 +5,7 @@ import logging
 from django.apps import apps
 from django.db.models import ObjectDoesNotExist
 from django.db.models.fields.files import FieldFile
-from django.utils import six
-from django.utils.encoding import python_2_unicode_compatible
+
 from django.utils.functional import cached_property
 
 from django_fsm import can_proceed, get_all_FIELD_transitions, has_transition_perm
@@ -213,7 +212,7 @@ class ValidatorViewMixin(object):
 
         def _get_reverse_for_field(field):
             return main_object.__class__._meta.get_field(field).remote_field.name
-        for k, v in six.iteritems(my_relations):
+        for k, v in my_relations.items():
             self.up_related_field(main_object, v, _get_model_for_field(k), self.SERIALIZER_MAP[k],
                                   k, _get_reverse_for_field(k), partial, nested_related_names)
 
@@ -235,7 +234,7 @@ class ValidatorViewMixin(object):
 
         main_object = main_serializer.save()
 
-        for k in six.iterkeys(my_relations):
+        for k in my_relations.keys():
             try:
                 rel_field_val = getattr(old_instance, k)
             except ObjectDoesNotExist:
@@ -257,25 +256,13 @@ class ValidatorViewMixin(object):
         def _get_reverse_for_field(field):
             return main_object.__class__._meta.get_field(field).remote_field.name
 
-        for k, v in six.iteritems(my_relations):
+        for k, v in my_relations.items():
             self.up_related_field(main_object, v, _get_model_for_field(k), self.SERIALIZER_MAP[k],
                                   k, _get_reverse_for_field(k), partial, nested_related_names)
 
         return self.get_object(), old_instance, main_serializer
 
 
-def _unicode_if(s):
-    '''Given a string (str or unicode), always returns a unicode version of that string, converting it if necessary.
-
-    This function is Python 2- and 3-compatible.
-    '''
-    # Under Python 2, we can use isinstance(s, unicode), but that syntax doesn't work under Python 3 because the
-    # unicode type doesn't exist (only str which is Unicode by default). Instead I rely on the quirk that Python 2
-    # str instances lack a method (.isnumeric()) that exists on Python 2 unicode instances and Python 3 str instances.
-    return s if hasattr(s, 'isnumeric') else s.decode('utf-8')
-
-
-@python_2_unicode_compatible
 class _BaseStateError(BaseException):
     '''Base class for state-related exceptions. Accepts only one param which must be a list of strings.'''
 
@@ -285,9 +272,8 @@ class _BaseStateError(BaseException):
         super(_BaseStateError, self).__init__(message)
 
     def __str__(self):
-        # There's only 1 arg, and it must be a list of messages. Under Python 2, that list might be a mix of unicode
-        # and str instances, so we have to combine them carefully to avoid encode/decode errors.
-        return u'\n'.join([_unicode_if(msg) for msg in self.args[0]])
+        # There's only 1 arg, and it must be a list of messages.
+        return '\n'.join(self.args[0])
 
 
 class TransitionError(_BaseStateError):
@@ -308,7 +294,7 @@ def error_string(function):
         try:
             valid = function(*args, **kwargs)
         except BasicValidationError as e:
-            return (False, [six.text_type(e)])
+            return (False, [str(e)])
         else:
             if valid and type(valid) is bool:
                 return (True, [])
@@ -322,7 +308,7 @@ def transition_error_string(function):
         try:
             valid = function(*args, **kwargs)
         except TransitionError as e:
-            return (False, [six.text_type(e)])
+            return (False, [str(e)])
 
         if valid and type(valid) is bool:
             return (True, [])
@@ -336,7 +322,7 @@ def state_error_string(function):
         try:
             valid = function(*args, **kwargs)
         except StateValidError as e:
-            return (False, [six.text_type(e)])
+            return (False, [str(e)])
 
         if valid and type(valid) is bool:
             return (True, [])
@@ -346,7 +332,7 @@ def state_error_string(function):
 
 
 def update_object(obj, kwdict):
-    for k, v in six.iteritems(kwdict):
+    for k, v in kwdict.items():
         setattr(obj, k, v)
 
 

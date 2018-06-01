@@ -1,7 +1,7 @@
 from django.apps import apps
 from django.contrib.postgres.fields import ArrayField
 from django.db import models
-from django.utils import six
+
 
 from model_utils import Choices
 
@@ -50,7 +50,6 @@ class PermissionQuerySet(models.QuerySet):
         return self.filter(target__in=targets)
 
 
-@six.python_2_unicode_compatible
 class Permission(models.Model):
     """
     Model describes field-level permissions.
