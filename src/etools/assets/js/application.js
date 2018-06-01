@@ -41,7 +41,7 @@ var app = function() {
                 $('.sidebar').addClass('sidebar-toggle');
                 $('.main-content-wrapper').addClass('main-content-toggle-left');
             }
-            
+
             $('.sidebarRight').toggleClass('sidebar-toggle-right animated bounceInRight');
             $('.main-content-wrapper').toggleClass('main-content-toggle-right');
 
@@ -77,7 +77,7 @@ var app = function() {
     };
 
 
-    //Vector Maps 
+    //Vector Maps
     var map = function() {
         $('#map').vectorMap({
             map: 'world_mill_en',
