@@ -1,9 +1,6 @@
-from django.utils.six import python_2_unicode_compatible
-
 from etools.applications.permissions2.utils import collect_parent_models, get_model_target
 
 
-@python_2_unicode_compatible
 class BaseCondition(object):
     def to_internal_value(self):
         raise NotImplementedError

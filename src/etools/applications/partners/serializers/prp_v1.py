@@ -8,7 +8,8 @@ from etools.applications.locations.models import Location
 from etools.applications.partners.models import (Intervention, InterventionAmendment,
                                                  PartnerOrganization, PartnerStaffMember,)
 from etools.applications.reports.models import (AppliedIndicator, Disaggregation,
-                                                DisaggregationValue, LowerResult, Result, ReportingRequirement)
+                                                DisaggregationValue, LowerResult, Result, ReportingRequirement,
+                                                SpecialReportingRequirement)
 from etools.applications.reports.serializers.v1 import SectorSerializer
 
 
@@ -174,12 +175,12 @@ class PRPResultSerializer(serializers.ModelSerializer):
 class ReportingRequirementsSerializer(serializers.ModelSerializer):
     class Meta:
         model = ReportingRequirement
-        fields = ('id', 'start_date', 'end_date', 'due_date', 'report_type', 'description')
+        fields = ('id', 'start_date', 'end_date', 'due_date', 'report_type')
 
 
 class SpecialReportingRequirementsSerializer(serializers.ModelSerializer):
     class Meta:
-        model = ReportingRequirement
+        model = SpecialReportingRequirement
         fields = ('id', 'due_date', 'description')
 
 

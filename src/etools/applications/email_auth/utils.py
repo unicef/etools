@@ -1,9 +1,9 @@
+from urllib.parse import urlparse, parse_qsl, urlencode, urlunparse, urljoin
 
 from django.conf import settings
 from django.urls import reverse
 
 from drfpasswordless.utils import create_callback_token_for_user
-from future.backports.urllib.parse import parse_qsl, urlencode, urljoin, urlparse, urlunparse
 
 from etools.applications.utils.common.urlresolvers import site_url
 

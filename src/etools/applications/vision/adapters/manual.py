@@ -6,7 +6,6 @@ from collections import OrderedDict
 
 from django.db import connection
 from django.db.models import NOT_PROVIDED
-from django.utils import six
 
 from etools.applications.vision.exceptions import VisionException
 from etools.applications.vision.utils import wcf_json_date_as_datetime
@@ -90,7 +89,7 @@ class MultiModelDataSynchronizer(VisionDataSynchronizer):
 
         # additional logic on field may be applied
         value_handler = self.FIELD_HANDLERS.get(
-            {y: x for x, y in six.iteritems(self.MODEL_MAPPING)}.get(model), {}
+            {y: x for x, y in self.MODEL_MAPPING.items()}.get(model), {}
         ).get(field_name, None)
         if value_handler:
             result = value_handler(result)
