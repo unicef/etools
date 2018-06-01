@@ -2,7 +2,6 @@
 import datetime
 
 from django.urls import reverse
-from django.utils import six
 
 from rest_framework import status
 from tablib.core import Dataset
@@ -83,8 +82,8 @@ class TestAgreementModelExport(BaseAgreementModelExportTestCase):
         exported_agreement = dataset[0]
         self.assertEqual(exported_agreement, (
             self.agreement.agreement_number,
-            six.text_type(self.agreement.status),
-            six.text_type(self.agreement.partner.name),
+            str(self.agreement.status),
+            str(self.agreement.partner.name),
             self.agreement.agreement_type,
             '{}'.format(self.agreement.start),
             '{}'.format(self.agreement.end),
@@ -108,8 +107,8 @@ class TestAgreementModelExport(BaseAgreementModelExportTestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         dataset = Dataset().load(response.content.decode('utf-8'), 'csv')
         self.assertEqual(dataset.height, 1)
-        self.assertEqual(len(dataset._get_headers()), 24)
-        self.assertEqual(len(dataset[0]), 24)
+        self.assertEqual(len(dataset._get_headers()), 25)
+        self.assertEqual(len(dataset[0]), 25)
 
     def test_invalid_format_export_api(self):
         response = self.forced_auth_req(

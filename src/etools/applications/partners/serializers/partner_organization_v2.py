@@ -4,7 +4,7 @@ import json
 from django.contrib.auth import get_user_model
 from django.core.exceptions import ValidationError
 from django.db.models import Q
-from django.utils import six, timezone
+from django.utils import timezone
 
 from rest_framework import serializers
 
@@ -309,7 +309,7 @@ class PartnerOrganizationDetailSerializer(serializers.ModelSerializer):
     planned_visits = PartnerPlannedVisitsSerializer(many=True, read_only=True, required=False)
 
     def get_hact_values(self, obj):
-        return json.loads(obj.hact_values) if isinstance(obj.hact_values, six.text_type) else obj.hact_values
+        return json.loads(obj.hact_values) if isinstance(obj.hact_values, str) else obj.hact_values
 
     def get_interventions(self, obj):
         interventions = InterventionListSerializer(self.get_related_interventions(obj), many=True)
@@ -337,7 +337,7 @@ class PartnerOrganizationCreateUpdateSerializer(AttachmentSerializerMixin, Snaps
     planned_visits = PartnerPlannedVisitsSerializer(many=True, read_only=True, required=False)
 
     def get_hact_values(self, obj):
-        return json.loads(obj.hact_values) if isinstance(obj.hact_values, six.text_type) else obj.hact_values
+        return json.loads(obj.hact_values) if isinstance(obj.hact_values, str) else obj.hact_values
 
     def validate(self, data):
         data = super(PartnerOrganizationCreateUpdateSerializer, self).validate(data)
@@ -381,7 +381,7 @@ class PartnerOrganizationHactSerializer(serializers.ModelSerializer):
     rating = serializers.CharField(source='get_rating_display')
 
     def get_hact_values(self, obj):
-        return json.loads(obj.hact_values) if isinstance(obj.hact_values, six.text_type) else obj.hact_values
+        return json.loads(obj.hact_values) if isinstance(obj.hact_values, str) else obj.hact_values
 
     class Meta:
         model = PartnerOrganization
