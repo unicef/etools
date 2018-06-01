@@ -21,7 +21,7 @@ from etools.applications.partners.models import (Agreement,  # TODO intervention
 
 
 class InterventionAmendmentsAdmin(admin.ModelAdmin):
-    verbose_name = u'Amendment'
+    verbose_name = 'Amendment'
     model = InterventionAmendment
     readonly_fields = [
         'amendment_number',
@@ -244,18 +244,18 @@ class InterventionAdmin(CountryUsersAdminMixin, HiddenPartnerMixin, SnapshotMode
 class AssessmentAdmin(admin.ModelAdmin):
     model = Assessment
     fields = (
-        u'partner',
-        u'type',
-        u'completed_date',
-        u'current',
-        u'report',
+        'partner',
+        'type',
+        'completed_date',
+        'current',
+        'report',
     )
     list_filter = (
-        u'partner',
-        u'type'
+        'partner',
+        'type'
     )
-    verbose_name = u'Assessment'
-    verbose_name_plural = u'Assessments'
+    verbose_name = 'Assessment'
+    verbose_name_plural = 'Assessments'
 
 
 class PartnerStaffMemberAdmin(SnapshotModelAdmin):
@@ -277,9 +277,9 @@ class PartnerStaffMemberAdmin(SnapshotModelAdmin):
         'email',
     )
     search_fields = (
-        u'first_name',
-        u'last_name',
-        u'email'
+        'first_name',
+        'last_name',
+        'email'
     )
     inlines = [
         ActivityInline,
@@ -313,76 +313,77 @@ class PartnerAdmin(ExportMixin, admin.ModelAdmin):
     form = PartnersAdminForm
     resource_class = PartnerExport
     search_fields = (
-        u'name',
-        u'vendor_number',
+        'name',
+        'vendor_number',
     )
     list_filter = (
-        u'partner_type',
-        u'rating',
+        'partner_type',
+        'rating',
         HiddenPartnerFilter,
     )
     list_display = (
-        u'name',
-        u'vendor_number',
-        u'partner_type',
-        u'rating',
-        u'type_of_assessment',
-        u'email',
-        u'phone_number',
-        u'alternate_id',
-        u'alternate_name',
+        'name',
+        'vendor_number',
+        'partner_type',
+        'rating',
+        'type_of_assessment',
+        'email',
+        'phone_number',
+        'alternate_id',
+        'alternate_name',
     )
     readonly_fields = (
-        u'vision_synced',
-        u'vendor_number',
-        u'rating',
-        u'type_of_assessment',
-        u'last_assessment_date',
-        u'core_values_assessment_date',
-        u'total_ct_cy',
-        u'total_ct_cp',
-        u'deleted_flag',
-        u'blocked',
-        u'name',
-        u'hact_values',
-        u'total_ct_cp',
-        u'total_ct_cy',
-        u'net_ct_cy',
-        u'reported_cy',
-        u'total_ct_ytd',
+        'vision_synced',
+        'vendor_number',
+        'rating',
+        'type_of_assessment',
+        'last_assessment_date',
+        'core_values_assessment_date',
+        'total_ct_cy',
+        'total_ct_cp',
+        'deleted_flag',
+        'blocked',
+        'name',
+        'hact_values',
+        'total_ct_cp',
+        'total_ct_cy',
+        'net_ct_cy',
+        'reported_cy',
+        'total_ct_ytd',
     )
     fieldsets = (
         (_('Partner Details'), {
             'fields':
-                ((u'name', u'vision_synced',),
-                 (u'short_name', u'alternate_name',),
-                 (u'partner_type', u'cso_type',),
-                 u'shared_with',
-                 u'vendor_number',
-                 u'rating',
-                 u'type_of_assessment',
-                 u'last_assessment_date',
-                 u'address',
-                 u'city',
-                 u'postal_code',
-                 u'country',
-                 u'phone_number',
-                 u'email',
-                 u'core_values_assessment_date',
-                 u'core_values_assessment',
-                 u'hidden',
-                 u'deleted_flag',
-                 u'blocked',
+                (('name', 'vision_synced',),
+                 ('short_name', 'alternate_name',),
+                 ('partner_type', 'cso_type',),
+                 'shared_with',
+                 'vendor_number',
+                 'rating',
+                 'type_of_assessment',
+                 'last_assessment_date',
+                 'address',
+                 'city',
+                 'postal_code',
+                 'country',
+                 'phone_number',
+                 'email',
+                 'core_values_assessment_date',
+                 'core_values_assessment',
+                 'manually_blocked',
+                 'deleted_flag',
+                 'blocked',
+                 'hidden',
                  )
         }),
         (_('Hact'), {
             'fields': (
-                u'hact_values',
-                u'total_ct_cp',
-                u'total_ct_cy',
-                u'net_ct_cy',
-                u'reported_cy',
-                u'total_ct_ytd',
+                'hact_values',
+                'total_ct_cp',
+                'total_ct_cy',
+                'net_ct_cy',
+                'reported_cy',
+                'total_ct_ytd',
             )
         })
     )
@@ -416,35 +417,35 @@ class PartnerAdmin(ExportMixin, admin.ModelAdmin):
 class PlannedEngagementAdmin(admin.ModelAdmin):
     model = PlannedEngagement
     search_fields = (
-        u'partner__name',
+        'partner__name',
     )
     fields = (
-        u'partner',
-        u'spot_check_mr',
-        u'spot_check_follow_up_q1',
-        u'spot_check_follow_up_q2',
-        u'spot_check_follow_up_q3',
-        u'spot_check_follow_up_q4',
-        u'scheduled_audit',
-        u'special_audit',
+        'partner',
+        'spot_check_mr',
+        'spot_check_follow_up_q1',
+        'spot_check_follow_up_q2',
+        'spot_check_follow_up_q3',
+        'spot_check_follow_up_q4',
+        'scheduled_audit',
+        'special_audit',
     )
     list_display = (
-        u'partner',
-        u'spot_check_mr',
-        u'spot_check_follow_up_q1',
-        u'spot_check_follow_up_q2',
-        u'spot_check_follow_up_q3',
-        u'spot_check_follow_up_q4',
-        u'scheduled_audit',
-        u'special_audit',
+        'partner',
+        'spot_check_mr',
+        'spot_check_follow_up_q1',
+        'spot_check_follow_up_q2',
+        'spot_check_follow_up_q3',
+        'spot_check_follow_up_q4',
+        'scheduled_audit',
+        'special_audit',
     )
     readonly_fields = [
-        u'partner',
+        'partner',
     ]
 
 
 class AgreementAmendmentAdmin(admin.ModelAdmin):
-    verbose_name = u'Amendment'
+    verbose_name = 'Amendment'
     model = AgreementAmendment
     fields = (
         'signed_amendment',
@@ -453,14 +454,14 @@ class AgreementAmendmentAdmin(admin.ModelAdmin):
         'types',
     )
     list_display = (
-        u'agreement',
-        u'number',
-        u'signed_amendment',
-        u'signed_date',
+        'agreement',
+        'number',
+        'signed_amendment',
+        'signed_date',
     )
     list_filter = (
-        u'agreement',
-        u'agreement__partner'
+        'agreement',
+        'agreement__partner'
     )
     readonly_fields = [
         'number',
@@ -479,37 +480,37 @@ class AgreementAmendmentAdmin(admin.ModelAdmin):
 class AgreementAdmin(ExportMixin, HiddenPartnerMixin, CountryUsersAdminMixin, SnapshotModelAdmin):
 
     list_filter = (
-        u'partner',
-        u'agreement_type',
+        'partner',
+        'agreement_type',
     )
     list_display = (
-        u'agreement_number',
-        u'partner',
-        u'agreement_type',
-        u'status',
-        u'signed_by_unicef_date',
+        'agreement_number',
+        'partner',
+        'agreement_type',
+        'status',
+        'signed_by_unicef_date',
     )
     fieldsets = (
         (_('Agreement Details'), {
             'fields':
                 (
-                    u'partner',
-                    u'agreement_type',
-                    u'agreement_number',
-                    u'country_programme',
-                    u'status',
-                    u'attached_agreement',
-                    (u'start', u'end',),
-                    u'signed_by_partner_date',
-                    u'partner_manager',
-                    u'signed_by_unicef_date',
-                    u'signed_by',
-                    u'authorized_officers',
+                    'partner',
+                    'agreement_type',
+                    'agreement_number',
+                    'country_programme',
+                    'status',
+                    'attached_agreement',
+                    ('start', 'end',),
+                    'signed_by_partner_date',
+                    'partner_manager',
+                    'signed_by_unicef_date',
+                    'signed_by',
+                    'authorized_officers',
                 )
         }),
     )
     filter_horizontal = (
-        u'authorized_officers',
+        'authorized_officers',
     )
     inlines = [
         ActivityInline,
@@ -521,26 +522,26 @@ class AgreementAdmin(ExportMixin, HiddenPartnerMixin, CountryUsersAdminMixin, Sn
 
 class FundingCommitmentAdmin(SnapshotModelAdmin):
     search_fields = (
-        u'fr_number',
-        u'grant__name',
+        'fr_number',
+        'grant__name',
     )
     list_filter = (
-        u'grant',
+        'grant',
     )
     list_display = (
-        u'fc_ref',
-        u'grant',
-        u'fr_number',
-        u'fr_item_amount_usd',
-        u'agreement_amount',
-        u'commitment_amount',
-        u'expenditure_amount',
+        'fc_ref',
+        'grant',
+        'fr_number',
+        'fr_item_amount_usd',
+        'agreement_amount',
+        'commitment_amount',
+        'expenditure_amount',
     )
     readonly_fields = list_display + (
-        u'wbs',
-        u'fc_type',
-        u'start',
-        u'end',
+        'wbs',
+        'fc_type',
+        'start',
+        'end',
     )
     inlines = [
         ActivityInline,
