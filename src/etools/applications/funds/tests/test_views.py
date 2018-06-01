@@ -1,4 +1,3 @@
-
 import json
 from datetime import datetime, timedelta
 
@@ -8,8 +7,17 @@ from django.utils import timezone
 from rest_framework import status
 
 from etools.applications.EquiTrack.tests.cases import BaseTenantTestCase
-from etools.applications.funds.tests.factories import FundsReservationHeaderFactory
-from etools.applications.partners.tests.factories import AgreementFactory, InterventionFactory, PartnerFactory
+from etools.applications.funds.tests.factories import (
+    DonorFactory,
+    FundsReservationHeaderFactory,
+    FundsReservationItemFactory,
+    GrantFactory,
+)
+from etools.applications.partners.tests.factories import (
+    AgreementFactory,
+    InterventionFactory,
+    PartnerFactory,
+)
 from etools.applications.users.tests.factories import UserFactory
 
 
@@ -152,6 +160,166 @@ class TestFRHeaderView(BaseTenantTestCase):
                          float(sum([self.fr_1.total_amt_local, self.fr_2.total_amt_local])))
         self.assertEqual(result['total_intervention_amt'],
                          float(sum([self.fr_1.intervention_amt, self.fr_2.intervention_amt])))
+
+    def test_grants_filter(self):
+        """Check that filtering on grant returns expected result"""
+        grant_number = "G123"
+        grant = GrantFactory(name=grant_number)
+        FundsReservationItemFactory(
+            fund_reservation=self.fr_1,
+            grant_number=grant_number
+        )
+        data = {
+            "values": self.fr_1.fr_number,
+            "grants": grant.pk,
+        }
+        status_code, result = self.run_request(data)
+        self.assertEqual(status_code, status.HTTP_200_OK)
+        self.assertEqual(len(result['frs']), 1)
+
+    def test_grants_many_filter(self):
+        """Check that filtering on multiple grants returns expected result"""
+        grant_number_1 = "G123"
+        grant_number_2 = "G124"
+        grant_1 = GrantFactory(name=grant_number_1)
+        grant_2 = GrantFactory(name=grant_number_2)
+        FundsReservationItemFactory(
+            fund_reservation=self.fr_1,
+            grant_number=grant_number_1
+        )
+        FundsReservationItemFactory(
+            fund_reservation=self.fr_2,
+            grant_number=grant_number_2
+        )
+        FundsReservationHeaderFactory()
+        data = {
+            "values": ",".join([self.fr_1.fr_number, self.fr_2.fr_number]),
+            "grants": ",".join([str(grant_1.pk), str(grant_2.pk)]),
+        }
+        status_code, result = self.run_request(data)
+        self.assertEqual(status_code, status.HTTP_200_OK)
+        self.assertEqual(len(result['frs']), 2)
+
+    def test_grants_filter_invalid(self):
+        """Check that filtering on invalid grant returns 400"""
+        grant_number = "G123"
+        GrantFactory(name=grant_number)
+        FundsReservationItemFactory(
+            fund_reservation=self.fr_1,
+            grant_number=grant_number
+        )
+        data = {
+            "values": self.fr_1.fr_number,
+            "grants": "404",
+        }
+        status_code, result = self.run_request(data)
+        self.assertEqual(status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn(
+            'please make sure to select FRs that relate to the PD/SSFA Partner',
+            result['error']
+        )
+
+    def test_donors_filter(self):
+        """Check that filtering on donor returns expected result"""
+        donor = DonorFactory()
+        grant_number = "G123"
+        GrantFactory(
+            donor=donor,
+            name=grant_number,
+        )
+        FundsReservationItemFactory(
+            fund_reservation=self.fr_1,
+            grant_number=grant_number
+        )
+        data = {
+            "values": self.fr_1.fr_number,
+            "donors": donor.pk,
+        }
+        status_code, result = self.run_request(data)
+        self.assertEqual(status_code, status.HTTP_200_OK)
+        self.assertEqual(len(result['frs']), 1)
+
+    def test_donors_many_filter(self):
+        """Check that filtering on multiple donors returns expected result"""
+        donor_1 = DonorFactory()
+        donor_2 = DonorFactory()
+        grant_number_1 = "G123"
+        grant_number_2 = "G124"
+        GrantFactory(
+            donor=donor_1,
+            name=grant_number_1,
+        )
+        GrantFactory(
+            donor=donor_2,
+            name=grant_number_2,
+        )
+        FundsReservationItemFactory(
+            fund_reservation=self.fr_1,
+            grant_number=grant_number_1
+        )
+        FundsReservationItemFactory(
+            fund_reservation=self.fr_2,
+            grant_number=grant_number_2
+        )
+        FundsReservationHeaderFactory()
+        data = {
+            "values": ",".join([self.fr_1.fr_number, self.fr_2.fr_number]),
+            "donors": ",".join([str(donor_1.pk), str(donor_2.pk)]),
+        }
+        status_code, result = self.run_request(data)
+        self.assertEqual(status_code, status.HTTP_200_OK)
+        self.assertEqual(len(result['frs']), 2)
+
+    def test_donors_filter_invalid(self):
+        """Check that filtering on invalid donors returns 400"""
+        donor = DonorFactory()
+        grant_number = "G123"
+        GrantFactory(
+            donor=donor,
+            name=grant_number,
+        )
+        FundsReservationItemFactory(
+            fund_reservation=self.fr_1,
+            grant_number=grant_number
+        )
+        data = {
+            "values": self.fr_1.fr_number,
+            "donors": "404",
+        }
+        status_code, result = self.run_request(data)
+        self.assertEqual(status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn(
+            'please make sure to select FRs that relate to the PD/SSFA Partner',
+            result['error']
+        )
+
+    def test_grant_donors_mismatch(self):
+        """Check that filtering on donors and grant not related to donor,
+        returns 400
+        """
+        donor = DonorFactory()
+        GrantFactory(
+            donor=donor,
+        )
+        grant_number = "G123"
+        grant = GrantFactory(
+            name=grant_number,
+        )
+        FundsReservationItemFactory(
+            fund_reservation=self.fr_1,
+            grant_number=grant_number
+        )
+        data = {
+            "values": self.fr_1.fr_number,
+            "grants": grant.pk,
+            "donors": donor.pk,
+        }
+        status_code, result = self.run_request(data)
+        self.assertEqual(status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn(
+            'please make sure to select FRs that relate to the PD/SSFA Partner',
+            result['error']
+        )
 
     def test_frs_vendor_code_mismatch(self):
         data = {'values': ','.join([self.fr_1.fr_number, self.fr_3.fr_number])}
