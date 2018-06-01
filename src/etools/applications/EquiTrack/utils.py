@@ -33,7 +33,7 @@ def get_current_site():
 def set_country(user, request):
     from etools.applications.users.models import Country
 
-    country = request.GET.get("country", None)
+    country = request.GET.get(settings.SCHEMA_OVERRIDE_PARAM, None)
     if country:
         try:
             country = Country.objects.get(

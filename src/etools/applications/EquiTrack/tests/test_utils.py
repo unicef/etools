@@ -1,6 +1,7 @@
 import json
 from datetime import datetime
 
+from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.contrib.auth.models import Group, Permission
 from django.core.serializers.json import DjangoJSONEncoder
@@ -59,7 +60,10 @@ class TestSetCountry(BaseTenantTestCase):
         But having issues creating another country outside of current schema
         """
         self.user.profile.countries_available.add(self.country)
-        request = self.factory.get("/?country={}".format(self.country.name))
+        request = self.factory.get("/?{}={}".format(
+            settings.SCHEMA_OVERRIDE_PARAM,
+            self.country.name
+        ))
         with mock.patch(PATH_SET_TENANT, self.mock_set):
             utils.set_country(self.user, request)
         self.assertEqual(request.tenant, self.country)
@@ -71,7 +75,10 @@ class TestSetCountry(BaseTenantTestCase):
         """
         self.user.profile.countries_available.add(self.country)
         request = self.factory.get(
-            "/?country={}".format(self.country.country_short_code)
+            "/?{}={}".format(
+                settings.SCHEMA_OVERRIDE_PARAM,
+                self.country.country_short_code
+            )
         )
         with mock.patch(PATH_SET_TENANT, self.mock_set):
             utils.set_country(self.user, request)
@@ -79,7 +86,9 @@ class TestSetCountry(BaseTenantTestCase):
         self.mock_set.assert_called_with(self.country)
 
     def test_set_country_override_invalid(self):
-        request = self.factory.get("/?country=Wrong")
+        request = self.factory.get("/?{}=Wrong".format(
+            settings.SCHEMA_OVERRIDE_PARAM
+        ))
         with mock.patch(PATH_SET_TENANT, self.mock_set):
             utils.set_country(self.user, request)
         self.assertEqual(request.tenant, self.country)
@@ -90,7 +99,10 @@ class TestSetCountry(BaseTenantTestCase):
         But having issues creating another country outside of current schema
         """
         self.user.profile.countries_available.remove(self.country)
-        request = self.factory.get("/?country={}".format(self.country.name))
+        request = self.factory.get("/?{}={}".format(
+            settings.SCHEMA_OVERRIDE_PARAM,
+            self.country.name
+        ))
         with mock.patch(PATH_SET_TENANT, self.mock_set):
             utils.set_country(self.user, request)
         self.assertEqual(request.tenant, self.country)
