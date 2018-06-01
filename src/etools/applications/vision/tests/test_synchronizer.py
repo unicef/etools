@@ -1,7 +1,4 @@
-# Python imports
-
 from django.test import override_settings
-from django.utils import six
 from django.utils.timezone import now as django_now
 
 import mock
@@ -122,7 +119,7 @@ class TestVisionDataLoader(BaseTenantTestCase):
             loader.get()
 
         # Assert that the status code is repeated in the message of the raised exception.
-        self.assertIn('401', six.text_type(context_manager.exception))
+        self.assertIn('401', str(context_manager.exception))
 
         # Ensure get was called as normal.
         self.assertEqual(mock_requests.get.call_count, 1)
@@ -140,7 +137,7 @@ class TestVisionDataSynchronizerInit(BaseTenantTestCase):
         with self.assertRaises(VisionException) as context_manager:
             _MySynchronizer()
 
-        self.assertEqual('Country is required', six.text_type(context_manager.exception))
+        self.assertEqual('Country is required', str(context_manager.exception))
 
     def test_instantiation_no_endpoint(self):
         """Ensure I can't create a synchronizer without specifying an endpoint"""
@@ -153,7 +150,7 @@ class TestVisionDataSynchronizerInit(BaseTenantTestCase):
         with self.assertRaises(VisionException) as context_manager:
             _MyBadSynchronizer(country=test_country)
 
-        self.assertEqual('You must set the ENDPOINT name', six.text_type(context_manager.exception))
+        self.assertEqual('You must set the ENDPOINT name', str(context_manager.exception))
 
     @mock.patch('etools.applications.vision.vision_data_synchronizer.connection', spec=['set_tenant'])
     @mock.patch('etools.applications.vision.vision_data_synchronizer.logger.info')

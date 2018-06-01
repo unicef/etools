@@ -51,6 +51,10 @@ Some editors add author annotations to files when they are created: ``__author__
 prefer that those not be added to new files, and they can be removed from existing files.
 
 
+Python 3
+--------
+
+All code in etools is Python 3.
 
 Testing
 -------

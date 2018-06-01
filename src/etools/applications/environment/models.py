@@ -1,12 +1,10 @@
-
 import random
 from decimal import Decimal
 
 from django.conf import settings
 from django.contrib.auth.models import Group
 from django.db import connection, models
-from django.utils import six, timezone
-from django.utils.encoding import python_2_unicode_compatible
+from django.utils import timezone
 from django.utils.translation import ugettext as _
 
 from waffle import managers
@@ -18,7 +16,6 @@ from etools.applications.users.models import Country
 cache = get_cache()
 
 
-@python_2_unicode_compatible
 class IssueCheckConfig(models.Model):
     """
     Used to enable/disable issue checks at runtime.
@@ -30,7 +27,6 @@ class IssueCheckConfig(models.Model):
         return '{}: {}'.format(self.check_id, self.is_active)
 
 
-@python_2_unicode_compatible
 class TenantFlag(BaseModel):
     """
     Associate one or more countries with a Flag.
@@ -217,7 +213,7 @@ class TenantFlag(BaseModel):
                 set_flag(request, self.name, flag_active, self.rollout)
                 return flag_active
 
-            if Decimal(six.text_type(random.uniform(0, 100))) <= self.percent:
+            if Decimal(str(random.uniform(0, 100))) <= self.percent:
                 set_flag(request, self.name, True, self.rollout)
                 return True
             set_flag(request, self.name, False, self.rollout)
@@ -232,7 +228,6 @@ class TenantSwitchManager(managers.BaseManager):
         return super(TenantSwitchManager, self).get_queryset().prefetch_related('countries')
 
 
-@python_2_unicode_compatible
 class TenantSwitch(BaseModel):
     """
     Associate one or more countries with a Switch.
