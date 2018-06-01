@@ -643,17 +643,14 @@ class PartnerOrganization(TimeStampedModel):
         If partner type is Government, then default to 0 planned visits
         """
         year = datetime.date.today().year
-        if self.partner_type == 'Government':
+        try:
+            pv = self.planned_visits.get(year=year)
+            pvq1 = pv.programmatic_q1
+            pvq2 = pv.programmatic_q2
+            pvq3 = pv.programmatic_q3
+            pvq4 = pv.programmatic_q4
+        except PartnerPlannedVisits.DoesNotExist:
             pvq1 = pvq2 = pvq3 = pvq4 = 0
-        else:
-            try:
-                pv = self.planned_visits.get(year=year)
-                pvq1 = pv.programmatic_q1
-                pvq2 = pv.programmatic_q2
-                pvq3 = pv.programmatic_q3
-                pvq4 = pv.programmatic_q4
-            except PartnerPlannedVisits.DoesNotExist:
-                pvq1 = pvq2 = pvq3 = pvq4 = 0
 
         hact = json.loads(self.hact_values) \
             if isinstance(self.hact_values, six.text_type) \
