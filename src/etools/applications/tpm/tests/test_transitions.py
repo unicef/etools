@@ -1,7 +1,7 @@
 
 from django.core.management import call_command
 from django.core.urlresolvers import reverse
-from django.utils import six
+
 from django.utils.translation import ugettext as _
 
 from rest_framework import status
@@ -214,8 +214,7 @@ class TransitionPermissionTestCaseMetaclass(type):
         return newclass
 
 
-@six.add_metaclass(TransitionPermissionTestCaseMetaclass)
-class TransitionPermissionsTestCaseMixin(object):
+class TransitionPermissionsTestCaseMixin(metaclass=TransitionPermissionTestCaseMetaclass):
     abstract = True
     model = NotImplemented
     factory = NotImplemented

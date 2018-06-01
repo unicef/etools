@@ -2,7 +2,7 @@
 from django.contrib import admin
 from django.db import models
 from django.forms import SelectMultiple
-from django.utils import six
+
 from django.utils.translation import ugettext_lazy as _
 
 from import_export.admin import ExportMixin
@@ -263,12 +263,12 @@ class PartnerStaffMemberAdmin(SnapshotModelAdmin):
     form = PartnerStaffMemberForm
 
     # display_staff_member_name() is used only in list_display. It could be replaced by this simple lambda --
-    #     lambda instance: six.text_type(instance)
+    #     lambda instance: str(instance)
     # However, creating a function allows me to put a title on the column in the admin by populating the function's
     # 'short_description' attribute.
     # https://docs.djangoproject.com/en/1.11/ref/contrib/admin/#django.contrib.admin.ModelAdmin.list_display
     def display_staff_member_name(instance):
-        return six.text_type(instance)
+        return str(instance)
     display_staff_member_name.short_description = 'Partner Staff Member'
 
     list_display = (
