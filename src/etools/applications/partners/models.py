@@ -460,11 +460,13 @@ class PartnerOrganization(TimeStampedModel):
         default=False,
     )
     blocked = models.BooleanField(verbose_name=_("Blocked"), default=False)
-    hidden = models.BooleanField(verbose_name=_("Hidden"), default=False)
     deleted_flag = models.BooleanField(
         verbose_name=_('Marked for deletion'),
         default=False,
     )
+    manually_blocked = models.BooleanField(verbose_name=_("Manually Hidden"), default=False)
+
+    hidden = models.BooleanField(verbose_name=_("Hidden"), default=False)
 
     total_ct_cp = models.DecimalField(
         verbose_name=_("Total Cash Transferred for Country Programme"),
@@ -1355,10 +1357,10 @@ class AgreementAmendment(TimeStampedModel):
     '''
     Represents an amendment to an agreement
     '''
-    IP_NAME = u'Change IP name'
-    AUTHORIZED_OFFICER = u'Change authorized officer'
-    BANKING_INFO = u'Change banking info'
-    CLAUSE = u'Change in clause'
+    IP_NAME = 'Change IP name'
+    AUTHORIZED_OFFICER = 'Change authorized officer'
+    BANKING_INFO = 'Change banking info'
+    CLAUSE = 'Change in clause'
 
     AMENDMENT_TYPES = Choices(
         (IP_NAME, 'Change in Legal Name of Implementing Partner'),
