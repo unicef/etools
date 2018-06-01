@@ -8,6 +8,7 @@ from factory.fuzzy import FuzzyText
 
 from etools.applications.EquiTrack.tests.cases import SCHEMA_NAME, TENANT_DOMAIN
 from etools.applications.users import models
+from etools.applications.publics.tests.factories import PublicsCurrencyFactory
 
 
 class GroupFactory(factory.django.DjangoModelFactory):
@@ -40,6 +41,7 @@ class CountryFactory(factory.django.DjangoModelFactory):
     name = "Test Country"
     schema_name = SCHEMA_NAME
     domain_url = TENANT_DOMAIN
+    local_currency = factory.SubFactory(PublicsCurrencyFactory)
 
 
 class ProfileFactory(factory.django.DjangoModelFactory):

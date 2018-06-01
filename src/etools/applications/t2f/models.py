@@ -793,6 +793,9 @@ class Invoice(models.Model):
     def __str__(self):
         return self.reference_number
 
+    class Meta:
+        ordering = ["pk", ]
+
 
 class InvoiceItem(models.Model):
     invoice = models.ForeignKey(
