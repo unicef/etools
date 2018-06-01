@@ -1,6 +1,4 @@
-
 from rest_framework_csv.renderers import CSVRenderer
-from six.moves import range
 
 
 class HactHistoryCSVRenderer(CSVRenderer):

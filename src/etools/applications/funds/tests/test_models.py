@@ -1,8 +1,5 @@
 # -*- coding: utf-8 -*-
-
 from decimal import Decimal
-
-from django.utils import six
 
 from etools.applications.EquiTrack.tests.cases import BaseTenantTestCase
 from etools.applications.funds.models import FundsCommitmentItem, FundsReservationHeader, FundsReservationItem
@@ -12,40 +9,40 @@ from etools.applications.funds.tests.factories import (DonorFactory, FundsCommit
 
 
 class TestStrUnicode(BaseTenantTestCase):
-    '''Ensure calling six.text_type() on model instances returns the right text.'''
+    '''Ensure calling str() on model instances returns the right text.'''
 
     def test_donor(self):
         donor = DonorFactory.build(name=u'R\xe4dda Barnen')
-        self.assertEqual(six.text_type(donor), u'R\xe4dda Barnen')
+        self.assertEqual(str(donor), u'R\xe4dda Barnen')
 
     def test_grant(self):
         donor = DonorFactory.build(name='xyz')
         grant = GrantFactory.build(donor=donor, name=u'R\xe4dda Barnen')
-        self.assertEqual(six.text_type(grant), u'xyz: R\xe4dda Barnen')
+        self.assertEqual(str(grant), u'xyz: R\xe4dda Barnen')
 
         donor = DonorFactory.build(name=u'xyz')
         grant = GrantFactory.build(donor=donor, name=u'R\xe4dda Barnen')
-        self.assertEqual(six.text_type(grant), u'xyz: R\xe4dda Barnen')
+        self.assertEqual(str(grant), u'xyz: R\xe4dda Barnen')
 
         donor = DonorFactory.build(name=u'R\xe4dda Barnen')
         grant = GrantFactory.build(donor=donor, name='xyz')
-        self.assertEqual(six.text_type(grant), u'R\xe4dda Barnen: xyz')
+        self.assertEqual(str(grant), u'R\xe4dda Barnen: xyz')
 
     def test_funds_reservation_header(self):
         funds_reservation_header = FundsReservationHeaderFactory.build(fr_number=u'R\xe4dda Barnen')
-        self.assertEqual(six.text_type(funds_reservation_header), u'R\xe4dda Barnen')
+        self.assertEqual(str(funds_reservation_header), u'R\xe4dda Barnen')
 
     def test_funds_reservation_item(self):
         funds_reservation_item = FundsReservationItemFactory.build(fr_ref_number=u'R\xe4dda Barnen')
-        self.assertEqual(six.text_type(funds_reservation_item), u'R\xe4dda Barnen')
+        self.assertEqual(str(funds_reservation_item), u'R\xe4dda Barnen')
 
     def test_funds_commitment_header(self):
         funds_commitment_header = FundsCommitmentHeaderFactory.build(fc_number=u'R\xe4dda Barnen')
-        self.assertEqual(six.text_type(funds_commitment_header), u'R\xe4dda Barnen')
+        self.assertEqual(str(funds_commitment_header), u'R\xe4dda Barnen')
 
     def test_funds_commitment_item(self):
         funds_commitment_item = FundsCommitmentItemFactory.build(fc_ref_number=u'R\xe4dda Barnen')
-        self.assertEqual(six.text_type(funds_commitment_item), u'R\xe4dda Barnen')
+        self.assertEqual(str(funds_commitment_item), u'R\xe4dda Barnen')
 
 
 class TestFundsReservationHeader(BaseTenantTestCase):
