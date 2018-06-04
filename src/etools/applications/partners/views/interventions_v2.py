@@ -777,14 +777,14 @@ class InterventionReportingRequirementView(APIView):
     def get_object(self, pk):
         return get_object_or_404(Intervention, pk=pk)
 
-    def get(self, request, intervention_pk, report_type, format=None):
+    def get(self, request, intervention_pk, report_type):
         self.intervention = self.get_object(intervention_pk)
         self.report_type = report_type
         return Response(
             self.serializer_list_class(self.get_data()).data
         )
 
-    def post(self, request, intervention_pk, report_type, format=None):
+    def post(self, request, intervention_pk, report_type):
         self.intervention = self.get_object(intervention_pk)
         self.report_type = report_type
         self.request.data["report_type"] = self.report_type
@@ -801,23 +801,23 @@ class InterventionReportingRequirementView(APIView):
             )
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
-    def delete(self, request, intervention_pk, report_type, format=None):
+    def delete(self, request, intervention_pk, report_type):
         self.intervention = self.get_object(intervention_pk)
         self.report_type = report_type
+        self.request.data["report_type"] = self.report_type
 
-        try:
-            deleted_ids = [int(rr["id"]) for rr in request.data["reporting_requirements"] if "id" in rr]
+        if not request.data["reporting_requirements"]:
+            return Response(status=status.HTTP_400_BAD_REQUEST)
 
-            if len(deleted_ids) == 0:
-                return Response(status=status.HTTP_400_BAD_REQUEST)
-
-            ReportingRequirement.objects.filter(
-                intervention=intervention_pk,
-                report_type=report_type,
-                id__in=deleted_ids
-            ).delete()
+        serializer = self.serializer_create_class(
+            data=self.request.data,
+            context={
+                "intervention": self.intervention,
+            }
+        )
+        if serializer.is_valid():
+            serializer.delete(serializer.validated_data)
             return Response(
                 self.serializer_list_class(self.get_data()).data
             )
-        except ReportingRequirement.DoesNotExist:
-            return Response(status=status.HTTP_404_NOT_FOUND)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
