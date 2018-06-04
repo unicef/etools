@@ -4,7 +4,7 @@ from abc import ABCMeta, abstractmethod
 
 from django.conf import settings
 from django.db import connection
-from django.utils import six
+
 from django.utils.encoding import force_text
 
 import requests
@@ -31,7 +31,7 @@ class VisionDataLoader(object):
         separator = '' if self.URL.endswith('/') else '/'
 
         self.url = '{}{}{}'.format(self.URL, separator, endpoint)
-        if country:
+        if country and country.name != "Global":
             self.url += '/{}'.format(country.business_area_code)
 
         logger.info('About to get data from {}'.format(self.url))
@@ -128,7 +128,7 @@ class DataSynchronizer(object):
             logger.info('sync', exc_info=True)
             log.exception_message = force_text(e)
             traceback = sys.exc_info()[2]
-            six.reraise(VisionException, VisionException(force_text(e)), traceback)
+            raise VisionException(force_text(e)).with_traceback(traceback)
         else:
             if isinstance(totals, dict):
                 log.total_processed = totals.get('processed', 0)
