@@ -1,10 +1,11 @@
 from django.http import Http404
 from django.utils import timezone
+from django_filters.rest_framework import DjangoFilterBackend
 
 from easy_pdf.rendering import render_to_pdf_response
 from rest_framework import generics, mixins, viewsets
 from rest_framework.decorators import detail_route, list_route
-from rest_framework.filters import DjangoFilterBackend, OrderingFilter, SearchFilter
+from rest_framework.filters import OrderingFilter, SearchFilter
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 

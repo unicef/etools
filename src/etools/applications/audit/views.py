@@ -340,7 +340,7 @@ class EngagementViewSet(
     @list_route(methods=['get'], url_path='partners')
     def partners(self, request, *args, **kwargs):
         engagements = self.get_queryset()
-        return EngagementPartnerView.as_view(engagements=engagements)(request, *args, **kwargs)
+        return EngagementPartnerView.as_view(engagements=engagements)(request._request, *args, **kwargs)
 
     @list_route(methods=['get'], url_path='hact')
     def hact(self, request, *args, **kwargs):

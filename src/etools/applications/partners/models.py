@@ -10,8 +10,7 @@ from django.db import models, connection, transaction
 from django.db.models import Case, Count, CharField, F, Max, Min, Q, Sum, When
 from django.db.models.signals import post_save, pre_delete
 from django.urls import reverse
-from django.utils import six, timezone
-from django.utils.encoding import python_2_unicode_compatible
+from django.utils import timezone
 from django.utils.functional import cached_property
 from django.utils.translation import ugettext as _
 
@@ -51,7 +50,7 @@ def _get_partner_base_path(partner):
         connection.schema_name,
         'file_attachments',
         'partner_organization',
-        six.text_type(partner.id),
+        str(partner.id),
     ])
 
 
@@ -59,7 +58,7 @@ def get_agreement_path(instance, filename):
     return '/'.join([
         _get_partner_base_path(instance.partner),
         'agreements',
-        six.text_type(instance.agreement_number),
+        str(instance.agreement_number),
         filename
     ])
 
@@ -70,7 +69,7 @@ def get_assesment_path(instance, filename):
     return '/'.join([
         _get_partner_base_path(instance.partner),
         'assesments',
-        six.text_type(instance.id),
+        str(instance.id),
         filename
     ])
 
@@ -79,9 +78,9 @@ def get_intervention_file_path(instance, filename):
     return '/'.join([
         _get_partner_base_path(instance.agreement.partner),
         'agreements',
-        six.text_type(instance.agreement.id),
+        str(instance.agreement.id),
         'interventions',
-        six.text_type(instance.id),
+        str(instance.id),
         filename
     ])
 
@@ -90,9 +89,9 @@ def get_prc_intervention_file_path(instance, filename):
     return '/'.join([
         _get_partner_base_path(instance.agreement.partner),
         'agreements',
-        six.text_type(instance.agreement.id),
+        str(instance.agreement.id),
         'interventions',
-        six.text_type(instance.id),
+        str(instance.id),
         'prc',
         filename
     ])
@@ -101,13 +100,13 @@ def get_prc_intervention_file_path(instance, filename):
 def get_intervention_amendment_file_path(instance, filename):
     return '/'.join([
         _get_partner_base_path(instance.intervention.agreement.partner),
-        six.text_type(instance.intervention.agreement.partner.id),
+        str(instance.intervention.agreement.partner.id),
         'agreements',
-        six.text_type(instance.intervention.agreement.id),
+        str(instance.intervention.agreement.id),
         'interventions',
-        six.text_type(instance.intervention.id),
+        str(instance.intervention.id),
         'amendments',
-        six.text_type(instance.id),
+        str(instance.id),
         filename
     ])
 
@@ -116,11 +115,11 @@ def get_intervention_attachments_file_path(instance, filename):
     return '/'.join([
         _get_partner_base_path(instance.intervention.agreement.partner),
         'agreements',
-        six.text_type(instance.intervention.agreement.id),
+        str(instance.intervention.agreement.id),
         'interventions',
-        six.text_type(instance.intervention.id),
+        str(instance.intervention.id),
         'attachments',
-        six.text_type(instance.id),
+        str(instance.id),
         filename
     ])
 
@@ -130,16 +129,15 @@ def get_agreement_amd_file_path(instance, filename):
         connection.schema_name,
         'file_attachments',
         'partner_org',
-        six.text_type(instance.agreement.partner.id),
+        str(instance.agreement.partner.id),
         'agreements',
         instance.agreement.base_number,
         'amendments',
-        six.text_type(instance.number),
+        str(instance.number),
         filename
     ])
 
 
-@python_2_unicode_compatible
 class WorkspaceFileType(models.Model):
     """
     Represents a file type
@@ -242,7 +240,6 @@ class PartnerOrganizationQuerySet(models.QuerySet):
                            hact_values__audits__completed__total=0, *args, **kwargs)
 
 
-@python_2_unicode_compatible
 class PartnerOrganization(TimeStampedModel):
     """
     Represents a partner organization
@@ -471,11 +468,13 @@ class PartnerOrganization(TimeStampedModel):
         default=False,
     )
     blocked = models.BooleanField(verbose_name=_("Blocked"), default=False)
-    hidden = models.BooleanField(verbose_name=_("Hidden"), default=False)
     deleted_flag = models.BooleanField(
         verbose_name=_('Marked for deletion'),
         default=False,
     )
+    manually_blocked = models.BooleanField(verbose_name=_("Manually Hidden"), default=False)
+
+    hidden = models.BooleanField(verbose_name=_("Hidden"), default=False)
 
     total_ct_cp = models.DecimalField(
         verbose_name=_("Total Cash Transferred for Country Programme"),
@@ -531,7 +530,7 @@ class PartnerOrganization(TimeStampedModel):
 
     def save(self, *args, **kwargs):
         # JSONFIELD has an issue where it keeps escaping characters
-        hact_is_string = isinstance(self.hact_values, six.text_type)
+        hact_is_string = isinstance(self.hact_values, str)
         try:
             self.hact_values = json.loads(self.hact_values) if hact_is_string else self.hact_values
         except ValueError as e:
@@ -613,7 +612,9 @@ class PartnerOrganization(TimeStampedModel):
     def min_req_spot_checks(self):
         # reported_cy can be None
         reported_cy = self.reported_cy or 0
-        return 1 if reported_cy > PartnerOrganization.CT_CP_AUDIT_TRIGGER_LEVEL else 0
+        if self.type_of_assessment == 'Low Risk Assumed' or reported_cy <= PartnerOrganization.CT_CP_AUDIT_TRIGGER_LEVEL:
+            return 0
+        return 1
 
     @cached_property
     def min_req_audits(self):
@@ -651,20 +652,17 @@ class PartnerOrganization(TimeStampedModel):
         If partner type is Government, then default to 0 planned visits
         """
         year = datetime.date.today().year
-        if self.partner_type == 'Government':
+        try:
+            pv = self.planned_visits.get(year=year)
+            pvq1 = pv.programmatic_q1
+            pvq2 = pv.programmatic_q2
+            pvq3 = pv.programmatic_q3
+            pvq4 = pv.programmatic_q4
+        except PartnerPlannedVisits.DoesNotExist:
             pvq1 = pvq2 = pvq3 = pvq4 = 0
-        else:
-            try:
-                pv = self.planned_visits.get(year=year)
-                pvq1 = pv.programmatic_q1
-                pvq2 = pv.programmatic_q2
-                pvq3 = pv.programmatic_q3
-                pvq4 = pv.programmatic_q4
-            except PartnerPlannedVisits.DoesNotExist:
-                pvq1 = pvq2 = pvq3 = pvq4 = 0
 
         hact = json.loads(self.hact_values) \
-            if isinstance(self.hact_values, six.text_type) \
+            if isinstance(self.hact_values, str) \
             else self.hact_values
         hact['programmatic_visits']['planned']['q1'] = pvq1
         hact['programmatic_visits']['planned']['q2'] = pvq2
@@ -828,7 +826,6 @@ class PartnerStaffMemberManager(models.Manager):
         return super(PartnerStaffMemberManager, self).get_queryset().select_related('partner')
 
 
-@python_2_unicode_compatible
 class PartnerStaffMember(TimeStampedModel):
     """
     Represents a staff member at the partner organization.
@@ -909,7 +906,6 @@ class PartnerStaffMember(TimeStampedModel):
         return super(PartnerStaffMember, self).save(**kwargs)
 
 
-@python_2_unicode_compatible
 class PlannedEngagement(TimeStampedModel):
     """ class to handle partner's engagement for current year """
     partner = models.OneToOneField(PartnerOrganization, verbose_name=_("Partner"), related_name='planned_engagement',
@@ -952,7 +948,6 @@ class PlannedEngagement(TimeStampedModel):
         return 'Planned Engagement {}'.format(self.partner.name)
 
 
-@python_2_unicode_compatible
 class Assessment(TimeStampedModel):
     """
     Represents an assessment for a partner organization.
@@ -1088,7 +1083,6 @@ def activity_to_active_side_effects(i, old_instance=None, user=None):
     pass
 
 
-@python_2_unicode_compatible
 class Agreement(TimeStampedModel):
     """
     Represents an agreement with the partner organization.
@@ -1367,15 +1361,14 @@ class AgreementAmendmentManager(models.Manager):
         return super(AgreementAmendmentManager, self).get_queryset().select_related('agreement__partner')
 
 
-@python_2_unicode_compatible
 class AgreementAmendment(TimeStampedModel):
     '''
     Represents an amendment to an agreement
     '''
-    IP_NAME = u'Change IP name'
-    AUTHORIZED_OFFICER = u'Change authorized officer'
-    BANKING_INFO = u'Change banking info'
-    CLAUSE = u'Change in clause'
+    IP_NAME = 'Change IP name'
+    AUTHORIZED_OFFICER = 'Change authorized officer'
+    BANKING_INFO = 'Change banking info'
+    CLAUSE = 'Change in clause'
 
     AMENDMENT_TYPES = Choices(
         (IP_NAME, 'Change in Legal Name of Implementing Partner'),
@@ -1512,7 +1505,6 @@ def side_effect_two(i, old_instance=None, user=None):
     pass
 
 
-@python_2_unicode_compatible
 class Intervention(TimeStampedModel):
     """
     Represents a partner intervention.
@@ -2056,7 +2048,6 @@ class Intervention(TimeStampedModel):
         super(Intervention, self).save()
 
 
-@python_2_unicode_compatible
 class InterventionAmendment(TimeStampedModel):
     """
     Represents an amendment for the partner intervention.
@@ -2144,7 +2135,6 @@ class InterventionAmendment(TimeStampedModel):
         )
 
 
-@python_2_unicode_compatible
 class InterventionPlannedVisits(TimeStampedModel):
     """
     Represents planned visits for the intervention
@@ -2170,7 +2160,6 @@ class InterventionPlannedVisits(TimeStampedModel):
         return '{} {}'.format(self.intervention, self.year)
 
 
-@python_2_unicode_compatible
 class InterventionResultLink(TimeStampedModel):
     intervention = models.ForeignKey(
         Intervention, related_name='result_links', verbose_name=_('Intervention'),
@@ -2190,7 +2179,6 @@ class InterventionResultLink(TimeStampedModel):
         )
 
 
-@python_2_unicode_compatible
 class InterventionBudget(TimeStampedModel):
     """
     Represents a budget for the intervention
@@ -2246,7 +2234,6 @@ class InterventionBudget(TimeStampedModel):
         )
 
 
-@python_2_unicode_compatible
 class FileType(models.Model):
     """
     Represents a file type
@@ -2276,7 +2263,6 @@ class FileType(models.Model):
         return self.name
 
 
-@python_2_unicode_compatible
 class InterventionAttachment(TimeStampedModel):
     """
     Represents a file for the partner intervention
@@ -2315,7 +2301,6 @@ class InterventionAttachment(TimeStampedModel):
         return self.attachment.name
 
 
-@python_2_unicode_compatible
 class InterventionReportingPeriod(TimeStampedModel):
     """
     Represents a set of 3 dates associated with an Intervention (start, end,
@@ -2422,11 +2407,11 @@ def get_file_path(instance, filename):
         [connection.schema_name,
          'file_attachments',
          'partner_org',
-         six.text_type(instance.pca.agreement.partner.id),
+         str(instance.pca.agreement.partner.id),
          'agreements',
-         six.text_type(instance.pca.agreement.id),
+         str(instance.pca.agreement.id),
          'interventions',
-         six.text_type(instance.pca.id),
+         str(instance.pca.id),
          filename]
     )
 

@@ -1,6 +1,5 @@
 from django.conf import settings
 from django.db import models
-from django.utils.encoding import python_2_unicode_compatible
 from django.utils.translation import ugettext_lazy as _
 
 from model_utils.models import TimeStampedModel
@@ -13,7 +12,6 @@ class BaseFirmManager(models.Manager):
         return self.get(vendor_number=vendor_number)
 
 
-@python_2_unicode_compatible
 class BaseFirm(TimeStampedModel, models.Model):
     vendor_number = models.CharField(
         verbose_name=_('Vendor Number'),
@@ -79,7 +77,6 @@ class BaseFirm(TimeStampedModel, models.Model):
         return self.vendor_number,
 
 
-@python_2_unicode_compatible
 class BaseStaffMember(ModelHavingTenantRelationsMixin,
                       models.Model):
     user = models.OneToOneField(

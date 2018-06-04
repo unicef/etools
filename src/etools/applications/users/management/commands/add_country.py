@@ -1,5 +1,5 @@
 from django.core.management.base import BaseCommand, CommandError
-from django.utils import six
+
 
 from etools.applications.publics.models import Currency
 from etools.applications.users.models import Country
@@ -9,7 +9,7 @@ class Command(BaseCommand):
     help = 'Create a new country and related schema'
 
     def add_arguments(self, parser):
-        parser.add_argument('country_name', type=six.text_type)
+        parser.add_argument('country_name', type=str)
 
     def handle(self, *args, **options):
         try:

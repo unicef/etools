@@ -5,7 +5,7 @@ from django.views.generic.detail import DetailView
 
 from rest_framework.generics import ListAPIView
 from rest_framework.permissions import IsAdminUser
-from six.moves import urllib_parse
+from urllib.parse import urljoin
 
 from etools.applications.attachments.models import Attachment, AttachmentFlat
 from etools.applications.attachments.serializers import AttachmentFlatSerializer
@@ -35,5 +35,5 @@ class AttachmentFileView(DetailView):
             return HttpResponseNotFound(
                 _("Attachment has no file or hyperlink")
             )
-        url = urllib_parse.urljoin(site_url(), attachment.url)
+        url = urljoin(site_url(), attachment.url)
         return HttpResponseRedirect(url)

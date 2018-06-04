@@ -5,7 +5,7 @@ from collections import namedtuple
 from django.conf import settings
 from django.core.exceptions import ImproperlyConfigured
 from django.db.models import Model
-from django.utils import six
+
 from django.utils.module_loading import import_string
 
 from etools.applications.environment.models import IssueCheckConfig
@@ -19,8 +19,7 @@ from etools.applications.EquiTrack.utils import run_on_all_tenants
 ModelCheckData = namedtuple('ModelCheckData', 'object metadata')
 
 
-@six.add_metaclass(ABCMeta)
-class BaseIssueCheck(object):
+class BaseIssueCheck(metaclass=ABCMeta):
     """
     Base class for all Issue Checks
     """
@@ -43,7 +42,7 @@ class BaseIssueCheck(object):
                     self.run_check(model_instance, metadata)
                 except IssueFoundException as e:
                     issue = FlaggedIssue.get_or_new(content_object=model_instance, issue_id=self.check_id)
-                    issue.message = six.text_type(e)
+                    issue.message = str(e)
                     issue.save()
         # todo: is it always valid to run all checks against all tenants?
         run_on_all_tenants(_inner)
@@ -144,7 +143,7 @@ def recheck_all_open_issues():
                 issue.recheck()
             except IssueCheckNotFoundException as e:
                 # todo: should this fail hard?
-                logging.error(six.text_type(e))
+                logging.error(str(e))
 
     # todo: is it always valid to run all checks against all tenants?
     run_on_all_tenants(_check)

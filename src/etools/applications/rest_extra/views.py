@@ -1,10 +1,7 @@
-from __future__ import absolute_import, division, print_function, unicode_literals
-
 from django.db import ProgrammingError
 from django.http import QueryDict
 
 from rest_framework import exceptions
-from rest_framework.compat import is_authenticated
 
 
 class MultiSerializerViewSetMixin(object):
@@ -112,6 +109,6 @@ class SafeTenantViewSetMixin(object):
         try:
             return super(SafeTenantViewSetMixin, self).dispatch(request, *args, **kwargs)
         except ProgrammingError:
-            if request.user and not is_authenticated(request.user):
+            if request.user and not request.user.is_authenticated:
                 raise exceptions.NotAuthenticated()
             raise

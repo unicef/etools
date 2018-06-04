@@ -1,9 +1,4 @@
-from __future__ import absolute_import, division, print_function, unicode_literals
-
-from django.utils import six
-
-
-class PermissionsBasedMetadataMixin(object):
+class PermissionsBasedMetadataMixin():
     """
     Filter fields which user has no read permission to.
     """
@@ -23,7 +18,7 @@ class PermissionsBasedMetadataMixin(object):
         method = serializer.context['request'].method
         fields = serializer._readable_fields if method == 'GET' else serializer._writable_fields
         field_names = [f.field_name for f in fields]
-        info = {k: v for k, v in six.iteritems(info) if k in field_names}
+        info = {k: v for k, v in info.items() if k in field_names}
 
         for field in info.values():
             self._remove_read_only(field)

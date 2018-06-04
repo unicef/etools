@@ -1,5 +1,5 @@
 
-from django.utils import six
+
 from django.utils.translation import ugettext as _
 
 from rest_framework import serializers
@@ -66,9 +66,9 @@ class DonorExportSerializer(serializers.ModelSerializer):
         fields = "__all__"
 
     def get_grant(self, obj):
-        return ", ".join([six.text_type(g.pk) for g in obj.grant_set.all()])
+        return ", ".join(str(pk) for pk in obj.grant_set.values_list('pk', flat=True))
 
 
 class DonorExportFlatSerializer(ExportSerializerMixin, DonorExportSerializer):
     def get_grant(self, obj):
-        return ", ".join([g.name for g in obj.grant_set.all()])
+        return ", ".join(name for name in obj.grant_set.values_list('name', flat=True))

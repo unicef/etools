@@ -3,8 +3,8 @@ import itertools
 from django.conf import settings
 from django.contrib.contenttypes.fields import GenericRelation
 from django.db import models
-from django.utils import six, timezone
-from django.utils.encoding import force_text, python_2_unicode_compatible
+from django.utils import timezone
+from django.utils.encoding import force_text
 from django.utils.translation import ugettext_lazy as _
 
 from django_fsm import FSMField, transition
@@ -33,7 +33,6 @@ from etools.applications.tpm.transitions.serializers import (
 )
 
 
-@python_2_unicode_compatible
 class TPMVisit(SoftDeleteMixin, TimeStampedModel, models.Model):
 
     DRAFT = 'draft'
@@ -191,7 +190,7 @@ class TPMVisit(SoftDeleteMixin, TimeStampedModel, models.Model):
         base_context.update(context)
         context = base_context
 
-        if isinstance(recipients, six.string_types):
+        if isinstance(recipients, str):
             recipients = [recipients, ]
         else:
             recipients = list(recipients)
@@ -348,7 +347,6 @@ class TPMVisit(SoftDeleteMixin, TimeStampedModel, models.Model):
         return build_frontend_url('tpm', 'visits', self.id, 'details')
 
 
-@python_2_unicode_compatible
 class TPMVisitReportRejectComment(models.Model):
     rejected_at = models.DateTimeField(auto_now_add=True, verbose_name=_('Rejected At'))
 
@@ -368,7 +366,6 @@ class TPMVisitReportRejectComment(models.Model):
         ordering = ['tpm_visit', 'id']
 
 
-@python_2_unicode_compatible
 class TPMActivity(Activity):
     tpm_visit = models.ForeignKey(
         TPMVisit, verbose_name=_('Visit'), related_name='tpm_activities',
@@ -433,7 +430,6 @@ class TPMActivity(Activity):
         }
 
 
-@python_2_unicode_compatible
 class TPMActionPoint(TimeStampedModel, models.Model):
     STATUSES = Choices(
         ('open', _('Open')),
