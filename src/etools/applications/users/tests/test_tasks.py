@@ -5,15 +5,13 @@ from unittest import skip
 from django.conf import settings
 from django.contrib.auth import get_user_model
 
-
 from mock import Mock, patch
 from tenant_schemas.utils import schema_context
 
 from etools.applications.EquiTrack.tests.cases import BaseTenantTestCase, SCHEMA_NAME
 from etools.applications.users import tasks
 from etools.applications.users.models import Section, UserProfile
-from etools.applications.users.tests.factories import (CountryFactory, GroupFactory,
-                                                       ProfileFactory, SectionFactory, UserFactory,)
+from etools.applications.users.tests.factories import CountryFactory, GroupFactory, ProfileFactory, UserFactory
 from etools.applications.vision.vision_data_synchronizer import VISION_NO_DATA_MESSAGE, VisionException
 
 
@@ -69,42 +67,6 @@ class TestUserMapper(BaseTenantTestCase):
             "UAT": country_uat,
             area_code: country,
         })
-
-    def test_get_section(self):
-        """Check that section is retrieved and set"""
-        name = "Section"
-        code = "Code"
-        with schema_context(SCHEMA_NAME):
-            section = SectionFactory(name=name, code=code)
-            self.assertTrue(
-                Section.objects.filter(name=name, code=code).exists()
-            )
-            res = self.mapper._get_section(name, code)
-        self.assertEqual(res, section)
-        self.assertEqual(self.mapper.sections, {name: section})
-
-    def test_get_section_exists(self):
-        """Check if section exsits and set already, it is handled properly"""
-        name = "Section"
-        code = "Code"
-        section = SectionFactory(name=name, code=code)
-        self.mapper.sections = {name: section}
-        res = self.mapper._get_section(name, code)
-        self.assertEqual(res, section)
-        self.assertEqual(self.mapper.sections, {name: section})
-
-    def test_get_section_create(self):
-        """Check that is section does not exist, that one is created"""
-        name = "Section"
-        code = "Code"
-        self.assertEqual(self.mapper.sections, {})
-        res = self.mapper._get_section(name, code)
-        self.assertIsInstance(res, Section)
-        self.assertEqual(list(self.mapper.sections.keys()), [name])
-        with schema_context(SCHEMA_NAME):
-            self.assertTrue(
-                Section.objects.filter(name=name, code=code).exists()
-            )
 
     def test_set_simple_attr_no_change(self):
         """If no change in attr value then return False"""
@@ -446,16 +408,16 @@ class TestMapUsers(BaseTenantTestCase):
         self.assertTrue(self.mock_log.save.call_count(), 1)
 
 
-class TestUserSynchronizer(BaseTenantTestCase):
+class TestUserVisionSynchronizer(BaseTenantTestCase):
     @classmethod
     def setUpTestData(cls):
-        cls.synchronizer = tasks.UserSynchronizer(
+        cls.synchronizer = tasks.UserVisionSynchronizer(
             "GetOrgChartUnitsInfo_JSON",
             "end"
         )
 
     def setUp(self):
-        super(TestUserSynchronizer, self).setUp()
+        super(TestUserVisionSynchronizer, self).setUp()
         self.record = {
             "ORG_UNIT_NAME": "UNICEF",
             "STAFF_ID": "123",
@@ -466,7 +428,7 @@ class TestUserSynchronizer(BaseTenantTestCase):
         }
 
     def test_init(self):
-        synchronizer = tasks.UserSynchronizer(
+        synchronizer = tasks.UserVisionSynchronizer(
             "GetOrgChartUnitsInfo_JSON",
             "end"
         )
@@ -478,7 +440,7 @@ class TestUserSynchronizer(BaseTenantTestCase):
         )
         self.assertEqual(
             synchronizer.required_keys,
-            tasks.UserSynchronizer.REQUIRED_KEYS_MAP[
+            tasks.UserVisionSynchronizer.REQUIRED_KEYS_MAP[
                 "GetOrgChartUnitsInfo_JSON"
             ]
         )
