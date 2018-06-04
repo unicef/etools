@@ -2,7 +2,6 @@ from datetime import date
 
 from django.core.management import call_command
 from django.core.urlresolvers import reverse
-from django.utils import six
 from factory import fuzzy
 
 from rest_framework import status
@@ -33,8 +32,7 @@ class TestActionPointViewSet(ActionPointsTestCaseMixin, BaseTenantTestCase):
         )
 
         self.assertEquals(response.status_code, status.HTTP_200_OK)
-        six.assertCountEqual(
-            self,
+        self.assertCountEqual(
             map(lambda x: x['id'], response.data['results']),
             map(lambda x: x.id, expected_visits)
         )
@@ -169,8 +167,7 @@ class TestActionPointsListViewMetadada(TestActionPointsViewMetadata, BaseTenantT
 
         if can_create:
             self.assertIn('POST', response.data['actions'])
-            six.assertCountEqual(
-                self,
+            self.assertCountEqual(
                 writable_fields or [],
                 response.data['actions']['POST'].keys()
             )
@@ -219,8 +216,7 @@ class TestActionPointsDetailViewMetadata(TestActionPointsViewMetadata):
 
         if can_update:
             self.assertIn('PUT', response.data['actions'])
-            six.assertCountEqual(
-                self,
+            self.assertCountEqual(
                 writable_fields or [],
                 response.data['actions']['PUT'].keys()
             )

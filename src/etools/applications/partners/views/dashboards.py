@@ -3,7 +3,7 @@ import operator
 from datetime import datetime
 
 from django.db.models import (
-    Case, CharField, Count, DateTimeField, DurationField, ExpressionWrapper, F, Max, Min, Sum, When,)
+    Case, CharField, Count, DateTimeField, DurationField, ExpressionWrapper, F, Max, Min, Sum, When)
 
 from rest_framework.generics import ListCreateAPIView
 from rest_framework.permissions import IsAdminUser
@@ -40,8 +40,8 @@ class InterventionPartnershipDashView(QueryStringFilterMixin, ListCreateAPIView)
             Count("frs__currency", distinct=True),
             max_fr_currency=Max("frs__currency", output_field=CharField(), distinct=True),
             multi_curr_flag=Count(Case(When(frs__multi_curr_flag=True, then=1))),
-            has_final_partnership_review=Count(Case(When(attachments__type__name=FileType.FINAL_PARTNERSHIP_REVIEW, then=1))),
         )
+
         query_params = self.request.query_params
         if query_params:
             queries = []
@@ -57,6 +57,24 @@ class InterventionPartnershipDashView(QueryStringFilterMixin, ListCreateAPIView)
                 qs = qs.filter(expression)
 
         return qs.order_by('agreement__partner__name')
+
+    def append_final_partnership_review(self, serializer):
+        qs = Intervention.objects.exclude(
+            status=Intervention.DRAFT
+        ).annotate(
+            has_final_partnership_review=Count(Case(When(attachments__type__name=FileType.FINAL_PARTNERSHIP_REVIEW,
+                                                         then=1)))
+        )
+        fpr = {}
+        for i in qs:
+            fpr[str(i.pk)] = {
+                "has_final_partnership_review": i.has_final_partnership_review,
+            }
+        # Add last_pv_date
+        for d in serializer.data:
+            pk = d["intervention_id"]
+            d["has_final_partnership_review"] = bool(fpr[pk]["has_final_partnership_review"])
+        return serializer
 
     def append_last_pv_date(self, serializer):
         delta = ExpressionWrapper(
@@ -110,6 +128,7 @@ class InterventionPartnershipDashView(QueryStringFilterMixin, ListCreateAPIView)
 
         serializer = self.get_serializer(queryset, many=True)
         self.append_last_pv_date(serializer)
+        self.append_final_partnership_review(serializer)
 
         response = Response(serializer.data)
         if "format" in query_params.keys():

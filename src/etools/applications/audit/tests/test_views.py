@@ -3,7 +3,7 @@ import datetime
 import random
 
 from django.core.management import call_command
-from django.utils import six
+
 
 from factory import fuzzy
 from mock import Mock, patch
@@ -270,8 +270,7 @@ class TestEngagementsListViewSet(EngagementTransitionsTestCaseMixin, BaseTenantT
 
         self.assertIn('results', response.data)
         self.assertIsInstance(response.data['results'], list)
-        six.assertCountEqual(
-            self,
+        self.assertCountEqual(
             map(lambda x: x['id'], response.data['results']),
             map(lambda x: x.id, engagements or [])
         )
@@ -497,8 +496,7 @@ class TestEngagementsUpdateViewSet(EngagementTransitionsTestCaseMixin, BaseTenan
             }
         )
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        six.assertCountEqual(
-            self,
+        self.assertCountEqual(
             map(lambda pd: pd['id'], response.data['active_pd']),
             map(lambda i: i.id, partner.agreements.first().interventions.all())
         )
@@ -654,8 +652,7 @@ class TestAuditorFirmViewSet(AuditTestCaseMixin, BaseTenantTestCase):
 
         self.assertEqual(response.status_code, expected_status)
         if expected_status == status.HTTP_200_OK:
-            six.assertCountEqual(
-                self,
+            self.assertCountEqual(
                 map(lambda x: x['id'], response.data['results']),
                 map(lambda x: x.id, expected_firms)
             )

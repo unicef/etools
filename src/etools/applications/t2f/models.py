@@ -1,4 +1,3 @@
-
 import logging
 from datetime import timedelta
 from decimal import Decimal
@@ -7,7 +6,6 @@ from functools import wraps
 from django.conf import settings
 from django.contrib.postgres.fields.array import ArrayField
 from django.db import connection, models
-from django.utils.encoding import python_2_unicode_compatible
 from django.utils.timezone import now as timezone_now
 from django.utils.translation import ugettext, ugettext_lazy as _
 
@@ -109,7 +107,6 @@ def mark_as_certified_or_completed_threshold_decorator(func):
     return wrapper
 
 
-@python_2_unicode_compatible
 class Travel(models.Model):
     PLANNED = 'planned'
     SUBMITTED = 'submitted'
@@ -493,7 +490,6 @@ class TravelActivity(models.Model):
         return self.travels.filter(traveler=self.primary_traveler).first().status
 
 
-@python_2_unicode_compatible
 class ItineraryItem(models.Model):
     travel = models.ForeignKey(
         'Travel', related_name='itinerary', verbose_name=_('Travel'),
@@ -743,7 +739,6 @@ class ActionPoint(models.Model):
         )
 
 
-@python_2_unicode_compatible
 class Invoice(models.Model):
     PENDING = 'pending'
     PROCESSING = 'processing'
@@ -797,6 +792,9 @@ class Invoice(models.Model):
 
     def __str__(self):
         return self.reference_number
+
+    class Meta:
+        ordering = ["pk", ]
 
 
 class InvoiceItem(models.Model):

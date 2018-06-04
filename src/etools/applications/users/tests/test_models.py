@@ -1,7 +1,7 @@
 
 from django.contrib.auth import get_user_model
 from django.test import SimpleTestCase
-from django.utils import six
+
 
 from etools.applications.EquiTrack.tests.cases import BaseTenantTestCase
 from etools.applications.users import models
@@ -14,8 +14,8 @@ class TestWorkspaceCounter(BaseTenantTestCase):
     def setUpTestData(cls):
         cls.counter = models.WorkspaceCounter.objects.first()
 
-    def test_unicode(self):
-        self.assertEqual(six.text_type(self.counter), self.counter.workspace.name)
+    def test_str(self):
+        self.assertEqual(str(self.counter), self.counter.workspace.name)
 
     def test_get_next_value_invalid_counter_type(self):
         with self.assertRaises(AttributeError):
@@ -31,15 +31,15 @@ class TestWorkspaceCounter(BaseTenantTestCase):
 
 
 class TestOffice(BaseTenantTestCase):
-    def test_unicode(self):
+    def test_str(self):
         o = models.Office(name="office")
-        self.assertEqual(six.text_type(o), "office")
+        self.assertEqual(str(o), "office")
 
 
 class TestSection(BaseTenantTestCase):
-    def test_unicode(self):
+    def test_str(self):
         s = models.Section(name="section")
-        self.assertEqual(six.text_type(s), "section")
+        self.assertEqual(str(s), "section")
 
 
 class TestUserProfileModel(BaseTenantTestCase):
@@ -107,50 +107,50 @@ class TestUserModel(BaseTenantTestCase):
     def test_conversion_to_string(self):
         '''Exercise converting instances to string.'''
         user = UserFactory(first_name='Pel\xe9', last_name='Arantes do Nascimento')
-        self.assertEqual(six.text_type(user), 'Pel\xe9 Arantes do Nascimento')
+        self.assertEqual(str(user), 'Pel\xe9 Arantes do Nascimento')
 
 
 class TestStrUnicode(SimpleTestCase):
-    '''Ensure calling six.text_type() on model instances returns the right text.'''
+    '''Ensure calling str() on model instances returns the right text.'''
 
     def test_country(self):
         instance = CountryFactory.build(name='xyz')
-        self.assertEqual(six.text_type(instance), u'xyz')
+        self.assertEqual(str(instance), u'xyz')
 
         instance = CountryFactory.build(name=u'Magyarorsz\xe1g')
-        self.assertEqual(six.text_type(instance), u'Magyarorsz\xe1g')
+        self.assertEqual(str(instance), u'Magyarorsz\xe1g')
 
     def test_workspace_counter(self):
         instance = models.WorkspaceCounter()
         instance.workspace = CountryFactory.build(name='xyz')
-        self.assertEqual(six.text_type(instance), u'xyz')
+        self.assertEqual(str(instance), u'xyz')
 
         instance = models.WorkspaceCounter()
         instance.workspace = CountryFactory.build(name=u'Magyarorsz\xe1g')
-        self.assertEqual(six.text_type(instance), u'Magyarorsz\xe1g')
+        self.assertEqual(str(instance), u'Magyarorsz\xe1g')
 
     def test_office(self):
         instance = OfficeFactory.build(name='xyz')
-        self.assertEqual(six.text_type(instance), u'xyz')
+        self.assertEqual(str(instance), u'xyz')
 
         instance = OfficeFactory.build(name=u'Magyarorsz\xe1g')
-        self.assertEqual(six.text_type(instance), u'Magyarorsz\xe1g')
+        self.assertEqual(str(instance), u'Magyarorsz\xe1g')
 
     def test_section(self):
         instance = SectionFactory.build(name='xyz')
-        self.assertEqual(six.text_type(instance), u'xyz')
+        self.assertEqual(str(instance), u'xyz')
 
         instance = SectionFactory.build(name=u'Magyarorsz\xe1g')
-        self.assertEqual(six.text_type(instance), u'Magyarorsz\xe1g')
+        self.assertEqual(str(instance), u'Magyarorsz\xe1g')
 
     def test_user_profile(self):
         UserModel = get_user_model()
         user = UserModel(first_name='Sviatoslav', last_name='')
         instance = models.UserProfile()
         instance.user = user
-        self.assertEqual(six.text_type(instance), u'User profile for Sviatoslav')
+        self.assertEqual(str(instance), u'User profile for Sviatoslav')
 
         user = UserModel(first_name=u'Sventoslav\u016d')
         instance = models.UserProfile()
         instance.user = user
-        self.assertEqual(six.text_type(instance), u'User profile for Sventoslav\u016d')
+        self.assertEqual(str(instance), u'User profile for Sventoslav\u016d')
