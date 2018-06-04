@@ -9,10 +9,8 @@ from django.contrib.contenttypes.models import ContentType
 from django.contrib.postgres.fields import ArrayField, JSONField
 from django.core.exceptions import ValidationError
 from django.db import models
-from django.utils.encoding import python_2_unicode_compatible
 from django.utils.translation import ugettext as _
 
-import six
 from model_utils import Choices
 from post_office import mail
 from post_office.models import EmailTemplate
@@ -34,7 +32,6 @@ def validate_notification_type(type_name):
         raise ValidationError("Notification type must be 'Email'")
 
 
-@python_2_unicode_compatible
 class Notification(models.Model):
     """
     Represents a notification instance from sender to recipients
@@ -129,7 +126,7 @@ class Notification(models.Model):
         else:
             sender = settings.DEFAULT_FROM_EMAIL
 
-        if isinstance(self.template_data, six.string_types):
+        if isinstance(self.template_data, str):
             template_data = json.loads(self.template_data)
         else:
             template_data = self.template_data

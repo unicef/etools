@@ -1,7 +1,7 @@
 import logging
 from datetime import date
 
-from django.utils import six
+
 from django.utils.translation import ugettext as _
 
 from etools.applications.partners.permissions import InterventionPermissions
@@ -244,7 +244,7 @@ def locations_valid(i):
         raise BasicValidationError(_('The following locations have been selected on '
                                      'the PD/SSFA indicators and cannot be removed'
                                      ' without removing them from the indicators first: ') +
-                                   ', '.join([six.text_type(l) for l in ind_locations - intervention_locations]))
+                                   ', '.join([str(l) for l in ind_locations - intervention_locations]))
     return True
 
 

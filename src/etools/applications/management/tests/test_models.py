@@ -1,6 +1,3 @@
-
-from django.utils import six
-
 from etools.applications.EquiTrack.tests.cases import BaseTenantTestCase
 from etools.applications.management.models import FlaggedIssue
 from etools.applications.management.tests.factories import FlaggedIssueFactory
@@ -8,7 +5,7 @@ from etools.applications.partners.tests.factories import PartnerFactory
 
 
 class TestStrUnicode(BaseTenantTestCase):
-    '''Ensure calling six.text_type() on model instances returns the right text.'''
+    '''Ensure calling str() on model instances returns the right text.'''
 
     def test_flagged_issue(self):
         partner = PartnerFactory()
@@ -17,14 +14,14 @@ class TestStrUnicode(BaseTenantTestCase):
             issue_id="321",
             message='test message'
         )
-        self.assertEqual(six.text_type(issue), u"test message")
+        self.assertEqual(str(issue), u"test message")
 
         issue = FlaggedIssueFactory(
             content_object=partner,
             issue_id="321",
             message=u"R\xe4dda Barnen"
         )
-        self.assertEqual(six.text_type(issue), u"R\xe4dda Barnen")
+        self.assertEqual(str(issue), u"R\xe4dda Barnen")
 
 
 class FlaggedIssueTest(BaseTenantTestCase):

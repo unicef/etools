@@ -4,7 +4,7 @@ from unittest import skip
 
 from django.conf import settings
 from django.contrib.auth import get_user_model
-from django.utils import six
+
 
 from mock import Mock, patch
 from tenant_schemas.utils import schema_context
@@ -49,7 +49,7 @@ class TestUserMapper(BaseTenantTestCase):
             country = CountryFactory(business_area_code=area_code)
             res = self.mapper._get_country(area_code)
         self.assertEqual(res, country)
-        six.assertCountEqual(self, self.mapper.countries, {
+        self.assertCountEqual(self.mapper.countries, {
             area_code: country,
             "UAT": country_uat
         })
@@ -65,7 +65,7 @@ class TestUserMapper(BaseTenantTestCase):
         }
         res = self.mapper._get_country(area_code)
         self.assertEqual(res, country)
-        six.assertCountEqual(self, self.mapper.countries, {
+        self.assertCountEqual(self.mapper.countries, {
             "UAT": country_uat,
             area_code: country,
         })

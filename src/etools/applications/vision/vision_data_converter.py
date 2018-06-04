@@ -3,18 +3,16 @@ import re
 from itertools import groupby
 from operator import itemgetter
 
-from django.utils import six
-
 
 def convert_vision_value(key, value):
-    if isinstance(value, six.text_type):
+    if isinstance(value, str):
         try:
             encoded_value = value.encode('ascii', 'ignore')
             return int(encoded_value)
         except ValueError:
             pass
 
-    if isinstance(value, six.string_types):
+    if isinstance(value, str):
         matched_date = re.match(r'/Date\((\d+)\)/', value, re.I)
         if matched_date:
             return datetime.datetime.fromtimestamp(int(matched_date.group(1)) / 1000.0)

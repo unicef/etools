@@ -13,7 +13,6 @@ from etools.applications.funds.tests.factories import (
     FundsReservationItemFactory,
     GrantFactory,
 )
-
 from etools.applications.partners.tests.factories import (
     AgreementFactory,
     InterventionFactory,
