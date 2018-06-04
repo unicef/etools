@@ -3,11 +3,12 @@ Development Environment Setup Instructions (OSX)
 
 Setup Server
 ------------
-Step 1. Check python version, it should be 2.7.x
+Step 1. Check python version, it should be 3.6.x. (You will probalby need to
+run "python3" rather than "python", which is probably still version 2.something.)
 
 ```bash
-$ python --version
-Python 2.7.10
+$ python3 --version
+Python 3.6.5
 ```
 
 Step 2. Install Postgres with brew, create Postgres database, and run the Postgres upon startup:
@@ -19,7 +20,7 @@ $ brew install postgresql
 In case of failing initdb during install, change the ownership of the postgres dir, and re-run postinstall to make initdb work:
 
 ```bash
-$ sudo chown -R `whoami` /usr/local/var/postgres  
+$ sudo chown -R `whoami` /usr/local/var/postgres
 $ brew postinstall postgresql
 ```
 
@@ -43,14 +44,7 @@ Step 4. Create Postgres user and PostGIS required extensions:
 # CREATE EXTENSION postgis;
 # CREATE EXTENSION postgis_topology;
 # CREATE EXTENSION fuzzystrmatch;
-# CREATE EXTENSION hstore;
 # \q
-```
-
-Modifiy the base template so all newly created test databases will have hstore extension:
-
-```bash
-$ psql -d template1 -c 'CREATE EXTENSION hstore;'
 ```
 
 Step 5. Install Redis:
@@ -76,7 +70,7 @@ $ export WORKON_HOME=~/Envs
 $ export VIRTUALENVWRAPPER_PYTHON=/usr/local/bin/python2.7
 $ mkdir -p $WORKON_HOME
 $ source /usr/local/bin/virtualenvwrapper.sh
-$ mkvirtualenv env1
+$ mkvirtualenv -p `which python3.6` env1
 $ pip install -r EquiTrack/requirements/local.txt
 ```
 
@@ -118,7 +112,7 @@ Assign the test country (UAT) to the user:
 ```bash
 $ source ~/.virtualenvs/env1/bin/activate
 $ python manage.py shell
-Python 2.7.10 (default, Oct 23 2015, 19:19:21)
+Python 3.6.5 (default, Mar 29 2018, 03:28:50)
 
 >>> from users.models import UserProfile, Country, Office, Section
 >>> from django.contrib.auth import get_user_model() as User

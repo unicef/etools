@@ -1,0 +1,448 @@
+{% extends "easy_pdf/base.html" %}
+
+{% block style_base %}
+  {% comment %}
+    See DEFAULT_CSS in https://github.com/chrisglass/xhtml2pdf/blob/master/xhtml2pdf/default.py
+    for base style.
+  {% endcomment %}
+
+  {% block layout_style %}
+    <style type="text/css">
+      @page {
+        size: a4 landscape;
+        margin: 1.8cm 2.0cm;
+
+        @frame content_frame {
+{#            left: 50pt; width: 512pt; top: 90pt; height: 632pt;#}
+        }
+
+        @frame footer_frame {
+          /* Static frame */
+          -pdf-frame-content:footer_content;
+          right: 60pt; width: 100pt; top: 570pt; height: 20pt;
+        }
+      }
+    </style>
+  {% endblock %}
+  {% block extra_style %}
+    <style type="text/css">
+    #content {
+      font-family: 'Roboto', 'Noto', sans-serif;
+      font-size: 10pt;
+    }
+    .main_title {
+      font-size: 25pt;
+      font-weight: lighter;
+    }
+    .view-container {
+    }
+    .content-section {
+      margin-bottom: 20pt;
+    }
+    .content-section__header {
+      font-size: 15pt;
+      line-height: 15pt;
+      font-weight: bold;
+      padding: 7pt 5pt 5pt;
+      background-color: #0099ff;
+      color: #ffffff;
+      margin: 0;
+    }
+    .content-section__header--orange {
+      background-color: #FF9044;
+    }
+    .content-section__header__title {
+      text-align: center;
+    }
+    .content-section__wrapper {
+      padding: 8pt 12pt 20pt;
+      border-bottom: 1px solid silver;
+      border-left: 1px solid silver;
+      border-right: 1px solid silver;
+    }
+    .content-section__wrapper tr {
+      border: none;
+    }
+    .content-section__table tr {
+      border-bottom: 1px solid silver;
+      padding: 4pt 10pt;
+    }
+    .content-section__table tr.content-section__table__header {
+      color: rgb(122, 122, 122);
+    }
+    .input-container {
+      padding: 7pt 10pt;
+      margin: 0;
+    }
+    .input-container__label, .input-container__value {
+      font-size: 12pt;
+      line-height: 12pt;
+      padding: 0;
+    }
+    .input-container__label {
+      font-size: 10pt;
+      color: rgb(122, 122, 122);
+      padding-bottom: 5pt;
+    }
+    .input-container__value {
+      color: rgb(60, 60, 60);
+    }
+    .risk-subheader {
+      font-weight: bold;
+      font-size: 12pt;
+    }
+    .internal-control-message {
+      padding: 0;
+    }
+    .text-center {
+      text-align: center!important;
+    }
+    .text-left {
+      text-align: left!important;
+    }
+    </style>
+  {% endblock %}
+{% endblock %}
+
+{% block content %}
+  {% if error %}
+    PDF could not be generated properly: <br> {{ error }}
+  {% else %}
+    <div id="content">
+      <div class="view-container">
+        <div class="main_title">{{ engagement.unique_id }}</div>
+        <div class="content-section">
+          <div class="content-section__header">
+            <div class="content-section__header__title">Engagement Overview</div>
+          </div>
+          <table class="content-section__wrapper">
+            <tr>
+              <td class="input-container">
+                <div class="input-container__label">{{ serializer.fields.agreement.read_field.fields.order_number.label }}</div>
+                <div class="input-container__value">{{ engagement.agreement.order_number }}</div>
+              </td>
+              <td class="input-container">
+                <div class="input-container__label">{{ serializer.fields.agreement.read_field.fields.auditor_firm.read_field.fields.name.label }}</div>
+                <div class="input-container__value">{{ engagement.agreement.auditor_firm.name }}</div>
+              </td>
+              <td class="input-container">
+                <div class="input-container__label">{{ serializer.fields.po_item.read_field.fields.number.label }}</div>
+                <div class="input-container__value">{{ engagement.po_item.number|default_if_none:"-" }}</div>
+              </td>
+            </tr>
+            <tr>
+              <td class="input-container">
+                <div class="input-container__label">{{ serializer.fields.agreement.read_field.fields.contract_start_date.label }}</div>
+                <div class="input-container__value">{{ engagement.agreement.contract_start_date|default:"-" }}</div>
+              </td>
+              <td class="input-container">
+                <div class="input-container__label">{{ serializer.fields.agreement.read_field.fields.contract_end_date.label }}</div>
+                <div class="input-container__value">{{ engagement.agreement.contract_end_date|default:"-" }}</div>
+              </td>
+              <td class="input-container">
+                <div class="input-container__label">{{ serializer.fields.partner_contacted_at.label }}</div>
+                <div class="input-container__value">{{ engagement.partner_contacted_at|default:"-" }}</div>
+              </td>
+            </tr>
+            <tr>
+              <td class="input-container">
+                <div class="input-container__label">{{ serializer.fields.engagement_type.label }}</div>
+                <div class="input-container__value">{{ engagement.engagement_type_display }}</div>
+              </td>
+              {% if engagement.engagement_type == 'audit' or engagement.engagement_type == 'sc' or engagement.engagement_type == 'sa' %}
+                <td class="input-container">
+                  <div class="input-container__label">{{ serializer.fields.start_date.label }}</div>
+                  <div class="input-container__value">{{ engagement.start_date }}</div>
+                </td>
+                <td class="input-container">
+                  <div class="input-container__label">{{ serializer.fields.end_date.label }}</div>
+                  <div class="input-container__value">{{ engagement.end_date }}</div>
+                </td>
+              {% else %}
+                <td class="input-container">
+                  <div class="input-container__label">{{ serializer.fields.shared_ip_with.label }}</div>
+                  <div class="input-container__value">{{ engagement.shared_ip_with }}</div>
+                </td>
+                <td class="input-container">
+                  <div class="input-container__label">{{ serializer.fields.joint_audit.label }}</div>
+                  <div class="input-container__value">{% if engagement.joint_audit %}Y{% else %}N{% endif %}</div>
+                </td>
+              {% endif %}
+            </tr>
+            {% if engagement.engagement_type == 'audit' or engagement.engagement_type == 'sa' %}
+              <tr>
+                <td class="input-container">
+                  <div class="input-container__label">{{ serializer.fields.total_value.label }}</div>
+                  <div class="input-container__value">$ {{ engagement.total_value|default_if_none:"0.00" }}</div>
+                </td>
+                <td class="input-container">
+                  <div class="input-container__label">{{ serializer.fields.shared_ip_with.label }}</div>
+                  <div class="input-container__value">{{ engagement.shared_ip_with|default:"-" }}</div>
+                </td>
+                <td class="input-container">
+                  <div class="input-container__label">{{ serializer.fields.joint_audit.label }}</div>
+                  <div class="input-container__value">{% if engagement.joint_audit %}Y{% else %}N{% endif %}</div>
+                </td>
+              </tr>
+            {% elif engagement.engagement_type == 'sc' %}
+              <tr>
+                <td class="input-container">
+                  <div class="input-container__label">{{ serializer.fields.total_value.label }}</div>
+                  <div class="input-container__value">$ {{ engagement.total_value|default_if_none:"0.00" }}</div>
+                </td>
+                <td class="input-container">
+                  <div class="input-container__label">{{ serializer.fields.status.label }}</div>
+                  <div class="input-container__value">{{ engagement.status_display }}</div>
+                </td>
+              </tr>
+            {% endif %}
+            {% if engagement.engagement_type != 'sc' %}
+              <tr>
+                <td class="input-container">
+                  <div class="input-container__label">{{ serializer.fields.status.label }}</div>
+                  <div class="input-container__value">{{ engagement.status_display }}</div>
+                </td>
+              </tr>
+            {% endif %}
+          </table>
+        </div>
+        {% if engagement.engagement_type == 'sa' %}
+          <pdf:nextpage></pdf:nextpage>
+          <div class="content-section">
+            <div class="content-section__header">
+              <div class="content-section__header__title">{{ serializer.fields.specific_procedures.label }}</div>
+            </div>
+            <div class="content-section__wrapper">
+              <table class="content-section__table">
+                <tr class="content-section__table__header">
+                  <td colspan="2">Procedure</td>
+                  <td colspan="6">{{ serializer.fields.specific_procedures.child.fields.description.label }}</td>
+                </tr>
+                {% if engagement.specific_procedures %}
+                  {% for specific_procedure in engagement.specific_procedures %}
+                  <tr>
+                    <td colspan="2">{{ forloop.counter }}</td>
+                    <td colspan="6">{{ specific_procedure.description|default:"-" }}</td>
+                  </tr>
+                  {% endfor %}
+                {% else %}
+                  <tr>
+                    <td colspan="2">-</td><td colspan="6">-</td>
+                  </tr>
+                {% endif %}
+              </table>
+            </div>
+          </div>
+        {% endif %}
+        <div class="content-section">
+          <div class="content-section__header">
+            <div class="content-section__header__title">Partner Details</div>
+          </div>
+          <table class="content-section__wrapper">
+            <tr>
+              <td class="input-container">
+                <div class="input-container__label">{{ serializer.fields.partner.read_field.label }}</div>
+                <div class="input-container__value">{{ engagement.partner.name }}</div>
+              </td>
+              <td class="input-container">
+                <div class="input-container__label">Partner Address</div>
+                <div class="input-container__value">{{ engagement.partner.address|default:"-" }}</div>
+              </td>
+            </tr>
+            <tr>
+              <td class="input-container">
+                <div class="input-container__label">{{ serializer.fields.partner.read_field.fields.phone_number.label }}</div>
+                <div class="input-container__value">{{ engagement.partner.phone_number|default:"-" }}</div>
+              </td>
+              <td class="input-container">
+                <div class="input-container__label">{{ serializer.fields.partner.read_field.fields.email.label }}</div>
+                <div class="input-container__value">{{ engagement.partner.email|default:"-" }}</div>
+              </td>
+              <td class="input-container">
+                <div class="input-container__label">{{ serializer.fields.authorized_officers.read_field.label }}</div>
+                <div class="input-container__value">{{ engagement.authorized_officers|default:"-" }}</div>
+              </td>
+            </tr>
+            <tr>
+              <td class="input-container">
+                <div class="input-container__label">{{ serializer.fields.active_pd.read_field.label }}</div>
+                <div class="input-container__value">{{ engagement.active_pd|default:"-" }}</div>
+              </td>
+            </tr>
+          </table>
+        </div>
+        <pdf:nextpage></pdf:nextpage>
+        <div class="content-section">
+          <div class="content-section__header">
+            <div class="content-section__header__title">Audit Staff Team Members ({{ engagement.staff_members|length }})</div>
+          </div>
+          <div class="content-section__wrapper">
+            <table class="content-section__table">
+              <tr class="content-section__table__header">
+                <td>{{ serializer.fields.staff_members.read_field.child.fields.user.fields.profile.fields.job_title.label }}</td>
+                <td>{{ serializer.fields.staff_members.read_field.child.fields.user.fields.first_name.label }}</td>
+                <td>{{ serializer.fields.staff_members.read_field.child.fields.user.fields.last_name.label }}</td>
+                <td>{{ serializer.fields.staff_members.read_field.child.fields.user.fields.profile.fields.phone_number.label }}</td>
+                <td colspan="2">{{ serializer.fields.staff_members.read_field.child.fields.user.fields.email.label }}</td>
+              </tr>
+              {% if engagement.staff_members %}
+                {% for staff_member in engagement.staff_members %}
+                <tr>
+                  <td>{{ staff_member.job_title|default:"-" }}</td>
+                  <td>{{ staff_member.first_name|default:"-" }}</td>
+                  <td>{{ staff_member.last_name|default:"-" }}</td>
+                  <td>{{ staff_member.phone_number|default:"-" }}</td>
+                  <td colspan="2">{{ staff_member.email|default:"-" }}</td>
+                </tr>
+                {% endfor %}
+              {% else %}
+                <tr>
+                  <td>-</td><td>-</td><td>-</td>
+                  <td>-</td><td>-</td><td colspan="2">-</td>
+                </tr>
+              {% endif %}
+            </table>
+          </div>
+        </div>
+        {% if engagement.status == 'report_submitted' or engagement.status == 'final' %}
+          <pdf:nextpage></pdf:nextpage>
+          <div class="content-section">
+            <div class="content-section__header">
+              <div class="content-section__header__title">Engagement Status</div>
+            </div>
+            <table class="content-section__wrapper">
+              <tr>
+                <td class="input-container">
+                  <div class="input-container__label">{{ serializer.fields.date_of_field_visit.label }}</div>
+                  <div class="input-container__value">{{ engagement.date_of_field_visit|default:"-" }}</div>
+                </td>
+                <td class="input-container">
+                  <div class="input-container__label">{{ serializer.fields.date_of_draft_report_to_ip.label }}</div>
+                  <div class="input-container__value">{{ engagement.date_of_draft_report_to_ip|default:"-" }}</div>
+                </td>
+                <td class="input-container">
+                  <div class="input-container__label">{{ serializer.fields.date_of_comments_by_ip.label }}</div>
+                  <div class="input-container__value">{{ engagement.date_of_comments_by_ip|default:"-" }}</div>
+                </td>
+              </tr>
+              <tr>
+                <td class="input-container">
+                  <div class="input-container__label">{{ serializer.fields.date_of_draft_report_to_unicef.label }}</div>
+                  <div class="input-container__value">{{ engagement.date_of_draft_report_to_unicef|default:"-" }}</div>
+                </td>
+                <td class="input-container">
+                  <div class="input-container__label">{{ serializer.fields.date_of_comments_by_unicef.label }}</div>
+                  <div class="input-container__value">{{ engagement.date_of_comments_by_unicef|default:"-" }}</div>
+                </td>
+              </tr>
+            </table>
+          </div>
+
+          {% block extra_content %}{% endblock %}
+
+          <pdf:nextpage></pdf:nextpage>
+          <div class="content-section">
+            <div class="content-section__header">
+              <div class="content-section__header__title">UNICEF Follow-Up Actions</div>
+            </div>
+            <div class="content-section__wrapper">
+              <table class="content-section__table">
+                <tr class="content-section__table__header">
+                  <td colspan="2">{{ serializer.fields.action_points.child.fields.category.label }}</td>
+                  <td>{{ serializer.fields.action_points.child.fields.due_date.label }}</td>
+                  <td>{{ serializer.fields.action_points.child.fields.person_responsible.label }}</td>
+                  <td colspan="2">{{ serializer.fields.action_points.child.description.label }}</td>
+                  <td>{{ serializer.fields.action_points.child.status.label }}</td>
+                  <td>{{ serializer.fields.action_points.child.high_priority.label }}</td>
+                  <td colspan="2">{{ serializer.fields.action_points.child.action_taken.label }}</td>
+                </tr>
+                {% if engagement.action_points %}
+                  {% for action_point in engagement.action_points %}
+                    <tr>
+                      <td colspan="2"><span>{{ action_point.category }}</span></td>
+                      <td>{{ action_point.due_date }}</td>
+                      <td>{{ action_point.person_responsible }}</td>
+                      <td colspan="2">{{ action_point.description|default:"-" }}</td>
+                      <td>{{ action_point.status }}</td>
+                      <td>{{ action_point.high_priority|yesno:"Y,N" }}</td>
+                      <td colspan="2">{{ action_point.action_taken|default:"-" }}</td>
+                    </tr>
+                  {% endfor %}
+                {% else %}
+                  <tr>
+                    <td colspan="2">-</td>
+                    <td>-</td>
+                    <td>-</td>
+                    <td colspan="2">-</td>
+                  </tr>
+                {% endif %}
+              </table>
+            </div>
+          </div>
+        {% endif %}
+        <pdf:nextpage></pdf:nextpage>
+        <div class="content-section">
+          <div class="content-section__header">
+            <div class="content-section__header__title">{{ serializer.fields.engagement_attachments.label }}</div>
+          </div>
+          <div class="content-section__wrapper">
+            <table class="content-section__table">
+              <tr class="content-section__table__header">
+                <td>{{ serializer.fields.engagement_attachments.child.fields.created.label }}</td>
+                <td>{{ serializer.fields.engagement_attachments.child.fields.file_type.label }}</td>
+                <td colspan="5">File Attachment</td>
+              </tr>
+              {% if engagement.engagement_attachments %}
+                {% for attachment in engagement.engagement_attachments %}
+                  <tr>
+                    <td>{{ attachment.created }}</td>
+                    <td>{{ attachment.file_type_display }}</td>
+                    <td colspan="5"><a href="{{ attachment.url }}" target="_blank">{{ attachment.filename }}</a></td>
+                  </tr>
+                {% endfor %}
+              {% else %}
+                  <tr>
+                    <td>-</td>
+                    <td>-</td>
+                    <td colspan="5">-</td>
+                  </tr>
+              {% endif %}
+            </table>
+          </div>
+        </div>
+        <div class="content-section">
+          <div class="content-section__header">
+            <div class="content-section__header__title">{{ serializer.fields.report_attachments.label }}</div>
+          </div>
+          <div class="content-section__wrapper">
+            <table class="content-section__table">
+              <tr class="content-section__table__header">
+                <td>{{ serializer.fields.report_attachments.child.fields.created.label }}</td>
+                <td>{{ serializer.fields.report_attachments.child.fields.file_type.label }}</td>
+                <td colspan="5">File Attachment</td>
+              </tr>
+              {% if engagement.report_attachments %}
+                {% for attachment in engagement.report_attachments %}
+                  <tr>
+                    <td>{{ attachment.created }}</td>
+                    <td>{{ attachment.file_type_display }}</td>
+                    <td colspan="5"><a href="{{ attachment.url }}" target="_blank">{{ attachment.filename }}</a></td>
+                  </tr>
+                {% endfor %}
+              {% else %}
+                  <tr>
+                    <td>-</td>
+                    <td>-</td>
+                    <td colspan="5">-</td>
+                  </tr>
+              {% endif %}
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div id="footer_content" style="text-align: right">
+      <pdf:pagenumber> of <pdf:pagecount>
+    <div>
+  {% endif %}
+{% endblock %}
