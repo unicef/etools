@@ -1,7 +1,5 @@
-
 from django.core.management import BaseCommand
 from django.db.models import Q
-from django.utils import six
 
 from etools.applications.permissions2.models import Permission
 from etools.applications.permissions2.conditions import ObjectStatusCondition, \
@@ -113,7 +111,7 @@ class Command(BaseCommand):
                 self._update_permissions(r, perm, targets, perm_type, condition)
             return
 
-        if isinstance(targets, six.string_types):
+        if isinstance(targets, str):
             targets = [targets]
 
         if condition is None:
