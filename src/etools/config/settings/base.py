@@ -579,3 +579,6 @@ REPORT_EMAILS = get_from_secrets_or_env('REPORT_EMAILS', 'etools@unicef.org').re
 # email auth settings
 EMAIL_AUTH_TOKEN_NAME = os.getenv('EMAIL_AUTH_TOKEN_NAME', 'url_auth_token')
 SILENCED_SYSTEM_CHECKS = ["tenant_schemas.W003"]
+
+# GET parameter that allows override of schema
+SCHEMA_OVERRIDE_PARAM = "schema"
