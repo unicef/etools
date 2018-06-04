@@ -4,7 +4,7 @@ from datetime import datetime
 
 from django.core.management import call_command
 from django.core.urlresolvers import reverse
-from django.utils import six, timezone
+from django.utils import timezone
 from django.utils.translation import ugettext_lazy as _
 from factory import fuzzy
 
@@ -51,8 +51,7 @@ class TestTPMVisitViewSet(TestExportMixin, TPMTestCaseMixin, BaseTenantTestCase)
         )
 
         self.assertEquals(response.status_code, status.HTTP_200_OK)
-        six.assertCountEqual(
-            self,
+        self.assertCountEqual(
             map(lambda x: x['id'], response.data['results']),
             map(lambda x: x.id, expected_visits)
         )
@@ -575,8 +574,7 @@ class TestTPMPartnerViewSet(TestExportMixin, TPMTestCaseMixin, BaseTenantTestCas
         )
 
         self.assertEquals(response.status_code, status.HTTP_200_OK)
-        six.assertCountEqual(
-            self,
+        self.assertCountEqual(
             map(lambda x: x['id'], response.data['results']),
             map(lambda x: x.id, expected_firms)
         )
@@ -592,8 +590,7 @@ class TestTPMPartnerViewSet(TestExportMixin, TPMTestCaseMixin, BaseTenantTestCas
 
         if can_create:
             self.assertIn('POST', response.data['actions'])
-            six.assertCountEqual(
-                self,
+            self.assertCountEqual(
                 writable_fields or [],
                 response.data['actions']['POST'].keys()
             )
@@ -611,8 +608,7 @@ class TestTPMPartnerViewSet(TestExportMixin, TPMTestCaseMixin, BaseTenantTestCas
 
         if can_update:
             self.assertIn('PUT', response.data['actions'])
-            six.assertCountEqual(
-                self,
+            self.assertCountEqual(
                 writable_fields or [],
                 response.data['actions']['PUT'].keys()
             )

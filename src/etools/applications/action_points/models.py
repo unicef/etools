@@ -2,7 +2,8 @@ from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.contrib.contenttypes.fields import GenericRelation
 from django.db import models
-from django.utils.six import python_2_unicode_compatible
+
+
 from django.utils.translation import ugettext_lazy as _
 
 from django_fsm import FSMField, transition
@@ -17,7 +18,6 @@ from etools.applications.permissions2.fsm import has_action_permission
 from etools.applications.utils.groups.wrappers import GroupWrapper
 
 
-@python_2_unicode_compatible
 class ActionPoint(TimeStampedModel):
     MODULE_CHOICES = Choices(
         ('t2f', _('Trip Management')),

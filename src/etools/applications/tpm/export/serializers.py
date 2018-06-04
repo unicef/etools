@@ -1,9 +1,9 @@
 
 import itertools
+from urllib.parse import urljoin
 
 from django.db.models import Manager, QuerySet
 
-from future.backports.urllib.parse import urljoin
 from rest_framework import serializers
 
 from etools.applications.utils.common.serializers.fields import CommaSeparatedExportField

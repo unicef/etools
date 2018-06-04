@@ -1,5 +1,4 @@
 # -*- coding: utf-8 -*-
-
 import logging
 import random
 
@@ -8,7 +7,6 @@ from django.core.cache import cache
 from django.db import connection
 from django.db.models.signals import post_delete, post_save
 from django.dispatch.dispatcher import receiver
-from django.utils.encoding import python_2_unicode_compatible
 from django.utils.translation import ugettext as _
 
 from model_utils.fields import AutoCreatedField, AutoLastModifiedField
@@ -25,7 +23,6 @@ def get_random_color():
     )
 
 
-@python_2_unicode_compatible
 class GatewayType(models.Model):
     """
     Represents an Admin Type in location-related models.
@@ -48,7 +45,6 @@ class LocationManager(models.Manager):
         return super(LocationManager, self).get_queryset().select_related('gateway')
 
 
-@python_2_unicode_compatible
 class Location(MPTTModel):
     """
     Represents Location, either a point or geospatial object,
@@ -134,7 +130,6 @@ def invalidate_locations_etag(sender, instance, **kwargs):
     cache.delete("{}-locations-etag".format(schema_name))
 
 
-@python_2_unicode_compatible
 class CartoDBTable(MPTTModel):
     """
     Represents a table in CartoDB, it is used to import locations
