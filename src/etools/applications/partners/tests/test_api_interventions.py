@@ -1811,6 +1811,7 @@ class TestInterventionReportingRequirementView(BaseTenantTestCase):
     def setUpTestData(cls):
         cls.unicef_staff = UserFactory(is_staff=True)
         _add_user_to_partnership_manager_group(cls.unicef_staff)
+
         cls.intervention = InterventionFactory(
             start=datetime.date(2001, 1, 1),
             status=Intervention.DRAFT,
@@ -1820,7 +1821,7 @@ class TestInterventionReportingRequirementView(BaseTenantTestCase):
             intervention=cls.intervention
         )
         cls.lower_result = LowerResultFactory(result_link=cls.result_link)
-        cls.indicator = AppliedIndicatorFactory(lower_result=cls.lower_result)
+        cls.indicator = AppliedIndicatorFactory(lower_result=cls.lower_result, is_high_frequency=True)
 
     def _get_url(self, report_type, intervention=None):
         intervention = self.intervention if intervention is None else intervention
@@ -2014,6 +2015,9 @@ class TestInterventionReportingRequirementView(BaseTenantTestCase):
             report_req = ReportingRequirementFactory(
                 intervention=self.intervention,
                 report_type=report_type,
+                start_date=datetime.date.today(),
+                end_date=datetime.date.today(),
+                due_date=datetime.date.today(),
             )
 
             requirement_qs = ReportingRequirement.objects.filter(
@@ -2029,7 +2033,10 @@ class TestInterventionReportingRequirementView(BaseTenantTestCase):
                 data={
                     "report_type": report_type,
                     "reporting_requirements": [{
-                        "id": report_req.id
+                        "id": report_req.id,
+                        "start_date": report_req.start_date,
+                        "end_date": report_req.end_date,
+                        "due_date": report_req.due_date,
                     }]
                 }
             )
