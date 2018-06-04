@@ -1,0 +1,11 @@
+coverage
+factory-boy
+Faker
+flake8
+freezegun
+mock
+responses
+isort
+ipython
+pdbpp
+tox
