@@ -6,7 +6,7 @@ from django.contrib.contenttypes.models import ContentType
 from django.core.exceptions import ObjectDoesNotExist
 from django.db import models, transaction
 from django.db.models.fields import related, related_descriptors
-from django.utils import six
+
 from django.utils.decorators import method_decorator
 from django.utils.translation import ugettext_lazy as _
 
@@ -20,8 +20,7 @@ from etools.applications.utils.common.serializers.mixins import PkSerializerMixi
 from etools.applications.utils.common.utils import pop_keys
 
 
-@six.add_metaclass(SerializerMetaclass)
-class DeletableSerializerMixin(object):
+class DeletableSerializerMixin(metaclass=SerializerMetaclass):
     """
     Mixin that allow delete object from list through partial update.
     `_delete` field is used to mark object for delete.
