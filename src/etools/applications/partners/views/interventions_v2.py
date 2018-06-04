@@ -806,9 +806,6 @@ class InterventionReportingRequirementView(APIView):
         self.report_type = report_type
         self.request.data["report_type"] = self.report_type
 
-        if not request.data["reporting_requirements"]:
-            return Response(status=status.HTTP_400_BAD_REQUEST)
-
         serializer = self.serializer_create_class(
             data=self.request.data,
             context={
