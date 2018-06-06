@@ -15,6 +15,7 @@ from etools.applications.action_points.transitions.conditions import ActionPoint
 from etools.applications.EquiTrack.utils import get_environment
 from etools.applications.notification.models import Notification
 from etools.applications.permissions2.fsm import has_action_permission
+from etools.applications.utils.common.urlresolvers import build_frontend_url
 from etools.applications.utils.groups.wrappers import GroupWrapper
 
 
@@ -118,10 +119,13 @@ class ActionPoint(TimeStampedModel):
 
     @property
     def reference_number(self):
-        return '{0}/{1}/ACTP'.format(
+        return '{0}/{1}/APD'.format(
             self.created.year,
             self.id,
         )
+
+    def get_object_url(self):
+        return build_frontend_url('apd', 'action-points', 'detail', self.id)
 
     @property
     def status_date(self):

@@ -58,10 +58,12 @@ class TPMActionPointSerializer(PermissionsBasedSerializerMixin, ActionPointBaseS
     is_responsible = serializers.SerializerMethodField()
     history = SnapshotSerializer(many=True, label=_('History'), read_only=True)
 
+    url = serializers.ReadOnlyField(label=_('Link'), source='get_object_url')
+
     class Meta(ActionPointBaseSerializer.Meta):
         model = TPMActionPoint
         fields = ActionPointBaseSerializer.Meta.fields + [
-            'tpm_activity', 'section', 'office', 'history', 'is_responsible'
+            'tpm_activity', 'section', 'office', 'history', 'is_responsible', 'url'
         ]
         extra_kwargs = copy(ActionPointBaseSerializer.Meta.extra_kwargs)
         extra_kwargs.update({
