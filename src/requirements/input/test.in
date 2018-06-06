@@ -10,3 +10,4 @@ isort
 ipython
 pdbpp
 tox
+drf-api-checker
