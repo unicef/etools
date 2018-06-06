@@ -785,7 +785,8 @@ class EngagementActionPoint(ActionPoint):
 
     def get_mail_context(self):
         context = super(EngagementActionPoint, self).get_mail_context()
-        context['engagement'] = self.engagement.get_mail_context() if self.engagement else None
+        if self.engagement:
+            context['engagement'] = Engagement.objects.get_subclass(id=self.engagement.id).get_mail_context()
         return context
 
 
