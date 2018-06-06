@@ -21,6 +21,7 @@ from etools.applications.utils.writable_serializers.serializers import WritableN
 
 
 class ActionPointBaseSerializer(UserContextSerializerMixin, SnapshotModelSerializer, serializers.ModelSerializer):
+    reference_number = serializers.ReadOnlyField(label=_('Reference Number'))
     author = MinimalUserSerializer(read_only=True, label=_('Author'))
     assigned_by = MinimalUserSerializer(read_only=True, label=_('Assigned By'))
     assigned_to = SeparatedReadWriteField(
@@ -33,7 +34,8 @@ class ActionPointBaseSerializer(UserContextSerializerMixin, SnapshotModelSeriali
     class Meta:
         model = ActionPoint
         fields = [
-            'id', 'author', 'assigned_by', 'assigned_to',
+            'id', 'reference_number',
+            'author', 'assigned_by', 'assigned_to',
 
             'high_priority', 'due_date', 'description',
 
@@ -42,7 +44,8 @@ class ActionPointBaseSerializer(UserContextSerializerMixin, SnapshotModelSeriali
         ]
         extra_kwargs = {
             'status': {'read_only': True},
-            'date_of_completion': {'read_only': True}
+            'date_of_completion': {'read_only': True},
+            'due_date': {'required': True},
         }
 
     def create(self, validated_data):
@@ -63,7 +66,6 @@ class ActionPointBaseSerializer(UserContextSerializerMixin, SnapshotModelSeriali
 class ActionPointListSerializer(PermissionsBasedSerializerMixin, ActionPointBaseSerializer):
     related_module = serializers.ChoiceField(label=_('Related Module'), choices=ActionPoint.MODULE_CHOICES,
                                              read_only=True)
-    reference_number = serializers.ReadOnlyField(label=_('Reference Number'))
 
     partner = SeparatedReadWriteField(
         read_field=MinimalPartnerOrganizationListSerializer(read_only=True, label=_('Partner')),
@@ -93,7 +95,7 @@ class ActionPointListSerializer(PermissionsBasedSerializerMixin, ActionPointBase
 
     class Meta(ActionPointBaseSerializer.Meta):
         fields = ActionPointBaseSerializer.Meta.fields + [
-            'reference_number', 'related_module',
+            'related_module',
 
             'section', 'office', 'location',
             'partner', 'cp_output', 'intervention',
