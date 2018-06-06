@@ -3,7 +3,7 @@ import operator
 from datetime import datetime
 
 from django.db.models import (
-    Case, CharField, Count, DateTimeField, DurationField, ExpressionWrapper, F, Max, Min, Sum, When, Value)
+    Case, CharField, Count, DateTimeField, DurationField, ExpressionWrapper, F, Max, Min, Sum, When)
 
 from rest_framework.generics import ListCreateAPIView
 from rest_framework.permissions import IsAdminUser

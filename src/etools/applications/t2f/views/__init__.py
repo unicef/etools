@@ -2,7 +2,7 @@
 from collections import OrderedDict
 
 from django.contrib.auth import get_user_model
-from django.utils import six
+
 
 from django_fsm import TransitionNotAllowed
 from rest_framework.exceptions import ValidationError
@@ -38,5 +38,5 @@ def run_transition(serializer):
         try:
             transition()
         except (TransitionNotAllowed, TransitionError) as exception:
-            raise ValidationError({'non_field_errors': [six.text_type(exception)]})
+            raise ValidationError({'non_field_errors': [str(exception)]})
         instance.save()
