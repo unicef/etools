@@ -783,6 +783,11 @@ class EngagementActionPoint(ActionPoint):
     def complete(self):
         self._do_complete()
 
+    def get_mail_context(self):
+        context = super(EngagementActionPoint, self).get_mail_context()
+        context['engagement'] = self.engagement.get_mail_context() if self.engagement else None
+        return context
+
 
 UNICEFAuditFocalPoint = GroupWrapper(code='unicef_audit_focal_point',
                                      name='UNICEF Audit Focal Point')
