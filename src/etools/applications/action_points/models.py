@@ -164,18 +164,19 @@ class ActionPoint(TimeStampedModel):
             'person_responsible': self.assigned_to.get_full_name(),
             'assigned_by': self.assigned_by.get_full_name(),
             'reference_number': self.reference_number,
-            'implementing_partner': str(self.partner),
+            'partner': self.partner.name if self.partner else '',
             'description': self.description,
-            'due_date': self.due_date.strftime('%d %b %Y'),
-            'object_url': self.related_object.get_object_url() if self.related_object else '',
+            'due_date': self.due_date.strftime('%d %b %Y') if self.due_date else '',
+            'object_url': self.get_object_url(),
         }
 
-    def send_email(self, recipient, template_name):
+    def send_email(self, recipient, template_name, additional_context=None):
         context = {
             'environment': get_environment(),
             'action_point': self.get_mail_context(),
             'recipient': recipient.get_full_name(),
         }
+        context.update(additional_context or {})
 
         notification = Notification.objects.create(
             sender=self,
