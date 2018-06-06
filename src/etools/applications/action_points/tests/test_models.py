@@ -19,7 +19,7 @@ class TestActionPointModel(BaseTenantTestCase):
 
     def test_str(self):
         action_point = ActionPointFactory()
-        self.assertEqual(str(action_point), '{0}/{1}/ACTP'.format(action_point.created.year, action_point.id))
+        self.assertEqual(str(action_point), '{0}/{1}/APD'.format(action_point.created.year, action_point.id))
 
     def test_complete_fail(self):
         action_point = ActionPointFactory()
