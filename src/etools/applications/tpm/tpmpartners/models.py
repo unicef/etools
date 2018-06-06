@@ -1,6 +1,5 @@
 from django.contrib.contenttypes.fields import GenericRelation
 from django.db import connection, models
-from django.utils.encoding import python_2_unicode_compatible
 from django.utils.translation import ugettext_lazy as _
 
 from etools.applications.attachments.models import Attachment
@@ -30,7 +29,6 @@ class TPMPartner(BaseFirm):
             self.save()
 
 
-@python_2_unicode_compatible
 class TPMPartnerStaffMember(BaseStaffMember):
     tpm_partner = models.ForeignKey(
         TPMPartner, verbose_name=_('TPM Vendor'), related_name='staff_members',

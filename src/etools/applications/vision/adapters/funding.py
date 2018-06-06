@@ -4,7 +4,7 @@ import logging
 from decimal import Decimal
 
 from django.db.models import Sum
-from django.utils import six
+
 
 from etools.applications.funds.models import (FundsCommitmentHeader, FundsCommitmentItem,
                                               FundsReservationHeader, FundsReservationItem,)
@@ -80,7 +80,7 @@ class FundReservationsSynchronizer(VisionDataSynchronizer):
         self.header_records = {}
         self.item_records = {}
         self.fr_headers = {}
-        self.REVERSE_MAPPING = {v: k for k, v in six.iteritems(self.MAPPING)}
+        self.REVERSE_MAPPING = {v: k for k, v in self.MAPPING.items()}
         self.REVERSE_HEADER_FIELDS = [self.REVERSE_MAPPING[v] for v in self.HEADER_FIELDS]
         self.REVERSE_ITEM_FIELDS = [self.REVERSE_MAPPING[v] for v in self.LINE_ITEM_FIELDS]
         super(FundReservationsSynchronizer, self).__init__(*args, **kwargs)
@@ -144,7 +144,7 @@ class FundReservationsSynchronizer(VisionDataSynchronizer):
                      'outstanding_amt', 'outstanding_amt_local']:
             return comp_decimals(obj_field, record_field)
         if field == 'line_item':
-            return six.text_type(obj_field) == record_field
+            return str(obj_field) == record_field
         return obj_field == record_field
 
     def update_obj(self, obj, new_record):
@@ -189,7 +189,7 @@ class FundReservationsSynchronizer(VisionDataSynchronizer):
 
         to_update = []
 
-        fr_line_item_keys = {k for k in six.iterkeys(self.item_records)}
+        fr_line_item_keys = {k for k in self.item_records.keys()}
 
         list_of_line_items = FundsReservationItem.objects.filter(fr_ref_number__in=fr_line_item_keys)
 
@@ -306,7 +306,7 @@ class FundCommitmentSynchronizer(VisionDataSynchronizer):
         self.header_records = {}
         self.item_records = {}
         self.fc_headers = {}
-        self.REVERSE_MAPPING = {v: k for k, v in six.iteritems(self.MAPPING)}
+        self.REVERSE_MAPPING = {v: k for k, v in self.MAPPING.items()}
         self.REVERSE_HEADER_FIELDS = [self.REVERSE_MAPPING[v] for v in self.HEADER_FIELDS]
         self.REVERSE_ITEM_FIELDS = [self.REVERSE_MAPPING[v] for v in self.LINE_ITEM_FIELDS]
         super(FundCommitmentSynchronizer, self).__init__(*args, **kwargs)
@@ -368,7 +368,7 @@ class FundCommitmentSynchronizer(VisionDataSynchronizer):
         if field in ['commitment_amount', 'commitment_amount_dc', 'amount_changed']:
             return comp_decimals(obj_field, record_field)
         if field == 'line_item':
-            return six.text_type(obj_field) == record_field
+            return str(obj_field) == record_field
         return obj_field == record_field
 
     def update_obj(self, obj, new_record):
@@ -383,7 +383,7 @@ class FundCommitmentSynchronizer(VisionDataSynchronizer):
 
         to_update = []
 
-        fc_numbers_from_records = {k for k in six.iterkeys(self.header_records)}
+        fc_numbers_from_records = {k for k in self.header_records.keys()}
 
         list_of_headers = FundsCommitmentHeader.objects.filter(fc_number__in=fc_numbers_from_records)
         for h in list_of_headers:
@@ -415,7 +415,7 @@ class FundCommitmentSynchronizer(VisionDataSynchronizer):
 
         to_update = []
 
-        fc_line_item_keys = {k for k in six.iterkeys(self.item_records)}
+        fc_line_item_keys = {k for k in self.item_records.keys()}
 
         list_of_line_items = FundsCommitmentItem.objects.filter(fc_ref_number__in=fc_line_item_keys)
 

@@ -3,7 +3,7 @@ import logging
 
 from django import forms
 from django.core.exceptions import ValidationError
-from django.utils import six
+
 
 from carto.auth import APIKeyAuthClient
 from carto.exceptions import CartoException
@@ -30,7 +30,7 @@ class CartoDBTableForm(forms.ModelForm):
         parent_code_col = self.cleaned_data['parent_code_col']
         remap_table_name = self.cleaned_data['remap_table_name']
 
-        auth_client = APIKeyAuthClient(api_key=api_key, base_url="https://{}.carto.com/".format(six.text_type(domain)))
+        auth_client = APIKeyAuthClient(api_key=api_key, base_url="https://{}.carto.com/".format(str(domain)))
         sql_client = SQLClient(auth_client)
         try:
             sites = sql_client.send('select * from {} limit 1'.format(table_name))
