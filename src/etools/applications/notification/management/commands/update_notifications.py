@@ -1174,10 +1174,10 @@ class Command(BaseCommand):
                 'subject': '[eTools] ACTION POINT ASSIGNED to {{ action_point.person_responsible }}',
 
                 'content': strip_text("""
-                    Dear {{ action_point.person_responsible.first_name }},
+                    Dear {{ action_point.person_responsible }},
 
                     {% with action_point.tpm_activity as activity %}
-                    {{ action_point.author.get_full_name }} has assigned you an action point related to
+                    {{ action_point.assigned_by }} has assigned you an action point related to
                     Monitoring/Verification Visit {{ activity.tpm_visit.reference_number }}.
 
                     Implementing Partner {{ activity.partner }}.
@@ -1197,10 +1197,10 @@ class Command(BaseCommand):
                     {% extends "email-templates/base" %}
 
                     {% block content %}
-                    Dear {{ action_point.person_responsible.first_name }},<br/>
+                    Dear {{ action_point.person_responsible }},<br/>
                     <br/>
                     {% with action_point.tpm_activity as activity %}
-                    <b>{{ action_point.author.get_full_name }}</b> has assigned you an action point related to
+                    <b>{{ action_point.assigned_by }}</b> has assigned you an action point related to
                     Monitoring/Verification Visit {{ activity.tpm_visit.reference_number }}.<br/>
                     Implementing Partner <b>{{ activity.partner }}</b>.
                     <br/>
