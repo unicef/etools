@@ -1003,7 +1003,7 @@ class TestAPIInterventionIndicatorsListView(BaseTenantTestCase):
             'is_high_frequency',
             'target_new',
             'baseline_new',
-            'measurement_specification',
+            'measurement_specifications',
             'label',
             'numerator_label',
             'denominator_label'
