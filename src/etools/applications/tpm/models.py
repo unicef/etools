@@ -155,7 +155,7 @@ class TPMVisit(SoftDeleteMixin, TimeStampedModel, models.Model):
             self.start_date, self.end_date
         )
 
-    def get_mail_context(self, user=None):
+    def get_mail_context(self, user=None, include_activities=True):
         object_url = self.get_object_url()
 
         if user:
@@ -165,15 +165,19 @@ class TPMVisit(SoftDeleteMixin, TimeStampedModel, models.Model):
         activities = self.tpm_activities.all()
         interventions = set(a.intervention.title for a in activities if a.intervention)
         partner_names = set(a.partner.name for a in activities)
-        return {
+        context = {
             'reference_number': self.reference_number,
             'tpm_partner': self.tpm_partner.name if self.tpm_partner else '-',
-            'tpm_activities': [a.get_mail_context() for a in activities],
             'multiple_tpm_activities': activities.count() > 1,
             'object_url': object_url,
             'partners': ', '.join(partner_names),
             'interventions': ', '.join(interventions),
         }
+
+        if include_activities:
+            context['tpm_activities'] = [a.get_mail_context(include_visit=False) for a in activities]
+
+        return context
 
     def _send_email(self, recipients, template_name, context=None, user=None, **kwargs):
         context = context or {}
@@ -419,13 +423,18 @@ class TPMActivity(Activity):
     def pv_applicable(self):
         return self.related_reports.exists()
 
-    def get_mail_context(self):
-        return {
+    def get_mail_context(self, user=None, include_visit=True):
+        context = {
             'locations': ', '.join(map(force_text, self.locations.all())),
             'intervention': self.intervention.title if self.intervention else '-',
             'cp_output': force_text(self.cp_output) if self.cp_output else '-',
             'section': force_text(self.section) if self.section else '-',
+            'partner': self.partner.name if self.partner else '-',
         }
+        if include_visit:
+            context['tpm_visit'] = self.tpm_visit.get_mail_context(user=user, include_activities=False)
+
+        return context
 
 
 class TPMActionPointManager(models.Manager):
@@ -450,6 +459,11 @@ class TPMActionPoint(ActionPoint):
                 conditions=[])
     def complete(self):
         self._do_complete()
+
+    def get_mail_context(self):
+        context = super(TPMActionPoint, self).get_mail_context()
+        context['tpm_activity'] = self.tpm_activity.get_mail_context() if self.tpm_activity else None
+        return context
 
 
 PME = GroupWrapper(code='pme',
