@@ -72,10 +72,12 @@ class EngagementActionPointSerializer(PermissionsBasedSerializerMixin, ActionPoi
 
     history = ActivitySerializer(many=True, label=_('History'), read_only=True)
 
+    url = serializers.ReadOnlyField(label=_('Link'), source='get_object_url')
+
     class Meta(ActionPointBaseSerializer.Meta):
         model = EngagementActionPoint
         fields = ActionPointBaseSerializer.Meta.fields + [
-            'section', 'office', 'history',
+            'section', 'office', 'history', 'url',
         ]
         extra_kwargs = copy(ActionPointBaseSerializer.Meta.extra_kwargs)
         extra_kwargs.update({
