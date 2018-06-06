@@ -44,7 +44,8 @@ class ActionPointBaseSerializer(UserContextSerializerMixin, SnapshotModelSeriali
         ]
         extra_kwargs = {
             'status': {'read_only': True},
-            'date_of_completion': {'read_only': True}
+            'date_of_completion': {'read_only': True},
+            'due_date': {'required': True},
         }
 
     def create(self, validated_data):
