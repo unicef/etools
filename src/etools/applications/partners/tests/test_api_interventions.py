@@ -1001,6 +1001,12 @@ class TestAPIInterventionIndicatorsListView(BaseTenantTestCase):
             'response_plan_name',
             'is_active',
             'is_high_frequency',
+            'target_new',
+            'baseline_new',
+            'measurement_specification',
+            'label',
+            'numerator_label',
+            'denominator_label'
         ))
 
     def _make_request(self, user):
