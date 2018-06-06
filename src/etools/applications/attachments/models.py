@@ -1,4 +1,3 @@
-
 import os
 from urllib.parse import urlsplit
 
@@ -112,6 +111,11 @@ class AttachmentFlat(models.Model):
     partner_type = models.CharField(max_length=150, blank=True, verbose_name=_('Partner Type'))
     vendor_number = models.CharField(max_length=50, blank=True, verbose_name=_('Vendor Number'))
     pd_ssfa_number = models.CharField(max_length=64, blank=True, verbose_name=_('PD SSFA Number'))
+    agreement_reference_number = models.CharField(
+        max_length=100,
+        blank=True,
+        verbose_name=_('Agreement Reference Number')
+    )
     file_type = models.CharField(max_length=100, blank=True, verbose_name=_('File Type'))
     file_link = models.CharField(max_length=1024, blank=True, verbose_name=_('File Link'))
     filename = models.CharField(max_length=1024, blank=True, verbose_name=_('File Name'))
