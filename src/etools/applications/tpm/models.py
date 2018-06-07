@@ -457,7 +457,14 @@ class TPMActionPoint(TimeStampedModel, models.Model):
     status = models.CharField(choices=STATUSES, max_length=9, verbose_name='Status', default=STATUSES.open)
 
     def __str__(self):
-        return 'Action Point #{} on {}'.format(self.id, self.tpm_activity)
+        return 'Action Point #{} on {}'.format(self.id, self.tpm_visit)
+
+    @property
+    def reference_number(self):
+        return '{0}/{1}/APD'.format(
+            self.created.year,
+            self.id,
+        )
 
     def get_mail_context(self):
         return {
