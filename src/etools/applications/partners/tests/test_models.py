@@ -2,7 +2,9 @@ import copy
 import datetime
 from unittest import skip
 
+from django.conf import settings
 from django.core.files.uploadedfile import SimpleUploadedFile
+from django.core.management import call_command
 from django.test import SimpleTestCase
 from django.urls import reverse
 from django.utils import timezone
@@ -612,6 +614,7 @@ class TestAgreementModel(BaseTenantTestCase):
 class TestInterventionModel(BaseTenantTestCase):
     def setUp(self):
         super(TestInterventionModel, self).setUp()
+        call_command('update_notifications')
         self.partner_organization = PartnerFactory(name="Partner Org 1")
         cp = CountryProgrammeFactory(
             name="CP 1",
@@ -1124,6 +1127,157 @@ class TestInterventionModel(BaseTenantTestCase):
         )
         self.assertEqual(intervention.status, models.Intervention.CLOSED)
         self.assertEqual(agreement.status, models.Agreement.ENDED)
+
+    def test_pca_required_end_is_null(self):
+        intervention = InterventionFactory(
+            document_type=models.Intervention.PD
+        )
+        self.assertFalse(intervention.pca_required())
+
+    def test_pca_required_no_cp(self):
+        intervention = InterventionFactory(
+            document_type=models.Intervention.PD,
+            end=datetime.date.today(),
+        )
+        self.assertFalse(intervention.pca_required())
+
+    def test_pca_required_cp_false(self):
+        """Intervention related via agreement, and CP is lead out
+        but PD end date does not exceed CP to date
+        """
+        lead = datetime.date.today() + datetime.timedelta(
+            days=settings.PCA_REQUIRED_NOTIFICATION_LEAD
+        )
+        cp = CountryProgrammeFactory(to_date=lead)
+        agreement = AgreementFactory(country_programme=cp)
+        intervention = InterventionFactory(
+            document_type=models.Intervention.PD,
+            end=datetime.date.today(),
+            agreement=agreement,
+        )
+        self.assertFalse(intervention.pca_required())
+
+    def test_pca_required_cp_lead_less(self):
+        """Intervention related via agreement, and CP is less lead out
+        and PD end date does exceed CP to date
+        """
+        lead = datetime.date.today() + datetime.timedelta(
+            days=settings.PCA_REQUIRED_NOTIFICATION_LEAD
+        )
+        cp = CountryProgrammeFactory(
+            to_date=lead - datetime.timedelta(days=10)
+        )
+        agreement = AgreementFactory(country_programme=cp)
+        intervention = InterventionFactory(
+            document_type=models.Intervention.PD,
+            end=lead + datetime.timedelta(days=10),
+            agreement=agreement,
+        )
+        self.assertTrue(intervention.pca_required())
+
+    def test_pca_required_cp_lead_greater(self):
+        """Intervention related via agreement, and CP is greater than lead out
+        and PD end date does exceed CP to date
+        """
+        lead = datetime.date.today() + datetime.timedelta(
+            days=settings.PCA_REQUIRED_NOTIFICATION_LEAD
+        )
+        cp = CountryProgrammeFactory(
+            to_date=lead + datetime.timedelta(days=10)
+        )
+        agreement = AgreementFactory(country_programme=cp)
+        intervention = InterventionFactory(
+            document_type=models.Intervention.PD,
+            end=lead + datetime.timedelta(days=20),
+            agreement=agreement,
+        )
+        self.assertFalse(intervention.pca_required())
+
+    def test_pca_required_cp(self):
+        """Intervention related via agreement, and CP is lead out
+        and PD end date does exceed CP to date
+        """
+        lead = datetime.date.today() + datetime.timedelta(
+            days=settings.PCA_REQUIRED_NOTIFICATION_LEAD
+        )
+        cp = CountryProgrammeFactory(to_date=lead)
+        agreement = AgreementFactory(country_programme=cp)
+        intervention = InterventionFactory(
+            document_type=models.Intervention.PD,
+            end=lead + datetime.timedelta(days=10),
+            agreement=agreement,
+        )
+        self.assertTrue(intervention.pca_required())
+
+    def test_pca_required_direct_cp_false(self):
+        """Intervention directly related to CP, and CP is lead out
+        but PD end date does not exceed CP to date
+        """
+        lead = datetime.date.today() + datetime.timedelta(
+            days=settings.PCA_REQUIRED_NOTIFICATION_LEAD
+        )
+        cp = CountryProgrammeFactory(to_date=lead)
+        intervention = InterventionFactory(
+            document_type=models.Intervention.PD,
+            end=datetime.date.today(),
+            country_programme=cp,
+        )
+        self.assertFalse(intervention.pca_required())
+
+    def test_pca_required_direct_cp_lead_less(self):
+        """Intervention directly related to CP, and CP is less lead out
+        and PD end date does exceed CP to date
+        """
+        lead = datetime.date.today() + datetime.timedelta(
+            days=settings.PCA_REQUIRED_NOTIFICATION_LEAD
+        )
+        cp = CountryProgrammeFactory(
+            to_date=lead - datetime.timedelta(days=10)
+        )
+        intervention = InterventionFactory(
+            document_type=models.Intervention.PD,
+            end=lead + datetime.timedelta(days=10),
+            country_programme=cp,
+        )
+        self.assertTrue(intervention.pca_required())
+
+    def test_pca_required_direct_cp_lead_greater(self):
+        """Intervention directly related to CP, and CP is greater than lead out
+        and PD end date does exceed CP to date
+        """
+        lead = datetime.date.today() + datetime.timedelta(
+            days=settings.PCA_REQUIRED_NOTIFICATION_LEAD
+        )
+        cp = CountryProgrammeFactory(
+            to_date=lead + datetime.timedelta(days=10)
+        )
+        intervention = InterventionFactory(
+            document_type=models.Intervention.PD,
+            end=lead + datetime.timedelta(days=20),
+            country_programme=cp,
+        )
+        self.assertFalse(intervention.pca_required())
+
+    def test_pca_required_direct_cp(self):
+        """Intervention directly related to CP, and CP is lead out
+        and PD end date does exceed CP to date
+        """
+        lead = datetime.date.today() + datetime.timedelta(
+            days=settings.PCA_REQUIRED_NOTIFICATION_LEAD
+        )
+        cp = CountryProgrammeFactory(to_date=lead)
+        intervention = InterventionFactory(
+            document_type=models.Intervention.PD,
+            end=lead + datetime.timedelta(days=10),
+            country_programme=cp,
+        )
+        self.assertTrue(intervention.pca_required())
+
+    def test_send_pca_required_notification(self):
+        intervention = InterventionFactory(
+            document_type=models.Intervention.PD
+        )
+        self.assertIsNone(intervention.send_pca_required_notification())
 
 
 class TestGetFilePaths(BaseTenantTestCase):

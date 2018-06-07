@@ -1,6 +1,7 @@
 import datetime
 import logging
 
+from django.conf import settings
 from django.contrib.contenttypes.models import ContentType
 from django.db.models import Q
 from django.utils.timezone import now, make_aware
@@ -8,6 +9,7 @@ from django.utils.timezone import now, make_aware
 from etools.applications.attachments.models import Attachment, FileType
 from etools.applications.partners.models import (Agreement, AgreementAmendment, Assessment, Intervention,
                                                  InterventionAmendment, InterventionAttachment, PartnerOrganization,)
+from etools.applications.reports.models import CountryProgramme
 from etools.applications.utils.common.utils import run_on_all_tenants
 
 logger = logging.getLogger(__name__)
@@ -256,3 +258,26 @@ def copy_all_attachments(**kwargs):
     ]
     for cmd in copy_commands:
         run_on_all_tenants(cmd, **kwargs)
+
+
+def send_pca_required_notifications():
+    """If the PD has an end date that is after the CP to date
+    and the it is 30 days prior to the end of the CP,
+    send a PCA required notification.
+    """
+    days_lead = datetime.date.today() + datetime.timedelta(
+        days=settings.PCA_REQUIRED_NOTIFICATION_LEAD
+    )
+    pd_list = set()
+    for cp in CountryProgramme.objects.filter(to_date=days_lead):
+        # For PDs related directly to CP
+        for pd in cp.interventions.filter(end__gt=cp.to_date):
+            pd_list.add(pd)
+
+        # For PDs by way of agreement
+        for agreement in cp.agreements.filter(interventions__end__gt=cp.to_date):
+            for pd in agreement.interventions.filter(end__gt=cp.to_date):
+                pd_list.add(pd)
+
+    for pd in pd_list:
+        pd.send_pca_required_notification()

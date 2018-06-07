@@ -1,11 +1,22 @@
 import datetime
+from mock import Mock, patch
 
+from django.conf import settings
+from django.core.management import call_command
+
+from etools.applications.EquiTrack.tests.cases import BaseTenantTestCase
 from etools.applications.funds.tests.factories import FundsReservationHeaderFactory
 from etools.applications.locations.tests.factories import GatewayTypeFactory, LocationFactory
+from etools.applications.partners import utils
 from etools.applications.partners.models import Intervention, InterventionBudget, InterventionResultLink
 from etools.applications.partners.tests.factories import AgreementFactory, InterventionFactory, PartnerFactory
-from etools.applications.reports.models import AppliedIndicator, IndicatorBlueprint, LowerResult, ResultType
-from etools.applications.reports.tests.factories import ResultFactory
+from etools.applications.reports.models import (
+    AppliedIndicator,
+    IndicatorBlueprint,
+    LowerResult,
+    ResultType,
+)
+from etools.applications.reports.tests.factories import CountryProgrammeFactory, ResultFactory
 from etools.applications.users.tests.factories import GroupFactory, UserFactory
 
 
@@ -80,3 +91,42 @@ def setup_intervention_test_data(test_case, include_results_and_indicators=False
             p_code='a-p-code')
         )
         test_case.disaggregation = test_case.applied_indicator.disaggregation.create(name='A Disaggregation')
+
+
+class TestSendPCARequiredNotification(BaseTenantTestCase):
+    @classmethod
+    def setUpTestData(cls):
+        call_command("update_notifications")
+        cls.send_path = "etools.applications.partners.models.send_notification_using_email_template"
+
+    def setUp(self):
+        self.lead_date = datetime.date.today() + datetime.timedelta(
+            days=settings.PCA_REQUIRED_NOTIFICATION_LEAD
+        )
+
+    def test_direct_cp(self):
+        cp = CountryProgrammeFactory(to_date=self.lead_date)
+        intervention = InterventionFactory(
+            document_type=Intervention.PD,
+            end=self.lead_date + datetime.timedelta(days=10),
+            country_programme=cp,
+        )
+        self.assertTrue(intervention.pca_required)
+        mock_send = Mock()
+        with patch(self.send_path, mock_send):
+            utils.send_pca_required_notifications()
+        self.assertEqual(mock_send.call_count, 1)
+
+    def test_agreement_cp(self):
+        cp = CountryProgrammeFactory(to_date=self.lead_date)
+        agreement = AgreementFactory(country_programme=cp)
+        intervention = InterventionFactory(
+            document_type=Intervention.PD,
+            end=self.lead_date + datetime.timedelta(days=10),
+            agreement=agreement,
+        )
+        self.assertTrue(intervention.pca_required)
+        mock_send = Mock()
+        with patch(self.send_path, mock_send):
+            utils.send_pca_required_notifications()
+        self.assertEqual(mock_send.call_count, 1)

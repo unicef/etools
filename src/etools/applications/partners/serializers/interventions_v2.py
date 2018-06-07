@@ -538,6 +538,7 @@ class InterventionDetailSerializer(serializers.ModelSerializer):
     grants = serializers.SerializerMethodField()
 
     location_p_codes = serializers.SerializerMethodField()
+    pca_required = serializers.BooleanField()
 
     def get_location_p_codes(self, obj):
         return [location.p_code for location in obj.flat_locations.all()]
@@ -599,7 +600,8 @@ class InterventionDetailSerializer(serializers.ModelSerializer):
             "location_p_codes",
             "days_from_submission_to_signed",
             "days_from_review_to_signed",
-            "partner_vendor"
+            "partner_vendor",
+            "pca_required",
         )
 
 
