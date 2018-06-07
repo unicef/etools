@@ -1,10 +1,9 @@
-
 import string
 import uuid
 
-from etools.applications.email_auth.utils import get_token_auth_link
 from etools.applications.EquiTrack.utils import get_environment
 from etools.applications.notification.utils import send_notification_using_email_template
+from etools.applications.tokens.utils import get_token_auth_link
 
 
 def generate_username():
