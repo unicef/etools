@@ -768,6 +768,11 @@ class InterventionReportingRequirementCreateSerializer(serializers.ModelSerializ
 
     def delete(self, validated_data):
         for r in validated_data["reporting_requirements"]:
+            if r.get("due_date") < date.today():
+                raise ValidationError(
+                    _("Cannot delete reporting requirements in the past.")
+                )
+
             if r.get("id"):
                 ReportingRequirement.objects.filter(pk=r.get("id")).delete()
         return self.intervention

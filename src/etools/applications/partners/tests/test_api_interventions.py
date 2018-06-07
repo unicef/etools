@@ -1811,6 +1811,7 @@ class TestInterventionReportingRequirementView(BaseTenantTestCase):
     def setUpTestData(cls):
         cls.unicef_staff = UserFactory(is_staff=True)
         _add_user_to_partnership_manager_group(cls.unicef_staff)
+
         cls.intervention = InterventionFactory(
             start=datetime.date(2001, 1, 1),
             status=Intervention.DRAFT,
@@ -1820,7 +1821,7 @@ class TestInterventionReportingRequirementView(BaseTenantTestCase):
             intervention=cls.intervention
         )
         cls.lower_result = LowerResultFactory(result_link=cls.result_link)
-        cls.indicator = AppliedIndicatorFactory(lower_result=cls.lower_result)
+        cls.indicator = AppliedIndicatorFactory(lower_result=cls.lower_result, is_high_frequency=True)
 
     def _get_url(self, report_type, intervention=None):
         intervention = self.intervention if intervention is None else intervention
@@ -2009,19 +2010,36 @@ class TestInterventionReportingRequirementView(BaseTenantTestCase):
                 status.HTTP_405_METHOD_NOT_ALLOWED
             )
 
-    def test_delete_invalid_report_type(self):
+    def test_delete_reporting_requirements(self):
         for report_type, _ in ReportingRequirement.TYPE_CHOICES:
+            report_req = ReportingRequirementFactory(
+                intervention=self.intervention,
+                report_type=report_type,
+                start_date=datetime.date.today(),
+                end_date=datetime.date.today(),
+                due_date=datetime.date.today(),
+            )
+
+            requirement_qs = ReportingRequirement.objects.filter(
+                intervention=self.intervention,
+                report_type=report_type,
+            )
+            init_count = requirement_qs.count()
+
             response = self.forced_auth_req(
                 "delete",
-                self._get_url(report_type),
+                self._get_url(report_type, self.intervention),
                 user=self.unicef_staff,
                 data={
+                    "report_type": report_type,
                     "reporting_requirements": [{
-                        "due_date": datetime.date(2001, 4, 15),
+                        "id": report_req.id,
+                        "start_date": report_req.start_date,
+                        "end_date": report_req.end_date,
+                        "due_date": report_req.due_date,
                     }]
                 }
             )
-            self.assertEqual(
-                response.status_code,
-                status.HTTP_405_METHOD_NOT_ALLOWED
-            )
+
+            self.assertEqual(response.status_code, status.HTTP_200_OK)
+            self.assertEqual(requirement_qs.count(), init_count - 1)
