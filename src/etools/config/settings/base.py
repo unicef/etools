@@ -268,7 +268,7 @@ AUTHENTICATION_BACKENDS = (
     'django.contrib.auth.backends.ModelBackend',
     'djangosaml2.backends.Saml2Backend',
 )
-AUTH_USER_MODEL = 'auth.User'
+AUTH_USER_MODEL = 'users.User'
 LOGIN_REDIRECT_URL = '/'
 LOGIN_URL = '/login/'
 

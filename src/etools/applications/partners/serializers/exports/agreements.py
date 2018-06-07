@@ -44,10 +44,12 @@ class AgreementExportSerializer(serializers.ModelSerializer):
     partner_manager_name = serializers.CharField(
         label=_("Signed By Partner"),
         source='partner_manager.get_full_name',
+        read_only=True,
     )
     signed_by_name = serializers.CharField(
         label=_("Signed By UNICEF"),
         source='signed_by.get_full_name',
+        read_only=True,
     )
     amendments = serializers.SerializerMethodField(label=_("Amendments"))
     url = serializers.SerializerMethodField(label=_("URL"))
