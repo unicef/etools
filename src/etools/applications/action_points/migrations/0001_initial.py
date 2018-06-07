@@ -69,6 +69,9 @@ class Migration(migrations.Migration):
             ],
             options={
                 'abstract': False,
+                'ordering': ('id',),
+                'verbose_name': 'Action Point',
+                'verbose_name_plural': 'Action Points',
             },
         ),
     ]
