@@ -1,3 +1,4 @@
 django-extensions
 invoke
+pip-tools
 sphinx
