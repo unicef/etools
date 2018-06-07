@@ -790,11 +790,11 @@ class Command(BaseCommand):
                     Dear {{ action_point.person_responsible }},
 
                     {{ action_point.assigned_by }} has assigned you an action point.
-                    
+
                     Engagement ID: {{ action_point.engagement.unique_id }}
                     Due Date: {{ action_point.due_date }}
                     Link: {{ action_point.engagement.object_url }}
-                    
+
                     Thank you.
                 """),
 
@@ -805,11 +805,11 @@ class Command(BaseCommand):
                     Dear {{ action_point.person_responsible }},<br/><br/>
 
                     {{ action_point.assigned_by }} has assigned you an action point. <br/><br/>
-                    
+
                     Engagement ID: {{ action_point.engagement.unique_id }}<br/>
                     Due Date: {{ action_point.due_date }}<br/>
                     Link: <a href="{{ action_point.engagement.object_url }}">click here</a><br/><br/>
-                    
+
                     Thank you.
                     {% endblock %}
                 """
