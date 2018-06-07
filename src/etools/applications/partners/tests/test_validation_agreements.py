@@ -1,13 +1,17 @@
 import datetime
 
 from etools.applications.EquiTrack.tests.cases import BaseTenantTestCase
-from etools.applications.EquiTrack.validation_mixins import BasicValidationError, TransitionError
 from etools.applications.partners.models import Agreement
-from etools.applications.partners.tests.factories import (AgreementAmendmentFactory, AgreementFactory,
-                                                          PartnerFactory, PartnerStaffFactory,)
+from etools.applications.partners.tests.factories import (
+    AgreementAmendmentFactory,
+    AgreementFactory,
+    PartnerFactory,
+    PartnerStaffFactory,
+)
 from etools.applications.partners.validation import agreements
 from etools.applications.reports.tests.factories import CountryProgrammeFactory
 from etools.applications.users.tests.factories import UserFactory
+from validator.exceptions import BasicValidationError, TransitionError
 
 
 class TestAgreementTransitionToSignedValid(BaseTenantTestCase):
