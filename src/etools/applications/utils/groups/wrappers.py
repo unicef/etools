@@ -5,6 +5,16 @@ from django.contrib.auth.models import Group
 
 
 class GroupWrapper(object):
+    """
+    Wrapper for easy access to commonly used django groups and mapping shortcodes for them.
+    example:
+
+    UNICEFUser = GroupWrapper(code='unicef_user',
+                              name='UNICEF User')
+
+    unicef_group = UNICEFUser.as_group() # group will be automatically created if not exists
+    """
+
     code = None
     name = None
     _group = None
