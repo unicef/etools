@@ -10,7 +10,13 @@ from django.urls import reverse
 from tenant_schemas.utils import get_public_schema_name
 
 from etools.applications.hact.tasks import update_hact_for_country, update_hact_values
-from etools.applications.users.models import Country, Office, Section, UserProfile, WorkspaceCounter
+from etools.applications.users.models import (
+    Country,
+    Office,
+    Section,
+    UserProfile,
+    WorkspaceCounter,
+)
 from etools.applications.vision.tasks import sync_handler, vision_sync_task
 from etools.libraries.azure_graph_api.tasks import sync_user
 
@@ -312,7 +318,6 @@ class SectionAdmin(admin.ModelAdmin):
 
 
 # Re-register UserAdmin
-admin.site.unregister(get_user_model())
 admin.site.register(get_user_model(), UserAdminPlus)
 admin.site.register(UserProfile, ProfileAdmin)
 admin.site.register(Country, CountryAdmin)

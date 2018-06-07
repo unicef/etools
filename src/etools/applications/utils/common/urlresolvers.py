@@ -1,4 +1,3 @@
-
 from django.db import connection
 from django.urls import reverse
 from django.utils.http import urlquote
@@ -14,9 +13,9 @@ def site_url():
 
 
 def build_frontend_url(*parts):
-    from etools.applications.email_auth.utils import update_url_with_kwargs
+    from etools.applications.tokens.utils import update_url_with_kwargs
 
-    token_auth_view = reverse('email_auth:login')
+    token_auth_view = reverse('tokens:login')
     change_country_view = urlquote(update_url_with_kwargs(
         reverse('users:country-change'),
         country=Country.objects.get(schema_name=connection.schema_name).id,

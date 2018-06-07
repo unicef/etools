@@ -1227,15 +1227,15 @@ class Command(BaseCommand):
                 'description': 'Action point assigned/reassigned',
                 'subject': '[eTools] ACTION POINT ASSIGNED to {{ action_point.person_responsible }}',
 
-                'content': """
+                'content': strip_text("""
                 Dear {{ recipient }},
 
-                {{ action_point.assigned_by }} has assigned you an action point related to:
-                Implementing Partner: {{ action_point.implementing_partner }}
+                {{ action_point.assigned_by }} has assigned you an action point {% if action_point.partner %}related to:
+                Implementing Partner: {{ action_point.partner }}{% endif %}
                 Description: {{ action_point.description }}
 
                 Link: {{ action_point.object_url }}
-                """,
+                """),
 
                 'html_content': """
                 {% extends "email-templates/base" %}
@@ -1243,8 +1243,9 @@ class Command(BaseCommand):
                 {% block content %}
                 Dear {{ recipient }},<br/><br/>
 
-                {{ action_point.assigned_by }} has assigned you an action point related to:<br/>
-                Implementing Partner: {{ action_point.implementing_partner }}<br/>
+                {{ action_point.assigned_by }} has assigned you an action point {% if action_point.partner %}related to:
+                <br/>
+                Implementing Partner: {{ action_point.partner }}{% endif %}<br/>
                 Description: {{ action_point.description }}<br/>
                 Link: <a href="{{ action_point.object_url }}">{{ action_point.reference_number }}</a>
                 {% endblock %}

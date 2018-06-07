@@ -52,7 +52,7 @@ class PartnerOrganizationExportSerializer(serializers.ModelSerializer):
     )
     actual_cash_transfer_for_current_year = serializers.CharField(
         label=_("Actual Cash Transfer for Current Year (USD)"),
-        source='total_ct_cy'
+        source='total_ct_ytd'
     )
     marked_for_deletion = serializers.SerializerMethodField(
         label=_("Marked for Deletion")
