@@ -271,12 +271,18 @@ def send_pca_required_notifications():
     pd_list = set()
     for cp in CountryProgramme.objects.filter(to_date=days_lead):
         # For PDs related directly to CP
-        for pd in cp.interventions.filter(end__gt=cp.to_date):
+        for pd in cp.interventions.filter(
+                document_type=Intervention.PD,
+                end__gt=cp.to_date
+        ):
             pd_list.add(pd)
 
         # For PDs by way of agreement
         for agreement in cp.agreements.filter(interventions__end__gt=cp.to_date):
-            for pd in agreement.interventions.filter(end__gt=cp.to_date):
+            for pd in agreement.interventions.filter(
+                    document_type=Intervention.PD,
+                    end__gt=cp.to_date
+            ):
                 pd_list.add(pd)
 
     for pd in pd_list:

@@ -2021,7 +2021,7 @@ class Intervention(TimeStampedModel):
         after the CP 'to date' and the it less than 30 days prior to the
         end of the CP
         """
-        if not self.end:
+        if not self.end or self.document_type != self.PD:
             return False
 
         cp_end_dates = []
