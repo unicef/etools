@@ -6,7 +6,7 @@ from django.core.urlresolvers import reverse
 import factory
 
 from etools.applications.EquiTrack.tests.cases import BaseTenantTestCase
-from etools.applications.publics.models import TravelExpenseType
+from etools.applications.publics.models import TravelExpenseType, Currency
 from etools.applications.publics.tests.factories import (PublicsAirlineCompanyFactory,
                                                          PublicsBusinessAreaFactory, PublicsCountryFactory,
                                                          PublicsCurrencyFactory, PublicsDSARateFactory,
@@ -115,6 +115,8 @@ class StaticDataEndpoints(BaseTenantTestCase):
                                                 travel_agent_1_et.id})
 
     def test_currencies_view(self):
+
+        self.assertEqual(Currency.objects.count(), 1)
         factory.build_batch(PublicsCurrencyFactory, 3)
 
         with self.assertNumQueries(5):
