@@ -287,7 +287,7 @@ class TestModelExport(BaseTenantTestCase):
             self.partner.rating,
             u'{}'.format(self.partner.core_values_assessment_date),
             u'{:.2f}'.format(self.partner.total_ct_cp),
-            u'{:.2f}'.format(self.partner.total_ct_cy),
+            u'{:.2f}'.format(self.partner.total_ct_ytd),
             deleted_flag,
             blocked,
             self.partner.type_of_assessment,

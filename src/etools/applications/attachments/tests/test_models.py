@@ -1,8 +1,7 @@
-
 from django.core.exceptions import ValidationError
 from django.core.files.uploadedfile import SimpleUploadedFile
 
-
+from etools.applications.attachments.models import AttachmentFlat
 from etools.applications.attachments.tests.factories import AttachmentFactory, AttachmentFileTypeFactory
 from etools.applications.EquiTrack.tests.cases import BaseTenantTestCase
 
@@ -70,3 +69,19 @@ class TestAttachments(BaseTenantTestCase):
         invalid_attachment = AttachmentFactory(content_object=self.simple_object)
         with self.assertRaises(ValidationError):
             invalid_attachment.clean()
+
+
+class TestAttachmentFlat(BaseTenantTestCase):
+    @classmethod
+    def setUpTestData(cls):
+        cls.simple_object = AttachmentFileTypeFactory()
+
+    def test_str(self):
+        attachment = AttachmentFactory(
+            file=SimpleUploadedFile('simple_file.txt', u'R\xe4dda Barnen'.encode('utf-8')),
+            content_object=self.simple_object
+        )
+        flat_qs = AttachmentFlat.objects.filter(attachment=attachment)
+        self.assertTrue(flat_qs.exists())
+        flat = flat_qs.first()
+        self.assertEqual(str(flat), str(attachment.file))
