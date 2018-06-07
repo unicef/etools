@@ -1,5 +1,7 @@
 from rest_framework_csv import renderers as r
 
+from etools.applications.EquiTrack.renderers import FriendlyCSVRenderer
+
 
 class PartnerOrganizationCSVRenderer(r.CSVRenderer):
     header = ['vendor_number', 'organization_full_name',
@@ -33,7 +35,7 @@ class PartnerOrganizationCSVRenderer(r.CSVRenderer):
     }
 
 
-class PartnerOrganizationHactCsvRenderer(r.CSVRenderer):
+class PartnerOrganizationHactCsvRenderer(FriendlyCSVRenderer):
 
     header = [
         'name',
@@ -108,7 +110,7 @@ class PartnerOrganizationHactCsvRenderer(r.CSVRenderer):
     }
 
 
-class PartnerOrganizationSimpleHactCsvRenderer(r.CSVRenderer):
+class PartnerOrganizationSimpleHactCsvRenderer(FriendlyCSVRenderer):
 
     header = [
         'name',
