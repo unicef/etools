@@ -33,6 +33,9 @@ class PartnerWithAgreementsFactory(PartnerFactory):
 
 
 class UserFactory(BaseUserFactory):
+    """
+    User factory with ability to quickly assign auditor portal related groups with special logic for auditor.
+    """
     class Params:
         unicef_user = factory.Trait(
             groups=[UNICEFUser.name],
