@@ -1,11 +1,10 @@
-
 import itertools
 
 from django.conf import settings
 from django.contrib.contenttypes.fields import GenericRelation
 from django.db import models
-from django.utils import six, timezone
-from django.utils.encoding import force_text, python_2_unicode_compatible
+from django.utils import timezone
+from django.utils.encoding import force_text
 from django.utils.translation import ugettext_lazy as _
 
 from django_fsm import FSMField, transition
@@ -28,7 +27,6 @@ from etools.applications.utils.common.urlresolvers import build_frontend_url
 from etools.applications.utils.groups.wrappers import GroupWrapper
 
 
-@python_2_unicode_compatible
 class TPMVisit(SoftDeleteMixin, TimeStampedModel, models.Model):
 
     DRAFT = 'draft'
@@ -186,7 +184,7 @@ class TPMVisit(SoftDeleteMixin, TimeStampedModel, models.Model):
         base_context.update(context)
         context = base_context
 
-        if isinstance(recipients, six.string_types):
+        if isinstance(recipients, str):
             recipients = [recipients, ]
         else:
             recipients = list(recipients)
@@ -343,7 +341,6 @@ class TPMVisit(SoftDeleteMixin, TimeStampedModel, models.Model):
         return build_frontend_url('tpm', 'visits', self.id, 'details')
 
 
-@python_2_unicode_compatible
 class TPMVisitReportRejectComment(models.Model):
     rejected_at = models.DateTimeField(auto_now_add=True, verbose_name=_('Rejected At'))
 
@@ -363,7 +360,6 @@ class TPMVisitReportRejectComment(models.Model):
         ordering = ['tpm_visit', 'id']
 
 
-@python_2_unicode_compatible
 class TPMActivity(Activity):
     tpm_visit = models.ForeignKey(
         TPMVisit, verbose_name=_('Visit'), related_name='tpm_activities',
@@ -428,7 +424,6 @@ class TPMActivity(Activity):
         }
 
 
-@python_2_unicode_compatible
 class TPMActionPoint(TimeStampedModel, models.Model):
     STATUSES = Choices(
         ('open', _('Open')),
@@ -462,7 +457,14 @@ class TPMActionPoint(TimeStampedModel, models.Model):
     status = models.CharField(choices=STATUSES, max_length=9, verbose_name='Status', default=STATUSES.open)
 
     def __str__(self):
-        return 'Action Point #{} on {}'.format(self.id, self.tpm_activity)
+        return 'Action Point #{} on {}'.format(self.id, self.tpm_visit)
+
+    @property
+    def reference_number(self):
+        return '{0}/{1}/APD'.format(
+            self.created.year,
+            self.id,
+        )
 
     def get_mail_context(self):
         return {

@@ -1,7 +1,5 @@
-
 from django.core.management import BaseCommand
 from django.db.models import Q
-from django.utils import six
 
 from etools.applications.permissions2.models import Permission
 from etools.applications.permissions2.conditions import ObjectStatusCondition, \
@@ -113,7 +111,7 @@ class Command(BaseCommand):
                 self._update_permissions(r, perm, targets, perm_type, condition)
             return
 
-        if isinstance(targets, six.string_types):
+        if isinstance(targets, str):
             targets = [targets]
 
         if condition is None:
@@ -251,9 +249,7 @@ class Command(BaseCommand):
         self.add_permission([self.unicef_user, self.third_party_monitor], 'view', self.visit_report,
                             condition=self.visit_status(TPMVisit.STATUSES.tpm_reported))
 
-        self.add_permission([self.pme, self.focal_point], 'edit', 'tpm.tpmvisit.action_points',
-                            condition=self.visit_status(TPMVisit.STATUSES.tpm_reported))
-        self.add_permission(self.unicef_user, 'view', 'tpm.tpmvisit.action_points',
+        self.add_permission(self.unicef_user, 'edit', 'tpm.tpmvisit.action_points',
                             condition=self.visit_status(TPMVisit.STATUSES.tpm_reported))
 
         self.add_permission(self.pme, 'view', 'tpm.tpmactivity.pv_applicable',
@@ -283,5 +279,7 @@ class Command(BaseCommand):
                             condition=self.visit_status(TPMVisit.STATUSES.unicef_approved))
         self.add_permission([self.unicef_user, self.third_party_monitor], 'view', self.visit_report,
                             condition=self.visit_status(TPMVisit.STATUSES.unicef_approved))
-        self.add_permission(self.unicef_user, 'view', ['tpm.tpmvisit.action_points', 'tpm.tpmvisit.approval_comment'],
+        self.add_permission(self.unicef_user, 'view', 'tpm.tpmvisit.approval_comment',
+                            condition=self.visit_status(TPMVisit.STATUSES.unicef_approved))
+        self.add_permission(self.unicef_user, 'edit', 'tpm.tpmvisit.action_points',
                             condition=self.visit_status(TPMVisit.STATUSES.unicef_approved))

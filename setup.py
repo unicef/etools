@@ -1,5 +1,5 @@
-# -*- coding: utf-8 -*-
 #!/usr/bin/env python
+# -*- coding: utf-8 -*-
 import ast
 import os.path
 import re
@@ -21,6 +21,7 @@ with open(init, 'rb') as f:
     NAME = str(ast.literal_eval(_name_re.search(content).group(1)))
 
 dependency_links = set()
+
 
 def get_requirements(env):
     ret = []
