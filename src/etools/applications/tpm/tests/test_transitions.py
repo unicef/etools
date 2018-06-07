@@ -1,7 +1,6 @@
 
 from django.core.management import call_command
 from django.core.urlresolvers import reverse
-
 from django.utils.translation import ugettext as _
 
 from rest_framework import status
@@ -10,6 +9,7 @@ from etools.applications.EquiTrack.tests.cases import BaseTenantTestCase
 from etools.applications.tpm.models import TPMVisit
 from etools.applications.tpm.tests.base import TPMTestCaseMixin
 from etools.applications.tpm.tests.factories import TPMVisitFactory, UserFactory
+from etools.applications.utils.permissions.tests.mixins import TransitionPermissionsTestCaseMixin
 
 
 class TPMTransitionTestCase(TPMTestCaseMixin, BaseTenantTestCase):
@@ -163,75 +163,6 @@ class TestTPMTransitionConditions(TPMTransitionTestCase):
 
         visit = self._refresh_tpm_visit_instance(visit)
         self.assertEquals(visit.status, 'unicef_approved')
-
-
-class TransitionPermissionTestCaseMetaclass(type):
-    @staticmethod
-    def _collect_transitions(model):
-        transitions = []
-        for attr_name in dir(model):
-            attr = getattr(model, attr_name, None)
-
-            if hasattr(attr, '_django_fsm'):
-                transitions.append(attr_name)
-
-        return transitions
-
-    @staticmethod
-    def _annotate_test(klass, obj_status, transition):
-        def test(self):
-            obj = self.create_object(transition, **{
-                self.status_field.name: obj_status,
-            })
-
-            result = self.do_transition(obj, transition)
-
-            success, message = self.check_result(result, obj, transition)
-
-            self.assertTrue(success, message)
-
-        model = klass.model
-        model_name = model._meta.model_name
-        test_name = 'test_{}_for_{}_{}'.format(transition, obj_status, model_name)
-        setattr(klass, test_name, test)
-
-    def __new__(cls, name, bases, attrs):
-        abstract = attrs.get('abstract', False)
-
-        newclass = super(TransitionPermissionTestCaseMetaclass, cls).__new__(cls, name, bases, attrs)
-
-        if abstract:
-            return newclass
-
-        newclass.transitions = cls._collect_transitions(newclass.model)
-        newclass.status_field = getattr(newclass.model, newclass.transitions[0])._django_fsm.field
-        newclass.statuses = list(zip(*newclass.status_field.choices))[0]
-
-        for obj_status in newclass.statuses:
-            for transition in newclass.transitions:
-                cls._annotate_test(newclass, obj_status, transition)
-
-        return newclass
-
-
-class TransitionPermissionsTestCaseMixin(metaclass=TransitionPermissionTestCaseMetaclass):
-    abstract = True
-    model = NotImplemented
-    factory = NotImplemented
-
-    def create_object(self, transition, **kwargs):
-        return self.factory(**kwargs)
-
-    def do_transition(self, obj, transition):
-        raise NotImplementedError
-
-    def check_result(self, result, obj, transition):
-        raise NotImplementedError
-
-    def get_extra_obj_attrs(self, **kwargs):
-        attrs = {}
-        attrs.update(kwargs)
-        return attrs
 
 
 class TPMTransitionPermissionsTestCase(TransitionPermissionsTestCaseMixin, TPMTransitionTestCase):
