@@ -11,6 +11,7 @@ from django.utils.translation import ugettext as _
 
 from model_utils.fields import AutoCreatedField, AutoLastModifiedField
 from mptt.models import MPTTModel, TreeForeignKey
+from mptt.managers import TreeManager
 
 logger = logging.getLogger(__name__)
 
@@ -39,10 +40,12 @@ class GatewayType(models.Model):
         return self.name
 
 
-class LocationManager(models.Manager):
+class LocationManager(TreeManager):
 
     def get_queryset(self):
-        return super(LocationManager, self).get_queryset().select_related('gateway')
+        return super(LocationManager, self).get_queryset().order_by(
+            Location.Meta.ordering
+        ).select_related('gateway')
 
 
 class Location(MPTTModel):
