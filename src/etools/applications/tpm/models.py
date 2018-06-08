@@ -396,6 +396,13 @@ class TPMActivity(Activity):
         ordering = ['tpm_visit', 'id', ]
 
     @property
+    def reference_number(self):
+        return self.tpm_visit.reference_number
+
+    def get_object_url(self):
+        return self.tpm_visit.get_object_url()
+
+    @property
     def related_reports(self):
         return Attachment.objects.filter(
             models.Q(

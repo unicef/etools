@@ -15,19 +15,7 @@ from etools.applications.partners.models import PartnerType
 from etools.applications.tpm.models import TPMActionPoint, TPMVisit
 from etools.applications.tpm.tests.base import TPMTestCaseMixin
 from etools.applications.tpm.tests.factories import TPMPartnerFactory, TPMVisitFactory, UserFactory
-
-
-class TestExportMixin(object):
-    def _test_export(self, user, url_name, args=tuple(), kwargs=None, status_code=status.HTTP_200_OK):
-        response = self.forced_auth_req(
-            'get',
-            reverse(url_name, args=args, kwargs=kwargs or {}),
-            user=user
-        )
-
-        self.assertEqual(response.status_code, status_code)
-        if status_code == status.HTTP_200_OK:
-            self.assertIn(response._headers['content-disposition'][0], 'Content-Disposition')
+from etools.applications.utils.common.tests.test_utils import TestExportMixin
 
 
 class TestTPMVisitViewSet(TestExportMixin, TPMTestCaseMixin, BaseTenantTestCase):

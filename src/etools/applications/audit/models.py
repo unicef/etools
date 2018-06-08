@@ -216,6 +216,10 @@ class Engagement(InheritedModelMixin, TimeStampedModel, models.Model):
             self.id
         )
 
+    @property
+    def reference_number(self):
+        return self.unique_id
+
     def get_mail_context(self, user=None):
         object_url = self.get_object_url()
 
