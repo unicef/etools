@@ -19,7 +19,7 @@ def staff_member_changed(sender, instance, action, reverse, pk_set, *args, **kwa
     if action == 'post_add':
         new_members = AuditorStaffMember.objects.filter(id__in=pk_set).select_related('user', 'user__profile')
 
-        engagement = Engagement.objects.get_subclass(id=instance.id)
+        engagement = instance.get_subclass()
         for member in new_members:
             member.send_user_appointed_email(engagement)
 

@@ -3,7 +3,9 @@ from django.contrib.auth.models import Group
 from django.contrib.contenttypes.fields import GenericForeignKey
 from django.db import models
 from django.test import TestCase
+from django.urls import reverse
 from django.utils.translation import ugettext_lazy as _
+from rest_framework import status
 
 from etools.applications.utils.common.utils import get_all_field_names
 
@@ -63,3 +65,16 @@ class CommonUtilsTest(TestCase):
         if hasattr(Dummy._meta, 'get_all_field_names'):
             actual_field_names = sorted(Dummy._meta.get_all_field_names())
             self.assertEqual(expected_field_names, actual_field_names)
+
+
+class TestExportMixin(object):
+    def _test_export(self, user, url_name, args=tuple(), kwargs=None, status_code=status.HTTP_200_OK):
+        response = self.forced_auth_req(
+            'get',
+            reverse(url_name, args=args, kwargs=kwargs or {}),
+            user=user
+        )
+
+        self.assertEqual(response.status_code, status_code)
+        if status_code == status.HTTP_200_OK:
+            self.assertIn(response._headers['content-disposition'][0], 'Content-Disposition')
