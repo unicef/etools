@@ -65,6 +65,30 @@ def get_pd_ssfa_number(obj):
     return ""
 
 
+def get_agreement_obj(obj):
+    """Not able to get specific agreement for partners, engagements,
+    and assessments
+    """
+    if isinstance(obj.content_object, (Agreement)):
+        return obj.content_object
+    elif isinstance(obj.content_object, (AgreementAmendment, Intervention)):
+        return obj.content_object.agreement
+    elif isinstance(obj.content_object, (
+            InterventionAmendment,
+            InterventionAttachment,
+            TPMActivity
+    )):
+        return obj.content_object.intervention.agreement
+    return ""
+
+
+def get_agreement_reference_number(obj):
+    agreement = get_agreement_obj(obj)
+    if agreement:
+        return agreement.reference_number
+    return ""
+
+
 def denormalize_attachment(attachment):
     from etools.applications.attachments.models import AttachmentFlat
 
@@ -72,6 +96,7 @@ def denormalize_attachment(attachment):
     partner_type = get_partner_type(attachment)
     vendor_number = get_vendor_number(attachment)
     pd_ssfa_number = get_pd_ssfa_number(attachment)
+    agreement_reference_number = get_agreement_reference_number(attachment)
     file_type = get_file_type(attachment)
     uploaded_by = attachment.uploaded_by if attachment.uploaded_by else ""
 
@@ -82,6 +107,7 @@ def denormalize_attachment(attachment):
             "partner_type": partner_type,
             "vendor_number": vendor_number,
             "pd_ssfa_number": pd_ssfa_number,
+            "agreement_reference_number": agreement_reference_number,
             "file_type": file_type,
             "file_link": attachment.file_link,
             "filename": attachment.filename,

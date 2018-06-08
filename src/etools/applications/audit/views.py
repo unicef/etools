@@ -137,7 +137,7 @@ class AuditorFirmViewSet(
 
     @list_route(methods=['get'], url_path='users')
     def users(self, request, *args, **kwargs):
-        return AuditUsersViewSet.as_view()(request, *args, **kwargs)
+        return AuditUsersViewSet.as_view()(request._request, *args, **kwargs)
 
 
 class PurchaseOrderViewSet(
