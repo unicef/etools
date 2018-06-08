@@ -3,7 +3,7 @@ import logging
 
 from django.conf import settings
 from django.contrib.contenttypes.models import ContentType
-from django.db.models import Q
+from django.db.models import F, Q
 from django.utils.timezone import now, make_aware
 
 from etools.applications.attachments.models import Attachment, FileType
@@ -287,3 +287,30 @@ def send_pca_required_notifications():
 
     for pd in pd_list:
         pd.send_pca_required_notification()
+
+
+def send_pca_missing_notifications():
+    """If the PD has en end date that is after PCA end date
+    and the PD start date is in the previous CP cycle,
+    and the current CP cycle has no PCA
+    send a missing PCA notification.
+    """
+    # get PDs that have end date after PCA end date
+    # this means that the CP is in previous cycle
+    # (as PCA and CP end dates are always equal)
+    # and PD start date in the previous CP cycle
+    intervention_qs = Intervention.objects.filter(
+        document_type=Intervention.PD,
+        agreement__agreement_type=Agreement.PCA,
+        agreement__country_programme__from_date__lt=F("start"),
+        end__gt=F("agreement__end")
+    )
+    for pd in intervention_qs:
+        # check that partner has no PCA in the current CP cycle
+        cp_previous = pd.agreement.country_programme
+        pca_next_qs = Agreement.objects.filter(
+            partner=pd.agreement.partner,
+            country_programme__from_date__gt=cp_previous.to_date
+        )
+        if not pca_next_qs.exists():
+            pd.send_pca_missing_notification()

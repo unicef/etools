@@ -2044,6 +2044,22 @@ class Intervention(TimeStampedModel):
             context=context
         )
 
+    def send_pca_missing_notification(self):
+        recipients = [u.user.email for u in self.unicef_focal_points.all()]
+        context = {
+            "reference_number": self.reference_number,
+            "partner_name": str(self.agreement.partner),
+            "pd_link": reverse(
+                "partners_api:intervention-detail",
+                args=[self.pk]
+            ),
+        }
+        send_notification_using_email_template(
+            recipients=recipients,
+            email_template_name='partners/intervention/pca_missing',
+            context=context
+        )
+
     @transaction.atomic
     def save(self, **kwargs):
         # check status auto updates
