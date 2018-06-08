@@ -400,9 +400,6 @@ class TPMActivity(Activity):
     def __str__(self):
         return 'Task #{0} for {1}'.format(self.id, self.tpm_visit)
 
-    def get_object_url(self):
-        return self.tpm_visit.get_object_url()
-
     @property
     def reference_number(self):
         return self.tpm_visit.reference_number
