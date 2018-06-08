@@ -31,11 +31,12 @@ from etools.applications.notification.utils import send_notification_using_email
 from etools.applications.partners.models import PartnerOrganization, PartnerStaffMember
 from etools.applications.permissions2.fsm import has_action_permission
 from etools.applications.utils.common.models.fields import CodedGenericRelation
+from etools.applications.utils.common.models.mixins import InheritedModelMixin
 from etools.applications.utils.common.urlresolvers import build_frontend_url
 from etools.applications.utils.groups.wrappers import GroupWrapper
 
 
-class Engagement(TimeStampedModel, models.Model):
+class Engagement(InheritedModelMixin, TimeStampedModel, models.Model):
 
     TYPE_AUDIT = 'audit'
     TYPE_MICRO_ASSESSMENT = 'ma'
@@ -786,7 +787,7 @@ class EngagementActionPoint(ActionPoint):
     def get_mail_context(self):
         context = super(EngagementActionPoint, self).get_mail_context()
         if self.engagement:
-            context['engagement'] = Engagement.objects.get_subclass(id=self.engagement.id).get_mail_context()
+            context['engagement'] = self.engagement_subclass.get_mail_context()
         return context
 
 
