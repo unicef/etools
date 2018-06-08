@@ -149,7 +149,7 @@ class TestSendPCAMissingNotification(BaseTenantTestCase):
             agreement_type=Agreement.PCA,
             country_programme=cp,
         )
-        intervention = InterventionFactory(
+        InterventionFactory(
             document_type=Intervention.PD,
             start=date_past,
             end=datetime.date.today(),
@@ -173,7 +173,7 @@ class TestSendPCAMissingNotification(BaseTenantTestCase):
             agreement_type=Agreement.PCA,
             country_programme=cp,
         )
-        intervention = InterventionFactory(
+        InterventionFactory(
             document_type=Intervention.PD,
             start=date_past + datetime.timedelta(days=1),
             end=date_future,
@@ -201,12 +201,12 @@ class TestSendPCAMissingNotification(BaseTenantTestCase):
             from_date=datetime.date.today() + datetime.timedelta(days=1),
             to_date=date_future,
         )
-        agreement = AgreementFactory(
+        AgreementFactory(
             partner=partner,
             agreement_type=Agreement.PCA,
             country_programme=cp,
         )
-        intervention = InterventionFactory(
+        InterventionFactory(
             document_type=Intervention.PD,
             start=date_past + datetime.timedelta(days=1),
             end=datetime.date.today() + datetime.timedelta(days=1),
