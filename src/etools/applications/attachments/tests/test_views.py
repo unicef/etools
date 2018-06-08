@@ -92,6 +92,7 @@ class TestAttachmentListView(BaseTenantTestCase):
             "partner_type": "",
             "vendor_number": "",
             "pd_ssfa_number": "",
+            "agreement_reference_number": "",
         }] * 2
 
     def assert_keys(self, response):
@@ -101,6 +102,7 @@ class TestAttachmentListView(BaseTenantTestCase):
             "partner_type",
             "vendor_number",
             "pd_ssfa_number",
+            "agreement_reference_number",
             "filename",
             "file_type",
             "file_link",
@@ -116,6 +118,7 @@ class TestAttachmentListView(BaseTenantTestCase):
             "partner_type": x["partner_type"],
             "vendor_number": x["vendor_number"],
             "pd_ssfa_number": x["pd_ssfa_number"],
+            "agreement_reference_number": x["agreement_reference_number"],
         } for x in response.data]
         self.assertCountEqual(received, expected)
 
@@ -185,6 +188,7 @@ class TestAttachmentListView(BaseTenantTestCase):
             "partner_type": self.partner.partner_type,
             "vendor_number": self.partner.vendor_number,
             "pd_ssfa_number": "",
+            "agreement_reference_number": "",
         }])
 
     def test_assessment(self):
@@ -210,6 +214,7 @@ class TestAttachmentListView(BaseTenantTestCase):
             "partner_type": self.partner.partner_type,
             "vendor_number": self.partner.vendor_number,
             "pd_ssfa_number": "",
+            "agreement_reference_number": "",
         }])
 
     def test_agreement(self):
@@ -235,6 +240,7 @@ class TestAttachmentListView(BaseTenantTestCase):
             "partner_type": self.partner.partner_type,
             "vendor_number": self.partner.vendor_number,
             "pd_ssfa_number": "",
+            "agreement_reference_number": self.agreement.reference_number,
         }])
 
     def test_agreement_amendment(self):
@@ -260,6 +266,7 @@ class TestAttachmentListView(BaseTenantTestCase):
             "partner_type": self.partner.partner_type,
             "vendor_number": self.partner.vendor_number,
             "pd_ssfa_number": "",
+            "agreement_reference_number": self.amendment.agreement.reference_number,
         }])
 
     def test_intervention_amendment(self):
@@ -285,6 +292,7 @@ class TestAttachmentListView(BaseTenantTestCase):
             "partner_type": self.partner.partner_type,
             "vendor_number": self.partner.vendor_number,
             "pd_ssfa_number": self.intervention.number,
+            "agreement_reference_number": self.intervention.agreement.reference_number,
         }])
 
     def test_intervention_attachment(self):
@@ -310,6 +318,7 @@ class TestAttachmentListView(BaseTenantTestCase):
             "partner_type": self.partner.partner_type,
             "vendor_number": self.partner.vendor_number,
             "pd_ssfa_number": self.intervention.number,
+            "agreement_reference_number": self.intervention.agreement.reference_number,
         }])
         self.assertCountEqual([x["file_type"] for x in response.data], [
             self.file_type_1.label,
@@ -349,11 +358,13 @@ class TestAttachmentListView(BaseTenantTestCase):
             "partner_type": self.partner.partner_type,
             "vendor_number": self.partner.vendor_number,
             "pd_ssfa_number": self.intervention.number,
+            "agreement_reference_number": self.intervention.agreement.reference_number,
         }, {
             "partner": self.partner.name,
             "partner_type": self.partner.partner_type,
             "vendor_number": self.partner.vendor_number,
             "pd_ssfa_number": self.intervention.number,
+            "agreement_reference_number": self.intervention.agreement.reference_number,
         }])
 
     def test_tpm_activity_attachments(self):
@@ -382,6 +393,7 @@ class TestAttachmentListView(BaseTenantTestCase):
             "partner_type": self.partner.partner_type,
             "vendor_number": self.partner.vendor_number,
             "pd_ssfa_number": self.intervention.number,
+            "agreement_reference_number": self.intervention.agreement.reference_number,
         }])
         self.assertCountEqual([x["file_type"] for x in response.data], [
             self.file_type_1.label,
@@ -415,6 +427,7 @@ class TestAttachmentListView(BaseTenantTestCase):
             "partner_type": self.partner.partner_type,
             "vendor_number": self.partner.vendor_number,
             "pd_ssfa_number": self.intervention.number,
+            "agreement_reference_number": self.intervention.agreement.reference_number,
         }])
         self.assertCountEqual([x["file_type"] for x in response.data], [
             self.file_type_1.label,
@@ -448,6 +461,7 @@ class TestAttachmentListView(BaseTenantTestCase):
             "partner_type": self.partner.partner_type,
             "vendor_number": self.partner.vendor_number,
             "pd_ssfa_number": "",
+            "agreement_reference_number": "",
         }])
         self.assertCountEqual([x["file_type"] for x in response.data], [
             self.file_type_1.label,
@@ -481,6 +495,7 @@ class TestAttachmentListView(BaseTenantTestCase):
             "partner_type": self.partner.partner_type,
             "vendor_number": self.partner.vendor_number,
             "pd_ssfa_number": "",
+            "agreement_reference_number": "",
         }])
         self.assertCountEqual([x["file_type"] for x in response.data], [
             self.file_type_1.label,

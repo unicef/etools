@@ -1,6 +1,7 @@
 
 from django.contrib.auth import get_user_model
 from django.contrib.auth.models import Group
+from django.db import connection
 from django.db.models import signals
 
 import factory
@@ -25,12 +26,30 @@ class OfficeFactory(factory.django.DjangoModelFactory):
 
     name = 'An Office'
 
+    @classmethod
+    def _create(cls, model_class, *args, **kwargs):
+        obj = super(OfficeFactory, cls)._create(model_class, *args, **kwargs)
+
+        if hasattr(connection.tenant, 'id') and connection.tenant.schema_name != 'public':
+            connection.tenant.offices.add(obj)
+
+        return obj
+
 
 class SectionFactory(factory.django.DjangoModelFactory):
     class Meta:
         model = models.Section
 
     name = FuzzyText()
+
+    @classmethod
+    def _create(cls, model_class, *args, **kwargs):
+        obj = super(SectionFactory, cls)._create(model_class, *args, **kwargs)
+
+        if hasattr(connection.tenant, 'id') and connection.tenant.schema_name != 'public':
+            connection.tenant.sections.add(obj)
+
+        return obj
 
 
 class CountryFactory(factory.django.DjangoModelFactory):

@@ -1,13 +1,9 @@
-
 from django.core import mail
 from django.core.management import call_command
-
-import factory.fuzzy
 
 from etools.applications.action_points.tests.factories import ActionPointFactory
 from etools.applications.audit.tests.factories import MicroAssessmentFactory
 from etools.applications.EquiTrack.tests.cases import BaseTenantTestCase
-from etools.applications.users.tests.factories import UserFactory
 
 
 class ActionPointsEmailsTestCase(BaseTenantTestCase):
@@ -28,15 +24,8 @@ class ActionPointsEmailsTestCase(BaseTenantTestCase):
         self.assertEqual(len(mail.outbox), 0)
 
     def test_complete(self):
-        action_point = ActionPointFactory(action_taken=factory.fuzzy.FuzzyText())
+        action_point = ActionPointFactory(status='pre_completed')
         mail.outbox = []
 
         action_point.complete()
-        self.assertEqual(len(mail.outbox), 1)
-
-    def test_reassign(self):
-        action_point = ActionPointFactory()
-        mail.outbox = []
-        action_point.assigned_to = UserFactory()
-        action_point.save()
         self.assertEqual(len(mail.outbox), 1)

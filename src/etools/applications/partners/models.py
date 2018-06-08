@@ -204,7 +204,7 @@ class PartnerOrganizationQuerySet(models.QuerySet):
 
     def not_programmatic_visit_compliant(self, *args, **kwargs):
         return self.filter(net_ct_cy__gt=PartnerOrganization.CT_MR_AUDIT_TRIGGER_LEVEL,
-                           hact_values__programmatic_visits__completed__total__gt=0,
+                           hact_values__programmatic_visits__completed__total=0,
                            *args, **kwargs)
 
     def not_spot_check_compliant(self, *args, **kwargs):
@@ -214,22 +214,10 @@ class PartnerOrganizationQuerySet(models.QuerySet):
                            Q(planned_engagement__spot_check_follow_up_q3__gt=0) |
                            Q(planned_engagement__spot_check_follow_up_q4__gt=0),  # aka required
                            hact_values__spot_checks__completed__total=0,
-                           hact_values__audit__completed__total=0, *args, **kwargs)
+                           hact_values__audits__completed=0, *args, **kwargs)
 
     def not_assurance_compliant(self, *args, **kwargs):
-        return self.filter(Q(reported_cy__gt=PartnerOrganization.CT_CP_AUDIT_TRIGGER_LEVEL) |
-                           Q(
-                               Q(hact_values__spot_checks__completed__total__gt=0) |
-                               Q(planned_engagement__spot_check_follow_up_q1__gt=0) |
-                               Q(planned_engagement__spot_check_follow_up_q2__gt=0) |
-                               Q(planned_engagement__spot_check_follow_up_q3__gt=0) |
-                               Q(planned_engagement__spot_check_follow_up_q4__gt=0) |
-                               Q(planned_engagement__scheduled_audit=True) |
-                               Q(planned_engagement__special_audit=True)) |
-                           Q(planned_engagement__spot_check_follow_up_q4__gt=0),
-                           hact_values__programmatic_visits__completed__total=0,
-                           hact_values__spot_checks__completed__total=0,
-                           hact_values__audits__completed__total=0, *args, **kwargs)
+        return self.not_programmatic_visit_compliant().not_spot_check_compliant(*args, **kwargs)
 
 
 class PartnerOrganization(TimeStampedModel):
@@ -632,10 +620,10 @@ class PartnerOrganization(TimeStampedModel):
 
         if pv + sc + au == 0:
             return PartnerOrganization.ASSURANCE_VOID
-        elif pv + sc + au < self.min_req_programme_visits + self.min_req_spot_checks + self.min_req_audits:
-            return PartnerOrganization.ASSURANCE_PARTIAL
-        else:
+        elif (pv >= self.min_req_programme_visits) & (sc >= self.min_req_spot_checks) & (au >= self.min_req_audits):
             return PartnerOrganization.ASSURANCE_COMPLETE
+        else:
+            return PartnerOrganization.ASSURANCE_PARTIAL
 
     def planned_visits_to_hact(self):
         """For current year sum all programmatic values of planned visits
