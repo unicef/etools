@@ -1,13 +1,13 @@
 # -*- coding: utf-8 -*-
 import datetime
 
-from drf_api_checker.unittest import ApiCheckerMixin as _, ApiCheckerBase
+from drf_api_checker.unittest import ApiCheckerMixin as BaseApiCheckerMixin, ApiCheckerBase
 from rest_framework.response import Response
 
 from etools.applications.users.tests.factories import UserFactory
 
 
-class ApiCheckerMixin(_):
+class ApiCheckerMixin(BaseApiCheckerMixin):
     def setUp(self):
         super().setUp()
         self.user = UserFactory(username='user', is_staff=True)
