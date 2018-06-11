@@ -7,7 +7,7 @@ from django.utils.translation import ugettext_lazy as _
 from rest_framework import serializers
 from rest_framework.exceptions import ValidationError
 
-from etools.applications.action_points.serializers import ActionPointBaseSerializer
+from etools.applications.action_points.serializers import ActionPointBaseSerializer, HistorySerializer
 from etools.applications.activities.serializers import ActivitySerializer
 from etools.applications.locations.serializers import LocationLightSerializer
 from etools.applications.partners.models import InterventionResultLink, PartnerType
@@ -15,7 +15,6 @@ from etools.applications.partners.serializers.interventions_v2 import Interventi
 from etools.applications.partners.serializers.partner_organization_v2 import MinimalPartnerOrganizationListSerializer
 from etools.applications.permissions2.serializers import PermissionsBasedSerializerMixin
 from etools.applications.reports.serializers.v1 import ResultSerializer, SectorSerializer
-from etools.applications.snapshot.serializers import ActivitySerializer as SnapshotSerializer
 from etools.applications.tpm.models import TPMActionPoint, TPMActivity, TPMVisit, TPMVisitReportRejectComment
 from etools.applications.tpm.serializers.attachments import (
     TPMAttachmentsSerializer, TPMReportAttachmentsSerializer, TPMReportSerializer,)
@@ -56,7 +55,7 @@ class TPMActionPointSerializer(PermissionsBasedSerializerMixin, ActionPointBaseS
     )
 
     is_responsible = serializers.SerializerMethodField()
-    history = SnapshotSerializer(many=True, label=_('History'), read_only=True)
+    history = HistorySerializer(many=True, label=_('History'), read_only=True, source='get_meaningful_history')
 
     url = serializers.ReadOnlyField(label=_('Link'), source='get_object_url')
 
