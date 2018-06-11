@@ -3,7 +3,7 @@ from copy import copy
 from django.utils.translation import ugettext as _
 from rest_framework import serializers
 
-from etools.applications.action_points.serializers import ActionPointBaseSerializer
+from etools.applications.action_points.serializers import ActionPointBaseSerializer, HistorySerializer
 from etools.applications.attachments.models import FileType
 from etools.applications.attachments.serializers import Base64AttachmentSerializer
 from etools.applications.attachments.serializers_fields import FileTypeModelChoiceField
@@ -20,7 +20,6 @@ from etools.applications.partners.serializers.partner_organization_v2 import (Pa
                                                                               PartnerStaffMemberNestedSerializer, )
 from etools.applications.permissions2.serializers import PermissionsBasedSerializerMixin
 from etools.applications.reports.serializers.v1 import SectorSerializer
-from etools.applications.snapshot.serializers import ActivitySerializer
 from etools.applications.users.serializers import OfficeSerializer
 from etools.applications.utils.common.serializers.fields import SeparatedReadWriteField
 from etools.applications.utils.writable_serializers.serializers import (WritableNestedParentSerializerMixin,
@@ -70,7 +69,7 @@ class EngagementActionPointSerializer(PermissionsBasedSerializerMixin, ActionPoi
         required=True
     )
 
-    history = ActivitySerializer(many=True, label=_('History'), read_only=True)
+    history = HistorySerializer(many=True, label=_('History'), read_only=True, source='get_meaningful_history')
 
     url = serializers.ReadOnlyField(label=_('Link'), source='get_object_url')
 
