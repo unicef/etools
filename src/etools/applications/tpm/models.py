@@ -2,7 +2,7 @@ import itertools
 
 from django.conf import settings
 from django.contrib.contenttypes.fields import GenericRelation
-from django.db import models
+from django.db import models, connection
 from django.utils import timezone
 from django.utils.encoding import force_text
 from django.utils.translation import ugettext_lazy as _
@@ -109,7 +109,8 @@ class TPMVisit(SoftDeleteMixin, TimeStampedModel, models.Model):
 
     @property
     def reference_number(self):
-        return '{0}/{1}/TPM'.format(
+        return '{}/{}/{}/TPM'.format(
+            connection.tenant.country_short_code or '',
             self.created.year,
             self.id,
         )

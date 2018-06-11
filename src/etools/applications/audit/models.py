@@ -5,7 +5,7 @@ from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.contrib.postgres.fields import ArrayField, JSONField
 from django.core.exceptions import ValidationError
-from django.db import models
+from django.db import models, connection
 from django.db.transaction import atomic
 from django.utils import timezone
 from django.utils.encoding import force_text
@@ -208,7 +208,8 @@ class Engagement(TimeStampedModel, models.Model):
     @property
     def unique_id(self):
         engagement_code = 'a' if self.engagement_type == self.TYPES.audit else self.engagement_type
-        return '{0}/{1}/{2}/{3}'.format(
+        return '{}/{}/{}/{}/{}'.format(
+            connection.tenant.country_short_code or '',
             self.partner.name[:5],
             engagement_code.upper(),
             self.created.year,
