@@ -1613,19 +1613,19 @@ class TestPlannedEngagement(BaseTenantTestCase):
         cls.user = UserFactory()
 
         cls.engagement = PlannedEngagementFactory(
-            spot_check_mr='q1',
-            spot_check_follow_up_q1=2,
-            spot_check_follow_up_q2=1,
-            spot_check_follow_up_q3=0,
-            spot_check_follow_up_q4=0,
+            spot_check_follow_up=3,
+            spot_check_planned_q1=2,
+            spot_check_planned_q2=1,
+            spot_check_planned_q3=0,
+            spot_check_planned_q4=0,
             scheduled_audit=True,
             special_audit=False
         )
 
     def test_properties(self):
-        self.assertEquals(self.engagement.total_spot_check_follow_up_required, 3)
-        self.assertEquals(self.engagement.spot_check_required, 4)
+        self.assertEquals(self.engagement.total_spot_check_planned, 3)
         self.assertEquals(self.engagement.required_audit, 1)
+        self.assertEquals(self.engagement.spot_check_required, self.engagement.partner.min_req_spot_checks + 3)
 
 
 class TestPartnerPlannedVisits(BaseTenantTestCase):
