@@ -40,8 +40,6 @@ class InterventionSectorLocationLinkExportSerializer(LocationExportSerializer):
         label=_("Reference Number")
     )
     sector = serializers.SerializerMethodField()
-    geo_point = serializers.SerializerMethodField()
-    point = serializers.SerializerMethodField()
 
     class Meta:
         model = Location
@@ -58,12 +56,6 @@ class InterventionSectorLocationLinkExportSerializer(LocationExportSerializer):
             [str(x.sector.pk) for x in obj.intervention_sector_locations.all()]
         )
 
-    def get_geo_point(self, obj):
-        return "{}".format(obj.geo_point)
-
-    def get_point(self, obj):
-        return "{}".format(obj.point)
-
 
 class InterventionSectorLocationLinkExportFlatSerializer(
         ExportSerializerMixin,
@@ -73,8 +65,6 @@ class InterventionSectorLocationLinkExportFlatSerializer(
         label=_("Reference Number"),
     )
     sector = serializers.SerializerMethodField(label=_("Sector"))
-    geo_point = serializers.SerializerMethodField()
-    point = serializers.SerializerMethodField()
 
     class Meta:
         model = Location
@@ -91,12 +81,6 @@ class InterventionSectorLocationLinkExportFlatSerializer(
             [str(x.sector.name)
              for x in obj.intervention_sector_locations.all()]
         )
-
-    def get_geo_point(self, obj):
-        return "{}".format(obj.geo_point)
-
-    def get_point(self, obj):
-        return "{}".format(obj.point)
 
 
 class InterventionResultExportSerializer(InterventionResultSerializer):

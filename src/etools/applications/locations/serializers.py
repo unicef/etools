@@ -77,10 +77,15 @@ class LocationLightSerializer(serializers.ModelSerializer):
 class LocationExportSerializer(serializers.ModelSerializer):
     location_type = serializers.CharField(source='gateway.name')
     geo_point = serializers.SerializerMethodField()
+    point = serializers.SerializerMethodField()
 
     class Meta:
         model = Location
         fields = "__all__"
+
+
+    def get_point(self, obj):
+        return "{}".format(obj.point)
 
     def get_geo_point(self, obj):
         return "{}".format(obj.geo_point)
@@ -89,6 +94,7 @@ class LocationExportSerializer(serializers.ModelSerializer):
 class LocationExportFlatSerializer(serializers.ModelSerializer):
     location_type = serializers.CharField(source='gateway.name')
     geom = serializers.SerializerMethodField()
+    point = serializers.SerializerMethodField()
 
     class Meta:
         model = Location
@@ -96,3 +102,6 @@ class LocationExportFlatSerializer(serializers.ModelSerializer):
 
     def get_geom(self, obj):
         return obj.geom.point_on_surface if obj.geom else ""
+
+    def get_point(self, obj):
+        return "{}".format(obj.point)
