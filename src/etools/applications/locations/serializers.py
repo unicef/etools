@@ -83,7 +83,6 @@ class LocationExportSerializer(serializers.ModelSerializer):
         model = Location
         fields = "__all__"
 
-
     def get_point(self, obj):
         return "{}".format(obj.point)
 
