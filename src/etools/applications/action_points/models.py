@@ -15,6 +15,7 @@ from etools.applications.action_points.transitions.conditions import ActionPoint
 from etools.applications.EquiTrack.utils import get_environment
 from etools.applications.notification.models import Notification
 from etools.applications.permissions2.fsm import has_action_permission
+from etools.applications.snapshot.models import Activity
 from etools.applications.utils.common.urlresolvers import build_frontend_url
 from etools.applications.utils.groups.wrappers import GroupWrapper
 
@@ -139,7 +140,10 @@ class ActionPoint(TimeStampedModel):
         return self.reference_number
 
     def get_meaningful_history(self):
-        return self.history.exclude(change={})
+        return self.history.filter(
+            models.Q(action=Activity.CREATE) |
+            models.Q(models.Q(action=Activity.UPDATE), ~models.Q(change={}))
+        )
 
     def snapshot_additional_data(self, diff):
         key_events = []
