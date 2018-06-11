@@ -105,6 +105,7 @@ class TestActionPointViewSet(ActionPointsTestCaseMixin, BaseTenantTestCase):
         self.assertEqual(response.data['author']['id'], self.unicef_user.id)
         self.assertIn('assigned_by', response.data)
         self.assertEqual(response.data['assigned_by']['id'], self.unicef_user.id)
+        self.assertEqual(len(response.data['history']), 1)
 
     def test_reassign(self):
         author = UserFactory(unicef_user=True)
@@ -112,6 +113,7 @@ class TestActionPointViewSet(ActionPointsTestCaseMixin, BaseTenantTestCase):
         new_assignee = UserFactory(unicef_user=True)
 
         action_point = ActionPointFactory(status='open', author=author, assigned_by=author, assigned_to=assignee)
+        self.assertEqual(action_point.history.count(), 0)
 
         response = self.forced_auth_req(
             'patch',
@@ -126,9 +128,11 @@ class TestActionPointViewSet(ActionPointsTestCaseMixin, BaseTenantTestCase):
         self.assertEqual(response.data['author']['id'], author.id)
         self.assertEqual(response.data['assigned_to']['id'], new_assignee.id)
         self.assertEqual(response.data['assigned_by']['id'], assignee.id)
+        self.assertEqual(len(response.data['history']), 1)
 
     def test_add_comment(self):
         action_point = ActionPointFactory(status='open', comments__count=0)
+        self.assertEqual(action_point.history.count(), 0)
 
         response = self.forced_auth_req(
             'patch',
@@ -143,6 +147,7 @@ class TestActionPointViewSet(ActionPointsTestCaseMixin, BaseTenantTestCase):
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(len(response.data['comments']), 1)
+        self.assertEqual(len(response.data['history']), 1)
 
 
 class TestActionPointsViewMetadata(ActionPointsTestCaseMixin):
