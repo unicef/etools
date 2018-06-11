@@ -1,7 +1,5 @@
-
 from django.core.management import call_command
 
-import factory.fuzzy
 from rest_framework.exceptions import ValidationError
 
 from etools.applications.action_points.models import ActionPoint
@@ -21,17 +19,23 @@ class TestActionPointModel(BaseTenantTestCase):
 
     def test_str(self):
         action_point = ActionPointFactory()
-        self.assertEqual(str(action_point), '{0}/{1}/ACTP'.format(action_point.created.year, action_point.id))
+        self.assertEqual(str(action_point), '{0}/{1}/APD'.format(action_point.created.year, action_point.id))
 
     def test_complete_fail(self):
         action_point = ActionPointFactory()
-        with self.assertRaises(ValidationError):
+        with self.assertRaisesRegex(ValidationError, "comments"):
             action_point.complete()
 
     def test_complete(self):
-        action_point = ActionPointFactory()
-        action_point.action_taken = factory.fuzzy.FuzzyText()
+        action_point = ActionPointFactory(status='pre_completed')
         action_point.complete()
+
+    def test_completion_date(self):
+        action_point = ActionPointFactory(status='pre_completed')
+        self.assertIsNone(action_point.date_of_completion)
+        action_point.complete()
+        action_point.save()
+        self.assertIsNotNone(action_point.date_of_completion)
 
     def test_audit_related(self):
         action_point = ActionPointFactory(engagement=MicroAssessmentFactory())
@@ -50,11 +54,10 @@ class TestActionPointModel(BaseTenantTestCase):
         self.assertEqual(action_point.related_module, None)
 
     def test_additional_data(self):
-        action_point = ActionPointFactory()
+        action_point = ActionPointFactory(status='pre_completed')
         initial_data = create_dict_with_relations(action_point)
 
         action_point.assigned_to = UserFactory()
-        action_point.action_taken = factory.fuzzy.FuzzyText().fuzz()
         action_point.complete()
         action_point.save()
 

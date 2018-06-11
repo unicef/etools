@@ -183,7 +183,7 @@ class TestSerialization(BaseTenantTestCase):
                 'groups': [self.group.id],
                 'user_permissions': [self.permission.id],
                 'pk': user.id,
-                'model': 'auth.user',
+                'model': 'users.user',
                 'password': '',
                 'email': 'fred@example.com',
                 'date_joined': serialized_date_joined,

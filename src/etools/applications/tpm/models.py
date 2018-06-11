@@ -164,7 +164,7 @@ class TPMVisit(SoftDeleteMixin, TimeStampedModel, models.Model):
         object_url = self.get_object_url()
 
         if user:
-            from etools.applications.email_auth.utils import update_url_with_auth_token
+            from etools.applications.tokens.utils import update_url_with_auth_token
             object_url = update_url_with_auth_token(object_url, user)
 
         activities = self.tpm_activities.all()
@@ -463,7 +463,14 @@ class TPMActionPoint(TimeStampedModel, models.Model):
     status = models.CharField(choices=STATUSES, max_length=9, verbose_name='Status', default=STATUSES.open)
 
     def __str__(self):
-        return 'Action Point #{} on {}'.format(self.id, self.tpm_activity)
+        return 'Action Point #{} on {}'.format(self.id, self.tpm_visit)
+
+    @property
+    def reference_number(self):
+        return '{0}/{1}/APD'.format(
+            self.created.year,
+            self.id,
+        )
 
     def get_mail_context(self):
         return {

@@ -21,7 +21,6 @@ from rest_framework_csv import renderers as r
 
 from etools.applications.EquiTrack.mixins import ExportModelMixin, QueryStringFilterMixin
 from etools.applications.EquiTrack.renderers import CSVFlatRenderer
-from etools.applications.EquiTrack.validation_mixins import ValidatorViewMixin
 from etools.applications.partners.exports_v2 import (
     PartnerOrganizationCSVRenderer,
     PartnerOrganizationHactCsvRenderer,
@@ -66,6 +65,7 @@ from etools.applications.partners.utils import get_data_from_insight
 from etools.applications.partners.views.helpers import set_tenant_or_fail
 from etools.applications.t2f.models import TravelActivity
 from etools.applications.vision.adapters.partner import PartnerSynchronizer
+from validator.mixins import ValidatorViewMixin
 
 
 class PartnerOrganizationListAPIView(QueryStringFilterMixin, ExportModelMixin, ListCreateAPIView):

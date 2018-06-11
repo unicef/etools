@@ -1,4 +1,3 @@
-
 import datetime
 
 from django.contrib.auth.models import Group
@@ -9,6 +8,7 @@ import factory.fuzzy
 from factory import fuzzy
 
 from etools.applications.attachments.tests.factories import AttachmentFactory
+from etools.applications.EquiTrack.tests.factories import InheritedTrait
 from etools.applications.firms.tests.factories import BaseFirmFactory, BaseStaffMemberFactory, BaseUserFactory
 from etools.applications.locations.tests.factories import LocationFactory
 from etools.applications.partners.models import InterventionResultLink, InterventionSectorLocationLink
@@ -148,19 +148,10 @@ class TPMActivityFactory(factory.DjangoModelFactory):
             AttachmentFactory(code='activity_report', content_object=self, **kwargs)
 
 
-class InheritedTrait(factory.Trait):
-    def __init__(self, *parents, **kwargs):
-        overrides = {}
-
-        for parent in parents:
-            overrides.update(parent.overrides)
-
-        overrides.update(kwargs)
-
-        super(InheritedTrait, self).__init__(**overrides)
-
-
 class UserFactory(BaseUserFactory):
+    """
+    User factory with ability to quickly assign tpm related groups with special logic for tpm partner.
+    """
     class Params:
         unicef_user = factory.Trait(
             groups=['UNICEF User'],
