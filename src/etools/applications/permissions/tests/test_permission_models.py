@@ -1,5 +1,3 @@
-from django.contrib.auth.models import Group
-from django.contrib.auth import get_user_model
 from django.test import override_settings, TestCase
 
 from etools.applications.permissions.models.models import BasePermission
@@ -18,8 +16,6 @@ from etools.applications.users.tests.factories import GroupFactory, UserFactory
 class BasePermissionTestCase(TestCase):
     @classmethod
     def setUpTestData(cls):
-        User = get_user_model()
-
         group1 = GroupFactory(name='Group1')
         group2 = GroupFactory(name='Group2')
 

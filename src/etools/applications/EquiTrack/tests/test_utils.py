@@ -8,8 +8,10 @@ from django.contrib.contenttypes.fields import GenericForeignKey
 from django.core.serializers.json import DjangoJSONEncoder
 from django.db import models
 from django.test import RequestFactory, SimpleTestCase
+from django.urls import reverse
 
 from freezegun import freeze_time
+from rest_framework import status
 
 from etools.applications.EquiTrack import utils
 from etools.applications.EquiTrack.tests.cases import BaseTenantTestCase
@@ -204,3 +206,16 @@ class TestSerialization(BaseTenantTestCase):
                 result,
                 {u'i': 27, u's': u'Foo', u'user': {u'exclamation': u'Hello, world!'}}
             )
+
+
+class TestExportMixin(object):
+    def _test_export(self, user, url_name, args=tuple(), kwargs=None, status_code=status.HTTP_200_OK):
+        response = self.forced_auth_req(
+            'get',
+            reverse(url_name, args=args, kwargs=kwargs or {}),
+            user=user
+        )
+
+        self.assertEqual(response.status_code, status_code)
+        if status_code == status.HTTP_200_OK:
+            self.assertIn(response._headers['content-disposition'][0], 'Content-Disposition')

@@ -11,6 +11,11 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.renderers import JSONRenderer
 from rest_framework.response import Response
 
+from etools.applications.action_points.conditions import (
+    ActionPointAssignedByCondition,
+    ActionPointAssigneeCondition,
+    ActionPointAuthorCondition,
+)
 from etools.applications.audit.conditions import (
     AuditModuleCondition,
     AuditStaffMemberCondition,
@@ -30,6 +35,7 @@ from etools.applications.audit.models import (
     Audit,
     Auditor,
     Engagement,
+    EngagementActionPoint,
     MicroAssessment,
     SpecialAudit,
     SpotCheck,
@@ -51,6 +57,7 @@ from etools.applications.audit.serializers.auditor import (
 )
 from etools.applications.audit.serializers.engagement import (
     AuditSerializer,
+    EngagementActionPointSerializer,
     EngagementExportSerializer,
     EngagementHactSerializer,
     EngagementLightSerializer,
@@ -455,3 +462,30 @@ class AuditorStaffMembersViewSet(
         return [
             AuditStaffMemberCondition(obj.auditor_firm, self.request.user),
         ]
+
+
+class EngagementActionPointViewSet(BaseAuditViewSet,
+                                   PermittedFSMActionMixin,
+                                   mixins.ListModelMixin,
+                                   mixins.CreateModelMixin,
+                                   mixins.RetrieveModelMixin,
+                                   mixins.UpdateModelMixin,
+                                   NestedViewSetMixin,
+                                   viewsets.GenericViewSet):
+    metadata_class = AuditPermissionBasedMetadata
+    queryset = EngagementActionPoint.objects.all()
+    serializer_class = EngagementActionPointSerializer
+
+    permission_classes = BaseAuditViewSet.permission_classes + [NestedPermission]
+
+    def get_obj_permission_context(self, obj):
+        return [
+            ObjectStatusCondition(obj),
+            ActionPointAuthorCondition(obj, self.request.user),
+            ActionPointAssignedByCondition(obj, self.request.user),
+            ActionPointAssigneeCondition(obj, self.request.user),
+        ]
+
+    def perform_create(self, serializer):
+        engagement = self.get_parent_object()
+        serializer.save(engagement=engagement, partner_id=engagement.partner_id)

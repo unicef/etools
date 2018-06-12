@@ -65,7 +65,7 @@ from etools.applications.partners.utils import get_data_from_insight
 from etools.applications.partners.views.helpers import set_tenant_or_fail
 from etools.applications.t2f.models import TravelActivity
 from etools.applications.vision.adapters.partner import PartnerSynchronizer
-from validator.mixins import ValidatorViewMixin
+from etools_validator.mixins import ValidatorViewMixin
 
 
 class PartnerOrganizationListAPIView(QueryStringFilterMixin, ExportModelMixin, ListCreateAPIView):

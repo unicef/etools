@@ -3,7 +3,7 @@ from django.conf.urls import include, url
 from rest_framework_nested import routers
 
 from etools.applications.tpm.views import (
-    ActionPointViewSet,
+    TPMActionPointViewSet,
     TPMPartnerViewSet,
     TPMStaffMembersViewSet,
     TPMVisitViewSet,
@@ -19,8 +19,8 @@ tpm_staffmember_api.register(r'staff-members', TPMStaffMembersViewSet, base_name
 tpm_visits_api = routers.SimpleRouter()
 tpm_visits_api.register(r'visits', TPMVisitViewSet, base_name='visits')
 
-tpm_action_points_api = NestedComplexRouter(tpm_visits_api, r'visits', lookup='tpm_visit')
-tpm_action_points_api.register(r'nested-action-points', ActionPointViewSet, base_name='tpmactionpoint')
+tpm_action_points_api = NestedComplexRouter(tpm_visits_api, r'visits', lookup='tpm_activity__tpm_visit')
+tpm_action_points_api.register(r'action-points', TPMActionPointViewSet, base_name='action-points')
 
 
 app_name = 'tpm'

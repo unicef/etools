@@ -90,7 +90,7 @@ from etools.applications.reports.serializers.v2 import (
 )
 from etools.applications.snapshot.models import Activity
 from etools.applications.users.models import Country
-from validator.mixins import ValidatorViewMixin
+from etools_validator.mixins import ValidatorViewMixin
 
 
 class InterventionListBaseView(ValidatorViewMixin, ListCreateAPIView):

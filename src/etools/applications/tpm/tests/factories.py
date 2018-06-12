@@ -7,6 +7,7 @@ from django.utils import timezone
 import factory.fuzzy
 from factory import fuzzy
 
+from etools.applications.action_points.tests.factories import ActionPointFactory
 from etools.applications.attachments.tests.factories import AttachmentFactory
 from etools.applications.EquiTrack.tests.factories import InheritedTrait
 from etools.applications.firms.tests.factories import BaseFirmFactory, BaseStaffMemberFactory, BaseUserFactory
@@ -14,7 +15,7 @@ from etools.applications.locations.tests.factories import LocationFactory
 from etools.applications.partners.models import InterventionResultLink, InterventionSectorLocationLink
 from etools.applications.partners.tests.factories import InterventionFactory
 from etools.applications.reports.tests.factories import ResultFactory, SectorFactory
-from etools.applications.tpm.models import TPMActivity, TPMVisit, TPMVisitReportRejectComment, TPMActionPoint
+from etools.applications.tpm.models import TPMActivity, TPMVisit, TPMVisitReportRejectComment
 from etools.applications.tpm.tpmpartners.models import TPMPartner, TPMPartnerStaffMember
 from etools.applications.users.tests.factories import OfficeFactory as SimpleOfficeFactory
 
@@ -94,6 +95,7 @@ class TPMActivityFactory(factory.DjangoModelFactory):
     report_attachments__count = 0
     unicef_focal_points__count = 0
     offices__count = 0
+    action_points__count = 0
 
     @factory.post_generation
     def unicef_focal_points(self, create, extracted, count, **kwargs):
@@ -147,6 +149,14 @@ class TPMActivityFactory(factory.DjangoModelFactory):
         for i in range(count):
             AttachmentFactory(code='activity_report', content_object=self, **kwargs)
 
+    @factory.post_generation
+    def action_points(self, create, extracted, count, **kwargs):
+        if not create:
+            return
+
+        for i in range(count):
+            ActionPointFactory(tpm_activity=self, **kwargs)
+
 
 class UserFactory(BaseUserFactory):
     """
@@ -192,17 +202,6 @@ class UserFactory(BaseUserFactory):
         TPMPartnerStaffMemberFactory(tpm_partner=extracted, user=self)
 
 
-class TPMActionPointFactory(factory.DjangoModelFactory):
-    class Meta:
-        model = TPMActionPoint
-
-    author = factory.SubFactory(UserFactory, unicef_user=True)
-    person_responsible = factory.SubFactory(UserFactory, unicef_user=True)
-
-    due_date = fuzzy.FuzzyDate(_FUZZY_START_DATE, _FUZZY_END_DATE)
-    description = fuzzy.FuzzyText()
-
-
 class TPMVisitFactory(factory.DjangoModelFactory):
     class Meta:
         model = TPMVisit
@@ -220,8 +219,6 @@ class TPMVisitFactory(factory.DjangoModelFactory):
     report_reject_comments__count = 0
 
     report_attachments__count = 0
-
-    action_points__count = 0
 
     class Params:
         draft = factory.Trait()
@@ -353,11 +350,3 @@ class TPMVisitFactory(factory.DjangoModelFactory):
 
         for i in range(count):
             AttachmentFactory(code='visit_report', content_object=self, **kwargs)
-
-    @factory.post_generation
-    def action_points(self, create, extracted, count, **kwargs):
-        if not create:
-            return
-
-        for i in range(count):
-            TPMActionPointFactory(tpm_visit=self, **kwargs)

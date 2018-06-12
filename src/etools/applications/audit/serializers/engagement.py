@@ -1,9 +1,9 @@
-from django.conf import settings
-from django.contrib.auth import get_user_model
-from django.utils.translation import ugettext as _
+from copy import copy
 
+from django.utils.translation import ugettext as _
 from rest_framework import serializers
 
+from etools.applications.action_points.serializers import ActionPointBaseSerializer, HistorySerializer
 from etools.applications.attachments.models import FileType
 from etools.applications.attachments.serializers import Base64AttachmentSerializer
 from etools.applications.attachments.serializers_fields import FileTypeModelChoiceField
@@ -44,11 +44,11 @@ from etools.applications.partners.serializers.partner_organization_v2 import (
 from etools.applications.permissions2.serializers import PermissionsBasedSerializerMixin
 from etools.applications.rest_extra.fields import SeparatedReadWriteField
 from etools.applications.rest_extra.serializers import (
-    UserContextSerializerMixin,
     WritableNestedParentSerializerMixin,
     WritableNestedSerializerMixin,
 )
-from etools.applications.users.serializers import MinimalUserSerializer
+from etools.applications.reports.serializers.v1 import SectorSerializer
+from etools.applications.users.serializers import OfficeSerializer
 
 
 class PartnerOrganizationLightSerializer(PartnerOrganizationListSerializer):
@@ -84,44 +84,29 @@ class ReportBase64AttachmentSerializer(WritableNestedSerializerMixin, Base64Atta
         pass
 
 
-class EngagementActionPointSerializer(UserContextSerializerMixin,
-                                      WritableNestedSerializerMixin,
-                                      serializers.ModelSerializer):
-    person_responsible = SeparatedReadWriteField(MinimalUserSerializer(read_only=True), label=_('Person Responsible'))
+class EngagementActionPointSerializer(PermissionsBasedSerializerMixin, ActionPointBaseSerializer):
+    section = SeparatedReadWriteField(
+        read_field=SectorSerializer(read_only=True, label=_('Section')),
+        required=True,
+    )
+    office = SeparatedReadWriteField(
+        read_field=OfficeSerializer(read_only=True, label=_('Office')),
+        required=True
+    )
 
-    class Meta(WritableNestedSerializerMixin.Meta):
+    history = HistorySerializer(many=True, label=_('History'), read_only=True, source='get_meaningful_history')
+
+    url = serializers.ReadOnlyField(label=_('Link'), source='get_object_url')
+
+    class Meta(ActionPointBaseSerializer.Meta):
         model = EngagementActionPoint
-        fields = [
-            'id', 'category', 'description', 'due_date', 'person_responsible', 'action_taken',
-            'status', 'high_priority',
+        fields = ActionPointBaseSerializer.Meta.fields + [
+            'section', 'office', 'history', 'url',
         ]
-
-    def _validate_person_responsible(self, attrs, instance=None):
-        person_responsible = attrs.get('person_responsible')
-        category = attrs.get('category')
-        if instance:
-            if not person_responsible:
-                person_responsible = instance.person_responsible
-            if not category:
-                category = instance.category
-
-        if category == 'Escalate to Investigation':
-            email = settings.EMAIL_FOR_USER_RESPONSIBLE_FOR_INVESTIGATION_ESCALATIONS
-            person_responsible = attrs['person_responsible'] = get_user_model().objects.filter(email=email).first()
-
-        if not person_responsible:
-            raise serializers.ValidationError({'person_responsible': _('This field is required.')})
-
-        return attrs
-
-    def update(self, instance, validated_data):
-        validated_data = self._validate_person_responsible(validated_data, instance=instance)
-        return super(EngagementActionPointSerializer, self).update(instance, validated_data)
-
-    def create(self, validated_data):
-        validated_data = self._validate_person_responsible(validated_data)
-        validated_data['author'] = self.get_user()
-        return super(EngagementActionPointSerializer, self).create(validated_data)
+        extra_kwargs = copy(ActionPointBaseSerializer.Meta.extra_kwargs)
+        extra_kwargs.update({
+            'assigned_to': {'label': _('Person Responsible')}
+        })
 
 
 class EngagementExportSerializer(serializers.ModelSerializer):
@@ -228,13 +213,11 @@ class EngagementSerializer(EngagementDatesValidation,
         many=True, required=False, label=_('Report Attachments')
     )
 
-    action_points = EngagementActionPointSerializer(many=True)
-
     class Meta(EngagementLightSerializer.Meta):
         fields = EngagementLightSerializer.Meta.fields + [
             'engagement_attachments', 'report_attachments',
             'total_value', 'staff_members', 'active_pd',
-            'authorized_officers', 'action_points',
+            'authorized_officers',
 
             'joint_audit', 'shared_ip_with', 'exchange_rate',
 

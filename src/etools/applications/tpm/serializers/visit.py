@@ -1,10 +1,12 @@
 import itertools
+from copy import copy
 
 from django.utils.translation import ugettext_lazy as _
 
 from rest_framework import serializers
 from rest_framework.exceptions import ValidationError
 
+from etools.applications.action_points.serializers import ActionPointBaseSerializer, HistorySerializer
 from etools.applications.activities.serializers import ActivitySerializer
 from etools.applications.locations.serializers import LocationLightSerializer
 from etools.applications.partners.models import InterventionResultLink, PartnerType
@@ -54,30 +56,44 @@ class TPMVisitReportRejectCommentSerializer(WritableNestedSerializerMixin,
         fields = ['id', 'rejected_at', 'reject_reason', ]
 
 
-class TPMActionPointSerializer(WritableNestedSerializerMixin,
-                               UserContextSerializerMixin,
-                               serializers.ModelSerializer):
-    author = MinimalUserSerializer(read_only=True, label=_('Assigned By'))
-
-    person_responsible = SeparatedReadWriteField(
-        read_field=MinimalUserSerializer(read_only=True, label=_('Person Responsible')),
+class TPMActionPointSerializer(PermissionsBasedSerializerMixin, ActionPointBaseSerializer):
+    section = SeparatedReadWriteField(
+        read_field=SectorSerializer(read_only=True, label=_('Section')),
+        read_only=True
+    )
+    office = SeparatedReadWriteField(
+        read_field=OfficeSerializer(read_only=True, label=_('Office')),
         required=True
     )
 
     is_responsible = serializers.SerializerMethodField()
+    history = HistorySerializer(many=True, label=_('History'), read_only=True, source='get_meaningful_history')
 
-    class Meta(WritableNestedSerializerMixin.Meta):
+    url = serializers.ReadOnlyField(label=_('Link'), source='get_object_url')
+
+    class Meta(ActionPointBaseSerializer.Meta):
         model = TPMActionPoint
-        fields = [
-            'id', 'author', 'person_responsible', 'is_responsible',
-            'due_date', 'status', 'description', 'comments',
+        fields = ActionPointBaseSerializer.Meta.fields + [
+            'tpm_activity', 'section', 'office', 'history', 'is_responsible', 'url'
         ]
+        extra_kwargs = copy(ActionPointBaseSerializer.Meta.extra_kwargs)
+        extra_kwargs.update({
+            'tpm_activity': {'label': _('Site Visit Schedule')},
+            'assigned_to': {'label': _('Person Responsible')}
+        })
 
     def get_is_responsible(self, obj):
-        return self.get_user() == obj.person_responsible
+        return self.get_user() == obj.assigned_to
 
     def create(self, validated_data):
-        validated_data['author'] = self.get_user()
+        activity = validated_data['tpm_activity']
+
+        validated_data.update({
+            'partner_id': activity.partner_id,
+            'intervention_id': activity.intervention_id,
+            'cp_output_id': activity.cp_output_id,
+            'section': activity.section,
+        })
         return super(TPMActionPointSerializer, self).create(validated_data)
 
 
@@ -225,8 +241,6 @@ class TPMVisitSerializer(WritableNestedParentSerializerMixin,
 
     report_reject_comments = TPMVisitReportRejectCommentSerializer(many=True, read_only=True)
 
-    action_points = TPMActionPointSerializer(label=_('Task Information'), many=True, required=False)
-
     def create(self, validated_data):
         validated_data['author'] = self.get_user()
         return super(TPMVisitSerializer, self).create(validated_data)
@@ -264,7 +278,7 @@ class TPMVisitSerializer(WritableNestedParentSerializerMixin,
 
     class Meta(TPMVisitLightSerializer.Meta):
         fields = TPMVisitLightSerializer.Meta.fields + [
-            'tpm_activities', 'report_attachments', 'action_points',
+            'tpm_activities', 'report_attachments',
             'cancel_comment', 'reject_comment', 'approval_comment',
             'visit_information', 'report_reject_comments',
         ]

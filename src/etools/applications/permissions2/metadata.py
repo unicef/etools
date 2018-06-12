@@ -13,6 +13,6 @@ class PermittedFSMTransitionActionMetadataMixin(FSMTransitionActionMetadataMixin
         :param view:
         :return:
         """
-        request.user._permission_context = view._collect_permission_context(instance=self._get_instance(view))
+        request.user._permission_context = view._collect_permission_context()
 
         return super(PermittedFSMTransitionActionMetadataMixin, self).determine_actions(request, view)

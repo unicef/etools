@@ -1,6 +1,7 @@
 from django.db import connection, models, transaction
 from django.db.models import Q
 
+from model_utils.managers import InheritanceManager
 from rest_framework import serializers
 
 from etools.applications.EquiTrack.utils import run_on_all_tenants
@@ -107,3 +108,16 @@ class ModelHavingTenantRelationsMixin(object):
         run_on_all_tenants(clear_relations, obj=self)
 
         super(ModelHavingTenantRelationsMixin, self).delete(*args, **kwargs)
+
+
+class InheritedModelMixin(object):
+    """
+    Mixin for easier access to subclasses. Designed to be tightly used with InheritanceManager
+    """
+
+    def get_subclass(self):
+        manager = self._meta.model._default_manager
+        if not isinstance(manager, InheritanceManager):
+            return self
+
+        return manager.get_subclass(pk=self.pk)
