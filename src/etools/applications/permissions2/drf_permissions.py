@@ -9,20 +9,24 @@ class NestedPermission(BasePermission):
     """
 
     def has_permission(self, request, view):
-        parent_model = view.get_parent().get_queryset().model
-
         model = view.get_queryset().model
-        field = getattr(model, view.parent_lookup_field).field
 
-        target = Permission.get_target(parent_model, field.rel.get_accessor_name())
+        targets = []
+        for lookup_field in view.parent_lookup_field.split('__'):
+            field = getattr(model, lookup_field).field
+            parent_model = field.related_model
+
+            targets.append(Permission.get_target(parent_model, field.rel.get_accessor_name()))
+
+            model = parent_model
 
         context = view._collect_permission_context()
 
-        permissions = Permission.objects.filter_by_context(context).filter_by_targets([target])
+        permissions = Permission.objects.filter_by_context(context).filter_by_targets(targets)
 
         if request.method in SAFE_METHODS:
             permission_kind = Permission.PERMISSIONS.view
         else:
             permission_kind = Permission.PERMISSIONS.edit
 
-        return bool(Permission.apply_permissions(permissions, [target], permission_kind))
+        return bool(Permission.apply_permissions(permissions, targets, permission_kind))
