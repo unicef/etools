@@ -1174,22 +1174,22 @@ class Command(BaseCommand):
                 'subject': '[eTools] ACTION POINT ASSIGNED to {{ action_point.person_responsible }}',
 
                 'content': strip_text("""
-                    Dear {{ action_point.person_responsible.first_name }},
+                    Dear {{ action_point.person_responsible }},
 
-                    {{ action_point.author.get_full_name }} has assigned you an action point related to
-                    Monitoring/Verification Visit {{ visit.reference_number }}.
+                    {% with action_point.tpm_activity as activity %}
+                    {{ action_point.assigned_by }} has assigned you an action point related to
+                    Monitoring/Verification Visit {{ activity.tpm_visit.reference_number }}.
 
-                    Implementing Partner{% if visit.multiple_tpm_activities %}s{% endif %} {{ visit.partners }}.
+                    Implementing Partner {{ activity.partner }}.
                     Please refer below for additional information.
 
-                    {% for activity in visit.tpm_activities %}
                     PD/SSFA/ToR: {{ activity.intervention}}
                     CP Output: {{ activity.cp_output }}
                     Location: {{ activity.locations }}
                     Section: {{ activity.section }}
-                    {% endfor %}
 
-                    Please click this link for additional information: {{ visit.object_url }}
+                    Please click this link for additional information: {{ activity.tpm_visit.object_url }}
+                    {% endwith %}
                     Thank you.
                 """),
 
@@ -1197,23 +1197,23 @@ class Command(BaseCommand):
                     {% extends "email-templates/base" %}
 
                     {% block content %}
-                    Dear {{ action_point.person_responsible.first_name }},<br/>
+                    Dear {{ action_point.person_responsible }},<br/>
                     <br/>
-                    <b>{{ action_point.author.get_full_name }}</b> has assigned you an action point related to
-                    Monitoring/Verification Visit {{ visit.reference_number }}.<br/>
-                    Implementing Partner{% if visit.multiple_tpm_activities %}s{% endif %} <b>{{ visit.partners }}</b>.
+                    {% with action_point.tpm_activity as activity %}
+                    <b>{{ action_point.assigned_by }}</b> has assigned you an action point related to
+                    Monitoring/Verification Visit {{ activity.tpm_visit.reference_number }}.<br/>
+                    Implementing Partner <b>{{ activity.partner }}</b>.
                     <br/>
                     Please refer below for additional information.<br/>
                     <br/>
-                    {% for activity in visit.tpm_activities %}
                     <b>PD/SSFA/ToR</b>: {{ activity.intervention }}<br/>
                     <b>CP Output</b> {{ activity.cp_output|default:"unassigned" }}<br/>
                     <b>Locations</b>: {{ activity.locations }}</br>
                     <b>Section</b>: {{ activity.section }}<br/><br/>
-                    {% endfor %}
 
                     Please click this link for additional information:
-                    <a href="{{ visit.object_url }}">{{ visit.object_url }}</a><br/><br/>
+                    <a href="{{ activity.tpm_visit.object_url }}">{{activity.tpm_visit.reference_number}}</a><br/><br/>
+                    {% endwith %}
                     Thank you.
                     {% endblock %}
                 """

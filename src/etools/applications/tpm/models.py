@@ -11,6 +11,7 @@ from django_fsm import FSMField, transition
 from model_utils import Choices, FieldTracker
 from model_utils.models import TimeStampedModel
 
+from etools.applications.action_points.models import ActionPoint
 from etools.applications.activities.models import Activity
 from etools.applications.attachments.models import Attachment
 from etools.applications.EquiTrack.utils import get_environment
@@ -154,7 +155,7 @@ class TPMVisit(SoftDeleteMixin, TimeStampedModel, models.Model):
             self.start_date, self.end_date
         )
 
-    def get_mail_context(self, user=None):
+    def get_mail_context(self, user=None, include_activities=True):
         object_url = self.get_object_url()
 
         if user:
@@ -164,15 +165,19 @@ class TPMVisit(SoftDeleteMixin, TimeStampedModel, models.Model):
         activities = self.tpm_activities.all()
         interventions = set(a.intervention.title for a in activities if a.intervention)
         partner_names = set(a.partner.name for a in activities)
-        return {
+        context = {
             'reference_number': self.reference_number,
             'tpm_partner': self.tpm_partner.name if self.tpm_partner else '-',
-            'tpm_activities': [a.get_mail_context() for a in activities],
             'multiple_tpm_activities': activities.count() > 1,
             'object_url': object_url,
             'partners': ', '.join(partner_names),
             'interventions': ', '.join(interventions),
         }
+
+        if include_activities:
+            context['tpm_activities'] = [a.get_mail_context(include_visit=False) for a in activities]
+
+        return context
 
     def _send_email(self, recipients, template_name, context=None, user=None, **kwargs):
         context = context or {}
@@ -388,12 +393,15 @@ class TPMActivity(Activity):
 
     objects = models.Manager()
 
-    def __str__(self):
-        return 'Task #{0} for {1}'.format(self.id, self.tpm_visit)
-
     class Meta:
         verbose_name_plural = _('TPM Activities')
         ordering = ['tpm_visit', 'id', ]
+
+    def __str__(self):
+        return 'Task #{0} for {1}'.format(self.id, self.tpm_visit)
+
+    def get_object_url(self):
+        return self.tpm_visit.get_object_url()
 
     @property
     def related_reports(self):
@@ -415,76 +423,47 @@ class TPMActivity(Activity):
     def pv_applicable(self):
         return self.related_reports.exists()
 
-    def get_mail_context(self):
-        return {
+    def get_mail_context(self, user=None, include_visit=True):
+        context = {
             'locations': ', '.join(map(force_text, self.locations.all())),
             'intervention': self.intervention.title if self.intervention else '-',
             'cp_output': force_text(self.cp_output) if self.cp_output else '-',
             'section': force_text(self.section) if self.section else '-',
+            'partner': self.partner.name if self.partner else '-',
         }
+        if include_visit:
+            context['tpm_visit'] = self.tpm_visit.get_mail_context(user=user, include_activities=False)
+
+        return context
 
 
-class TPMActionPoint(TimeStampedModel, models.Model):
-    STATUSES = Choices(
-        ('open', _('Open')),
-        ('progress', _('In-Progress')),
-        ('completed', _('Completed')),
-        ('cancelled', _('Cancelled')),
-    )
+class TPMActionPointManager(models.Manager):
+    def get_queryset(self):
+        queryset = super(TPMActionPointManager, self).get_queryset()
+        return queryset.filter(tpm_activity__isnull=False)
 
-    tpm_visit = models.ForeignKey(
-        TPMVisit, related_name='action_points', verbose_name=_('Visit'),
-        on_delete=models.CASCADE,
-    )
 
-    author = models.ForeignKey(
-        settings.AUTH_USER_MODEL,
-        related_name='created_tpm_action_points',
-        verbose_name=_('Assigned By'),
-        on_delete=models.CASCADE,
-    )
-    person_responsible = models.ForeignKey(
-        settings.AUTH_USER_MODEL,
-        related_name='tpm_action_points',
-        verbose_name=_('Person Responsible'),
-        on_delete=models.CASCADE,
-    )
+class TPMActionPoint(ActionPoint):
+    """
+    This proxy class is for easier permissions assigning.
+    """
+    objects = TPMActionPointManager()
 
-    due_date = models.DateField(verbose_name=_('Due Date'))
-    description = models.TextField(verbose_name=_('Description'))
-    comments = models.TextField(blank=True, verbose_name=_('Comments'))
+    class Meta(ActionPoint.Meta):
+        verbose_name = _('Engagement Action Point')
+        verbose_name_plural = _('Engagement Action Points')
+        proxy = True
 
-    status = models.CharField(choices=STATUSES, max_length=9, verbose_name='Status', default=STATUSES.open)
-
-    def __str__(self):
-        return 'Action Point #{} on {}'.format(self.id, self.tpm_visit)
-
-    @property
-    def reference_number(self):
-        return '{0}/{1}/APD'.format(
-            self.created.year,
-            self.id,
-        )
+    @transition('status', source=ActionPoint.STATUSES.open, target=ActionPoint.STATUSES.completed,
+                permission=has_action_permission(action='complete'),
+                conditions=[])
+    def complete(self):
+        self._do_complete()
 
     def get_mail_context(self):
-        return {
-            'person_responsible': self.person_responsible.get_full_name(),
-            'author': self.author.get_full_name(),
-
-        }
-
-    def notify_person_responsible(self, template_name):
-        context = {
-            'environment': get_environment(),
-            'visit': self.tpm_visit.get_mail_context(),
-            'action_point': self.get_mail_context(),
-        }
-
-        send_notification_using_email_template(
-            recipients=[self.person_responsible.email],
-            email_template_name=template_name,
-            context=context,
-        )
+        context = super(TPMActionPoint, self).get_mail_context()
+        context['tpm_activity'] = self.tpm_activity.get_mail_context() if self.tpm_activity else None
+        return context
 
 
 PME = GroupWrapper(code='pme',
