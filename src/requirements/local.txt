@@ -57,7 +57,7 @@ docutils==0.14            # via sphinx
 drf-nested-routers==0.90.2
 drfpasswordless==1.1.5
 et-xmlfile==1.0.1
-etools-validator==0.2.0
+etools-validator==0.2.1
 factory-boy==2.8
 faker==0.8.12
 fancycompleter==0.8
