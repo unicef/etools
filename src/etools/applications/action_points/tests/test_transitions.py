@@ -7,7 +7,7 @@ from etools.applications.action_points.models import ActionPoint
 from etools.applications.action_points.tests.base import ActionPointsTestCaseMixin
 from etools.applications.action_points.tests.factories import ActionPointFactory, UserFactory
 from etools.applications.EquiTrack.tests.cases import BaseTenantTestCase
-from etools.applications.EquiTrack.tests.mixins import TransitionPermissionsTestCaseMixin
+from etools.applications.permissions.tests.mixins import TransitionPermissionsTestCaseMixin
 
 
 class ActionPointTransitionTestCase(ActionPointsTestCaseMixin, BaseTenantTestCase):
