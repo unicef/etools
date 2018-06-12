@@ -39,7 +39,7 @@ from etools.applications.partners.serializers.exports.agreements import (
     AgreementExportSerializer,
 )
 from etools.applications.partners.validation.agreements import AgreementValid
-from validator.mixins import ValidatorViewMixin
+from etools_validator.mixins import ValidatorViewMixin
 
 
 class AgreementListAPIView(QueryStringFilterMixin, ExportModelMixin, ValidatorViewMixin, ListCreateAPIView):

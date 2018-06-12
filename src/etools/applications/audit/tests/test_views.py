@@ -2,7 +2,6 @@
 import datetime
 import random
 
-from django.conf import settings
 from django.core.management import call_command
 
 
@@ -10,16 +9,18 @@ from factory import fuzzy
 from mock import Mock, patch
 from rest_framework import status
 
+from etools.applications.action_points.tests.factories import ActionPointFactory
 from etools.applications.attachments.tests.factories import AttachmentFactory, AttachmentFileTypeFactory
 from etools.applications.audit.models import Engagement, Risk
 from etools.applications.audit.tests.base import AuditTestCaseMixin, EngagementTransitionsTestCaseMixin
-from etools.applications.audit.tests.factories import (AuditFactory, AuditPartnerFactory, EngagementActionPointFactory,
+from etools.applications.audit.tests.factories import (AuditFactory, AuditPartnerFactory,
                                                        EngagementFactory, MicroAssessmentFactory,
                                                        PartnerWithAgreementsFactory, PurchaseOrderFactory,
                                                        RiskBluePrintFactory, RiskCategoryFactory, SpecialAuditFactory,
                                                        SpotCheckFactory, UserFactory,)
 from etools.applications.EquiTrack.tests.cases import BaseTenantTestCase
 from etools.applications.partners.models import PartnerType
+from etools.applications.reports.tests.factories import SectorFactory
 
 
 class BaseTestCategoryRisksViewSet(EngagementTransitionsTestCaseMixin):
@@ -453,7 +454,6 @@ class SpecialAuditCreateViewSet(BaseTestEngagementsCreateViewSet, BaseTenantTest
 
 class TestEngagementsUpdateViewSet(EngagementTransitionsTestCaseMixin, BaseTenantTestCase):
     engagement_factory = MicroAssessmentFactory
-    fixtures = ['audit_users', ]
 
     def _do_update(self, user, data):
         data = data or {}
@@ -507,69 +507,88 @@ class TestEngagementsUpdateViewSet(EngagementTransitionsTestCaseMixin, BaseTenan
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response.data['active_pd'], [])
 
+
+class TestEngagementActionPointViewSet(EngagementTransitionsTestCaseMixin, BaseTenantTestCase):
+    engagement_factory = MicroAssessmentFactory
+
     def test_action_point_added(self):
         self._init_finalized_engagement()
         self.assertEqual(self.engagement.action_points.count(), 0)
-        response = self._do_update(self.unicef_focal_point, {
-            'action_points': [{
-                'category': "Invoice and receive reimbursement of ineligible expenditure",
+
+        response = self.forced_auth_req(
+            'post',
+            '/api/audit/engagements/{}/action-points/'.format(self.engagement.id),
+            user=self.unicef_focal_point,
+            data={
                 'description': fuzzy.FuzzyText(length=100).fuzz(),
                 'due_date': fuzzy.FuzzyDate(datetime.date(2001, 1, 1)).fuzz(),
-                'person_responsible': self.unicef_user.id
-            }]
-        })
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
+                'assigned_to': self.unicef_user.id,
+                'section': SectorFactory().id,
+                'office': self.unicef_focal_point.profile.office.id,
+            }
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         self.assertEqual(self.engagement.action_points.count(), 1)
 
-    def test_action_point_person_responsible_required(self):
-        self._init_finalized_engagement()
-        response = self._do_update(self.unicef_focal_point, {
-            'action_points': [{
-                'category': "Invoice and receive reimbursement of ineligible expenditure",
-                'description': fuzzy.FuzzyText(length=100).fuzz(),
-                'due_date': fuzzy.FuzzyDate(datetime.date(2001, 1, 1)).fuzz(),
-            }]
-        })
-        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
-        self.assertIn('action_points', response.data)
-        self.assertIn('person_responsible', response.data['action_points'][0])
-
-    def test_action_point_escalate_to_investigation(self):
-        self._init_finalized_engagement()
-        self.assertEqual(self.engagement.action_points.count(), 0)
-        response = self._do_update(self.unicef_focal_point, {
-            'action_points': [{
-                'category': 'Escalate to Investigation',
-                'description': fuzzy.FuzzyText(length=100).fuzz(),
-                'due_date': fuzzy.FuzzyDate(datetime.date(2001, 1, 1)).fuzz(),
-            }]
-        })
+    def _test_action_point_editable(self, action_point, user, editable=True):
+        response = self.forced_auth_req(
+            'options',
+            '/api/audit/engagements/{}/action-points/{}/'.format(self.engagement.id, action_point.id),
+            user=user
+        )
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(self.engagement.action_points.count(), 1)
-        self.assertEqual(
-            self.engagement.action_points.first().person_responsible.email,
-            settings.EMAIL_FOR_USER_RESPONSIBLE_FOR_INVESTIGATION_ESCALATIONS
-        )
 
-    def test_action_point_escalate_to_investigation_person_responsible_changed(self):
+        if editable:
+            self.assertIn('PUT', response.data['actions'].keys())
+            self.assertListEqual(
+                ['assigned_to', 'high_priority', 'due_date', 'description', 'section', 'office'],
+                list(response.data['actions']['PUT'].keys())
+            )
+        else:
+            self.assertNotIn('PUT', response.data['actions'].keys())
+
+    def test_action_point_editable_by_author(self):
         self._init_finalized_engagement()
-        action_point = EngagementActionPointFactory(
-            author=self.unicef_focal_point,
-            engagement=self.engagement,
-            category="Invoice and receive reimbursement of ineligible expenditure",
-            person_responsible=self.unicef_focal_point,
+        action_point = ActionPointFactory(engagement=self.engagement, status='pre_completed')
+
+        self._test_action_point_editable(action_point, action_point.author)
+
+    def test_action_point_editable_by_focal_point(self):
+        self._init_finalized_engagement()
+        action_point = ActionPointFactory(engagement=self.engagement, status='pre_completed')
+
+        self._test_action_point_editable(action_point, self.unicef_focal_point)
+
+    def test_action_point_readonly_by_simple_unicef_user(self):
+        self._init_finalized_engagement()
+        action_point = ActionPointFactory(engagement=self.engagement, status='pre_completed')
+
+        self._test_action_point_editable(action_point, self.unicef_user, editable=False)
+
+    def test_action_point_readonly_by_author_on_complete(self):
+        self._init_finalized_engagement()
+        action_point = ActionPointFactory(engagement=self.engagement, status='completed')
+
+        self._test_action_point_editable(action_point, action_point.author, editable=False)
+
+    def test_action_point_readonly_by_focal_point_on_complete(self):
+        self._init_finalized_engagement()
+        action_point = ActionPointFactory(engagement=self.engagement, status='completed')
+
+        self._test_action_point_editable(action_point, self.unicef_focal_point, editable=False)
+
+    def test_action_point_complete(self):
+        self._init_finalized_engagement()
+        action_point = ActionPointFactory(engagement=self.engagement, status='pre_completed', comments__count=0)
+
+        response = self.forced_auth_req(
+            'post',
+            '/api/audit/engagements/{}/action-points/{}/complete/'.format(self.engagement.id, action_point.id),
+            user=action_point.assigned_to
         )
-        response = self._do_update(self.unicef_focal_point, {
-            'action_points': [{
-                'id': action_point.id,
-                'category': 'Escalate to Investigation',
-            }]
-        })
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(
-            self.engagement.action_points.first().person_responsible.email,
-            settings.EMAIL_FOR_USER_RESPONSIBLE_FOR_INVESTIGATION_ESCALATIONS
-        )
+        self.assertEqual(response.data['status'], 'completed')
 
 
 class TestMetadataDetailViewSet(EngagementTransitionsTestCaseMixin):

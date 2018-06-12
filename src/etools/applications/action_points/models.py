@@ -14,6 +14,7 @@ from etools.applications.action_points.transitions.conditions import ActionPoint
 from etools.applications.EquiTrack.utils import get_environment
 from etools.applications.notification.models import Notification
 from etools.applications.permissions2.fsm import has_action_permission
+from etools.applications.snapshot.models import Activity
 from etools.applications.utils.common.urlresolvers import build_frontend_url
 from etools.applications.utils.groups.wrappers import GroupWrapper
 
@@ -78,10 +79,10 @@ class ActionPoint(TimeStampedModel):
                                      on_delete=models.CASCADE,
                                      )
     engagement = models.ForeignKey('audit.Engagement', verbose_name=_('Engagement'), blank=True, null=True,
-                                   on_delete=models.CASCADE,
+                                   related_name='action_points', on_delete=models.CASCADE,
                                    )
     tpm_activity = models.ForeignKey('tpm.TPMActivity', verbose_name=_('TPM Activity'), blank=True, null=True,
-                                     on_delete=models.CASCADE,
+                                     related_name='action_points', on_delete=models.CASCADE,
                                      )
     travel = models.ForeignKey('t2f.Travel', verbose_name=_('Travel'), blank=True, null=True,
                                on_delete=models.CASCADE,
@@ -103,8 +104,12 @@ class ActionPoint(TimeStampedModel):
         verbose_name_plural = _('Action Points')
 
     @property
+    def engagement_subclass(self):
+        return self.engagement.get_subclass() if self.engagement else None
+
+    @property
     def related_object(self):
-        return self.engagement or self.tpm_activity or self.travel
+        return self.engagement_subclass or self.tpm_activity or self.travel
 
     @property
     def related_module(self):
@@ -135,7 +140,10 @@ class ActionPoint(TimeStampedModel):
         return self.reference_number
 
     def get_meaningful_history(self):
-        return self.history.exclude(change={})
+        return self.history.filter(
+            models.Q(action=Activity.CREATE) |
+            models.Q(models.Q(action=Activity.UPDATE), ~models.Q(change={}))
+        )
 
     def snapshot_additional_data(self, diff):
         key_events = []
@@ -185,13 +193,16 @@ class ActionPoint(TimeStampedModel):
         )
         notification.send_notification()
 
+    def _do_complete(self):
+        self.send_email(self.assigned_by, 'action_points/action_point/completed')
+
     @transition(status, source=STATUSES.open, target=STATUSES.completed,
                 permission=has_action_permission(action='complete'),
                 conditions=[
                     ActionPointCompleteActionsTakenCheck.as_condition()
                 ])
     def complete(self):
-        self.send_email(self.assigned_by, 'action_points/action_point/completed')
+        self._do_complete()
 
 
 PME = GroupWrapper(code='pme',
