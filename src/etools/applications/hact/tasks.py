@@ -1,13 +1,10 @@
 
-import json
 from datetime import datetime
 
 from django.db import connection, transaction
 
 from celery.utils.log import get_task_logger
 
-from etools.applications.EquiTrack.encoders import EToolsEncoder
-from etools.applications.audit.models import Audit, Engagement
 from etools.applications.hact.models import AggregateHact
 from etools.applications.partners.models import PartnerOrganization
 from etools.applications.users.models import Country
@@ -31,16 +28,11 @@ def update_hact_for_country(country_name):
         partners = PartnerOrganization.objects.active()
         for partner in partners:
             logger.debug('Updating Partner {}'.format(partner.name))
-            hact = json.loads(partner.hact_values) if isinstance(partner.hact_values, str) else partner.hact_values
-            audits = Audit.objects.filter(partner=partner, status=Engagement.FINAL,
-                                          date_of_draft_report_to_unicef__year=datetime.now().year)
-            hact['outstanding_findings'] = sum([
-                audit.pending_unsupported_amount for audit in audits if audit.pending_unsupported_amount])
-            hact['assurance_coverage'] = partner.assurance_coverage
-
-            PartnerOrganization.programmatic_visits(partner)
-            partner.hact_values = json.dumps(hact, cls=EToolsEncoder)
-            partner.save()
+            partner.planned_visits_to_hact()
+            partner.programmatic_visits()
+            partner.spot_checks()
+            partner.audits_completed()
+            partner.hact_support()
 
     except Exception as e:
         logger.info('HACT Sync', exc_info=True)
