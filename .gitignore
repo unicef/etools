@@ -28,8 +28,6 @@ EquiTrack/migration_errors.txt
 static/*
 media
 
-README.rst
-
 *.dump
 dump.rdb
 .vagrant
@@ -118,3 +116,6 @@ src/etools/config/settings/custom.py
 *secrets.yml
 /dist
 .tox
+.pytest_cache
+coverage.xml
+
