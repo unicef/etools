@@ -63,7 +63,7 @@ class PartnerOrganizationHactCsvRenderer(FriendlyCSVRenderer):
         'hact_values.spot_checks.planned.q3',
         'hact_values.spot_checks.planned.q4',
         'hact_min_requirements.spot_checks',
-        'hact_values.spot_checks.follow_up_required',
+        'planned_engagement.spot_check_follow_up.follow_up_required',
         'hact_values.spot_checks.completed.q1',
         'hact_values.spot_checks.completed.q2',
         'hact_values.spot_checks.completed.q3',
@@ -99,7 +99,7 @@ class PartnerOrganizationHactCsvRenderer(FriendlyCSVRenderer):
         'hact_values.spot_checks.planned.q3': 'Q3',
         'hact_values.spot_checks.planned.q4': 'Q4',
         'hact_min_requirements.spot_checks': 'Spot Checks M.R',
-        'hact_values.spot_checks.follow_up_required': 'Follow up Required',
+        'planned_engagement.spot_check_follow_up': 'Follow Up',
         'hact_values.spot_checks.completed.q1': 'Spot Checks Completed Q1',
         'hact_values.spot_checks.completed.q2': 'Q2',
         'hact_values.spot_checks.completed.q3': 'Q3',
@@ -251,7 +251,8 @@ class InterventionCSVRenderer(r.CSVRenderer):
 
 class PartnershipDashCSVRenderer(r.CSVRenderer):
     header = [
-        'partner_name', 'partner_vendor_number',
+        'partner_name',
+        'partner_vendor_number',
         'number',
         'sections',
         'offices_names',
@@ -271,7 +272,8 @@ class PartnershipDashCSVRenderer(r.CSVRenderer):
         'disbursement_usd',
         'outstanding_dct_usd',
         'disbursement_percent',
-        'days_last_pv'
+        'days_last_pv',
+        'link',
     ]
 
     labels = {
@@ -297,6 +299,7 @@ class PartnershipDashCSVRenderer(r.CSVRenderer):
         "outstanding_dct_usd": "Outstanding DCT (USD)",
         "disbursement_percent": "Disbursement To Date (%)",
         "days_last_pv": "Days Since Last PV",
+        "link": "Link"
     }
 
 

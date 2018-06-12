@@ -22,7 +22,7 @@ from etools.applications.EquiTrack.encoders import EToolsEncoder
 from etools.applications.EquiTrack.serializers import StringConcat
 from etools.applications.attachments.models import Attachment
 from etools.applications.environment.helpers import tenant_switch_is_active
-from etools.applications.EquiTrack.fields import CurrencyField, QuarterField
+from etools.applications.EquiTrack.fields import CurrencyField
 from etools.applications.EquiTrack.utils import get_current_year, get_quarter, import_permissions
 from etools.applications.funds.models import Grant
 from etools.applications.locations.models import Location
@@ -209,10 +209,10 @@ class PartnerOrganizationQuerySet(models.QuerySet):
 
     def not_spot_check_compliant(self, *args, **kwargs):
         return self.filter(Q(reported_cy__gt=PartnerOrganization.CT_CP_AUDIT_TRIGGER_LEVEL) |
-                           Q(planned_engagement__spot_check_follow_up_q1__gt=0) |
-                           Q(planned_engagement__spot_check_follow_up_q2__gt=0) |
-                           Q(planned_engagement__spot_check_follow_up_q3__gt=0) |
-                           Q(planned_engagement__spot_check_follow_up_q4__gt=0),  # aka required
+                           Q(planned_engagement__spot_check_planned_q1__gt=0) |
+                           Q(planned_engagement__spot_check_planned_q2__gt=0) |
+                           Q(planned_engagement__spot_check_planned_q3__gt=0) |
+                           Q(planned_engagement__spot_check_planned_q4__gt=0),  # aka required
                            hact_values__spot_checks__completed__total=0,
                            hact_values__audits__completed=0, *args, **kwargs)
 
@@ -890,24 +890,24 @@ class PlannedEngagement(TimeStampedModel):
     """ class to handle partner's engagement for current year """
     partner = models.OneToOneField(PartnerOrganization, verbose_name=_("Partner"), related_name='planned_engagement',
                                    on_delete=models.CASCADE)
-    spot_check_mr = QuarterField(verbose_name=_('Spot Check MR'), null=False, default='')
-    spot_check_follow_up_q1 = models.IntegerField(verbose_name=_("Spot Check Q1"), default=0)
-    spot_check_follow_up_q2 = models.IntegerField(verbose_name=_("Spot Check Q2"), default=0)
-    spot_check_follow_up_q3 = models.IntegerField(verbose_name=_("Spot Check Q3"), default=0)
-    spot_check_follow_up_q4 = models.IntegerField(verbose_name=_("Spot Check Q4"), default=0)
+    spot_check_follow_up = models.IntegerField(verbose_name=_("Spot Check Follow Up Required"), default=0)
+    spot_check_planned_q1 = models.IntegerField(verbose_name=_("Spot Check Q1"), default=0)
+    spot_check_planned_q2 = models.IntegerField(verbose_name=_("Spot Check Q2"), default=0)
+    spot_check_planned_q3 = models.IntegerField(verbose_name=_("Spot Check Q3"), default=0)
+    spot_check_planned_q4 = models.IntegerField(verbose_name=_("Spot Check Q4"), default=0)
     scheduled_audit = models.BooleanField(verbose_name=_("Scheduled Audit"), default=False)
     special_audit = models.BooleanField(verbose_name=_("Special Audit"), default=False)
 
     @cached_property
-    def total_spot_check_follow_up_required(self):
+    def total_spot_check_planned(self):
         return sum([
-            self.spot_check_follow_up_q1, self.spot_check_follow_up_q2,
-            self.spot_check_follow_up_q3, self.spot_check_follow_up_q4
+            self.spot_check_planned_q1, self.spot_check_planned_q2,
+            self.spot_check_planned_q3, self.spot_check_planned_q4
         ])
 
     @cached_property
     def spot_check_required(self):
-        return self.total_spot_check_follow_up_required + (1 if self.spot_check_mr else 0)
+        return self.spot_check_follow_up + self.partner.min_req_spot_checks
 
     @cached_property
     def required_audit(self):
@@ -915,11 +915,11 @@ class PlannedEngagement(TimeStampedModel):
 
     def reset(self):
         """this is used to reset the values of the object at the end of the year"""
-        self.spot_check_mr = None
-        self.spot_check_follow_up_q1 = 0
-        self.spot_check_follow_up_q2 = 0
-        self.spot_check_follow_up_q3 = 0
-        self.spot_check_follow_up_q4 = 0
+        self.spot_check_follow_up = 0
+        self.spot_check_planned_q1 = 0
+        self.spot_check_planned_q2 = 0
+        self.spot_check_planned_q3 = 0
+        self.spot_check_planned_q4 = 0
         self.scheduled_audit = False
         self.special_audit = False
         self.save()
