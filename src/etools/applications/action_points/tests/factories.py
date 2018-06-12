@@ -64,12 +64,12 @@ class ActionPointFactory(factory.DjangoModelFactory):
     due_date = factory.fuzzy.FuzzyDate(timezone.now().date() + timedelta(days=1),
                                        timezone.now().date() + timedelta(days=10))
 
-    author = factory.SubFactory(UserFactory)
+    author = factory.SubFactory(UserFactory, unicef_user=True)
     assigned_by = factory.SelfAttribute('author')
     section = factory.SubFactory(SectorFactory)
     office = factory.SelfAttribute('author.profile.office')
 
-    assigned_to = factory.SubFactory(UserFactory)
+    assigned_to = factory.SubFactory(UserFactory, unicef_user=True)
 
     comments__count = 0
 
