@@ -789,12 +789,11 @@ class Command(BaseCommand):
                 'content': strip_text("""
                     Dear {{ action_point.person_responsible }},
 
-                    {{ action_point.author }} has assigned you an action point.
+                    {{ action_point.assigned_by }} has assigned you an action point.
 
-                    Engagement ID: {{ engagement.unique_id }}
-                    Category: {{ action_point.category }}
-                    Due Date: {{ action_point.due_date}}
-                    Link: {{ engagement.object_url }}
+                    Engagement ID: {{ action_point.engagement.unique_id }}
+                    Due Date: {{ action_point.due_date }}
+                    Link: {{ action_point.engagement.object_url }}
 
                     Thank you.
                 """),
@@ -805,12 +804,11 @@ class Command(BaseCommand):
                     {% block content %}
                     Dear {{ action_point.person_responsible }},<br/><br/>
 
-                    {{ action_point.author }} has assigned you an action point. <br/><br/>
+                    {{ action_point.assigned_by }} has assigned you an action point. <br/><br/>
 
-                    Engagement ID: {{ engagement.unique_id }}<br/>
-                    Category: {{ action_point.category }}<br/>
-                    Due Date: {{ action_point.due_date}}<br/>
-                    Link: <a href="{{ engagement.object_url }}">click here</a><br/><br/>
+                    Engagement ID: {{ action_point.engagement.unique_id }}<br/>
+                    Due Date: {{ action_point.due_date }}<br/>
+                    Link: <a href="{{ action_point.engagement.object_url }}">click here</a><br/><br/>
 
                     Thank you.
                     {% endblock %}

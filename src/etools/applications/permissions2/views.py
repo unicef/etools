@@ -7,6 +7,12 @@ class PermissionContextMixin(object):
     def _collect_permission_context(self, instance=None):
         context = self.get_permission_context()
 
+        if not instance and hasattr(self, 'get_object'):
+            try:
+                instance = self.get_object()
+            except AssertionError:
+                pass
+
         if instance:
             context.extend(self.get_obj_permission_context(instance))
 
