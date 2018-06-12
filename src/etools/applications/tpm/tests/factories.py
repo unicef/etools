@@ -3,7 +3,7 @@ import datetime
 
 from django.contrib.auth.models import Group
 from django.db import connection
-from django.utils import six, timezone
+from django.utils import timezone
 
 import factory.fuzzy
 from factory import fuzzy
@@ -17,6 +17,7 @@ from etools.applications.reports.tests.factories import ResultFactory, SectorFac
 from etools.applications.tpm.models import TPMActivity, TPMVisit, TPMVisitReportRejectComment, TPMActionPoint
 from etools.applications.tpm.tpmpartners.models import TPMPartner, TPMPartnerStaffMember
 from etools.applications.users.tests.factories import OfficeFactory as SimpleOfficeFactory
+from etools.applications.utils.common.tests.factories import InheritedTrait
 
 _FUZZY_START_DATE = timezone.now().date() - datetime.timedelta(days=5)
 _FUZZY_END_DATE = timezone.now().date() + datetime.timedelta(days=5)
@@ -148,19 +149,10 @@ class TPMActivityFactory(factory.DjangoModelFactory):
             AttachmentFactory(code='activity_report', content_object=self, **kwargs)
 
 
-class InheritedTrait(factory.Trait):
-    def __init__(self, *parents, **kwargs):
-        overrides = {}
-
-        for parent in parents:
-            overrides.update(parent.overrides)
-
-        overrides.update(kwargs)
-
-        super(InheritedTrait, self).__init__(**overrides)
-
-
 class UserFactory(BaseUserFactory):
+    """
+    User factory with ability to quickly assign tpm related groups with special logic for tpm partner.
+    """
     class Params:
         unicef_user = factory.Trait(
             groups=['UNICEF User'],
@@ -182,7 +174,7 @@ class UserFactory(BaseUserFactory):
         if extracted is not None:
             extracted = extracted[:]
             for i, group in enumerate(extracted):
-                if isinstance(group, six.string_types):
+                if isinstance(group, str):
                     extracted[i] = Group.objects.get_or_create(name=group)[0]
 
             self.groups.add(*extracted)

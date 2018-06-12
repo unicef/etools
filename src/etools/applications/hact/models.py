@@ -1,5 +1,4 @@
 
-import decimal
 import json
 from datetime import date, datetime
 from decimal import Decimal
@@ -12,18 +11,10 @@ from django.utils.translation import ugettext_lazy as _
 
 from model_utils.models import TimeStampedModel
 
+from etools.applications.EquiTrack.encoders import EToolsEncoder
 from etools.applications.audit.models import Audit, Engagement, MicroAssessment, SpecialAudit, SpotCheck
 from etools.applications.EquiTrack.utils import get_current_year
 from etools.applications.partners.models import PartnerOrganization, PartnerType
-
-
-class HactEncoder(json.JSONEncoder):
-    def default(self, o):
-        if isinstance(o, decimal.Decimal):
-            return float(o)
-        elif isinstance(o, datetime):
-            return o.isoformat()
-        return json.JSONEncoder.default(self, o)
 
 
 class HactHistory(TimeStampedModel):
@@ -57,7 +48,7 @@ class AggregateHact(TimeStampedModel):
                 'cash_transfers_partner_type': self.get_cash_transfer_partner_type(),
                 'spot_checks_completed': self.get_spot_checks_completed(),
             },
-        }, cls=HactEncoder)
+        }, cls=EToolsEncoder)
         self.save()
 
     @staticmethod
@@ -386,10 +377,10 @@ class AggregateHact(TimeStampedModel):
             ],
             'coverage_by_cash_transfer': [
                 ['Coverage by Cash Transfer (USD) (Total)', 'Count'],
-                ['Without Assurance', no_coverage.aggregate(total=Coalesce(Sum('total_ct_cy'), 0))['total']],
+                ['Without Assurance', no_coverage.aggregate(total=Coalesce(Sum('total_ct_ytd'), 0))['total']],
                 ['Partially Met Requirements', partial_coverage.aggregate(
-                    total=Coalesce(Sum('total_ct_cy'), 0))['total']],
-                ['Met Requirements', full_coverage.aggregate(total=Coalesce(Sum('total_ct_cy'), 0))['total']],
+                    total=Coalesce(Sum('total_ct_ytd'), 0))['total']],
+                ['Met Requirements', full_coverage.aggregate(total=Coalesce(Sum('total_ct_ytd'), 0))['total']],
 
             ],
             'table': [

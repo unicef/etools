@@ -5,7 +5,7 @@ from datetime import datetime, timedelta
 
 from django.core import mail
 from django.core.urlresolvers import reverse
-from django.utils import six
+
 from django.utils.six import StringIO
 
 from freezegun import freeze_time
@@ -303,9 +303,9 @@ class ActionPoints(URLAssertionMixin, BaseTenantTestCase):
                           'Assigned By',
                           'URL'])
 
-        self.assertTrue(isinstance(rows[1][4], six.string_types))
+        self.assertTrue(isinstance(rows[1][4], str))
         self.assertFalse(rows[1][4].isdigit())
-        self.assertTrue(isinstance(rows[1][9], six.string_types))
+        self.assertTrue(isinstance(rows[1][9], str))
         self.assertFalse(rows[1][9].isdigit())
 
     def test_mail_on_first_save(self):

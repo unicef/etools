@@ -513,6 +513,7 @@ class InterventionCreateUpdateSerializer(SnapshotModelSerializer):
 class InterventionDetailSerializer(serializers.ModelSerializer):
     planned_budget = InterventionBudgetCUSerializer(read_only=True)
     partner = serializers.CharField(source='agreement.partner.name')
+    partner_vendor = serializers.CharField(source='agreement.partner.vendor_number')
     partner_id = serializers.CharField(source='agreement.partner.id', read_only=True)
     prc_review_document_file = serializers.FileField(source='prc_review_document', read_only=True)
     prc_review_attachment = AttachmentSingleFileField(read_only=True)
@@ -526,6 +527,8 @@ class InterventionDetailSerializer(serializers.ModelSerializer):
     permissions = serializers.SerializerMethodField(read_only=True)
     flagged_sections = serializers.SerializerMethodField(read_only=True)
     section_names = serializers.SerializerMethodField(read_only=True)
+    days_from_submission_to_signed = serializers.CharField(read_only=True)
+    days_from_review_to_signed = serializers.CharField(read_only=True)
     locations = serializers.SerializerMethodField()
     location_names = serializers.SerializerMethodField()
     cluster_names = serializers.SerializerMethodField()
@@ -593,7 +596,10 @@ class InterventionDetailSerializer(serializers.ModelSerializer):
             "attachments", 'permissions', 'partner_id', "sections",
             "locations", "location_names", "cluster_names", "flat_locations", "flagged_sections", "section_names",
             "in_amendment", "prc_review_attachment", "signed_pd_attachment", "donors", "donor_codes", "grants",
-            "location_p_codes"
+            "location_p_codes",
+            "days_from_submission_to_signed",
+            "days_from_review_to_signed",
+            "partner_vendor"
         )
 
 
@@ -765,3 +771,20 @@ class InterventionReportingRequirementCreateSerializer(serializers.ModelSerializ
             if r.get("id"):
                 ReportingRequirement.objects.filter(pk=r.get("id")).delete()
         return self.intervention
+
+
+class InterventionLocationExportSerializer(serializers.Serializer):
+    partner = serializers.CharField(source="intervention.agreement.partner.name")
+    pd_ref_number = serializers.CharField(source="intervention.number")
+    partnership = serializers.CharField(source="intervention.agreement.agreement_number")
+    status = serializers.CharField(source="intervention.status")
+    location = serializers.CharField(source="selected_location.name", read_only=True)
+    section = serializers.CharField(source="section.name", read_only=True)
+    cp_output = serializers.CharField(source="intervention.cp_output_names")
+    start = serializers.CharField(source="intervention.start")
+    end = serializers.CharField(source="intervention.end")
+    focal_point = serializers.CharField(source="intervention.focal_point_names")
+    hyperlink = serializers.SerializerMethodField()
+
+    def get_hyperlink(self, obj):
+        return 'https://{}/pmp/interventions/{}/details/'.format(self.context['request'].get_host(), obj.intervention.id)

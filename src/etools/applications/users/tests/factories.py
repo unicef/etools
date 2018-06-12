@@ -1,6 +1,7 @@
 
 from django.contrib.auth import get_user_model
 from django.contrib.auth.models import Group
+from django.db import connection
 from django.db.models import signals
 
 import factory
@@ -8,6 +9,7 @@ from factory.fuzzy import FuzzyText
 
 from etools.applications.EquiTrack.tests.cases import SCHEMA_NAME, TENANT_DOMAIN
 from etools.applications.users import models
+from etools.applications.publics.tests.factories import PublicsCurrencyFactory
 
 
 class GroupFactory(factory.django.DjangoModelFactory):
@@ -24,12 +26,30 @@ class OfficeFactory(factory.django.DjangoModelFactory):
 
     name = 'An Office'
 
+    @classmethod
+    def _create(cls, model_class, *args, **kwargs):
+        obj = super(OfficeFactory, cls)._create(model_class, *args, **kwargs)
+
+        if hasattr(connection.tenant, 'id') and connection.tenant.schema_name != 'public':
+            connection.tenant.offices.add(obj)
+
+        return obj
+
 
 class SectionFactory(factory.django.DjangoModelFactory):
     class Meta:
         model = models.Section
 
     name = FuzzyText()
+
+    @classmethod
+    def _create(cls, model_class, *args, **kwargs):
+        obj = super(SectionFactory, cls)._create(model_class, *args, **kwargs)
+
+        if hasattr(connection.tenant, 'id') and connection.tenant.schema_name != 'public':
+            connection.tenant.sections.add(obj)
+
+        return obj
 
 
 class CountryFactory(factory.django.DjangoModelFactory):
@@ -40,6 +60,7 @@ class CountryFactory(factory.django.DjangoModelFactory):
     name = "Test Country"
     schema_name = SCHEMA_NAME
     domain_url = TENANT_DOMAIN
+    local_currency = factory.SubFactory(PublicsCurrencyFactory)
 
 
 class ProfileFactory(factory.django.DjangoModelFactory):

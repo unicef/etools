@@ -9,6 +9,7 @@ class InterventionDashSerializer(serializers.ModelSerializer):
     partner_name = serializers.CharField(source='agreement.partner.name', read_only=True)
     partner_id = serializers.CharField(source='agreement.partner.id', read_only=True)
     partner_blocked = serializers.BooleanField(source='agreement.partner.blocked', read_only=True)
+    partner_marked_for_deletion = serializers.BooleanField(source='agreement.partner.deleted_flag', read_only=True)
     sections = serializers.SerializerMethodField()
     offices_names = serializers.SerializerMethodField()
     budget_currency = serializers.CharField(source='planned_budget.currency', read_only=True)
@@ -47,7 +48,7 @@ class InterventionDashSerializer(serializers.ModelSerializer):
     outstanding_dct_usd = serializers.DecimalField(source='frs__outstanding_amt__sum',
                                                    read_only=True, max_digits=20, decimal_places=2)
     multi_curr_flag = serializers.BooleanField()
-    has_final_partnership_review = serializers.BooleanField()
+    has_final_partnership_review = serializers.SerializerMethodField()
 
     def fr_currencies_ok(self, obj):
         return obj.frs__currency__count == 1 if obj.frs__currency__count else None
@@ -79,6 +80,9 @@ class InterventionDashSerializer(serializers.ModelSerializer):
     def get_last_pv_date(self, obj):
         return ""  # obj.last_pv_date
 
+    def get_has_final_partnership_review(self, obj):
+        return ""
+
     def get_offices_names(self, obj):
         return ",".join(o.name for o in obj.offices.all())
 
@@ -92,6 +96,7 @@ class InterventionDashSerializer(serializers.ModelSerializer):
             'partner_blocked',
             'partner_id',
             'partner_name',
+            'partner_marked_for_deletion',
             'number',
             'status',
             'start',

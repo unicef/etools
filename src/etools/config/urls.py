@@ -58,7 +58,7 @@ urlpatterns = [
     url(r'^$', ModuleRedirectView.as_view(), name='dashboard'),
     url(r'^login/$', MainView.as_view(), name='main'),
     url(r'^saml2/logout/$', logout_view, name='saml2_logout'),
-    url(r'^email-auth/', include('etools.applications.email_auth.urls')),
+    url(r'^tokens/', include('etools.applications.tokens.urls')),
 
     url(r'^api/static_data/$', StaticDataView.as_view({'get': 'list'}), name='public_static'),
 
@@ -78,6 +78,7 @@ urlpatterns = [
     url(r'^api/t2f/', include(t2f_patterns)),
     url(r'^api/tpm/', include('etools.applications.tpm.urls')),
     url(r'^api/audit/', include('etools.applications.audit.urls')),
+    url(r'^api/action-points/', include('etools.applications.action_points.urls')),
     url(r'^api/v2/reports/', include('etools.applications.reports.urls_v2')),
     url(r'^api/v2/', include('etools.applications.partners.urls_v2', namespace='partners_api')),
     url(r'^api/prp/v1/', include('etools.applications.partners.prp_urls', namespace='prp_api_v1')),

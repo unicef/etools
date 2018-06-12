@@ -1,7 +1,4 @@
-
 import json
-
-from django.utils import six
 
 from rest_framework import serializers
 
@@ -29,7 +26,7 @@ class AppliedIndicatorExportSerializer(serializers.ModelSerializer):
 
     def get_disaggregation(self, obj):
         res = obj.disaggregation
-        if isinstance(obj.disaggregation, six.text_type):
+        if isinstance(obj.disaggregation, str):
             res = json.loads(obj.disaggregation)
         return res
 
@@ -78,9 +75,9 @@ class IndicatorExportSerializer(serializers.ModelSerializer):
 
 
 class IndicatorExportFlatSerializer(ExportSerializerMixin, IndicatorExportSerializer):
-    sector = serializers.CharField(source="sector.name")
-    result = serializers.CharField(source="result.name")
-    unit = serializers.CharField(source="unit.type")
+    sector = serializers.CharField(source="sector.name", read_only=True)
+    result = serializers.CharField(source="result.name", read_only=True)
+    unit = serializers.CharField(source="unit.type", read_only=True)
 
 
 class AppliedIndicatorLocationExportSerializer(serializers.Serializer):

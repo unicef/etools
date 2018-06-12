@@ -6,27 +6,40 @@ from django.db import transaction
 from django.db.models import Q
 
 from rest_framework import status
-from rest_framework.generics import DestroyAPIView, ListAPIView, ListCreateAPIView, RetrieveUpdateDestroyAPIView
+from rest_framework.generics import (
+    DestroyAPIView,
+    ListAPIView,
+    ListCreateAPIView,
+    RetrieveUpdateDestroyAPIView,
+)
 from rest_framework.response import Response
 from rest_framework.serializers import ValidationError
 from rest_framework_csv import renderers as r
 
 from etools.applications.EquiTrack.mixins import ExportModelMixin, QueryStringFilterMixin
 from etools.applications.EquiTrack.renderers import CSVFlatRenderer
-from etools.applications.EquiTrack.validation_mixins import ValidatorViewMixin
 from etools.applications.partners.exports_v2 import AgreementCSVRenderer
 from etools.applications.partners.filters import PartnerScopeFilter
 from etools.applications.partners.models import Agreement, AgreementAmendment
-from etools.applications.partners.permissions import PartnershipManagerPermission, PartnershipManagerRepPermission
-from etools.applications.partners.serializers.agreements_v2 import (AgreementAmendmentCreateUpdateSerializer,
-                                                                    AgreementAmendmentListSerializer,
-                                                                    AgreementCreateUpdateSerializer,
-                                                                    AgreementDetailSerializer, AgreementListSerializer,)
-from etools.applications.partners.serializers.exports.agreements import (AgreementAmendmentExportFlatSerializer,
-                                                                         AgreementAmendmentExportSerializer,
-                                                                         AgreementExportFlatSerializer,
-                                                                         AgreementExportSerializer,)
+from etools.applications.partners.permissions import (
+    PartnershipManagerPermission,
+    PartnershipManagerRepPermission,
+)
+from etools.applications.partners.serializers.agreements_v2 import (
+    AgreementAmendmentCreateUpdateSerializer,
+    AgreementAmendmentListSerializer,
+    AgreementCreateUpdateSerializer,
+    AgreementDetailSerializer,
+    AgreementListSerializer,
+)
+from etools.applications.partners.serializers.exports.agreements import (
+    AgreementAmendmentExportFlatSerializer,
+    AgreementAmendmentExportSerializer,
+    AgreementExportFlatSerializer,
+    AgreementExportSerializer,
+)
 from etools.applications.partners.validation.agreements import AgreementValid
+from validator.mixins import ValidatorViewMixin
 
 
 class AgreementListAPIView(QueryStringFilterMixin, ExportModelMixin, ValidatorViewMixin, ListCreateAPIView):
@@ -248,7 +261,7 @@ class AgreementDeleteView(DestroyAPIView):
             return Response(status=status.HTTP_404_NOT_FOUND)
         if agreement.status != Agreement.DRAFT or \
                 agreement.interventions.count():
-            raise ValidationError("Cannot delete an agreement that is not Draft or has PDs associated with it")
+            raise ValidationError("Cannot delete an agreement that is not Draft or has PDs/SSFAs associated with it")
         else:
             agreement.delete()
             return Response(status=status.HTTP_204_NO_CONTENT)

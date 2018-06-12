@@ -1,7 +1,4 @@
-
 import json
-
-from django.utils import six
 
 from rest_framework import serializers
 
@@ -12,7 +9,7 @@ class HactHistorySerializer(serializers.ModelSerializer):
     partner_values = serializers.SerializerMethodField()
 
     def get_partner_values(self, obj):
-        return json.loads(obj.partner_values) if isinstance(obj.partner_values, six.text_type) else obj.partner_values
+        return json.loads(obj.partner_values) if isinstance(obj.partner_values, str) else obj.partner_values
 
     class Meta:
         model = HactHistory
@@ -29,7 +26,7 @@ class AggregateHactSerializer(serializers.ModelSerializer):
     partner_values = serializers.SerializerMethodField()
 
     def get_partner_values(self, obj):
-        return json.loads(obj.partner_values) if isinstance(obj.partner_values, six.text_type) else obj.partner_values
+        return json.loads(obj.partner_values) if isinstance(obj.partner_values, str) else obj.partner_values
 
     class Meta:
         model = HactHistory

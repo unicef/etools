@@ -127,7 +127,7 @@ class TestActiveUserSection(BaseTenantTestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response.data, [{
             "countryName": "",
-            "records": {"total": 1, "sections": []}
+            "records": {"total": 1, "sections": [{'count': 1, 'name': self.unicef_staff.profile.section.name}]}
         }])
 
 

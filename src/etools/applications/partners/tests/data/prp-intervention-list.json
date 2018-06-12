@@ -60,6 +60,10 @@
     "partner_org": {
       "id": 0,
       "address": null,
+      "partner_type": "",
+      "cso_type": null,
+      "total_ct_cp": null,
+      "total_ct_cy": null,
       "short_name": "",
       "alternate_name": null,
       "basis_for_risk_rating": "",
@@ -74,7 +78,7 @@
       "rating": null,
       "street_address": null
     },
-    "reporting_periods": [],
+    "special_reports": [],
     "status": "active",
     "cso_budget_currency": "",
     "id": 642,
@@ -104,6 +108,10 @@
     "partner_org": {
       "id": 0,
       "address": null,
+      "partner_type": "",
+      "cso_type": null,
+      "total_ct_cp": null,
+      "total_ct_cy": null,
       "short_name": "",
       "alternate_name": null,
       "basis_for_risk_rating": "",
@@ -118,7 +126,7 @@
       "rating": null,
       "street_address": null
     },
-    "reporting_periods": [],
+    "special_reports": [],
     "status": "draft",
     "cso_budget_currency": "",
     "id": 641,
@@ -148,6 +156,10 @@
     "partner_org": {
       "id": 0,
       "address": null,
+      "partner_type": "",
+      "cso_type": null,
+      "total_ct_cp": null,
+      "total_ct_cy": null,
       "short_name": "",
       "alternate_name": null,
       "basis_for_risk_rating": "",
@@ -162,7 +174,7 @@
       "rating": null,
       "street_address": null
     },
-    "reporting_periods": [],
+    "special_reports": [],
     "status": "draft",
     "cso_budget_currency": "",
     "id": 640,

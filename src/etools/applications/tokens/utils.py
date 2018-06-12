@@ -1,9 +1,9 @@
+from urllib.parse import urlparse, parse_qsl, urlencode, urlunparse, urljoin
 
 from django.conf import settings
 from django.urls import reverse
 
 from drfpasswordless.utils import create_callback_token_for_user
-from future.backports.urllib.parse import parse_qsl, urlencode, urljoin, urlparse, urlunparse
 
 from etools.applications.utils.common.urlresolvers import site_url
 
@@ -26,4 +26,7 @@ def update_url_with_auth_token(url, user):
 
 
 def get_token_auth_link(user):
-    return update_url_with_auth_token(urljoin(site_url(), reverse('email_auth:login')), user)
+    return update_url_with_auth_token(
+        urljoin(site_url(), reverse('tokens:login')),
+        user
+    )

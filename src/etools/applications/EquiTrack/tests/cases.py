@@ -67,6 +67,8 @@ class BaseTenantTestCase(TenantTestCase):
             cls.tenant.save(verbosity=0)
 
         cls.tenant.business_area_code = 'ZZZ'
+        # Make sure country has a short code, it affects some results
+        cls.tenant.country_short_code = 'TST'
         cls.tenant.save(verbosity=0)
 
         try:
