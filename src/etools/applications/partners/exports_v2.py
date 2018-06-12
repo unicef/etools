@@ -1,5 +1,7 @@
 from rest_framework_csv import renderers as r
 
+from etools.applications.EquiTrack.renderers import FriendlyCSVRenderer
+
 
 class PartnerOrganizationCSVRenderer(r.CSVRenderer):
     header = ['vendor_number', 'organization_full_name',
@@ -33,7 +35,7 @@ class PartnerOrganizationCSVRenderer(r.CSVRenderer):
     }
 
 
-class PartnerOrganizationHactCsvRenderer(r.CSVRenderer):
+class PartnerOrganizationHactCsvRenderer(FriendlyCSVRenderer):
 
     header = [
         'name',
@@ -61,7 +63,7 @@ class PartnerOrganizationHactCsvRenderer(r.CSVRenderer):
         'hact_values.spot_checks.planned.q3',
         'hact_values.spot_checks.planned.q4',
         'hact_min_requirements.spot_checks',
-        'hact_values.spot_checks.follow_up_required',
+        'planned_engagement.spot_check_follow_up.follow_up_required',
         'hact_values.spot_checks.completed.q1',
         'hact_values.spot_checks.completed.q2',
         'hact_values.spot_checks.completed.q3',
@@ -97,7 +99,7 @@ class PartnerOrganizationHactCsvRenderer(r.CSVRenderer):
         'hact_values.spot_checks.planned.q3': 'Q3',
         'hact_values.spot_checks.planned.q4': 'Q4',
         'hact_min_requirements.spot_checks': 'Spot Checks M.R',
-        'hact_values.spot_checks.follow_up_required': 'Follow up Required',
+        'planned_engagement.spot_check_follow_up': 'Follow Up',
         'hact_values.spot_checks.completed.q1': 'Spot Checks Completed Q1',
         'hact_values.spot_checks.completed.q2': 'Q2',
         'hact_values.spot_checks.completed.q3': 'Q3',
@@ -108,7 +110,7 @@ class PartnerOrganizationHactCsvRenderer(r.CSVRenderer):
     }
 
 
-class PartnerOrganizationSimpleHactCsvRenderer(r.CSVRenderer):
+class PartnerOrganizationSimpleHactCsvRenderer(FriendlyCSVRenderer):
 
     header = [
         'name',
@@ -123,7 +125,7 @@ class PartnerOrganizationSimpleHactCsvRenderer(r.CSVRenderer):
         'hact_values.programmatic_visits.planned.total',
         'hact_min_requirements.programme_visits',
         'hact_values.programmatic_visits.completed.total',
-        'planned_engagement.spot_check_required',
+        'hact_min_requirements.spot_checks',
         'hact_values.spot_checks.completed.total',
         'hact_values.audits.minimum_requirements',
         'hact_values.audits.completed',
@@ -143,7 +145,7 @@ class PartnerOrganizationSimpleHactCsvRenderer(r.CSVRenderer):
         'hact_values.programmatic_visits.planned.total': 'Programmatic Visits Planned',
         'hact_min_requirements.programme_visits': 'Programmatic Visits M.R',
         'hact_values.programmatic_visits.completed.total': 'Programmatic Visits Completed',
-        'planned_engagement.spot_check_required': 'Spot Check Required',
+        'hact_min_requirements.spot_checks': 'Spot Check Required',
         'hact_values.spot_checks.completed.total': 'Spot Checks Completed',
         'hact_values.audits.minimum_requirements': 'Audits M.R',
         'hact_values.audits.completed': 'Audit Completed',

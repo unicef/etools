@@ -1,19 +1,20 @@
-# Python imports
-
 import json
 from datetime import datetime
 
+from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.contrib.auth.models import Group, Permission
 from django.core.serializers.json import DjangoJSONEncoder
-from django.test import SimpleTestCase
+from django.test import RequestFactory, SimpleTestCase
 
 import mock
 from freezegun import freeze_time
 
+from etools.applications.EquiTrack import utils
 from etools.applications.EquiTrack.tests.cases import BaseTenantTestCase
-from etools.applications.EquiTrack.utils import (get_current_year, get_quarter, make_dictionary_serializable,
-                                                 model_instance_to_dictionary,)
+from etools.applications.users.tests.factories import UserFactory
+
+PATH_SET_TENANT = "etools.applications.EquiTrack.utils.connection.set_tenant"
 
 
 class TestUtils(SimpleTestCase):
@@ -25,19 +26,87 @@ class TestUtils(SimpleTestCase):
     def test_get_current_year(self):
         """test get current year function"""
 
-        current_year = get_current_year()
+        current_year = utils.get_current_year()
         self.assertEqual(current_year, 2013)
 
     @freeze_time("2013-05-26")
     def test_get_quarter_default(self):
         """test current quarter function"""
-        quarter = get_quarter()
+        quarter = utils.get_quarter()
         self.assertEqual(quarter, 'q2')
 
     def test_get_quarter(self):
         """test current quarter function"""
-        quarter = get_quarter(datetime(2016, 10, 1))
+        quarter = utils.get_quarter(datetime(2016, 10, 1))
         self.assertEqual(quarter, 'q4')
+
+
+class TestSetCountry(BaseTenantTestCase):
+    def setUp(self):
+        self.factory = RequestFactory()
+        self.user = UserFactory()
+        self.mock_set = mock.Mock()
+        self.country = self.user.profile.country
+
+    def test_set_country(self):
+        request = self.factory.get("/")
+        with mock.patch(PATH_SET_TENANT, self.mock_set):
+            utils.set_country(self.user, request)
+        self.assertEqual(request.tenant, self.country)
+        self.mock_set.assert_called_with(self.country)
+
+    def test_set_country_override(self):
+        """Ideally we would be setup a different country
+        But having issues creating another country outside of current schema
+        """
+        self.user.profile.countries_available.add(self.country)
+        request = self.factory.get("/?{}={}".format(
+            settings.SCHEMA_OVERRIDE_PARAM,
+            self.country.name
+        ))
+        with mock.patch(PATH_SET_TENANT, self.mock_set):
+            utils.set_country(self.user, request)
+        self.assertEqual(request.tenant, self.country)
+        self.mock_set.assert_called_with(self.country)
+
+    def test_set_country_override_shortcode(self):
+        """Ideally we would be setup a different country
+        But having issues creating another country outside of current schema
+        """
+        self.user.profile.countries_available.add(self.country)
+        request = self.factory.get(
+            "/?{}={}".format(
+                settings.SCHEMA_OVERRIDE_PARAM,
+                self.country.country_short_code
+            )
+        )
+        with mock.patch(PATH_SET_TENANT, self.mock_set):
+            utils.set_country(self.user, request)
+        self.assertEqual(request.tenant, self.country)
+        self.mock_set.assert_called_with(self.country)
+
+    def test_set_country_override_invalid(self):
+        request = self.factory.get("/?{}=Wrong".format(
+            settings.SCHEMA_OVERRIDE_PARAM
+        ))
+        with mock.patch(PATH_SET_TENANT, self.mock_set):
+            utils.set_country(self.user, request)
+        self.assertEqual(request.tenant, self.country)
+        self.mock_set.assert_called_with(self.country)
+
+    def test_set_country_override_not_avialable(self):
+        """Ideally we would be setup a different country
+        But having issues creating another country outside of current schema
+        """
+        self.user.profile.countries_available.remove(self.country)
+        request = self.factory.get("/?{}={}".format(
+            settings.SCHEMA_OVERRIDE_PARAM,
+            self.country.name
+        ))
+        with mock.patch(PATH_SET_TENANT, self.mock_set):
+            utils.set_country(self.user, request)
+        self.assertEqual(request.tenant, self.country)
+        self.mock_set.assert_called_with(self.country)
 
 
 class TestSerialization(BaseTenantTestCase):
@@ -53,7 +122,7 @@ class TestSerialization(BaseTenantTestCase):
 
     def test_simple_instance(self):
         user = self.user
-        result = model_instance_to_dictionary(user)
+        result = utils.model_instance_to_dictionary(user)
 
         # Recreate how a datetime ends up embedded in a string in the JSON,
         # which is not quite isoformat().
@@ -72,7 +141,7 @@ class TestSerialization(BaseTenantTestCase):
                 'groups': [self.group.id],
                 'user_permissions': [self.permission.id],
                 'pk': user.id,
-                'model': 'auth.user',
+                'model': 'users.user',
                 'password': '',
                 'email': 'fred@example.com',
                 'date_joined': serialized_date_joined,
@@ -88,7 +157,7 @@ class TestSerialization(BaseTenantTestCase):
                 'i': 27,
                 's': 'Foo'
             }
-            result = make_dictionary_serializable(d)
+            result = utils.make_dictionary_serializable(d)
             self.assertEqual(
                 result,
                 {u'i': 27, u's': u'Foo', u'user': {u'exclamation': u'Hello, world!'}}

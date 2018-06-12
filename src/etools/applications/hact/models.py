@@ -377,10 +377,10 @@ class AggregateHact(TimeStampedModel):
             ],
             'coverage_by_cash_transfer': [
                 ['Coverage by Cash Transfer (USD) (Total)', 'Count'],
-                ['Without Assurance', no_coverage.aggregate(total=Coalesce(Sum('total_ct_cy'), 0))['total']],
+                ['Without Assurance', no_coverage.aggregate(total=Coalesce(Sum('total_ct_ytd'), 0))['total']],
                 ['Partially Met Requirements', partial_coverage.aggregate(
-                    total=Coalesce(Sum('total_ct_cy'), 0))['total']],
-                ['Met Requirements', full_coverage.aggregate(total=Coalesce(Sum('total_ct_cy'), 0))['total']],
+                    total=Coalesce(Sum('total_ct_ytd'), 0))['total']],
+                ['Met Requirements', full_coverage.aggregate(total=Coalesce(Sum('total_ct_ytd'), 0))['total']],
 
             ],
             'table': [

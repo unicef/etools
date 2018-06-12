@@ -17,8 +17,6 @@ import datetime
 import os
 from os.path import abspath, basename, dirname, join, normpath
 
-from django.utils import six
-
 import dj_database_url
 import saml2
 import yaml
@@ -34,7 +32,7 @@ def str2bool(value):
 
     This assumes that 'value' is one of a list of some common possible Truthy string values.
     """
-    return six.text_type(value).lower() in ("yes", "true", "t", "1")
+    return str(value).lower() in ("yes", "true", "t", "1")
 
 
 # Absolute filesystem path to the Django project directory:
@@ -115,7 +113,7 @@ MIDDLEWARE = (
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.contrib.auth.middleware.SessionAuthenticationMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
-    'etools.applications.email_auth.middleware.TokenAuthenticationMiddleware',
+    'etools.applications.tokens.middleware.TokenAuthenticationMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
@@ -195,7 +193,7 @@ SHARED_APPS = (
     'etools.applications.utils.writable_serializers',
     'etools.applications.utils.permissions',
     'waffle',
-    'etools.applications.email_auth',
+    'etools.applications.tokens',
     'etools.applications.permissions2',
 )
 TENANT_APPS = (
@@ -270,7 +268,7 @@ AUTHENTICATION_BACKENDS = (
     'django.contrib.auth.backends.ModelBackend',
     'djangosaml2.backends.Saml2Backend',
 )
-AUTH_USER_MODEL = 'auth.User'
+AUTH_USER_MODEL = 'users.User'
 LOGIN_REDIRECT_URL = '/'
 LOGIN_URL = '/login/'
 
@@ -581,3 +579,6 @@ REPORT_EMAILS = get_from_secrets_or_env('REPORT_EMAILS', 'etools@unicef.org').re
 # email auth settings
 EMAIL_AUTH_TOKEN_NAME = os.getenv('EMAIL_AUTH_TOKEN_NAME', 'url_auth_token')
 SILENCED_SYSTEM_CHECKS = ["tenant_schemas.W003"]
+
+# GET parameter that allows override of schema
+SCHEMA_OVERRIDE_PARAM = "schema"

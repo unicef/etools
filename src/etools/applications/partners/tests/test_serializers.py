@@ -1,8 +1,5 @@
 # Python imports
-
 import datetime
-
-from django.utils import six
 
 from rest_framework import serializers
 
@@ -677,22 +674,22 @@ class TestPartnerOrganizationDetailSerializer(BaseTenantTestCase):
         serializer = PartnerOrganizationDetailSerializer(instance=self.partner)
 
         data = serializer.data
-        six.assertCountEqual(self, data.keys(), [
+        self.assertCountEqual(data.keys(), [
             'address', 'alternate_id', 'alternate_name', 'assessments', 'basis_for_risk_rating', 'blocked', 'city',
             'core_values_assessment', 'core_values_assessment_date', 'core_values_assessment_file', 'country',
             'created', 'cso_type', 'deleted_flag', 'description', 'email', 'hact_min_requirements', 'hact_values',
             'hidden', u'id', 'interventions', 'last_assessment_date', 'modified', 'name', 'net_ct_cy', 'partner_type',
             'phone_number', 'planned_engagement', 'postal_code', 'rating', 'reported_cy', 'shared_with', 'short_name',
             'staff_members', 'street_address', 'total_ct_cp', 'total_ct_cy', 'total_ct_ytd', 'type_of_assessment',
-            'vendor_number', 'vision_synced', 'core_values_assessment_attachment', 'planned_visits',
+            'vendor_number', 'vision_synced', 'core_values_assessment_attachment', 'planned_visits', 'manually_blocked'
         ])
 
-        six.assertCountEqual(self, data['planned_engagement'].keys(), [
-            'id', 'scheduled_audit', 'special_audit', 'spot_check_follow_up_q1', 'spot_check_follow_up_q2',
-            'spot_check_follow_up_q3', 'spot_check_follow_up_q4', 'spot_check_mr',
-            'total_spot_check_follow_up_required', 'spot_check_required', 'required_audit'
+        self.assertCountEqual(data['planned_engagement'].keys(), [
+            'id', 'scheduled_audit', 'special_audit', 'spot_check_planned_q1', 'spot_check_planned_q2',
+            'spot_check_planned_q3', 'spot_check_planned_q4', 'spot_check_follow_up', 'spot_check_required',
+            'total_spot_check_planned', 'required_audit'
         ])
 
         self.assertEquals(len(data['staff_members']), 1)
-        six.assertCountEqual(self, data['staff_members'][0].keys(), [
+        self.assertCountEqual(data['staff_members'][0].keys(), [
             'active', 'created', 'email', 'first_name', u'id', 'last_name', 'modified', 'partner', 'phone', 'title'])
