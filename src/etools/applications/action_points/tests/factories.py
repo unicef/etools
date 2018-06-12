@@ -65,7 +65,7 @@ class ActionPointFactory(factory.DjangoModelFactory):
                                        timezone.now().date() + timedelta(days=10))
 
     author = factory.SubFactory(UserFactory, unicef_user=True)
-    assigned_by = factory.SelfAttribute('author')
+    assigned_by = factory.SubFactory(UserFactory, unicef_user=True)
     section = factory.SubFactory(SectorFactory)
     office = factory.SelfAttribute('author.profile.office')
 

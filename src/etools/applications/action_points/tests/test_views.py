@@ -9,13 +9,14 @@ from rest_framework import status
 from etools.applications.action_points.tests.base import ActionPointsTestCaseMixin
 from etools.applications.action_points.tests.factories import ActionPointFactory
 from etools.applications.EquiTrack.tests.cases import BaseTenantTestCase
-from etools.applications.audit.tests.factories import EngagementFactory
+from etools.applications.audit.tests.factories import MicroAssessmentFactory
 from etools.applications.partners.tests.factories import PartnerFactory
 from etools.applications.reports.tests.factories import SectorFactory
-from etools.applications.tpm.tests.factories import UserFactory
+from etools.applications.tpm.tests.factories import UserFactory, TPMVisitFactory
+from etools.applications.utils.common.tests.test_utils import TestExportMixin
 
 
-class TestActionPointViewSet(ActionPointsTestCaseMixin, BaseTenantTestCase):
+class TestActionPointViewSet(TestExportMixin, ActionPointsTestCaseMixin, BaseTenantTestCase):
     @classmethod
     def setUpTestData(cls):
         call_command('update_action_points_permissions', verbosity=0)
@@ -148,6 +149,21 @@ class TestActionPointViewSet(ActionPointsTestCaseMixin, BaseTenantTestCase):
         self.assertEqual(len(response.data['comments']), 1)
         self.assertEqual(len(response.data['history']), 1)
 
+    def test_list_csv(self):
+        ActionPointFactory(status='open', comments__count=1)
+        ActionPointFactory(status='open', comments__count=1, engagement=MicroAssessmentFactory())
+        ActionPointFactory(
+            status='open', comments__count=1,
+            tpm_activity=TPMVisitFactory(tpm_activities__count=1).tpm_activities.first()
+        )
+
+        self._test_export(self.pme_user, 'action-points:action-points-export/csv')
+
+    def test_single_csv(self):
+        action_point = ActionPointFactory(status='open', comments__count=1, engagement=MicroAssessmentFactory())
+
+        self._test_export(self.pme_user, 'action-points:action-points-export/csv', args=[action_point.id])
+
 
 class TestActionPointsViewMetadata(ActionPointsTestCaseMixin):
     @classmethod
@@ -275,7 +291,7 @@ class TestRelatedOpenActionPointDetailViewMetadata(TestOpenActionPointDetailView
 
     def setUp(self):
         super(TestRelatedOpenActionPointDetailViewMetadata, self).setUp()
-        self.action_point.engagement = EngagementFactory()
+        self.action_point.engagement = MicroAssessmentFactory()
         self.action_point.save()
 
 

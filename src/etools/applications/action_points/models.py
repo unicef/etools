@@ -80,10 +80,10 @@ class ActionPoint(TimeStampedModel):
                                      on_delete=models.CASCADE,
                                      )
     engagement = models.ForeignKey('audit.Engagement', verbose_name=_('Engagement'), blank=True, null=True,
-                                   on_delete=models.CASCADE,
+                                   related_name='action_points', on_delete=models.CASCADE,
                                    )
     tpm_activity = models.ForeignKey('tpm.TPMActivity', verbose_name=_('TPM Activity'), blank=True, null=True,
-                                     on_delete=models.CASCADE,
+                                     related_name='action_points', on_delete=models.CASCADE,
                                      )
     travel = models.ForeignKey('t2f.Travel', verbose_name=_('Travel'), blank=True, null=True,
                                on_delete=models.CASCADE,
@@ -105,8 +105,12 @@ class ActionPoint(TimeStampedModel):
         verbose_name_plural = _('Action Points')
 
     @property
+    def engagement_subclass(self):
+        return self.engagement.get_subclass() if self.engagement else None
+
+    @property
     def related_object(self):
-        return self.engagement or self.tpm_activity or self.travel
+        return self.engagement_subclass or self.tpm_activity or self.travel
 
     @property
     def related_module(self):
@@ -189,13 +193,16 @@ class ActionPoint(TimeStampedModel):
         )
         notification.send_notification()
 
+    def _do_complete(self):
+        self.send_email(self.assigned_by, 'action_points/action_point/completed')
+
     @transition(status, source=STATUSES.open, target=STATUSES.completed,
                 permission=has_action_permission(action='complete'),
                 conditions=[
                     ActionPointCompleteActionsTakenCheck.as_condition()
                 ])
     def complete(self):
-        self.send_email(self.assigned_by, 'action_points/action_point/completed')
+        self._do_complete()
 
 
 PME = GroupWrapper(code='pme',

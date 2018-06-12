@@ -5,7 +5,7 @@ from rest_framework_nested import routers
 
 from etools.applications.audit.views import (AuditorFirmViewSet, AuditorStaffMembersViewSet, AuditViewSet,
                                              EngagementViewSet, MicroAssessmentViewSet, PurchaseOrderViewSet,
-                                             SpecialAuditViewSet, SpotCheckViewSet,)
+                                             SpecialAuditViewSet, SpotCheckViewSet, EngagementActionPointViewSet)
 from etools.applications.utils.common.routers import NestedComplexRouter
 
 auditor_firms_api = routers.SimpleRouter()
@@ -32,6 +32,8 @@ audits_api.register('audits', AuditViewSet, base_name='audits')
 special_audits_api = routers.SimpleRouter()
 special_audits_api.register(r'special-audits', SpecialAuditViewSet, base_name='special-audits')
 
+engagement_action_points_api = NestedComplexRouter(engagements_api, r'engagements', lookup='engagement')
+engagement_action_points_api.register(r'action-points', EngagementActionPointViewSet, base_name='action-points')
 
 app_name = 'audit'
 urlpatterns = [
@@ -43,4 +45,5 @@ urlpatterns = [
     url(r'^', include(spot_checks_api.urls)),
     url(r'^', include(audits_api.urls)),
     url(r'^', include(special_audits_api.urls)),
+    url(r'^', include(engagement_action_points_api.urls)),
 ]
