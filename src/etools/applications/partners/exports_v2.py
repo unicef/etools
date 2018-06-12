@@ -251,7 +251,8 @@ class InterventionCSVRenderer(r.CSVRenderer):
 
 class PartnershipDashCSVRenderer(r.CSVRenderer):
     header = [
-        'partner_name', 'partner_vendor_number',
+        'partner_name',
+        'partner_vendor_number',
         'number',
         'sections',
         'offices_names',
@@ -271,7 +272,8 @@ class PartnershipDashCSVRenderer(r.CSVRenderer):
         'disbursement_usd',
         'outstanding_dct_usd',
         'disbursement_percent',
-        'days_last_pv'
+        'days_last_pv',
+        'link',
     ]
 
     labels = {
@@ -297,6 +299,7 @@ class PartnershipDashCSVRenderer(r.CSVRenderer):
         "outstanding_dct_usd": "Outstanding DCT (USD)",
         "disbursement_percent": "Disbursement To Date (%)",
         "days_last_pv": "Days Since Last PV",
+        "link": "Link"
     }
 
 
