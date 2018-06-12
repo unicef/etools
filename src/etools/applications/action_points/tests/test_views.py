@@ -106,7 +106,6 @@ class TestActionPointViewSet(TestExportMixin, ActionPointsTestCaseMixin, BaseTen
         self.assertEqual(response.data['author']['id'], self.unicef_user.id)
         self.assertIn('assigned_by', response.data)
         self.assertEqual(response.data['assigned_by']['id'], self.unicef_user.id)
-        self.assertEqual(len(response.data['history']), 1)
 
     def test_reassign(self):
         author = UserFactory(unicef_user=True)
