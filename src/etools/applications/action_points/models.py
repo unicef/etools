@@ -1,8 +1,7 @@
 from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.contrib.contenttypes.fields import GenericRelation
-from django.db import models
-
+from django.db import models, connection
 
 from django.utils.translation import ugettext_lazy as _
 
@@ -124,7 +123,8 @@ class ActionPoint(TimeStampedModel):
 
     @property
     def reference_number(self):
-        return '{0}/{1}/APD'.format(
+        return '{}/{}/{}/APD'.format(
+            connection.tenant.country_short_code or '',
             self.created.year,
             self.id,
         )
