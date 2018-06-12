@@ -1,18 +1,24 @@
-from rest_framework import mixins, viewsets
-from rest_framework.filters import OrderingFilter, SearchFilter, DjangoFilterBackend
-from rest_framework.permissions import IsAuthenticated
+from django.utils import timezone
 
-from etools.applications.action_points.conditions import ActionPointModuleCondition, ActionPointAssigneeCondition, \
-    ActionPointAuthorCondition, ActionPointAssignedByCondition, RelatedActionPointCondition, \
-    UnRelatedActionPointCondition
+from rest_framework import mixins, viewsets
+from rest_framework.decorators import detail_route, list_route
+from rest_framework.filters import DjangoFilterBackend, OrderingFilter, SearchFilter
+from rest_framework.permissions import IsAuthenticated
+from rest_framework.response import Response
+
+from etools.applications.action_points.conditions import (
+    ActionPointAssignedByCondition, ActionPointAssigneeCondition, ActionPointAuthorCondition,
+    ActionPointModuleCondition, RelatedActionPointCondition, UnRelatedActionPointCondition,)
+from etools.applications.action_points.export.renderers import ActionPointCSVRenderer
+from etools.applications.action_points.export.serializers import ActionPointExportSerializer
 from etools.applications.action_points.filters import ReferenceNumberOrderingFilter, RelatedModuleFilter
 from etools.applications.action_points.metadata import ActionPointMetadata
 from etools.applications.action_points.models import ActionPoint
-from etools.applications.action_points.serializers import ActionPointSerializer, ActionPointListSerializer
+from etools.applications.action_points.serializers import ActionPointListSerializer, ActionPointSerializer
 from etools.applications.permissions2.conditions import GroupCondition, NewObjectCondition, ObjectStatusCondition
-from etools.applications.permissions2.views import PermittedSerializerMixin, PermittedFSMActionMixin
+from etools.applications.permissions2.views import PermittedFSMActionMixin, PermittedSerializerMixin
 from etools.applications.utils.common.pagination import DynamicPageNumberPagination
-from etools.applications.utils.common.views import SafeTenantViewSetMixin, MultiSerializerViewSetMixin
+from etools.applications.utils.common.views import MultiSerializerViewSetMixin, SafeTenantViewSetMixin
 
 
 class ActionPointViewSet(
@@ -71,3 +77,19 @@ class ActionPointViewSet(
             RelatedActionPointCondition(obj),
             UnRelatedActionPointCondition(obj),
         ]
+
+    @list_route(methods=['get'], url_path='export/csv', renderer_classes=(ActionPointCSVRenderer,))
+    def list_csv_export(self, request, *args, **kwargs):
+        serializer = ActionPointExportSerializer(self.get_queryset(), many=True)
+        return Response(serializer.data, headers={
+            'Content-Disposition': 'attachment;filename=action_points_{}.csv'.format(timezone.now().date())
+        })
+
+    @detail_route(methods=['get'], url_path='export/csv', renderer_classes=(ActionPointCSVRenderer,))
+    def single_csv_export(self, request, *args, **kwargs):
+        serializer = ActionPointExportSerializer(self.get_object())
+        return Response(serializer.data, headers={
+            'Content-Disposition': 'attachment;filename={}_{}.csv'.format(
+                self.get_object().reference_number, timezone.now().date()
+            )
+        })
