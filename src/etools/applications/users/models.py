@@ -22,6 +22,7 @@ logger = logging.getLogger(__name__)
 
 class User(AbstractBaseUser, PermissionsMixin):
     USERNAME_FIELD = "username"
+    REQUIRED_FIELDS = ['email']
 
     username = models.CharField(_("username"), max_length=256, unique=True)
     email = models.EmailField(_('email address'), unique=True)
