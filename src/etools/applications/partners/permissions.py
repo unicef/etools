@@ -8,7 +8,7 @@ from etools.applications.environment.helpers import tenant_switch_is_active
 from etools.applications.EquiTrack.utils import HashableDict
 from etools.applications.utils.common.utils import get_all_field_names
 from etools.applications.utils.permissions.utils import is_user_in_groups
-from validator.utils import check_rigid_related
+from etools_validator.utils import check_rigid_related
 
 # READ_ONLY_API_GROUP_NAME is the name of the permissions group that provides read-only access to some list views.
 # Initially, this is only being used for PRP-related endpoints.

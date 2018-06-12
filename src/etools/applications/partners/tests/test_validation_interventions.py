@@ -34,7 +34,7 @@ from etools.applications.partners.validation.interventions import (
     transition_to_terminated,
 )
 from etools.applications.users.tests.factories import GroupFactory, UserFactory
-from validator.exceptions import (
+from etools_validator.exceptions import (
     BasicValidationError,
     StateValidationError,
     TransitionError,
