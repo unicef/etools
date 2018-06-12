@@ -6,8 +6,9 @@ from unittest import skipIf
 
 from django.test import TestCase, override_settings
 from urllib.parse import urlparse
-from storages.backends.azure_storage import AzureStorage
 from storages.utils import setting
+
+from etools.libraries.azure_storage_backend import EToolsAzureStorage
 
 TEST_FILENAME = 'test.tmp'
 TEST_FILECONTENT = b'a'
@@ -29,7 +30,7 @@ class TestAzureStorage(TestCase):
         self.resource = self.backend.save(TEST_FILENAME, BytesIO(TEST_FILECONTENT))
 
     def get_backend(self):
-        ret = AzureStorage()
+        ret = EToolsAzureStorage()
         ret.account_name = setting("AZURE_ACCOUNT_NAME")
         ret.account_key = setting("AZURE_ACCOUNT_KEY")
         ret.azure_container = setting("AZURE_CONTAINER")
