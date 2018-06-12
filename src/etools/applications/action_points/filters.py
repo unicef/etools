@@ -23,7 +23,7 @@ class RelatedModuleFilter(BaseFilterBackend):
             return queryset
 
         related_instance_fields = {
-            ActionPoint.MODULE_CHOICES.t2f: 'travel_activity',
+            ActionPoint.MODULE_CHOICES.t2f: 'travel',
             ActionPoint.MODULE_CHOICES.tpm: 'tpm_activity',
             ActionPoint.MODULE_CHOICES.audit: 'engagement',
         }
