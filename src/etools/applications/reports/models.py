@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 from datetime import date
 
+from django.contrib.postgres.fields import JSONField
 from django.db import models, transaction
 from django.utils.functional import cached_property
 from django.utils.translation import ugettext as _
@@ -548,6 +549,11 @@ class AppliedIndicator(TimeStampedModel):
         on_delete=models.CASCADE,
     )
 
+    measurement_specifications = models.TextField(max_length=4048, blank=True, null=True)
+    label = models.TextField(max_length=4048, blank=True, null=True)
+    numerator_label = models.CharField(max_length=256, blank=True, null=True)
+    denominator_label = models.CharField(max_length=256, blank=True, null=True)
+
     section = models.ForeignKey(
         Sector,
         verbose_name=_("Section"),
@@ -602,6 +608,9 @@ class AppliedIndicator(TimeStampedModel):
         null=True,
         blank=True,
     )
+    target_new = JSONField(default=dict([('d', 1), ('v', 0)]))
+    baseline_new = JSONField(default=dict([('d', 1), ('v', 0)]))
+
     assumptions = models.TextField(
         verbose_name=_("Assumptions"),
         null=True,

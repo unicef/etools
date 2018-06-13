@@ -133,6 +133,8 @@ class DisaggregationSerializer(serializers.ModelSerializer):
 class AppliedIndicatorSerializer(serializers.ModelSerializer):
 
     indicator = IndicatorBlueprintCUSerializer(required=False, allow_null=True)
+    target_new = serializers.JSONField(required=False)
+    baseline_new = serializers.JSONField(required=False)
 
     class Meta:
         model = AppliedIndicator
