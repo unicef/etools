@@ -1,5 +1,4 @@
 coverage
-django-adminactions
 factory-boy
 Faker
 flake8

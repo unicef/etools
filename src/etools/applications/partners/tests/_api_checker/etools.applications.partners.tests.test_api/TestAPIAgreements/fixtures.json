@@ -2,20 +2,20 @@
     "agreement": {
         "master": {
             "model": "partners.agreement",
-            "pk": 64,
+            "pk": 5,
             "fields": {
-                "created": "2018-06-03T16:09:48.928Z",
-                "modified": "2018-06-03T16:09:48.932Z",
-                "partner": 70,
-                "country_programme": 64,
+                "created": "2018-06-13T02:58:15.818Z",
+                "modified": "2018-06-13T02:58:15.821Z",
+                "partner": 5,
+                "country_programme": 5,
                 "agreement_type": "PCA",
-                "agreement_number": "TST/PCA201864",
-                "attached_agreement": "test/file_attachments/partner_organization/70/agreements/test_file.pdf",
-                "start": "2018-06-03",
+                "agreement_number": "TST/PCA20185",
+                "attached_agreement": "test/file_attachments/partner_organization/5/agreements/test_file.pdf",
+                "start": "2018-06-13",
                 "end": "2018-12-31",
-                "signed_by_unicef_date": "2018-06-03",
+                "signed_by_unicef_date": "2018-06-13",
                 "signed_by": null,
-                "signed_by_partner_date": "2018-06-03",
+                "signed_by_partner_date": "2018-06-13",
                 "partner_manager": null,
                 "status": "signed",
                 "authorized_officers": []
@@ -24,13 +24,13 @@
         "deps": [
             {
                 "model": "partners.partnerorganization",
-                "pk": 70,
+                "pk": 5,
                 "fields": {
-                    "created": "2018-06-03T16:09:48.916Z",
-                    "modified": "2018-06-03T16:09:48.922Z",
+                    "created": "2018-06-13T02:58:15.804Z",
+                    "modified": "2018-06-13T02:58:15.811Z",
                     "partner_type": "",
                     "cso_type": null,
-                    "name": "Partner 0",
+                    "name": "Partner 4",
                     "short_name": "",
                     "description": "",
                     "shared_with": null,
@@ -51,8 +51,9 @@
                     "core_values_assessment": "",
                     "vision_synced": false,
                     "blocked": false,
-                    "hidden": false,
                     "deleted_flag": false,
+                    "manually_blocked": false,
+                    "hidden": false,
                     "total_ct_cp": null,
                     "total_ct_cy": null,
                     "net_ct_cy": null,
@@ -104,10 +105,10 @@
             },
             {
                 "model": "reports.countryprogramme",
-                "pk": 64,
+                "pk": 5,
                 "fields": {
-                    "name": "Country Programme 0",
-                    "wbs": "0000/A0/00",
+                    "name": "Country Programme 4",
+                    "wbs": "0000/A0/04",
                     "invalid": false,
                     "from_date": "2018-01-01",
                     "to_date": "2018-12-31"

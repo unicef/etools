@@ -5,13 +5,13 @@
             "Content-Type",
             "application/json"
         ],
-        "allow": [
-            "Allow",
-            "GET"
-        ],
         "vary": [
             "Vary",
             "Accept, Cookie"
+        ],
+        "allow": [
+            "Allow",
+            "GET"
         ],
         "x-frame-options": [
             "X-Frame-Options",
@@ -20,7 +20,7 @@
     },
     "data": [
         {
-            "intervention": 23,
+            "intervention": 4,
             "ram_indicators": []
         }
     ],

@@ -5,13 +5,13 @@
             "Content-Type",
             "application/json"
         ],
-        "allow": [
-            "Allow",
-            "GET"
-        ],
         "vary": [
             "Vary",
             "Accept, Cookie"
+        ],
+        "allow": [
+            "Allow",
+            "GET"
         ],
         "x-frame-options": [
             "X-Frame-Options",
@@ -20,19 +20,19 @@
     },
     "data": [
         {
-            "id": 11,
+            "id": 1,
             "amendment_number": "1",
-            "signed_amendment_file": "http://testserver/media/test/file_attachments/partner_organization/72/72/agreements/66/interventions/22/amendments/None/test_file.pdf",
+            "signed_amendment_file": "http://testserver/media/test/file_attachments/partner_organization/7/7/agreements/7/interventions/3/amendments/None/test_file.pdf",
             "signed_amendment_attachment": null,
-            "created": "2018-06-03T16:09:52.477000Z",
-            "modified": "2018-06-03T16:09:52.559000Z",
+            "created": "2018-06-13T02:58:16.666000Z",
+            "modified": "2018-06-13T02:58:16.686000Z",
             "types": [
-                "Change authorized officer"
+                "Change banking info"
             ],
-            "other_description": "oZjvVKGYZPNrfImJREWZpvDkzJOTTQZBdphfmEYBFlgCOTpWNs",
-            "signed_date": "2018-06-03",
-            "signed_amendment": "http://testserver/media/test/file_attachments/partner_organization/72/72/agreements/66/interventions/22/amendments/None/test_file.pdf",
-            "intervention": 22
+            "other_description": "nkWPtssopVUpSWswPcWvQGLOYfIzfQotNZAVPZKBYWGbAJarjL",
+            "signed_date": "2018-06-13",
+            "signed_amendment": "http://testserver/media/test/file_attachments/partner_organization/7/7/agreements/7/interventions/3/amendments/None/test_file.pdf",
+            "intervention": 3
         }
     ],
     "content_type": null
