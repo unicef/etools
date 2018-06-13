@@ -506,21 +506,21 @@ class PlannedEngagementAdmin(admin.ModelAdmin):
     )
     fields = (
         'partner',
-        'spot_check_mr',
-        'spot_check_follow_up_q1',
-        'spot_check_follow_up_q2',
-        'spot_check_follow_up_q3',
-        'spot_check_follow_up_q4',
+        'spot_check_follow_up',
+        'spot_check_planned_q1',
+        'spot_check_planned_q2',
+        'spot_check_planned_q3',
+        'spot_check_planned_q4',
         'scheduled_audit',
         'special_audit',
     )
     list_display = (
         'partner',
-        'spot_check_mr',
-        'spot_check_follow_up_q1',
-        'spot_check_follow_up_q2',
-        'spot_check_follow_up_q3',
-        'spot_check_follow_up_q4',
+        'spot_check_follow_up',
+        'spot_check_planned_q1',
+        'spot_check_planned_q2',
+        'spot_check_planned_q3',
+        'spot_check_planned_q4',
         'scheduled_audit',
         'special_audit',
     )

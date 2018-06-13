@@ -163,6 +163,7 @@ SHARED_APPS = (
 
     'storages',
     'rest_framework',
+    'rest_framework_gis',
     'rest_framework_swagger',
     'rest_framework.authtoken',
     'drfpasswordless',
@@ -582,3 +583,6 @@ SILENCED_SYSTEM_CHECKS = ["tenant_schemas.W003"]
 
 # GET parameter that allows override of schema
 SCHEMA_OVERRIDE_PARAM = "schema"
+
+# Number of days before PCA required notification
+PCA_REQUIRED_NOTIFICATION_LEAD = 30

@@ -616,7 +616,7 @@ class InterventionDetailSerializer(serializers.ModelSerializer):
             "location_p_codes",
             "days_from_submission_to_signed",
             "days_from_review_to_signed",
-            "partner_vendor"
+            "partner_vendor",
         )
 
 

@@ -27,12 +27,13 @@ django-ordered-model==1.4.3
 django-post-office==3.0.4
 django-redis-cache==1.7.1
 django-rest-swagger==2.1.0
+django-storages==1.6.5
 django-tenant-schemas==1.9.0
 django-waffle==0.14
 django-contrib-comments==1.8.0
 djangosaml2==0.16.10
 drf-nested-routers==0.90.2
-etools-validator==0.2.0
+etools-validator==0.2.1
 flower==0.9.2
 GDAL==1.10.0
 gunicorn==19.7.1
@@ -43,4 +44,3 @@ raven==6.2.1
 tenant-schemas-celery==0.1.7
 
 -e git+https://github.com/unicef/djangosaml2.git@v0.16.11.2#egg=djangosaml2
--e git+https://github.com/robertavram/django-storages.git@1.6.5.3#egg=django-storages

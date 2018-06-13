@@ -11,7 +11,7 @@ from etools.applications.partners.tests.factories import (
 from etools.applications.partners.validation import agreements
 from etools.applications.reports.tests.factories import CountryProgrammeFactory
 from etools.applications.users.tests.factories import UserFactory
-from validator.exceptions import BasicValidationError, TransitionError
+from etools_validator.exceptions import BasicValidationError, TransitionError
 
 
 class TestAgreementTransitionToSignedValid(BaseTenantTestCase):
