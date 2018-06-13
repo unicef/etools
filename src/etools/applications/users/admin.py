@@ -171,6 +171,7 @@ class UserAdminPlus(UserAdmin):
 
     change_form_template = 'admin/users/user/change_form.html'
     inlines = [ProfileInline]
+    readonly_fields = ('date_joined',)
 
     list_display = [
         'email',

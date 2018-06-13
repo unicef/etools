@@ -1,9 +1,11 @@
 from django.core.management import call_command
+from django.db import connection
 
 from rest_framework.exceptions import ValidationError
 
 from etools.applications.action_points.models import ActionPoint
 from etools.applications.action_points.tests.factories import ActionPointFactory
+from etools.applications.audit.models import MicroAssessment
 from etools.applications.audit.tests.factories import MicroAssessmentFactory
 from etools.applications.EquiTrack.tests.cases import BaseTenantTestCase
 from etools.applications.snapshot.utils import create_dict_with_relations, create_snapshot
@@ -19,7 +21,10 @@ class TestActionPointModel(BaseTenantTestCase):
 
     def test_str(self):
         action_point = ActionPointFactory()
-        self.assertEqual(str(action_point), '{0}/{1}/APD'.format(action_point.created.year, action_point.id))
+        self.assertEqual(str(action_point), '{}/{}/{}/APD'.format(
+            connection.tenant.country_short_code or '',
+            action_point.created.year, action_point.id
+        ))
 
     def test_complete_fail(self):
         action_point = ActionPointFactory()
@@ -40,6 +45,10 @@ class TestActionPointModel(BaseTenantTestCase):
     def test_audit_related(self):
         action_point = ActionPointFactory(engagement=MicroAssessmentFactory())
         self.assertEqual(action_point.related_module, ActionPoint.MODULE_CHOICES.audit)
+
+    def test_engagement_subclass(self):
+        action_point = ActionPointFactory(engagement=MicroAssessmentFactory())
+        self.assertEqual(type(ActionPoint.objects.get(pk=action_point.pk).related_object), MicroAssessment)
 
     def test_tpm_related(self):
         action_point = ActionPointFactory(tpm_activity=TPMVisitFactory(tpm_activities__count=1).tpm_activities.first())

@@ -77,5 +77,5 @@ class TPMPartnerStaffMemberAdmin(admin.ModelAdmin):
 @admin.register(models.TPMActionPoint)
 class TPMActionPointAdmin(admin.ModelAdmin):
     list_display = [
-        'author', 'person_responsible', 'tpm_visit', 'due_date', 'status',
+        'author', 'assigned_to', 'tpm_activity', 'due_date', 'status',
     ]
