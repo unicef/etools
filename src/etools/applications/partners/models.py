@@ -26,7 +26,6 @@ from etools.applications.EquiTrack.serializers import StringConcat
 from etools.applications.EquiTrack.utils import get_current_year, get_quarter, import_permissions
 from etools.applications.funds.models import Grant
 from etools.applications.locations.models import Location
-from etools.applications.notification.utils import send_notification_using_email_template
 from etools.applications.partners.validation import interventions as intervention_validation
 from etools.applications.partners.validation.agreements import (agreement_transition_to_ended_valid,
                                                                 agreement_transition_to_signed_valid,
@@ -2018,62 +2017,6 @@ class Intervention(TimeStampedModel):
 
             if save_agreement:
                 self.agreement.save()
-
-    def pca_required(self):
-        """A new PCA is required, if the PD has an end date that is
-        after the CP 'to date' and the it less than 30 days prior to the
-        end of the CP
-        """
-        if not self.end or self.document_type != self.PD:
-            return False
-
-        cp_end_dates = []
-        if self.country_programme:
-            cp_end_dates.append(self.country_programme.to_date)
-
-        if self.agreement.country_programme:
-            cp_end_dates.append(self.agreement.country_programme.to_date)
-
-        days_lead = datetime.date.today() + datetime.timedelta(
-            days=settings.PCA_REQUIRED_NOTIFICATION_LEAD
-        )
-        for cp_end_date in cp_end_dates:
-            if cp_end_date < self.end and cp_end_date <= days_lead:
-                return True
-
-        return False
-
-    def send_pca_required_notification(self):
-        recipients = [u.user.email for u in self.unicef_focal_points.all()]
-        context = {
-            "reference_number": self.reference_number,
-            "partner_name": str(self.agreement.partner),
-            "pd_link": reverse(
-                "partners_api:intervention-detail",
-                args=[self.pk]
-            ),
-        }
-        send_notification_using_email_template(
-            recipients=recipients,
-            email_template_name='partners/intervention/new_pca_required',
-            context=context
-        )
-
-    def send_pca_missing_notification(self):
-        recipients = [u.user.email for u in self.unicef_focal_points.all()]
-        context = {
-            "reference_number": self.reference_number,
-            "partner_name": str(self.agreement.partner),
-            "pd_link": reverse(
-                "partners_api:intervention-detail",
-                args=[self.pk]
-            ),
-        }
-        send_notification_using_email_template(
-            recipients=recipients,
-            email_template_name='partners/intervention/pca_missing',
-            context=context
-        )
 
     @transaction.atomic
     def save(self, **kwargs):

@@ -4,9 +4,11 @@ import logging
 from django.conf import settings
 from django.contrib.contenttypes.models import ContentType
 from django.db.models import F, Q
+from django.urls import reverse
 from django.utils.timezone import now, make_aware
 
 from etools.applications.attachments.models import Attachment, FileType
+from etools.applications.notification.utils import send_notification_using_email_template
 from etools.applications.partners.models import (Agreement, AgreementAmendment, Assessment, Intervention,
                                                  InterventionAmendment, InterventionAttachment, PartnerOrganization,)
 from etools.applications.reports.models import CountryProgramme
@@ -286,7 +288,20 @@ def send_pca_required_notifications():
                 pd_list.add(pd)
 
     for pd in pd_list:
-        pd.send_pca_required_notification()
+        recipients = [u.user.email for u in pd.unicef_focal_points.all()]
+        context = {
+            "reference_number": pd.reference_number,
+            "partner_name": str(pd.agreement.partner),
+            "pd_link": reverse(
+                "partners_api:intervention-detail",
+                args=[pd.pk]
+            ),
+        }
+        send_notification_using_email_template(
+            recipients=recipients,
+            email_template_name='partners/intervention/new_pca_required',
+            context=context
+        )
 
 
 def send_pca_missing_notifications():
@@ -313,4 +328,17 @@ def send_pca_missing_notifications():
             country_programme__from_date__gt=cp_previous.to_date
         )
         if not pca_next_qs.exists():
-            pd.send_pca_missing_notification()
+            recipients = [u.user.email for u in pd.unicef_focal_points.all()]
+            context = {
+                "reference_number": pd.reference_number,
+                "partner_name": str(pd.agreement.partner),
+                "pd_link": reverse(
+                    "partners_api:intervention-detail",
+                    args=[pd.pk]
+                ),
+            }
+            send_notification_using_email_template(
+                recipients=recipients,
+                email_template_name='partners/intervention/pca_missing',
+                context=context
+            )
