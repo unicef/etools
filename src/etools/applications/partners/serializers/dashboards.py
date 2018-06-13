@@ -1,4 +1,3 @@
-
 from rest_framework import serializers
 
 from etools.applications.partners.models import Intervention
@@ -50,6 +49,8 @@ class InterventionDashSerializer(serializers.ModelSerializer):
     multi_curr_flag = serializers.BooleanField()
     has_final_partnership_review = serializers.SerializerMethodField()
 
+    link = serializers.SerializerMethodField()
+
     def fr_currencies_ok(self, obj):
         return obj.frs__currency__count == 1 if obj.frs__currency__count else None
 
@@ -89,6 +90,10 @@ class InterventionDashSerializer(serializers.ModelSerializer):
     def get_sections(self, obj):
         return ",".join([l.name for l in obj.sections.all()])
 
+    def get_link(self, obj):
+        host_name = self.context['request'].get_host()
+        return f'https://{host_name}/pmp/partners/{obj.pk}/details'
+
     class Meta:
         model = Intervention
         fields = (
@@ -123,4 +128,5 @@ class InterventionDashSerializer(serializers.ModelSerializer):
             'outstanding_dct_usd',
             'multi_curr_flag',
             'has_final_partnership_review',
+            'link',
         )
