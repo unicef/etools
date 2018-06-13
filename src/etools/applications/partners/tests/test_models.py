@@ -2,7 +2,6 @@ import copy
 import datetime
 from unittest import skip
 
-from django.conf import settings
 from django.core.files.uploadedfile import SimpleUploadedFile
 from django.core.management import call_command
 from django.test import SimpleTestCase

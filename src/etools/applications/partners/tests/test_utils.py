@@ -106,7 +106,7 @@ class TestSendPCARequiredNotification(BaseTenantTestCase):
 
     def test_direct_cp(self):
         cp = CountryProgrammeFactory(to_date=self.lead_date)
-        intervention = InterventionFactory(
+        InterventionFactory(
             document_type=Intervention.PD,
             end=self.lead_date + datetime.timedelta(days=10),
             country_programme=cp,
@@ -119,7 +119,7 @@ class TestSendPCARequiredNotification(BaseTenantTestCase):
     def test_agreement_cp(self):
         cp = CountryProgrammeFactory(to_date=self.lead_date)
         agreement = AgreementFactory(country_programme=cp)
-        intervention = InterventionFactory(
+        InterventionFactory(
             document_type=Intervention.PD,
             end=self.lead_date + datetime.timedelta(days=10),
             agreement=agreement,

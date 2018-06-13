@@ -304,7 +304,7 @@ class TestSendPCARequiredNotifications(BaseTenantTestCase):
         )
         cp = CountryProgrammeFactory(to_date=lead_date)
         agreement = AgreementFactory(country_programme=cp)
-        intervention = InterventionFactory(
+        InterventionFactory(
             document_type=Intervention.PD,
             end=lead_date + datetime.timedelta(days=10),
             agreement=agreement,
