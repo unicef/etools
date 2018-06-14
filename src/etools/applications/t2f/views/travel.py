@@ -154,6 +154,7 @@ class TravelActivityViewSet(QueryStringFilterMixin, mixins.ListModelMixin, views
             queries = []
             filters = (
                 ('year', 'date__year'),
+                ('status', 'travels__status'),
             )
             queries.extend(self.filter_params(filters))
             if queries:

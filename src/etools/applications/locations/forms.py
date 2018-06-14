@@ -4,11 +4,10 @@ import logging
 from django import forms
 from django.core.exceptions import ValidationError
 
-
-from carto.auth import APIKeyAuthClient
 from carto.exceptions import CartoException
 from carto.sql import SQLClient
 
+from etools.applications.locations.auth import EtoolsCartoNoAuthClient
 from etools.applications.locations.models import CartoDBTable
 
 logger = logging.getLogger(__name__)
@@ -22,14 +21,13 @@ class CartoDBTableForm(forms.ModelForm):
 
     def clean(self):
 
-        api_key = self.cleaned_data['api_key']
         domain = self.cleaned_data['domain']
         table_name = self.cleaned_data['table_name']
         name_col = self.cleaned_data['name_col']
         pcode_col = self.cleaned_data['pcode_col']
         parent_code_col = self.cleaned_data['parent_code_col']
+        auth_client = EtoolsCartoNoAuthClient(base_url="https://{}.carto.com/".format(str(domain)))
 
-        auth_client = APIKeyAuthClient(api_key=api_key, base_url="https://{}.carto.com/".format(str(domain)))
         sql_client = SQLClient(auth_client)
         try:
             sites = sql_client.send('select * from {} limit 1'.format(table_name))
