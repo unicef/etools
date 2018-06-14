@@ -153,7 +153,7 @@ class TravelActivityViewSet(QueryStringFilterMixin, mixins.ListModelMixin, views
         if query_params:
             queries = []
             filters = (
-                ('year', 'date__year'),
+                ('year', 'travels__end_date__year'),
                 ('status', 'travels__status'),
             )
             queries.extend(self.filter_params(filters))
@@ -188,7 +188,7 @@ class TravelActivityPerInterventionViewSet(QueryStringFilterMixin, mixins.ListMo
         if query_params:
             queries = []
             filters = (
-                ('year', 'date__year'),
+                ('year', 'travels__end_date__year'),
             )
             queries.extend(self.filter_params(filters))
             if queries:
