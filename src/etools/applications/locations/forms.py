@@ -1,4 +1,3 @@
-
 import logging
 
 from django import forms
@@ -27,7 +26,7 @@ class CartoDBTableForm(forms.ModelForm):
         pcode_col = self.cleaned_data['pcode_col']
         parent_code_col = self.cleaned_data['parent_code_col']
         auth_client = EtoolsCartoNoAuthClient(base_url="https://{}.carto.com/".format(str(domain)))
-
+        
         sql_client = SQLClient(auth_client)
         try:
             sites = sql_client.send('select * from {} limit 1'.format(table_name))
