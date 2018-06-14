@@ -263,6 +263,9 @@ class PartnerOrganizationDetailSerializer(serializers.ModelSerializer):
     hidden = serializers.BooleanField(read_only=True)
     planned_visits = PartnerPlannedVisitsSerializer(many=True, read_only=True, required=False)
 
+    partner_type_slug = serializers.ReadOnlyField()
+    flags = serializers.ReadOnlyField()
+
     def get_hact_values(self, obj):
         return json.loads(obj.hact_values) if isinstance(obj.hact_values, str) else obj.hact_values
 
