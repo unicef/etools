@@ -28,7 +28,7 @@ from etools.applications.audit.serializers.auditor import (AuditorFirmExportSeri
                                                            AuditorFirmSerializer, AuditorStaffMemberSerializer,
                                                            AuditUserSerializer, PurchaseOrderSerializer,)
 from etools.applications.audit.serializers.engagement import (AuditSerializer, EngagementExportSerializer,
-                                                              EngagementHactSerializer, EngagementLightSerializer,
+                                                              EngagementHactSerializer, EngagementListSerializer,
                                                               EngagementSerializer, MicroAssessmentSerializer,
                                                               SpecialAuditSerializer, SpotCheckSerializer,
                                                               EngagementActionPointSerializer)
@@ -207,7 +207,7 @@ class EngagementViewSet(
     queryset = Engagement.objects.all()
     serializer_class = EngagementSerializer
     serializer_action_classes = {
-        'list': EngagementLightSerializer,
+        'list': EngagementListSerializer,
     }
     metadata_class = AuditPermissionBasedMetadata
 
@@ -308,10 +308,7 @@ class EngagementViewSet(
                                                 status=Engagement.FINAL).select_subclasses(
             "audit", "spotcheck", "microassessment", "specialaudit"
         )
-        serializer = EngagementHactSerializer(engagements, many=True, context={
-            "request": request,
-            "permission_context": self._collect_permission_context(),
-        })
+        serializer = EngagementHactSerializer(engagements, many=True, context={"request": request})
         return Response(serializer.data)
 
     @detail_route(methods=['get'], url_path='pdf')
