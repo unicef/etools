@@ -18,6 +18,7 @@ class AuditorStaffMember(BaseStaffMember):
         AuditorFirm, verbose_name=_('Auditor'), related_name='staff_members',
         on_delete=models.CASCADE,
     )
+    hidden = models.BooleanField(verbose_name=_('Hidden'), default=False)
 
     def __str__(self):
         auditor_firm_name = ' ({})'.format(self.auditor_firm.name) if hasattr(self, 'auditor_firm') else ''

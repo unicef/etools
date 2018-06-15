@@ -110,11 +110,19 @@ class PurchaseOrderSerializer(
 
 class AuditUserSerializer(UserSerializer):
     auditor_firm = serializers.SerializerMethodField()
+    hidden = serializers.SerializerMethodField()
 
     class Meta(UserSerializer.Meta):
-        fields = UserSerializer.Meta.fields + ['id', 'auditor_firm', ]
+        fields = UserSerializer.Meta.fields + ['id', 'auditor_firm', 'hidden', ]
 
     def get_auditor_firm(self, obj):
         if hasattr(obj, 'purchase_order_auditorstaffmember'):
             return obj.purchase_order_auditorstaffmember.auditor_firm.id
         return
+
+    def get_hidden(self, obj):
+        hidden = not obj.is_active
+        if hasattr(obj, 'purchase_order_auditorstaffmember'):
+            hidden = hidden and obj.purchase_order_auditorstaffmember.hidden
+
+        return hidden

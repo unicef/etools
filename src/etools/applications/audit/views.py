@@ -391,12 +391,27 @@ class AuditorStaffMembersViewSet(
     ordering_fields = ('user__email', 'user__first_name', 'id', )
     search_fields = ('user__first_name', 'user__email', 'user__last_name', )
 
+    def get_queryset(self):
+        queryset = super(AuditorStaffMembersViewSet, self).get_queryset()
+
+        if self.action == 'list':
+            queryset = queryset.filter(hidden=False)
+
+        return queryset
+
     def perform_create(self, serializer, **kwargs):
         self.check_serializer_permissions(serializer, edit=True)
 
         instance = serializer.save(auditor_firm=self.get_parent_object(), **kwargs)
         instance.user.profile.country = self.request.user.profile.country
         instance.user.profile.save()
+
+    def perform_destroy(self, instance):
+        # deactivate staff member & user
+        instance.hidden = True
+        instance.save()
+        instance.user.is_active = False
+        instance.user.save()
 
     def get_permission_context(self):
         context = super(AuditorStaffMembersViewSet, self).get_permission_context()

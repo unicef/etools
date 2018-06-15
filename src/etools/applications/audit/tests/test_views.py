@@ -807,6 +807,67 @@ class TestAuditorStaffMembersViewSet(AuditTestCaseMixin, BaseTenantTestCase):
         self.assertIn('user', response.data)
         self.assertEqual(response.data['user'][0], 'User is already assigned to auditor firm.')
 
+    def test_deactivate_auditor_flow(self):
+        user = UserFactory(auditor=True, partner_firm=self.auditor_firm, is_active=True)
+
+        list_response = self.forced_auth_req(
+            'get',
+            '/api/audit/audit-firms/{}/staff-members/'.format(self.auditor_firm.id),
+            user=self.unicef_focal_point
+        )
+
+        self.assertEqual(list_response.status_code, status.HTTP_200_OK)
+        self.assertIn(
+            user.purchase_order_auditorstaffmember.id,
+            [r['id'] for r in list_response.data['results']]
+        )
+
+        del_response = self.forced_auth_req(
+            'delete',
+            '/api/audit/audit-firms/{}/staff-members/{}/'.format(self.auditor_firm.id,
+                                                                 user.purchase_order_auditorstaffmember.id),
+            user=self.unicef_focal_point
+        )
+        self.assertEqual(del_response.status_code, status.HTTP_204_NO_CONTENT)
+
+        deleted_list_response = self.forced_auth_req(
+            'get',
+            '/api/audit/audit-firms/{}/staff-members/'.format(self.auditor_firm.id),
+            user=self.unicef_focal_point
+        )
+
+        self.assertEqual(deleted_list_response.status_code, status.HTTP_200_OK)
+        self.assertNotIn(
+            user.purchase_order_auditorstaffmember.id,
+            [r['id'] for r in deleted_list_response.data['results']]
+        )
+
+        activate_response = self.forced_auth_req(
+            'patch',
+            '/api/audit/audit-firms/{}/staff-members/{}/'.format(self.auditor_firm.id,
+                                                                user.purchase_order_auditorstaffmember.id),
+            user=self.unicef_focal_point,
+            data={
+                'hidden': False,
+                'user': {
+                    'is_active': True
+                }
+            }
+        )
+        self.assertEqual(activate_response.status_code, status.HTTP_200_OK)
+
+        updated_list_response = self.forced_auth_req(
+            'get',
+            '/api/audit/audit-firms/{}/staff-members/'.format(self.auditor_firm.id),
+            user=self.unicef_focal_point
+        )
+
+        self.assertEqual(updated_list_response.status_code, status.HTTP_200_OK)
+        self.assertIn(
+            user.purchase_order_auditorstaffmember.id,
+            [r['id'] for r in list_response.data['results']]
+        )
+
     def test_assign_none_provided(self):
         response = self.forced_auth_req(
             'post',

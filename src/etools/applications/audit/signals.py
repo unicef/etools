@@ -28,13 +28,6 @@ def staff_member_changed(sender, instance, action, reverse, pk_set, *args, **kwa
             member.user.profile.countries_available.add(country)
 
 
-@receiver(post_delete, sender=AuditorStaffMember)
-def delete_user_receiver(instance, **kwargs):
-    user = instance.user
-    user.is_active = False
-    user.save()
-
-
 @receiver(post_save, sender=EngagementActionPoint)
 def action_point_updated_receiver(instance, created, **kwargs):
     if created:
