@@ -8,6 +8,7 @@ from django.contrib.contenttypes.models import ContentType
 from django.db import transaction, connection
 from django.db.models import Q
 from django.shortcuts import get_object_or_404
+from django.utils.translation import ugettext as _
 
 from rest_framework import status
 from rest_framework.exceptions import ValidationError
@@ -817,33 +818,34 @@ class InterventionReportingRequirementView(APIView):
         self.intervention = self.get_object(intervention_pk)
         self.report_type = report_type
         self.request.data["report_type"] = self.report_type
-        serializer = self.serializer_create_class(
-            data=self.request.data,
-            context={
-                "intervention": self.intervention,
-            }
-        )
-        if serializer.is_valid():
-            serializer.save()
-            return Response(
-                self.serializer_list_class(self.get_data()).data
-            )
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
-    def delete(self, request, intervention_pk, report_type):
-        self.intervention = self.get_object(intervention_pk)
-        self.report_type = report_type
-        self.request.data["report_type"] = self.report_type
+        received_rr_ids = [int(r["id"]) for r in request.data["reporting_requirements"] if "id" in r]
 
-        serializer = self.serializer_create_class(
-            data=self.request.data,
-            context={
-                "intervention": self.intervention,
-            }
-        )
-        if serializer.is_valid():
-            serializer.delete(serializer.validated_data)
-            return Response(
-                self.serializer_list_class(self.get_data()).data
+        with transaction.atomic():
+            # delete those reporting requirements which are not present in the request before new and/or modified
+            # reporting requirements are saved. If there's no reporting requirements in the request, delete all of them.
+            deleted_reporting_requirements = ReportingRequirement.objects.exclude(
+                intervention=intervention_pk,
+                report_type=report_type,
+                id__in=received_rr_ids)
+
+            for deleted_reporting_requirement in deleted_reporting_requirements:
+                if deleted_reporting_requirement.start_date < datetime.date.today():
+                    raise ValidationError(
+                        _("Cannot delete already started reporting requirements.")
+                    )
+                deleted_reporting_requirement.delete()
+
+            serializer = self.serializer_create_class(
+                data=self.request.data,
+                context={
+                    "intervention": self.intervention,
+                }
             )
+            if serializer.is_valid():
+                serializer.save()
+                return Response(
+                    self.serializer_list_class(self.get_data()).data
+                )
+
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
