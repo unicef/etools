@@ -454,6 +454,7 @@ class BaseTPMAttachmentsViewSet(BaseTPMViewSet,
                                 mixins.CreateModelMixin,
                                 mixins.RetrieveModelMixin,
                                 mixins.UpdateModelMixin,
+                                mixins.DestroyModelMixin,
                                 NestedViewSetMixin,
                                 viewsets.GenericViewSet):
     metadata_class = TPMPermissionBasedMetadata
