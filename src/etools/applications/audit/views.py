@@ -1,5 +1,6 @@
 
 from django.contrib.auth import get_user_model
+from django.contrib.contenttypes.models import ContentType
 from django.db.models import Prefetch
 from django.http import Http404
 
@@ -12,6 +13,7 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.renderers import JSONRenderer
 from rest_framework.response import Response
 
+from etools.applications.attachments.models import Attachment
 from etools.applications.audit.conditions import (AuditModuleCondition, AuditStaffMemberCondition,
                                                   EngagementStaffMemberCondition,)
 from etools.applications.audit.exports import (AuditDetailCSVRenderer, AuditorFirmCSVRenderer,
@@ -28,7 +30,9 @@ from etools.applications.audit.serializers.auditor import (AuditorFirmExportSeri
 from etools.applications.audit.serializers.engagement import (AuditSerializer, EngagementExportSerializer,
                                                               EngagementHactSerializer, EngagementLightSerializer,
                                                               EngagementSerializer, MicroAssessmentSerializer,
-                                                              SpecialAuditSerializer, SpotCheckSerializer,)
+                                                              SpecialAuditSerializer, SpotCheckSerializer,
+                                                              EngagementAttachmentSerializer,
+                                                              ReportAttachmentSerializer)
 from etools.applications.audit.serializers.export import (AuditDetailCSVSerializer, AuditPDFSerializer,
                                                           MicroAssessmentDetailCSVSerializer,
                                                           MicroAssessmentPDFSerializer,
@@ -37,7 +41,7 @@ from etools.applications.audit.serializers.export import (AuditDetailCSVSerializ
 from etools.applications.partners.models import PartnerOrganization
 from etools.applications.partners.serializers.partner_organization_v2 import MinimalPartnerOrganizationListSerializer
 from etools.applications.permissions2.conditions import GroupCondition, NewObjectCondition, ObjectStatusCondition
-from etools.applications.permissions2.drf_permissions import NestedPermission
+from etools.applications.permissions2.drf_permissions import NestedPermission, get_permission_for_targets
 from etools.applications.permissions2.views import PermittedFSMActionMixin, PermittedSerializerMixin
 from etools.applications.utils.common.pagination import DynamicPageNumberPagination
 from etools.applications.utils.common.views import (ExportViewSetDataMixin, MultiSerializerViewSetMixin,
@@ -409,3 +413,52 @@ class AuditorStaffMembersViewSet(
         return [
             AuditStaffMemberCondition(obj.auditor_firm, self.request.user),
         ]
+
+
+class BaseAuditAttachmentsViewSet(BaseAuditViewSet,
+                                  mixins.ListModelMixin,
+                                  mixins.CreateModelMixin,
+                                  mixins.RetrieveModelMixin,
+                                  mixins.UpdateModelMixin,
+                                  mixins.DestroyModelMixin,
+                                  NestedViewSetMixin,
+                                  viewsets.GenericViewSet):
+    metadata_class = AuditPermissionBasedMetadata
+    queryset = Attachment.objects.all()
+
+    def get_parent_filter(self):
+        parent = self.get_parent_object()
+        if not parent:
+            return {}
+
+        return {
+            'content_type_id': ContentType.objects.get_for_model(parent.get_subclass()._meta.model).id,
+            'object_id': parent.pk
+        }
+
+    def perform_create(self, serializer):
+        serializer.save(content_object=self.get_parent_object().get_subclass())
+
+
+class EngagementAttachmentsViewSet(BaseAuditAttachmentsViewSet):
+    serializer_class = EngagementAttachmentSerializer
+    permission_classes = BaseAuditViewSet.permission_classes + [
+        get_permission_for_targets('audit.engagement.engagement_attachments')
+    ]
+
+    def get_parent_filter(self):
+        filters = super(EngagementAttachmentsViewSet, self).get_parent_filter()
+        filters.update({'code': 'audit_engagement'})
+        return filters
+
+
+class ReportAttachmentsViewSet(BaseAuditAttachmentsViewSet):
+    serializer_class = ReportAttachmentSerializer
+    permission_classes = BaseAuditViewSet.permission_classes + [
+        get_permission_for_targets('audit.engagement.report_attachments')
+    ]
+
+    def get_parent_filter(self):
+        filters = super(ReportAttachmentsViewSet, self).get_parent_filter()
+        filters.update({'code': 'audit_report'})
+        return filters
