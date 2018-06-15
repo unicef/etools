@@ -845,7 +845,7 @@ class TestAuditorStaffMembersViewSet(AuditTestCaseMixin, BaseTenantTestCase):
         activate_response = self.forced_auth_req(
             'patch',
             '/api/audit/audit-firms/{}/staff-members/{}/'.format(self.auditor_firm.id,
-                                                                user.purchase_order_auditorstaffmember.id),
+                                                                 user.purchase_order_auditorstaffmember.id),
             user=self.unicef_focal_point,
             data={
                 'hidden': False,
