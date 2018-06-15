@@ -5,7 +5,8 @@ from rest_framework_nested import routers
 
 from etools.applications.audit.views import (AuditorFirmViewSet, AuditorStaffMembersViewSet, AuditViewSet,
                                              EngagementViewSet, MicroAssessmentViewSet, PurchaseOrderViewSet,
-                                             SpecialAuditViewSet, SpotCheckViewSet, EngagementActionPointViewSet)
+                                             SpecialAuditViewSet, SpotCheckViewSet, EngagementActionPointViewSet,
+                                             EngagementAttachmentsViewSet, ReportAttachmentsViewSet)
 from etools.applications.utils.common.routers import NestedComplexRouter
 
 auditor_firms_api = routers.SimpleRouter()
@@ -35,6 +36,10 @@ special_audits_api.register(r'special-audits', SpecialAuditViewSet, base_name='s
 engagement_action_points_api = NestedComplexRouter(engagements_api, r'engagements', lookup='engagement')
 engagement_action_points_api.register(r'action-points', EngagementActionPointViewSet, base_name='action-points')
 
+attachments_api = NestedComplexRouter(engagements_api, r'engagements')
+attachments_api.register(r'engagement-attachments', EngagementAttachmentsViewSet, base_name='engagement-attachments')
+attachments_api.register(r'report-attachments', ReportAttachmentsViewSet, base_name='report-attachments')
+
 app_name = 'audit'
 urlpatterns = [
     url(r'^', include(auditor_staffmember_api.urls)),
@@ -46,4 +51,5 @@ urlpatterns = [
     url(r'^', include(audits_api.urls)),
     url(r'^', include(special_audits_api.urls)),
     url(r'^', include(engagement_action_points_api.urls)),
+    url(r'^', include(attachments_api.urls)),
 ]
