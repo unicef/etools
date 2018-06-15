@@ -681,13 +681,14 @@ class TestPartnerOrganizationDetailSerializer(BaseTenantTestCase):
             'hidden', u'id', 'interventions', 'last_assessment_date', 'modified', 'name', 'net_ct_cy', 'partner_type',
             'phone_number', 'planned_engagement', 'postal_code', 'rating', 'reported_cy', 'shared_with', 'short_name',
             'staff_members', 'street_address', 'total_ct_cp', 'total_ct_cy', 'total_ct_ytd', 'type_of_assessment',
-            'vendor_number', 'vision_synced', 'core_values_assessment_attachment', 'planned_visits', 'manually_blocked'
+            'vendor_number', 'vision_synced', 'core_values_assessment_attachment', 'planned_visits', 'manually_blocked',
+            'flags', 'partner_type_slug'
         ])
 
         self.assertCountEqual(data['planned_engagement'].keys(), [
-            'id', 'scheduled_audit', 'special_audit', 'spot_check_follow_up_q1', 'spot_check_follow_up_q2',
-            'spot_check_follow_up_q3', 'spot_check_follow_up_q4', 'spot_check_mr',
-            'total_spot_check_follow_up_required', 'spot_check_required', 'required_audit'
+            'id', 'scheduled_audit', 'special_audit', 'spot_check_planned_q1', 'spot_check_planned_q2',
+            'spot_check_planned_q3', 'spot_check_planned_q4', 'spot_check_follow_up', 'spot_check_required',
+            'total_spot_check_planned', 'required_audit'
         ])
 
         self.assertEquals(len(data['staff_members']), 1)

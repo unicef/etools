@@ -1,11 +1,11 @@
-
 from django.core.management import call_command
+from django.db import connection
 
-import factory.fuzzy
 from rest_framework.exceptions import ValidationError
 
 from etools.applications.action_points.models import ActionPoint
 from etools.applications.action_points.tests.factories import ActionPointFactory
+from etools.applications.audit.models import MicroAssessment
 from etools.applications.audit.tests.factories import MicroAssessmentFactory
 from etools.applications.EquiTrack.tests.cases import BaseTenantTestCase
 from etools.applications.snapshot.utils import create_dict_with_relations, create_snapshot
@@ -21,21 +21,34 @@ class TestActionPointModel(BaseTenantTestCase):
 
     def test_str(self):
         action_point = ActionPointFactory()
-        self.assertEqual(str(action_point), '{0}/{1}/ACTP'.format(action_point.created.year, action_point.id))
+        self.assertEqual(str(action_point), '{}/{}/{}/APD'.format(
+            connection.tenant.country_short_code or '',
+            action_point.created.year, action_point.id
+        ))
 
     def test_complete_fail(self):
         action_point = ActionPointFactory()
-        with self.assertRaises(ValidationError):
+        with self.assertRaisesRegex(ValidationError, "comments"):
             action_point.complete()
 
     def test_complete(self):
-        action_point = ActionPointFactory()
-        action_point.action_taken = factory.fuzzy.FuzzyText()
+        action_point = ActionPointFactory(status='pre_completed')
         action_point.complete()
+
+    def test_completion_date(self):
+        action_point = ActionPointFactory(status='pre_completed')
+        self.assertIsNone(action_point.date_of_completion)
+        action_point.complete()
+        action_point.save()
+        self.assertIsNotNone(action_point.date_of_completion)
 
     def test_audit_related(self):
         action_point = ActionPointFactory(engagement=MicroAssessmentFactory())
         self.assertEqual(action_point.related_module, ActionPoint.MODULE_CHOICES.audit)
+
+    def test_engagement_subclass(self):
+        action_point = ActionPointFactory(engagement=MicroAssessmentFactory())
+        self.assertEqual(type(ActionPoint.objects.get(pk=action_point.pk).related_object), MicroAssessment)
 
     def test_tpm_related(self):
         action_point = ActionPointFactory(tpm_activity=TPMVisitFactory(tpm_activities__count=1).tpm_activities.first())
@@ -50,11 +63,10 @@ class TestActionPointModel(BaseTenantTestCase):
         self.assertEqual(action_point.related_module, None)
 
     def test_additional_data(self):
-        action_point = ActionPointFactory()
+        action_point = ActionPointFactory(status='pre_completed')
         initial_data = create_dict_with_relations(action_point)
 
         action_point.assigned_to = UserFactory()
-        action_point.action_taken = factory.fuzzy.FuzzyText().fuzz()
         action_point.complete()
         action_point.save()
 

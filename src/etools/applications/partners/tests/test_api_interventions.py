@@ -1001,6 +1001,12 @@ class TestAPIInterventionIndicatorsListView(BaseTenantTestCase):
             'response_plan_name',
             'is_active',
             'is_high_frequency',
+            'target_new',
+            'baseline_new',
+            'measurement_specifications',
+            'label',
+            'numerator_label',
+            'denominator_label'
         ))
 
     def _make_request(self, user):
@@ -1528,7 +1534,7 @@ class TestInterventionAmendmentCreateAPIView(BaseTenantTestCase):
         self.assertEquals(response.status_code, status.HTTP_403_FORBIDDEN)
 
     def test_create_amendment_invalid_type(self):
-        invalid_type = 'asdf'
+        invalid_type = 'invalid_choice'
         response = self._make_request(
             user=self.partnership_manager_user,
             data={"types": [invalid_type], "signed_amendment": self.uploaded_file},

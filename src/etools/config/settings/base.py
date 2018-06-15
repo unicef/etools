@@ -113,7 +113,7 @@ MIDDLEWARE = (
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.contrib.auth.middleware.SessionAuthenticationMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
-    'etools.applications.email_auth.middleware.TokenAuthenticationMiddleware',
+    'etools.applications.tokens.middleware.TokenAuthenticationMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
@@ -163,6 +163,7 @@ SHARED_APPS = (
 
     'storages',
     'rest_framework',
+    'rest_framework_gis',
     'rest_framework_swagger',
     'rest_framework.authtoken',
     'drfpasswordless',
@@ -193,7 +194,7 @@ SHARED_APPS = (
     'etools.applications.utils.writable_serializers',
     'etools.applications.utils.permissions',
     'waffle',
-    'etools.applications.email_auth',
+    'etools.applications.tokens',
     'etools.applications.permissions2',
 )
 TENANT_APPS = (
@@ -268,7 +269,7 @@ AUTHENTICATION_BACKENDS = (
     'django.contrib.auth.backends.ModelBackend',
     'djangosaml2.backends.Saml2Backend',
 )
-AUTH_USER_MODEL = 'auth.User'
+AUTH_USER_MODEL = 'users.User'
 LOGIN_REDIRECT_URL = '/'
 LOGIN_URL = '/login/'
 
@@ -582,3 +583,6 @@ SILENCED_SYSTEM_CHECKS = ["tenant_schemas.W003"]
 
 # GET parameter that allows override of schema
 SCHEMA_OVERRIDE_PARAM = "schema"
+
+# Number of days before PCA required notification
+PCA_REQUIRED_NOTIFICATION_LEAD = 30

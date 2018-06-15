@@ -12,6 +12,8 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.renderers import JSONRenderer
 from rest_framework.response import Response
 
+from etools.applications.action_points.conditions import ActionPointAuthorCondition, ActionPointAssignedByCondition, \
+    ActionPointAssigneeCondition
 from etools.applications.audit.conditions import (AuditModuleCondition, AuditStaffMemberCondition,
                                                   EngagementStaffMemberCondition,)
 from etools.applications.audit.exports import (AuditDetailCSVRenderer, AuditorFirmCSVRenderer,
@@ -20,7 +22,7 @@ from etools.applications.audit.exports import (AuditDetailCSVRenderer, AuditorFi
 from etools.applications.audit.filters import DisplayStatusFilter, UniqueIDOrderingFilter
 from etools.applications.audit.metadata import AuditBaseMetadata, AuditPermissionBasedMetadata
 from etools.applications.audit.models import (Audit, Auditor, Engagement, MicroAssessment, SpecialAudit,
-                                              SpotCheck, UNICEFAuditFocalPoint, UNICEFUser,)
+                                              SpotCheck, UNICEFAuditFocalPoint, UNICEFUser, EngagementActionPoint)
 from etools.applications.audit.purchase_order.models import AuditorFirm, AuditorStaffMember, PurchaseOrder
 from etools.applications.audit.serializers.auditor import (AuditorFirmExportSerializer, AuditorFirmLightSerializer,
                                                            AuditorFirmSerializer, AuditorStaffMemberSerializer,
@@ -28,7 +30,8 @@ from etools.applications.audit.serializers.auditor import (AuditorFirmExportSeri
 from etools.applications.audit.serializers.engagement import (AuditSerializer, EngagementExportSerializer,
                                                               EngagementHactSerializer, EngagementLightSerializer,
                                                               EngagementSerializer, MicroAssessmentSerializer,
-                                                              SpecialAuditSerializer, SpotCheckSerializer,)
+                                                              SpecialAuditSerializer, SpotCheckSerializer,
+                                                              EngagementActionPointSerializer)
 from etools.applications.audit.serializers.export import (AuditDetailCSVSerializer, AuditPDFSerializer,
                                                           MicroAssessmentDetailCSVSerializer,
                                                           MicroAssessmentPDFSerializer,
@@ -134,7 +137,7 @@ class AuditorFirmViewSet(
 
     @list_route(methods=['get'], url_path='users')
     def users(self, request, *args, **kwargs):
-        return AuditUsersViewSet.as_view()(request, *args, **kwargs)
+        return AuditUsersViewSet.as_view()(request._request, *args, **kwargs)
 
 
 class PurchaseOrderViewSet(
@@ -409,3 +412,30 @@ class AuditorStaffMembersViewSet(
         return [
             AuditStaffMemberCondition(obj.auditor_firm, self.request.user),
         ]
+
+
+class EngagementActionPointViewSet(BaseAuditViewSet,
+                                   PermittedFSMActionMixin,
+                                   mixins.ListModelMixin,
+                                   mixins.CreateModelMixin,
+                                   mixins.RetrieveModelMixin,
+                                   mixins.UpdateModelMixin,
+                                   NestedViewSetMixin,
+                                   viewsets.GenericViewSet):
+    metadata_class = AuditPermissionBasedMetadata
+    queryset = EngagementActionPoint.objects.all()
+    serializer_class = EngagementActionPointSerializer
+
+    permission_classes = BaseAuditViewSet.permission_classes + [NestedPermission]
+
+    def get_obj_permission_context(self, obj):
+        return [
+            ObjectStatusCondition(obj),
+            ActionPointAuthorCondition(obj, self.request.user),
+            ActionPointAssignedByCondition(obj, self.request.user),
+            ActionPointAssigneeCondition(obj, self.request.user),
+        ]
+
+    def perform_create(self, serializer):
+        engagement = self.get_parent_object()
+        serializer.save(engagement=engagement, partner_id=engagement.partner_id)
