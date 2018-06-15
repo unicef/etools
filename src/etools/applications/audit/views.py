@@ -308,7 +308,10 @@ class EngagementViewSet(
                                                 status=Engagement.FINAL).select_subclasses(
             "audit", "spotcheck", "microassessment", "specialaudit"
         )
-        serializer = EngagementHactSerializer(engagements, many=True, context={"request": request})
+        serializer = EngagementHactSerializer(engagements, many=True, context={
+            "request": request,
+            "permission_context": self._collect_permission_context(),
+        })
         return Response(serializer.data)
 
     @detail_route(methods=['get'], url_path='pdf')
