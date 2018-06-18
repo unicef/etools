@@ -1,6 +1,5 @@
 from django.db import connection
 from django.urls import reverse
-from django.utils.http import urlquote
 
 from etools.applications.EquiTrack.utils import get_current_site
 from etools.applications.users.models import Country
@@ -22,11 +21,11 @@ def build_frontend_url(*parts, user=None, include_token=False, **kwargs):
     else:
         frontend_url += reverse('tokens:login')
 
-    change_country_view = urlquote(update_url_with_kwargs(
+    change_country_view = update_url_with_kwargs(
         reverse('users:country-change'),
         country=Country.objects.get(schema_name=connection.schema_name).id,
-        next=urlquote('/'.join(map(str, ('',) + parts)))
-    ))
+        next='/'.join(map(str, ('',) + parts))
+    )
 
     frontend_url = update_url_with_kwargs(frontend_url, next=change_country_view)
 
