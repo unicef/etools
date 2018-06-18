@@ -1026,6 +1026,26 @@ class TestEngagementAttachmentsView(MATransitionsTestCaseMixin, BaseTenantTestCa
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(len(response.data['results']), attachments_num + 1)
 
+    def test_create_meta_focal_point(self):
+        response = self.forced_auth_req(
+            'options',
+            reverse('audit:engagement-attachments-list', args=['new']),
+            user=self.unicef_focal_point
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertIn('POST', response.data['actions'])
+        self.assertIn('GET', response.data['actions'])
+
+    def test_create_meta_unicef_user(self):
+        response = self.forced_auth_req(
+            'options',
+            reverse('audit:engagement-attachments-list', args=['new']),
+            user=self.unicef_user
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertNotIn('POST', response.data['actions'])
+        self.assertIn('GET', response.data['actions'])
+
 
 class TestEngagementReportAttachmentsView(MATransitionsTestCaseMixin, BaseTenantTestCase):
     def test_list(self):

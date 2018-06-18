@@ -64,16 +64,8 @@ class BaseAuditViewSet(
     permission_classes = [IsAuthenticated, ]
 
     def get_permission_context(self):
-        context = [
-            AuditModuleCondition(),
-            GroupCondition(self.request.user),
-        ]
-
-        if getattr(self, 'action', None) == 'create':
-            context.append(
-                NewObjectCondition(self.queryset.model),
-            )
-
+        context = super().get_permission_context()
+        context.append(AuditModuleCondition())
         return context
 
 
@@ -136,9 +128,11 @@ class AuditorFirmViewSet(
         return context
 
     def get_obj_permission_context(self, obj):
-        return [
+        context = super().get_obj_permission_context(obj)
+        context.extend([
             AuditStaffMemberCondition(obj, self.request.user),
-        ]
+        ])
+        return context
 
     @list_route(methods=['get'], url_path='users')
     def users(self, request, *args, **kwargs):
@@ -253,6 +247,17 @@ class EngagementViewSet(
         },
     }
 
+    def get_object(self):
+        lookup_url_kwarg = self.lookup_url_kwarg or self.lookup_field
+        if lookup_url_kwarg not in self.kwargs:
+            return
+
+        # generate fake object in case of accessing nested
+        if self.kwargs[lookup_url_kwarg] == 'new':
+            return self.queryset.model()
+
+        return super().get_object()
+
     def get_serializer_class(self):
         serializer_class = None
 
@@ -293,11 +298,13 @@ class EngagementViewSet(
         return context
 
     def get_obj_permission_context(self, obj):
-        return [
+        context = super().get_obj_permission_context(obj)
+        context.extend([
             ObjectStatusCondition(obj),
             AuditStaffMemberCondition(obj.agreement.auditor_firm, self.request.user),
             EngagementStaffMemberCondition(obj, self.request.user),
-        ]
+        ])
+        return context
 
     @list_route(methods=['get'], url_path='partners')
     def partners(self, request, *args, **kwargs):
@@ -414,9 +421,11 @@ class AuditorStaffMembersViewSet(
         return context
 
     def get_obj_permission_context(self, obj):
-        return [
+        context = super().get_obj_permission_context(obj)
+        context.extend([
             AuditStaffMemberCondition(obj.auditor_firm, self.request.user),
-        ]
+        ])
+        return context
 
 
 class EngagementActionPointViewSet(BaseAuditViewSet,
@@ -434,12 +443,14 @@ class EngagementActionPointViewSet(BaseAuditViewSet,
     permission_classes = BaseAuditViewSet.permission_classes + [NestedPermission]
 
     def get_obj_permission_context(self, obj):
-        return [
+        context = super().get_obj_permission_context(obj)
+        context.extend([
             ObjectStatusCondition(obj),
             ActionPointAuthorCondition(obj, self.request.user),
             ActionPointAssignedByCondition(obj, self.request.user),
             ActionPointAssigneeCondition(obj, self.request.user),
-        ]
+        ])
+        return context
 
     def perform_create(self, serializer):
         engagement = self.get_parent_object()

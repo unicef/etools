@@ -53,16 +53,8 @@ class BaseTPMViewSet(
     permission_classes = [IsAuthenticated]
 
     def get_permission_context(self):
-        context = [
-            TPMModuleCondition(),
-            GroupCondition(self.request.user),
-        ]
-
-        if getattr(self, 'action', None) == 'create':
-            context.append(
-                NewObjectCondition(self.queryset.model),
-            )
-
+        context = super().get_permission_context()
+        context.append(TPMModuleCondition())
         return context
 
 
@@ -121,9 +113,11 @@ class TPMPartnerViewSet(
         return context
 
     def get_obj_permission_context(self, obj):
-        return [
+        context = super().get_obj_permission_context(obj)
+        context.extend([
             TPMStaffMemberCondition(obj, self.request.user),
-        ]
+        ])
+        return context
 
     @list_route(methods=['get'], url_path='sync/(?P<vendor_number>[^/]+)')
     def sync(self, request, *args, **kwargs):
@@ -362,12 +356,14 @@ class TPMVisitViewSet(
         return context
 
     def get_obj_permission_context(self, obj):
-        return [
+        context = super().get_obj_permission_context(obj)
+        context.extend([
             ObjectStatusCondition(obj),
             TPMStaffMemberCondition(obj.tpm_partner, self.request.user),
             TPMVisitUNICEFFocalPointCondition(obj, self.request.user),
             TPMVisitTPMFocalPointCondition(obj, self.request.user),
-        ]
+        ])
+        return context
 
     @list_route(methods=['get'], url_path='activities/export', renderer_classes=(TPMActivityCSVRenderer,))
     def activities_export(self, request, *args, **kwargs):
@@ -434,12 +430,14 @@ class TPMActionPointViewSet(BaseTPMViewSet,
     permission_classes = BaseTPMViewSet.permission_classes + [NestedPermission]
 
     def get_obj_permission_context(self, obj):
-        return [
+        context = super().get_obj_permission_context(obj)
+        context.extend([
             ObjectStatusCondition(obj),
             ActionPointAuthorCondition(obj, self.request.user),
             ActionPointAssignedByCondition(obj, self.request.user),
             ActionPointAssigneeCondition(obj, self.request.user),
-        ]
+        ])
+        return context
 
     @list_route(methods=['get'], url_path='export', renderer_classes=(TPMActionPointCSVRenderer,))
     def csv_export(self, request, *args, **kwargs):
