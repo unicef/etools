@@ -47,6 +47,12 @@ class InterventionPartnershipDashView(QueryStringFilterMixin, ListCreateAPIView)
             queries = []
             filters = (
                 ('status', 'status__in'),
+                ('startAfter', 'start__gt'),
+                ('startBefore', 'start__lt'),
+                ('endAfter', 'end__gt'),
+                ('endBefore', 'end__lt'),
+                ('offices', 'offices__name__in'),
+                ('sectors', 'sections__in'),
             )
             search_terms = ['agreement__partner__name__icontains', ]
             queries.extend(self.filter_params(filters))
