@@ -122,6 +122,7 @@ class ReportingRequirementFactory(factory.django.DjangoModelFactory):
         model = models.ReportingRequirement
 
     report_type = fuzzy.FuzzyChoice(models.ReportingRequirement.TYPE_CHOICES)
+    start_date = fuzzy.FuzzyDate(datetime.date(2001, 1, 1))
     end_date = fuzzy.FuzzyDate(datetime.date(2001, 1, 1))
     due_date = fuzzy.FuzzyDate(datetime.date(2001, 1, 1))
 

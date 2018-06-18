@@ -831,7 +831,7 @@ class InterventionReportingRequirementView(APIView):
                 id__in=received_rr_ids)
 
             for deleted_reporting_requirement in deleted_reporting_requirements:
-                if deleted_reporting_requirement.start_date < datetime.date.today():
+                if deleted_reporting_requirement.start_date <= datetime.date.today():
                     raise ValidationError(
                         _("Cannot delete already started reporting requirements.")
                     )
