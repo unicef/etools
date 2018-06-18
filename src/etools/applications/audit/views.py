@@ -244,17 +244,6 @@ class EngagementViewSet(
         },
     }
 
-    def get_object(self):
-        lookup_url_kwarg = self.lookup_url_kwarg or self.lookup_field
-        if lookup_url_kwarg not in self.kwargs:
-            return
-
-        # generate fake object in case of accessing nested
-        if self.kwargs[lookup_url_kwarg] == 'new':
-            return self.queryset.model()
-
-        return super().get_object()
-
     def get_serializer_class(self):
         serializer_class = None
 
