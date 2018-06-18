@@ -4,7 +4,6 @@ import logging
 from django import forms
 from django.core.exceptions import ValidationError
 
-
 from carto.exceptions import CartoException
 from carto.sql import SQLClient
 
@@ -27,8 +26,8 @@ class CartoDBTableForm(forms.ModelForm):
         name_col = self.cleaned_data['name_col']
         pcode_col = self.cleaned_data['pcode_col']
         parent_code_col = self.cleaned_data['parent_code_col']
-
         auth_client = EtoolsCartoNoAuthClient(base_url="https://{}.carto.com/".format(str(domain)))
+
         sql_client = SQLClient(auth_client)
         try:
             sites = sql_client.send('select * from {} limit 1'.format(table_name))
