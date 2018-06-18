@@ -1945,7 +1945,7 @@ class TestInterventionReportingRequirementView(BaseTenantTestCase):
             report_type=report_type
         )
         init_count = requirement_qs.count()
-        
+
         response = self.forced_auth_req(
             "post",
             self._get_url(report_type),
@@ -1960,8 +1960,6 @@ class TestInterventionReportingRequirementView(BaseTenantTestCase):
             len(response.data["reporting_requirements"]),
             init_count - 1
         )
-
-
 
     def test_post_invalid_no_report_type(self):
         """Missing report type value"""
