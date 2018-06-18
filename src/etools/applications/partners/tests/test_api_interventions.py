@@ -1999,7 +1999,7 @@ class TestInterventionReportingRequirementView(BaseTenantTestCase):
             ]}
         )
 
-    def test_post_delete(self):
+    def test_post_delete_qpr(self):
         report_type = ReportingRequirement.TYPE_QPR
         requirement_qs = ReportingRequirement.objects.filter(
             intervention=self.intervention,
@@ -2010,7 +2010,7 @@ class TestInterventionReportingRequirementView(BaseTenantTestCase):
             report_type=report_type
         )
 
-        # this requirements should be deleted by ommiting it in the POST request
+        # this requirements will be deleted by ommiting it in the POST/save request
         ReportingRequirementFactory(
             intervention=self.intervention,
             report_type=report_type,
@@ -2040,8 +2040,54 @@ class TestInterventionReportingRequirementView(BaseTenantTestCase):
             len(response.data["reporting_requirements"]),
             init_count - 1
         )
+        self.assertEqual(
+            response.data["reporting_requirements"][0]["id"],
+            requirement1.id
+        )
 
-    def test_post_delete_past_requirements(self):
+    def test_post_delete_hr(self):
+        report_type = ReportingRequirement.TYPE_HR
+        requirement_qs = ReportingRequirement.objects.filter(
+            intervention=self.intervention,
+            report_type=report_type,
+        )
+        requirement1 = ReportingRequirementFactory(
+            intervention=self.intervention,
+            report_type=report_type
+        )
+
+        # this requirements will be deleted by ommiting it in the POST/save request
+        ReportingRequirementFactory(
+            intervention=self.intervention,
+            report_type=report_type,
+            due_date=datetime.date.today() + datetime.timedelta(days=1),
+        )
+        init_count = requirement_qs.count()
+
+        response = self.forced_auth_req(
+            "post",
+            self._get_url(report_type),
+            user=self.unicef_staff,
+            data={
+                "reporting_requirements": [{
+                    "id": requirement1.id,
+                    "due_date": requirement1.due_date,
+                }]
+            }
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(requirement_qs.count(), init_count - 1)
+        self.assertEqual(
+            len(response.data["reporting_requirements"]),
+            init_count - 1
+        )
+        self.assertEqual(
+            response.data["reporting_requirements"][0]["id"],
+            requirement1.id
+        )
+
+    def test_post_delete_qpr_invalid(self):
         report_type = ReportingRequirement.TYPE_QPR
         requirement1 = ReportingRequirementFactory(
             intervention=self.intervention,
@@ -2072,7 +2118,36 @@ class TestInterventionReportingRequirementView(BaseTenantTestCase):
         )
 
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
-        self.assertEqual(response.data, ['Cannot delete already started reporting requirements.'])
+        self.assertEqual(response.data, ['Cannot delete past reporting requirements.'])
+
+    def test_post_delete_hr_invalid(self):
+        report_type = ReportingRequirement.TYPE_HR
+        requirement1 = ReportingRequirementFactory(
+            intervention=self.intervention,
+            report_type=report_type
+        )
+
+        # this requirements should be deleted by ommiting it in the POST request
+        ReportingRequirementFactory(
+            intervention=self.intervention,
+            report_type=report_type,
+            due_date=datetime.date.today() - datetime.timedelta(days=1),
+        )
+
+        response = self.forced_auth_req(
+            "post",
+            self._get_url(report_type),
+            user=self.unicef_staff,
+            data={
+                "reporting_requirements": [{
+                    "id": requirement1.id,
+                    "due_date": requirement1.due_date,
+                }]
+            }
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertEqual(response.data, ['Cannot delete past reporting requirements.'])
 
     def test_patch_invalid(self):
         for report_type, _ in ReportingRequirement.TYPE_CHOICES:
@@ -2091,7 +2166,7 @@ class TestInterventionReportingRequirementView(BaseTenantTestCase):
                 status.HTTP_405_METHOD_NOT_ALLOWED
             )
 
-    def test_delete_invalid(self):
+    def test_delete_invalid_report_type(self):
         for report_type, _ in ReportingRequirement.TYPE_CHOICES:
             report_req = ReportingRequirementFactory(
                 intervention=self.intervention,

@@ -831,10 +831,17 @@ class InterventionReportingRequirementView(APIView):
                 id__in=received_rr_ids)
 
             for deleted_reporting_requirement in deleted_reporting_requirements:
-                if deleted_reporting_requirement.start_date <= datetime.date.today():
-                    raise ValidationError(
-                        _("Cannot delete already started reporting requirements.")
-                    )
+                if self.report_type == ReportingRequirement.TYPE_QPR:
+                    if deleted_reporting_requirement.start_date <= datetime.date.today():
+                        raise ValidationError(
+                            _("Cannot delete past reporting requirements.")
+                        )
+                if self.report_type == ReportingRequirement.TYPE_HR:
+                    if deleted_reporting_requirement.due_date <= datetime.date.today():
+                        raise ValidationError(
+                            _("Cannot delete past reporting requirements.")
+                        )
+
                 deleted_reporting_requirement.delete()
 
             serializer = self.serializer_create_class(
