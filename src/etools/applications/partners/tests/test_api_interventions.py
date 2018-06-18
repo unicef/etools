@@ -1945,8 +1945,7 @@ class TestInterventionReportingRequirementView(BaseTenantTestCase):
             report_type=report_type
         )
         init_count = requirement_qs.count()
-        print(init_count)
-
+        
         response = self.forced_auth_req(
             "post",
             self._get_url(report_type),
