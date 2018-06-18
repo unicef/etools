@@ -48,6 +48,7 @@ class AgreementListSerializer(serializers.ModelSerializer):
             "signed_by_partner_date",
             "status",
             "signed_by",
+            "country_programme"
         )
 
 
