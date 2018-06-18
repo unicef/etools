@@ -1930,6 +1930,40 @@ class TestInterventionReportingRequirementView(BaseTenantTestCase):
             init_count + 2
         )
 
+    def test_post_delete(self):
+        report_type = ReportingRequirement.TYPE_QPR
+        requirement_qs = ReportingRequirement.objects.filter(
+            intervention=self.intervention,
+            report_type=report_type,
+        )
+        requirement = ReportingRequirementFactory(
+            intervention=self.intervention,
+            report_type=report_type
+        )
+        ReportingRequirementFactory(
+            intervention=self.intervention,
+            report_type=report_type
+        )
+        init_count = requirement_qs.count()
+        print(init_count)
+
+        response = self.forced_auth_req(
+            "post",
+            self._get_url(report_type),
+            user=self.unicef_staff,
+            data={
+                "reporting_requirements": [requirement]
+            }
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(requirement_qs.count(), init_count - 1)
+        self.assertEqual(
+            len(response.data["reporting_requirements"]),
+            init_count - 1
+        )
+
+
+
     def test_post_invalid_no_report_type(self):
         """Missing report type value"""
         report_type = ReportingRequirement.TYPE_QPR
@@ -2016,7 +2050,7 @@ class TestInterventionReportingRequirementView(BaseTenantTestCase):
                 status.HTTP_405_METHOD_NOT_ALLOWED
             )
 
-    def test_delete_reporting_requirements(self):
+    def test_delete_invalid(self):
         for report_type, _ in ReportingRequirement.TYPE_CHOICES:
             report_req = ReportingRequirementFactory(
                 intervention=self.intervention,
