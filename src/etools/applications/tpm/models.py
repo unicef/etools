@@ -156,12 +156,8 @@ class TPMVisit(SoftDeleteMixin, TimeStampedModel, models.Model):
             self.start_date, self.end_date
         )
 
-    def get_mail_context(self, user=None, include_activities=True):
-        object_url = self.get_object_url()
-
-        if user:
-            from etools.applications.tokens.utils import update_url_with_auth_token
-            object_url = update_url_with_auth_token(object_url, user)
+    def get_mail_context(self, user=None, include_token=False, include_activities=True):
+        object_url = self.get_object_url(user=user, include_token=include_token)
 
         activities = self.tpm_activities.all()
         interventions = set(a.intervention.title for a in activities if a.intervention)
@@ -176,7 +172,7 @@ class TPMVisit(SoftDeleteMixin, TimeStampedModel, models.Model):
         }
 
         if include_activities:
-            context['tpm_activities'] = [a.get_mail_context(include_visit=False) for a in activities]
+            context['tpm_activities'] = [a.get_mail_context(user=user, include_visit=False) for a in activities]
 
         return context
 
@@ -343,8 +339,8 @@ class TPMVisit(SoftDeleteMixin, TimeStampedModel, models.Model):
         if approval_comment:
             self.approval_comment = approval_comment
 
-    def get_object_url(self):
-        return build_frontend_url('tpm', 'visits', self.id, 'details')
+    def get_object_url(self, **kwargs):
+        return build_frontend_url('tpm', 'visits', self.id, 'details', **kwargs)
 
 
 class TPMVisitReportRejectComment(models.Model):
@@ -428,7 +424,7 @@ class TPMActivity(Activity):
     def pv_applicable(self):
         return self.related_reports.exists()
 
-    def get_mail_context(self, user=None, include_visit=True):
+    def get_mail_context(self, user=None, include_token=False, include_visit=True):
         context = {
             'locations': ', '.join(map(force_text, self.locations.all())),
             'intervention': self.intervention.title if self.intervention else '-',
@@ -437,7 +433,8 @@ class TPMActivity(Activity):
             'partner': self.partner.name if self.partner else '-',
         }
         if include_visit:
-            context['tpm_visit'] = self.tpm_visit.get_mail_context(user=user, include_activities=False)
+            context['tpm_visit'] = self.tpm_visit.get_mail_context(user=user, include_token=include_token,
+                                                                   include_activities=False)
 
         return context
 
@@ -465,9 +462,10 @@ class TPMActionPoint(ActionPoint):
     def complete(self):
         self._do_complete()
 
-    def get_mail_context(self):
-        context = super(TPMActionPoint, self).get_mail_context()
-        context['tpm_activity'] = self.tpm_activity.get_mail_context() if self.tpm_activity else None
+    def get_mail_context(self, user=None, include_token=False):
+        context = super(TPMActionPoint, self).get_mail_context(user=user, include_token=include_token)
+        if self.tpm_activity:
+            context['tpm_activity'] = self.tpm_activity.get_mail_context(user=user, include_token=include_token)
         return context
 
 
