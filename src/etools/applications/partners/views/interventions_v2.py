@@ -823,7 +823,8 @@ class InterventionReportingRequirementView(APIView):
 
         with transaction.atomic():
             # delete those reporting requirements which are not present in the request, before new and/or modified
-            # reporting requirements are saved. If there's no reporting requirements in the request, delete all of them.
+            # reporting requirements are saved. If there's no reporting requirements in the request, it should mean
+            # that all of them were deleted on the frontend.
             deleted_reporting_requirements = ReportingRequirement.objects.exclude(
                 intervention=intervention_pk,
                 report_type=report_type,

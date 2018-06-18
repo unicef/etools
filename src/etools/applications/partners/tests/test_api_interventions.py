@@ -2025,7 +2025,7 @@ class TestInterventionReportingRequirementView(BaseTenantTestCase):
                 end_date=datetime.date.today(),
                 due_date=datetime.date.today(),
             )
-            
+
             response = self.forced_auth_req(
                 "delete",
                 self._get_url(report_type, self.intervention),
