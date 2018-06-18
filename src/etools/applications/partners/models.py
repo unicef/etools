@@ -18,13 +18,13 @@ from django_fsm import FSMField, transition
 from model_utils import Choices, FieldTracker
 from model_utils.models import TimeFramedModel, TimeStampedModel
 
-from etools.applications.EquiTrack.encoders import EToolsEncoder
-from etools.applications.EquiTrack.serializers import StringConcat
 from etools.applications.attachments.models import Attachment
 from etools.applications.environment.helpers import tenant_switch_is_active
+from etools.applications.EquiTrack.encoders import EToolsEncoder
 from etools.applications.EquiTrack.fields import CurrencyField
 from etools.applications.EquiTrack.utils import get_current_year
 from etools.applications.generics.fields import CodedGenericRelation
+from etools.applications.EquiTrack.serializers import StringConcat
 from etools.applications.funds.models import Grant
 from etools.applications.locations.models import Location
 from etools.applications.partners.utils import get_quarter, import_permissions
@@ -1324,10 +1324,10 @@ class Agreement(TimeStampedModel):
         pass
 
     @transaction.atomic
-    def save(self, **kwargs):
+    def save(self, force_insert=False, **kwargs):
 
         oldself = None
-        if self.pk:
+        if self.pk and not force_insert:
             # load from DB
             oldself = Agreement.objects.get(pk=self.pk)
 
@@ -2027,15 +2027,15 @@ class Intervention(TimeStampedModel):
                 self.agreement.save()
 
     @transaction.atomic
-    def save(self, **kwargs):
+    def save(self, force_insert=False, **kwargs):
         # check status auto updates
         # TODO: move this outside of save in the future to properly check transitions
         # self.check_status_auto_updates()
 
         oldself = None
-        if self.pk:
+        if self.pk and not force_insert:
             # load from DB
-            oldself = Intervention.objects.get(pk=self.pk)
+            oldself = Intervention.objects.filter(pk=self.pk).first()
 
         # update reference number if needed
         amendment_number = kwargs.get('amendment_number', None)
