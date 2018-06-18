@@ -825,10 +825,13 @@ class InterventionReportingRequirementView(APIView):
             # delete those reporting requirements which are not present in the request, before new and/or modified
             # reporting requirements are saved. If there's no reporting requirements in the request, it should mean
             # that all of them were deleted on the frontend.
-            deleted_reporting_requirements = ReportingRequirement.objects.exclude(
+
+            deleted_reporting_requirements = ReportingRequirement.objects.filter(
                 intervention=intervention_pk,
-                report_type=report_type,
-                id__in=received_rr_ids)
+                report_type=self.report_type
+            ).exclude(
+                id__in=received_rr_ids
+            )
 
             for deleted_reporting_requirement in deleted_reporting_requirements:
                 if self.report_type == ReportingRequirement.TYPE_QPR:
