@@ -44,7 +44,7 @@ from etools.applications.audit.serializers.export import (AuditDetailCSVSerializ
                                                           SpotCheckDetailCSVSerializer, SpotCheckPDFSerializer,)
 from etools.applications.partners.models import PartnerOrganization
 from etools.applications.partners.serializers.partner_organization_v2 import MinimalPartnerOrganizationListSerializer
-from etools.applications.permissions2.conditions import GroupCondition, NewObjectCondition, ObjectStatusCondition
+from etools.applications.permissions2.conditions import ObjectStatusCondition
 from etools.applications.permissions2.drf_permissions import NestedPermission, get_permission_for_targets
 from etools.applications.permissions2.views import PermittedFSMActionMixin, PermittedSerializerMixin
 from etools.applications.utils.common.pagination import DynamicPageNumberPagination

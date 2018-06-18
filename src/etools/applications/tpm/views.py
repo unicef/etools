@@ -14,7 +14,7 @@ from etools.applications.action_points.conditions import ActionPointAuthorCondit
     ActionPointAssigneeCondition
 from etools.applications.partners.models import PartnerOrganization
 from etools.applications.partners.serializers.partner_organization_v2 import MinimalPartnerOrganizationListSerializer
-from etools.applications.permissions2.conditions import GroupCondition, NewObjectCondition, ObjectStatusCondition
+from etools.applications.permissions2.conditions import ObjectStatusCondition
 from etools.applications.permissions2.drf_permissions import NestedPermission
 from etools.applications.permissions2.views import PermittedFSMActionMixin, PermittedSerializerMixin
 from etools.applications.reports.models import Result, Sector
