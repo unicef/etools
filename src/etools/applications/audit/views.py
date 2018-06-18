@@ -3,6 +3,7 @@ from django.contrib.auth import get_user_model
 from django.contrib.contenttypes.models import ContentType
 from django.db.models import Prefetch
 from django.http import Http404
+from django.utils.translation import ugettext_lazy as _
 
 from django_filters.rest_framework import DjangoFilterBackend
 from easy_pdf.rendering import render_to_pdf_response
@@ -446,6 +447,9 @@ class EngagementAttachmentsViewSet(BaseAuditAttachmentsViewSet):
         get_permission_for_targets('audit.engagement.engagement_attachments')
     ]
 
+    def get_view_name(self):
+        return _('Related Documents')
+
     def get_parent_filter(self):
         filters = super(EngagementAttachmentsViewSet, self).get_parent_filter()
         filters.update({'code': 'audit_engagement'})
@@ -457,6 +461,9 @@ class ReportAttachmentsViewSet(BaseAuditAttachmentsViewSet):
     permission_classes = BaseAuditViewSet.permission_classes + [
         get_permission_for_targets('audit.engagement.report_attachments')
     ]
+
+    def get_view_name(self):
+        return _('Report Attachments')
 
     def get_parent_filter(self):
         filters = super(ReportAttachmentsViewSet, self).get_parent_filter()
