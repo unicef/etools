@@ -822,7 +822,7 @@ class InterventionReportingRequirementView(APIView):
         received_rr_ids = [int(r["id"]) for r in request.data["reporting_requirements"] if "id" in r]
 
         with transaction.atomic():
-            # delete those reporting requirements which are not present in the request before new and/or modified
+            # delete those reporting requirements which are not present in the request, before new and/or modified
             # reporting requirements are saved. If there's no reporting requirements in the request, delete all of them.
             deleted_reporting_requirements = ReportingRequirement.objects.exclude(
                 intervention=intervention_pk,

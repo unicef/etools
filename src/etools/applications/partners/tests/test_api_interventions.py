@@ -2025,13 +2025,7 @@ class TestInterventionReportingRequirementView(BaseTenantTestCase):
                 end_date=datetime.date.today(),
                 due_date=datetime.date.today(),
             )
-
-            requirement_qs = ReportingRequirement.objects.filter(
-                intervention=self.intervention,
-                report_type=report_type,
-            )
-            init_count = requirement_qs.count()
-
+            
             response = self.forced_auth_req(
                 "delete",
                 self._get_url(report_type, self.intervention),
@@ -2047,5 +2041,4 @@ class TestInterventionReportingRequirementView(BaseTenantTestCase):
                 }
             )
 
-            self.assertEqual(response.status_code, status.HTTP_200_OK)
-            self.assertEqual(requirement_qs.count(), init_count - 1)
+            self.assertEqual(response.status_code, status.HTTP_405_METHOD_NOT_ALLOWED)
