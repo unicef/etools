@@ -556,3 +556,106 @@ class ActivityReportAttachmentsViewSet(BaseTPMAttachmentsViewSet):
 
     def perform_create(self, serializer):
         serializer.save(content_type=ContentType.objects.get_for_model(TPMActivity))
+
+
+class BaseTPMAttachmentsViewSet(BaseTPMViewSet,
+                                mixins.ListModelMixin,
+                                mixins.CreateModelMixin,
+                                mixins.RetrieveModelMixin,
+                                mixins.UpdateModelMixin,
+                                mixins.DestroyModelMixin,
+                                NestedViewSetMixin,
+                                viewsets.GenericViewSet):
+    metadata_class = TPMPermissionBasedMetadata
+    queryset = Attachment.objects.all()
+
+
+class PartnerAttachmentsViewSet(BaseTPMAttachmentsViewSet):
+    serializer_class = TPMPartnerAttachmentsSerializer
+
+    def get_view_name(self):
+        return _('Attachments')
+
+    def get_parent_filter(self):
+        parent = self.get_parent_object()
+        if not parent:
+            return {}
+
+        return {
+            'content_type_id': ContentType.objects.get_for_model(TPMPartner).id,
+            'object_id': parent.pk,
+        }
+
+    def perform_create(self, serializer):
+        serializer.save(content_object=self.get_parent_object())
+
+
+class VisitReportAttachmentsViewSet(BaseTPMAttachmentsViewSet):
+    serializer_class = TPMVisitReportAttachmentsSerializer
+    permission_classes = BaseTPMViewSet.permission_classes + [
+        get_permission_for_targets('tpm.tpmvisit.report_attachments')
+    ]
+
+    def get_view_name(self):
+        return _('Related Documents')
+
+    def get_parent_filter(self):
+        parent = self.get_parent_object()
+        if not parent:
+            return {}
+
+        return {
+            'content_type_id': ContentType.objects.get_for_model(TPMVisit).id,
+            'object_id': parent.pk,
+        }
+
+    def perform_create(self, serializer):
+        serializer.save(content_object=self.get_parent_object())
+
+
+class ActivityAttachmentsViewSet(BaseTPMAttachmentsViewSet):
+    serializer_class = ActivityAttachmentsSerializer
+    permission_classes = BaseTPMViewSet.permission_classes + [
+        get_permission_for_targets('tpm.tpmactivity.attachments')
+    ]
+
+    def get_view_name(self):
+        return _('Related Documents')
+
+    def get_parent_filter(self):
+        parent = self.get_parent_object()
+        if not parent:
+            return {}
+
+        return {
+            'code': 'activity_attachments',
+            'content_type_id': ContentType.objects.get_for_model(TPMActivity).id,
+            'object_id__in': parent.tpm_activities.values_list('id', flat=True),
+        }
+
+    def perform_create(self, serializer):
+        serializer.save(content_type=ContentType.objects.get_for_model(TPMActivity))
+
+
+class ActivityReportAttachmentsViewSet(BaseTPMAttachmentsViewSet):
+    serializer_class = ActivityReportSerializer
+    permission_classes = BaseTPMViewSet.permission_classes + [
+        get_permission_for_targets('tpm.tpmactivity.report_attachments')
+    ]
+
+    def get_view_name(self):
+        return _('Reports by Task')
+
+    def get_parent_filter(self):
+        parent = self.get_parent_object()
+        if not parent:
+            return {}
+
+        return {
+            'code': 'activity_report',
+            'content_type_id': ContentType.objects.get_for_model(TPMActivity).id,
+            'object_id__in': parent.tpm_activities.values_list('id', flat=True),
+        }
+
+    def perform_create(self, serializer):
+        serializer.save(content_type=ContentType.objects.get_for_model(TPMActivity))
