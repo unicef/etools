@@ -5,6 +5,17 @@ from etools.applications.utils.common.views import FSMTransitionActionMixin
 
 
 class PermissionContextMixin(object):
+    def get_object(self):
+        lookup_url_kwarg = self.lookup_url_kwarg or self.lookup_field
+        if lookup_url_kwarg not in self.kwargs:
+            return
+
+        # generate fake object in case of accessing nested
+        if self.kwargs[lookup_url_kwarg] == 'new':
+            return self.queryset.model()
+
+        return super().get_object()
+
     def _collect_permission_context(self, instance=None):
         context = self.get_permission_context()
 
