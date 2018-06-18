@@ -85,10 +85,19 @@ class TestExportMixin(object):
 
 class TestFrontendUrl(BaseTenantTestCase):
     def test_staff_user_url(self):
-        self.assertIn(site_url() + reverse('main'), build_frontend_url(UserFactory(is_staff=True)))
+        self.assertIn(
+            site_url() + reverse('main'),
+            build_frontend_url('test', user=UserFactory(is_staff=True))
+        )
 
     def test_common_user_url(self):
-        self.assertIn(site_url() + reverse('tokens:login'), build_frontend_url(UserFactory(is_staff=False)))
+        self.assertIn(
+            site_url() + reverse('tokens:login'),
+            build_frontend_url('test', user=UserFactory(is_staff=False))
+        )
 
     def test_token_url(self):
-        self.assertIn('token=', build_frontend_url(UserFactory(), include_token=True))
+        self.assertIn(
+            'token=',
+            build_frontend_url('test', user=UserFactory(), include_token=True)
+        )
