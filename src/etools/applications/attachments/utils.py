@@ -78,7 +78,7 @@ def get_agreement_obj(obj):
             InterventionAttachment,
             TPMActivity
     )):
-        return obj.content_object.intervention.number if obj.content_object.intervention else ""
+        return obj.content_object.intervention.agreement if obj.content_object.intervention else None
     return ""
 
 
