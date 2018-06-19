@@ -1,13 +1,17 @@
 import datetime
 import logging
 
+from django.conf import settings
 from django.contrib.contenttypes.models import ContentType
-from django.db.models import Q
+from django.db.models import F, Q
+from django.urls import reverse
 from django.utils.timezone import now, make_aware
 
 from etools.applications.attachments.models import Attachment, FileType
+from etools.applications.notification.utils import send_notification_using_email_template
 from etools.applications.partners.models import (Agreement, AgreementAmendment, Assessment, Intervention,
                                                  InterventionAmendment, InterventionAttachment, PartnerOrganization,)
+from etools.applications.reports.models import CountryProgramme
 from etools.applications.utils.common.utils import run_on_all_tenants
 
 logger = logging.getLogger(__name__)
@@ -256,3 +260,85 @@ def copy_all_attachments(**kwargs):
     ]
     for cmd in copy_commands:
         run_on_all_tenants(cmd, **kwargs)
+
+
+def send_pca_required_notifications():
+    """If the PD has an end date that is after the CP to date
+    and the it is 30 days prior to the end of the CP,
+    send a PCA required notification.
+    """
+    days_lead = datetime.date.today() + datetime.timedelta(
+        days=settings.PCA_REQUIRED_NOTIFICATION_LEAD
+    )
+    pd_list = set()
+    for cp in CountryProgramme.objects.filter(to_date=days_lead):
+        # For PDs related directly to CP
+        for pd in cp.interventions.filter(
+                document_type=Intervention.PD,
+                end__gt=cp.to_date
+        ):
+            pd_list.add(pd)
+
+        # For PDs by way of agreement
+        for agreement in cp.agreements.filter(interventions__end__gt=cp.to_date):
+            for pd in agreement.interventions.filter(
+                    document_type=Intervention.PD,
+                    end__gt=cp.to_date
+            ):
+                pd_list.add(pd)
+
+    for pd in pd_list:
+        recipients = [u.user.email for u in pd.unicef_focal_points.all()]
+        context = {
+            "reference_number": pd.reference_number,
+            "partner_name": str(pd.agreement.partner),
+            "pd_link": reverse(
+                "partners_api:intervention-detail",
+                args=[pd.pk]
+            ),
+        }
+        send_notification_using_email_template(
+            recipients=recipients,
+            email_template_name='partners/intervention/new_pca_required',
+            context=context
+        )
+
+
+def send_pca_missing_notifications():
+    """If the PD has en end date that is after PCA end date
+    and the PD start date is in the previous CP cycle,
+    and the current CP cycle has no PCA
+    send a missing PCA notification.
+    """
+    # get PDs that have end date after PCA end date
+    # this means that the CP is in previous cycle
+    # (as PCA and CP end dates are always equal)
+    # and PD start date in the previous CP cycle
+    intervention_qs = Intervention.objects.filter(
+        document_type=Intervention.PD,
+        agreement__agreement_type=Agreement.PCA,
+        agreement__country_programme__from_date__lt=F("start"),
+        end__gt=F("agreement__end")
+    )
+    for pd in intervention_qs:
+        # check that partner has no PCA in the current CP cycle
+        cp_previous = pd.agreement.country_programme
+        pca_next_qs = Agreement.objects.filter(
+            partner=pd.agreement.partner,
+            country_programme__from_date__gt=cp_previous.to_date
+        )
+        if not pca_next_qs.exists():
+            recipients = [u.user.email for u in pd.unicef_focal_points.all()]
+            context = {
+                "reference_number": pd.reference_number,
+                "partner_name": str(pd.agreement.partner),
+                "pd_link": reverse(
+                    "partners_api:intervention-detail",
+                    args=[pd.pk]
+                ),
+            }
+            send_notification_using_email_template(
+                recipients=recipients,
+                email_template_name='partners/intervention/pca_missing',
+                context=context
+            )
