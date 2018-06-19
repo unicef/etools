@@ -3,6 +3,7 @@ import datetime
 from unittest import skip
 
 from django.core.files.uploadedfile import SimpleUploadedFile
+from django.core.management import call_command
 from django.test import SimpleTestCase
 from django.urls import reverse
 from django.utils import timezone
@@ -606,6 +607,7 @@ class TestAgreementModel(BaseTenantTestCase):
 class TestInterventionModel(BaseTenantTestCase):
     def setUp(self):
         super(TestInterventionModel, self).setUp()
+        call_command('update_notifications')
         self.partner_organization = PartnerFactory(name="Partner Org 1")
         cp = CountryProgrammeFactory(
             name="CP 1",

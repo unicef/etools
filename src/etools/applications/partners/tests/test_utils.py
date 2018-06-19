@@ -1,11 +1,22 @@
 import datetime
+from mock import Mock, patch
 
+from django.conf import settings
+from django.core.management import call_command
+
+from etools.applications.EquiTrack.tests.cases import BaseTenantTestCase
 from etools.applications.funds.tests.factories import FundsReservationHeaderFactory
 from etools.applications.locations.tests.factories import GatewayTypeFactory, LocationFactory
-from etools.applications.partners.models import Intervention, InterventionBudget, InterventionResultLink
+from etools.applications.partners import utils
+from etools.applications.partners.models import Agreement, Intervention, InterventionBudget, InterventionResultLink
 from etools.applications.partners.tests.factories import AgreementFactory, InterventionFactory, PartnerFactory
-from etools.applications.reports.models import AppliedIndicator, IndicatorBlueprint, LowerResult, ResultType
-from etools.applications.reports.tests.factories import ResultFactory
+from etools.applications.reports.models import (
+    AppliedIndicator,
+    IndicatorBlueprint,
+    LowerResult,
+    ResultType,
+)
+from etools.applications.reports.tests.factories import CountryProgrammeFactory, ResultFactory
 from etools.applications.users.tests.factories import GroupFactory, UserFactory
 
 
@@ -80,3 +91,126 @@ def setup_intervention_test_data(test_case, include_results_and_indicators=False
             p_code='a-p-code')
         )
         test_case.disaggregation = test_case.applied_indicator.disaggregation.create(name='A Disaggregation')
+
+
+class TestSendPCARequiredNotification(BaseTenantTestCase):
+    @classmethod
+    def setUpTestData(cls):
+        call_command("update_notifications")
+        cls.send_path = "etools.applications.partners.utils.send_notification_using_email_template"
+
+    def setUp(self):
+        self.lead_date = datetime.date.today() + datetime.timedelta(
+            days=settings.PCA_REQUIRED_NOTIFICATION_LEAD
+        )
+
+    def test_direct_cp(self):
+        cp = CountryProgrammeFactory(to_date=self.lead_date)
+        InterventionFactory(
+            document_type=Intervention.PD,
+            end=self.lead_date + datetime.timedelta(days=10),
+            country_programme=cp,
+        )
+        mock_send = Mock()
+        with patch(self.send_path, mock_send):
+            utils.send_pca_required_notifications()
+        self.assertEqual(mock_send.call_count, 1)
+
+    def test_agreement_cp(self):
+        cp = CountryProgrammeFactory(to_date=self.lead_date)
+        agreement = AgreementFactory(country_programme=cp)
+        InterventionFactory(
+            document_type=Intervention.PD,
+            end=self.lead_date + datetime.timedelta(days=10),
+            agreement=agreement,
+        )
+        mock_send = Mock()
+        with patch(self.send_path, mock_send):
+            utils.send_pca_required_notifications()
+        self.assertEqual(mock_send.call_count, 1)
+
+
+class TestSendPCAMissingNotification(BaseTenantTestCase):
+    @classmethod
+    def setUpTestData(cls):
+        call_command("update_notifications")
+        cls.send_path = "etools.applications.partners.utils.send_notification_using_email_template"
+
+    def test_cp_current(self):
+        date_past = datetime.date.today() - datetime.timedelta(days=10)
+        date_future = datetime.date.today() + datetime.timedelta(days=10)
+        cp = CountryProgrammeFactory(
+            from_date=date_past,
+            to_date=date_future,
+        )
+        agreement = AgreementFactory(
+            agreement_type=Agreement.PCA,
+            country_programme=cp,
+        )
+        InterventionFactory(
+            document_type=Intervention.PD,
+            start=date_past,
+            end=datetime.date.today(),
+            agreement=agreement,
+        )
+        mock_send = Mock()
+        with patch(self.send_path, mock_send):
+            utils.send_pca_missing_notifications()
+        self.assertEqual(mock_send.call_count, 0)
+
+    def test_cp_previous_pca_missing(self):
+        date_past = datetime.date.today() - datetime.timedelta(days=10)
+        date_future = datetime.date.today() + datetime.timedelta(days=10)
+        partner = PartnerFactory()
+        cp = CountryProgrammeFactory(
+            from_date=date_past,
+            to_date=datetime.date.today(),
+        )
+        agreement = AgreementFactory(
+            partner=partner,
+            agreement_type=Agreement.PCA,
+            country_programme=cp,
+        )
+        InterventionFactory(
+            document_type=Intervention.PD,
+            start=date_past + datetime.timedelta(days=1),
+            end=date_future,
+            agreement=agreement,
+        )
+        mock_send = Mock()
+        with patch(self.send_path, mock_send):
+            utils.send_pca_missing_notifications()
+        self.assertEqual(mock_send.call_count, 1)
+
+    def test_cp_previous(self):
+        date_past = datetime.date.today() - datetime.timedelta(days=10)
+        date_future = datetime.date.today() + datetime.timedelta(days=10)
+        partner = PartnerFactory()
+        cp_previous = CountryProgrammeFactory(
+            from_date=date_past,
+            to_date=datetime.date.today(),
+        )
+        agreement_previous = AgreementFactory(
+            partner=partner,
+            agreement_type=Agreement.PCA,
+            country_programme=cp_previous,
+        )
+        cp = CountryProgrammeFactory(
+            from_date=datetime.date.today() + datetime.timedelta(days=1),
+            to_date=date_future,
+        )
+        AgreementFactory(
+            partner=partner,
+            agreement_type=Agreement.PCA,
+            country_programme=cp,
+        )
+        InterventionFactory(
+            document_type=Intervention.PD,
+            start=date_past + datetime.timedelta(days=1),
+            end=datetime.date.today() + datetime.timedelta(days=1),
+            agreement=agreement_previous,
+        )
+        mock_send = Mock()
+        with patch(self.send_path, mock_send):
+            utils.send_pca_missing_notifications()
+        self.assertEqual(mock_send.call_count, 0)
