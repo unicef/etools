@@ -51,7 +51,7 @@ class AuditorStaffMemberSerializer(BaseStaffMemberSerializer):
 
     class Meta(BaseStaffMemberSerializer.Meta):
         model = AuditorStaffMember
-        fields = BaseStaffMemberSerializer.Meta.fields + ['user_pk', ]
+        fields = BaseStaffMemberSerializer.Meta.fields + ['user_pk', 'hidden', ]
 
 
 class AuditorFirmLightSerializer(PermissionsBasedSerializerMixin, serializers.ModelSerializer):
