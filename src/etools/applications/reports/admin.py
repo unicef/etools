@@ -2,8 +2,8 @@ from django.contrib import admin
 
 from import_export.admin import ImportExportModelAdmin
 from mptt.admin import MPTTModelAdmin
+from unicef_djangolib.forms import AutoSizeTextForm
 
-from etools.applications.EquiTrack.forms import AutoSizeTextForm
 from etools.applications.reports.forms import IndicatorAdminForm
 from etools.applications.reports.models import (AppliedIndicator, CountryProgramme, Disaggregation,
                                                 DisaggregationValue, Indicator, IndicatorBlueprint,

@@ -18,9 +18,10 @@ from rest_framework.renderers import JSONRenderer
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework_csv import renderers as r
+from unicef_restlib.views import QueryStringFilterMixin
 from unicef_snapshot.models import Activity
 
-from etools.applications.EquiTrack.mixins import ExportModelMixin, QueryStringFilterMixin
+from etools.applications.EquiTrack.mixins import ExportModelMixin
 from etools.applications.EquiTrack.renderers import CSVFlatRenderer
 from etools.applications.partners.exports_v2 import InterventionCSVRenderer, InterventionLocationCSVRenderer
 from etools.applications.partners.filters import (
@@ -94,6 +95,22 @@ class InterventionListAPIView(QueryStringFilterMixin, ExportModelMixin, Interven
         InterventionCSVRenderer,
         CSVFlatRenderer,
     )
+
+    search_terms = ('title__icontains', 'agreement__partner__name__icontains', 'number__icontains')
+    filters = (
+        ('document_type', 'document_type__in'),
+        ('cp_outputs', 'result_links__cp_output__pk__in'),
+        ('country_programme', 'country_programme__in'),
+        ('sections', 'sections__in'),
+        ('cluster', 'result_links__ll_results__applied_indicators__cluster_indicator_title__icontains'),
+        ('status', 'status__in'),
+        ('unicef_focal_points', 'unicef_focal_points__in'),
+        ('start', 'start__gte'),
+        ('end', 'end__lte'),
+        ('office', 'offices__in'),
+        ('location', 'result_links__ll_results__applied_indicators__locations__name__icontains'),
+    )
+    search_terms = ['title__icontains', 'agreement__partner__name__icontains', 'number__icontains']
 
     SERIALIZER_MAP = {
         'planned_budget': InterventionBudgetCUSerializer,
@@ -172,22 +189,8 @@ class InterventionListAPIView(QueryStringFilterMixin, ExportModelMixin, Interven
                 queries.append(Q(unicef_focal_points__in=[self.request.user.id]) |
                                Q(unicef_signatory=self.request.user))
 
-            filters = (
-                ('document_type', 'document_type__in'),
-                ('cp_outputs', 'result_links__cp_output__pk__in'),
-                ('country_programme', 'country_programme__in'),
-                ('sections', 'sections__in'),
-                ('cluster', 'result_links__ll_results__applied_indicators__cluster_indicator_title__icontains'),
-                ('status', 'status__in'),
-                ('unicef_focal_points', 'unicef_focal_points__in'),
-                ('start', 'start__gte'),
-                ('end', 'end__lte'),
-                ('office', 'offices__in'),
-                ('location', 'result_links__ll_results__applied_indicators__locations__name__icontains'),
-            )
-            search_terms = ['title__icontains', 'agreement__partner__name__icontains', 'number__icontains']
-            queries.extend(self.filter_params(filters))
-            queries.append(self.search_params(search_terms))
+            queries.extend(self.filter_params())
+            queries.append(self.search_params())
 
             if queries:
                 expression = functools.reduce(operator.and_, queries)

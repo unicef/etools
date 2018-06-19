@@ -1,5 +1,4 @@
 from django.db import connection
-from django.db.models import Q
 
 from rest_framework import serializers
 
@@ -49,27 +48,3 @@ class ExportSerializerMixin(object):
 
     def get_country(self, obj):
         return connection.schema_name
-
-
-class QueryStringFilterMixin(object):
-
-    search_param = 'search'
-
-    def filter_params(self, filters):
-        queries = []
-        for param_filter, query_filter in filters:
-            if param_filter in self.request.query_params:
-                value = self.request.query_params.get(param_filter)
-                if query_filter.endswith(('__in')):
-                    value = value.split(',')
-                queries.append(Q(**{query_filter: value}))
-        return queries
-
-    def search_params(self, filters):
-        search_term = self.request.query_params.get(self.search_param)
-        search_query = Q()
-        if self.search_param in self.request.query_params:
-            for param_filter in filters:
-                q = Q(**{param_filter: search_term})
-                search_query = search_query | q
-        return search_query
