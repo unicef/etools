@@ -33,13 +33,13 @@ from etools.applications.notification.utils import send_notification_using_email
 from etools.applications.partners.models import PartnerOrganization, PartnerStaffMember
 from etools.applications.permissions2.fsm import has_action_permission
 from etools.applications.utils.common.models.fields import CodedGenericRelation
+from etools.applications.utils.common.models.mixins import InheritedModelMixin
 from etools.applications.utils.common.urlresolvers import build_frontend_url
 from etools.applications.utils.groups.wrappers import GroupWrapper
 
 
 @python_2_unicode_compatible
-class Engagement(TimeStampedModel, models.Model):
-
+class Engagement(InheritedModelMixin, TimeStampedModel, models.Model):
     TYPE_AUDIT = 'audit'
     TYPE_MICRO_ASSESSMENT = 'ma'
     TYPE_SPOT_CHECK = 'sc'
