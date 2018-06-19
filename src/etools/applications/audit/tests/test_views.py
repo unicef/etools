@@ -355,6 +355,19 @@ class TestEngagementsListViewSet(EngagementTransitionsTestCaseMixin, BaseTenantT
         )
         self._test_list(self.auditor, [self.third_engagement], filter_params={'status': status})
 
+    def test_hact_view(self):
+        self._init_finalized_engagement()
+
+        response = self.forced_auth_req(
+            'get',
+            '/api/audit/engagements/hact/',
+            data={'partner': self.engagement.partner.id},
+            user=self.unicef_user
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(response.data), 1)
+        self.assertNotEqual(response.data[0], {})
+
 
 class BaseTestEngagementsCreateViewSet(EngagementTransitionsTestCaseMixin):
     endpoint = 'engagements'
