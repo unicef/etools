@@ -1,4 +1,3 @@
-
 import datetime
 
 from django.contrib.auth import get_user_model
@@ -14,6 +13,7 @@ from etools.applications.users.tests.factories import ProfileFactory
 class BaseUserFactory(factory.DjangoModelFactory):
     class Meta:
         model = get_user_model()
+        django_get_or_create = ("email", )
 
     username = factory.LazyFunction(generate_username)
     first_name = factory.Faker('first_name')
