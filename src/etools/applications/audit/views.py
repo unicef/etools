@@ -31,51 +31,22 @@ from etools.applications.audit.exports import (
 )
 from etools.applications.audit.filters import DisplayStatusFilter, UniqueIDOrderingFilter
 from etools.applications.audit.metadata import AuditBaseMetadata, AuditPermissionBasedMetadata
-from etools.applications.audit.models import (
-    Audit,
-    Auditor,
-    Engagement,
-    EngagementActionPoint,
-    MicroAssessment,
-    SpecialAudit,
-    SpotCheck,
-    UNICEFAuditFocalPoint,
-    UNICEFUser,
-)
-from etools.applications.audit.purchase_order.models import (
-    AuditorFirm,
-    AuditorStaffMember,
-    PurchaseOrder,
-)
-from etools.applications.audit.serializers.auditor import (
-    AuditorFirmExportSerializer,
-    AuditorFirmLightSerializer,
-    AuditorFirmSerializer,
-    AuditorStaffMemberSerializer,
-    AuditUserSerializer,
-    PurchaseOrderSerializer,
-)
-from etools.applications.audit.serializers.engagement import (
-    AuditSerializer,
-    EngagementActionPointSerializer,
-    EngagementExportSerializer,
-    EngagementHactSerializer,
-    EngagementLightSerializer,
-    EngagementSerializer,
-    MicroAssessmentSerializer,
-    SpecialAuditSerializer,
-    SpotCheckSerializer,
-)
-from etools.applications.audit.serializers.export import (
-    AuditDetailCSVSerializer,
-    AuditPDFSerializer,
-    MicroAssessmentDetailCSVSerializer,
-    MicroAssessmentPDFSerializer,
-    SpecialAuditDetailPDFSerializer,
-    SpecialAuditPDFSerializer,
-    SpotCheckDetailCSVSerializer,
-    SpotCheckPDFSerializer,
-)
+from etools.applications.audit.models import (Audit, Auditor, Engagement, MicroAssessment, SpecialAudit,
+                                              SpotCheck, UNICEFAuditFocalPoint, UNICEFUser, EngagementActionPoint)
+from etools.applications.audit.purchase_order.models import AuditorFirm, AuditorStaffMember, PurchaseOrder
+from etools.applications.audit.serializers.auditor import (AuditorFirmExportSerializer, AuditorFirmLightSerializer,
+                                                           AuditorFirmSerializer, AuditorStaffMemberSerializer,
+                                                           AuditUserSerializer, PurchaseOrderSerializer,)
+from etools.applications.audit.serializers.engagement import (AuditSerializer, EngagementExportSerializer,
+                                                              EngagementHactSerializer, EngagementListSerializer,
+                                                              EngagementSerializer, MicroAssessmentSerializer,
+                                                              SpecialAuditSerializer, SpotCheckSerializer,
+                                                              EngagementActionPointSerializer)
+from etools.applications.audit.serializers.export import (AuditDetailCSVSerializer, AuditPDFSerializer,
+                                                          MicroAssessmentDetailCSVSerializer,
+                                                          MicroAssessmentPDFSerializer,
+                                                          SpecialAuditDetailPDFSerializer, SpecialAuditPDFSerializer,
+                                                          SpotCheckDetailCSVSerializer, SpotCheckPDFSerializer,)
 from etools.applications.EquiTrack.views import ExportViewSetDataMixin
 from etools.applications.partners.models import PartnerOrganization
 from etools.applications.partners.serializers.partner_organization_v2 import MinimalPartnerOrganizationListSerializer
@@ -257,7 +228,7 @@ class EngagementViewSet(
     queryset = Engagement.objects.all()
     serializer_class = EngagementSerializer
     serializer_action_classes = {
-        'list': EngagementLightSerializer,
+        'list': EngagementListSerializer,
     }
     metadata_class = AuditPermissionBasedMetadata
 

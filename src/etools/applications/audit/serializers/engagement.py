@@ -138,7 +138,7 @@ class EngagementExportSerializer(serializers.ModelSerializer):
         )
 
 
-class EngagementLightSerializer(PermissionsBasedSerializerMixin, serializers.ModelSerializer):
+class EngagementLightSerializer(serializers.ModelSerializer):
     agreement = SeparatedReadWriteField(
         read_field=PurchaseOrderSerializer(read_only=True), label=_('Purchase Order')
     )
@@ -181,6 +181,11 @@ class EngagementLightSerializer(PermissionsBasedSerializerMixin, serializers.Mod
         return attrs
 
 
+class EngagementListSerializer(PermissionsBasedSerializerMixin, EngagementLightSerializer):
+    class Meta(EngagementLightSerializer.Meta):
+        pass
+
+
 class SpecificProcedureSerializer(WritableNestedSerializerMixin,
                                   serializers.ModelSerializer):
     class Meta(WritableNestedSerializerMixin.Meta):
@@ -192,13 +197,13 @@ class SpecificProcedureSerializer(WritableNestedSerializerMixin,
 
 class EngagementSerializer(EngagementDatesValidation,
                            WritableNestedParentSerializerMixin,
-                           EngagementLightSerializer):
+                           EngagementListSerializer):
     staff_members = SeparatedReadWriteField(
         read_field=AuditorStaffMemberSerializer(many=True, required=False), label=_('Audit Staff Team Members')
     )
     active_pd = SeparatedReadWriteField(
         read_field=BaseInterventionListSerializer(many=True, required=False),
-        label=_('Programme Document(s) or SSFA(s)'), required=False
+        label=_('Programme Document(s) or SSFA(s) - (optional)'), required=False
     )
     authorized_officers = SeparatedReadWriteField(
         read_field=PartnerStaffMemberNestedSerializer(many=True, read_only=True), label=_('Authorized Officers')
@@ -213,8 +218,8 @@ class EngagementSerializer(EngagementDatesValidation,
         many=True, required=False, label=_('Report Attachments')
     )
 
-    class Meta(EngagementLightSerializer.Meta):
-        fields = EngagementLightSerializer.Meta.fields + [
+    class Meta(EngagementListSerializer.Meta):
+        fields = EngagementListSerializer.Meta.fields + [
             'engagement_attachments', 'report_attachments',
             'total_value', 'staff_members', 'active_pd',
             'authorized_officers',
