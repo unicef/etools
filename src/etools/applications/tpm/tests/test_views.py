@@ -1,20 +1,19 @@
 
-import base64
 from datetime import datetime, timedelta
 
-from django.core.management import call_command
+from django.core.files.uploadedfile import SimpleUploadedFile
 from django.core.urlresolvers import reverse
 from django.utils import six
 from django.utils.translation import ugettext_lazy as _
 
 from rest_framework import status
 
-from etools.applications.attachments.tests.factories import AttachmentFileTypeFactory
+from etools.applications.attachments.tests.factories import AttachmentFileTypeFactory, AttachmentFactory
 from etools.applications.EquiTrack.tests.cases import BaseTenantTestCase
 from etools.applications.partners.models import PartnerType
 from etools.applications.tpm.models import TPMActionPoint, TPMVisit
 from etools.applications.tpm.tests.base import TPMTestCaseMixin
-from etools.applications.tpm.tests.factories import TPMPartnerFactory, TPMVisitFactory, UserFactory
+from etools.applications.tpm.tests.factories import TPMPartnerFactory, TPMVisitFactory
 
 
 class TestExportMixin(object):
@@ -31,16 +30,6 @@ class TestExportMixin(object):
 
 
 class TestTPMVisitViewSet(TestExportMixin, TPMTestCaseMixin, BaseTenantTestCase):
-    @classmethod
-    def setUpTestData(cls):
-        super(TestTPMVisitViewSet, cls).setUpTestData()
-        call_command('update_tpm_permissions', verbosity=0)
-        call_command('update_notifications')
-
-        cls.pme_user = UserFactory(pme=True)
-        cls.unicef_user = UserFactory(unicef_user=True)
-        cls.tpm_user = UserFactory(tpm=True)
-
     def _test_list_view(self, user, expected_visits):
         response = self.forced_auth_req(
             'get',
@@ -82,41 +71,6 @@ class TestTPMVisitViewSet(TestExportMixin, TPMTestCaseMixin, BaseTenantTestCase)
         )
 
         self.assertEquals(create_response.status_code, status.HTTP_201_CREATED)
-
-    def test_add_attachment(self):
-        file_type = AttachmentFileTypeFactory(code="tpm")
-        file_name = 'simple_file.txt'
-        file_content = 'these are the file contents!'.encode('utf-8')
-        base64_file = 'data:text/plain;base64,{}'.format(
-            base64.b64encode(file_content)
-        )
-        visit = TPMVisitFactory(
-            tpm_activities__count=1,
-            tpm_activities__intervention__agreement__partner__partner_type=PartnerType.GOVERNMENT
-        )
-        activity = visit.tpm_activities.first()
-        self.assertEqual(activity.attachments.count(), 0)
-
-        response = self.forced_auth_req(
-            'patch',
-            reverse('tpm:visits-detail', args=[visit.pk]),
-            user=self.pme_user,
-            data={
-                "tpm_activities": [{
-                    "id": activity.pk,
-                    "attachments": [
-                        {
-                            "file_name": file_name,
-                            "file": base64_file,
-                            "file_type": file_type.pk,
-                        }
-                    ]
-                }]
-            }
-        )
-        self.assertEquals(response.status_code, status.HTTP_200_OK)
-        self.assertTrue(len(response.data["tpm_activities"][0]["attachments"]))
-        self.assertEqual(activity.attachments.count(), 1)
 
     def test_action_points(self):
         visit = TPMVisitFactory(status='tpm_reported', tpm_activities__unicef_focal_points__count=1)
@@ -301,16 +255,6 @@ class TestTPMVisitViewSet(TestExportMixin, TPMTestCaseMixin, BaseTenantTestCase)
 
 
 class TestTPMStaffMembersViewSet(TestExportMixin, TPMTestCaseMixin, BaseTenantTestCase):
-    @classmethod
-    def setUpTestData(cls):
-        super(TestTPMStaffMembersViewSet, cls).setUpTestData()
-
-        cls.tpm_partner = TPMPartnerFactory()
-
-        cls.pme_user = UserFactory(pme=True)
-        cls.unicef_user = UserFactory(unicef_user=True)
-        cls.tpm_user = UserFactory(tpm=True, tpm_partner=cls.tpm_partner)
-
     def test_list_view(self):
         response = self.forced_auth_req(
             'get',
@@ -434,13 +378,7 @@ class TestTPMPartnerViewSet(TestExportMixin, TPMTestCaseMixin, BaseTenantTestCas
     @classmethod
     def setUpTestData(cls):
         super(TestTPMPartnerViewSet, cls).setUpTestData()
-
-        cls.tpm_partner = TPMPartnerFactory()
         cls.second_tpm_partner = TPMPartnerFactory()
-
-        cls.pme_user = UserFactory(pme=True)
-        cls.unicef_user = UserFactory(unicef_user=True)
-        cls.tpm_user = UserFactory(tpm=True, tpm_partner=cls.tpm_partner)
 
     def _test_list_view(self, user, expected_firms):
         response = self.forced_auth_req(
@@ -520,7 +458,7 @@ class TestTPMPartnerViewSet(TestExportMixin, TPMTestCaseMixin, BaseTenantTestCas
     def test_pme_list_options(self):
         self._test_list_options(
             self.pme_user,
-            writable_fields=['attachments', 'email', 'hidden', 'phone_number']
+            writable_fields=['email', 'hidden', 'phone_number']
         )
 
     def test_tpm_partner_list_options(self):
@@ -529,7 +467,7 @@ class TestTPMPartnerViewSet(TestExportMixin, TPMTestCaseMixin, BaseTenantTestCas
     def test_pme_detail_options(self):
         self._test_detail_options(
             self.pme_user,
-            writable_fields=['attachments', 'email', 'hidden', 'phone_number']
+            writable_fields=['email', 'hidden', 'phone_number']
         )
 
     def test_tpm_partner_detail_options(self):
@@ -537,3 +475,137 @@ class TestTPMPartnerViewSet(TestExportMixin, TPMTestCaseMixin, BaseTenantTestCas
 
     def test_partners_csv(self):
         self._test_export(self.pme_user, 'tpm:partners-export')
+
+
+class TestPartnerAttachmentsView(TPMTestCaseMixin, BaseTenantTestCase):
+    def test_list(self):
+        partner = TPMPartnerFactory()
+        attachments_num = partner.attachments.count()
+
+        AttachmentFactory(content_object=partner)
+
+        response = self.forced_auth_req(
+            'get',
+            reverse('tpm:partner-attachments-list', args=[partner.id]),
+            user=self.pme_user
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(response.data['results']), attachments_num + 1)
+
+    def test_add(self):
+        partner = TPMPartnerFactory()
+
+        response = self.forced_auth_req(
+            'post',
+            reverse('tpm:partner-attachments-list', args=[partner.id]),
+            user=self.pme_user,
+            request_format='multipart',
+            data={
+                'file_type': AttachmentFileTypeFactory(code='tpm_partner').id,
+                'file': SimpleUploadedFile('hello_world.txt', u'hello world!'.encode('utf-8')),
+            }
+        )
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+
+
+class TestVisitReportAttachmentsView(TPMTestCaseMixin, BaseTenantTestCase):
+    @classmethod
+    def setUpTestData(cls):
+        super(TestVisitReportAttachmentsView, cls).setUpTestData()
+
+        cls.visit = TPMVisitFactory(status='tpm_accepted',
+                                    tpm_partner=cls.tpm_user.tpmpartners_tpmpartnerstaffmember.tpm_partner,
+                                    tpm_partner_focal_points=[cls.tpm_user.tpmpartners_tpmpartnerstaffmember])
+
+    def test_add(self):
+        attachments_num = self.visit.report_attachments.count()
+
+        create_response = self.forced_auth_req(
+            'post',
+            reverse('tpm:visit-report-attachments-list', args=[self.visit.id]),
+            user=self.tpm_user,
+            request_format='multipart',
+            data={
+                'file_type': AttachmentFileTypeFactory(code='tpm_report_attachments').id,
+                'file': SimpleUploadedFile('hello_world.txt', u'hello world!'.encode('utf-8')),
+            }
+        )
+        self.assertEqual(create_response.status_code, status.HTTP_201_CREATED)
+
+        response = self.forced_auth_req(
+            'get',
+            reverse('tpm:visit-report-attachments-list', args=[self.visit.id]),
+            user=self.tpm_user
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(response.data['results']), attachments_num + 1)
+
+
+class TestActivityAttachmentsView(TPMTestCaseMixin, BaseTenantTestCase):
+    @classmethod
+    def setUpTestData(cls):
+        super(TestActivityAttachmentsView, cls).setUpTestData()
+
+        cls.visit = TPMVisitFactory(status='draft',
+                                    tpm_partner=cls.tpm_user.tpmpartners_tpmpartnerstaffmember.tpm_partner,
+                                    tpm_partner_focal_points=[cls.tpm_user.tpmpartners_tpmpartnerstaffmember],
+                                    tpm_activities__count=1)
+        cls.activity = cls.visit.tpm_activities.first()
+
+    def test_add(self):
+        attachments_num = self.activity.report_attachments.count()
+        create_response = self.forced_auth_req(
+            'post',
+            reverse('tpm:activity-attachments-list', args=[self.visit.id]),
+            user=self.pme_user,
+            request_format='multipart',
+            data={
+                'object_id': self.activity.id,
+                'file_type': AttachmentFileTypeFactory(code='tpm').id,
+                'file': SimpleUploadedFile('hello_world.txt', u'hello world!'.encode('utf-8')),
+            }
+        )
+        self.assertEqual(create_response.status_code, status.HTTP_201_CREATED)
+
+        list_response = self.forced_auth_req(
+            'get',
+            reverse('tpm:activity-attachments-list', args=[self.visit.id]),
+            user=self.pme_user
+        )
+        self.assertEqual(list_response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(list_response.data['results']), attachments_num + 1)
+
+
+class TestActivityReportAttachmentsView(TPMTestCaseMixin, BaseTenantTestCase):
+    @classmethod
+    def setUpTestData(cls):
+        super(TestActivityReportAttachmentsView, cls).setUpTestData()
+
+        cls.visit = TPMVisitFactory(status='tpm_accepted',
+                                    tpm_partner=cls.tpm_user.tpmpartners_tpmpartnerstaffmember.tpm_partner,
+                                    tpm_partner_focal_points=[cls.tpm_user.tpmpartners_tpmpartnerstaffmember],
+                                    tpm_activities__count=1)
+        cls.activity = cls.visit.tpm_activities.first()
+
+    def test_add(self):
+        attachments_num = self.activity.report_attachments.count()
+        create_response = self.forced_auth_req(
+            'post',
+            reverse('tpm:activity-report-attachments-list', args=[self.visit.id]),
+            user=self.tpm_user,
+            request_format='multipart',
+            data={
+                'object_id': self.activity.id,
+                'file_type': AttachmentFileTypeFactory(code='tpm_report').id,
+                'file': SimpleUploadedFile('hello_world.txt', u'hello world!'.encode('utf-8')),
+            }
+        )
+        self.assertEqual(create_response.status_code, status.HTTP_201_CREATED)
+
+        list_response = self.forced_auth_req(
+            'get',
+            reverse('tpm:activity-report-attachments-list', args=[self.visit.id]),
+            user=self.tpm_user
+        )
+        self.assertEqual(list_response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(list_response.data['results']), attachments_num + 1)
