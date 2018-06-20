@@ -6,7 +6,6 @@ from rest_framework import serializers
 from etools.applications.firms.serializers import BaseStaffMemberSerializer
 from etools.applications.permissions2.serializers import PermissionsBasedSerializerMixin
 from etools.applications.tpm.models import TPMPartnerStaffMember
-from etools.applications.tpm.serializers.attachments import TPMPartnerAttachmentsSerializer
 from etools.applications.tpm.tpmpartners.models import TPMPartner
 from etools.applications.utils.writable_serializers.serializers import WritableNestedSerializerMixin
 
@@ -46,9 +45,8 @@ class TPMPartnerLightSerializer(PermissionsBasedSerializerMixin, serializers.Mod
 
 class TPMPartnerSerializer(WritableNestedSerializerMixin, TPMPartnerLightSerializer):
     staff_members = TPMPartnerStaffMemberSerializer(label=_('TPM Contacts'), many=True, required=False, read_only=True)
-    attachments = TPMPartnerAttachmentsSerializer(many=True)
 
     class Meta(WritableNestedSerializerMixin.Meta, TPMPartnerLightSerializer.Meta):
         fields = TPMPartnerLightSerializer.Meta.fields + [
-            'staff_members', 'attachments',
+            'staff_members',
         ]
