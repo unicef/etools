@@ -186,7 +186,7 @@ class EngagementSerializer(EngagementDatesValidation,
     )
     active_pd = SeparatedReadWriteField(
         read_field=BaseInterventionListSerializer(many=True, required=False),
-        label=_('Programme Document(s) or SSFA(s)'), required=False
+        label=_('Programme Document(s) or SSFA(s) - (optional)'), required=False
     )
     authorized_officers = SeparatedReadWriteField(
         read_field=PartnerStaffMemberNestedSerializer(many=True, read_only=True), label=_('Authorized Officers')

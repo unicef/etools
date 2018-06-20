@@ -16,9 +16,8 @@ from etools.applications.audit.models import Engagement, Risk
 from etools.applications.audit.tests.base import AuditTestCaseMixin, EngagementTransitionsTestCaseMixin
 from etools.applications.audit.tests.factories import (AuditFactory, AuditPartnerFactory,
                                                        EngagementFactory, MicroAssessmentFactory,
-                                                       PartnerWithAgreementsFactory, PurchaseOrderFactory,
-                                                       RiskBluePrintFactory, RiskCategoryFactory, SpecialAuditFactory,
-                                                       SpotCheckFactory, UserFactory,)
+                                                       PurchaseOrderFactory, RiskBluePrintFactory, RiskCategoryFactory,
+                                                       SpecialAuditFactory, SpotCheckFactory, UserFactory,)
 from etools.applications.EquiTrack.tests.cases import BaseTenantTestCase
 from etools.applications.audit.tests.test_transitions import MATransitionsTestCaseMixin
 from etools.applications.partners.models import PartnerType
@@ -465,62 +464,6 @@ class SpecialAuditCreateViewSet(BaseTestEngagementsCreateViewSet, BaseTenantTest
         response = self._do_create(self.unicef_focal_point, self.create_data)
 
         self.assertEquals(response.status_code, status.HTTP_201_CREATED)
-
-
-class TestEngagementsUpdateViewSet(EngagementTransitionsTestCaseMixin, BaseTenantTestCase):
-    engagement_factory = MicroAssessmentFactory
-
-    def _do_update(self, user, data):
-        data = data or {}
-        response = self.forced_auth_req(
-            'patch',
-            '/api/audit/micro-assessments/{}/'.format(self.engagement.id),
-            user=user, data=data
-        )
-        return response
-
-    def test_partner_government_changed_without_pd(self):
-        partner = PartnerWithAgreementsFactory(partner_type=PartnerType.GOVERNMENT)
-
-        response = self._do_update(self.unicef_focal_point, {'partner': partner.id})
-
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
-
-    def test_partner_bilaterial_changed_without_pd(self):
-        partner = PartnerWithAgreementsFactory(partner_type=PartnerType.BILATERAL_MULTILATERAL)
-
-        response = self._do_update(self.unicef_focal_point, {'partner': partner.id})
-
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
-
-    def test_partner_changed_without_pd(self):
-        partner = PartnerWithAgreementsFactory(partner_type=PartnerType.CIVIL_SOCIETY_ORGANIZATION)
-
-        response = self._do_update(self.unicef_focal_point, {'partner': partner.id})
-
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(response.data['active_pd'], [])
-
-    def test_partner_changed_with_pd(self):
-        partner = PartnerWithAgreementsFactory(partner_type=PartnerType.CIVIL_SOCIETY_ORGANIZATION)
-        response = self._do_update(
-            self.unicef_focal_point,
-            {
-                'partner': partner.id,
-                'active_pd': partner.agreements.first().interventions.values_list('id', flat=True)
-            }
-        )
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertCountEqual(
-            map(lambda pd: pd['id'], response.data['active_pd']),
-            map(lambda i: i.id, partner.agreements.first().interventions.all())
-        )
-
-    def test_government_partner_changed(self):
-        partner = PartnerWithAgreementsFactory(partner_type=PartnerType.GOVERNMENT)
-        response = self._do_update(self.unicef_focal_point, {'partner': partner.id})
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(response.data['active_pd'], [])
 
 
 class TestEngagementActionPointViewSet(EngagementTransitionsTestCaseMixin, BaseTenantTestCase):
