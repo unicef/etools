@@ -374,12 +374,12 @@ class ModuleRedirectView(RedirectView):
     url = '/dash/'
     permanent = False
 
-    # TODO: Rewrite this ...
     def get_redirect_url(self, *args, **kwargs):
-        if ThirdPartyMonitor.as_group() in self.request.user.groups.all():
-            return '/tpm/'
+        if not self.request.user.is_staff:
+            if ThirdPartyMonitor.as_group() in self.request.user.groups.all():
+                return '/tpm/'
 
-        if Auditor.as_group() in self.request.user.groups.all():
-            return '/ap/'
+            if Auditor.as_group() in self.request.user.groups.all():
+                return '/ap/'
 
         return super(ModuleRedirectView, self).get_redirect_url(*args, **kwargs)
