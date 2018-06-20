@@ -283,6 +283,14 @@ class Command(BaseCommand):
             condition=self.new_engagement()
         )
 
+        # cancelled engagement
+        cancelled_condition = self.engagement_status(Engagement.STATUSES.cancelled)
+        self.add_permissions(
+            self.everybody, 'view',
+            'audit.engagement.cancel_comment',
+            condition=cancelled_condition
+        )
+
         # ip_contacted: auditor can edit, everybody else can view, focal point can cancel and edit staff members
         partner_contacted_condition = self.engagement_status(Engagement.STATUSES.partner_contacted)
         self.add_permissions(
@@ -305,7 +313,7 @@ class Command(BaseCommand):
 
         self.add_permissions(
             self.focal_point, 'edit',
-            self.partner_block + self.staff_members_block + self.engagement_attachments_block,
+            self.staff_members_block + self.engagement_attachments_block,
             condition=partner_contacted_condition
         )
         self.add_permissions(
