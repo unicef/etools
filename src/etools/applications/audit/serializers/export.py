@@ -67,16 +67,15 @@ class StaffMemberPDFSerializer(serializers.ModelSerializer):
 
 
 class EngagementActionPointPDFSerializer(serializers.ModelSerializer):
-    category = serializers.CharField(source='get_category_display')
     due_date = serializers.DateField(format='%d %b %Y')
-    person_responsible = serializers.CharField(source='person_responsible.get_full_name')
+    person_responsible = serializers.CharField(source='assigned_to.get_full_name')
     status = serializers.CharField(source='get_status_display')
 
     class Meta:
         model = EngagementActionPoint
         fields = [
 
-            'id', 'category', 'description', 'due_date', 'person_responsible', 'action_taken',
+            'id', 'description', 'due_date', 'person_responsible',
             'status', 'high_priority',
         ]
 
