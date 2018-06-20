@@ -22,6 +22,13 @@ class SeparatedReadWriteField(Field):
         self.read_field = read_field
         self.write_field = write_field
 
+        # update fields from kwargs
+        for kwarg_name in {'label', } & set(kwargs.keys()):
+            setattr(self.read_field, kwarg_name, kwargs[kwarg_name])
+
+            if self.write_field is not builtin_field:
+                setattr(self.write_field, kwarg_name, kwargs[kwarg_name])
+
     def to_representation(self, value):
         return self.read_field.to_representation(value)
 

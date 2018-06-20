@@ -348,24 +348,20 @@
             <div class="content-section__wrapper">
               <table class="content-section__table">
                 <tr class="content-section__table__header">
-                  <td colspan="2">{{ serializer.fields.action_points.child.fields.category.label }}</td>
                   <td>{{ serializer.fields.action_points.child.fields.due_date.label }}</td>
                   <td>{{ serializer.fields.action_points.child.fields.person_responsible.label }}</td>
                   <td colspan="2">{{ serializer.fields.action_points.child.description.label }}</td>
                   <td>{{ serializer.fields.action_points.child.status.label }}</td>
                   <td>{{ serializer.fields.action_points.child.high_priority.label }}</td>
-                  <td colspan="2">{{ serializer.fields.action_points.child.action_taken.label }}</td>
                 </tr>
                 {% if engagement.action_points %}
                   {% for action_point in engagement.action_points %}
                     <tr>
-                      <td colspan="2"><span>{{ action_point.category }}</span></td>
                       <td>{{ action_point.due_date }}</td>
                       <td>{{ action_point.person_responsible }}</td>
                       <td colspan="2">{{ action_point.description|default:"-" }}</td>
                       <td>{{ action_point.status }}</td>
                       <td>{{ action_point.high_priority|yesno:"Y,N" }}</td>
-                      <td colspan="2">{{ action_point.action_taken|default:"-" }}</td>
                     </tr>
                   {% endfor %}
                 {% else %}
