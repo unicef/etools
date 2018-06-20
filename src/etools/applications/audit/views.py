@@ -122,7 +122,8 @@ class AuditorFirmViewSet(
     def get_permission_context(self):
         context = super(AuditorFirmViewSet, self).get_permission_context()
 
-        if Auditor.as_group() in self.request.user.groups.all():
+        if Auditor.as_group() in self.request.user.groups.all() and \
+           hasattr(self.request.user, 'purchase_order_auditorstaffmember'):
             context += [
                 AuditStaffMemberCondition(self.request.user.purchase_order_auditorstaffmember.auditor_firm,
                                           self.request.user),
@@ -279,7 +280,8 @@ class EngagementViewSet(
     def get_permission_context(self):
         context = super(EngagementViewSet, self).get_permission_context()
 
-        if Auditor.as_group() in self.request.user.groups.all():
+        if Auditor.as_group() in self.request.user.groups.all() and \
+           hasattr(self.request.user, 'purchase_order_auditorstaffmember'):
             context += [
                 AuditStaffMemberCondition(self.request.user.purchase_order_auditorstaffmember.auditor_firm,
                                           self.request.user),

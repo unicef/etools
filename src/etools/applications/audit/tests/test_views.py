@@ -11,7 +11,7 @@ from rest_framework import status
 
 from etools.applications.action_points.tests.factories import ActionPointFactory
 from etools.applications.attachments.tests.factories import AttachmentFactory, AttachmentFileTypeFactory
-from etools.applications.audit.models import Engagement, Risk
+from etools.applications.audit.models import Engagement, Risk, Auditor
 from etools.applications.audit.tests.base import AuditTestCaseMixin, EngagementTransitionsTestCaseMixin
 from etools.applications.audit.tests.factories import (AuditFactory, AuditPartnerFactory,
                                                        EngagementFactory, MicroAssessmentFactory,
@@ -285,6 +285,12 @@ class TestEngagementsListViewSet(EngagementTransitionsTestCaseMixin, BaseTenantT
 
     def test_unknown_user_list(self):
         self._test_list(self.usual_user, expected_status=status.HTTP_403_FORBIDDEN)
+
+    def test_list_view_without_audit_organization(self):
+        user = UserFactory(unicef_user=True)
+        user.groups.add(Auditor.as_group())
+
+        self._test_list(user, [self.engagement, self.second_engagement])
 
     def test_status_filter_final(self):
         status = Engagement.STATUSES.final
