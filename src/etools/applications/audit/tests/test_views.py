@@ -2,9 +2,10 @@
 import datetime
 import random
 
+from django.core.files.uploadedfile import SimpleUploadedFile
 from django.conf import settings
 from django.core.management import call_command
-from django.utils import six
+from django.urls import reverse
 
 from factory import fuzzy
 from mock import Mock, patch
@@ -19,6 +20,7 @@ from etools.applications.audit.tests.factories import (AuditFactory, AuditPartne
                                                        RiskBluePrintFactory, RiskCategoryFactory, SpecialAuditFactory,
                                                        SpotCheckFactory, UserFactory,)
 from etools.applications.EquiTrack.tests.cases import BaseTenantTestCase
+from etools.applications.audit.tests.test_transitions import MATransitionsTestCaseMixin
 from etools.applications.partners.models import PartnerType
 
 
@@ -269,8 +271,7 @@ class TestEngagementsListViewSet(EngagementTransitionsTestCaseMixin, BaseTenantT
 
         self.assertIn('results', response.data)
         self.assertIsInstance(response.data['results'], list)
-        six.assertCountEqual(
-            self,
+        self.assertCountEqual(
             map(lambda x: x['id'], response.data['results']),
             map(lambda x: x.id, engagements or [])
         )
@@ -497,8 +498,7 @@ class TestEngagementsUpdateViewSet(EngagementTransitionsTestCaseMixin, BaseTenan
             }
         )
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        six.assertCountEqual(
-            self,
+        self.assertCountEqual(
             map(lambda pd: pd['id'], response.data['active_pd']),
             map(lambda i: i.id, partner.agreements.first().interventions.all())
         )
@@ -635,8 +635,7 @@ class TestAuditorFirmViewSet(AuditTestCaseMixin, BaseTenantTestCase):
 
         self.assertEqual(response.status_code, expected_status)
         if expected_status == status.HTTP_200_OK:
-            six.assertCountEqual(
-                self,
+            self.assertCountEqual(
                 map(lambda x: x['id'], response.data['results']),
                 map(lambda x: x.id, expected_firms)
             )
@@ -982,3 +981,73 @@ class TestEngagementPartnerView(AuditTestCaseMixin, BaseTenantTestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(len(response.data), 1)
         self.assertEqual(response.data[0]["id"], engagement.partner.pk)
+
+
+class TestEngagementAttachmentsView(MATransitionsTestCaseMixin, BaseTenantTestCase):
+    def test_list(self):
+        attachments_num = self.engagement.engagement_attachments.count()
+
+        create_response = self.forced_auth_req(
+            'post',
+            reverse('audit:engagement-attachments-list', args=[self.engagement.id]),
+            user=self.unicef_focal_point,
+            request_format='multipart',
+            data={
+                'file_type': AttachmentFileTypeFactory(code='audit_engagement').id,
+                'file': SimpleUploadedFile('hello_world.txt', u'hello world!'.encode('utf-8')),
+            }
+        )
+        self.assertEqual(create_response.status_code, status.HTTP_201_CREATED)
+
+        response = self.forced_auth_req(
+            'get',
+            reverse('audit:engagement-attachments-list', args=[self.engagement.id]),
+            user=self.unicef_focal_point
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(response.data['results']), attachments_num + 1)
+
+    def test_create_meta_focal_point(self):
+        response = self.forced_auth_req(
+            'options',
+            reverse('audit:engagement-attachments-list', args=['new']),
+            user=self.unicef_focal_point
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertIn('POST', response.data['actions'])
+        self.assertIn('GET', response.data['actions'])
+
+    def test_create_meta_unicef_user(self):
+        response = self.forced_auth_req(
+            'options',
+            reverse('audit:engagement-attachments-list', args=['new']),
+            user=self.unicef_user
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertNotIn('POST', response.data['actions'])
+        self.assertIn('GET', response.data['actions'])
+
+
+class TestEngagementReportAttachmentsView(MATransitionsTestCaseMixin, BaseTenantTestCase):
+    def test_list(self):
+        attachments_num = self.engagement.report_attachments.count()
+
+        create_response = self.forced_auth_req(
+            'post',
+            reverse('audit:report-attachments-list', args=[self.engagement.id]),
+            user=self.auditor,
+            request_format='multipart',
+            data={
+                'file_type': AttachmentFileTypeFactory(code='audit_report').id,
+                'file': SimpleUploadedFile('hello_world.txt', u'hello world!'.encode('utf-8')),
+            }
+        )
+        self.assertEqual(create_response.status_code, status.HTTP_201_CREATED)
+
+        response = self.forced_auth_req(
+            'get',
+            reverse('audit:report-attachments-list', args=[self.engagement.id]),
+            user=self.auditor
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(response.data['results']), attachments_num + 1)

@@ -13,7 +13,7 @@ from rest_framework.response import Response
 from etools.applications.attachments.models import Attachment
 from etools.applications.partners.models import PartnerOrganization
 from etools.applications.partners.serializers.partner_organization_v2 import MinimalPartnerOrganizationListSerializer
-from etools.applications.permissions2.conditions import GroupCondition, NewObjectCondition, ObjectStatusCondition
+from etools.applications.permissions2.conditions import ObjectStatusCondition
 from etools.applications.permissions2.drf_permissions import NestedPermission, get_permission_for_targets
 from etools.applications.permissions2.views import PermittedFSMActionMixin, PermittedSerializerMixin
 from etools.applications.reports.models import Result, Sector
@@ -54,16 +54,8 @@ class BaseTPMViewSet(
     permission_classes = [IsAuthenticated]
 
     def get_permission_context(self):
-        context = [
-            TPMModuleCondition(),
-            GroupCondition(self.request.user),
-        ]
-
-        if getattr(self, 'action', None) == 'create':
-            context.append(
-                NewObjectCondition(self.queryset.model),
-            )
-
+        context = super().get_permission_context()
+        context.append(TPMModuleCondition())
         return context
 
 
@@ -122,9 +114,11 @@ class TPMPartnerViewSet(
         return context
 
     def get_obj_permission_context(self, obj):
-        return [
+        context = super().get_obj_permission_context(obj)
+        context.extend([
             TPMStaffMemberCondition(obj, self.request.user),
-        ]
+        ])
+        return context
 
     @list_route(methods=['get'], url_path='sync/(?P<vendor_number>[^/]+)')
     def sync(self, request, *args, **kwargs):
@@ -363,12 +357,14 @@ class TPMVisitViewSet(
         return context
 
     def get_obj_permission_context(self, obj):
-        return [
+        context = super().get_obj_permission_context(obj)
+        context.extend([
             ObjectStatusCondition(obj),
             TPMStaffMemberCondition(obj.tpm_partner, self.request.user),
             TPMVisitUNICEFFocalPointCondition(obj, self.request.user),
             TPMVisitTPMFocalPointCondition(obj, self.request.user),
-        ]
+        ])
+        return context
 
     @list_route(methods=['get'], url_path='activities/export', renderer_classes=(TPMActivityCSVRenderer,))
     def activities_export(self, request, *args, **kwargs):
