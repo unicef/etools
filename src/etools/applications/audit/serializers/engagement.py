@@ -408,6 +408,9 @@ class AuditSerializer(ActivePDValidationMixin, RiskCategoriesUpdateMixin, Engage
     def _validate_financial_findings(self, validated_data):
         financial_findings = validated_data.get('financial_findings')
         audited_expenditure = validated_data.get('audited_expenditure')
+        if not (financial_findings or audited_expenditure):
+            return
+
         if not financial_findings:
             financial_findings = self.instance.financial_findings if self.instance else None
         if not audited_expenditure:
