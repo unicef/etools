@@ -451,6 +451,35 @@ class SpecialAuditCreateViewSet(BaseTestEngagementsCreateViewSet, BaseTenantTest
         self.assertEquals(response.status_code, status.HTTP_201_CREATED)
 
 
+class TestEngagementsUpdateViewSet(EngagementTransitionsTestCaseMixin, BaseTenantTestCase):
+    engagement_factory = AuditFactory
+
+    def _do_update(self, user, data):
+        data = data or {}
+        response = self.forced_auth_req(
+            'patch',
+            '/api/audit/audits/{}/'.format(self.engagement.id),
+            user=user, data=data
+        )
+        return response
+
+    def test_percent_of_audited_expenditure_invalid(self):
+        response = self._do_update(self.auditor, {
+            'audited_expenditure': 1,
+            'financial_findings': 2
+        })
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertEqual(len(response.data), 1)
+        self.assertIn('financial_findings', response.data)
+
+    def test_percent_of_audited_expenditure_valid(self):
+        response = self._do_update(self.auditor, {
+            'audited_expenditure': 2,
+            'financial_findings': 1
+        })
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+
 class TestEngagementActionPointViewSet(EngagementTransitionsTestCaseMixin, BaseTenantTestCase):
     engagement_factory = MicroAssessmentFactory
 

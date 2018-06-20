@@ -405,6 +405,21 @@ class AuditSerializer(ActivePDValidationMixin, RiskCategoriesUpdateMixin, Engage
     def get_number_of_financial_findings(self, obj):
         return obj.financial_finding_set.count()
 
+    def _validate_financial_findings(self, validated_data):
+        financial_findings = validated_data.get('financial_findings')
+        audited_expenditure = validated_data.get('audited_expenditure')
+        if not financial_findings:
+            financial_findings = self.instance.financial_findings if self.instance else None
+        if not audited_expenditure:
+            audited_expenditure = self.instance.audited_expenditure if self.instance else None
+
+        if audited_expenditure and financial_findings and financial_findings > audited_expenditure:
+            raise serializers.ValidationError({'financial_findings': _('Cannot exceed Audited Expenditure')})
+
+    def validate(self, validated_data):
+        self._validate_financial_findings(validated_data)
+        return validated_data
+
 
 class SpecialAuditRecommendationSerializer(WritableNestedSerializerMixin, serializers.ModelSerializer):
     class Meta(WritableNestedSerializerMixin.Meta):
