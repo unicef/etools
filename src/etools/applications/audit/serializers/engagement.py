@@ -5,7 +5,7 @@ from rest_framework import serializers
 
 from etools.applications.action_points.serializers import ActionPointBaseSerializer, HistorySerializer
 from etools.applications.attachments.models import FileType
-from etools.applications.attachments.serializers import Base64AttachmentSerializer
+from etools.applications.attachments.serializers import BaseAttachmentSerializer
 from etools.applications.attachments.serializers_fields import FileTypeModelChoiceField
 from etools.applications.audit.models import (Audit, DetailedFindingInfo, Engagement, EngagementActionPoint,
                                               FinancialFinding, Finding, KeyInternalControl, MicroAssessment, Risk,
@@ -41,22 +41,30 @@ class PartnerOrganizationLightSerializer(PartnerOrganizationListSerializer):
         }
 
 
-class EngagementBase64AttachmentSerializer(WritableNestedSerializerMixin, Base64AttachmentSerializer):
+class EngagementAttachmentSerializer(BaseAttachmentSerializer):
     file_type = FileTypeModelChoiceField(
         label=_('Document Type'), queryset=FileType.objects.filter(code='audit_engagement')
     )
 
-    class Meta(WritableNestedSerializerMixin.Meta, Base64AttachmentSerializer.Meta):
+    class Meta(BaseAttachmentSerializer.Meta):
         pass
 
+    def create(self, validated_data):
+        validated_data['code'] = 'audit_engagement'
+        return super(EngagementAttachmentSerializer, self).create(validated_data)
 
-class ReportBase64AttachmentSerializer(WritableNestedSerializerMixin, Base64AttachmentSerializer):
+
+class ReportAttachmentSerializer(BaseAttachmentSerializer):
     file_type = FileTypeModelChoiceField(
         label=_('Document Type'), queryset=FileType.objects.filter(code='audit_report')
     )
 
-    class Meta(WritableNestedSerializerMixin.Meta, Base64AttachmentSerializer.Meta):
+    class Meta(BaseAttachmentSerializer.Meta):
         pass
+
+    def create(self, validated_data):
+        validated_data['code'] = 'audit_report'
+        return super(ReportAttachmentSerializer, self).create(validated_data)
 
 
 class EngagementActionPointSerializer(PermissionsBasedSerializerMixin, ActionPointBaseSerializer):
@@ -113,7 +121,7 @@ class EngagementExportSerializer(serializers.ModelSerializer):
         )
 
 
-class EngagementLightSerializer(PermissionsBasedSerializerMixin, serializers.ModelSerializer):
+class EngagementLightSerializer(serializers.ModelSerializer):
     agreement = SeparatedReadWriteField(
         read_field=PurchaseOrderSerializer(read_only=True), label=_('Purchase Order')
     )
@@ -156,6 +164,11 @@ class EngagementLightSerializer(PermissionsBasedSerializerMixin, serializers.Mod
         return attrs
 
 
+class EngagementListSerializer(PermissionsBasedSerializerMixin, EngagementLightSerializer):
+    class Meta(EngagementLightSerializer.Meta):
+        pass
+
+
 class SpecificProcedureSerializer(WritableNestedSerializerMixin,
                                   serializers.ModelSerializer):
     class Meta(WritableNestedSerializerMixin.Meta):
@@ -167,13 +180,13 @@ class SpecificProcedureSerializer(WritableNestedSerializerMixin,
 
 class EngagementSerializer(EngagementDatesValidation,
                            WritableNestedParentSerializerMixin,
-                           EngagementLightSerializer):
+                           EngagementListSerializer):
     staff_members = SeparatedReadWriteField(
         read_field=AuditorStaffMemberSerializer(many=True, required=False), label=_('Audit Staff Team Members')
     )
     active_pd = SeparatedReadWriteField(
         read_field=BaseInterventionListSerializer(many=True, required=False),
-        label=_('Programme Document(s) or SSFA(s)'), required=False
+        label=_('Programme Document(s) or SSFA(s) - (optional)'), required=False
     )
     authorized_officers = SeparatedReadWriteField(
         read_field=PartnerStaffMemberNestedSerializer(many=True, read_only=True), label=_('Authorized Officers')
@@ -181,16 +194,8 @@ class EngagementSerializer(EngagementDatesValidation,
 
     specific_procedures = SpecificProcedureSerializer(many=True, label=_('Specific Procedure To Be Performed'))
 
-    engagement_attachments = EngagementBase64AttachmentSerializer(
-        many=True, required=False, label=_('Related Documents')
-    )
-    report_attachments = ReportBase64AttachmentSerializer(
-        many=True, required=False, label=_('Report Attachments')
-    )
-
-    class Meta(EngagementLightSerializer.Meta):
-        fields = EngagementLightSerializer.Meta.fields + [
-            'engagement_attachments', 'report_attachments',
+    class Meta(EngagementListSerializer.Meta):
+        fields = EngagementListSerializer.Meta.fields + [
             'total_value', 'staff_members', 'active_pd',
             'authorized_officers',
 

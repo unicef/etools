@@ -570,19 +570,19 @@ class InterventionDetailSerializer(serializers.ModelSerializer):
         return permissions.get_permissions()
 
     def get_locations(self, obj):
-        return [l.id for l in obj.intervention_locations]
+        return [l.id for l in obj.intervention_locations()]
 
     def get_location_names(self, obj):
-        return ['{} [{} - {}]'.format(l.name, l.gateway.name, l.p_code) for l in obj.intervention_locations]
+        return ['{} [{} - {}]'.format(l.name, l.gateway.name, l.p_code) for l in obj.intervention_locations()]
 
     def get_section_names(self, obj):
-        return [l.name for l in obj.flagged_sections]
+        return [l.name for l in obj.flagged_sections()]
 
     def get_flagged_sections(self, obj):
-        return [l.id for l in obj.flagged_sections]
+        return [l.id for l in obj.flagged_sections()]
 
     def get_cluster_names(self, obj):
-        return [c for c in obj.intervention_clusters]
+        return [c for c in obj.intervention_clusters()]
 
     class Meta:
         model = Intervention
@@ -610,10 +610,10 @@ class InterventionListMapSerializer(serializers.ModelSerializer):
     sections = serializers.SerializerMethodField()
 
     def get_locations(self, obj):
-        return [LocationSerializer().to_representation(l) for l in obj.intervention_locations]
+        return [LocationSerializer().to_representation(l) for l in obj.intervention_locations()]
 
     def get_sections(self, obj):
-        return [s.id for s in obj.flagged_sections]
+        return [s.id for s in obj.flagged_sections()]
 
     class Meta:
         model = Intervention

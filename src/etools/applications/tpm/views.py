@@ -1,8 +1,9 @@
-
+from django.contrib.contenttypes.models import ContentType
 from django.http import Http404
 from django.utils import timezone
-from django_filters.rest_framework import DjangoFilterBackend
+from django.utils.translation import ugettext_lazy as _
 
+from django_filters.rest_framework import DjangoFilterBackend
 from easy_pdf.rendering import render_to_pdf_response
 from rest_framework import generics, mixins, viewsets
 from rest_framework.decorators import detail_route, list_route
@@ -12,10 +13,11 @@ from rest_framework.response import Response
 
 from etools.applications.action_points.conditions import ActionPointAuthorCondition, ActionPointAssignedByCondition, \
     ActionPointAssigneeCondition
+from etools.applications.attachments.models import Attachment
 from etools.applications.partners.models import PartnerOrganization
 from etools.applications.partners.serializers.partner_organization_v2 import MinimalPartnerOrganizationListSerializer
-from etools.applications.permissions2.conditions import GroupCondition, NewObjectCondition, ObjectStatusCondition
-from etools.applications.permissions2.drf_permissions import NestedPermission
+from etools.applications.permissions2.conditions import ObjectStatusCondition
+from etools.applications.permissions2.drf_permissions import NestedPermission, get_permission_for_targets
 from etools.applications.permissions2.views import PermittedFSMActionMixin, PermittedSerializerMixin
 from etools.applications.reports.models import Result, Sector
 from etools.applications.reports.serializers.v1 import ResultLightSerializer, SectorSerializer
@@ -31,6 +33,8 @@ from etools.applications.tpm.export.serializers import (
 from etools.applications.tpm.filters import ReferenceNumberOrderingFilter
 from etools.applications.tpm.metadata import TPMBaseMetadata, TPMPermissionBasedMetadata
 from etools.applications.tpm.models import PME, ThirdPartyMonitor, TPMActionPoint, TPMActivity, TPMVisit, UNICEFUser
+from etools.applications.tpm.serializers.attachments import TPMPartnerAttachmentsSerializer, \
+    TPMVisitReportAttachmentsSerializer, ActivityAttachmentsSerializer, ActivityReportSerializer
 from etools.applications.tpm.serializers.partner import (
     TPMPartnerLightSerializer, TPMPartnerSerializer, TPMPartnerStaffMemberSerializer,)
 from etools.applications.tpm.serializers.visit import (
@@ -53,16 +57,8 @@ class BaseTPMViewSet(
     permission_classes = [IsAuthenticated]
 
     def get_permission_context(self):
-        context = [
-            TPMModuleCondition(),
-            GroupCondition(self.request.user),
-        ]
-
-        if getattr(self, 'action', None) == 'create':
-            context.append(
-                NewObjectCondition(self.queryset.model),
-            )
-
+        context = super().get_permission_context()
+        context.append(TPMModuleCondition())
         return context
 
 
@@ -121,9 +117,11 @@ class TPMPartnerViewSet(
         return context
 
     def get_obj_permission_context(self, obj):
-        return [
+        context = super().get_obj_permission_context(obj)
+        context.extend([
             TPMStaffMemberCondition(obj, self.request.user),
-        ]
+        ])
+        return context
 
     @list_route(methods=['get'], url_path='sync/(?P<vendor_number>[^/]+)')
     def sync(self, request, *args, **kwargs):
@@ -362,12 +360,14 @@ class TPMVisitViewSet(
         return context
 
     def get_obj_permission_context(self, obj):
-        return [
+        context = super().get_obj_permission_context(obj)
+        context.extend([
             ObjectStatusCondition(obj),
             TPMStaffMemberCondition(obj.tpm_partner, self.request.user),
             TPMVisitUNICEFFocalPointCondition(obj, self.request.user),
             TPMVisitTPMFocalPointCondition(obj, self.request.user),
-        ]
+        ])
+        return context
 
     @list_route(methods=['get'], url_path='activities/export', renderer_classes=(TPMActivityCSVRenderer,))
     def activities_export(self, request, *args, **kwargs):
@@ -434,12 +434,14 @@ class TPMActionPointViewSet(BaseTPMViewSet,
     permission_classes = BaseTPMViewSet.permission_classes + [NestedPermission]
 
     def get_obj_permission_context(self, obj):
-        return [
+        context = super().get_obj_permission_context(obj)
+        context.extend([
             ObjectStatusCondition(obj),
             ActionPointAuthorCondition(obj, self.request.user),
             ActionPointAssignedByCondition(obj, self.request.user),
             ActionPointAssigneeCondition(obj, self.request.user),
-        ]
+        ])
+        return context
 
     @list_route(methods=['get'], url_path='export', renderer_classes=(TPMActionPointCSVRenderer,))
     def csv_export(self, request, *args, **kwargs):
@@ -449,3 +451,106 @@ class TPMActionPointViewSet(BaseTPMViewSet,
                 self.get_root_object().reference_number, timezone.now().date()
             )
         })
+
+
+class BaseTPMAttachmentsViewSet(BaseTPMViewSet,
+                                mixins.ListModelMixin,
+                                mixins.CreateModelMixin,
+                                mixins.RetrieveModelMixin,
+                                mixins.UpdateModelMixin,
+                                mixins.DestroyModelMixin,
+                                NestedViewSetMixin,
+                                viewsets.GenericViewSet):
+    metadata_class = TPMPermissionBasedMetadata
+    queryset = Attachment.objects.all()
+
+
+class PartnerAttachmentsViewSet(BaseTPMAttachmentsViewSet):
+    serializer_class = TPMPartnerAttachmentsSerializer
+
+    def get_view_name(self):
+        return _('Attachments')
+
+    def get_parent_filter(self):
+        parent = self.get_parent_object()
+        if not parent:
+            return {}
+
+        return {
+            'content_type_id': ContentType.objects.get_for_model(TPMPartner).id,
+            'object_id': parent.pk,
+        }
+
+    def perform_create(self, serializer):
+        serializer.save(content_object=self.get_parent_object())
+
+
+class VisitReportAttachmentsViewSet(BaseTPMAttachmentsViewSet):
+    serializer_class = TPMVisitReportAttachmentsSerializer
+    permission_classes = BaseTPMViewSet.permission_classes + [
+        get_permission_for_targets('tpm.tpmvisit.report_attachments')
+    ]
+
+    def get_view_name(self):
+        return _('Related Documents')
+
+    def get_parent_filter(self):
+        parent = self.get_parent_object()
+        if not parent:
+            return {}
+
+        return {
+            'content_type_id': ContentType.objects.get_for_model(TPMVisit).id,
+            'object_id': parent.pk,
+        }
+
+    def perform_create(self, serializer):
+        serializer.save(content_object=self.get_parent_object())
+
+
+class ActivityAttachmentsViewSet(BaseTPMAttachmentsViewSet):
+    serializer_class = ActivityAttachmentsSerializer
+    permission_classes = BaseTPMViewSet.permission_classes + [
+        get_permission_for_targets('tpm.tpmactivity.attachments')
+    ]
+
+    def get_view_name(self):
+        return _('Related Documents')
+
+    def get_parent_filter(self):
+        parent = self.get_parent_object()
+        if not parent:
+            return {}
+
+        return {
+            'code': 'activity_attachments',
+            'content_type_id': ContentType.objects.get_for_model(TPMActivity).id,
+            'object_id__in': parent.tpm_activities.values_list('id', flat=True),
+        }
+
+    def perform_create(self, serializer):
+        serializer.save(content_type=ContentType.objects.get_for_model(TPMActivity))
+
+
+class ActivityReportAttachmentsViewSet(BaseTPMAttachmentsViewSet):
+    serializer_class = ActivityReportSerializer
+    permission_classes = BaseTPMViewSet.permission_classes + [
+        get_permission_for_targets('tpm.tpmactivity.report_attachments')
+    ]
+
+    def get_view_name(self):
+        return _('Reports by Task')
+
+    def get_parent_filter(self):
+        parent = self.get_parent_object()
+        if not parent:
+            return {}
+
+        return {
+            'code': 'activity_report',
+            'content_type_id': ContentType.objects.get_for_model(TPMActivity).id,
+            'object_id__in': parent.tpm_activities.values_list('id', flat=True),
+        }
+
+    def perform_create(self, serializer):
+        serializer.save(content_type=ContentType.objects.get_for_model(TPMActivity))

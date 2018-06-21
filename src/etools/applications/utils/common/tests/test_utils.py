@@ -7,6 +7,9 @@ from django.urls import reverse
 from django.utils.translation import ugettext_lazy as _
 from rest_framework import status
 
+from etools.applications.EquiTrack.tests.cases import BaseTenantTestCase
+from etools.applications.users.tests.factories import UserFactory
+from etools.applications.utils.common.urlresolvers import build_frontend_url, site_url
 from etools.applications.utils.common.utils import get_all_field_names
 
 
@@ -78,3 +81,23 @@ class TestExportMixin(object):
         self.assertEqual(response.status_code, status_code)
         if status_code == status.HTTP_200_OK:
             self.assertIn(response._headers['content-disposition'][0], 'Content-Disposition')
+
+
+class TestFrontendUrl(BaseTenantTestCase):
+    def test_staff_user_url(self):
+        self.assertIn(
+            site_url() + reverse('main'),
+            build_frontend_url('test', user=UserFactory(is_staff=True))
+        )
+
+    def test_common_user_url(self):
+        self.assertIn(
+            site_url() + reverse('tokens:login'),
+            build_frontend_url('test', user=UserFactory(is_staff=False))
+        )
+
+    def test_token_url(self):
+        self.assertIn(
+            'token=',
+            build_frontend_url('test', user=UserFactory(), include_token=True)
+        )

@@ -2,8 +2,9 @@
 import datetime
 import random
 
+from django.core.files.uploadedfile import SimpleUploadedFile
 from django.core.management import call_command
-
+from django.urls import reverse
 
 from factory import fuzzy
 from mock import Mock, patch
@@ -15,10 +16,10 @@ from etools.applications.audit.models import Engagement, Risk
 from etools.applications.audit.tests.base import AuditTestCaseMixin, EngagementTransitionsTestCaseMixin
 from etools.applications.audit.tests.factories import (AuditFactory, AuditPartnerFactory,
                                                        EngagementFactory, MicroAssessmentFactory,
-                                                       PartnerWithAgreementsFactory, PurchaseOrderFactory,
-                                                       RiskBluePrintFactory, RiskCategoryFactory, SpecialAuditFactory,
-                                                       SpotCheckFactory, UserFactory,)
+                                                       PurchaseOrderFactory, RiskBluePrintFactory, RiskCategoryFactory,
+                                                       SpecialAuditFactory, SpotCheckFactory, UserFactory,)
 from etools.applications.EquiTrack.tests.cases import BaseTenantTestCase
+from etools.applications.audit.tests.test_transitions import MATransitionsTestCaseMixin
 from etools.applications.partners.models import PartnerType
 from etools.applications.reports.tests.factories import SectorFactory
 
@@ -355,6 +356,19 @@ class TestEngagementsListViewSet(EngagementTransitionsTestCaseMixin, BaseTenantT
         )
         self._test_list(self.auditor, [self.third_engagement], filter_params={'status': status})
 
+    def test_hact_view(self):
+        self._init_finalized_engagement()
+
+        response = self.forced_auth_req(
+            'get',
+            '/api/audit/engagements/hact/',
+            data={'partner': self.engagement.partner.id},
+            user=self.unicef_user
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(response.data), 1)
+        self.assertNotEqual(response.data[0], {})
+
 
 class BaseTestEngagementsCreateViewSet(EngagementTransitionsTestCaseMixin):
     endpoint = 'engagements'
@@ -450,62 +464,6 @@ class SpecialAuditCreateViewSet(BaseTestEngagementsCreateViewSet, BaseTenantTest
         response = self._do_create(self.unicef_focal_point, self.create_data)
 
         self.assertEquals(response.status_code, status.HTTP_201_CREATED)
-
-
-class TestEngagementsUpdateViewSet(EngagementTransitionsTestCaseMixin, BaseTenantTestCase):
-    engagement_factory = MicroAssessmentFactory
-
-    def _do_update(self, user, data):
-        data = data or {}
-        response = self.forced_auth_req(
-            'patch',
-            '/api/audit/micro-assessments/{}/'.format(self.engagement.id),
-            user=user, data=data
-        )
-        return response
-
-    def test_partner_government_changed_without_pd(self):
-        partner = PartnerWithAgreementsFactory(partner_type=PartnerType.GOVERNMENT)
-
-        response = self._do_update(self.unicef_focal_point, {'partner': partner.id})
-
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
-
-    def test_partner_bilaterial_changed_without_pd(self):
-        partner = PartnerWithAgreementsFactory(partner_type=PartnerType.BILATERAL_MULTILATERAL)
-
-        response = self._do_update(self.unicef_focal_point, {'partner': partner.id})
-
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
-
-    def test_partner_changed_without_pd(self):
-        partner = PartnerWithAgreementsFactory(partner_type=PartnerType.CIVIL_SOCIETY_ORGANIZATION)
-
-        response = self._do_update(self.unicef_focal_point, {'partner': partner.id})
-
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(response.data['active_pd'], [])
-
-    def test_partner_changed_with_pd(self):
-        partner = PartnerWithAgreementsFactory(partner_type=PartnerType.CIVIL_SOCIETY_ORGANIZATION)
-        response = self._do_update(
-            self.unicef_focal_point,
-            {
-                'partner': partner.id,
-                'active_pd': partner.agreements.first().interventions.values_list('id', flat=True)
-            }
-        )
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertCountEqual(
-            map(lambda pd: pd['id'], response.data['active_pd']),
-            map(lambda i: i.id, partner.agreements.first().interventions.all())
-        )
-
-    def test_government_partner_changed(self):
-        partner = PartnerWithAgreementsFactory(partner_type=PartnerType.GOVERNMENT)
-        response = self._do_update(self.unicef_focal_point, {'partner': partner.id})
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(response.data['active_pd'], [])
 
 
 class TestEngagementActionPointViewSet(EngagementTransitionsTestCaseMixin, BaseTenantTestCase):
@@ -998,3 +956,73 @@ class TestEngagementPartnerView(AuditTestCaseMixin, BaseTenantTestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(len(response.data), 1)
         self.assertEqual(response.data[0]["id"], engagement.partner.pk)
+
+
+class TestEngagementAttachmentsView(MATransitionsTestCaseMixin, BaseTenantTestCase):
+    def test_list(self):
+        attachments_num = self.engagement.engagement_attachments.count()
+
+        create_response = self.forced_auth_req(
+            'post',
+            reverse('audit:engagement-attachments-list', args=[self.engagement.id]),
+            user=self.unicef_focal_point,
+            request_format='multipart',
+            data={
+                'file_type': AttachmentFileTypeFactory(code='audit_engagement').id,
+                'file': SimpleUploadedFile('hello_world.txt', u'hello world!'.encode('utf-8')),
+            }
+        )
+        self.assertEqual(create_response.status_code, status.HTTP_201_CREATED)
+
+        response = self.forced_auth_req(
+            'get',
+            reverse('audit:engagement-attachments-list', args=[self.engagement.id]),
+            user=self.unicef_focal_point
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(response.data['results']), attachments_num + 1)
+
+    def test_create_meta_focal_point(self):
+        response = self.forced_auth_req(
+            'options',
+            reverse('audit:engagement-attachments-list', args=['new']),
+            user=self.unicef_focal_point
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertIn('POST', response.data['actions'])
+        self.assertIn('GET', response.data['actions'])
+
+    def test_create_meta_unicef_user(self):
+        response = self.forced_auth_req(
+            'options',
+            reverse('audit:engagement-attachments-list', args=['new']),
+            user=self.unicef_user
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertNotIn('POST', response.data['actions'])
+        self.assertIn('GET', response.data['actions'])
+
+
+class TestEngagementReportAttachmentsView(MATransitionsTestCaseMixin, BaseTenantTestCase):
+    def test_list(self):
+        attachments_num = self.engagement.report_attachments.count()
+
+        create_response = self.forced_auth_req(
+            'post',
+            reverse('audit:report-attachments-list', args=[self.engagement.id]),
+            user=self.auditor,
+            request_format='multipart',
+            data={
+                'file_type': AttachmentFileTypeFactory(code='audit_report').id,
+                'file': SimpleUploadedFile('hello_world.txt', u'hello world!'.encode('utf-8')),
+            }
+        )
+        self.assertEqual(create_response.status_code, status.HTTP_201_CREATED)
+
+        response = self.forced_auth_req(
+            'get',
+            reverse('audit:report-attachments-list', args=[self.engagement.id]),
+            user=self.auditor
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(response.data['results']), attachments_num + 1)
