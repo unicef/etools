@@ -6,10 +6,8 @@ from django.core.management import call_command
 from etools.applications.EquiTrack.tests.cases import BaseTenantTestCase
 from etools.applications.attachments.tests.factories import AttachmentFactory
 from etools.applications.attachments.utils import denormalize_attachment
-from etools.applications.partners.tests.factories import PartnerFactory
 from etools.applications.tpm.models import ThirdPartyMonitor
-from etools.applications.tpm.tests.factories import TPMPartnerFactory, TPMPartnerStaffMemberFactory, TPMVisitFactory, \
-    TPMActivityFactory
+from etools.applications.tpm.tests.factories import TPMPartnerFactory, TPMPartnerStaffMemberFactory, TPMVisitFactory
 
 
 class TestTPMVisit(BaseTenantTestCase):
