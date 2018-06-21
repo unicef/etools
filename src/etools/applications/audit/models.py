@@ -242,7 +242,7 @@ class Engagement(InheritedModelMixin, TimeStampedModel, models.Model):
             if context:
                 ctx.update(context)
             base_context = {
-                'engagement': self.get_mail_context(user=focal_point, include_token=True),
+                'engagement': self.get_mail_context(user=focal_point),
                 'environment': get_environment(),
             }
             base_context.update(ctx)
