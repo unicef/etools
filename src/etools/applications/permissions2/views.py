@@ -1,9 +1,21 @@
 from rest_framework import serializers
 
+from etools.applications.permissions2.conditions import NewObjectCondition, GroupCondition
 from etools.applications.utils.common.views import FSMTransitionActionMixin
 
 
 class PermissionContextMixin(object):
+    def get_object(self):
+        lookup_url_kwarg = self.lookup_url_kwarg or self.lookup_field
+        if lookup_url_kwarg not in self.kwargs:
+            return
+
+        # generate fake object in case of accessing nested
+        if self.kwargs[lookup_url_kwarg] == 'new':
+            return self.queryset.model()
+
+        return super().get_object()
+
     def _collect_permission_context(self, instance=None):
         context = self.get_permission_context()
 
@@ -14,14 +26,26 @@ class PermissionContextMixin(object):
                 pass
 
         if instance:
-            context.extend(self.get_obj_permission_context(instance))
+            if instance.pk:
+                context.extend(self.get_obj_permission_context(instance))
+            else:
+                context.extend(self.get_new_obj_permission_context())
+        elif getattr(self, 'action', None) == 'create':
+            context.extend(self.get_new_obj_permission_context())
 
         if hasattr(self, 'get_parent'):
             context += self.get_parent()._collect_permission_context(self.get_parent_object())
         return context
 
     def get_permission_context(self):
-        return []
+        return [
+            GroupCondition(self.request.user),
+        ]
+
+    def get_new_obj_permission_context(self):
+        return [
+            NewObjectCondition(self.queryset.model)
+        ]
 
     def get_obj_permission_context(self, obj):
         return []
