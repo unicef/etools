@@ -15,7 +15,7 @@ from etools.applications.action_points.filters import ReferenceNumberOrderingFil
 from etools.applications.action_points.metadata import ActionPointMetadata
 from etools.applications.action_points.models import ActionPoint
 from etools.applications.action_points.serializers import ActionPointListSerializer, ActionPointSerializer
-from etools.applications.permissions2.conditions import GroupCondition, NewObjectCondition, ObjectStatusCondition
+from etools.applications.permissions2.conditions import ObjectStatusCondition
 from etools.applications.permissions2.views import PermittedFSMActionMixin, PermittedSerializerMixin
 from etools.applications.utils.common.pagination import DynamicPageNumberPagination
 from etools.applications.utils.common.views import MultiSerializerViewSetMixin, SafeTenantViewSetMixin
@@ -58,25 +58,21 @@ class ActionPointViewSet(
     )
 
     def get_permission_context(self):
-        context = [
-            ActionPointModuleCondition(),
-            GroupCondition(self.request.user),
-        ]
-
-        if getattr(self, 'action', None) == 'create':
-            context.append(NewObjectCondition(self.queryset.model))
-
+        context = super().get_permission_context()
+        context.append(ActionPointModuleCondition())
         return context
 
     def get_obj_permission_context(self, obj):
-        return [
+        context = super().get_obj_permission_context(obj)
+        context.extend([
             ObjectStatusCondition(obj),
             ActionPointAuthorCondition(obj, self.request.user),
             ActionPointAssignedByCondition(obj, self.request.user),
             ActionPointAssigneeCondition(obj, self.request.user),
             RelatedActionPointCondition(obj),
             UnRelatedActionPointCondition(obj),
-        ]
+        ])
+        return context
 
     @list_route(methods=['get'], url_path='export/csv', renderer_classes=(ActionPointCSVRenderer,))
     def list_csv_export(self, request, *args, **kwargs):

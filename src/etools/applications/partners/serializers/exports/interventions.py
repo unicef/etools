@@ -384,7 +384,7 @@ class InterventionExportSerializer(serializers.ModelSerializer):
         return ', '.join([s.name for s in obj.sections.all()])
 
     def get_intervention_clusters(self, obj):
-        return ', '.join([c for c in obj.intervention_clusters])
+        return ', '.join([c for c in obj.intervention_clusters()])
 
     def get_contingency_pd(self, obj):
         return "Yes" if obj.contingency_pd else "No"

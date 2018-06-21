@@ -129,8 +129,8 @@ class ActionPoint(TimeStampedModel):
             self.id,
         )
 
-    def get_object_url(self):
-        return build_frontend_url('apd', 'action-points', 'detail', self.id)
+    def get_object_url(self, **kwargs):
+        return build_frontend_url('apd', 'action-points', 'detail', self.id, **kwargs)
 
     @property
     def status_date(self):
@@ -167,7 +167,7 @@ class ActionPoint(TimeStampedModel):
 
         return activity.get_action_display()
 
-    def get_mail_context(self):
+    def get_mail_context(self, user=None, include_token=False):
         return {
             'person_responsible': self.assigned_to.get_full_name(),
             'assigned_by': self.assigned_by.get_full_name(),
@@ -175,13 +175,13 @@ class ActionPoint(TimeStampedModel):
             'partner': self.partner.name if self.partner else '',
             'description': self.description,
             'due_date': self.due_date.strftime('%d %b %Y') if self.due_date else '',
-            'object_url': self.get_object_url(),
+            'object_url': self.get_object_url(user=user, include_token=include_token),
         }
 
     def send_email(self, recipient, template_name, additional_context=None):
         context = {
             'environment': get_environment(),
-            'action_point': self.get_mail_context(),
+            'action_point': self.get_mail_context(user=recipient),
             'recipient': recipient.get_full_name(),
         }
         context.update(additional_context or {})
