@@ -22,6 +22,7 @@
         {
             "id": 1,
             "partner": 1,
+            "country_programme": 1,
             "agreement_number": "TST/PCA20181",
             "partner_name": "Partner 0",
             "agreement_type": "PCA",
