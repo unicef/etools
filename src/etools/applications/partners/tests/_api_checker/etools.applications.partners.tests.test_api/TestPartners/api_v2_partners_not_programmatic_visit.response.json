@@ -45,33 +45,6 @@
             "total_ct_ytd": null,
             "hidden": false,
             "basis_for_risk_rating": ""
-        },
-        {
-            "street_address": null,
-            "last_assessment_date": null,
-            "address": null,
-            "city": null,
-            "postal_code": null,
-            "country": null,
-            "id": 101,
-            "vendor_number": "DDD",
-            "deleted_flag": false,
-            "blocked": false,
-            "name": "Partner 4",
-            "short_name": "Short name",
-            "partner_type": "Civil Society Organization",
-            "cso_type": "International",
-            "rating": null,
-            "shared_with": null,
-            "email": null,
-            "phone_number": null,
-            "total_ct_cp": null,
-            "total_ct_cy": null,
-            "net_ct_cy": null,
-            "reported_cy": null,
-            "total_ct_ytd": null,
-            "hidden": false,
-            "basis_for_risk_rating": ""
         }
     ],
     "content_type": null

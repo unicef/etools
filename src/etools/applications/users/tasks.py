@@ -131,11 +131,11 @@ class UserMapper(object):
     @transaction.atomic
     def create_or_update_user(self, record):
 
-        key_value = record[self.KEY_ATTRIBUTE]
-        logger.debug(key_value)
-
         if not self.record_is_valid(record):
             return
+
+        key_value = record[self.KEY_ATTRIBUTE]
+        logger.debug(key_value)
 
         try:
             user, created = get_user_model().objects.get_or_create(
@@ -218,10 +218,13 @@ class UserMapper(object):
                     user.profile.save()
 
     def record_is_valid(self, record):
+        if self.KEY_ATTRIBUTE not in record:
+            logger.info(u"Discarding Record {} field is missing".format(self.KEY_ATTRIBUTE))
+            return False
         for field in self.REQUIRED_USER_FIELDS:
             if isinstance(field, str):
                 if not record.get(field, False):
-                    logger.debug(u"User doesn't have the required fields {} missing".format(field))
+                    logger.info(u"User doesn't have the required fields {} missing".format(field))
                     return False
             elif isinstance(field, tuple):
                 allowed_values = field[1]
