@@ -37,7 +37,6 @@ from etools.applications.utils.groups.wrappers import GroupWrapper
 
 
 class Engagement(InheritedModelMixin, TimeStampedModel, models.Model):
-
     TYPE_AUDIT = 'audit'
     TYPE_MICRO_ASSESSMENT = 'ma'
     TYPE_SPOT_CHECK = 'sc'
@@ -221,12 +220,8 @@ class Engagement(InheritedModelMixin, TimeStampedModel, models.Model):
     def reference_number(self):
         return self.unique_id
 
-    def get_mail_context(self, user=None):
-        object_url = self.get_object_url()
-
-        if user:
-            from etools.applications.tokens.utils import update_url_with_auth_token
-            object_url = update_url_with_auth_token(object_url, user)
+    def get_mail_context(self, **kwargs):
+        object_url = self.get_object_url(**kwargs)
 
         return {
             'unique_id': self.unique_id,
@@ -277,8 +272,8 @@ class Engagement(InheritedModelMixin, TimeStampedModel, models.Model):
     def finalize(self):
         self.date_of_final_report = timezone.now()
 
-    def get_object_url(self):
-        return build_frontend_url('ap', 'engagements', self.id, 'overview')
+    def get_object_url(self, **kwargs):
+        return build_frontend_url('ap', 'engagements', self.id, 'overview', **kwargs)
 
 
 class RiskCategory(OrderedModel, models.Model):
@@ -438,8 +433,8 @@ class SpotCheck(Engagement):
     def __str__(self):
         return 'SpotCheck ({}: {}, {})'.format(self.engagement_type, self.agreement.order_number, self.partner.name)
 
-    def get_object_url(self):
-        return build_frontend_url('ap', 'spot-checks', self.id, 'overview')
+    def get_object_url(self, **kwargs):
+        return build_frontend_url('ap', 'spot-checks', self.id, 'overview', **kwargs)
 
 
 class Finding(models.Model):
@@ -541,8 +536,8 @@ class MicroAssessment(Engagement):
             self.engagement_type, self.agreement.order_number, self.partner.name
         )
 
-    def get_object_url(self):
-        return build_frontend_url('ap', 'micro-assessments', self.id, 'overview')
+    def get_object_url(self, **kwargs):
+        return build_frontend_url('ap', 'micro-assessments', self.id, 'overview', **kwargs)
 
 
 class DetailedFindingInfo(models.Model):
@@ -633,8 +628,8 @@ class Audit(Engagement):
     def __str__(self):
         return 'Audit ({}: {}, {})'.format(self.engagement_type, self.agreement.order_number, self.partner.name)
 
-    def get_object_url(self):
-        return build_frontend_url('ap', 'audits', self.id, 'overview')
+    def get_object_url(self, **kwargs):
+        return build_frontend_url('ap', 'audits', self.id, 'overview', **kwargs)
 
 
 class FinancialFinding(models.Model):
@@ -727,8 +722,8 @@ class SpecialAudit(Engagement):
     def __str__(self):
         return 'Special Audit ({}: {}, {})'.format(self.engagement_type, self.agreement.order_number, self.partner.name)
 
-    def get_object_url(self):
-        return build_frontend_url('ap', 'special-audits', self.id, 'overview')
+    def get_object_url(self, **kwargs):
+        return build_frontend_url('ap', 'special-audits', self.id, 'overview', **kwargs)
 
 
 class SpecificProcedure(models.Model):
@@ -789,10 +784,10 @@ class EngagementActionPoint(ActionPoint):
     def complete(self):
         self._do_complete()
 
-    def get_mail_context(self):
-        context = super(EngagementActionPoint, self).get_mail_context()
+    def get_mail_context(self, user=None, include_token=False):
+        context = super(EngagementActionPoint, self).get_mail_context(user=user, include_token=include_token)
         if self.engagement:
-            context['engagement'] = self.engagement_subclass.get_mail_context()
+            context['engagement'] = self.engagement_subclass.get_mail_context(user=user, include_token=include_token)
         return context
 
 

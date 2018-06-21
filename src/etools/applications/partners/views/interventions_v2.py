@@ -549,7 +549,7 @@ class InterventionListMapView(ListCreateAPIView):
     permission_classes = (IsAdminUser,)
 
     def get_queryset(self):
-        q = Intervention.objects.detail_qs()
+        q = Intervention.objects
         # TODO: remember to add back the location filter after the PRP integration related structural changes are final
         # .filter(sector_locations__isnull=False).exclude(sector_locations__locations=None)\
         # .prefetch_related('sector_locations__locations')
