@@ -7,11 +7,15 @@ from rest_framework.exceptions import ValidationError
 from etools.applications.attachments.models import Attachment, AttachmentFlat
 from etools.applications.attachments.serializers_fields import Base64FileField
 from etools.applications.users.serializers import SimpleUserSerializer
+from etools.applications.utils.common.serializers.fields import SeparatedReadWriteField
 from etools.applications.utils.common.serializers.mixins import UserContextSerializerMixin
 
 
 class BaseAttachmentSerializer(UserContextSerializerMixin, serializers.ModelSerializer):
-    uploaded_by = SimpleUserSerializer(label=_('Uploaded By'), read_only=True)
+    uploaded_by = SeparatedReadWriteField(
+        write_field=serializers.HiddenField(default=serializers.CurrentUserDefault()),
+        read_field=SimpleUserSerializer(label=_('Uploaded By')),
+    )
 
     def _validate_attachment(self, validated_data, instance=None):
         file_attachment = validated_data.get('file', None) or (instance.file if instance else None)
@@ -22,7 +26,6 @@ class BaseAttachmentSerializer(UserContextSerializerMixin, serializers.ModelSeri
 
     def create(self, validated_data):
         self._validate_attachment(validated_data)
-        validated_data['uploaded_by'] = self.get_user()
         return super(BaseAttachmentSerializer, self).create(validated_data)
 
     def update(self, instance, validated_data):
