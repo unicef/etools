@@ -61,7 +61,7 @@ def get_pd_ssfa_number(obj):
             InterventionAmendment,
             InterventionAttachment,
     )):
-        return obj.content_object.intervention.number
+        return obj.content_object.intervention.number if obj.content_object.intervention else ""
     return ""
 
 
@@ -78,7 +78,7 @@ def get_agreement_obj(obj):
             InterventionAttachment,
             TPMActivity
     )):
-        return obj.content_object.intervention.agreement
+        return obj.content_object.intervention.agreement if obj.content_object.intervention else None
     return ""
 
 

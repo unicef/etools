@@ -37,7 +37,6 @@ from etools.applications.utils.groups.wrappers import GroupWrapper
 
 
 class Engagement(InheritedModelMixin, TimeStampedModel, models.Model):
-
     TYPE_AUDIT = 'audit'
     TYPE_MICRO_ASSESSMENT = 'ma'
     TYPE_SPOT_CHECK = 'sc'

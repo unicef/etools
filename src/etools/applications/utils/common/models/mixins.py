@@ -42,6 +42,9 @@ class InheritedModelMixin(object):
     """
 
     def get_subclass(self):
+        if not self.pk:
+            return self
+
         manager = self._meta.model._default_manager
         if not isinstance(manager, InheritanceManager):
             return self
