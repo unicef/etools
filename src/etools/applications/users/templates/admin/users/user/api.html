@@ -1,0 +1,11 @@
+{% extends "admin/base_site.html" %}{% load i18n %}
+
+{% block content %}
+<h2><a href="{% url 'admin:users_user_change' object.id %}" target="_blank">{{object.get_full_name}}</a></h2>
+
+<table>
+    {% for key, value in ad_dict.items %}
+    <tr><td>{{key}}</td><td>{{value}}</td></tr>
+    {% endfor %}
+</table>
+{% endblock content %}

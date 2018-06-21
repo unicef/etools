@@ -7,6 +7,7 @@ from django.db import connection
 from django.http import HttpResponseForbidden, HttpResponseRedirect
 
 from django.views.generic import FormView, RedirectView
+from django.views.generic.detail import DetailView
 
 from rest_framework import mixins, status, viewsets
 from rest_framework.exceptions import ValidationError
@@ -26,6 +27,7 @@ from etools.applications.users.serializers import (CountrySerializer, GroupSeria
                                                    OfficeSerializer, ProfileRetrieveUpdateSerializer,
                                                    SimpleProfileSerializer, SimpleUserSerializer,
                                                    UserCreationSerializer, UserSerializer,)
+from etools.libraries.azure_graph_api.tasks import retrieve_user_info
 
 logger = logging.getLogger(__name__)
 
@@ -38,6 +40,18 @@ class UserAuthAPIView(RetrieveAPIView):
     def get_object(self, queryset=None, **kwargs):
         user = self.request.user
         return user
+
+
+class ADUserAPIView(DetailView):
+    template_name = 'admin/users/user/api.html'
+    model = get_user_model()
+    slug_field = slug_url_kwarg = 'username'
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        if self.request.user and self.request.user.is_superuser:
+            context['ad_dict'] = retrieve_user_info(self.object.username)
+        return context
 
 
 class ChangeUserCountryView(APIView):
