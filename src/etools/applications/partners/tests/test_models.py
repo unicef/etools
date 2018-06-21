@@ -3,6 +3,7 @@ import datetime
 from unittest import skip
 
 from django.core.files.uploadedfile import SimpleUploadedFile
+from django.core.management import call_command
 from django.test import SimpleTestCase
 from django.urls import reverse
 from django.utils import timezone
@@ -606,6 +607,7 @@ class TestAgreementModel(BaseTenantTestCase):
 class TestInterventionModel(BaseTenantTestCase):
     def setUp(self):
         super(TestInterventionModel, self).setUp()
+        call_command('update_notifications')
         self.partner_organization = PartnerFactory(name="Partner Org 1")
         cp = CountryProgrammeFactory(
             name="CP 1",
@@ -866,7 +868,7 @@ class TestInterventionModel(BaseTenantTestCase):
         ])
 
     def test_intervention_locations_empty(self):
-        self.assertFalse(self.intervention.intervention_locations)
+        self.assertFalse(self.intervention.intervention_locations())
 
     def test_intervention_locations(self):
         intervention = InterventionFactory()
@@ -885,13 +887,13 @@ class TestInterventionModel(BaseTenantTestCase):
             lower_result=lower_result_2
         )
         applied_indicator_2.locations.add(location_2)
-        self.assertCountEqual(intervention.intervention_locations, [
+        self.assertCountEqual(intervention.intervention_locations(), [
             location_1,
             location_2,
         ])
 
     def test_intervention_clusters_empty(self):
-        self.assertFalse(self.intervention.intervention_clusters)
+        self.assertFalse(self.intervention.intervention_clusters())
 
     def test_intervention_clusters(self):
         intervention = InterventionFactory()
@@ -913,7 +915,7 @@ class TestInterventionModel(BaseTenantTestCase):
             cluster_name='',
         )
         AppliedIndicatorFactory(lower_result=lower_result_2)
-        self.assertCountEqual(intervention.intervention_clusters, [
+        self.assertCountEqual(intervention.intervention_clusters(), [
             "Title 1",
             "Title 2",
         ])

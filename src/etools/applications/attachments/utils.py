@@ -98,7 +98,7 @@ def denormalize_attachment(attachment):
     pd_ssfa_number = get_pd_ssfa_number(attachment)
     agreement_reference_number = get_agreement_reference_number(attachment)
     file_type = get_file_type(attachment)
-    uploaded_by = attachment.uploaded_by if attachment.uploaded_by else ""
+    uploaded_by = attachment.uploaded_by.get_full_name() if attachment.uploaded_by else ""
 
     flat, created = AttachmentFlat.objects.update_or_create(
         attachment=attachment,
