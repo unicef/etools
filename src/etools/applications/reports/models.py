@@ -374,7 +374,10 @@ class LowerResult(TimeStampedModel):
                 self.result_link.intervention.id,
                 latest_ll_id + 1
             )
-        return super(LowerResult, self).save(**kwargs)
+        super(LowerResult, self).save(**kwargs)
+
+        # reset certain caches
+        self.result_link.intervention.clear_caches()
 
 
 class Unit(models.Model):
@@ -649,6 +652,12 @@ class AppliedIndicator(TimeStampedModel):
 
     class Meta:
         unique_together = (("indicator", "lower_result"),)
+
+    def save(self, *args, **kwargs):
+        super().save(*args, **kwargs)
+
+        # reset certain caches
+        self.lower_result.result_link.intervention.clear_caches()
 
 
 class Indicator(TimeStampedModel):
