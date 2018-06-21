@@ -11,9 +11,9 @@ from rest_framework.filters import OrderingFilter, SearchFilter
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 
-from etools.applications.attachments.models import Attachment
 from etools.applications.action_points.conditions import ActionPointAuthorCondition, ActionPointAssignedByCondition, \
     ActionPointAssigneeCondition
+from etools.applications.attachments.models import Attachment
 from etools.applications.partners.models import PartnerOrganization
 from etools.applications.partners.serializers.partner_organization_v2 import MinimalPartnerOrganizationListSerializer
 from etools.applications.permissions2.conditions import ObjectStatusCondition
