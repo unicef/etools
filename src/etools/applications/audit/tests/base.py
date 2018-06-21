@@ -1,4 +1,3 @@
-
 import os
 import tempfile
 from datetime import timedelta
@@ -12,9 +11,13 @@ from post_office.models import EmailTemplate
 
 from etools.applications.attachments.models import Attachment, FileType
 from etools.applications.audit.models import RiskBluePrint
-from etools.applications.audit.tests.factories import (AuditorStaffMemberFactory,
-                                                       AuditPartnerFactory, RiskFactory, UserFactory,)
-from etools.applications.utils.groups.wrappers import GroupWrapper
+from etools.applications.audit.tests.factories import (
+    AuditorStaffMemberFactory,
+    AuditPartnerFactory,
+    RiskFactory,
+    UserFactory,
+)
+from etools.applications.EquiTrack.wrappers import GroupWrapper
 
 
 class AuditTestCaseMixin(object):

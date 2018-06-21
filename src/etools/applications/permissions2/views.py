@@ -1,6 +1,6 @@
 from rest_framework import serializers
 
-from etools.applications.utils.common.views import FSMTransitionActionMixin
+from etools.applications.EquiTrack.views import FSMTransitionActionMixin
 
 
 class PermissionContextMixin(object):

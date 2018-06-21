@@ -1,4 +1,3 @@
-
 from django.conf import settings
 from django.conf.urls import include, url
 from django.contrib import admin
@@ -10,6 +9,7 @@ from rest_framework_nested import routers
 from rest_framework_swagger.renderers import OpenAPIRenderer
 
 from etools.applications.EquiTrack.views import IssueJWTRedirectView, MainView, OutdatedBrowserView
+from etools.applications.EquiTrack.schemas import get_schema_view, get_swagger_view
 from etools.applications.locations.views import LocationsLightViewSet, LocationsViewSet, LocationTypesViewSet
 from etools.applications.management.urls import urlpatterns as management_urls
 from etools.applications.partners.views.v1 import FileTypeViewSet
@@ -20,7 +20,6 @@ from etools.applications.reports.views.v1 import (IndicatorViewSet, ResultTypeVi
 from etools.applications.t2f.urls import urlpatterns as t2f_patterns
 from etools.applications.users.views import (CountriesViewSet, GroupViewSet, ModuleRedirectView,
                                              OfficeViewSet, SectionViewSet, UserViewSet,)
-from etools.applications.utils.common.schemas import get_schema_view, get_swagger_view
 
 # ******************  API docs and schemas  ******************************
 schema_view = get_swagger_view(title='eTools API')

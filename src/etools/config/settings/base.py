@@ -189,10 +189,9 @@ SHARED_APPS = (
     'etools.applications.audit.purchase_order',
     'etools.applications.EquiTrack',
     'etools.applications.tpm.tpmpartners',
-    'etools.applications.utils.common',
-    'etools.applications.utils.mail',
-    'etools.applications.utils.writable_serializers',
-    'etools.applications.utils.permissions',
+    'etools.applications.generics',
+    'etools.applications.rest_extra',
+    'etools.applications.permissions',
     'waffle',
     'etools.applications.tokens',
     'etools.applications.permissions2',
@@ -240,7 +239,7 @@ TEMPLATES = [
             'loaders': [
                 'django.template.loaders.filesystem.Loader',
                 'django.template.loaders.app_directories.Loader',
-                'etools.applications.utils.mail.loaders.EmailTemplateLoader',
+                'etools.applications.EquiTrack.loaders.EmailTemplateLoader',
             ],
             'context_processors': [
                 # Already defined Django-related contexts here

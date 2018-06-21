@@ -23,19 +23,27 @@ from etools.applications.attachments.models import Attachment
 from etools.applications.environment.helpers import tenant_switch_is_active
 from etools.applications.EquiTrack.encoders import EToolsEncoder
 from etools.applications.EquiTrack.fields import CurrencyField
+from etools.applications.EquiTrack.utils import get_current_year
+from etools.applications.generics.fields import CodedGenericRelation
 from etools.applications.EquiTrack.serializers import StringConcat
-from etools.applications.EquiTrack.utils import get_current_year, get_quarter, import_permissions
 from etools.applications.funds.models import Grant
 from etools.applications.locations.models import Location
+from etools.applications.partners.utils import get_quarter, import_permissions
 from etools.applications.partners.validation import interventions as intervention_validation
-from etools.applications.partners.validation.agreements import (agreement_transition_to_ended_valid,
-                                                                agreement_transition_to_signed_valid,
-                                                                agreements_illegal_transition,)
-from etools.applications.reports.models import CountryProgramme, Indicator, Result, Sector
+from etools.applications.partners.validation.agreements import (
+    agreement_transition_to_ended_valid,
+    agreement_transition_to_signed_valid,
+    agreements_illegal_transition,
+)
+from etools.applications.reports.models import (
+    CountryProgramme,
+    Indicator,
+    Result,
+    Sector,
+)
 from etools.applications.t2f.models import Travel, TravelType
 from etools.applications.tpm.models import TPMVisit
 from etools.applications.users.models import Office
-from etools.applications.utils.common.models.fields import CodedGenericRelation
 
 INTERVENTION_LOWER_RESULTS_CACHE_KEY = "{}_intervention_lower_result"
 INTERVENTION_LOCATIONS_CACHE_KEY = "{}_intervention_locations"

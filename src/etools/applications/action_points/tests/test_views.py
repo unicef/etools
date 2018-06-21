@@ -9,11 +9,11 @@ from rest_framework import status
 from etools.applications.action_points.tests.base import ActionPointsTestCaseMixin
 from etools.applications.action_points.tests.factories import ActionPointFactory
 from etools.applications.EquiTrack.tests.cases import BaseTenantTestCase
+from etools.applications.EquiTrack.tests.test_utils import TestExportMixin
 from etools.applications.audit.tests.factories import MicroAssessmentFactory
 from etools.applications.partners.tests.factories import PartnerFactory
 from etools.applications.reports.tests.factories import SectorFactory
 from etools.applications.tpm.tests.factories import UserFactory, TPMVisitFactory
-from etools.applications.utils.common.tests.test_utils import TestExportMixin
 
 
 class TestActionPointViewSet(TestExportMixin, ActionPointsTestCaseMixin, BaseTenantTestCase):

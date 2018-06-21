@@ -1,4 +1,3 @@
-
 from django.db.models import Q
 from django.http import HttpResponseNotFound, HttpResponseRedirect
 from django.utils.translation import ugettext as _
@@ -10,7 +9,7 @@ from urllib.parse import urljoin
 
 from etools.applications.attachments.models import Attachment, AttachmentFlat
 from etools.applications.attachments.serializers import AttachmentFlatSerializer
-from etools.applications.utils.common.urlresolvers import site_url
+from etools.applications.EquiTrack.urlresolvers import site_url
 
 
 class AttachmentListView(ListAPIView):

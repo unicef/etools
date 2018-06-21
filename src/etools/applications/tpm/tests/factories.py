@@ -1,4 +1,3 @@
-
 import datetime
 
 from django.contrib.auth.models import Group
@@ -10,6 +9,7 @@ from factory import fuzzy
 
 from etools.applications.action_points.tests.factories import ActionPointFactory
 from etools.applications.attachments.tests.factories import AttachmentFactory
+from etools.applications.EquiTrack.tests.factories import InheritedTrait
 from etools.applications.firms.tests.factories import BaseFirmFactory, BaseStaffMemberFactory, BaseUserFactory
 from etools.applications.locations.tests.factories import LocationFactory
 from etools.applications.partners.models import InterventionResultLink, InterventionSectorLocationLink
@@ -18,7 +18,6 @@ from etools.applications.reports.tests.factories import ResultFactory, SectorFac
 from etools.applications.tpm.models import TPMActivity, TPMVisit, TPMVisitReportRejectComment
 from etools.applications.tpm.tpmpartners.models import TPMPartner, TPMPartnerStaffMember
 from etools.applications.users.tests.factories import OfficeFactory as SimpleOfficeFactory
-from etools.applications.utils.common.tests.factories import InheritedTrait
 
 _FUZZY_START_DATE = timezone.now().date() - datetime.timedelta(days=5)
 _FUZZY_END_DATE = timezone.now().date() + datetime.timedelta(days=5)

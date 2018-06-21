@@ -18,22 +18,29 @@ from ordered_model.models import OrderedModel
 
 from etools.applications.action_points.models import ActionPoint
 from etools.applications.attachments.models import Attachment
-from etools.applications.audit.purchase_order.models import AuditorStaffMember, PurchaseOrder, PurchaseOrderItem
-from etools.applications.audit.transitions.conditions import (AuditSubmitReportRequiredFieldsCheck,
-                                                              EngagementHasReportAttachmentsCheck,
-                                                              EngagementSubmitReportRequiredFieldsCheck,
-                                                              SpecialAuditSubmitRelatedModelsCheck,
-                                                              SPSubmitReportRequiredFieldsCheck,
-                                                              ValidateMARiskCategories, ValidateMARiskExtra,)
+from etools.applications.audit.purchase_order.models import (
+    AuditorStaffMember,
+    PurchaseOrder,
+    PurchaseOrderItem,
+)
+from etools.applications.audit.transitions.conditions import (
+    AuditSubmitReportRequiredFieldsCheck,
+    EngagementHasReportAttachmentsCheck,
+    EngagementSubmitReportRequiredFieldsCheck,
+    SpecialAuditSubmitRelatedModelsCheck,
+    SPSubmitReportRequiredFieldsCheck,
+    ValidateMARiskCategories,
+    ValidateMARiskExtra,
+)
 from etools.applications.audit.transitions.serializers import EngagementCancelSerializer
+from etools.applications.EquiTrack.mixins import InheritedModelMixin
+from etools.applications.EquiTrack.urlresolvers import build_frontend_url
 from etools.applications.EquiTrack.utils import get_environment
+from etools.applications.EquiTrack.wrappers import GroupWrapper
+from etools.applications.generics.fields import CodedGenericRelation
 from etools.applications.notification.utils import send_notification_using_email_template
 from etools.applications.partners.models import PartnerOrganization, PartnerStaffMember
 from etools.applications.permissions2.fsm import has_action_permission
-from etools.applications.utils.common.models.fields import CodedGenericRelation
-from etools.applications.utils.common.models.mixins import InheritedModelMixin
-from etools.applications.utils.common.urlresolvers import build_frontend_url
-from etools.applications.utils.groups.wrappers import GroupWrapper
 
 
 class Engagement(InheritedModelMixin, TimeStampedModel, models.Model):

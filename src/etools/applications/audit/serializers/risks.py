@@ -8,11 +8,15 @@ from django.utils.translation import ugettext_lazy as _
 from rest_framework import serializers
 
 from etools.applications.audit.models import Risk, RiskBluePrint, RiskCategory
-from etools.applications.utils.common.serializers.fields import (RecursiveListSerializer,
-                                                                 WriteListSerializeFriendlyRecursiveField,
-                                                                 DynamicChoicesField)
-from etools.applications.utils.writable_serializers.serializers import (WritableListSerializer,
-                                                                        WritableNestedSerializerMixin,)
+from etools.applications.rest_extra.fields import (
+    DynamicChoicesField,
+    RecursiveListSerializer,
+    WriteListSerializeFriendlyRecursiveField,
+)
+from etools.applications.rest_extra.serializers import (
+    WritableListSerializer,
+    WritableNestedSerializerMixin,
+)
 
 
 class BaseRiskSerializer(WritableNestedSerializerMixin, serializers.ModelSerializer):

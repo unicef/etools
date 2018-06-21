@@ -14,18 +14,24 @@ from model_utils.models import TimeStampedModel
 from etools.applications.action_points.models import ActionPoint
 from etools.applications.activities.models import Activity
 from etools.applications.attachments.models import Attachment
+from etools.applications.EquiTrack.urlresolvers import build_frontend_url
 from etools.applications.EquiTrack.utils import get_environment
+from etools.applications.EquiTrack.wrappers import GroupWrapper
+from etools.applications.generics.fields import CodedGenericRelation
 from etools.applications.notification.utils import send_notification_using_email_template
 from etools.applications.publics.models import SoftDeleteMixin
 from etools.applications.permissions2.fsm import has_action_permission
 from etools.applications.tpm.tpmpartners.models import TPMPartner, TPMPartnerStaffMember
-from etools.applications.tpm.transitions.conditions import (TPMVisitAssignRequiredFieldsCheck,
-                                                            TPMVisitReportValidations, ValidateTPMVisitActivities,)
-from etools.applications.tpm.transitions.serializers import (TPMVisitApproveSerializer, TPMVisitCancelSerializer,
-                                                             TPMVisitRejectSerializer,)
-from etools.applications.utils.common.models.fields import CodedGenericRelation
-from etools.applications.utils.common.urlresolvers import build_frontend_url
-from etools.applications.utils.groups.wrappers import GroupWrapper
+from etools.applications.tpm.transitions.conditions import (
+    TPMVisitAssignRequiredFieldsCheck,
+    TPMVisitReportValidations,
+    ValidateTPMVisitActivities,
+)
+from etools.applications.tpm.transitions.serializers import (
+    TPMVisitApproveSerializer,
+    TPMVisitCancelSerializer,
+    TPMVisitRejectSerializer,
+)
 
 
 class TPMVisit(SoftDeleteMixin, TimeStampedModel, models.Model):

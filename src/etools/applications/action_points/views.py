@@ -17,8 +17,8 @@ from etools.applications.action_points.models import ActionPoint
 from etools.applications.action_points.serializers import ActionPointListSerializer, ActionPointSerializer
 from etools.applications.permissions2.conditions import GroupCondition, NewObjectCondition, ObjectStatusCondition
 from etools.applications.permissions2.views import PermittedFSMActionMixin, PermittedSerializerMixin
-from etools.applications.utils.common.pagination import DynamicPageNumberPagination
-from etools.applications.utils.common.views import MultiSerializerViewSetMixin, SafeTenantViewSetMixin
+from etools.applications.rest_extra.pagination import DynamicPageNumberPagination
+from etools.applications.rest_extra.views import MultiSerializerViewSetMixin, SafeTenantViewSetMixin
 
 
 class ActionPointViewSet(

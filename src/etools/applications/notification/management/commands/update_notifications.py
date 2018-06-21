@@ -5,7 +5,7 @@ from django.db import transaction
 
 from post_office.models import EmailTemplate
 
-from etools.applications.utils.common.utils import strip_text
+from etools.applications.EquiTrack.utils import strip_text
 
 logger = logging.getLogger(__name__)
 

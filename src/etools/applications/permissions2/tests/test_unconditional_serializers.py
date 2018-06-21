@@ -3,7 +3,7 @@ from django.test import TestCase
 
 from rest_framework import serializers
 
-from etools.applications.utils.writable_serializers.serializers import WritableNestedSerializerMixin
+from etools.applications.rest_extra.serializers import WritableNestedSerializerMixin
 
 from ..models import Permission
 from ..serializers import PermissionsBasedSerializerMixin

@@ -2,7 +2,7 @@ from django.core.management.base import BaseCommand
 
 from etools.applications.attachments.models import Attachment, AttachmentFlat
 from etools.applications.attachments.utils import denormalize_attachment
-from etools.applications.utils.common.utils import run_on_all_tenants
+from etools.applications.EquiTrack.utils import run_on_all_tenants
 
 
 class Command(BaseCommand):

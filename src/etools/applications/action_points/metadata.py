@@ -1,9 +1,12 @@
 from rest_framework.metadata import SimpleMetadata
 
 from etools.applications.permissions2.metadata import PermittedFSMTransitionActionMetadataMixin
-from etools.applications.utils.common.metadata import ReadOnlyFieldWithChoicesMixin, \
-    SeparatedReadWriteFieldMetadata, CRUActionsMetadataMixin
-from etools.applications.utils.permissions.metadata import PermissionsBasedMetadataMixin
+from etools.applications.rest_extra.metadata import (
+    ReadOnlyFieldWithChoicesMixin,
+    SeparatedReadWriteFieldMetadata,
+    CRUActionsMetadataMixin,
+)
+from etools.applications.permissions.metadata import PermissionsBasedMetadataMixin
 
 
 class ActionPointMetadata(

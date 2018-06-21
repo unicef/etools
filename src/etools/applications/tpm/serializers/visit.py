@@ -1,4 +1,3 @@
-
 import itertools
 from copy import copy
 
@@ -15,16 +14,29 @@ from etools.applications.partners.serializers.interventions_v2 import Interventi
 from etools.applications.partners.serializers.partner_organization_v2 import MinimalPartnerOrganizationListSerializer
 from etools.applications.permissions2.serializers import PermissionsBasedSerializerMixin
 from etools.applications.reports.serializers.v1 import ResultSerializer, SectorSerializer
-from etools.applications.tpm.models import TPMActionPoint, TPMActivity, TPMVisit, TPMVisitReportRejectComment
+from etools.applications.rest_extra.fields import SeparatedReadWriteField
+from etools.applications.rest_extra.serializers import (
+    UserContextSerializerMixin,
+    WritableNestedParentSerializerMixin,
+    WritableNestedSerializerMixin,
+)
+from etools.applications.tpm.models import (
+    TPMActionPoint,
+    TPMActivity,
+    TPMVisit,
+    TPMVisitReportRejectComment,
+)
 from etools.applications.tpm.serializers.attachments import (
-    TPMAttachmentsSerializer, TPMReportAttachmentsSerializer, TPMReportSerializer,)
-from etools.applications.tpm.serializers.partner import TPMPartnerLightSerializer, TPMPartnerStaffMemberSerializer
+    TPMAttachmentsSerializer,
+    TPMReportAttachmentsSerializer,
+    TPMReportSerializer,
+)
+from etools.applications.tpm.serializers.partner import (
+    TPMPartnerLightSerializer,
+    TPMPartnerStaffMemberSerializer,
+)
 from etools.applications.tpm.tpmpartners.models import TPMPartnerStaffMember
 from etools.applications.users.serializers import MinimalUserSerializer, OfficeSerializer
-from etools.applications.utils.common.serializers.fields import SeparatedReadWriteField
-from etools.applications.utils.common.serializers.mixins import UserContextSerializerMixin
-from etools.applications.utils.writable_serializers.serializers import (
-    WritableNestedParentSerializerMixin, WritableNestedSerializerMixin,)
 
 
 class InterventionResultLinkVisitSerializer(serializers.ModelSerializer):

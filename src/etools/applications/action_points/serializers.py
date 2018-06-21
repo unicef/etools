@@ -15,9 +15,11 @@ from etools.applications.reports.serializers.v1 import ResultSerializer, SectorS
 from etools.applications.snapshot.models import Activity
 from etools.applications.users.serializers import OfficeSerializer
 from etools.applications.users.serializers_v3 import MinimalUserSerializer
-from etools.applications.utils.common.serializers.fields import SeparatedReadWriteField
-from etools.applications.utils.common.serializers.mixins import UserContextSerializerMixin
-from etools.applications.utils.writable_serializers.serializers import WritableNestedSerializerMixin
+from etools.applications.rest_extra.fields import SeparatedReadWriteField
+from etools.applications.rest_extra.serializers import (
+    UserContextSerializerMixin,
+    WritableNestedSerializerMixin,
+)
 
 
 class ActionPointBaseSerializer(UserContextSerializerMixin, SnapshotModelSerializer, serializers.ModelSerializer):

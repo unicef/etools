@@ -1,15 +1,21 @@
 import datetime
 from mock import Mock, patch
 
+from django.test import SimpleTestCase
 from django.conf import settings
 from django.core.management import call_command
+from freezegun import freeze_time
 
 from etools.applications.EquiTrack.tests.cases import BaseTenantTestCase
 from etools.applications.funds.tests.factories import FundsReservationHeaderFactory
 from etools.applications.locations.tests.factories import GatewayTypeFactory, LocationFactory
 from etools.applications.partners import utils
 from etools.applications.partners.models import Agreement, Intervention, InterventionBudget, InterventionResultLink
-from etools.applications.partners.tests.factories import AgreementFactory, InterventionFactory, PartnerFactory
+from etools.applications.partners.tests.factories import (
+    AgreementFactory,
+    InterventionFactory,
+    PartnerFactory,
+)
 from etools.applications.reports.models import (
     AppliedIndicator,
     IndicatorBlueprint,
@@ -91,6 +97,20 @@ def setup_intervention_test_data(test_case, include_results_and_indicators=False
             p_code='a-p-code')
         )
         test_case.disaggregation = test_case.applied_indicator.disaggregation.create(name='A Disaggregation')
+
+
+class TestGetQuarterDefault(SimpleTestCase):
+    @freeze_time("2013-05-26")
+    def test_get_quarter_default(self):
+
+        """test current quarter function"""
+        quarter = utils.get_quarter()
+        self.assertEqual(quarter, 'q2')
+
+    def test_get_quarter(self):
+        """test current quarter function"""
+        quarter = utils.get_quarter(datetime.datetime(2016, 10, 1))
+        self.assertEqual(quarter, 'q4')
 
 
 class TestSendPCARequiredNotification(BaseTenantTestCase):

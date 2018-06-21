@@ -18,7 +18,11 @@ from etools.applications.environment.tests.factories import TenantSwitchFactory
 from etools.applications.EquiTrack.tests.cases import BaseTenantTestCase
 from etools.applications.EquiTrack.tests.mixins import URLAssertionMixin
 from etools.applications.locations.tests.factories import LocationFactory
-from etools.applications.partners.models import Intervention, InterventionAmendment, InterventionResultLink
+from etools.applications.partners.models import (
+    Intervention,
+    InterventionAmendment,
+    InterventionResultLink,
+)
 from etools.applications.partners.tests.factories import (
     AgreementFactory,
     InterventionAmendmentFactory,
@@ -30,12 +34,18 @@ from etools.applications.partners.tests.factories import (
 )
 from etools.applications.partners.tests.test_utils import setup_intervention_test_data
 from etools.applications.reports.models import AppliedIndicator, ReportingRequirement
-from etools.applications.reports.tests.factories import (AppliedIndicatorFactory, CountryProgrammeFactory,
-                                                         IndicatorFactory, LowerResultFactory,
-                                                         ReportingRequirementFactory, ResultFactory, SectorFactory,)
+from etools.applications.reports.tests.factories import (
+    AppliedIndicatorFactory,
+    CountryProgrammeFactory,
+    IndicatorFactory,
+    LowerResultFactory,
+    ReportingRequirementFactory,
+    ResultFactory,
+    SectorFactory,
+)
 from etools.applications.snapshot.models import Activity
 from etools.applications.users.tests.factories import GroupFactory, UserFactory
-from etools.applications.utils.common.utils import get_all_field_names
+from etools.applications.EquiTrack.utils import get_all_field_names
 
 
 def _add_user_to_partnership_manager_group(user):

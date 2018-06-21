@@ -1,4 +1,3 @@
-
 import itertools
 from collections import OrderedDict
 
@@ -7,16 +6,34 @@ from django.utils.translation import ugettext_lazy as _
 from rest_framework import serializers
 
 from etools.applications.attachments.serializers import AttachmentPDFSerializer
-from etools.applications.audit.models import (Audit, Engagement, EngagementActionPoint, Finding, MicroAssessment,
-                                              SpecialAuditRecommendation, SpecificProcedure, SpotCheck, Risk)
-from etools.applications.audit.purchase_order.models import AuditorFirm, AuditorStaffMember, PurchaseOrder
+from etools.applications.audit.models import (
+    Audit,
+    Engagement,
+    EngagementActionPoint,
+    Finding,
+    MicroAssessment,
+    Risk,
+    SpecialAuditRecommendation,
+    SpecificProcedure,
+    SpotCheck,
+)
+from etools.applications.audit.purchase_order.models import (
+    AuditorFirm,
+    AuditorStaffMember,
+    PurchaseOrder,
+)
 from etools.applications.audit.serializers.auditor import PurchaseOrderItemSerializer
-from etools.applications.audit.serializers.engagement import (DetailedFindingInfoSerializer,
-                                                              KeyInternalControlSerializer,)
-from etools.applications.audit.serializers.risks import (AggregatedRiskRootSerializer,
-                                                         KeyInternalWeaknessSerializer, RiskRootSerializer,)
+from etools.applications.audit.serializers.engagement import (
+    DetailedFindingInfoSerializer,
+    KeyInternalControlSerializer,
+)
+from etools.applications.audit.serializers.risks import (
+    AggregatedRiskRootSerializer,
+    KeyInternalWeaknessSerializer,
+    RiskRootSerializer,
+)
 from etools.applications.partners.models import PartnerOrganization
-from etools.applications.utils.common.serializers.fields import CommaSeparatedExportField
+from etools.applications.rest_extra.fields import CommaSeparatedExportField
 
 
 class AuditorPDFSerializer(serializers.ModelSerializer):

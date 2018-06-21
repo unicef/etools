@@ -1,7 +1,6 @@
-
 from django.db import migrations
 
-from etools.applications.utils.common.migrating import fix_null_values
+from etools.applications.EquiTrack.utils import fix_null_values
 
 
 def fix_nulls(apps, schema):

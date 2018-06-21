@@ -1,14 +1,19 @@
 """
-Project wide base classes and utility functions for apps
+Generic classes/functions that don't fit anywhere specifically
+and not enough to make into a library
+
+Used throughout the eTools project
 """
-import codecs
-import csv
+import datetime
 import json
 import uuid
-from datetime import datetime
+
 from functools import wraps
+from itertools import chain
+import logging
 
 from django.conf import settings
+from django.contrib.contenttypes.fields import GenericForeignKey
 from django.contrib.sites.models import Site
 from django.core import serializers
 from django.core.cache import cache
@@ -16,9 +21,12 @@ from django.db import connection, models
 from django.db.models import Q
 from django.utils.cache import patch_cache_control
 
-import requests
 from rest_framework import status
 from rest_framework.response import Response
+
+from etools.applications.users.models import Country
+
+logger = logging.getLogger(__name__)
 
 
 def get_environment():
@@ -27,6 +35,35 @@ def get_environment():
 
 def get_current_site():
     return Site.objects.get_current()
+
+
+class EveryCountry:
+    """
+    Loop through every available available tenant/country, then revert back to whatever was set before.
+
+    Example usage:
+
+    with EveryCountry() as c:
+        for country in c:
+            print(country.name)
+            function()
+    """
+    original_country = None
+
+    def __enter__(self):
+        self.original_country = connection.tenant
+        for c in Country.objects.exclude(name='Global').all():
+            connection.set_tenant(c)
+            yield c
+
+    def __exit__(self, type, value, traceback):
+        connection.set_tenant(self.original_country)
+
+
+def run_on_all_tenants(function, **kwargs):
+    with EveryCountry() as c:
+        for country in c:
+            function(**kwargs)
 
 
 def set_country(user, request):
@@ -51,25 +88,9 @@ def set_country(user, request):
     connection.set_tenant(request.tenant)
 
 
-def get_data_from_insight(endpoint, data={}):
-    url = '{}/{}'.format(
-        settings.VISION_URL,
-        endpoint
-    ).format(**data)
-
-    response = requests.get(
-        url,
-        headers={'Content-Type': 'application/json'},
-        auth=(settings.VISION_USER, settings.VISION_PASSWORD),
-        verify=False
-    )
-    if response.status_code != 200:
-        return False, 'Loading data from Vision Failed, status {}'.format(response.status_code)
-    try:
-        result = json.loads(response.json())
-    except ValueError:
-        return False, 'Loading data from Vision Failed, no valid response returned for data: {}'.format(data)
-    return True, result
+def set_country_by_name(name):
+    connection.set_tenant(Country.objects.get(name=name))
+    logger.info(u'Set in {} workspace'.format(name))
 
 
 def etag_cached(cache_key, public_cache=False):
@@ -117,113 +138,28 @@ def etag_cached(cache_key, public_cache=False):
     return decorator
 
 
-class Vividict(dict):
-    def __missing__(self, key):
-        value = self[key] = type(self)()
-        return value
-
-
-class HashableDict(dict):
-    def __hash__(self):
-        return hash(frozenset(self.items()))
-
-
-def proccess_permissions(permission_dict):
-    '''
-    :param permission_dict: the csv file read as a generator of dictionaries
-     where the header contains the following keys:
-
-    'Group' - the Django Group the user should belong to - field may be blank.
-    'Condition' - the condition that should be required to satisfy.
-    'Status' - the status of the model (represents state)
-    'Field' - the field we are targetting (eg: start_date) this needs to be spelled exactly as it is on the model
-    'Action' - One of the following values: 'view', 'edit', 'required'
-    'Allowed' - the boolean 'TRUE' or 'FALSE' if the action should be allowed if the: group match, status match and
-    condition match are all valid
-
-    *** note that in order for the system to know what the default behaviour should be on a specified field for a
-    specific action, only the conditions opposite to the default should be defined.
-
-    :return:
-     a nested dictionary where the first key is the field targeted, the following nested key is the action possible,
-     and the last nested key is the action parameter
-     eg:
-     {'start_date': {'edit': {'false': [{'condition': 'condition2',
-                                         'group': 'UNICEF USER',
-                                         'status': 'Active'}]},
-                     'required': {'true': [{'condition': '',
-                                            'group': 'UNICEF USER',
-                                            'status': 'Active'},
-                                           {'condition': '',
-                                            'group': 'UNICEF USER',
-                                            'status': 'Signed'}]},
-                     'view': {'true': [{'condition': 'condition1',
-                                        'group': 'PM',
-                                        'status': 'Active'}]}}}
-    '''
-
-    result = Vividict()
-    possible_actions = ['edit', 'required', 'view']
-
-    for row in permission_dict:
-        field = row['Field Name']
-        action = row['Action'].lower()
-        allowed = row['Allowed'].lower()
-        assert action in possible_actions
-
-        if isinstance(result[field][action][allowed], dict):
-            result[field][action][allowed] = []
-
-        # this action should not have been defined with any other allowed param
-        assert list(result[field][action].keys()) == [allowed], \
-            'There cannot be two types of "allowed" defined on the same ' \
-            'field with the same action as the system will not be able' \
-            ' to have a default behaviour.  field=%r, action=%r, allowed=%r' \
-            % (field, action, allowed)
-
-        result[field][action][allowed].append({
-            'group': row['Group'],
-            'condition': row['Condition'],
-            'status': row['Status'].lower()
-        })
-    return result
-
-
-def import_permissions(model_name):
-    permission_file_map = {
-        'Intervention': settings.PACKAGE_ROOT + '/assets/partner/intervention_permissions.csv',
-        'Agreement': settings.PACKAGE_ROOT + '/assets/partner/agreement_permissions.csv'
-    }
-
-    def process_file():
-        with codecs.open(permission_file_map[model_name], 'r', encoding='ascii') as csvfile:
-            sheet = csv.DictReader(csvfile, delimiter=',', quotechar='|')
-            result = proccess_permissions(sheet)
-        return result
-
-    cache_key = "public-{}-permissions".format(model_name.lower())
-    response = cache.get_or_set(cache_key, process_file, 60 * 60 * 24)
-
-    return response
-
-
 def get_current_year():
-    return datetime.today().year
+    return datetime.date.today().year
 
 
-def get_quarter(retrieve_date=None):
-    if not retrieve_date:
-        retrieve_date = datetime.today()
-    month = retrieve_date.month
-    if 0 < month <= 3:
-        quarter = 'q1'
-    elif 3 < month <= 6:
-        quarter = 'q2'
-    elif 6 < month <= 9:
-        quarter = 'q3'
-    else:
-        quarter = 'q4'
-    return quarter
+def get_all_field_names(TheModel):
+    '''Return a list of all field names that are possible for this model (including reverse relation names).
+    Any internal-only field names are not included.
+
+    Replacement for MyModel._meta.get_all_field_names() which does not exist under Django 1.10.
+    https://github.com/django/django/blob/stable/1.7.x/django/db/models/options.py#L422
+    https://docs.djangoproject.com/en/1.10/ref/models/meta/#migrating-from-the-old-api
+    '''
+    return list(set(chain.from_iterable(
+        (field.name, field.attname) if hasattr(field, 'attname') else (field.name,)
+        for field in TheModel._meta.get_fields()
+        if not (field.many_to_one and field.related_model is None) and
+        not isinstance(field, GenericForeignKey)
+    )))
+
+
+def strip_text(text):
+    return '\r\n'.join(map(lambda line: line.lstrip(), text.splitlines()))
 
 
 def model_instance_to_dictionary(obj):
@@ -261,3 +197,12 @@ def make_dictionary_serializable(data):
         k: model_instance_to_dictionary(v) if isinstance(v, models.Model) else v
         for k, v in data.items()
     }
+
+
+def fix_null_values(model, field_names, new_value=''):
+    """
+    For each fieldname, update any records in 'model' where the field's value is NULL
+    to be an empty string instead (or whatever new_value is)
+    """
+    for name in field_names:
+        model._default_manager.filter(**{name: None}).update(**{name: new_value})

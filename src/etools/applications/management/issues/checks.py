@@ -1,4 +1,3 @@
-
 import logging
 from abc import ABCMeta, abstractmethod
 from collections import namedtuple
@@ -10,9 +9,12 @@ from django.db.models import Model
 from django.utils.module_loading import import_string
 
 from etools.applications.environment.models import IssueCheckConfig
-from etools.applications.management.issues.exceptions import IssueCheckNotFoundException, IssueFoundException
+from etools.applications.management.issues.exceptions import (
+    IssueCheckNotFoundException,
+    IssueFoundException,
+)
 from etools.applications.management.models import FlaggedIssue, ISSUE_STATUS_RESOLVED
-from etools.applications.utils.common.utils import run_on_all_tenants
+from etools.applications.EquiTrack.utils import run_on_all_tenants
 
 ModelCheckData = namedtuple('ModelCheckData', 'object metadata')
 

@@ -8,9 +8,9 @@ from django.views.generic import TemplateView, View
 from easy_pdf.views import PDFTemplateView
 from rest_framework import mixins, viewsets
 
-from etools.applications.EquiTrack.utils import get_data_from_insight
 from etools.applications.partners.models import Agreement, FileType
 from etools.applications.partners.serializers.v1 import FileTypeSerializer
+from etools.applications.partners.utils import get_data_from_insight
 
 
 class PCAPDFView(PDFTemplateView):

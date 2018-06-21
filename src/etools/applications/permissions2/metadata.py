@@ -1,4 +1,4 @@
-from etools.applications.utils.common.metadata import FSMTransitionActionMetadataMixin
+from etools.applications.EquiTrack.metadata import FSMTransitionActionMetadataMixin
 
 
 class PermittedFSMTransitionActionMetadataMixin(FSMTransitionActionMetadataMixin):

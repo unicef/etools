@@ -1,4 +1,3 @@
-
 from django.core.management import call_command
 from django.core.urlresolvers import reverse
 from django.utils.translation import ugettext as _
@@ -6,10 +5,10 @@ from django.utils.translation import ugettext as _
 from rest_framework import status
 
 from etools.applications.EquiTrack.tests.cases import BaseTenantTestCase
+from etools.applications.permissions.tests.mixins import TransitionPermissionsTestCaseMixin
 from etools.applications.tpm.models import TPMVisit
 from etools.applications.tpm.tests.base import TPMTestCaseMixin
 from etools.applications.tpm.tests.factories import TPMVisitFactory, UserFactory
-from etools.applications.utils.permissions.tests.mixins import TransitionPermissionsTestCaseMixin
 
 
 class TPMTransitionTestCase(TPMTestCaseMixin, BaseTenantTestCase):
