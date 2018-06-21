@@ -9,6 +9,7 @@ from rest_framework.exceptions import ValidationError
 from etools.applications.attachments.serializers import Base64AttachmentSerializer
 from etools.applications.attachments.tests.factories import AttachmentFileTypeFactory
 from etools.applications.EquiTrack.tests.cases import BaseTenantTestCase
+from etools.applications.users.tests.factories import UserFactory
 
 
 class TestAttachmentsSerializer(BaseTenantTestCase):
@@ -22,7 +23,7 @@ class TestAttachmentsSerializer(BaseTenantTestCase):
     def test_invalid(self):
         invalid_serializer = Base64AttachmentSerializer(data={
             'file_type': self.file_type.pk,
-        })
+        }, context={'user': UserFactory()})
 
         self.assertTrue(invalid_serializer.is_valid())
         # file and hyperlink validation were moved to save in fact
@@ -36,7 +37,7 @@ class TestAttachmentsSerializer(BaseTenantTestCase):
             'file': self.base64_file,
             'file_name': self.file_name,
             'file_type': self.file_type.pk,
-        })
+        }, context={'user': UserFactory()})
         self.assertTrue(valid_serializer.is_valid())
         attachment_instance = valid_serializer.save(content_object=self.file_type)
         self.assertTrue(

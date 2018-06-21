@@ -6,6 +6,7 @@ import json
 
 from django.conf import settings
 from django.contrib.postgres.fields import ArrayField, JSONField
+from django.core.cache import cache
 from django.db import models, connection, transaction
 from django.db.models import Case, Count, CharField, F, Max, Min, Q, Sum, When
 from django.db.models.signals import post_save, pre_delete
@@ -35,6 +36,11 @@ from etools.applications.t2f.models import Travel, TravelType
 from etools.applications.tpm.models import TPMVisit
 from etools.applications.users.models import Office
 from etools.applications.utils.common.models.fields import CodedGenericRelation
+
+INTERVENTION_LOWER_RESULTS_CACHE_KEY = "{}_intervention_lower_result"
+INTERVENTION_LOCATIONS_CACHE_KEY = "{}_intervention_locations"
+INTERVENTION_FLAGGED_SECTIONS_CACHE_KEY = "{}_intervention_flagged_sections"
+INTERVENTION_CLUSTERS_CACHE_KEY = "{}_intervention_clusters"
 
 
 def _get_partner_base_path(partner):
@@ -1834,42 +1840,63 @@ class Intervention(TimeStampedModel):
             for lower_result in link.ll_results.all()
         ]
 
-    @cached_property
-    def intervention_locations(self):
-        if tenant_switch_is_active("prp_mode_off"):
-            locations = set(self.flat_locations.all())
-        else:
-            # return intervention locations as a set of Location objects
-            locations = set()
-            for lower_result in self.all_lower_results:
-                for applied_indicator in lower_result.applied_indicators.all():
-                    for location in applied_indicator.locations.all():
-                        locations.add(location)
+    def intervention_locations(self, reset=False):
+        cache_key = INTERVENTION_LOCATIONS_CACHE_KEY.format(self.pk)
+        if reset:
+            cache.delete(cache_key)
+            return
+
+        locations = cache.get(cache_key)
+        if locations is None:
+            if tenant_switch_is_active("prp_mode_off"):
+                locations = set(self.flat_locations.all())
+            else:
+                # return intervention locations as a set of Location objects
+                locations = set()
+                for lower_result in self.all_lower_results:
+                    for applied_indicator in lower_result.applied_indicators.all():
+                        for location in applied_indicator.locations.all():
+                            locations.add(location)
+            cache.set(cache_key, locations)
 
         return locations
 
-    @cached_property
-    def flagged_sections(self):
-        if tenant_switch_is_active("prp_mode_off"):
-            sections = set(self.sections.all())
-        else:
-            # return intervention locations as a set of Location objects
-            sections = set()
-            for lower_result in self.all_lower_results:
-                for applied_indicator in lower_result.applied_indicators.all():
-                    if applied_indicator.section:
-                        sections.add(applied_indicator.section)
+    def flagged_sections(self, reset=False):
+        cache_key = INTERVENTION_FLAGGED_SECTIONS_CACHE_KEY.format(self.pk)
+        if reset:
+            cache.delete(cache_key)
+            return
+
+        sections = cache.get(cache_key)
+        if sections is None:
+            if tenant_switch_is_active("prp_mode_off"):
+                sections = set(self.sections.all())
+            else:
+                # return intervention locations as a set of Location objects
+                sections = set()
+                for lower_result in self.all_lower_results:
+                    for applied_indicator in lower_result.applied_indicators.all():
+                        if applied_indicator.section:
+                            sections.add(applied_indicator.section)
+            cache.set(cache_key, sections)
 
         return sections
 
-    @cached_property
-    def intervention_clusters(self):
+    def intervention_clusters(self, reset=False):
         # return intervention clusters as an array of strings
-        clusters = set()
-        for lower_result in self.all_lower_results:
-            for applied_indicator in lower_result.applied_indicators.all():
-                if applied_indicator.cluster_name:
-                    clusters.add(applied_indicator.cluster_name)
+        cache_key = INTERVENTION_CLUSTERS_CACHE_KEY.format(self.pk)
+        if reset:
+            cache.delete(cache_key)
+            return
+
+        clusters = cache.get(cache_key)
+        if clusters is None:
+            clusters = set()
+            for lower_result in self.all_lower_results:
+                for applied_indicator in lower_result.applied_indicators.all():
+                    if applied_indicator.cluster_name:
+                        clusters.add(applied_indicator.cluster_name)
+            cache.set(cache_key, clusters)
 
         return clusters
 
@@ -2017,6 +2044,11 @@ class Intervention(TimeStampedModel):
 
             if save_agreement:
                 self.agreement.save()
+
+    def clear_caches(self):
+        self.intervention_locations(reset=True)
+        self.flagged_sections(reset=True)
+        self.intervention_clusters(reset=True)
 
     @transaction.atomic
     def save(self, force_insert=False, **kwargs):
@@ -2172,6 +2204,12 @@ class InterventionResultLink(TimeStampedModel):
         return '{} {}'.format(
             self.intervention, self.cp_output
         )
+
+    def save(self, *args, **kwargs):
+        super().save(*args, **kwargs)
+
+        # reset certain caches
+        self.intervention.clear_caches()
 
 
 class InterventionBudget(TimeStampedModel):
