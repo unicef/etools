@@ -1,17 +1,15 @@
-
 from django.conf import settings
 from django.contrib.contenttypes.fields import GenericForeignKey
 from django.contrib.contenttypes.models import ContentType
 from django.contrib.postgres.fields import JSONField
+from django.core.exceptions import FieldDoesNotExist
 from django.db import models
-from django.utils import six
-from django.utils.encoding import python_2_unicode_compatible
+
 from django.utils.translation import ugettext as _
 
 from model_utils.models import TimeStampedModel
 
 
-@python_2_unicode_compatible
 class Activity(TimeStampedModel):
     CREATE = "create"
     UPDATE = "update"
@@ -50,7 +48,22 @@ class Activity(TimeStampedModel):
         return "{} {} {}".format(self.by_user, self.action, self.target)
 
     def by_user_display(self):
-        by_user = six.text_type(self.by_user)
+        by_user = str(self.by_user)
         if not by_user.strip():
             by_user = self.by_user.email
         return by_user
+
+    def get_action_display(self):
+        if self.action == Activity.CREATE:
+            return _('Created')
+        elif self.action == Activity.UPDATE:
+            titles = []
+            for field in self.change.keys():
+                try:
+                    titles.append(str(self.target._meta.get_field(field).verbose_name))
+                except FieldDoesNotExist:
+                    continue
+
+            return _('Changed {}').format(', '.join(titles))
+        else:
+            raise NotImplementedError

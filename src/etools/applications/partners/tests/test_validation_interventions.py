@@ -1,25 +1,44 @@
-
 import datetime
 from unittest import skip
 
 from mock import Mock, patch
 
 from etools.applications.EquiTrack.tests.cases import BaseTenantTestCase
-from etools.applications.EquiTrack.validation_mixins import BasicValidationError, StateValidError, TransitionError
 from etools.applications.funds.tests.factories import FundsReservationHeaderFactory
-from etools.applications.partners.models import Agreement, FileType, Intervention, InterventionAmendment
-from etools.applications.partners.tests.factories import (AgreementFactory, FileTypeFactory,
-                                                          InterventionAmendmentFactory, InterventionAttachmentFactory,
-                                                          InterventionFactory, PartnerStaffFactory,)
-from etools.applications.partners.validation.interventions import (InterventionValid, partnership_manager_only,
-                                                                   signed_date_valid,
-                                                                   ssfa_agreement_has_no_other_intervention,
-                                                                   start_date_related_agreement_valid,
-                                                                   start_date_signed_valid, transition_ok,
-                                                                   transition_to_active, transition_to_closed,
-                                                                   transition_to_signed, transition_to_suspended,
-                                                                   transition_to_terminated,)
+from etools.applications.partners.models import (
+    Agreement,
+    FileType,
+    Intervention,
+    InterventionAmendment,
+)
+from etools.applications.partners.tests.factories import (
+    AgreementFactory,
+    FileTypeFactory,
+    InterventionAmendmentFactory,
+    InterventionAttachmentFactory,
+    InterventionFactory,
+    PartnerStaffFactory,
+)
+from etools.applications.partners.validation.interventions import (
+    InterventionValid,
+    partnership_manager_only,
+    signed_date_valid,
+    ssfa_agreement_has_no_other_intervention,
+    start_date_related_agreement_valid,
+    start_date_signed_valid,
+    transition_ok,
+    transition_to_active,
+    transition_to_closed,
+    transition_to_signed,
+    transition_to_suspended,
+    transition_to_terminated,
+)
 from etools.applications.users.tests.factories import GroupFactory, UserFactory
+from etools_validator.exceptions import (
+    BasicValidationError,
+    StateValidationError,
+    TransitionError,
+)
 
 
 class TestPartnershipManagerOnly(BaseTenantTestCase):
@@ -694,7 +713,7 @@ class TestInterventionValid(BaseTenantTestCase):
                 mock_check
         ):
             with self.assertRaisesRegexp(
-                    StateValidError,
+                    StateValidationError,
                     "Cannot change fields while"
             ):
                 validator.check_rigid_fields(self.intervention)
@@ -702,7 +721,7 @@ class TestInterventionValid(BaseTenantTestCase):
     def test_state_signed_valid_invalid(self):
         """Invalid if unicef budget is 0"""
         self.intervention.total_unicef_budget = 0
-        with self.assertRaisesRegexp(StateValidError, "UNICEF Cash"):
+        with self.assertRaisesRegexp(StateValidationError, "UNICEF Cash"):
             self.validator.state_signed_valid(self.intervention)
 
     def test_state_signed_valid(self):
@@ -718,7 +737,7 @@ class TestInterventionValid(BaseTenantTestCase):
         self.intervention.total_unicef_budget = 10
         self.intervention.start = self.future_date
         with self.assertRaisesRegexp(
-                StateValidError,
+                StateValidationError,
                 "Today is not after the start date"
         ):
             self.validator.state_active_valid(self.intervention)
@@ -727,7 +746,7 @@ class TestInterventionValid(BaseTenantTestCase):
         """Invalid if unicef budget is 0"""
         self.intervention.total_unicef_budget = 0
         self.intervention.start = datetime.date(2001, 1, 1)
-        with self.assertRaisesRegexp(StateValidError, "UNICEF Cash"):
+        with self.assertRaisesRegexp(StateValidationError, "UNICEF Cash"):
             self.validator.state_active_valid(self.intervention)
 
     def test_state_active_valid(self):
@@ -742,7 +761,7 @@ class TestInterventionValid(BaseTenantTestCase):
         """Invalid if end date is after today"""
         self.intervention.end = self.future_date
         with self.assertRaisesRegexp(
-                StateValidError,
+                StateValidationError,
                 "Today is not after the end date"
         ):
             self.validator.state_ended_valid(self.intervention)

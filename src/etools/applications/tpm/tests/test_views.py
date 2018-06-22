@@ -1,32 +1,22 @@
 
-from datetime import datetime, timedelta
+from datetime import datetime
 
 from django.core.files.uploadedfile import SimpleUploadedFile
 from django.core.urlresolvers import reverse
-from django.utils import six
+from django.utils import timezone
 from django.utils.translation import ugettext_lazy as _
+from factory import fuzzy
 
 from rest_framework import status
 
+from etools.applications.action_points.tests.factories import ActionPointFactory
 from etools.applications.attachments.tests.factories import AttachmentFileTypeFactory, AttachmentFactory
 from etools.applications.EquiTrack.tests.cases import BaseTenantTestCase
 from etools.applications.partners.models import PartnerType
-from etools.applications.tpm.models import TPMActionPoint, TPMVisit
+from etools.applications.tpm.models import TPMVisit
 from etools.applications.tpm.tests.base import TPMTestCaseMixin
-from etools.applications.tpm.tests.factories import TPMPartnerFactory, TPMVisitFactory
-
-
-class TestExportMixin(object):
-    def _test_export(self, user, url_name, args=tuple(), kwargs=None, status_code=status.HTTP_200_OK):
-        response = self.forced_auth_req(
-            'get',
-            reverse(url_name, args=args, kwargs=kwargs or {}),
-            user=user
-        )
-
-        self.assertEqual(response.status_code, status_code)
-        if status_code == status.HTTP_200_OK:
-            self.assertIn(response._headers['content-disposition'][0], 'Content-Disposition')
+from etools.applications.tpm.tests.factories import TPMPartnerFactory, TPMVisitFactory, _FUZZY_END_DATE
+from etools.applications.utils.common.tests.test_utils import TestExportMixin
 
 
 class TestTPMVisitViewSet(TestExportMixin, TPMTestCaseMixin, BaseTenantTestCase):
@@ -38,8 +28,7 @@ class TestTPMVisitViewSet(TestExportMixin, TPMTestCaseMixin, BaseTenantTestCase)
         )
 
         self.assertEquals(response.status_code, status.HTTP_200_OK)
-        six.assertCountEqual(
-            self,
+        self.assertCountEqual(
             map(lambda x: x['id'], response.data['results']),
             map(lambda x: x.id, expected_visits)
         )
@@ -71,28 +60,6 @@ class TestTPMVisitViewSet(TestExportMixin, TPMTestCaseMixin, BaseTenantTestCase)
         )
 
         self.assertEquals(create_response.status_code, status.HTTP_201_CREATED)
-
-    def test_action_points(self):
-        visit = TPMVisitFactory(status='tpm_reported', tpm_activities__unicef_focal_points__count=1)
-        unicef_focal_point = visit.tpm_activities.first().unicef_focal_points.first()
-        self.assertFalse(TPMActionPoint.objects.filter(tpm_visit=visit).exists())
-
-        response = self.forced_auth_req(
-            'patch',
-            reverse('tpm:visits-detail', args=(visit.id,)),
-            user=unicef_focal_point,
-            data={
-                'action_points': [
-                    {
-                        "person_responsible": visit.tpm_partner.staff_members.first().user.id,
-                        "due_date": (datetime.now().date() + timedelta(days=5)).strftime('%Y-%m-%d'),
-                        "description": "Description",
-                    }
-                ]
-            }
-        )
-        self.assertEquals(response.status_code, status.HTTP_200_OK)
-        self.assertTrue(TPMActionPoint.objects.filter(tpm_visit=visit).exists())
 
     def test_intervention_bilateral_partner(self):
         visit = TPMVisitFactory(
@@ -242,16 +209,151 @@ class TestTPMVisitViewSet(TestExportMixin, TPMTestCaseMixin, BaseTenantTestCase)
         self._test_export(self.pme_user, 'tpm:visits-locations/export')
 
     def test_action_points_csv(self):
-        TPMVisitFactory(status='unicef_approved', action_points__count=3)
+        TPMVisitFactory(status='unicef_approved', tpm_activities__action_points__count=3)
         self._test_export(self.pme_user, 'tpm:visits-action-points/export')
 
     def test_visit_action_points_csv(self):
-        visit = TPMVisitFactory(status='unicef_approved', action_points__count=3)
-        self._test_export(self.pme_user, 'tpm:visits-action-points/export', args=(visit.id,))
+        visit = TPMVisitFactory(status='unicef_approved', tpm_activities__action_points__count=3)
+        self._test_export(self.pme_user, 'tpm:action-points-export', args=(visit.id,))
 
     def test_visit_letter(self):
         visit = TPMVisitFactory(status='tpm_accepted')
         self._test_export(self.pme_user, 'tpm:visits-visit-letter', args=(visit.id,))
+
+
+class TestTPMActionPointViewSet(TPMTestCaseMixin, BaseTenantTestCase):
+    def test_action_point_added(self):
+        visit = TPMVisitFactory(status='tpm_reported', tpm_activities__count=1)
+        activity = visit.tpm_activities.first()
+        self.assertEqual(activity.action_points.count(), 0)
+
+        response = self.forced_auth_req(
+            'post',
+            '/api/tpm/visits/{}/action-points/'.format(visit.id),
+            user=self.pme_user,
+            data={
+                'tpm_activity': activity.id,
+                'description': fuzzy.FuzzyText(length=100).fuzz(),
+                'due_date': fuzzy.FuzzyDate(timezone.now().date(), _FUZZY_END_DATE).fuzz(),
+                'assigned_to': self.unicef_user.id,
+                'office': self.pme_user.profile.office.id,
+            }
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        self.assertEqual(activity.action_points.count(), 1)
+        self.assertIsNotNone(activity.action_points.first().section)
+
+    def _test_action_point_editable(self, action_point, user, editable=True):
+        visit = action_point.tpm_activity.tpm_visit
+
+        response = self.forced_auth_req(
+            'options',
+            '/api/tpm/visits/{}/action-points/{}/'.format(visit.id, action_point.id),
+            user=user
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        if editable:
+            self.assertIn('PUT', response.data['actions'].keys())
+            self.assertCountEqual(
+                ['assigned_to', 'high_priority', 'due_date', 'description', 'office', 'tpm_activity'],
+                response.data['actions']['PUT'].keys()
+            )
+        else:
+            self.assertNotIn('PUT', response.data['actions'].keys())
+
+    def test_action_point_editable_by_pme(self):
+        visit = TPMVisitFactory(status='tpm_reported', tpm_activities__count=1)
+        activity = visit.tpm_activities.first()
+        action_point = ActionPointFactory(tpm_activity=activity, status='pre_completed')
+
+        self._test_action_point_editable(action_point, self.pme_user)
+
+    def test_action_point_editable_by_author(self):
+        visit = TPMVisitFactory(status='tpm_reported', tpm_activities__count=1)
+        activity = visit.tpm_activities.first()
+        action_point = ActionPointFactory(tpm_activity=activity, status='pre_completed')
+
+        self._test_action_point_editable(action_point, action_point.author)
+
+    def test_action_point_readonly_by_unicef_user(self):
+        visit = TPMVisitFactory(status='tpm_reported', tpm_activities__count=1)
+        activity = visit.tpm_activities.first()
+        action_point = ActionPointFactory(tpm_activity=activity, status='pre_completed')
+
+        self._test_action_point_editable(action_point, self.unicef_user, editable=False)
+
+    def test_action_point_editable_by_pme_approved_visit(self):
+        visit = TPMVisitFactory(status='unicef_approved', tpm_activities__count=1)
+        activity = visit.tpm_activities.first()
+        action_point = ActionPointFactory(tpm_activity=activity, status='pre_completed')
+
+        self._test_action_point_editable(action_point, self.pme_user)
+
+    def test_action_point_editable_by_author_approved_visit(self):
+        visit = TPMVisitFactory(status='unicef_approved', tpm_activities__count=1)
+        activity = visit.tpm_activities.first()
+        action_point = ActionPointFactory(tpm_activity=activity, status='pre_completed')
+
+        self._test_action_point_editable(action_point, action_point.author)
+
+    def test_action_point_readonly_by_unicef_user_approved_visit(self):
+        visit = TPMVisitFactory(status='unicef_approved', tpm_activities__count=1)
+        activity = visit.tpm_activities.first()
+        action_point = ActionPointFactory(tpm_activity=activity, status='pre_completed')
+
+        self._test_action_point_editable(action_point, self.unicef_user, editable=False)
+
+    def test_action_point_readonly_on_complete_by_pme(self):
+        visit = TPMVisitFactory(status='unicef_approved', tpm_activities__count=1)
+        activity = visit.tpm_activities.first()
+        action_point = ActionPointFactory(tpm_activity=activity, status='completed')
+
+        self._test_action_point_editable(action_point, self.pme_user, editable=False)
+
+    def test_action_point_readonly_on_complete_by_author(self):
+        visit = TPMVisitFactory(status='unicef_approved', tpm_activities__count=1)
+        activity = visit.tpm_activities.first()
+        action_point = ActionPointFactory(tpm_activity=activity, status='completed')
+
+        self._test_action_point_editable(action_point, action_point.assigned_to, editable=False)
+
+    def _test_complete(self, action_point, user, can_complete=True):
+        activity = action_point.tpm_activity
+        visit = activity.tpm_visit
+
+        response = self.forced_auth_req(
+            'post',
+            '/api/tpm/visits/{}/action-points/{}/complete/'.format(visit.id, action_point.id),
+            user=user
+        )
+
+        if can_complete:
+            self.assertEqual(response.status_code, status.HTTP_200_OK)
+            self.assertEqual(response.data['status'], 'completed')
+        else:
+            self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+
+    def test_action_point_complete_pme(self):
+        visit = TPMVisitFactory(status='tpm_reported', tpm_activities__count=1)
+        activity = visit.tpm_activities.first()
+        action_point = ActionPointFactory(tpm_activity=activity, status='pre_completed', comments__count=0)
+
+        self._test_complete(action_point, self.pme_user)
+
+    def test_action_point_complete_assignee(self):
+        visit = TPMVisitFactory(status='tpm_reported', tpm_activities__count=1)
+        activity = visit.tpm_activities.first()
+        action_point = ActionPointFactory(tpm_activity=activity, status='pre_completed', comments__count=0)
+
+        self._test_complete(action_point, action_point.assigned_to)
+
+    def test_action_point_complete_fail_unicef_user(self):
+        visit = TPMVisitFactory(status='tpm_reported', tpm_activities__count=1)
+        activity = visit.tpm_activities.first()
+        action_point = ActionPointFactory(tpm_activity=activity, status='pre_completed', comments__count=0)
+
+        self._test_complete(action_point, self.unicef_user, can_complete=False)
 
 
 class TestTPMStaffMembersViewSet(TestExportMixin, TPMTestCaseMixin, BaseTenantTestCase):
@@ -388,8 +490,7 @@ class TestTPMPartnerViewSet(TestExportMixin, TPMTestCaseMixin, BaseTenantTestCas
         )
 
         self.assertEquals(response.status_code, status.HTTP_200_OK)
-        six.assertCountEqual(
-            self,
+        self.assertCountEqual(
             map(lambda x: x['id'], response.data['results']),
             map(lambda x: x.id, expected_firms)
         )
@@ -405,8 +506,7 @@ class TestTPMPartnerViewSet(TestExportMixin, TPMTestCaseMixin, BaseTenantTestCas
 
         if can_create:
             self.assertIn('POST', response.data['actions'])
-            six.assertCountEqual(
-                self,
+            self.assertCountEqual(
                 writable_fields or [],
                 response.data['actions']['POST'].keys()
             )
@@ -424,8 +524,7 @@ class TestTPMPartnerViewSet(TestExportMixin, TPMTestCaseMixin, BaseTenantTestCas
 
         if can_update:
             self.assertIn('PUT', response.data['actions'])
-            six.assertCountEqual(
-                self,
+            self.assertCountEqual(
                 writable_fields or [],
                 response.data['actions']['PUT'].keys()
             )

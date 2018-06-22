@@ -1,5 +1,4 @@
 
-import datetime
 import random
 
 from django.contrib.auth.models import Group
@@ -8,7 +7,7 @@ import factory
 from factory import fuzzy
 
 from etools.applications.audit.models import (Audit, Auditor, DetailedFindingInfo, Engagement,
-                                              EngagementActionPoint, Finding, KeyInternalControl, MicroAssessment,
+                                              Finding, KeyInternalControl, MicroAssessment,
                                               Risk, RiskBluePrint, RiskCategory, SpecialAudit, SpecificProcedure,
                                               SpotCheck, UNICEFAuditFocalPoint, UNICEFUser,)
 from etools.applications.audit.purchase_order.models import (AuditorFirm, AuditorStaffMember,
@@ -33,6 +32,9 @@ class PartnerWithAgreementsFactory(PartnerFactory):
 
 
 class UserFactory(BaseUserFactory):
+    """
+    User factory with ability to quickly assign auditor portal related groups with special logic for auditor.
+    """
     class Params:
         unicef_user = factory.Trait(
             groups=[UNICEFUser.name],
@@ -209,12 +211,3 @@ class SpecificProcedureFactory(factory.DjangoModelFactory):
     audit = factory.SubFactory(SpecialAuditFactory)
     description = fuzzy.FuzzyText(length=100)
     finding = fuzzy.FuzzyText(length=100)
-
-
-class EngagementActionPointFactory(factory.DjangoModelFactory):
-    class Meta:
-        model = EngagementActionPoint
-
-    category = fuzzy.FuzzyChoice(EngagementActionPoint.CATEGORY_CHOICES)
-    description = fuzzy.FuzzyText(length=100)
-    due_date = fuzzy.FuzzyDate(datetime.date(2001, 1, 1))

@@ -4,7 +4,7 @@ from django.conf.urls import include, url
 from rest_framework_nested import routers
 
 from etools.applications.tpm.views import (
-    ActionPointViewSet, TPMPartnerViewSet, TPMStaffMembersViewSet, TPMVisitViewSet, PartnerAttachmentsViewSet,
+    TPMActionPointViewSet, TPMPartnerViewSet, TPMStaffMembersViewSet, TPMVisitViewSet, PartnerAttachmentsViewSet,
     VisitReportAttachmentsViewSet, ActivityReportAttachmentsViewSet, ActivityAttachmentsViewSet)
 from etools.applications.utils.common.routers import NestedComplexRouter
 
@@ -28,8 +28,8 @@ visit_attachments_api.register('activities/attachments', ActivityAttachmentsView
 visit_attachments_api.register('activities/report-attachments', ActivityReportAttachmentsViewSet,
                                base_name='activity-report-attachments')
 
-tpm_action_points_api = NestedComplexRouter(tpm_visits_api, r'visits', lookup='tpm_visit')
-tpm_action_points_api.register(r'nested-action-points', ActionPointViewSet, base_name='tpmactionpoint')
+tpm_action_points_api = NestedComplexRouter(tpm_visits_api, r'visits', lookup='tpm_activity__tpm_visit')
+tpm_action_points_api.register(r'action-points', TPMActionPointViewSet, base_name='action-points')
 
 
 app_name = 'tpm'

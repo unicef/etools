@@ -1,17 +1,19 @@
 from django.conf import settings
+from django.template import Context
 from django.template.loader import get_template
 
 from etools.applications.notification.models import Notification
 
 
-def get_template_content(content, filename):
+def get_template_content(content, filename, context={}):
     # If content given, use that; if filename given, fetch the template
     # from that file and return its content; else, return an empty string.
     if content:
         return content
     if filename:
+        ctx = Context(context)
         template = get_template(filename)
-        return template.template
+        return template.template.render(ctx)
     return ''
 
 
@@ -57,6 +59,9 @@ def send_notification_using_templates(
         from_address = settings.DEFAULT_FROM_EMAIL
 
     # Let the model handle parameter validation by creating the instance and 'cleaning' it before saving.
+    text_template = get_template_content(text_template_content, text_template_filename, context)
+    html_template = get_template_content(html_template_content, html_template_filename, context)
+
     notification = Notification(
         type='Email',
         sender=sender,
@@ -64,9 +69,9 @@ def send_notification_using_templates(
         recipients=recipients,
         cc=cc or [],
         template_data=context,
-        subject=get_template_content(subject_template_content, subject_template_filename),
-        text_message=get_template_content(text_template_content, text_template_filename),
-        html_message=get_template_content(html_template_content, html_template_filename),
+        subject=get_template_content(subject_template_content, subject_template_filename, context),
+        text_message=text_template,
+        html_message=html_template,
     )
     notification.full_clean()
     notification.save()

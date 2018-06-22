@@ -5,8 +5,9 @@ from django.contrib.auth.models import Group
 from django.core.exceptions import ValidationError as DjangoValidationError
 from django.db import connection
 from django.http import HttpResponseForbidden, HttpResponseRedirect
-from django.utils import six
+
 from django.views.generic import FormView, RedirectView
+from django.views.generic.detail import DetailView
 
 from rest_framework import mixins, status, viewsets
 from rest_framework.exceptions import ValidationError
@@ -26,6 +27,7 @@ from etools.applications.users.serializers import (CountrySerializer, GroupSeria
                                                    OfficeSerializer, ProfileRetrieveUpdateSerializer,
                                                    SimpleProfileSerializer, SimpleUserSerializer,
                                                    UserCreationSerializer, UserSerializer,)
+from etools.libraries.azure_graph_api.tasks import retrieve_user_info
 
 logger = logging.getLogger(__name__)
 
@@ -38,6 +40,18 @@ class UserAuthAPIView(RetrieveAPIView):
     def get_object(self, queryset=None, **kwargs):
         user = self.request.user
         return user
+
+
+class ADUserAPIView(DetailView):
+    template_name = 'admin/users/user/api.html'
+    model = get_user_model()
+    slug_field = slug_url_kwarg = 'username'
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        if self.request.user and self.request.user.is_superuser:
+            context['ad_dict'] = retrieve_user_info(self.object.username)
+        return context
 
 
 class ChangeUserCountryView(APIView):
@@ -85,7 +99,7 @@ class ChangeUserCountryView(APIView):
         try:
             self.change_country()
         except DjangoValidationError as err:
-            return HttpResponseForbidden(six.text_type(err))
+            return HttpResponseForbidden(str(err))
 
         return HttpResponseRedirect(self.get_redirect_url())
 
@@ -98,7 +112,7 @@ class ChangeUserCountryView(APIView):
                 status_code = status.HTTP_403_FORBIDDEN
             else:
                 status_code = status.HTTP_400_BAD_REQUEST
-            return Response(six.text_type(err), status=status_code)
+            return Response(str(err), status=status_code)
 
         return Response(status=status.HTTP_204_NO_CONTENT)
 

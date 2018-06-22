@@ -1,5 +1,4 @@
 from django.db import models
-from django.utils.encoding import python_2_unicode_compatible
 from django.utils.translation import ugettext_lazy as _
 
 from model_utils.models import TimeStampedModel
@@ -14,7 +13,6 @@ class AuditorFirm(BaseFirm):
                                                help_text=_('Allow UNICEF users to join and act as auditors.'))
 
 
-@python_2_unicode_compatible
 class AuditorStaffMember(BaseStaffMember):
     auditor_firm = models.ForeignKey(
         AuditorFirm, verbose_name=_('Auditor'), related_name='staff_members',
@@ -28,7 +26,7 @@ class AuditorStaffMember(BaseStaffMember):
     def send_user_appointed_email(self, engagement):
         context = {
             'environment': get_environment(),
-            'engagement': engagement.get_mail_context(user=self.user),
+            'engagement': engagement.get_mail_context(user=self.user, include_token=True),
             'staff_member': self.user.get_full_name(),
         }
 
@@ -44,7 +42,6 @@ class PurchaseOrderManager(models.Manager):
         return self.get(order_number=order_number)
 
 
-@python_2_unicode_compatible
 class PurchaseOrder(TimeStampedModel, models.Model):
     order_number = models.CharField(
         verbose_name=_('Purchase Order Number'),
