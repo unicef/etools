@@ -1916,6 +1916,7 @@ class TestInterventionReportingRequirementView(BaseTenantTestCase):
             user=self.unicef_staff,
             data={
                 "reporting_requirements": [{
+                    "start_date": datetime.date(2001, 3, 15),
                     "due_date": datetime.date(2001, 4, 15),
                 }, {
                     "due_date": datetime.date(2001, 5, 15),
@@ -1927,6 +1928,77 @@ class TestInterventionReportingRequirementView(BaseTenantTestCase):
         self.assertEqual(
             len(response.data["reporting_requirements"]),
             init_count + 2
+        )
+
+    def test_post_hr_invalid_start_after_end(self):
+        AppliedIndicatorFactory(
+            is_high_frequency=True,
+            lower_result=self.lower_result
+        )
+        report_type = ReportingRequirement.TYPE_HR
+        response = self.forced_auth_req(
+            "post",
+            self._get_url(report_type),
+            user=self.unicef_staff,
+            data={
+                "reporting_requirements": [{
+                    "start_date": datetime.date(2001, 4, 15),
+                    "due_date": datetime.date(2001, 3, 15),
+                }]
+            }
+        )
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertEqual(
+            response.data['reporting_requirements'],
+            {"due_date": 'Due date needs to be after the start date.'}
+        )
+
+    def test_post_hr_invalid_missing_start(self):
+        AppliedIndicatorFactory(
+            is_high_frequency=True,
+            lower_result=self.lower_result
+        )
+        report_type = ReportingRequirement.TYPE_HR
+        response = self.forced_auth_req(
+            "post",
+            self._get_url(report_type),
+            user=self.unicef_staff,
+            data={
+                "reporting_requirements": [{
+                    "due_date": datetime.date(2001, 4, 15),
+                }]
+            }
+        )
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertEqual(
+            response.data['reporting_requirements'],
+            {"start_date": 'The first HR is required to have a start date.'}
+        )
+
+    def test_post_hr_invalid_multiple_start(self):
+        AppliedIndicatorFactory(
+            is_high_frequency=True,
+            lower_result=self.lower_result
+        )
+        report_type = ReportingRequirement.TYPE_HR
+        response = self.forced_auth_req(
+            "post",
+            self._get_url(report_type),
+            user=self.unicef_staff,
+            data={
+                "reporting_requirements": [{
+                    "start_date": datetime.date(2001, 3, 15),
+                    "due_date": datetime.date(2001, 4, 15),
+                }, {
+                    "start_date": datetime.date(2001, 3, 15),
+                    "due_date": datetime.date(2001, 4, 15),
+                }]
+            }
+        )
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertEqual(
+            response.data['reporting_requirements'],
+            {"start_date": 'Only the first HR is expected to have a start date.'}
         )
 
     def test_post_invalid_no_report_type(self):

@@ -221,7 +221,7 @@ class TestInterventionReportingRequirementCreateSerializer(BaseTenantTestCase):
         data = {
             "report_type": ReportingRequirement.TYPE_HR,
             "reporting_requirements": [
-                {"due_date": datetime.date(2001, 4, 15)},
+                {"start_date": datetime.date(2001, 4, 15), "due_date": datetime.date(2001, 4, 15)},
                 {"due_date": datetime.date(2001, 5, 15)}
             ]
         }
@@ -243,7 +243,7 @@ class TestInterventionReportingRequirementCreateSerializer(BaseTenantTestCase):
         data = {
             "report_type": ReportingRequirement.TYPE_HR,
             "reporting_requirements": [
-                {"due_date": datetime.date(2001, 4, 15)},
+                {"start_date": datetime.date(2001, 4, 15), "due_date": datetime.date(2001, 4, 15)},
                 {"due_date": datetime.date(2001, 5, 15)}
             ]
         }
@@ -300,7 +300,7 @@ class TestInterventionReportingRequirementCreateSerializer(BaseTenantTestCase):
         data = {
             "report_type": ReportingRequirement.TYPE_HR,
             "reporting_requirements": [
-                {"due_date": datetime.date(2001, 4, 15)},
+                {"start_date": datetime.date(2001, 4, 15), "due_date": datetime.date(2001, 4, 15)},
                 {"due_date": datetime.date(2001, 5, 15)}
             ]
         }
@@ -356,6 +356,7 @@ class TestInterventionReportingRequirementCreateSerializer(BaseTenantTestCase):
         requirement = ReportingRequirementFactory(
             intervention=self.intervention,
             report_type=report_type,
+            start_date=datetime.date(2001, 3, 15),
             due_date=datetime.date(2001, 4, 15),
         )
         requirement_qs = ReportingRequirement.objects.filter(
@@ -366,6 +367,7 @@ class TestInterventionReportingRequirementCreateSerializer(BaseTenantTestCase):
         data = {
             "report_type": report_type,
             "reporting_requirements": [{
+                "start_date": datetime.date(2001, 3, 15),
                 "due_date": datetime.date(2001, 4, 15),
             }]
         }
@@ -379,6 +381,7 @@ class TestInterventionReportingRequirementCreateSerializer(BaseTenantTestCase):
         req_updated = ReportingRequirement.objects.get(pk=requirement.pk)
         self.assertEqual(req_updated.start_date, None)
         self.assertEqual(req_updated.end_date, req_updated.due_date)
+        self.assertEqual(req_updated.start_date, datetime.date(2001, 3, 15))
         self.assertEqual(req_updated.due_date, datetime.date(2001, 4, 15))
 
     def test_update_create_qpr(self):
@@ -439,6 +442,7 @@ class TestInterventionReportingRequirementCreateSerializer(BaseTenantTestCase):
         data = {
             "report_type": report_type,
             "reporting_requirements": [{
+                "start_date": datetime.date(2001, 3, 15),
                 "due_date": datetime.date(2001, 4, 15),
             }, {
                 "due_date": datetime.date(2001, 6, 15),
