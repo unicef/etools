@@ -514,7 +514,7 @@ class TestPartnerOrganizationModel(BaseTenantTestCase):
         travel = TravelFactory(
             traveler=traveller,
             status=Travel.COMPLETED,
-            completed_at=datetime.datetime(datetime.datetime.today().year, 9, 1, tzinfo=tz)
+            end_date=datetime.datetime(datetime.datetime.today().year, 9, 1, tzinfo=tz)
         )
         TravelActivityFactory(
             travels=[travel],

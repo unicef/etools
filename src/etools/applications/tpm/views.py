@@ -106,7 +106,8 @@ class TPMPartnerViewSet(
     def get_permission_context(self):
         context = super(TPMPartnerViewSet, self).get_permission_context()
 
-        if ThirdPartyMonitor.as_group() in self.request.user.groups.all():
+        if ThirdPartyMonitor.as_group() in self.request.user.groups.all() and \
+           hasattr(self.request.user, 'tpmpartners_tpmpartnerstaffmember'):
             context += [
                 TPMStaffMemberCondition(
                     self.request.user.tpmpartners_tpmpartnerstaffmember.tpm_partner,
@@ -303,7 +304,8 @@ class TPMVisitViewSet(
         if UNICEFUser.as_group() in user_groups or PME.as_group() in user_groups:
             # no need to filter queryset
             pass
-        elif ThirdPartyMonitor.as_group() in user_groups:
+        elif ThirdPartyMonitor.as_group() in user_groups and \
+                hasattr(self.request.user, 'tpmpartners_tpmpartnerstaffmember'):
             queryset = queryset.filter(
                 tpm_partner=self.request.user.tpmpartners_tpmpartnerstaffmember.tpm_partner
             ).exclude(status=TPMVisit.STATUSES.draft)
@@ -349,7 +351,8 @@ class TPMVisitViewSet(
     def get_permission_context(self):
         context = super(TPMVisitViewSet, self).get_permission_context()
 
-        if ThirdPartyMonitor.as_group() in self.request.user.groups.all():
+        if ThirdPartyMonitor.as_group() in self.request.user.groups.all() and \
+           hasattr(self.request.user, 'tpmpartners_tpmpartnerstaffmember'):
             context += [
                 TPMStaffMemberCondition(
                     self.request.user.tpmpartners_tpmpartnerstaffmember.tpm_partner,
