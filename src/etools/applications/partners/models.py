@@ -37,10 +37,10 @@ from etools.applications.tpm.models import TPMVisit
 from etools.applications.users.models import Office
 from etools.applications.utils.common.models.fields import CodedGenericRelation
 
-INTERVENTION_LOWER_RESULTS_CACHE_KEY = "{}_intervention_lower_result"
-INTERVENTION_LOCATIONS_CACHE_KEY = "{}_intervention_locations"
-INTERVENTION_FLAGGED_SECTIONS_CACHE_KEY = "{}_intervention_flagged_sections"
-INTERVENTION_CLUSTERS_CACHE_KEY = "{}_intervention_clusters"
+INTERVENTION_LOWER_RESULTS_CACHE_KEY = "{}-{}_intervention_lower_result"
+INTERVENTION_LOCATIONS_CACHE_KEY = "{}-{}_intervention_locations"
+INTERVENTION_FLAGGED_SECTIONS_CACHE_KEY = "{}-{}_intervention_flagged_sections"
+INTERVENTION_CLUSTERS_CACHE_KEY = "{}-{}_intervention_clusters"
 
 
 def _get_partner_base_path(partner):
@@ -1841,7 +1841,7 @@ class Intervention(TimeStampedModel):
         ]
 
     def intervention_locations(self, reset=False):
-        cache_key = INTERVENTION_LOCATIONS_CACHE_KEY.format(self.pk)
+        cache_key = INTERVENTION_LOCATIONS_CACHE_KEY.format(connection.schema_name, self.pk)
         if reset:
             cache.delete(cache_key)
             return
@@ -1862,7 +1862,7 @@ class Intervention(TimeStampedModel):
         return locations
 
     def flagged_sections(self, reset=False):
-        cache_key = INTERVENTION_FLAGGED_SECTIONS_CACHE_KEY.format(self.pk)
+        cache_key = INTERVENTION_FLAGGED_SECTIONS_CACHE_KEY.format(connection.schema_name, self.pk)
         if reset:
             cache.delete(cache_key)
             return
@@ -1884,7 +1884,7 @@ class Intervention(TimeStampedModel):
 
     def intervention_clusters(self, reset=False):
         # return intervention clusters as an array of strings
-        cache_key = INTERVENTION_CLUSTERS_CACHE_KEY.format(self.pk)
+        cache_key = INTERVENTION_CLUSTERS_CACHE_KEY.format(connection.schema_name, self.pk)
         if reset:
             cache.delete(cache_key)
             return
