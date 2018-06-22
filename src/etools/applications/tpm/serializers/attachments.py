@@ -2,36 +2,43 @@
 from django.utils.translation import ugettext as _
 
 from etools.applications.attachments.models import FileType
-from etools.applications.attachments.serializers import Base64AttachmentSerializer
+from etools.applications.attachments.serializers import BaseAttachmentSerializer
 from etools.applications.attachments.serializers_fields import FileTypeModelChoiceField
-from etools.applications.utils.writable_serializers.serializers import WritableNestedSerializerMixin
 
 
-class TPMPartnerAttachmentsSerializer(WritableNestedSerializerMixin, Base64AttachmentSerializer):
+class TPMPartnerAttachmentsSerializer(BaseAttachmentSerializer):
     file_type = FileTypeModelChoiceField(queryset=FileType.objects.filter(
         code="tpm_partner"), label=_('Document Type'))
 
-    class Meta(WritableNestedSerializerMixin.Meta, Base64AttachmentSerializer.Meta):
+    class Meta(BaseAttachmentSerializer.Meta):
         pass
 
 
-class TPMAttachmentsSerializer(WritableNestedSerializerMixin, Base64AttachmentSerializer):
+class ActivityAttachmentsSerializer(BaseAttachmentSerializer):
     file_type = FileTypeModelChoiceField(queryset=FileType.objects.filter(code="tpm"), label=_('Document Type'))
 
-    class Meta(WritableNestedSerializerMixin.Meta, Base64AttachmentSerializer.Meta):
-        pass
+    class Meta(BaseAttachmentSerializer.Meta):
+        fields = BaseAttachmentSerializer.Meta.fields + ['object_id']
+
+    def create(self, validated_data):
+        validated_data['code'] = 'activity_attachments'
+        return super(ActivityAttachmentsSerializer, self).create(validated_data)
 
 
-class TPMReportSerializer(WritableNestedSerializerMixin, Base64AttachmentSerializer):
+class ActivityReportSerializer(BaseAttachmentSerializer):
     file_type = FileTypeModelChoiceField(queryset=FileType.objects.filter(code="tpm_report"), label=_('Document Type'))
 
-    class Meta(WritableNestedSerializerMixin.Meta, Base64AttachmentSerializer.Meta):
-        pass
+    class Meta(BaseAttachmentSerializer.Meta):
+        fields = BaseAttachmentSerializer.Meta.fields + ['object_id']
+
+    def create(self, validated_data):
+        validated_data['code'] = 'activity_report'
+        return super(ActivityReportSerializer, self).create(validated_data)
 
 
-class TPMReportAttachmentsSerializer(WritableNestedSerializerMixin, Base64AttachmentSerializer):
+class TPMVisitReportAttachmentsSerializer(BaseAttachmentSerializer):
     file_type = FileTypeModelChoiceField(queryset=FileType.objects.filter(code='tpm_report_attachments'),
                                          label=_('Document Type'))
 
-    class Meta(WritableNestedSerializerMixin.Meta, Base64AttachmentSerializer.Meta):
+    class Meta(BaseAttachmentSerializer.Meta):
         pass

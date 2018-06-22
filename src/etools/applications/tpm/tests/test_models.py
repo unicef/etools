@@ -4,6 +4,8 @@ from django.core import mail
 from django.core.management import call_command
 
 from etools.applications.EquiTrack.tests.cases import BaseTenantTestCase
+from etools.applications.attachments.tests.factories import AttachmentFactory
+from etools.applications.attachments.utils import denormalize_attachment
 from etools.applications.tpm.models import ThirdPartyMonitor
 from etools.applications.tpm.tests.factories import TPMPartnerFactory, TPMPartnerStaffMemberFactory, TPMVisitFactory
 
@@ -31,6 +33,17 @@ class TestTPMVisit(BaseTenantTestCase):
             [a.pv_applicable for a in visit.tpm_activities.all()],
             [True, True, True]
         )
+
+
+class TestTPMActivity(BaseTenantTestCase):
+    def test_activity_attachment_without_intervention(self):
+        visit = TPMVisitFactory(tpm_activities__count=1)
+        activity = visit.tpm_activities.first()
+        activity.intervention = None
+        activity.save()
+
+        attachment = AttachmentFactory(content_object=activity)
+        denormalize_attachment(attachment)
 
 
 class TPMStaffMemberTestCase(BaseTenantTestCase):

@@ -18,8 +18,7 @@ class AttachmentAdmin(admin.ModelAdmin):
     list_display = [
         'file_type',
         'file',
-        'content_object',
         'modified',
         'uploaded_by',
     ]
-    list_filter = ['file_type', 'uploaded_by', ]
+    list_filter = ['file_type', ]

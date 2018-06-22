@@ -156,12 +156,8 @@ class TPMVisit(SoftDeleteMixin, TimeStampedModel, models.Model):
             self.start_date, self.end_date
         )
 
-    def get_mail_context(self, user=None, include_activities=True):
-        object_url = self.get_object_url()
-
-        if user:
-            from etools.applications.tokens.utils import update_url_with_auth_token
-            object_url = update_url_with_auth_token(object_url, user)
+    def get_mail_context(self, user=None, include_token=False, include_activities=True):
+        object_url = self.get_object_url(user=user, include_token=include_token)
 
         activities = self.tpm_activities.all()
         interventions = set(a.intervention.title for a in activities if a.intervention)
@@ -176,15 +172,15 @@ class TPMVisit(SoftDeleteMixin, TimeStampedModel, models.Model):
         }
 
         if include_activities:
-            context['tpm_activities'] = [a.get_mail_context(include_visit=False) for a in activities]
+            context['tpm_activities'] = [a.get_mail_context(user=user, include_visit=False) for a in activities]
 
         return context
 
-    def _send_email(self, recipients, template_name, context=None, user=None, **kwargs):
+    def _send_email(self, recipients, template_name, context=None, user=None, include_token=False, **kwargs):
         context = context or {}
 
         base_context = {
-            'visit': self.get_mail_context(user=user),
+            'visit': self.get_mail_context(user=user, include_token=include_token),
             'environment': get_environment(),
         }
         base_context.update(context)
@@ -241,7 +237,7 @@ class TPMVisit(SoftDeleteMixin, TimeStampedModel, models.Model):
             self._send_email(
                 staff_member.user.email, 'tpm/visit/assign_staff_member',
                 context={'recipient': staff_member.user.get_full_name()},
-                user=staff_member.user
+                user=staff_member.user, include_token=True
             )
 
     @transition(
@@ -269,7 +265,8 @@ class TPMVisit(SoftDeleteMixin, TimeStampedModel, models.Model):
             self._send_email(
                 recipient.email, 'tpm/visit/reject',
                 cc=self._get_tpm_focal_points_as_email_recipients(),
-                context={'recipient': recipient.get_full_name()}
+                context={'recipient': recipient.get_full_name()},
+                user=recipient,
             )
 
     @transition(status, source=[STATUSES.assigned], target=STATUSES.tpm_accepted,
@@ -294,7 +291,8 @@ class TPMVisit(SoftDeleteMixin, TimeStampedModel, models.Model):
             self._send_email(
                 recipient.email, 'tpm/visit/report',
                 cc=self._get_tpm_focal_points_as_email_recipients(),
-                context={'recipient': recipient.get_full_name()}
+                context={'recipient': recipient.get_full_name()},
+                user=recipient,
             )
 
     @transition(
@@ -312,7 +310,8 @@ class TPMVisit(SoftDeleteMixin, TimeStampedModel, models.Model):
         for staff_user in self.tpm_partner_focal_points.filter(user__email__isnull=False, user__is_active=True):
             self._send_email(
                 [staff_user.user.email], 'tpm/visit/report_rejected',
-                context={'recipient': staff_user.user.get_full_name()}
+                context={'recipient': staff_user.user.get_full_name()},
+                user=staff_user.user
             )
 
     @transition(status, source=[STATUSES.tpm_reported], target=STATUSES.unicef_approved,
@@ -329,7 +328,8 @@ class TPMVisit(SoftDeleteMixin, TimeStampedModel, models.Model):
             for recipient in self.unicef_focal_points_with_emails:
                 self._send_email(
                     recipient.email, 'tpm/visit/approve_report',
-                    context={'recipient': recipient.get_full_name()}
+                    context={'recipient': recipient.get_full_name()},
+                    user=recipient
                 )
 
         if notify_tpm_partner:
@@ -337,14 +337,15 @@ class TPMVisit(SoftDeleteMixin, TimeStampedModel, models.Model):
             for staff_user in self.tpm_partner_focal_points.filter(user__email__isnull=False, user__is_active=True):
                 self._send_email(
                     [staff_user.user.email, ], 'tpm/visit/approve_report_tpm',
-                    context={'recipient': staff_user.user.get_full_name()}
+                    context={'recipient': staff_user.user.get_full_name()},
+                    user=staff_user.user
                 )
 
         if approval_comment:
             self.approval_comment = approval_comment
 
-    def get_object_url(self):
-        return build_frontend_url('tpm', 'visits', self.id, 'details')
+    def get_object_url(self, **kwargs):
+        return build_frontend_url('tpm', 'visits', self.id, 'details', **kwargs)
 
 
 class TPMVisitReportRejectComment(models.Model):
@@ -428,7 +429,7 @@ class TPMActivity(Activity):
     def pv_applicable(self):
         return self.related_reports.exists()
 
-    def get_mail_context(self, user=None, include_visit=True):
+    def get_mail_context(self, user=None, include_token=False, include_visit=True):
         context = {
             'locations': ', '.join(map(force_text, self.locations.all())),
             'intervention': self.intervention.title if self.intervention else '-',
@@ -437,7 +438,8 @@ class TPMActivity(Activity):
             'partner': self.partner.name if self.partner else '-',
         }
         if include_visit:
-            context['tpm_visit'] = self.tpm_visit.get_mail_context(user=user, include_activities=False)
+            context['tpm_visit'] = self.tpm_visit.get_mail_context(user=user, include_token=include_token,
+                                                                   include_activities=False)
 
         return context
 
@@ -465,9 +467,10 @@ class TPMActionPoint(ActionPoint):
     def complete(self):
         self._do_complete()
 
-    def get_mail_context(self):
-        context = super(TPMActionPoint, self).get_mail_context()
-        context['tpm_activity'] = self.tpm_activity.get_mail_context() if self.tpm_activity else None
+    def get_mail_context(self, user=None, include_token=False):
+        context = super(TPMActionPoint, self).get_mail_context(user=user, include_token=include_token)
+        if self.tpm_activity:
+            context['tpm_activity'] = self.tpm_activity.get_mail_context(user=user, include_token=include_token)
         return context
 
 
