@@ -749,14 +749,14 @@ class PartnerOrganization(TimeStampedModel):
                 activities__travel_type=TravelType.SPOT_CHECK,
                 traveler=F('activities__primary_traveler'),
                 status__in=[Travel.COMPLETED],
-                completed_at__year=datetime.datetime.now().year,
+                end_date__year=datetime.datetime.now().year,
                 activities__partner=self,
             )
 
-            trq1 = trip.filter(completed_at__month__in=[1, 2, 3]).count()
-            trq2 = trip.filter(completed_at__month__in=[4, 5, 6]).count()
-            trq3 = trip.filter(completed_at__month__in=[7, 8, 9]).count()
-            trq4 = trip.filter(completed_at__month__in=[10, 11, 12]).count()
+            trq1 = trip.filter(end_date__month__in=[1, 2, 3]).count()
+            trq2 = trip.filter(end_date__month__in=[4, 5, 6]).count()
+            trq3 = trip.filter(end_date__month__in=[7, 8, 9]).count()
+            trq4 = trip.filter(end_date__month__in=[10, 11, 12]).count()
 
             audit_spot_check = SpotCheck.objects.filter(
                 partner=self, status=Engagement.FINAL,
