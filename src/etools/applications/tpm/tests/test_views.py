@@ -13,9 +13,9 @@ from etools.applications.action_points.tests.factories import ActionPointFactory
 from etools.applications.attachments.tests.factories import AttachmentFileTypeFactory, AttachmentFactory
 from etools.applications.EquiTrack.tests.cases import BaseTenantTestCase
 from etools.applications.partners.models import PartnerType
-from etools.applications.tpm.models import TPMVisit
+from etools.applications.tpm.models import TPMVisit, ThirdPartyMonitor
 from etools.applications.tpm.tests.base import TPMTestCaseMixin
-from etools.applications.tpm.tests.factories import TPMPartnerFactory, TPMVisitFactory, _FUZZY_END_DATE
+from etools.applications.tpm.tests.factories import TPMPartnerFactory, TPMVisitFactory, UserFactory, _FUZZY_END_DATE
 from etools.applications.utils.common.tests.test_utils import TestExportMixin
 
 
@@ -50,6 +50,12 @@ class TestTPMVisitViewSet(TestExportMixin, TPMTestCaseMixin, BaseTenantTestCase)
                                 tpm_partner_focal_points=[self.tpm_user.tpmpartners_tpmpartnerstaffmember])
 
         self._test_list_view(self.tpm_user, [visit])
+
+    def test_list_view_without_tpm_organization(self):
+        user = UserFactory(unicef_user=True)
+        user.groups.add(ThirdPartyMonitor.as_group())
+
+        self._test_list_view(user, [])
 
     def test_create_empty(self):
         create_response = self.forced_auth_req(
