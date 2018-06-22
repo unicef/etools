@@ -30,7 +30,8 @@ AUTHENTICATION_BACKENDS = (
 # No Redis for local dev
 CACHES = {
     'default': {
-        'BACKEND': 'django.core.cache.backends.locmem.LocMemCache',
+        'BACKEND': 'redis_cache.RedisCache',
+        'LOCATION': get_from_secrets_or_env('REDIS_URL', 'redis://localhost:6379/0')
     }
 }
 
