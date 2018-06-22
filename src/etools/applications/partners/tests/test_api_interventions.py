@@ -10,6 +10,7 @@ from django.urls import reverse, resolve
 from django.utils import timezone
 
 from rest_framework import status
+from rest_framework.exceptions import ErrorDetail
 from rest_framework.test import APIRequestFactory
 from unicef_snapshot.models import Activity
 
@@ -1542,7 +1543,8 @@ class TestInterventionAmendmentCreateAPIView(BaseTenantTestCase):
         )
 
         self.assertEquals(response.status_code, status.HTTP_400_BAD_REQUEST)
-        self.assertEquals(response.data['types'], [u'"%s" is not a valid choice.' % invalid_type])
+        self.assertEquals(response.data['types'],
+                          {0: [ErrorDetail(string='"invalid_choice" is not a valid choice.', code=f'{invalid_type}')]})
 
     def test_create_amendment_invalid_file(self):
         response = self._make_request(

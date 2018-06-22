@@ -143,8 +143,8 @@ class AppliedIndicatorSerializer(serializers.ModelSerializer):
         fields = '__all__'
 
     def validate(self, attrs):
-        lower_result = attrs.get('lower_result')
-        blueprint_data = attrs.get('indicator')
+        lower_result = attrs.get('lower_result', getattr(self.instance, 'lower_result', None))
+        blueprint_data = attrs.get('indicator', getattr(self.instance, 'indicator', None))
 
         # make sure locations are in the intervention
         locations = set(l.id for l in attrs.get('locations', []))

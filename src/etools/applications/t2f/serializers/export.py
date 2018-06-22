@@ -21,18 +21,18 @@ class YesOrNoField(serializers.BooleanField):
 
 
 class TravelActivityExportSerializer(serializers.Serializer):
-    reference_number = serializers.CharField(source='travel.reference_number')
-    traveler = serializers.CharField(source='travel.traveler.get_full_name')
-    section = serializers.CharField(source='travel.sector.name')
-    office = serializers.CharField(source='travel.office.name')
-    status = serializers.CharField(source='travel.status')
-    trip_type = serializers.CharField(source='activity.travel_type')
-    partner = serializers.CharField(source='activity.partner.name')
-    partnership = serializers.CharField(source='activity.partnership.title')
-    results = serializers.CharField(source='activity.result.name')
+    reference_number = serializers.CharField(source='travel.reference_number', read_only=True)
+    traveler = serializers.CharField(source='travel.traveler.get_full_name', read_only=True)
+    section = serializers.CharField(source='travel.sector.name', read_only=True)
+    office = serializers.CharField(source='travel.office.name', read_only=True)
+    status = serializers.CharField(source='travel.status', read_only=True)
+    trip_type = serializers.CharField(source='activity.travel_type', read_only=True)
+    partner = serializers.CharField(source='activity.partner.name', read_only=True)
+    partnership = serializers.CharField(source='activity.partnership.title', read_only=True)
+    results = serializers.CharField(source='activity.result.name', read_only=True)
     locations = serializers.SerializerMethodField()
-    start_date = serializers.DateTimeField(source='travel.start_date', format='%d-%b-%Y')
-    end_date = serializers.DateTimeField(source='travel.end_date', format='%d-%b-%Y')
+    start_date = serializers.DateTimeField(source='travel.start_date', format='%d-%b-%Y', read_only=True)
+    end_date = serializers.DateTimeField(source='travel.end_date', format='%d-%b-%Y', read_only=True)
     is_secondary_traveler = serializers.SerializerMethodField()
     primary_traveler_name = serializers.SerializerMethodField()
 
@@ -59,21 +59,22 @@ class TravelActivityExportSerializer(serializers.Serializer):
 
 class FinanceExportSerializer(serializers.Serializer):
     reference_number = serializers.CharField()
-    traveler = serializers.CharField(source='traveler.get_full_name')
-    office = serializers.CharField(source='office.name')
-    section = serializers.CharField(source='sector.name')
+    traveler = serializers.CharField(source='traveler.get_full_name', read_only=True)
+    office = serializers.CharField(source='office.name', read_only=True)
+    section = serializers.CharField(source='sector.name', read_only=True)
     status = serializers.CharField()
-    supervisor = serializers.CharField(source='supervisor.get_full_name')
+    supervisor = serializers.CharField(source='supervisor.get_full_name', read_only=True)
     start_date = serializers.DateTimeField(format='%d-%b-%Y')
     end_date = serializers.DateTimeField(format='%d-%b-%Y')
     purpose_of_travel = serializers.CharField(source='purpose')
     mode_of_travel = serializers.SerializerMethodField()
     international_travel = YesOrNoField()
     require_ta = YesOrNoField(source='ta_required')
-    dsa_total = serializers.DecimalField(source='cost_summary.dsa_total', max_digits=20, decimal_places=2)
+    dsa_total = serializers.DecimalField(source='cost_summary.dsa_total', max_digits=20, decimal_places=2,
+                                         read_only=True)
     expense_total = serializers.SerializerMethodField()
     deductions_total = serializers.DecimalField(
-        source='cost_summary.deductions_total', max_digits=20, decimal_places=2)
+        source='cost_summary.deductions_total', max_digits=20, decimal_places=2, read_only=True)
 
     class Meta:
         fields = ('reference_number', 'traveler', 'office', 'section', 'status', 'supervisor', 'start_date',
@@ -97,16 +98,16 @@ class FinanceExportSerializer(serializers.Serializer):
 
 
 class TravelAdminExportSerializer(serializers.Serializer):
-    reference_number = serializers.CharField(source='travel.reference_number')
-    traveler = serializers.CharField(source='travel.traveler.get_full_name')
-    office = serializers.CharField(source='travel.office.name')
-    section = serializers.CharField(source='travel.sector.name')
-    status = serializers.CharField(source='travel.status')
+    reference_number = serializers.CharField(source='travel.reference_number', read_only=True)
+    traveler = serializers.CharField(source='travel.traveler.get_full_name', read_only=True)
+    office = serializers.CharField(source='travel.office.name', read_only=True)
+    section = serializers.CharField(source='travel.sector.name', read_only=True)
+    status = serializers.CharField(source='travel.status', read_only=True)
     origin = serializers.CharField()
     destination = serializers.CharField()
     departure_time = serializers.DateTimeField(source='departure_date', format='%d-%b-%Y %I:%M %p')
     arrival_time = serializers.DateTimeField(source='arrival_date', format='%d-%b-%Y %I:%M %p')
-    dsa_area = serializers.CharField(source='dsa_region.area_code')
+    dsa_area = serializers.CharField(source='dsa_region.area_code', read_only=True)
     overnight_travel = YesOrEmptyField()
     mode_of_travel = serializers.CharField()
     airline = serializers.SerializerMethodField()
@@ -120,23 +121,23 @@ class TravelAdminExportSerializer(serializers.Serializer):
 
     def to_representation(self, instance):
         data = super(TravelAdminExportSerializer, self).to_representation(instance)
-        if not data['dsa_area']:
+        if 'dsa_area' not in data or not data['dsa_area']:
             data['dsa_area'] = 'NODSA'
         return data
 
 
 class InvoiceExportSerializer(serializers.Serializer):
-    reference_number = serializers.CharField(source='invoice.reference_number')
-    ta_number = serializers.CharField(source='invoice.travel.reference_number')
-    vendor_number = serializers.CharField(source='invoice.vendor_number')
-    currency = serializers.CharField(source='invoice.currency.name')
-    total_amount = serializers.DecimalField(source='invoice.amount', max_digits=20, decimal_places=4)
-    status = serializers.CharField(source='invoice.status')
-    message = serializers.CharField(source='invoice.message')
-    vision_fi_doc = serializers.CharField(source='invoice.vision_fi_id')
-    wbs = serializers.CharField(source='wbs.name')
-    grant = serializers.CharField(source='grant.name')
-    fund = serializers.CharField(source='fund.name')
+    reference_number = serializers.CharField(source='invoice.reference_number', read_only=True)
+    ta_number = serializers.CharField(source='invoice.travel.reference_number', read_only=True)
+    vendor_number = serializers.CharField(source='invoice.vendor_number', read_only=True)
+    currency = serializers.CharField(source='invoice.currency.name', read_only=True)
+    total_amount = serializers.DecimalField(source='invoice.amount', max_digits=20, decimal_places=4, read_only=True)
+    status = serializers.CharField(source='invoice.status', read_only=True)
+    message = serializers.CharField(source='invoice.message', read_only=True)
+    vision_fi_doc = serializers.CharField(source='invoice.vision_fi_id', read_only=True)
+    wbs = serializers.CharField(source='wbs.name', read_only=True)
+    grant = serializers.CharField(source='grant.name', read_only=True)
+    fund = serializers.CharField(source='fund.name', read_only=True)
     amount = serializers.DecimalField(max_digits=20, decimal_places=4)
 
     class Meta:

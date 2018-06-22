@@ -186,12 +186,12 @@ class TestActionPointViewSet(TestExportMixin, ActionPointsTestCaseMixin, BaseTen
             tpm_activity=TPMVisitFactory(tpm_activities__count=1).tpm_activities.first()
         )
 
-        self._test_export(self.pme_user, 'action-points:action-points-export/csv')
+        self._test_export(self.pme_user, 'action-points:action-points-list-csv-export')
 
     def test_single_csv(self):
         action_point = ActionPointFactory(status='open', comments__count=1, engagement=MicroAssessmentFactory())
 
-        self._test_export(self.pme_user, 'action-points:action-points-export/csv', args=[action_point.id])
+        self._test_export(self.pme_user, 'action-points:action-points-single-csv-export', args=[action_point.id])
 
 
 class TestActionPointsViewMetadata(ActionPointsTestCaseMixin):

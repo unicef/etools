@@ -15,10 +15,11 @@ from etools.applications.reports.serializers.exports import IndicatorExportFlatS
 
 class InterventionAmendmentExportSerializer(InterventionAmendmentCUSerializer):
     types = TypeArrayField(label=_("Types"))
+    signed_amendment_attachment = None
 
     class Meta:
         model = InterventionAmendment
-        exclude = ("signed_amendment_attachment", )
+        fields = "__all__"
 
 
 class InterventionAmendmentExportFlatSerializer(
@@ -29,10 +30,11 @@ class InterventionAmendmentExportFlatSerializer(
         label=_("Reference Number"),
         source="intervention.number",
     )
+    signed_amendment_attachment = None
 
     class Meta:
         model = InterventionAmendment
-        exclude = ("signed_amendment_attachment", )
+        fields = "__all__"
 
 
 class InterventionSectorLocationLinkExportSerializer(LocationExportSerializer):

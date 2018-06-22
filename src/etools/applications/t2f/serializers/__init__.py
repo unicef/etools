@@ -1,12 +1,12 @@
 
-from rest_framework import ISO_8601, serializers
+from rest_framework import serializers
 
 from etools.applications.publics.models import TravelExpenseType
 
 
 class DSASerializer(serializers.Serializer):
-    start_date = serializers.DateTimeField(format=ISO_8601)
-    end_date = serializers.DateTimeField(format=ISO_8601)
+    start_date = serializers.DateField()
+    end_date = serializers.DateField()
     daily_rate = serializers.DecimalField(max_digits=20, decimal_places=4)
     night_count = serializers.IntegerField()
     total_amount = serializers.DecimalField(max_digits=20, decimal_places=4)
