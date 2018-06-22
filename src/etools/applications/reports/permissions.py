@@ -1,7 +1,7 @@
 
 from rest_framework import permissions
 
-from etools.applications.utils.permissions.utils import is_user_in_groups
+from etools.applications.utils.common.utils import is_user_in_groups
 
 
 class PMEPermission(permissions.BasePermission):

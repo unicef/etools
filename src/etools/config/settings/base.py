@@ -192,7 +192,6 @@ SHARED_APPS = (
     'etools.applications.utils.common',
     'etools.applications.utils.mail',
     'etools.applications.utils.writable_serializers',
-    'etools.applications.utils.permissions',
     'waffle',
     'etools.applications.tokens',
     'etools.applications.permissions2',
