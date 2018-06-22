@@ -15,7 +15,7 @@ from etools.applications.EquiTrack.tests.cases import BaseTenantTestCase
 from etools.applications.partners.models import PartnerType
 from etools.applications.tpm.models import TPMVisit, ThirdPartyMonitor
 from etools.applications.tpm.tests.base import TPMTestCaseMixin
-from etools.applications.tpm.tests.factories import TPMPartnerFactory, TPMVisitFactory, _FUZZY_END_DATE
+from etools.applications.tpm.tests.factories import TPMPartnerFactory, TPMVisitFactory, UserFactory, _FUZZY_END_DATE
 from etools.applications.utils.common.tests.test_utils import TestExportMixin
 
 
