@@ -514,7 +514,7 @@ class TestPartnerOrganizationModel(BaseTenantTestCase):
         travel = TravelFactory(
             traveler=traveller,
             status=Travel.COMPLETED,
-            completed_at=datetime.datetime(datetime.datetime.today().year, 9, 1, tzinfo=tz)
+            end_date=datetime.datetime(datetime.datetime.today().year, 9, 1, tzinfo=tz)
         )
         TravelActivityFactory(
             travels=[travel],
@@ -868,7 +868,7 @@ class TestInterventionModel(BaseTenantTestCase):
         ])
 
     def test_intervention_locations_empty(self):
-        self.assertFalse(self.intervention.intervention_locations)
+        self.assertFalse(self.intervention.intervention_locations())
 
     def test_intervention_locations(self):
         intervention = InterventionFactory()
@@ -887,13 +887,13 @@ class TestInterventionModel(BaseTenantTestCase):
             lower_result=lower_result_2
         )
         applied_indicator_2.locations.add(location_2)
-        self.assertCountEqual(intervention.intervention_locations, [
+        self.assertCountEqual(intervention.intervention_locations(), [
             location_1,
             location_2,
         ])
 
     def test_intervention_clusters_empty(self):
-        self.assertFalse(self.intervention.intervention_clusters)
+        self.assertFalse(self.intervention.intervention_clusters())
 
     def test_intervention_clusters(self):
         intervention = InterventionFactory()
@@ -915,7 +915,7 @@ class TestInterventionModel(BaseTenantTestCase):
             cluster_name='',
         )
         AppliedIndicatorFactory(lower_result=lower_result_2)
-        self.assertCountEqual(intervention.intervention_clusters, [
+        self.assertCountEqual(intervention.intervention_clusters(), [
             "Title 1",
             "Title 2",
         ])

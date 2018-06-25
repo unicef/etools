@@ -39,6 +39,7 @@ class AgreementListSerializer(serializers.ModelSerializer):
         fields = (
             "id",
             "partner",
+            "country_programme",
             "agreement_number",
             "partner_name",
             "agreement_type",
