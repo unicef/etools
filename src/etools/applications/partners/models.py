@@ -1840,6 +1840,7 @@ class Intervention(TimeStampedModel):
             for lower_result in link.ll_results.all()
         ]
 
+    # TODO (Rob): Remove this and alll usage as this is no longer valid
     def intervention_locations(self, reset=False):
         cache_key = INTERVENTION_LOCATIONS_CACHE_KEY.format(self.pk)
         if reset:
@@ -1861,6 +1862,7 @@ class Intervention(TimeStampedModel):
 
         return locations
 
+    # TODO (Rob): Remove this and all usage as this is no longer valid
     def flagged_sections(self, reset=False):
         cache_key = INTERVENTION_FLAGGED_SECTIONS_CACHE_KEY.format(self.pk)
         if reset:
