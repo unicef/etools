@@ -617,7 +617,6 @@ class InterventionListMapSerializer(serializers.ModelSerializer):
             "agreement",
             "document_type", "number", "title", "status",
             "start", "end",
-            "flat_locations",
             "offices",
             "sections",
             "locations"
