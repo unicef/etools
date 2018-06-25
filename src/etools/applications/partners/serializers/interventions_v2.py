@@ -10,7 +10,6 @@ from django.utils.translation import ugettext as _
 from rest_framework import serializers
 
 from etools.applications.attachments.serializers_fields import AttachmentSingleFileField
-from etools.applications.EquiTrack.serializers import SnapshotModelSerializer
 from etools.applications.funds.models import FundsCommitmentItem, FundsReservationHeader
 from etools.applications.funds.serializers import FRsSerializer
 from etools.applications.locations.serializers import LocationLightSerializer, LocationSerializer
@@ -27,6 +26,7 @@ from etools.applications.reports.models import (
 from etools.applications.reports.serializers.v1 import SectorSerializer
 from etools.applications.reports.serializers.v2 import (IndicatorSerializer, LowerResultCUSerializer,
                                                         LowerResultSerializer, ReportingRequirementSerializer,)
+from etools.applications.snapshot.serializers import SnapshotModelSerializer
 
 
 class InterventionBudgetCUSerializer(serializers.ModelSerializer):

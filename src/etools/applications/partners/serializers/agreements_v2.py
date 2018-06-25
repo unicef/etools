@@ -2,13 +2,13 @@ from rest_framework import serializers
 from rest_framework.serializers import ValidationError
 
 from etools.applications.attachments.serializers_fields import AttachmentSingleFileField
-from etools.applications.EquiTrack.serializers import SnapshotModelSerializer
 from etools.applications.partners.models import Agreement, AgreementAmendment
 from etools.applications.partners.permissions import AgreementPermissions
 from etools.applications.partners.serializers.partner_organization_v2 import (PartnerStaffMemberNestedSerializer,
                                                                               SimpleStaffMemberSerializer,)
 from etools.applications.partners.validation.agreements import AgreementValid
 from etools.applications.reports.models import CountryProgramme
+from etools.applications.snapshot.serializers import SnapshotModelSerializer
 from etools.applications.users.serializers import SimpleUserSerializer
 
 
