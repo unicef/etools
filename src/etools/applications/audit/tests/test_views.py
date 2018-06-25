@@ -12,7 +12,7 @@ from rest_framework import status
 
 from etools.applications.action_points.tests.factories import ActionPointFactory
 from etools.applications.attachments.tests.factories import AttachmentFactory, AttachmentFileTypeFactory
-from etools.applications.audit.models import Engagement, Risk
+from etools.applications.audit.models import Engagement, Risk, Auditor
 from etools.applications.audit.tests.base import AuditTestCaseMixin, EngagementTransitionsTestCaseMixin
 from etools.applications.audit.tests.factories import (AuditFactory, AuditPartnerFactory,
                                                        EngagementFactory, MicroAssessmentFactory,
@@ -288,6 +288,12 @@ class TestEngagementsListViewSet(EngagementTransitionsTestCaseMixin, BaseTenantT
     def test_unknown_user_list(self):
         self._test_list(self.usual_user, expected_status=status.HTTP_403_FORBIDDEN)
 
+    def test_list_view_without_audit_organization(self):
+        user = UserFactory(unicef_user=True)
+        user.groups.add(Auditor.as_group())
+
+        self._test_list(user, [self.engagement, self.second_engagement])
+
     def test_status_filter_final(self):
         status = Engagement.STATUSES.final
         self.third_engagement = self.engagement_factory(
@@ -464,6 +470,35 @@ class SpecialAuditCreateViewSet(BaseTestEngagementsCreateViewSet, BaseTenantTest
         response = self._do_create(self.unicef_focal_point, self.create_data)
 
         self.assertEquals(response.status_code, status.HTTP_201_CREATED)
+
+
+class TestEngagementsUpdateViewSet(EngagementTransitionsTestCaseMixin, BaseTenantTestCase):
+    engagement_factory = AuditFactory
+
+    def _do_update(self, user, data):
+        data = data or {}
+        response = self.forced_auth_req(
+            'patch',
+            '/api/audit/audits/{}/'.format(self.engagement.id),
+            user=user, data=data
+        )
+        return response
+
+    def test_percent_of_audited_expenditure_invalid(self):
+        response = self._do_update(self.auditor, {
+            'audited_expenditure': 1,
+            'financial_findings': 2
+        })
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertEqual(len(response.data), 1)
+        self.assertIn('financial_findings', response.data)
+
+    def test_percent_of_audited_expenditure_valid(self):
+        response = self._do_update(self.auditor, {
+            'audited_expenditure': 2,
+            'financial_findings': 1
+        })
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
 
 
 class TestEngagementActionPointViewSet(EngagementTransitionsTestCaseMixin, BaseTenantTestCase):
