@@ -67,6 +67,9 @@ class TravelFilterBoxFilter(BaseFilterBoxFilter):
 
         return data
 
+    def filter_queryset(self, request, queryset, view):
+        return super().filter_queryset(request, queryset, view).distinct()
+
 
 class ShowHiddenFilter(BaseFilterBackend):
     def filter_queryset(self, request, queryset, view):
