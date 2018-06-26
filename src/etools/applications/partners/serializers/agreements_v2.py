@@ -1,5 +1,6 @@
 from rest_framework import serializers
 from rest_framework.serializers import ValidationError
+from unicef_snapshot.serializers import SnapshotModelSerializer
 
 from etools.applications.attachments.serializers_fields import AttachmentSingleFileField
 from etools.applications.partners.models import Agreement, AgreementAmendment
@@ -8,7 +9,6 @@ from etools.applications.partners.serializers.partner_organization_v2 import (Pa
                                                                               SimpleStaffMemberSerializer,)
 from etools.applications.partners.validation.agreements import AgreementValid
 from etools.applications.reports.models import CountryProgramme
-from etools.applications.snapshot.serializers import SnapshotModelSerializer
 from etools.applications.users.serializers import SimpleUserSerializer
 
 

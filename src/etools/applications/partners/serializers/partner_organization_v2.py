@@ -7,6 +7,7 @@ from django.db.models import Q
 from django.utils import timezone
 
 from rest_framework import serializers
+from unicef_snapshot.serializers import SnapshotModelSerializer
 
 from etools.applications.attachments.serializers_fields import AttachmentSingleFileField
 from etools.applications.partners.models import (
@@ -18,7 +19,6 @@ from etools.applications.partners.models import (
     PlannedEngagement,
 )
 from etools.applications.partners.serializers.interventions_v2 import InterventionListSerializer
-from etools.applications.snapshot.serializers import SnapshotModelSerializer
 
 
 class PartnerStaffMemberCreateSerializer(serializers.ModelSerializer):

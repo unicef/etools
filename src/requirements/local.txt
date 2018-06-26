@@ -99,7 +99,6 @@ pillow==5.0.0
 pip-tools==2.0.2
 pluggy==0.6.0
 prompt-toolkit==1.0.15
-psycopg2-binary==2.7.5
 psycopg2==2.7.4
 ptyprocess==0.5.2
 py==1.5.3
@@ -137,7 +136,7 @@ tornado==4.2.0
 tox==3.0.0
 traitlets==4.3.2
 typing==3.6.2             # via django-extensions
-unicef_notification==0.2.0
+unicef_snapshot==0.1.0
 unicodecsv==0.14.1
 uritemplate==3.0.0
 vine==1.1.4
