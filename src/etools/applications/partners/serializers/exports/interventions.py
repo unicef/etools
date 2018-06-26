@@ -94,7 +94,8 @@ class InterventionResultExportSerializer(InterventionResultSerializer):
     country_programme = serializers.CharField(
         label=_("Country Programme"),
         source="cp_output.country_programme.name",
-        read_only=True
+        read_only=True,
+        allow_null=True,
     )
     result_type = serializers.CharField(
         label=_("Result Type"),
@@ -104,7 +105,8 @@ class InterventionResultExportSerializer(InterventionResultSerializer):
     sector = serializers.CharField(
         label=_("Sector"),
         source="cp_output.sector.name",
-        read_only=True
+        read_only=True,
+        allow_null=True,
     )
     name = serializers.CharField(
         label=_("Name"),
@@ -129,7 +131,8 @@ class InterventionResultExportSerializer(InterventionResultSerializer):
     parent = serializers.CharField(
         label=_("Parent"),
         source="cp_output.parent.pk",
-        read_only=True
+        read_only=True,
+        allow_null=True,
     )
     wbs = serializers.CharField(
         label=_("WBS"),
@@ -184,7 +187,8 @@ class InterventionResultExportFlatSerializer(
     parent = serializers.CharField(
         label=_("Parent"),
         source="cp_output.parent.name",
-        read_only=True
+        read_only=True,
+        allow_null=True,
     )
 
     class Meta:
