@@ -8,7 +8,7 @@ from etools.applications.EquiTrack.utils import get_current_site
 from etools.applications.action_points.models import ActionPoint
 from etools.applications.EquiTrack.serializers import SnapshotModelSerializer
 from etools.applications.locations.serializers import LocationLightSerializer
-from etools.applications.partners.serializers.interventions_v2 import InterventionCreateUpdateSerializer
+from etools.applications.partners.serializers.interventions_v2 import BaseInterventionListSerializer
 from etools.applications.partners.serializers.partner_organization_v2 import MinimalPartnerOrganizationListSerializer
 from etools.applications.permissions2.serializers import PermissionsBasedSerializerMixin
 from etools.applications.reports.serializers.v1 import ResultSerializer, SectorSerializer
@@ -71,7 +71,7 @@ class ActionPointListSerializer(PermissionsBasedSerializerMixin, ActionPointBase
         read_field=MinimalPartnerOrganizationListSerializer(read_only=True, label=_('Partner')),
     )
     intervention = SeparatedReadWriteField(
-        read_field=InterventionCreateUpdateSerializer(read_only=True, label=_('PD/SSFA')),
+        read_field=BaseInterventionListSerializer(read_only=True, label=_('PD/SSFA')),
         required=False,
     )
 
@@ -99,7 +99,32 @@ class ActionPointListSerializer(PermissionsBasedSerializerMixin, ActionPointBase
 
             'section', 'office', 'location',
             'partner', 'cp_output', 'intervention',
+
+            'engagement', 'tpm_activity', 'travel',
         ]
+
+    def create(self, validated_data):
+        if 'engagement' in validated_data:
+            engagement = validated_data['engagement']
+            validated_data.update({
+                'partner_id': engagement.partner_id,
+            })
+        elif 'tpm_activity' in validated_data:
+            activity = validated_data['tpm_activity']
+            validated_data.update({
+                'partner_id': activity.partner_id,
+                'intervention_id': activity.intervention_id,
+                'cp_output_id': activity.cp_output_id,
+                'section_id': activity.section_id,
+            })
+        elif 'travel' in validated_data:
+            travel = validated_data['travel']
+            validated_data.update({
+                'office_id': travel.office_id,
+                'section_id': travel.sector_id,
+            })
+
+        return super().create(validated_data)
 
 
 class CommentSerializer(UserContextSerializerMixin, WritableNestedSerializerMixin, serializers.ModelSerializer):

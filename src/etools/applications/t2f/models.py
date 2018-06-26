@@ -207,6 +207,10 @@ class Travel(models.Model):
     def __str__(self):
         return self.reference_number
 
+    def get_object_url(self):
+        return 'https://{host}/t2f/edit-travel/{travel_id}/'.format(host=settings.HOST,
+                                                                    travel_id=self.id)
+
     @property
     def cost_summary(self):
         calculator = CostSummaryCalculator(self)
@@ -439,15 +443,12 @@ class Travel(models.Model):
         # TODO this could be async to avoid too long api calls in case of mail server issue
         serializer = TravelMailSerializer(self, context={})
 
-        url = 'https://{host}/t2f/edit-travel/{travel_id}/'.format(host=settings.HOST,
-                                                                   travel_id=self.id)
-
         send_notification_using_templates(
             recipients=[recipient],
             from_address=settings.DEFAULT_FROM_EMAIL,  # TODO what should sender be?
             subject_template_content=subject,
             html_template_filename=template_name,
-            context={'travel': serializer.data, 'url': url}
+            context={'travel': serializer.data, 'url': self.get_object_url()}
         )
 
     def generate_invoices(self):
