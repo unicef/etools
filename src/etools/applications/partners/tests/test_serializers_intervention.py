@@ -243,7 +243,7 @@ class TestInterventionReportingRequirementCreateSerializer(BaseTenantTestCase):
         data = {
             "report_type": ReportingRequirement.TYPE_HR,
             "reporting_requirements": [
-                {"start_date": datetime.date(2001, 4, 15), "due_date": datetime.date(2001, 4, 15)},
+                {"start_date": datetime.date(2001, 3, 15), "due_date": datetime.date(2001, 4, 15)},
                 {"due_date": datetime.date(2001, 5, 15)}
             ]
         }
@@ -300,7 +300,7 @@ class TestInterventionReportingRequirementCreateSerializer(BaseTenantTestCase):
         data = {
             "report_type": ReportingRequirement.TYPE_HR,
             "reporting_requirements": [
-                {"start_date": datetime.date(2001, 4, 15), "due_date": datetime.date(2001, 4, 15)},
+                {"start_date": datetime.date(2001, 3, 15), "due_date": datetime.date(2001, 4, 15)},
                 {"due_date": datetime.date(2001, 5, 15)}
             ]
         }
@@ -379,7 +379,6 @@ class TestInterventionReportingRequirementCreateSerializer(BaseTenantTestCase):
         serializer.create(serializer.validated_data)
         self.assertEqual(requirement_qs.count(), init_count)
         req_updated = ReportingRequirement.objects.get(pk=requirement.pk)
-        self.assertEqual(req_updated.start_date, None)
         self.assertEqual(req_updated.end_date, req_updated.due_date)
         self.assertEqual(req_updated.start_date, datetime.date(2001, 3, 15))
         self.assertEqual(req_updated.due_date, datetime.date(2001, 4, 15))
@@ -456,6 +455,6 @@ class TestInterventionReportingRequirementCreateSerializer(BaseTenantTestCase):
         serializer.create(serializer.validated_data)
         self.assertEqual(requirement_qs.count(), init_count + 1)
         req_updated = ReportingRequirement.objects.get(pk=requirement.pk)
-        self.assertEqual(req_updated.start_date, None)
+        self.assertEqual(req_updated.start_date, datetime.date(2001, 3, 15))
         self.assertEqual(req_updated.end_date, req_updated.due_date)
         self.assertEqual(req_updated.due_date, datetime.date(2001, 4, 15))
