@@ -649,15 +649,6 @@ class InterventionReportingRequirementCreateSerializer(serializers.ModelSerializ
 
         # Ensure start date is after previous end date
         for i in range(1, len(requirements)):
-            if requirements[i]["start_date"] >= requirements[i]["end_date"]:
-                raise serializers.ValidationError({
-                    "reporting_requirements": {
-                        "start_date": _(
-                            "End date needs to be after the start date."
-                        )
-                    }
-                })
-
             if requirements[i]["start_date"] <= requirements[i - 1]["end_date"]:
                 raise serializers.ValidationError({
                     "reporting_requirements": {
@@ -689,15 +680,6 @@ class InterventionReportingRequirementCreateSerializer(serializers.ModelSerializ
                 }
             })
 
-        if requirements[0]["start_date"] >= requirements[0]["due_date"]:
-            raise serializers.ValidationError({
-                "reporting_requirements": {
-                    "due_date": _(
-                        "Due date needs to be after the start date."
-                    )
-                }
-            })
-
         self._validate_start_date(requirements)
 
         for i in range(1, len(requirements)):
@@ -721,6 +703,19 @@ class InterventionReportingRequirementCreateSerializer(serializers.ModelSerializ
                     )
                 }
             })
+
+        for i in range(1, len(requirements)):
+            if "start_date" not in requirements[i] or not requirements[i]["start_date"]:
+                continue
+
+            if requirements[i]["start_date"] > requirements[i]["end_date"]:
+                raise serializers.ValidationError({
+                    "reporting_requirements": {
+                        "start_date": _(
+                            "End date needs to be after the start date."
+                        )
+                    }
+                })
 
     def _merge_data(self, data):
         current_reqs = ReportingRequirement.objects.values(
