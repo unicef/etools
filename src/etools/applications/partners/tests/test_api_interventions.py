@@ -1943,6 +1943,7 @@ class TestInterventionReportingRequirementView(BaseTenantTestCase):
             data={
                 "reporting_requirements": [{
                     "start_date": datetime.date(2001, 4, 15),
+                    "end_date": datetime.date(2001, 3, 15),
                     "due_date": datetime.date(2001, 3, 15),
                 }]
             }
@@ -1950,7 +1951,7 @@ class TestInterventionReportingRequirementView(BaseTenantTestCase):
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertEqual(
             response.data['reporting_requirements'],
-            {"due_date": 'Due date needs to be after the start date.'}
+            {"start_date": 'End date needs to be after the start date.'}
         )
 
     def test_post_hr_invalid_missing_start(self):
