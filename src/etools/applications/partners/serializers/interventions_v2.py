@@ -680,7 +680,7 @@ class InterventionReportingRequirementCreateSerializer(serializers.ModelSerializ
                 _("Indicator needs to be either cluster or high frequency.")
             )
 
-        if "start_date" not in requirements[0]:
+        if "start_date" not in requirements[0] or not requirements[0]["start_date"]:
             raise serializers.ValidationError({
                 "reporting_requirements": {
                     "start_date": _(
@@ -701,7 +701,7 @@ class InterventionReportingRequirementCreateSerializer(serializers.ModelSerializ
         self._validate_start_date(requirements)
 
         for i in range(1, len(requirements)):
-            if "start_date" in requirements[i]:
+            if "start_date" in requirements[i] and requirements[i]["start_date"]:
                 raise serializers.ValidationError({
                     "reporting_requirements": {
                         "start_date": _(
