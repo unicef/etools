@@ -196,6 +196,7 @@ SHARED_APPS = (
     'waffle',
     'etools.applications.tokens',
     'etools.applications.permissions2',
+    'unicef_notification',
 )
 TENANT_APPS = (
     'django_fsm',
@@ -586,3 +587,5 @@ SCHEMA_OVERRIDE_PARAM = "schema"
 
 # Number of days before PCA required notification
 PCA_REQUIRED_NOTIFICATION_LEAD = 30
+
+UNICEF_NOTIFICATION_TEMPLATE_DIR = "notifications"

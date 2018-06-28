@@ -1,10 +1,8 @@
-
 from django.core import mail
 from django.test import TestCase
 
 from post_office.models import EmailTemplate
-
-from etools.applications.notification.utils import send_notification_using_email_template
+from unicef_notification.utils import send_notification_with_template
 
 
 class EmailTemplateLoaderTestCase(TestCase):
@@ -31,10 +29,10 @@ class EmailTemplateLoaderTestCase(TestCase):
         mail.outbox = []
 
     def test_extends(self):
-        send_notification_using_email_template(
+        send_notification_with_template(
             recipients=['test@example.com'],
             from_address='no-reply@test.com',
-            email_template_name='template1',
+            template_name='template1',
             context={},
         )
 

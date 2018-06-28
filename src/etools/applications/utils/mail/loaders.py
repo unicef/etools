@@ -1,4 +1,3 @@
-
 from django.template import Origin, TemplateDoesNotExist
 from django.template.loaders.base import Loader as BaseLoader
 
