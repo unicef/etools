@@ -79,6 +79,14 @@ class ProfileFactory(factory.django.DjangoModelFactory):
         profile=None
     )
 
+    @factory.post_generation
+    def countries_available(self, create, extracted, **kwargs):
+        if extracted is not None:
+            for country in extracted:
+                self.countries_available.add(country)
+        elif create:
+            self.countries_available.add(connection.tenant)
+
 
 @factory.django.mute_signals(signals.pre_save, signals.post_save)
 class UserFactory(factory.django.DjangoModelFactory):

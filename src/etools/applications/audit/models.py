@@ -232,7 +232,8 @@ class Engagement(InheritedModelMixin, TimeStampedModel, models.Model):
         }
 
     def _notify_focal_points(self, template_name, context=None):
-        for focal_point in get_user_model().objects.filter(groups=UNICEFAuditFocalPoint.as_group()):
+        for focal_point in get_user_model().objects.filter(groups=UNICEFAuditFocalPoint.as_group(),
+                                                           profile__countries_available=connection.tenant):
             # Build the context in the same order the previous version of the code did,
             # just in case something relies on it (intentionally or not).
             ctx = {
