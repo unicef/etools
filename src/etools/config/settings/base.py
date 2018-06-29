@@ -88,7 +88,7 @@ DEBUG = str2bool(get_from_secrets_or_env('DJANGO_DEBUG'))
 
 # DJANGO: EMAIL
 DEFAULT_FROM_EMAIL = "no-reply@unicef.org"
-EMAIL_BACKEND = 'post_office.EmailBackend'  # Will send email via our template system
+EMAIL_BACKEND = 'unicef_notification.backends.EmailBackend'
 EMAIL_HOST = get_from_secrets_or_env('EMAIL_HOST', '')
 EMAIL_HOST_USER = get_from_secrets_or_env('EMAIL_HOST_USER', '')
 EMAIL_HOST_PASSWORD = get_from_secrets_or_env('EMAIL_HOST_PASSWORD', '')
@@ -241,7 +241,7 @@ TEMPLATES = [
             'loaders': [
                 'django.template.loaders.filesystem.Loader',
                 'django.template.loaders.app_directories.Loader',
-                'etools.applications.utils.mail.loaders.EmailTemplateLoader',
+                'unicef_notification.loaders.EmailTemplateLoader',
             ],
             'context_processors': [
                 # Already defined Django-related contexts here
