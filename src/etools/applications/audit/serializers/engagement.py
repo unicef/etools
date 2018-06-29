@@ -1,30 +1,29 @@
+from copy import copy
 
-from django.conf import settings
-from django.contrib.auth import get_user_model
 from django.utils.translation import ugettext as _
-
 from rest_framework import serializers
 
+from etools.applications.action_points.serializers import ActionPointBaseSerializer, HistorySerializer
 from etools.applications.attachments.models import FileType
-from etools.applications.attachments.serializers import Base64AttachmentSerializer
+from etools.applications.attachments.serializers import BaseAttachmentSerializer
 from etools.applications.attachments.serializers_fields import FileTypeModelChoiceField
 from etools.applications.audit.models import (Audit, DetailedFindingInfo, Engagement, EngagementActionPoint,
                                               FinancialFinding, Finding, KeyInternalControl, MicroAssessment, Risk,
-                                              SpecialAudit, SpecialAuditRecommendation, SpecificProcedure, SpotCheck,)
+                                              SpecialAudit, SpecialAuditRecommendation, SpecificProcedure, SpotCheck, )
 from etools.applications.audit.serializers.auditor import (AuditorStaffMemberSerializer,
-                                                           PurchaseOrderItemSerializer, PurchaseOrderSerializer,)
+                                                           PurchaseOrderItemSerializer, PurchaseOrderSerializer, )
 from etools.applications.audit.serializers.mixins import EngagementDatesValidation, RiskCategoriesUpdateMixin
 from etools.applications.audit.serializers.risks import (AggregatedRiskRootSerializer,
-                                                         KeyInternalWeaknessSerializer, RiskRootSerializer,)
+                                                         KeyInternalWeaknessSerializer, RiskRootSerializer, )
 from etools.applications.partners.serializers.interventions_v2 import BaseInterventionListSerializer
 from etools.applications.partners.serializers.partner_organization_v2 import (PartnerOrganizationListSerializer,
-                                                                              PartnerStaffMemberNestedSerializer,)
+                                                                              PartnerStaffMemberNestedSerializer, )
 from etools.applications.permissions2.serializers import PermissionsBasedSerializerMixin
-from etools.applications.users.serializers import MinimalUserSerializer
+from etools.applications.reports.serializers.v1 import SectorSerializer
+from etools.applications.users.serializers import OfficeSerializer
 from etools.applications.utils.common.serializers.fields import SeparatedReadWriteField
-from etools.applications.utils.common.serializers.mixins import UserContextSerializerMixin
 from etools.applications.utils.writable_serializers.serializers import (WritableNestedParentSerializerMixin,
-                                                                        WritableNestedSerializerMixin,)
+                                                                        WritableNestedSerializerMixin, )
 
 
 class PartnerOrganizationLightSerializer(PartnerOrganizationListSerializer):
@@ -42,62 +41,55 @@ class PartnerOrganizationLightSerializer(PartnerOrganizationListSerializer):
         }
 
 
-class EngagementBase64AttachmentSerializer(WritableNestedSerializerMixin, Base64AttachmentSerializer):
+class EngagementAttachmentSerializer(BaseAttachmentSerializer):
     file_type = FileTypeModelChoiceField(
         label=_('Document Type'), queryset=FileType.objects.filter(code='audit_engagement')
     )
 
-    class Meta(WritableNestedSerializerMixin.Meta, Base64AttachmentSerializer.Meta):
+    class Meta(BaseAttachmentSerializer.Meta):
         pass
 
+    def create(self, validated_data):
+        validated_data['code'] = 'audit_engagement'
+        return super(EngagementAttachmentSerializer, self).create(validated_data)
 
-class ReportBase64AttachmentSerializer(WritableNestedSerializerMixin, Base64AttachmentSerializer):
+
+class ReportAttachmentSerializer(BaseAttachmentSerializer):
     file_type = FileTypeModelChoiceField(
         label=_('Document Type'), queryset=FileType.objects.filter(code='audit_report')
     )
 
-    class Meta(WritableNestedSerializerMixin.Meta, Base64AttachmentSerializer.Meta):
+    class Meta(BaseAttachmentSerializer.Meta):
         pass
 
-
-class EngagementActionPointSerializer(UserContextSerializerMixin,
-                                      WritableNestedSerializerMixin,
-                                      serializers.ModelSerializer):
-    person_responsible = SeparatedReadWriteField(MinimalUserSerializer(read_only=True), label=_('Person Responsible'))
-
-    class Meta(WritableNestedSerializerMixin.Meta):
-        model = EngagementActionPoint
-        fields = [
-            'id', 'category', 'description', 'due_date', 'person_responsible', 'action_taken',
-            'status', 'high_priority',
-        ]
-
-    def _validate_person_responsible(self, attrs, instance=None):
-        person_responsible = attrs.get('person_responsible')
-        category = attrs.get('category')
-        if instance:
-            if not person_responsible:
-                person_responsible = instance.person_responsible
-            if not category:
-                category = instance.category
-
-        if category == 'Escalate to Investigation':
-            email = settings.EMAIL_FOR_USER_RESPONSIBLE_FOR_INVESTIGATION_ESCALATIONS
-            person_responsible = attrs['person_responsible'] = get_user_model().objects.filter(email=email).first()
-
-        if not person_responsible:
-            raise serializers.ValidationError({'person_responsible': _('This field is required.')})
-
-        return attrs
-
-    def update(self, instance, validated_data):
-        validated_data = self._validate_person_responsible(validated_data, instance=instance)
-        return super(EngagementActionPointSerializer, self).update(instance, validated_data)
-
     def create(self, validated_data):
-        validated_data = self._validate_person_responsible(validated_data)
-        validated_data['author'] = self.get_user()
-        return super(EngagementActionPointSerializer, self).create(validated_data)
+        validated_data['code'] = 'audit_report'
+        return super(ReportAttachmentSerializer, self).create(validated_data)
+
+
+class EngagementActionPointSerializer(PermissionsBasedSerializerMixin, ActionPointBaseSerializer):
+    section = SeparatedReadWriteField(
+        read_field=SectorSerializer(read_only=True, label=_('Section')),
+        required=True,
+    )
+    office = SeparatedReadWriteField(
+        read_field=OfficeSerializer(read_only=True, label=_('Office')),
+        required=True
+    )
+
+    history = HistorySerializer(many=True, label=_('History'), read_only=True, source='get_meaningful_history')
+
+    url = serializers.ReadOnlyField(label=_('Link'), source='get_object_url')
+
+    class Meta(ActionPointBaseSerializer.Meta):
+        model = EngagementActionPoint
+        fields = ActionPointBaseSerializer.Meta.fields + [
+            'section', 'office', 'history', 'url',
+        ]
+        extra_kwargs = copy(ActionPointBaseSerializer.Meta.extra_kwargs)
+        extra_kwargs.update({
+            'assigned_to': {'label': _('Person Responsible')}
+        })
 
 
 class EngagementExportSerializer(serializers.ModelSerializer):
@@ -129,7 +121,7 @@ class EngagementExportSerializer(serializers.ModelSerializer):
         )
 
 
-class EngagementLightSerializer(PermissionsBasedSerializerMixin, serializers.ModelSerializer):
+class EngagementLightSerializer(serializers.ModelSerializer):
     agreement = SeparatedReadWriteField(
         read_field=PurchaseOrderSerializer(read_only=True), label=_('Purchase Order')
     )
@@ -172,6 +164,11 @@ class EngagementLightSerializer(PermissionsBasedSerializerMixin, serializers.Mod
         return attrs
 
 
+class EngagementListSerializer(PermissionsBasedSerializerMixin, EngagementLightSerializer):
+    class Meta(EngagementLightSerializer.Meta):
+        pass
+
+
 class SpecificProcedureSerializer(WritableNestedSerializerMixin,
                                   serializers.ModelSerializer):
     class Meta(WritableNestedSerializerMixin.Meta):
@@ -183,13 +180,13 @@ class SpecificProcedureSerializer(WritableNestedSerializerMixin,
 
 class EngagementSerializer(EngagementDatesValidation,
                            WritableNestedParentSerializerMixin,
-                           EngagementLightSerializer):
+                           EngagementListSerializer):
     staff_members = SeparatedReadWriteField(
         read_field=AuditorStaffMemberSerializer(many=True, required=False), label=_('Audit Staff Team Members')
     )
     active_pd = SeparatedReadWriteField(
         read_field=BaseInterventionListSerializer(many=True, required=False),
-        label=_('Programme Document(s) or SSFA(s)'), required=False
+        label=_('Programme Document(s) or SSFA(s) - (optional)'), required=False
     )
     authorized_officers = SeparatedReadWriteField(
         read_field=PartnerStaffMemberNestedSerializer(many=True, read_only=True), label=_('Authorized Officers')
@@ -197,20 +194,10 @@ class EngagementSerializer(EngagementDatesValidation,
 
     specific_procedures = SpecificProcedureSerializer(many=True, label=_('Specific Procedure To Be Performed'))
 
-    engagement_attachments = EngagementBase64AttachmentSerializer(
-        many=True, required=False, label=_('Related Documents')
-    )
-    report_attachments = ReportBase64AttachmentSerializer(
-        many=True, required=False, label=_('Report Attachments')
-    )
-
-    action_points = EngagementActionPointSerializer(many=True)
-
-    class Meta(EngagementLightSerializer.Meta):
-        fields = EngagementLightSerializer.Meta.fields + [
-            'engagement_attachments', 'report_attachments',
+    class Meta(EngagementListSerializer.Meta):
+        fields = EngagementListSerializer.Meta.fields + [
             'total_value', 'staff_members', 'active_pd',
-            'authorized_officers', 'action_points',
+            'authorized_officers',
 
             'joint_audit', 'shared_ip_with', 'exchange_rate',
 
@@ -422,6 +409,24 @@ class AuditSerializer(ActivePDValidationMixin, RiskCategoriesUpdateMixin, Engage
 
     def get_number_of_financial_findings(self, obj):
         return obj.financial_finding_set.count()
+
+    def _validate_financial_findings(self, validated_data):
+        financial_findings = validated_data.get('financial_findings')
+        audited_expenditure = validated_data.get('audited_expenditure')
+        if not (financial_findings or audited_expenditure):
+            return
+
+        if not financial_findings:
+            financial_findings = self.instance.financial_findings if self.instance else None
+        if not audited_expenditure:
+            audited_expenditure = self.instance.audited_expenditure if self.instance else None
+
+        if audited_expenditure and financial_findings and financial_findings > audited_expenditure:
+            raise serializers.ValidationError({'financial_findings': _('Cannot exceed Audited Expenditure')})
+
+    def validate(self, validated_data):
+        self._validate_financial_findings(validated_data)
+        return validated_data
 
 
 class SpecialAuditRecommendationSerializer(WritableNestedSerializerMixin, serializers.ModelSerializer):

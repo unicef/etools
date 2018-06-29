@@ -131,6 +131,9 @@ class NestedViewSetMixin(object):
 
         return parents
 
+    def get_parent_filter(self):
+        return None
+
     def _get_parent_filters(self):
         parents = self._get_parents()
 
@@ -140,10 +143,19 @@ class NestedViewSetMixin(object):
         lookups = []
         for parent in parents:
             lookups.append(child.parent_lookup_field)
-            filters['{}__{}'.format(
-                '__'.join(lookups), getattr(child.parent, 'lookup_field', 'pk')
-            )] = self.kwargs.get(child.parent_lookup_kwarg)
 
+            parent_filter = None
+            if isinstance(child, NestedViewSetMixin):
+                parent_filter = child.get_parent_filter()
+
+            if parent_filter is None:
+                parent_filter = {
+                    '{}__{}'.format(
+                        '__'.join(lookups), getattr(child.parent, 'lookup_field', 'pk')
+                    ): self.kwargs.get(child.parent_lookup_kwarg)
+                }
+
+            filters.update(parent_filter)
             child = parent
 
         return filters

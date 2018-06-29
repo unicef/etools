@@ -6,6 +6,7 @@ import json
 
 from django.conf import settings
 from django.contrib.postgres.fields import ArrayField, JSONField
+from django.core.cache import cache
 from django.db import models, connection, transaction
 from django.db.models import Case, Count, CharField, F, Max, Min, Q, Sum, When
 from django.db.models.signals import post_save, pre_delete
@@ -18,11 +19,11 @@ from django_fsm import FSMField, transition
 from model_utils import Choices, FieldTracker
 from model_utils.models import TimeFramedModel, TimeStampedModel
 
-from etools.applications.EquiTrack.encoders import EToolsEncoder
-from etools.applications.EquiTrack.serializers import StringConcat
 from etools.applications.attachments.models import Attachment
 from etools.applications.environment.helpers import tenant_switch_is_active
-from etools.applications.EquiTrack.fields import CurrencyField, QuarterField
+from etools.applications.EquiTrack.encoders import EToolsEncoder
+from etools.applications.EquiTrack.fields import CurrencyField
+from etools.applications.EquiTrack.serializers import StringConcat
 from etools.applications.EquiTrack.utils import get_current_year, get_quarter, import_permissions
 from etools.applications.funds.models import Grant
 from etools.applications.locations.models import Location
@@ -31,10 +32,15 @@ from etools.applications.partners.validation.agreements import (agreement_transi
                                                                 agreement_transition_to_signed_valid,
                                                                 agreements_illegal_transition,)
 from etools.applications.reports.models import CountryProgramme, Indicator, Result, Sector
-from etools.applications.t2f.models import Travel, TravelActivity, TravelType
+from etools.applications.t2f.models import Travel, TravelType
 from etools.applications.tpm.models import TPMVisit
 from etools.applications.users.models import Office
 from etools.applications.utils.common.models.fields import CodedGenericRelation
+
+INTERVENTION_LOWER_RESULTS_CACHE_KEY = "{}_intervention_lower_result"
+INTERVENTION_LOCATIONS_CACHE_KEY = "{}_intervention_locations"
+INTERVENTION_FLAGGED_SECTIONS_CACHE_KEY = "{}_intervention_flagged_sections"
+INTERVENTION_CLUSTERS_CACHE_KEY = "{}_intervention_clusters"
 
 
 def _get_partner_base_path(partner):
@@ -204,32 +210,20 @@ class PartnerOrganizationQuerySet(models.QuerySet):
 
     def not_programmatic_visit_compliant(self, *args, **kwargs):
         return self.filter(net_ct_cy__gt=PartnerOrganization.CT_MR_AUDIT_TRIGGER_LEVEL,
-                           hact_values__programmatic_visits__completed__total__gt=0,
+                           hact_values__programmatic_visits__completed__total=0,
                            *args, **kwargs)
 
     def not_spot_check_compliant(self, *args, **kwargs):
         return self.filter(Q(reported_cy__gt=PartnerOrganization.CT_CP_AUDIT_TRIGGER_LEVEL) |
-                           Q(planned_engagement__spot_check_follow_up_q1__gt=0) |
-                           Q(planned_engagement__spot_check_follow_up_q2__gt=0) |
-                           Q(planned_engagement__spot_check_follow_up_q3__gt=0) |
-                           Q(planned_engagement__spot_check_follow_up_q4__gt=0),  # aka required
+                           Q(planned_engagement__spot_check_planned_q1__gt=0) |
+                           Q(planned_engagement__spot_check_planned_q2__gt=0) |
+                           Q(planned_engagement__spot_check_planned_q3__gt=0) |
+                           Q(planned_engagement__spot_check_planned_q4__gt=0),  # aka required
                            hact_values__spot_checks__completed__total=0,
-                           hact_values__audit__completed__total=0, *args, **kwargs)
+                           hact_values__audits__completed=0, *args, **kwargs)
 
     def not_assurance_compliant(self, *args, **kwargs):
-        return self.filter(Q(reported_cy__gt=PartnerOrganization.CT_CP_AUDIT_TRIGGER_LEVEL) |
-                           Q(
-                               Q(hact_values__spot_checks__completed__total__gt=0) |
-                               Q(planned_engagement__spot_check_follow_up_q1__gt=0) |
-                               Q(planned_engagement__spot_check_follow_up_q2__gt=0) |
-                               Q(planned_engagement__spot_check_follow_up_q3__gt=0) |
-                               Q(planned_engagement__spot_check_follow_up_q4__gt=0) |
-                               Q(planned_engagement__scheduled_audit=True) |
-                               Q(planned_engagement__special_audit=True)) |
-                           Q(planned_engagement__spot_check_follow_up_q4__gt=0),
-                           hact_values__programmatic_visits__completed__total=0,
-                           hact_values__spot_checks__completed__total=0,
-                           hact_values__audits__completed__total=0, *args, **kwargs)
+        return self.not_programmatic_visit_compliant().not_spot_check_compliant(*args, **kwargs)
 
 
 class PartnerOrganization(TimeStampedModel):
@@ -520,11 +514,16 @@ class PartnerOrganization(TimeStampedModel):
     def latest_assessment(self, type):
         return self.assessments.filter(type=type).order_by('completed_date').last()
 
+    def get_hact_json(self):
+        return json.loads(self.hact_values) if isinstance(self.hact_values, str) else self.hact_values
+
     def save(self, *args, **kwargs):
         # JSONFIELD has an issue where it keeps escaping characters
+
         hact_is_string = isinstance(self.hact_values, str)
+
         try:
-            self.hact_values = json.loads(self.hact_values) if hact_is_string else self.hact_values
+            self.hact_values = self.get_hact_json()
         except ValueError as e:
             e.args = ['hact_values needs to be a valid format (dict)']
             raise e
@@ -624,18 +623,17 @@ class PartnerOrganization(TimeStampedModel):
     @cached_property
     def assurance_coverage(self):
 
-        hact = json.loads(self.hact_values) if isinstance(self.hact_values, str) else self.hact_values
-
+        hact = self.get_hact_json()
         pv = hact['programmatic_visits']['completed']['total']
         sc = hact['spot_checks']['completed']['total']
         au = hact['audits']['completed']
 
         if pv + sc + au == 0:
             return PartnerOrganization.ASSURANCE_VOID
-        elif pv + sc + au < self.min_req_programme_visits + self.min_req_spot_checks + self.min_req_audits:
-            return PartnerOrganization.ASSURANCE_PARTIAL
-        else:
+        elif (pv >= self.min_req_programme_visits) & (sc >= self.min_req_spot_checks) & (au >= self.min_req_audits):
             return PartnerOrganization.ASSURANCE_COMPLETE
+        else:
+            return PartnerOrganization.ASSURANCE_PARTIAL
 
     def planned_visits_to_hact(self):
         """For current year sum all programmatic values of planned visits
@@ -653,9 +651,7 @@ class PartnerOrganization(TimeStampedModel):
         except PartnerPlannedVisits.DoesNotExist:
             pvq1 = pvq2 = pvq3 = pvq4 = 0
 
-        hact = json.loads(self.hact_values) \
-            if isinstance(self.hact_values, str) \
-            else self.hact_values
+        hact = self.get_hact_json()
         hact['programmatic_visits']['planned']['q1'] = pvq1
         hact['programmatic_visits']['planned']['q2'] = pvq2
         hact['programmatic_visits']['planned']['q3'] = pvq3
@@ -664,12 +660,11 @@ class PartnerOrganization(TimeStampedModel):
         self.hact_values = hact
         self.save()
 
-    @classmethod
-    def programmatic_visits(cls, partner, event_date=None, update_one=False):
+    def programmatic_visits(self, event_date=None, update_one=False):
         """
         :return: all completed programmatic visits
         """
-        hact = json.loads(partner.hact_values) if isinstance(partner.hact_values, str) else partner.hact_values
+        hact = self.get_hact_json()
 
         pv = hact['programmatic_visits']['completed']['total']
 
@@ -681,23 +676,23 @@ class PartnerOrganization(TimeStampedModel):
             hact['programmatic_visits']['completed'][quarter_name] = pvq
             hact['programmatic_visits']['completed']['total'] = pv
         else:
-            pv_year = TravelActivity.objects.filter(
-                travel_type=TravelType.PROGRAMME_MONITORING,
-                travels__traveler=F('primary_traveler'),
-                travels__status__in=[Travel.COMPLETED],
-                travels__end_date__year=timezone.now().year,
-                partner=partner,
+            pv_year = Travel.objects.filter(
+                activities__travel_type=TravelType.PROGRAMME_MONITORING,
+                traveler=F('activities__primary_traveler'),
+                status=Travel.COMPLETED,
+                end_date__year=timezone.now().year,
+                activities__partner=self
             )
 
             pv = pv_year.count()
-            pvq1 = pv_year.filter(travels__end_date__month__in=[1, 2, 3]).count()
-            pvq2 = pv_year.filter(travels__end_date__month__in=[4, 5, 6]).count()
-            pvq3 = pv_year.filter(travels__end_date__month__in=[7, 8, 9]).count()
-            pvq4 = pv_year.filter(travels__end_date__month__in=[10, 11, 12]).count()
+            pvq1 = pv_year.filter(end_date__month__in=[1, 2, 3]).count()
+            pvq2 = pv_year.filter(end_date__month__in=[4, 5, 6]).count()
+            pvq3 = pv_year.filter(end_date__month__in=[7, 8, 9]).count()
+            pvq4 = pv_year.filter(end_date__month__in=[10, 11, 12]).count()
 
             # TPM visit are counted one per month maximum
             tpmv = TPMVisit.objects.filter(
-                tpm_activities__partner=partner, status=TPMVisit.UNICEF_APPROVED,
+                tpm_activities__partner=self, status=TPMVisit.UNICEF_APPROVED,
                 date_of_unicef_approved__year=datetime.datetime.now().year
             ).distinct()
 
@@ -730,11 +725,10 @@ class PartnerOrganization(TimeStampedModel):
             hact['programmatic_visits']['completed']['q4'] = pvq4 + tpmv4
             hact['programmatic_visits']['completed']['total'] = pv + tpm_total
 
-        partner.hact_values = hact
-        partner.save()
+        self.hact_values = hact
+        self.save()
 
-    @classmethod
-    def spot_checks(cls, partner, event_date=None, update_one=False):
+    def spot_checks(self, event_date=None, update_one=False):
         """
         :return: all completed spot checks
         """
@@ -742,29 +736,30 @@ class PartnerOrganization(TimeStampedModel):
         if not event_date:
             event_date = datetime.datetime.today()
         quarter_name = get_quarter(event_date)
-        sc = partner.hact_values['spot_checks']['completed']['total']
-        scq = partner.hact_values['spot_checks']['completed'][quarter_name]
+        hact = self.get_hact_json()
+        sc = hact['spot_checks']['completed']['total']
+        scq = hact['spot_checks']['completed'][quarter_name]
 
         if update_one:
             sc += 1
             scq += 1
-            partner.hact_values['spot_checks']['completed'][quarter_name] = scq
+            hact['spot_checks']['completed'][quarter_name] = scq
         else:
-            trip = TravelActivity.objects.filter(
-                travel_type=TravelType.SPOT_CHECK,
-                travels__traveler=F('primary_traveler'),
-                travels__status__in=[Travel.COMPLETED],
-                travels__completed_at__year=datetime.datetime.now().year,
-                partner=partner,
+            trip = Travel.objects.filter(
+                activities__travel_type=TravelType.SPOT_CHECK,
+                traveler=F('activities__primary_traveler'),
+                status__in=[Travel.COMPLETED],
+                end_date__year=datetime.datetime.now().year,
+                activities__partner=self,
             )
 
-            trq1 = trip.filter(travels__completed_at__month__in=[1, 2, 3]).count()
-            trq2 = trip.filter(travels__completed_at__month__in=[4, 5, 6]).count()
-            trq3 = trip.filter(travels__completed_at__month__in=[7, 8, 9]).count()
-            trq4 = trip.filter(travels__completed_at__month__in=[10, 11, 12]).count()
+            trq1 = trip.filter(end_date__month__in=[1, 2, 3]).count()
+            trq2 = trip.filter(end_date__month__in=[4, 5, 6]).count()
+            trq3 = trip.filter(end_date__month__in=[7, 8, 9]).count()
+            trq4 = trip.filter(end_date__month__in=[10, 11, 12]).count()
 
             audit_spot_check = SpotCheck.objects.filter(
-                partner=partner, status=Engagement.FINAL,
+                partner=self, status=Engagement.FINAL,
                 date_of_draft_report_to_unicef__year=datetime.datetime.now().year
             )
 
@@ -773,39 +768,53 @@ class PartnerOrganization(TimeStampedModel):
             asc3 = audit_spot_check.filter(date_of_draft_report_to_unicef__month__in=[7, 8, 9]).count()
             asc4 = audit_spot_check.filter(date_of_draft_report_to_unicef__month__in=[10, 11, 12]).count()
 
-            partner.hact_values['spot_checks']['completed']['q1'] = trq1 + asc1
-            partner.hact_values['spot_checks']['completed']['q2'] = trq2 + asc2
-            partner.hact_values['spot_checks']['completed']['q3'] = trq3 + asc3
-            partner.hact_values['spot_checks']['completed']['q4'] = trq4 + asc4
+            hact['spot_checks']['completed']['q1'] = trq1 + asc1
+            hact['spot_checks']['completed']['q2'] = trq2 + asc2
+            hact['spot_checks']['completed']['q3'] = trq3 + asc3
+            hact['spot_checks']['completed']['q4'] = trq4 + asc4
 
             sc = trip.count() + audit_spot_check.count()  # TODO 1.1.9c add spot checks from field monitoring
 
-        partner.hact_values['spot_checks']['completed']['total'] = sc
-        partner.save()
+        hact['spot_checks']['completed']['total'] = sc
+        self.hact_values = hact
+        self.save()
 
-    @classmethod
-    def audits_completed(cls, partner, update_one=False):
+    def audits_completed(self, update_one=False):
         """
         :param partner: Partner Organization
         :param update_one: if True will increase by one the value, if False would recalculate the value
         :return: all completed audit (including special audit)
         """
         from etools.applications.audit.models import Audit, Engagement, SpecialAudit
-        completed_audit = partner.hact_values['audits']['completed']
+        hact = self.get_hact_json()
+        completed_audit = hact['audits']['completed']
         if update_one:
             completed_audit += 1
         else:
             audits = Audit.objects.filter(
-                partner=partner,
+                partner=self,
                 status=Engagement.FINAL,
                 date_of_draft_report_to_unicef__year=datetime.datetime.now().year).count()
             s_audits = SpecialAudit.objects.filter(
-                partner=partner,
+                partner=self,
                 status=Engagement.FINAL,
                 date_of_draft_report_to_unicef__year=datetime.datetime.now().year).count()
             completed_audit = audits + s_audits
-        partner.hact_values['audits']['completed'] = completed_audit
-        partner.save()
+        hact['audits']['completed'] = completed_audit
+        self.hact_values = hact
+        self.save()
+
+    def hact_support(self):
+        from etools.applications.audit.models import Audit, Engagement
+
+        hact = self.get_hact_json()
+        audits = Audit.objects.filter(partner=self, status=Engagement.FINAL,
+                                      date_of_draft_report_to_unicef__year=datetime.datetime.today().year)
+        hact['outstanding_findings'] = sum([
+            audit.pending_unsupported_amount for audit in audits if audit.pending_unsupported_amount])
+        hact['assurance_coverage'] = self.assurance_coverage
+        self.hact_values = json.dumps(hact, cls=EToolsEncoder)
+        self.save()
 
     def get_admin_url(self):
         admin_url_name = 'admin:partners_partnerorganization_change'
@@ -902,24 +911,24 @@ class PlannedEngagement(TimeStampedModel):
     """ class to handle partner's engagement for current year """
     partner = models.OneToOneField(PartnerOrganization, verbose_name=_("Partner"), related_name='planned_engagement',
                                    on_delete=models.CASCADE)
-    spot_check_mr = QuarterField(verbose_name=_('Spot Check MR'), null=False, default='')
-    spot_check_follow_up_q1 = models.IntegerField(verbose_name=_("Spot Check Q1"), default=0)
-    spot_check_follow_up_q2 = models.IntegerField(verbose_name=_("Spot Check Q2"), default=0)
-    spot_check_follow_up_q3 = models.IntegerField(verbose_name=_("Spot Check Q3"), default=0)
-    spot_check_follow_up_q4 = models.IntegerField(verbose_name=_("Spot Check Q4"), default=0)
+    spot_check_follow_up = models.IntegerField(verbose_name=_("Spot Check Follow Up Required"), default=0)
+    spot_check_planned_q1 = models.IntegerField(verbose_name=_("Spot Check Q1"), default=0)
+    spot_check_planned_q2 = models.IntegerField(verbose_name=_("Spot Check Q2"), default=0)
+    spot_check_planned_q3 = models.IntegerField(verbose_name=_("Spot Check Q3"), default=0)
+    spot_check_planned_q4 = models.IntegerField(verbose_name=_("Spot Check Q4"), default=0)
     scheduled_audit = models.BooleanField(verbose_name=_("Scheduled Audit"), default=False)
     special_audit = models.BooleanField(verbose_name=_("Special Audit"), default=False)
 
     @cached_property
-    def total_spot_check_follow_up_required(self):
+    def total_spot_check_planned(self):
         return sum([
-            self.spot_check_follow_up_q1, self.spot_check_follow_up_q2,
-            self.spot_check_follow_up_q3, self.spot_check_follow_up_q4
+            self.spot_check_planned_q1, self.spot_check_planned_q2,
+            self.spot_check_planned_q3, self.spot_check_planned_q4
         ])
 
     @cached_property
     def spot_check_required(self):
-        return self.total_spot_check_follow_up_required + (1 if self.spot_check_mr else 0)
+        return self.spot_check_follow_up + self.partner.min_req_spot_checks
 
     @cached_property
     def required_audit(self):
@@ -927,11 +936,11 @@ class PlannedEngagement(TimeStampedModel):
 
     def reset(self):
         """this is used to reset the values of the object at the end of the year"""
-        self.spot_check_mr = None
-        self.spot_check_follow_up_q1 = 0
-        self.spot_check_follow_up_q2 = 0
-        self.spot_check_follow_up_q3 = 0
-        self.spot_check_follow_up_q4 = 0
+        self.spot_check_follow_up = 0
+        self.spot_check_planned_q1 = 0
+        self.spot_check_planned_q2 = 0
+        self.spot_check_planned_q3 = 0
+        self.spot_check_planned_q4 = 0
         self.scheduled_audit = False
         self.special_audit = False
         self.save()
@@ -1313,10 +1322,10 @@ class Agreement(TimeStampedModel):
         pass
 
     @transaction.atomic
-    def save(self, **kwargs):
+    def save(self, force_insert=False, **kwargs):
 
         oldself = None
-        if self.pk:
+        if self.pk and not force_insert:
             # load from DB
             oldself = Agreement.objects.get(pk=self.pk)
 
@@ -1831,42 +1840,65 @@ class Intervention(TimeStampedModel):
             for lower_result in link.ll_results.all()
         ]
 
-    @cached_property
-    def intervention_locations(self):
-        if tenant_switch_is_active("prp_mode_off"):
-            locations = set(self.flat_locations.all())
-        else:
-            # return intervention locations as a set of Location objects
-            locations = set()
-            for lower_result in self.all_lower_results:
-                for applied_indicator in lower_result.applied_indicators.all():
-                    for location in applied_indicator.locations.all():
-                        locations.add(location)
+    # TODO (Rob): Remove this and alll usage as this is no longer valid
+    def intervention_locations(self, reset=False):
+        cache_key = INTERVENTION_LOCATIONS_CACHE_KEY.format(self.pk)
+        if reset:
+            cache.delete(cache_key)
+            return
+
+        locations = cache.get(cache_key)
+        if locations is None:
+            if tenant_switch_is_active("prp_mode_off"):
+                locations = set(self.flat_locations.all())
+            else:
+                # return intervention locations as a set of Location objects
+                locations = set()
+                for lower_result in self.all_lower_results:
+                    for applied_indicator in lower_result.applied_indicators.all():
+                        for location in applied_indicator.locations.all():
+                            locations.add(location)
+            cache.set(cache_key, locations)
 
         return locations
 
-    @cached_property
-    def flagged_sections(self):
-        if tenant_switch_is_active("prp_mode_off"):
-            sections = set(self.sections.all())
-        else:
-            # return intervention locations as a set of Location objects
-            sections = set()
-            for lower_result in self.all_lower_results:
-                for applied_indicator in lower_result.applied_indicators.all():
-                    if applied_indicator.section:
-                        sections.add(applied_indicator.section)
+    # TODO (Rob): Remove this and all usage as this is no longer valid
+    def flagged_sections(self, reset=False):
+        cache_key = INTERVENTION_FLAGGED_SECTIONS_CACHE_KEY.format(self.pk)
+        if reset:
+            cache.delete(cache_key)
+            return
+
+        sections = cache.get(cache_key)
+        if sections is None:
+            if tenant_switch_is_active("prp_mode_off"):
+                sections = set(self.sections.all())
+            else:
+                # return intervention locations as a set of Location objects
+                sections = set()
+                for lower_result in self.all_lower_results:
+                    for applied_indicator in lower_result.applied_indicators.all():
+                        if applied_indicator.section:
+                            sections.add(applied_indicator.section)
+            cache.set(cache_key, sections)
 
         return sections
 
-    @cached_property
-    def intervention_clusters(self):
+    def intervention_clusters(self, reset=False):
         # return intervention clusters as an array of strings
-        clusters = set()
-        for lower_result in self.all_lower_results:
-            for applied_indicator in lower_result.applied_indicators.all():
-                if applied_indicator.cluster_name:
-                    clusters.add(applied_indicator.cluster_name)
+        cache_key = INTERVENTION_CLUSTERS_CACHE_KEY.format(self.pk)
+        if reset:
+            cache.delete(cache_key)
+            return
+
+        clusters = cache.get(cache_key)
+        if clusters is None:
+            clusters = set()
+            for lower_result in self.all_lower_results:
+                for applied_indicator in lower_result.applied_indicators.all():
+                    if applied_indicator.cluster_name:
+                        clusters.add(applied_indicator.cluster_name)
+            cache.set(cache_key, clusters)
 
         return clusters
 
@@ -2015,16 +2047,21 @@ class Intervention(TimeStampedModel):
             if save_agreement:
                 self.agreement.save()
 
+    def clear_caches(self):
+        self.intervention_locations(reset=True)
+        self.flagged_sections(reset=True)
+        self.intervention_clusters(reset=True)
+
     @transaction.atomic
-    def save(self, **kwargs):
+    def save(self, force_insert=False, **kwargs):
         # check status auto updates
         # TODO: move this outside of save in the future to properly check transitions
         # self.check_status_auto_updates()
 
         oldself = None
-        if self.pk:
+        if self.pk and not force_insert:
             # load from DB
-            oldself = Intervention.objects.get(pk=self.pk)
+            oldself = Intervention.objects.filter(pk=self.pk).first()
 
         # update reference number if needed
         amendment_number = kwargs.get('amendment_number', None)
@@ -2169,6 +2206,12 @@ class InterventionResultLink(TimeStampedModel):
         return '{} {}'.format(
             self.intervention, self.cp_output
         )
+
+    def save(self, *args, **kwargs):
+        super().save(*args, **kwargs)
+
+        # reset certain caches
+        self.intervention.clear_caches()
 
 
 class InterventionBudget(TimeStampedModel):

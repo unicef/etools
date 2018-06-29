@@ -789,12 +789,11 @@ class Command(BaseCommand):
                 'content': strip_text("""
                     Dear {{ action_point.person_responsible }},
 
-                    {{ action_point.author }} has assigned you an action point.
+                    {{ action_point.assigned_by }} has assigned you an action point.
 
-                    Engagement ID: {{ engagement.unique_id }}
-                    Category: {{ action_point.category }}
-                    Due Date: {{ action_point.due_date}}
-                    Link: {{ engagement.object_url }}
+                    Engagement ID: {{ action_point.engagement.unique_id }}
+                    Due Date: {{ action_point.due_date }}
+                    Link: {{ action_point.engagement.object_url }}
 
                     Thank you.
                 """),
@@ -805,12 +804,11 @@ class Command(BaseCommand):
                     {% block content %}
                     Dear {{ action_point.person_responsible }},<br/><br/>
 
-                    {{ action_point.author }} has assigned you an action point. <br/><br/>
+                    {{ action_point.assigned_by }} has assigned you an action point. <br/><br/>
 
-                    Engagement ID: {{ engagement.unique_id }}<br/>
-                    Category: {{ action_point.category }}<br/>
-                    Due Date: {{ action_point.due_date}}<br/>
-                    Link: <a href="{{ engagement.object_url }}">click here</a><br/><br/>
+                    Engagement ID: {{ action_point.engagement.unique_id }}<br/>
+                    Due Date: {{ action_point.due_date }}<br/>
+                    Link: <a href="{{ action_point.engagement.object_url }}">click here</a><br/><br/>
 
                     Thank you.
                     {% endblock %}
@@ -1174,22 +1172,22 @@ class Command(BaseCommand):
                 'subject': '[eTools] ACTION POINT ASSIGNED to {{ action_point.person_responsible }}',
 
                 'content': strip_text("""
-                    Dear {{ action_point.person_responsible.first_name }},
+                    Dear {{ action_point.person_responsible }},
 
-                    {{ action_point.author.get_full_name }} has assigned you an action point related to
-                    Monitoring/Verification Visit {{ visit.reference_number }}.
+                    {% with action_point.tpm_activity as activity %}
+                    {{ action_point.assigned_by }} has assigned you an action point related to
+                    Monitoring/Verification Visit {{ activity.tpm_visit.reference_number }}.
 
-                    Implementing Partner{% if visit.multiple_tpm_activities %}s{% endif %} {{ visit.partners }}.
+                    Implementing Partner {{ activity.partner }}.
                     Please refer below for additional information.
 
-                    {% for activity in visit.tpm_activities %}
                     PD/SSFA/ToR: {{ activity.intervention}}
                     CP Output: {{ activity.cp_output }}
                     Location: {{ activity.locations }}
                     Section: {{ activity.section }}
-                    {% endfor %}
 
-                    Please click this link for additional information: {{ visit.object_url }}
+                    Please click this link for additional information: {{ activity.tpm_visit.object_url }}
+                    {% endwith %}
                     Thank you.
                 """),
 
@@ -1197,23 +1195,23 @@ class Command(BaseCommand):
                     {% extends "email-templates/base" %}
 
                     {% block content %}
-                    Dear {{ action_point.person_responsible.first_name }},<br/>
+                    Dear {{ action_point.person_responsible }},<br/>
                     <br/>
-                    <b>{{ action_point.author.get_full_name }}</b> has assigned you an action point related to
-                    Monitoring/Verification Visit {{ visit.reference_number }}.<br/>
-                    Implementing Partner{% if visit.multiple_tpm_activities %}s{% endif %} <b>{{ visit.partners }}</b>.
+                    {% with action_point.tpm_activity as activity %}
+                    <b>{{ action_point.assigned_by }}</b> has assigned you an action point related to
+                    Monitoring/Verification Visit {{ activity.tpm_visit.reference_number }}.<br/>
+                    Implementing Partner <b>{{ activity.partner }}</b>.
                     <br/>
                     Please refer below for additional information.<br/>
                     <br/>
-                    {% for activity in visit.tpm_activities %}
                     <b>PD/SSFA/ToR</b>: {{ activity.intervention }}<br/>
                     <b>CP Output</b> {{ activity.cp_output|default:"unassigned" }}<br/>
                     <b>Locations</b>: {{ activity.locations }}</br>
                     <b>Section</b>: {{ activity.section }}<br/><br/>
-                    {% endfor %}
 
                     Please click this link for additional information:
-                    <a href="{{ visit.object_url }}">{{ visit.object_url }}</a><br/><br/>
+                    <a href="{{ activity.tpm_visit.object_url }}">{{activity.tpm_visit.reference_number}}</a><br/><br/>
+                    {% endwith %}
                     Thank you.
                     {% endblock %}
                 """
@@ -1227,15 +1225,15 @@ class Command(BaseCommand):
                 'description': 'Action point assigned/reassigned',
                 'subject': '[eTools] ACTION POINT ASSIGNED to {{ action_point.person_responsible }}',
 
-                'content': """
+                'content': strip_text("""
                 Dear {{ recipient }},
 
-                {{ action_point.assigned_by }} has assigned you an action point related to:
-                Implementing Partner: {{ action_point.implementing_partner }}
+                {{ action_point.assigned_by }} has assigned you an action point {% if action_point.partner %}related to:
+                Implementing Partner: {{ action_point.partner }}{% endif %}
                 Description: {{ action_point.description }}
 
                 Link: {{ action_point.object_url }}
-                """,
+                """),
 
                 'html_content': """
                 {% extends "email-templates/base" %}
@@ -1243,8 +1241,9 @@ class Command(BaseCommand):
                 {% block content %}
                 Dear {{ recipient }},<br/><br/>
 
-                {{ action_point.assigned_by }} has assigned you an action point related to:<br/>
-                Implementing Partner: {{ action_point.implementing_partner }}<br/>
+                {{ action_point.assigned_by }} has assigned you an action point {% if action_point.partner %}related to:
+                <br/>
+                Implementing Partner: {{ action_point.partner }}{% endif %}<br/>
                 Description: {{ action_point.description }}<br/>
                 Link: <a href="{{ action_point.object_url }}">{{ action_point.reference_number }}</a>
                 {% endblock %}
@@ -1313,6 +1312,74 @@ class Command(BaseCommand):
 
                 Please note that this is an automated message and replies to this address not monitored.<br/>
                 {% endblock %}
+                """
+            }
+        )
+
+        EmailTemplate.objects.update_or_create(
+            name="partners/intervention/new_pca_required",
+            defaults={
+                "description": "New PCA Required",
+                "subject": "[eTools] New PCA Required: {{partner_name}}",
+                "content": """
+                Dear Colleague,
+
+                Please note that the Partnership ref. {{reference_number}} with {{partner_name}} has an end date that goes beyond the current Country Programme Cycle.
+
+                A new PCA will have to be signed with the partner for the new Country Programme.
+
+               {{pd_link}}
+
+                Please note that this is an automated message and replies to this email address are not monitored.
+                """,
+                "html_content": """
+                {% extends "email-templates/base" %}
+
+                {% block content %}
+                Dear Colleague,<br /><br />
+
+                Please note that the Partnership ref. {{reference_number}} with {{partner_name}} has an end date that goes beyond the current Country Programme Cycle.<br />
+
+                A new PCA will have to be signed with the partner for the new Country Programme.</br >
+
+               {{pd_link}}<br />
+
+                Please note that this is an automated message and replies to this email address are not monitored.<br />
+                {% endblock content %}
+                """
+            }
+        )
+
+        EmailTemplate.objects.update_or_create(
+            name="partners/intervention/pca_missing",
+            defaults={
+                "description": "New PCA Required",
+                "subject": "[eTools] New PCA Required: {{partner_name}}",
+                "content": """
+                Dear Colleague,
+
+                Please note that there is no PCA for Partner {{partner_name}}. There currently is an ongoing Partnership ref. {{reference_number}} with this partner.
+
+                A PCA with {{partner_name}} must signed as soon as possible. Please take action immediately.
+
+               {{pd_link}}
+
+                Please note that this is an automated message and replies to this email address are not monitored.
+                """,
+                "html_content": """
+                {% extends "email-templates/base" %}
+
+                {% block content %}
+                Dear Colleague,<br /><br />
+
+                Please note that there is no PCA for Partner {{partner_name}}. There currently is an ongoing Partnership ref. {{reference_number}} with this partner.<br />
+
+                A PCA with {{partner_name}} must signed as soon as possible. Please take action immediately.<br />
+
+               {{pd_link}}<br />
+
+                Please note that this is an automated message and replies to this email address are not monitored.<br />
+                {% endblock content %}
                 """
             }
         )

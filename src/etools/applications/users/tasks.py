@@ -17,7 +17,7 @@ import requests
 from celery.utils.log import get_task_logger
 from dateutil.relativedelta import relativedelta
 
-from etools.applications.users.models import Country, Section, UserProfile
+from etools.applications.users.models import Country, UserProfile
 from etools.applications.vision.exceptions import VisionException
 from etools.applications.vision.models import VisionSyncLog
 from etools.applications.vision.vision_data_synchronizer import VISION_NO_DATA_MESSAGE
@@ -49,17 +49,21 @@ class UserMapper(object):
         'unicefBusinessAreaCode',
         'unicefSectionCode'
     ]
-    ATTR_MAP = {
+
+    USER_ATTR_MAP = {
         'dn': 'dn',
-        'mail': 'username',
-        'internetaddress': 'email',
-        'givenName': 'first_name',
-        'sn': 'last_name',
-        'telephoneNumber': 'phone_number',
-        'unicefBusinessAreaCode': 'country',
-        'unicefIndexNumber': 'staff_id',
-        'unicefSectionCode': 'section_code',
-        'functionalTitle': 'post_title'
+        'username': 'mail',
+        'email': 'internetaddress',
+        'first_name': 'givenName',
+        'last_name': 'sn',
+    }
+
+    PROFILE_ATTR_MAP = {
+        'phone_number': 'telephoneNumber',
+        'country': 'unicefBusinessAreaCode',
+        'staff_id': 'unicefIndexNumber',
+        'section_code': 'unicefSectionCode',
+        'post_title': 'functionalTitle'
     }
 
     def __init__(self):
@@ -75,11 +79,6 @@ class UserMapper(object):
         if business_area_code not in self.countries:
             self.countries[business_area_code] = Country.objects.filter(business_area_code=business_area_code).first()
         return self.countries[business_area_code] or self.countries['UAT']
-
-    def _get_section(self, section_name, section_code):
-        if not self.sections.get(section_name):
-            self.sections[section_name], _ = Section.objects.get_or_create(name=section_name, code=section_code)
-        return self.sections[section_name]
 
     def _set_simple_attr(self, obj, attr, cleaned_value):
         old_value = getattr(obj, attr)
@@ -108,7 +107,7 @@ class UserMapper(object):
         """Set an attribute of an object to a specific value.
         Return True if the attribute was changed and False otherwise.
         """
-        # clean the value
+
         field = obj._meta.get_field(attr)
         if type(value) == list:
             value = u'- '.join([str(val) for val in value])
@@ -130,31 +129,22 @@ class UserMapper(object):
         return self._set_simple_attr(obj, attr, cleaned_value)
 
     @transaction.atomic
-    def create_or_update_user(self, ad_user):
-        logger.debug(ad_user.get(self.KEY_ATTRIBUTE))
-        for field in self.REQUIRED_USER_FIELDS:
-            if isinstance(field, str):
-                if not ad_user.get(field, False):
-                    logger.debug(u"User doesn't have the required fields {} missing".format(field))
-                    return
-            elif isinstance(field, tuple):
-                allowed_values = field[1]
-                if isinstance(allowed_values, str):
-                    allowed_values = [allowed_values, ]
+    def create_or_update_user(self, record):
 
-                if ad_user.get(field[0], False) not in allowed_values:
-                    logger.debug(u"User is not in Unicef organization {}".format(field[1]))
-                    return
+        if not self.record_is_valid(record):
+            return
 
-        # TODO: MODIFY THIS TO USE THE GUID ON THE PROFILE INSTEAD OF EMAIL on the USer
+        key_value = record[self.KEY_ATTRIBUTE]
+        logger.debug(key_value)
 
         try:
             user, created = get_user_model().objects.get_or_create(
-                email=ad_user[self.KEY_ATTRIBUTE],
-                username=ad_user[self.KEY_ATTRIBUTE]
-            )
+                email=key_value, username=key_value)
+
             if created:
                 user.set_unusable_password()
+                user.groups.add(self.groups['UNICEF User'])
+                logger.info(u'Group added to user {}'.format(user))
 
             try:
                 profile = user.profile
@@ -162,42 +152,11 @@ class UserMapper(object):
                 logger.warning(u'No profile for user {}'.format(user))
                 return
 
-            profile_modified = False
-            # TODO: user.is_staff should not be set for regular UNICEF users.. global refactor needed
-            user_modified = False if user.is_staff and user.is_active else True
-            # TODO: in the future see if ADFS returns somewhere whether users are active or not.
-            # user.is_staff = user.is_staff or True
-            # user.is_active = user.is_active or True
+            self.update_user(user, record)
+            self.update_profile(profile, record)
 
-            if created:
-                user.groups.add(self.groups['UNICEF User'])
-                logger.info(u'Group added to user {}'.format(user))
-
-            # most attributes are direct maps.
-            for attr, attr_val in ad_user.items():
-                mapped_attribute = self.ATTR_MAP.get(attr, 'unusable_attr')
-                value = ad_user[attr]
-
-                if hasattr(user, mapped_attribute):
-                    u_modified = self._set_attribute(user, mapped_attribute, value)
-                    user_modified = user_modified or u_modified
-
-                if mapped_attribute not in ['email', 'first_name', 'last_name', 'username'] \
-                        and hasattr(profile, mapped_attribute):
-                    modified = self._set_attribute(profile, mapped_attribute, value)
-                    profile_modified = profile_modified or modified
-            try:
-                if user_modified:
-                    logger.debug(u'saving modified user')
-                    user.save()
-                if profile_modified:
-                    logger.debug(u'saving profile for: {}'.format(user))
-                    profile.save()
-            except IntegrityError as e:
-                logger.exception(u'Integrity error on user: {} - exception {}'.format(user.email, e))
         except IntegrityError as e:
-            logger.exception(u'Integrity error on user retrieving: {} - exception {}'.format(
-                ad_user[self.KEY_ATTRIBUTE], e))
+            logger.exception(u'Integrity error on user retrieving: {} - exception {}'.format(key_value, e))
 
     def _set_supervisor(self, profile, manager_id):
         if not manager_id or manager_id == 'Vacant':
@@ -230,7 +189,7 @@ class UserMapper(object):
 
         for code in section_codes:
             self.section_users = {}
-            synchronizer = UserSynchronizer('GetOrgChartUnitsInfo_JSON', code)
+            synchronizer = UserVisionSynchronizer('GetOrgChartUnitsInfo_JSON', code)
             logger.info(u"Mapping for section {}".format(code))
             for in_user in synchronizer.response:
                 # if the user has no staff id don't bother for supervisor
@@ -258,6 +217,50 @@ class UserMapper(object):
                         user, supervisor_updated, profile_updated))
                     user.profile.save()
 
+    def record_is_valid(self, record):
+        if self.KEY_ATTRIBUTE not in record:
+            logger.info(u"Discarding Record {} field is missing".format(self.KEY_ATTRIBUTE))
+            return False
+        for field in self.REQUIRED_USER_FIELDS:
+            if isinstance(field, str):
+                if not record.get(field, False):
+                    logger.info(u"User doesn't have the required fields {} missing".format(field))
+                    return False
+            elif isinstance(field, tuple):
+                allowed_values = field[1]
+                if isinstance(allowed_values, str):
+                    allowed_values = [allowed_values, ]
+
+                if record.get(field[0], False) not in allowed_values:
+                    logger.debug(u"User is not in Unicef organization {}".format(field[1]))
+                    return False
+        return True
+
+    def update_user(self, user, record):
+        modified = False
+        for attr, record_attr in self.USER_ATTR_MAP.items():
+
+            record_value = record.get(record_attr, None)
+            if record_value:
+                attr_modified = self._set_attribute(user, attr, record_value)
+                modified = modified or attr_modified
+
+        if modified:
+            logger.debug(f'Updated User: {user}')
+            user.save()
+
+    def update_profile(self, profile, record):
+        modified = False
+        for attr, record_attr in self.PROFILE_ATTR_MAP.items():
+            record_value = record.get(record_attr, None)
+            if record_value:
+                attr_modified = self._set_attribute(profile, attr, record_value)
+                modified = modified or attr_modified
+
+        if modified:
+            logger.debug(f'Updated Profile: {profile.user}')
+            profile.save()
+
 
 class AzureUserMapper(UserMapper):
     KEY_ATTRIBUTE = 'userPrincipalName'
@@ -271,16 +274,19 @@ class AzureUserMapper(UserMapper):
         ('companyName', ['UNICEF', ]),
     ]
 
-    ATTR_MAP = {
-        'userPrincipalName': 'username',
-        'mail': 'email',
-        'givenName': 'first_name',
-        'surname': 'last_name',
-        'id': 'guid',
-        'businessPhones': 'phone_number',
-        'extension_f4805b4021f643d0aa596e1367d432f1_extensionAttribute1': 'country',
-        'extension_f4805b4021f643d0aa596e1367d432f1_extensionAttribute2': 'staff_id',
-        'jobTitle': 'post_title'
+    USER_ATTR_MAP = {
+        'username': 'userPrincipalName',
+        'email': 'userPrincipalName',
+        'first_name': 'givenName',
+        'last_name': 'surname',
+    }
+
+    PROFILE_ATTR_MAP = {
+        'guid': 'id',
+        'phone_number': 'businessPhones',
+        'country': 'extension_f4805b4021f643d0aa596e1367d432f1_extensionAttribute1',
+        'staff_id': 'extension_f4805b4021f643d0aa596e1367d432f1_extensionAttribute2',
+        'post_title': 'jobTitle'
     }
 
 
@@ -327,7 +333,7 @@ def map_users():
         log.save()
 
 
-class UserSynchronizer(object):
+class UserVisionSynchronizer(object):
 
     REQUIRED_KEYS_MAP = {
         'GetOrgChartUnitsInfo_JSON': (

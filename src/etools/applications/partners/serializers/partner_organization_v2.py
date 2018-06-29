@@ -196,33 +196,19 @@ class MinimalPartnerOrganizationListSerializer(serializers.ModelSerializer):
 
 class PlannedEngagementSerializer(serializers.ModelSerializer):
 
-    spot_check_mr = serializers.SerializerMethodField(read_only=True)
-
-    @staticmethod
-    def get_spot_check_mr(obj):
-        spot_check_mr = {
-            'q1': 0,
-            'q2': 0,
-            'q3': 0,
-            'q4': 0,
-        }
-        if obj.spot_check_mr in spot_check_mr:
-            spot_check_mr[obj.spot_check_mr] += 1
-        return spot_check_mr
-
     class Meta:
         model = PlannedEngagement
         fields = (
             "id",
-            "spot_check_mr",
-            "spot_check_follow_up_q1",
-            "spot_check_follow_up_q2",
-            "spot_check_follow_up_q3",
-            "spot_check_follow_up_q4",
+            "spot_check_follow_up",
+            "spot_check_planned_q1",
+            "spot_check_planned_q2",
+            "spot_check_planned_q3",
+            "spot_check_planned_q4",
+            "spot_check_required",
             "scheduled_audit",
             "special_audit",
-            "total_spot_check_follow_up_required",
-            "spot_check_required",
+            "total_spot_check_planned",
             "required_audit"
         )
 
@@ -233,36 +219,6 @@ class PlannedEngagementNestedSerializer(serializers.ModelSerializer):
     is removed in this case to avoid validation errors for e.g. when creating
     the partner and the engagement at the same time.
     """
-    spot_check_mr = serializers.JSONField()
-
-    def validate(self, data):
-        data = super(PlannedEngagementNestedSerializer, self).validate(data)
-        spot_check_mr = data.get('spot_check_mr', 0)
-        partner = data.get('partner', None)
-
-        spot_check_mr_number = 1 if spot_check_mr else 0
-        if spot_check_mr_number > partner.min_req_spot_checks:
-            raise ValidationError("Based on Liquidation, you cannot set this value")
-        return data
-
-    def validate_spot_check_mr(self, attrs):
-        quarters = []
-        for key, value in attrs.items():
-            try:
-                value = int(value)
-            except ValueError:
-                raise ValidationError("You can select only MR in one quarter")
-            else:
-                if value:
-                    if value != 1:
-                        raise ValidationError("If selected, the value has to be 1")
-                    quarters.append(key)
-        if len(quarters) > 1:
-            raise ValidationError("You can select only MR in one quarter")
-        elif len(quarters) == 1:
-            return quarters[0]
-        else:
-            return 0
 
     class Meta:
         model = PlannedEngagement
@@ -306,6 +262,9 @@ class PartnerOrganizationDetailSerializer(serializers.ModelSerializer):
     hact_min_requirements = serializers.JSONField(read_only=True)
     hidden = serializers.BooleanField(read_only=True)
     planned_visits = PartnerPlannedVisitsSerializer(many=True, read_only=True, required=False)
+
+    partner_type_slug = serializers.ReadOnlyField()
+    flags = serializers.ReadOnlyField()
 
     def get_hact_values(self, obj):
         return json.loads(obj.hact_values) if isinstance(obj.hact_values, str) else obj.hact_values

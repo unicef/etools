@@ -1,5 +1,3 @@
-
-
 from django.utils.translation import ugettext as _
 
 from rest_framework import serializers
@@ -89,70 +87,87 @@ class InterventionResultExportSerializer(InterventionResultSerializer):
     intervention = serializers.CharField(
         label=_("Reference Number"),
         source="intervention.number",
+        read_only=True
     )
     country_programme = serializers.CharField(
         label=_("Country Programme"),
         source="cp_output.country_programme.name",
+        read_only=True
     )
     result_type = serializers.CharField(
         label=_("Result Type"),
         source="cp_output.result_type.name",
+        read_only=True
     )
     sector = serializers.CharField(
         label=_("Sector"),
         source="cp_output.sector.name",
+        read_only=True
     )
     name = serializers.CharField(
         label=_("Name"),
         source="cp_output.name",
+        read_only=True
     )
     code = serializers.CharField(
         label=_("Code"),
         source="cp_output.code",
+        read_only=True
     )
     from_date = serializers.CharField(
         label=_("From Date"),
         source="cp_output.from_date",
+        read_only=True
     )
     to_date = serializers.CharField(
         label=_("To Date"),
         source="cp_output.to_date",
+        read_only=True
     )
     parent = serializers.CharField(
         label=_("Parent"),
         source="cp_output.parent.pk",
+        read_only=True
     )
     wbs = serializers.CharField(
         label=_("WBS"),
         source="cp_output.wbs",
+        read_only=True
     )
     vision_id = serializers.CharField(
         label=_("VISION ID"),
         source="cp_output.vision_id",
+        read_only=True
     )
     gic_code = serializers.CharField(
         label=_("GIC Code"),
         source="cp_output.gic_code",
+        read_only=True
     )
     gic_name = serializers.CharField(
         label=_("GIC Name"),
         source="cp_output.gic_name",
+        read_only=True
     )
     sic_code = serializers.CharField(
         label=_("SIC Code"),
         source="cp_output.sic_code",
+        read_only=True
     )
     sic_name = serializers.CharField(
         label=_("SIC Name"),
         source="cp_output.sic_name",
+        read_only=True
     )
     activity_focus_code = serializers.CharField(
         label=_("Activity Focus Code"),
         source="cp_output.activity_focus_code",
+        read_only=True
     )
     activity_focus_name = serializers.CharField(
         label=_("Activity Focus Name"),
         source="cp_output.activity_focus_name",
+        read_only=True
     )
 
     class Meta:
@@ -167,6 +182,7 @@ class InterventionResultExportFlatSerializer(
     parent = serializers.CharField(
         label=_("Parent"),
         source="cp_output.parent.name",
+        read_only=True
     )
 
     class Meta:
@@ -368,7 +384,7 @@ class InterventionExportSerializer(serializers.ModelSerializer):
         return ', '.join([s.name for s in obj.sections.all()])
 
     def get_intervention_clusters(self, obj):
-        return ', '.join([c for c in obj.intervention_clusters])
+        return ', '.join([c for c in obj.intervention_clusters()])
 
     def get_contingency_pd(self, obj):
         return "Yes" if obj.contingency_pd else "No"
@@ -440,38 +456,47 @@ class InterventionExportFlatSerializer(ExportSerializerMixin, InterventionExport
     country_programme = serializers.CharField(
         label=_("Country Programme"),
         source='country_programme.name',
+        read_only=True
     )
     partner_contribution = serializers.CharField(
         label=_("CSO Contribution"),
         source='planned_budget.partner_contribution',
+        read_only=True
     )
     unicef_cash = serializers.CharField(
         label=_("UNICEF Cash"),
         source='planned_budget.unicef_cash',
+        read_only=True
     )
     in_kind_amount = serializers.CharField(
         label=_("In Kind Amount"),
         source='planned_budget.in_kind_amount',
+        read_only=True
     )
     partner_contribution_local = serializers.CharField(
         label=_("CSO Contribution (Local)"),
         source='planned_budget.partner_contribution_local',
+        read_only=True
     )
     unicef_cash_local = serializers.CharField(
         label=_("UNICEF Cash (Local)"),
         source='planned_budget.unicef_cash_local',
+        read_only=True
     )
     in_kind_amount_local = serializers.CharField(
         label=_("In Kind Amount (Local)"),
         source='planned_budget.in_kind_amount_local',
+        read_only=True
     )
     currency = serializers.CharField(
         label=_("Currency"),
         source='planned_budget.currency',
+        read_only=True
     )
     total = serializers.CharField(
         label=_("Total"),
         source='planned_budget.total',
+        read_only=True
     )
 
     class Meta:
