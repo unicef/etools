@@ -8,6 +8,8 @@ from django.db import connection
 from django.db.models.signals import post_delete, post_save
 from django.dispatch.dispatcher import receiver
 from django.utils.translation import ugettext as _
+from django.contrib.contenttypes.fields import GenericForeignKey
+from django.contrib.contenttypes.models import ContentType
 
 from model_utils.fields import AutoCreatedField, AutoLastModifiedField
 from mptt.models import MPTTModel, TreeForeignKey
@@ -92,12 +94,7 @@ class Location(MPTTModel):
         blank=True,
     )
     point = models.PointField(verbose_name=_("Point"), null=True, blank=True)
-
-    # pcode remap related fields
-    prev_id = models.CharField(verbose_name=_("Previous Pcode"), max_length=32, null=True, db_index=True)
-    prev_pcode = models.CharField(verbose_name=_("Previous Pcode"), max_length=32, null=True, db_index=True)
     is_active = models.BooleanField(verbose_name=_("Active"), default=True, blank=True)
-
     created = AutoCreatedField(_('created'))
     modified = AutoLastModifiedField(_('modified'))
 
@@ -126,6 +123,35 @@ class Location(MPTTModel):
     class Meta:
         unique_together = ('name', 'gateway', 'p_code')
         ordering = ['name']
+
+
+class LocationRemapHistory(models.Model):
+    '''
+    Location Remap History records for the related objects(interventions, travels, activities, actions)
+    '''
+    old_location = models.ForeignKey(
+        Location,
+        verbose_name=_("Old Location"),
+        on_delete=models.CASCADE,
+        related_name="+"
+    )
+    new_location = models.ForeignKey(
+        Location,
+        verbose_name=_("New Location"),
+        on_delete=models.CASCADE,
+        related_name="+"
+    )
+
+    content_type = models.ForeignKey(
+        ContentType,
+        verbose_name=_('Content Type'),
+        on_delete=models.CASCADE
+    )
+    object_id = models.IntegerField(verbose_name=_('Object ID'))
+    content_object = GenericForeignKey('content_type', 'object_id')
+
+    comment = models.TextField(verbose_name=_('Comments'), blank=True)
+    created = AutoCreatedField(_('created'))
 
 
 @receiver(post_delete, sender=Location)
