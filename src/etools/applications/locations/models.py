@@ -43,7 +43,8 @@ class GatewayType(models.Model):
 class LocationManager(TreeManager):
 
     def get_queryset(self):
-        return super(LocationManager, self).get_queryset().order_by('name').select_related('gateway')
+        return super(LocationManager, self).get_queryset().filter(is_active=True)\
+            .order_by('name').select_related('gateway')
 
 
 class Location(MPTTModel):
