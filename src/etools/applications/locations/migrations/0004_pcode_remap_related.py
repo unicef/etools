@@ -21,15 +21,5 @@ class Migration(migrations.Migration):
             model_name='location',
             name='is_active',
             field=models.BooleanField(default=True, verbose_name='Active'),
-        ),
-        migrations.AddField(
-            model_name='location',
-            name='prev_id',
-            field=models.CharField(db_index=True, max_length=32, null=True, verbose_name='Previous Pcode'),
-        ),
-        migrations.AddField(
-            model_name='location',
-            name='prev_pcode',
-            field=models.CharField(db_index=True, max_length=32, null=True, verbose_name='Previous Pcode'),
-        ),
+        )
     ]
