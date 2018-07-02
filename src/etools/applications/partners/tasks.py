@@ -1,11 +1,8 @@
-import csv
 import datetime
 import itertools
-from io import StringIO
 
 from django.conf import settings
 from django.contrib.auth import get_user_model
-from django.core.mail.message import EmailMessage
 from django.db import connection, transaction
 from django.db.models import F, Sum
 from django.db.models.functions import Coalesce
@@ -251,9 +248,13 @@ def _notify_interventions_ending_soon(country_name):
 
 
 @app.task
-def pmp_indicator_report():
+def pmp_indicator_report(writer, **kwargs):
     base_url = 'https://etools.unicef.org'
-    countries = Country.objects.exclude(schema_name__in=['public', 'uat', 'frg'])
+    countries = kwargs.get('countries', None)
+    qs = Country.objects.exclude(schema_name__in=['public', 'uat', 'frg'])
+    if countries:
+        qs = qs.filter(schema_name__in=countries.pop().split(','))
+
     fieldnames = [
         'Country',
         'Partner Name',
@@ -279,11 +280,11 @@ def pmp_indicator_report():
         'Partner Link',
         'Intervention Link',
     ]
-    csvfile = StringIO()
-    writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
-    writer.writeheader()
 
-    for country in countries:
+    dict_writer = writer(fieldnames=fieldnames)
+    dict_writer.writeheader()
+
+    for country in qs:
         connection.set_tenant(Country.objects.get(name=country.name))
         logger.info(u'Running on %s' % country.name)
         for partner in PartnerOrganization.objects.filter():
@@ -291,7 +292,7 @@ def pmp_indicator_report():
                     agreement__partner=partner).select_related('planned_budget'):
                 planned_budget = getattr(intervention, 'planned_budget', None)
                 fr_currencies = intervention.frs.all().values_list('currency', flat=True).distinct()
-                writer.writerow({
+                dict_writer.writerow({
                     'Country': country,
                     'Partner Name': str(partner),
                     'Partner Type': partner.cso_type,
@@ -317,11 +318,6 @@ def pmp_indicator_report():
                     'Partner Link': '{}/pmp/partners/{}/details'.format(base_url, partner.pk),
                     'Intervention Link': '{}/pmp/interventions/{}/details'.format(base_url, intervention.pk),
                 })
-
-    mail = EmailMessage('PMP Indicator Report', 'Report generated',
-                        'etools-reports@unicef.org', settings.REPORT_EMAILS)
-    mail.attach('pmp_indicators.csv', csvfile.getvalue().encode('utf-8'), 'text/csv')
-    mail.send()
 
 
 @app.task
