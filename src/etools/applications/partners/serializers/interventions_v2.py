@@ -645,18 +645,8 @@ class InterventionReportingRequirementCreateSerializer(serializers.ModelSerializ
         fields = ("reporting_requirements", "report_type", )
 
     def _validate_qpr(self, requirements):
-        self._validate_start_date(requirements, ReportingRequirement.TYPE_QPR)
-
-        # Ensure start date is after previous end date
-        for i in range(1, len(requirements)):
-            if requirements[i]["start_date"] <= requirements[i - 1]["end_date"]:
-                raise serializers.ValidationError({
-                    "reporting_requirements": {
-                        "start_date": _(
-                            "Start date needs to be after previous end date."
-                        )
-                    }
-                })
+        self._validate_start_date(requirements)
+        self._validate_date_intervals(requirements)
 
     def _validate_hr(self, requirements):
         # Ensure intervention has high frequency or cluster indicators
@@ -671,28 +661,10 @@ class InterventionReportingRequirementCreateSerializer(serializers.ModelSerializ
                 _("Indicator needs to be either cluster or high frequency.")
             )
 
-        if "start_date" not in requirements[0] or not requirements[0]["start_date"]:
-            raise serializers.ValidationError({
-                "reporting_requirements": {
-                    "start_date": _(
-                        "The first HR is required to have a start date."
-                    )
-                }
-            })
+        self._validate_start_date(requirements)
+        self._validate_date_intervals(requirements)
 
-        self._validate_start_date(requirements, ReportingRequirement.TYPE_HR)
-
-        for i in range(1, len(requirements)):
-            if "start_date" in requirements[i] and requirements[i]["start_date"]:
-                raise serializers.ValidationError({
-                    "reporting_requirements": {
-                        "start_date": _(
-                            "Only the first HR is expected to have a start date."
-                        )
-                    }
-                })
-
-    def _validate_start_date(self, requirements, report_type):
+    def _validate_start_date(self, requirements):
         # Ensure that the first reporting requirement start date
         # is on or after PD start date
         if requirements[0]["start_date"] < self.intervention.start:
@@ -704,16 +676,23 @@ class InterventionReportingRequirementCreateSerializer(serializers.ModelSerializ
                 }
             })
 
+    def _validate_date_intervals(self, requirements):
+        # Ensure start date is after previous end date
         for i in range(0, len(requirements)):
-            # only the first HR has a start date
-            if report_type == ReportingRequirement.TYPE_HR and i > 0:
-                continue
-
             if requirements[i]["start_date"] > requirements[i]["end_date"]:
                 raise serializers.ValidationError({
                     "reporting_requirements": {
                         "start_date": _(
                             "End date needs to be after the start date."
+                        )
+                    }
+                })
+
+            if i > 0 and requirements[i]["start_date"] <= requirements[i - 1]["end_date"]:
+                raise serializers.ValidationError({
+                    "reporting_requirements": {
+                        "start_date": _(
+                            "Start date needs to be after previous end date."
                         )
                     }
                 })
