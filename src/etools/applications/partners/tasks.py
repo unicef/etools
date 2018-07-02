@@ -23,6 +23,7 @@ from etools.applications.partners.utils import (
 from etools.applications.partners.validation.agreements import AgreementValid
 from etools.applications.partners.validation.interventions import InterventionValid
 from etools.applications.users.models import Country
+from etools.applications.utils.common.utils import run_on_all_tenants
 from etools.config.celery import app
 
 logger = get_task_logger(__name__)
@@ -355,9 +356,9 @@ def notify_partner_hidden(partner_pk):
 
 @app.task
 def check_pca_required():
-    send_pca_required_notifications()
+    run_on_all_tenants(send_pca_required_notifications)
 
 
 @app.task
 def check_pca_missing():
-    send_pca_missing_notifications()
+    run_on_all_tenants(send_pca_missing_notifications)
