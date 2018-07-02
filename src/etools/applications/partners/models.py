@@ -1884,22 +1884,12 @@ class Intervention(TimeStampedModel):
 
         return sections
 
-    def intervention_clusters(self, reset=False):
-        # return intervention clusters as an array of strings
-        cache_key = INTERVENTION_CLUSTERS_CACHE_KEY.format(self.pk)
-        if reset:
-            cache.delete(cache_key)
-            return
-
-        clusters = cache.get(cache_key)
-        if clusters is None:
-            clusters = set()
-            for lower_result in self.all_lower_results:
-                for applied_indicator in lower_result.applied_indicators.all():
-                    if applied_indicator.cluster_name:
-                        clusters.add(applied_indicator.cluster_name)
-            cache.set(cache_key, clusters)
-
+    def intervention_clusters(self):
+        clusters = set()
+        for lower_result in self.all_lower_results:
+            for applied_indicator in lower_result.applied_indicators.all():
+                if applied_indicator.cluster_name:
+                    clusters.add(applied_indicator.cluster_name)
         return clusters
 
     @cached_property
@@ -2050,7 +2040,6 @@ class Intervention(TimeStampedModel):
     def clear_caches(self):
         self.intervention_locations(reset=True)
         self.flagged_sections(reset=True)
-        self.intervention_clusters(reset=True)
 
     @transaction.atomic
     def save(self, force_insert=False, **kwargs):
