@@ -206,10 +206,10 @@ def _notify_of_ended_interventions_with_mismatched_frs(country_name):
     for intervention in ended_interventions:
         if intervention.total_frs['total_actual_amt'] != intervention.total_frs['total_frs_amt']:
             email_context = get_intervention_context(intervention)
-            send_notification_using_email_template(
+            send_notification_with_templates(
                 sender=intervention,
                 recipients=email_context['unicef_focal_points'],
-                email_template_name="partners/partnership/ended/frs/outstanding",
+                template_name="partners/partnership/ended/frs/outstanding",
                 context=email_context
             )
 
@@ -240,10 +240,10 @@ def _notify_interventions_ending_soon(country_name):
     for intervention in interventions:
         email_context = get_intervention_context(intervention)
         email_context["days"] = str((intervention.end - today).days)
-        send_notification_using_email_template(
+        send_notification_with_template(
             sender=intervention,
             recipients=email_context['unicef_focal_points'],
-            email_template_name="partners/partnership/ending",
+            template_name="partners/partnership/ending",
             context=email_context
         )
 
