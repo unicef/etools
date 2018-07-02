@@ -4,8 +4,6 @@ from django.db.models import Aggregate, CharField, Value
 
 from rest_framework import serializers
 
-from etools.applications.snapshot.utils import create_dict_with_relations, create_snapshot
-
 
 class StringConcat(Aggregate):
     """ A custom aggregation function that returns "," separated strings """
@@ -34,11 +32,3 @@ class JsonFieldSerializer(serializers.Field):
 
     def to_internal_value(self, data):
         return json.dumps(data) if isinstance(data, dict) else data
-
-
-class SnapshotModelSerializer(serializers.ModelSerializer):
-    def save(self, **kwargs):
-        pre_save = create_dict_with_relations(self.instance)
-        super(SnapshotModelSerializer, self).save(**kwargs)
-        create_snapshot(self.instance, pre_save, self.context["request"].user)
-        return self.instance
