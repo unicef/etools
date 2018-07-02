@@ -249,9 +249,12 @@ def _notify_interventions_ending_soon(country_name):
 
 
 @app.task
-def pmp_indicator_report():
+def pmp_indicator_report(writer, **kwargs):
     base_url = 'https://etools.unicef.org'
-    countries = Country.objects.exclude(schema_name__in=['public', 'uat', 'frg'])
+    countries = kwargs.get('countries', None)
+    qs = Country.objects.exclude(schema_name__in=['public', 'uat', 'frg'])
+    if countries:
+        qs = qs.filter(schema_name__in=countries.pop().split(','))
     fieldnames = [
         'Country',
         'Partner Name',
