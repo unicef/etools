@@ -3,6 +3,8 @@ import logging
 from datetime import datetime
 from decimal import Decimal
 
+from django.db import connection
+
 from etools.applications.partners.models import PartnerOrganization, PlannedEngagement
 from etools.applications.partners.tasks import notify_partner_hidden
 from etools.applications.vision.utils import comp_decimals
@@ -211,7 +213,7 @@ class PartnerSynchronizer(VisionDataSynchronizer):
                 partner_org.save()
 
                 if notify_block:
-                    notify_partner_hidden.delay(partner_org.pk)
+                    notify_partner_hidden.delay(partner_org.pk, connection.schema_name)
 
             if new:
                 PlannedEngagement.objects.get_or_create(partner=partner_org)
