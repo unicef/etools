@@ -1,10 +1,6 @@
-import json
 from datetime import datetime
 
 from django.conf import settings
-from django.contrib.auth import get_user_model
-from django.contrib.auth.models import Group, Permission
-from django.core.serializers.json import DjangoJSONEncoder
 from django.test import RequestFactory, SimpleTestCase
 
 import mock
@@ -107,58 +103,3 @@ class TestSetCountry(BaseTenantTestCase):
             utils.set_country(self.user, request)
         self.assertEqual(request.tenant, self.country)
         self.mock_set.assert_called_with(self.country)
-
-
-class TestSerialization(BaseTenantTestCase):
-    def setUp(self):
-        user = get_user_model().objects.create(username='user001', email='fred@example.com', is_superuser=True)
-        grp = Group.objects.create(name='Group 2')
-        user.groups.add(grp)
-        perm = Permission.objects.first()
-        user.user_permissions.add(perm)
-        self.user = user
-        self.group = grp
-        self.permission = perm
-
-    def test_simple_instance(self):
-        user = self.user
-        result = utils.model_instance_to_dictionary(user)
-
-        # Recreate how a datetime ends up embedded in a string in the JSON,
-        # which is not quite isoformat().
-        serialized_date_joined = json.loads(json.dumps(user.date_joined, cls=DjangoJSONEncoder))
-
-        self.assertEqual(
-            result,
-            {
-                'username': 'user001',
-                'first_name': '',
-                'last_name': '',
-                'is_active': True,
-                'is_superuser': True,
-                'is_staff': False,
-                'last_login': None,
-                'groups': [self.group.id],
-                'user_permissions': [self.permission.id],
-                'pk': user.id,
-                'model': 'users.user',
-                'password': '',
-                'email': 'fred@example.com',
-                'date_joined': serialized_date_joined,
-            }
-        )
-
-    def test_make_dictionary_serializable(self):
-        user = self.user
-        with mock.patch('etools.applications.EquiTrack.utils.model_instance_to_dictionary') as mock_serialize_model:
-            mock_serialize_model.return_value = {'exclamation': 'Hello, world!'}
-            d = {
-                'user': user,
-                'i': 27,
-                's': 'Foo'
-            }
-            result = utils.make_dictionary_serializable(d)
-            self.assertEqual(
-                result,
-                {u'i': 27, u's': u'Foo', u'user': {u'exclamation': u'Hello, world!'}}
-            )

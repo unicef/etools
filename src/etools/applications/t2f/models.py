@@ -10,8 +10,8 @@ from django.utils.timezone import now as timezone_now
 from django.utils.translation import ugettext, ugettext_lazy as _
 
 from django_fsm import FSMField, transition
+from unicef_notification.utils import send_notification
 
-from etools.applications.notification.utils import send_notification_using_templates
 from etools.applications.publics.models import TravelExpenseType
 from etools.applications.t2f.helpers.cost_summary_calculator import CostSummaryCalculator
 from etools.applications.t2f.helpers.invoice_maker import InvoiceMaker
@@ -442,11 +442,11 @@ class Travel(models.Model):
         url = 'https://{host}/t2f/edit-travel/{travel_id}/'.format(host=settings.HOST,
                                                                    travel_id=self.id)
 
-        send_notification_using_templates(
+        send_notification(
             recipients=[recipient],
             from_address=settings.DEFAULT_FROM_EMAIL,  # TODO what should sender be?
-            subject_template_content=subject,
-            html_template_filename=template_name,
+            subject=subject,
+            html_content_filename=template_name,
             context={'travel': serializer.data, 'url': url}
         )
 
@@ -727,13 +727,13 @@ class ActionPoint(models.Model):
         context = {'action_point': serializer.data, 'url': url, 'trip_url': trip_url}
         template_name = 'emails/action_point_assigned.html'
 
-        send_notification_using_templates(
+        send_notification(
             recipients=[recipient],
             cc=[cc],
             from_address=settings.DEFAULT_FROM_EMAIL,  # TODO what should sender be?
-            subject_template_content=subject,
-            html_template_filename=template_name,
-            text_template_content='',
+            subject=subject,
+            html_content_filename=template_name,
+            content='',
             context=context,
         )
 
