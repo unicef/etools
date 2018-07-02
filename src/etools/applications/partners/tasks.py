@@ -1,19 +1,17 @@
-import csv
 import datetime
 import itertools
-from io import StringIO
 
 from django.conf import settings
 from django.contrib.auth import get_user_model
-from django.core.mail.message import EmailMessage
 from django.db import connection, transaction
 from django.db.models import F, Sum
 from django.db.models.functions import Coalesce
 
 from celery.utils.log import get_task_logger
+from unicef_notification.utils import send_notification_with_template
+from tenant_schemas.utils import schema_context
 
 from etools.applications.EquiTrack.utils import get_environment
-from etools.applications.notification.utils import send_notification_using_email_template
 from etools.applications.partners.models import Agreement, Intervention, PartnerOrganization
 from etools.applications.partners.utils import (
     copy_all_attachments,
@@ -179,10 +177,10 @@ def _notify_of_signed_interventions_with_no_frs(country_name):
 
     for intervention in signed_interventions:
         email_context = get_intervention_context(intervention)
-        send_notification_using_email_template(
+        send_notification_with_template(
             sender=intervention,
             recipients=email_context['unicef_focal_points'],
-            email_template_name="partners/partnership/signed/frs",
+            template_name="partners/partnership/signed/frs",
             context=email_context
         )
 
@@ -209,10 +207,10 @@ def _notify_of_ended_interventions_with_mismatched_frs(country_name):
     for intervention in ended_interventions:
         if intervention.total_frs['total_actual_amt'] != intervention.total_frs['total_frs_amt']:
             email_context = get_intervention_context(intervention)
-            send_notification_using_email_template(
+            send_notification_with_template(
                 sender=intervention,
                 recipients=email_context['unicef_focal_points'],
-                email_template_name="partners/partnership/ended/frs/outstanding",
+                template_name="partners/partnership/ended/frs/outstanding",
                 context=email_context
             )
 
@@ -243,18 +241,21 @@ def _notify_interventions_ending_soon(country_name):
     for intervention in interventions:
         email_context = get_intervention_context(intervention)
         email_context["days"] = str((intervention.end - today).days)
-        send_notification_using_email_template(
+        send_notification_with_template(
             sender=intervention,
             recipients=email_context['unicef_focal_points'],
-            email_template_name="partners/partnership/ending",
+            template_name="partners/partnership/ending",
             context=email_context
         )
 
 
 @app.task
-def pmp_indicator_report():
+def pmp_indicator_report(writer, **kwargs):
     base_url = 'https://etools.unicef.org'
-    countries = Country.objects.exclude(schema_name__in=['public', 'uat', 'frg'])
+    countries = kwargs.get('countries', None)
+    qs = Country.objects.exclude(schema_name__in=['public', 'uat', 'frg'])
+    if countries:
+        qs = qs.filter(schema_name__in=countries.pop().split(','))
     fieldnames = [
         'Country',
         'Partner Name',
@@ -280,11 +281,11 @@ def pmp_indicator_report():
         'Partner Link',
         'Intervention Link',
     ]
-    csvfile = StringIO()
-    writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
-    writer.writeheader()
 
-    for country in countries:
+    dict_writer = writer(fieldnames=fieldnames)
+    dict_writer.writeheader()
+
+    for country in qs:
         connection.set_tenant(Country.objects.get(name=country.name))
         logger.info(u'Running on %s' % country.name)
         for partner in PartnerOrganization.objects.filter():
@@ -292,7 +293,7 @@ def pmp_indicator_report():
                     agreement__partner=partner).select_related('planned_budget'):
                 planned_budget = getattr(intervention, 'planned_budget', None)
                 fr_currencies = intervention.frs.all().values_list('currency', flat=True).distinct()
-                writer.writerow({
+                dict_writer.writerow({
                     'Country': country,
                     'Partner Name': str(partner),
                     'Partner Type': partner.cso_type,
@@ -319,11 +320,6 @@ def pmp_indicator_report():
                     'Intervention Link': '{}/pmp/interventions/{}/details'.format(base_url, intervention.pk),
                 })
 
-    mail = EmailMessage('PMP Indicator Report', 'Report generated',
-                        'etools-reports@unicef.org', settings.REPORT_EMAILS)
-    mail.attach('pmp_indicators.csv', csvfile.getvalue().encode('utf-8'), 'text/csv')
-    mail.send()
-
 
 @app.task
 def copy_attachments(hours=25):
@@ -332,26 +328,28 @@ def copy_attachments(hours=25):
 
 
 @app.task
-def notify_partner_hidden(partner_pk):
-    partner = PartnerOrganization.objects.get(pk=partner_pk)
-    pds = Intervention.objects.filter(
-        agreement__partner__name=partner.name,
-        status__in=[Intervention.SIGNED, Intervention.ACTIVE, Intervention.ENDED]
-    )
-    if pds:
-        email_context = {
-            'partner_name': partner.name,
-            'pds': ', '.join(pd.number for pd in pds),
-            'environment': get_environment(),
-        }
-        emails_to_pd = [pd.unicef_focal_points.values_list('email', flat=True) for pd in pds]
-        recipients = set(itertools.chain.from_iterable(emails_to_pd))
+def notify_partner_hidden(partner_pk, tenant_name):
 
-        send_notification_using_email_template(
-            recipients=list(recipients),
-            email_template_name='partners/blocked_partner',
-            context=email_context
+    with schema_context(tenant_name):
+        partner = PartnerOrganization.objects.get(pk=partner_pk)
+        pds = Intervention.objects.filter(
+            agreement__partner__name=partner.name,
+            status__in=[Intervention.SIGNED, Intervention.ACTIVE, Intervention.ENDED]
         )
+        if pds:
+            email_context = {
+                'partner_name': partner.name,
+                'pds': ', '.join(pd.number for pd in pds),
+                'environment': get_environment(),
+            }
+            emails_to_pd = [pd.unicef_focal_points.values_list('email', flat=True) for pd in pds]
+            recipients = set(itertools.chain.from_iterable(emails_to_pd))
+
+            send_notification_with_template(
+                recipients=list(recipients),
+                template_name='partners/blocked_partner',
+                context=email_context
+            )
 
 
 @app.task
