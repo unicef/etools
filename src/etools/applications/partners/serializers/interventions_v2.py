@@ -606,20 +606,20 @@ class InterventionDetailSerializer(serializers.ModelSerializer):
 class InterventionListMapSerializer(serializers.ModelSerializer):
     partner_name = serializers.CharField(source='agreement.partner.name')
     partner_id = serializers.CharField(source='agreement.partner.id')
-    locations = serializers.SerializerMethodField()
-    sections = serializers.SerializerMethodField()
-
-    def get_locations(self, obj):
-        return [LocationSerializer().to_representation(l) for l in obj.intervention_locations()]
-
-    def get_sections(self, obj):
-        return [s.id for s in obj.flagged_sections()]
+    locations = LocationSerializer(source="flat_locations", many=True)
 
     class Meta:
         model = Intervention
         fields = (
-            "id", "partner_id", "partner_name", "agreement", "document_type", "number", "title", "status",
-            "start", "end", "offices", "sections", "locations"
+            "id",
+            "partner_id",
+            "partner_name",
+            "agreement",
+            "document_type", "number", "title", "status",
+            "start", "end",
+            "offices",
+            "sections",
+            "locations"
         )
 
 

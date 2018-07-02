@@ -749,14 +749,14 @@ class PartnerOrganization(TimeStampedModel):
                 activities__travel_type=TravelType.SPOT_CHECK,
                 traveler=F('activities__primary_traveler'),
                 status__in=[Travel.COMPLETED],
-                completed_at__year=datetime.datetime.now().year,
+                end_date__year=datetime.datetime.now().year,
                 activities__partner=self,
             )
 
-            trq1 = trip.filter(completed_at__month__in=[1, 2, 3]).count()
-            trq2 = trip.filter(completed_at__month__in=[4, 5, 6]).count()
-            trq3 = trip.filter(completed_at__month__in=[7, 8, 9]).count()
-            trq4 = trip.filter(completed_at__month__in=[10, 11, 12]).count()
+            trq1 = trip.filter(end_date__month__in=[1, 2, 3]).count()
+            trq2 = trip.filter(end_date__month__in=[4, 5, 6]).count()
+            trq3 = trip.filter(end_date__month__in=[7, 8, 9]).count()
+            trq4 = trip.filter(end_date__month__in=[10, 11, 12]).count()
 
             audit_spot_check = SpotCheck.objects.filter(
                 partner=self, status=Engagement.FINAL,
@@ -1840,6 +1840,7 @@ class Intervention(TimeStampedModel):
             for lower_result in link.ll_results.all()
         ]
 
+    # TODO (Rob): Remove this and alll usage as this is no longer valid
     def intervention_locations(self, reset=False):
         cache_key = INTERVENTION_LOCATIONS_CACHE_KEY.format(self.pk)
         if reset:
@@ -1861,6 +1862,7 @@ class Intervention(TimeStampedModel):
 
         return locations
 
+    # TODO (Rob): Remove this and all usage as this is no longer valid
     def flagged_sections(self, reset=False):
         cache_key = INTERVENTION_FLAGGED_SECTIONS_CACHE_KEY.format(self.pk)
         if reset:
