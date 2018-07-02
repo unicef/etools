@@ -2,13 +2,14 @@ from django.conf import settings
 from django.shortcuts import redirect
 from django.utils.translation import ugettext_lazy as _
 from django.views.generic import FormView
+
 from rest_framework.authtoken.models import Token
 from rest_framework.response import Response
 from rest_framework.views import APIView
+from unicef_notification.utils import send_notification_with_template
 
 from etools.applications.tokens.forms import EmailLoginForm
 from etools.applications.tokens.utils import get_token_auth_link, update_url_with_kwargs
-from etools.applications.notification.utils import send_notification_using_email_template
 
 
 class TokenEmailAuthView(FormView):
@@ -45,9 +46,9 @@ class TokenEmailAuthView(FormView):
             'login_link': login_link,
         }
 
-        send_notification_using_email_template(
+        send_notification_with_template(
             recipients=[form.get_user().email],
-            email_template_name='email_auth/token/login',
+            template_name='email_auth/token/login',
             context=email_context
         )
 

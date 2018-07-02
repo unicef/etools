@@ -73,6 +73,8 @@ def create_location(pcode, carto_table, parent, parent_instance,
         if parent and parent_instance:
             logger.info("Updating parent:{} for location {}".format(parent_instance, location))
             location.parent = parent_instance
+        else:
+            location.parent = None
 
         try:
             location.save()
