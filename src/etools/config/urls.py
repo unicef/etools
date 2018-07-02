@@ -82,7 +82,7 @@ urlpatterns = [
     url(r'^api/v2/users/', include('etools.applications.users.urls_v2', namespace='users_v2')),
     url(r'^api/v2/workspaces/', CountriesViewSet.as_view(http_method_names=['get']), name="list-workspaces"),
     url(r'^api/v2/funds/', include('etools.applications.funds.urls')),
-    url(r'^api/v2/activity/', include('etools.applications.snapshot.urls')),
+    url(r'^api/v2/activity/', include('unicef_snapshot.urls')),
     url(r'^api/v2/environment/', include('etools.applications.environment.urls_v2')),
     url(r'^api/v2/attachments/', include('etools.applications.attachments.urls')),
 
