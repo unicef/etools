@@ -206,7 +206,7 @@ def _notify_of_ended_interventions_with_mismatched_frs(country_name):
     for intervention in ended_interventions:
         if intervention.total_frs['total_actual_amt'] != intervention.total_frs['total_frs_amt']:
             email_context = get_intervention_context(intervention)
-            send_notification_with_templates(
+            send_notification_with_template(
                 sender=intervention,
                 recipients=email_context['unicef_focal_points'],
                 template_name="partners/partnership/ended/frs/outstanding",
