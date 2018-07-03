@@ -1,7 +1,5 @@
 import datetime
 
-from django.utils.translation import ugettext as _
-
 from etools.applications.EquiTrack.tests.cases import BaseTenantTestCase
 from etools.applications.partners.models import Intervention
 from etools.applications.partners.serializers.interventions_v2 import InterventionReportingRequirementCreateSerializer
@@ -73,7 +71,7 @@ class TestInterventionReportingRequirementCreateSerializer(BaseTenantTestCase):
         self.assertFalse(serializer.is_valid())
         self.assertEqual(
             serializer.errors['non_field_errors'],
-            [_('Changes not allowed when PD not in amendment state.')]
+            ['Changes not allowed when PD not in amendment state.']
         )
 
     def test_validation_pd_has_no_start(self):
@@ -92,7 +90,7 @@ class TestInterventionReportingRequirementCreateSerializer(BaseTenantTestCase):
         self.assertFalse(serializer.is_valid())
         self.assertEqual(
             serializer.errors['non_field_errors'],
-            [_('PD needs to have a start date.')]
+            ['PD needs to have a start date.']
         )
 
     def test_validation_empty_reporting_requirements(self):
@@ -107,7 +105,7 @@ class TestInterventionReportingRequirementCreateSerializer(BaseTenantTestCase):
         self.assertFalse(serializer.is_valid())
         self.assertEqual(
             serializer.errors['reporting_requirements'],
-            [_('This field cannot be empty.')]
+            ['This field cannot be empty.']
         )
 
     def test_validation_missing_reporting_requirements(self):
@@ -119,7 +117,7 @@ class TestInterventionReportingRequirementCreateSerializer(BaseTenantTestCase):
         self.assertFalse(serializer.is_valid())
         self.assertEqual(
             serializer.errors['reporting_requirements'],
-            [_('This field is required.')]
+            ['This field is required.']
         )
 
     def test_validation_qpr_missing_fields(self):
@@ -137,7 +135,7 @@ class TestInterventionReportingRequirementCreateSerializer(BaseTenantTestCase):
         self.assertFalse(serializer.is_valid())
         self.assertEqual(
             serializer.errors['reporting_requirements'],
-            [{"start_date": [_('This field is required.')]}]
+            [{"start_date": ['This field is required.']}]
         )
 
     def test_validation_qpr_early_start(self):
@@ -156,7 +154,7 @@ class TestInterventionReportingRequirementCreateSerializer(BaseTenantTestCase):
         self.assertFalse(serializer.is_valid())
         self.assertEqual(
             serializer.errors['reporting_requirements'],
-            {"start_date": _('Start date needs to be on or after PD start date.')}
+            {"start_date": 'Start date needs to be on or after PD start date.'}
         )
 
     def test_validation_qpr_end_after_next_start(self):
@@ -179,7 +177,7 @@ class TestInterventionReportingRequirementCreateSerializer(BaseTenantTestCase):
         self.assertFalse(serializer.is_valid())
         self.assertEqual(
             serializer.errors['reporting_requirements'],
-            {"start_date": _('Next start date needs to be one day after previous end date.')}
+            {"start_date": 'Next start date needs to be one day after previous end date.'}
         )
 
     def test_validation_qpr_with_gaps(self):
@@ -202,7 +200,7 @@ class TestInterventionReportingRequirementCreateSerializer(BaseTenantTestCase):
         self.assertFalse(serializer.is_valid())
         self.assertEqual(
             serializer.errors['reporting_requirements'],
-            {"start_date": _('Next start date needs to be one day after previous end date.')}
+            {"start_date": 'Next start date needs to be one day after previous end date.'}
         )
 
     def test_validation_qpr(self):
@@ -238,7 +236,7 @@ class TestInterventionReportingRequirementCreateSerializer(BaseTenantTestCase):
         self.assertFalse(serializer.is_valid())
         self.assertEqual(
             serializer.errors['reporting_requirements'],
-            [{"due_date": [_('This field is required.')]}]
+            [{"due_date": ['This field is required.']}]
         )
 
         data["reporting_requirements"] = [{
@@ -251,7 +249,7 @@ class TestInterventionReportingRequirementCreateSerializer(BaseTenantTestCase):
         self.assertFalse(serializer.is_valid())
         self.assertEqual(
             serializer.errors['reporting_requirements'],
-            [{"start_date": [_('This field is required.')]}]
+            [{"start_date": ['This field is required.']}]
         )
 
     def test_validation_hr_indicator_invalid(self):
@@ -269,7 +267,7 @@ class TestInterventionReportingRequirementCreateSerializer(BaseTenantTestCase):
         self.assertFalse(serializer.is_valid())
         self.assertEqual(
             serializer.errors['non_field_errors'],
-            [_("Indicator needs to be either cluster or high frequency.")]
+            ["Indicator needs to be either cluster or high frequency."]
         )
 
     def test_validation_hr_early_start(self):
@@ -291,7 +289,7 @@ class TestInterventionReportingRequirementCreateSerializer(BaseTenantTestCase):
         self.assertFalse(serializer.is_valid())
         self.assertEqual(
             serializer.errors['reporting_requirements'],
-            {"start_date": _('Start date needs to be on or after PD start date.')}
+            {"start_date": 'Start date needs to be on or after PD start date.'}
         )
 
     def test_validation_hr_due_after_next_start(self):
@@ -316,7 +314,7 @@ class TestInterventionReportingRequirementCreateSerializer(BaseTenantTestCase):
         self.assertFalse(serializer.is_valid())
         self.assertEqual(
             serializer.errors['reporting_requirements'],
-            {"start_date": _('Next start date needs to be one day after previous end date.')}
+            {"start_date": 'Next start date needs to be one day after previous end date.'}
         )
 
     def test_validation_hr_with_gaps(self):
@@ -341,7 +339,7 @@ class TestInterventionReportingRequirementCreateSerializer(BaseTenantTestCase):
         self.assertFalse(serializer.is_valid())
         self.assertEqual(
             serializer.errors['reporting_requirements'],
-            {"start_date": _('Next start date needs to be one day after previous end date.')}
+            {"start_date": 'Next start date needs to be one day after previous end date.'}
         )
 
     def test_validation_hr(self):
