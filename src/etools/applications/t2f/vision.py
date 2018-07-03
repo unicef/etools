@@ -13,7 +13,8 @@ from django.db.models.query_utils import Q
 from django.urls import reverse
 from django.utils.datastructures import MultiValueDict
 
-from etools.applications.notification.utils import send_notification_using_templates
+from unicef_notification.utils import send_notification
+
 from etools.applications.t2f.models import Invoice
 from etools.applications.users.models import Country as Workspace
 
@@ -201,10 +202,10 @@ class InvoiceUpdater(object):
                                          groups__name='Finance Focal Point').values_list('email', flat=True)
 
         # TODO what should sender be?
-        send_notification_using_templates(
+        send_notification(
             recipients=[u.email for u in recipients],
             from_address=settings.DEFAULT_FROM_EMAIL,  # TODO what should sender be?
-            subject_template_content='[Travel2Field VISION Error] {}'.format(invoice.reference_number),
-            html_template_filename='emails/failed_invoice_sync.html',
+            subject='[Travel2Field VISION Error] {}'.format(invoice.reference_number),
+            html_content_filename='emails/failed_invoice_sync.html',
             context={'invoice': invoice, 'url': url}
         )
