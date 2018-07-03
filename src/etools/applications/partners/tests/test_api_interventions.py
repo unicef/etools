@@ -8,7 +8,6 @@ from django.db import connection
 from django.test import SimpleTestCase
 from django.urls import reverse, resolve
 from django.utils import timezone
-from django.utils.translation import ugettext as _
 
 from rest_framework import status
 from rest_framework.test import APIRequestFactory
@@ -1956,7 +1955,7 @@ class TestInterventionReportingRequirementView(BaseTenantTestCase):
         self.assertEqual(
             response.data,
             {"reporting_requirements": [
-                {"start_date": [_("This field is required.")]}
+                {"start_date": ["This field is required."]}
             ]}
         )
 
@@ -1997,7 +1996,7 @@ class TestInterventionReportingRequirementView(BaseTenantTestCase):
         self.assertEqual(
             response.data,
             {"non_field_errors": [
-                _("Changes not allowed when PD not in amendment state.")
+                "Changes not allowed when PD not in amendment state."
             ]}
         )
 
