@@ -5,13 +5,13 @@ from django.test import SimpleTestCase
 from django.urls import reverse
 
 from rest_framework import status
+from unicef_snapshot.models import Activity
 
 from etools.applications.EquiTrack.tests.cases import BaseTenantTestCase
 from etools.applications.EquiTrack.tests.mixins import URLAssertionMixin
 from etools.applications.partners.models import Agreement, AgreementAmendment, Intervention, PartnerType
 from etools.applications.partners.tests.factories import AgreementFactory, InterventionFactory, PartnerFactory
 from etools.applications.reports.tests.factories import CountryProgrammeFactory
-from etools.applications.snapshot.models import Activity
 from etools.applications.users.tests.factories import GroupFactory, UserFactory
 
 

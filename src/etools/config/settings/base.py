@@ -216,6 +216,7 @@ TENANT_APPS = (
     'etools.applications.management',
     'etools.applications.snapshot',
     'etools.applications.action_points',
+    'unicef_snapshot',
 )
 INSTALLED_APPS = ('tenant_schemas',) + SHARED_APPS + TENANT_APPS
 

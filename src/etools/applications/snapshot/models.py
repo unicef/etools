@@ -20,7 +20,7 @@ class Activity(TimeStampedModel):
 
     target_content_type = models.ForeignKey(
         ContentType,
-        related_name='activity',
+        related_name='activity_old',
         on_delete=models.CASCADE,
         db_index=True,
         verbose_name=_('Content Type')
@@ -34,6 +34,7 @@ class Activity(TimeStampedModel):
     )
     by_user = models.ForeignKey(
         settings.AUTH_USER_MODEL,
+        related_name='by_user_old',
         verbose_name=_("By User"),
         on_delete=models.CASCADE,
     )
