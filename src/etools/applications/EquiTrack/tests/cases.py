@@ -3,10 +3,10 @@ from django.core.management import call_command
 from django.core.urlresolvers import resolve
 from django.db import connection
 
-from post_office.models import EmailTemplate
 from rest_framework.test import APIClient, APIRequestFactory, force_authenticate
 from tenant_schemas.test.cases import TenantTestCase
 from tenant_schemas.utils import get_tenant_model
+from unicef_notification.models import EmailTemplate
 
 from etools.applications.users.models import WorkspaceCounter
 

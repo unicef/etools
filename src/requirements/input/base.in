@@ -24,7 +24,6 @@ django-logentry-admin==1.0.3
 django-model-utils==2.6
 django-mptt==0.9
 django-ordered-model==1.4.3
-django-post-office==3.0.4
 django-redis-cache==1.7.1
 django-rest-swagger==2.1.0
 django-storages==1.6.5
@@ -43,3 +42,7 @@ pyyaml==3.12
 psycopg2==2.7.4
 raven==6.2.1
 tenant-schemas-celery==0.1.7
+unicef_notification==0.2.0
+unicef_snapshot==0.1.0
+
+-e git+https://github.com/unicef/djangosaml2.git@v0.16.11.2#egg=djangosaml2

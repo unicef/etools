@@ -1,11 +1,10 @@
-
 from django.contrib import admin
 from django.contrib.contenttypes.admin import GenericStackedInline
 
 from django_comments.models import Comment
+from unicef_snapshot.admin import ActivityInline, SnapshotModelAdmin
 
 from etools.applications.action_points.models import ActionPoint
-from etools.applications.EquiTrack.admin import ActivityInline, SnapshotModelAdmin
 
 
 class CommentInline(GenericStackedInline):
