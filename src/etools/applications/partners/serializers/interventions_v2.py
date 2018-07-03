@@ -1,4 +1,4 @@
-from datetime import date
+from datetime import datetime, date
 from operator import itemgetter
 
 from django.db import transaction
@@ -693,14 +693,15 @@ class InterventionReportingRequirementCreateSerializer(serializers.ModelSerializ
                     }
                 })
 
-            if i > 0 and requirements[i]["start_date"] <= requirements[i - 1]["end_date"]:
-                raise serializers.ValidationError({
-                    "reporting_requirements": {
-                        "start_date": _(
-                            "Start date needs to be after previous end date."
-                        )
-                    }
-                })
+            if i > 0:
+                if abs((requirements[i]["start_date"] - requirements[i - 1]["end_date"]).days) > 1:
+                    raise serializers.ValidationError({
+                        "reporting_requirements": {
+                            "start_date": _(
+                                "Next start date needs to be one day after previous end date."
+                            )
+                        }
+                    })
 
     def _merge_data(self, data):
         current_reqs = ReportingRequirement.objects.values(
@@ -739,9 +740,13 @@ class InterventionReportingRequirementCreateSerializer(serializers.ModelSerializ
     def run_validation(self, initial_data):
         serializer = self.fields["reporting_requirements"].child
         report_type = initial_data.get("report_type")
+
+        serializer.fields["start_date"].required = True
         if report_type == ReportingRequirement.TYPE_QPR:
-            serializer.fields["start_date"].required = True
             serializer.fields["end_date"].required = True
+        elif report_type == ReportingRequirement.TYPE_HR:
+            serializer.fields["due_date"].required = True
+
         return super().run_validation(initial_data)
 
     def validate(self, data):
