@@ -1916,8 +1916,10 @@ class TestInterventionReportingRequirementView(BaseTenantTestCase):
             user=self.unicef_staff,
             data={
                 "reporting_requirements": [{
+                    "start_date": datetime.date(2001, 3, 15),
                     "due_date": datetime.date(2001, 4, 15),
                 }, {
+                    "start_date": datetime.date(2001, 4, 16),
                     "due_date": datetime.date(2001, 5, 15),
                 }]
             }
