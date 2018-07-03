@@ -5,12 +5,20 @@ from django.conf import settings
 from django.contrib.contenttypes.models import ContentType
 from django.db.models import F, Q
 from django.urls import reverse
-from django.utils.timezone import now, make_aware
+from django.utils.timezone import make_aware, now
+
+from unicef_notification.utils import send_notification_with_template
 
 from etools.applications.attachments.models import Attachment, FileType
-from etools.applications.notification.utils import send_notification_using_email_template
-from etools.applications.partners.models import (Agreement, AgreementAmendment, Assessment, Intervention,
-                                                 InterventionAmendment, InterventionAttachment, PartnerOrganization,)
+from etools.applications.partners.models import (
+    Agreement,
+    AgreementAmendment,
+    Assessment,
+    Intervention,
+    InterventionAmendment,
+    InterventionAttachment,
+    PartnerOrganization,
+)
 from etools.applications.reports.models import CountryProgramme
 from etools.applications.utils.common.utils import run_on_all_tenants
 
@@ -297,9 +305,9 @@ def send_pca_required_notifications():
                 args=[pd.pk]
             ),
         }
-        send_notification_using_email_template(
+        send_notification_with_template(
             recipients=recipients,
-            email_template_name='partners/intervention/new_pca_required',
+            template_name='partners/intervention/new_pca_required',
             context=context
         )
 
@@ -337,8 +345,8 @@ def send_pca_missing_notifications():
                     args=[pd.pk]
                 ),
             }
-            send_notification_using_email_template(
+            send_notification_with_template(
                 recipients=recipients,
-                email_template_name='partners/intervention/pca_missing',
+                template_name='partners/intervention/pca_missing',
                 context=context
             )

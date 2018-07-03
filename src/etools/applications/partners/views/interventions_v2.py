@@ -22,6 +22,7 @@ from rest_framework.renderers import JSONRenderer
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework_csv import renderers as r
+from unicef_snapshot.models import Activity
 
 from etools.applications.environment.helpers import tenant_switch_is_active
 from etools.applications.EquiTrack.mixins import ExportModelMixin, QueryStringFilterMixin
@@ -88,7 +89,6 @@ from etools.applications.reports.serializers.v2 import (
     AppliedIndicatorSerializer,
     LowerResultSimpleCUSerializer,
 )
-from etools.applications.snapshot.models import Activity
 from etools.applications.users.models import Country
 from etools_validator.mixins import ValidatorViewMixin
 

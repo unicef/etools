@@ -531,7 +531,7 @@ class TestNotifyOfNoFrsSignedInterventionsTask(PartnersTestBaseClass):
         ]
         self._assertCalls(mock_logger.info, expected_call_args)
 
-    @mock.patch('etools.applications.notification.utils.Notification')
+    @mock.patch('unicef_notification.models.Notification')
     def test_notify_of_signed_interventions_with_some_interventions(
             self,
             mock_notification_model,
@@ -566,7 +566,7 @@ class TestNotifyOfNoFrsSignedInterventionsTask(PartnersTestBaseClass):
 
         # Verify that Notification.objects.create() was called as expected.
         expected_call_args = [((), {
-            'type': 'Email',
+            'method_type': mock_notification_model.TYPE_EMAIL,
             'sender': intervention_,
             'recipients': [],
             'cc': [],
@@ -615,7 +615,7 @@ class TestNotifyOfMismatchedEndedInterventionsTask(PartnersTestBaseClass):
         expected_call_args = [((template.format(self.country_name), ), {})]
         self._assertCalls(mock_logger.info, expected_call_args)
 
-    @mock.patch('etools.applications.notification.utils.Notification')
+    @mock.patch('unicef_notification.models.Notification')
     def test_notify_of_ended_interventions_with_some_interventions(
             self,
             mock_notification_model,
@@ -658,7 +658,7 @@ class TestNotifyOfMismatchedEndedInterventionsTask(PartnersTestBaseClass):
 
         # Verify that Notification.objects.create() was called as expected.
         expected_call_args = [((), {
-            'type': 'Email',
+            'method_type': mock_notification_model.TYPE_EMAIL,
             'sender': intervention_,
             'recipients': [],
             'cc': [],
@@ -706,7 +706,7 @@ class TestNotifyOfInterventionsEndingSoon(PartnersTestBaseClass):
         expected_call_args = [((template.format(self.country_name), ), {})]
         self._assertCalls(mock_logger.info, expected_call_args)
 
-    @mock.patch('etools.applications.notification.utils.Notification')
+    @mock.patch('unicef_notification.models.Notification')
     def test_notify_interventions_ending_soon_with_some_interventions(
             self,
             mock_notification_model,
@@ -753,7 +753,7 @@ class TestNotifyOfInterventionsEndingSoon(PartnersTestBaseClass):
             template_data = etools.applications.partners.tasks.get_intervention_context(intervention)
             template_data['days'] = str((intervention.end - today).days)
             expected_call_args.append(((), {
-                'type': 'Email',
+                'method_type': mock_notification_model.TYPE_EMAIL,
                 'sender': intervention,
                 'recipients': [],
                 'cc': [],
@@ -799,7 +799,7 @@ class TestCheckPCARequired(BaseTenantTestCase):
         call_command("update_notifications")
 
     def test_command(self):
-        send_path = "etools.applications.partners.utils.send_notification_using_email_template"
+        send_path = "etools.applications.partners.utils.send_notification_with_template"
         lead_date = datetime.date.today() + datetime.timedelta(
             days=settings.PCA_REQUIRED_NOTIFICATION_LEAD
         )
@@ -822,7 +822,7 @@ class TestCheckPCAMissing(BaseTenantTestCase):
         call_command("update_notifications")
 
     def test_command(self):
-        send_path = "etools.applications.partners.utils.send_notification_using_email_template"
+        send_path = "etools.applications.partners.utils.send_notification_with_template"
         date_past = datetime.date.today() - datetime.timedelta(days=10)
         date_future = datetime.date.today() + datetime.timedelta(days=10)
         partner = PartnerFactory()
