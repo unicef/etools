@@ -9,4 +9,4 @@ isort
 ipython
 pdbpp
 tox
-drf-api-checker
+drf-api-checker>=0.3

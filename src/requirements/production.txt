@@ -95,6 +95,7 @@ tablib==0.12.1
 tenant-schemas-celery==0.1.7
 tornado==4.2.0
 unicef_notification==0.2.0
+unicef_snapshot==0.1.0
 unicodecsv==0.14.1
 uritemplate==3.0.0
 vine==1.1.4

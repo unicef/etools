@@ -1,4 +1,3 @@
-
 from django.contrib import admin
 from django.db import models
 from django.forms import SelectMultiple
@@ -6,8 +5,8 @@ from django.forms import SelectMultiple
 from django.utils.translation import ugettext_lazy as _
 
 from import_export.admin import ExportMixin
+from unicef_snapshot.admin import ActivityInline, SnapshotModelAdmin
 
-from etools.applications.EquiTrack.admin import ActivityInline, SnapshotModelAdmin
 from etools.applications.partners.exports import PartnerExport
 from etools.applications.partners.forms import (PartnersAdminForm,  # TODO intervention sector locations cleanup
                                                 PartnerStaffMemberForm,)
