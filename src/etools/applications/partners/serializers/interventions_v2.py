@@ -792,6 +792,7 @@ class InterventionReportingRequirementCreateSerializer(serializers.ModelSerializ
                 ReportingRequirement.objects.create(**r)
         return self.intervention
 
+
 class InterventionLocationExportSerializer(serializers.Serializer):
     partner = serializers.CharField(source="intervention.agreement.partner.name")
     pd_ref_number = serializers.CharField(source="intervention.number")
