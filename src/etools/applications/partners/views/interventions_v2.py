@@ -819,41 +819,37 @@ class InterventionReportingRequirementView(APIView):
         received_rr_ids = [int(r["id"]) for r in request.data["reporting_requirements"] if "id" in r]
 
         with transaction.atomic():
-            # delete those reporting requirements which are not present in the request, before new and/or modified
-            # reporting requirements are saved. If there's no reporting requirements in the request, it should mean
-            # that all of them were deleted on the frontend.
-
-            deleted_reporting_requirements = ReportingRequirement.objects.filter(
-                intervention=intervention_pk,
-                report_type=self.report_type
-            ).exclude(
-                id__in=received_rr_ids
-            )
-
-            for deleted_reporting_requirement in deleted_reporting_requirements:
-                if self.report_type == ReportingRequirement.TYPE_QPR:
-                    if deleted_reporting_requirement.start_date <= datetime.date.today():
-                        raise ValidationError(
-                            _("Cannot delete past reporting requirements.")
-                        )
-                if self.report_type == ReportingRequirement.TYPE_HR:
-                    if deleted_reporting_requirement.due_date <= datetime.date.today():
-                        raise ValidationError(
-                            _("Cannot delete past reporting requirements.")
-                        )
-
-                deleted_reporting_requirement.delete()
-
             serializer = self.serializer_create_class(
                 data=self.request.data,
                 context={
                     "intervention": self.intervention,
                 }
             )
+
             if serializer.is_valid():
-                serializer.save()
-                return Response(
-                    self.serializer_list_class(self.get_data()).data
+                # delete those reporting requirements which are not present in the request, before new and/or modified
+                # reporting requirements are saved. If there's no reporting requirements in the request, it should mean
+                # that all of them were deleted on the frontend.
+                deleted_reporting_requirements = ReportingRequirement.objects.filter(
+                    intervention=intervention_pk,
+                    report_type=self.report_type
+                ).exclude(
+                    id__in=received_rr_ids
                 )
+
+                for deleted_reporting_requirement in deleted_reporting_requirements:
+                    if deleted_reporting_requirement.start_date <= datetime.date.today():
+                        raise ValidationError(
+                            _("Cannot delete reporting requirements in progress.")
+                        )
+
+                    deleted_reporting_requirement.delete()
+
+                serializer.save()
+            else:
+                transaction.set_rollback(True)
+
+        if serializer.is_valid():
+            return Response(self.serializer_list_class(self.get_data()).data)
 
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)

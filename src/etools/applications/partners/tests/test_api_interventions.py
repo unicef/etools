@@ -2011,14 +2011,16 @@ class TestInterventionReportingRequirementView(BaseTenantTestCase):
                 intervention=self.intervention,
                 report_type=report_type
             )
+            requirement1.end_date = requirement1.start_date + datetime.timedelta(days=15)
+            requirement1.due_date = requirement1.start_date + datetime.timedelta(days=15)
 
             # this requirements will be deleted by ommiting it in the POST/save request
             ReportingRequirementFactory(
                 intervention=self.intervention,
                 report_type=report_type,
                 start_date=datetime.date.today() + datetime.timedelta(days=1),
-                end_date=datetime.date.today() + datetime.timedelta(days=1),
-                due_date=datetime.date.today() + datetime.timedelta(days=1),
+                end_date=datetime.date.today() + datetime.timedelta(days=2),
+                due_date=datetime.date.today() + datetime.timedelta(days=2),
             )
             init_count = requirement_qs.count()
 
@@ -2047,12 +2049,14 @@ class TestInterventionReportingRequirementView(BaseTenantTestCase):
                 requirement1.id
             )
 
-    def test_post_delete_qpr_invalid(self):
+    def test_post_delete_report_in_progress(self):
         for report_type, _ in ReportingRequirement.TYPE_CHOICES:
             requirement1 = ReportingRequirementFactory(
                 intervention=self.intervention,
                 report_type=report_type
             )
+            requirement1.end_date = requirement1.start_date + datetime.timedelta(days=15)
+            requirement1.due_date = requirement1.start_date + datetime.timedelta(days=15)
 
             # this requirements should be deleted by ommiting it in the POST request
             ReportingRequirementFactory(
@@ -2078,7 +2082,7 @@ class TestInterventionReportingRequirementView(BaseTenantTestCase):
             )
 
             self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
-            self.assertEqual(response.data, ['Cannot delete past reporting requirements.'])
+            self.assertEqual(response.data, ['Cannot delete reporting requirements in progress.'])
 
     def test_patch_invalid(self):
         for report_type, _ in ReportingRequirement.TYPE_CHOICES:
