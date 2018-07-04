@@ -9,7 +9,7 @@ from rest_framework.authtoken.models import Token
 from etools.applications.EquiTrack.tests.cases import BaseTenantTestCase
 from etools.applications.users.tests.factories import UserFactory
 
-SEND_PATH = "etools.applications.tokens.views.send_notification_using_email_template"
+SEND_PATH = "etools.applications.tokens.views.send_notification_with_template"
 
 
 class TestTokenEmailAuthView(BaseTenantTestCase):
