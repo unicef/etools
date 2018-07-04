@@ -792,23 +792,6 @@ class InterventionReportingRequirementCreateSerializer(serializers.ModelSerializ
                 ReportingRequirement.objects.create(**r)
         return self.intervention
 
-    def delete(self, validated_data):
-        for r in validated_data["reporting_requirements"]:
-            if validated_data["report_type"] == ReportingRequirement.TYPE_QPR and r.get("start_date") <= date.today():
-                raise ValidationError(
-                    _("Cannot delete past reporting requirements.")
-                )
-            if validated_data["report_type"] == ReportingRequirement.TYPE_HR and r.get("due_date") <= date.today():
-                raise ValidationError(
-                    _("Cannot delete past reporting requirements.")
-                )
-
-            if r.get("id"):
-                ReportingRequirement.objects.filter(pk=r.get("id")).delete()
-
-        return self.intervention
-
-
 class InterventionLocationExportSerializer(serializers.Serializer):
     partner = serializers.CharField(source="intervention.agreement.partner.name")
     pd_ref_number = serializers.CharField(source="intervention.number")
