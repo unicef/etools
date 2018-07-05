@@ -3,9 +3,10 @@ from django.contrib import admin
 
 from ordered_model.admin import OrderedModelAdmin
 
+from etools.applications.action_points.admin import ActionPointAdmin
 from etools.applications.audit.models import (Audit, Engagement, FinancialFinding, Finding, MicroAssessment,
                                               Risk, RiskBluePrint, RiskCategory, SpecialAuditRecommendation,
-                                              SpecificProcedure, SpotCheck,)
+                                              SpecificProcedure, SpotCheck, EngagementActionPoint)
 
 
 @admin.register(Engagement)
@@ -89,3 +90,8 @@ class SpecificProcedureAdmin(admin.ModelAdmin):
 @admin.register(SpecialAuditRecommendation)
 class SpecialAuditRecommendationAdmin(admin.ModelAdmin):
     pass
+
+
+@admin.register(EngagementActionPoint)
+class EngagementActionPointAdmin(ActionPointAdmin):
+    list_display = ('engagement', ) + ActionPointAdmin.list_display

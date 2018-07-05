@@ -1,11 +1,12 @@
-
+import requests
 from django.conf import settings
 from django.core.cache import cache
 
 from celery.utils.log import get_task_logger
 
 from etools.config.celery import app
-from etools.libraries.azure_graph_api.client import azure_sync_users
+from etools.libraries.azure_graph_api.client import azure_sync_users, get_token
+from etools.libraries.azure_graph_api.utils import handle_record
 
 logger = get_task_logger(__name__)
 
@@ -51,3 +52,22 @@ def sync_delta_users():
     cache.set(AZURE_GRAPH_API_USER_CACHE_KEY, delta_link)
     logger.info('Azure Delta Sync Process finished')
     return delta_link
+
+
+@app.task
+def retrieve_user_info(username):
+    logger.info('Azure Delta Sync Process started')
+    url = '{}/{}/users/{}'.format(
+        settings.AZURE_GRAPH_API_BASE_URL,
+        settings.AZURE_GRAPH_API_VERSION,
+        username
+    )
+    access_token = get_token()
+    logger.info('User %s synchronized', username)
+    headers = {'Authorization': 'Bearer {}'.format(access_token)}
+    response = requests.get(url, headers=headers)
+    jresponse = response.json()
+    if response.status_code == 200:
+        logger.info('Azure: Information retrieved')
+        return handle_record(jresponse)
+    return {}

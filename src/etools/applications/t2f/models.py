@@ -1,4 +1,3 @@
-
 import logging
 from datetime import timedelta
 from decimal import Decimal
@@ -7,7 +6,6 @@ from functools import wraps
 from django.conf import settings
 from django.contrib.postgres.fields.array import ArrayField
 from django.db import connection, models
-from django.utils.encoding import python_2_unicode_compatible
 from django.utils.timezone import now as timezone_now
 from django.utils.translation import ugettext, ugettext_lazy as _
 
@@ -109,7 +107,6 @@ def mark_as_certified_or_completed_threshold_decorator(func):
     return wrapper
 
 
-@python_2_unicode_compatible
 class Travel(models.Model):
     PLANNED = 'planned'
     SUBMITTED = 'submitted'
@@ -423,14 +420,13 @@ class Travel(models.Model):
                                          'emails/trip_completed.html')
 
         try:
-            from etools.applications.partners.models import PartnerOrganization
             for act in self.activities.filter(primary_traveler=self.traveler,
                                               travel_type=TravelType.PROGRAMME_MONITORING):
-                PartnerOrganization.programmatic_visits(act.partner, event_date=self.end_date, update_one=True)
+                act.partner.programmatic_visits(event_date=self.end_date, update_one=True)
 
             for act in self.activities.filter(primary_traveler=self.traveler,
                                               travel_type=TravelType.SPOT_CHECK):
-                PartnerOrganization.spot_checks(act.partner, update_one=True)
+                act.partner.spot_checks(event_date=self.end_date, update_one=True)
 
         except Exception:
             log.exception('Exception while trying to update hact values.')
@@ -493,7 +489,6 @@ class TravelActivity(models.Model):
         return self.travels.filter(traveler=self.primary_traveler).first().status
 
 
-@python_2_unicode_compatible
 class ItineraryItem(models.Model):
     travel = models.ForeignKey(
         'Travel', related_name='itinerary', verbose_name=_('Travel'),
@@ -743,7 +738,6 @@ class ActionPoint(models.Model):
         )
 
 
-@python_2_unicode_compatible
 class Invoice(models.Model):
     PENDING = 'pending'
     PROCESSING = 'processing'
@@ -797,6 +791,9 @@ class Invoice(models.Model):
 
     def __str__(self):
         return self.reference_number
+
+    class Meta:
+        ordering = ["pk", ]
 
 
 class InvoiceItem(models.Model):

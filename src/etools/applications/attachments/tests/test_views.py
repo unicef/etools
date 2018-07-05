@@ -1,6 +1,5 @@
-
 from django.core.urlresolvers import reverse
-from django.utils import six
+
 
 from rest_framework import status
 
@@ -78,6 +77,7 @@ class TestAttachmentListView(BaseTenantTestCase):
             "partner_type": "",
             "vendor_number": "",
             "pd_ssfa_number": "",
+            "agreement_reference_number": "",
         }] * 2
 
     def assert_keys(self, response):
@@ -87,6 +87,7 @@ class TestAttachmentListView(BaseTenantTestCase):
             "partner_type",
             "vendor_number",
             "pd_ssfa_number",
+            "agreement_reference_number",
             "filename",
             "file_type",
             "file_link",
@@ -94,7 +95,7 @@ class TestAttachmentListView(BaseTenantTestCase):
             "created",
         ]
         for row in response.data:
-            six.assertCountEqual(self, list(row.keys()), expected_keys)
+            self.assertCountEqual(list(row.keys()), expected_keys)
 
     def assert_values(self, response, expected):
         received = [{
@@ -102,8 +103,9 @@ class TestAttachmentListView(BaseTenantTestCase):
             "partner_type": x["partner_type"],
             "vendor_number": x["vendor_number"],
             "pd_ssfa_number": x["pd_ssfa_number"],
+            "agreement_reference_number": x["agreement_reference_number"],
         } for x in response.data]
-        six.assertCountEqual(self, received, expected)
+        self.assertCountEqual(received, expected)
 
     def test_get_no_file(self):
         attachment = AttachmentFactory(
@@ -171,6 +173,7 @@ class TestAttachmentListView(BaseTenantTestCase):
             "partner_type": self.partner.partner_type,
             "vendor_number": self.partner.vendor_number,
             "pd_ssfa_number": "",
+            "agreement_reference_number": "",
         }])
 
     def test_assessment(self):
@@ -196,6 +199,7 @@ class TestAttachmentListView(BaseTenantTestCase):
             "partner_type": self.partner.partner_type,
             "vendor_number": self.partner.vendor_number,
             "pd_ssfa_number": "",
+            "agreement_reference_number": "",
         }])
 
     def test_agreement(self):
@@ -221,6 +225,7 @@ class TestAttachmentListView(BaseTenantTestCase):
             "partner_type": self.partner.partner_type,
             "vendor_number": self.partner.vendor_number,
             "pd_ssfa_number": "",
+            "agreement_reference_number": self.agreement.reference_number,
         }])
 
     def test_agreement_amendment(self):
@@ -246,6 +251,7 @@ class TestAttachmentListView(BaseTenantTestCase):
             "partner_type": self.partner.partner_type,
             "vendor_number": self.partner.vendor_number,
             "pd_ssfa_number": "",
+            "agreement_reference_number": self.amendment.agreement.reference_number,
         }])
 
     def test_intervention_amendment(self):
@@ -271,6 +277,7 @@ class TestAttachmentListView(BaseTenantTestCase):
             "partner_type": self.partner.partner_type,
             "vendor_number": self.partner.vendor_number,
             "pd_ssfa_number": self.intervention.number,
+            "agreement_reference_number": self.intervention.agreement.reference_number,
         }])
 
     def test_intervention_attachment(self):
@@ -296,8 +303,9 @@ class TestAttachmentListView(BaseTenantTestCase):
             "partner_type": self.partner.partner_type,
             "vendor_number": self.partner.vendor_number,
             "pd_ssfa_number": self.intervention.number,
+            "agreement_reference_number": self.intervention.agreement.reference_number,
         }])
-        six.assertCountEqual(self, [x["file_type"] for x in response.data], [
+        self.assertCountEqual([x["file_type"] for x in response.data], [
             self.file_type_1.label,
             self.file_type_2.label,
             self.intervention_attachment.type.name
@@ -335,11 +343,13 @@ class TestAttachmentListView(BaseTenantTestCase):
             "partner_type": self.partner.partner_type,
             "vendor_number": self.partner.vendor_number,
             "pd_ssfa_number": self.intervention.number,
+            "agreement_reference_number": self.intervention.agreement.reference_number,
         }, {
             "partner": self.partner.name,
             "partner_type": self.partner.partner_type,
             "vendor_number": self.partner.vendor_number,
             "pd_ssfa_number": self.intervention.number,
+            "agreement_reference_number": self.intervention.agreement.reference_number,
         }])
 
     def test_tpm_activity_attachments(self):
@@ -368,8 +378,9 @@ class TestAttachmentListView(BaseTenantTestCase):
             "partner_type": self.partner.partner_type,
             "vendor_number": self.partner.vendor_number,
             "pd_ssfa_number": self.intervention.number,
+            "agreement_reference_number": self.intervention.agreement.reference_number,
         }])
-        six.assertCountEqual(self, [x["file_type"] for x in response.data], [
+        self.assertCountEqual([x["file_type"] for x in response.data], [
             self.file_type_1.label,
             self.file_type_2.label,
             file_type.label
@@ -401,8 +412,9 @@ class TestAttachmentListView(BaseTenantTestCase):
             "partner_type": self.partner.partner_type,
             "vendor_number": self.partner.vendor_number,
             "pd_ssfa_number": self.intervention.number,
+            "agreement_reference_number": self.intervention.agreement.reference_number,
         }])
-        six.assertCountEqual(self, [x["file_type"] for x in response.data], [
+        self.assertCountEqual([x["file_type"] for x in response.data], [
             self.file_type_1.label,
             self.file_type_2.label,
             file_type.label
@@ -434,8 +446,9 @@ class TestAttachmentListView(BaseTenantTestCase):
             "partner_type": self.partner.partner_type,
             "vendor_number": self.partner.vendor_number,
             "pd_ssfa_number": "",
+            "agreement_reference_number": "",
         }])
-        six.assertCountEqual(self, [x["file_type"] for x in response.data], [
+        self.assertCountEqual([x["file_type"] for x in response.data], [
             self.file_type_1.label,
             self.file_type_2.label,
             file_type.label
@@ -467,8 +480,9 @@ class TestAttachmentListView(BaseTenantTestCase):
             "partner_type": self.partner.partner_type,
             "vendor_number": self.partner.vendor_number,
             "pd_ssfa_number": "",
+            "agreement_reference_number": "",
         }])
-        six.assertCountEqual(self, [x["file_type"] for x in response.data], [
+        self.assertCountEqual([x["file_type"] for x in response.data], [
             self.file_type_1.label,
             self.file_type_2.label,
             file_type.label

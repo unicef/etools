@@ -16,7 +16,11 @@ from tenant_schemas.utils import schema_context
 from etools.applications.EquiTrack.utils import get_environment
 from etools.applications.notification.utils import send_notification_using_email_template
 from etools.applications.partners.models import Agreement, Intervention, PartnerOrganization
-from etools.applications.partners.utils import copy_all_attachments
+from etools.applications.partners.utils import (
+    copy_all_attachments,
+    send_pca_missing_notifications,
+    send_pca_required_notifications,
+)
 from etools.applications.partners.validation.agreements import AgreementValid
 from etools.applications.partners.validation.interventions import InterventionValid
 from etools.applications.users.models import Country
@@ -350,3 +354,13 @@ def notify_partner_hidden(partner_pk, tenant_name):
                 email_template_name='partners/blocked_partner',
                 context=email_context
             )
+
+
+@app.task
+def check_pca_required():
+    send_pca_required_notifications()
+
+
+@app.task
+def check_pca_missing():
+    send_pca_missing_notifications()

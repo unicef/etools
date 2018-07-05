@@ -8,8 +8,13 @@ from django.shortcuts import get_object_or_404
 
 from rest_framework import status
 from rest_framework.exceptions import ValidationError
-from rest_framework.generics import (CreateAPIView, DestroyAPIView, ListAPIView,
-                                     ListCreateAPIView, RetrieveUpdateDestroyAPIView,)
+from rest_framework.generics import (
+    CreateAPIView,
+    DestroyAPIView,
+    ListAPIView,
+    ListCreateAPIView,
+    RetrieveUpdateDestroyAPIView,
+)
 from rest_framework.permissions import IsAdminUser
 from rest_framework.response import Response
 from rest_framework_csv import renderers as r
@@ -17,10 +22,11 @@ from rest_framework_csv import renderers as r
 from etools.applications.EquiTrack.mixins import ExportModelMixin, QueryStringFilterMixin
 from etools.applications.EquiTrack.renderers import CSVFlatRenderer
 from etools.applications.EquiTrack.utils import get_data_from_insight
-from etools.applications.EquiTrack.validation_mixins import ValidatorViewMixin
-from etools.applications.partners.exports_v2 import (PartnerOrganizationCSVRenderer,
-                                                     PartnerOrganizationHactCsvRenderer,
-                                                     PartnerOrganizationSimpleHactCsvRenderer,)
+from etools.applications.partners.exports_v2 import (
+    PartnerOrganizationCSVRenderer,
+    PartnerOrganizationHactCsvRenderer,
+    PartnerOrganizationSimpleHactCsvRenderer,
+)
 from etools.applications.partners.filters import PartnerScopeFilter
 from etools.applications.partners.models import (
     Assessment,
@@ -36,8 +42,13 @@ from etools.applications.partners.permissions import (
     PartnershipSeniorManagerPermission,
 )
 from etools.applications.partners.serializers.exports.partner_organization import (
-    AssessmentExportFlatSerializer, AssessmentExportSerializer, PartnerOrganizationExportFlatSerializer,
-    PartnerOrganizationExportSerializer, PartnerStaffMemberExportFlatSerializer, PartnerStaffMemberExportSerializer,)
+    AssessmentExportFlatSerializer,
+    AssessmentExportSerializer,
+    PartnerOrganizationExportFlatSerializer,
+    PartnerOrganizationExportSerializer,
+    PartnerStaffMemberExportFlatSerializer,
+    PartnerStaffMemberExportSerializer,
+)
 from etools.applications.partners.serializers.partner_organization_v2 import (
     AssessmentDetailSerializer,
     MinimalPartnerOrganizationListSerializer,
@@ -54,6 +65,7 @@ from etools.applications.partners.serializers.partner_organization_v2 import (
 from etools.applications.partners.views.helpers import set_tenant_or_fail
 from etools.applications.t2f.models import TravelActivity
 from etools.applications.vision.adapters.partner import PartnerSynchronizer
+from etools_validator.mixins import ValidatorViewMixin
 
 
 class PartnerOrganizationListAPIView(QueryStringFilterMixin, ExportModelMixin, ListCreateAPIView):
@@ -197,6 +209,7 @@ class PartnerOrganizationHactAPIView(ListAPIView):
         'staff_members', 'assessments').active()
     serializer_class = PartnerOrganizationHactSerializer
     renderer_classes = (r.JSONRenderer, PartnerOrganizationHactCsvRenderer)
+    filename = 'detailed_hact_dashboard'
 
     def list(self, request, format=None):
         """
@@ -207,12 +220,13 @@ class PartnerOrganizationHactAPIView(ListAPIView):
         response = super(PartnerOrganizationHactAPIView, self).list(request)
         if "format" in query_params.keys():
             if query_params.get("format") == 'csv':
-                response['Content-Disposition'] = "attachment;filename=hact_dashboard.csv"
+                response['Content-Disposition'] = f"attachment;filename={self.filename}.csv"
         return response
 
 
 class PartnerOrganizationSimpleHactAPIView(PartnerOrganizationHactAPIView):
     renderer_classes = (r.JSONRenderer, PartnerOrganizationSimpleHactCsvRenderer)
+    filename = 'hact_dashboard'
 
 
 class PlannedEngagementAPIView(ListAPIView):

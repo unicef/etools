@@ -1,10 +1,8 @@
-
 from django.db import connection
 from django.utils import timezone
 
 from celery.utils.log import get_task_logger
 
-from etools.applications.partners.models import PartnerOrganization
 from etools.applications.tpm.tpmpartners.models import TPMPartner
 from etools.applications.users.models import Country
 from etools.applications.vision.adapters.funding import FundCommitmentSynchronizer, FundReservationsSynchronizer
@@ -95,31 +93,6 @@ def sync_handler(self, country_name, handler):
             # The 'autoretry_for' in the task decorator tells Celery to
             # retry this a few times on VisionExceptions, so just re-raise it
             raise
-
-
-# Not scheduled by any code in this repo, but by other means, so keep it around.
-# It catches all exceptions internally and keeps going on to the next partner, so
-# no need to have celery retry it on exceptions.
-# TODO: Write some tests for it!
-@app.task
-def update_all_partners(country_name=None):
-    logger.info(u'Starting update HACT values for partners')
-    countries = Country.objects.filter(vision_sync_enabled=True)
-    if country_name is not None:
-        countries = countries.filter(name=country_name)
-    for country in countries:
-        connection.set_tenant(country)
-        logger.info(u'Updating {}'.format(country.name))
-        partners = PartnerOrganization.objects.all()
-        for partner in partners:
-            try:
-                partner.planned_visits_to_hact()
-                PartnerOrganization.programmatic_visits(partner)
-                PartnerOrganization.spot_checks(partner)
-                PartnerOrganization.audits_completed(partner)
-
-            except Exception:
-                logger.exception(u'Exception {} {}'.format(partner.name, partner.hact_values))
 
 
 # Not scheduled by any code in this repo, but by other means, so keep it around.

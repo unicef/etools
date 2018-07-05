@@ -513,6 +513,7 @@ class InterventionCreateUpdateSerializer(SnapshotModelSerializer):
 class InterventionDetailSerializer(serializers.ModelSerializer):
     planned_budget = InterventionBudgetCUSerializer(read_only=True)
     partner = serializers.CharField(source='agreement.partner.name')
+    partner_vendor = serializers.CharField(source='agreement.partner.vendor_number')
     partner_id = serializers.CharField(source='agreement.partner.id', read_only=True)
     prc_review_document_file = serializers.FileField(source='prc_review_document', read_only=True)
     prc_review_attachment = AttachmentSingleFileField(read_only=True)
@@ -569,19 +570,19 @@ class InterventionDetailSerializer(serializers.ModelSerializer):
         return permissions.get_permissions()
 
     def get_locations(self, obj):
-        return [l.id for l in obj.intervention_locations]
+        return [l.id for l in obj.intervention_locations()]
 
     def get_location_names(self, obj):
-        return ['{} [{} - {}]'.format(l.name, l.gateway.name, l.p_code) for l in obj.intervention_locations]
+        return ['{} [{} - {}]'.format(l.name, l.gateway.name, l.p_code) for l in obj.intervention_locations()]
 
     def get_section_names(self, obj):
-        return [l.name for l in obj.flagged_sections]
+        return [l.name for l in obj.flagged_sections()]
 
     def get_flagged_sections(self, obj):
-        return [l.id for l in obj.flagged_sections]
+        return [l.id for l in obj.flagged_sections()]
 
     def get_cluster_names(self, obj):
-        return [c for c in obj.intervention_clusters]
+        return [c for c in obj.intervention_clusters()]
 
     class Meta:
         model = Intervention
@@ -598,26 +599,27 @@ class InterventionDetailSerializer(serializers.ModelSerializer):
             "location_p_codes",
             "days_from_submission_to_signed",
             "days_from_review_to_signed",
+            "partner_vendor",
         )
 
 
 class InterventionListMapSerializer(serializers.ModelSerializer):
     partner_name = serializers.CharField(source='agreement.partner.name')
     partner_id = serializers.CharField(source='agreement.partner.id')
-    locations = serializers.SerializerMethodField()
-    sections = serializers.SerializerMethodField()
-
-    def get_locations(self, obj):
-        return [LocationSerializer().to_representation(l) for l in obj.intervention_locations]
-
-    def get_sections(self, obj):
-        return [s.id for s in obj.flagged_sections]
+    locations = LocationSerializer(source="flat_locations", many=True)
 
     class Meta:
         model = Intervention
         fields = (
-            "id", "partner_id", "partner_name", "agreement", "document_type", "number", "title", "status",
-            "start", "end", "offices", "sections", "locations"
+            "id",
+            "partner_id",
+            "partner_name",
+            "agreement",
+            "document_type", "number", "title", "status",
+            "start", "end",
+            "offices",
+            "sections",
+            "locations"
         )
 
 
@@ -776,8 +778,8 @@ class InterventionLocationExportSerializer(serializers.Serializer):
     pd_ref_number = serializers.CharField(source="intervention.number")
     partnership = serializers.CharField(source="intervention.agreement.agreement_number")
     status = serializers.CharField(source="intervention.status")
-    location = serializers.CharField(source="selected_location.name")
-    section = serializers.CharField(source="section.name")
+    location = serializers.CharField(source="selected_location.name", read_only=True)
+    section = serializers.CharField(source="section.name", read_only=True)
     cp_output = serializers.CharField(source="intervention.cp_output_names")
     start = serializers.CharField(source="intervention.start")
     end = serializers.CharField(source="intervention.end")

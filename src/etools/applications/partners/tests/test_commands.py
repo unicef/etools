@@ -1,13 +1,18 @@
+import datetime
+from unittest.mock import Mock, patch
 
+from django.conf import settings
 from django.core.management import call_command
 
 from etools.applications.attachments.models import Attachment
 from etools.applications.attachments.tests.factories import AttachmentFactory, AttachmentFileTypeFactory
 from etools.applications.EquiTrack.tests.cases import BaseTenantTestCase
+from etools.applications.partners.models import Agreement, Intervention
 from etools.applications.partners.tests.factories import (AgreementAmendmentFactory, AgreementFactory,
                                                           AssessmentFactory, InterventionAmendmentFactory,
                                                           InterventionAttachmentFactory,
                                                           InterventionFactory, PartnerFactory,)
+from etools.applications.reports.tests.factories import CountryProgrammeFactory
 
 
 class TestCopyAttachments(BaseTenantTestCase):
@@ -285,3 +290,57 @@ class TestCopyAttachments(BaseTenantTestCase):
             attachment_update.file.name,
             self.intervention_attachment.attachment.name
         )
+
+
+class TestSendPCARequiredNotifications(BaseTenantTestCase):
+    @classmethod
+    def setUpTestData(cls):
+        call_command("update_notifications")
+
+    def test_command(self):
+        send_path = "etools.applications.partners.utils.send_notification_using_email_template"
+        lead_date = datetime.date.today() + datetime.timedelta(
+            days=settings.PCA_REQUIRED_NOTIFICATION_LEAD
+        )
+        cp = CountryProgrammeFactory(to_date=lead_date)
+        agreement = AgreementFactory(country_programme=cp)
+        InterventionFactory(
+            document_type=Intervention.PD,
+            end=lead_date + datetime.timedelta(days=10),
+            agreement=agreement,
+        )
+        mock_send = Mock()
+        with patch(send_path, mock_send):
+            call_command("send_pca_required_notifications")
+        self.assertEqual(mock_send.call_count, 1)
+
+
+class TestSendPCAMissingNotifications(BaseTenantTestCase):
+    @classmethod
+    def setUpTestData(cls):
+        call_command("update_notifications")
+
+    def test_command(self):
+        send_path = "etools.applications.partners.utils.send_notification_using_email_template"
+        date_past = datetime.date.today() - datetime.timedelta(days=10)
+        date_future = datetime.date.today() + datetime.timedelta(days=10)
+        partner = PartnerFactory()
+        cp = CountryProgrammeFactory(
+            from_date=date_past,
+            to_date=datetime.date.today(),
+        )
+        agreement = AgreementFactory(
+            partner=partner,
+            agreement_type=Agreement.PCA,
+            country_programme=cp,
+        )
+        InterventionFactory(
+            document_type=Intervention.PD,
+            start=date_past + datetime.timedelta(days=1),
+            end=date_future,
+            agreement=agreement,
+        )
+        mock_send = Mock()
+        with patch(send_path, mock_send):
+            call_command("send_pca_missing_notifications")
+        self.assertEqual(mock_send.call_count, 1)

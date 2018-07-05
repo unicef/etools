@@ -1,9 +1,8 @@
 # -*- coding: utf-8 -*-
-
 from datetime import date
 
+from django.contrib.postgres.fields import JSONField
 from django.db import models, transaction
-from django.utils.encoding import python_2_unicode_compatible
 from django.utils.functional import cached_property
 from django.utils.translation import ugettext as _
 
@@ -57,7 +56,6 @@ class CountryProgrammeManager(models.Manager):
         return self.get_queryset().filter(from_date__lte=today, to_date__gt=today)
 
 
-@python_2_unicode_compatible
 class CountryProgramme(models.Model):
     """
     Represents a country programme cycle
@@ -113,7 +111,6 @@ class CountryProgramme(models.Model):
         super(CountryProgramme, self).save(*args, **kwargs)
 
 
-@python_2_unicode_compatible
 class ResultType(models.Model):
     """
     Represents a result type
@@ -134,7 +131,6 @@ class ResultType(models.Model):
         return self.name
 
 
-@python_2_unicode_compatible
 class Sector(TimeStampedModel):
     """
     Represents a sector
@@ -169,7 +165,6 @@ class OutputManager(models.Manager):
             'country_programme', 'result_type')
 
 
-@python_2_unicode_compatible
 class Result(MPTTModel):
     """
     Represents a result, wbs is unique
@@ -341,7 +336,6 @@ class Result(MPTTModel):
                 node.save()
 
 
-@python_2_unicode_compatible
 class LowerResult(TimeStampedModel):
 
     # Lower result is always an output
@@ -380,10 +374,12 @@ class LowerResult(TimeStampedModel):
                 self.result_link.intervention.id,
                 latest_ll_id + 1
             )
-        return super(LowerResult, self).save(**kwargs)
+        super(LowerResult, self).save(**kwargs)
+
+        # reset certain caches
+        self.result_link.intervention.clear_caches()
 
 
-@python_2_unicode_compatible
 class Unit(models.Model):
     """
     Represents an unit of measurement
@@ -397,7 +393,6 @@ class Unit(models.Model):
         return self.type
 
 
-@python_2_unicode_compatible
 class IndicatorBlueprint(TimeStampedModel):
     """
     IndicatorBlueprint module is a pattern for indicator
@@ -505,7 +500,6 @@ class IndicatorBlueprint(TimeStampedModel):
         return self.title
 
 
-@python_2_unicode_compatible
 class Disaggregation(TimeStampedModel):
     """
     Disaggregation model. For example: <Gender, Age>
@@ -520,7 +514,6 @@ class Disaggregation(TimeStampedModel):
         return self.name
 
 
-@python_2_unicode_compatible
 class DisaggregationValue(TimeStampedModel):
     """
     Disaggregation Value model. For example: Gender <Male, Female, Other>
@@ -558,6 +551,11 @@ class AppliedIndicator(TimeStampedModel):
         blank=True,
         on_delete=models.CASCADE,
     )
+
+    measurement_specifications = models.TextField(max_length=4048, blank=True, null=True)
+    label = models.TextField(max_length=4048, blank=True, null=True)
+    numerator_label = models.CharField(max_length=256, blank=True, null=True)
+    denominator_label = models.CharField(max_length=256, blank=True, null=True)
 
     section = models.ForeignKey(
         Sector,
@@ -613,6 +611,9 @@ class AppliedIndicator(TimeStampedModel):
         null=True,
         blank=True,
     )
+    target_new = JSONField(default=dict([('d', 1), ('v', 0)]))
+    baseline_new = JSONField(default=dict([('d', 1), ('v', 0)]))
+
     assumptions = models.TextField(
         verbose_name=_("Assumptions"),
         null=True,
@@ -652,8 +653,13 @@ class AppliedIndicator(TimeStampedModel):
     class Meta:
         unique_together = (("indicator", "lower_result"),)
 
+    def save(self, *args, **kwargs):
+        super().save(*args, **kwargs)
 
-@python_2_unicode_compatible
+        # reset certain caches
+        self.lower_result.result_link.intervention.clear_caches()
+
+
 class Indicator(TimeStampedModel):
     """
     Represents an indicator
@@ -761,7 +767,6 @@ class Indicator(TimeStampedModel):
         super(Indicator, self).save(*args, **kwargs)
 
 
-@python_2_unicode_compatible
 class ReportingRequirement(TimeStampedModel):
     TYPE_QPR = "QPR"
     TYPE_HR = "HR"

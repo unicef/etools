@@ -3,9 +3,10 @@ import datetime
 from unittest import skip
 
 from django.core.files.uploadedfile import SimpleUploadedFile
+from django.core.management import call_command
 from django.test import SimpleTestCase
 from django.urls import reverse
-from django.utils import six, timezone
+from django.utils import timezone
 
 from freezegun import freeze_time
 from mock import Mock, patch
@@ -60,7 +61,7 @@ class TestAgreementNumberGeneration(BaseTenantTestCase):
         '''Thoroughly exercise agreement reference numbers for PCA'''
         # All of the agreements created here are PCAs, so id is the only part of the reference number that varies
         # for this test.
-        reference_number_template = 'LEBA/PCA' + six.text_type(self.date.year) + '{id}'
+        reference_number_template = 'LEBA/PCA' + str(self.date.year) + '{id}'
 
         # test basic sequence
         agreement1 = AgreementFactory()
@@ -96,7 +97,7 @@ class TestAgreementNumberGeneration(BaseTenantTestCase):
 
     def test_reference_number_other(self):
         '''Verify simple agreement reference # generation for all agreement types'''
-        reference_number_template = 'LEBA/{agreement_type}' + six.text_type(self.date.year) + '{id}'
+        reference_number_template = 'LEBA/{agreement_type}' + str(self.date.year) + '{id}'
         agreement_types = [agreement_type[0] for agreement_type in models.Agreement.AGREEMENT_TYPES]
         for agreement_type in agreement_types:
             agreement = AgreementFactory(agreement_type=agreement_type)
@@ -106,7 +107,7 @@ class TestAgreementNumberGeneration(BaseTenantTestCase):
 
     def test_base_number_generation(self):
         '''Verify correct values in the .base_number attribute'''
-        base_number_template = 'LEBA/PCA' + six.text_type(self.date.year) + '{id}'
+        base_number_template = 'LEBA/PCA' + str(self.date.year) + '{id}'
         agreement = AgreementFactory()
 
         expected_base_number = base_number_template.format(id=agreement.id)
@@ -123,7 +124,7 @@ class TestAgreementNumberGeneration(BaseTenantTestCase):
 
     def test_update_reference_number(self):
         '''Exercise Agreement.update_reference_number()'''
-        reference_number_template = 'LEBA/PCA' + six.text_type(self.date.year) + '{id}'
+        reference_number_template = 'LEBA/PCA' + str(self.date.year) + '{id}'
 
         agreement = AgreementFactory.build()
 
@@ -325,6 +326,12 @@ class TestPartnerOrganizationModel(BaseTenantTestCase):
         self.partner_organization.reported_cy = 99000.00
         self.assert_min_requirements(1, 1)
 
+    def test_hact_min_requirements_ct_between_25k_and_100k_low_risk(self):
+        self.partner_organization.net_ct_cy = 99000.00
+        self.partner_organization.reported_cy = 99000.00
+        self.partner_organization.type_of_assessment = 'Low Risk Assumed'
+        self.assert_min_requirements(1, 0)
+
     def test_hact_min_requirements_ct_between_100k_and_500k_high(self):
         self.partner_organization.net_ct_cy = 490000.00
         self.partner_organization.reported_cy = 490000.00
@@ -415,8 +422,7 @@ class TestPartnerOrganizationModel(BaseTenantTestCase):
 
     def test_programmatic_visits_update_one(self):
         self.assertEqual(self.partner_organization.hact_values['programmatic_visits']['completed']['total'], 0)
-        models.PartnerOrganization.programmatic_visits(
-            self.partner_organization,
+        self.partner_organization.programmatic_visits(
             event_date=datetime.datetime(2013, 5, 26),
             update_one=True
         )
@@ -441,7 +447,7 @@ class TestPartnerOrganizationModel(BaseTenantTestCase):
             travel_type=TravelType.PROGRAMME_MONITORING,
             partner=self.partner_organization,
         )
-        models.PartnerOrganization.programmatic_visits(self.partner_organization)
+        self.partner_organization.programmatic_visits()
         self.assertEqual(self.partner_organization.hact_values['programmatic_visits']['completed']['total'], 1)
         self.assertEqual(self.partner_organization.hact_values['programmatic_visits']['completed']['q1'], 0)
         self.assertEqual(self.partner_organization.hact_values['programmatic_visits']['completed']['q2'], 0)
@@ -471,7 +477,7 @@ class TestPartnerOrganizationModel(BaseTenantTestCase):
             partner=self.partner_organization,
         )
 
-        models.PartnerOrganization.programmatic_visits(self.partner_organization)
+        self.partner_organization.programmatic_visits()
         self.assertEqual(self.partner_organization.hact_values['programmatic_visits']['completed']['total'], 1)
         self.assertEqual(self.partner_organization.hact_values['programmatic_visits']['completed']['q1'], 0)
         self.assertEqual(self.partner_organization.hact_values['programmatic_visits']['completed']['q2'], 1)
@@ -481,10 +487,7 @@ class TestPartnerOrganizationModel(BaseTenantTestCase):
     @freeze_time("2013-12-26")
     def test_spot_checks_update_one(self):
         self.assertEqual(self.partner_organization.hact_values['spot_checks']['completed']['total'], 0)
-        models.PartnerOrganization.spot_checks(
-            self.partner_organization,
-            update_one=True,
-        )
+        self.partner_organization.spot_checks(update_one=True)
         self.assertEqual(self.partner_organization.hact_values['spot_checks']['completed']['total'], 1)
         self.assertEqual(self.partner_organization.hact_values['spot_checks']['completed']['q1'], 0)
         self.assertEqual(self.partner_organization.hact_values['spot_checks']['completed']['q2'], 0)
@@ -494,8 +497,7 @@ class TestPartnerOrganizationModel(BaseTenantTestCase):
     @freeze_time("2013-12-26")
     def test_spot_checks_update_one_with_date(self):
         self.assertEqual(self.partner_organization.hact_values['spot_checks']['completed']['total'], 0)
-        models.PartnerOrganization.spot_checks(
-            self.partner_organization,
+        self.partner_organization.spot_checks(
             update_one=True,
             event_date=datetime.datetime(2013, 5, 12)
         )
@@ -512,7 +514,7 @@ class TestPartnerOrganizationModel(BaseTenantTestCase):
         travel = TravelFactory(
             traveler=traveller,
             status=Travel.COMPLETED,
-            completed_at=datetime.datetime(datetime.datetime.today().year, 9, 1, tzinfo=tz)
+            end_date=datetime.datetime(datetime.datetime.today().year, 9, 1, tzinfo=tz)
         )
         TravelActivityFactory(
             travels=[travel],
@@ -526,7 +528,7 @@ class TestPartnerOrganizationModel(BaseTenantTestCase):
             status=Engagement.FINAL,
             date_of_draft_report_to_unicef=datetime.datetime(datetime.datetime.today().year, 4, 1)
         )
-        models.PartnerOrganization.spot_checks(self.partner_organization)
+        self.partner_organization.spot_checks()
         self.assertEqual(self.partner_organization.hact_values['spot_checks']['completed']['total'], 2)
         self.assertEqual(self.partner_organization.hact_values['spot_checks']['completed']['q1'], 0)
         self.assertEqual(self.partner_organization.hact_values['spot_checks']['completed']['q2'], 1)
@@ -536,8 +538,7 @@ class TestPartnerOrganizationModel(BaseTenantTestCase):
     @freeze_time("2013-12-26")
     def test_audits_completed_update_one(self):
         self.assertEqual(self.partner_organization.hact_values['audits']['completed'], 0)
-        models.PartnerOrganization.audits_completed(
-            self.partner_organization,
+        self.partner_organization.audits_completed(
             update_one=True,
         )
         self.assertEqual(self.partner_organization.hact_values['audits']['completed'], 1)
@@ -554,7 +555,7 @@ class TestPartnerOrganizationModel(BaseTenantTestCase):
             status=Engagement.FINAL,
             date_of_draft_report_to_unicef=datetime.datetime(datetime.datetime.today().year, 8, 1)
         )
-        models.PartnerOrganization.audits_completed(self.partner_organization)
+        self.partner_organization.audits_completed()
         self.assertEqual(self.partner_organization.hact_values['audits']['completed'], 2)
 
     def test_partner_organization_get_admin_url(self):
@@ -606,6 +607,7 @@ class TestAgreementModel(BaseTenantTestCase):
 class TestInterventionModel(BaseTenantTestCase):
     def setUp(self):
         super(TestInterventionModel, self).setUp()
+        call_command('update_notifications')
         self.partner_organization = PartnerFactory(name="Partner Org 1")
         cp = CountryProgrammeFactory(
             name="CP 1",
@@ -626,7 +628,7 @@ class TestInterventionModel(BaseTenantTestCase):
 
     def test_str(self):
         number = self.intervention.number
-        self.assertEqual(six.text_type(self.intervention), number)
+        self.assertEqual(str(self.intervention), number)
 
     def test_permission_structure(self):
         permissions = models.Intervention.permission_structure()
@@ -839,15 +841,15 @@ class TestInterventionModel(BaseTenantTestCase):
     def test_reference_number(self):
         '''Exercise the reference number property'''
         expected_reference_number = self.intervention.agreement.base_number + '/' + self.intervention.document_type
-        expected_reference_number += six.text_type(self.intervention.created.year) + \
-            six.text_type(self.intervention.id)
+        expected_reference_number += str(self.intervention.created.year) + \
+            str(self.intervention.id)
         self.assertEqual(self.intervention.reference_number, expected_reference_number)
 
         self.intervention.signed_by_unicef_date = get_date_from_prior_year()
 
         expected_reference_number = self.intervention.agreement.base_number + '/' + self.intervention.document_type
         expected_reference_number += \
-            six.text_type(self.intervention.signed_by_unicef_date.year) + six.text_type(self.intervention.id)
+            str(self.intervention.signed_by_unicef_date.year) + str(self.intervention.id)
         self.assertEqual(self.intervention.reference_number, expected_reference_number)
 
     def test_all_lower_results_empty(self):
@@ -860,13 +862,13 @@ class TestInterventionModel(BaseTenantTestCase):
         )
         lower_result_1 = LowerResultFactory(result_link=link)
         lower_result_2 = LowerResultFactory(result_link=link)
-        six.assertCountEqual(self, intervention.all_lower_results, [
+        self.assertCountEqual(intervention.all_lower_results, [
             lower_result_1,
             lower_result_2,
         ])
 
     def test_intervention_locations_empty(self):
-        self.assertFalse(self.intervention.intervention_locations)
+        self.assertFalse(self.intervention.intervention_locations())
 
     def test_intervention_locations(self):
         intervention = InterventionFactory()
@@ -885,13 +887,13 @@ class TestInterventionModel(BaseTenantTestCase):
             lower_result=lower_result_2
         )
         applied_indicator_2.locations.add(location_2)
-        six.assertCountEqual(self, intervention.intervention_locations, [
+        self.assertCountEqual(intervention.intervention_locations(), [
             location_1,
             location_2,
         ])
 
     def test_intervention_clusters_empty(self):
-        self.assertFalse(self.intervention.intervention_clusters)
+        self.assertFalse(self.intervention.intervention_clusters())
 
     def test_intervention_clusters(self):
         intervention = InterventionFactory()
@@ -913,7 +915,7 @@ class TestInterventionModel(BaseTenantTestCase):
             cluster_name='',
         )
         AppliedIndicatorFactory(lower_result=lower_result_2)
-        six.assertCountEqual(self, intervention.intervention_clusters, [
+        self.assertCountEqual(intervention.intervention_clusters(), [
             "Title 1",
             "Title 2",
         ])
@@ -1222,13 +1224,13 @@ class TestGetFilePaths(BaseTenantTestCase):
 class TestWorkspaceFileType(BaseTenantTestCase):
     def test_str(self):
         w = models.WorkspaceFileType(name="Test")
-        self.assertEqual(six.text_type(w), "Test")
+        self.assertEqual(str(w), "Test")
 
 
 class TestPartnerOrganization(BaseTenantTestCase):
     def test_str(self):
         p = models.PartnerOrganization(name="Test Partner Org")
-        self.assertEqual(six.text_type(p), "Test Partner Org")
+        self.assertEqual(str(p), "Test Partner Org")
 
     def test_save_exception(self):
         p = models.PartnerOrganization(name="Test", hact_values="wrong")
@@ -1248,7 +1250,7 @@ class TestPartnerOrganization(BaseTenantTestCase):
             name="Test",
             hact_values='{"all": "good"}'
         )
-        self.assertTrue(isinstance(p.hact_values, six.text_type),
+        self.assertTrue(isinstance(p.hact_values, str),
                         msg="The type of p.hact_values is %s" % type(p.hact_values))
         p.save()
         self.assertIsNotNone(p.pk)
@@ -1265,7 +1267,7 @@ class TestPartnerStaffMember(BaseTenantTestCase):
             last_name="Last",
             partner=partner
         )
-        self.assertEqual(six.text_type(staff), "First Last (Partner)")
+        self.assertEqual(str(staff), "First Last (Partner)")
 
     def test_save_update_deactivate(self):
         partner = PartnerFactory()
@@ -1301,7 +1303,7 @@ class TestAssessment(BaseTenantTestCase):
             type="Type",
             rating="Rating",
         )
-        self.assertEqual(six.text_type(a), "Type: Partner Rating NOT COMPLETED")
+        self.assertEqual(str(a), "Type: Partner Rating NOT COMPLETED")
 
     def test_str_completed(self):
         partner = models.PartnerOrganization(name="Partner")
@@ -1311,7 +1313,7 @@ class TestAssessment(BaseTenantTestCase):
             rating="Rating",
             completed_date=datetime.date(2001, 1, 1)
         )
-        self.assertEqual(six.text_type(a), "Type: Partner Rating 01-01-2001")
+        self.assertEqual(str(a), "Type: Partner Rating 01-01-2001")
 
 
 class TestAgreement(BaseTenantTestCase):
@@ -1321,7 +1323,7 @@ class TestAgreement(BaseTenantTestCase):
             partner=partner,
             agreement_type=models.Agreement.DRAFT,
         )
-        self.assertEqual(six.text_type(agreement), "draft for Partner ( - )")
+        self.assertEqual(str(agreement), "draft for Partner ( - )")
 
     def test_str_dates(self):
         partner = models.PartnerOrganization(name="Partner")
@@ -1332,7 +1334,7 @@ class TestAgreement(BaseTenantTestCase):
             end=datetime.date(2002, 1, 1),
         )
         self.assertEqual(
-            six.text_type(agreement),
+            str(agreement),
             "draft for Partner (01-01-2001 - 01-01-2002)"
         )
 
@@ -1392,7 +1394,7 @@ class TestAgreementAmendment(BaseTenantTestCase):
             agreement=agreement
         )
         self.assertEqual(
-            six.text_type(amendment),
+            str(amendment),
             "{} {}".format(agreement.reference_number, amendment.number)
         )
 
@@ -1403,9 +1405,9 @@ class TestInterventionAmendment(BaseTenantTestCase):
             amendment_number="123",
             signed_date=None
         )
-        self.assertEqual(six.text_type(ia), "123:- None")
+        self.assertEqual(str(ia), "123:- None")
         ia.signed_date = datetime.date(2001, 1, 1)
-        self.assertEqual(six.text_type(ia), "123:- 2001-01-01")
+        self.assertEqual(str(ia), "123:- 2001-01-01")
 
     def test_compute_reference_number_no_amendments(self):
         intervention = InterventionFactory()
@@ -1433,10 +1435,10 @@ class TestInterventionResultLink(BaseTenantTestCase):
             intervention=intervention,
             cp_output=result,
         )
-        intervention_str = six.text_type(intervention)
-        result_str = six.text_type(result)
+        intervention_str = str(intervention)
+        result_str = str(result)
         self.assertEqual(
-            six.text_type(link),
+            str(link),
             "{} {}".format(intervention_str, result_str)
         )
 
@@ -1444,32 +1446,32 @@ class TestInterventionResultLink(BaseTenantTestCase):
 class TestInterventionBudget(BaseTenantTestCase):
     def test_str(self):
         intervention = InterventionFactory()
-        intervention_str = six.text_type(intervention)
+        intervention_str = str(intervention)
         budget = InterventionBudgetFactory(
             intervention=intervention,
             unicef_cash_local=10.00,
             in_kind_amount_local=5.00,
             partner_contribution_local=20.00,
         )
-        self.assertEqual(six.text_type(budget), "{}: 35.00".format(intervention_str))
+        self.assertEqual(str(budget), "{}: 35.00".format(intervention_str))
 
 
 class TestFileType(BaseTenantTestCase):
     def test_str(self):
         f = models.FileType(name="FileType")
-        self.assertEqual(six.text_type(f), "FileType")
+        self.assertEqual(str(f), "FileType")
 
 
 class TestInterventionAttachment(BaseTenantTestCase):
     def test_str(self):
         a = models.InterventionAttachment(attachment="test.pdf")
-        self.assertEqual(six.text_type(a), "test.pdf")
+        self.assertEqual(str(a), "test.pdf")
 
 
 class TestInterventionReportingPeriod(BaseTenantTestCase):
     def test_str(self):
         intervention = InterventionFactory()
-        intervention_str = six.text_type(intervention)
+        intervention_str = str(intervention)
         period = InterventionReportingPeriodFactory(
             intervention=intervention,
             start_date=datetime.date(2001, 1, 1),
@@ -1477,7 +1479,7 @@ class TestInterventionReportingPeriod(BaseTenantTestCase):
             due_date=datetime.date(2003, 3, 3),
         )
         self.assertEqual(
-            six.text_type(period),
+            str(period),
             "{} (2001-01-01 - 2002-02-02) due on 2003-03-03".format(
                 intervention_str
             )
@@ -1485,7 +1487,7 @@ class TestInterventionReportingPeriod(BaseTenantTestCase):
 
 
 class TestStrUnicodeSlow(BaseTenantTestCase):
-    '''Ensure calling six.text_type() on model instances returns the right text.
+    '''Ensure calling str() on model instances returns the right text.
 
     This is the same as TestStrUnicode below, except that it tests objects that need to be saved to the database
     so it's based on BaseTenantTestCase instead of TestCase.
@@ -1494,111 +1496,111 @@ class TestStrUnicodeSlow(BaseTenantTestCase):
     def test_assessment(self):
         partner = PartnerFactory(name='xyz')
         instance = AssessmentFactory(partner=partner)
-        self.assertIn(u'xyz', six.text_type(instance))
+        self.assertIn(u'xyz', str(instance))
 
         partner = PartnerFactory(name=u'R\xe4dda Barnen')
         instance = AssessmentFactory(partner=partner)
-        self.assertIn(u'R\xe4dda Barnen', six.text_type(instance))
+        self.assertIn(u'R\xe4dda Barnen', str(instance))
 
     def test_agreement_amendment(self):
         partner = PartnerFactory(name='xyz')
         agreement = AgreementFactory(partner=partner)
         instance = AgreementAmendmentFactory(number='xyz', agreement=agreement)
         # This model's __str__() method operates on a limited range of text, so it's not possible to challenge it
-        # with non-ASCII text. As long as six.text_type() succeeds, that's all the testing we can do.
-        six.text_type(instance)
+        # with non-ASCII text. As long as str() succeeds, that's all the testing we can do.
+        str(instance)
 
 
 class TestStrUnicode(SimpleTestCase):
-    '''Ensure calling six.text_type() on model instances returns the right text.'''
+    '''Ensure calling str() on model instances returns the right text.'''
 
     def test_workspace_file_type(self):
         instance = WorkspaceFileTypeFactory.build(name='xyz')
-        self.assertEqual(six.text_type(instance), u'xyz')
+        self.assertEqual(str(instance), u'xyz')
 
         instance = WorkspaceFileTypeFactory.build(name=u'R\xe4dda Barnen')
-        self.assertEqual(six.text_type(instance), u'R\xe4dda Barnen')
+        self.assertEqual(str(instance), u'R\xe4dda Barnen')
 
     def test_partner_organization(self):
         instance = PartnerFactory.build(name='xyz')
-        self.assertEqual(six.text_type(instance), u'xyz')
+        self.assertEqual(str(instance), u'xyz')
 
         instance = PartnerFactory.build(name=u'R\xe4dda Barnen')
-        self.assertEqual(six.text_type(instance), u'R\xe4dda Barnen')
+        self.assertEqual(str(instance), u'R\xe4dda Barnen')
 
     def test_partner_staff_member(self):
         partner = PartnerFactory.build(name='partner')
 
         instance = PartnerStaffFactory.build(first_name='xyz', partner=partner)
-        self.assertTrue(six.text_type(instance).startswith(u'xyz'))
+        self.assertTrue(str(instance).startswith(u'xyz'))
 
         instance = PartnerStaffFactory.build(first_name=u'R\xe4dda Barnen', partner=partner)
-        self.assertTrue(six.text_type(instance).startswith(u'R\xe4dda Barnen'))
+        self.assertTrue(str(instance).startswith(u'R\xe4dda Barnen'))
 
     def test_agreement(self):
         partner = PartnerFactory.build(name='xyz')
         instance = AgreementFactory.build(partner=partner)
-        self.assertIn(u'xyz', six.text_type(instance))
+        self.assertIn(u'xyz', str(instance))
 
         partner = PartnerFactory.build(name=u'R\xe4dda Barnen')
         instance = AgreementFactory.build(partner=partner)
-        self.assertIn(u'R\xe4dda Barnen', six.text_type(instance))
+        self.assertIn(u'R\xe4dda Barnen', str(instance))
 
     def test_intervention(self):
         instance = InterventionFactory.build(number='two')
-        self.assertEqual(u'two', six.text_type(instance))
+        self.assertEqual(u'two', str(instance))
 
         instance = InterventionFactory.build(number=u'tv\xe5')
-        self.assertEqual(u'tv\xe5', six.text_type(instance))
+        self.assertEqual(u'tv\xe5', str(instance))
 
     def test_intervention_amendment(self):
         instance = InterventionAmendmentFactory.build()
         # This model's __str__() method operates on a limited range of text, so it's not possible to challenge it
-        # with non-ASCII text. As long as six.text_type() succeeds, that's all the testing we can do.
-        six.text_type(instance)
+        # with non-ASCII text. As long as str() succeeds, that's all the testing we can do.
+        str(instance)
 
     def test_intervention_result_link(self):
         intervention = InterventionFactory.build(number='two')
         instance = InterventionResultLinkFactory.build(intervention=intervention)
-        self.assertTrue(six.text_type(instance).startswith(u'two'))
+        self.assertTrue(str(instance).startswith(u'two'))
 
         intervention = InterventionFactory.build(number=u'tv\xe5')
         instance = InterventionResultLinkFactory.build(intervention=intervention)
-        self.assertTrue(six.text_type(instance).startswith(u'tv\xe5'))
+        self.assertTrue(str(instance).startswith(u'tv\xe5'))
 
     def test_intervention_budget(self):
         intervention = InterventionFactory.build(number='two')
         instance = InterventionBudgetFactory.build(intervention=intervention)
-        self.assertTrue(six.text_type(instance).startswith(u'two'))
+        self.assertTrue(str(instance).startswith(u'two'))
 
         intervention = InterventionFactory.build(number=u'tv\xe5')
         instance = InterventionBudgetFactory.build(intervention=intervention)
-        self.assertTrue(six.text_type(instance).startswith(u'tv\xe5'))
+        self.assertTrue(str(instance).startswith(u'tv\xe5'))
 
     def test_file_type(self):
         instance = FileTypeFactory.build()
         # This model's __str__() method returns model constants, so it's not possible to challenge it
-        # with non-ASCII text. As long as six.text_type() succeeds, that's all the testing we can do.
-        six.text_type(instance)
+        # with non-ASCII text. As long as str() succeeds, that's all the testing we can do.
+        str(instance)
 
     def test_intervention_attachment(self):
         attachment = SimpleUploadedFile(name='two.txt', content='hello world!'.encode('utf-8'))
         instance = InterventionAttachmentFactory.build(attachment=attachment)
-        self.assertEqual(six.text_type(instance), u'two.txt')
+        self.assertEqual(str(instance), u'two.txt')
 
         attachment = SimpleUploadedFile(u'tv\xe5.txt', u'hello world!'.encode('utf-8'))
         instance = InterventionAttachmentFactory.build(attachment=attachment)
-        self.assertEqual(six.text_type(instance), u'tv\xe5.txt')
+        self.assertEqual(str(instance), u'tv\xe5.txt')
 
     def test_intervention_reporting_period(self):
         intervention = InterventionFactory.build(number='two')
-        six.text_type(intervention)
+        str(intervention)
         instance = InterventionReportingPeriodFactory.build(intervention=intervention)
-        self.assertTrue(six.text_type(instance).startswith('two'))
+        self.assertTrue(str(instance).startswith('two'))
 
         intervention = InterventionFactory.build(number=u'tv\xe5')
         instance = InterventionReportingPeriodFactory.build(intervention=intervention)
-        self.assertTrue(six.text_type(instance).startswith(u'tv\xe5'))
+        self.assertTrue(str(instance).startswith(u'tv\xe5'))
 
 
 class TestPlannedEngagement(BaseTenantTestCase):
@@ -1607,19 +1609,19 @@ class TestPlannedEngagement(BaseTenantTestCase):
         cls.user = UserFactory()
 
         cls.engagement = PlannedEngagementFactory(
-            spot_check_mr='q1',
-            spot_check_follow_up_q1=2,
-            spot_check_follow_up_q2=1,
-            spot_check_follow_up_q3=0,
-            spot_check_follow_up_q4=0,
+            spot_check_follow_up=3,
+            spot_check_planned_q1=2,
+            spot_check_planned_q2=1,
+            spot_check_planned_q3=0,
+            spot_check_planned_q4=0,
             scheduled_audit=True,
             special_audit=False
         )
 
     def test_properties(self):
-        self.assertEquals(self.engagement.total_spot_check_follow_up_required, 3)
-        self.assertEquals(self.engagement.spot_check_required, 4)
+        self.assertEquals(self.engagement.total_spot_check_planned, 3)
         self.assertEquals(self.engagement.required_audit, 1)
+        self.assertEquals(self.engagement.spot_check_required, self.engagement.partner.min_req_spot_checks + 3)
 
 
 class TestPartnerPlannedVisits(BaseTenantTestCase):

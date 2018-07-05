@@ -1,6 +1,6 @@
 import time
 
-from django.db import IntegrityError
+from django.db import IntegrityError, transaction
 from django.utils.encoding import force_text
 
 from carto.exceptions import CartoException
@@ -71,6 +71,7 @@ def create_location(pcode, carto_table, parent, parent_instance,
             location.geom = row['the_geom']
 
         if parent and parent_instance:
+            logger.info("Updating parent:{} for location {}".format(parent_instance, location))
             location.parent = parent_instance
 
         try:
@@ -171,49 +172,56 @@ def update_sites_from_cartodb(carto_table_pk):
     except CartoException:
         logger.exception("CartoDB exception occured")
     else:
-        for row in rows:
-            pcode = str(row[carto_table.pcode_col]).strip()
-            site_name = row[carto_table.name_col]
+        # wrap Location tree updates in a transaction, to prevent an invalid tree state due to errors
+        with transaction.atomic():
+            # disable tree 'generation' during single row updates, rebuild the tree after.
+            # this should prevent errors happening (probably)due to invalid intermediary tree state
+            with Location.objects.disable_mptt_updates():
+                for row in rows:
+                    pcode = str(row[carto_table.pcode_col]).strip()
+                    site_name = row[carto_table.name_col]
 
-            if not site_name or site_name.isspace():
-                logger.warning("No name for location with PCode: {}".format(pcode))
-                sites_not_added += 1
-                continue
+                    if not site_name or site_name.isspace():
+                        logger.warning("No name for location with PCode: {}".format(pcode))
+                        sites_not_added += 1
+                        continue
 
-            parent = None
-            parent_code = None
-            parent_instance = None
+                    parent = None
+                    parent_code = None
+                    parent_instance = None
 
-            # attempt to reference the parent of this location
-            if carto_table.parent_code_col and carto_table.parent:
-                msg = None
-                parent = carto_table.parent.__class__
-                parent_code = row[carto_table.parent_code_col]
-                try:
-                    parent_instance = Location.objects.get(p_code=parent_code)
-                except Location.MultipleObjectsReturned:
-                    msg = "Multiple locations found for parent code: {}".format(
-                        parent_code
-                    )
-                except Location.DoesNotExist:
-                    msg = "No locations found for parent code: {}".format(
-                        parent_code
-                    )
-                except Exception as exp:
-                    msg = force_text(exp)
+                    # attempt to reference the parent of this location
+                    if carto_table.parent_code_col and carto_table.parent:
+                        msg = None
+                        parent = carto_table.parent.__class__
+                        parent_code = row[carto_table.parent_code_col]
+                        try:
+                            parent_instance = Location.objects.get(p_code=parent_code)
+                        except Location.MultipleObjectsReturned:
+                            msg = "Multiple locations found for parent code: {}".format(
+                                parent_code
+                            )
+                        except Location.DoesNotExist:
+                            msg = "No locations found for parent code: {}".format(
+                                parent_code
+                            )
+                        except Exception as exp:
+                            msg = force_text(exp)
 
-                if msg is not None:
-                    logger.warning(msg)
-                    sites_not_added += 1
-                    continue
+                        if msg is not None:
+                            logger.warning(msg)
+                            sites_not_added += 1
+                            continue
 
-            # create the actual location or retrieve existing based on type and code
-            succ, sites_not_added, sites_created, sites_updated = create_location(
-                pcode, carto_table,
-                parent, parent_instance,
-                site_name, row,
-                sites_not_added, sites_created,
-                sites_updated)
+                    # create the actual location or retrieve existing based on type and code
+                    succ, sites_not_added, sites_created, sites_updated = create_location(
+                        pcode, carto_table,
+                        parent, parent_instance,
+                        site_name, row,
+                        sites_not_added, sites_created,
+                        sites_updated)
+
+            Location.objects.rebuild()
 
     return "Table name {}: {} sites created, {} sites updated, {} sites skipped".format(
         carto_table.table_name, sites_created, sites_updated, sites_not_added)

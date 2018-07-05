@@ -1,5 +1,7 @@
 from rest_framework_csv import renderers as r
 
+from etools.applications.EquiTrack.renderers import FriendlyCSVRenderer
+
 
 class PartnerOrganizationCSVRenderer(r.CSVRenderer):
     header = ['vendor_number', 'organization_full_name',
@@ -33,7 +35,7 @@ class PartnerOrganizationCSVRenderer(r.CSVRenderer):
     }
 
 
-class PartnerOrganizationHactCsvRenderer(r.CSVRenderer):
+class PartnerOrganizationHactCsvRenderer(FriendlyCSVRenderer):
 
     header = [
         'name',
@@ -41,7 +43,7 @@ class PartnerOrganizationHactCsvRenderer(r.CSVRenderer):
         'partner_type',
         'shared_with',
         'type_of_assessment',
-        'total_ct_cy',
+        'net_ct_cy',
         'reported_cy',
         'total_ct_ytd',
         'rating',
@@ -61,12 +63,12 @@ class PartnerOrganizationHactCsvRenderer(r.CSVRenderer):
         'hact_values.spot_checks.planned.q3',
         'hact_values.spot_checks.planned.q4',
         'hact_min_requirements.spot_checks',
-        'hact_values.spot_checks.follow_up_required',
+        'planned_engagement.spot_check_follow_up',
         'hact_values.spot_checks.completed.q1',
         'hact_values.spot_checks.completed.q2',
         'hact_values.spot_checks.completed.q3',
         'hact_values.spot_checks.completed.q4',
-        'hact_values.audits.minimum_requirements',
+        'hact_min_requirements.audits',
         'hact_values.audits.completed',
         'hact_values.outstanding_findings',
     ]
@@ -77,7 +79,7 @@ class PartnerOrganizationHactCsvRenderer(r.CSVRenderer):
         'partner_type': 'Partner Type',
         'shared_with': 'Shared IP',
         'type_of_assessment': 'Assessment Type',
-        'total_ct_cy': 'Cash Transfer 1 OCT - 30 SEP',
+        'net_ct_cy': 'Cash Transfer 1 OCT - 30 SEP',
         'reported_cy': 'Liquidations 1 OCT - 30 SEP',
         'total_ct_ytd': 'Cash Transfers Jan - Dec',
         'rating': 'Risk Rating',
@@ -97,18 +99,18 @@ class PartnerOrganizationHactCsvRenderer(r.CSVRenderer):
         'hact_values.spot_checks.planned.q3': 'Q3',
         'hact_values.spot_checks.planned.q4': 'Q4',
         'hact_min_requirements.spot_checks': 'Spot Checks M.R',
-        'hact_values.spot_checks.follow_up_required': 'Follow up Required',
+        'planned_engagement.spot_check_follow_up': 'Follow Up',
         'hact_values.spot_checks.completed.q1': 'Spot Checks Completed Q1',
         'hact_values.spot_checks.completed.q2': 'Q2',
         'hact_values.spot_checks.completed.q3': 'Q3',
         'hact_values.spot_checks.completed.q4': 'Q4',
-        'hact_values.audits.minimum_requirements': 'Audits M.R',
+        'hact_min_requirements.audits': 'Audits M.R',
         'hact_values.audits.completed': 'Audit Completed',
         'hact_values.outstanding_findings': 'Audits Outstanding Findings',
     }
 
 
-class PartnerOrganizationSimpleHactCsvRenderer(r.CSVRenderer):
+class PartnerOrganizationSimpleHactCsvRenderer(FriendlyCSVRenderer):
 
     header = [
         'name',
@@ -125,7 +127,7 @@ class PartnerOrganizationSimpleHactCsvRenderer(r.CSVRenderer):
         'hact_values.programmatic_visits.completed.total',
         'planned_engagement.spot_check_required',
         'hact_values.spot_checks.completed.total',
-        'hact_values.audits.minimum_requirements',
+        'hact_min_requirements.audits',
         'hact_values.audits.completed',
         'hact_values.outstanding_findings',
     ]
@@ -145,7 +147,7 @@ class PartnerOrganizationSimpleHactCsvRenderer(r.CSVRenderer):
         'hact_values.programmatic_visits.completed.total': 'Programmatic Visits Completed',
         'planned_engagement.spot_check_required': 'Spot Check Required',
         'hact_values.spot_checks.completed.total': 'Spot Checks Completed',
-        'hact_values.audits.minimum_requirements': 'Audits M.R',
+        'hact_min_requirements.audits': 'Audits M.R',
         'hact_values.audits.completed': 'Audit Completed',
         'hact_values.outstanding_findings': 'Audits Outstanding Findings',
     }
@@ -156,6 +158,7 @@ class AgreementCSVRenderer(r.CSVRenderer):
         "agreement_number",
         "status",
         "partner_name",
+        "partner_number",
         "agreement_type",
         "start",
         "end",
@@ -172,6 +175,7 @@ class AgreementCSVRenderer(r.CSVRenderer):
         "agreement_number": 'Reference Number',
         "status": 'Status',
         "partner_name": 'Partner Name',
+        "partner_number": "Vendor Number",
         "agreement_type": 'Agreement Type',
         "start": 'Start Date',
         "end": 'End Date',
@@ -249,7 +253,8 @@ class InterventionCSVRenderer(r.CSVRenderer):
 
 class PartnershipDashCSVRenderer(r.CSVRenderer):
     header = [
-        'partner_name', 'partner_vendor_number',
+        'partner_name',
+        'partner_vendor_number',
         'number',
         'sections',
         'offices_names',
@@ -269,7 +274,8 @@ class PartnershipDashCSVRenderer(r.CSVRenderer):
         'disbursement_usd',
         'outstanding_dct_usd',
         'disbursement_percent',
-        'days_last_pv'
+        'days_last_pv',
+        'link',
     ]
 
     labels = {
@@ -295,6 +301,7 @@ class PartnershipDashCSVRenderer(r.CSVRenderer):
         "outstanding_dct_usd": "Outstanding DCT (USD)",
         "disbursement_percent": "Disbursement To Date (%)",
         "days_last_pv": "Days Since Last PV",
+        "link": "Link"
     }
 
 

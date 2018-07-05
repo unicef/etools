@@ -173,8 +173,7 @@ class PartnerSynchronizer(VisionDataSynchronizer):
                     notify_block = True
                 partner_org.blocked = posting_block
 
-                if not partner_org.hidden:
-                    partner_org.hidden = partner_org.deleted_flag or partner_org.blocked
+                partner_org.hidden = partner_org.deleted_flag or partner_org.blocked or partner_org.manually_blocked
                 partner_org.vision_synced = True
                 saving = True
 

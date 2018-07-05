@@ -1,15 +1,18 @@
-
 import logging
 from datetime import date
 
-from django.utils import six
+
 from django.utils.translation import ugettext as _
 
-from etools.applications.EquiTrack.validation_mixins import (BasicValidationError, check_required_fields,
-                                                             check_rigid_fields, CompleteValidation,
-                                                             StateValidError, TransitionError,)
 from etools.applications.partners.permissions import InterventionPermissions
 from etools.applications.reports.models import AppliedIndicator
+from etools_validator.exceptions import (
+    BasicValidationError,
+    StateValidationError,
+    TransitionError,
+)
+from etools_validator.utils import check_rigid_fields, check_required_fields
+from etools_validator.validation import CompleteValidation
 
 logger = logging.getLogger('partners.interventions.validation')
 
@@ -241,7 +244,7 @@ def locations_valid(i):
         raise BasicValidationError(_('The following locations have been selected on '
                                      'the PD/SSFA indicators and cannot be removed'
                                      ' without removing them from the indicators first: ') +
-                                   ', '.join([six.text_type(l) for l in ind_locations - intervention_locations]))
+                                   ', '.join([str(l) for l in ind_locations - intervention_locations]))
     return True
 
 
@@ -293,7 +296,7 @@ class InterventionValid(CompleteValidation):
         required_fields = [f for f in self.permissions['required'] if self.permissions['required'][f] is True]
         required_valid, fields = check_required_fields(intervention, required_fields)
         if not required_valid:
-            raise StateValidError(['Required fields not completed in {}: {}'.format(
+            raise StateValidationError(['Required fields not completed in {}: {}'.format(
                 intervention.status, ', '.join(f for f in fields))])
 
     def check_rigid_fields(self, intervention, related=False):
@@ -303,7 +306,7 @@ class InterventionValid(CompleteValidation):
         rigid_fields = [f for f in self.permissions['edit'] if self.permissions['edit'][f] is False]
         rigid_valid, field = check_rigid_fields(intervention, rigid_fields, related=related)
         if not rigid_valid:
-            raise StateValidError(['Cannot change fields while in {}: {}'.format(intervention.status, field)])
+            raise StateValidationError(['Cannot change fields while in {}: {}'.format(intervention.status, field)])
 
     def state_draft_valid(self, intervention, user=None):
         self.check_required_fields(intervention)
@@ -314,7 +317,7 @@ class InterventionValid(CompleteValidation):
         self.check_required_fields(intervention)
         self.check_rigid_fields(intervention, related=True)
         if intervention.total_unicef_budget == 0:
-            raise StateValidError([_('UNICEF Cash $ or UNICEF Supplies $ should not be 0')])
+            raise StateValidationError([_('UNICEF Cash $ or UNICEF Supplies $ should not be 0')])
         return True
 
     def state_suspended_valid(self, intervention, user=None):
@@ -328,9 +331,9 @@ class InterventionValid(CompleteValidation):
 
         today = date.today()
         if not (intervention.start <= today):
-            raise StateValidError([_('Today is not after the start date')])
+            raise StateValidationError([_('Today is not after the start date')])
         if intervention.total_unicef_budget == 0:
-            raise StateValidError([_('UNICEF Cash $ or UNICEF Supplies $ should not be 0')])
+            raise StateValidationError([_('UNICEF Cash $ or UNICEF Supplies $ should not be 0')])
         return True
 
     def state_ended_valid(self, intervention, user=None):
@@ -339,5 +342,5 @@ class InterventionValid(CompleteValidation):
 
         today = date.today()
         if not today > intervention.end:
-            raise StateValidError([_('Today is not after the end date')])
+            raise StateValidationError([_('Today is not after the end date')])
         return True

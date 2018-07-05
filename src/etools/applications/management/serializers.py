@@ -2,6 +2,7 @@
 from django.contrib.gis.geos import GEOSGeometry
 
 from rest_framework import serializers
+from rest_framework_gis.serializers import GeoFeatureModelSerializer
 
 from etools.applications.locations.models import Location
 
@@ -13,6 +14,7 @@ class GisLocationListSerializer(serializers.ModelSerializer):
         model = Location
         fields = (
             'id',
+            'parent_id',
             'name',
             'p_code',
             'gateway_id',
@@ -20,25 +22,44 @@ class GisLocationListSerializer(serializers.ModelSerializer):
         )
 
 
-class GisLocationGeoDetailSerializer(serializers.ModelSerializer):
+class GisLocationWktSerializer(serializers.ModelSerializer):
     id = serializers.CharField(read_only=True)
     geom = serializers.SerializerMethodField()
+    point = serializers.SerializerMethodField()
 
     def get_geom(self, obj):
-        geo_format = self.context.get('request').query_params.get('geo_format') or None
+        return "{}".format(GEOSGeometry(obj.geom).wkt if obj.geom else '')
 
-        if geo_format == 'wkt':
-            return "{}".format(GEOSGeometry(obj.geom).wkt if obj.geom else '')
-        else:
-            return "{}".format(GEOSGeometry(obj.geom).geojson if obj.geom else '')
+    def get_point(self, obj):
+        return "{}".format(GEOSGeometry(obj.point) if obj.point else '')
 
     class Meta:
         model = Location
         fields = (
             'id',
+            'parent_id',
             'name',
             'p_code',
             'gateway_id',
             'level',
-            'geom'
+            'geom',
+            'point'
+        )
+
+
+class GisLocationGeojsonSerializer(GeoFeatureModelSerializer):
+    id = serializers.CharField(read_only=True)
+
+    class Meta:
+        model = Location
+        geo_field = None
+        fields = (
+            'id',
+            'parent_id',
+            'name',
+            'p_code',
+            'gateway_id',
+            'level',
+            'geom',
+            'point'
         )
