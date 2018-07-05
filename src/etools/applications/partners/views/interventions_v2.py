@@ -5,7 +5,7 @@ import logging
 import operator
 
 from django.contrib.contenttypes.models import ContentType
-from django.db import transaction, connection, IntegrityError
+from django.db import transaction, connection
 from django.db.models import Q
 from django.shortcuts import get_object_or_404
 from django.utils.translation import ugettext as _
