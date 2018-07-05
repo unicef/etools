@@ -93,21 +93,6 @@ class TestInterventionReportingRequirementCreateSerializer(BaseTenantTestCase):
             ['PD needs to have a start date.']
         )
 
-    def test_validation_empty_reporting_requirements(self):
-        data = {
-            "report_type": ReportingRequirement.TYPE_QPR,
-            "reporting_requirements": []
-        }
-        serializer = InterventionReportingRequirementCreateSerializer(
-            data=data,
-            context=self.context
-        )
-        self.assertFalse(serializer.is_valid())
-        self.assertEqual(
-            serializer.errors['reporting_requirements'],
-            ['This field cannot be empty.']
-        )
-
     def test_validation_missing_reporting_requirements(self):
         data = {}
         serializer = InterventionReportingRequirementCreateSerializer(
@@ -119,6 +104,17 @@ class TestInterventionReportingRequirementCreateSerializer(BaseTenantTestCase):
             serializer.errors['reporting_requirements'],
             ['This field is required.']
         )
+
+    def test_validation_empty_reporting_requirements(self):
+        data = {
+            "report_type": ReportingRequirement.TYPE_QPR,
+            "reporting_requirements": []
+        }
+        serializer = InterventionReportingRequirementCreateSerializer(
+            data=data,
+            context=self.context
+        )
+        self.assertTrue(serializer.is_valid())
 
     def test_validation_qpr_missing_fields(self):
         data = {

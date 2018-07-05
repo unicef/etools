@@ -769,10 +769,15 @@ class InterventionReportingRequirementCreateSerializer(serializers.ModelSerializ
             )
 
         # Validate reporting requirements first
-        if not len(data["reporting_requirements"]):
+        if "reporting_requirements" not in data:
             raise serializers.ValidationError({
-                "reporting_requirements": _("This field cannot be empty.")
+                "reporting_requirements": _("This field is required.")
             })
+
+        # allow the validation to pass if an empty list is received. saving an empty list will
+        # overwrite/remove the existing reporting requirements
+        if not len(data["reporting_requirements"]):
+            return data
 
         self._merge_data(data)
 

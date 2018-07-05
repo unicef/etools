@@ -5,7 +5,7 @@ import logging
 import operator
 
 from django.contrib.contenttypes.models import ContentType
-from django.db import transaction, connection
+from django.db import transaction, connection, IntegrityError
 from django.db.models import Q
 from django.shortcuts import get_object_or_404
 from django.utils.translation import ugettext as _
@@ -816,7 +816,9 @@ class InterventionReportingRequirementView(APIView):
         self.report_type = report_type
         self.request.data["report_type"] = self.report_type
 
-        received_rr_ids = [int(r["id"]) for r in request.data["reporting_requirements"] if "id" in r]
+        received_rr_ids = []
+        if "reporting_requirements" in request.data:
+            received_rr_ids = [int(r["id"]) for r in request.data["reporting_requirements"] if "id" in r]
 
         with transaction.atomic():
             serializer = self.serializer_create_class(
@@ -826,10 +828,10 @@ class InterventionReportingRequirementView(APIView):
                 }
             )
 
-            if serializer.is_valid():
-                # delete those reporting requirements which are not present in the request, before new and/or modified
-                # reporting requirements are saved. If there's no reporting requirements in the request, it should mean
-                # that all of them were deleted on the frontend.
+            # delete those reporting requirements which are not present in the request, before new and/or modified
+            # reporting requirements are saved. If there's no reporting requirements in the request, it should mean
+            # that all of them were deleted on the frontend.
+            if received_rr_ids:
                 deleted_reporting_requirements = ReportingRequirement.objects.filter(
                     intervention=intervention_pk,
                     report_type=self.report_type
@@ -842,9 +844,9 @@ class InterventionReportingRequirementView(APIView):
                         raise ValidationError(
                             _("Cannot delete reporting requirements in progress.")
                         )
-
                     deleted_reporting_requirement.delete()
 
+            if serializer.is_valid():
                 serializer.save()
             else:
                 transaction.set_rollback(True)
