@@ -17,26 +17,10 @@ def update_requirements(ctx):
     )
     ctx.run(
         'pip-compile {0}src/requirements/base.txt '
-        '{0}src/requirements/input/production.in '
-        '--no-header '
-        '--no-emit-trusted-host '
-        '--no-index -o {0}src/requirements/production.txt'.format(
-            BASE_DIR
-        )
-    )
-    ctx.run(
-        'pip-compile {0}src/requirements/base.txt '
         '{0}src/requirements/input/test.in '
         '--no-header '
         '--no-emit-trusted-host '
         '--no-index -o {0}src/requirements/test.txt'.format(BASE_DIR)
-    )
-    ctx.run(
-        'pip-compile {0}src/requirements/test.txt '
-        '{0}src/requirements/input/local.in '
-        '--no-header '
-        '--no-emit-trusted-host '
-        '--no-index -o {0}src/requirements/local.txt'.format(BASE_DIR)
     )
 
 

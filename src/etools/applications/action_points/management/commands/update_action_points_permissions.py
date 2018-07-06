@@ -17,6 +17,12 @@ class Command(BaseCommand):
         'action_points.actionpoint.location',
     ]
 
+    action_point_related_objects = [
+        'action_points.actionpoint.engagement',
+        'action_points.actionpoint.tpm_activity',
+        'action_points.actionpoint.travel',
+    ]
+
     # editable fields on create
     action_point_create = [
         'action_points.actionpoint.description',
@@ -25,7 +31,7 @@ class Command(BaseCommand):
         'action_points.actionpoint.high_priority',
         'action_points.actionpoint.section',
         'action_points.actionpoint.office',
-    ] + action_point_pmp_relations
+    ] + action_point_pmp_relations + action_point_related_objects
 
     # editable fields on edit
     action_point_base_edit = [
@@ -56,7 +62,7 @@ class Command(BaseCommand):
 
         'action_points.actionpoint.status',
         'action_points.actionpoint.status_date',
-    ] + action_point_pmp_relations
+    ] + action_point_pmp_relations + action_point_related_objects
 
     # object details specific fields
     action_point_details = [
