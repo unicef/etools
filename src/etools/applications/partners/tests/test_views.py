@@ -16,6 +16,7 @@ import mock
 from model_utils import Choices
 from rest_framework import status
 from rest_framework.test import APIRequestFactory
+from unicef_snapshot.models import Activity
 
 from etools.applications.attachments.tests.factories import AttachmentFileTypeFactory
 from etools.applications.EquiTrack.tests.cases import BaseTenantTestCase
@@ -59,7 +60,6 @@ from etools.applications.reports.tests.factories import (
     ResultTypeFactory,
     SectorFactory,
 )
-from etools.applications.snapshot.models import Activity
 from etools.applications.users.tests.factories import (
     GroupFactory,
     OfficeFactory,

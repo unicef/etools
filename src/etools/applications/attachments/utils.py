@@ -70,7 +70,7 @@ def get_pd_ssfa_number(obj):
             InterventionAmendment,
             InterventionAttachment,
     )):
-        return obj.content_object.intervention.number
+        return obj.content_object.intervention.number if obj.content_object.intervention else ""
     return ""
 
 
@@ -87,7 +87,7 @@ def get_agreement_obj(obj):
             InterventionAttachment,
             TPMActivity
     )):
-        return obj.content_object.intervention.agreement
+        return obj.content_object.intervention.agreement if obj.content_object.intervention else None
     return ""
 
 
@@ -107,7 +107,7 @@ def denormalize_attachment(attachment):
     pd_ssfa_number = get_pd_ssfa_number(attachment)
     agreement_reference_number = get_agreement_reference_number(attachment)
     file_type = get_file_type(attachment)
-    uploaded_by = str(attachment.uploaded_by) if attachment.uploaded_by else ""
+    uploaded_by = attachment.uploaded_by.get_full_name() if attachment.uploaded_by else ""
 
     flat, created = AttachmentFlat.objects.update_or_create(
         attachment=attachment,

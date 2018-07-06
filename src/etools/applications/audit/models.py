@@ -4,7 +4,7 @@ from decimal import DivisionByZero, InvalidOperation
 from django.contrib.auth import get_user_model
 from django.contrib.postgres.fields import ArrayField, JSONField
 from django.core.exceptions import ValidationError
-from django.db import models, connection
+from django.db import connection, models
 from django.db.transaction import atomic
 from django.utils import timezone
 from django.utils.encoding import force_text
@@ -15,19 +15,22 @@ from model_utils import Choices, FieldTracker
 from model_utils.managers import InheritanceManager
 from model_utils.models import TimeStampedModel
 from ordered_model.models import OrderedModel
+from unicef_notification.utils import send_notification_with_template
 
 from etools.applications.action_points.models import ActionPoint
 from etools.applications.attachments.models import Attachment
 from etools.applications.audit.purchase_order.models import AuditorStaffMember, PurchaseOrder, PurchaseOrderItem
-from etools.applications.audit.transitions.conditions import (AuditSubmitReportRequiredFieldsCheck,
-                                                              EngagementHasReportAttachmentsCheck,
-                                                              EngagementSubmitReportRequiredFieldsCheck,
-                                                              SpecialAuditSubmitRelatedModelsCheck,
-                                                              SPSubmitReportRequiredFieldsCheck,
-                                                              ValidateMARiskCategories, ValidateMARiskExtra,)
+from etools.applications.audit.transitions.conditions import (
+    AuditSubmitReportRequiredFieldsCheck,
+    EngagementHasReportAttachmentsCheck,
+    EngagementSubmitReportRequiredFieldsCheck,
+    SpecialAuditSubmitRelatedModelsCheck,
+    SPSubmitReportRequiredFieldsCheck,
+    ValidateMARiskCategories,
+    ValidateMARiskExtra,
+)
 from etools.applications.audit.transitions.serializers import EngagementCancelSerializer
 from etools.applications.EquiTrack.utils import get_environment
-from etools.applications.notification.utils import send_notification_using_email_template
 from etools.applications.partners.models import PartnerOrganization, PartnerStaffMember
 from etools.applications.permissions2.fsm import has_action_permission
 from etools.applications.utils.common.models.fields import CodedGenericRelation
@@ -37,7 +40,6 @@ from etools.applications.utils.groups.wrappers import GroupWrapper
 
 
 class Engagement(InheritedModelMixin, TimeStampedModel, models.Model):
-
     TYPE_AUDIT = 'audit'
     TYPE_MICRO_ASSESSMENT = 'ma'
     TYPE_SPOT_CHECK = 'sc'
@@ -221,12 +223,8 @@ class Engagement(InheritedModelMixin, TimeStampedModel, models.Model):
     def reference_number(self):
         return self.unique_id
 
-    def get_mail_context(self, user=None):
-        object_url = self.get_object_url()
-
-        if user:
-            from etools.applications.tokens.utils import update_url_with_auth_token
-            object_url = update_url_with_auth_token(object_url, user)
+    def get_mail_context(self, **kwargs):
+        object_url = self.get_object_url(**kwargs)
 
         return {
             'unique_id': self.unique_id,
@@ -252,9 +250,9 @@ class Engagement(InheritedModelMixin, TimeStampedModel, models.Model):
             base_context.update(ctx)
             context = base_context
 
-            send_notification_using_email_template(
+            send_notification_with_template(
                 recipients=[focal_point.email],
-                email_template_name=template_name,
+                template_name=template_name,
                 context=context,
             )
 
@@ -277,8 +275,8 @@ class Engagement(InheritedModelMixin, TimeStampedModel, models.Model):
     def finalize(self):
         self.date_of_final_report = timezone.now()
 
-    def get_object_url(self):
-        return build_frontend_url('ap', 'engagements', self.id, 'overview')
+    def get_object_url(self, **kwargs):
+        return build_frontend_url('ap', 'engagements', self.id, 'overview', **kwargs)
 
 
 class RiskCategory(OrderedModel, models.Model):
@@ -438,8 +436,8 @@ class SpotCheck(Engagement):
     def __str__(self):
         return 'SpotCheck ({}: {}, {})'.format(self.engagement_type, self.agreement.order_number, self.partner.name)
 
-    def get_object_url(self):
-        return build_frontend_url('ap', 'spot-checks', self.id, 'overview')
+    def get_object_url(self, **kwargs):
+        return build_frontend_url('ap', 'spot-checks', self.id, 'overview', **kwargs)
 
 
 class Finding(models.Model):
@@ -541,8 +539,8 @@ class MicroAssessment(Engagement):
             self.engagement_type, self.agreement.order_number, self.partner.name
         )
 
-    def get_object_url(self):
-        return build_frontend_url('ap', 'micro-assessments', self.id, 'overview')
+    def get_object_url(self, **kwargs):
+        return build_frontend_url('ap', 'micro-assessments', self.id, 'overview', **kwargs)
 
 
 class DetailedFindingInfo(models.Model):
@@ -633,8 +631,8 @@ class Audit(Engagement):
     def __str__(self):
         return 'Audit ({}: {}, {})'.format(self.engagement_type, self.agreement.order_number, self.partner.name)
 
-    def get_object_url(self):
-        return build_frontend_url('ap', 'audits', self.id, 'overview')
+    def get_object_url(self, **kwargs):
+        return build_frontend_url('ap', 'audits', self.id, 'overview', **kwargs)
 
 
 class FinancialFinding(models.Model):
@@ -727,8 +725,8 @@ class SpecialAudit(Engagement):
     def __str__(self):
         return 'Special Audit ({}: {}, {})'.format(self.engagement_type, self.agreement.order_number, self.partner.name)
 
-    def get_object_url(self):
-        return build_frontend_url('ap', 'special-audits', self.id, 'overview')
+    def get_object_url(self, **kwargs):
+        return build_frontend_url('ap', 'special-audits', self.id, 'overview', **kwargs)
 
 
 class SpecificProcedure(models.Model):
@@ -789,10 +787,10 @@ class EngagementActionPoint(ActionPoint):
     def complete(self):
         self._do_complete()
 
-    def get_mail_context(self):
-        context = super(EngagementActionPoint, self).get_mail_context()
+    def get_mail_context(self, user=None, include_token=False):
+        context = super(EngagementActionPoint, self).get_mail_context(user=user, include_token=include_token)
         if self.engagement:
-            context['engagement'] = self.engagement_subclass.get_mail_context()
+            context['engagement'] = self.engagement_subclass.get_mail_context(user=user, include_token=include_token)
         return context
 
 

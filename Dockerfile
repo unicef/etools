@@ -39,7 +39,7 @@ RUN pip install --upgrade \
 # http://gis.stackexchange.com/a/74060
 ENV CPLUS_INCLUDE_PATH /usr/include/gdal
 ENV C_INCLUDE_PATH /usr/include/gdal
-ENV REQUIREMENTS_FILE production.txt
+ENV REQUIREMENTS_FILE base.txt
 
 ADD src/requirements/*.txt /pip/
 ADD src/requirements/$REQUIREMENTS_FILE /pip/app_requirements.txt

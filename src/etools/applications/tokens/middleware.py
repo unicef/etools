@@ -3,6 +3,8 @@ from django.contrib.auth import login
 from django.utils.deprecation import MiddlewareMixin
 
 from drfpasswordless.utils import authenticate_by_token
+from rest_framework.authentication import TokenAuthentication
+from rest_framework.exceptions import AuthenticationFailed
 
 
 class TokenAuthenticationMiddleware(MiddlewareMixin):
@@ -11,7 +13,14 @@ class TokenAuthenticationMiddleware(MiddlewareMixin):
         if token is None:
             return
 
-        user = authenticate_by_token(token)
+        try:
+            # attempt to auth via authtoken
+            token_auth = TokenAuthentication()
+            user, _ = token_auth.authenticate_credentials(token)
+        except AuthenticationFailed:
+            # attempt to auth by drfpasswordless
+            user = authenticate_by_token(token)
+
         if user is None:
             return
 

@@ -5,6 +5,7 @@ from django.test import SimpleTestCase
 from django.urls import reverse
 
 from rest_framework import status
+from unicef_snapshot.models import Activity
 
 from etools.applications.attachments.models import Attachment
 from etools.applications.attachments.tests.factories import (
@@ -25,7 +26,6 @@ from etools.applications.partners.tests.factories import (
     PartnerFactory,
 )
 from etools.applications.reports.tests.factories import CountryProgrammeFactory
-from etools.applications.snapshot.models import Activity
 from etools.applications.users.tests.factories import GroupFactory, UserFactory
 
 

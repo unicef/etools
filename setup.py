@@ -44,9 +44,7 @@ def get_requirements(env):
 
 
 install_requires = get_requirements('base')
-dev_requires = get_requirements('local')
 test_requires = get_requirements('test')
-optional_requires = get_requirements('production')
 
 setup(
     name=NAME,
@@ -64,7 +62,6 @@ setup(
     license='BSD',
     include_package_data=True,
     extras_require={
-        'dev': dev_requires,
         'test': test_requires,
     },
     classifiers=[

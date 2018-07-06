@@ -14,6 +14,7 @@ class GisLocationListSerializer(serializers.ModelSerializer):
         model = Location
         fields = (
             'id',
+            'parent_id',
             'name',
             'p_code',
             'gateway_id',
@@ -36,6 +37,7 @@ class GisLocationWktSerializer(serializers.ModelSerializer):
         model = Location
         fields = (
             'id',
+            'parent_id',
             'name',
             'p_code',
             'gateway_id',
@@ -53,6 +55,7 @@ class GisLocationGeojsonSerializer(GeoFeatureModelSerializer):
         geo_field = None
         fields = (
             'id',
+            'parent_id',
             'name',
             'p_code',
             'gateway_id',

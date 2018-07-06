@@ -1,9 +1,9 @@
 from rest_framework import serializers
 from rest_framework.serializers import ValidationError
+from unicef_snapshot.serializers import SnapshotModelSerializer
 
 from etools.applications.attachments.serializers import AttachmentSerializerMixin
 from etools.applications.attachments.serializers_fields import AttachmentSingleFileField
-from etools.applications.EquiTrack.serializers import SnapshotModelSerializer
 from etools.applications.partners.models import Agreement, AgreementAmendment
 from etools.applications.partners.permissions import AgreementPermissions
 from etools.applications.partners.serializers.partner_organization_v2 import (
@@ -43,6 +43,7 @@ class AgreementListSerializer(serializers.ModelSerializer):
         fields = (
             "id",
             "partner",
+            "country_programme",
             "agreement_number",
             "partner_name",
             "agreement_type",

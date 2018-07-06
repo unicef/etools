@@ -117,7 +117,7 @@ class TestSendPCARequiredNotification(BaseTenantTestCase):
     @classmethod
     def setUpTestData(cls):
         call_command("update_notifications")
-        cls.send_path = "etools.applications.partners.utils.send_notification_using_email_template"
+        cls.send_path = "etools.applications.partners.utils.send_notification_with_template"
 
     def setUp(self):
         self.lead_date = datetime.date.today() + datetime.timedelta(
@@ -154,7 +154,7 @@ class TestSendPCAMissingNotification(BaseTenantTestCase):
     @classmethod
     def setUpTestData(cls):
         call_command("update_notifications")
-        cls.send_path = "etools.applications.partners.utils.send_notification_using_email_template"
+        cls.send_path = "etools.applications.partners.utils.send_notification_with_template"
 
     def test_cp_current(self):
         date_past = datetime.date.today() - datetime.timedelta(days=10)

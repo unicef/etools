@@ -7,10 +7,10 @@ from django.db.models import Q
 from django.utils import timezone
 
 from rest_framework import serializers
+from unicef_snapshot.serializers import SnapshotModelSerializer
 
 from etools.applications.attachments.serializers import AttachmentSerializerMixin
 from etools.applications.attachments.serializers_fields import AttachmentSingleFileField
-from etools.applications.EquiTrack.serializers import SnapshotModelSerializer
 from etools.applications.partners.models import (
     Assessment,
     Intervention,
@@ -263,6 +263,9 @@ class PartnerOrganizationDetailSerializer(serializers.ModelSerializer):
     hact_min_requirements = serializers.JSONField(read_only=True)
     hidden = serializers.BooleanField(read_only=True)
     planned_visits = PartnerPlannedVisitsSerializer(many=True, read_only=True, required=False)
+
+    partner_type_slug = serializers.ReadOnlyField()
+    flags = serializers.ReadOnlyField()
 
     def get_hact_values(self, obj):
         return json.loads(obj.hact_values) if isinstance(obj.hact_values, str) else obj.hact_values

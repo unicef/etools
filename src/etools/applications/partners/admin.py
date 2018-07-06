@@ -7,10 +7,10 @@ from django.utils.safestring import mark_safe
 from django.utils.translation import ugettext_lazy as _
 
 from import_export.admin import ExportMixin
+from unicef_snapshot.admin import ActivityInline, SnapshotModelAdmin
 
 from etools.applications.attachments.admin import AttachmentSingleInline
 from etools.applications.attachments.models import Attachment
-from etools.applications.EquiTrack.admin import ActivityInline, SnapshotModelAdmin
 from etools.applications.partners.exports import PartnerExport
 from etools.applications.partners.forms import (
     PartnersAdminForm,

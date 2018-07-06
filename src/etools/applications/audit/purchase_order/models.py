@@ -2,10 +2,10 @@ from django.db import models
 from django.utils.translation import ugettext_lazy as _
 
 from model_utils.models import TimeStampedModel
+from unicef_notification.utils import send_notification_with_template
 
 from etools.applications.EquiTrack.utils import get_environment
 from etools.applications.firms.models import BaseFirm, BaseStaffMember
-from etools.applications.notification.utils import send_notification_using_email_template
 
 
 class AuditorFirm(BaseFirm):
@@ -26,13 +26,13 @@ class AuditorStaffMember(BaseStaffMember):
     def send_user_appointed_email(self, engagement):
         context = {
             'environment': get_environment(),
-            'engagement': engagement.get_mail_context(user=self.user),
+            'engagement': engagement.get_mail_context(user=self.user, include_token=True),
             'staff_member': self.user.get_full_name(),
         }
 
-        send_notification_using_email_template(
+        send_notification_with_template(
             recipients=[self.user.email],
-            email_template_name='audit/engagement/submit_to_auditor',
+            template_name='audit/engagement/submit_to_auditor',
             context=context,
         )
 

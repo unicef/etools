@@ -4,11 +4,11 @@
             "model": "partners.partnerorganization",
             "pk": 101,
             "fields": {
-                "created": "2018-06-13T02:58:17.977Z",
-                "modified": "2018-06-13T02:58:17.982Z",
+                "created": "2018-06-13T19:32:09.054Z",
+                "modified": "2018-06-13T19:32:09.057Z",
                 "partner_type": "Civil Society Organization",
                 "cso_type": "International",
-                "name": "Partner 8",
+                "name": "Partner 4",
                 "short_name": "Short name",
                 "description": "",
                 "shared_with": null,
@@ -77,6 +77,56 @@
                         }
                     },
                     "outstanding_findings": 0
+                },
+                "basis_for_risk_rating": ""
+            }
+        },
+        "deps": []
+    },
+    "partner_not_programmatic_visit_compliant": {
+        "master": {
+            "model": "partners.partnerorganization",
+            "pk": 1,
+            "fields": {
+                "created": "2018-06-18T17:32:34.863Z",
+                "modified": "2018-06-18T17:32:34.865Z",
+                "partner_type": "",
+                "cso_type": null,
+                "name": "Partner 1",
+                "short_name": "",
+                "description": "",
+                "shared_with": null,
+                "street_address": null,
+                "city": null,
+                "postal_code": null,
+                "country": null,
+                "address": null,
+                "email": null,
+                "phone_number": null,
+                "vendor_number": null,
+                "alternate_id": null,
+                "alternate_name": null,
+                "rating": null,
+                "type_of_assessment": null,
+                "last_assessment_date": null,
+                "core_values_assessment_date": null,
+                "core_values_assessment": "",
+                "vision_synced": false,
+                "blocked": false,
+                "deleted_flag": false,
+                "manually_blocked": false,
+                "hidden": false,
+                "total_ct_cp": null,
+                "total_ct_cy": null,
+                "net_ct_cy": "2501.00",
+                "reported_cy": null,
+                "total_ct_ytd": null,
+                "hact_values": {
+                    "programmatic_visits": {
+                        "completed": {
+                            "total": 0
+                        }
+                    }
                 },
                 "basis_for_risk_rating": ""
             }
