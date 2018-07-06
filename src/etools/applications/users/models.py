@@ -103,7 +103,6 @@ class Country(TenantMixin):
 
     # TODO: rename the related name as it's inappropriate for relating offices to countries.. should be office_countries
     offices = models.ManyToManyField('Office', related_name='offices', verbose_name=_('Offices'))
-    sections = models.ManyToManyField('Section', related_name='sections', verbose_name=_('Sections'))
 
     threshold_tre_usd = models.DecimalField(max_digits=20, decimal_places=4, default=None, null=True,
                                             verbose_name=_('Threshold TRE (USD)'))
@@ -197,17 +196,6 @@ class Office(models.Model):
         ordering = ('name', )
 
 
-class CountrySectionManager(models.Manager):
-    def get_queryset(self):
-        if hasattr(connection.tenant, 'id') and connection.tenant.schema_name != 'public':
-            return super(CountrySectionManager, self).get_queryset().filter(sections=connection.tenant)
-        else:
-            # this only gets called on initialization because FakeTenant does not have the model attrs
-            # see:
-            # https://github.com/bernardopires/django-tenant-schemas/blob/90f8b147adb4ea5ccc0d723f3e50bc9178857d65/tenant_schemas/postgresql_backend/base.py#L153
-            return super(CountrySectionManager, self).get_queryset()
-
-
 class Section(models.Model):
     """
     Represents a section for the country
@@ -215,8 +203,6 @@ class Section(models.Model):
 
     name = models.CharField(max_length=64, unique=True, verbose_name=_('Name'))
     code = models.CharField(max_length=32, null=True, unique=True, blank=True, verbose_name=_('Code'))
-
-    objects = CountrySectionManager()
 
     def __str__(self):
         return self.name
@@ -254,10 +240,6 @@ class UserProfile(models.Model):
     )
     countries_available = models.ManyToManyField(Country, blank=True, related_name="accessible_by",
                                                  verbose_name=_('Countries Available'))
-    section = models.ForeignKey(
-        Section, null=True, blank=True, verbose_name=_('Section'),
-        on_delete=models.CASCADE,
-    )
     office = models.ForeignKey(
         Office, null=True, blank=True, verbose_name=_('Office'),
         on_delete=models.CASCADE,
@@ -278,9 +260,6 @@ class UserProfile(models.Model):
                                    blank=True, null=True, verbose_name=_('Supervisor'))
     oic = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, verbose_name=_('OIC'),
                             null=True, blank=True)  # related oic_set
-
-    # TODO: refactor when sections are properly set
-    section_code = models.CharField(max_length=32, null=True, blank=True, verbose_name=_('Section Code'))
 
     # TODO: figure this out when we need to autmatically map to groups
     # vision_roles = ArrayField(models.CharField(max_length=20, blank=True, choices=VISION_ROLES),

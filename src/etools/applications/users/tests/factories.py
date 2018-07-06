@@ -36,22 +36,6 @@ class OfficeFactory(factory.django.DjangoModelFactory):
         return obj
 
 
-class SectionFactory(factory.django.DjangoModelFactory):
-    class Meta:
-        model = models.Section
-
-    name = FuzzyText()
-
-    @classmethod
-    def _create(cls, model_class, *args, **kwargs):
-        obj = super(SectionFactory, cls)._create(model_class, *args, **kwargs)
-
-        if hasattr(connection.tenant, 'id') and connection.tenant.schema_name != 'public':
-            connection.tenant.sections.add(obj)
-
-        return obj
-
-
 class CountryFactory(factory.django.DjangoModelFactory):
     class Meta:
         model = models.Country
@@ -69,7 +53,6 @@ class ProfileFactory(factory.django.DjangoModelFactory):
 
     country = factory.SubFactory(CountryFactory)
     office = factory.SubFactory(OfficeFactory)
-    section = factory.SubFactory(SectionFactory)
     job_title = 'Chief Tester'
     phone_number = '0123456789'
     # We pass in profile=None to prevent UserFactory from creating another profile
