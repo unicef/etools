@@ -8,17 +8,11 @@ from tablib.core import Dataset
 from etools.applications.EquiTrack.tests.cases import BaseTenantTestCase
 from etools.applications.locations.tests.factories import LocationFactory
 from etools.applications.partners.tests.factories import (
-    AgreementFactory,
-    InterventionAmendmentFactory,
-    InterventionAttachmentFactory,
-    InterventionBudgetFactory,
-    InterventionFactory,
-    InterventionResultLinkFactory,
-    InterventionSectorLocationLinkFactory,
-    PartnerFactory,
-    PartnerStaffFactory,
-)
-from etools.applications.reports.tests.factories import CountryProgrammeFactory, IndicatorFactory, ResultFactory, SectorFactory
+    AgreementFactory, InterventionAmendmentFactory, InterventionAttachmentFactory, InterventionBudgetFactory,
+    InterventionFactory, InterventionResultLinkFactory, InterventionSectorLocationLinkFactory,
+    PartnerFactory, PartnerStaffFactory,)
+from etools.applications.reports.tests.factories import (
+    CountryProgrammeFactory, IndicatorFactory, ResultFactory, SectorFactory,)
 from etools.applications.users.tests.factories import UserFactory
 
 
@@ -106,7 +100,7 @@ class TestInterventionModelExport(BaseInterventionModelExportTestCase):
         self.assertEqual(dataset.height, 1)
         self.assertEqual(dataset._get_headers(), [
             "Partner",
-            "Vendor #",
+            "Vendor Number",
             "Status",
             "Partner Type",
             "Agreement",
@@ -414,6 +408,7 @@ class TestInterventionLocationExport(BaseInterventionModelExportTestCase):
     def test_intervention_location_export(self):
         # First intervention was already created for us in setUpTestData
         partner_name = self.intervention.agreement.partner.name
+        partner_vendor_code = self.intervention.agreement.partner.vendor_number
 
         # Assign known dates that we can test for in the output later on
         self.intervention.start = datetime.date(2013, 1, 6)
@@ -435,21 +430,27 @@ class TestInterventionLocationExport(BaseInterventionModelExportTestCase):
         )
 
         # Some results
-        InterventionResultLinkFactory(cp_output=ResultFactory(sector=sec1, name='Result A'), intervention=self.intervention)
-        InterventionResultLinkFactory(cp_output=ResultFactory(sector=sec1, name='Result B'), intervention=self.intervention)
+        InterventionResultLinkFactory(cp_output=ResultFactory(sector=sec1, name='Result A'),
+                                      intervention=self.intervention)
+        InterventionResultLinkFactory(cp_output=ResultFactory(sector=sec1, name='Result B'),
+                                      intervention=self.intervention)
 
         # Another intervention, with no locations
-        self.intervention2 = InterventionFactory(agreement=AgreementFactory(partner=PartnerFactory(name='Partner 2')))
+        self.intervention2 = InterventionFactory(
+            agreement=AgreementFactory(partner=PartnerFactory(name='Partner 2', vendor_number='123')))
         # Sections
         sec2 = SectorFactory(name='Sector 2')
         sec3 = SectorFactory(name='Sector 3')
         self.intervention2.sections.add(sec2, sec3)
         # Results
-        InterventionResultLinkFactory(cp_output=ResultFactory(sector=sec2, name='Result C'), intervention=self.intervention2)
-        InterventionResultLinkFactory(cp_output=ResultFactory(sector=sec3, name='Result D'), intervention=self.intervention2)
+        InterventionResultLinkFactory(
+            cp_output=ResultFactory(sector=sec2, name='Result C'), intervention=self.intervention2)
+        InterventionResultLinkFactory(
+            cp_output=ResultFactory(sector=sec3, name='Result D'), intervention=self.intervention2)
 
         # Intervention with no sectors
-        self.intervention3 = InterventionFactory(agreement=AgreementFactory(partner=PartnerFactory(name='Partner 3')))
+        self.intervention3 = InterventionFactory(
+            agreement=AgreementFactory(partner=PartnerFactory(name='Partner 3', vendor_number='456')))
         self.intervention3.flat_locations.add(LocationFactory(name='Location 2'))
         InterventionResultLinkFactory(intervention=self.intervention3, cp_output=ResultFactory(name='Result Fred'))
 
@@ -466,9 +467,9 @@ class TestInterventionLocationExport(BaseInterventionModelExportTestCase):
         self.assertEqual(200, response.status_code, msg=response.content.decode('utf-8'))
         result = response.content.decode('utf-8')
 
-        today = datetime.date.today()
+        today = '{:%Y_%m_%d}'.format(datetime.date.today())
         self.assertEqual(
-            f'attachment;filename={today.year}_{today.month}_{today.day}_TST_Interventions.csv',
+            f'attachment;filename=PD_locations_as_of_{today}_TST.csv',
             response['Content-Disposition'],
         )
 
@@ -481,13 +482,13 @@ class TestInterventionLocationExport(BaseInterventionModelExportTestCase):
         agreement_number_2 = self.intervention2.agreement.agreement_number
         agreement_number_3 = self.intervention3.agreement.agreement_number
         self.assertEqual(
-            f'Partner,PD Ref Number,Partnership,Status,Location,Section,CP output,Start Date,End Date,Name of UNICEF Focal Point,Hyperlink\r\n'
-            f'{partner_name},{self.intervention.number},{agreement_number_1},draft,Location 0,Sector 0,"Result A, Result B",2013-01-06,2013-03-20,"Jack Bennie, Phil Silver",https://testserver/pmp/interventions/{self.intervention.id}/details/\r\n'
-            f'{partner_name},{self.intervention.number},{agreement_number_1},draft,Location 1,Sector 0,"Result A, Result B",2013-01-06,2013-03-20,"Jack Bennie, Phil Silver",https://testserver/pmp/interventions/{self.intervention.id}/details/\r\n'
-            f'{partner_name},{self.intervention.number},{agreement_number_1},draft,Location 0,Sector 1,"Result A, Result B",2013-01-06,2013-03-20,"Jack Bennie, Phil Silver",https://testserver/pmp/interventions/{self.intervention.id}/details/\r\n'
-            f'{partner_name},{self.intervention.number},{agreement_number_1},draft,Location 1,Sector 1,"Result A, Result B",2013-01-06,2013-03-20,"Jack Bennie, Phil Silver",https://testserver/pmp/interventions/{self.intervention.id}/details/\r\n'
-            f'Partner 2,{self.intervention2.number},{agreement_number_2},draft,,Sector 2,"Result C, Result D",,,,https://testserver/pmp/interventions/{self.intervention2.id}/details/\r\n'
-            f'Partner 2,{self.intervention2.number},{agreement_number_2},draft,,Sector 3,"Result C, Result D",,,,https://testserver/pmp/interventions/{self.intervention2.id}/details/\r\n'
-            f'Partner 3,{self.intervention3.number},{agreement_number_3},draft,Location 2,,Result Fred,,,,https://testserver/pmp/interventions/{self.intervention3.id}/details/\r\n',
+            f'Partner,Vendor Number,PD Ref Number,Agreement,Status,Location,Section,CP output,Start Date,End Date,Name of UNICEF Focal Point,Hyperlink\r\n'
+            f'{partner_name},{partner_vendor_code},{self.intervention.number},{agreement_number_1},draft,Location 0,Sector 0,"Result A, Result B",2013-01-06,2013-03-20,"Jack Bennie, Phil Silver",https://testserver/pmp/interventions/{self.intervention.id}/details/\r\n'
+            f'{partner_name},{partner_vendor_code},{self.intervention.number},{agreement_number_1},draft,Location 1,Sector 0,"Result A, Result B",2013-01-06,2013-03-20,"Jack Bennie, Phil Silver",https://testserver/pmp/interventions/{self.intervention.id}/details/\r\n'
+            f'{partner_name},{partner_vendor_code},{self.intervention.number},{agreement_number_1},draft,Location 0,Sector 1,"Result A, Result B",2013-01-06,2013-03-20,"Jack Bennie, Phil Silver",https://testserver/pmp/interventions/{self.intervention.id}/details/\r\n'
+            f'{partner_name},{partner_vendor_code},{self.intervention.number},{agreement_number_1},draft,Location 1,Sector 1,"Result A, Result B",2013-01-06,2013-03-20,"Jack Bennie, Phil Silver",https://testserver/pmp/interventions/{self.intervention.id}/details/\r\n'
+            f'Partner 2,123,{self.intervention2.number},{agreement_number_2},draft,,Sector 2,"Result C, Result D",,,,https://testserver/pmp/interventions/{self.intervention2.id}/details/\r\n'
+            f'Partner 2,123,{self.intervention2.number},{agreement_number_2},draft,,Sector 3,"Result C, Result D",,,,https://testserver/pmp/interventions/{self.intervention2.id}/details/\r\n'
+            f'Partner 3,456,{self.intervention3.number},{agreement_number_3},draft,Location 2,,Result Fred,,,,https://testserver/pmp/interventions/{self.intervention3.id}/details/\r\n',
             result,
         )

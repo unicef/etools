@@ -221,7 +221,10 @@ class InterventionListAPIView(QueryStringFilterMixin, ExportModelMixin, Interven
         response = super(InterventionListAPIView, self).list(request)
         if "format" in query_params.keys():
             if query_params.get("format") in ['csv', "csv_flat"]:
-                response['Content-Disposition'] = "attachment;filename=interventions.csv"
+                country = Country.objects.get(schema_name=connection.schema_name)
+                today = '{:%Y_%m_%d}'.format(datetime.date.today())
+                filename = f"PD_budget_as_of_{today}_{country.country_short_code}"
+                response['Content-Disposition'] = f"attachment;filename={filename}.csv"
 
         return response
 
@@ -751,8 +754,8 @@ class InterventionLocationListAPIView(ListAPIView):
         query_params = self.request.query_params
         if query_params.get("format") in ['csv', 'csv_flat']:
             country = Country.objects.get(schema_name=connection.schema_name)
-            today = datetime.date.today()
-            filename = f"{today.year}_{today.month}_{today.day}_{country.country_short_code}_Interventions"
+            today = '{:%Y_%m_%d}'.format(datetime.date.today())
+            filename = f"PD_locations_as_of_{today}_{country.country_short_code}"
             response['Content-Disposition'] = "attachment;filename=%s.csv" % filename
 
         return response
