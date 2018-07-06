@@ -8,7 +8,13 @@ from carto.sql import SQLClient
 from celery.utils.log import get_task_logger
 
 from etools.applications.locations.auth import EtoolsCartoNoAuthClient
-from etools.applications.locations.models import CartoDBTable, Location
+from etools.applications.locations.models import CartoDBTable, Location, LocationRemapHistory
+from etools.applications.partners.models import Intervention
+from etools.applications.reports.models import AppliedIndicator
+from etools.applications.t2f.models import TravelActivity
+from etools.applications.activities.models import Activity
+from etools.applications.action_points.models import ActionPoint
+from django.contrib.contenttypes.models import ContentType
 from etools.config.celery import app
 
 logger = get_task_logger(__name__)
@@ -104,6 +110,62 @@ def create_location(pcode, carto_table, parent, parent_instance,
                 remapped_location.name,
                 carto_table.location_type.name
             ))
+
+            # save remap history
+            intervention_old_locations = Intervention.flat_locations.get(id=remapped_location.id)
+            if intervention_old_locations:
+                ctp = ContentType.objects.get(app_label='partners', model='intervention')
+                for old_location in intervention_old_locations:
+                    LocationRemapHistory.objects.create(
+                        old_location=remapped_location,
+                        new_location=location,
+                        content_type=ctp,
+                        object_id=old_location.intervention_flat_locations.id,
+                    )
+
+            appliedindicator_old_locations = AppliedIndicator.locations.get(id=remapped_location.id)
+            if appliedindicator_old_locations:
+                ctp = ContentType.objects.get(app_label='reports', model='appliedindicator')
+                for old_location in appliedindicator_old_locations:
+                    LocationRemapHistory.objects.create(
+                        old_location=remapped_location,
+                        new_location=location,
+                        content_type=ctp,
+                        object_id=old_location.applied_indicators.id,
+                    )
+
+            travelactivity_old_locations = TravelActivity.locations.get(id=remapped_location.id)
+            if travelactivity_old_locations:
+                ctp = ContentType.objects.get(app_label='t2f', model='travelactivity')
+                for old_location in travelactivity_old_locations:
+                    LocationRemapHistory.objects.create(
+                        old_location=remapped_location,
+                        new_location=location,
+                        content_type=ctp,
+                        #object_id=old_location.???.id,
+                    )
+
+            activities_old_locations = Activity.locations.get(id=remapped_location.id)
+            if activities_old_locations:
+                ctp = ContentType.objects.get(app_label='activities', model='activity')
+                for old_location in activities_old_locations:
+                    LocationRemapHistory.objects.create(
+                        old_location=remapped_location,
+                        new_location=location,
+                        content_type=ctp,
+                        #object_id=old_location.???.id,
+                    )
+
+            actionpoints_old = ActionPoint.get(location__id=remapped_location.id)
+            if actionpoints_old:
+                ctp = ContentType.objects.get(app_label='action_points', model='actionpoint')
+                for actionpoint in actionpoints_old:
+                    LocationRemapHistory.objects.create(
+                        old_location=remapped_location,
+                        new_location=location,
+                        content_type=ctp,
+                        object_id=actionpoint.id,
+                    )
 
         sites_updated += 1
         logger.info('{}: {} ({})'.format(
