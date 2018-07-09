@@ -22,6 +22,7 @@ from rest_framework.renderers import JSONRenderer
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework_csv import renderers as r
+from unicef_snapshot.models import Activity
 
 from etools.applications.environment.helpers import tenant_switch_is_active
 from etools.applications.EquiTrack.mixins import ExportModelMixin, QueryStringFilterMixin
@@ -88,7 +89,6 @@ from etools.applications.reports.serializers.v2 import (
     AppliedIndicatorSerializer,
     LowerResultSimpleCUSerializer,
 )
-from etools.applications.snapshot.models import Activity
 from etools.applications.users.models import Country
 from etools_validator.mixins import ValidatorViewMixin
 
@@ -549,10 +549,7 @@ class InterventionListMapView(ListCreateAPIView):
     permission_classes = (IsAdminUser,)
 
     def get_queryset(self):
-        q = Intervention.objects
-        # TODO: remember to add back the location filter after the PRP integration related structural changes are final
-        # .filter(sector_locations__isnull=False).exclude(sector_locations__locations=None)\
-        # .prefetch_related('sector_locations__locations')
+        q = Intervention.objects.prefetch_related("flat_locations")
 
         query_params = self.request.query_params
 

@@ -21,15 +21,15 @@ class TestAPIAgreements(ApiCheckerMixin, AssertTimeStampedMixin, BaseTenantTestC
 
     def test_agreement_detail(self):
         url = reverse("partners_api:agreement-detail", args=[self.get_fixture('agreement').pk])
-        self.assertAPI(url)
+        self.assertGET(url)
 
     def test_agreement_list(self):
         url = reverse("partners_api:agreement-list")
-        self.assertAPI(url)
+        self.assertGET(url)
 
     def test_agreement_amendement_list(self):
         url = reverse("partners_api:agreement-amendment-list")
-        self.assertAPI(url)
+        self.assertGET(url)
 
 
 class TestAPIIntervention(BaseTenantTestCase, metaclass=ViewSetChecker):

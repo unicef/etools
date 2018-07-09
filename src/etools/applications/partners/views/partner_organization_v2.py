@@ -209,6 +209,7 @@ class PartnerOrganizationHactAPIView(ListAPIView):
         'staff_members', 'assessments').active()
     serializer_class = PartnerOrganizationHactSerializer
     renderer_classes = (r.JSONRenderer, PartnerOrganizationHactCsvRenderer)
+    filename = 'detailed_hact_dashboard'
 
     def list(self, request, format=None):
         """
@@ -219,12 +220,13 @@ class PartnerOrganizationHactAPIView(ListAPIView):
         response = super(PartnerOrganizationHactAPIView, self).list(request)
         if "format" in query_params.keys():
             if query_params.get("format") == 'csv':
-                response['Content-Disposition'] = "attachment;filename=hact_dashboard.csv"
+                response['Content-Disposition'] = f"attachment;filename={self.filename}.csv"
         return response
 
 
 class PartnerOrganizationSimpleHactAPIView(PartnerOrganizationHactAPIView):
     renderer_classes = (r.JSONRenderer, PartnerOrganizationSimpleHactCsvRenderer)
+    filename = 'hact_dashboard'
 
 
 class PlannedEngagementAPIView(ListAPIView):

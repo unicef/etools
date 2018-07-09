@@ -12,6 +12,7 @@ from django.utils import timezone
 from rest_framework import status
 from rest_framework.exceptions import ErrorDetail
 from rest_framework.test import APIRequestFactory
+from unicef_snapshot.models import Activity
 
 from etools.applications.environment.helpers import tenant_switch_is_active
 from etools.applications.environment.models import TenantSwitch
@@ -34,7 +35,6 @@ from etools.applications.reports.models import AppliedIndicator, ReportingRequir
 from etools.applications.reports.tests.factories import (AppliedIndicatorFactory, CountryProgrammeFactory,
                                                          IndicatorFactory, LowerResultFactory,
                                                          ReportingRequirementFactory, ResultFactory, SectorFactory,)
-from etools.applications.snapshot.models import Activity
 from etools.applications.users.tests.factories import GroupFactory, UserFactory
 from etools.applications.utils.common.utils import get_all_field_names
 
@@ -1918,8 +1918,10 @@ class TestInterventionReportingRequirementView(BaseTenantTestCase):
             user=self.unicef_staff,
             data={
                 "reporting_requirements": [{
+                    "start_date": datetime.date(2001, 3, 15),
                     "due_date": datetime.date(2001, 4, 15),
                 }, {
+                    "start_date": datetime.date(2001, 4, 16),
                     "due_date": datetime.date(2001, 5, 15),
                 }]
             }

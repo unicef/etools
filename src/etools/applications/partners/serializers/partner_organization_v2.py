@@ -7,9 +7,9 @@ from django.db.models import Q
 from django.utils import timezone
 
 from rest_framework import serializers
+from unicef_snapshot.serializers import SnapshotModelSerializer
 
 from etools.applications.attachments.serializers_fields import AttachmentSingleFileField
-from etools.applications.EquiTrack.serializers import SnapshotModelSerializer
 from etools.applications.partners.models import (
     Assessment,
     Intervention,

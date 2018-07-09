@@ -1,4 +1,3 @@
-
 import os
 import tempfile
 from datetime import timedelta
@@ -8,12 +7,16 @@ from django.core.files import File
 from django.core.management import call_command
 from django.utils import timezone
 
-from post_office.models import EmailTemplate
+from unicef_notification.models import EmailTemplate
 
 from etools.applications.attachments.models import Attachment, FileType
 from etools.applications.audit.models import RiskBluePrint
-from etools.applications.audit.tests.factories import (AuditorStaffMemberFactory,
-                                                       AuditPartnerFactory, RiskFactory, UserFactory,)
+from etools.applications.audit.tests.factories import (
+    AuditorStaffMemberFactory,
+    AuditPartnerFactory,
+    RiskFactory,
+    UserFactory,
+)
 from etools.applications.utils.groups.wrappers import GroupWrapper
 
 
