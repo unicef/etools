@@ -38,7 +38,7 @@ class TravelActivityList(BaseTenantTestCase):
 
         response_json = json.loads(response.rendered_content)
         expected_keys = ['primary_traveler', 'travel_type', 'date', 'locations', 'status', 'reference_number',
-                         'trip_id']
+                         'trip_id', 'travel_end_dates']
 
         self.assertEqual(len(response_json), 1)
         self.assertKeysIn(expected_keys, response_json[0], exact=True)

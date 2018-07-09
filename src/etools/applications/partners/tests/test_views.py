@@ -18,25 +18,53 @@ from rest_framework import status
 from rest_framework.test import APIRequestFactory
 from unicef_snapshot.models import Activity
 
+from etools.applications.attachments.tests.factories import AttachmentFileTypeFactory
 from etools.applications.EquiTrack.tests.cases import BaseTenantTestCase
 from etools.applications.EquiTrack.tests.mixins import URLAssertionMixin
 from etools.applications.funds.models import FundsCommitmentHeader, FundsCommitmentItem
 from etools.applications.funds.tests.factories import FundsReservationHeaderFactory
-from etools.applications.partners.models import (Agreement, AgreementAmendment, Assessment, FileType, Intervention,
-                                                 InterventionAmendment, InterventionAttachment, InterventionBudget,
-                                                 InterventionPlannedVisits, InterventionReportingPeriod,
-                                                 InterventionSectorLocationLink, PartnerOrganization, PartnerType,)
+from etools.applications.partners.models import (
+    Agreement,
+    AgreementAmendment,
+    Assessment,
+    FileType,
+    Intervention,
+    InterventionAmendment,
+    InterventionAttachment,
+    InterventionBudget,
+    InterventionPlannedVisits,
+    InterventionReportingPeriod,
+    InterventionSectorLocationLink,
+    PartnerOrganization,
+    PartnerType,
+)
 from etools.applications.partners.permissions import READ_ONLY_API_GROUP_NAME
-from etools.applications.partners.serializers.exports.partner_organization import PartnerOrganizationExportSerializer
-from etools.applications.partners.tests.factories import (AgreementAmendmentFactory, AgreementFactory,
-                                                          InterventionFactory, InterventionReportingPeriodFactory,
-                                                          InterventionResultLinkFactory, PartnerFactory,
-                                                          PartnerStaffFactory, PlannedEngagementFactory,)
+from etools.applications.partners.serializers.exports.partner_organization import (
+    PartnerOrganizationExportSerializer,
+)
+from etools.applications.partners.tests.factories import (
+    AgreementAmendmentFactory,
+    AgreementFactory,
+    InterventionFactory,
+    InterventionReportingPeriodFactory,
+    InterventionResultLinkFactory,
+    PartnerFactory,
+    PartnerStaffFactory,
+    PlannedEngagementFactory,
+)
 from etools.applications.partners.views import partner_organization_v2, v2
 from etools.applications.reports.models import ResultType
-from etools.applications.reports.tests.factories import (CountryProgrammeFactory, ResultFactory,
-                                                         ResultTypeFactory, SectorFactory,)
-from etools.applications.users.tests.factories import GroupFactory, OfficeFactory, UserFactory
+from etools.applications.reports.tests.factories import (
+    CountryProgrammeFactory,
+    ResultFactory,
+    ResultTypeFactory,
+    SectorFactory,
+)
+from etools.applications.users.tests.factories import (
+    GroupFactory,
+    OfficeFactory,
+    UserFactory,
+)
 
 
 class URLsTestCase(URLAssertionMixin, SimpleTestCase):
@@ -827,6 +855,9 @@ class TestAgreementCreateAPIView(BaseTenantTestCase):
         cls.partnership_manager_user.groups.add(GroupFactory())
         cls.partnership_manager_user.profile.partner_staff_member = partner_staff.id
         cls.partnership_manager_user.save()
+        cls.file_type_agreement = AttachmentFileTypeFactory(
+            code="partners_agreement"
+        )
 
     def test_minimal_create(self):
         '''Test passing as few fields as possible to create'''
@@ -885,6 +916,9 @@ class TestAgreementAPIFileAttachments(BaseTenantTestCase):
             agreement_type=Agreement.MOU,
             partner=cls.partner,
             attached_agreement=None,
+        )
+        cls.file_type_agreement = AttachmentFileTypeFactory(
+            code="partners_agreement"
         )
 
     def _get_and_assert_response(self):
@@ -1050,6 +1084,9 @@ class TestAgreementAPIView(BaseTenantTestCase):
         cls.intervention = InterventionFactory(
             agreement=cls.agreement,
             document_type=Intervention.PD)
+        cls.file_type_agreement = AttachmentFileTypeFactory(
+            code="partners_agreement"
+        )
 
     def test_cp_end_date_update(self):
         data = {
