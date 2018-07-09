@@ -94,7 +94,7 @@ class TestPartnerOrganizationDetailAPIView(BaseTenantTestCase):
         response = self.forced_auth_req(
             'patch',
             self.url,
-            data={"core_values_assessment_attachment": attachment.pk},
+            data={"core_values_assessments": [{"attachment": attachment.pk}]},
             user=self.unicef_staff
         )
         data = json.loads(response.rendered_content)

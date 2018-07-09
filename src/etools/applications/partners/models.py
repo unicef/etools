@@ -635,6 +635,10 @@ class PartnerOrganization(TimeStampedModel):
         else:
             return PartnerOrganization.ASSURANCE_PARTIAL
 
+    @cached_property
+    def current_core_value_assessment(self):
+        return self.core_values_assessments.filter(archived=False).first()
+
     def planned_visits_to_hact(self):
         """For current year sum all programmatic values of planned visits
         records for partner
@@ -819,6 +823,19 @@ class PartnerOrganization(TimeStampedModel):
     def get_admin_url(self):
         admin_url_name = 'admin:partners_partnerorganization_change'
         return reverse(admin_url_name, args=(self.id,))
+
+
+class CoreValuesAssessment(TimeStampedModel):
+    partner = models.ForeignKey(PartnerOrganization, verbose_name=_("Partner"), related_name='core_values_assessments',
+                                on_delete=models.CASCADE)
+
+    date = models.DateField(verbose_name=_('Date positively assessed against core values'), blank=True, null=True)
+    attachment_file = models.FileField(verbose_name=_("Core Values Assessment"), blank=True, null=True,
+                                       upload_to='partners/core_values/', max_length=1024,
+                                       help_text='Only required for CSO partners')
+    attachment = CodedGenericRelation(Attachment, verbose_name=_('Core Values Assessment'), blank=True, null=True,
+                                      code='partners_partner_assessment', help_text='Only required for CSO partners')
+    archived = models.BooleanField(default=False)
 
 
 class PartnerStaffMemberManager(models.Manager):
