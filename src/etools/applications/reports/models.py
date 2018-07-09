@@ -607,7 +607,7 @@ class AppliedIndicator(TimeStampedModel):
     )
 
     target = JSONField(default=dict([('d', 1), ('v', 0)]))
-    baseline = JSONField(default=dict([('d', 1), ('v', 0)]))
+    baseline = JSONField(default=dict([('d', 1), ('v', 0)]), null=True)
 
     assumptions = models.TextField(
         verbose_name=_("Assumptions"),
