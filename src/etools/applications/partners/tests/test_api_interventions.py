@@ -13,15 +13,25 @@ from rest_framework import status
 from rest_framework.test import APIRequestFactory
 from unicef_snapshot.models import Activity
 
+from etools.applications.attachments.models import Attachment
+from etools.applications.attachments.tests.factories import (
+    AttachmentFactory,
+    AttachmentFileTypeFactory,
+)
 from etools.applications.environment.helpers import tenant_switch_is_active
 from etools.applications.environment.models import TenantSwitch
 from etools.applications.environment.tests.factories import TenantSwitchFactory
 from etools.applications.EquiTrack.tests.cases import BaseTenantTestCase
 from etools.applications.EquiTrack.tests.mixins import URLAssertionMixin
 from etools.applications.locations.tests.factories import LocationFactory
-from etools.applications.partners.models import Intervention, InterventionAmendment, InterventionResultLink
+from etools.applications.partners.models import (
+    Intervention,
+    InterventionAmendment,
+    InterventionResultLink,
+)
 from etools.applications.partners.tests.factories import (
     AgreementFactory,
+    FileTypeFactory,
     InterventionAmendmentFactory,
     InterventionAttachmentFactory,
     InterventionFactory,
@@ -31,9 +41,15 @@ from etools.applications.partners.tests.factories import (
 )
 from etools.applications.partners.tests.test_utils import setup_intervention_test_data
 from etools.applications.reports.models import AppliedIndicator, ReportingRequirement
-from etools.applications.reports.tests.factories import (AppliedIndicatorFactory, CountryProgrammeFactory,
-                                                         IndicatorFactory, LowerResultFactory,
-                                                         ReportingRequirementFactory, ResultFactory, SectorFactory,)
+from etools.applications.reports.tests.factories import (
+    AppliedIndicatorFactory,
+    CountryProgrammeFactory,
+    IndicatorFactory,
+    LowerResultFactory,
+    ReportingRequirementFactory,
+    ResultFactory,
+    SectorFactory,
+)
 from etools.applications.users.tests.factories import GroupFactory, UserFactory
 from etools.applications.utils.common.utils import get_all_field_names
 
@@ -194,6 +210,90 @@ class TestInterventionsAPI(BaseTenantTestCase):
         status_code, response = self.run_request_list_ep(data, user=self.partnership_manager_user)
 
         self.assertEqual(status_code, status.HTTP_201_CREATED)
+
+    def test_add_contingency_pd_with_attachment(self):
+        attachment = AttachmentFactory(
+            file="test_file.pdf",
+            file_type=None,
+            code="",
+        )
+        file_type = FileTypeFactory()
+        self.assertIsNone(attachment.file_type)
+        self.assertIsNone(attachment.content_object)
+        self.assertFalse(attachment.code)
+        data = {
+            "document_type": Intervention.PD,
+            "title": "My test intervention1",
+            "contingency_pd": True,
+            "agreement": self.agreement.pk,
+            "attachments": [{
+                "type": file_type.pk,
+                "attachment_document": attachment.pk,
+            }]
+        }
+        status_code, response = self.run_request_list_ep(data, user=self.partnership_manager_user)
+        self.assertEqual(status_code, status.HTTP_201_CREATED)
+        attachment_updated = Attachment.objects.get(pk=attachment.pk)
+        self.assertEqual(
+            attachment_updated.file_type.code,
+            self.file_type_attachment.code
+        )
+        self.assertEqual(
+            attachment_updated.object_id,
+            response["attachments"][0]["id"]
+        )
+        self.assertEqual(
+            attachment_updated.code,
+            self.file_type_attachment.code
+        )
+
+    def test_add_contingency_pd_with_prc_review_and_signed_pd(self):
+        attachment_prc = AttachmentFactory(
+            file="test_file_prc.pdf",
+            file_type=None,
+            code="",
+        )
+        attachment_pd = AttachmentFactory(
+            file="test_file_pd.pdf",
+            file_type=None,
+            code="",
+        )
+        self.assertIsNone(attachment_prc.file_type)
+        self.assertIsNone(attachment_prc.content_object)
+        self.assertFalse(attachment_prc.code)
+        self.assertIsNone(attachment_pd.file_type)
+        self.assertIsNone(attachment_pd.content_object)
+        self.assertFalse(attachment_pd.code)
+        data = {
+            "document_type": Intervention.PD,
+            "title": "My test intervention1",
+            "contingency_pd": True,
+            "agreement": self.agreement.pk,
+            "prc_review_attachment": attachment_prc.pk,
+            "signed_pd_attachment": attachment_pd.pk,
+        }
+        status_code, response = self.run_request_list_ep(data, user=self.partnership_manager_user)
+        self.assertEqual(status_code, status.HTTP_201_CREATED)
+        attachment_prc_updated = Attachment.objects.get(pk=attachment_prc.pk)
+        self.assertEqual(
+            attachment_prc_updated.file_type.code,
+            self.file_type_prc.code
+        )
+        self.assertEqual(attachment_prc_updated.object_id, response["id"])
+        self.assertEqual(
+            attachment_prc_updated.code,
+            self.file_type_prc.code
+        )
+        attachment_pd_updated = Attachment.objects.get(pk=attachment_pd.pk)
+        self.assertEqual(
+            attachment_pd_updated.file_type.code,
+            self.file_type_pd.code
+        )
+        self.assertEqual(attachment_pd_updated.object_id, response["id"])
+        self.assertEqual(
+            attachment_pd_updated.code,
+            self.file_type_pd.code
+        )
 
     def test_add_one_valid_fr_on_create_pd(self):
         self.assertFalse(Activity.objects.exists())
@@ -1504,6 +1604,9 @@ class TestInterventionAmendmentCreateAPIView(BaseTenantTestCase):
             "signed_date": datetime.date.today(),
             "signed_amendment": self.uploaded_file,
         }
+        self.file_type = AttachmentFileTypeFactory(
+            code="partners_intervention_amendment_signed"
+        )
 
     def assertResponseFundamentals(self, response):
         '''Assert common fundamentals about the response.'''
@@ -1585,6 +1688,37 @@ class TestInterventionAmendmentCreateAPIView(BaseTenantTestCase):
         self.assertEquals(response.status_code, status.HTTP_201_CREATED)
         data = self.assertResponseFundamentals(response)
         self.assertEquals(data['intervention'], self.intervention.id)
+
+    def test_create_amendment_with_attachment(self):
+        attachment = AttachmentFactory(
+            file="test_file.pdf",
+            file_type=None,
+            code="",
+        )
+        self.data.pop("signed_amendment")
+        self.data["signed_amendment_attachment"] = attachment.pk
+        self.assertIsNone(attachment.file_type)
+        self.assertIsNone(attachment.content_object)
+        self.assertFalse(attachment.code)
+        response = self._make_request(
+            user=self.partnership_manager_user,
+            data=self.data,
+            request_format='multipart',
+        )
+
+        self.assertEquals(response.status_code, status.HTTP_201_CREATED)
+        data = self.assertResponseFundamentals(response)
+        self.assertEquals(data['intervention'], self.intervention.pk)
+        attachment_updated = Attachment.objects.get(pk=attachment.pk)
+        self.assertEqual(
+            attachment_updated.file_type.code,
+            self.file_type.code
+        )
+        self.assertEqual(attachment_updated.object_id, data["id"])
+        self.assertEqual(
+            attachment_updated.code,
+            self.file_type.code
+        )
 
     def test_create_amendment_when_already_in_amendment(self):
         self.intervention.in_amendment = True
