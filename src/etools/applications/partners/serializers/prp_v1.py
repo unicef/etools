@@ -121,6 +121,8 @@ class PRPIndicatorSerializer(serializers.ModelSerializer):
     blueprint_id = serializers.IntegerField(source='indicator.id', read_only=True)
     locations = PRPLocationSerializer(read_only=True, many=True)
     disaggregation = DisaggregationSerializer(read_only=True, many=True)
+    target = serializers.JSONField(required=False)
+    baseline = serializers.JSONField(required=False)
 
     class Meta:
         model = AppliedIndicator
@@ -141,6 +143,8 @@ class PRPIndicatorSerializer(serializers.ModelSerializer):
             'disaggregation',
             'is_high_frequency',
             'is_active',
+            'numerator_label',
+            'denominator_label'
         )
 
 

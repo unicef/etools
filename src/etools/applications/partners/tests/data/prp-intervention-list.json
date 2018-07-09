@@ -6,7 +6,7 @@
           {
             "blueprint_id": 0,
             "means_of_verification": null,
-            "target": 0,
+            "target": {"d": 1, "v": 0},
             "title": "The Blueprint",
             "disaggregation": [
               {
@@ -26,9 +26,11 @@
             ],
             "cluster_indicator_id": null,
             "id": 8,
-              "baseline": null,
-              "is_active": true,
-              "is_high_frequency": false
+            "baseline": {"d": 1, "v": 0},
+            "is_active": true,
+            "is_high_frequency": false,
+            "denominator_label": null,
+            "numerator_label": null
           }
         ],
         "cp_output": {
