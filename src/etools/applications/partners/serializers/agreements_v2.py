@@ -99,14 +99,25 @@ class AgreementCreateUpdateSerializer(AttachmentSerializerMixin, SnapshotModelSe
         data = super(AgreementCreateUpdateSerializer, self).validate(data)
         agreement_type = data.get('agreement_type', None) or self.instance.agreement_type
 
-        if agreement_type == Agreement.PCA:
-            # Look for country programme in data and on instance.
-            country_programme = data.get('country_programme')
-            if not country_programme and self.instance:
-                country_programme = self.instance.country_programme
+        # Look for country programme in data and on instance.
+        country_programme = data.get('country_programme')
+        if not country_programme and self.instance:
+            country_programme = self.instance.country_programme
 
+        if agreement_type == Agreement.PCA:
             if country_programme is None:
                 raise ValidationError({'country_programme': 'Country Programme is required for PCAs!'})
+        # If there is a PCA for a Country Programme
+        # a user will not be able to add an SSFA for the same partner.
+        if agreement_type == Agreement.SSFA:
+            # check whether PCA exists for country programme and partner
+            pca_qs = Agreement.objects.filter(
+                agreement_type=Agreement.PCA,
+                country_programme=country_programme,
+                partner=data.get("partner")
+            )
+            if pca_qs.exists():
+                raise ValidationError({'agreement_type': 'Not able to create SSFA when a PCA exists for Partner.'})
 
         # When running validations in the serializer.. keep in mind that the
         # related fields have not been updated and therefore not accessible on old_instance.relatedfield_old.

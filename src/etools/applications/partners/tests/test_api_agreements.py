@@ -177,6 +177,27 @@ class TestAgreementsAPI(BaseTenantTestCase):
             1
         )
 
+    def test_add_new_SSFA_with_existing_PCA_country_programme(self):
+        AgreementFactory(
+            agreement_type=Agreement.PCA,
+            partner=self.partner1,
+            country_programme=self.country_programme
+        )
+        self.assertFalse(Activity.objects.exists())
+        data = {
+            "agreement_type": Agreement.SSFA,
+            "partner": self.partner1.pk,
+            "country_programme": self.country_programme.pk,
+        }
+        status_code, response = self.run_request_list_ep(data)
+
+        self.assertEqual(status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertEqual(
+            response['agreement_type'],
+            ["Not able to create SSFA when a PCA exists for Partner."]
+        )
+        self.assertFalse(Activity.objects.exists())
+
     def test_add_new_SSFA_with_country_programme_null(self):
         self.assertFalse(Activity.objects.exists())
         data = {
@@ -201,6 +222,7 @@ class TestAgreementsAPI(BaseTenantTestCase):
             "partner": self.partner1.id
         }
         status_code, response = self.run_request_list_ep(data)
+
         self.assertTrue(Activity.objects.exists())
         agreement_id = response['id']
 
