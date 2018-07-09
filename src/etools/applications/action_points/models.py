@@ -36,6 +36,27 @@ class ActionPoint(TimeStampedModel):
         STATUSES.completed: 'date_of_completion'
     }
 
+    CATEGORY_CHOICES = Choices(
+        ("Invoice and receive reimbursement of ineligible expenditure",
+         _("Invoice and receive reimbursement of ineligible expenditure")),
+        ("Change cash transfer modality (DCT, reimbursement or direct payment)",
+         _("Change cash transfer modality (DCT, reimbursement or direct payment)")),
+        ("IP to incur and report on additional expenditure", _("IP to incur and report on additional expenditure")),
+        ("Review and amend ICE or budget", _("Review and amend ICE or budget")),
+        ("IP to correct FACE form or Statement of Expenditure",
+         _("IP to correct FACE form or Statement of Expenditure")),
+        ("Schedule a programmatic visit", _("Schedule a programmatic visit")),
+        ("Schedule a follow-up spot check", _("Schedule a follow-up spot check")),
+        ("Schedule an audit", _("Schedule an audit")),
+        ("Block future cash transfers", _("Block future cash transfers")),
+        ("Block or mark vendor for deletion", _("Block or mark vendor for deletion")),
+        ("Escalate to Chief of Operations, Dep Rep, or Rep", _("Escalate to Chief of Operations, Dep Rep, or Rep")),
+        ("Escalate to Investigation", _("Escalate to Investigation")),
+        ("Capacity building / Discussion with partner", _("Capacity building / Discussion with partner")),
+        ("Change IP risk rating", _("Change IP risk rating")),
+        ("Other", _("Other")),
+    )
+
     KEY_EVENTS = Choices(
         ('status_update', _('Status Update')),
         ('reassign', _('Reassign')),
@@ -55,6 +76,7 @@ class ActionPoint(TimeStampedModel):
 
     status = FSMField(verbose_name=_('Status'), max_length=10, choices=STATUSES, default=STATUSES.open, protected=True)
 
+    category = models.CharField(verbose_name=_('Category'), max_length=100, choices=CATEGORY_CHOICES, blank=True)
     description = models.TextField(verbose_name=_('Description'))
     due_date = models.DateField(verbose_name=_('Due Date'), blank=True, null=True)
     high_priority = models.BooleanField(default=False, verbose_name=_('High Priority'))
