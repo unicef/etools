@@ -1,6 +1,13 @@
 from etools.applications.audit.models import Engagement
-from etools.applications.partners.models import (Agreement, AgreementAmendment, Assessment, Intervention,
-                                                 InterventionAmendment, InterventionAttachment, PartnerOrganization,)
+from etools.applications.partners.models import (
+    Agreement,
+    AgreementAmendment,
+    Assessment,
+    Intervention,
+    InterventionAmendment,
+    InterventionAttachment,
+    PartnerOrganization,
+)
 from etools.applications.tpm.models import TPMActivity
 
 
@@ -10,7 +17,9 @@ def get_file_type(obj):
     """
     if isinstance(obj.content_object, InterventionAttachment):
         return obj.content_object.type.name
-    return obj.file_type.label
+    elif obj.file_type:
+        return obj.file_type.label
+    return ""
 
 
 def get_partner_obj(obj):

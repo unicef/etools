@@ -4,12 +4,22 @@ from mock import Mock, patch
 from django.conf import settings
 from django.core.management import call_command
 
+from etools.applications.attachments.tests.factories import AttachmentFileTypeFactory
 from etools.applications.EquiTrack.tests.cases import BaseTenantTestCase
 from etools.applications.funds.tests.factories import FundsReservationHeaderFactory
 from etools.applications.locations.tests.factories import GatewayTypeFactory, LocationFactory
 from etools.applications.partners import utils
-from etools.applications.partners.models import Agreement, Intervention, InterventionBudget, InterventionResultLink
-from etools.applications.partners.tests.factories import AgreementFactory, InterventionFactory, PartnerFactory
+from etools.applications.partners.models import (
+    Agreement,
+    Intervention,
+    InterventionBudget,
+    InterventionResultLink,
+)
+from etools.applications.partners.tests.factories import (
+    AgreementFactory,
+    InterventionFactory,
+    PartnerFactory,
+)
 from etools.applications.reports.models import (
     AppliedIndicator,
     IndicatorBlueprint,
@@ -91,6 +101,16 @@ def setup_intervention_test_data(test_case, include_results_and_indicators=False
             p_code='a-p-code')
         )
         test_case.disaggregation = test_case.applied_indicator.disaggregation.create(name='A Disaggregation')
+
+    test_case.file_type_attachment = AttachmentFileTypeFactory(
+        code="partners_intervention_attachment"
+    )
+    test_case.file_type_prc = AttachmentFileTypeFactory(
+        code="partners_intervention_prc_review"
+    )
+    test_case.file_type_pd = AttachmentFileTypeFactory(
+        code="partners_intervention_signed_pd"
+    )
 
 
 class TestSendPCARequiredNotification(BaseTenantTestCase):
