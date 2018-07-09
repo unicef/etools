@@ -78,7 +78,8 @@
       "phone_number": null,
       "postal_code": null,
       "rating": null,
-      "street_address": null
+      "street_address": null,
+      "type_of_assessment": null
     },
     "special_reports": [],
     "status": "active",
@@ -126,7 +127,8 @@
       "phone_number": null,
       "postal_code": null,
       "rating": null,
-      "street_address": null
+      "street_address": null,
+      "type_of_assessment": null
     },
     "special_reports": [],
     "status": "draft",
@@ -174,7 +176,8 @@
       "phone_number": null,
       "postal_code": null,
       "rating": null,
-      "street_address": null
+      "street_address": null,
+      "type_of_assessment": null
     },
     "special_reports": [],
     "status": "draft",

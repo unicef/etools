@@ -39,7 +39,8 @@ class PRPPartnerOrganizationListSerializer(serializers.ModelSerializer):
             "email",
             "phone_number",
             "basis_for_risk_rating",
-            "core_values_assessment_date"
+            "core_values_assessment_date",
+            "type_of_assessment"
         )
 
 
@@ -50,7 +51,7 @@ class AuthOfficerSerializer(serializers.ModelSerializer):
     class Meta:
         model = PartnerStaffMember
         depth = 1
-        fields = ('name', 'title', 'phone_num', 'email')
+        fields = ('name', 'title', 'phone_num', 'email', 'active')
 
 
 class UserFocalPointSerializer(serializers.ModelSerializer):
@@ -68,7 +69,7 @@ class PartnerFocalPointSerializer(serializers.ModelSerializer):
     class Meta:
         model = PartnerStaffMember
         depth = 1
-        fields = ('name', 'email')
+        fields = ('name', 'email', 'active')
 
 
 class InterventionAmendmentSerializer(serializers.ModelSerializer):
