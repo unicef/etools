@@ -2050,7 +2050,6 @@ class Intervention(TimeStampedModel):
     def clear_caches(self):
         self.intervention_locations(reset=True)
         self.flagged_sections(reset=True)
-        self.intervention_clusters(reset=True)
 
     @transaction.atomic
     def save(self, force_insert=False, **kwargs):
