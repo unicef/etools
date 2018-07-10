@@ -86,7 +86,7 @@
         <ul>
           {% for activity in visit.tpm_activities.all %}
             <li>{{ activity.implementing_partner }} on {{ activity.date }} in {{ activity.locations.all | join:', ' }}
-              to monitor their partnership with UNICEF “{{ activity.partnership }}”.</li>
+              to monitor their partnership with UNICEF "{{ activity.intervention }}".</li>
           {% endfor %}
         </ul>
 
