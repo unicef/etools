@@ -64,7 +64,7 @@ class ActionPointBaseSerializer(UserContextSerializerMixin, SnapshotModelSeriali
 
 
 class ActionPointListSerializer(PermissionsBasedSerializerMixin, ActionPointBaseSerializer):
-    related_module = serializers.ChoiceField(label=_('Related Module'), choices=ActionPoint.MODULE_CHOICES,
+    related_module = serializers.ChoiceField(label=_('Related App'), choices=ActionPoint.MODULE_CHOICES,
                                              read_only=True)
 
     partner = SeparatedReadWriteField(
@@ -143,7 +143,7 @@ class ActionPointSerializer(WritableNestedSerializerMixin, ActionPointListSerial
     comments = CommentSerializer(many=True, label=_('Actions Taken'))
     history = HistorySerializer(many=True, label=_('History'), read_only=True, source='get_meaningful_history')
 
-    related_object_str = serializers.SerializerMethodField(label=_('Reference'))
+    related_object_str = serializers.SerializerMethodField(label=_('Related Document'))
     related_object_url = serializers.SerializerMethodField()
 
     class Meta(WritableNestedSerializerMixin.Meta, ActionPointListSerializer.Meta):
