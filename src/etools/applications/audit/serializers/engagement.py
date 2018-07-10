@@ -84,12 +84,13 @@ class EngagementActionPointSerializer(PermissionsBasedSerializerMixin, ActionPoi
     class Meta(ActionPointBaseSerializer.Meta):
         model = EngagementActionPoint
         fields = ActionPointBaseSerializer.Meta.fields + [
-            'section', 'office', 'history', 'url',
+            'category', 'section', 'office', 'history', 'url',
         ]
         extra_kwargs = copy(ActionPointBaseSerializer.Meta.extra_kwargs)
         extra_kwargs.update({
             'assigned_to': {'label': _('Person Responsible')},
             'reference_number': {'label': _('Reference No.')},
+            'category': {'required': True},
         })
 
 
