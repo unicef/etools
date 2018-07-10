@@ -7,7 +7,8 @@ from rest_framework_csv.renderers import CSVRenderer
 
 class TPMActivityCSVRenderer(CSVRenderer):
     header = ['ref', 'visit', 'visit_status', 'activity', 'section', 'cp_output', 'partner', 'intervention', 'pd_ssfa',
-              'locations', 'date', 'unicef_focal_points', 'offices', 'tpm_focal_points', 'link']
+              'locations', 'date', 'unicef_focal_points', 'offices', 'tpm_focal_points', 'additional_information',
+              'link']
     labels = {
         'ref': _('Visit Ref. #'),
         'visit': _('Visit'),
@@ -23,13 +24,15 @@ class TPMActivityCSVRenderer(CSVRenderer):
         'unicef_focal_points': _('Name of UNICEF Focal Point'),
         'offices': _('Offices'),
         'tpm_focal_points': _('Name of TPM Focal Point'),
+        'additional_information': _('Additional Information'),
         'link': _('Hyperlink'),
     }
 
 
 class TPMLocationCSVRenderer(CSVRenderer):
     header = ['ref', 'visit', 'visit_status', 'activity', 'section', 'cp_output', 'partner', 'intervention', 'pd_ssfa',
-              'location', 'date', 'unicef_focal_points', 'offices', 'tpm_focal_points', 'link']
+              'location', 'date', 'unicef_focal_points', 'offices', 'tpm_focal_points', 'additional_information',
+              'link']
     labels = {
         'ref': _('Visit Ref. #'),
         'visit': _('Visit'),
@@ -45,6 +48,7 @@ class TPMLocationCSVRenderer(CSVRenderer):
         'unicef_focal_points': _('Name of UNICEF Focal Point'),
         'offices': _('Offices'),
         'tpm_focal_points': _('Name of TPM Focal Point'),
+        'additional_information': _('Additional Information'),
         'link': _('Hyperlink'),
     }
 
@@ -77,7 +81,8 @@ class TPMVisitCSVRenderer(CSVRenderer):
         'ref', 'visit', 'status', 'activities',
         'sections', 'partners', 'interventions', 'pd_ssfa', 'locations',
         'start_date', 'end_date', 'unicef_focal_points',
-        'tpm_partner_focal_points', 'report_link', 'attachments', 'link',
+        'tpm_partner_focal_points', 'report_link', 'attachments', 'additional_information',
+        'link',
     ]
     labels = {
         'ref': _('Visit Ref. #'),
@@ -95,6 +100,7 @@ class TPMVisitCSVRenderer(CSVRenderer):
         'tpm_partner_focal_points': _('Name of TPM focal Point'),
         'report_link': _('Report Hyperlink'),
         'attachments': _('Attachment Type - Hyperlink'),
+        'additional_information': _('Additional Information'),
         'link': _('Visit Hyperlink'),
     }
 

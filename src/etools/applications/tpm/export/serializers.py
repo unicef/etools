@@ -33,6 +33,7 @@ class TPMActivityExportSerializer(serializers.Serializer):
     unicef_focal_points = UsersExportField()
     offices = CommaSeparatedExportField()
     tpm_focal_points = UsersExportField(source='tpm_visit.tpm_partner_focal_points')
+    additional_information = serializers.CharField()
     link = serializers.CharField(source='tpm_visit.get_object_url')
 
     def get_activity(self, obj):
@@ -54,6 +55,7 @@ class TPMLocationExportSerializer(serializers.Serializer):
     unicef_focal_points = UsersExportField(source='activity.tpmactivity.unicef_focal_points')
     offices = CommaSeparatedExportField(source='activity.tpmactivity.offices')
     tpm_focal_points = UsersExportField(source='activity.tpmactivity.tpm_visit.tpm_partner_focal_points')
+    additional_information = serializers.CharField(source='activity.tpmactivity.additional_information')
     link = serializers.CharField(source='activity.tpmactivity.tpm_visit.get_object_url')
 
     def get_activity(self, obj):
@@ -95,6 +97,7 @@ class TPMVisitExportSerializer(serializers.Serializer):
     tpm_partner_focal_points = CommaSeparatedExportField()
     report_link = serializers.SerializerMethodField()
     attachments = serializers.SerializerMethodField()
+    additional_information = CommaSeparatedExportField(source='tpm_activities.additional_information')
     link = serializers.CharField(source='get_object_url')
 
     def get_report_link(self, obj):
