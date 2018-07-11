@@ -126,7 +126,7 @@ class TravelFactory(factory.DjangoModelFactory):
     traveler = factory.SubFactory(UserFactory)
     supervisor = factory.SubFactory(UserFactory)
     office = factory.SubFactory(OfficeFactory)
-    sector = factory.SubFactory(SectorFactory)
+    section = factory.SubFactory(SectorFactory)
     start_date = fuzzy.FuzzyDateTime(start_dt=_FUZZY_START_DATE, end_dt=timezone.now())
     end_date = fuzzy.FuzzyDateTime(start_dt=timezone.now(), end_dt=_FUZZY_END_DATE)
     purpose = factory.Sequence(lambda n: 'Purpose #{}'.format(n))
