@@ -2,13 +2,13 @@ from django.core.management import call_command
 from django.db import connection
 
 from rest_framework.exceptions import ValidationError
+from unicef_snapshot.utils import create_dict_with_relations, create_snapshot
 
 from etools.applications.action_points.models import ActionPoint
 from etools.applications.action_points.tests.factories import ActionPointFactory
 from etools.applications.audit.models import MicroAssessment
 from etools.applications.audit.tests.factories import MicroAssessmentFactory
 from etools.applications.EquiTrack.tests.cases import BaseTenantTestCase
-from etools.applications.snapshot.utils import create_dict_with_relations, create_snapshot
 from etools.applications.t2f.tests.factories import TravelFactory
 from etools.applications.tpm.tests.factories import TPMVisitFactory
 from etools.applications.users.tests.factories import UserFactory

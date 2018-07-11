@@ -4,7 +4,7 @@ from decimal import DivisionByZero, InvalidOperation
 from django.contrib.auth import get_user_model
 from django.contrib.postgres.fields import ArrayField, JSONField
 from django.core.exceptions import ValidationError
-from django.db import models, connection
+from django.db import connection, models
 from django.db.transaction import atomic
 from django.utils import timezone
 from django.utils.encoding import force_text
@@ -15,19 +15,22 @@ from model_utils import Choices, FieldTracker
 from model_utils.managers import InheritanceManager
 from model_utils.models import TimeStampedModel
 from ordered_model.models import OrderedModel
+from unicef_notification.utils import send_notification_with_template
 
 from etools.applications.action_points.models import ActionPoint
 from etools.applications.attachments.models import Attachment
 from etools.applications.audit.purchase_order.models import AuditorStaffMember, PurchaseOrder, PurchaseOrderItem
-from etools.applications.audit.transitions.conditions import (AuditSubmitReportRequiredFieldsCheck,
-                                                              EngagementHasReportAttachmentsCheck,
-                                                              EngagementSubmitReportRequiredFieldsCheck,
-                                                              SpecialAuditSubmitRelatedModelsCheck,
-                                                              SPSubmitReportRequiredFieldsCheck,
-                                                              ValidateMARiskCategories, ValidateMARiskExtra,)
+from etools.applications.audit.transitions.conditions import (
+    AuditSubmitReportRequiredFieldsCheck,
+    EngagementHasReportAttachmentsCheck,
+    EngagementSubmitReportRequiredFieldsCheck,
+    SpecialAuditSubmitRelatedModelsCheck,
+    SPSubmitReportRequiredFieldsCheck,
+    ValidateMARiskCategories,
+    ValidateMARiskExtra,
+)
 from etools.applications.audit.transitions.serializers import EngagementCancelSerializer
 from etools.applications.EquiTrack.utils import get_environment
-from etools.applications.notification.utils import send_notification_using_email_template
 from etools.applications.partners.models import PartnerOrganization, PartnerStaffMember
 from etools.applications.permissions2.fsm import has_action_permission
 from etools.applications.utils.common.models.fields import CodedGenericRelation
@@ -248,9 +251,9 @@ class Engagement(InheritedModelMixin, TimeStampedModel, models.Model):
             base_context.update(ctx)
             context = base_context
 
-            send_notification_using_email_template(
+            send_notification_with_template(
                 recipients=[focal_point.email],
-                email_template_name=template_name,
+                template_name=template_name,
                 context=context,
             )
 

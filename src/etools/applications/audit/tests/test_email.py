@@ -1,7 +1,7 @@
 from django.core import mail
 from django.core.management import call_command
 
-from post_office.models import EmailTemplate
+from unicef_notification.models import EmailTemplate
 
 from etools.applications.EquiTrack.tests.cases import BaseTenantTestCase
 from etools.applications.audit.tests.factories import UserFactory
