@@ -121,7 +121,8 @@ class GisLocationsGeomListViewset(ListAPIView):
 
                     # we must specify the proper serializer `geo_field` for both points and polygons, to be able
                     # to generate a result which is importable in QGis
-                    polygons = Location.objects.filter(geom__isnull=False).all()
+                    # `point__isnull = True` = polygons(`geom__isnull=False`) + locations with no geometry at all
+                    polygons = Location.objects.filter(point__isnull = True).all()
                     self.get_serializer_class().Meta.geo_field = 'geom'
                     serialized_polygons = self.get_serializer(polygons, many=True, context={'request': request})
 
@@ -145,13 +146,14 @@ class GisLocationsGeomListViewset(ListAPIView):
                     self.get_serializer_class().Meta.geo_field = 'point'
             else:
                 if geom_type is None:
-                    locations = Location.objects.filter(Q(geom__isnull=False) | Q(point__isnull=False)).all()
+                    locations = Location.objects.all()
                 elif geom_type == 'polygon':
                     locations = Location.objects.filter(geom__isnull=False).all()
                 elif geom_type == 'point':
                     locations = Location.objects.filter(point__isnull=False).all()
 
             serializer = self.get_serializer(locations, many=True, context={'request': request})
+
             return Response(serializer.data)
 
 
