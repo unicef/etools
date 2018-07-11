@@ -28,8 +28,7 @@ class TravelList(URLAssertionMixin, BaseTenantTestCase):
         cls.unicef_staff = UserFactory(is_staff=True)
         cls.travel = TravelFactory(reference_number=make_travel_reference_number(),
                                    traveler=cls.traveler,
-                                   supervisor=cls.unicef_staff,
-                                   section=None)
+                                   supervisor=cls.unicef_staff)
 
     def test_urls(self):
         '''Verify URL pattern names generate the URLs we expect them to.'''
@@ -67,8 +66,7 @@ class TravelList(URLAssertionMixin, BaseTenantTestCase):
 
         self.assertEqual(len(response_json['data']), 1)
         travel_data = response_json['data'][0]
-        expected_keys = ['end_date', 'id', 'office', 'purpose', 'reference_number',
-                         'section', 'start_date', 'status', 'traveler']
+        expected_keys = ['end_date', 'id', 'office', 'purpose', 'reference_number', 'start_date', 'status', 'traveler']
         self.assertKeysIn(expected_keys, travel_data)
 
     def test_list_search_partial(self):
@@ -111,7 +109,6 @@ class TravelList(URLAssertionMixin, BaseTenantTestCase):
         travel = TravelFactory(reference_number=make_travel_reference_number(),
                                traveler=self.traveler,
                                supervisor=self.unicef_staff,
-                               sector=None,
                                section=None)
 
         with self.assertNumQueries(10):

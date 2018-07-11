@@ -121,7 +121,7 @@ class ActionPointListSerializer(PermissionsBasedSerializerMixin, ActionPointBase
             travel = validated_data['travel']
             validated_data.update({
                 'office_id': travel.office_id,
-                'section_id': travel.sector_id,
+                'section_id': travel.section_id,
             })
 
         return super().create(validated_data)
