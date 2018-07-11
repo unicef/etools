@@ -59,7 +59,7 @@
   <div id="page-header">
     <img src="{% static 'img/qDWQF3.png' %}" style="display: block; width: 3.17in; height: 0.5in; margin-top: -0.19in; margin-left: -0.1in;">
     <hr size="0.01in" color="#a6a6a6">
-    <p><b>United Nations Children’s Fund</b></p>
+    <p><b>United Nations Children's Fund</b></p>
   </div>
 {% endblock %}
 
@@ -85,7 +85,7 @@
 
         <ul>
           {% for activity in visit.tpm_activities.all %}
-            <li>{{ activity.implementing_partner }} on {{ activity.date }} in {{ activity.locations.all | join:', ' }}
+            <li>{{ activity.partner }} on {{ activity.date }} in {{ activity.locations.all | join:', ' }}
               to monitor their partnership with UNICEF "{{ activity.intervention }}".</li>
           {% endfor %}
         </ul>
