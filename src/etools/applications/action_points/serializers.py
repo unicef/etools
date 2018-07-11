@@ -34,7 +34,7 @@ class ActionPointBaseSerializer(UserContextSerializerMixin, SnapshotModelSeriali
     class Meta:
         model = ActionPoint
         fields = [
-            'id', 'reference_number',
+            'id', 'reference_number', 'category',
             'author', 'assigned_by', 'assigned_to',
 
             'high_priority', 'due_date', 'description',
@@ -46,6 +46,7 @@ class ActionPointBaseSerializer(UserContextSerializerMixin, SnapshotModelSeriali
             'status': {'read_only': True},
             'date_of_completion': {'read_only': True},
             'due_date': {'required': True},
+            'category': {'required': True},
         }
 
     def create(self, validated_data):
