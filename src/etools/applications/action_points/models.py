@@ -23,7 +23,7 @@ class ActionPoint(TimeStampedModel):
     MODULE_CHOICES = Choices(
         ('t2f', _('Trip Management')),
         ('tpm', 'Third Party Monitoring'),
-        ('audit', _('Auditor Portal')),
+        ('audit', _('Financial Assurance')),
     )
 
     STATUSES = Choices(
