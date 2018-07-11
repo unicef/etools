@@ -50,12 +50,12 @@ class Base64FileField(serializers.FileField):
         return content_file
 
 
-class AttachmentSingleFileField(serializers.RelatedField):
+class AttachmentSingleFileField(serializers.Field):
+    override = None
+
     def __init__(self, *args, **kwargs):
-        # force attachment field to be read only
-        # create/updates happen with separate api call request
-        # we return the create/update link as part of the response
-        kwargs["read_only"] = True
+        if "override" in kwargs:
+            self.override = kwargs.pop("override")
         super(AttachmentSingleFileField, self).__init__(*args, **kwargs)
 
     def get_attachment(self, instance):
@@ -81,3 +81,12 @@ class AttachmentSingleFileField(serializers.RelatedField):
         if request is not None:
             return request.build_absolute_uri(url)
         return url
+
+    def to_internal_value(self, data):
+        """This data is passed to the validation method
+
+        So we package in the code value, as that is needed
+        during validation
+        """
+        attachment = getattr(self.parent.Meta.model, self.source)
+        return (data, attachment.field.code)

@@ -13,6 +13,7 @@ from etools.applications.EquiTrack.tests.cases import BaseTenantTestCase
 from etools.applications.audit.tests.factories import MicroAssessmentFactory
 from etools.applications.partners.tests.factories import PartnerFactory
 from etools.applications.reports.tests.factories import SectorFactory
+from etools.applications.t2f.tests.factories import TravelFactory
 from etools.applications.tpm.tests.factories import UserFactory, TPMVisitFactory
 from etools.applications.utils.common.tests.test_utils import TestExportMixin
 
@@ -25,6 +26,15 @@ class TestActionPointViewSet(TestExportMixin, ActionPointsTestCaseMixin, BaseTen
         cls.pme_user = UserFactory(pme=True)
         cls.unicef_user = UserFactory(unicef_user=True)
         cls.common_user = UserFactory()
+        cls.create_data = {
+            'category': fuzzy.FuzzyChoice(dict(ActionPoint.CATEGORY_CHOICES).keys()).fuzz(),
+            'description': 'do something',
+            'due_date': date.today(),
+            'assigned_to': cls.pme_user.id,
+            'office': cls.pme_user.profile.office.id,
+            'section': SectorFactory().id,
+            'partner': PartnerFactory().id,
+        }
 
     def _test_list_view(self, user, expected_visits):
         response = self.forced_auth_req(
@@ -87,20 +97,10 @@ class TestActionPointViewSet(TestExportMixin, ActionPointsTestCaseMixin, BaseTen
         self.assertEquals(response.status_code, status.HTTP_403_FORBIDDEN)
 
     def test_create_author(self):
-        action_point_data = {
-            'category': fuzzy.FuzzyChoice(dict(ActionPoint.CATEGORY_CHOICES).keys()).fuzz(),
-            'description': 'do something',
-            'due_date': date.today(),
-            'assigned_to': self.pme_user.id,
-            'office': self.pme_user.profile.office.id,
-            'section': SectorFactory().id,
-            'partner': PartnerFactory().id,
-        }
-
         response = self.forced_auth_req(
             'post',
             reverse('action-points:action-points-list'),
-            data=action_point_data,
+            data=self.create_data,
             user=self.unicef_user
         )
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
@@ -108,6 +108,35 @@ class TestActionPointViewSet(TestExportMixin, ActionPointsTestCaseMixin, BaseTen
         self.assertEqual(response.data['author']['id'], self.unicef_user.id)
         self.assertIn('assigned_by', response.data)
         self.assertEqual(response.data['assigned_by']['id'], self.unicef_user.id)
+
+    def test_create_t2f_related(self):
+        travel = TravelFactory()
+        data = {'travel': travel.id}
+        data.update(self.create_data)
+
+        response = self.forced_auth_req(
+            'post',
+            reverse('action-points:action-points-list'),
+            data=data,
+            user=self.unicef_user
+        )
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        self.assertIsNotNone(response.data['travel'])
+        self.assertEqual(response.data['travel'], travel.id)
+
+    def test_travel_filter(self):
+        travel = TravelFactory()
+        ActionPointFactory()  # common action point, shouldn't appear while filtering
+        ActionPointFactory(travel=travel)
+
+        response = self.forced_auth_req(
+            'get',
+            reverse('action-points:action-points-list'),
+            data={'travel': travel.id},
+            user=self.unicef_user
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(response.data['results']), 1)
 
     def test_reassign(self):
         author = UserFactory(unicef_user=True)
@@ -214,6 +243,10 @@ class TestActionPointsListViewMetadada(TestActionPointsViewMetadata, BaseTenantT
                 'location',
                 'section',
                 'office',
+
+                'travel',
+                'engagement',
+                'tpm_activity',
             ]
         )
 

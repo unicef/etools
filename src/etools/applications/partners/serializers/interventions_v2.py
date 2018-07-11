@@ -1,23 +1,29 @@
 from datetime import date
 from operator import itemgetter
 
-
-from rest_framework.serializers import ValidationError
 from django.db import transaction
 from django.db.models import Q
 from django.utils.translation import ugettext as _
 
 from rest_framework import serializers
+from rest_framework.serializers import ValidationError
+from unicef_snapshot.serializers import SnapshotModelSerializer
 
+from etools.applications.attachments.serializers import AttachmentSerializerMixin
 from etools.applications.attachments.serializers_fields import AttachmentSingleFileField
-from etools.applications.EquiTrack.serializers import SnapshotModelSerializer
 from etools.applications.funds.models import FundsCommitmentItem, FundsReservationHeader
 from etools.applications.funds.serializers import FRsSerializer
 from etools.applications.locations.serializers import LocationLightSerializer, LocationSerializer
-from etools.applications.partners.models import (Intervention,
-                                                 InterventionAmendment, InterventionAttachment, InterventionBudget,
-                                                 InterventionPlannedVisits, InterventionReportingPeriod,
-                                                 InterventionResultLink, InterventionSectorLocationLink,)
+from etools.applications.partners.models import (
+    Intervention,
+    InterventionAmendment,
+    InterventionAttachment,
+    InterventionBudget,
+    InterventionPlannedVisits,
+    InterventionReportingPeriod,
+    InterventionResultLink,
+    InterventionSectorLocationLink,
+)
 from etools.applications.partners.permissions import InterventionPermissions
 from etools.applications.reports.models import (
     AppliedIndicator,
@@ -25,8 +31,12 @@ from etools.applications.reports.models import (
     ReportingRequirement,
 )
 from etools.applications.reports.serializers.v1 import SectorSerializer
-from etools.applications.reports.serializers.v2 import (IndicatorSerializer, LowerResultCUSerializer,
-                                                        LowerResultSerializer, ReportingRequirementSerializer,)
+from etools.applications.reports.serializers.v2 import (
+    IndicatorSerializer,
+    LowerResultCUSerializer,
+    LowerResultSerializer,
+    ReportingRequirementSerializer,
+)
 
 
 class InterventionBudgetCUSerializer(serializers.ModelSerializer):
@@ -46,10 +56,12 @@ class InterventionBudgetCUSerializer(serializers.ModelSerializer):
         )
 
 
-class InterventionAmendmentCUSerializer(serializers.ModelSerializer):
+class InterventionAmendmentCUSerializer(AttachmentSerializerMixin, serializers.ModelSerializer):
     amendment_number = serializers.CharField(read_only=True)
     signed_amendment_file = serializers.FileField(source="signed_amendment", read_only=True)
-    signed_amendment_attachment = AttachmentSingleFileField(read_only=True)
+    signed_amendment_attachment = AttachmentSingleFileField(
+        override="signed_amendment"
+    )
 
     class Meta:
         model = InterventionAmendment
@@ -255,9 +267,12 @@ class InterventionSectorLocationCUSerializer(serializers.ModelSerializer):
         )
 
 
-class InterventionAttachmentSerializer(serializers.ModelSerializer):
+class InterventionAttachmentSerializer(AttachmentSerializerMixin, serializers.ModelSerializer):
     attachment_file = serializers.FileField(source="attachment", read_only=True)
-    attachment_document = AttachmentSingleFileField(source="attachment_file", read_only=True)
+    attachment_document = AttachmentSingleFileField(
+        source="attachment_file",
+        override="attachment",
+    )
 
     class Meta:
         model = InterventionAttachment
@@ -463,14 +478,15 @@ class FundingCommitmentNestedSerializer(serializers.ModelSerializer):
         )
 
 
-class InterventionCreateUpdateSerializer(SnapshotModelSerializer):
+class InterventionCreateUpdateSerializer(AttachmentSerializerMixin, SnapshotModelSerializer):
 
     planned_budget = InterventionBudgetCUSerializer(read_only=True)
     partner = serializers.CharField(source='agreement.partner.name', read_only=True)
     prc_review_document_file = serializers.FileField(source='prc_review_document', read_only=True)
-    prc_review_attachment = AttachmentSingleFileField(read_only=True)
+    prc_review_attachment = AttachmentSingleFileField()
     signed_pd_document_file = serializers.FileField(source='signed_pd_document', read_only=True)
-    signed_pd_attachment = AttachmentSingleFileField(read_only=True)
+    signed_pd_attachment = AttachmentSingleFileField()
+    planned_visits = PlannedVisitsNestedSerializer(many=True, read_only=True, required=False)
     attachments = InterventionAttachmentSerializer(many=True, read_only=True, required=False)
     result_links = InterventionResultCUSerializer(many=True, read_only=True, required=False)
     frs = serializers.PrimaryKeyRelatedField(many=True,
@@ -645,29 +661,10 @@ class InterventionReportingRequirementCreateSerializer(serializers.ModelSerializ
         fields = ("reporting_requirements", "report_type", )
 
     def _validate_qpr(self, requirements):
-        # Ensure that the first reporting requirement start date
-        # is on or after PD start date
-        if requirements[0]["start_date"] < self.intervention.start:
-            raise serializers.ValidationError({
-                "reporting_requirements": {
-                    "start_date": _(
-                        "Start date needs to be on or after PD start date."
-                    )
-                }
-            })
+        self._validate_start_date(requirements)
+        self._validate_date_intervals(requirements)
 
-        # Ensure start date is after previous end date
-        for i in range(1, len(requirements)):
-            if requirements[i]["start_date"] <= requirements[i - 1]["end_date"]:
-                raise serializers.ValidationError({
-                    "reporting_requirements": {
-                        "start_date": _(
-                            "Start date needs to be after previous end date."
-                        )
-                    }
-                })
-
-    def _validate_hr(self):
+    def _validate_hr(self, requirements):
         # Ensure intervention has high frequency or cluster indicators
         indicator_qs = AppliedIndicator.objects.filter(
             lower_result__result_link__intervention=self.intervention
@@ -679,6 +676,43 @@ class InterventionReportingRequirementCreateSerializer(serializers.ModelSerializ
             raise serializers.ValidationError(
                 _("Indicator needs to be either cluster or high frequency.")
             )
+
+        self._validate_start_date(requirements)
+        self._validate_date_intervals(requirements)
+
+    def _validate_start_date(self, requirements):
+        # Ensure that the first reporting requirement start date
+        # is on or after PD start date
+        if requirements[0]["start_date"] < self.intervention.start:
+            raise serializers.ValidationError({
+                "reporting_requirements": {
+                    "start_date": _(
+                        "Start date needs to be on or after PD start date."
+                    )
+                }
+            })
+
+    def _validate_date_intervals(self, requirements):
+        # Ensure start date is after previous end date
+        for i in range(0, len(requirements)):
+            if requirements[i]["start_date"] > requirements[i]["end_date"]:
+                raise serializers.ValidationError({
+                    "reporting_requirements": {
+                        "start_date": _(
+                            "End date needs to be after the start date."
+                        )
+                    }
+                })
+
+            if i > 0:
+                if abs((requirements[i]["start_date"] - requirements[i - 1]["end_date"]).days) > 1:
+                    raise serializers.ValidationError({
+                        "reporting_requirements": {
+                            "start_date": _(
+                                "Next start date needs to be one day after previous end date."
+                            )
+                        }
+                    })
 
     def _merge_data(self, data):
         current_reqs = ReportingRequirement.objects.values(
@@ -706,7 +740,6 @@ class InterventionReportingRequirementCreateSerializer(serializers.ModelSerializ
             r["report_type"] = report_type
             if report_type == ReportingRequirement.TYPE_HR:
                 r["end_date"] = r["due_date"]
-                r["start_date"] = None
 
         # We need all reporting requirements in end date order
         data["reporting_requirements"] = sorted(
@@ -718,9 +751,13 @@ class InterventionReportingRequirementCreateSerializer(serializers.ModelSerializ
     def run_validation(self, initial_data):
         serializer = self.fields["reporting_requirements"].child
         report_type = initial_data.get("report_type")
+
+        serializer.fields["start_date"].required = True
         if report_type == ReportingRequirement.TYPE_QPR:
-            serializer.fields["start_date"].required = True
             serializer.fields["end_date"].required = True
+        elif report_type == ReportingRequirement.TYPE_HR:
+            serializer.fields["due_date"].required = True
+
         return super().run_validation(initial_data)
 
     def validate(self, data):
@@ -753,7 +790,7 @@ class InterventionReportingRequirementCreateSerializer(serializers.ModelSerializ
         if data["report_type"] == ReportingRequirement.TYPE_QPR:
             self._validate_qpr(data["reporting_requirements"])
         elif data["report_type"] == ReportingRequirement.TYPE_HR:
-            self._validate_hr()
+            self._validate_hr(data["reporting_requirements"])
 
         return data
 

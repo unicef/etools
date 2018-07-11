@@ -10,5 +10,5 @@ search: False
 
 # specify the requirement files
 requirements:
-  - src/requirements/production.txt
-  - src/requirements/local.txt
+  - src/requirements/base.txt
+  - src/requirements/test.txt

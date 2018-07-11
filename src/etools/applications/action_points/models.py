@@ -1,20 +1,19 @@
 from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.contrib.contenttypes.fields import GenericRelation
-from django.db import models, connection
-
+from django.db import connection, models
 from django.utils.translation import ugettext_lazy as _
 
 from django_fsm import FSMField, transition
 from model_utils import Choices, FieldTracker
 from model_utils.fields import MonitorField
 from model_utils.models import TimeStampedModel
+from unicef_snapshot.models import Activity
 
 from etools.applications.action_points.transitions.conditions import ActionPointCompleteActionsTakenCheck
 from etools.applications.EquiTrack.utils import get_environment
 from etools.applications.notification.models import Notification
 from etools.applications.permissions2.fsm import has_action_permission
-from etools.applications.snapshot.models import Activity
 from etools.applications.utils.common.urlresolvers import build_frontend_url
 from etools.applications.utils.groups.wrappers import GroupWrapper
 
@@ -115,7 +114,7 @@ class ActionPoint(TimeStampedModel):
 
     comments = GenericRelation('django_comments.Comment', object_id_field='object_pk')
 
-    history = GenericRelation('snapshot.Activity', object_id_field='target_object_id',
+    history = GenericRelation('unicef_snapshot.Activity', object_id_field='target_object_id',
                               content_type_field='target_content_type')
 
     tracker = FieldTracker(fields=['assigned_to'])

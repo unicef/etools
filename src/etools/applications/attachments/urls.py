@@ -1,17 +1,27 @@
 from django.conf.urls import url
 
-from etools.applications.attachments.views import AttachmentFileView, AttachmentListView
+from etools.applications.attachments import views
 
 app_name = 'attachments'
 urlpatterns = (
     url(
         r'^$',
-        view=AttachmentListView.as_view(),
+        view=views.AttachmentListView.as_view(),
         name='list'
     ),
     url(
         r'^file/(?P<pk>\d+)/$',
-        view=AttachmentFileView.as_view(),
+        view=views.AttachmentFileView.as_view(),
         name='file'
+    ),
+    url(
+        r'^upload/$',
+        view=views.AttachmentCreateView.as_view(),
+        name='create'
+    ),
+    url(
+        r'^upload/(?P<pk>\d+)/$',
+        view=views.AttachmentUpdateView.as_view(),
+        name='update'
     ),
 )
