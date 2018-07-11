@@ -226,7 +226,7 @@ class InterventionExportSerializer(serializers.ModelSerializer):
         source='agreement.partner.name',
     )
     vendor_number = serializers.CharField(
-        label=_("Vendor #"),
+        label=_("Vendor Number"),
         source='agreement.partner.vendor_number',
     )
     partner_type = serializers.CharField(

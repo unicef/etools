@@ -98,7 +98,7 @@ class TestModelExport(BaseTenantTestCase):
 
         self.assertEqual(dataset._get_headers(), [
             "Partner",
-            "Vendor #",
+            "Vendor Number",
             "Status",
             "Partner Type",
             "Agreement",
