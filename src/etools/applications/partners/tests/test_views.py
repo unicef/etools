@@ -58,7 +58,7 @@ from etools.applications.reports.tests.factories import (
     CountryProgrammeFactory,
     ResultFactory,
     ResultTypeFactory,
-    SectorFactory,
+    SectionFactory,
 )
 from etools.applications.users.tests.factories import (
     GroupFactory,
@@ -1447,7 +1447,7 @@ class TestInterventionViews(BaseTenantTestCase):
         )
 
         self.intervention = response.data
-        self.section = SectorFactory()
+        self.section = SectionFactory()
 
         self.fund_commitment_header = FundsCommitmentHeader.objects.create(
             vendor_code="test1",
@@ -1700,7 +1700,7 @@ class TestInterventionViews(BaseTenantTestCase):
         self.assertEqual(response.data, ["Cannot change fields while intervention is active: unicef_cash"])
 
     @skip('TODO: update test when new validation requirement is built')
-    def test_intervention_active_update_sector_locations(self):
+    def test_intervention_active_update_section_locations(self):
         intervention_obj = Intervention.objects.get(id=self.intervention_data["id"])
         intervention_obj.status = Intervention.DRAFT
         intervention_obj.save()
@@ -2108,7 +2108,7 @@ class TestPartnershipDashboardView(BaseTenantTestCase):
         )
         self.intervention = response.data
 
-        self.section = SectorFactory()
+        self.section = SectionFactory()
 
         # Basic data to adjust in tests
         self.intervention_data = {

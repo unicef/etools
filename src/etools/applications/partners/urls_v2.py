@@ -25,7 +25,7 @@ from etools.applications.partners.views.interventions_v2 import (InterventionAme
                                                                  InterventionResultLinkListCreateView,
                                                                  InterventionResultLinkUpdateView,
                                                                  InterventionResultListAPIView,
-                                                                 InterventionSectorLocationLinkListAPIView, )
+                                                                 InterventionSectionLocationLinkListAPIView, )
 from etools.applications.partners.views.partner_organization_v2 import (
     PartnerOrganizationAddView,
     PartnerOrganizationAssessmentDeleteView,
@@ -183,7 +183,7 @@ urlpatterns = (
         view=InterventionLocationListAPIView.as_view(http_method_names=['get', ]),
         name='intervention-locations-list'),
     url(r'^interventions/sector-locations/$',
-        view=InterventionSectorLocationLinkListAPIView.as_view(http_method_names=['get', ]),
+        view=InterventionSectionLocationLinkListAPIView.as_view(http_method_names=['get', ]),
         name='intervention-sector-locations'),
     url(r'^interventions/map/$',
         view=InterventionListMapView.as_view(http_method_names=['get', ]),

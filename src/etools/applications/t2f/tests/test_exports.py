@@ -16,7 +16,7 @@ from etools.applications.partners.tests.factories import InterventionFactory
 from etools.applications.publics.tests.factories import (PublicsAirlineCompanyFactory, PublicsCurrencyFactory,
                                                          PublicsDSARateFactory, PublicsDSARegionFactory,
                                                          PublicsFundFactory, PublicsGrantFactory, PublicsWBSFactory,)
-from etools.applications.reports.tests.factories import ResultFactory, SectorFactory
+from etools.applications.reports.tests.factories import ResultFactory, SectionFactory
 from etools.applications.t2f.models import Invoice, ModeOfTravel, TravelActivity, TravelType
 from etools.applications.t2f.tests.factories import (ExpenseFactory, InvoiceFactory, InvoiceItemFactory,
                                                      ItineraryItemFactory, TravelActivityFactory, TravelFactory,)
@@ -47,8 +47,8 @@ class TravelExports(BaseTenantTestCase):
     def test_activity_export(self):
         tz = timezone.get_default_timezone()
         office = OfficeFactory(name='Budapest')
-        section_health = SectorFactory(name='Health')
-        section_education = SectorFactory(name='Education')
+        section_health = SectionFactory(name='Health')
+        section_education = SectionFactory(name='Education')
 
         location_ABC = LocationFactory(name='Location ABC')
         location_345 = LocationFactory(name='Location 345')

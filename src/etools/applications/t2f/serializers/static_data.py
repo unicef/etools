@@ -23,7 +23,7 @@ class OfficeSerializer(serializers.ModelSerializer):
         fields = ('id', 'name')
 
 
-class SectorSerializer(serializers.ModelSerializer):
+class SectionSerializer(serializers.ModelSerializer):
     class Meta:
         model = Sector
         fields = ('id', 'name', 'description')

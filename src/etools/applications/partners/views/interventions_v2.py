@@ -58,8 +58,8 @@ from etools.applications.partners.serializers.exports.interventions import (
     InterventionIndicatorExportSerializer,
     InterventionResultExportFlatSerializer,
     InterventionResultExportSerializer,
-    InterventionSectorLocationLinkExportFlatSerializer,
-    InterventionSectorLocationLinkExportSerializer,
+    InterventionSectionLocationLinkExportFlatSerializer,
+    InterventionSectionLocationLinkExportSerializer,
 )
 from etools.applications.partners.serializers.interventions_v2 import (
     InterventionAmendmentCUSerializer,
@@ -76,7 +76,7 @@ from etools.applications.partners.serializers.interventions_v2 import (
     InterventionResultCUSerializer,
     InterventionResultLinkSimpleCUSerializer,
     InterventionResultSerializer,
-    InterventionSectorLocationCUSerializer,
+    InterventionSectionLocationCUSerializer,
     MinimalInterventionListSerializer,
     InterventionLocationExportSerializer)
 from etools.applications.partners.validation.interventions import InterventionValid
@@ -494,11 +494,11 @@ class InterventionAmendmentDeleteView(DestroyAPIView):
             raise ValidationError("You do not have permissions to delete an amendment")
 
 
-class InterventionSectorLocationLinkListAPIView(ExportModelMixin, ListAPIView):
+class InterventionSectionLocationLinkListAPIView(ExportModelMixin, ListAPIView):
     """
-    Returns a list of InterventionSectorLocationLinks.
+    Returns a list of InterventionSectionLocationLinks.
     """
-    serializer_class = InterventionSectorLocationCUSerializer
+    serializer_class = InterventionSectionLocationCUSerializer
     permission_classes = (PartnershipManagerPermission,)
     filter_backends = (PartnerScopeFilter,)
     renderer_classes = (
@@ -514,10 +514,10 @@ class InterventionSectorLocationLinkListAPIView(ExportModelMixin, ListAPIView):
         query_params = self.request.query_params
         if "format" in query_params.keys():
             if query_params.get("format") == 'csv':
-                return InterventionSectorLocationLinkExportSerializer
+                return InterventionSectionLocationLinkExportSerializer
             if query_params.get("format") == 'csv_flat':
-                return InterventionSectorLocationLinkExportFlatSerializer
-        return super(InterventionSectorLocationLinkListAPIView, self).get_serializer_class()
+                return InterventionSectionLocationLinkExportFlatSerializer
+        return super(InterventionSectionLocationLinkListAPIView, self).get_serializer_class()
 
     def get_queryset(self, format=None):
         q = InterventionSectorLocationLink.objects.all()
