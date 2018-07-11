@@ -15,7 +15,7 @@ from django.utils.translation import ugettext
 from rest_framework import serializers
 from rest_framework.exceptions import ValidationError
 
-from etools.applications.locations.models import Location
+from unicef_locations.models import Location
 from etools.applications.partners.models import PartnerType
 from etools.applications.publics.models import AirlineCompany, Currency
 from etools.applications.t2f.helpers.permission_matrix import PermissionMatrix

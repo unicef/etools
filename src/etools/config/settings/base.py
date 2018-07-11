@@ -203,7 +203,7 @@ TENANT_APPS = (
     'django_comments',
     'logentry_admin',
     'etools.applications.funds',
-    'etools.applications.locations',
+    'unicef_locations',
     'etools.applications.reports',
     'etools.applications.partners',
     'etools.applications.hact',

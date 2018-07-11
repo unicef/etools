@@ -10,7 +10,7 @@ from tenant_schemas.test.client import TenantClient
 from etools.applications.EquiTrack.fields import CURRENCY_LIST
 from etools.applications.EquiTrack.tests.cases import BaseTenantTestCase
 from etools.applications.EquiTrack.tests.mixins import URLAssertionMixin
-from etools.applications.locations.tests.factories import GatewayTypeFactory
+from unicef_locations.tests.factories import GatewayTypeFactory
 from etools.applications.partners.models import (Agreement, AgreementAmendment, Assessment, Intervention,
                                                  InterventionAmendment, PartnerOrganization, PartnerType,)
 from etools.applications.partners.tests.factories import PartnerFactory
