@@ -6,6 +6,7 @@ from factory import fuzzy
 
 from rest_framework import status
 
+from etools.applications.action_points.models import ActionPoint
 from etools.applications.action_points.tests.base import ActionPointsTestCaseMixin
 from etools.applications.action_points.tests.factories import ActionPointFactory
 from etools.applications.EquiTrack.tests.cases import BaseTenantTestCase
@@ -87,6 +88,7 @@ class TestActionPointViewSet(TestExportMixin, ActionPointsTestCaseMixin, BaseTen
 
     def test_create_author(self):
         action_point_data = {
+            'category': fuzzy.FuzzyChoice(dict(ActionPoint.CATEGORY_CHOICES).keys()).fuzz(),
             'description': 'do something',
             'due_date': date.today(),
             'assigned_to': self.pme_user.id,
@@ -199,6 +201,7 @@ class TestActionPointsListViewMetadada(TestActionPointsViewMetadata, BaseTenantT
         self._test_list_options(
             self.pme_user,
             writable_fields=[
+                'category',
                 'description',
                 'due_date',
                 'assigned_to',
@@ -247,6 +250,7 @@ class TestActionPointsDetailViewMetadata(TestActionPointsViewMetadata):
 class TestOpenActionPointDetailViewMetadata(TestActionPointsDetailViewMetadata, BaseTenantTestCase):
     status = 'open'
     editable_fields = [
+        'category',
         'description',
         'due_date',
         'assigned_to',
@@ -279,6 +283,7 @@ class TestOpenActionPointDetailViewMetadata(TestActionPointsDetailViewMetadata, 
 
 class TestRelatedOpenActionPointDetailViewMetadata(TestOpenActionPointDetailViewMetadata):
     editable_fields = [
+        'category',
         'description',
         'due_date',
         'assigned_to',
