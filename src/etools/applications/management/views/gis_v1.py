@@ -1,5 +1,4 @@
 from django.db import connection
-from django.db.models import Q
 
 from rest_framework.generics import ListAPIView, RetrieveAPIView
 from rest_framework.response import Response
@@ -122,7 +121,7 @@ class GisLocationsGeomListViewset(ListAPIView):
                     # we must specify the proper serializer `geo_field` for both points and polygons, to be able
                     # to generate a result which is importable in QGis
                     # `point__isnull = True` = polygons(`geom__isnull=False`) + locations with no geometry at all
-                    polygons = Location.objects.filter(point__isnull = True).all()
+                    polygons = Location.objects.filter(point__isnull=True).all()
                     self.get_serializer_class().Meta.geo_field = 'geom'
                     serialized_polygons = self.get_serializer(polygons, many=True, context={'request': request})
 
