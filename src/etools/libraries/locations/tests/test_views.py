@@ -1,13 +1,8 @@
-from django.core.cache import cache
 from django.core.urlresolvers import reverse
-from django.db import connection
-from django.test import TestCase
-
 from rest_framework import status
 
 from etools.applications.EquiTrack.tests.cases import BaseTenantTestCase
 from etools.applications.users.tests.factories import UserFactory
-from unicef_locations.models import Location
 from unicef_locations.tests.factories import LocationFactory
 
 
@@ -96,7 +91,6 @@ class TestLocationViews(BaseTenantTestCase):
                                         user=self.unicef_staff, HTTP_IF_NONE_MATCH=etag)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(len(response.data), 6)
-
 
     def test_api_location_autocomplete(self):
         response = self.forced_auth_req('get', reverse('locations:locations_autocomplete'),

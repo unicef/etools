@@ -5,7 +5,6 @@ from rest_framework import permissions
 from unicef_locations import views
 
 
-
 def cache_key():
     schema_name = connection.schema_name
     return '{}-locations-etag'.format(schema_name)

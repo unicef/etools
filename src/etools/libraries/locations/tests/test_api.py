@@ -28,4 +28,4 @@ class TestAPICartoDB(BaseTenantTestCase, metaclass=ViewSetChecker):
     ]
 
     def get_fixtures(cls):
-        return {'locationtype': CartoDBTableFactory(),}
+        return {'locationtype': CartoDBTableFactory()}
