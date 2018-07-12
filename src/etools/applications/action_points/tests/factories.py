@@ -11,7 +11,7 @@ from etools.applications.action_points.models import ActionPoint
 from etools.applications.firms.tests.factories import BaseUserFactory
 from etools.applications.locations.tests.factories import LocationFactory
 from etools.applications.partners.tests.factories import InterventionFactory, ResultFactory
-from etools.applications.reports.tests.factories import SectorFactory
+from etools.applications.reports.tests.factories import SectionFactory
 from etools.applications.utils.common.tests.factories import InheritedTrait
 
 
@@ -66,7 +66,7 @@ class ActionPointFactory(factory.DjangoModelFactory):
 
     author = factory.SubFactory(UserFactory, unicef_user=True)
     assigned_by = factory.SubFactory(UserFactory, unicef_user=True)
-    section = factory.SubFactory(SectorFactory)
+    section = factory.SubFactory(SectionFactory)
     office = factory.SelfAttribute('author.profile.office')
 
     assigned_to = factory.SubFactory(UserFactory, unicef_user=True)

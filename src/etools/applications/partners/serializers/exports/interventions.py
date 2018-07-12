@@ -35,7 +35,7 @@ class InterventionAmendmentExportFlatSerializer(
         exclude = ("signed_amendment_attachment", )
 
 
-class InterventionSectorLocationLinkExportSerializer(LocationExportSerializer):
+class InterventionSectionLocationLinkExportSerializer(LocationExportSerializer):
     intervention = serializers.SerializerMethodField(
         label=_("Reference Number")
     )
@@ -57,7 +57,7 @@ class InterventionSectorLocationLinkExportSerializer(LocationExportSerializer):
         )
 
 
-class InterventionSectorLocationLinkExportFlatSerializer(
+class InterventionSectionLocationLinkExportFlatSerializer(
         ExportSerializerMixin,
         LocationExportFlatSerializer
 ):

@@ -5,7 +5,7 @@ import factory
 from factory import fuzzy
 
 from etools.applications.partners import models
-from etools.applications.reports.tests.factories import CountryProgrammeFactory, ResultFactory, SectorFactory
+from etools.applications.reports.tests.factories import CountryProgrammeFactory, ResultFactory, SectionFactory
 from etools.applications.users.tests.factories import UserFactory
 
 
@@ -186,13 +186,13 @@ class InterventionResultLinkFactory(factory.django.DjangoModelFactory):
     cp_output = factory.SubFactory(ResultFactory)
 
 
-class InterventionSectorLocationLinkFactory(factory.django.DjangoModelFactory):
+class InterventionSectionLocationLinkFactory(factory.django.DjangoModelFactory):
 
     class Meta:
         model = models.InterventionSectorLocationLink
 
     intervention = factory.SubFactory(InterventionFactory)
-    sector = factory.SubFactory(SectorFactory)
+    sector = factory.SubFactory(SectionFactory)
 
 
 class FundingCommitmentFactory(factory.django.DjangoModelFactory):

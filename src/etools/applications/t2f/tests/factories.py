@@ -10,7 +10,7 @@ from etools.applications.publics.tests.factories import (PublicsAirlineCompanyFa
                                                          PublicsDSARegionFactory, PublicsFundFactory,
                                                          PublicsGrantFactory, PublicsTravelExpenseTypeFactory,
                                                          PublicsWBSFactory,)
-from etools.applications.reports.tests.factories import ResultFactory, SectorFactory
+from etools.applications.reports.tests.factories import ResultFactory, SectionFactory
 from etools.applications.t2f import models
 from etools.applications.users.tests.factories import OfficeFactory, UserFactory
 
@@ -126,7 +126,7 @@ class TravelFactory(factory.DjangoModelFactory):
     traveler = factory.SubFactory(UserFactory)
     supervisor = factory.SubFactory(UserFactory)
     office = factory.SubFactory(OfficeFactory)
-    section = factory.SubFactory(SectorFactory)
+    section = factory.SubFactory(SectionFactory)
     start_date = fuzzy.FuzzyDateTime(start_dt=_FUZZY_START_DATE, end_dt=timezone.now())
     end_date = fuzzy.FuzzyDateTime(start_dt=timezone.now(), end_dt=_FUZZY_END_DATE)
     purpose = factory.Sequence(lambda n: 'Purpose #{}'.format(n))
