@@ -590,3 +590,4 @@ SCHEMA_OVERRIDE_PARAM = "schema"
 PCA_REQUIRED_NOTIFICATION_LEAD = 30
 
 UNICEF_NOTIFICATION_TEMPLATE_DIR = "notifications"
+UNICEF_LOCATIONS_GET_CACHE_KEY = 'etools.libraries.locations.views.cache_key'
