@@ -489,6 +489,10 @@ class TravelActivity(models.Model):
     def travel_status(self):
         return self.travels.filter(traveler=self.primary_traveler).first().status
 
+    def get_object_url(self):
+        # TODO: to be used for generating link from action points dashboard to related object
+        return ""
+
 
 class ItineraryItem(models.Model):
     travel = models.ForeignKey(
