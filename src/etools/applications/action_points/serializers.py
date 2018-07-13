@@ -100,7 +100,7 @@ class ActionPointListSerializer(PermissionsBasedSerializerMixin, ActionPointBase
             'section', 'office', 'location',
             'partner', 'cp_output', 'intervention',
 
-            'engagement', 'tpm_activity', 'travel',
+            'engagement', 'tpm_activity', 'travel_activity',
         ]
 
     def create(self, validated_data):
@@ -116,12 +116,6 @@ class ActionPointListSerializer(PermissionsBasedSerializerMixin, ActionPointBase
                 'intervention_id': activity.intervention_id,
                 'cp_output_id': activity.cp_output_id,
                 'section_id': activity.section_id,
-            })
-        elif 'travel' in validated_data:
-            travel = validated_data['travel']
-            validated_data.update({
-                'office_id': travel.office_id,
-                'section_id': travel.section_id,
             })
 
         return super().create(validated_data)
