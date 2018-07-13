@@ -9,7 +9,7 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from etools.applications.partners.models import Agreement
-from etools.applications.users.models import Country, Section, UserProfile
+from etools.applications.users.models import Country, UserProfile
 
 
 class PortalDashView(View):
@@ -20,23 +20,17 @@ class PortalDashView(View):
         return HttpResponse(result)
 
 
-class ActiveUsersSection(APIView):
+class ActiveUsers(APIView):
     """
-    Gets the list of active Users in all countries
     """
     model = UserProfile
 
     def get(self, request, **kwargs):
-        # get all the countries:
         country_list = Country.objects.values_list('name', flat=True)
-
-        # get all sections:
-        section_list = Section.objects.values_list('name', flat=True)
 
         results = []
         for country in country_list:
             country_records = {}
-            # create the first filter
             user_qry = UserProfile.objects.filter(
                 user__is_staff=True,
                 user__is_active=True,
@@ -46,18 +40,6 @@ class ActiveUsersSection(APIView):
                 'total': user_qry.count()
             }
 
-            sections = []
-            for section in section_list:
-                section_qry = user_qry.filter(
-                    section__name=section,
-                )
-                section_users = {
-                    'name': section,
-                    'count': section_qry.count()
-                }
-                sections.append(section_users)
-
-            country_records[country]['sections'] = sections
             results.append({'countryName': country,
                             'records': country_records[country]})
 

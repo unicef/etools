@@ -35,7 +35,7 @@ class InterventionAmendmentExportFlatSerializer(
         exclude = ("signed_amendment_attachment", )
 
 
-class InterventionSectorLocationLinkExportSerializer(LocationExportSerializer):
+class InterventionSectionLocationLinkExportSerializer(LocationExportSerializer):
     intervention = serializers.SerializerMethodField(
         label=_("Reference Number")
     )
@@ -57,7 +57,7 @@ class InterventionSectorLocationLinkExportSerializer(LocationExportSerializer):
         )
 
 
-class InterventionSectorLocationLinkExportFlatSerializer(
+class InterventionSectionLocationLinkExportFlatSerializer(
         ExportSerializerMixin,
         LocationExportFlatSerializer
 ):
@@ -226,7 +226,7 @@ class InterventionExportSerializer(serializers.ModelSerializer):
         source='agreement.partner.name',
     )
     vendor_number = serializers.CharField(
-        label=_("Vendor #"),
+        label=_("Vendor Number"),
         source='agreement.partner.vendor_number',
     )
     partner_type = serializers.CharField(
