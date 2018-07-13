@@ -1,13 +1,9 @@
-from django.core.cache import cache
 from django.core.urlresolvers import reverse
-from django.db import connection
-
 from rest_framework import status
 
 from etools.applications.EquiTrack.tests.cases import BaseTenantTestCase
-from etools.applications.locations.models import Location
-from etools.applications.locations.tests.factories import LocationFactory
 from etools.applications.users.tests.factories import UserFactory
+from unicef_locations.tests.factories import LocationFactory
 
 
 class TestLocationViews(BaseTenantTestCase):
@@ -95,15 +91,6 @@ class TestLocationViews(BaseTenantTestCase):
                                         user=self.unicef_staff, HTTP_IF_NONE_MATCH=etag)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(len(response.data), 6)
-
-    def test_location_delete_etag(self):
-        # Activate cache-aside with a request.
-        self.forced_auth_req('get', reverse('locations-list'), user=self.unicef_staff)
-        schema_name = connection.schema_name
-        etag_before = cache.get("{}-locations-etag".format(schema_name))
-        Location.objects.all().delete()
-        etag_after = cache.get("{}-locations-etag".format(schema_name))
-        assert etag_before != etag_after
 
     def test_api_location_autocomplete(self):
         response = self.forced_auth_req('get', reverse('locations:locations_autocomplete'),
