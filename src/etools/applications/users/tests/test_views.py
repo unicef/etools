@@ -15,7 +15,7 @@ from etools.applications.EquiTrack.tests.cases import BaseTenantTestCase
 from etools.applications.publics.tests.factories import PublicsBusinessAreaFactory
 from etools.applications.users.models import Group, UserProfile
 from etools.applications.users.tests.factories import (CountryFactory, GroupFactory,
-                                                       OfficeFactory, SectionFactory, UserFactory,)
+                                                       OfficeFactory, UserFactory,)
 
 
 class TestUserAuthAPIView(BaseTenantTestCase):
@@ -69,33 +69,6 @@ class TestChangeUserCountry(BaseTenantTestCase):
             data={"country": country.pk}
         )
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
-
-
-class TestSectionViews(BaseTenantTestCase):
-    @classmethod
-    def setUpTestData(cls):
-        cls.unicef_staff = UserFactory(is_staff=True)
-        cls.url = '/api/sections/'
-
-    def test_api_section_list_values(self):
-        s1 = SectionFactory()
-        s2 = SectionFactory()
-        response = self.forced_auth_req(
-            'get',
-            self.url,
-            user=self.unicef_staff,
-            data={"values": "{},{}".format(s1.id, s2.id)}
-        )
-        # Returns empty set - figure out public schema testing
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
-
-    def test_api_sections_detail(self):
-        response = self.forced_auth_req(
-            'get',
-            self.url,
-            user=self.unicef_staff
-        )
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
 
 
 class TestOfficeViews(BaseTenantTestCase):
@@ -343,26 +316,6 @@ class TestProfileEdit(BaseTenantTestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertTemplateUsed(response, "users/profile.html")
 
-    @skip("Issue with office/section not being available")
-    def test_post(self):
-        user = UserFactory(is_staff=True)
-        self.client.force_login(user)
-        response = self.client.post(
-            self.url,
-            data={
-                "guid": "123",
-                "office": "",
-                "section": "",
-                "job_title": "New Job",
-                "phone_number": "123-546-7890",
-            }
-        )
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertTemplateUsed(response, "users/profile.html")
-        profile = UserProfile.objects.get(user=user)
-        self.assertEqual(profile.job_title, "New Job")
-        self.assertEqual(profile.phone_number, "123-546-7890")
-
 
 class TestGroupViewSet(BaseTenantTestCase):
     @classmethod
@@ -480,7 +433,6 @@ class TestUserViewSet(BaseTenantTestCase):
                     "guid": "123",
                     "country": None,
                     "office": None,
-                    "section": None,
                     "job_title": "New Job",
                     "phone_number": "123-546-7890",
                     "country_override": None,

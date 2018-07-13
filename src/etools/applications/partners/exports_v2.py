@@ -308,6 +308,7 @@ class PartnershipDashCSVRenderer(r.CSVRenderer):
 class InterventionLocationCSVRenderer(r.CSVRenderer):
     header = [   # This controls field order in the output
         'partner',
+        'partner_vendor_number',
         'pd_ref_number',
         'partnership',
         'status',
@@ -326,7 +327,8 @@ class InterventionLocationCSVRenderer(r.CSVRenderer):
         'hyperlink': 'Hyperlink',
         'location': 'Location',
         'partner': 'Partner',
-        'partnership': 'Partnership',
+        "partner_vendor_number": "Vendor Number",
+        'partnership': 'Agreement',
         'pd_ref_number': 'PD Ref Number',
         'section': 'Section',
         'start': 'Start Date',
