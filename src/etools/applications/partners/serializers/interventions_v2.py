@@ -9,6 +9,7 @@ from rest_framework import serializers
 from rest_framework.serializers import ValidationError
 from unicef_snapshot.serializers import SnapshotModelSerializer
 
+from etools.applications.attachments.serializers import AttachmentSerializerMixin
 from etools.applications.attachments.serializers_fields import AttachmentSingleFileField
 from etools.applications.funds.models import FundsCommitmentItem, FundsReservationHeader
 from etools.applications.funds.serializers import FRsSerializer
@@ -24,8 +25,12 @@ from etools.applications.partners.models import (
     InterventionSectorLocationLink,
 )
 from etools.applications.partners.permissions import InterventionPermissions
-from etools.applications.reports.models import AppliedIndicator, LowerResult, ReportingRequirement
-from etools.applications.reports.serializers.v1 import SectorSerializer
+from etools.applications.reports.models import (
+    AppliedIndicator,
+    LowerResult,
+    ReportingRequirement,
+)
+from etools.applications.reports.serializers.v1 import SectionSerializer
 from etools.applications.reports.serializers.v2 import (
     IndicatorSerializer,
     LowerResultCUSerializer,
@@ -51,10 +56,12 @@ class InterventionBudgetCUSerializer(serializers.ModelSerializer):
         )
 
 
-class InterventionAmendmentCUSerializer(serializers.ModelSerializer):
+class InterventionAmendmentCUSerializer(AttachmentSerializerMixin, serializers.ModelSerializer):
     amendment_number = serializers.CharField(read_only=True)
     signed_amendment_file = serializers.FileField(source="signed_amendment", read_only=True)
-    signed_amendment_attachment = AttachmentSingleFileField(read_only=True)
+    signed_amendment_attachment = AttachmentSingleFileField(
+        override="signed_amendment"
+    )
 
     class Meta:
         model = InterventionAmendment
@@ -240,9 +247,9 @@ class MinimalInterventionListSerializer(serializers.ModelSerializer):
 
 
 # TODO intervention sector locations cleanup
-class InterventionLocationSectorNestedSerializer(serializers.ModelSerializer):
+class InterventionLocationSectionNestedSerializer(serializers.ModelSerializer):
     locations = LocationLightSerializer(many=True)
-    sector = SectorSerializer()
+    sector = SectionSerializer()
 
     class Meta:
         model = InterventionSectorLocationLink
@@ -252,7 +259,7 @@ class InterventionLocationSectorNestedSerializer(serializers.ModelSerializer):
 
 
 # TODO intervention sector locations cleanup
-class InterventionSectorLocationCUSerializer(serializers.ModelSerializer):
+class InterventionSectionLocationCUSerializer(serializers.ModelSerializer):
     class Meta:
         model = InterventionSectorLocationLink
         fields = (
@@ -260,9 +267,12 @@ class InterventionSectorLocationCUSerializer(serializers.ModelSerializer):
         )
 
 
-class InterventionAttachmentSerializer(serializers.ModelSerializer):
+class InterventionAttachmentSerializer(AttachmentSerializerMixin, serializers.ModelSerializer):
     attachment_file = serializers.FileField(source="attachment", read_only=True)
-    attachment_document = AttachmentSingleFileField(source="attachment_file", read_only=True)
+    attachment_document = AttachmentSingleFileField(
+        source="attachment_file",
+        override="attachment",
+    )
 
     class Meta:
         model = InterventionAttachment
@@ -468,14 +478,15 @@ class FundingCommitmentNestedSerializer(serializers.ModelSerializer):
         )
 
 
-class InterventionCreateUpdateSerializer(SnapshotModelSerializer):
+class InterventionCreateUpdateSerializer(AttachmentSerializerMixin, SnapshotModelSerializer):
 
     planned_budget = InterventionBudgetCUSerializer(read_only=True)
     partner = serializers.CharField(source='agreement.partner.name', read_only=True)
     prc_review_document_file = serializers.FileField(source='prc_review_document', read_only=True)
-    prc_review_attachment = AttachmentSingleFileField(read_only=True)
+    prc_review_attachment = AttachmentSingleFileField()
     signed_pd_document_file = serializers.FileField(source='signed_pd_document', read_only=True)
-    signed_pd_attachment = AttachmentSingleFileField(read_only=True)
+    signed_pd_attachment = AttachmentSingleFileField()
+    planned_visits = PlannedVisitsNestedSerializer(many=True, read_only=True, required=False)
     attachments = InterventionAttachmentSerializer(many=True, read_only=True, required=False)
     result_links = InterventionResultCUSerializer(many=True, read_only=True, required=False)
     frs = serializers.PrimaryKeyRelatedField(many=True,
@@ -801,6 +812,7 @@ class InterventionReportingRequirementCreateSerializer(serializers.ModelSerializ
 
 class InterventionLocationExportSerializer(serializers.Serializer):
     partner = serializers.CharField(source="intervention.agreement.partner.name")
+    partner_vendor_number = serializers.CharField(source="intervention.agreement.partner.vendor_number")
     pd_ref_number = serializers.CharField(source="intervention.number")
     partnership = serializers.CharField(source="intervention.agreement.agreement_number")
     status = serializers.CharField(source="intervention.status")

@@ -22,16 +22,16 @@
         {
             "id": 1,
             "amendment_number": "1",
-            "signed_amendment_file": "http://testserver/media/test/file_attachments/partner_organization/7/7/agreements/7/interventions/3/amendments/None/test_file.pdf",
+            "signed_amendment_file": "http://testserver/media/test/file_attachments/partner_organization/7/7/agreements/7/interventions/3/amendments/None/test_file_vgp2fTw.pdf",
             "signed_amendment_attachment": null,
-            "created": "2018-06-13T02:58:16.666000Z",
-            "modified": "2018-06-13T02:58:16.686000Z",
+            "created": "2018-07-11T14:19:08.349000Z",
+            "modified": "2018-07-11T14:19:08.386000Z",
             "types": [
-                "Change banking info"
+                "Change authorized officer"
             ],
-            "other_description": "nkWPtssopVUpSWswPcWvQGLOYfIzfQotNZAVPZKBYWGbAJarjL",
-            "signed_date": "2018-06-13",
-            "signed_amendment": "http://testserver/media/test/file_attachments/partner_organization/7/7/agreements/7/interventions/3/amendments/None/test_file.pdf",
+            "other_description": "jcFCLxnSdeVyYltjOQAjIdewThiSKkEztgiBLULBSiIvSLhXnV",
+            "signed_date": "2018-07-11",
+            "signed_amendment": "http://testserver/media/test/file_attachments/partner_organization/7/7/agreements/7/interventions/3/amendments/None/test_file_vgp2fTw.pdf",
             "intervention": 3
         }
     ],

@@ -14,7 +14,7 @@ from etools.applications.partners.models import InterventionResultLink, PartnerT
 from etools.applications.partners.serializers.interventions_v2 import InterventionCreateUpdateSerializer
 from etools.applications.partners.serializers.partner_organization_v2 import MinimalPartnerOrganizationListSerializer
 from etools.applications.permissions2.serializers import PermissionsBasedSerializerMixin
-from etools.applications.reports.serializers.v1 import ResultSerializer, SectorSerializer
+from etools.applications.reports.serializers.v1 import ResultSerializer, SectionSerializer
 from etools.applications.tpm.models import TPMActionPoint, TPMActivity, TPMVisit, TPMVisitReportRejectComment
 from etools.applications.tpm.serializers.partner import TPMPartnerLightSerializer, TPMPartnerStaffMemberSerializer
 from etools.applications.tpm.tpmpartners.models import TPMPartnerStaffMember
@@ -44,7 +44,7 @@ class TPMVisitReportRejectCommentSerializer(WritableNestedSerializerMixin,
 
 class TPMActionPointSerializer(PermissionsBasedSerializerMixin, ActionPointBaseSerializer):
     section = SeparatedReadWriteField(
-        read_field=SectorSerializer(read_only=True, label=_('Section')),
+        read_field=SectionSerializer(read_only=True, label=_('Section')),
         read_only=True
     )
     office = SeparatedReadWriteField(
@@ -103,7 +103,7 @@ class TPMActivitySerializer(PermissionsBasedSerializerMixin, WritableNestedSeria
     )
 
     section = SeparatedReadWriteField(
-        read_field=SectorSerializer(read_only=True, label=_('Section')),
+        read_field=SectionSerializer(read_only=True, label=_('Section')),
         required=True,
     )
 
@@ -189,7 +189,7 @@ class TPMVisitLightSerializer(PermissionsBasedSerializerMixin, serializers.Model
         ).data
 
     def get_sections(self, obj):
-        return SectorSerializer(
+        return SectionSerializer(
             set(map(
                 lambda a: a.section,
                 obj.tpm_activities.all()

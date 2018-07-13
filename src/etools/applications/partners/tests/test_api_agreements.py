@@ -7,10 +7,24 @@ from django.urls import reverse
 from rest_framework import status
 from unicef_snapshot.models import Activity
 
+from etools.applications.attachments.models import Attachment
+from etools.applications.attachments.tests.factories import (
+    AttachmentFactory,
+    AttachmentFileTypeFactory,
+)
 from etools.applications.EquiTrack.tests.cases import BaseTenantTestCase
 from etools.applications.EquiTrack.tests.mixins import URLAssertionMixin
-from etools.applications.partners.models import Agreement, AgreementAmendment, Intervention, PartnerType
-from etools.applications.partners.tests.factories import AgreementFactory, InterventionFactory, PartnerFactory
+from etools.applications.partners.models import (
+    Agreement,
+    AgreementAmendment,
+    Intervention,
+    PartnerType,
+)
+from etools.applications.partners.tests.factories import (
+    AgreementFactory,
+    InterventionFactory,
+    PartnerFactory,
+)
 from etools.applications.reports.tests.factories import CountryProgrammeFactory
 from etools.applications.users.tests.factories import GroupFactory, UserFactory
 
@@ -49,6 +63,12 @@ class TestAgreementsAPI(BaseTenantTestCase):
                                                           number="001",
                                                           signed_amendment="application/pdf",
                                                           signed_date=datetime.date.today())
+        cls.file_type_agreement = AttachmentFileTypeFactory(
+            code="partners_agreement"
+        )
+        cls.file_type_agreement_amendment = AttachmentFileTypeFactory(
+            code="partners_agreement_amendment"
+        )
 
     def run_request_list_ep(self, data={}, user=None, method='post'):
         response = self.forced_auth_req(
@@ -82,6 +102,40 @@ class TestAgreementsAPI(BaseTenantTestCase):
         self.assertEqual(
             Activity.objects.filter(action=Activity.CREATE).count(),
             1
+        )
+
+    def test_add_new_PCA_with_attachment(self):
+        attachment = AttachmentFactory(
+            file="test_file.pdf",
+            file_type=None,
+            code="",
+        )
+        self.assertIsNone(attachment.file_type)
+        self.assertIsNone(attachment.content_object)
+        self.assertFalse(attachment.code)
+        self.assertFalse(Activity.objects.exists())
+        data = {
+            "agreement_type": Agreement.PCA,
+            "partner": self.partner1.id,
+            "country_programme": self.country_programme.id,
+            "attachment": attachment.pk
+        }
+        status_code, response = self.run_request_list_ep(data)
+        self.assertEqual(status_code, status.HTTP_201_CREATED)
+        self.assertEqual(response['agreement_type'], Agreement.PCA)
+        self.assertEqual(
+            Activity.objects.filter(action=Activity.CREATE).count(),
+            1
+        )
+        attachment_updated = Attachment.objects.get(pk=attachment.pk)
+        self.assertEqual(
+            attachment_updated.file_type.code,
+            self.file_type_agreement.code
+        )
+        self.assertEqual(attachment_updated.object_id, response["id"])
+        self.assertEqual(
+            attachment_updated.code,
+            self.file_type_agreement.code
         )
 
     def test_fail_add_new_PCA_without_agreement_type(self):
@@ -188,3 +242,65 @@ class TestAgreementsAPI(BaseTenantTestCase):
             status_code, response = self.run_request_list_ep(user=self.unicef_staff, method='get')
 
         self.assertEqual(status_code, status.HTTP_200_OK)
+
+    def test_add_new_PCA_with_amendment(self):
+        attachment = AttachmentFactory(
+            file="test_file.pdf",
+            file_type=None,
+            code="",
+        )
+        attachment_amendment = AttachmentFactory(
+            file="test_file_amendment.pdf",
+            file_type=None,
+            code="",
+        )
+        self.assertIsNone(attachment.file_type)
+        self.assertIsNone(attachment.content_object)
+        self.assertFalse(attachment.code)
+        self.assertIsNone(attachment_amendment.file_type)
+        self.assertIsNone(attachment_amendment.content_object)
+        self.assertFalse(attachment_amendment.code)
+        self.assertFalse(Activity.objects.exists())
+        data = {
+            "agreement_type": Agreement.PCA,
+            "partner": self.partner1.id,
+            "country_programme": self.country_programme.id,
+            "attachment": attachment.pk,
+            "amendments": [{
+                "types": [AgreementAmendment.CLAUSE, ],
+                "signed_date": datetime.date.today().strftime("%Y-%m-%d"),
+                "signed_amendment_attachment": attachment_amendment.pk,
+            }]
+        }
+        status_code, response = self.run_request_list_ep(data)
+        self.assertEqual(status_code, status.HTTP_201_CREATED)
+        self.assertEqual(response['agreement_type'], Agreement.PCA)
+        self.assertEqual(
+            Activity.objects.filter(action=Activity.CREATE).count(),
+            1
+        )
+        attachment_updated = Attachment.objects.get(pk=attachment.pk)
+        self.assertEqual(
+            attachment_updated.file_type.code,
+            self.file_type_agreement.code
+        )
+        self.assertEqual(attachment_updated.object_id, response["id"])
+        self.assertEqual(
+            attachment_updated.code,
+            self.file_type_agreement.code
+        )
+        attachment_amendment_updated = Attachment.objects.get(
+            pk=attachment_amendment.pk
+        )
+        self.assertEqual(
+            attachment_amendment_updated.file_type.code,
+            self.file_type_agreement_amendment.code
+        )
+        self.assertEqual(
+            attachment_amendment_updated.object_id,
+            response["amendments"][0]["id"]
+        )
+        self.assertEqual(
+            attachment_amendment_updated.code,
+            self.file_type_agreement_amendment.code
+        )
