@@ -16,7 +16,6 @@ class SimpleCountrySerializer(serializers.ModelSerializer):
 class UserProfileSerializer(serializers.ModelSerializer):
 
     office = serializers.CharField(source='office.name')
-    section = serializers.CharField(source='section.name')
     country_name = serializers.CharField(source='country.name')
     countries_available = SimpleCountrySerializer(many=True, read_only=True)
 
@@ -62,7 +61,7 @@ class ProfileRetrieveUpdateSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = UserProfile
-        fields = ('name', 'office', 'section', 'supervisor', 'countries_available',
+        fields = ('name', 'office', 'supervisor', 'countries_available',
                   'oic', 'groups', 'supervisees', 'job_title', 'phone_number')
 
 
@@ -122,9 +121,7 @@ class GroupSerializer(serializers.ModelSerializer):
 class SimpleNestedProfileSerializer(serializers.ModelSerializer):
     class Meta:
         model = UserProfile
-        fields = (
-            'country', 'office', 'section'
-        )
+        fields = ('country', 'office')
 
 
 class SimpleUserSerializer(serializers.ModelSerializer):
@@ -182,7 +179,6 @@ class UserCreationSerializer(serializers.ModelSerializer):
             user = get_user_model().objects.create(**validated_data)
             user.profile.country = user_profile['country']
             user.profile.office = user_profile['office']
-            user.profile.section = user_profile['section']
             user.profile.partner_staff_member = 0
             user.profile.job_title = user_profile['job_title']
             user.profile.phone_number = user_profile['phone_number']

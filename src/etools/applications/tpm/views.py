@@ -20,7 +20,7 @@ from etools.applications.permissions2.conditions import ObjectStatusCondition
 from etools.applications.permissions2.drf_permissions import NestedPermission, get_permission_for_targets
 from etools.applications.permissions2.views import PermittedFSMActionMixin, PermittedSerializerMixin
 from etools.applications.reports.models import Result, Sector
-from etools.applications.reports.serializers.v1 import ResultLightSerializer, SectorSerializer
+from etools.applications.reports.serializers.v1 import ResultLightSerializer, SectionSerializer
 
 from etools.applications.tpm.conditions import (
     TPMModuleCondition, TPMStaffMemberCondition, TPMVisitTPMFocalPointCondition, TPMVisitUNICEFFocalPointCondition,)
@@ -225,7 +225,7 @@ class ImplementingPartnerView(generics.ListAPIView):
 
 class VisitsSectionView(generics.ListAPIView):
     queryset = Sector.objects.all()
-    serializer_class = SectorSerializer
+    serializer_class = SectionSerializer
     permission_classes = (IsAuthenticated,)
 
     filter_backends = (SearchFilter,)

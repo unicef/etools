@@ -166,10 +166,6 @@ class Travel(models.Model):
         on_delete=models.CASCADE,
     )
     section = models.ForeignKey(
-        'users.Section', null=True, blank=True, related_name='+', verbose_name=_('Section'),
-        on_delete=models.CASCADE,
-    )
-    sector = models.ForeignKey(
         'reports.Sector', null=True, blank=True, related_name='+', verbose_name=_('Sector'),
         on_delete=models.CASCADE,
     )
