@@ -60,6 +60,7 @@ class ActionPointFactory(factory.DjangoModelFactory):
     partner = factory.SelfAttribute('intervention.agreement.partner')
     cp_output = factory.SubFactory(ResultFactory)
     location = factory.SubFactory(LocationFactory)
+    category = factory.fuzzy.FuzzyChoice(dict(ActionPoint.CATEGORY_CHOICES).keys()).fuzz()
     description = factory.fuzzy.FuzzyText()
     due_date = factory.fuzzy.FuzzyDate(timezone.now().date() + timedelta(days=1),
                                        timezone.now().date() + timedelta(days=10))
