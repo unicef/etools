@@ -328,7 +328,7 @@ class TestAgreementsAPI(BaseTenantTestCase):
             partner=self.partner1,
             status=Agreement.DRAFT
         )
-        attachment = AttachmentFactory(
+        AttachmentFactory(
             content_object=agreement,
             file_type=self.file_type_agreement,
             code=self.file_type_agreement.code,
@@ -349,7 +349,7 @@ class TestAgreementsAPI(BaseTenantTestCase):
         self.assertEqual(status_code, status.HTTP_400_BAD_REQUEST)
         self.assertEqual(
             response["attachment"],
-             ["Attachment expects an integer"]
+            ["Attachment expects an integer"]
         )
 
     def test_patch_agreement_with_attachment_as_pk(self):
