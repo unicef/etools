@@ -16,10 +16,10 @@ from etools.applications.partners.views.v1 import FileTypeViewSet
 from etools.applications.publics import urls as publics_patterns
 from etools.applications.publics.views import StaticDataView
 from etools.applications.reports.views.v1 import (IndicatorViewSet, ResultTypeViewSet,
-                                                  ResultViewSet, SectorViewSet, UnitViewSet,)
+                                                  ResultViewSet, SectionViewSet, UnitViewSet,)
 from etools.applications.t2f.urls import urlpatterns as t2f_patterns
 from etools.applications.users.views import (CountriesViewSet, GroupViewSet, ModuleRedirectView,
-                                             OfficeViewSet, SectionViewSet, UserViewSet,)
+                                             OfficeViewSet, UserViewSet,)
 from etools.applications.utils.common.schemas import get_schema_view, get_swagger_view
 
 # ******************  API docs and schemas  ******************************
@@ -38,10 +38,9 @@ api.register(r'partners/file-types', FileTypeViewSet, base_name='filetypes')
 api.register(r'users', UserViewSet, base_name='users')
 api.register(r'groups', GroupViewSet, base_name='groups')
 api.register(r'offices', OfficeViewSet, base_name='offices')
-api.register(r'sections', SectionViewSet, base_name='sections')
 
 api.register(r'reports/result-types', ResultTypeViewSet, base_name='resulttypes')
-api.register(r'reports/sectors', SectorViewSet, base_name='sectors')
+api.register(r'reports/sectors', SectionViewSet, base_name='sectors')
 api.register(r'reports/indicators', IndicatorViewSet, base_name='indicators')
 api.register(r'reports/results', ResultViewSet, base_name='results')
 api.register(r'reports/units', UnitViewSet, base_name='units')

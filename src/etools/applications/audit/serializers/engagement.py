@@ -19,7 +19,7 @@ from etools.applications.partners.serializers.interventions_v2 import BaseInterv
 from etools.applications.partners.serializers.partner_organization_v2 import (PartnerOrganizationListSerializer,
                                                                               PartnerStaffMemberNestedSerializer, )
 from etools.applications.permissions2.serializers import PermissionsBasedSerializerMixin
-from etools.applications.reports.serializers.v1 import SectorSerializer
+from etools.applications.reports.serializers.v1 import SectionSerializer
 from etools.applications.users.serializers import OfficeSerializer
 from etools.applications.utils.common.serializers.fields import SeparatedReadWriteField
 from etools.applications.utils.writable_serializers.serializers import (WritableNestedParentSerializerMixin,
@@ -70,7 +70,7 @@ class ReportAttachmentSerializer(BaseAttachmentSerializer):
 class EngagementActionPointSerializer(PermissionsBasedSerializerMixin, ActionPointBaseSerializer):
     reference_number = serializers.ReadOnlyField(label=_('Reference No.'))
     section = SeparatedReadWriteField(
-        read_field=SectorSerializer(read_only=True, label=_('Section')),
+        read_field=SectionSerializer(read_only=True, label=_('Section')),
         required=True,
     )
     office = SeparatedReadWriteField(

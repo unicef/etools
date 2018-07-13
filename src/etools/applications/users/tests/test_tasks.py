@@ -10,7 +10,7 @@ from tenant_schemas.utils import schema_context
 
 from etools.applications.EquiTrack.tests.cases import BaseTenantTestCase, SCHEMA_NAME
 from etools.applications.users import tasks
-from etools.applications.users.models import Section, UserProfile
+from etools.applications.users.models import UserProfile
 from etools.applications.users.tests.factories import CountryFactory, GroupFactory, ProfileFactory, UserFactory
 from etools.applications.vision.vision_data_synchronizer import VISION_NO_DATA_MESSAGE, VisionException
 
@@ -25,9 +25,7 @@ class TestUserMapper(BaseTenantTestCase):
 
     def test_init(self):
         self.assertEqual(self.mapper.countries, {})
-        self.assertEqual(self.mapper.sections, {})
         self.assertEqual(self.mapper.groups, {self.group.name: self.group})
-        self.assertEqual(self.mapper.section_users, {})
 
     @skip("UAT country not found?!?!")
     def test_get_country_uat(self):
@@ -68,27 +66,6 @@ class TestUserMapper(BaseTenantTestCase):
             area_code: country,
         })
 
-    def test_set_simple_attr_no_change(self):
-        """If no change in attr value then return False"""
-        section = Section(name="Name")
-        res = self.mapper._set_simple_attr(section, "name", "Name")
-        self.assertFalse(res)
-        self.assertEqual(section.name, "Name")
-
-    def test_set_simple_attr_change(self):
-        """If change in attr value then return True"""
-        section = Section(name="Name")
-        res = self.mapper._set_simple_attr(section, "name", "Change")
-        self.assertTrue(res)
-        self.assertEqual(section.name, "Change")
-
-    def test_set_special_attr_not_country(self):
-        """Return False if attr is not country"""
-        section = Section(name="Name")
-        res = self.mapper._set_special_attr(section, "name", "Change")
-        self.assertFalse(res)
-        self.assertEqual(section.name, "Name")
-
     def test_set_special_attr_country_override(self):
         """If country attribute, but override is set then False"""
         country = CountryFactory()
@@ -120,37 +97,6 @@ class TestUserMapper(BaseTenantTestCase):
         self.assertTrue(res)
         self.assertEqual(profile.country, country)
         self.assertTrue(profile.countries_available.count())
-
-    def test_set_attribute_char(self):
-        """Ensure set attribute on char field works as expected"""
-        section = Section(name="Initial")
-        res = self.mapper._set_attribute(section, "name", "Change")
-        self.assertTrue(res)
-        self.assertEqual(section.name, "Change")
-
-    def test_set_attribute_char_truncate(self):
-        """If char field and value provided longer than allowed,
-        then truncated
-        """
-        section = Section(name="Initial")
-        res = self.mapper._set_attribute(section, "name", "1" * 70)
-        self.assertTrue(res)
-        self.assertEqual(section.name, "1" * 64)
-
-    def test_set_attribute_blank(self):
-        """Blank values are set to None"""
-        section = Section(name="Initial")
-        res = self.mapper._set_attribute(section, "name", "")
-        self.assertTrue(res)
-        self.assertIsNone(section.name)
-
-    def test_set_attribute_section_code(self):
-        """If section_code attribute, then set to last 4 chars of value"""
-        profile = ProfileFactory()
-        self.assertNotEqual(profile.section_code, "5678")
-        res = self.mapper._set_attribute(profile, "section_code", "12345678")
-        self.assertTrue(res)
-        self.assertEqual(profile.section_code, "5678")
 
     def test_set_attribute_special_field(self):
         """If special field, use _set_special_attr method"""
@@ -227,122 +173,6 @@ class TestUserMapper(BaseTenantTestCase):
         profile = UserProfile.objects.get(user__email=email)
         self.assertEqual(profile.phone_number, phone)
 
-    def test_set_supervisor_vacant(self):
-        """If manager id is Vacant, return False"""
-        profile = ProfileFactory()
-        self.assertIsNone(profile.supervisor)
-        self.assertFalse(self.mapper._set_supervisor(profile, "Vacant"))
-        self.assertIsNone(profile.supervisor)
-
-    def test_set_supervisor_none(self):
-        """If manager id is None, return False"""
-        profile = ProfileFactory()
-        self.assertIsNone(profile.supervisor)
-        self.assertFalse(self.mapper._set_supervisor(profile, None))
-        self.assertIsNone(profile.supervisor)
-
-    def test_set_supervisor_matches(self):
-        """If manager matches, return False"""
-        manager_id = "321"
-        supervisor = ProfileFactory(staff_id=manager_id)
-        profile = ProfileFactory()
-        profile.supervisor = supervisor.user
-        self.assertFalse(self.mapper._set_supervisor(profile, manager_id))
-
-    def test_set_supervisor_does_not_exist(self):
-        profile = ProfileFactory()
-        self.assertIsNone(profile.supervisor)
-        self.assertFalse(self.mapper._set_supervisor(profile, "404"))
-        self.assertIsNone(profile.supervisor)
-
-    def test_set_supervisor(self):
-        manager_id = "321"
-        supervisor = ProfileFactory(staff_id=manager_id)
-        profile = ProfileFactory()
-        self.mapper.section_user = {manager_id: supervisor}
-        self.assertIsNone(profile.supervisor)
-        self.assertTrue(self.mapper._set_supervisor(profile, manager_id))
-        self.assertEqual(profile.supervisor, supervisor.user)
-
-    def test_map_users_no_sections(self):
-        self.assertEqual(self.mapper.section_users, {})
-        self.mapper.map_users()
-        self.assertEqual(self.mapper.section_users, {})
-
-    def test_map_users_response_empty(self):
-        """If no STAFF_ID, then continue, and ignore record"""
-        profile = ProfileFactory()
-        profile.section_code = "SEC"
-        profile.save()
-        data = {
-            "ORG_UNIT_NAME": "UNICEF",
-            "STAFF_ID": None,
-            "MANAGER_ID": "",
-            "ORG_UNIT_CODE": "101",
-            "VENDOR_CODE": "202",
-            "STAFF_EMAIL": "map@example.com",
-        }
-
-        self.assertEqual(self.mapper.section_users, {})
-        mock_request = Mock()
-        mock_request.get().json.return_value = json.dumps([data])
-        mock_request.get().status_code = 200
-        self.assertFalse(self.mapper.section_users, {})
-        with patch("etools.applications.users.tasks.requests", mock_request):
-            self.mapper.map_users()
-        self.assertEqual(self.mapper.section_users, {})
-
-    def test_map_users_no_user(self):
-        """If not able to find a matching user on STAFF_ID value,
-        continue and ignore the record
-        """
-        profile = ProfileFactory()
-        profile.section_code = "SEC"
-        profile.save()
-        data = {
-            "ORG_UNIT_NAME": "UNICEF",
-            "STAFF_ID": "404",
-            "MANAGER_ID": "",
-            "ORG_UNIT_CODE": "101",
-            "VENDOR_CODE": "202",
-            "STAFF_EMAIL": "map@example.com",
-        }
-
-        self.assertEqual(self.mapper.section_users, {})
-        mock_request = Mock()
-        mock_request.get().json.return_value = json.dumps([data])
-        mock_request.get().status_code = 200
-        self.assertFalse(self.mapper.section_users, {})
-        with patch("etools.applications.users.tasks.requests", mock_request):
-            self.mapper.map_users()
-        self.assertEqual(self.mapper.section_users, {})
-
-    def test_map_users(self):
-        """If user is found, ensure section_users is updated"""
-        profile = ProfileFactory()
-        profile.section_code = "SEC"
-        profile.staff_id = profile.user.pk
-        profile.save()
-        data = {
-            "ORG_UNIT_NAME": "UNICEF",
-            "STAFF_ID": profile.staff_id,
-            "MANAGER_ID": "",
-            "ORG_UNIT_CODE": "101",
-            "VENDOR_CODE": "202",
-            "STAFF_EMAIL": "map@example.com",
-            "STAFF_POST_NO": "123",
-        }
-        mock_request = Mock()
-        mock_request.get().json.return_value = json.dumps([data])
-        mock_request.get().status_code = 200
-        self.assertFalse(self.mapper.section_users, {})
-        with patch("etools.applications.users.tasks.requests", mock_request):
-            self.mapper.map_users()
-        self.assertEqual(
-            self.mapper.section_users,
-            {profile.user.pk: profile.user}
-        )
-
 
 @skip("Issues with using public schema")
 class TestSyncUsers(BaseTenantTestCase):
@@ -377,7 +207,6 @@ class TestMapUsers(BaseTenantTestCase):
 
     def test_map(self):
         profile = ProfileFactory()
-        profile.section_code = "SEC"
         profile.staff_id = profile.user.pk
         profile.save()
         data = {
