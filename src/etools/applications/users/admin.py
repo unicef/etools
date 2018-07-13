@@ -13,7 +13,6 @@ from etools.applications.hact.tasks import update_hact_for_country, update_hact_
 from etools.applications.users.models import (
     Country,
     Office,
-    Section,
     UserProfile,
     WorkspaceCounter,
 )
@@ -30,7 +29,6 @@ class ProfileInline(admin.StackedInline):
         'country_override',
         'countries_available',
         'office',
-        'section',
         'job_title',
         'post_title',
         'phone_number',
@@ -77,7 +75,6 @@ class ProfileAdmin(admin.ModelAdmin):
         'country_override',
         'countries_available',
         'office',
-        'section',
         'job_title',
         'phone_number',
         'staff_id',
@@ -86,18 +83,15 @@ class ProfileAdmin(admin.ModelAdmin):
         'post_number',
         'post_title',
         'vendor_number',
-        'section_code'
     ]
     list_display = (
         'username',
         'office',
-        'section',
         'job_title',
         'phone_number',
     )
     list_editable = (
         'office',
-        'section',
         'job_title',
         'phone_number',
     )
@@ -254,7 +248,6 @@ class CountryAdmin(admin.ModelAdmin):
     )
     filter_horizontal = (
         'offices',
-        'sections',
     )
 
     def get_urls(self):
@@ -310,18 +303,9 @@ class CountryAdmin(admin.ModelAdmin):
         return HttpResponseRedirect(reverse('admin:users_country_change', args=[country.pk]))
 
 
-class SectionAdmin(admin.ModelAdmin):
-
-    list_display = (
-        'name',
-        'code',
-    )
-
-
 # Re-register UserAdmin
 admin.site.register(get_user_model(), UserAdminPlus)
 admin.site.register(UserProfile, ProfileAdmin)
 admin.site.register(Country, CountryAdmin)
 admin.site.register(Office)
-admin.site.register(Section, SectionAdmin)
 admin.site.register(WorkspaceCounter)

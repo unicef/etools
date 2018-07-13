@@ -12,7 +12,7 @@ from etools.applications.reports.serializers.v2 import (AppliedIndicatorSerializ
                                                         LowerResultCUSerializer, LowerResultSimpleCUSerializer,)
 from etools.applications.reports.tests.factories import (AppliedIndicatorFactory, DisaggregationFactory,
                                                          DisaggregationValueFactory, IndicatorBlueprintFactory,
-                                                         LowerResultFactory, SectorFactory,)
+                                                         LowerResultFactory, SectionFactory,)
 
 
 class DisaggregationTest(BaseTenantTestCase):
@@ -88,7 +88,7 @@ class DisaggregationTest(BaseTenantTestCase):
 class TestAppliedIndicatorSerializer(BaseTenantTestCase):
     @classmethod
     def setUpTestData(cls):
-        cls.section = SectorFactory()
+        cls.section = SectionFactory()
         cls.intervention = InterventionFactory()
         cls.result_link = InterventionResultLinkFactory(
             intervention=cls.intervention,
@@ -144,7 +144,7 @@ class TestAppliedIndicatorSerializer(BaseTenantTestCase):
 
     def test_validate_invalid_section(self):
         """If sector already set on applied indicator then fail validation"""
-        self.data["section"] = SectorFactory().pk
+        self.data["section"] = SectionFactory().pk
         serializer = AppliedIndicatorSerializer(data=self.data)
         self.assertFalse(serializer.is_valid())
         self.assertEqual(serializer.errors, {"non_field_errors": [

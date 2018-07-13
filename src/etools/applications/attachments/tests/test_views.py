@@ -20,7 +20,7 @@ from etools.applications.partners.tests.factories import (
     InterventionAttachmentFactory,
     InterventionFactory,
     InterventionResultLinkFactory,
-    InterventionSectorLocationLinkFactory,
+    InterventionSectionLocationLinkFactory,
     PartnerFactory,
 )
 from etools.applications.tpm.tests.factories import (
@@ -67,7 +67,7 @@ class TestAttachmentListView(BaseTenantTestCase):
         cls.result_link = InterventionResultLinkFactory(
             intervention=cls.intervention
         )
-        cls.sector_location = InterventionSectorLocationLinkFactory(
+        cls.section_location = InterventionSectionLocationLinkFactory(
             intervention=cls.intervention
         )
         cls.intervention_amendment = InterventionAmendmentFactory(
