@@ -6,7 +6,7 @@ from django.test import SimpleTestCase
 from etools.applications.EquiTrack.tests.cases import BaseTenantTestCase
 from etools.applications.users import models
 from etools.applications.users.tests.factories import (CountryFactory, OfficeFactory,
-                                                       ProfileFactory, SectionFactory, UserFactory,)
+                                                       ProfileFactory, UserFactory,)
 
 
 class TestWorkspaceCounter(BaseTenantTestCase):
@@ -34,12 +34,6 @@ class TestOffice(BaseTenantTestCase):
     def test_str(self):
         o = models.Office(name="office")
         self.assertEqual(str(o), "office")
-
-
-class TestSection(BaseTenantTestCase):
-    def test_str(self):
-        s = models.Section(name="section")
-        self.assertEqual(str(s), "section")
 
 
 class TestUserProfileModel(BaseTenantTestCase):
@@ -134,13 +128,6 @@ class TestStrUnicode(SimpleTestCase):
         self.assertEqual(str(instance), u'xyz')
 
         instance = OfficeFactory.build(name=u'Magyarorsz\xe1g')
-        self.assertEqual(str(instance), u'Magyarorsz\xe1g')
-
-    def test_section(self):
-        instance = SectionFactory.build(name='xyz')
-        self.assertEqual(str(instance), u'xyz')
-
-        instance = SectionFactory.build(name=u'Magyarorsz\xe1g')
         self.assertEqual(str(instance), u'Magyarorsz\xe1g')
 
     def test_user_profile(self):

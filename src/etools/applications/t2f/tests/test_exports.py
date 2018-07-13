@@ -16,7 +16,7 @@ from etools.applications.partners.tests.factories import InterventionFactory
 from etools.applications.publics.tests.factories import (PublicsAirlineCompanyFactory, PublicsCurrencyFactory,
                                                          PublicsDSARateFactory, PublicsDSARegionFactory,
                                                          PublicsFundFactory, PublicsGrantFactory, PublicsWBSFactory,)
-from etools.applications.reports.tests.factories import ResultFactory, SectorFactory
+from etools.applications.reports.tests.factories import ResultFactory, SectionFactory
 from etools.applications.t2f.models import Invoice, ModeOfTravel, TravelActivity, TravelType
 from etools.applications.t2f.tests.factories import (ExpenseFactory, InvoiceFactory, InvoiceItemFactory,
                                                      ItineraryItemFactory, TravelActivityFactory, TravelFactory,)
@@ -47,8 +47,8 @@ class TravelExports(BaseTenantTestCase):
     def test_activity_export(self):
         tz = timezone.get_default_timezone()
         office = OfficeFactory(name='Budapest')
-        section_health = SectorFactory(name='Health')
-        section_education = SectorFactory(name='Education')
+        section_health = SectionFactory(name='Health')
+        section_education = SectionFactory(name='Education')
 
         location_ABC = LocationFactory(name='Location ABC')
         location_345 = LocationFactory(name='Location 345')
@@ -88,7 +88,7 @@ class TravelExports(BaseTenantTestCase):
         travel_1 = TravelFactory(reference_number='2016/1000',
                                  traveler=user_joe_smith,
                                  office=office,
-                                 sector=section_health,
+                                 section=section_health,
                                  start_date=datetime(2017, 11, 8, tzinfo=tz),
                                  end_date=datetime(2017, 11, 14, tzinfo=tz),
                                  )
@@ -97,7 +97,7 @@ class TravelExports(BaseTenantTestCase):
                                  supervisor=supervisor,
                                  traveler=user_alice_carter,
                                  office=office,
-                                 sector=section_education,
+                                 section=section_education,
                                  start_date=datetime(2017, 11, 8, tzinfo=tz),
                                  end_date=datetime(2017, 11, 14, tzinfo=tz),
                                  )
@@ -284,7 +284,7 @@ class TravelExports(BaseTenantTestCase):
                          ['{}/1'.format(datetime.now().year),
                           'John Doe',
                           'An Office',
-                          travel.sector.name,
+                          travel.section.name,
                           'planned',
                           'Jakab Gipsz',
                           '20-Nov-2016',
@@ -301,7 +301,7 @@ class TravelExports(BaseTenantTestCase):
                          ['{}/2'.format(datetime.now().year),
                           'John Doe',
                           'An Office',
-                          travel_2.sector.name,
+                          travel_2.section.name,
                           'planned',
                           'Jakab Gipsz',
                           '20-Nov-2016',
@@ -409,7 +409,7 @@ class TravelExports(BaseTenantTestCase):
                          ['{}/1'.format(datetime.now().year),
                           'John Doe',
                           'An Office',
-                          travel_1.sector.name,
+                          travel_1.section.name,
                           'planned',
                           'Origin1',
                           'Origin2',
@@ -424,7 +424,7 @@ class TravelExports(BaseTenantTestCase):
                          ['{}/1'.format(datetime.now().year),
                           'John Doe',
                           'An Office',
-                          travel_1.sector.name,
+                          travel_1.section.name,
                           'planned',
                           'Origin2',
                           'Origin3',
@@ -439,7 +439,7 @@ class TravelExports(BaseTenantTestCase):
                          ['{}/1'.format(datetime.now().year),
                           'John Doe',
                           'An Office',
-                          travel_1.sector.name,
+                          travel_1.section.name,
                           'planned',
                           'Origin3',
                           'Origin1',
@@ -454,7 +454,7 @@ class TravelExports(BaseTenantTestCase):
                          ['{}/2'.format(datetime.now().year),
                           'Max Mustermann',
                           'An Office',
-                          travel_2.sector.name,
+                          travel_2.section.name,
                           'planned',
                           'Origin2',
                           'Origin1',
@@ -469,7 +469,7 @@ class TravelExports(BaseTenantTestCase):
                          ['{}/2'.format(datetime.now().year),
                           'Max Mustermann',
                           'An Office',
-                          travel_2.sector.name,
+                          travel_2.section.name,
                           'planned',
                           'Origin3',
                           'Origin1',

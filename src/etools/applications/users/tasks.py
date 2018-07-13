@@ -7,14 +7,13 @@ from django.contrib.auth import get_user_model
 from django.contrib.auth.models import Group
 from django.core.exceptions import ObjectDoesNotExist
 from django.db import IntegrityError, transaction
-from django.db.models import Q
 from django.utils.encoding import force_text
 
 import requests
 from celery.utils.log import get_task_logger
 from dateutil.relativedelta import relativedelta
 
-from etools.applications.users.models import Country, UserProfile
+from etools.applications.users.models import Country
 from etools.applications.vision.exceptions import VisionException
 from etools.applications.vision.models import VisionSyncLog
 from etools.applications.vision.vision_data_synchronizer import VISION_NO_DATA_MESSAGE
@@ -44,7 +43,6 @@ class UserMapper(object):
         'givenName',
         'sn',
         'unicefBusinessAreaCode',
-        'unicefSectionCode'
     ]
 
     USER_ATTR_MAP = {
@@ -59,15 +57,12 @@ class UserMapper(object):
         'phone_number': 'telephoneNumber',
         'country': 'unicefBusinessAreaCode',
         'staff_id': 'unicefIndexNumber',
-        'section_code': 'unicefSectionCode',
         'post_title': 'functionalTitle'
     }
 
     def __init__(self):
         self.countries = {}
-        self.sections = {}
         self.groups = {}
-        self.section_users = {}
         self.groups['UNICEF User'] = Group.objects.get(name='UNICEF User')
 
     def _get_country(self, business_area_code):
@@ -116,10 +111,6 @@ class UserMapper(object):
         if cleaned_value == '':
             cleaned_value = None
 
-        # if section code.. only take last 4 digits
-        if cleaned_value and attr == 'section_code':
-            cleaned_value = cleaned_value[-4:]
-
         if attr in self.SPECIAL_FIELDS:
             return self._set_special_attr(obj, attr, cleaned_value)
 
@@ -154,65 +145,6 @@ class UserMapper(object):
 
         except IntegrityError as e:
             logger.exception(u'Integrity error on user retrieving: {} - exception {}'.format(key_value, e))
-
-    def _set_supervisor(self, profile, manager_id):
-        if not manager_id or manager_id == 'Vacant':
-            return False
-        if profile.supervisor and profile.supervisor.profile.staff_id == manager_id:
-            return False
-
-        try:
-            supervisor = self.section_users.get(
-                manager_id,
-                get_user_model().objects.get(
-                    is_active=True,
-                    profile__staff_id=manager_id
-                )
-            )
-            self.section_users[manager_id] = supervisor
-        except get_user_model().DoesNotExist:
-            logger.warning(u"this user does not exist in the db to set as supervisor: {}".format(manager_id))
-            return False
-
-        profile.supervisor = supervisor
-        return True
-
-    def map_users(self):
-
-        # get all section codes
-        section_codes = UserProfile.objects.values_list('section_code', flat=True)\
-            .exclude(Q(section_code__isnull=True) | Q(section_code=''))\
-            .distinct()
-
-        for code in section_codes:
-            self.section_users = {}
-            synchronizer = UserVisionSynchronizer('GetOrgChartUnitsInfo_JSON', code)
-            logger.info(u"Mapping for section {}".format(code))
-            for in_user in synchronizer.response:
-                # if the user has no staff id don't bother for supervisor
-                if not in_user.get('STAFF_ID'):
-                    continue
-                # get user:
-                try:
-                    user = self.section_users.get(
-                        in_user['STAFF_ID'],
-                        get_user_model().objects.get(profile__staff_id=in_user['STAFF_ID'])
-                    )
-                    self.section_users[in_user['STAFF_ID']] = user
-                except get_user_model().DoesNotExist:
-                    logger.warning(u"this user does not exist in the db: {}".format(in_user['STAFF_EMAIL']))
-                    continue
-
-                profile_updated = self._set_attribute(user.profile, "post_number", in_user["STAFF_POST_NO"])
-                profile_updated = self._set_attribute(
-                    user.profile, "vendor_number", in_user["VENDOR_CODE"]) or profile_updated
-
-                supervisor_updated = self._set_supervisor(user.profile, in_user["MANAGER_ID"])
-
-                if profile_updated or supervisor_updated:
-                    logger.info(u"saving profile for {}, supervisor updated: {}, profile updated: {}".format(
-                        user, supervisor_updated, profile_updated))
-                    user.profile.save()
 
     def record_is_valid(self, record):
         if self.KEY_ATTRIBUTE not in record:

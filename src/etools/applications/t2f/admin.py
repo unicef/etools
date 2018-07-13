@@ -10,7 +10,7 @@ class TravelAdmin(admin.ModelAdmin):
     list_filter = (
         'status',
         'traveler',
-        'sector'
+        'section'
     )
     search_fields = (
         'reference_number',
@@ -21,8 +21,7 @@ class TravelAdmin(admin.ModelAdmin):
         'status',
         'start_date',
         'end_date',
-        'section',
-        'sector'
+        'section'
     )
     readonly_fields = (
         'status',

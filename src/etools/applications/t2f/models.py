@@ -166,10 +166,6 @@ class Travel(models.Model):
         on_delete=models.CASCADE,
     )
     section = models.ForeignKey(
-        'users.Section', null=True, blank=True, related_name='+', verbose_name=_('Section'),
-        on_delete=models.CASCADE,
-    )
-    sector = models.ForeignKey(
         'reports.Sector', null=True, blank=True, related_name='+', verbose_name=_('Sector'),
         on_delete=models.CASCADE,
     )
@@ -488,6 +484,10 @@ class TravelActivity(models.Model):
     @property
     def travel_status(self):
         return self.travels.filter(traveler=self.primary_traveler).first().status
+
+    def get_object_url(self):
+        # TODO: to be used for generating link from action points dashboard to related object
+        return ""
 
 
 class ItineraryItem(models.Model):

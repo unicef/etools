@@ -55,7 +55,7 @@ class TestActionPointModel(BaseTenantTestCase):
         self.assertEqual(action_point.related_module, ActionPoint.MODULE_CHOICES.tpm)
 
     def test_t2f_related(self):
-        action_point = ActionPointFactory(travel=TravelFactory())
+        action_point = ActionPointFactory(travel_activity=TravelFactory().activities.first())
         self.assertEqual(action_point.related_module, ActionPoint.MODULE_CHOICES.t2f)
 
     def test_none_related(self):
