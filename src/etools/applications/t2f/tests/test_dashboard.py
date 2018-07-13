@@ -31,14 +31,14 @@ class TravelActivityList(BaseTenantTestCase):
     def test_list_view(self):
         partner = self.travel.activities.first().partner
         partner_id = partner.id
-        with self.assertNumQueries(4):
+        with self.assertNumQueries(5):
             response = self.forced_auth_req('get', reverse('t2f:travels:list:activities',
                                                            kwargs={'partner_organization_pk': partner_id}),
                                             user=self.unicef_staff)
 
         response_json = json.loads(response.rendered_content)
         expected_keys = ['primary_traveler', 'travel_type', 'date', 'locations', 'status', 'reference_number',
-                         'trip_id', 'travel_end_dates']
+                         'trip_id', 'travel_latest_date']
 
         self.assertEqual(len(response_json), 1)
         self.assertKeysIn(expected_keys, response_json[0], exact=True)
@@ -54,7 +54,7 @@ class TravelActivityList(BaseTenantTestCase):
 
         self.assertEqual(act.primary_traveler, act.travels.first().traveler)
 
-        with self.assertNumQueries(4):
+        with self.assertNumQueries(6):
             response = self.forced_auth_req('get', reverse('t2f:travels:list:activities',
                                                            kwargs={'partner_organization_pk': partner_id}),
                                             user=self.unicef_staff)
