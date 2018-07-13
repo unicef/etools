@@ -527,11 +527,14 @@ class TravelActivityByPartnerSerializer(serializers.ModelSerializer):
     reference_number = serializers.ReadOnlyField()
     status = serializers.ReadOnlyField()
     trip_id = serializers.ReadOnlyField()
-    travel_end_dates = serializers.SlugRelatedField(slug_field='end_date', many=True, read_only=True, source='travels')
+    travel_latest_date = serializers.SerializerMethodField()
+
+    def get_travel_latest_date(self, obj):
+        return getattr(obj.travels.filter(traveler=obj.primary_traveler).last(), 'end_date', '-')
 
     class Meta:
         model = TravelActivity
-        fields = ('travel_end_dates', 'primary_traveler', 'travel_type', 'date', 'locations', 'reference_number',
+        fields = ('travel_latest_date', 'primary_traveler', 'travel_type', 'date', 'locations', 'reference_number',
                   'status', 'trip_id')
 
 
