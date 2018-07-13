@@ -5,7 +5,7 @@ from rest_framework.permissions import IsAdminUser
 from etools.applications.reports.models import CountryProgramme, Indicator, Result, ResultType, Sector, Unit
 from etools.applications.reports.serializers.v1 import (CountryProgrammeSerializer, IndicatorCreateSerializer,
                                                         ResultSerializer, ResultTypeSerializer,
-                                                        SectorCreateSerializer, UnitSerializer,)
+                                                        SectionCreateSerializer, UnitSerializer,)
 
 
 class ResultTypeViewSet(mixins.ListModelMixin,
@@ -17,15 +17,15 @@ class ResultTypeViewSet(mixins.ListModelMixin,
     serializer_class = ResultTypeSerializer
 
 
-class SectorViewSet(mixins.RetrieveModelMixin,
-                    mixins.ListModelMixin,
-                    mixins.CreateModelMixin,
-                    viewsets.GenericViewSet):
+class SectionViewSet(mixins.RetrieveModelMixin,
+                     mixins.ListModelMixin,
+                     mixins.CreateModelMixin,
+                     viewsets.GenericViewSet):
     """
     Returns a list of all Sectors
     """
     queryset = Sector.objects.all()
-    serializer_class = SectorCreateSerializer
+    serializer_class = SectionCreateSerializer
 
 
 class ResultViewSet(viewsets.ModelViewSet):

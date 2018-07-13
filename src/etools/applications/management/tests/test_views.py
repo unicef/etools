@@ -114,9 +114,9 @@ class LoadResultStructureTest(BaseTenantTestCase):
         self.assertEqual(response.status_code, status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 
-class TestActiveUserSection(BaseTenantTestCase):
+class TestActiveUser(BaseTenantTestCase):
     def setUp(self):
-        super(TestActiveUserSection, self).setUp()
+        super(TestActiveUser, self).setUp()
         self.unicef_staff = UserFactory(is_staff=True)
 
     def test_get(self):
@@ -128,7 +128,7 @@ class TestActiveUserSection(BaseTenantTestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response.data, [{
             "countryName": "",
-            "records": {"total": 1, "sections": [{'count': 1, 'name': self.unicef_staff.profile.section.name}]}
+            "records": {"total": 1}
         }])
 
 

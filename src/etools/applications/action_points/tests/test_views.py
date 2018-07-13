@@ -11,7 +11,7 @@ from etools.applications.action_points.tests.factories import ActionPointFactory
 from etools.applications.EquiTrack.tests.cases import BaseTenantTestCase
 from etools.applications.audit.tests.factories import MicroAssessmentFactory
 from etools.applications.partners.tests.factories import PartnerFactory
-from etools.applications.reports.tests.factories import SectorFactory
+from etools.applications.reports.tests.factories import SectionFactory
 from etools.applications.t2f.tests.factories import TravelFactory
 from etools.applications.tpm.tests.factories import UserFactory, TPMVisitFactory
 from etools.applications.utils.common.tests.test_utils import TestExportMixin
@@ -30,7 +30,7 @@ class TestActionPointViewSet(TestExportMixin, ActionPointsTestCaseMixin, BaseTen
             'due_date': date.today(),
             'assigned_to': cls.pme_user.id,
             'office': cls.pme_user.profile.office.id,
-            'section': SectorFactory().id,
+            'section': SectionFactory().id,
             'partner': PartnerFactory().id,
         }
 

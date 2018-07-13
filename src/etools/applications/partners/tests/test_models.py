@@ -28,7 +28,7 @@ from etools.applications.partners.tests.factories import (
     InterventionFactory,
     InterventionReportingPeriodFactory,
     InterventionResultLinkFactory,
-    InterventionSectorLocationLinkFactory,
+    InterventionSectionLocationLinkFactory,
     PartnerFactory,
     PartnerPlannedVisitsFactory,
     PartnerStaffFactory,
@@ -36,7 +36,7 @@ from etools.applications.partners.tests.factories import (
     WorkspaceFileTypeFactory,
 )
 from etools.applications.reports.tests.factories import (AppliedIndicatorFactory, CountryProgrammeFactory,
-                                                         LowerResultFactory, ResultFactory, SectorFactory,)
+                                                         LowerResultFactory, ResultFactory, SectionFactory,)
 from etools.applications.t2f.models import Travel, TravelType
 from etools.applications.t2f.tests.factories import TravelActivityFactory, TravelFactory
 from etools.applications.tpm.models import TPMVisit
@@ -727,21 +727,21 @@ class TestInterventionModel(BaseTenantTestCase):
         res = self.intervention.days_from_review_to_signed
         self.assertEqual(res, "Not fully signed")
 
-    def test_sector_names(self):
-        sector_1 = SectorFactory(name="ABC")
-        sector_2 = SectorFactory(name="CBA")
+    def test_section_names(self):
+        section_1 = SectionFactory(name="ABC")
+        section_2 = SectionFactory(name="CBA")
         intervention = InterventionFactory()
-        InterventionSectorLocationLinkFactory(
+        InterventionSectionLocationLinkFactory(
             intervention=intervention,
-            sector=sector_1,
+            sector=section_1,
         )
-        InterventionSectorLocationLinkFactory(
+        InterventionSectionLocationLinkFactory(
             intervention=intervention,
-            sector=sector_2,
+            sector=section_2,
         )
         self.assertEqual(intervention.sector_names, "ABC, CBA")
 
-    def test_sector_names_empty(self):
+    def test_section_names_empty(self):
         self.assertEqual(self.intervention.sector_names, "")
 
     @skip("fr_currency property on intervention is being deprecated")

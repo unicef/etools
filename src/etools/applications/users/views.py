@@ -19,7 +19,7 @@ from rest_framework.views import APIView
 from etools.applications.audit.models import Auditor
 from etools.applications.EquiTrack.permissions import IsSuperUserOrStaff
 from etools.applications.reports.models import Sector
-from etools.applications.reports.serializers.v1 import SectorSerializer
+from etools.applications.reports.serializers.v1 import SectionSerializer
 from etools.applications.tpm.models import ThirdPartyMonitor
 from etools.applications.users.forms import ProfileForm
 from etools.applications.users.models import Country, Office, UserProfile
@@ -204,7 +204,6 @@ class ProfileEdit(FormView):
         context = super(ProfileEdit, self).get_context_data(**kwargs)
         context.update({
             'office_list': connection.tenant.offices.all().order_by('name'),
-            'section_list': connection.tenant.sections.all().order_by('name')
         })
         return context
 
@@ -215,7 +214,6 @@ class ProfileEdit(FormView):
             user=self.request.user
         )
         profile.office = form.cleaned_data['office']
-        profile.section = form.cleaned_data['section']
         profile.job_title = form.cleaned_data['job_title']
         profile.phone_number = form.cleaned_data['phone_number']
         profile.save()
@@ -227,7 +225,6 @@ class ProfileEdit(FormView):
         try:
             profile = self.request.user.profile
             initial['office'] = profile.office
-            initial['section'] = profile.section
             initial['job_title'] = profile.job_title
             initial['phone_number'] = profile.phone_number
         except UserProfile.DoesNotExist:
@@ -368,7 +365,7 @@ class SectionViewSet(mixins.RetrieveModelMixin,
     """
     Returns a list of all Sections
     """
-    serializer_class = SectorSerializer
+    serializer_class = SectionSerializer
     permission_classes = (IsAdminUser,)
 
     def get_queryset(self):

@@ -14,7 +14,7 @@ from etools.applications.firms.tests.factories import BaseFirmFactory, BaseStaff
 from etools.applications.locations.tests.factories import LocationFactory
 from etools.applications.partners.models import InterventionResultLink, InterventionSectorLocationLink
 from etools.applications.partners.tests.factories import InterventionFactory
-from etools.applications.reports.tests.factories import ResultFactory, SectorFactory
+from etools.applications.reports.tests.factories import ResultFactory, SectionFactory
 from etools.applications.tpm.models import TPMActivity, TPMVisit, TPMVisitReportRejectComment
 from etools.applications.tpm.tpmpartners.models import TPMPartner, TPMPartnerStaffMember
 from etools.applications.users.tests.factories import OfficeFactory as SimpleOfficeFactory
@@ -52,11 +52,11 @@ class InterventionResultLinkFactory(factory.django.DjangoModelFactory):
     cp_output = factory.SubFactory(ResultFactory)
 
 
-class InterventionSectorLocationLinkFactory(factory.django.DjangoModelFactory):
+class InterventionSectionLocationLinkFactory(factory.django.DjangoModelFactory):
     class Meta:
         model = InterventionSectorLocationLink
 
-    sector = factory.SubFactory(SectorFactory)
+    sector = factory.SubFactory(SectionFactory)
 
     @factory.post_generation
     def locations(self, created, extracted, **kwargs):
@@ -69,7 +69,7 @@ class InterventionSectorLocationLinkFactory(factory.django.DjangoModelFactory):
 
 class FullInterventionFactory(InterventionFactory):
     result_links = factory.RelatedFactory(InterventionResultLinkFactory, 'intervention')
-    sector_locations = factory.RelatedFactory(InterventionSectorLocationLinkFactory, 'intervention')
+    sector_locations = factory.RelatedFactory(InterventionSectionLocationLinkFactory, 'intervention')
 
 
 class OfficeFactory(SimpleOfficeFactory):
@@ -90,7 +90,7 @@ class TPMActivityFactory(factory.DjangoModelFactory):
     intervention = factory.SubFactory(FullInterventionFactory)
     partner = factory.SelfAttribute('intervention.agreement.partner')
     date = fuzzy.FuzzyDate(_FUZZY_START_DATE, _FUZZY_END_DATE)
-    section = factory.SubFactory(SectorFactory)
+    section = factory.SubFactory(SectionFactory)
 
     attachments__count = 0
     report_attachments__count = 0
