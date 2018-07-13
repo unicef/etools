@@ -88,6 +88,24 @@ class TestAgreementsAPI(BaseTenantTestCase):
         )
         return response.status_code, json.loads(response.rendered_content)
 
+    def test_agreement_detail_attachment_empty(self):
+        status_code, response = self.run_request(self.agreement1.pk)
+
+        self.assertEqual(status_code, status.HTTP_200_OK)
+        self.assertIsNone(response["attachment"])
+
+    def test_agreement_detail_attachment(self):
+        attachment = AttachmentFactory(
+            content_object=self.agreement1,
+            file_type=self.file_type_agreement,
+            code=self.file_type_agreement.code,
+            file="test_file.pdf"
+        )
+        status_code, response = self.run_request(self.agreement1.pk)
+
+        self.assertEqual(status_code, status.HTTP_200_OK)
+        self.assertTrue(response["attachment"].endswith(attachment.file.url))
+
     def test_add_new_PCA(self):
         self.assertFalse(Activity.objects.exists())
         data = {
@@ -304,3 +322,126 @@ class TestAgreementsAPI(BaseTenantTestCase):
             attachment_amendment_updated.code,
             self.file_type_agreement_amendment.code
         )
+
+    def test_patch_agreement_with_attachment_as_url(self):
+        agreement = AgreementFactory(
+            partner=self.partner1,
+            status=Agreement.DRAFT
+        )
+        attachment = AttachmentFactory(
+            content_object=agreement,
+            file_type=self.file_type_agreement,
+            code=self.file_type_agreement.code,
+            file="test_file.pdf",
+        )
+        status_code, response = self.run_request(agreement.pk)
+        self.assertEqual(status_code, status.HTTP_200_OK)
+
+        data = {
+            "attachment": response["attachment"]
+        }
+        status_code, response = self.run_request(
+            agreement.pk,
+            data,
+            method="patch",
+        )
+
+        self.assertEqual(status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertEqual(
+            response["attachment"],
+             ["Attachment expects an integer"]
+        )
+
+    def test_patch_agreement_with_attachment_as_pk(self):
+        agreement = AgreementFactory(
+            partner=self.partner1,
+            status=Agreement.DRAFT
+        )
+        attachment = AttachmentFactory(
+            file="test_file.pdf",
+            file_type=None,
+            code="",
+        )
+        self.assertIsNone(attachment.content_object)
+        self.assertIsNone(attachment.file_type)
+        self.assertEqual(attachment.code, "")
+
+        data = {
+            "attachment": attachment.pk
+        }
+        status_code, response = self.run_request(
+            agreement.pk,
+            data,
+            method="patch",
+        )
+
+        self.assertEqual(status_code, status.HTTP_200_OK)
+        self.assertTrue(response["attachment"].endswith(attachment.file.url))
+        attachment_update = Attachment.objects.get(pk=attachment.pk)
+        self.assertEqual(attachment_update.content_object, agreement)
+        self.assertEqual(attachment_update.file_type, self.file_type_agreement)
+        self.assertEqual(attachment_update.code, self.file_type_agreement.code)
+
+    def test_patch_agreement_without_attachment(self):
+        agreement = AgreementFactory(
+            partner=self.partner1,
+            status=Agreement.DRAFT
+        )
+        attachment = AttachmentFactory(
+            file="test_file.pdf",
+            file_type=None,
+            code="",
+        )
+        self.assertIsNone(attachment.content_object)
+        self.assertIsNone(attachment.file_type)
+        self.assertEqual(attachment.code, "")
+
+        data = {
+            "agreement_type": Agreement.PCA
+        }
+        status_code, response = self.run_request(
+            agreement.pk,
+            data,
+            method="patch",
+        )
+
+        self.assertEqual(status_code, status.HTTP_200_OK)
+
+    def test_patch_agreement_replace_attachment(self):
+        agreement = AgreementFactory(
+            partner=self.partner1,
+            status=Agreement.DRAFT
+        )
+        attachment_current = AttachmentFactory(
+            content_object=agreement,
+            file_type=self.file_type_agreement,
+            code=self.file_type_agreement.code,
+            file="old_file.pdf",
+        )
+        attachment_new = AttachmentFactory(
+            file="new_file.pdf",
+            file_type=None,
+            code="",
+        )
+
+        status_code, response = self.run_request(agreement.pk)
+        self.assertEqual(status_code, status.HTTP_200_OK)
+        self.assertTrue(
+            response["attachment"].endswith(attachment_current.file.url)
+        )
+
+        data = {
+            "attachment": attachment_new.pk
+        }
+        status_code, response = self.run_request(
+            agreement.pk,
+            data,
+            method="patch",
+        )
+
+        self.assertEqual(status_code, status.HTTP_200_OK)
+        self.assertTrue(
+            response["attachment"].endswith(attachment_new.file.url)
+        )
+        agreement_updated = Agreement.objects.get(pk=agreement.pk)
+        self.assertEqual(agreement_updated.attachment.last(), attachment_new)
