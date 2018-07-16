@@ -181,7 +181,7 @@ class InterventionResultsLinkAdmin(admin.ModelAdmin):
 
 
 # TODO intervention sector locations cleanup
-class InterventionSectorLocationAdmin(admin.ModelAdmin):
+class InterventionSectionLocationAdmin(admin.ModelAdmin):
     model = InterventionSectorLocationLink
     fields = (
         'intervention',
@@ -676,7 +676,7 @@ admin.site.register(InterventionBudget, InterventionBudgetAdmin)
 admin.site.register(InterventionPlannedVisits, InterventionPlannedVisitsAdmin)
 admin.site.register(InterventionAttachment, InterventionAttachmentAdmin)
 # TODO intervention sector locations cleanup
-admin.site.register(InterventionSectorLocationLink, InterventionSectorLocationAdmin)
+admin.site.register(InterventionSectorLocationLink, InterventionSectionLocationAdmin)
 
 
 admin.site.register(FileType, FileTypeAdmin)

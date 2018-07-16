@@ -10,7 +10,7 @@ from model_utils.fields import AutoCreatedField, AutoLastModifiedField
 from model_utils.models import TimeStampedModel
 from mptt.models import MPTTModel, TreeForeignKey
 
-from etools.applications.locations.models import Location
+from unicef_locations.models import Location
 
 
 class Quarter(models.Model):

@@ -8,11 +8,11 @@ from unicef_snapshot.serializers import SnapshotModelSerializer
 
 from etools.applications.EquiTrack.utils import get_current_site
 from etools.applications.action_points.models import ActionPoint
-from etools.applications.locations.serializers import LocationLightSerializer
+from unicef_locations.serializers import LocationLightSerializer
 from etools.applications.partners.serializers.interventions_v2 import BaseInterventionListSerializer
 from etools.applications.partners.serializers.partner_organization_v2 import MinimalPartnerOrganizationListSerializer
 from etools.applications.permissions2.serializers import PermissionsBasedSerializerMixin
-from etools.applications.reports.serializers.v1 import ResultSerializer, SectorSerializer
+from etools.applications.reports.serializers.v1 import ResultSerializer, SectionSerializer
 from etools.applications.users.serializers import OfficeSerializer
 from etools.applications.users.serializers_v3 import MinimalUserSerializer
 from etools.applications.utils.common.serializers.fields import SeparatedReadWriteField
@@ -85,7 +85,7 @@ class ActionPointListSerializer(PermissionsBasedSerializerMixin, ActionPointBase
     )
 
     section = SeparatedReadWriteField(
-        read_field=SectorSerializer(read_only=True, label=_('Section')),
+        read_field=SectionSerializer(read_only=True, label=_('Section')),
         required=True,
     )
     office = SeparatedReadWriteField(
@@ -100,7 +100,7 @@ class ActionPointListSerializer(PermissionsBasedSerializerMixin, ActionPointBase
             'section', 'office', 'location',
             'partner', 'cp_output', 'intervention',
 
-            'engagement', 'tpm_activity', 'travel',
+            'engagement', 'tpm_activity', 'travel_activity',
         ]
 
     def create(self, validated_data):
@@ -116,12 +116,6 @@ class ActionPointListSerializer(PermissionsBasedSerializerMixin, ActionPointBase
                 'intervention_id': activity.intervention_id,
                 'cp_output_id': activity.cp_output_id,
                 'section_id': activity.section_id,
-            })
-        elif 'travel' in validated_data:
-            travel = validated_data['travel']
-            validated_data.update({
-                'office_id': travel.office_id,
-                'section_id': travel.sector_id,
             })
 
         return super().create(validated_data)

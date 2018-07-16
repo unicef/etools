@@ -55,7 +55,7 @@ class ActionPointViewSet(
     filter_fields = (
         'assigned_to', 'high_priority', 'author', 'section',
         'office', 'status', 'partner', 'intervention', 'cp_output', 'due_date',
-        'engagement', 'tpm_activity', 'travel',
+        'engagement', 'tpm_activity', 'travel_activity',
     )
 
     def get_permission_context(self):

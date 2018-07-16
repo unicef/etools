@@ -13,7 +13,7 @@ from etools.applications.attachments.serializers import AttachmentSerializerMixi
 from etools.applications.attachments.serializers_fields import AttachmentSingleFileField
 from etools.applications.funds.models import FundsCommitmentItem, FundsReservationHeader
 from etools.applications.funds.serializers import FRsSerializer
-from etools.applications.locations.serializers import LocationLightSerializer, LocationSerializer
+from unicef_locations.serializers import LocationLightSerializer, LocationSerializer
 from etools.applications.partners.models import (
     Intervention,
     InterventionAmendment,
@@ -30,7 +30,7 @@ from etools.applications.reports.models import (
     LowerResult,
     ReportingRequirement,
 )
-from etools.applications.reports.serializers.v1 import SectorSerializer
+from etools.applications.reports.serializers.v1 import SectionSerializer
 from etools.applications.reports.serializers.v2 import (
     IndicatorSerializer,
     LowerResultCUSerializer,
@@ -247,9 +247,9 @@ class MinimalInterventionListSerializer(serializers.ModelSerializer):
 
 
 # TODO intervention sector locations cleanup
-class InterventionLocationSectorNestedSerializer(serializers.ModelSerializer):
+class InterventionLocationSectionNestedSerializer(serializers.ModelSerializer):
     locations = LocationLightSerializer(many=True)
-    sector = SectorSerializer()
+    sector = SectionSerializer()
 
     class Meta:
         model = InterventionSectorLocationLink
@@ -259,7 +259,7 @@ class InterventionLocationSectorNestedSerializer(serializers.ModelSerializer):
 
 
 # TODO intervention sector locations cleanup
-class InterventionSectorLocationCUSerializer(serializers.ModelSerializer):
+class InterventionSectionLocationCUSerializer(serializers.ModelSerializer):
     class Meta:
         model = InterventionSectorLocationLink
         fields = (
@@ -811,6 +811,7 @@ class InterventionReportingRequirementCreateSerializer(serializers.ModelSerializ
 
 class InterventionLocationExportSerializer(serializers.Serializer):
     partner = serializers.CharField(source="intervention.agreement.partner.name")
+    partner_vendor_number = serializers.CharField(source="intervention.agreement.partner.vendor_number")
     pd_ref_number = serializers.CharField(source="intervention.number")
     partnership = serializers.CharField(source="intervention.agreement.agreement_number")
     status = serializers.CharField(source="intervention.status")

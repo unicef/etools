@@ -7,7 +7,7 @@ from django.core.management import call_command
 from etools.applications.attachments.tests.factories import AttachmentFileTypeFactory
 from etools.applications.EquiTrack.tests.cases import BaseTenantTestCase
 from etools.applications.funds.tests.factories import FundsReservationHeaderFactory
-from etools.applications.locations.tests.factories import GatewayTypeFactory, LocationFactory
+from unicef_locations.tests.factories import GatewayTypeFactory, LocationFactory
 from etools.applications.partners import utils
 from etools.applications.partners.models import (
     Agreement,

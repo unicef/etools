@@ -1,0 +1,31 @@
+{
+    "status_code": 200,
+    "headers": {
+        "content-type": [
+            "Content-Type",
+            "application/json"
+        ],
+        "vary": [
+            "Vary",
+            "Accept, Cookie"
+        ],
+        "allow": [
+            "Allow",
+            "GET, HEAD, OPTIONS"
+        ],
+        "x-frame-options": [
+            "X-Frame-Options",
+            "SAMEORIGIN"
+        ]
+    },
+    "data": {
+        "id": "101",
+        "name": "Location 0 [GatewayType 0 - abc]",
+        "p_code": "abc",
+        "location_type": "GatewayType 0",
+        "location_type_admin_level": 0,
+        "parent": null,
+        "geo_point": "SRID=4326;POINT (20 20)"
+    },
+    "content_type": null
+}

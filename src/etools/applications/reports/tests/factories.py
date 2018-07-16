@@ -110,7 +110,7 @@ class AppliedIndicatorFactory(factory.django.DjangoModelFactory):
     target = fuzzy.FuzzyInteger(0, 100)
 
 
-class SectorFactory(factory.django.DjangoModelFactory):
+class SectionFactory(factory.django.DjangoModelFactory):
     class Meta:
         model = models.Sector
 
