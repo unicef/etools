@@ -1339,8 +1339,9 @@ class Agreement(TimeStampedModel):
         else:
             # if it's draft and not SSFA or SSFA and no interventions, update ref number on every save.
             if self.status == self.DRAFT:
-                if self.agreement_type != self.SSFA or not self.interventions.exists():
-                    self.update_reference_number()
+                self.update_reference_number()
+                for i in self.interventions.all():
+                    i.save(save_from_agreement=True)
             self.update_related_interventions(oldself)
 
         # update reference number if needed
@@ -2051,7 +2052,7 @@ class Intervention(TimeStampedModel):
         self.flagged_sections(reset=True)
 
     @transaction.atomic
-    def save(self, force_insert=False, **kwargs):
+    def save(self, force_insert=False, save_from_agreement=False, **kwargs):
         # check status auto updates
         # TODO: move this outside of save in the future to properly check transitions
         # self.check_status_auto_updates()
@@ -2072,7 +2073,8 @@ class Intervention(TimeStampedModel):
         elif self.status == self.DRAFT:
             self.update_reference_number()
 
-        self.update_ssfa_properties()
+        if save_from_agreement is False:
+            self.update_ssfa_properties()
 
         super(Intervention, self).save()
 

@@ -1440,6 +1440,7 @@ class TestInterventionViews(BaseTenantTestCase):
             "end": (timezone.now().date() + datetime.timedelta(days=31)).isoformat(),
             "unicef_budget": 0,
             "agreement": self.agreement.id,
+            "reference_number_year": datetime.date.today().year
         }
         response = self.forced_auth_req(
             'post',
@@ -1528,6 +1529,7 @@ class TestInterventionViews(BaseTenantTestCase):
             ],
             "amendments": [],
             "attachments": [],
+            "reference_number_year": datetime.date.today().year
         }
 
         response = self.forced_auth_req(
@@ -1592,6 +1594,7 @@ class TestInterventionViews(BaseTenantTestCase):
             "end": (timezone.now().date() + datetime.timedelta(days=31)).isoformat(),
             "unicef_budget": 0,
             "agreement": self.agreement.id,
+            "reference_number_year": datetime.date.today().year
         }
         response = self.forced_auth_req(
             'post',
@@ -1610,6 +1613,7 @@ class TestInterventionViews(BaseTenantTestCase):
             "end": (timezone.now().date() + datetime.timedelta(days=31)).isoformat(),
             "unicef_budget": 0,
             "agreement": self.agreement.id,
+            "reference_number_year": datetime.date.today().year
         }
         response = self.forced_auth_req(
             'post',
