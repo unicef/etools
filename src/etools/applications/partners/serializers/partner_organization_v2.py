@@ -11,7 +11,6 @@ from rest_framework.utils import model_meta
 from unicef_snapshot.serializers import SnapshotModelSerializer
 
 from etools.applications.attachments.models import Attachment
-from etools.applications.attachments.serializers import AttachmentSerializerMixin
 from etools.applications.attachments.serializers_fields import AttachmentSingleFileField
 from etools.applications.partners.models import (
     Assessment,
@@ -346,7 +345,7 @@ class PartnerOrganizationCreateUpdateSerializer(SnapshotModelSerializer):
                 partner=partner
             )
             pk, code = core_value_assessment["attachment"]
-            attachment = Attachment.objects.update_or_create(
+            Attachment.objects.update_or_create(
                 pk=pk,
                 defaults={
                     "code": code,
