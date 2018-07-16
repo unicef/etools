@@ -8,7 +8,7 @@ from unicef_snapshot.serializers import SnapshotModelSerializer
 
 from etools.applications.EquiTrack.utils import get_current_site
 from etools.applications.action_points.models import ActionPoint
-from etools.applications.locations.serializers import LocationLightSerializer
+from unicef_locations.serializers import LocationLightSerializer
 from etools.applications.partners.serializers.interventions_v2 import BaseInterventionListSerializer
 from etools.applications.partners.serializers.partner_organization_v2 import MinimalPartnerOrganizationListSerializer
 from etools.applications.permissions2.serializers import PermissionsBasedSerializerMixin

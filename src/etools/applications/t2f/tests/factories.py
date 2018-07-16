@@ -4,7 +4,7 @@ from django.utils import timezone
 import factory
 from factory import fuzzy
 
-from etools.applications.locations.tests.factories import LocationFactory
+from unicef_locations.tests.factories import LocationFactory
 from etools.applications.partners.tests.factories import InterventionFactory
 from etools.applications.publics.tests.factories import (PublicsAirlineCompanyFactory, PublicsCurrencyFactory,
                                                          PublicsDSARegionFactory, PublicsFundFactory,

@@ -10,7 +10,7 @@ from rest_framework.test import APIRequestFactory
 
 from etools.applications.EquiTrack.tests.cases import BaseTenantTestCase
 from etools.applications.EquiTrack.tests.mixins import WorkspaceRequiredAPITestMixIn
-from etools.applications.locations.tests.factories import GatewayTypeFactory, LocationFactory
+from unicef_locations.tests.factories import GatewayTypeFactory, LocationFactory
 from etools.applications.partners.models import InterventionResultLink, PartnerOrganization
 from etools.applications.partners.permissions import READ_ONLY_API_GROUP_NAME
 from etools.applications.partners.tests.factories import InterventionFactory

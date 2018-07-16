@@ -4,7 +4,7 @@ from django.db import connection
 
 from rest_framework import serializers
 
-from etools.applications.locations.models import Location
+from unicef_locations.models import Location
 from etools.applications.partners.models import (Intervention, InterventionAmendment,
                                                  PartnerOrganization, PartnerStaffMember,)
 from etools.applications.reports.models import (AppliedIndicator, Disaggregation,

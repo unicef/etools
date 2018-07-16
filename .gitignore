@@ -118,4 +118,4 @@ src/etools/config/settings/custom.py
 .tox
 .pytest_cache
 coverage.xml
-
+Pipfile

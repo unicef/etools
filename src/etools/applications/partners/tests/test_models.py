@@ -15,7 +15,7 @@ from etools.applications.audit.models import Engagement
 from etools.applications.audit.tests.factories import AuditFactory, SpecialAuditFactory, SpotCheckFactory
 from etools.applications.EquiTrack.tests.cases import BaseTenantTestCase
 from etools.applications.funds.tests.factories import DonorFactory, FundsReservationHeaderFactory, GrantFactory
-from etools.applications.locations.tests.factories import LocationFactory
+from unicef_locations.tests.factories import LocationFactory
 from etools.applications.partners import models
 from etools.applications.partners.tests.factories import (
     AgreementAmendmentFactory,

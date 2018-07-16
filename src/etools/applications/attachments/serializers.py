@@ -118,6 +118,8 @@ def validate_attachment(cls, data):
         attachment = Attachment.objects.get(pk=int(value))
     except Attachment.DoesNotExist:
         raise serializers.ValidationError("Attachment does not exist")
+    except ValueError:
+        raise serializers.ValidationError("Attachment expects an integer")
 
     file_type = FileType.objects.get(code=code)
     if attachment.content_object is not None:

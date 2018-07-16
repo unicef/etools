@@ -13,7 +13,7 @@ from etools.applications.EquiTrack.tests.cases import BaseTenantTestCase
 from etools.applications.audit.tests.factories import MicroAssessmentFactory
 from etools.applications.partners.tests.factories import PartnerFactory
 from etools.applications.reports.tests.factories import SectionFactory
-from etools.applications.t2f.tests.factories import TravelFactory
+from etools.applications.t2f.tests.factories import TravelActivityFactory
 from etools.applications.tpm.tests.factories import UserFactory, TPMVisitFactory
 from etools.applications.utils.common.tests.test_utils import TestExportMixin
 
@@ -110,7 +110,7 @@ class TestActionPointViewSet(TestExportMixin, ActionPointsTestCaseMixin, BaseTen
         self.assertEqual(response.data['assigned_by']['id'], self.unicef_user.id)
 
     def test_create_t2f_related(self):
-        travel_activity = TravelFactory().activities.first()
+        travel_activity = TravelActivityFactory()
         data = {'travel_activity': travel_activity.id}
         data.update(self.create_data)
 
@@ -125,7 +125,7 @@ class TestActionPointViewSet(TestExportMixin, ActionPointsTestCaseMixin, BaseTen
         self.assertEqual(response.data['travel_activity'], travel_activity.id)
 
     def test_travel_filter(self):
-        travel_activity = TravelFactory().activities.first()
+        travel_activity = TravelActivityFactory()
         ActionPointFactory()  # common action point, shouldn't appear while filtering
         ActionPointFactory(travel_activity=travel_activity)
 

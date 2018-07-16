@@ -6,7 +6,7 @@ from rest_framework import status
 from tablib.core import Dataset
 
 from etools.applications.EquiTrack.tests.cases import BaseTenantTestCase
-from etools.applications.locations.tests.factories import LocationFactory
+from unicef_locations.tests.factories import LocationFactory
 from etools.applications.partners.tests.factories import (
     AgreementFactory,
     InterventionAmendmentFactory,
