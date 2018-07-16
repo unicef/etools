@@ -1,0 +1,39 @@
+{
+    "status_code": 200,
+    "headers": {
+        "content-type": [
+            "Content-Type",
+            "application/json"
+        ],
+        "vary": [
+            "Vary",
+            "Accept, Cookie"
+        ],
+        "allow": [
+            "Allow",
+            "GET"
+        ],
+        "x-frame-options": [
+            "X-Frame-Options",
+            "SAMEORIGIN"
+        ]
+    },
+    "data": [
+        {
+            "id": 535,
+            "amendment_number": "1",
+            "signed_amendment_file": "http://testserver/media/test/file_attachments/partner_organization/17942/17942/agreements/18374/interventions/15602/amendments/None/test_file.pdf",
+            "signed_amendment_attachment": null,
+            "created": "2018-07-16T19:05:04.195000Z",
+            "modified": "2018-07-16T19:05:04.220000Z",
+            "types": [
+                "Change in clause"
+            ],
+            "other_description": "mEdbRcpihRVQAtCfzGgTocCzlpfyKbxCbZsOswBaNxRZtafHQt",
+            "signed_date": "2018-07-16",
+            "signed_amendment": "http://testserver/media/test/file_attachments/partner_organization/17942/17942/agreements/18374/interventions/15602/amendments/None/test_file.pdf",
+            "intervention": 15602
+        }
+    ],
+    "content_type": null
+}
