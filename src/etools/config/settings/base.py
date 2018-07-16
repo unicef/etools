@@ -88,7 +88,7 @@ DEBUG = str2bool(get_from_secrets_or_env('DJANGO_DEBUG'))
 
 # DJANGO: EMAIL
 DEFAULT_FROM_EMAIL = "no-reply@unicef.org"
-EMAIL_BACKEND = 'post_office.EmailBackend'  # Will send email via our template system
+EMAIL_BACKEND = 'unicef_notification.backends.EmailBackend'
 EMAIL_HOST = get_from_secrets_or_env('EMAIL_HOST', '')
 EMAIL_HOST_USER = get_from_secrets_or_env('EMAIL_HOST_USER', '')
 EMAIL_HOST_PASSWORD = get_from_secrets_or_env('EMAIL_HOST_PASSWORD', '')
@@ -196,13 +196,14 @@ SHARED_APPS = (
     'waffle',
     'etools.applications.tokens',
     'etools.applications.permissions2',
+    'unicef_notification',
 )
 TENANT_APPS = (
     'django_fsm',
     'django_comments',
     'logentry_admin',
     'etools.applications.funds',
-    'etools.applications.locations',
+    'unicef_locations',
     'etools.applications.reports',
     'etools.applications.partners',
     'etools.applications.hact',
@@ -215,6 +216,7 @@ TENANT_APPS = (
     'etools.applications.management',
     'etools.applications.snapshot',
     'etools.applications.action_points',
+    'unicef_snapshot',
 )
 INSTALLED_APPS = ('tenant_schemas',) + SHARED_APPS + TENANT_APPS
 
@@ -240,7 +242,7 @@ TEMPLATES = [
             'loaders': [
                 'django.template.loaders.filesystem.Loader',
                 'django.template.loaders.app_directories.Loader',
-                'etools.applications.utils.mail.loaders.EmailTemplateLoader',
+                'unicef_notification.loaders.EmailTemplateLoader',
             ],
             'context_processors': [
                 # Already defined Django-related contexts here
@@ -586,3 +588,6 @@ SCHEMA_OVERRIDE_PARAM = "schema"
 
 # Number of days before PCA required notification
 PCA_REQUIRED_NOTIFICATION_LEAD = 30
+
+UNICEF_NOTIFICATION_TEMPLATE_DIR = "notifications"
+UNICEF_LOCATIONS_GET_CACHE_KEY = 'etools.libraries.locations.views.cache_key'

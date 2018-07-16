@@ -1,6 +1,6 @@
 azure-storage==0.20.2
 carto==1.2.2
-celery==4.1
+celery==4.2
 dj-database-url==0.5
 dj-static==0.0.6
 Django==1.10.8
@@ -17,17 +17,16 @@ django-cors-headers==2.2
 django-debug-toolbar==1.9.1
 django-easy-pdf==0.1.1
 django-filter==1.0.2
-django-fsm==2.4.0
+django-fsm==2.6
 django-import-export==1.0
 django-leaflet==0.23
 django-logentry-admin==1.0.3
 django-model-utils==2.6
 django-mptt==0.9
-django-ordered-model==1.4.3
-django-post-office==3.0.4
+django-ordered-model==1.5
 django-redis-cache==1.7.1
 django-rest-swagger==2.1.0
-django-storages==1.6.5
+django-storages==1.6.6
 django-tenant-schemas==1.9.0
 django-waffle==0.14
 django-contrib-comments==1.8.0
@@ -36,11 +35,15 @@ drf-nested-routers==0.90.2
 etools-validator==0.2.1
 flower==0.9.2
 GDAL==1.10.0
-gunicorn==19.7.1
-drfpasswordless==1.1.5
+gunicorn==19.8.1
+drfpasswordless==1.2
+newrelic==2.94.0.79
 pyyaml==3.12
-psycopg2==2.7.4
+psycopg2==2.7.5
 raven==6.2.1
 tenant-schemas-celery==0.1.7
+unicef-locations==1.1.0
+unicef_notification==0.2.0
+unicef_snapshot==0.1.0
 
 -e git+https://github.com/unicef/djangosaml2.git@v0.16.11.2#egg=djangosaml2

@@ -1,18 +1,33 @@
+from django.core.files.uploadedfile import SimpleUploadedFile
 from django.core.urlresolvers import reverse
 
 
 from rest_framework import status
 
-from etools.applications.attachments.tests.factories import AttachmentFactory, AttachmentFileTypeFactory
+from etools.applications.attachments.models import Attachment
+from etools.applications.attachments.tests.factories import (
+    AttachmentFactory,
+    AttachmentFileTypeFactory,
+)
 from etools.applications.audit.tests.factories import EngagementFactory
 from etools.applications.EquiTrack.tests.cases import BaseTenantTestCase
 from etools.applications.partners.models import PartnerType
-from etools.applications.partners.tests.factories import (AgreementAmendmentFactory, AgreementFactory,
-                                                          AssessmentFactory, InterventionAmendmentFactory,
-                                                          InterventionAttachmentFactory, InterventionFactory,
-                                                          InterventionResultLinkFactory,
-                                                          InterventionSectorLocationLinkFactory, PartnerFactory,)
-from etools.applications.tpm.tests.factories import SimpleTPMPartnerFactory, TPMActivityFactory, TPMVisitFactory
+from etools.applications.partners.tests.factories import (
+    AgreementAmendmentFactory,
+    AgreementFactory,
+    AssessmentFactory,
+    InterventionAmendmentFactory,
+    InterventionAttachmentFactory,
+    InterventionFactory,
+    InterventionResultLinkFactory,
+    InterventionSectionLocationLinkFactory,
+    PartnerFactory,
+)
+from etools.applications.tpm.tests.factories import (
+    SimpleTPMPartnerFactory,
+    TPMActivityFactory,
+    TPMVisitFactory,
+)
 from etools.applications.users.tests.factories import UserFactory
 
 
@@ -52,7 +67,7 @@ class TestAttachmentListView(BaseTenantTestCase):
         cls.result_link = InterventionResultLinkFactory(
             intervention=cls.intervention
         )
-        cls.sector_location = InterventionSectorLocationLinkFactory(
+        cls.section_location = InterventionSectionLocationLinkFactory(
             intervention=cls.intervention
         )
         cls.intervention_amendment = InterventionAmendmentFactory(
@@ -536,3 +551,203 @@ class TestAttachmentFileView(BaseTenantTestCase):
             user=self.unicef_staff,
         )
         self.assertEqual(response.status_code, status.HTTP_302_FOUND)
+
+
+class TestAttachmentUpdateView(BaseTenantTestCase):
+    @classmethod
+    def setUpTestData(cls):
+        cls.file_type = AttachmentFileTypeFactory(code="test_code")
+        cls.unicef_staff = UserFactory(is_staff=True)
+
+    def setUp(self):
+        self.attachment = AttachmentFactory(
+            file_type=self.file_type,
+            code=self.file_type.code,
+            content_object=self.file_type
+        )
+        self.file_data = SimpleUploadedFile(
+            'hello_world.txt',
+            u'hello world!'.encode('utf-8')
+        )
+        self.url = reverse("attachments:update", args=[self.attachment.pk])
+
+    def test_get(self):
+        response = self.forced_auth_req(
+            "get",
+            self.url,
+            user=self.unicef_staff,
+            data={"file": self.file_data}
+        )
+        self.assertEqual(
+            response.status_code,
+            status.HTTP_405_METHOD_NOT_ALLOWED
+        )
+
+    def test_post(self):
+        response = self.forced_auth_req(
+            "post",
+            self.url,
+            user=self.unicef_staff,
+            data={"file": self.file_data}
+        )
+        self.assertEqual(
+            response.status_code,
+            status.HTTP_405_METHOD_NOT_ALLOWED
+        )
+
+    def test_permission(self):
+        user = UserFactory()
+        self.assertFalse(self.attachment.file)
+        response = self.forced_auth_req(
+            "put",
+            self.url,
+            user=user,
+            data={"file": self.file_data},
+            request_format="multipart"
+        )
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+
+    def test_put(self):
+        self.assertFalse(self.attachment.file)
+        self.assertIsNone(self.attachment.uploaded_by)
+        response = self.forced_auth_req(
+            "put",
+            self.url,
+            user=self.unicef_staff,
+            data={"file": self.file_data},
+            request_format="multipart"
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data["id"], self.attachment.pk)
+        self.assertEqual(
+            response.data["file_link"],
+            reverse("attachments:file", args=[self.attachment.pk])
+        )
+        attachment_update = Attachment.objects.get(pk=self.attachment.pk)
+        self.assertTrue(attachment_update.file)
+        self.assertEqual(attachment_update.uploaded_by, self.unicef_staff)
+
+    def test_patch(self):
+        self.assertFalse(self.attachment.file)
+        self.assertIsNone(self.attachment.uploaded_by)
+        response = self.forced_auth_req(
+            "patch",
+            self.url,
+            user=self.unicef_staff,
+            data={"file": self.file_data},
+            request_format="multipart"
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        attachment_update = Attachment.objects.get(pk=self.attachment.pk)
+        self.assertTrue(attachment_update.file)
+        self.assertEqual(
+            response.data["file_link"],
+            reverse("attachments:file", args=[self.attachment.pk])
+        )
+        self.assertEqual(attachment_update.uploaded_by, self.unicef_staff)
+
+    def test_put_target(self):
+        """Ensure update only affects specified attachment"""
+        attachment = AttachmentFactory(
+            file_type=self.file_type,
+            code=self.file_type.code,
+            content_object=self.file_type
+        )
+        self.assertFalse(self.attachment.file)
+        self.assertFalse(attachment.file)
+        self.assertIsNone(self.attachment.uploaded_by)
+        response = self.forced_auth_req(
+            "put",
+            self.url,
+            user=self.unicef_staff,
+            data={"file": self.file_data},
+            request_format="multipart"
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data["id"], self.attachment.pk)
+        self.assertEqual(
+            response.data["file_link"],
+            reverse("attachments:file", args=[self.attachment.pk])
+        )
+        attachment_update = Attachment.objects.get(pk=self.attachment.pk)
+        self.assertTrue(attachment_update.file)
+        self.assertEqual(attachment_update.uploaded_by, self.unicef_staff)
+        other_attachment_update = Attachment.objects.get(pk=attachment.pk)
+        self.assertFalse(other_attachment_update.file)
+
+
+class TestAttachmentCreatreView(BaseTenantTestCase):
+    @classmethod
+    def setUpTestData(cls):
+        cls.file_type = AttachmentFileTypeFactory(code="test_code")
+        cls.unicef_staff = UserFactory(is_staff=True)
+
+    def setUp(self):
+        self.file_data = SimpleUploadedFile(
+            'hello_world.txt',
+            u'hello world!'.encode('utf-8')
+        )
+        self.url = reverse("attachments:create")
+
+    def test_get(self):
+        response = self.forced_auth_req(
+            "get",
+            self.url,
+            user=self.unicef_staff,
+            data={"file": self.file_data}
+        )
+        self.assertEqual(
+            response.status_code,
+            status.HTTP_405_METHOD_NOT_ALLOWED
+        )
+
+    def test_put(self):
+        response = self.forced_auth_req(
+            "put",
+            self.url,
+            user=self.unicef_staff,
+            data={"file": self.file_data}
+        )
+        self.assertEqual(
+            response.status_code,
+            status.HTTP_405_METHOD_NOT_ALLOWED
+        )
+
+    def test_patch(self):
+        response = self.forced_auth_req(
+            "patch",
+            self.url,
+            user=self.unicef_staff,
+            data={"file": self.file_data}
+        )
+        self.assertEqual(
+            response.status_code,
+            status.HTTP_405_METHOD_NOT_ALLOWED
+        )
+
+    def test_permission(self):
+        user = UserFactory()
+        response = self.forced_auth_req(
+            "post",
+            self.url,
+            user=user,
+            data={"file": self.file_data},
+            request_format="multipart"
+        )
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+
+    def test_post(self):
+        response = self.forced_auth_req(
+            "post",
+            self.url,
+            user=self.unicef_staff,
+            data={"file": self.file_data},
+            request_format="multipart"
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertTrue(response.data["file_link"])
+        attachment_qs = Attachment.objects.filter(pk=response.data["id"])
+        self.assertTrue(attachment_qs.exists())
+        attachment = attachment_qs.first()
+        self.assertIsNone(attachment.content_object)
+        self.assertEqual(attachment.uploaded_by, self.unicef_staff)

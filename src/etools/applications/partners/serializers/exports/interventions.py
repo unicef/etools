@@ -3,8 +3,8 @@ from django.utils.translation import ugettext as _
 from rest_framework import serializers
 
 from etools.applications.EquiTrack.mixins import ExportSerializerMixin
-from etools.applications.locations.models import Location
-from etools.applications.locations.serializers import LocationExportFlatSerializer, LocationExportSerializer
+from unicef_locations.models import Location
+from unicef_locations.serializers import LocationExportFlatSerializer, LocationExportSerializer
 from etools.applications.partners.models import Intervention, InterventionAmendment, InterventionResultLink
 from etools.applications.partners.serializers.fields import TypeArrayField
 from etools.applications.partners.serializers.interventions_v2 import (InterventionAmendmentCUSerializer,
@@ -35,7 +35,7 @@ class InterventionAmendmentExportFlatSerializer(
         exclude = ("signed_amendment_attachment", )
 
 
-class InterventionSectorLocationLinkExportSerializer(LocationExportSerializer):
+class InterventionSectionLocationLinkExportSerializer(LocationExportSerializer):
     intervention = serializers.SerializerMethodField(
         label=_("Reference Number")
     )
@@ -57,7 +57,7 @@ class InterventionSectorLocationLinkExportSerializer(LocationExportSerializer):
         )
 
 
-class InterventionSectorLocationLinkExportFlatSerializer(
+class InterventionSectionLocationLinkExportFlatSerializer(
         ExportSerializerMixin,
         LocationExportFlatSerializer
 ):
@@ -226,7 +226,7 @@ class InterventionExportSerializer(serializers.ModelSerializer):
         source='agreement.partner.name',
     )
     vendor_number = serializers.CharField(
-        label=_("Vendor #"),
+        label=_("Vendor Number"),
         source='agreement.partner.vendor_number',
     )
     partner_type = serializers.CharField(
@@ -384,7 +384,7 @@ class InterventionExportSerializer(serializers.ModelSerializer):
         return ', '.join([s.name for s in obj.sections.all()])
 
     def get_intervention_clusters(self, obj):
-        return ', '.join([c for c in obj.intervention_clusters])
+        return ', '.join([c for c in obj.intervention_clusters()])
 
     def get_contingency_pd(self, obj):
         return "Yes" if obj.contingency_pd else "No"

@@ -10,8 +10,8 @@ from django.utils.timezone import now as timezone_now
 from django.utils.translation import ugettext, ugettext_lazy as _
 
 from django_fsm import FSMField, transition
+from unicef_notification.utils import send_notification
 
-from etools.applications.notification.utils import send_notification_using_templates
 from etools.applications.publics.models import TravelExpenseType
 from etools.applications.t2f.helpers.cost_summary_calculator import CostSummaryCalculator
 from etools.applications.t2f.helpers.invoice_maker import InvoiceMaker
@@ -166,10 +166,6 @@ class Travel(models.Model):
         on_delete=models.CASCADE,
     )
     section = models.ForeignKey(
-        'users.Section', null=True, blank=True, related_name='+', verbose_name=_('Section'),
-        on_delete=models.CASCADE,
-    )
-    sector = models.ForeignKey(
         'reports.Sector', null=True, blank=True, related_name='+', verbose_name=_('Sector'),
         on_delete=models.CASCADE,
     )
@@ -206,6 +202,10 @@ class Travel(models.Model):
 
     def __str__(self):
         return self.reference_number
+
+    def get_object_url(self):
+        return 'https://{host}/t2f/edit-travel/{travel_id}/'.format(host=settings.HOST,
+                                                                    travel_id=self.id)
 
     @property
     def cost_summary(self):
@@ -426,7 +426,7 @@ class Travel(models.Model):
 
             for act in self.activities.filter(primary_traveler=self.traveler,
                                               travel_type=TravelType.SPOT_CHECK):
-                act.partner.spot_checks(update_one=True)
+                act.partner.spot_checks(event_date=self.end_date, update_one=True)
 
         except Exception:
             log.exception('Exception while trying to update hact values.')
@@ -439,15 +439,12 @@ class Travel(models.Model):
         # TODO this could be async to avoid too long api calls in case of mail server issue
         serializer = TravelMailSerializer(self, context={})
 
-        url = 'https://{host}/t2f/edit-travel/{travel_id}/'.format(host=settings.HOST,
-                                                                   travel_id=self.id)
-
-        send_notification_using_templates(
+        send_notification(
             recipients=[recipient],
             from_address=settings.DEFAULT_FROM_EMAIL,  # TODO what should sender be?
-            subject_template_content=subject,
-            html_template_filename=template_name,
-            context={'travel': serializer.data, 'url': url}
+            subject=subject,
+            html_content_filename=template_name,
+            context={'travel': serializer.data, 'url': self.get_object_url()}
         )
 
     def generate_invoices(self):
@@ -487,6 +484,10 @@ class TravelActivity(models.Model):
     @property
     def travel_status(self):
         return self.travels.filter(traveler=self.primary_traveler).first().status
+
+    def get_object_url(self):
+        # TODO: to be used for generating link from action points dashboard to related object
+        return ""
 
 
 class ItineraryItem(models.Model):
@@ -727,13 +728,13 @@ class ActionPoint(models.Model):
         context = {'action_point': serializer.data, 'url': url, 'trip_url': trip_url}
         template_name = 'emails/action_point_assigned.html'
 
-        send_notification_using_templates(
+        send_notification(
             recipients=[recipient],
             cc=[cc],
             from_address=settings.DEFAULT_FROM_EMAIL,  # TODO what should sender be?
-            subject_template_content=subject,
-            html_template_filename=template_name,
-            text_template_content='',
+            subject=subject,
+            html_content_filename=template_name,
+            content='',
             context=context,
         )
 

@@ -9,15 +9,13 @@ from rest_framework.exceptions import ValidationError
 
 from etools.applications.action_points.serializers import ActionPointBaseSerializer, HistorySerializer
 from etools.applications.activities.serializers import ActivitySerializer
-from etools.applications.locations.serializers import LocationLightSerializer
+from unicef_locations.serializers import LocationLightSerializer
 from etools.applications.partners.models import InterventionResultLink, PartnerType
 from etools.applications.partners.serializers.interventions_v2 import InterventionCreateUpdateSerializer
 from etools.applications.partners.serializers.partner_organization_v2 import MinimalPartnerOrganizationListSerializer
 from etools.applications.permissions2.serializers import PermissionsBasedSerializerMixin
-from etools.applications.reports.serializers.v1 import ResultSerializer, SectorSerializer
+from etools.applications.reports.serializers.v1 import ResultSerializer, SectionSerializer
 from etools.applications.tpm.models import TPMActionPoint, TPMActivity, TPMVisit, TPMVisitReportRejectComment
-from etools.applications.tpm.serializers.attachments import (
-    TPMAttachmentsSerializer, TPMReportAttachmentsSerializer, TPMReportSerializer,)
 from etools.applications.tpm.serializers.partner import TPMPartnerLightSerializer, TPMPartnerStaffMemberSerializer
 from etools.applications.tpm.tpmpartners.models import TPMPartnerStaffMember
 from etools.applications.users.serializers import MinimalUserSerializer, OfficeSerializer
@@ -46,7 +44,7 @@ class TPMVisitReportRejectCommentSerializer(WritableNestedSerializerMixin,
 
 class TPMActionPointSerializer(PermissionsBasedSerializerMixin, ActionPointBaseSerializer):
     section = SeparatedReadWriteField(
-        read_field=SectorSerializer(read_only=True, label=_('Section')),
+        read_field=SectionSerializer(read_only=True, label=_('Section')),
         read_only=True
     )
     office = SeparatedReadWriteField(
@@ -105,7 +103,7 @@ class TPMActivitySerializer(PermissionsBasedSerializerMixin, WritableNestedSeria
     )
 
     section = SeparatedReadWriteField(
-        read_field=SectorSerializer(read_only=True, label=_('Section')),
+        read_field=SectionSerializer(read_only=True, label=_('Section')),
         required=True,
     )
 
@@ -118,9 +116,6 @@ class TPMActivitySerializer(PermissionsBasedSerializerMixin, WritableNestedSeria
         read_field=OfficeSerializer(read_only=True, many=True, label=_('Office(s) of UNICEF Focal Point(s)')),
         required=True,
     )
-
-    attachments = TPMAttachmentsSerializer(many=True, required=False, label=_('Related Documents'))
-    report_attachments = TPMReportSerializer(many=True, required=False, label=_('Reports by Task'))
 
     pv_applicable = serializers.BooleanField(read_only=True)
 
@@ -149,7 +144,7 @@ class TPMActivitySerializer(PermissionsBasedSerializerMixin, WritableNestedSeria
         model = TPMActivity
         fields = [
             'id', 'partner', 'intervention', 'cp_output', 'section', 'unicef_focal_points',
-            'date', 'locations', 'attachments', 'report_attachments', 'additional_information',
+            'date', 'locations', 'additional_information',
             'pv_applicable', 'offices',
         ]
         extra_kwargs = {
@@ -194,7 +189,7 @@ class TPMVisitLightSerializer(PermissionsBasedSerializerMixin, serializers.Model
         ).data
 
     def get_sections(self, obj):
-        return SectorSerializer(
+        return SectionSerializer(
             set(map(
                 lambda a: a.section,
                 obj.tpm_activities.all()
@@ -224,8 +219,6 @@ class TPMVisitSerializer(WritableNestedParentSerializerMixin,
                          UserContextSerializerMixin,
                          TPMVisitLightSerializer):
     tpm_activities = TPMActivitySerializer(many=True, required=False, label=_('Site Visit Schedule'))
-
-    report_attachments = TPMReportAttachmentsSerializer(many=True, required=False, label=_('Overall Visit Reports'))
 
     report_reject_comments = TPMVisitReportRejectCommentSerializer(many=True, read_only=True)
 
@@ -266,7 +259,7 @@ class TPMVisitSerializer(WritableNestedParentSerializerMixin,
 
     class Meta(TPMVisitLightSerializer.Meta):
         fields = TPMVisitLightSerializer.Meta.fields + [
-            'tpm_activities', 'report_attachments',
+            'tpm_activities',
             'cancel_comment', 'reject_comment', 'approval_comment',
             'visit_information', 'report_reject_comments',
         ]

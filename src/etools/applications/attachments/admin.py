@@ -1,5 +1,5 @@
-
 from django.contrib import admin
+from django.contrib.contenttypes import admin as ct_admin
 
 from ordered_model.admin import OrderedModelAdmin
 
@@ -18,8 +18,19 @@ class AttachmentAdmin(admin.ModelAdmin):
     list_display = [
         'file_type',
         'file',
-        'content_object',
         'modified',
         'uploaded_by',
     ]
     list_filter = ['file_type', 'uploaded_by', ]
+
+
+class AttachmentInline(ct_admin.GenericTabularInline):
+    model = app_models.Attachment
+    extra = 0
+    fields = ('file', 'hyperlink', 'modified', 'uploaded_by', )
+    readonly_fields = ('file', 'hyperlink', 'modified', 'uploaded_by', )
+
+
+class AttachmentSingleInline(AttachmentInline):
+    def has_add_permission(self, request):
+        return False

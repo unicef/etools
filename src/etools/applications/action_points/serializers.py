@@ -3,16 +3,16 @@ from django.utils.translation import ugettext_lazy as _
 
 from django_comments.models import Comment
 from rest_framework import serializers
+from unicef_snapshot.models import Activity
+from unicef_snapshot.serializers import SnapshotModelSerializer
 
 from etools.applications.EquiTrack.utils import get_current_site
 from etools.applications.action_points.models import ActionPoint
-from etools.applications.EquiTrack.serializers import SnapshotModelSerializer
-from etools.applications.locations.serializers import LocationLightSerializer
-from etools.applications.partners.serializers.interventions_v2 import InterventionCreateUpdateSerializer
+from unicef_locations.serializers import LocationLightSerializer
+from etools.applications.partners.serializers.interventions_v2 import BaseInterventionListSerializer
 from etools.applications.partners.serializers.partner_organization_v2 import MinimalPartnerOrganizationListSerializer
 from etools.applications.permissions2.serializers import PermissionsBasedSerializerMixin
-from etools.applications.reports.serializers.v1 import ResultSerializer, SectorSerializer
-from etools.applications.snapshot.models import Activity
+from etools.applications.reports.serializers.v1 import ResultSerializer, SectionSerializer
 from etools.applications.users.serializers import OfficeSerializer
 from etools.applications.users.serializers_v3 import MinimalUserSerializer
 from etools.applications.utils.common.serializers.fields import SeparatedReadWriteField
@@ -71,7 +71,7 @@ class ActionPointListSerializer(PermissionsBasedSerializerMixin, ActionPointBase
         read_field=MinimalPartnerOrganizationListSerializer(read_only=True, label=_('Partner')),
     )
     intervention = SeparatedReadWriteField(
-        read_field=InterventionCreateUpdateSerializer(read_only=True, label=_('PD/SSFA')),
+        read_field=BaseInterventionListSerializer(read_only=True, label=_('PD/SSFA')),
         required=False,
     )
 
@@ -85,7 +85,7 @@ class ActionPointListSerializer(PermissionsBasedSerializerMixin, ActionPointBase
     )
 
     section = SeparatedReadWriteField(
-        read_field=SectorSerializer(read_only=True, label=_('Section')),
+        read_field=SectionSerializer(read_only=True, label=_('Section')),
         required=True,
     )
     office = SeparatedReadWriteField(
@@ -99,7 +99,26 @@ class ActionPointListSerializer(PermissionsBasedSerializerMixin, ActionPointBase
 
             'section', 'office', 'location',
             'partner', 'cp_output', 'intervention',
+
+            'engagement', 'tpm_activity', 'travel_activity',
         ]
+
+    def create(self, validated_data):
+        if 'engagement' in validated_data:
+            engagement = validated_data['engagement']
+            validated_data.update({
+                'partner_id': engagement.partner_id,
+            })
+        elif 'tpm_activity' in validated_data:
+            activity = validated_data['tpm_activity']
+            validated_data.update({
+                'partner_id': activity.partner_id,
+                'intervention_id': activity.intervention_id,
+                'cp_output_id': activity.cp_output_id,
+                'section_id': activity.section_id,
+            })
+
+        return super().create(validated_data)
 
 
 class CommentSerializer(UserContextSerializerMixin, WritableNestedSerializerMixin, serializers.ModelSerializer):

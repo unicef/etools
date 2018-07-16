@@ -22,6 +22,7 @@ from rest_framework.renderers import JSONRenderer
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework_csv import renderers as r
+from unicef_snapshot.models import Activity
 
 from etools.applications.environment.helpers import tenant_switch_is_active
 from etools.applications.EquiTrack.mixins import ExportModelMixin, QueryStringFilterMixin
@@ -57,8 +58,8 @@ from etools.applications.partners.serializers.exports.interventions import (
     InterventionIndicatorExportSerializer,
     InterventionResultExportFlatSerializer,
     InterventionResultExportSerializer,
-    InterventionSectorLocationLinkExportFlatSerializer,
-    InterventionSectorLocationLinkExportSerializer,
+    InterventionSectionLocationLinkExportFlatSerializer,
+    InterventionSectionLocationLinkExportSerializer,
 )
 from etools.applications.partners.serializers.interventions_v2 import (
     InterventionAmendmentCUSerializer,
@@ -75,7 +76,7 @@ from etools.applications.partners.serializers.interventions_v2 import (
     InterventionResultCUSerializer,
     InterventionResultLinkSimpleCUSerializer,
     InterventionResultSerializer,
-    InterventionSectorLocationCUSerializer,
+    InterventionSectionLocationCUSerializer,
     MinimalInterventionListSerializer,
     InterventionLocationExportSerializer)
 from etools.applications.partners.validation.interventions import InterventionValid
@@ -88,7 +89,6 @@ from etools.applications.reports.serializers.v2 import (
     AppliedIndicatorSerializer,
     LowerResultSimpleCUSerializer,
 )
-from etools.applications.snapshot.models import Activity
 from etools.applications.users.models import Country
 from etools_validator.mixins import ValidatorViewMixin
 
@@ -221,7 +221,10 @@ class InterventionListAPIView(QueryStringFilterMixin, ExportModelMixin, Interven
         response = super(InterventionListAPIView, self).list(request)
         if "format" in query_params.keys():
             if query_params.get("format") in ['csv', "csv_flat"]:
-                response['Content-Disposition'] = "attachment;filename=interventions.csv"
+                country = Country.objects.get(schema_name=connection.schema_name)
+                today = '{:%Y_%m_%d}'.format(datetime.date.today())
+                filename = f"PD_budget_as_of_{today}_{country.country_short_code}"
+                response['Content-Disposition'] = f"attachment;filename={filename}.csv"
 
         return response
 
@@ -491,11 +494,11 @@ class InterventionAmendmentDeleteView(DestroyAPIView):
             raise ValidationError("You do not have permissions to delete an amendment")
 
 
-class InterventionSectorLocationLinkListAPIView(ExportModelMixin, ListAPIView):
+class InterventionSectionLocationLinkListAPIView(ExportModelMixin, ListAPIView):
     """
-    Returns a list of InterventionSectorLocationLinks.
+    Returns a list of InterventionSectionLocationLinks.
     """
-    serializer_class = InterventionSectorLocationCUSerializer
+    serializer_class = InterventionSectionLocationCUSerializer
     permission_classes = (PartnershipManagerPermission,)
     filter_backends = (PartnerScopeFilter,)
     renderer_classes = (
@@ -511,10 +514,10 @@ class InterventionSectorLocationLinkListAPIView(ExportModelMixin, ListAPIView):
         query_params = self.request.query_params
         if "format" in query_params.keys():
             if query_params.get("format") == 'csv':
-                return InterventionSectorLocationLinkExportSerializer
+                return InterventionSectionLocationLinkExportSerializer
             if query_params.get("format") == 'csv_flat':
-                return InterventionSectorLocationLinkExportFlatSerializer
-        return super(InterventionSectorLocationLinkListAPIView, self).get_serializer_class()
+                return InterventionSectionLocationLinkExportFlatSerializer
+        return super(InterventionSectionLocationLinkListAPIView, self).get_serializer_class()
 
     def get_queryset(self, format=None):
         q = InterventionSectorLocationLink.objects.all()
@@ -549,10 +552,7 @@ class InterventionListMapView(ListCreateAPIView):
     permission_classes = (IsAdminUser,)
 
     def get_queryset(self):
-        q = Intervention.objects.detail_qs()
-        # TODO: remember to add back the location filter after the PRP integration related structural changes are final
-        # .filter(sector_locations__isnull=False).exclude(sector_locations__locations=None)\
-        # .prefetch_related('sector_locations__locations')
+        q = Intervention.objects.prefetch_related("flat_locations")
 
         query_params = self.request.query_params
 
@@ -754,8 +754,8 @@ class InterventionLocationListAPIView(ListAPIView):
         query_params = self.request.query_params
         if query_params.get("format") in ['csv', 'csv_flat']:
             country = Country.objects.get(schema_name=connection.schema_name)
-            today = datetime.date.today()
-            filename = f"{today.year}_{today.month}_{today.day}_{country.country_short_code}_Interventions"
+            today = '{:%Y_%m_%d}'.format(datetime.date.today())
+            filename = f"PD_locations_as_of_{today}_{country.country_short_code}"
             response['Content-Disposition'] = "attachment;filename=%s.csv" % filename
 
         return response

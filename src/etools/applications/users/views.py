@@ -7,6 +7,7 @@ from django.db import connection
 from django.http import HttpResponseForbidden, HttpResponseRedirect
 
 from django.views.generic import FormView, RedirectView
+from django.views.generic.detail import DetailView
 
 from rest_framework import mixins, status, viewsets
 from rest_framework.exceptions import ValidationError
@@ -18,7 +19,7 @@ from rest_framework.views import APIView
 from etools.applications.audit.models import Auditor
 from etools.applications.EquiTrack.permissions import IsSuperUserOrStaff
 from etools.applications.reports.models import Sector
-from etools.applications.reports.serializers.v1 import SectorSerializer
+from etools.applications.reports.serializers.v1 import SectionSerializer
 from etools.applications.tpm.models import ThirdPartyMonitor
 from etools.applications.users.forms import ProfileForm
 from etools.applications.users.models import Country, Office, UserProfile
@@ -26,6 +27,7 @@ from etools.applications.users.serializers import (CountrySerializer, GroupSeria
                                                    OfficeSerializer, ProfileRetrieveUpdateSerializer,
                                                    SimpleProfileSerializer, SimpleUserSerializer,
                                                    UserCreationSerializer, UserSerializer,)
+from etools.libraries.azure_graph_api.tasks import retrieve_user_info
 
 logger = logging.getLogger(__name__)
 
@@ -38,6 +40,18 @@ class UserAuthAPIView(RetrieveAPIView):
     def get_object(self, queryset=None, **kwargs):
         user = self.request.user
         return user
+
+
+class ADUserAPIView(DetailView):
+    template_name = 'admin/users/user/api.html'
+    model = get_user_model()
+    slug_field = slug_url_kwarg = 'username'
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        if self.request.user and self.request.user.is_superuser:
+            context['ad_dict'] = retrieve_user_info(self.object.username)
+        return context
 
 
 class ChangeUserCountryView(APIView):
@@ -190,7 +204,6 @@ class ProfileEdit(FormView):
         context = super(ProfileEdit, self).get_context_data(**kwargs)
         context.update({
             'office_list': connection.tenant.offices.all().order_by('name'),
-            'section_list': connection.tenant.sections.all().order_by('name')
         })
         return context
 
@@ -201,7 +214,6 @@ class ProfileEdit(FormView):
             user=self.request.user
         )
         profile.office = form.cleaned_data['office']
-        profile.section = form.cleaned_data['section']
         profile.job_title = form.cleaned_data['job_title']
         profile.phone_number = form.cleaned_data['phone_number']
         profile.save()
@@ -213,7 +225,6 @@ class ProfileEdit(FormView):
         try:
             profile = self.request.user.profile
             initial['office'] = profile.office
-            initial['section'] = profile.section
             initial['job_title'] = profile.job_title
             initial['phone_number'] = profile.phone_number
         except UserProfile.DoesNotExist:
@@ -354,7 +365,7 @@ class SectionViewSet(mixins.RetrieveModelMixin,
     """
     Returns a list of all Sections
     """
-    serializer_class = SectorSerializer
+    serializer_class = SectionSerializer
     permission_classes = (IsAdminUser,)
 
     def get_queryset(self):
@@ -374,12 +385,12 @@ class ModuleRedirectView(RedirectView):
     url = '/dash/'
     permanent = False
 
-    # TODO: Rewrite this ...
     def get_redirect_url(self, *args, **kwargs):
-        if ThirdPartyMonitor.as_group() in self.request.user.groups.all():
-            return '/tpm/'
+        if not self.request.user.is_staff:
+            if ThirdPartyMonitor.as_group() in self.request.user.groups.all():
+                return '/tpm/'
 
-        if Auditor.as_group() in self.request.user.groups.all():
-            return '/ap/'
+            if Auditor.as_group() in self.request.user.groups.all():
+                return '/ap/'
 
         return super(ModuleRedirectView, self).get_redirect_url(*args, **kwargs)

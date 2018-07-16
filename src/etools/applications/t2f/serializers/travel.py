@@ -15,10 +15,9 @@ from django.utils.translation import ugettext
 from rest_framework import serializers
 from rest_framework.exceptions import ValidationError
 
-from etools.applications.locations.models import Location
+from unicef_locations.models import Location
 from etools.applications.partners.models import PartnerType
 from etools.applications.publics.models import AirlineCompany, Currency
-from etools.applications.reports.models import Sector
 from etools.applications.t2f.helpers.permission_matrix import PermissionMatrix
 from etools.applications.t2f.models import (ActionPoint, Clearances, CostAssignment, Deduction, Expense,
                                             ItineraryItem, Travel, TravelActivity, TravelAttachment, TravelType,)
@@ -238,8 +237,6 @@ class TravelDetailsSerializer(PermissionBasedModelSerializer):
     report = serializers.CharField(source='report_note', required=False, default='', allow_blank=True)
     mode_of_travel = serializers.ListField(child=LowerTitleField(), allow_null=True, required=False)
     action_points = ActionPointSerializer(many=True, required=False)
-    section = serializers.PrimaryKeyRelatedField(source='sector', queryset=Sector.objects.all(),
-                                                 allow_null=True, required=False)
 
     # Fix because of a frontend validation failure (fix it on the frontend first)
     estimated_travel_cost = serializers.DecimalField(max_digits=18, decimal_places=2, required=False)
@@ -516,12 +513,10 @@ class TravelListSerializer(TravelDetailsSerializer):
     # TODO: reserve field names to pks for related fields and add _name for the names
     traveler = serializers.CharField(source='traveler.get_full_name')
     supervisor_name = serializers.CharField(source='supervisor.get_full_name')
-    section = serializers.PrimaryKeyRelatedField(source='sector', queryset=Sector.objects.all(),
-                                                 allow_null=True, required=False)
 
     class Meta:
         model = Travel
-        fields = ('id', 'reference_number', 'traveler', 'purpose', 'status', 'section', 'office', 'start_date',
+        fields = ('id', 'reference_number', 'traveler', 'purpose', 'status', 'office', 'start_date', 'section',
                   'end_date', 'supervisor_name')
         read_only_fields = ('status',)
 
@@ -532,10 +527,15 @@ class TravelActivityByPartnerSerializer(serializers.ModelSerializer):
     reference_number = serializers.ReadOnlyField()
     status = serializers.ReadOnlyField()
     trip_id = serializers.ReadOnlyField()
+    travel_latest_date = serializers.SerializerMethodField()
+
+    def get_travel_latest_date(self, obj):
+        return getattr(obj.travels.filter(traveler=obj.primary_traveler).last(), 'end_date', '-')
 
     class Meta:
         model = TravelActivity
-        fields = ('primary_traveler', 'travel_type', 'date', 'locations', 'reference_number', 'status', 'trip_id')
+        fields = ('travel_latest_date', 'primary_traveler', 'travel_type', 'date', 'locations', 'reference_number',
+                  'status', 'trip_id')
 
 
 class CloneOutputSerializer(TravelDetailsSerializer):

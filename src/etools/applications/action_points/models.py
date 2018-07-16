@@ -1,20 +1,19 @@
 from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.contrib.contenttypes.fields import GenericRelation
-from django.db import models, connection
-
+from django.db import connection, models
 from django.utils.translation import ugettext_lazy as _
 
 from django_fsm import FSMField, transition
 from model_utils import Choices, FieldTracker
 from model_utils.fields import MonitorField
 from model_utils.models import TimeStampedModel
+from unicef_snapshot.models import Activity
 
 from etools.applications.action_points.transitions.conditions import ActionPointCompleteActionsTakenCheck
 from etools.applications.EquiTrack.utils import get_environment
 from etools.applications.notification.models import Notification
 from etools.applications.permissions2.fsm import has_action_permission
-from etools.applications.snapshot.models import Activity
 from etools.applications.utils.common.urlresolvers import build_frontend_url
 from etools.applications.utils.groups.wrappers import GroupWrapper
 
@@ -84,16 +83,16 @@ class ActionPoint(TimeStampedModel):
     tpm_activity = models.ForeignKey('tpm.TPMActivity', verbose_name=_('TPM Activity'), blank=True, null=True,
                                      related_name='action_points', on_delete=models.CASCADE,
                                      )
-    travel = models.ForeignKey('t2f.Travel', verbose_name=_('Travel'), blank=True, null=True,
-                               on_delete=models.CASCADE,
-                               )
+    travel_activity = models.ForeignKey('t2f.TravelActivity', verbose_name=_('Travel'), blank=True, null=True,
+                                        on_delete=models.CASCADE,
+                                        )
 
     date_of_completion = MonitorField(verbose_name=_('Date Action Point Completed'), null=True, blank=True,
                                       default=None, monitor='status', when=[STATUSES.completed])
 
     comments = GenericRelation('django_comments.Comment', object_id_field='object_pk')
 
-    history = GenericRelation('snapshot.Activity', object_id_field='target_object_id',
+    history = GenericRelation('unicef_snapshot.Activity', object_id_field='target_object_id',
                               content_type_field='target_content_type')
 
     tracker = FieldTracker(fields=['assigned_to'])
@@ -109,7 +108,7 @@ class ActionPoint(TimeStampedModel):
 
     @property
     def related_object(self):
-        return self.engagement_subclass or self.tpm_activity or self.travel
+        return self.engagement_subclass or self.tpm_activity or self.travel_activity
 
     @property
     def related_module(self):
@@ -117,7 +116,7 @@ class ActionPoint(TimeStampedModel):
             return self.MODULE_CHOICES.audit
         if self.tpm_activity:
             return self.MODULE_CHOICES.tpm
-        if self.travel:
+        if self.travel_activity:
             return self.MODULE_CHOICES.t2f
         return None
 
@@ -129,8 +128,8 @@ class ActionPoint(TimeStampedModel):
             self.id,
         )
 
-    def get_object_url(self):
-        return build_frontend_url('apd', 'action-points', 'detail', self.id)
+    def get_object_url(self, **kwargs):
+        return build_frontend_url('apd', 'action-points', 'detail', self.id, **kwargs)
 
     @property
     def status_date(self):
@@ -167,7 +166,7 @@ class ActionPoint(TimeStampedModel):
 
         return activity.get_action_display()
 
-    def get_mail_context(self):
+    def get_mail_context(self, user=None, include_token=False):
         return {
             'person_responsible': self.assigned_to.get_full_name(),
             'assigned_by': self.assigned_by.get_full_name(),
@@ -175,13 +174,13 @@ class ActionPoint(TimeStampedModel):
             'partner': self.partner.name if self.partner else '',
             'description': self.description,
             'due_date': self.due_date.strftime('%d %b %Y') if self.due_date else '',
-            'object_url': self.get_object_url(),
+            'object_url': self.get_object_url(user=user, include_token=include_token),
         }
 
     def send_email(self, recipient, template_name, additional_context=None):
         context = {
             'environment': get_environment(),
-            'action_point': self.get_mail_context(),
+            'action_point': self.get_mail_context(user=recipient),
             'recipient': recipient.get_full_name(),
         }
         context.update(additional_context or {})

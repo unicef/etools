@@ -10,16 +10,17 @@ from rest_framework_nested import routers
 from rest_framework_swagger.renderers import OpenAPIRenderer
 
 from etools.applications.EquiTrack.views import IssueJWTRedirectView, MainView, OutdatedBrowserView
-from etools.applications.locations.views import LocationsLightViewSet, LocationsViewSet, LocationTypesViewSet
+from etools.libraries.locations.views import LocationsLightViewSet, LocationsViewSet, LocationTypesViewSet, \
+    CartoDBTablesView, LocationQuerySetView
 from etools.applications.management.urls import urlpatterns as management_urls
 from etools.applications.partners.views.v1 import FileTypeViewSet
 from etools.applications.publics import urls as publics_patterns
 from etools.applications.publics.views import StaticDataView
 from etools.applications.reports.views.v1 import (IndicatorViewSet, ResultTypeViewSet,
-                                                  ResultViewSet, SectorViewSet, UnitViewSet,)
+                                                  ResultViewSet, SectionViewSet, UnitViewSet,)
 from etools.applications.t2f.urls import urlpatterns as t2f_patterns
 from etools.applications.users.views import (CountriesViewSet, GroupViewSet, ModuleRedirectView,
-                                             OfficeViewSet, SectionViewSet, UserViewSet,)
+                                             OfficeViewSet, UserViewSet,)
 from etools.applications.utils.common.schemas import get_schema_view, get_swagger_view
 
 # ******************  API docs and schemas  ******************************
@@ -38,10 +39,9 @@ api.register(r'partners/file-types', FileTypeViewSet, base_name='filetypes')
 api.register(r'users', UserViewSet, base_name='users')
 api.register(r'groups', GroupViewSet, base_name='groups')
 api.register(r'offices', OfficeViewSet, base_name='offices')
-api.register(r'sections', SectionViewSet, base_name='sections')
 
 api.register(r'reports/result-types', ResultTypeViewSet, base_name='resulttypes')
-api.register(r'reports/sectors', SectorViewSet, base_name='sectors')
+api.register(r'reports/sectors', SectionViewSet, base_name='sectors')
 api.register(r'reports/indicators', IndicatorViewSet, base_name='indicators')
 api.register(r'reports/results', ResultViewSet, base_name='results')
 api.register(r'reports/units', UnitViewSet, base_name='units')
@@ -59,7 +59,10 @@ urlpatterns = [
     url(r'^api/static_data/$', StaticDataView.as_view({'get': 'list'}), name='public_static'),
 
     # ***************  API version 1  ********************
-    url(r'^locations/', include('etools.applications.locations.urls')),
+    url(r'^locations/', include('unicef_locations.urls')),
+    url(r'^locations/cartodbtables/$', CartoDBTablesView.as_view(), name='cartodbtables'),
+    url(r'^locations/autocomplete/$', LocationQuerySetView.as_view(), name='locations_autocomplete'),
+
     # GIS API urls
     url(r'^api/management/gis/', include('etools.applications.management.urls_gis')),
     url(r'^users/', include('etools.applications.users.urls')),
@@ -82,7 +85,7 @@ urlpatterns = [
     url(r'^api/v2/users/', include('etools.applications.users.urls_v2', namespace='users_v2')),
     url(r'^api/v2/workspaces/', CountriesViewSet.as_view(http_method_names=['get']), name="list-workspaces"),
     url(r'^api/v2/funds/', include('etools.applications.funds.urls')),
-    url(r'^api/v2/activity/', include('etools.applications.snapshot.urls')),
+    url(r'^api/v2/activity/', include('unicef_snapshot.urls')),
     url(r'^api/v2/environment/', include('etools.applications.environment.urls_v2')),
     url(r'^api/v2/attachments/', include('etools.applications.attachments.urls')),
 

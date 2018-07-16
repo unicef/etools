@@ -1,22 +1,26 @@
 from rest_framework import serializers
 from rest_framework.serializers import ValidationError
+from unicef_snapshot.serializers import SnapshotModelSerializer
 
+from etools.applications.attachments.serializers import AttachmentSerializerMixin
 from etools.applications.attachments.serializers_fields import AttachmentSingleFileField
-from etools.applications.EquiTrack.serializers import SnapshotModelSerializer
 from etools.applications.partners.models import Agreement, AgreementAmendment
 from etools.applications.partners.permissions import AgreementPermissions
-from etools.applications.partners.serializers.partner_organization_v2 import (PartnerStaffMemberNestedSerializer,
-                                                                              SimpleStaffMemberSerializer,)
+from etools.applications.partners.serializers.partner_organization_v2 import (
+    PartnerStaffMemberNestedSerializer,
+    SimpleStaffMemberSerializer,
+)
 from etools.applications.partners.validation.agreements import AgreementValid
 from etools.applications.reports.models import CountryProgramme
 from etools.applications.users.serializers import SimpleUserSerializer
 
 
-class AgreementAmendmentCreateUpdateSerializer(serializers.ModelSerializer):
+class AgreementAmendmentCreateUpdateSerializer(AttachmentSerializerMixin, serializers.ModelSerializer):
     number = serializers.CharField(read_only=True)
     created = serializers.DateTimeField(read_only=True)
     modified = serializers.DateTimeField(read_only=True)
     signed_amendment_file = serializers.FileField(source="signed_amendment", read_only=True)
+    signed_amendment_attachment = AttachmentSingleFileField()
 
     class Meta:
         model = AgreementAmendment
@@ -39,6 +43,7 @@ class AgreementListSerializer(serializers.ModelSerializer):
         fields = (
             "id",
             "partner",
+            "country_programme",
             "agreement_number",
             "partner_name",
             "agreement_type",
@@ -73,7 +78,7 @@ class AgreementDetailSerializer(serializers.ModelSerializer):
         fields = "__all__"
 
 
-class AgreementCreateUpdateSerializer(SnapshotModelSerializer):
+class AgreementCreateUpdateSerializer(AttachmentSerializerMixin, SnapshotModelSerializer):
 
     partner_name = serializers.CharField(source='partner.name', read_only=True)
     agreement_type = serializers.CharField(required=True)
@@ -84,7 +89,7 @@ class AgreementCreateUpdateSerializer(SnapshotModelSerializer):
     partner_signatory = SimpleStaffMemberSerializer(source='partner_manager', read_only=True)
     agreement_number = serializers.CharField(read_only=True)
     attached_agreement_file = serializers.FileField(source="attached_agreement", read_only=True)
-    attachment = AttachmentSingleFileField(read_only=True)
+    attachment = AttachmentSingleFileField()
 
     class Meta:
         model = Agreement

@@ -15,7 +15,7 @@ from etools.applications.audit.models import Engagement
 from etools.applications.audit.tests.factories import AuditFactory, SpecialAuditFactory, SpotCheckFactory
 from etools.applications.EquiTrack.tests.cases import BaseTenantTestCase
 from etools.applications.funds.tests.factories import DonorFactory, FundsReservationHeaderFactory, GrantFactory
-from etools.applications.locations.tests.factories import LocationFactory
+from unicef_locations.tests.factories import LocationFactory
 from etools.applications.partners import models
 from etools.applications.partners.tests.factories import (
     AgreementAmendmentFactory,
@@ -28,7 +28,7 @@ from etools.applications.partners.tests.factories import (
     InterventionFactory,
     InterventionReportingPeriodFactory,
     InterventionResultLinkFactory,
-    InterventionSectorLocationLinkFactory,
+    InterventionSectionLocationLinkFactory,
     PartnerFactory,
     PartnerPlannedVisitsFactory,
     PartnerStaffFactory,
@@ -36,7 +36,7 @@ from etools.applications.partners.tests.factories import (
     WorkspaceFileTypeFactory,
 )
 from etools.applications.reports.tests.factories import (AppliedIndicatorFactory, CountryProgrammeFactory,
-                                                         LowerResultFactory, ResultFactory, SectorFactory,)
+                                                         LowerResultFactory, ResultFactory, SectionFactory,)
 from etools.applications.t2f.models import Travel, TravelType
 from etools.applications.t2f.tests.factories import TravelActivityFactory, TravelFactory
 from etools.applications.tpm.models import TPMVisit
@@ -514,7 +514,7 @@ class TestPartnerOrganizationModel(BaseTenantTestCase):
         travel = TravelFactory(
             traveler=traveller,
             status=Travel.COMPLETED,
-            completed_at=datetime.datetime(datetime.datetime.today().year, 9, 1, tzinfo=tz)
+            end_date=datetime.datetime(datetime.datetime.today().year, 9, 1, tzinfo=tz)
         )
         TravelActivityFactory(
             travels=[travel],
@@ -727,21 +727,21 @@ class TestInterventionModel(BaseTenantTestCase):
         res = self.intervention.days_from_review_to_signed
         self.assertEqual(res, "Not fully signed")
 
-    def test_sector_names(self):
-        sector_1 = SectorFactory(name="ABC")
-        sector_2 = SectorFactory(name="CBA")
+    def test_section_names(self):
+        section_1 = SectionFactory(name="ABC")
+        section_2 = SectionFactory(name="CBA")
         intervention = InterventionFactory()
-        InterventionSectorLocationLinkFactory(
+        InterventionSectionLocationLinkFactory(
             intervention=intervention,
-            sector=sector_1,
+            sector=section_1,
         )
-        InterventionSectorLocationLinkFactory(
+        InterventionSectionLocationLinkFactory(
             intervention=intervention,
-            sector=sector_2,
+            sector=section_2,
         )
         self.assertEqual(intervention.sector_names, "ABC, CBA")
 
-    def test_sector_names_empty(self):
+    def test_section_names_empty(self):
         self.assertEqual(self.intervention.sector_names, "")
 
     @skip("fr_currency property on intervention is being deprecated")
@@ -868,7 +868,7 @@ class TestInterventionModel(BaseTenantTestCase):
         ])
 
     def test_intervention_locations_empty(self):
-        self.assertFalse(self.intervention.intervention_locations)
+        self.assertFalse(self.intervention.intervention_locations())
 
     def test_intervention_locations(self):
         intervention = InterventionFactory()
@@ -887,13 +887,13 @@ class TestInterventionModel(BaseTenantTestCase):
             lower_result=lower_result_2
         )
         applied_indicator_2.locations.add(location_2)
-        self.assertCountEqual(intervention.intervention_locations, [
+        self.assertCountEqual(intervention.intervention_locations(), [
             location_1,
             location_2,
         ])
 
     def test_intervention_clusters_empty(self):
-        self.assertFalse(self.intervention.intervention_clusters)
+        self.assertFalse(self.intervention.intervention_clusters())
 
     def test_intervention_clusters(self):
         intervention = InterventionFactory()
@@ -915,7 +915,7 @@ class TestInterventionModel(BaseTenantTestCase):
             cluster_name='',
         )
         AppliedIndicatorFactory(lower_result=lower_result_2)
-        self.assertCountEqual(intervention.intervention_clusters, [
+        self.assertCountEqual(intervention.intervention_clusters(), [
             "Title 1",
             "Title 2",
         ])

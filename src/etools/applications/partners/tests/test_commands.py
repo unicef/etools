@@ -298,7 +298,7 @@ class TestSendPCARequiredNotifications(BaseTenantTestCase):
         call_command("update_notifications")
 
     def test_command(self):
-        send_path = "etools.applications.partners.utils.send_notification_using_email_template"
+        send_path = "etools.applications.partners.utils.send_notification_with_template"
         lead_date = datetime.date.today() + datetime.timedelta(
             days=settings.PCA_REQUIRED_NOTIFICATION_LEAD
         )
@@ -321,7 +321,7 @@ class TestSendPCAMissingNotifications(BaseTenantTestCase):
         call_command("update_notifications")
 
     def test_command(self):
-        send_path = "etools.applications.partners.utils.send_notification_using_email_template"
+        send_path = "etools.applications.partners.utils.send_notification_with_template"
         date_past = datetime.date.today() - datetime.timedelta(days=10)
         date_future = datetime.date.today() + datetime.timedelta(days=10)
         partner = PartnerFactory()

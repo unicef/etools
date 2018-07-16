@@ -5,7 +5,7 @@ from rest_framework import status
 from tenant_schemas.test.client import TenantClient
 
 from etools.applications.EquiTrack.tests.cases import BaseTenantTestCase
-from etools.applications.locations.tests.factories import LocationFactory
+from unicef_locations.tests.factories import LocationFactory
 from etools.applications.partners.models import Intervention
 from etools.applications.partners.tests.factories import InterventionFactory
 from etools.applications.t2f.models import Travel, TravelType
@@ -113,9 +113,9 @@ class LoadResultStructureTest(BaseTenantTestCase):
         self.assertEqual(response.status_code, status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 
-class TestActiveUserSection(BaseTenantTestCase):
+class TestActiveUser(BaseTenantTestCase):
     def setUp(self):
-        super(TestActiveUserSection, self).setUp()
+        super(TestActiveUser, self).setUp()
         self.unicef_staff = UserFactory(is_staff=True)
 
     def test_get(self):
@@ -127,7 +127,7 @@ class TestActiveUserSection(BaseTenantTestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response.data, [{
             "countryName": "",
-            "records": {"total": 1, "sections": [{'count': 1, 'name': self.unicef_staff.profile.section.name}]}
+            "records": {"total": 1}
         }])
 
 
@@ -224,7 +224,7 @@ class TestGisLocationViews(BaseTenantTestCase):
         )
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(sorted(response.data[0].keys()), ["gateway_id", "id", "level", "name", "p_code"])
+        self.assertEqual(sorted(response.data[0].keys()), ["gateway_id", "id", "level", "name", "p_code", "parent_id"])
 
     def test_travel_locations_in_use(self):
         self.client.force_login(self.unicef_staff)
@@ -251,7 +251,7 @@ class TestGisLocationViews(BaseTenantTestCase):
         )
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(sorted(response.data[0].keys()), ["gateway_id", "id", "level", "name", "p_code"])
+        self.assertEqual(sorted(response.data[0].keys()), ["gateway_id", "id", "level", "name", "p_code", "parent_id"])
 
     def test_intervention_locations_geom(self):
         self.client.force_login(self.unicef_staff)
@@ -295,7 +295,7 @@ class TestGisLocationViews(BaseTenantTestCase):
         self.assertEqual(len(response.json()), 1)
         self.assertEqual(
             sorted(response.data[0].keys()),
-            ["gateway_id", "geom", "id", "level", "name", "p_code", "point"]
+            ["gateway_id", "geom", "id", "level", "name", "p_code", "parent_id", "point"]
         )
         self.assertEqual(response.data[0]["geom"], self.location_with_geom.geom.wkt)
 
@@ -339,7 +339,7 @@ class TestGisLocationViews(BaseTenantTestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(
             sorted(response.data.keys()),
-            ["gateway_id", "geom", "id", "level", "name", "p_code", "point"]
+            ["gateway_id", "geom", "id", "level", "name", "p_code", "parent_id", "point"]
         )
         self.assertEqual(response.data["id"], str(self.location_with_geom.id))
         self.assertEqual(response.data["geom"], self.location_with_geom.geom.wkt)
@@ -373,7 +373,7 @@ class TestGisLocationViews(BaseTenantTestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(
             sorted(response.data.keys()),
-            ["gateway_id", "geom", "id", "level", "name", "p_code", "point"]
+            ["gateway_id", "geom", "id", "level", "name", "p_code", "parent_id", "point"]
         )
         self.assertEqual(response.data["id"], str(self.location_with_geom.id))
         self.assertEqual(response.data["geom"], self.location_with_geom.geom.wkt)

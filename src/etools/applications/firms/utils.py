@@ -1,8 +1,9 @@
 import string
 import uuid
 
+from unicef_notification.utils import send_notification_with_template
+
 from etools.applications.EquiTrack.utils import get_environment
-from etools.applications.notification.utils import send_notification_using_email_template
 from etools.applications.tokens.utils import get_token_auth_link
 
 
@@ -27,8 +28,8 @@ def send_invite_email(staff):
         'login_link': get_token_auth_link(staff.user)
     }
 
-    send_notification_using_email_template(
+    send_notification_with_template(
         recipients=[staff.user.email],
-        email_template_name='organisations/staff_member/invite',
+        template_name='organisations/staff_member/invite',
         context=context
     )
