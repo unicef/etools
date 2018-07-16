@@ -43,7 +43,7 @@ from etools.applications.partners.models import (
     InterventionAttachment,
     InterventionReportingPeriod,
     InterventionResultLink,
-    InterventionSectorLocationLink,
+    InterventionSectionLocationLink,
 )
 from etools.applications.partners.permissions import (
     PartnershipManagerPermission,
@@ -520,7 +520,7 @@ class InterventionSectionLocationLinkListAPIView(ExportModelMixin, ListAPIView):
         return super(InterventionSectionLocationLinkListAPIView, self).get_serializer_class()
 
     def get_queryset(self, format=None):
-        q = InterventionSectorLocationLink.objects.all()
+        q = InterventionSectionLocationLink.objects.all()
         query_params = self.request.query_params
 
         if query_params:

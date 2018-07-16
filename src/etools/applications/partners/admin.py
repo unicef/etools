@@ -31,7 +31,7 @@ from etools.applications.partners.models import (
     InterventionBudget,
     InterventionPlannedVisits,
     InterventionResultLink,
-    InterventionSectorLocationLink,
+    InterventionSectionLocationLink,
     PartnerOrganization,
     PartnerStaffMember,
     PlannedEngagement,
@@ -182,7 +182,7 @@ class InterventionResultsLinkAdmin(admin.ModelAdmin):
 
 # TODO intervention sector locations cleanup
 class InterventionSectionLocationAdmin(admin.ModelAdmin):
-    model = InterventionSectorLocationLink
+    model = InterventionSectionLocationLink
     fields = (
         'intervention',
         'sector',
@@ -676,7 +676,7 @@ admin.site.register(InterventionBudget, InterventionBudgetAdmin)
 admin.site.register(InterventionPlannedVisits, InterventionPlannedVisitsAdmin)
 admin.site.register(InterventionAttachment, InterventionAttachmentAdmin)
 # TODO intervention sector locations cleanup
-admin.site.register(InterventionSectorLocationLink, InterventionSectionLocationAdmin)
+admin.site.register(InterventionSectionLocationLink, InterventionSectionLocationAdmin)
 
 
 admin.site.register(FileType, FileTypeAdmin)

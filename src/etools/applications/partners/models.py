@@ -31,7 +31,7 @@ from etools.applications.partners.validation import interventions as interventio
 from etools.applications.partners.validation.agreements import (agreement_transition_to_ended_valid,
                                                                 agreement_transition_to_signed_valid,
                                                                 agreements_illegal_transition,)
-from etools.applications.reports.models import CountryProgramme, Indicator, Result, Sector
+from etools.applications.reports.models import CountryProgramme, Indicator, Result, Section
 from etools.applications.t2f.models import Travel, TravelType
 from etools.applications.tpm.models import TPMVisit
 from etools.applications.users.models import Office
@@ -1716,7 +1716,7 @@ class Intervention(TimeStampedModel):
         default=False,
     )
     sections = models.ManyToManyField(
-        Sector,
+        Section,
         verbose_name=_("Sections"),
         blank=True,
         related_name='interventions',
@@ -1791,7 +1791,7 @@ class Intervention(TimeStampedModel):
 
     @property
     def sector_names(self):
-        return ', '.join(Sector.objects.filter(intervention_locations__intervention=self).
+        return ', '.join(Section.objects.filter(intervention_locations__intervention=self).
                          values_list('name', flat=True))
 
     @property
@@ -2364,13 +2364,13 @@ class InterventionReportingPeriod(TimeStampedModel):
 
 
 # TODO intervention sector locations cleanup
-class InterventionSectorLocationLink(TimeStampedModel):
+class InterventionSectionLocationLink(TimeStampedModel):
     intervention = models.ForeignKey(
         Intervention, related_name='sector_locations', verbose_name=_('Intervention'),
         on_delete=models.CASCADE,
     )
     sector = models.ForeignKey(
-        Sector, related_name='intervention_locations', verbose_name=_('Sector'),
+        Section, related_name='intervention_locations', verbose_name=_('Sector'),
         on_delete=models.CASCADE,
     )
     locations = models.ManyToManyField(Location, related_name='intervention_sector_locations', blank=True,

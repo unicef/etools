@@ -19,7 +19,7 @@ from etools.applications.partners.serializers.partner_organization_v2 import Min
 from etools.applications.permissions2.conditions import ObjectStatusCondition
 from etools.applications.permissions2.drf_permissions import NestedPermission, get_permission_for_targets
 from etools.applications.permissions2.views import PermittedFSMActionMixin, PermittedSerializerMixin
-from etools.applications.reports.models import Result, Sector
+from etools.applications.reports.models import Result, Section
 from etools.applications.reports.serializers.v1 import ResultLightSerializer, SectionSerializer
 
 from etools.applications.tpm.conditions import (
@@ -224,7 +224,7 @@ class ImplementingPartnerView(generics.ListAPIView):
 
 
 class VisitsSectionView(generics.ListAPIView):
-    queryset = Sector.objects.all()
+    queryset = Section.objects.all()
     serializer_class = SectionSerializer
     permission_classes = (IsAuthenticated,)
 

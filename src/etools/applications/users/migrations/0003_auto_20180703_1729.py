@@ -13,14 +13,6 @@ class Migration(migrations.Migration):
 
     operations = [
         migrations.RemoveField(
-            model_name='country',
-            name='sections',
-        ),
-        migrations.RemoveField(
-            model_name='userprofile',
-            name='section',
-        ),
-        migrations.RemoveField(
             model_name='userprofile',
             name='section_code',
         ),
