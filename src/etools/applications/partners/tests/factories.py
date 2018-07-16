@@ -47,6 +47,7 @@ class AgreementFactory(factory.django.DjangoModelFactory):
     signed_by_unicef_date = datetime.date.today()
     signed_by_partner_date = datetime.date.today()
     status = 'signed'
+    reference_number_year = 2018
     attached_agreement = factory.django.FileField(filename='test_file.pdf')
     country_programme = factory.SubFactory(CountryProgrammeFactory)
 
@@ -99,6 +100,7 @@ class InterventionFactory(factory.django.DjangoModelFactory):
     agreement = factory.SubFactory(AgreementFactory)
     title = factory.Sequence(lambda n: 'Intervention Title {}'.format(n))
     submission_date = datetime.datetime.today()
+    reference_number_year = datetime.date.today().year
 
 
 class InterventionAmendmentFactory(factory.django.DjangoModelFactory):

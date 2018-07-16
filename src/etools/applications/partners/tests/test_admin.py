@@ -1,3 +1,5 @@
+import datetime
+
 from django.contrib.admin.sites import AdminSite
 
 from unicef_snapshot.models import Activity
@@ -124,6 +126,7 @@ class TestAgreementAdmin(TestAdminCase):
             partner=self.partner,
             country_programme=CountryProgrammeFactory(),
             agreement_type=Agreement.PCA,
+            reference_number_year=datetime.date.today().year
         )
         aa = AgreementAdmin(Agreement, self.site)
         aa.save_model(self.request, obj, {}, False)

@@ -865,6 +865,7 @@ class TestAgreementCreateAPIView(BaseTenantTestCase):
         data = {
             "agreement_type": Agreement.MOU,
             "partner": self.partner.id,
+            "reference_number_year": datetime.date.today().year
         }
         response = self.forced_auth_req(
             'post',
@@ -886,6 +887,7 @@ class TestAgreementCreateAPIView(BaseTenantTestCase):
         data = {
             "agreement_type": Agreement.PCA,
             "partner": self.partner.id,
+            "reference_number_year": datetime.date.today().year
         }
         response = self.forced_auth_req(
             'post',
@@ -1826,7 +1828,8 @@ class TestInterventionViews(BaseTenantTestCase):
             "document_type": Intervention.PD,
             "country_programme": country_programme.pk,
             "unicef_focal_points": user.pk,
-            "office": office.pk
+            "office": office.pk,
+            "reference_number_year": datetime.date.today().year
         }
         response = self.forced_auth_req(
             'get',
