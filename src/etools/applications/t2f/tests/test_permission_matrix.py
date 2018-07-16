@@ -7,7 +7,7 @@ from django.core.urlresolvers import reverse
 import mock
 
 from etools.applications.EquiTrack.tests.cases import BaseTenantTestCase
-from etools.applications.locations.tests.factories import LocationFactory
+from unicef_locations.tests.factories import LocationFactory
 from etools.applications.publics.tests.factories import (PublicsCurrencyFactory,
                                                          PublicsDSARegionFactory, PublicsWBSFactory,)
 from etools.applications.t2f import UserTypes

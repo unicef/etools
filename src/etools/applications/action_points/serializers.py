@@ -8,7 +8,7 @@ from unicef_snapshot.serializers import SnapshotModelSerializer
 
 from etools.applications.EquiTrack.utils import get_current_site
 from etools.applications.action_points.models import ActionPoint
-from etools.applications.locations.serializers import LocationLightSerializer
+from unicef_locations.serializers import LocationLightSerializer
 from etools.applications.partners.serializers.interventions_v2 import BaseInterventionListSerializer
 from etools.applications.partners.serializers.partner_organization_v2 import MinimalPartnerOrganizationListSerializer
 from etools.applications.permissions2.serializers import PermissionsBasedSerializerMixin
@@ -100,7 +100,7 @@ class ActionPointListSerializer(PermissionsBasedSerializerMixin, ActionPointBase
             'section', 'office', 'location',
             'partner', 'cp_output', 'intervention',
 
-            'engagement', 'tpm_activity', 'travel',
+            'engagement', 'tpm_activity', 'travel_activity',
         ]
 
     def create(self, validated_data):
@@ -116,12 +116,6 @@ class ActionPointListSerializer(PermissionsBasedSerializerMixin, ActionPointBase
                 'intervention_id': activity.intervention_id,
                 'cp_output_id': activity.cp_output_id,
                 'section_id': activity.section_id,
-            })
-        elif 'travel' in validated_data:
-            travel = validated_data['travel']
-            validated_data.update({
-                'office_id': travel.office_id,
-                'section_id': travel.section_id,
             })
 
         return super().create(validated_data)

@@ -5,6 +5,7 @@ from datetime import timedelta
 from django.conf import settings
 from django.core.files import File
 from django.core.management import call_command
+from django.db import connection
 from django.utils import timezone
 
 from unicef_notification.models import EmailTemplate
@@ -37,10 +38,14 @@ class AuditTestCaseMixin(object):
 
         self.auditor_firm = AuditPartnerFactory()
 
-        self.auditor = UserFactory(auditor=True, partner_firm=self.auditor_firm)
-        self.unicef_user = UserFactory(first_name='UNICEF User', unicef_user=True)
-        self.unicef_focal_point = UserFactory(first_name='UNICEF Audit Focal Point', audit_focal_point=True)
-        self.usual_user = UserFactory(first_name='Unknown user')
+        self.auditor = UserFactory(auditor=True, partner_firm=self.auditor_firm,
+                                   profile__countries_available=[connection.tenant])
+        self.unicef_user = UserFactory(first_name='UNICEF User', unicef_user=True,
+                                       profile__countries_available=[connection.tenant])
+        self.unicef_focal_point = UserFactory(first_name='UNICEF Audit Focal Point', audit_focal_point=True,
+                                              profile__countries_available=[connection.tenant])
+        self.usual_user = UserFactory(first_name='Unknown user',
+                                      profile__countries_available=[connection.tenant])
 
 
 class EngagementTransitionsTestCaseMixin(AuditTestCaseMixin):

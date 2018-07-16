@@ -11,7 +11,7 @@ from django.utils.six import StringIO
 from pytz import UTC
 
 from etools.applications.EquiTrack.tests.cases import BaseTenantTestCase
-from etools.applications.locations.tests.factories import LocationFactory
+from unicef_locations.tests.factories import LocationFactory
 from etools.applications.partners.tests.factories import InterventionFactory
 from etools.applications.publics.tests.factories import (PublicsAirlineCompanyFactory, PublicsCurrencyFactory,
                                                          PublicsDSARateFactory, PublicsDSARegionFactory,
