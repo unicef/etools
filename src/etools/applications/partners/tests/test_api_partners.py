@@ -15,6 +15,7 @@ from etools.applications.attachments.tests.factories import (
 from etools.applications.EquiTrack.tests.cases import BaseTenantTestCase
 from etools.applications.EquiTrack.tests.mixins import URLAssertionMixin
 from etools.applications.partners.models import (
+    CoreValuesAssessment,
     Intervention,
     PartnerOrganization,
     PartnerPlannedVisits,
@@ -91,10 +92,18 @@ class TestPartnerOrganizationDetailAPIView(BaseTenantTestCase):
         self.assertIsNone(attachment.file_type)
         self.assertIsNone(attachment.content_object)
         self.assertFalse(attachment.code)
+        assessment_qs = CoreValuesAssessment.objects.filter(
+            partner=self.partner
+        )
+        self.assertFalse(assessment_qs.exists())
         response = self.forced_auth_req(
             'patch',
             self.url,
-            data={"core_values_assessments": [{"attachment": attachment.pk}]},
+            data={
+                "core_values_assessments": [{
+                    "attachment": attachment.pk
+                }]
+            },
             user=self.unicef_staff
         )
         data = json.loads(response.rendered_content)
@@ -102,14 +111,10 @@ class TestPartnerOrganizationDetailAPIView(BaseTenantTestCase):
         self.assertEqual(data["interventions"][0]["id"], self.intervention.pk)
         attachment_updated = Attachment.objects.get(pk=attachment.pk)
         self.assertEqual(
-            attachment_updated.file_type.code,
-            self.file_type.code
-        )
-        self.assertEqual(attachment_updated.object_id, data["id"])
-        self.assertEqual(
             attachment_updated.code,
-            self.file_type.code
+            "partners_partner_assessment"
         )
+        self.assertTrue(assessment_qs.exists())
 
     def test_add_planned_visits(self):
         response = self.forced_auth_req(

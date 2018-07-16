@@ -7,8 +7,10 @@ from django.db.models import Q
 from django.utils import timezone
 
 from rest_framework import serializers
+from rest_framework.utils import model_meta
 from unicef_snapshot.serializers import SnapshotModelSerializer
 
+from etools.applications.attachments.models import Attachment
 from etools.applications.attachments.serializers import AttachmentSerializerMixin
 from etools.applications.attachments.serializers_fields import AttachmentSingleFileField
 from etools.applications.partners.models import (
@@ -23,10 +25,9 @@ from etools.applications.partners.models import (
 from etools.applications.partners.serializers.interventions_v2 import InterventionListSerializer
 
 
-class CoreValuesAssessmentSerializer(AttachmentSerializerMixin, serializers.ModelSerializer):
+class CoreValuesAssessmentSerializer(serializers.ModelSerializer):
     attachment_file_file = serializers.FileField(source='attachment_file', read_only=True)
     attachment = AttachmentSingleFileField()
-
 
     class Meta:
         model = CoreValuesAssessment
@@ -273,10 +274,6 @@ class PartnerOrganizationDetailSerializer(serializers.ModelSerializer):
     hidden = serializers.BooleanField(read_only=True)
     planned_visits = PartnerPlannedVisitsSerializer(many=True, read_only=True, required=False)
     core_values_assessments = CoreValuesAssessmentSerializer(many=True, read_only=True, required=False)
-
-    # core_values_assessment_file = serializers.FileField(source='core_values_assessment', read_only=True)
-    # core_values_assessment_attachment = AttachmentSingleFileField(read_only=True)
-
     partner_type_slug = serializers.ReadOnlyField()
     flags = serializers.ReadOnlyField()
 
@@ -305,7 +302,7 @@ class PartnerOrganizationCreateUpdateSerializer(SnapshotModelSerializer):
     hact_values = serializers.SerializerMethodField(read_only=True)
     hidden = serializers.BooleanField(read_only=True)
     planned_visits = PartnerPlannedVisitsSerializer(many=True, read_only=True, required=False)
-    core_values_assessments = CoreValuesAssessmentSerializer(many=True, required=False, read_only=True)
+    core_values_assessments = CoreValuesAssessmentSerializer(many=True, required=False)
 
     def get_hact_values(self, obj):
         return json.loads(obj.hact_values) if isinstance(obj.hact_values, str) else obj.hact_values
@@ -342,6 +339,46 @@ class PartnerOrganizationCreateUpdateSerializer(SnapshotModelSerializer):
                 }
             }
         }
+
+    def set_core_values_assessments(self, partner, data):
+        for core_value_assessment in data:
+            assessment, _ = CoreValuesAssessment.objects.get_or_create(
+                partner=partner
+            )
+            pk, code = core_value_assessment["attachment"]
+            attachment = Attachment.objects.update_or_create(
+                pk=pk,
+                defaults={
+                    "code": code,
+                    "content_object": assessment,
+                }
+            )
+
+    def create(self, validated_data):
+        try:
+            core_values_assessments = validated_data.pop("core_values_assessments")
+        except KeyError:
+            core_values_assessments = []
+
+        partner = PartnerOrganization.objects.create(**validated_data)
+        self.set_core_values_assessments(partner, core_values_assessments)
+        return partner
+
+    def update(self, instance, validated_data):
+        try:
+            core_values_assessments = validated_data.pop("core_values_assessments")
+        except KeyError:
+            core_values_assessments = []
+
+        info = model_meta.get_field_info(instance)
+        for attr, value in validated_data.items():
+            if attr in info.relations and info.relations[attr].to_many:
+                field = getattr(instance, attr)
+                field.set(value)
+            else:
+                setattr(instance, attr, value)
+        self.set_core_values_assessments(instance, core_values_assessments)
+        return instance
 
 
 class PartnerOrganizationHactSerializer(serializers.ModelSerializer):
