@@ -9,7 +9,7 @@ from django_comments.models import Comment
 from etools.applications.EquiTrack.utils import get_current_site
 from etools.applications.action_points.models import ActionPoint
 from etools.applications.firms.tests.factories import BaseUserFactory
-from etools.applications.locations.tests.factories import LocationFactory
+from unicef_locations.tests.factories import LocationFactory
 from etools.applications.partners.tests.factories import InterventionFactory, ResultFactory
 from etools.applications.reports.tests.factories import SectionFactory
 from etools.applications.utils.common.tests.factories import InheritedTrait

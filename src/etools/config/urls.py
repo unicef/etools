@@ -10,7 +10,8 @@ from rest_framework_nested import routers
 from rest_framework_swagger.renderers import OpenAPIRenderer
 
 from etools.applications.EquiTrack.views import IssueJWTRedirectView, MainView, OutdatedBrowserView
-from etools.applications.locations.views import LocationsLightViewSet, LocationsViewSet, LocationTypesViewSet
+from etools.libraries.locations.views import LocationsLightViewSet, LocationsViewSet, LocationTypesViewSet, \
+    CartoDBTablesView, LocationQuerySetView
 from etools.applications.management.urls import urlpatterns as management_urls
 from etools.applications.partners.views.v1 import FileTypeViewSet
 from etools.applications.publics import urls as publics_patterns
@@ -58,7 +59,10 @@ urlpatterns = [
     url(r'^api/static_data/$', StaticDataView.as_view({'get': 'list'}), name='public_static'),
 
     # ***************  API version 1  ********************
-    url(r'^locations/', include('etools.applications.locations.urls')),
+    url(r'^locations/', include('unicef_locations.urls')),
+    url(r'^locations/cartodbtables/$', CartoDBTablesView.as_view(), name='cartodbtables'),
+    url(r'^locations/autocomplete/$', LocationQuerySetView.as_view(), name='locations_autocomplete'),
+
     # GIS API urls
     url(r'^api/management/gis/', include('etools.applications.management.urls_gis')),
     url(r'^users/', include('etools.applications.users.urls')),
