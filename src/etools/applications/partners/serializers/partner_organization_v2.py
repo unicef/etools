@@ -376,6 +376,7 @@ class PartnerOrganizationCreateUpdateSerializer(SnapshotModelSerializer):
                 field.set(value)
             else:
                 setattr(instance, attr, value)
+        instance.save()
         self.set_core_values_assessments(instance, core_values_assessments)
         return instance
 
