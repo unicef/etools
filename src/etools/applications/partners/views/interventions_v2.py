@@ -819,42 +819,14 @@ class InterventionReportingRequirementView(APIView):
         self.report_type = report_type
         self.request.data["report_type"] = self.report_type
 
-        received_rr_ids = []
-        if "reporting_requirements" in request.data:
-            received_rr_ids = [int(r["id"]) for r in request.data["reporting_requirements"] if "id" in r]
+        serializer = self.serializer_create_class(
+            data=self.request.data,
+            context={
+                "intervention": self.intervention,
+            }
+        )
 
-        with transaction.atomic():
-            serializer = self.serializer_create_class(
-                data=self.request.data,
-                context={
-                    "intervention": self.intervention,
-                }
-            )
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
 
-            # delete those reporting requirements which are not present in the request, before new and/or modified
-            # reporting requirements are saved. If there's no reporting requirements in the request, it should mean
-            # that all of them were deleted on the frontend.
-            if received_rr_ids:
-                deleted_reporting_requirements = ReportingRequirement.objects.filter(
-                    intervention=intervention_pk,
-                    report_type=self.report_type
-                ).exclude(
-                    id__in=received_rr_ids
-                )
-
-                for deleted_reporting_requirement in deleted_reporting_requirements:
-                    if deleted_reporting_requirement.start_date <= datetime.date.today():
-                        raise ValidationError(
-                            _("Cannot delete reporting requirements in progress.")
-                        )
-                    deleted_reporting_requirement.delete()
-
-            if serializer.is_valid():
-                serializer.save()
-            else:
-                transaction.set_rollback(True)
-
-        if serializer.is_valid():
-            return Response(self.serializer_list_class(self.get_data()).data)
-
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        return Response(self.serializer_list_class(self.get_data()).data)

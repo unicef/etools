@@ -714,17 +714,7 @@ class InterventionReportingRequirementCreateSerializer(serializers.ModelSerializ
                         }
                     })
 
-    def _merge_data(self, data):
-        current_reqs = ReportingRequirement.objects.values(
-            "id",
-            "start_date",
-            "end_date",
-            "due_date",
-        ).filter(
-            intervention=self.intervention,
-            report_type=data["report_type"],
-        )
-
+    def _merge_data(self, data, current_reqs):
         current_reqs_dict = {}
         for r in current_reqs:
             current_reqs_dict[r["due_date"]] = r
@@ -734,19 +724,39 @@ class InterventionReportingRequirementCreateSerializer(serializers.ModelSerializ
             # not expecting ids, so match based on due date
             if r.get("due_date") in current_reqs_dict:
                 r["id"] = current_reqs_dict[r.get("due_date")]["id"]
-                current_reqs_dict.pop(r["due_date"])
+
+            if r["id"]:
+                current_req_filter = list(filter(lambda current_req: current_req["id"] == r["id"], current_reqs))
+                if current_req_filter:
+                    # do not allow to change/edit already started reporting periods(same as delete)
+                    if not self._past_reporting_requirement_unchanged(current_req_filter.pop(), r):
+                        raise serializers.ValidationError({
+                            "reporting_requirements": {
+                                "start_date": _(
+                                    "Cannot edit reporting requirements started in the past."
+                                )
+                            }
+                        })
 
             r["intervention"] = self.intervention
             r["report_type"] = report_type
-            if report_type == ReportingRequirement.TYPE_HR:
-                r["end_date"] = r["due_date"]
 
         # We need all reporting requirements in end date order
         data["reporting_requirements"] = sorted(
             data["reporting_requirements"],
             key=itemgetter("end_date")
         )
+
         return data
+
+    def _past_reporting_requirement_unchanged(self, current_req, new_req):
+        if current_req["start_date"] <= date.today():
+            if current_req["start_date"] != new_req["start_date"] or \
+                            current_req["end_date"] != new_req["end_date"] or \
+                            current_req["due_date"] != new_req["due_date"] :
+                return False
+        return True
+
 
     def run_validation(self, initial_data):
         serializer = self.fields["reporting_requirements"].child
@@ -790,7 +800,32 @@ class InterventionReportingRequirementCreateSerializer(serializers.ModelSerializ
         if not len(data["reporting_requirements"]):
             return data
 
-        self._merge_data(data)
+        current_reqs = ReportingRequirement.objects.values(
+            "id",
+            "start_date",
+            "end_date",
+            "due_date",
+        ).filter(
+            intervention=self.intervention,
+            report_type=data["report_type"],
+        )
+
+        self._merge_data(data, current_reqs)
+
+        # handle deletion of the omitted reporint requirements in the same request
+        kept_requirement_ids = [int(r["id"]) for r in data["reporting_requirements"] if "id" in r]
+        deleted_reporting_requirements = ReportingRequirement.objects.filter(
+            intervention=self.intervention,
+            report_type=data["report_type"]
+        ).exclude(
+            id__in=kept_requirement_ids
+        )
+        for deleted_reporting_requirement in deleted_reporting_requirements:
+            if deleted_reporting_requirement.start_date <= date.today():
+                raise ValidationError(
+                    _("Cannot delete reporting requirements started in the past.")
+                )
+        data["deleted_reporting_requirements"] = deleted_reporting_requirements
 
         if data["report_type"] == ReportingRequirement.TYPE_QPR:
             self._validate_qpr(data["reporting_requirements"])
@@ -799,7 +834,11 @@ class InterventionReportingRequirementCreateSerializer(serializers.ModelSerializ
 
         return data
 
+    @transaction.atomic
     def create(self, validated_data):
+        for deleted_reporting_requirement in validated_data["deleted_reporting_requirements"]:
+            deleted_reporting_requirement.delete()
+
         for r in validated_data["reporting_requirements"]:
             if r.get("id"):
                 pk = r.pop("id")

@@ -2214,7 +2214,7 @@ class TestInterventionReportingRequirementView(BaseTenantTestCase):
             )
 
             self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
-            self.assertEqual(response.data, ['Cannot delete reporting requirements in progress.'])
+            self.assertEqual(response.data, ['Cannot delete reporting requirements started in the past.'])
 
     def test_patch_invalid(self):
         for report_type, _ in ReportingRequirement.TYPE_CHOICES:

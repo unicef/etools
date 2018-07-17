@@ -15,7 +15,7 @@ class Migration(migrations.Migration):
         migrations.AlterField(
             model_name='reportingrequirement',
             name='end_date',
-            field=models.DateField(blank=True, verbose_name='End Date'),
+            field=models.DateField(verbose_name='End Date'),
         ),
         migrations.AlterField(
             model_name='reportingrequirement',

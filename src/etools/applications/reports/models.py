@@ -777,7 +777,7 @@ class ReportingRequirement(TimeStampedModel):
         related_name="reporting_requirements"
     )
     start_date = models.DateField(verbose_name=_('Start Date'))
-    end_date = models.DateField(verbose_name=_('End Date'), blank=True)
+    end_date = models.DateField(verbose_name=_('End Date'))
     due_date = models.DateField(verbose_name=_('Due Date'))
     report_type = models.CharField(max_length=50, choices=TYPE_CHOICES)
 
