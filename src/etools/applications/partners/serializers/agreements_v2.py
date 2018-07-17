@@ -52,7 +52,6 @@ class AgreementListSerializer(serializers.ModelSerializer):
             "signed_by_unicef_date",
             "signed_by_partner_date",
             "status",
-            "signed_by",
         )
 
 
@@ -61,7 +60,7 @@ class AgreementDetailSerializer(serializers.ModelSerializer):
     partner_name = serializers.CharField(source='partner.name', read_only=True)
     authorized_officers = PartnerStaffMemberNestedSerializer(many=True, read_only=True)
     amendments = AgreementAmendmentCreateUpdateSerializer(many=True, read_only=True)
-    unicef_signatory = SimpleUserSerializer(source='signed_by')
+    # unicef_signatory = SimpleUserSerializer(source='signed_by')
     partner_signatory = SimpleStaffMemberSerializer(source='partner_manager')
     attached_agreement_file = serializers.FileField(source="attached_agreement", read_only=True)
     attachment = AttachmentSingleFileField(read_only=True)
@@ -85,7 +84,7 @@ class AgreementCreateUpdateSerializer(AttachmentSerializerMixin, SnapshotModelSe
     amendments = AgreementAmendmentCreateUpdateSerializer(many=True, read_only=True)
     country_programme = serializers.PrimaryKeyRelatedField(queryset=CountryProgramme.objects.all(), required=False,
                                                            allow_null=True)
-    unicef_signatory = SimpleUserSerializer(source='signed_by', read_only=True)
+    # unicef_signatory = SimpleUserSerializer(source='signed_by', read_only=True)
     partner_signatory = SimpleStaffMemberSerializer(source='partner_manager', read_only=True)
     agreement_number = serializers.CharField(read_only=True)
     attached_agreement_file = serializers.FileField(source="attached_agreement", read_only=True)
