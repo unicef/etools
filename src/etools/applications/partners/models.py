@@ -1174,7 +1174,7 @@ class Agreement(TimeStampedModel):
     )
     reference_number_year = models.IntegerField()
 
-    special_conditions_pca = models.BooleanField(default=False)
+    special_conditions_pca = models.BooleanField(default=False, verbose_name=_('Special Conditions PCA'))
 
     signed_by_unicef_date = models.DateField(
         verbose_name=_("Signed By UNICEF Date"),
