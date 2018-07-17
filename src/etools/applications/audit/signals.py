@@ -1,6 +1,6 @@
 
 from django.db import connection
-from django.db.models.signals import m2m_changed, post_delete, post_save
+from django.db.models.signals import m2m_changed, post_save
 from django.dispatch import receiver
 
 from etools.applications.audit.models import Auditor, Engagement, EngagementActionPoint
@@ -26,13 +26,6 @@ def staff_member_changed(sender, instance, action, reverse, pk_set, *args, **kwa
         country = Country.objects.get(schema_name=connection.schema_name)
         for member in new_members:
             member.user.profile.countries_available.add(country)
-
-
-@receiver(post_delete, sender=AuditorStaffMember)
-def delete_user_receiver(instance, **kwargs):
-    user = instance.user
-    user.is_active = False
-    user.save()
 
 
 @receiver(post_save, sender=EngagementActionPoint)
