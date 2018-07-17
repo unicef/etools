@@ -91,6 +91,7 @@ class TestAgreementCreateUpdateSerializer(AgreementCreateUpdateSerializerBase):
         data = {
             "agreement_type": Agreement.MOU,
             "partner": self.partner.id,
+            "reference_number_year": datetime.date.today().year
         }
         serializer = AgreementCreateUpdateSerializer(data=data)
         serializer.context['request'] = self.fake_request
@@ -161,6 +162,7 @@ class TestAgreementCreateUpdateSerializer(AgreementCreateUpdateSerializerBase):
                 "agreement_type": agreement_type,
                 "partner": self.partner.id,
                 "country_programme": self.country_programme.id,
+                "reference_number_year": datetime.date.today().year
             }
             serializer = AgreementCreateUpdateSerializer(data=data)
             serializer.context['request'] = self.fake_request
@@ -195,6 +197,7 @@ class TestAgreementCreateUpdateSerializer(AgreementCreateUpdateSerializerBase):
             "country_programme": self.country_programme.id,
             "start": self.today,
             "end": self.today,
+            "reference_number_year": datetime.date.today().year
         }
         serializer = AgreementCreateUpdateSerializer(data=data)
         serializer.context['request'] = self.fake_request
@@ -208,6 +211,7 @@ class TestAgreementCreateUpdateSerializer(AgreementCreateUpdateSerializerBase):
             "agreement_type": Agreement.SSFA,
             "partner": self.partner.id,
             "start": self.today + datetime.timedelta(days=5),
+            "reference_number_year": datetime.date.today().year
         }
         serializer = AgreementCreateUpdateSerializer(data=data)
         serializer.context['request'] = self.fake_request
@@ -218,6 +222,7 @@ class TestAgreementCreateUpdateSerializer(AgreementCreateUpdateSerializerBase):
             "agreement_type": Agreement.SSFA,
             "partner": self.partner.id,
             "end": self.today + datetime.timedelta(days=5),
+            "reference_number_year": datetime.date.today().year
         }
         serializer = AgreementCreateUpdateSerializer(data=data)
         serializer.context['request'] = self.fake_request
@@ -236,6 +241,7 @@ class TestAgreementCreateUpdateSerializer(AgreementCreateUpdateSerializerBase):
                 "agreement_type": agreement_type,
                 "country_programme": self.country_programme,
                 "partner": self.partner,
+                "reference_number_year": datetime.date.today().year
             }
             serializer = AgreementCreateUpdateSerializer(data=data)
             serializer.context['request'] = self.fake_request
@@ -258,6 +264,7 @@ class TestAgreementCreateUpdateSerializer(AgreementCreateUpdateSerializerBase):
                 "agreement_type": agreement_type,
                 "country_programme": self.country_programme.id,
                 "partner": self.partner.id,
+                "reference_number_year": datetime.date.today().year
             }
             serializer = AgreementCreateUpdateSerializer(data=data)
             serializer.context['request'] = self.fake_request
@@ -273,6 +280,7 @@ class TestAgreementCreateUpdateSerializer(AgreementCreateUpdateSerializerBase):
                 "agreement_type": agreement_type,
                 "country_programme": self.country_programme.id,
                 "partner": self.partner.id,
+                "reference_number_year": datetime.date.today().year
             }
             serializer = AgreementCreateUpdateSerializer(data=data)
             serializer.context['request'] = self.fake_request
@@ -309,6 +317,7 @@ class TestAgreementCreateUpdateSerializer(AgreementCreateUpdateSerializerBase):
             "partner": self.partner.id,
             "signed_by_unicef_date": self.today,
             "signed_by": signatory.id,
+            "reference_number_year": datetime.date.today().year
         }
         serializer = AgreementCreateUpdateSerializer(data=data)
         serializer.context['request'] = self.fake_request
@@ -321,6 +330,7 @@ class TestAgreementCreateUpdateSerializer(AgreementCreateUpdateSerializerBase):
             "partner": self.partner.id,
             "signed_by_partner_date": self.today,
             "partner_manager": partner_signatory.id,
+            "reference_number_year": datetime.date.today().year
         }
         serializer = AgreementCreateUpdateSerializer(data=data)
         serializer.context['request'] = self.fake_request
@@ -335,6 +345,7 @@ class TestAgreementCreateUpdateSerializer(AgreementCreateUpdateSerializerBase):
             "signed_by": signatory.id,
             "signed_by_partner_date": self.today,
             "partner_manager": partner_signatory.id,
+            "reference_number_year": datetime.date.today().year
         }
         serializer = AgreementCreateUpdateSerializer(data=data)
         serializer.context['request'] = self.fake_request
@@ -348,6 +359,7 @@ class TestAgreementCreateUpdateSerializer(AgreementCreateUpdateSerializerBase):
             "partner": self.partner,
             "signed_by_unicef_date": self.today + datetime.timedelta(days=5),
             "signed_by": signatory,
+            "reference_number_year": datetime.date.today().year
         }
 
         with self.assertRaises(serializers.ValidationError) as context_manager:
@@ -365,6 +377,7 @@ class TestAgreementCreateUpdateSerializer(AgreementCreateUpdateSerializerBase):
             "partner": self.partner,
             "signed_by_partner_date": self.today + datetime.timedelta(days=5),
             "partner_manager": partner_signatory,
+            "reference_number_year": datetime.date.today().year
         }
 
         with self.assertRaises(serializers.ValidationError) as context_manager:
@@ -386,7 +399,8 @@ class TestAgreementCreateUpdateSerializer(AgreementCreateUpdateSerializerBase):
                                      start=self.today - datetime.timedelta(days=5),
                                      end=self.today + datetime.timedelta(days=5),
                                      signed_by_unicef_date=None,
-                                     signed_by_partner_date=None)
+                                     signed_by_partner_date=None,
+                                     reference_number_year=datetime.date.today().year)
         intervention = InterventionFactory(agreement=agreement)
 
         # Start w/an invalid intervention.

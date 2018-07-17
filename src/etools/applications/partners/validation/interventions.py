@@ -126,8 +126,10 @@ def transition_to_signed(i):
     from etools.applications.partners.models import Agreement
     if i.in_amendment is True:
         raise TransitionError([_('Cannot Transition status while adding an amendment')])
-    if i.document_type in [i.PD, i.SHPD] and i.agreement.status in [Agreement.SUSPENDED, Agreement.TERMINATED]:
-        raise TransitionError([_('The PCA related to this record is Suspended or Terminated. '
+
+    if i.document_type in [i.PD, i.SHPD] and i.agreement.status in [Agreement.SUSPENDED, Agreement.TERMINATED,
+                                                                    Agreement.DRAFT]:
+        raise TransitionError([_('The PCA related to this record is Draft, Suspended or Terminated. '
                                  'This Programme Document will not change status until the related PCA '
                                  'is in Signed status')])
 
