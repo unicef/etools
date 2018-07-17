@@ -40,7 +40,7 @@
         ],
         "unicef_signatory": null,
         "partner_signatory": null,
-        "attached_agreement_file": "https://saunietoolsdevstg.blob.core.windows.net/files/test/file_attachments/partner_organization/247/agreements/test_file_7P3eqM1.pdf",
+        "attached_agreement_file": "http://testserver/media/test/file_attachments/partner_organization/247/agreements/test_file_7P3eqM1.pdf",
         "attachment": null,
         "permissions": {
             "edit": {
@@ -129,7 +129,7 @@
         "modified": "2018-07-17T16:23:43.822000Z",
         "agreement_type": "PCA",
         "agreement_number": "TST/PCA2018233",
-        "attached_agreement": "https://saunietoolsdevstg.blob.core.windows.net/files/test/file_attachments/partner_organization/247/agreements/test_file_7P3eqM1.pdf",
+        "attached_agreement": "http://testserver/media/test/file_attachments/partner_organization/247/agreements/test_file_7P3eqM1.pdf",
         "start": "2018-07-17",
         "end": "2018-12-31",
         "reference_number_year": 2018,

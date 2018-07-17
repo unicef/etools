@@ -22,7 +22,7 @@
         {
             "id": 9,
             "amendment_number": "1",
-            "signed_amendment_file": "https://saunietoolsdevstg.blob.core.windows.net/files/test/file_attachments/partner_organization/249/249/agreements/235/interventions/218/amendments/None/test_file.pdf",
+            "signed_amendment_file": "http://testserver/media/test/file_attachments/partner_organization/249/249/agreements/235/interventions/218/amendments/None/test_file.pdf",
             "signed_amendment_attachment": null,
             "created": "2018-07-17T16:23:47.735000Z",
             "modified": "2018-07-17T16:23:47.782000Z",
@@ -31,7 +31,7 @@
             ],
             "other_description": "tTwDUCwtgwyuRbvpPjuTxGBJFJVxeZwJqVkEQuxzSkxTdmnale",
             "signed_date": "2018-07-17",
-            "signed_amendment": "https://saunietoolsdevstg.blob.core.windows.net/files/test/file_attachments/partner_organization/249/249/agreements/235/interventions/218/amendments/None/test_file.pdf",
+            "signed_amendment": "http://testserver/media/test/file_attachments/partner_organization/249/249/agreements/235/interventions/218/amendments/None/test_file.pdf",
             "intervention": 218
         }
     ],
