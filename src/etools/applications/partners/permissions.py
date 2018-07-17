@@ -117,6 +117,7 @@ class InterventionPermissions(PMPPermissions):
             'condition2': self.user in self.instance.partner_focal_points.all(),
             'contingency on': self.instance.contingency_pd is True,
             'not_in_amendment_mode': not user_added_amendment(self.instance),
+            'not_ssfa': self.instance.document_type != self.instance.SSFA,
             'user_adds_amendment': user_added_amendment(self.instance),
             'prp_mode_on': not prp_mode_off(),
             'prp_mode_off': prp_mode_off(),
