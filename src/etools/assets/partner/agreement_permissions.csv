@@ -2,6 +2,7 @@ Field no,Verbose Name,Field Name,Group,Condition,Status,Action,Allowed
 2.2.1,Partner Name,partner,Partnership Manager,,Draft,Edit,TRUE
 2.2.2,Agreement Type,agreement_type,Partnership Manager,,Draft,Edit,TRUE
 2.2.3,Reference Number,agreement_number,UNICEF User,user adds amendment,Signed,Edit,TRUE
+2.2.3,Reference Number,agreement_number,UNICEF User,,Draft,Edit,TRUE
 2.2.12,CP Structure,country_programme,Partnership Manager,is type PCA or MOU,Draft,Edit,TRUE
 2.2.4,Start Date,start,Partnership Manager,,Draft,Edit,TRUE
 2.2.5,End Date,end,Partnership Manager,,Draft,Edit,TRUE
@@ -24,3 +25,9 @@ Field no,Verbose Name,Field Name,Group,Condition,Status,Action,Allowed
 2.2.9,Signed By UNICEF Date,signed_by_unicef_date,Partnership Manager,,Signed,Required,TRUE
 2.2.10,Signed Agreement (Attachment),attached_agreement,Partnership Manager,,Signed,Required,TRUE
 2.3.1,Authorized Officer,authorized_officers,Partnership Manager,is type PCA or SSFA,Signed,Required,TRUE
+3.7,r number,reference_number_year,UNICEF User,,*,View,TRUE
+3.7,r number,reference_number_year,UNICEF User,,Draft,Edit,TRUE
+3.7,r number,reference_number_year,UNICEF User,,*,Required,TRUE
+3.11,r s,special_conditions_pca,UNICEF User,,*,View,TRUE
+3.11,r s,special_conditions_pca,UNICEF User,,Draft,Edit,TRUE
+3.11,r s,special_conditions_pca,UNICEF User,,*,Required,False

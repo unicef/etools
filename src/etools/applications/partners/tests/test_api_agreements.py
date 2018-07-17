@@ -112,6 +112,7 @@ class TestAgreementsAPI(BaseTenantTestCase):
             "agreement_type": Agreement.PCA,
             "partner": self.partner1.id,
             "country_programme": self.country_programme.id,
+            "reference_number_year": datetime.date.today().year,
         }
         status_code, response = self.run_request_list_ep(data)
 
@@ -136,7 +137,8 @@ class TestAgreementsAPI(BaseTenantTestCase):
             "agreement_type": Agreement.PCA,
             "partner": self.partner1.id,
             "country_programme": self.country_programme.id,
-            "attachment": attachment.pk
+            "attachment": attachment.pk,
+            "reference_number_year": datetime.date.today().year,
         }
         status_code, response = self.run_request_list_ep(data)
         self.assertEqual(status_code, status.HTTP_201_CREATED)
@@ -172,7 +174,8 @@ class TestAgreementsAPI(BaseTenantTestCase):
         self.assertFalse(Activity.objects.exists())
         data = {
             "agreement_type": Agreement.PCA,
-            "partner": self.partner1.id
+            "partner": self.partner1.id,
+            "reference_number_year": datetime.date.today().year,
         }
         status_code, response = self.run_request_list_ep(data)
 
@@ -184,7 +187,8 @@ class TestAgreementsAPI(BaseTenantTestCase):
         self.assertFalse(Activity.objects.exists())
         data = {
             "agreement_type": Agreement.SSFA,
-            "partner": self.partner1.id
+            "partner": self.partner1.id,
+            "reference_number_year": datetime.date.today().year,
         }
         status_code, response = self.run_request_list_ep(data)
 
@@ -200,7 +204,8 @@ class TestAgreementsAPI(BaseTenantTestCase):
         data = {
             "agreement_type": Agreement.SSFA,
             "partner": self.partner1.id,
-            "country_programme": 'null'
+            "country_programme": 'null',
+            "reference_number_year": datetime.date.today().year,
         }
         status_code, response = self.run_request_list_ep(data)
 
@@ -216,7 +221,8 @@ class TestAgreementsAPI(BaseTenantTestCase):
         self.assertFalse(Activity.objects.exists())
         data = {
             "agreement_type": Agreement.SSFA,
-            "partner": self.partner1.id
+            "partner": self.partner1.id,
+            "reference_number_year": datetime.date.today().year,
         }
         status_code, response = self.run_request_list_ep(data)
         self.assertTrue(Activity.objects.exists())
@@ -249,6 +255,7 @@ class TestAgreementsAPI(BaseTenantTestCase):
             "agreement_type": Agreement.PCA,
             "partner": self.partner1.id,
             "country_programme": self.country_programme.id,
+            "reference_number_year": datetime.date.today().year
         }
         status_code, response = self.run_request_list_ep(data, user=self.unicef_staff)
         self.assertEqual(status_code, status.HTTP_403_FORBIDDEN)
@@ -281,6 +288,7 @@ class TestAgreementsAPI(BaseTenantTestCase):
         self.assertFalse(Activity.objects.exists())
         data = {
             "agreement_type": Agreement.PCA,
+            "reference_number_year": datetime.date.today().year,
             "partner": self.partner1.id,
             "country_programme": self.country_programme.id,
             "attachment": attachment.pk,
