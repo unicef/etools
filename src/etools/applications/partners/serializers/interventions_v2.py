@@ -13,7 +13,7 @@ from etools.applications.attachments.serializers import AttachmentSerializerMixi
 from etools.applications.attachments.serializers_fields import AttachmentSingleFileField
 from etools.applications.funds.models import FundsCommitmentItem, FundsReservationHeader
 from etools.applications.funds.serializers import FRsSerializer
-from etools.applications.locations.serializers import LocationLightSerializer, LocationSerializer
+from unicef_locations.serializers import LocationLightSerializer, LocationSerializer
 from etools.applications.partners.models import (
     Intervention,
     InterventionAmendment,
