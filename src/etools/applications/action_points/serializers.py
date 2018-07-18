@@ -7,8 +7,10 @@ from unicef_snapshot.models import Activity
 from unicef_snapshot.serializers import SnapshotModelSerializer
 
 from etools.applications.EquiTrack.utils import get_current_site
-from etools.applications.action_points.models import ActionPoint
+from etools.applications.action_points.models import ActionPoint, Category
 from unicef_locations.serializers import LocationLightSerializer
+
+from etools.applications.attachments.serializers_fields import ModelChoiceField
 from etools.applications.partners.serializers.interventions_v2 import BaseInterventionListSerializer
 from etools.applications.partners.serializers.partner_organization_v2 import MinimalPartnerOrganizationListSerializer
 from etools.applications.permissions2.serializers import PermissionsBasedSerializerMixin
@@ -20,6 +22,11 @@ from etools.applications.utils.common.serializers.mixins import UserContextSeria
 from etools.applications.utils.writable_serializers.serializers import WritableNestedSerializerMixin
 
 
+class CategoryModelChoiceField(ModelChoiceField):
+    def get_choice(self, obj):
+        return obj.id, obj.description
+
+
 class ActionPointBaseSerializer(UserContextSerializerMixin, SnapshotModelSerializer, serializers.ModelSerializer):
     reference_number = serializers.ReadOnlyField(label=_('Reference Number'))
     author = MinimalUserSerializer(read_only=True, label=_('Author'))
@@ -28,6 +35,8 @@ class ActionPointBaseSerializer(UserContextSerializerMixin, SnapshotModelSeriali
         read_field=MinimalUserSerializer(read_only=True, label=_('Assigned To')),
         required=True
     )
+    category = CategoryModelChoiceField(label=_('Action Point Category'),
+                                        queryset=Category.objects.filter(module=Category.MODULE_CHOICES.apd))
 
     status_date = serializers.DateTimeField(read_only=True, label=_('Status Date'))
 
@@ -46,7 +55,6 @@ class ActionPointBaseSerializer(UserContextSerializerMixin, SnapshotModelSeriali
             'status': {'read_only': True},
             'date_of_completion': {'read_only': True},
             'due_date': {'required': True},
-            'category': {'required': True},
         }
 
     def create(self, validated_data):

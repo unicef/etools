@@ -7,7 +7,7 @@ import factory.fuzzy
 from django_comments.models import Comment
 
 from etools.applications.EquiTrack.utils import get_current_site
-from etools.applications.action_points.models import ActionPoint
+from etools.applications.action_points.models import ActionPoint, Category
 from etools.applications.firms.tests.factories import BaseUserFactory
 from unicef_locations.tests.factories import LocationFactory
 from etools.applications.partners.tests.factories import InterventionFactory, ResultFactory
@@ -52,6 +52,14 @@ class ActionPointCommentFactory(factory.DjangoModelFactory):
     site = factory.LazyAttribute(lambda o: get_current_site())
 
 
+class ActionPointCategoryFactory(factory.DjangoModelFactory):
+    class Meta:
+        model = Category
+
+    module = Category.MODULE_CHOICES.apd
+    description = factory.fuzzy.FuzzyText()
+
+
 class ActionPointFactory(factory.DjangoModelFactory):
     class Meta:
         model = ActionPoint
@@ -60,7 +68,7 @@ class ActionPointFactory(factory.DjangoModelFactory):
     partner = factory.SelfAttribute('intervention.agreement.partner')
     cp_output = factory.SubFactory(ResultFactory)
     location = factory.SubFactory(LocationFactory)
-    category = factory.fuzzy.FuzzyChoice(dict(ActionPoint.CATEGORY_CHOICES).keys()).fuzz()
+    category = factory.SubFactory(ActionPointCategoryFactory)
     description = factory.fuzzy.FuzzyText()
     due_date = factory.fuzzy.FuzzyDate(timezone.now().date() + timedelta(days=1),
                                        timezone.now().date() + timedelta(days=10))

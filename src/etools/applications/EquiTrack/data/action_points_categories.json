@@ -1,0 +1,137 @@
+[
+  {
+    "model": "action_points.category",
+    "pk": 1,
+    "fields": {
+      "order": 1,
+      "module": "action_points",
+      "description": "Invoice and receive reimbursement of ineligible expenditure"
+    }
+  },
+  {
+    "model": "action_points.category",
+    "pk": 2,
+    "fields": {
+      "order": 2,
+      "module": "action_points",
+      "description": "Change cash transfer modality (DCT, reimbursement or direct payment)"
+    }
+  },
+  {
+    "model": "action_points.category",
+    "pk": 3,
+    "fields": {
+      "order": 3,
+      "module": "action_points",
+      "description": "IP to incur and report on additional expenditure"
+    }
+  },
+  {
+    "model": "action_points.category",
+    "pk": 4,
+    "fields": {
+      "order": 4,
+      "module": "action_points",
+      "description": "Review and amend ICE or budget"
+    }
+  },
+  {
+    "model": "action_points.category",
+    "pk": 5,
+    "fields": {
+      "order": 5,
+      "module": "action_points",
+      "description": "IP to correct FACE form or Statement of Expenditure"
+    }
+  },
+  {
+    "model": "action_points.category",
+    "pk": 6,
+    "fields": {
+      "order": 6,
+      "module": "action_points",
+      "description": "Schedule a programmatic visit"
+    }
+  },
+  {
+    "model": "action_points.category",
+    "pk": 7,
+    "fields": {
+      "order": 7,
+      "module": "action_points",
+      "description": "Schedule a follow-up spot check"
+    }
+  },
+  {
+    "model": "action_points.category",
+    "pk": 8,
+    "fields": {
+      "order": 8,
+      "module": "action_points",
+      "description": "Schedule an audit"
+    }
+  },
+  {
+    "model": "action_points.category",
+    "pk": 9,
+    "fields": {
+      "order": 9,
+      "module": "action_points",
+      "description": "Block future cash transfers"
+    }
+  },
+  {
+    "model": "action_points.category",
+    "pk": 10,
+    "fields": {
+      "order": 10,
+      "module": "action_points",
+      "description": "Block or mark vendor for deletion"
+    }
+  },
+  {
+    "model": "action_points.category",
+    "pk": 11,
+    "fields": {
+      "order": 11,
+      "module": "action_points",
+      "description": "Escalate to Chief of Operations, Dep Rep, or Rep"
+    }
+  },
+  {
+    "model": "action_points.category",
+    "pk": 12,
+    "fields": {
+      "order": 12,
+      "module": "action_points",
+      "description": "Escalate to Investigation"
+    }
+  },
+  {
+    "model": "action_points.category",
+    "pk": 13,
+    "fields": {
+      "order": 13,
+      "module": "action_points",
+      "description": "Capacity building / Discussion with partner"
+    }
+  },
+  {
+    "model": "action_points.category",
+    "pk": 14,
+    "fields": {
+      "order": 14,
+      "module": "action_points",
+      "description": "Change IP risk rating"
+    }
+  },
+  {
+    "model": "action_points.category",
+    "pk": 15,
+    "fields": {
+      "order": 15,
+      "module": "action_points",
+      "description": "Other"
+    }
+  }
+]
