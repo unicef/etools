@@ -2057,9 +2057,11 @@ class TestInterventionReportingRequirementView(BaseTenantTestCase):
             data={
                 "reporting_requirements": [{
                     "start_date": datetime.date(2001, 3, 15),
+                    "end_date": datetime.date(2001, 4, 15),
                     "due_date": datetime.date(2001, 4, 15),
                 }, {
                     "start_date": datetime.date(2001, 4, 16),
+                    "end_date": datetime.date(2001, 5, 15),
                     "due_date": datetime.date(2001, 5, 15),
                 }]
             }
@@ -2148,7 +2150,8 @@ class TestInterventionReportingRequirementView(BaseTenantTestCase):
             )
             requirement1 = ReportingRequirementFactory(
                 intervention=self.intervention,
-                report_type=report_type
+                report_type=report_type,
+                start_date=datetime.date.today() + datetime.timedelta(days=1),
             )
             requirement1.end_date = requirement1.start_date + datetime.timedelta(days=15)
             requirement1.due_date = requirement1.start_date + datetime.timedelta(days=15)
@@ -2157,9 +2160,9 @@ class TestInterventionReportingRequirementView(BaseTenantTestCase):
             ReportingRequirementFactory(
                 intervention=self.intervention,
                 report_type=report_type,
-                start_date=datetime.date.today() + datetime.timedelta(days=1),
-                end_date=datetime.date.today() + datetime.timedelta(days=2),
-                due_date=datetime.date.today() + datetime.timedelta(days=2),
+                start_date=datetime.date.today() + datetime.timedelta(days=16),
+                end_date=datetime.date.today() + datetime.timedelta(days=17),
+                due_date=datetime.date.today() + datetime.timedelta(days=17),
             )
             init_count = requirement_qs.count()
 
@@ -2192,7 +2195,8 @@ class TestInterventionReportingRequirementView(BaseTenantTestCase):
         for report_type, _ in ReportingRequirement.TYPE_CHOICES:
             requirement1 = ReportingRequirementFactory(
                 intervention=self.intervention,
-                report_type=report_type
+                report_type=report_type,
+                start_date=datetime.date.today() + datetime.timedelta(days=1),
             )
             requirement1.end_date = requirement1.start_date + datetime.timedelta(days=15)
             requirement1.due_date = requirement1.start_date + datetime.timedelta(days=15)
@@ -2221,7 +2225,7 @@ class TestInterventionReportingRequirementView(BaseTenantTestCase):
             )
 
             self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
-            self.assertEqual(response.data, ['Cannot delete reporting requirements started in the past.'])
+            self.assertEqual(response.data, {'non_field_errors': ['Cannot delete past reporting requirements.']})
 
     def test_patch_invalid(self):
         for report_type, _ in ReportingRequirement.TYPE_CHOICES:

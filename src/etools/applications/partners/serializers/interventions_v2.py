@@ -726,11 +726,11 @@ class InterventionReportingRequirementCreateSerializer(serializers.ModelSerializ
             if r.get("due_date") in current_reqs_dict:
                 r["id"] = current_reqs_dict[r.get("due_date")]["id"]
 
-            if r["id"]:
+            if "id" in r:
                 current_req_filter = list(filter(lambda current_req: current_req["id"] == r["id"], current_reqs))
                 if current_req_filter:
                     # do not allow to change/edit already started reporting periods(same as delete)
-                    if not self._past_reporting_requirement_unchanged(current_req_filter.pop(), r):
+                    if not self._is_past_reporting_requirement_unchanged(current_req_filter.pop(), r):
                         raise serializers.ValidationError({
                             "reporting_requirements": {
                                 "start_date": _(
@@ -750,7 +750,7 @@ class InterventionReportingRequirementCreateSerializer(serializers.ModelSerializ
 
         return data
 
-    def _past_reporting_requirement_unchanged(self, current_req, new_req):
+    def _is_past_reporting_requirement_unchanged(self, current_req, new_req):
         if current_req["start_date"] <= date.today():
             if current_req["start_date"] != new_req["start_date"] or \
                             current_req["end_date"] != new_req["end_date"] or \
@@ -824,7 +824,7 @@ class InterventionReportingRequirementCreateSerializer(serializers.ModelSerializ
         for deleted_reporting_requirement in deleted_reporting_requirements:
             if deleted_reporting_requirement.start_date <= date.today():
                 raise ValidationError(
-                    _("Cannot delete reporting requirements started in the past.")
+                    _("Cannot delete past reporting requirements.")
                 )
         data["deleted_reporting_requirements"] = deleted_reporting_requirements
 
