@@ -481,10 +481,6 @@ class TravelActivity(models.Model):
     class Meta:
         verbose_name_plural = _("Travel Activities")
 
-    def __str__(self):
-        travels = [travel.reference_number for travel in self.travels.all()]
-        return 'Task for Visit{} {}'.format('s' if len(travels) > 1 else '', ', '.join(travels))
-
     @property
     def travel_status(self):
         return self.travels.filter(traveler=self.primary_traveler).first().status
