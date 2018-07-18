@@ -4,7 +4,7 @@
     "pk": 1,
     "fields": {
       "order": 1,
-      "module": "action_points",
+      "module": "apd",
       "description": "Invoice and receive reimbursement of ineligible expenditure"
     }
   },
@@ -13,7 +13,7 @@
     "pk": 2,
     "fields": {
       "order": 2,
-      "module": "action_points",
+      "module": "apd",
       "description": "Change cash transfer modality (DCT, reimbursement or direct payment)"
     }
   },
@@ -22,7 +22,7 @@
     "pk": 3,
     "fields": {
       "order": 3,
-      "module": "action_points",
+      "module": "apd",
       "description": "IP to incur and report on additional expenditure"
     }
   },
@@ -31,7 +31,7 @@
     "pk": 4,
     "fields": {
       "order": 4,
-      "module": "action_points",
+      "module": "apd",
       "description": "Review and amend ICE or budget"
     }
   },
@@ -40,7 +40,7 @@
     "pk": 5,
     "fields": {
       "order": 5,
-      "module": "action_points",
+      "module": "apd",
       "description": "IP to correct FACE form or Statement of Expenditure"
     }
   },
@@ -49,7 +49,7 @@
     "pk": 6,
     "fields": {
       "order": 6,
-      "module": "action_points",
+      "module": "apd",
       "description": "Schedule a programmatic visit"
     }
   },
@@ -58,7 +58,7 @@
     "pk": 7,
     "fields": {
       "order": 7,
-      "module": "action_points",
+      "module": "apd",
       "description": "Schedule a follow-up spot check"
     }
   },
@@ -67,7 +67,7 @@
     "pk": 8,
     "fields": {
       "order": 8,
-      "module": "action_points",
+      "module": "apd",
       "description": "Schedule an audit"
     }
   },
@@ -76,7 +76,7 @@
     "pk": 9,
     "fields": {
       "order": 9,
-      "module": "action_points",
+      "module": "apd",
       "description": "Block future cash transfers"
     }
   },
@@ -85,7 +85,7 @@
     "pk": 10,
     "fields": {
       "order": 10,
-      "module": "action_points",
+      "module": "apd",
       "description": "Block or mark vendor for deletion"
     }
   },
@@ -94,7 +94,7 @@
     "pk": 11,
     "fields": {
       "order": 11,
-      "module": "action_points",
+      "module": "apd",
       "description": "Escalate to Chief of Operations, Dep Rep, or Rep"
     }
   },
@@ -103,7 +103,7 @@
     "pk": 12,
     "fields": {
       "order": 12,
-      "module": "action_points",
+      "module": "apd",
       "description": "Escalate to Investigation"
     }
   },
@@ -112,7 +112,7 @@
     "pk": 13,
     "fields": {
       "order": 13,
-      "module": "action_points",
+      "module": "apd",
       "description": "Capacity building / Discussion with partner"
     }
   },
@@ -121,7 +121,7 @@
     "pk": 14,
     "fields": {
       "order": 14,
-      "module": "action_points",
+      "module": "apd",
       "description": "Change IP risk rating"
     }
   },
@@ -130,7 +130,7 @@
     "pk": 15,
     "fields": {
       "order": 15,
-      "module": "action_points",
+      "module": "apd",
       "description": "Other"
     }
   }
