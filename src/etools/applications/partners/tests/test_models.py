@@ -849,7 +849,7 @@ class TestInterventionModel(BaseTenantTestCase):
 
         expected_reference_number = self.intervention.agreement.base_number + '/' + self.intervention.document_type
         expected_reference_number += \
-            str(self.intervention.signed_by_unicef_date.year) + str(self.intervention.id)
+            str(self.intervention.reference_number_year) + str(self.intervention.id)
         self.assertEqual(self.intervention.reference_number, expected_reference_number)
 
     def test_all_lower_results_empty(self):

@@ -1,5 +1,4 @@
 from django.db import connection
-from django.db.models import Q
 
 from rest_framework.generics import ListAPIView, RetrieveAPIView
 from rest_framework.response import Response
@@ -63,7 +62,7 @@ class GisLocationsInUseViewset(ListAPIView):
 
             locations = Location.objects.filter(
                 pk__in=list(location_ids),
-            ).all()
+            )
 
             serializer = GisLocationListSerializer(locations, many=True, context={'request': request})
 
@@ -121,14 +120,15 @@ class GisLocationsGeomListViewset(ListAPIView):
 
                     # we must specify the proper serializer `geo_field` for both points and polygons, to be able
                     # to generate a result which is importable in QGis
-                    polygons = Location.objects.filter(geom__isnull=False).all()
+                    # `point__isnull = True` = polygons(`geom__isnull=False`) + locations with no geometry at all
+                    polygons = Location.objects.filter(point__isnull=True)
                     self.get_serializer_class().Meta.geo_field = 'geom'
                     serialized_polygons = self.get_serializer(polygons, many=True, context={'request': request})
 
                     if len(serialized_polygons.data) > 0:
                         response["features"] += serialized_polygons.data["features"]
 
-                    points = Location.objects.filter(point__isnull=False).all()
+                    points = Location.objects.filter(point__isnull=False)
                     self.get_serializer_class().Meta.geo_field = 'point'
                     serialized_points = self.get_serializer(points, many=True, context={'request': request})
 
@@ -138,20 +138,21 @@ class GisLocationsGeomListViewset(ListAPIView):
                     return Response(response)
 
                 if geom_type == 'polygon':
-                    locations = Location.objects.filter(geom__isnull=False).all()
+                    locations = Location.objects.filter(geom__isnull=False)
                     self.get_serializer_class().Meta.geo_field = 'geom'
                 elif geom_type == 'point':
-                    locations = Location.objects.filter(point__isnull=False).all()
+                    locations = Location.objects.filter(point__isnull=False)
                     self.get_serializer_class().Meta.geo_field = 'point'
             else:
                 if geom_type is None:
-                    locations = Location.objects.filter(Q(geom__isnull=False) | Q(point__isnull=False)).all()
+                    locations = Location.objects.all()
                 elif geom_type == 'polygon':
-                    locations = Location.objects.filter(geom__isnull=False).all()
+                    locations = Location.objects.filter(geom__isnull=False)
                 elif geom_type == 'point':
-                    locations = Location.objects.filter(point__isnull=False).all()
+                    locations = Location.objects.filter(point__isnull=False)
 
             serializer = self.get_serializer(locations, many=True, context={'request': request})
+
             return Response(serializer.data)
 
 
