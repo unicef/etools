@@ -89,6 +89,7 @@ class EngagementActionPointSerializer(PermissionsBasedSerializerMixin, ActionPoi
         extra_kwargs = copy(ActionPointBaseSerializer.Meta.extra_kwargs)
         extra_kwargs.update({
             'assigned_to': {'label': _('Person Responsible')},
+            'category': {'label': _('Action Point Category')},
         })
 
 
