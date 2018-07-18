@@ -68,6 +68,7 @@ class ReportAttachmentSerializer(BaseAttachmentSerializer):
 
 
 class EngagementActionPointSerializer(PermissionsBasedSerializerMixin, ActionPointBaseSerializer):
+    reference_number = serializers.ReadOnlyField(label=_('Reference No.'))
     section = SeparatedReadWriteField(
         read_field=SectionSerializer(read_only=True, label=_('Section')),
         required=True,
@@ -88,7 +89,7 @@ class EngagementActionPointSerializer(PermissionsBasedSerializerMixin, ActionPoi
         ]
         extra_kwargs = copy(ActionPointBaseSerializer.Meta.extra_kwargs)
         extra_kwargs.update({
-            'assigned_to': {'label': _('Person Responsible')}
+            'assigned_to': {'label': _('Person Responsible')},
         })
 
 

@@ -53,7 +53,7 @@ class ActionPointViewSet(
         'assigned_to__last_name', 'due_date', 'status'
     )
     filter_fields = (
-        'assigned_to', 'high_priority', 'author', 'section',
+        'assigned_by', 'assigned_to', 'high_priority', 'author', 'section', 'location',
         'office', 'status', 'partner', 'intervention', 'cp_output', 'due_date',
         'engagement', 'tpm_activity', 'travel_activity',
     )

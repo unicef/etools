@@ -10,6 +10,7 @@ from factory import fuzzy
 from mock import Mock, patch
 from rest_framework import status
 
+from etools.applications.action_points.models import ActionPoint
 from etools.applications.action_points.tests.factories import ActionPointFactory
 from etools.applications.attachments.tests.factories import AttachmentFactory, AttachmentFileTypeFactory
 from etools.applications.audit.models import Engagement, Risk, Auditor
@@ -513,6 +514,7 @@ class TestEngagementActionPointViewSet(EngagementTransitionsTestCaseMixin, BaseT
             '/api/audit/engagements/{}/action-points/'.format(self.engagement.id),
             user=self.unicef_focal_point,
             data={
+                'category': fuzzy.FuzzyChoice(dict(ActionPoint.CATEGORY_CHOICES).keys()).fuzz(),
                 'description': fuzzy.FuzzyText(length=100).fuzz(),
                 'due_date': fuzzy.FuzzyDate(datetime.date(2001, 1, 1)).fuzz(),
                 'assigned_to': self.unicef_user.id,
@@ -535,7 +537,7 @@ class TestEngagementActionPointViewSet(EngagementTransitionsTestCaseMixin, BaseT
         if editable:
             self.assertIn('PUT', response.data['actions'].keys())
             self.assertListEqual(
-                ['assigned_to', 'high_priority', 'due_date', 'description', 'section', 'office'],
+                ['category', 'assigned_to', 'high_priority', 'due_date', 'description', 'section', 'office'],
                 list(response.data['actions']['PUT'].keys())
             )
         else:
