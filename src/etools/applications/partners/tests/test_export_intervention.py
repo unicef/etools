@@ -186,6 +186,7 @@ class TestInterventionModelExport(BaseInterventionModelExportTestCase):
             '{}'.format(self.intervention.review_date_prc),
             u'{}'.format(self.intervention.partner_authorized_officer_signatory.get_full_name()),
             '{}'.format(self.intervention.signed_by_unicef_date),
+            u'',
             self.unicef_staff.get_full_name(),
             '{}'.format(self.intervention.signed_by_partner_date),
             '{}'.format(self.intervention.days_from_submission_to_signed),
@@ -209,8 +210,8 @@ class TestInterventionModelExport(BaseInterventionModelExportTestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         dataset = Dataset().load(response.content.decode('utf-8'), 'csv')
         self.assertEqual(dataset.height, 1)
-        self.assertEqual(len(dataset._get_headers()), 62)
-        self.assertEqual(len(dataset[0]), 62)
+        self.assertEqual(len(dataset._get_headers()), 63)
+        self.assertEqual(len(dataset[0]), 63)
 
 
 class TestInterventionAmendmentModelExport(BaseInterventionModelExportTestCase):

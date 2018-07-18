@@ -329,6 +329,7 @@ class TestAgreementCreateUpdateSerializer(AgreementCreateUpdateSerializerBase):
             "agreement_type": Agreement.MOU,
             "partner": self.partner.id,
             "signed_by_partner_date": self.today,
+            "signed_by": signatory.id,
             "partner_manager": partner_signatory.id,
             "reference_number_year": datetime.date.today().year
         }

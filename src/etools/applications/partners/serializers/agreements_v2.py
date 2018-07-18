@@ -82,6 +82,7 @@ class AgreementCreateUpdateSerializer(AttachmentSerializerMixin, SnapshotModelSe
     partner_name = serializers.CharField(source='partner.name', read_only=True)
     agreement_type = serializers.CharField(required=True)
     amendments = AgreementAmendmentCreateUpdateSerializer(many=True, read_only=True)
+    signed_by = serializers.CharField(read_only=True, allow_null=True)
     country_programme = serializers.PrimaryKeyRelatedField(queryset=CountryProgramme.objects.all(), required=False,
                                                            allow_null=True)
     unicef_signatory = SimpleUserSerializer(source='signed_by', read_only=True)
