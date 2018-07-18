@@ -8,7 +8,6 @@ from django.contrib.contenttypes.models import ContentType
 from django.db import transaction, connection
 from django.db.models import Q
 from django.shortcuts import get_object_or_404
-from django.utils.translation import ugettext as _
 
 from rest_framework import status
 from rest_framework.exceptions import ValidationError

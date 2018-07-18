@@ -754,10 +754,9 @@ class InterventionReportingRequirementCreateSerializer(serializers.ModelSerializ
         if current_req["start_date"] <= date.today():
             if current_req["start_date"] != new_req["start_date"] or \
                             current_req["end_date"] != new_req["end_date"] or \
-                            current_req["due_date"] != new_req["due_date"] :
+                            current_req["due_date"] != new_req["due_date"]:
                 return False
         return True
-
 
     def run_validation(self, initial_data):
         serializer = self.fields["reporting_requirements"].child
