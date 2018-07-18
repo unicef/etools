@@ -58,7 +58,7 @@ from etools.applications.reports.tests.factories import (
     CountryProgrammeFactory,
     ResultFactory,
     ResultTypeFactory,
-    SectorFactory,
+    SectionFactory,
 )
 from etools.applications.users.tests.factories import (
     GroupFactory,
@@ -865,6 +865,7 @@ class TestAgreementCreateAPIView(BaseTenantTestCase):
         data = {
             "agreement_type": Agreement.MOU,
             "partner": self.partner.id,
+            "reference_number_year": datetime.date.today().year
         }
         response = self.forced_auth_req(
             'post',
@@ -886,6 +887,7 @@ class TestAgreementCreateAPIView(BaseTenantTestCase):
         data = {
             "agreement_type": Agreement.PCA,
             "partner": self.partner.id,
+            "reference_number_year": datetime.date.today().year
         }
         response = self.forced_auth_req(
             'post',
@@ -1438,6 +1440,7 @@ class TestInterventionViews(BaseTenantTestCase):
             "end": (timezone.now().date() + datetime.timedelta(days=31)).isoformat(),
             "unicef_budget": 0,
             "agreement": self.agreement.id,
+            "reference_number_year": datetime.date.today().year
         }
         response = self.forced_auth_req(
             'post',
@@ -1447,7 +1450,7 @@ class TestInterventionViews(BaseTenantTestCase):
         )
 
         self.intervention = response.data
-        self.section = SectorFactory()
+        self.section = SectionFactory()
 
         self.fund_commitment_header = FundsCommitmentHeader.objects.create(
             vendor_code="test1",
@@ -1526,6 +1529,7 @@ class TestInterventionViews(BaseTenantTestCase):
             ],
             "amendments": [],
             "attachments": [],
+            "reference_number_year": datetime.date.today().year
         }
 
         response = self.forced_auth_req(
@@ -1590,6 +1594,7 @@ class TestInterventionViews(BaseTenantTestCase):
             "end": (timezone.now().date() + datetime.timedelta(days=31)).isoformat(),
             "unicef_budget": 0,
             "agreement": self.agreement.id,
+            "reference_number_year": datetime.date.today().year
         }
         response = self.forced_auth_req(
             'post',
@@ -1608,6 +1613,7 @@ class TestInterventionViews(BaseTenantTestCase):
             "end": (timezone.now().date() + datetime.timedelta(days=31)).isoformat(),
             "unicef_budget": 0,
             "agreement": self.agreement.id,
+            "reference_number_year": datetime.date.today().year
         }
         response = self.forced_auth_req(
             'post',
@@ -1700,7 +1706,7 @@ class TestInterventionViews(BaseTenantTestCase):
         self.assertEqual(response.data, ["Cannot change fields while intervention is active: unicef_cash"])
 
     @skip('TODO: update test when new validation requirement is built')
-    def test_intervention_active_update_sector_locations(self):
+    def test_intervention_active_update_section_locations(self):
         intervention_obj = Intervention.objects.get(id=self.intervention_data["id"])
         intervention_obj.status = Intervention.DRAFT
         intervention_obj.save()
@@ -1826,7 +1832,8 @@ class TestInterventionViews(BaseTenantTestCase):
             "document_type": Intervention.PD,
             "country_programme": country_programme.pk,
             "unicef_focal_points": user.pk,
-            "office": office.pk
+            "office": office.pk,
+            "reference_number_year": datetime.date.today().year
         }
         response = self.forced_auth_req(
             'get',
@@ -2108,7 +2115,7 @@ class TestPartnershipDashboardView(BaseTenantTestCase):
         )
         self.intervention = response.data
 
-        self.section = SectorFactory()
+        self.section = SectionFactory()
 
         # Basic data to adjust in tests
         self.intervention_data = {

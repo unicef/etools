@@ -4,13 +4,13 @@ from django.db import connection
 
 from rest_framework import serializers
 
-from etools.applications.locations.models import Location
+from unicef_locations.models import Location
 from etools.applications.partners.models import (Intervention, InterventionAmendment,
                                                  PartnerOrganization, PartnerStaffMember,)
 from etools.applications.reports.models import (AppliedIndicator, Disaggregation,
                                                 DisaggregationValue, LowerResult, Result, ReportingRequirement,
                                                 SpecialReportingRequirement)
-from etools.applications.reports.serializers.v1 import SectorSerializer
+from etools.applications.reports.serializers.v1 import SectionSerializer
 
 
 class PRPPartnerOrganizationListSerializer(serializers.ModelSerializer):
@@ -220,7 +220,7 @@ class PRPInterventionListSerializer(serializers.ModelSerializer):
     reporting_requirements = ReportingRequirementsSerializer(many=True, read_only=True)
     special_reports = SpecialReportingRequirementsSerializer(source="special_reporting_requirements",
                                                              many=True, read_only=True)
-    sections = SectorSerializer(source="combined_sections", many=True, read_only=True)
+    sections = SectionSerializer(source="combined_sections", many=True, read_only=True)
     locations = PRPLocationSerializer(source="flat_locations", many=True, read_only=True)
 
     def get_unicef_budget_currency(self, obj):

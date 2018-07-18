@@ -4,7 +4,7 @@ from rest_framework.generics import ListAPIView, RetrieveAPIView
 from rest_framework.response import Response
 
 from etools.applications.EquiTrack.permissions import IsSuperUser
-from etools.applications.locations.models import Location
+from unicef_locations.models import Location
 from etools.applications.management.serializers import (
     GisLocationWktSerializer,
     GisLocationListSerializer,

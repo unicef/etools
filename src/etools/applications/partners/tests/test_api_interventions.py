@@ -23,7 +23,7 @@ from etools.applications.environment.models import TenantSwitch
 from etools.applications.environment.tests.factories import TenantSwitchFactory
 from etools.applications.EquiTrack.tests.cases import BaseTenantTestCase
 from etools.applications.EquiTrack.tests.mixins import URLAssertionMixin
-from etools.applications.locations.tests.factories import LocationFactory
+from unicef_locations.tests.factories import LocationFactory
 from etools.applications.partners.models import (
     Intervention,
     InterventionAmendment,
@@ -36,7 +36,7 @@ from etools.applications.partners.tests.factories import (
     InterventionAttachmentFactory,
     InterventionFactory,
     InterventionResultLinkFactory,
-    InterventionSectorLocationLinkFactory,
+    InterventionSectionLocationLinkFactory,
     PartnerFactory,
 )
 from etools.applications.partners.tests.test_utils import setup_intervention_test_data
@@ -48,7 +48,7 @@ from etools.applications.reports.tests.factories import (
     LowerResultFactory,
     ReportingRequirementFactory,
     ResultFactory,
-    SectorFactory,
+    SectionFactory,
 )
 from etools.applications.users.tests.factories import GroupFactory, UserFactory
 from etools.applications.utils.common.utils import get_all_field_names
@@ -109,12 +109,12 @@ class TestInterventionsAPI(BaseTenantTestCase):
                   "offices", "population_focus", "country_programme_id", "engagement", "sections",
                   "sections_present", "flat_locations", "reporting_periods", "activity",
                   "prc_review_attachment", "signed_pd_attachment", "actionpoint",
-                  "reporting_requirements", "special_reporting_requirements", ],
+                  "reporting_requirements", "special_reporting_requirements", "reference_number_year", "number"],
         'signed': [],
         'active': ['']
     }
     REQUIRED_FIELDS = {
-        'draft': ['number', 'title', 'agreement', 'document_type'],
+        'draft': ['number', 'title', 'agreement', 'document_type', 'reference_number_year'],
         'signed': [],
         'active': ['']
     }
@@ -206,6 +206,7 @@ class TestInterventionsAPI(BaseTenantTestCase):
             "title": "My test intervention1",
             "contingency_pd": True,
             "agreement": self.agreement.id,
+            "reference_number_year": datetime.date.today().year,
         }
         status_code, response = self.run_request_list_ep(data, user=self.partnership_manager_user)
 
@@ -226,6 +227,7 @@ class TestInterventionsAPI(BaseTenantTestCase):
             "title": "My test intervention1",
             "contingency_pd": True,
             "agreement": self.agreement.pk,
+            "reference_number_year": datetime.date.today().year,
             "attachments": [{
                 "type": file_type.pk,
                 "attachment_document": attachment.pk,
@@ -271,6 +273,7 @@ class TestInterventionsAPI(BaseTenantTestCase):
             "agreement": self.agreement.pk,
             "prc_review_attachment": attachment_prc.pk,
             "signed_pd_attachment": attachment_pd.pk,
+            "reference_number_year": datetime.date.today().year
         }
         status_code, response = self.run_request_list_ep(data, user=self.partnership_manager_user)
         self.assertEqual(status_code, status.HTTP_201_CREATED)
@@ -304,7 +307,8 @@ class TestInterventionsAPI(BaseTenantTestCase):
             "start": (timezone.now().date()).isoformat(),
             "end": (timezone.now().date() + datetime.timedelta(days=31)).isoformat(),
             "agreement": self.agreement.id,
-            "frs": frs_data
+            "frs": frs_data,
+            "reference_number_year": datetime.date.today().year
         }
         status_code, response = self.run_request_list_ep(data, user=self.partnership_manager_user)
 
@@ -324,7 +328,8 @@ class TestInterventionsAPI(BaseTenantTestCase):
             "start": (timezone.now().date()).isoformat(),
             "end": (timezone.now().date() + datetime.timedelta(days=31)).isoformat(),
             "agreement": self.agreement.id,
-            "frs": frs_data
+            "frs": frs_data,
+            "reference_number_year": datetime.date.today().year
         }
         status_code, response = self.run_request_list_ep(data, user=self.partnership_manager_user)
 
@@ -348,7 +353,8 @@ class TestInterventionsAPI(BaseTenantTestCase):
             "start": (timezone.now().date()).isoformat(),
             "end": (timezone.now().date() + datetime.timedelta(days=31)).isoformat(),
             "agreement": self.agreement.id,
-            "frs": frs_data
+            "frs": frs_data,
+            "reference_number_year": datetime.date.today().year,
         }
         status_code, response = self.run_request_list_ep(data, user=self.partnership_manager_user)
 
@@ -559,8 +565,8 @@ class TestInterventionsAPI(BaseTenantTestCase):
         self.assertEqual(status_code, status.HTTP_200_OK)
         self.assertEqual(len(response), 3)
 
-        section1 = SectorFactory()
-        section2 = SectorFactory()
+        section1 = SectionFactory()
+        section2 = SectionFactory()
 
         # add another intervention to make sure that the queries are constant
         data = {
@@ -570,6 +576,7 @@ class TestInterventionsAPI(BaseTenantTestCase):
             "end": (timezone.now().date() + datetime.timedelta(days=31)).isoformat(),
             "agreement": self.agreement.id,
             "sections": [section1.id, section2.id],
+            "reference_number_year": datetime.date.today().year
         }
 
         status_code, response = self.run_request_list_ep(data, user=self.partnership_manager_user)
@@ -592,8 +599,8 @@ class TestInterventionsAPI(BaseTenantTestCase):
         self.assertEqual(status_code, status.HTTP_200_OK)
         self.assertEqual(len(response), 3)
 
-        section1 = SectorFactory()
-        section2 = SectorFactory()
+        section1 = SectionFactory()
+        section2 = SectionFactory()
 
         EXTRA_INTERVENTIONS = 15
         for i in range(0, EXTRA_INTERVENTIONS + 1):
@@ -1180,7 +1187,7 @@ class TestAPInterventionIndicatorsCreateView(BaseTenantTestCase):
                           kwargs={'lower_result_pk': cls.lower_result.id})
 
         location = LocationFactory()
-        section = SectorFactory()
+        section = SectionFactory()
 
         cls.result_link.intervention.flat_locations.add(location)
         cls.result_link.intervention.sections.add(section)
@@ -1279,7 +1286,7 @@ class TestAPInterventionIndicatorsUpdateView(BaseTenantTestCase):
         )
 
         location = LocationFactory()
-        cls.section = SectorFactory()
+        cls.section = SectionFactory()
 
         cls.result_link.intervention.flat_locations.add(location)
         cls.result_link.intervention.sections.add(cls.section)
@@ -1784,20 +1791,20 @@ class TestInterventionAmendmentDeleteView(BaseTenantTestCase):
         self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
 
 
-class TestInterventionSectorLocationLinkListAPIView(BaseTenantTestCase):
+class TestInterventionSectionLocationLinkListAPIView(BaseTenantTestCase):
     @classmethod
     def setUpTestData(cls):
         cls.unicef_staff = UserFactory(is_staff=True)
-        InterventionSectorLocationLinkFactory()
+        InterventionSectionLocationLinkFactory()
         cls.intervention = InterventionFactory()
-        cls.sector = SectorFactory(name="Sector Name")
-        cls.link = InterventionSectorLocationLinkFactory(
+        cls.section = SectionFactory(name="Sector Name")
+        cls.link = InterventionSectionLocationLinkFactory(
             intervention=cls.intervention,
-            sector=cls.sector
+            sector=cls.section
         )
 
     def setUp(self):
-        super(TestInterventionSectorLocationLinkListAPIView, self).setUp()
+        super(TestInterventionSectionLocationLinkListAPIView, self).setUp()
         self.url = reverse("partners_api:intervention-sector-locations")
 
     def assertResponseFundamentals(self, response):
@@ -1820,7 +1827,7 @@ class TestInterventionSectorLocationLinkListAPIView(BaseTenantTestCase):
         data, first = self.assertResponseFundamentals(response)
         self.assertEqual(first["id"], self.link.pk)
 
-    def test_search_sector_name(self):
+    def test_search_section_name(self):
         response = self.forced_auth_req(
             'get',
             self.url,
@@ -1888,17 +1895,17 @@ class TestInterventionListMapView(BaseTenantTestCase):
         # since the cache is extremely unreliable as tests progress this is something to go around that
         if ts.id:
             ts.delete()
-        sector = SectorFactory()
+        section = SectionFactory()
         intervention = InterventionFactory()
         rl = InterventionResultLinkFactory(intervention=intervention)
         llo = LowerResultFactory(result_link=rl)
-        AppliedIndicatorFactory(lower_result=llo, section=sector)
+        AppliedIndicatorFactory(lower_result=llo, section=section)
 
         response = self.forced_auth_req(
             'get',
             self.url,
             user=self.unicef_staff,
-            data={"section": sector.pk},
+            data={"section": section.pk},
         )
         data, first = self.assertResponseFundamentals(response)
         self.assertEqual(first["id"], intervention.pk)
@@ -1906,15 +1913,15 @@ class TestInterventionListMapView(BaseTenantTestCase):
     def test_get_param_section_with_flag(self):
         # set prp mode off flag
         TenantSwitchFactory(name='prp_mode_off', countries=[connection.tenant])
-        sector = SectorFactory()
+        section = SectionFactory()
         intervention = InterventionFactory()
-        intervention.sections.add(sector)
+        intervention.sections.add(section)
 
         response = self.forced_auth_req(
             'get',
             self.url,
             user=self.unicef_staff,
-            data={"section": sector.pk},
+            data={"section": section.pk},
         )
         data, first = self.assertResponseFundamentals(response)
         self.assertEqual(first["id"], intervention.pk)

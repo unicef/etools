@@ -26,7 +26,7 @@ from etools.applications.EquiTrack.fields import CurrencyField
 from etools.applications.EquiTrack.serializers import StringConcat
 from etools.applications.EquiTrack.utils import get_current_year, get_quarter, import_permissions
 from etools.applications.funds.models import Grant
-from etools.applications.locations.models import Location
+from unicef_locations.models import Location
 from etools.applications.partners.validation import interventions as intervention_validation
 from etools.applications.partners.validation.agreements import (agreement_transition_to_ended_valid,
                                                                 agreement_transition_to_signed_valid,
@@ -1172,6 +1172,9 @@ class Agreement(TimeStampedModel):
         null=True,
         blank=True,
     )
+    reference_number_year = models.IntegerField()
+
+    special_conditions_pca = models.BooleanField(default=False, verbose_name=_('Special Conditions PCA'))
 
     signed_by_unicef_date = models.DateField(
         verbose_name=_("Signed By UNICEF Date"),
@@ -1250,7 +1253,7 @@ class Agreement(TimeStampedModel):
         return '{code}/{type}{year}{id}'.format(
             code=connection.tenant.country_short_code or '',
             type=self.agreement_type,
-            year=self.created.year,
+            year=self.reference_number_year,
             id=self.id,
         )
 
@@ -1334,6 +1337,11 @@ class Agreement(TimeStampedModel):
             super(Agreement, self).save()
             self.update_reference_number()
         else:
+            # if it's draft and not SSFA or SSFA and no interventions, update ref number on every save.
+            if self.status == self.DRAFT:
+                self.update_reference_number()
+                for i in self.interventions.all():
+                    i.save(save_from_agreement=True)
             self.update_related_interventions(oldself)
 
         # update reference number if needed
@@ -1624,6 +1632,7 @@ class Intervention(TimeStampedModel):
         null=True,
         blank=True,
     )
+    reference_number_year = models.IntegerField(null=True)
     review_date_prc = models.DateField(
         verbose_name=_('Review Date by PRC'),
         help_text='The date the PRC reviewed the partnership',
@@ -1923,6 +1932,7 @@ class Intervention(TimeStampedModel):
                 r['latest_end_date'] = fr.end_date
         return r
 
+    # TODO: check if this is used anywhere and remove if possible.
     @property
     def year(self):
         if self.id:
@@ -1996,7 +2006,7 @@ class Intervention(TimeStampedModel):
             number = '{agreement}/{type}{year}{id}'.format(
                 agreement=self.agreement.base_number,
                 type=self.document_type,
-                year=self.year,
+                year=self.reference_number_year,
                 id=self.id
             )
             return number
@@ -2042,7 +2052,7 @@ class Intervention(TimeStampedModel):
         self.flagged_sections(reset=True)
 
     @transaction.atomic
-    def save(self, force_insert=False, **kwargs):
+    def save(self, force_insert=False, save_from_agreement=False, **kwargs):
         # check status auto updates
         # TODO: move this outside of save in the future to properly check transitions
         # self.check_status_auto_updates()
@@ -2060,8 +2070,11 @@ class Intervention(TimeStampedModel):
             # to create a reference number we need a pk
             super(Intervention, self).save()
             self.update_reference_number()
+        elif self.status == self.DRAFT:
+            self.update_reference_number()
 
-        self.update_ssfa_properties()
+        if save_from_agreement is False:
+            self.update_ssfa_properties()
 
         super(Intervention, self).save()
 
