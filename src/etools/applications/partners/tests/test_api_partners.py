@@ -7,11 +7,7 @@ from django.urls import reverse
 from mock import Mock, patch
 from rest_framework import status
 
-from etools.applications.attachments.models import Attachment
-from etools.applications.attachments.tests.factories import (
-    AttachmentFactory,
-    AttachmentFileTypeFactory,
-)
+from etools.applications.attachments.tests.factories import AttachmentFactory, AttachmentFileTypeFactory
 from etools.applications.EquiTrack.tests.cases import BaseTenantTestCase
 from etools.applications.EquiTrack.tests.mixins import URLAssertionMixin
 from etools.applications.partners.models import (
@@ -109,12 +105,6 @@ class TestPartnerOrganizationDetailAPIView(BaseTenantTestCase):
         data = json.loads(response.rendered_content)
         self.assertEqual(data["id"], self.partner.pk)
         self.assertEqual(data["interventions"][0]["id"], self.intervention.pk)
-        attachment_updated = Attachment.objects.get(pk=attachment.pk)
-        self.assertEqual(
-            attachment_updated.code,
-            "partners_partner_assessment"
-        )
-        self.assertTrue(assessment_qs.exists())
 
     def test_add_planned_visits(self):
         response = self.forced_auth_req(
