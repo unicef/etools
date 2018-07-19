@@ -2227,6 +2227,47 @@ class TestInterventionReportingRequirementView(BaseTenantTestCase):
             self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
             self.assertEqual(response.data, {'non_field_errors': ['Cannot delete past reporting requirements.']})
 
+    def test_post_edit_report_in_progress(self):
+        for report_type, _ in ReportingRequirement.TYPE_CHOICES:
+            requirement1 = ReportingRequirementFactory(
+                intervention=self.intervention,
+                report_type=report_type,
+                start_date=datetime.date.today() - datetime.timedelta(days=1),
+            )
+            requirement1.end_date = requirement1.start_date - datetime.timedelta(days=1)
+            requirement1.due_date = requirement1.start_date - datetime.timedelta(days=1)
+
+            # this requirements should be deleted by ommiting it in the POST request
+            requirement2 = ReportingRequirementFactory(
+                intervention=self.intervention,
+                report_type=report_type,
+                start_date=datetime.date.today(),
+                end_date=datetime.date.today(),
+                due_date=datetime.date.today(),
+            )
+
+            response = self.forced_auth_req(
+                "post",
+                self._get_url(report_type),
+                user=self.unicef_staff,
+                data={
+                    "reporting_requirements": [{
+                        "id": requirement1.id,
+                        "start_date": requirement1.start_date,
+                        "end_date": requirement1.end_date,
+                        "due_date": requirement1.due_date,
+                    }, {
+                        "id": requirement2.id,
+                        "start_date": requirement2.start_date,
+                        "end_date": requirement2.end_date,
+                        "due_date": requirement2.due_date,
+                    }]
+                }
+            )
+
+            self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+            self.assertEqual(response.data, {'non_field_errors': ['Cannot edit past reporting requirements.']})
+
     def test_patch_invalid(self):
         for report_type, _ in ReportingRequirement.TYPE_CHOICES:
             response = self.forced_auth_req(

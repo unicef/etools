@@ -731,13 +731,9 @@ class InterventionReportingRequirementCreateSerializer(serializers.ModelSerializ
                 if current_req_filter:
                     # do not allow to change/edit already started reporting periods(same as delete)
                     if not self._is_past_reporting_requirement_unchanged(current_req_filter.pop(), r):
-                        raise serializers.ValidationError({
-                            "reporting_requirements": {
-                                "start_date": _(
-                                    "Cannot edit reporting requirements started in the past."
-                                )
-                            }
-                        })
+                        raise serializers.ValidationError(
+                            _("Cannot edit past reporting requirements.")
+                        )
 
             r["intervention"] = self.intervention
             r["report_type"] = report_type
