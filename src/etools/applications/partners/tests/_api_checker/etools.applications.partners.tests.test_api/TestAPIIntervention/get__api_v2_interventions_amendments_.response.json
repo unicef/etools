@@ -20,19 +20,19 @@
     },
     "data": [
         {
-            "id": 535,
+            "id": 83,
             "amendment_number": "1",
-            "signed_amendment_file": "http://testserver/media/test/file_attachments/partner_organization/17942/17942/agreements/18374/interventions/15602/amendments/None/test_file.pdf",
+            "signed_amendment_file": "http://testserver/media/test/file_attachments/partner_organization/3483/3483/agreements/3501/interventions/3268/amendments/None/test_file.pdf",
             "signed_amendment_attachment": null,
-            "created": "2018-07-16T19:05:04.195000Z",
-            "modified": "2018-07-16T19:05:04.220000Z",
+            "created": "2018-07-18T19:33:29.345000Z",
+            "modified": "2018-07-18T19:33:29.368000Z",
             "types": [
                 "Change in clause"
             ],
-            "other_description": "mEdbRcpihRVQAtCfzGgTocCzlpfyKbxCbZsOswBaNxRZtafHQt",
-            "signed_date": "2018-07-16",
-            "signed_amendment": "http://testserver/media/test/file_attachments/partner_organization/17942/17942/agreements/18374/interventions/15602/amendments/None/test_file.pdf",
-            "intervention": 15602
+            "other_description": "YSzPWljvpaaZkGOjGluvISIvzkCbWLCOzIBshuuIbpQwobueFU",
+            "signed_date": "2018-07-18",
+            "signed_amendment": "http://testserver/media/test/file_attachments/partner_organization/3483/3483/agreements/3501/interventions/3268/amendments/None/test_file.pdf",
+            "intervention": 3268
         }
     ],
     "content_type": null
