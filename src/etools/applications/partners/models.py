@@ -831,8 +831,8 @@ class CoreValuesAssessment(TimeStampedModel):
 
     date = models.DateField(verbose_name=_('Date positively assessed against core values'), blank=True, null=True)
     assessment = models.FileField(verbose_name=_("Core Values Assessment"), blank=True, null=True,
-                                       upload_to='partners/core_values/', max_length=1024,
-                                       help_text='Only required for CSO partners')
+                                  upload_to='partners/core_values/', max_length=1024,
+                                  help_text='Only required for CSO partners')
     attachment = CodedGenericRelation(Attachment, verbose_name=_('Core Values Assessment'), blank=True, null=True,
                                       code='partners_partner_assessment', help_text='Only required for CSO partners')
     archived = models.BooleanField(default=False)
