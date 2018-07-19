@@ -47,7 +47,7 @@ class TestCopyAttachments(BaseTenantTestCase):
             core_values_assessment="sample.pdf"
         )
         cls.core_values_assessment = CoreValuesAssessmentFactory(
-            attachment_file="sample.pdf"
+            assessment="sample.pdf"
         )
         cls.agreement = AgreementFactory(
             attached_agreement="sample.pdf"

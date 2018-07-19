@@ -12,7 +12,7 @@ def migrate_core_value_assessment(apps, schema_editor):
         CoreValuesAssessment.objects.create(
             partner=partner,
             date=partner.core_values_assessment_date,
-            attachment_file=partner.core_values_assessment,
+            assessment=partner.core_values_assessment,
             archived=False
         )
 

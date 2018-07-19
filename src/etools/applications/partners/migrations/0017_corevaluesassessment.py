@@ -22,7 +22,7 @@ class Migration(migrations.Migration):
                 ('created', model_utils.fields.AutoCreatedField(default=django.utils.timezone.now, editable=False, verbose_name='created')),
                 ('modified', model_utils.fields.AutoLastModifiedField(default=django.utils.timezone.now, editable=False, verbose_name='modified')),
                 ('date', models.DateField(blank=True, null=True, verbose_name='Date positively assessed against core values')),
-                ('attachment_file', models.FileField(blank=True, help_text='Only required for CSO partners', max_length=1024, null=True, upload_to='partners/core_values/', verbose_name='Core Values Assessment')),
+                ('assessment', models.FileField(blank=True, help_text='Only required for CSO partners', max_length=1024, null=True, upload_to='partners/core_values/', verbose_name='Core Values Assessment')),
                 ('archived', models.BooleanField(default=False)),
                 ('partner', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='core_values_assessments', to='partners.PartnerOrganization', verbose_name='Partner')),
             ],

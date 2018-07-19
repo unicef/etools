@@ -293,7 +293,7 @@ def pmp_indicator_report(writer, **kwargs):
                     agreement__partner=partner).select_related('planned_budget'):
                 planned_budget = getattr(intervention, 'planned_budget', None)
                 fr_currencies = intervention.frs.all().values_list('currency', flat=True).distinct()
-                has_assessment = bool(getattr(partner.current_core_value_assessment, 'attachment_file', False))
+                has_assessment = bool(getattr(partner.current_core_value_assessment, 'assessment', False))
                 dict_writer.writerow({
                     'Country': country,
                     'Partner Name': str(partner),

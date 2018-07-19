@@ -776,7 +776,7 @@ class TestCopyAttachments(BaseTenantTestCase):
             code="partners_partner_assessment"
         )
         cls.core_value_assessment = CoreValuesAssessmentFactory(
-            attachment_file="sample.pdf"
+            assessment="sample.pdf"
         )
 
     def test_call(self):
@@ -790,7 +790,7 @@ class TestCopyAttachments(BaseTenantTestCase):
         attachment_update = Attachment.objects.get(pk=attachment.pk)
         self.assertEqual(
             attachment_update.file.name,
-            self.core_value_assessment.attachment_file.name
+            self.core_value_assessment.assessment.name
         )
 
 

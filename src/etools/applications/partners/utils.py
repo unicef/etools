@@ -100,14 +100,14 @@ def copy_core_values_assessments(**kwargs):
     content_type = ContentType.objects.get_for_model(CoreValuesAssessment)
 
     for core_values_assessment in CoreValuesAssessment.objects.filter(
-            attachment_file__isnull=False,
+            assessment__isnull=False,
             modified__gte=get_from_datetime(**kwargs)
     ).all():
         update_or_create_attachment(
             file_type,
             content_type,
             core_values_assessment.pk,
-            core_values_assessment.attachment_file,
+            core_values_assessment.assessment,
         )
 
 
