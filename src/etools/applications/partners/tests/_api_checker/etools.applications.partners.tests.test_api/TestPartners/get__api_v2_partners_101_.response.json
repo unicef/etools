@@ -64,8 +64,6 @@
             },
             "outstanding_findings": 0
         },
-        "core_values_assessment_file": null,
-        "core_values_assessment_attachment": null,
         "interventions": [],
         "hact_min_requirements": {
             "programme_visits": 0,
@@ -74,16 +72,17 @@
         },
         "hidden": false,
         "planned_visits": [],
+        "core_values_assessments": [],
         "partner_type_slug": "CSO",
         "flags": {
             "expiring_assessment_flag": false,
             "approaching_threshold_flag": false
         },
-        "created": "2018-07-16T19:05:05.556000Z",
-        "modified": "2018-07-16T19:05:05.560000Z",
+        "created": "2018-07-17T16:23:50.291000Z",
+        "modified": "2018-07-17T16:23:50.294000Z",
         "partner_type": "Civil Society Organization",
         "cso_type": "International",
-        "name": "Partner 8",
+        "name": "Partner 252",
         "short_name": "Short name",
         "description": "",
         "shared_with": null,
