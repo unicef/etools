@@ -407,7 +407,7 @@ class TPMActivity(Activity):
         ordering = ['tpm_visit', 'id', ]
 
     def __str__(self):
-        return 'Task No {0} for Visit {1}'.format(self.task_number, self.tpm_visit.reference_number)
+        return 'Task #{0} for {1}'.format(self.id, self.tpm_visit)
 
     @cached_property
     def task_number(self):

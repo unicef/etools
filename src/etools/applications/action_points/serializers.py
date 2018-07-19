@@ -171,16 +171,10 @@ class ActionPointSerializer(WritableNestedSerializerMixin, ActionPointListSerial
     comments = CommentSerializer(many=True, label=_('Actions Taken'))
     history = HistorySerializer(many=True, label=_('History'), read_only=True, source='get_meaningful_history')
 
-    related_object_str = serializers.SerializerMethodField(label=_('Related Document'))
-    related_object_url = serializers.SerializerMethodField()
+    related_object_str = serializers.ReadOnlyField(label=_('Related Document'))
+    related_object_url = serializers.ReadOnlyField()
 
     class Meta(WritableNestedSerializerMixin.Meta, ActionPointListSerializer.Meta):
         fields = ActionPointListSerializer.Meta.fields + [
             'comments', 'history', 'related_object_str', 'related_object_url',
         ]
-
-    def get_related_object_str(self, obj):
-        return str(obj.related_object) if obj.related_object else None
-
-    def get_related_object_url(self, obj):
-        return obj.related_object.get_object_url() if obj.related_object else None

@@ -123,9 +123,6 @@ class ActionPoint(TimeStampedModel):
         verbose_name = _('Action Point')
         verbose_name_plural = _('Action Points')
 
-    def get_category_display(self):
-        return self.category.description if self.category else ''
-
     @property
     def engagement_subclass(self):
         return self.engagement.get_subclass() if self.engagement else None
@@ -133,6 +130,25 @@ class ActionPoint(TimeStampedModel):
     @property
     def related_object(self):
         return self.engagement_subclass or self.tpm_activity or self.travel_activity
+
+    @property
+    def related_object_str(self):
+        obj = self.related_object
+        if not obj:
+            return
+
+        if self.tpm_activity:
+            return 'Task No {0} for Visit {1}'.format(obj.task_number, obj.tpm_visit.reference_number)
+
+        return str(obj)
+
+    @property
+    def related_object_url(self):
+        obj = self.related_object
+        if not obj:
+            return
+
+        return obj.get_object_url()
 
     @property
     def related_module(self):
