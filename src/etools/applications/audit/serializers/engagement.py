@@ -68,6 +68,7 @@ class ReportAttachmentSerializer(BaseAttachmentSerializer):
 
 
 class EngagementActionPointSerializer(PermissionsBasedSerializerMixin, ActionPointBaseSerializer):
+    reference_number = serializers.ReadOnlyField(label=_('Reference No.'))
     section = SeparatedReadWriteField(
         read_field=SectionSerializer(read_only=True, label=_('Section')),
         required=True,
