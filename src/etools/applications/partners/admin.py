@@ -35,7 +35,7 @@ from etools.applications.partners.models import (
     PartnerOrganization,
     PartnerStaffMember,
     PlannedEngagement,
-)
+    CoreValuesAssessment)
 
 
 class InterventionAmendmentsAdmin(admin.ModelAdmin):
@@ -387,8 +387,9 @@ class HiddenPartnerFilter(admin.SimpleListFilter):
         return queryset.filter(hidden=False)
 
 
-class CoreValueAssessmentInline(AttachmentSingleInline):
-    verbose_name_plural = "Core Value Assessment Attachment"
+class CoreValueAssessmentInline(admin.StackedInline):
+    model = CoreValuesAssessment
+    extra = 0
 
 
 class PartnerAdmin(ExportMixin, admin.ModelAdmin):
