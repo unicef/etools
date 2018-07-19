@@ -513,7 +513,7 @@ class TestEngagementActionPointViewSet(EngagementTransitionsTestCaseMixin, BaseT
             '/api/audit/engagements/{}/action-points/'.format(self.engagement.id),
             user=self.unicef_focal_point,
             data={
-                'category': ActionPointCategoryFactory().id,
+                'category': ActionPointCategoryFactory().description,
                 'description': fuzzy.FuzzyText(length=100).fuzz(),
                 'due_date': fuzzy.FuzzyDate(datetime.date(2001, 1, 1)).fuzz(),
                 'assigned_to': self.unicef_user.id,

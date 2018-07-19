@@ -24,7 +24,19 @@ from etools.applications.utils.writable_serializers.serializers import WritableN
 
 class CategoryModelChoiceField(ModelChoiceField):
     def get_choice(self, obj):
-        return obj.id, obj.description
+        # todo: switch to (id, description) in closest future when frontend will be able to handle it correctly
+        return obj.description, obj.description
+
+    def to_representation(self, value):
+        return self.get_queryset().get(pk=value.pk).description
+
+    def to_internal_value(self, data):
+        try:
+            return self.get_queryset().get(description=data)
+        except self.queryset.ObjectDoesNotExist:
+            self.fail('does_not_exist', pk_value=data)
+        except (TypeError, ValueError):
+            self.fail('incorrect_type', data_type=type(data).__name__)
 
 
 class ActionPointBaseSerializer(UserContextSerializerMixin, SnapshotModelSerializer, serializers.ModelSerializer):

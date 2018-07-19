@@ -26,7 +26,7 @@ class TestActionPointViewSet(TestExportMixin, ActionPointsTestCaseMixin, BaseTen
         cls.unicef_user = UserFactory(unicef_user=True)
         cls.common_user = UserFactory()
         cls.create_data = {
-            'category': ActionPointCategoryFactory().id,
+            'category': ActionPointCategoryFactory().description,
             'description': 'do something',
             'due_date': date.today(),
             'assigned_to': cls.pme_user.id,
