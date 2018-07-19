@@ -2,6 +2,7 @@ Field no,Field Name,Group,Condition,Status,Action,Allowed
 3.2.2,agreement,Partnership Manager,,Draft,Edit,TRUE
 3.2.3,document_type,Partnership Manager,,Draft,Edit,TRUE
 3.2.4,number,Partnership Manager,user_adds_amendment,*,Edit,TRUE
+3.2.4,number,Partnership Manager,,Draft,Edit,TRUE
 3.2.5,title,Partnership Manager,,Draft,Edit,TRUE
 3.2.7,partner_focal_points,Partnership Manager,,Draft,Edit,TRUE
 3.2.7,partner_focal_points,Partnership Manager,,Signed,Edit,TRUE
@@ -52,6 +53,9 @@ Field no,Field Name,Group,Condition,Status,Action,Allowed
 3.3.5,sections,Partnership Manager,user_adds_amendment,*,Edit,TRUE
 3.4.1,result_links,Partnership Manager,user_adds_amendment+prp_mode_on,*,Edit,TRUE
 3.4.2,result_links,UNICEF User,prp_mode_on,*,View,TRUE
+3.7,reference_number_year,UNICEF User,,*,View,TRUE
+3.7,reference_number_year,UNICEF User,not_ssfa,Draft,Edit,TRUE
+3.7,reference_number_year,UNICEF User,not_ssfa,*,Required,TRUE
 3.5,planned_budget,Partnership Manager,user_adds_amendment,*,Edit,TRUE
 3.5,planned_budget,Partnership Manager,user_adds_amendment,*,Edit,TRUE
 3.6,planned_visits,Partnership Manager,user_adds_amendment,*,Edit,TRUE

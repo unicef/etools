@@ -72,7 +72,6 @@ class Country(TenantMixin):
     Represents a country which has many offices and sections
 
     Relates to :model:`users.Office`
-    Relates to :model:`users.Section`
     """
 
     name = models.CharField(max_length=100, verbose_name=_('Name'))
@@ -219,7 +218,6 @@ class UserProfile(models.Model):
 
     Relates to :model:`AUTH_USER_MODEL`
     Relates to :model:`users.Country`
-    Relates to :model:`users.Section`
     Relates to :model:`users.Office`
     """
 
