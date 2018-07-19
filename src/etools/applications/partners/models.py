@@ -1208,13 +1208,11 @@ class Agreement(TimeStampedModel):
         null=True, blank=True,
         on_delete=models.CASCADE,
     )
-
     signed_by_partner_date = models.DateField(
         verbose_name=_("Signed By Partner Date"),
         null=True,
         blank=True,
     )
-
     # Signatory on behalf of the PartnerOrganization
     partner_manager = models.ForeignKey(
         PartnerStaffMember,
@@ -1694,7 +1692,10 @@ class Intervention(TimeStampedModel):
         null=True,
         blank=True,
     )
-
+    signed_by_unicef = models.BooleanField(
+        blank=True, default=False,
+        verbose_name=_("Signed By UNICEF Authorized Officer")
+    )
     # partnership managers
     unicef_signatory = models.ForeignKey(
         settings.AUTH_USER_MODEL,

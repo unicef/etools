@@ -727,6 +727,7 @@ class TestInterventionValid(BaseTenantTestCase):
     def test_state_signed_valid(self):
         """Valid if unicef budget is not 0"""
         self.intervention.total_unicef_budget = 10
+        self.intervention.signed_by_unicef = True
         self.assertTrue(self.validator.state_signed_valid(self.intervention))
 
     def test_state_suspended_valid(self):
@@ -753,6 +754,7 @@ class TestInterventionValid(BaseTenantTestCase):
         """Valid if unicef budget is not 0 and start is before today"""
         self.intervention.total_unicef_budget = 10
         self.intervention.start = datetime.date(2001, 1, 1)
+        self.intervention.signed_by_unicef = True
         self.assertTrue(
             self.validator.state_active_valid(self.intervention)
         )
@@ -769,4 +771,5 @@ class TestInterventionValid(BaseTenantTestCase):
     def test_state_ended_valid(self):
         """Invalid if end date is after today"""
         self.intervention.end = datetime.date(2001, 1, 1)
+        self.intervention.signed_by_unicef = True
         self.assertTrue(self.validator.state_ended_valid(self.intervention))
