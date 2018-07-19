@@ -17,8 +17,7 @@ from etools.applications.partners.models import (
     Intervention,
     InterventionAmendment,
     InterventionAttachment,
-    PartnerOrganization,
-)
+    CoreValuesAssessment)
 from etools.applications.reports.models import CountryProgramme
 from etools.applications.utils.common.utils import run_on_all_tenants
 
@@ -29,7 +28,7 @@ def update_or_create_attachment(file_type, content_type, object_id, filename):
     logger.info("code: {}".format(file_type.code))
     logger.info("content type: {}".format(content_type))
     logger.info("object_id: {}".format(object_id))
-    attachment, created = Attachment.objects.update_or_create(
+    Attachment.objects.update_or_create(
         code=file_type.code,
         content_type=content_type,
         object_id=object_id,
@@ -98,17 +97,17 @@ def copy_core_values_assessments(**kwargs):
         }
     )
 
-    content_type = ContentType.objects.get_for_model(PartnerOrganization)
+    content_type = ContentType.objects.get_for_model(CoreValuesAssessment)
 
-    for partner in PartnerOrganization.objects.filter(
-            core_values_assessment__isnull=False,
+    for core_values_assessment in CoreValuesAssessment.objects.filter(
+            assessment__isnull=False,
             modified__gte=get_from_datetime(**kwargs)
     ).all():
         update_or_create_attachment(
             file_type,
             content_type,
-            partner.pk,
-            partner.core_values_assessment,
+            core_values_assessment.pk,
+            core_values_assessment.assessment,
         )
 
 
