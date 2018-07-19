@@ -23,6 +23,9 @@ from etools.applications.partners.serializers.interventions_v2 import Interventi
 
 
 class CoreValuesAssessmentSerializer(serializers.ModelSerializer):
+    attachment = AttachmentSingleFileField(read_only=True)
+    assessment = serializers.FileField(required=True)
+    assessment_file = serializers.FileField(source='assessment', read_only=True)
 
     class Meta:
         model = CoreValuesAssessment
