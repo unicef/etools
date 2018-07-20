@@ -489,6 +489,9 @@ class TravelActivity(models.Model):
         # TODO: to be used for generating link from action points dashboard to related object
         return ""
 
+    def __str__(self):
+        return '{} - {}'.format(self.travel_type, self.date)
+
 
 class ItineraryItem(models.Model):
     travel = models.ForeignKey(
