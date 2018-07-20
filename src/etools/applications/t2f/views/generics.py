@@ -4,10 +4,11 @@ from django.conf import settings
 from rest_framework import generics, status
 from rest_framework.response import Response
 
+from etools.applications.action_points.models import ActionPoint
 from etools.applications.partners.models import Intervention
 from etools.applications.publics.models import TravelAgent
 from etools.applications.t2f.helpers.permission_matrix import get_permission_matrix
-from etools.applications.t2f.models import ActionPoint, ModeOfTravel, TravelType
+from etools.applications.t2f.models import ModeOfTravel, TravelType
 from etools.applications.t2f.serializers.static_data import StaticDataSerializer
 from etools.applications.t2f.views import get_filtered_users
 from etools.applications.users.models import UserProfile
@@ -21,7 +22,7 @@ class StaticDataView(generics.GenericAPIView):
             'partnerships': Intervention.objects.all(),
             'travel_types': [c[0] for c in TravelType.CHOICES],
             'travel_modes': [c[0] for c in ModeOfTravel.CHOICES],
-            'action_point_statuses': [c[0] for c in ActionPoint.STATUS],
+            'action_point_statuses': [c[0] for c in ActionPoint.STATUSES],
         }
 
         serializer = self.get_serializer(data)

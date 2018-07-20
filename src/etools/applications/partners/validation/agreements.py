@@ -86,7 +86,7 @@ def signed_by_everyone_valid(agreement):
 
 def signatures_valid(agreement):
     today = date.today()
-    unicef_signing_requirements = [agreement.signed_by_unicef_date, agreement.signed_by]
+    unicef_signing_requirements = [agreement.signed_by_unicef_date]
     partner_signing_requirements = [agreement.signed_by_partner_date, agreement.partner_manager]
     if agreement.agreement_type == agreement.SSFA:
         if any(unicef_signing_requirements + partner_signing_requirements):

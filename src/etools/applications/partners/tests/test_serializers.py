@@ -329,6 +329,7 @@ class TestAgreementCreateUpdateSerializer(AgreementCreateUpdateSerializerBase):
             "agreement_type": Agreement.MOU,
             "partner": self.partner.id,
             "signed_by_partner_date": self.today,
+            "signed_by": signatory.id,
             "partner_manager": partner_signatory.id,
             "reference_number_year": datetime.date.today().year
         }
@@ -667,7 +668,7 @@ class TestAgreementSerializerTransitions(AgreementCreateUpdateSerializerBase):
     def test_ensure_field_read_write_status(self):
         """Ensure that the fields I expect to be read-only are read-only; also confirm the converse"""
         expected_read_only_fields = ('id', 'created', 'modified', 'partner_name', 'amendments', 'unicef_signatory',
-                                     'partner_signatory', 'agreement_number', 'attached_agreement_file')
+                                     'partner_signatory', 'agreement_number', 'attached_agreement_file', 'signed_by')
 
         serializer = AgreementCreateUpdateSerializer()
 

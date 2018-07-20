@@ -52,7 +52,7 @@ class ActionPointViewSet(
     )
     ordering_fields = (
         'cp_output__name', 'partner__name', 'section__name', 'office__name', 'assigned_to__first_name',
-        'assigned_to__last_name', 'due_date', 'status'
+        'assigned_to__last_name', 'due_date', 'status', 'pk'
     )
     filter_fields = (
         'assigned_by', 'assigned_to', 'high_priority', 'author', 'section', 'location',

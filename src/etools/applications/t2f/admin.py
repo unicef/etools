@@ -68,25 +68,6 @@ class ItineraryItemAdmin(admin.ModelAdmin):
     )
 
 
-class ActionPointAdmin(admin.ModelAdmin):
-    model = models.ActionPoint
-    list_filter = (
-        'travel',
-        'status',
-    )
-    search_fields = (
-        'action_point_number',
-        'travel__reference_number'
-    )
-    list_display = (
-        'action_point_number',
-        'travel',
-        'description',
-        'status',
-        'completed_at',
-    )
-
-
 class ExpenseAdmin(AdminListMixin, admin.ModelAdmin):
     pass
 
@@ -122,7 +103,6 @@ class InvoiceItemAdmin(AdminListMixin, admin.ModelAdmin):
 admin.site.register(models.TravelActivity, TravelActivityAdmin)
 admin.site.register(models.Travel, TravelAdmin)
 admin.site.register(models.ItineraryItem, ItineraryItemAdmin)
-admin.site.register(models.ActionPoint, ActionPointAdmin)
 admin.site.register(models.Expense, ExpenseAdmin)
 admin.site.register(models.Deduction, DeductionAdmin)
 admin.site.register(models.CostAssignment, CostAssignmentAdmin)
