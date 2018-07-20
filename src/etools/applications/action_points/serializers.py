@@ -46,7 +46,7 @@ class ActionPointBaseSerializer(UserContextSerializerMixin, SnapshotModelSeriali
             'author', 'assigned_by', 'assigned_to',
 
             'high_priority', 'due_date', 'description',
-
+            'office', 'section',
             'created', 'date_of_completion',
             'status', 'status_date',
         ]
@@ -167,7 +167,7 @@ class HistorySerializer(serializers.ModelSerializer):
 
 
 class ActionPointSerializer(WritableNestedSerializerMixin, ActionPointListSerializer):
-    comments = CommentSerializer(many=True, label=_('Actions Taken'))
+    comments = CommentSerializer(many=True, label=_('Actions Taken'), required=False)
     history = HistorySerializer(many=True, label=_('History'), read_only=True, source='get_meaningful_history')
 
     related_object_str = serializers.ReadOnlyField(label=_('Related Document'))

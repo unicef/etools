@@ -320,11 +320,15 @@ class InterventionValid(CompleteValidation):
         self.check_rigid_fields(intervention, related=True)
         if intervention.total_unicef_budget == 0:
             raise StateValidationError([_('UNICEF Cash $ or UNICEF Supplies $ should not be 0')])
+        if not intervention.signed_by_unicef:
+            raise StateValidationError([_('Signed by UNICEF Authorized Officer must be checked')])
         return True
 
     def state_suspended_valid(self, intervention, user=None):
         self.check_required_fields(intervention)
         self.check_rigid_fields(intervention, related=True)
+        if not intervention.signed_by_unicef:
+            raise StateValidationError([_('Signed by UNICEF Authorized Officer must be checked')])
         return True
 
     def state_active_valid(self, intervention, user=None):
@@ -336,6 +340,8 @@ class InterventionValid(CompleteValidation):
             raise StateValidationError([_('Today is not after the start date')])
         if intervention.total_unicef_budget == 0:
             raise StateValidationError([_('UNICEF Cash $ or UNICEF Supplies $ should not be 0')])
+        if not intervention.signed_by_unicef:
+            raise StateValidationError([_('Signed by UNICEF Authorized Officer must be checked')])
         return True
 
     def state_ended_valid(self, intervention, user=None):
@@ -345,4 +351,6 @@ class InterventionValid(CompleteValidation):
         today = date.today()
         if not today > intervention.end:
             raise StateValidationError([_('Today is not after the end date')])
+        if not intervention.signed_by_unicef:
+            raise StateValidationError([_('Signed by UNICEF Authorized Officer must be checked')])
         return True
