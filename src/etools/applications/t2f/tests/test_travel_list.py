@@ -135,39 +135,6 @@ class TravelList(URLAssertionMixin, BaseTenantTestCase):
         self.assertEqual(len(response_json['travels_by_section']), 1)
         self.assertEqual(response_json['planned'], 1)
 
-    def test_dashboard_action_points_list_view(self):
-        with self.assertNumQueries(6):
-            response = self.forced_auth_req(
-                'get',
-                reverse('t2f:action_points:dashboard'),
-                user=self.unicef_staff,
-                data={"office_id": self.travel.office.id}
-            )
-
-        response_json = json.loads(response.rendered_content)
-
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
-        expected_keys = ['action_points_by_section']
-        self.assertKeysIn(expected_keys, response_json)
-        self.assertEqual(len(response_json['action_points_by_section']), 1)
-        self.assertEqual(response_json['action_points_by_section'][0]['total_action_points'], 1)
-
-    def test_dashboard_action_points_list_view_no_office(self):
-        with self.assertNumQueries(6):
-            response = self.forced_auth_req(
-                'get',
-                reverse('t2f:action_points:dashboard'),
-                user=self.unicef_staff,
-            )
-
-        response_json = json.loads(response.rendered_content)
-
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
-        expected_keys = ['action_points_by_section']
-        self.assertKeysIn(expected_keys, response_json)
-        self.assertEqual(len(response_json['action_points_by_section']), 1)
-        self.assertEqual(response_json['action_points_by_section'][0]['total_action_points'], 1)
-
     def test_pagination(self):
         TravelFactory(traveler=self.traveler, supervisor=self.unicef_staff)
         TravelFactory(traveler=self.traveler, supervisor=self.unicef_staff)

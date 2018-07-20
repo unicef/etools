@@ -1,7 +1,6 @@
 
 from etools.applications.t2f.filters import BaseFilterBoxFilter, BaseSearchFilter, BaseSortFilter
-from etools.applications.t2f.serializers.filters.invoices import (InvoiceFilterBoxSerializer,
-                                                                  InvoiceSortFilterSerializer,)
+from etools.applications.t2f.serializers.filters.invoices import InvoiceFilterBoxSerializer, InvoiceSortFilterSerializer
 
 
 class InvoiceSearchFilter(BaseSearchFilter):

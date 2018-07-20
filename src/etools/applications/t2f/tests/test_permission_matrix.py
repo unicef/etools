@@ -5,11 +5,14 @@ from django.contrib.auth.models import Group
 from django.core.urlresolvers import reverse
 
 import mock
+from unicef_locations.tests.factories import LocationFactory
 
 from etools.applications.EquiTrack.tests.cases import BaseTenantTestCase
-from unicef_locations.tests.factories import LocationFactory
-from etools.applications.publics.tests.factories import (PublicsCurrencyFactory,
-                                                         PublicsDSARegionFactory, PublicsWBSFactory,)
+from etools.applications.publics.tests.factories import (
+    PublicsCurrencyFactory,
+    PublicsDSARegionFactory,
+    PublicsWBSFactory,
+)
 from etools.applications.t2f import UserTypes
 from etools.applications.t2f.helpers.permission_matrix import get_user_role_list, PermissionMatrix
 from etools.applications.t2f.models import ModeOfTravel, Travel, TravelType

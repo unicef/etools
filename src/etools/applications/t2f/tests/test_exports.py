@@ -13,13 +13,25 @@ from pytz import UTC
 from etools.applications.EquiTrack.tests.cases import BaseTenantTestCase
 from unicef_locations.tests.factories import LocationFactory
 from etools.applications.partners.tests.factories import InterventionFactory
-from etools.applications.publics.tests.factories import (PublicsAirlineCompanyFactory, PublicsCurrencyFactory,
-                                                         PublicsDSARateFactory, PublicsDSARegionFactory,
-                                                         PublicsFundFactory, PublicsGrantFactory, PublicsWBSFactory,)
+from etools.applications.publics.tests.factories import (
+    PublicsAirlineCompanyFactory,
+    PublicsCurrencyFactory,
+    PublicsDSARateFactory,
+    PublicsDSARegionFactory,
+    PublicsFundFactory,
+    PublicsGrantFactory,
+    PublicsWBSFactory,
+)
 from etools.applications.reports.tests.factories import ResultFactory, SectionFactory
 from etools.applications.t2f.models import Invoice, ModeOfTravel, TravelActivity, TravelType
-from etools.applications.t2f.tests.factories import (ExpenseFactory, InvoiceFactory, InvoiceItemFactory,
-                                                     ItineraryItemFactory, TravelActivityFactory, TravelFactory,)
+from etools.applications.t2f.tests.factories import (
+    ExpenseFactory,
+    InvoiceFactory,
+    InvoiceItemFactory,
+    ItineraryItemFactory,
+    TravelActivityFactory,
+    TravelFactory,
+)
 from etools.applications.users.tests.factories import OfficeFactory, UserFactory
 
 log = logging.getLogger('__name__')
