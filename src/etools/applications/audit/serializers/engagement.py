@@ -77,13 +77,13 @@ class DescriptionBasedCategoryChoiceField(ModelChoiceField):
     def to_representation(self, value):
         try:
             return self.get_queryset().get(pk=value.pk).description
-        except self.queryset.ObjectDoesNotExist:
+        except self.queryset.model.ObjectDoesNotExist:
             return None
 
     def to_internal_value(self, data):
         try:
             return self.get_queryset().get(description=data)
-        except self.queryset.ObjectDoesNotExist:
+        except self.queryset.model.ObjectDoesNotExist:
             self.fail('does_not_exist', pk_value=data)
         except (TypeError, ValueError):
             self.fail('incorrect_type', data_type=type(data).__name__)
