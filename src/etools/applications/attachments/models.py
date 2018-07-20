@@ -235,6 +235,10 @@ class AttachmentFlat(models.Model):
         blank=True,
         verbose_name=_('Agreement Reference Number')
     )
+    agreement_link = models.URLField(
+        blank=True,
+        verbose_name=_('Agreement Link')
+    )
     file_type = models.CharField(
         max_length=100,
         blank=True,

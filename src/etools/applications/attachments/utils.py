@@ -1,3 +1,5 @@
+from django.urls import reverse
+
 from etools.applications.audit.models import Engagement
 from etools.applications.partners.models import (
     Agreement,
@@ -91,11 +93,14 @@ def get_agreement_obj(obj):
     return ""
 
 
-def get_agreement_reference_number(obj):
+def get_agreement_info(obj):
     agreement = get_agreement_obj(obj)
     if agreement:
-        return agreement.reference_number
-    return ""
+        return (
+            reverse("partners_api:agreement-detail", args=[agreement.pk]),
+            agreement.reference_number
+        )
+    return "", ""
 
 
 def denormalize_attachment(attachment):
@@ -105,7 +110,7 @@ def denormalize_attachment(attachment):
     partner_type = get_partner_type(attachment)
     vendor_number = get_vendor_number(attachment)
     pd_ssfa_number = get_pd_ssfa_number(attachment)
-    agreement_reference_number = get_agreement_reference_number(attachment)
+    agreement_link, agreement_reference_number = get_agreement_info(attachment)
     file_type = get_file_type(attachment)
     uploaded_by = attachment.uploaded_by.get_full_name() if attachment.uploaded_by else ""
 
@@ -117,6 +122,7 @@ def denormalize_attachment(attachment):
             "vendor_number": vendor_number,
             "pd_ssfa_number": pd_ssfa_number,
             "agreement_reference_number": agreement_reference_number,
+            "agreement_link": agreement_link,
             "file_type": file_type,
             "file_link": attachment.file_link,
             "filename": attachment.filename,
