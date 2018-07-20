@@ -67,7 +67,9 @@ class TestPartners(BaseTenantTestCase, metaclass=ViewSetChecker):
         )
         partner_not_programmatic_visit_compliant = PartnerFactory(
             net_ct_cy=PartnerOrganization.CT_MR_AUDIT_TRIGGER_LEVEL + 1,
-            hact_values={'programmatic_visits': {'completed': {'total': 0}}}
+            hact_values={'programmatic_visits': {'completed': {'total': 0}}},
+            hidden=False,
+            reported_cy=10000
         )
         return {
             'partner': partner,
