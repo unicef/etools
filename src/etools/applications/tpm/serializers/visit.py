@@ -77,7 +77,8 @@ class TPMActionPointSerializer(PermissionsBasedSerializerMixin, ActionPointBaseS
     class Meta(ActionPointBaseSerializer.Meta):
         model = TPMActionPoint
         fields = ActionPointBaseSerializer.Meta.fields + [
-            'tpm_activity', 'section', 'office', 'history', 'is_responsible', 'url'
+            'partner', 'intervention', 'cp_output', 'location', 'tpm_activity',
+            'section', 'office', 'history', 'is_responsible', 'url'
         ]
         fields.remove('category')
         extra_kwargs = copy(ActionPointBaseSerializer.Meta.extra_kwargs)
