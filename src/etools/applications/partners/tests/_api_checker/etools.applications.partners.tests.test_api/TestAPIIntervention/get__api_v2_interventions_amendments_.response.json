@@ -20,19 +20,19 @@
     },
     "data": [
         {
-            "id": 9,
+            "id": 1,
             "amendment_number": "1",
-            "signed_amendment_file": "http://testserver/media/test/file_attachments/partner_organization/249/249/agreements/235/interventions/218/amendments/None/test_file.pdf",
+            "signed_amendment_file": "http://testserver/media/test/file_attachments/partner_organization/124/124/agreements/124/interventions/120/amendments/None/test_file.pdf",
             "signed_amendment_attachment": null,
-            "created": "2018-07-17T16:23:47.735000Z",
-            "modified": "2018-07-17T16:23:47.782000Z",
+            "created": "2018-07-20T21:19:08.152000Z",
+            "modified": "2018-07-20T21:19:08.202000Z",
             "types": [
                 "Change banking info"
             ],
-            "other_description": "tTwDUCwtgwyuRbvpPjuTxGBJFJVxeZwJqVkEQuxzSkxTdmnale",
-            "signed_date": "2018-07-17",
-            "signed_amendment": "http://testserver/media/test/file_attachments/partner_organization/249/249/agreements/235/interventions/218/amendments/None/test_file.pdf",
-            "intervention": 218
+            "other_description": "ltyZLyNrCLdpTWgTmCOELHLSGBKULsSzeBXOsvBxwwgCXwycvZ",
+            "signed_date": "2018-07-20",
+            "signed_amendment": "http://testserver/media/test/file_attachments/partner_organization/124/124/agreements/124/interventions/120/amendments/None/test_file.pdf",
+            "intervention": 120
         }
     ],
     "content_type": null

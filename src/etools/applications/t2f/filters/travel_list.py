@@ -8,9 +8,11 @@ from rest_framework.filters import BaseFilterBackend
 
 from etools.applications.t2f.filters import BaseFilterBoxFilter, BaseSearchFilter, BaseSortFilter
 from etools.applications.t2f.models import Travel
-from etools.applications.t2f.serializers.filters.travel_list import (ShowHiddenFilterSerializer,
-                                                                     TravelFilterBoxSerializer,
-                                                                     TravelSortFilterSerializer,)
+from etools.applications.t2f.serializers.filters.travel_list import (
+    ShowHiddenFilterSerializer,
+    TravelFilterBoxSerializer,
+    TravelSortFilterSerializer,
+)
 
 
 class TravelSearchFilter(BaseSearchFilter):

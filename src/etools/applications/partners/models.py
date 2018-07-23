@@ -209,12 +209,12 @@ class PartnerOrganizationQuerySet(models.QuerySet):
         return self.filter(Q(reported_cy__gt=0) | Q(total_ct_cy__gt=0), hidden=False, *args, **kwargs)
 
     def not_programmatic_visit_compliant(self, *args, **kwargs):
-        return self.filter(net_ct_cy__gt=PartnerOrganization.CT_MR_AUDIT_TRIGGER_LEVEL,
+        return self.active(net_ct_cy__gt=PartnerOrganization.CT_MR_AUDIT_TRIGGER_LEVEL,
                            hact_values__programmatic_visits__completed__total=0,
                            *args, **kwargs)
 
     def not_spot_check_compliant(self, *args, **kwargs):
-        return self.filter(Q(reported_cy__gt=PartnerOrganization.CT_CP_AUDIT_TRIGGER_LEVEL) |
+        return self.active(Q(reported_cy__gt=PartnerOrganization.CT_CP_AUDIT_TRIGGER_LEVEL) |
                            Q(planned_engagement__spot_check_planned_q1__gt=0) |
                            Q(planned_engagement__spot_check_planned_q2__gt=0) |
                            Q(planned_engagement__spot_check_planned_q3__gt=0) |
@@ -1208,13 +1208,11 @@ class Agreement(TimeStampedModel):
         null=True, blank=True,
         on_delete=models.CASCADE,
     )
-
     signed_by_partner_date = models.DateField(
         verbose_name=_("Signed By Partner Date"),
         null=True,
         blank=True,
     )
-
     # Signatory on behalf of the PartnerOrganization
     partner_manager = models.ForeignKey(
         PartnerStaffMember,
@@ -1694,7 +1692,10 @@ class Intervention(TimeStampedModel):
         null=True,
         blank=True,
     )
-
+    signed_by_unicef = models.BooleanField(
+        blank=True, default=False,
+        verbose_name=_("Signed By UNICEF Authorized Officer")
+    )
     # partnership managers
     unicef_signatory = models.ForeignKey(
         settings.AUTH_USER_MODEL,
