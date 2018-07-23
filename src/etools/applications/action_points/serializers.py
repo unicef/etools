@@ -32,9 +32,18 @@ class ActionPointBaseSerializer(UserContextSerializerMixin, SnapshotModelSeriali
     author = MinimalUserSerializer(read_only=True, label=_('Author'))
     assigned_by = MinimalUserSerializer(read_only=True, label=_('Assigned By'))
     assigned_to = SeparatedReadWriteField(
-        read_field=MinimalUserSerializer(read_only=True, label=_('Assigned To')),
+        read_field=MinimalUserSerializer(read_only=True, label=_('Assignee')),
         required=True
     )
+    section = SeparatedReadWriteField(
+        read_field=SectionSerializer(read_only=True, label=_('Section of Assignee')),
+        required=True,
+    )
+    office = SeparatedReadWriteField(
+        read_field=OfficeSerializer(read_only=True, label=_('Office of Assignee')),
+        required=True
+    )
+
     category = CategoryModelChoiceField(label=_('Category'), required=True, queryset=Category.objects.all())
 
     status_date = serializers.DateTimeField(read_only=True, label=_('Status Date'))
@@ -92,22 +101,10 @@ class ActionPointListSerializer(PermissionsBasedSerializerMixin, ActionPointBase
         read_field=LocationLightSerializer(read_only=True, label=_('Location')),
     )
 
-    section = SeparatedReadWriteField(
-        read_field=SectionSerializer(read_only=True, label=_('Section')),
-        required=True,
-    )
-    office = SeparatedReadWriteField(
-        read_field=OfficeSerializer(read_only=True, label=_('Office')),
-        required=True
-    )
-
     class Meta(ActionPointBaseSerializer.Meta):
         fields = ActionPointBaseSerializer.Meta.fields + [
             'related_module',
-
-            'section', 'office', 'location',
-            'partner', 'cp_output', 'intervention',
-
+            'cp_output', 'partner', 'intervention', 'location',
             'engagement', 'tpm_activity', 'travel_activity',
         ]
 
