@@ -1,4 +1,3 @@
-
 import csv
 import datetime
 import json
@@ -17,27 +16,55 @@ import mock
 from model_utils import Choices
 from rest_framework import status
 from rest_framework.test import APIRequestFactory
+from unicef_snapshot.models import Activity
 
+from etools.applications.attachments.tests.factories import AttachmentFileTypeFactory
 from etools.applications.EquiTrack.tests.cases import BaseTenantTestCase
 from etools.applications.EquiTrack.tests.mixins import URLAssertionMixin
 from etools.applications.funds.models import FundsCommitmentHeader, FundsCommitmentItem
 from etools.applications.funds.tests.factories import FundsReservationHeaderFactory
-from etools.applications.partners.models import (Agreement, AgreementAmendment, Assessment, FileType, Intervention,
-                                                 InterventionAmendment, InterventionAttachment, InterventionBudget,
-                                                 InterventionPlannedVisits, InterventionReportingPeriod,
-                                                 InterventionSectorLocationLink, PartnerOrganization, PartnerType,)
+from etools.applications.partners.models import (
+    Agreement,
+    AgreementAmendment,
+    Assessment,
+    FileType,
+    Intervention,
+    InterventionAmendment,
+    InterventionAttachment,
+    InterventionBudget,
+    InterventionPlannedVisits,
+    InterventionReportingPeriod,
+    InterventionSectorLocationLink,
+    PartnerOrganization,
+    PartnerType,
+)
 from etools.applications.partners.permissions import READ_ONLY_API_GROUP_NAME
-from etools.applications.partners.serializers.exports.partner_organization import PartnerOrganizationExportSerializer
-from etools.applications.partners.tests.factories import (AgreementAmendmentFactory, AgreementFactory,
-                                                          InterventionFactory, InterventionReportingPeriodFactory,
-                                                          InterventionResultLinkFactory, PartnerFactory,
-                                                          PartnerStaffFactory, PlannedEngagementFactory,)
+from etools.applications.partners.serializers.exports.partner_organization import (
+    PartnerOrganizationExportSerializer,
+)
+from etools.applications.partners.tests.factories import (
+    AgreementAmendmentFactory,
+    AgreementFactory,
+    InterventionFactory,
+    InterventionReportingPeriodFactory,
+    InterventionResultLinkFactory,
+    PartnerFactory,
+    PartnerStaffFactory,
+    PlannedEngagementFactory,
+)
 from etools.applications.partners.views import partner_organization_v2, v2
 from etools.applications.reports.models import ResultType
-from etools.applications.reports.tests.factories import (CountryProgrammeFactory, ResultFactory,
-                                                         ResultTypeFactory, SectorFactory,)
-from etools.applications.snapshot.models import Activity
-from etools.applications.users.tests.factories import GroupFactory, OfficeFactory, UserFactory
+from etools.applications.reports.tests.factories import (
+    CountryProgrammeFactory,
+    ResultFactory,
+    ResultTypeFactory,
+    SectionFactory,
+)
+from etools.applications.users.tests.factories import (
+    GroupFactory,
+    OfficeFactory,
+    UserFactory,
+)
 
 
 class URLsTestCase(URLAssertionMixin, SimpleTestCase):
@@ -828,6 +855,9 @@ class TestAgreementCreateAPIView(BaseTenantTestCase):
         cls.partnership_manager_user.groups.add(GroupFactory())
         cls.partnership_manager_user.profile.partner_staff_member = partner_staff.id
         cls.partnership_manager_user.save()
+        cls.file_type_agreement = AttachmentFileTypeFactory(
+            code="partners_agreement"
+        )
 
     def test_minimal_create(self):
         '''Test passing as few fields as possible to create'''
@@ -835,6 +865,7 @@ class TestAgreementCreateAPIView(BaseTenantTestCase):
         data = {
             "agreement_type": Agreement.MOU,
             "partner": self.partner.id,
+            "reference_number_year": datetime.date.today().year
         }
         response = self.forced_auth_req(
             'post',
@@ -856,6 +887,7 @@ class TestAgreementCreateAPIView(BaseTenantTestCase):
         data = {
             "agreement_type": Agreement.PCA,
             "partner": self.partner.id,
+            "reference_number_year": datetime.date.today().year
         }
         response = self.forced_auth_req(
             'post',
@@ -886,6 +918,9 @@ class TestAgreementAPIFileAttachments(BaseTenantTestCase):
             agreement_type=Agreement.MOU,
             partner=cls.partner,
             attached_agreement=None,
+        )
+        cls.file_type_agreement = AttachmentFileTypeFactory(
+            code="partners_agreement"
         )
 
     def _get_and_assert_response(self):
@@ -1051,6 +1086,9 @@ class TestAgreementAPIView(BaseTenantTestCase):
         cls.intervention = InterventionFactory(
             agreement=cls.agreement,
             document_type=Intervention.PD)
+        cls.file_type_agreement = AttachmentFileTypeFactory(
+            code="partners_agreement"
+        )
 
     def test_cp_end_date_update(self):
         data = {
@@ -1402,6 +1440,7 @@ class TestInterventionViews(BaseTenantTestCase):
             "end": (timezone.now().date() + datetime.timedelta(days=31)).isoformat(),
             "unicef_budget": 0,
             "agreement": self.agreement.id,
+            "reference_number_year": datetime.date.today().year
         }
         response = self.forced_auth_req(
             'post',
@@ -1411,7 +1450,7 @@ class TestInterventionViews(BaseTenantTestCase):
         )
 
         self.intervention = response.data
-        self.section = SectorFactory()
+        self.section = SectionFactory()
 
         self.fund_commitment_header = FundsCommitmentHeader.objects.create(
             vendor_code="test1",
@@ -1490,6 +1529,7 @@ class TestInterventionViews(BaseTenantTestCase):
             ],
             "amendments": [],
             "attachments": [],
+            "reference_number_year": datetime.date.today().year
         }
 
         response = self.forced_auth_req(
@@ -1554,6 +1594,7 @@ class TestInterventionViews(BaseTenantTestCase):
             "end": (timezone.now().date() + datetime.timedelta(days=31)).isoformat(),
             "unicef_budget": 0,
             "agreement": self.agreement.id,
+            "reference_number_year": datetime.date.today().year
         }
         response = self.forced_auth_req(
             'post',
@@ -1572,6 +1613,7 @@ class TestInterventionViews(BaseTenantTestCase):
             "end": (timezone.now().date() + datetime.timedelta(days=31)).isoformat(),
             "unicef_budget": 0,
             "agreement": self.agreement.id,
+            "reference_number_year": datetime.date.today().year
         }
         response = self.forced_auth_req(
             'post',
@@ -1664,7 +1706,7 @@ class TestInterventionViews(BaseTenantTestCase):
         self.assertEqual(response.data, ["Cannot change fields while intervention is active: unicef_cash"])
 
     @skip('TODO: update test when new validation requirement is built')
-    def test_intervention_active_update_sector_locations(self):
+    def test_intervention_active_update_section_locations(self):
         intervention_obj = Intervention.objects.get(id=self.intervention_data["id"])
         intervention_obj.status = Intervention.DRAFT
         intervention_obj.save()
@@ -1790,7 +1832,8 @@ class TestInterventionViews(BaseTenantTestCase):
             "document_type": Intervention.PD,
             "country_programme": country_programme.pk,
             "unicef_focal_points": user.pk,
-            "office": office.pk
+            "office": office.pk,
+            "reference_number_year": datetime.date.today().year
         }
         response = self.forced_auth_req(
             'get',
@@ -2072,7 +2115,7 @@ class TestPartnershipDashboardView(BaseTenantTestCase):
         )
         self.intervention = response.data
 
-        self.section = SectorFactory()
+        self.section = SectionFactory()
 
         # Basic data to adjust in tests
         self.intervention_data = {

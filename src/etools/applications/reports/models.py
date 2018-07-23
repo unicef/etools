@@ -10,7 +10,7 @@ from model_utils.fields import AutoCreatedField, AutoLastModifiedField
 from model_utils.models import TimeStampedModel
 from mptt.models import MPTTModel, TreeForeignKey
 
-from etools.applications.locations.models import Location
+from unicef_locations.models import Location
 
 
 class Quarter(models.Model):
@@ -605,14 +605,9 @@ class AppliedIndicator(TimeStampedModel):
         null=True,
         blank=True,
     )
-    target = models.PositiveIntegerField(verbose_name=_("Target"), default=0)
-    baseline = models.PositiveIntegerField(
-        verbose_name=_("Baseline"),
-        null=True,
-        blank=True,
-    )
-    target_new = JSONField(default=dict([('d', 1), ('v', 0)]))
-    baseline_new = JSONField(default=dict([('d', 1), ('v', 0)]))
+
+    target = JSONField(default=dict([('d', 1), ('v', 0)]))
+    baseline = JSONField(default=dict([('d', 1), ('v', 0)]), null=True)
 
     assumptions = models.TextField(
         verbose_name=_("Assumptions"),

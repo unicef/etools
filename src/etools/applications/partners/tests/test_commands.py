@@ -11,7 +11,8 @@ from etools.applications.partners.models import Agreement, Intervention
 from etools.applications.partners.tests.factories import (AgreementAmendmentFactory, AgreementFactory,
                                                           AssessmentFactory, InterventionAmendmentFactory,
                                                           InterventionAttachmentFactory,
-                                                          InterventionFactory, PartnerFactory,)
+                                                          InterventionFactory, PartnerFactory,
+                                                          CoreValuesAssessmentFactory)
 from etools.applications.reports.tests.factories import CountryProgrammeFactory
 
 
@@ -45,6 +46,9 @@ class TestCopyAttachments(BaseTenantTestCase):
         cls.partner = PartnerFactory(
             core_values_assessment="sample.pdf"
         )
+        cls.core_values_assessment = CoreValuesAssessmentFactory(
+            assessment="sample.pdf"
+        )
         cls.agreement = AgreementFactory(
             attached_agreement="sample.pdf"
         )
@@ -67,7 +71,7 @@ class TestCopyAttachments(BaseTenantTestCase):
 
     def test_partner_create(self):
         attachment_qs = Attachment.objects.filter(
-            object_id=self.partner.pk,
+            object_id=self.core_values_assessment.pk,
             code=self.file_type_partner.code,
             file_type=self.file_type_partner
         )
@@ -82,7 +86,7 @@ class TestCopyAttachments(BaseTenantTestCase):
 
     def test_partner_update(self):
         attachment = AttachmentFactory(
-            content_object=self.partner,
+            content_object=self.core_values_assessment,
             file_type=self.file_type_partner,
             code=self.file_type_partner.code,
             file="random.pdf"
@@ -298,7 +302,7 @@ class TestSendPCARequiredNotifications(BaseTenantTestCase):
         call_command("update_notifications")
 
     def test_command(self):
-        send_path = "etools.applications.partners.utils.send_notification_using_email_template"
+        send_path = "etools.applications.partners.utils.send_notification_with_template"
         lead_date = datetime.date.today() + datetime.timedelta(
             days=settings.PCA_REQUIRED_NOTIFICATION_LEAD
         )
@@ -321,7 +325,7 @@ class TestSendPCAMissingNotifications(BaseTenantTestCase):
         call_command("update_notifications")
 
     def test_command(self):
-        send_path = "etools.applications.partners.utils.send_notification_using_email_template"
+        send_path = "etools.applications.partners.utils.send_notification_with_template"
         date_past = datetime.date.today() - datetime.timedelta(days=10)
         date_future = datetime.date.today() + datetime.timedelta(days=10)
         partner = PartnerFactory()

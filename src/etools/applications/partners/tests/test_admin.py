@@ -1,15 +1,26 @@
+import datetime
 
 from django.contrib.admin.sites import AdminSite
 
+from unicef_snapshot.models import Activity
+
 from etools.applications.EquiTrack.tests.cases import BaseTenantTestCase
 from etools.applications.funds.tests.factories import GrantFactory
-from etools.applications.partners.admin import (AgreementAdmin, FundingCommitmentAdmin,
-                                                InterventionAdmin, PartnerStaffMemberAdmin,)
+from etools.applications.partners.admin import (
+    AgreementAdmin,
+    FundingCommitmentAdmin,
+    InterventionAdmin,
+    PartnerStaffMemberAdmin,
+)
 from etools.applications.partners.models import Agreement, FundingCommitment, Intervention, PartnerStaffMember
-from etools.applications.partners.tests.factories import (AgreementFactory, FundingCommitmentFactory,
-                                                          InterventionFactory, PartnerFactory, PartnerStaffFactory,)
+from etools.applications.partners.tests.factories import (
+    AgreementFactory,
+    FundingCommitmentFactory,
+    InterventionFactory,
+    PartnerFactory,
+    PartnerStaffFactory,
+)
 from etools.applications.reports.tests.factories import CountryProgrammeFactory
-from etools.applications.snapshot.models import Activity
 from etools.applications.users.tests.factories import UserFactory
 
 
@@ -115,6 +126,7 @@ class TestAgreementAdmin(TestAdminCase):
             partner=self.partner,
             country_programme=CountryProgrammeFactory(),
             agreement_type=Agreement.PCA,
+            reference_number_year=datetime.date.today().year
         )
         aa = AgreementAdmin(Agreement, self.site)
         aa.save_model(self.request, obj, {}, False)

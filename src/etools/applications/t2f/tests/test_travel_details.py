@@ -5,18 +5,22 @@ from io import StringIO
 from django.core.urlresolvers import reverse
 
 import factory
-from freezegun import freeze_time
 from pytz import UTC
 
 from etools.applications.EquiTrack.tests.cases import BaseTenantTestCase
 from etools.applications.EquiTrack.tests.mixins import URLAssertionMixin
-from etools.applications.locations.tests.factories import LocationFactory
+from unicef_locations.tests.factories import LocationFactory
 from etools.applications.partners.models import PartnerType
 from etools.applications.partners.tests.factories import InterventionFactory, PartnerFactory
 from etools.applications.publics.models import DSARegion
-from etools.applications.publics.tests.factories import (PublicsAirlineCompanyFactory, PublicsBusinessAreaFactory,
-                                                         PublicsCurrencyFactory, PublicsDSARegionFactory,
-                                                         PublicsTravelExpenseTypeFactory, PublicsWBSFactory,)
+from etools.applications.publics.tests.factories import (
+    PublicsAirlineCompanyFactory,
+    PublicsBusinessAreaFactory,
+    PublicsCurrencyFactory,
+    PublicsDSARegionFactory,
+    PublicsTravelExpenseTypeFactory,
+    PublicsWBSFactory,
+)
 from etools.applications.t2f.models import ModeOfTravel, Travel, TravelAttachment, TravelType
 from etools.applications.t2f.tests.factories import ItineraryItemFactory, TravelAttachmentFactory, TravelFactory
 from etools.applications.users.tests.factories import UserFactory
@@ -51,7 +55,7 @@ class TravelDetails(URLAssertionMixin, BaseTenantTestCase):
         self.assertIntParamRegexes(names_and_paths, 't2f:travels:details:')
 
     def test_details_view(self):
-        with self.assertNumQueries(25):
+        with self.assertNumQueries(23):
             response = self.forced_auth_req('get', reverse('t2f:travels:details:index',
                                                            kwargs={'travel_pk': self.travel.id}),
                                             user=self.unicef_staff)
@@ -61,9 +65,8 @@ class TravelDetails(URLAssertionMixin, BaseTenantTestCase):
                            'completed_at', 'certification_note', 'misc_expenses', 'traveler', 'id', 'additional_note',
                            'section', 'clearances', 'cost_assignments', 'start_date', 'status', 'activities',
                            'rejection_note', 'end_date', 'mode_of_travel', 'international_travel',
-                           'first_submission_date', 'deductions', 'purpose', 'report', 'action_points',
-                           'reference_number', 'cost_summary', 'currency', 'canceled_at', 'estimated_travel_cost',
-                           'itinerary'],
+                           'first_submission_date', 'deductions', 'purpose', 'report', 'itinerary',
+                           'reference_number', 'cost_summary', 'currency', 'canceled_at', 'estimated_travel_cost'],
                           response_json,
                           exact=True)
 
@@ -73,7 +76,7 @@ class TravelDetails(URLAssertionMixin, BaseTenantTestCase):
             name=u'\u0628\u0631\u0646\u0627\u0645\u062c \u062a\u062f\u0631\u064a\u0628 \u0627\u0644\u0645\u062a\u0627\u0628\u0639\u064a\u0646.pdf',  # noqa
             file=factory.django.FileField(filename=u'travels/lebanon/24800/\u0628\u0631\u0646\u0627\u0645\u062c_\u062a\u062f\u0631\u064a\u0628_\u0627\u0644\u0645\u062a\u0627\u0628\u0639\u064a\u0646.pdf')  # noqa
         )
-        with self.assertNumQueries(25):
+        with self.assertNumQueries(23):
             response = self.forced_auth_req(
                 'get',
                 reverse('t2f:travels:details:index', args=[self.travel.pk]),
@@ -85,10 +88,9 @@ class TravelDetails(URLAssertionMixin, BaseTenantTestCase):
             ['cancellation_note', 'supervisor', 'attachments', 'office', 'expenses', 'ta_required',
              'completed_at', 'certification_note', 'misc_expenses', 'traveler', 'id', 'additional_note',
              'section', 'clearances', 'cost_assignments', 'start_date', 'status', 'activities',
-             'rejection_note', 'end_date', 'mode_of_travel', 'international_travel',
-             'first_submission_date', 'deductions', 'purpose', 'report', 'action_points',
-             'reference_number', 'cost_summary', 'currency', 'canceled_at', 'estimated_travel_cost',
-             'itinerary'],
+             'rejection_note', 'end_date', 'mode_of_travel', 'international_travel', 'itinerary',
+             'first_submission_date', 'deductions', 'purpose', 'report',
+             'reference_number', 'cost_summary', 'currency', 'canceled_at', 'estimated_travel_cost'],
             response_json,
             exact=True
         )
@@ -619,33 +621,6 @@ class TravelDetails(URLAssertionMixin, BaseTenantTestCase):
         response_json = json.loads(response.rendered_content)
         self.assertEqual(response_json, {'activities': [{'primary_traveler': ['This field is required.']}]})
 
-    def test_action_points(self):
-        response = self.forced_auth_req('get', reverse('t2f:travels:details:index',
-                                                       kwargs={'travel_pk': self.travel.id}),
-                                        user=self.unicef_staff)
-        response_json = json.loads(response.rendered_content)
-
-        self.assertEqual(len(response_json['action_points']), 1)
-
-        action_point_list = response_json['action_points']
-        action_point_list.append({'status': 'open',
-                                  'due_date': '2017-01-02T20:20:19.565210Z',
-                                  'description': 'desc',
-                                  'follow_up': True,
-                                  'actions_taken': None,
-                                  'assigned_by': 1216,
-                                  'comments': None,
-                                  'completed_at': None,
-                                  'person_responsible': 1217})
-        data = {'action_points': action_point_list}
-        response = self.forced_auth_req('patch', reverse('t2f:travels:details:index',
-                                                         kwargs={'travel_pk': self.travel.id}),
-                                        data=data,
-                                        user=self.unicef_staff)
-        response_json = json.loads(response.rendered_content)
-
-        self.assertEqual(len(response_json['action_points']), 2)
-
     def test_reversed_itinerary_order(self):
         dsa_1 = DSARegion.objects.first()
         dsa_2 = PublicsDSARegionFactory()
@@ -777,64 +752,64 @@ class TravelDetails(URLAssertionMixin, BaseTenantTestCase):
                                         data=data, user=self.unicef_staff)
         self.assertEqual(response.status_code, 201)
 
-    @freeze_time('2017-02-15')
-    def test_action_point_500(self):
-        dsa = PublicsDSARegionFactory()
-        currency = PublicsCurrencyFactory()
-
-        data = {'deductions': [{'date': '2017-02-20',
-                                'breakfast': False,
-                                'lunch': False,
-                                'dinner': False,
-                                'accomodation': False,
-                                'no_dsa': False},
-                               {'date': '2017-02-21',
-                                'breakfast': False,
-                                'lunch': False,
-                                'dinner': False,
-                                'accomodation': False,
-                                'no_dsa': False},
-                               {'date': '2017-02-22',
-                                'breakfast': False,
-                                'lunch': False,
-                                'dinner': False,
-                                'accomodation': False,
-                                'no_dsa': False},
-                               {'date': '2017-02-23',
-                                'breakfast': False,
-                                'lunch': False,
-                                'dinner': False,
-                                'accomodation': False,
-                                'no_dsa': False}],
-                'itinerary': [{'airlines': [],
-                               'origin': 'A',
-                               'destination': 'B',
-                               'dsa_region': dsa.id,
-                               'departure_date': '2017-02-19T23:00:00.355Z',
-                               'arrival_date': '2017-02-20T23:00:00.362Z',
-                               'mode_of_travel': 'car'},
-                              {'origin': 'B',
-                               'destination': 'A',
-                               'dsa_region': dsa.id,
-                               'departure_date': '2017-02-22T23:00:00.376Z',
-                               'arrival_date': '2017-02-23T23:00:00.402Z',
-                               'mode_of_travel': 'car'}],
-                'cost_assignments': [],
-                'expenses': [],
-                'action_points': [{'description': 'Test',
-                                   'due_date': '2017-02-21T23:00:00.237Z',
-                                   'person_responsible': self.unicef_staff.id,
-                                   'follow_up': True,
-                                   'status': 'open',
-                                   'completed_at': '2017-02-21T23:00:00.259Z',
-                                   'actions_taken': 'asdasd'}],
-                'ta_required': True,
-                'currency': currency.id,
-                'supervisor': self.unicef_staff.id,
-                'traveler': self.traveler.id}
-        response = self.forced_auth_req('post', reverse('t2f:travels:list:index'),
-                                        data=data, user=self.unicef_staff)
-        self.assertEqual(response.status_code, 201, response.rendered_content)
+    # @freeze_time('2017-02-15')
+    # def test_action_point_500(self):
+    #     dsa = PublicsDSARegionFactory()
+    #     currency = PublicsCurrencyFactory()
+    #
+    #     data = {'deductions': [{'date': '2017-02-20',
+    #                             'breakfast': False,
+    #                             'lunch': False,
+    #                             'dinner': False,
+    #                             'accomodation': False,
+    #                             'no_dsa': False},
+    #                            {'date': '2017-02-21',
+    #                             'breakfast': False,
+    #                             'lunch': False,
+    #                             'dinner': False,
+    #                             'accomodation': False,
+    #                             'no_dsa': False},
+    #                            {'date': '2017-02-22',
+    #                             'breakfast': False,
+    #                             'lunch': False,
+    #                             'dinner': False,
+    #                             'accomodation': False,
+    #                             'no_dsa': False},
+    #                            {'date': '2017-02-23',
+    #                             'breakfast': False,
+    #                             'lunch': False,
+    #                             'dinner': False,
+    #                             'accomodation': False,
+    #                             'no_dsa': False}],
+    #             'itinerary': [{'airlines': [],
+    #                            'origin': 'A',
+    #                            'destination': 'B',
+    #                            'dsa_region': dsa.id,
+    #                            'departure_date': '2017-02-19T23:00:00.355Z',
+    #                            'arrival_date': '2017-02-20T23:00:00.362Z',
+    #                            'mode_of_travel': 'car'},
+    #                           {'origin': 'B',
+    #                            'destination': 'A',
+    #                            'dsa_region': dsa.id,
+    #                            'departure_date': '2017-02-22T23:00:00.376Z',
+    #                            'arrival_date': '2017-02-23T23:00:00.402Z',
+    #                            'mode_of_travel': 'car'}],
+    #             'cost_assignments': [],
+    #             'expenses': [],
+    #             'action_points': [{'description': 'Test',
+    #                                'due_date': '2017-02-21T23:00:00.237Z',
+    #                                'person_responsible': self.unicef_staff.id,
+    #                                'follow_up': True,
+    #                                'status': 'open',
+    #                                'completed_at': '2017-02-21T23:00:00.259Z',
+    #                                'actions_taken': 'asdasd'}],
+    #             'ta_required': True,
+    #             'currency': currency.id,
+    #             'supervisor': self.unicef_staff.id,
+    #             'traveler': self.traveler.id}
+    #     response = self.forced_auth_req('post', reverse('t2f:travels:list:index'),
+    #                                     data=data, user=self.unicef_staff)
+    #     self.assertEqual(response.status_code, 201, response.rendered_content)
 
     def test_travel_count_at_approval(self):
         TravelFactory(traveler=self.traveler,

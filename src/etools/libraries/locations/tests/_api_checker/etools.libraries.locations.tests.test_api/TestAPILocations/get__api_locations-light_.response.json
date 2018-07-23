@@ -1,0 +1,37 @@
+{
+    "status_code": 200,
+    "headers": {
+        "content-type": [
+            "Content-Type",
+            "application/json"
+        ],
+        "etag": [
+            "ETag",
+            "\"fee13df9f3604d378642a2eb4736c14e\""
+        ],
+        "cache-control": [
+            "Cache-Control",
+            "private, must-revalidate"
+        ],
+        "vary": [
+            "Vary",
+            "Accept, Cookie"
+        ],
+        "allow": [
+            "Allow",
+            "GET, HEAD, OPTIONS"
+        ],
+        "x-frame-options": [
+            "X-Frame-Options",
+            "SAMEORIGIN"
+        ]
+    },
+    "data": [
+        {
+            "id": "101",
+            "name": "Location 0 [GatewayType 0 - abc]",
+            "p_code": "abc"
+        }
+    ],
+    "content_type": null
+}

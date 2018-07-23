@@ -1,6 +1,5 @@
 import datetime
 import json
-from unittest import skip
 
 from django.test import SimpleTestCase
 from django.urls import reverse
@@ -8,9 +7,12 @@ from django.urls import reverse
 from mock import Mock, patch
 from rest_framework import status
 
+from etools.applications.attachments.tests.factories import AttachmentFactory, AttachmentFileTypeFactory
 from etools.applications.EquiTrack.tests.cases import BaseTenantTestCase
 from etools.applications.EquiTrack.tests.mixins import URLAssertionMixin
 from etools.applications.partners.models import (
+    CoreValuesAssessment,
+    Intervention,
     PartnerOrganization,
     PartnerPlannedVisits,
     PartnerType,
@@ -55,23 +57,54 @@ class TestPartnerOrganizationDetailAPIView(BaseTenantTestCase):
             partner=cls.partner,
             signed_by_unicef_date=datetime.date.today())
 
-        cls.intervention = InterventionFactory(agreement=agreement)
+        cls.intervention = InterventionFactory(
+            agreement=agreement,
+            status=Intervention.CLOSED
+        )
+        cls.file_type = AttachmentFileTypeFactory(
+            code="partners_partner_assessment"
+        )
 
         cls.url = reverse(
             "partners_api:partner-detail",
             kwargs={'pk': cls.partner.pk}
         )
 
-    @skip("This will be done in a separate PR")
     def test_get_partner_details(self):
         response = self.forced_auth_req(
             'get',
             self.url,
             user=self.unicef_staff
         )
+        data = json.loads(response.rendered_content)
+        self.assertEqual(self.intervention.pk, data["interventions"][0]["id"])
 
-        response_json = json.loads(response.rendered_content)
-        self.assertEqual(self.intervention.id, response_json.get("interventions")[0].id)
+    def test_patch_with_attachment(self):
+        attachment = AttachmentFactory(
+            file="test_file.pdf",
+            file_type=None,
+            code="",
+        )
+        self.assertIsNone(attachment.file_type)
+        self.assertIsNone(attachment.content_object)
+        self.assertFalse(attachment.code)
+        assessment_qs = CoreValuesAssessment.objects.filter(
+            partner=self.partner
+        )
+        self.assertFalse(assessment_qs.exists())
+        response = self.forced_auth_req(
+            'patch',
+            self.url,
+            data={
+                "core_values_assessments": [{
+                    "assessment_file": attachment.pk
+                }]
+            },
+            user=self.unicef_staff
+        )
+        data = json.loads(response.rendered_content)
+        self.assertEqual(data["id"], self.partner.pk)
+        self.assertEqual(data["interventions"][0]["id"], self.intervention.pk)
 
     def test_add_planned_visits(self):
         response = self.forced_auth_req(

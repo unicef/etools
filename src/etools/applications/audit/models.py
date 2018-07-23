@@ -4,7 +4,7 @@ from decimal import DivisionByZero, InvalidOperation
 from django.contrib.auth import get_user_model
 from django.contrib.postgres.fields import ArrayField, JSONField
 from django.core.exceptions import ValidationError
-from django.db import models, connection
+from django.db import connection, models
 from django.db.transaction import atomic
 from django.utils import timezone
 from django.utils.encoding import force_text
@@ -15,19 +15,22 @@ from model_utils import Choices, FieldTracker
 from model_utils.managers import InheritanceManager
 from model_utils.models import TimeStampedModel
 from ordered_model.models import OrderedModel
+from unicef_notification.utils import send_notification_with_template
 
 from etools.applications.action_points.models import ActionPoint
 from etools.applications.attachments.models import Attachment
 from etools.applications.audit.purchase_order.models import AuditorStaffMember, PurchaseOrder, PurchaseOrderItem
-from etools.applications.audit.transitions.conditions import (AuditSubmitReportRequiredFieldsCheck,
-                                                              EngagementHasReportAttachmentsCheck,
-                                                              EngagementSubmitReportRequiredFieldsCheck,
-                                                              SpecialAuditSubmitRelatedModelsCheck,
-                                                              SPSubmitReportRequiredFieldsCheck,
-                                                              ValidateMARiskCategories, ValidateMARiskExtra,)
+from etools.applications.audit.transitions.conditions import (
+    AuditSubmitReportRequiredFieldsCheck,
+    EngagementHasReportAttachmentsCheck,
+    EngagementSubmitReportRequiredFieldsCheck,
+    SpecialAuditSubmitRelatedModelsCheck,
+    SPSubmitReportRequiredFieldsCheck,
+    ValidateMARiskCategories,
+    ValidateMARiskExtra,
+)
 from etools.applications.audit.transitions.serializers import EngagementCancelSerializer
 from etools.applications.EquiTrack.utils import get_environment
-from etools.applications.notification.utils import send_notification_using_email_template
 from etools.applications.partners.models import PartnerOrganization, PartnerStaffMember
 from etools.applications.permissions2.fsm import has_action_permission
 from etools.applications.utils.common.models.fields import CodedGenericRelation
@@ -178,7 +181,7 @@ class Engagement(InheritedModelMixin, TimeStampedModel, models.Model):
         verbose_name_plural = _('Engagements')
 
     def __str__(self):
-        return '{}: {}, {}'.format(self.engagement_type, self.agreement.order_number, self.partner.name)
+        return '{} {}'.format(self.get_engagement_type_display(), self.reference_number)
 
     @property
     def displayed_status(self):
@@ -232,7 +235,8 @@ class Engagement(InheritedModelMixin, TimeStampedModel, models.Model):
         }
 
     def _notify_focal_points(self, template_name, context=None):
-        for focal_point in get_user_model().objects.filter(groups=UNICEFAuditFocalPoint.as_group()):
+        for focal_point in get_user_model().objects.filter(groups=UNICEFAuditFocalPoint.as_group(),
+                                                           profile__countries_available=connection.tenant):
             # Build the context in the same order the previous version of the code did,
             # just in case something relies on it (intentionally or not).
             ctx = {
@@ -247,9 +251,9 @@ class Engagement(InheritedModelMixin, TimeStampedModel, models.Model):
             base_context.update(ctx)
             context = base_context
 
-            send_notification_using_email_template(
+            send_notification_with_template(
                 recipients=[focal_point.email],
-                email_template_name=template_name,
+                template_name=template_name,
                 context=context,
             )
 
@@ -430,9 +434,6 @@ class SpotCheck(Engagement):
         self.partner.spot_checks(update_one=True, event_date=self.date_of_draft_report_to_unicef)
         return super(SpotCheck, self).finalize(*args, **kwargs)
 
-    def __str__(self):
-        return 'SpotCheck ({}: {}, {})'.format(self.engagement_type, self.agreement.order_number, self.partner.name)
-
     def get_object_url(self, **kwargs):
         return build_frontend_url('ap', 'spot-checks', self.id, 'overview', **kwargs)
 
@@ -531,11 +532,6 @@ class MicroAssessment(Engagement):
     def submit(self, *args, **kwargs):
         return super(MicroAssessment, self).submit(*args, **kwargs)
 
-    def __str__(self):
-        return 'MicroAssessment ({}: {}, {})'.format(
-            self.engagement_type, self.agreement.order_number, self.partner.name
-        )
-
     def get_object_url(self, **kwargs):
         return build_frontend_url('ap', 'micro-assessments', self.id, 'overview', **kwargs)
 
@@ -624,9 +620,6 @@ class Audit(Engagement):
     def finalize(self, *args, **kwargs):
         self.partner.audits_completed(update_one=True)
         return super(Audit, self).finalize(*args, **kwargs)
-
-    def __str__(self):
-        return 'Audit ({}: {}, {})'.format(self.engagement_type, self.agreement.order_number, self.partner.name)
 
     def get_object_url(self, **kwargs):
         return build_frontend_url('ap', 'audits', self.id, 'overview', **kwargs)
@@ -718,9 +711,6 @@ class SpecialAudit(Engagement):
     def finalize(self, *args, **kwargs):
         self.partner.audits_completed(update_one=True)
         return super(SpecialAudit, self).finalize(*args, **kwargs)
-
-    def __str__(self):
-        return 'Special Audit ({}: {}, {})'.format(self.engagement_type, self.agreement.order_number, self.partner.name)
 
     def get_object_url(self, **kwargs):
         return build_frontend_url('ap', 'special-audits', self.id, 'overview', **kwargs)

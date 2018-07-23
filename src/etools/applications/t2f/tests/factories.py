@@ -4,13 +4,18 @@ from django.utils import timezone
 import factory
 from factory import fuzzy
 
-from etools.applications.locations.tests.factories import LocationFactory
+from unicef_locations.tests.factories import LocationFactory
 from etools.applications.partners.tests.factories import InterventionFactory
-from etools.applications.publics.tests.factories import (PublicsAirlineCompanyFactory, PublicsCurrencyFactory,
-                                                         PublicsDSARegionFactory, PublicsFundFactory,
-                                                         PublicsGrantFactory, PublicsTravelExpenseTypeFactory,
-                                                         PublicsWBSFactory,)
-from etools.applications.reports.tests.factories import ResultFactory, SectorFactory
+from etools.applications.publics.tests.factories import (
+    PublicsAirlineCompanyFactory,
+    PublicsCurrencyFactory,
+    PublicsDSARegionFactory,
+    PublicsFundFactory,
+    PublicsGrantFactory,
+    PublicsTravelExpenseTypeFactory,
+    PublicsWBSFactory,
+)
+from etools.applications.reports.tests.factories import ResultFactory, SectionFactory
 from etools.applications.t2f import models
 from etools.applications.users.tests.factories import OfficeFactory, UserFactory
 
@@ -109,24 +114,11 @@ class ClearanceFactory(factory.DjangoModelFactory):
         model = models.Clearances
 
 
-class ActionPointFactory(factory.DjangoModelFactory):
-    action_point_number = factory.Sequence(lambda n: models.make_action_point_number())
-    description = fuzzy.FuzzyText(length=128)
-    due_date = fuzzy.FuzzyDateTime(start_dt=_FUZZY_START_DATE, end_dt=timezone.now())
-    person_responsible = factory.SubFactory(UserFactory)
-    assigned_by = factory.SubFactory(UserFactory)
-    status = 'open'
-    created_at = timezone.now()
-
-    class Meta:
-        model = models.ActionPoint
-
-
 class TravelFactory(factory.DjangoModelFactory):
     traveler = factory.SubFactory(UserFactory)
     supervisor = factory.SubFactory(UserFactory)
     office = factory.SubFactory(OfficeFactory)
-    sector = factory.SubFactory(SectorFactory)
+    section = factory.SubFactory(SectionFactory)
     start_date = fuzzy.FuzzyDateTime(start_dt=_FUZZY_START_DATE, end_dt=timezone.now())
     end_date = fuzzy.FuzzyDateTime(start_dt=timezone.now(), end_dt=_FUZZY_END_DATE)
     purpose = factory.Sequence(lambda n: 'Purpose #{}'.format(n))
@@ -141,7 +133,7 @@ class TravelFactory(factory.DjangoModelFactory):
     deductions = factory.RelatedFactory(DeductionFactory, 'travel')
     cost_assignments = factory.RelatedFactory(CostAssignmentFactory, 'travel')
     clearances = factory.RelatedFactory(ClearanceFactory, 'travel')
-    action_points = factory.RelatedFactory(ActionPointFactory, 'travel')
+    # action_points = factory.RelatedFactory(ActionPointFactory, 'travel')
 
     @factory.post_generation
     def populate_activities(self, create, extracted, **kwargs):

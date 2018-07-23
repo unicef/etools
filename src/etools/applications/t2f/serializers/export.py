@@ -23,7 +23,7 @@ class YesOrNoField(serializers.BooleanField):
 class TravelActivityExportSerializer(serializers.Serializer):
     reference_number = serializers.CharField(source='travel.reference_number')
     traveler = serializers.CharField(source='travel.traveler.get_full_name')
-    section = serializers.CharField(source='travel.sector.name')
+    section = serializers.CharField(source='travel.section.name')
     office = serializers.CharField(source='travel.office.name')
     status = serializers.CharField(source='travel.status')
     trip_type = serializers.CharField(source='activity.travel_type')
@@ -61,7 +61,7 @@ class FinanceExportSerializer(serializers.Serializer):
     reference_number = serializers.CharField()
     traveler = serializers.CharField(source='traveler.get_full_name')
     office = serializers.CharField(source='office.name')
-    section = serializers.CharField(source='sector.name')
+    section = serializers.CharField(source='section.name')
     status = serializers.CharField()
     supervisor = serializers.CharField(source='supervisor.get_full_name')
     start_date = serializers.DateTimeField(format='%d-%b-%Y')
@@ -100,7 +100,7 @@ class TravelAdminExportSerializer(serializers.Serializer):
     reference_number = serializers.CharField(source='travel.reference_number')
     traveler = serializers.CharField(source='travel.traveler.get_full_name')
     office = serializers.CharField(source='travel.office.name')
-    section = serializers.CharField(source='travel.sector.name')
+    section = serializers.CharField(source='travel.section.name')
     status = serializers.CharField(source='travel.status')
     origin = serializers.CharField()
     destination = serializers.CharField()
@@ -142,24 +142,3 @@ class InvoiceExportSerializer(serializers.Serializer):
     class Meta:
         fields = ('reference_number', 'ta_number', 'vendor_number', 'currency', 'total_amount', 'status', 'message',
                   'vision_fi_doc', 'wbs', 'grant', 'fund', 'amount')
-
-
-class ActionPointExportSerializer(serializers.Serializer):
-    action_point_number = serializers.CharField()
-    trip_reference_number = serializers.CharField(source='travel.reference_number')
-    description = serializers.CharField()
-    due_date = serializers.DateTimeField()
-    person_responsible = serializers.CharField(source='person_responsible.get_full_name')
-    status = serializers.CharField()
-    completed_date = serializers.DateTimeField(source='completed_at')
-    actions_taken = serializers.CharField()
-    flag_for_follow_up = serializers.BooleanField(source='follow_up')
-    assigned_by = serializers.CharField(source='assigned_by.get_full_name')
-    url = serializers.SerializerMethodField()
-
-    class Meta:
-        fields = ('action_point_number', 'trip_reference_number', 'description', 'due_date', 'person_responsible',
-                  'status', 'completed_date', 'actions_taken', 'flag_for_follow_up', 'assigned_by', 'url')
-
-    def get_url(self, obj):
-        return None

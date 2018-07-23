@@ -6,7 +6,7 @@ from rest_framework import serializers
 from etools.applications.reports.models import CountryProgramme, Indicator, Result, ResultType, Sector, Unit
 
 
-class SectorSerializer(serializers.ModelSerializer):
+class SectionSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Sector
@@ -31,7 +31,7 @@ class OutputSerializer(serializers.ModelSerializer):
         fields = ('id', 'name', 'sector', 'humanitarian_tag')
 
 
-class SectorCreateSerializer(serializers.ModelSerializer):
+class SectionCreateSerializer(serializers.ModelSerializer):
 
     id = serializers.CharField(read_only=True)
 

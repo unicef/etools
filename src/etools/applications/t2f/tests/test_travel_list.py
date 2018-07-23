@@ -10,7 +10,7 @@ from rest_framework import status
 
 from etools.applications.EquiTrack.tests.cases import BaseTenantTestCase
 from etools.applications.EquiTrack.tests.mixins import URLAssertionMixin
-from etools.applications.locations.tests.factories import LocationFactory
+from unicef_locations.tests.factories import LocationFactory
 from etools.applications.publics.models import DSARegion
 from etools.applications.publics.tests.factories import PublicsCurrencyFactory, PublicsWBSFactory
 from etools.applications.reports.tests.factories import ResultFactory
@@ -28,8 +28,7 @@ class TravelList(URLAssertionMixin, BaseTenantTestCase):
         cls.unicef_staff = UserFactory(is_staff=True)
         cls.travel = TravelFactory(reference_number=make_travel_reference_number(),
                                    traveler=cls.traveler,
-                                   supervisor=cls.unicef_staff,
-                                   section=None)
+                                   supervisor=cls.unicef_staff)
 
     def test_urls(self):
         '''Verify URL pattern names generate the URLs we expect them to.'''
@@ -67,8 +66,7 @@ class TravelList(URLAssertionMixin, BaseTenantTestCase):
 
         self.assertEqual(len(response_json['data']), 1)
         travel_data = response_json['data'][0]
-        expected_keys = ['end_date', 'id', 'office', 'purpose', 'reference_number',
-                         'section', 'start_date', 'status', 'traveler']
+        expected_keys = ['end_date', 'id', 'office', 'purpose', 'reference_number', 'start_date', 'status', 'traveler']
         self.assertKeysIn(expected_keys, travel_data)
 
     def test_list_search_partial(self):
@@ -111,7 +109,6 @@ class TravelList(URLAssertionMixin, BaseTenantTestCase):
         travel = TravelFactory(reference_number=make_travel_reference_number(),
                                traveler=self.traveler,
                                supervisor=self.unicef_staff,
-                               sector=None,
                                section=None)
 
         with self.assertNumQueries(10):
@@ -137,39 +134,6 @@ class TravelList(URLAssertionMixin, BaseTenantTestCase):
         self.assertEqual(response_json['travels_by_section'][0]['section_name'], 'No Section selected')
         self.assertEqual(len(response_json['travels_by_section']), 1)
         self.assertEqual(response_json['planned'], 1)
-
-    def test_dashboard_action_points_list_view(self):
-        with self.assertNumQueries(6):
-            response = self.forced_auth_req(
-                'get',
-                reverse('t2f:action_points:dashboard'),
-                user=self.unicef_staff,
-                data={"office_id": self.travel.office.id}
-            )
-
-        response_json = json.loads(response.rendered_content)
-
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
-        expected_keys = ['action_points_by_section']
-        self.assertKeysIn(expected_keys, response_json)
-        self.assertEqual(len(response_json['action_points_by_section']), 1)
-        self.assertEqual(response_json['action_points_by_section'][0]['total_action_points'], 1)
-
-    def test_dashboard_action_points_list_view_no_office(self):
-        with self.assertNumQueries(6):
-            response = self.forced_auth_req(
-                'get',
-                reverse('t2f:action_points:dashboard'),
-                user=self.unicef_staff,
-            )
-
-        response_json = json.loads(response.rendered_content)
-
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
-        expected_keys = ['action_points_by_section']
-        self.assertKeysIn(expected_keys, response_json)
-        self.assertEqual(len(response_json['action_points_by_section']), 1)
-        self.assertEqual(response_json['action_points_by_section'][0]['total_action_points'], 1)
 
     def test_pagination(self):
         TravelFactory(traveler=self.traveler, supervisor=self.unicef_staff)

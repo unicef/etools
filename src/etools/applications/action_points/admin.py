@@ -1,11 +1,10 @@
-
 from django.contrib import admin
 from django.contrib.contenttypes.admin import GenericStackedInline
 
 from django_comments.models import Comment
+from unicef_snapshot.admin import ActivityInline, SnapshotModelAdmin
 
 from etools.applications.action_points.models import ActionPoint
-from etools.applications.EquiTrack.admin import ActivityInline, SnapshotModelAdmin
 
 
 class CommentInline(GenericStackedInline):
@@ -28,6 +27,8 @@ class ActionPointAdmin(SnapshotModelAdmin):
     search_fields = ('author__email', 'assigned_to__email')
     inlines = (CommentInline, ActivityInline, )
     readonly_fields = ('status', )
+    raw_id_fields = ('section', 'office', 'location', 'cp_output', 'partner', 'intervention', 'tpm_activity',
+                     'travel_activity', 'engagement', 'author', 'assigned_by', 'assigned_to')
 
 
 admin.site.register(ActionPoint, ActionPointAdmin)

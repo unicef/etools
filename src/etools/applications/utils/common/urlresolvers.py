@@ -1,14 +1,21 @@
+from urllib.parse import urljoin
+
+from django.conf import settings
 from django.db import connection
 from django.urls import reverse
 
-from etools.applications.EquiTrack.utils import get_current_site
 from etools.applications.users.models import Country
 
 
 def site_url():
-    return 'https://{0}'.format(
-        get_current_site().domain
-    )
+    return 'https://{0}'.format(settings.HOST)
+
+
+def build_absolute_url(url):
+    if not url:
+        return ''
+
+    return urljoin(site_url(), url)
 
 
 def build_frontend_url(*parts, user=None, include_token=False, **kwargs):

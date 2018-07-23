@@ -2,27 +2,34 @@ import itertools
 
 from django.conf import settings
 from django.contrib.contenttypes.fields import GenericRelation
-from django.db import models, connection
+from django.db import connection, models
 from django.utils import timezone
 from django.utils.encoding import force_text
+from django.utils.functional import cached_property
 from django.utils.translation import ugettext_lazy as _
 
 from django_fsm import FSMField, transition
 from model_utils import Choices, FieldTracker
 from model_utils.models import TimeStampedModel
+from unicef_notification.utils import send_notification_with_template
 
 from etools.applications.action_points.models import ActionPoint
 from etools.applications.activities.models import Activity
 from etools.applications.attachments.models import Attachment
 from etools.applications.EquiTrack.utils import get_environment
-from etools.applications.notification.utils import send_notification_using_email_template
-from etools.applications.publics.models import SoftDeleteMixin
 from etools.applications.permissions2.fsm import has_action_permission
+from etools.applications.publics.models import SoftDeleteMixin
 from etools.applications.tpm.tpmpartners.models import TPMPartner, TPMPartnerStaffMember
-from etools.applications.tpm.transitions.conditions import (TPMVisitAssignRequiredFieldsCheck,
-                                                            TPMVisitReportValidations, ValidateTPMVisitActivities,)
-from etools.applications.tpm.transitions.serializers import (TPMVisitApproveSerializer, TPMVisitCancelSerializer,
-                                                             TPMVisitRejectSerializer,)
+from etools.applications.tpm.transitions.conditions import (
+    TPMVisitAssignRequiredFieldsCheck,
+    TPMVisitReportValidations,
+    ValidateTPMVisitActivities,
+)
+from etools.applications.tpm.transitions.serializers import (
+    TPMVisitApproveSerializer,
+    TPMVisitCancelSerializer,
+    TPMVisitRejectSerializer,
+)
 from etools.applications.utils.common.models.fields import CodedGenericRelation
 from etools.applications.utils.common.urlresolvers import build_frontend_url
 from etools.applications.utils.groups.wrappers import GroupWrapper
@@ -193,9 +200,9 @@ class TPMVisit(SoftDeleteMixin, TimeStampedModel, models.Model):
 
         # assert recipients
         if recipients:
-            send_notification_using_email_template(
+            send_notification_with_template(
                 recipients=recipients,
-                email_template_name=template_name,
+                template_name=template_name,
                 context=context,
             )
 
@@ -401,6 +408,10 @@ class TPMActivity(Activity):
 
     def __str__(self):
         return 'Task #{0} for {1}'.format(self.id, self.tpm_visit)
+
+    @cached_property
+    def task_number(self):
+        return list(self.tpm_visit.tpm_activities.values_list('id', flat=True)).index(self.id) + 1
 
     @property
     def reference_number(self):

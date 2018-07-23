@@ -1,0 +1,39 @@
+{
+    "status_code": 200,
+    "headers": {
+        "content-type": [
+            "Content-Type",
+            "application/json"
+        ],
+        "vary": [
+            "Vary",
+            "Accept, Cookie"
+        ],
+        "allow": [
+            "Allow",
+            "GET"
+        ],
+        "x-frame-options": [
+            "X-Frame-Options",
+            "SAMEORIGIN"
+        ]
+    },
+    "data": [
+        {
+            "id": 1,
+            "amendment_number": "1",
+            "signed_amendment_file": "http://testserver/media/test/file_attachments/partner_organization/124/124/agreements/124/interventions/120/amendments/None/test_file.pdf",
+            "signed_amendment_attachment": null,
+            "created": "2018-07-20T21:19:08.152000Z",
+            "modified": "2018-07-20T21:19:08.202000Z",
+            "types": [
+                "Change banking info"
+            ],
+            "other_description": "ltyZLyNrCLdpTWgTmCOELHLSGBKULsSzeBXOsvBxwwgCXwycvZ",
+            "signed_date": "2018-07-20",
+            "signed_amendment": "http://testserver/media/test/file_attachments/partner_organization/124/124/agreements/124/interventions/120/amendments/None/test_file.pdf",
+            "intervention": 120
+        }
+    ],
+    "content_type": null
+}
