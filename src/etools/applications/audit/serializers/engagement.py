@@ -8,7 +8,7 @@ from etools.applications.action_points.serializers import ActionPointBaseSeriali
     CategoryModelChoiceField
 from etools.applications.attachments.models import FileType
 from etools.applications.attachments.serializers import BaseAttachmentSerializer
-from etools.applications.attachments.serializers_fields import FileTypeModelChoiceField, ModelChoiceField
+from etools.applications.attachments.serializers_fields import FileTypeModelChoiceField
 from etools.applications.audit.models import (Audit, DetailedFindingInfo, Engagement, EngagementActionPoint,
                                               FinancialFinding, Finding, KeyInternalControl, MicroAssessment, Risk,
                                               SpecialAudit, SpecialAuditRecommendation, SpecificProcedure, SpotCheck, )
