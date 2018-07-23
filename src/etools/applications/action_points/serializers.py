@@ -7,8 +7,10 @@ from unicef_snapshot.models import Activity
 from unicef_snapshot.serializers import SnapshotModelSerializer
 
 from etools.applications.EquiTrack.utils import get_current_site
-from etools.applications.action_points.models import ActionPoint
-from etools.applications.locations.serializers import LocationLightSerializer
+from etools.applications.action_points.models import ActionPoint, Category
+from unicef_locations.serializers import LocationLightSerializer
+
+from etools.applications.attachments.serializers_fields import ModelChoiceField
 from etools.applications.partners.serializers.interventions_v2 import BaseInterventionListSerializer
 from etools.applications.partners.serializers.partner_organization_v2 import MinimalPartnerOrganizationListSerializer
 from etools.applications.permissions2.serializers import PermissionsBasedSerializerMixin
@@ -20,6 +22,11 @@ from etools.applications.utils.common.serializers.mixins import UserContextSeria
 from etools.applications.utils.writable_serializers.serializers import WritableNestedSerializerMixin
 
 
+class CategoryModelChoiceField(ModelChoiceField):
+    def get_choice(self, obj):
+        return obj.id, obj.description
+
+
 class ActionPointBaseSerializer(UserContextSerializerMixin, SnapshotModelSerializer, serializers.ModelSerializer):
     reference_number = serializers.ReadOnlyField(label=_('Reference Number'))
     author = MinimalUserSerializer(read_only=True, label=_('Author'))
@@ -28,17 +35,18 @@ class ActionPointBaseSerializer(UserContextSerializerMixin, SnapshotModelSeriali
         read_field=MinimalUserSerializer(read_only=True, label=_('Assigned To')),
         required=True
     )
+    category = CategoryModelChoiceField(label=_('Category'), required=True, queryset=Category.objects.all())
 
     status_date = serializers.DateTimeField(read_only=True, label=_('Status Date'))
 
     class Meta:
         model = ActionPoint
         fields = [
-            'id', 'reference_number',
+            'id', 'reference_number', 'category',
             'author', 'assigned_by', 'assigned_to',
 
             'high_priority', 'due_date', 'description',
-
+            'office', 'section',
             'created', 'date_of_completion',
             'status', 'status_date',
         ]
@@ -64,7 +72,7 @@ class ActionPointBaseSerializer(UserContextSerializerMixin, SnapshotModelSeriali
 
 
 class ActionPointListSerializer(PermissionsBasedSerializerMixin, ActionPointBaseSerializer):
-    related_module = serializers.ChoiceField(label=_('Related Module'), choices=ActionPoint.MODULE_CHOICES,
+    related_module = serializers.ChoiceField(label=_('Related App'), choices=ActionPoint.MODULE_CHOICES,
                                              read_only=True)
 
     partner = SeparatedReadWriteField(
@@ -100,7 +108,7 @@ class ActionPointListSerializer(PermissionsBasedSerializerMixin, ActionPointBase
             'section', 'office', 'location',
             'partner', 'cp_output', 'intervention',
 
-            'engagement', 'tpm_activity', 'travel',
+            'engagement', 'tpm_activity', 'travel_activity',
         ]
 
     def create(self, validated_data):
@@ -116,12 +124,6 @@ class ActionPointListSerializer(PermissionsBasedSerializerMixin, ActionPointBase
                 'intervention_id': activity.intervention_id,
                 'cp_output_id': activity.cp_output_id,
                 'section_id': activity.section_id,
-            })
-        elif 'travel' in validated_data:
-            travel = validated_data['travel']
-            validated_data.update({
-                'office_id': travel.office_id,
-                'section_id': travel.section_id,
             })
 
         return super().create(validated_data)
@@ -165,19 +167,13 @@ class HistorySerializer(serializers.ModelSerializer):
 
 
 class ActionPointSerializer(WritableNestedSerializerMixin, ActionPointListSerializer):
-    comments = CommentSerializer(many=True, label=_('Actions Taken'))
+    comments = CommentSerializer(many=True, label=_('Actions Taken'), required=False)
     history = HistorySerializer(many=True, label=_('History'), read_only=True, source='get_meaningful_history')
 
-    related_object_str = serializers.SerializerMethodField(label=_('Reference'))
-    related_object_url = serializers.SerializerMethodField()
+    related_object_str = serializers.ReadOnlyField(label=_('Related Document'))
+    related_object_url = serializers.ReadOnlyField()
 
     class Meta(WritableNestedSerializerMixin.Meta, ActionPointListSerializer.Meta):
         fields = ActionPointListSerializer.Meta.fields + [
             'comments', 'history', 'related_object_str', 'related_object_url',
         ]
-
-    def get_related_object_str(self, obj):
-        return str(obj.related_object) if obj.related_object else None
-
-    def get_related_object_url(self, obj):
-        return obj.related_object.get_object_url() if obj.related_object else None

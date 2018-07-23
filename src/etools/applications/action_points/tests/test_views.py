@@ -7,12 +7,12 @@ from factory import fuzzy
 from rest_framework import status
 
 from etools.applications.action_points.tests.base import ActionPointsTestCaseMixin
-from etools.applications.action_points.tests.factories import ActionPointFactory
+from etools.applications.action_points.tests.factories import ActionPointFactory, ActionPointCategoryFactory
 from etools.applications.EquiTrack.tests.cases import BaseTenantTestCase
 from etools.applications.audit.tests.factories import MicroAssessmentFactory
 from etools.applications.partners.tests.factories import PartnerFactory
 from etools.applications.reports.tests.factories import SectionFactory
-from etools.applications.t2f.tests.factories import TravelFactory
+from etools.applications.t2f.tests.factories import TravelActivityFactory
 from etools.applications.tpm.tests.factories import UserFactory, TPMVisitFactory
 from etools.applications.utils.common.tests.test_utils import TestExportMixin
 
@@ -26,6 +26,7 @@ class TestActionPointViewSet(TestExportMixin, ActionPointsTestCaseMixin, BaseTen
         cls.unicef_user = UserFactory(unicef_user=True)
         cls.common_user = UserFactory()
         cls.create_data = {
+            'category': ActionPointCategoryFactory().id,
             'description': 'do something',
             'due_date': date.today(),
             'assigned_to': cls.pme_user.id,
@@ -108,8 +109,8 @@ class TestActionPointViewSet(TestExportMixin, ActionPointsTestCaseMixin, BaseTen
         self.assertEqual(response.data['assigned_by']['id'], self.unicef_user.id)
 
     def test_create_t2f_related(self):
-        travel = TravelFactory()
-        data = {'travel': travel.id}
+        travel_activity = TravelActivityFactory()
+        data = {'travel_activity': travel_activity.id}
         data.update(self.create_data)
 
         response = self.forced_auth_req(
@@ -119,18 +120,18 @@ class TestActionPointViewSet(TestExportMixin, ActionPointsTestCaseMixin, BaseTen
             user=self.unicef_user
         )
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
-        self.assertIsNotNone(response.data['travel'])
-        self.assertEqual(response.data['travel'], travel.id)
+        self.assertIsNotNone(response.data['travel_activity'])
+        self.assertEqual(response.data['travel_activity'], travel_activity.id)
 
     def test_travel_filter(self):
-        travel = TravelFactory()
+        travel_activity = TravelActivityFactory()
         ActionPointFactory()  # common action point, shouldn't appear while filtering
-        ActionPointFactory(travel=travel)
+        ActionPointFactory(travel_activity=travel_activity)
 
         response = self.forced_auth_req(
             'get',
             reverse('action-points:action-points-list'),
-            data={'travel': travel.id},
+            data={'travel_activity': travel_activity.id},
             user=self.unicef_user
         )
         self.assertEqual(response.status_code, status.HTTP_200_OK)
@@ -228,6 +229,7 @@ class TestActionPointsListViewMetadada(TestActionPointsViewMetadata, BaseTenantT
         self._test_list_options(
             self.pme_user,
             writable_fields=[
+                'category',
                 'description',
                 'due_date',
                 'assigned_to',
@@ -241,7 +243,7 @@ class TestActionPointsListViewMetadada(TestActionPointsViewMetadata, BaseTenantT
                 'section',
                 'office',
 
-                'travel',
+                'travel_activity',
                 'engagement',
                 'tpm_activity',
             ]
@@ -280,6 +282,7 @@ class TestActionPointsDetailViewMetadata(TestActionPointsViewMetadata):
 class TestOpenActionPointDetailViewMetadata(TestActionPointsDetailViewMetadata, BaseTenantTestCase):
     status = 'open'
     editable_fields = [
+        'category',
         'description',
         'due_date',
         'assigned_to',
@@ -312,6 +315,7 @@ class TestOpenActionPointDetailViewMetadata(TestActionPointsDetailViewMetadata, 
 
 class TestRelatedOpenActionPointDetailViewMetadata(TestOpenActionPointDetailViewMetadata):
     editable_fields = [
+        'category',
         'description',
         'due_date',
         'assigned_to',

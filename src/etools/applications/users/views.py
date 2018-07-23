@@ -18,8 +18,6 @@ from rest_framework.views import APIView
 
 from etools.applications.audit.models import Auditor
 from etools.applications.EquiTrack.permissions import IsSuperUserOrStaff
-from etools.applications.reports.models import Sector
-from etools.applications.reports.serializers.v1 import SectionSerializer
 from etools.applications.tpm.models import ThirdPartyMonitor
 from etools.applications.users.forms import ProfileForm
 from etools.applications.users.models import Country, Office, UserProfile
@@ -357,28 +355,6 @@ class CountriesViewSet(ListAPIView):
 
     def get_queryset(self):
         return Country.objects.all()
-
-
-class SectionViewSet(mixins.RetrieveModelMixin,
-                     mixins.ListModelMixin,
-                     viewsets.GenericViewSet):
-    """
-    Returns a list of all Sections
-    """
-    serializer_class = SectionSerializer
-    permission_classes = (IsAdminUser,)
-
-    def get_queryset(self):
-        queryset = Sector.objects.all()
-        if "values" in self.request.query_params.keys():
-            # Used for ghost data - filter in all(), and return straight away.
-            try:
-                ids = [int(x) for x in self.request.query_params.get("values").split(",")]
-            except ValueError:
-                raise ValidationError("ID values must be integers")
-            else:
-                queryset = queryset.filter(id__in=ids)
-        return queryset
 
 
 class ModuleRedirectView(RedirectView):

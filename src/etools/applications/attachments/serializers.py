@@ -17,6 +17,7 @@ from etools.applications.attachments.serializers_fields import (
 from etools.applications.users.serializers import SimpleUserSerializer
 from etools.applications.utils.common.serializers.fields import SeparatedReadWriteField
 from etools.applications.utils.common.serializers.mixins import UserContextSerializerMixin
+from etools.applications.utils.common.urlresolvers import build_absolute_url
 
 
 class BaseAttachmentSerializer(UserContextSerializerMixin, serializers.ModelSerializer):
@@ -117,6 +118,8 @@ def validate_attachment(cls, data):
         attachment = Attachment.objects.get(pk=int(value))
     except Attachment.DoesNotExist:
         raise serializers.ValidationError("Attachment does not exist")
+    except ValueError:
+        raise serializers.ValidationError("Attachment expects an integer")
 
     file_type = FileType.objects.get(code=code)
     if attachment.content_object is not None:
@@ -203,9 +206,13 @@ class AttachmentSerializerMixin(object):
 class AttachmentPDFSerializer(serializers.ModelSerializer):
     file_type_display = serializers.ReadOnlyField(source='file_type.label')
     created = serializers.DateTimeField(format='%d %b %Y')
+    url = serializers.SerializerMethodField()
 
     class Meta:
         model = Attachment
         fields = [
             'file_type_display', 'filename', 'url', 'created',
         ]
+
+    def get_url(self, obj):
+        return build_absolute_url(obj.file_link)

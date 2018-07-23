@@ -21,15 +21,15 @@
     "data": [
         {
             "id": 1,
-            "created": "2018-07-11T14:19:04.833852Z",
-            "modified": "2018-07-11T14:19:04.850909Z",
+            "created": "2018-07-20T21:19:06.783240Z",
+            "modified": "2018-07-20T21:19:06.786616Z",
             "number": "tmp01",
             "signed_amendment": null,
             "types": [
                 "Change in clause"
             ],
             "signed_date": null,
-            "agreement": 5
+            "agreement": 122
         }
     ],
     "content_type": null

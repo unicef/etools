@@ -202,7 +202,7 @@ TENANT_APPS = (
     'django_comments',
     'logentry_admin',
     'etools.applications.funds',
-    'etools.applications.locations',
+    'unicef_locations',
     'etools.applications.reports',
     'etools.applications.partners',
     'etools.applications.hact',
@@ -544,3 +544,4 @@ SCHEMA_OVERRIDE_PARAM = "schema"
 PCA_REQUIRED_NOTIFICATION_LEAD = 30
 
 UNICEF_NOTIFICATION_TEMPLATE_DIR = "notifications"
+UNICEF_LOCATIONS_GET_CACHE_KEY = 'etools.libraries.locations.views.cache_key'

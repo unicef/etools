@@ -23,7 +23,7 @@ from etools.applications.environment.models import TenantSwitch
 from etools.applications.environment.tests.factories import TenantSwitchFactory
 from etools.applications.EquiTrack.tests.cases import BaseTenantTestCase
 from etools.applications.EquiTrack.tests.mixins import URLAssertionMixin
-from etools.applications.locations.tests.factories import LocationFactory
+from unicef_locations.tests.factories import LocationFactory
 from etools.applications.partners.models import (
     Intervention,
     InterventionAmendment,
@@ -103,18 +103,19 @@ class TestInterventionsAPI(BaseTenantTestCase):
                   "country_programme", "amendments", "unicef_focal_points", "end", "title",
                   "signed_by_partner_date", "review_date_prc", "frs", "start",
                   "metadata", "submission_date", "agreement", "unicef_signatory_id",
-                  "result_links", "contingency_pd", "unicef_signatory", "agreement_id", "signed_by_unicef_date",
+                  "result_links", "contingency_pd", "unicef_signatory", "signed_by_unicef", "agreement_id",
+                  "signed_by_unicef_date",
                   "partner_authorized_officer_signatory_id", "created", "planned_visits",
                   "planned_budget", "modified", "signed_pd_document", "submission_date_prc", "document_type",
                   "offices", "population_focus", "country_programme_id", "engagement", "sections",
                   "sections_present", "flat_locations", "reporting_periods", "activity",
                   "prc_review_attachment", "signed_pd_attachment", "actionpoint",
-                  "reporting_requirements", "special_reporting_requirements", ],
+                  "reporting_requirements", "special_reporting_requirements", "reference_number_year", "number"],
         'signed': [],
         'active': ['']
     }
     REQUIRED_FIELDS = {
-        'draft': ['number', 'title', 'agreement', 'document_type'],
+        'draft': ['number', 'title', 'agreement', 'document_type', 'reference_number_year'],
         'signed': [],
         'active': ['']
     }
@@ -206,6 +207,7 @@ class TestInterventionsAPI(BaseTenantTestCase):
             "title": "My test intervention1",
             "contingency_pd": True,
             "agreement": self.agreement.id,
+            "reference_number_year": datetime.date.today().year,
         }
         status_code, response = self.run_request_list_ep(data, user=self.partnership_manager_user)
 
@@ -226,6 +228,7 @@ class TestInterventionsAPI(BaseTenantTestCase):
             "title": "My test intervention1",
             "contingency_pd": True,
             "agreement": self.agreement.pk,
+            "reference_number_year": datetime.date.today().year,
             "attachments": [{
                 "type": file_type.pk,
                 "attachment_document": attachment.pk,
@@ -271,6 +274,7 @@ class TestInterventionsAPI(BaseTenantTestCase):
             "agreement": self.agreement.pk,
             "prc_review_attachment": attachment_prc.pk,
             "signed_pd_attachment": attachment_pd.pk,
+            "reference_number_year": datetime.date.today().year
         }
         status_code, response = self.run_request_list_ep(data, user=self.partnership_manager_user)
         self.assertEqual(status_code, status.HTTP_201_CREATED)
@@ -304,7 +308,8 @@ class TestInterventionsAPI(BaseTenantTestCase):
             "start": (timezone.now().date()).isoformat(),
             "end": (timezone.now().date() + datetime.timedelta(days=31)).isoformat(),
             "agreement": self.agreement.id,
-            "frs": frs_data
+            "frs": frs_data,
+            "reference_number_year": datetime.date.today().year
         }
         status_code, response = self.run_request_list_ep(data, user=self.partnership_manager_user)
 
@@ -324,7 +329,8 @@ class TestInterventionsAPI(BaseTenantTestCase):
             "start": (timezone.now().date()).isoformat(),
             "end": (timezone.now().date() + datetime.timedelta(days=31)).isoformat(),
             "agreement": self.agreement.id,
-            "frs": frs_data
+            "frs": frs_data,
+            "reference_number_year": datetime.date.today().year
         }
         status_code, response = self.run_request_list_ep(data, user=self.partnership_manager_user)
 
@@ -348,7 +354,8 @@ class TestInterventionsAPI(BaseTenantTestCase):
             "start": (timezone.now().date()).isoformat(),
             "end": (timezone.now().date() + datetime.timedelta(days=31)).isoformat(),
             "agreement": self.agreement.id,
-            "frs": frs_data
+            "frs": frs_data,
+            "reference_number_year": datetime.date.today().year,
         }
         status_code, response = self.run_request_list_ep(data, user=self.partnership_manager_user)
 
@@ -570,6 +577,7 @@ class TestInterventionsAPI(BaseTenantTestCase):
             "end": (timezone.now().date() + datetime.timedelta(days=31)).isoformat(),
             "agreement": self.agreement.id,
             "sections": [section1.id, section2.id],
+            "reference_number_year": datetime.date.today().year
         }
 
         status_code, response = self.run_request_list_ep(data, user=self.partnership_manager_user)

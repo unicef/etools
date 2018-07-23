@@ -9,7 +9,7 @@ from rest_framework.exceptions import ValidationError
 
 from etools.applications.action_points.serializers import ActionPointBaseSerializer, HistorySerializer
 from etools.applications.activities.serializers import ActivitySerializer
-from etools.applications.locations.serializers import LocationLightSerializer
+from unicef_locations.serializers import LocationLightSerializer
 from etools.applications.partners.models import InterventionResultLink, PartnerType
 from etools.applications.partners.serializers.interventions_v2 import InterventionCreateUpdateSerializer
 from etools.applications.partners.serializers.partner_organization_v2 import MinimalPartnerOrganizationListSerializer
@@ -62,6 +62,7 @@ class TPMActionPointSerializer(PermissionsBasedSerializerMixin, ActionPointBaseS
         fields = ActionPointBaseSerializer.Meta.fields + [
             'tpm_activity', 'section', 'office', 'history', 'is_responsible', 'url'
         ]
+        fields.remove('category')
         extra_kwargs = copy(ActionPointBaseSerializer.Meta.extra_kwargs)
         extra_kwargs.update({
             'tpm_activity': {'label': _('Site Visit Schedule')},

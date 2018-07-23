@@ -9,10 +9,10 @@ from django.utils import timezone
 from rest_framework import serializers
 from unicef_snapshot.serializers import SnapshotModelSerializer
 
-from etools.applications.attachments.serializers import AttachmentSerializerMixin
 from etools.applications.attachments.serializers_fields import AttachmentSingleFileField
 from etools.applications.partners.models import (
     Assessment,
+    CoreValuesAssessment,
     Intervention,
     PartnerOrganization,
     PartnerPlannedVisits,
@@ -20,6 +20,16 @@ from etools.applications.partners.models import (
     PlannedEngagement,
 )
 from etools.applications.partners.serializers.interventions_v2 import InterventionListSerializer
+
+
+class CoreValuesAssessmentSerializer(serializers.ModelSerializer):
+    attachment = AttachmentSingleFileField(read_only=True)
+    # assessment = serializers.FileField(required=True)
+    assessment_file = serializers.FileField(source='assessment', read_only=True)
+
+    class Meta:
+        model = CoreValuesAssessment
+        fields = "__all__"
 
 
 class PartnerStaffMemberCreateSerializer(serializers.ModelSerializer):
@@ -257,13 +267,11 @@ class PartnerOrganizationDetailSerializer(serializers.ModelSerializer):
     assessments = AssessmentDetailSerializer(many=True, read_only=True)
     planned_engagement = PlannedEngagementSerializer(read_only=True)
     hact_values = serializers.SerializerMethodField(read_only=True)
-    core_values_assessment_file = serializers.FileField(source='core_values_assessment', read_only=True)
-    core_values_assessment_attachment = AttachmentSingleFileField(read_only=True)
     interventions = serializers.SerializerMethodField(read_only=True)
     hact_min_requirements = serializers.JSONField(read_only=True)
     hidden = serializers.BooleanField(read_only=True)
     planned_visits = PartnerPlannedVisitsSerializer(many=True, read_only=True, required=False)
-
+    core_values_assessments = CoreValuesAssessmentSerializer(many=True, read_only=True, required=False)
     partner_type_slug = serializers.ReadOnlyField()
     flags = serializers.ReadOnlyField()
 
@@ -285,15 +293,14 @@ class PartnerOrganizationDetailSerializer(serializers.ModelSerializer):
         fields = "__all__"
 
 
-class PartnerOrganizationCreateUpdateSerializer(AttachmentSerializerMixin, SnapshotModelSerializer):
+class PartnerOrganizationCreateUpdateSerializer(SnapshotModelSerializer):
 
     staff_members = PartnerStaffMemberNestedSerializer(many=True, read_only=True)
     planned_engagement = PlannedEngagementNestedSerializer(read_only=True)
     hact_values = serializers.SerializerMethodField(read_only=True)
-    core_values_assessment_file = serializers.FileField(source='core_values_assessment', read_only=True)
-    core_values_assessment_attachment = AttachmentSingleFileField()
     hidden = serializers.BooleanField(read_only=True)
     planned_visits = PartnerPlannedVisitsSerializer(many=True, read_only=True, required=False)
+    core_values_assessments = CoreValuesAssessmentSerializer(many=True, read_only=True, required=False)
 
     def get_hact_values(self, obj):
         return json.loads(obj.hact_values) if isinstance(obj.hact_values, str) else obj.hact_values
@@ -330,6 +337,47 @@ class PartnerOrganizationCreateUpdateSerializer(AttachmentSerializerMixin, Snaps
                 }
             }
         }
+
+    # def set_core_values_assessments(self, partner, data):
+    #     for core_value_assessment in data:
+    #         assessment, _ = CoreValuesAssessment.objects.get_or_create(
+    #             partner=partner
+    #         )
+    #         pk, code = core_value_assessment["attachment"]
+    #         Attachment.objects.update_or_create(
+    #             pk=pk,
+    #             defaults={
+    #                 "code": code,
+    #                 "content_object": assessment,
+    #             }
+    #         )
+    #
+    # def create(self, validated_data):
+    #     try:
+    #         core_values_assessments = validated_data.pop("core_values_assessments")
+    #     except KeyError:
+    #         core_values_assessments = []
+    #
+    #     partner = PartnerOrganization.objects.create(**validated_data)
+    #     self.set_core_values_assessments(partner, core_values_assessments)
+    #     return partner
+    #
+    # def update(self, instance, validated_data):
+    #     try:
+    #         core_values_assessments = validated_data.pop("core_values_assessments")
+    #     except KeyError:
+    #         core_values_assessments = []
+    #
+    #     info = model_meta.get_field_info(instance)
+    #     for attr, value in validated_data.items():
+    #         if attr in info.relations and info.relations[attr].to_many:
+    #             field = getattr(instance, attr)
+    #             field.set(value)
+    #         else:
+    #             setattr(instance, attr, value)
+    #     instance.save()
+    #     self.set_core_values_assessments(instance, core_values_assessments)
+    #     return instance
 
 
 class PartnerOrganizationHactSerializer(serializers.ModelSerializer):

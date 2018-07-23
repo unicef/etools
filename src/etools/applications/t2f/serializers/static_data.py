@@ -3,7 +3,7 @@ from django.contrib.auth import get_user_model
 
 from rest_framework import serializers
 
-from etools.applications.locations.models import Location
+from unicef_locations.models import Location
 from etools.applications.partners.models import Intervention, InterventionResultLink, PartnerOrganization
 from etools.applications.reports.models import Result, Sector
 from etools.applications.users.models import Office

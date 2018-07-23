@@ -13,7 +13,7 @@ from etools.applications.attachments.serializers import AttachmentSerializerMixi
 from etools.applications.attachments.serializers_fields import AttachmentSingleFileField
 from etools.applications.funds.models import FundsCommitmentItem, FundsReservationHeader
 from etools.applications.funds.serializers import FRsSerializer
-from etools.applications.locations.serializers import LocationLightSerializer, LocationSerializer
+from unicef_locations.serializers import LocationLightSerializer, LocationSerializer
 from etools.applications.partners.models import (
     Intervention,
     InterventionAmendment,
@@ -606,6 +606,7 @@ class InterventionDetailSerializer(serializers.ModelSerializer):
             "id", 'frs', "partner", "agreement", "document_type", "number", "prc_review_document_file", "frs_details",
             "signed_pd_document_file", "title", "status", "start", "end", "submission_date_prc", "review_date_prc",
             "submission_date", "prc_review_document", "submitted_to_prc", "signed_pd_document", "signed_by_unicef_date",
+            "signed_by_unicef",
             "unicef_signatory", "unicef_focal_points", "partner_focal_points", "partner_authorized_officer_signatory",
             "offices", "population_focus", "signed_by_partner_date", "created", "modified",
             "planned_budget", "result_links", 'country_programme', 'metadata', 'contingency_pd', "amendments",
@@ -616,6 +617,7 @@ class InterventionDetailSerializer(serializers.ModelSerializer):
             "days_from_submission_to_signed",
             "days_from_review_to_signed",
             "partner_vendor",
+            "reference_number_year"
         )
 
 

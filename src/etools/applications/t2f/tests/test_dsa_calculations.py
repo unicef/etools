@@ -5,8 +5,12 @@ from unittest import skip
 from pytz import UTC
 
 from etools.applications.EquiTrack.tests.cases import BaseTenantTestCase
-from etools.applications.publics.tests.factories import (PublicsCountryFactory, PublicsCurrencyFactory,
-                                                         PublicsDSARateFactory, PublicsDSARegionFactory,)
+from etools.applications.publics.tests.factories import (
+    PublicsCountryFactory,
+    PublicsCurrencyFactory,
+    PublicsDSARateFactory,
+    PublicsDSARegionFactory,
+)
 from etools.applications.t2f.helpers.cost_summary_calculator import DSACalculator, DSAdto
 from etools.applications.t2f.tests.factories import DeductionFactory, ItineraryItemFactory, TravelFactory
 from etools.applications.users.tests.factories import UserFactory

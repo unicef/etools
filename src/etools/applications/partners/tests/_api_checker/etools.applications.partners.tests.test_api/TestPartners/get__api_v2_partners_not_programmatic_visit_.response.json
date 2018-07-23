@@ -26,7 +26,7 @@
             "city": null,
             "postal_code": null,
             "country": null,
-            "id": 9,
+            "id": 126,
             "vendor_number": null,
             "deleted_flag": false,
             "blocked": false,
@@ -41,7 +41,7 @@
             "total_ct_cp": null,
             "total_ct_cy": null,
             "net_ct_cy": "2501.00",
-            "reported_cy": null,
+            "reported_cy": "10000.00",
             "total_ct_ytd": null,
             "hidden": false,
             "basis_for_risk_rating": ""

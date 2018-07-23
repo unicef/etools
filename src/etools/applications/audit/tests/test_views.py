@@ -10,7 +10,7 @@ from factory import fuzzy
 from mock import Mock, patch
 from rest_framework import status
 
-from etools.applications.action_points.tests.factories import ActionPointFactory
+from etools.applications.action_points.tests.factories import ActionPointFactory, ActionPointCategoryFactory
 from etools.applications.attachments.tests.factories import AttachmentFactory, AttachmentFileTypeFactory
 from etools.applications.audit.models import Engagement, Risk, Auditor
 from etools.applications.audit.tests.base import AuditTestCaseMixin, EngagementTransitionsTestCaseMixin
@@ -513,6 +513,7 @@ class TestEngagementActionPointViewSet(EngagementTransitionsTestCaseMixin, BaseT
             '/api/audit/engagements/{}/action-points/'.format(self.engagement.id),
             user=self.unicef_focal_point,
             data={
+                'category': ActionPointCategoryFactory(module='audit').description,
                 'description': fuzzy.FuzzyText(length=100).fuzz(),
                 'due_date': fuzzy.FuzzyDate(datetime.date(2001, 1, 1)).fuzz(),
                 'assigned_to': self.unicef_user.id,
@@ -535,8 +536,8 @@ class TestEngagementActionPointViewSet(EngagementTransitionsTestCaseMixin, BaseT
         if editable:
             self.assertIn('PUT', response.data['actions'].keys())
             self.assertListEqual(
-                ['assigned_to', 'high_priority', 'due_date', 'description', 'section', 'office'],
-                list(response.data['actions']['PUT'].keys())
+                sorted(['category', 'assigned_to', 'high_priority', 'due_date', 'description', 'section', 'office']),
+                sorted(list(response.data['actions']['PUT'].keys()))
             )
         else:
             self.assertNotIn('PUT', response.data['actions'].keys())
@@ -799,6 +800,67 @@ class TestAuditorStaffMembersViewSet(AuditTestCaseMixin, BaseTenantTestCase):
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertIn('user', response.data)
         self.assertEqual(response.data['user'][0], 'User is already assigned to auditor firm.')
+
+    def test_deactivate_auditor_flow(self):
+        user = UserFactory(auditor=True, partner_firm=self.auditor_firm, is_active=True)
+
+        list_response = self.forced_auth_req(
+            'get',
+            '/api/audit/audit-firms/{}/staff-members/'.format(self.auditor_firm.id),
+            user=self.unicef_focal_point
+        )
+
+        self.assertEqual(list_response.status_code, status.HTTP_200_OK)
+        self.assertIn(
+            user.purchase_order_auditorstaffmember.id,
+            [r['id'] for r in list_response.data['results']]
+        )
+
+        del_response = self.forced_auth_req(
+            'delete',
+            '/api/audit/audit-firms/{}/staff-members/{}/'.format(self.auditor_firm.id,
+                                                                 user.purchase_order_auditorstaffmember.id),
+            user=self.unicef_focal_point
+        )
+        self.assertEqual(del_response.status_code, status.HTTP_204_NO_CONTENT)
+
+        deleted_list_response = self.forced_auth_req(
+            'get',
+            '/api/audit/audit-firms/{}/staff-members/'.format(self.auditor_firm.id),
+            user=self.unicef_focal_point
+        )
+
+        self.assertEqual(deleted_list_response.status_code, status.HTTP_200_OK)
+        self.assertNotIn(
+            user.purchase_order_auditorstaffmember.id,
+            [r['id'] for r in deleted_list_response.data['results']]
+        )
+
+        activate_response = self.forced_auth_req(
+            'patch',
+            '/api/audit/audit-firms/{}/staff-members/{}/'.format(self.auditor_firm.id,
+                                                                 user.purchase_order_auditorstaffmember.id),
+            user=self.unicef_focal_point,
+            data={
+                'hidden': False,
+                'user': {
+                    'is_active': True
+                }
+            }
+        )
+        self.assertEqual(activate_response.status_code, status.HTTP_200_OK)
+
+        updated_list_response = self.forced_auth_req(
+            'get',
+            '/api/audit/audit-firms/{}/staff-members/'.format(self.auditor_firm.id),
+            user=self.unicef_focal_point
+        )
+
+        self.assertEqual(updated_list_response.status_code, status.HTTP_200_OK)
+        self.assertIn(
+            user.purchase_order_auditorstaffmember.id,
+            [r['id'] for r in list_response.data['results']]
+        )
 
     def test_assign_none_provided(self):
         response = self.forced_auth_req(

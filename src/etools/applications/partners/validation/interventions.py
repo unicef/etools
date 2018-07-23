@@ -126,8 +126,10 @@ def transition_to_signed(i):
     from etools.applications.partners.models import Agreement
     if i.in_amendment is True:
         raise TransitionError([_('Cannot Transition status while adding an amendment')])
-    if i.document_type in [i.PD, i.SHPD] and i.agreement.status in [Agreement.SUSPENDED, Agreement.TERMINATED]:
-        raise TransitionError([_('The PCA related to this record is Suspended or Terminated. '
+
+    if i.document_type in [i.PD, i.SHPD] and i.agreement.status in [Agreement.SUSPENDED, Agreement.TERMINATED,
+                                                                    Agreement.DRAFT]:
+        raise TransitionError([_('The PCA related to this record is Draft, Suspended or Terminated. '
                                  'This Programme Document will not change status until the related PCA '
                                  'is in Signed status')])
 
@@ -318,11 +320,15 @@ class InterventionValid(CompleteValidation):
         self.check_rigid_fields(intervention, related=True)
         if intervention.total_unicef_budget == 0:
             raise StateValidationError([_('UNICEF Cash $ or UNICEF Supplies $ should not be 0')])
+        if not intervention.signed_by_unicef:
+            raise StateValidationError([_('Signed by UNICEF Authorized Officer must be checked')])
         return True
 
     def state_suspended_valid(self, intervention, user=None):
         self.check_required_fields(intervention)
         self.check_rigid_fields(intervention, related=True)
+        if not intervention.signed_by_unicef:
+            raise StateValidationError([_('Signed by UNICEF Authorized Officer must be checked')])
         return True
 
     def state_active_valid(self, intervention, user=None):
@@ -334,6 +340,8 @@ class InterventionValid(CompleteValidation):
             raise StateValidationError([_('Today is not after the start date')])
         if intervention.total_unicef_budget == 0:
             raise StateValidationError([_('UNICEF Cash $ or UNICEF Supplies $ should not be 0')])
+        if not intervention.signed_by_unicef:
+            raise StateValidationError([_('Signed by UNICEF Authorized Officer must be checked')])
         return True
 
     def state_ended_valid(self, intervention, user=None):
@@ -343,4 +351,6 @@ class InterventionValid(CompleteValidation):
         today = date.today()
         if not today > intervention.end:
             raise StateValidationError([_('Today is not after the end date')])
+        if not intervention.signed_by_unicef:
+            raise StateValidationError([_('Signed by UNICEF Authorized Officer must be checked')])
         return True
