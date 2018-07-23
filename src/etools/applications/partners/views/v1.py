@@ -4,6 +4,7 @@ from django.conf import settings
 from django.http import HttpResponse
 from django.utils.http import urlsafe_base64_decode
 from django.views.generic import TemplateView, View
+from django.contrib.auth.mixins import LoginRequiredMixin
 
 from easy_pdf.views import PDFTemplateView
 from rest_framework import mixins, viewsets
@@ -13,7 +14,7 @@ from etools.applications.partners.models import Agreement, FileType
 from etools.applications.partners.serializers.v1 import FileTypeSerializer
 
 
-class PCAPDFView(PDFTemplateView):
+class PCAPDFView(LoginRequiredMixin, PDFTemplateView):
     template_name = "partners/pca/english_pdf.html"
     # TODO add proper templates for different languages
     language_templates_mapping = {
