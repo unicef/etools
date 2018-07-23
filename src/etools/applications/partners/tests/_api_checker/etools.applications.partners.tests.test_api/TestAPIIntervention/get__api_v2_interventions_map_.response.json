@@ -1,0 +1,69 @@
+{
+    "status_code": 200,
+    "headers": {
+        "content-type": [
+            "Content-Type",
+            "application/json"
+        ],
+        "vary": [
+            "Vary",
+            "Accept, Cookie"
+        ],
+        "allow": [
+            "Allow",
+            "GET"
+        ],
+        "x-frame-options": [
+            "X-Frame-Options",
+            "SAMEORIGIN"
+        ]
+    },
+    "data": [
+        {
+            "id": 121,
+            "partner_id": "125",
+            "partner_name": "Partner 7",
+            "agreement": 125,
+            "document_type": "",
+            "number": "TST/PCA2018125/2018121",
+            "title": "Intervention Title 3",
+            "status": "draft",
+            "start": null,
+            "end": null,
+            "offices": [],
+            "sections": [],
+            "locations": []
+        },
+        {
+            "id": 120,
+            "partner_id": "124",
+            "partner_name": "Partner 6",
+            "agreement": 124,
+            "document_type": "",
+            "number": "TST/PCA2018124/2018120",
+            "title": "Intervention Title 2",
+            "status": "draft",
+            "start": null,
+            "end": null,
+            "offices": [],
+            "sections": [],
+            "locations": []
+        },
+        {
+            "id": 101,
+            "partner_id": "123",
+            "partner_name": "Partner 5",
+            "agreement": 123,
+            "document_type": "",
+            "number": "TST/PCA2018123/2018101",
+            "title": "Intervention Title 1",
+            "status": "draft",
+            "start": null,
+            "end": null,
+            "offices": [],
+            "sections": [],
+            "locations": []
+        }
+    ],
+    "content_type": null
+}

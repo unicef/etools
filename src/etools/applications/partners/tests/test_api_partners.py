@@ -97,7 +97,7 @@ class TestPartnerOrganizationDetailAPIView(BaseTenantTestCase):
             self.url,
             data={
                 "core_values_assessments": [{
-                    "attachment": attachment.pk
+                    "assessment_file": attachment.pk
                 }]
             },
             user=self.unicef_staff
