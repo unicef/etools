@@ -8,6 +8,7 @@ from django_fsm import FSMField, transition
 from model_utils import Choices, FieldTracker
 from model_utils.fields import MonitorField
 from model_utils.models import TimeStampedModel
+from ordered_model.models import OrderedModel
 from unicef_snapshot.models import Activity
 
 from etools.applications.action_points.transitions.conditions import ActionPointCompleteActionsTakenCheck
@@ -18,11 +19,30 @@ from etools.applications.utils.common.urlresolvers import build_frontend_url
 from etools.applications.utils.groups.wrappers import GroupWrapper
 
 
+class Category(OrderedModel, models.Model):
+    MODULE_CHOICES = Choices(
+        ('apd', _('Action Points')),
+        ('t2f', _('Trip Management')),
+        ('tpm', 'Third Party Monitoring'),
+        ('audit', _('Financial Assurance')),
+    )
+
+    module = models.CharField(max_length=10, choices=MODULE_CHOICES, verbose_name=_('Module'))
+    description = models.TextField(verbose_name=_('Description'))
+
+    class Meta:
+        unique_together = ("description", "module", )
+        ordering = ('module', 'order')
+
+    def __str__(self):
+        return '{}: {}'.format(self.module, self.description)
+
+
 class ActionPoint(TimeStampedModel):
     MODULE_CHOICES = Choices(
         ('t2f', _('Trip Management')),
         ('tpm', 'Third Party Monitoring'),
-        ('audit', _('Auditor Portal')),
+        ('audit', _('Financial Assurance')),
     )
 
     STATUSES = Choices(
@@ -54,6 +74,7 @@ class ActionPoint(TimeStampedModel):
 
     status = FSMField(verbose_name=_('Status'), max_length=10, choices=STATUSES, default=STATUSES.open, protected=True)
 
+    category = models.ForeignKey(Category, verbose_name=_('Category'), blank=True, null=True)
     description = models.TextField(verbose_name=_('Description'))
     due_date = models.DateField(verbose_name=_('Due Date'), blank=True, null=True)
     high_priority = models.BooleanField(default=False, verbose_name=_('High Priority'))
@@ -109,6 +130,25 @@ class ActionPoint(TimeStampedModel):
     @property
     def related_object(self):
         return self.engagement_subclass or self.tpm_activity or self.travel_activity
+
+    @property
+    def related_object_str(self):
+        obj = self.related_object
+        if not obj:
+            return
+
+        if self.tpm_activity:
+            return 'Task No {0} for Visit {1}'.format(obj.task_number, obj.tpm_visit.reference_number)
+
+        return str(obj)
+
+    @property
+    def related_object_url(self):
+        obj = self.related_object
+        if not obj:
+            return
+
+        return obj.get_object_url()
 
     @property
     def related_module(self):

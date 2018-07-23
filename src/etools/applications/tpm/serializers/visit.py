@@ -62,6 +62,7 @@ class TPMActionPointSerializer(PermissionsBasedSerializerMixin, ActionPointBaseS
         fields = ActionPointBaseSerializer.Meta.fields + [
             'tpm_activity', 'section', 'office', 'history', 'is_responsible', 'url'
         ]
+        fields.remove('category')
         extra_kwargs = copy(ActionPointBaseSerializer.Meta.extra_kwargs)
         extra_kwargs.update({
             'tpm_activity': {'label': _('Site Visit Schedule')},
