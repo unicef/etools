@@ -98,7 +98,7 @@ class EngagementActionPointSerializer(PermissionsBasedSerializerMixin, ActionPoi
     class Meta(ActionPointBaseSerializer.Meta):
         model = EngagementActionPoint
         fields = ActionPointBaseSerializer.Meta.fields + [
-            'partner', 'intervention', 'section', 'office', 'history', 'url',
+            'partner', 'intervention', 'history', 'url',
         ]
         extra_kwargs = copy(ActionPointBaseSerializer.Meta.extra_kwargs)
         extra_kwargs.update({

@@ -537,7 +537,10 @@ class TestEngagementActionPointViewSet(EngagementTransitionsTestCaseMixin, BaseT
         if editable:
             self.assertIn('PUT', response.data['actions'].keys())
             self.assertListEqual(
-                sorted(['category', 'assigned_to', 'high_priority', 'due_date', 'description', 'section', 'office', 'intervention']),
+                sorted([
+                    'category', 'assigned_to', 'high_priority', 'due_date', 'description',
+                    'section', 'office', 'intervention'
+                ]),
                 sorted(list(response.data['actions']['PUT'].keys()))
             )
         else:
