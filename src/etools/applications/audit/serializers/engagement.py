@@ -103,6 +103,7 @@ class EngagementActionPointSerializer(PermissionsBasedSerializerMixin, ActionPoi
         extra_kwargs = copy(ActionPointBaseSerializer.Meta.extra_kwargs)
         extra_kwargs.update({
             'assigned_to': {'label': _('Person Responsible')},
+            'high_priority': {'label': _('Priority')},
         })
 
     def create(self, validated_data):
