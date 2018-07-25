@@ -71,7 +71,7 @@ class LocationsLightViewSet(mixins.ListModelMixin, viewsets.GenericViewSet):
     """
     Returns a list of all Locations with restricted field set.
     """
-    queryset = Location.objects.all()
+    queryset = Location.objects.defer('geom', )
     serializer_class = LocationLightSerializer
 
     @etag_cached('locations')
@@ -85,7 +85,7 @@ class LocationQuerySetView(ListAPIView):
 
     def get_queryset(self):
         q = self.request.query_params.get('q')
-        qs = self.model.objects
+        qs = self.model.objects.defer('geom', )
 
         if q:
             qs = qs.filter(name__icontains=q)
