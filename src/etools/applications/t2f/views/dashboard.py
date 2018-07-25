@@ -75,7 +75,7 @@ class ActionPointDashboardViewSet(mixins.ListModelMixin, viewsets.GenericViewSet
             if office_id:
                 travels = travels.filter(office_id__in=office_id)
             if travels.exists():
-                action_points = ActionPoint.objects.filter(travel__in=travels)
+                action_points = ActionPoint.objects.filter(travel_activity__travels__in=travels)
                 total = action_points.count()
                 completed = action_points.filter(status=Travel.COMPLETED).count()
                 section = travels.first().section
