@@ -1,5 +1,6 @@
+from django.conf import settings
 from django.shortcuts import redirect
-from django.views.generic import TemplateView
+from django.views.generic import RedirectView, TemplateView
 
 from rest_framework.response import Response
 from rest_framework.views import APIView
@@ -7,8 +8,8 @@ from rest_framework_jwt.serializers import jwt_encode_handler, jwt_payload_handl
 from rest_framework_jwt.views import jwt_response_payload_handler
 
 
-class MainView(TemplateView):
-    template_name = 'choose_login.html'
+class MainView(RedirectView):
+    url = settings.LOGIN_URL
 
     def get(self, request, *args, **kwargs):
         if request.user.is_authenticated:
