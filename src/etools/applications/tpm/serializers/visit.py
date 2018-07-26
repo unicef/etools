@@ -85,6 +85,7 @@ class TPMActionPointSerializer(PermissionsBasedSerializerMixin, ActionPointBaseS
         extra_kwargs = copy(ActionPointBaseSerializer.Meta.extra_kwargs)
         extra_kwargs.update({
             'tpm_activity': {'label': _('Related Task')},
+            'high_priority': {'label': _('Priority')},
         })
 
     def get_is_responsible(self, obj):
