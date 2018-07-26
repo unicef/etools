@@ -14,6 +14,7 @@ from etools.applications.attachments.serializers_fields import (
     AttachmentSingleFileField,
     Base64FileField,
 )
+from etools.applications.attachments.validators import AttachmentRequiresFileOrLink
 from etools.applications.users.serializers import SimpleUserSerializer
 from etools.applications.utils.common.serializers.fields import SeparatedReadWriteField
 from etools.applications.utils.common.serializers.mixins import UserContextSerializerMixin
@@ -92,6 +93,7 @@ class AttachmentFileUploadSerializer(serializers.ModelSerializer):
     class Meta:
         model = Attachment
         fields = ["file", "uploaded_by"]
+        validators = [AttachmentRequiresFileOrLink,]
 
 
 def validate_attachment(cls, data):
