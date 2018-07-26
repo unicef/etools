@@ -44,7 +44,7 @@ class ActionPointBaseSerializer(UserContextSerializerMixin, SnapshotModelSeriali
         required=True
     )
 
-    category = CategoryModelChoiceField(label=_('Category'), required=True, queryset=Category.objects.all())
+    category = CategoryModelChoiceField(label=_('Category'), required=False, queryset=Category.objects.all())
 
     status_date = serializers.DateTimeField(read_only=True, label=_('Status Date'))
 
