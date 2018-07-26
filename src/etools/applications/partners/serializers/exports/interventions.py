@@ -18,7 +18,7 @@ class InterventionAmendmentExportSerializer(InterventionAmendmentCUSerializer):
 
     class Meta:
         model = InterventionAmendment
-        exclude = ("signed_amendment_attachment", )
+        exclude = ("signed_amendment_attachment", "internal_prc_review")
 
 
 class InterventionAmendmentExportFlatSerializer(
@@ -32,7 +32,7 @@ class InterventionAmendmentExportFlatSerializer(
 
     class Meta:
         model = InterventionAmendment
-        exclude = ("signed_amendment_attachment", )
+        exclude = ("signed_amendment_attachment", "internal_prc_review")
 
 
 class InterventionSectionLocationLinkExportSerializer(LocationExportSerializer):

@@ -136,6 +136,28 @@ class TestActionPointViewSet(TestExportMixin, ActionPointsTestCaseMixin, BaseTen
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(len(response.data['results']), 1)
 
+    def test_filter_multiple_status(self):
+        ActionPointFactory(status='open')
+        ActionPointFactory(status='completed')
+
+        response = self.forced_auth_req(
+            'get',
+            reverse('action-points:action-points-list'),
+            data={'status': 'completed'},
+            user=self.unicef_user
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(response.data['results']), 1)
+
+        response = self.forced_auth_req(
+            'get',
+            reverse('action-points:action-points-list'),
+            data={'status__in': 'open,completed'},
+            user=self.unicef_user
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(response.data['results']), 2)
+
     def test_reassign(self):
         author = UserFactory(unicef_user=True)
         assignee = UserFactory(unicef_user=True)
