@@ -233,7 +233,7 @@ class ActionPoint(TimeStampedModel):
         notification.send_notification()
 
     def _do_complete(self):
-        self.send_email(self.assigned_by, 'action_points/action_point/completed', cc=[self.assigned_to])
+        self.send_email(self.assigned_by, 'action_points/action_point/completed', cc=[self.assigned_to.email])
 
     @transition(status, source=STATUSES.open, target=STATUSES.completed,
                 permission=has_action_permission(action='complete'),

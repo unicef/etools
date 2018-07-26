@@ -10,6 +10,7 @@ def action_point_updated_receiver(instance, created, **kwargs):
     if created:
         if instance.related_module is None:
             instance.send_email(instance.assigned_to, 'action_points/action_point/assigned',
-                                cc=[instance.assigned_by])
+                                cc=[instance.assigned_by.email])
+    else:
         if instance.tracker.has_changed('assigned_to'):
             instance.send_email(instance.assigned_to, 'action_points/action_point/assigned')
