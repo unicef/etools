@@ -7,7 +7,7 @@ from factory import fuzzy
 from rest_framework import status
 
 from etools.applications.action_points.tests.base import ActionPointsTestCaseMixin
-from etools.applications.action_points.tests.factories import ActionPointFactory, ActionPointCategoryFactory
+from etools.applications.action_points.tests.factories import ActionPointFactory
 from etools.applications.EquiTrack.tests.cases import BaseTenantTestCase
 from etools.applications.audit.tests.factories import MicroAssessmentFactory
 from etools.applications.partners.tests.factories import PartnerFactory
@@ -26,7 +26,6 @@ class TestActionPointViewSet(TestExportMixin, ActionPointsTestCaseMixin, BaseTen
         cls.unicef_user = UserFactory(unicef_user=True)
         cls.common_user = UserFactory()
         cls.create_data = {
-            'category': ActionPointCategoryFactory().id,
             'description': 'do something',
             'due_date': date.today(),
             'assigned_to': cls.pme_user.id,
