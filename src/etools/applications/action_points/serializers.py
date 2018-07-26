@@ -119,9 +119,6 @@ class ActionPointListSerializer(PermissionsBasedSerializerMixin, ActionPointBase
             activity = validated_data['tpm_activity']
             validated_data.update({
                 'partner_id': activity.partner_id,
-                'intervention_id': activity.intervention_id,
-                'cp_output_id': activity.cp_output_id,
-                'section_id': activity.section_id,
             })
 
         return super().create(validated_data)
