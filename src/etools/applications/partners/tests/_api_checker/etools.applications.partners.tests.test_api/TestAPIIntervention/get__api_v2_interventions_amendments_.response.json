@@ -24,6 +24,7 @@
             "amendment_number": "1",
             "signed_amendment_file": "http://testserver/media/test/file_attachments/partner_organization/124/124/agreements/124/interventions/120/amendments/None/test_file.pdf",
             "signed_amendment_attachment": null,
+            "internal_prc_review": null,
             "created": "2018-07-20T21:19:08.152000Z",
             "modified": "2018-07-20T21:19:08.202000Z",
             "types": [

@@ -2154,6 +2154,12 @@ class InterventionAmendment(TimeStampedModel):
         code='partners_intervention_amendment_signed',
         blank=True,
     )
+    internal_prc_review = CodedGenericRelation(
+        Attachment,
+        verbose_name=_('Internal PRC Review'),
+        code='partners_intervention_amendment_internal_prc_review',
+        blank=True,
+    )
 
     tracker = FieldTracker()
 
