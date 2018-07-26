@@ -54,11 +54,14 @@ class ActionPointViewSet(
         'cp_output__name', 'partner__name', 'section__name', 'office__name', 'assigned_to__first_name',
         'assigned_to__last_name', 'due_date', 'status', 'pk'
     )
-    filter_fields = (
+    filter_fields = {field: ['exact'] for field in (
         'assigned_by', 'assigned_to', 'high_priority', 'author', 'section', 'location',
-        'office', 'status', 'partner', 'intervention', 'cp_output', 'due_date',
+        'office', 'partner', 'intervention', 'cp_output', 'due_date',
         'engagement', 'tpm_activity', 'travel_activity',
-    )
+    )}
+    filter_fields.update({
+        'status': ['exact', 'in'],
+    })
 
     def get_permission_context(self):
         context = super().get_permission_context()

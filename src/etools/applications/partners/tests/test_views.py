@@ -1030,11 +1030,6 @@ class TestAgreementAPIView(BaseTenantTestCase):
         cls.partner_staff = PartnerStaffFactory(partner=cls.partner)
         cls.partner_staff2 = PartnerStaffFactory(partner=cls.partner)
 
-        cls.unicef_staff = UserFactory(is_staff=True)
-        cls.partner = PartnerFactory(partner_type=PartnerType.CIVIL_SOCIETY_ORGANIZATION)
-        cls.partner_staff = PartnerStaffFactory(partner=cls.partner)
-        cls.partner_staff2 = PartnerStaffFactory(partner=cls.partner)
-
         cls.partner_staff_user = UserFactory(is_staff=True)
         cls.partner_staff_user.profile.partner_staff_member = cls.partner_staff.id
         cls.partner_staff_user.save()
@@ -1336,14 +1331,13 @@ class TestAgreementAPIView(BaseTenantTestCase):
         self.assertEqual(response.data, ["Cannot delete a signed amendment"])
 
     def test_agreement_generate_pdf_default(self):
+        self.client.force_login(self.unicef_staff)
         with mock.patch('etools.applications.partners.views.v1.get_data_from_insight') as mock_get_insight:
             # FIXME: need to return some fake data here (not just {}) to actually get a PDF that
             # has more in it than an error message
             mock_get_insight.return_value = (True, {})
-            response = self.forced_auth_req(
-                'get',
-                reverse('partners_api:pca_pdf', args=[self.agreement.pk]),
-                user=self.unicef_staff
+            response = self.client.get(
+                reverse('partners_api:pca_pdf', args=[self.agreement.pk])
             )
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
@@ -1353,6 +1347,7 @@ class TestAgreementAPIView(BaseTenantTestCase):
 
     @skip('figure out why this is failing with a random vendor number')
     def test_agreement_generate_pdf_lang(self):
+        self.client.force_login(self.unicef_staff)
         params = {
             "lang": "spanish",
         }
@@ -1360,10 +1355,8 @@ class TestAgreementAPIView(BaseTenantTestCase):
             # FIXME: need to return some fake data here (not just {}) to actually get a PDF that
             # has more in it than an error message
             mock_get_insight.return_value = (True, {})
-            response = self.forced_auth_req(
-                'get',
+            response = self.client.get(
                 reverse('partners_api:pca_pdf', args=[self.agreement.pk]),
-                user=self.unicef_staff,
                 data=params
             )
         self.assertEqual(response.status_code, status.HTTP_200_OK)
