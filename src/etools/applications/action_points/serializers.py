@@ -32,7 +32,7 @@ class ActionPointBaseSerializer(UserContextSerializerMixin, SnapshotModelSeriali
     author = MinimalUserSerializer(read_only=True, label=_('Author'))
     assigned_by = MinimalUserSerializer(read_only=True, label=_('Assigned By'))
     assigned_to = SeparatedReadWriteField(
-        read_field=MinimalUserSerializer(read_only=True, label=_('Assigned To')),
+        read_field=MinimalUserSerializer(read_only=True, label=_('Assignee')),
         required=True
     )
     category = CategoryModelChoiceField(label=_('Category'), required=True, queryset=Category.objects.all())
@@ -121,9 +121,6 @@ class ActionPointListSerializer(PermissionsBasedSerializerMixin, ActionPointBase
             activity = validated_data['tpm_activity']
             validated_data.update({
                 'partner_id': activity.partner_id,
-                'intervention_id': activity.intervention_id,
-                'cp_output_id': activity.cp_output_id,
-                'section_id': activity.section_id,
             })
 
         return super().create(validated_data)

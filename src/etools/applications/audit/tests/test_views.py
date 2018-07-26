@@ -513,7 +513,7 @@ class TestEngagementActionPointViewSet(EngagementTransitionsTestCaseMixin, BaseT
             '/api/audit/engagements/{}/action-points/'.format(self.engagement.id),
             user=self.unicef_focal_point,
             data={
-                'category': ActionPointCategoryFactory(module='audit').description,
+                'category': ActionPointCategoryFactory(module='audit').id,
                 'description': fuzzy.FuzzyText(length=100).fuzz(),
                 'due_date': fuzzy.FuzzyDate(datetime.date(2001, 1, 1)).fuzz(),
                 'assigned_to': self.unicef_user.id,
@@ -524,6 +524,7 @@ class TestEngagementActionPointViewSet(EngagementTransitionsTestCaseMixin, BaseT
 
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         self.assertEqual(self.engagement.action_points.count(), 1)
+        self.assertIsNotNone(self.engagement.action_points.first().partner)
 
     def _test_action_point_editable(self, action_point, user, editable=True):
         response = self.forced_auth_req(
@@ -536,7 +537,10 @@ class TestEngagementActionPointViewSet(EngagementTransitionsTestCaseMixin, BaseT
         if editable:
             self.assertIn('PUT', response.data['actions'].keys())
             self.assertListEqual(
-                sorted(['category', 'assigned_to', 'high_priority', 'due_date', 'description', 'section', 'office']),
+                sorted([
+                    'category', 'assigned_to', 'high_priority', 'due_date', 'description',
+                    'section', 'office', 'intervention'
+                ]),
                 sorted(list(response.data['actions']['PUT'].keys()))
             )
         else:

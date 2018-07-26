@@ -11,7 +11,8 @@ from etools.applications.action_points.serializers import ActionPointBaseSeriali
 from etools.applications.activities.serializers import ActivitySerializer
 from unicef_locations.serializers import LocationLightSerializer
 from etools.applications.partners.models import InterventionResultLink, PartnerType
-from etools.applications.partners.serializers.interventions_v2 import InterventionCreateUpdateSerializer
+from etools.applications.partners.serializers.interventions_v2 import InterventionCreateUpdateSerializer, \
+    BaseInterventionListSerializer
 from etools.applications.partners.serializers.partner_organization_v2 import MinimalPartnerOrganizationListSerializer
 from etools.applications.permissions2.serializers import PermissionsBasedSerializerMixin
 from etools.applications.reports.serializers.v1 import ResultSerializer, SectionSerializer
@@ -43,6 +44,22 @@ class TPMVisitReportRejectCommentSerializer(WritableNestedSerializerMixin,
 
 
 class TPMActionPointSerializer(PermissionsBasedSerializerMixin, ActionPointBaseSerializer):
+    reference_number = serializers.ReadOnlyField(label=_('Reference No.'))
+
+    partner = MinimalPartnerOrganizationListSerializer(read_only=True, label=_('Related Partner'))
+    intervention = SeparatedReadWriteField(
+        label=_('Related PD/SSFA'), read_field=BaseInterventionListSerializer(), required=False,
+    )
+    cp_output = SeparatedReadWriteField(
+        read_field=ResultSerializer(read_only=True, label=_('Related CP Output')),
+        required=False,
+    )
+
+    location = SeparatedReadWriteField(
+        read_field=LocationLightSerializer(read_only=True, label=_('Related Location')),
+        required=False,
+    )
+
     section = SeparatedReadWriteField(
         read_field=SectionSerializer(read_only=True, label=_('Section')),
         read_only=True
@@ -60,7 +77,8 @@ class TPMActionPointSerializer(PermissionsBasedSerializerMixin, ActionPointBaseS
     class Meta(ActionPointBaseSerializer.Meta):
         model = TPMActionPoint
         fields = ActionPointBaseSerializer.Meta.fields + [
-            'tpm_activity', 'section', 'office', 'history', 'is_responsible', 'url'
+            'partner', 'intervention', 'cp_output', 'location', 'tpm_activity',
+            'section', 'office', 'history', 'is_responsible', 'url'
         ]
         fields.remove('category')
         extra_kwargs = copy(ActionPointBaseSerializer.Meta.extra_kwargs)
@@ -77,9 +95,6 @@ class TPMActionPointSerializer(PermissionsBasedSerializerMixin, ActionPointBaseS
 
         validated_data.update({
             'partner_id': activity.partner_id,
-            'intervention_id': activity.intervention_id,
-            'cp_output_id': activity.cp_output_id,
-            'section': activity.section,
         })
         return super(TPMActionPointSerializer, self).create(validated_data)
 
