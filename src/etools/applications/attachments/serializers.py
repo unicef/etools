@@ -121,7 +121,10 @@ def validate_attachment(cls, data):
     except ValueError:
         raise serializers.ValidationError("Attachment expects an integer")
 
-    file_type = FileType.objects.get(code=code)
+    file_type, __ = FileType.objects.get_or_create(
+        code=code,
+        defaults={"name": code.replace("_", " ").title()}
+    )
     if attachment.content_object is not None:
         if not cls.instance or attachment.content_object != cls.instance:
             # If content object exists, expect instance to exist
