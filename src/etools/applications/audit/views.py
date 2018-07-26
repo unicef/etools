@@ -445,7 +445,6 @@ class EngagementActionPointViewSet(BaseAuditViewSet,
     metadata_class = AuditPermissionBasedMetadata
     queryset = EngagementActionPoint.objects.all()
     serializer_class = EngagementActionPointSerializer
-
     permission_classes = BaseAuditViewSet.permission_classes + [NestedPermission]
 
     def get_obj_permission_context(self, obj):
@@ -460,7 +459,7 @@ class EngagementActionPointViewSet(BaseAuditViewSet,
 
     def perform_create(self, serializer):
         engagement = self.get_parent_object()
-        serializer.save(engagement=engagement, partner_id=engagement.partner_id)
+        serializer.save(engagement=engagement)
 
 
 class BaseAuditAttachmentsViewSet(BaseAuditViewSet,

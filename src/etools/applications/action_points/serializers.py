@@ -32,10 +32,11 @@ class ActionPointBaseSerializer(UserContextSerializerMixin, SnapshotModelSeriali
     author = MinimalUserSerializer(read_only=True, label=_('Author'))
     assigned_by = MinimalUserSerializer(read_only=True, label=_('Assigned By'))
     assigned_to = SeparatedReadWriteField(
-        read_field=MinimalUserSerializer(read_only=True, label=_('Assigned To')),
-        required=True
+        read_field=MinimalUserSerializer(read_only=True),
+        required=True, label=_('Assignee')
     )
-    category = CategoryModelChoiceField(label=_('Category'), required=True, queryset=Category.objects.all())
+
+    category = CategoryModelChoiceField(label=_('Category'), required=False, queryset=Category.objects.all())
 
     status_date = serializers.DateTimeField(read_only=True, label=_('Status Date'))
 
@@ -93,21 +94,18 @@ class ActionPointListSerializer(PermissionsBasedSerializerMixin, ActionPointBase
     )
 
     section = SeparatedReadWriteField(
-        read_field=SectionSerializer(read_only=True, label=_('Section')),
+        read_field=SectionSerializer(read_only=True, label=_('Section of Assignee')),
         required=True,
     )
     office = SeparatedReadWriteField(
-        read_field=OfficeSerializer(read_only=True, label=_('Office')),
+        read_field=OfficeSerializer(read_only=True, label=_('Office of Assignee')),
         required=True
     )
 
     class Meta(ActionPointBaseSerializer.Meta):
         fields = ActionPointBaseSerializer.Meta.fields + [
             'related_module',
-
-            'section', 'office', 'location',
-            'partner', 'cp_output', 'intervention',
-
+            'cp_output', 'partner', 'intervention', 'location',
             'engagement', 'tpm_activity', 'travel_activity',
         ]
 
@@ -121,9 +119,6 @@ class ActionPointListSerializer(PermissionsBasedSerializerMixin, ActionPointBase
             activity = validated_data['tpm_activity']
             validated_data.update({
                 'partner_id': activity.partner_id,
-                'intervention_id': activity.intervention_id,
-                'cp_output_id': activity.cp_output_id,
-                'section_id': activity.section_id,
             })
 
         return super().create(validated_data)
