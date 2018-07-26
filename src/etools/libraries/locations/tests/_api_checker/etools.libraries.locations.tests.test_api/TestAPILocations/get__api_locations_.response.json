@@ -7,7 +7,7 @@
         ],
         "etag": [
             "ETag",
-            "\"ba4552c4c2b4483683e14dd60c674bf3\""
+            "\"76ba84a50e0a4834ac2980aa3fe2754c\""
         ],
         "cache-control": [
             "Cache-Control",
@@ -31,10 +31,13 @@
             "id": "101",
             "name": "Location 0 [GatewayType 0 - abc]",
             "p_code": "abc",
-            "location_type": "GatewayType 0",
-            "location_type_admin_level": 0,
-            "parent": null,
-            "geo_point": "SRID=4326;POINT (20 20)"
+            "gateway": {
+                "id": 2511,
+                "name": "GatewayType 0",
+                "admin_level": 0
+            },
+            "geo_point": "SRID=4326;POINT (20 20)",
+            "parent": null
         }
     ],
     "content_type": null
