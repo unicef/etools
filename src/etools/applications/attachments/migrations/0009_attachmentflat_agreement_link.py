@@ -8,14 +8,18 @@ from django.db import migrations, models
 
 def update_agreement_link(apps, schema_editor):
     AttachmentFlat = apps.get_model("attachments", "attachmentflat")
-    Agreement = apps.get_model("partners", "Agreement")
-    for flat in AttachmentFlat.objects.filter(agreement_reference_number__isnull=False):
-        agreement = Agreement.objects.get(
-            reference_number=flat.agreement_reference_number
-        )
+    flat_qs = AttachmentFlat.objects.filter(
+        agreement_reference_number__isnull=False
+    ).exclude(agreement_reference_number="")
+    for flat in flat_qs:
+        __, agreement_type_year_pk = flat.agreement_reference_number.split("/")
+        if agreement_type_year_pk.startswith(Agreement.PCA):
+            pk = agreement_type_year_pk[7:]
+        else:
+            pk = agreement_type_year_pk[8:]
         flat.agreement_link = reverse(
             "partners_api:agreement-detail",
-            args=[agreement.pk]
+            args=[pk]
         )
         flat.save()
 
@@ -23,7 +27,6 @@ def update_agreement_link(apps, schema_editor):
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('partners', '0020_auto_20180719_1815'),
         ('attachments', '0008_auto_20180717_1535'),
     ]
 
