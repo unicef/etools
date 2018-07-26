@@ -7,7 +7,7 @@
         ],
         "etag": [
             "ETag",
-            "\"fee13df9f3604d378642a2eb4736c14e\""
+            "\"159e456d88624f45abbcb665f6da40c5\""
         ],
         "cache-control": [
             "Cache-Control",
@@ -30,7 +30,12 @@
         {
             "id": "101",
             "name": "Location 0 [GatewayType 0 - abc]",
-            "p_code": "abc"
+            "p_code": "abc",
+            "gateway": {
+                "id": 2511,
+                "name": "GatewayType 0",
+                "admin_level": 0
+            }
         }
     ],
     "content_type": null
