@@ -79,12 +79,12 @@ class EngagementActionPointSerializer(PermissionsBasedSerializerMixin, ActionPoi
     )
 
     section = SeparatedReadWriteField(
-        read_field=SectionSerializer(read_only=True, label=_('Section of Assignee')),
-        required=True,
+        read_field=SectionSerializer(read_only=True),
+        required=True, label=_('Section of Assignee')
     )
     office = SeparatedReadWriteField(
-        read_field=OfficeSerializer(read_only=True, label=_('Office of Assignee')),
-        required=True
+        read_field=OfficeSerializer(read_only=True),
+        required=True, label=_('Office of Assignee')
     )
     category = CategoryModelChoiceField(
         label=_('Action Point Category'), required=True,

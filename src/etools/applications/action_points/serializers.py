@@ -32,8 +32,8 @@ class ActionPointBaseSerializer(UserContextSerializerMixin, SnapshotModelSeriali
     author = MinimalUserSerializer(read_only=True, label=_('Author'))
     assigned_by = MinimalUserSerializer(read_only=True, label=_('Assigned By'))
     assigned_to = SeparatedReadWriteField(
-        read_field=MinimalUserSerializer(read_only=True, label=_('Assignee')),
-        required=True
+        read_field=MinimalUserSerializer(read_only=True),
+        required=True, label=_('Assignee')
     )
 
     category = CategoryModelChoiceField(label=_('Category'), required=False, queryset=Category.objects.all())

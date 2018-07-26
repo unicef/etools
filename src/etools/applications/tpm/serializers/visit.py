@@ -48,25 +48,26 @@ class TPMActionPointSerializer(PermissionsBasedSerializerMixin, ActionPointBaseS
 
     partner = MinimalPartnerOrganizationListSerializer(read_only=True, label=_('Related Partner'))
     intervention = SeparatedReadWriteField(
-        label=_('Related PD/SSFA'), read_field=BaseInterventionListSerializer(), required=False,
+        read_field=BaseInterventionListSerializer(),
+        required=False, label=_('Related PD/SSFA')
     )
     cp_output = SeparatedReadWriteField(
-        read_field=ResultSerializer(read_only=True, label=_('Related CP Output')),
-        required=False,
+        read_field=ResultSerializer(),
+        required=False, label=_('Related CP Output')
     )
 
     location = SeparatedReadWriteField(
-        read_field=LocationLightSerializer(read_only=True, label=_('Related Location')),
-        required=False,
+        read_field=LocationLightSerializer(),
+        required=False, label=_('Related Location')
     )
 
     section = SeparatedReadWriteField(
-        read_field=SectionSerializer(read_only=True, label=_('Section of Assignee')),
-        required=True,
+        read_field=SectionSerializer(),
+        required=True, label=_('Section of Assignee')
     )
     office = SeparatedReadWriteField(
-        read_field=OfficeSerializer(read_only=True, label=_('Office of Assignee')),
-        required=True,
+        read_field=OfficeSerializer(),
+        required=True, label=_('Office of Assignee')
     )
 
     is_responsible = serializers.SerializerMethodField()
