@@ -35,14 +35,6 @@ class ActionPointBaseSerializer(UserContextSerializerMixin, SnapshotModelSeriali
         read_field=MinimalUserSerializer(read_only=True, label=_('Assignee')),
         required=True
     )
-    section = SeparatedReadWriteField(
-        read_field=SectionSerializer(read_only=True, label=_('Section of Assignee')),
-        required=True,
-    )
-    office = SeparatedReadWriteField(
-        read_field=OfficeSerializer(read_only=True, label=_('Office of Assignee')),
-        required=True
-    )
 
     category = CategoryModelChoiceField(label=_('Category'), required=False, queryset=Category.objects.all())
 
@@ -99,6 +91,15 @@ class ActionPointListSerializer(PermissionsBasedSerializerMixin, ActionPointBase
 
     location = SeparatedReadWriteField(
         read_field=LocationLightSerializer(read_only=True, label=_('Location')),
+    )
+
+    section = SeparatedReadWriteField(
+        read_field=SectionSerializer(read_only=True, label=_('Section of Assignee')),
+        required=True,
+    )
+    office = SeparatedReadWriteField(
+        read_field=OfficeSerializer(read_only=True, label=_('Office of Assignee')),
+        required=True
     )
 
     class Meta(ActionPointBaseSerializer.Meta):
