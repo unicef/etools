@@ -61,12 +61,12 @@ class TPMActionPointSerializer(PermissionsBasedSerializerMixin, ActionPointBaseS
     )
 
     section = SeparatedReadWriteField(
-        read_field=SectionSerializer(read_only=True, label=_('Section')),
-        read_only=True
+        read_field=SectionSerializer(read_only=True, label=_('Section of Assignee')),
+        required=True,
     )
     office = SeparatedReadWriteField(
-        read_field=OfficeSerializer(read_only=True, label=_('Office')),
-        required=True
+        read_field=OfficeSerializer(read_only=True, label=_('Office of Assignee')),
+        required=True,
     )
 
     is_responsible = serializers.SerializerMethodField()
@@ -83,8 +83,7 @@ class TPMActionPointSerializer(PermissionsBasedSerializerMixin, ActionPointBaseS
         fields.remove('category')
         extra_kwargs = copy(ActionPointBaseSerializer.Meta.extra_kwargs)
         extra_kwargs.update({
-            'tpm_activity': {'label': _('Site Visit Schedule')},
-            'assigned_to': {'label': _('Person Responsible')}
+            'tpm_activity': {'label': _('Related Task')},
         })
 
     def get_is_responsible(self, obj):
