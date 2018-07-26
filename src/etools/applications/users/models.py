@@ -28,6 +28,7 @@ class User(AbstractBaseUser, PermissionsMixin):
     email = models.EmailField(_('email address'), unique=True)
     password = models.CharField(_("password"), max_length=128)
     first_name = models.CharField(_('first name'), max_length=30, blank=True)
+    middle_name = models.CharField(_('middle_name'), max_length=50, blank=True)
     last_name = models.CharField(_('last name'), max_length=30, blank=True)
     date_joined = models.DateTimeField(_('date joined'), auto_now_add=True)
     last_login = models.DateTimeField(_('last login'), blank=True, null=True)
@@ -54,8 +55,12 @@ class User(AbstractBaseUser, PermissionsMixin):
         """
         Return the first_name plus the last_name, with a space in between.
         """
-        full_name = '%s %s' % (self.first_name, self.last_name)
-        return full_name.strip()
+        full_name = ' '.join([
+            self.first_name,
+            self.middle_name,
+            self.last_name,
+        ])
+        return full_name.strip().replace("  ", " ")
 
     def get_short_name(self):
         """Return the short name for the user."""
@@ -271,6 +276,9 @@ class UserProfile(models.Model):
 
     def first_name(self):
         return self.user.first_name
+
+    def middle_name(self):
+        return self.user.middle_name
 
     def last_name(self):
         return self.user.last_name
