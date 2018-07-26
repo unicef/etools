@@ -209,12 +209,12 @@ class PartnerOrganizationQuerySet(models.QuerySet):
         return self.filter(Q(reported_cy__gt=0) | Q(total_ct_cy__gt=0), hidden=False, *args, **kwargs)
 
     def not_programmatic_visit_compliant(self, *args, **kwargs):
-        return self.filter(net_ct_cy__gt=PartnerOrganization.CT_MR_AUDIT_TRIGGER_LEVEL,
+        return self.active(net_ct_cy__gt=PartnerOrganization.CT_MR_AUDIT_TRIGGER_LEVEL,
                            hact_values__programmatic_visits__completed__total=0,
                            *args, **kwargs)
 
     def not_spot_check_compliant(self, *args, **kwargs):
-        return self.filter(Q(reported_cy__gt=PartnerOrganization.CT_CP_AUDIT_TRIGGER_LEVEL) |
+        return self.active(Q(reported_cy__gt=PartnerOrganization.CT_CP_AUDIT_TRIGGER_LEVEL) |
                            Q(planned_engagement__spot_check_planned_q1__gt=0) |
                            Q(planned_engagement__spot_check_planned_q2__gt=0) |
                            Q(planned_engagement__spot_check_planned_q3__gt=0) |
@@ -635,6 +635,10 @@ class PartnerOrganization(TimeStampedModel):
         else:
             return PartnerOrganization.ASSURANCE_PARTIAL
 
+    @cached_property
+    def current_core_value_assessment(self):
+        return self.core_values_assessments.filter(archived=False).first()
+
     def planned_visits_to_hact(self):
         """For current year sum all programmatic values of planned visits
         records for partner
@@ -819,6 +823,19 @@ class PartnerOrganization(TimeStampedModel):
     def get_admin_url(self):
         admin_url_name = 'admin:partners_partnerorganization_change'
         return reverse(admin_url_name, args=(self.id,))
+
+
+class CoreValuesAssessment(TimeStampedModel):
+    partner = models.ForeignKey(PartnerOrganization, verbose_name=_("Partner"), related_name='core_values_assessments',
+                                on_delete=models.CASCADE)
+
+    date = models.DateField(verbose_name=_('Date positively assessed against core values'), blank=True, null=True)
+    assessment = models.FileField(verbose_name=_("Core Values Assessment"), blank=True, null=True,
+                                  upload_to='partners/core_values/', max_length=1024,
+                                  help_text='Only required for CSO partners')
+    attachment = CodedGenericRelation(Attachment, verbose_name=_('Core Values Assessment'), blank=True, null=True,
+                                      code='partners_partner_assessment', help_text='Only required for CSO partners')
+    archived = models.BooleanField(default=False)
 
 
 class PartnerStaffMemberManager(models.Manager):
@@ -1191,13 +1208,11 @@ class Agreement(TimeStampedModel):
         null=True, blank=True,
         on_delete=models.CASCADE,
     )
-
     signed_by_partner_date = models.DateField(
         verbose_name=_("Signed By Partner Date"),
         null=True,
         blank=True,
     )
-
     # Signatory on behalf of the PartnerOrganization
     partner_manager = models.ForeignKey(
         PartnerStaffMember,
@@ -1677,7 +1692,10 @@ class Intervention(TimeStampedModel):
         null=True,
         blank=True,
     )
-
+    signed_by_unicef = models.BooleanField(
+        blank=True, default=False,
+        verbose_name=_("Signed By UNICEF Authorized Officer")
+    )
     # partnership managers
     unicef_signatory = models.ForeignKey(
         settings.AUTH_USER_MODEL,
@@ -2134,6 +2152,12 @@ class InterventionAmendment(TimeStampedModel):
         Attachment,
         verbose_name=_('Amendment Document'),
         code='partners_intervention_amendment_signed',
+        blank=True,
+    )
+    internal_prc_review = CodedGenericRelation(
+        Attachment,
+        verbose_name=_('Internal PRC Review'),
+        code='partners_intervention_amendment_internal_prc_review',
         blank=True,
     )
 

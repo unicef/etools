@@ -6,6 +6,7 @@ from django.db import transaction
 from django.db.models import Q
 from django.shortcuts import get_object_or_404
 
+from etools_validator.mixins import ValidatorViewMixin
 from rest_framework import status
 from rest_framework.exceptions import ValidationError
 from rest_framework.generics import (
@@ -51,6 +52,7 @@ from etools.applications.partners.serializers.exports.partner_organization impor
 )
 from etools.applications.partners.serializers.partner_organization_v2 import (
     AssessmentDetailSerializer,
+    CoreValuesAssessmentSerializer,
     MinimalPartnerOrganizationListSerializer,
     PartnerOrganizationCreateUpdateSerializer,
     PartnerOrganizationDetailSerializer,
@@ -65,7 +67,6 @@ from etools.applications.partners.serializers.partner_organization_v2 import (
 from etools.applications.partners.views.helpers import set_tenant_or_fail
 from etools.applications.t2f.models import TravelActivity
 from etools.applications.vision.adapters.partner import PartnerSynchronizer
-from etools_validator.mixins import ValidatorViewMixin
 
 
 class PartnerOrganizationListAPIView(QueryStringFilterMixin, ExportModelMixin, ListCreateAPIView):
@@ -167,7 +168,8 @@ class PartnerOrganizationDetailAPIView(ValidatorViewMixin, RetrieveUpdateDestroy
         'assessments': AssessmentDetailSerializer,
         'planned_visits': PartnerPlannedVisitsSerializer,
         'staff_members': PartnerStaffMemberCreateUpdateSerializer,
-        'planned_engagement': PlannedEngagementNestedSerializer
+        'planned_engagement': PlannedEngagementNestedSerializer,
+        'core_values_assessments': CoreValuesAssessmentSerializer
     }
 
     def get_serializer_class(self, format=None):
@@ -183,6 +185,7 @@ class PartnerOrganizationDetailAPIView(ValidatorViewMixin, RetrieveUpdateDestroy
             'staff_members',
             'planned_engagement',
             'planned_visits',
+            'core_values_assessments'
         ]
 
         instance, old_instance, serializer = self.my_update(

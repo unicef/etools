@@ -18,7 +18,7 @@ class InterventionAmendmentExportSerializer(InterventionAmendmentCUSerializer):
 
     class Meta:
         model = InterventionAmendment
-        exclude = ("signed_amendment_attachment", )
+        exclude = ("signed_amendment_attachment", "internal_prc_review")
 
 
 class InterventionAmendmentExportFlatSerializer(
@@ -32,7 +32,7 @@ class InterventionAmendmentExportFlatSerializer(
 
     class Meta:
         model = InterventionAmendment
-        exclude = ("signed_amendment_attachment", )
+        exclude = ("signed_amendment_attachment", "internal_prc_review")
 
 
 class InterventionSectionLocationLinkExportSerializer(LocationExportSerializer):
@@ -363,6 +363,7 @@ class InterventionExportSerializer(serializers.ModelSerializer):
             "partner_authorized_officer_signatory",
             "signed_by_partner_date",
             "unicef_signatory",
+            "signed_by_unicef",
             "signed_by_unicef_date",
             "days_from_submission_to_signed",
             "days_from_review_to_signed",

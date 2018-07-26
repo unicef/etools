@@ -45,18 +45,23 @@ class ActionPointViewSet(
                        RelatedModuleFilter, DjangoFilterBackend,)
 
     search_fields = (
-        'assigned_to__email', 'assigned_by__email', 'section__name', 'office__name',
+        'assigned_to__email', 'assigned_to__first_name', 'assigned_to__last_name',
+        'assigned_by__email', 'assigned_by__first_name', 'assigned_by__last_name',
+        'section__name', 'office__name',
         'status', 'intervention__title', 'location__name', 'partner__name', 'cp_output__name',
     )
     ordering_fields = (
         'cp_output__name', 'partner__name', 'section__name', 'office__name', 'assigned_to__first_name',
-        'assigned_to__last_name', 'due_date', 'status'
+        'assigned_to__last_name', 'due_date', 'status', 'pk'
     )
-    filter_fields = (
-        'assigned_to', 'high_priority', 'author', 'section',
-        'office', 'status', 'partner', 'intervention', 'cp_output', 'due_date',
+    filter_fields = {field: ['exact'] for field in (
+        'assigned_by', 'assigned_to', 'high_priority', 'author', 'section', 'location',
+        'office', 'partner', 'intervention', 'cp_output', 'due_date',
         'engagement', 'tpm_activity', 'travel_activity',
-    )
+    )}
+    filter_fields.update({
+        'status': ['exact', 'in'],
+    })
 
     def get_permission_context(self):
         context = super().get_permission_context()

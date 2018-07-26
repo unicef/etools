@@ -16,7 +16,8 @@ from etools.applications.attachments.tests.factories import AttachmentFactory, A
 from etools.applications.EquiTrack.tests.cases import BaseTenantTestCase
 from etools.applications.funds.tests.factories import FundsReservationHeaderFactory
 from etools.applications.partners.models import Agreement, Intervention
-from etools.applications.partners.tests.factories import AgreementFactory, InterventionFactory, PartnerFactory
+from etools.applications.partners.tests.factories import AgreementFactory, InterventionFactory, PartnerFactory, \
+    CoreValuesAssessmentFactory
 from etools.applications.reports.tests.factories import CountryProgrammeFactory
 from etools.applications.users.tests.factories import CountryFactory, UserFactory
 
@@ -774,13 +775,13 @@ class TestCopyAttachments(BaseTenantTestCase):
         cls.file_type_partner = AttachmentFileTypeFactory(
             code="partners_partner_assessment"
         )
-        cls.partner = PartnerFactory(
-            core_values_assessment="sample.pdf"
+        cls.core_value_assessment = CoreValuesAssessmentFactory(
+            assessment="sample.pdf"
         )
 
     def test_call(self):
         attachment = AttachmentFactory(
-            content_object=self.partner,
+            content_object=self.core_value_assessment,
             file_type=self.file_type_partner,
             code=self.file_type_partner.code,
             file="random.pdf"
@@ -789,7 +790,7 @@ class TestCopyAttachments(BaseTenantTestCase):
         attachment_update = Attachment.objects.get(pk=attachment.pk)
         self.assertEqual(
             attachment_update.file.name,
-            self.partner.core_values_assessment.name
+            self.core_value_assessment.assessment.name
         )
 
 

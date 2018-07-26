@@ -3,12 +3,20 @@ from django.conf.urls import include, url
 from etools.applications.t2f.html_views import TravelEditView
 from etools.applications.t2f.views.dashboard import ActionPointDashboardViewSet, TravelDashboardViewSet
 from etools.applications.t2f.views.exports import FinanceExport, InvoiceExport, TravelActivityExport, TravelAdminExport
-from etools.applications.t2f.views.generics import (PermissionMatrixView, SettingsView,
-                                                    StaticDataView, VendorNumberListView,)
+from etools.applications.t2f.views.generics import (
+    PermissionMatrixView,
+    SettingsView,
+    StaticDataView,
+    VendorNumberListView,
+)
 from etools.applications.t2f.views.invoices import InvoiceViewSet
-from etools.applications.t2f.views.travel import (ActionPointViewSet, TravelActivityPerInterventionViewSet,
-                                                  TravelActivityViewSet, TravelAttachmentViewSet,
-                                                  TravelDetailsViewSet, TravelListViewSet,)
+from etools.applications.t2f.views.travel import (
+    TravelActivityPerInterventionViewSet,
+    TravelActivityViewSet,
+    TravelAttachmentViewSet,
+    TravelDetailsViewSet,
+    TravelListViewSet,
+)
 from etools.applications.t2f.views.vision import VisionInvoiceExport, VisionInvoiceUpdate
 
 app_name = 't2f'
@@ -31,12 +39,7 @@ travel_attachment_details = TravelAttachmentViewSet.as_view({'delete': 'destroy'
 clone_travel_for_secondary_traveler = TravelDetailsViewSet.as_view({'post': 'clone_for_secondary_traveler'})
 clone_travel_for_driver = TravelDetailsViewSet.as_view({'post': 'clone_for_driver'})
 
-action_points_list = ActionPointViewSet.as_view({'get': 'list'})
 action_points_dashboard_list = ActionPointDashboardViewSet.as_view({'get': 'list'})
-action_points_export = ActionPointViewSet.as_view({'get': 'export'})
-action_points_details = ActionPointViewSet.as_view({'get': 'retrieve',
-                                                    'put': 'update',
-                                                    'patch': 'partial_update'})
 
 invoices_list = InvoiceViewSet.as_view({'get': 'list'})
 invoices_details = InvoiceViewSet.as_view({'get': 'retrieve'})
@@ -78,10 +81,7 @@ travel_patterns = ((
 
 
 action_points_patterns = ((
-    url(r'^$', action_points_list, name='list'),
-    url(r'^(?P<action_point_pk>[0-9]+)/$', action_points_details, name='details'),
     url(r'^dashboard/$', action_points_dashboard_list, name='dashboard'),
-    url(r'^export/$', action_points_export, name='export')
 ), 'action_points')
 
 invoice_patterns = ((

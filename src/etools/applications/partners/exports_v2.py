@@ -239,6 +239,7 @@ class InterventionCSVRenderer(r.CSVRenderer):
         "partner_authorized_officer_signatory": "Signed by Partner",
         "signed_by_partner_date": "Signed by Partner Date",
         "unicef_signatory": "Signed by UNICEF",
+        "signed_by_unicef": "Signed by UNICEF Yes/No",
         "signed_by_unicef_date": "Signed by UNICEF Date",
         "days_from_submission_to_signed": "Days from Submission to Signed",
         "days_from_review_to_signed": "Days from Review to Signed",

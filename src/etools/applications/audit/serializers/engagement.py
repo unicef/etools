@@ -3,10 +3,11 @@ from copy import copy
 from django.utils.translation import ugettext as _
 from rest_framework import serializers
 
+from etools.applications.action_points.models import Category
 from etools.applications.action_points.serializers import ActionPointBaseSerializer, HistorySerializer
 from etools.applications.attachments.models import FileType
 from etools.applications.attachments.serializers import BaseAttachmentSerializer
-from etools.applications.attachments.serializers_fields import FileTypeModelChoiceField
+from etools.applications.attachments.serializers_fields import FileTypeModelChoiceField, ModelChoiceField
 from etools.applications.audit.models import (Audit, DetailedFindingInfo, Engagement, EngagementActionPoint,
                                               FinancialFinding, Finding, KeyInternalControl, MicroAssessment, Risk,
                                               SpecialAudit, SpecialAuditRecommendation, SpecificProcedure, SpotCheck, )
@@ -67,7 +68,29 @@ class ReportAttachmentSerializer(BaseAttachmentSerializer):
         return super(ReportAttachmentSerializer, self).create(validated_data)
 
 
+class DescriptionBasedCategoryChoiceField(ModelChoiceField):
+    def get_choice(self, obj):
+        # todo: switch to original CategoryModelChoiceField in closest future
+        # as soon frontend will be able to handle it correctly
+        return obj.description, obj.description
+
+    def to_representation(self, value):
+        try:
+            return self.get_queryset().get(pk=value.pk).description
+        except self.queryset.model.DoesNotExist:
+            return None
+
+    def to_internal_value(self, data):
+        try:
+            return self.get_queryset().get(description=data)
+        except self.queryset.model.DoesNotExist:
+            self.fail('does_not_exist', pk_value=data)
+        except (TypeError, ValueError):
+            self.fail('incorrect_type', data_type=type(data).__name__)
+
+
 class EngagementActionPointSerializer(PermissionsBasedSerializerMixin, ActionPointBaseSerializer):
+    reference_number = serializers.ReadOnlyField(label=_('Reference No.'))
     section = SeparatedReadWriteField(
         read_field=SectionSerializer(read_only=True, label=_('Section')),
         required=True,
@@ -75,6 +98,10 @@ class EngagementActionPointSerializer(PermissionsBasedSerializerMixin, ActionPoi
     office = SeparatedReadWriteField(
         read_field=OfficeSerializer(read_only=True, label=_('Office')),
         required=True
+    )
+    category = DescriptionBasedCategoryChoiceField(
+        label=_('Action Point Category'), required=True,
+        queryset=Category.objects.filter(module=Category.MODULE_CHOICES.audit)
     )
 
     history = HistorySerializer(many=True, label=_('History'), read_only=True, source='get_meaningful_history')
@@ -88,7 +115,7 @@ class EngagementActionPointSerializer(PermissionsBasedSerializerMixin, ActionPoi
         ]
         extra_kwargs = copy(ActionPointBaseSerializer.Meta.extra_kwargs)
         extra_kwargs.update({
-            'assigned_to': {'label': _('Person Responsible')}
+            'assigned_to': {'label': _('Person Responsible')},
         })
 
 

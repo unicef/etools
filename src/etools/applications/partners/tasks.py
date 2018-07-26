@@ -288,11 +288,12 @@ def pmp_indicator_report(writer, **kwargs):
     for country in qs:
         connection.set_tenant(Country.objects.get(name=country.name))
         logger.info(u'Running on %s' % country.name)
-        for partner in PartnerOrganization.objects.filter():
+        for partner in PartnerOrganization.objects.prefetch_related('core_values_assessments'):
             for intervention in Intervention.objects.filter(
                     agreement__partner=partner).select_related('planned_budget'):
                 planned_budget = getattr(intervention, 'planned_budget', None)
                 fr_currencies = intervention.frs.all().values_list('currency', flat=True).distinct()
+                has_assessment = bool(getattr(partner.current_core_value_assessment, 'assessment', False))
                 dict_writer.writerow({
                     'Country': country,
                     'Partner Name': str(partner),
@@ -315,7 +316,7 @@ def pmp_indicator_report(writer, **kwargs):
                     'FR currencies': ', '.join(fr for fr in fr_currencies),
                     'Sum of all FR planned amount': intervention.frs.aggregate(
                         total=Coalesce(Sum('intervention_amt'), 0))['total'] if fr_currencies.count() <= 1 else '-',
-                    'Core value attached': True if partner.core_values_assessment else False,
+                    'Core value attached': has_assessment,
                     'Partner Link': '{}/pmp/partners/{}/details'.format(base_url, partner.pk),
                     'Intervention Link': '{}/pmp/interventions/{}/details'.format(base_url, intervention.pk),
                 })

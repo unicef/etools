@@ -103,7 +103,8 @@ class TestInterventionsAPI(BaseTenantTestCase):
                   "country_programme", "amendments", "unicef_focal_points", "end", "title",
                   "signed_by_partner_date", "review_date_prc", "frs", "start",
                   "metadata", "submission_date", "agreement", "unicef_signatory_id",
-                  "result_links", "contingency_pd", "unicef_signatory", "agreement_id", "signed_by_unicef_date",
+                  "result_links", "contingency_pd", "unicef_signatory", "signed_by_unicef", "agreement_id",
+                  "signed_by_unicef_date",
                   "partner_authorized_officer_signatory_id", "created", "planned_visits",
                   "planned_budget", "modified", "signed_pd_document", "submission_date_prc", "document_type",
                   "offices", "population_focus", "country_programme_id", "engagement", "sections",
@@ -1611,8 +1612,11 @@ class TestInterventionAmendmentCreateAPIView(BaseTenantTestCase):
             "signed_date": datetime.date.today(),
             "signed_amendment": self.uploaded_file,
         }
-        self.file_type = AttachmentFileTypeFactory(
+        self.file_type_signed_amendment_attachment = AttachmentFileTypeFactory(
             code="partners_intervention_amendment_signed"
+        )
+        self.file_type_internal_prc_review = AttachmentFileTypeFactory(
+            code="partners_intervention_amendment_internal_prc_review"
         )
 
     def assertResponseFundamentals(self, response):
@@ -1696,7 +1700,7 @@ class TestInterventionAmendmentCreateAPIView(BaseTenantTestCase):
         data = self.assertResponseFundamentals(response)
         self.assertEquals(data['intervention'], self.intervention.id)
 
-    def test_create_amendment_with_attachment(self):
+    def test_create_amendment_with_signed_attachment(self):
         attachment = AttachmentFactory(
             file="test_file.pdf",
             file_type=None,
@@ -1719,12 +1723,42 @@ class TestInterventionAmendmentCreateAPIView(BaseTenantTestCase):
         attachment_updated = Attachment.objects.get(pk=attachment.pk)
         self.assertEqual(
             attachment_updated.file_type.code,
-            self.file_type.code
+            self.file_type_signed_amendment_attachment.code
         )
         self.assertEqual(attachment_updated.object_id, data["id"])
         self.assertEqual(
             attachment_updated.code,
-            self.file_type.code
+            self.file_type_signed_amendment_attachment.code
+        )
+
+    def test_create_amendment_with_internal_prc_review(self):
+        attachment = AttachmentFactory(
+            file="test_file.pdf",
+            file_type=None,
+            code="",
+        )
+        self.data["internal_prc_review"] = attachment.pk
+        self.assertIsNone(attachment.file_type)
+        self.assertIsNone(attachment.content_object)
+        self.assertFalse(attachment.code)
+        response = self._make_request(
+            user=self.partnership_manager_user,
+            data=self.data,
+            request_format='multipart',
+        )
+
+        self.assertEquals(response.status_code, status.HTTP_201_CREATED)
+        data = self.assertResponseFundamentals(response)
+        self.assertEquals(data['intervention'], self.intervention.pk)
+        attachment_updated = Attachment.objects.get(pk=attachment.pk)
+        self.assertEqual(
+            attachment_updated.file_type.code,
+            self.file_type_internal_prc_review.code
+        )
+        self.assertEqual(attachment_updated.object_id, data["id"])
+        self.assertEqual(
+            attachment_updated.code,
+            self.file_type_internal_prc_review.code
         )
 
     def test_create_amendment_when_already_in_amendment(self):
