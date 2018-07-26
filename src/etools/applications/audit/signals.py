@@ -12,6 +12,7 @@ from etools.applications.users.models import Country
 def create_user_receiver(instance, created, **kwargs):
     if created:
         instance.user.groups.add(Auditor.as_group())
+        instance.user.profile.countries_available.add(connection.tenant)
 
 
 @receiver(m2m_changed, sender=Engagement.staff_members.through)
