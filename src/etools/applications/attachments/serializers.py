@@ -93,7 +93,7 @@ class AttachmentFileUploadSerializer(serializers.ModelSerializer):
     class Meta:
         model = Attachment
         fields = ["file", "uploaded_by"]
-        validators = [AttachmentRequiresFileOrLink,]
+        validators = [AttachmentRequiresFileOrLink]
 
 
 def validate_attachment(cls, data):
