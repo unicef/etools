@@ -36,7 +36,7 @@ from etools.applications.audit.serializers.engagement import (AuditSerializer, E
                                                               SpecialAuditSerializer, SpotCheckSerializer,
                                                               EngagementActionPointSerializer,
                                                               EngagementAttachmentSerializer,
-                                                              ReportAttachmentSerializer)
+                                                              ReportAttachmentSerializer, StaffSpotCheckSerializer)
 from etools.applications.audit.serializers.export import (AuditDetailCSVSerializer, AuditPDFSerializer,
                                                           MicroAssessmentDetailCSVSerializer,
                                                           MicroAssessmentPDFSerializer,
@@ -367,6 +367,11 @@ class SpotCheckViewSet(EngagementManagementMixin, EngagementViewSet):
     serializer_class = SpotCheckSerializer
     export_serializer_class = SpotCheckDetailCSVSerializer
     renderer_classes = [JSONRenderer, SpotCheckDetailCSVRenderer]
+
+
+class StaffSpotCheckViewSet(SpotCheckViewSet):
+    queryset = SpotCheck.objects.filter(agreement__auditor_firm__unicef_users_allowed=True)
+    serializer_class = StaffSpotCheckSerializer
 
 
 class SpecialAuditViewSet(EngagementManagementMixin, EngagementViewSet):

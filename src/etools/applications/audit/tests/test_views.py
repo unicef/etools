@@ -17,7 +17,8 @@ from etools.applications.audit.tests.base import AuditTestCaseMixin, EngagementT
 from etools.applications.audit.tests.factories import (AuditFactory, AuditPartnerFactory,
                                                        EngagementFactory, MicroAssessmentFactory,
                                                        PurchaseOrderFactory, RiskBluePrintFactory, RiskCategoryFactory,
-                                                       SpecialAuditFactory, SpotCheckFactory, UserFactory,)
+                                                       SpecialAuditFactory, SpotCheckFactory, UserFactory,
+                                                       StaffSpotCheckFactory)
 from etools.applications.EquiTrack.tests.cases import BaseTenantTestCase
 from etools.applications.audit.tests.test_transitions import MATransitionsTestCaseMixin
 from etools.applications.partners.models import PartnerType
@@ -587,6 +588,58 @@ class TestEngagementActionPointViewSet(EngagementTransitionsTestCaseMixin, BaseT
         )
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response.data['status'], 'completed')
+
+
+class TestStaffSpotCheck(AuditTestCaseMixin, BaseTenantTestCase):
+    fixtures = ('audit_staff_organization',)
+
+    def test_list_options(self):
+        response = self.forced_auth_req(
+            'options',
+            reverse('audit:staff-spot-checks-list'),
+            user=self.unicef_focal_point
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertIn('POST', response.data['actions'])
+
+    def test_create(self):
+        spot_check = SpotCheckFactory()
+        create_data = {
+            'end_date': spot_check.end_date,
+            'start_date': spot_check.start_date,
+            'partner_contacted_at': spot_check.partner_contacted_at,
+            'total_value': spot_check.total_value,
+            'partner': spot_check.partner_id,
+            'authorized_officers': spot_check.authorized_officers.values_list('id', flat=True),
+            'staff_members': spot_check.staff_members.values_list('id', flat=True),
+            'active_pd': spot_check.active_pd.values_list('id', flat=True),
+            'shared_ip_with': spot_check.shared_ip_with,
+        }
+
+        response = self.forced_auth_req(
+            'post',
+            reverse('audit:staff-spot-checks-list'),
+            user=self.unicef_focal_point,
+            data=create_data
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        self.assertIsNotNone(response.data['agreement'])
+
+    def test_list(self):
+        SpotCheckFactory()
+        staff_spot_check = StaffSpotCheckFactory()
+
+        response = self.forced_auth_req(
+            'get',
+            reverse('audit:staff-spot-checks-list'),
+            user=self.unicef_focal_point
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(response.data['results']), 1)
+        self.assertEqual(response.data['results'][0]['id'], staff_spot_check.id)
 
 
 class TestMetadataDetailViewSet(EngagementTransitionsTestCaseMixin):
