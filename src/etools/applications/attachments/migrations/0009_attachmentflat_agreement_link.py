@@ -6,24 +6,6 @@ from django.urls import reverse
 from django.db import migrations, models
 
 
-def update_agreement_link(apps, schema_editor):
-    AttachmentFlat = apps.get_model("attachments", "attachmentflat")
-    flat_qs = AttachmentFlat.objects.filter(
-        agreement_reference_number__isnull=False
-    ).exclude(agreement_reference_number="")
-    for flat in flat_qs:
-        __, agreement_type_year_pk = flat.agreement_reference_number.split("/")
-        if agreement_type_year_pk.startswith(Agreement.PCA):
-            pk = agreement_type_year_pk[7:]
-        else:
-            pk = agreement_type_year_pk[8:]
-        flat.agreement_link = reverse(
-            "partners_api:agreement-detail",
-            args=[pk]
-        )
-        flat.save()
-
-
 class Migration(migrations.Migration):
 
     dependencies = [
@@ -33,11 +15,7 @@ class Migration(migrations.Migration):
     operations = [
         migrations.AddField(
             model_name='attachmentflat',
-            name='agreement_link',
-            field=models.URLField(blank=True, verbose_name='Agreement Link'),
+            name='object_link',
+            field=models.URLField(blank=True, verbose_name='Object Link'),
         ),
-        migrations.RunPython(
-            update_agreement_link,
-            reverse_code=migrations.RunPython.noop,
-        )
     ]
