@@ -103,6 +103,7 @@ class TestAttachmentListView(BaseTenantTestCase):
             "vendor_number",
             "pd_ssfa_number",
             "agreement_reference_number",
+            "object_link",
             "filename",
             "file_type",
             "file_link",
