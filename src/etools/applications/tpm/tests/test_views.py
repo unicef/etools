@@ -13,6 +13,7 @@ from etools.applications.action_points.tests.factories import ActionPointFactory
 from etools.applications.attachments.tests.factories import AttachmentFileTypeFactory, AttachmentFactory
 from etools.applications.EquiTrack.tests.cases import BaseTenantTestCase
 from etools.applications.partners.models import PartnerType
+from etools.applications.reports.tests.factories import SectionFactory
 from etools.applications.tpm.models import TPMVisit, ThirdPartyMonitor
 from etools.applications.tpm.tests.base import TPMTestCaseMixin
 from etools.applications.tpm.tests.factories import TPMPartnerFactory, TPMVisitFactory, UserFactory, _FUZZY_END_DATE
@@ -243,12 +244,13 @@ class TestTPMActionPointViewSet(TPMTestCaseMixin, BaseTenantTestCase):
                 'due_date': fuzzy.FuzzyDate(timezone.now().date(), _FUZZY_END_DATE).fuzz(),
                 'assigned_to': self.unicef_user.id,
                 'office': self.pme_user.profile.office.id,
+                'section': SectionFactory().id,
             }
         )
 
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         self.assertEqual(activity.action_points.count(), 1)
-        self.assertIsNotNone(activity.action_points.first().section)
+        self.assertIsNotNone(activity.action_points.first().partner)
 
     def _test_action_point_editable(self, action_point, user, editable=True):
         visit = action_point.tpm_activity.tpm_visit
@@ -262,8 +264,11 @@ class TestTPMActionPointViewSet(TPMTestCaseMixin, BaseTenantTestCase):
         if editable:
             self.assertIn('PUT', response.data['actions'].keys())
             self.assertCountEqual(
-                ['assigned_to', 'high_priority', 'due_date', 'description', 'office', 'tpm_activity'],
-                response.data['actions']['PUT'].keys()
+                sorted([
+                    'intervention', 'cp_output', 'location', 'assigned_to', 'high_priority',
+                    'due_date', 'description', 'office', 'section', 'tpm_activity',
+                ]),
+                sorted(response.data['actions']['PUT'].keys())
             )
         else:
             self.assertNotIn('PUT', response.data['actions'].keys())
