@@ -22,6 +22,9 @@ class RelatedModuleFilter(BaseFilterBackend):
         if not related_module:
             return queryset
 
+        if related_module == ActionPoint.MODULE_CHOICES.apd:
+            return queryset.filter(travel_activity__isnull=True, tpm_activity__isnull=True, engagement__isnull=True)
+
         related_instance_fields = {
             ActionPoint.MODULE_CHOICES.t2f: 'travel_activity',
             ActionPoint.MODULE_CHOICES.tpm: 'tpm_activity',
