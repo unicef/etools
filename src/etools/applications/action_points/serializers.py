@@ -27,16 +27,21 @@ class CategoryModelChoiceField(ModelChoiceField):
         return obj.id, obj.description
 
 
+class CategorySerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Category
+        fields = ('id', 'module', 'description')
+
+
 class ActionPointBaseSerializer(UserContextSerializerMixin, SnapshotModelSerializer, serializers.ModelSerializer):
     reference_number = serializers.ReadOnlyField(label=_('Reference Number'))
     author = MinimalUserSerializer(read_only=True, label=_('Author'))
     assigned_by = MinimalUserSerializer(read_only=True, label=_('Assigned By'))
-    assigned_to = SeparatedReadWriteField(
-        read_field=MinimalUserSerializer(read_only=True),
-        required=True, label=_('Assignee')
-    )
+    assigned_to = SeparatedReadWriteField(required=True, label=_('Assignee'),
+                                          read_field=MinimalUserSerializer())
 
-    category = CategoryModelChoiceField(label=_('Category'), required=False, queryset=Category.objects.all())
+    category = SeparatedReadWriteField(label=_('Category'), required=False,
+                                       read_field=CategorySerializer())
 
     status_date = serializers.DateTimeField(read_only=True, label=_('Status Date'))
 
@@ -109,6 +114,16 @@ class ActionPointListSerializer(PermissionsBasedSerializerMixin, ActionPointBase
             'engagement', 'tpm_activity', 'travel_activity',
         ]
 
+
+class ActionPointCreateSerializer(ActionPointListSerializer):
+    class Meta(ActionPointListSerializer.Meta):
+        pass
+
+    def validate_category(self, value):
+        if value and value.module != Category.MODULE_CHOICES.apd:
+            raise serializers.ValidationError(_('Category doesn\'t belong to selected module.'))
+        return value
+
     def create(self, validated_data):
         if 'engagement' in validated_data:
             engagement = validated_data['engagement']
@@ -172,3 +187,8 @@ class ActionPointSerializer(WritableNestedSerializerMixin, ActionPointListSerial
         fields = ActionPointListSerializer.Meta.fields + [
             'comments', 'history', 'related_object_str', 'related_object_url',
         ]
+
+    def validate_category(self, value):
+        if value and value.module != self.instance.related_module:
+            raise serializers.ValidationError(_('Category doesn\'t belong to selected module.'))
+        return value
