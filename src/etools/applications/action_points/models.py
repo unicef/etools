@@ -217,7 +217,7 @@ class ActionPoint(TimeStampedModel):
             'object_url': self.get_object_url(user=user, include_token=include_token),
         }
 
-    def send_email(self, recipient, template_name, additional_context=None):
+    def send_email(self, recipient, template_name, additional_context=None, cc=None):
         context = {
             'environment': get_environment(),
             'action_point': self.get_mail_context(user=recipient),
@@ -226,14 +226,14 @@ class ActionPoint(TimeStampedModel):
         context.update(additional_context or {})
 
         notification = Notification.objects.create(
-            sender=self,
+            sender=self, cc=cc or [],
             recipients=[recipient.email], template_name=template_name,
-            template_data=context
+            template_data=context,
         )
         notification.send_notification()
 
     def _do_complete(self):
-        self.send_email(self.assigned_by, 'action_points/action_point/completed')
+        self.send_email(self.assigned_by, 'action_points/action_point/completed', cc=[self.assigned_to.email])
 
     @transition(status, source=STATUSES.open, target=STATUSES.completed,
                 permission=has_action_permission(action='complete'),

@@ -12,6 +12,7 @@ from etools.applications.users.models import Country
 def create_user_receiver(instance, created, **kwargs):
     if created:
         instance.user.groups.add(ThirdPartyMonitor.as_group())
+        instance.user.profile.countries_available.add(connection.tenant)
 
 
 @receiver(post_delete, sender=TPMPartnerStaffMember)
