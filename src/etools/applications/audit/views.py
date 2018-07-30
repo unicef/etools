@@ -99,7 +99,7 @@ class AuditorFirmViewSet(
     filter_backends = (SearchFilter, OrderingFilter, DjangoFilterBackend)
     search_fields = ('name', 'email')
     ordering_fields = ('name', )
-    filter_fields = ('country', )
+    filter_fields = ('country', 'unicef_users_allowed')
 
     def get_queryset(self):
         queryset = super(AuditorFirmViewSet, self).get_queryset()
