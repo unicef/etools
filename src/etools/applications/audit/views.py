@@ -36,7 +36,8 @@ from etools.applications.audit.serializers.engagement import (AuditSerializer, E
                                                               SpecialAuditSerializer, SpotCheckSerializer,
                                                               EngagementActionPointSerializer,
                                                               EngagementAttachmentSerializer,
-                                                              ReportAttachmentSerializer, StaffSpotCheckSerializer)
+                                                              ReportAttachmentSerializer, StaffSpotCheckSerializer,
+                                                              StaffSpotCheckListSerializer)
 from etools.applications.audit.serializers.export import (AuditDetailCSVSerializer, AuditPDFSerializer,
                                                           MicroAssessmentDetailCSVSerializer,
                                                           MicroAssessmentPDFSerializer,
@@ -376,6 +377,9 @@ class SpotCheckViewSet(EngagementManagementMixin, EngagementViewSet):
 class StaffSpotCheckViewSet(SpotCheckViewSet):
     unicef_engagements = True
     serializer_class = StaffSpotCheckSerializer
+    serializer_action_classes = {
+        'list': StaffSpotCheckListSerializer
+    }
 
 
 class SpecialAuditViewSet(EngagementManagementMixin, EngagementViewSet):

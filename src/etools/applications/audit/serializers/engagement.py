@@ -342,6 +342,12 @@ class SpotCheckSerializer(ActivePDValidationMixin, EngagementSerializer):
         })
 
 
+class StaffSpotCheckListSerializer(EngagementListSerializer):
+    class Meta(EngagementListSerializer.Meta):
+        fields = copy(EngagementListSerializer.Meta.fields)
+        fields.remove('po_item')
+
+
 class StaffSpotCheckSerializer(SpotCheckSerializer):
     agreement = PurchaseOrderSerializer(read_only=True, label=_('Purchase Order'))
 
