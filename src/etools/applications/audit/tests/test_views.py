@@ -641,6 +641,34 @@ class TestStaffSpotCheck(AuditTestCaseMixin, BaseTenantTestCase):
         self.assertEqual(len(response.data['results']), 1)
         self.assertEqual(response.data['results'][0]['id'], staff_spot_check.id)
 
+        attachments_response = self.forced_auth_req(
+            'get',
+            reverse('audit:engagement-attachments-list', args=[staff_spot_check.id]),
+            user=self.unicef_focal_point,
+        )
+        self.assertEqual(attachments_response.status_code, status.HTTP_200_OK)
+
+    def test_engagements_list(self):
+        spot_check = SpotCheckFactory()
+        StaffSpotCheckFactory()
+
+        response = self.forced_auth_req(
+            'get',
+            reverse('audit:engagements-list'),
+            user=self.unicef_focal_point
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(response.data['results']), 1)
+        self.assertEqual(response.data['results'][0]['id'], spot_check.id)
+
+        attachments_response = self.forced_auth_req(
+            'get',
+            reverse('audit:engagement-attachments-list', args=[spot_check.id]),
+            user=self.unicef_focal_point,
+        )
+        self.assertEqual(attachments_response.status_code, status.HTTP_200_OK)
+
 
 class TestMetadataDetailViewSet(EngagementTransitionsTestCaseMixin):
     def _test_risk_choices(self, field, expected_choices):

@@ -205,6 +205,7 @@ class EngagementViewSet(
     viewsets.GenericViewSet
 ):
     queryset = Engagement.objects.all()
+    unicef_engagements = False
     serializer_class = EngagementSerializer
     serializer_action_classes = {
         'list': EngagementListSerializer,
@@ -273,6 +274,9 @@ class EngagementViewSet(
         queryset = queryset.prefetch_related(
             'partner', Prefetch('agreement', PurchaseOrder.objects.prefetch_related('auditor_firm'))
         )
+
+        if self.action == 'list':
+            queryset = queryset.filter(agreement__auditor_firm__unicef_users_allowed=self.unicef_engagements)
 
         return queryset
 
@@ -370,7 +374,7 @@ class SpotCheckViewSet(EngagementManagementMixin, EngagementViewSet):
 
 
 class StaffSpotCheckViewSet(SpotCheckViewSet):
-    queryset = SpotCheck.objects.filter(agreement__auditor_firm__unicef_users_allowed=True)
+    unicef_engagements = True
     serializer_class = StaffSpotCheckSerializer
 
 
