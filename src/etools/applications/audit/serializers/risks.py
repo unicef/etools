@@ -2,17 +2,13 @@ import itertools
 from collections import OrderedDict
 
 from django.db import models
-
 from django.utils.translation import ugettext_lazy as _
 
 from rest_framework import serializers
+from unicef_restlib.fields import DynamicChoicesField, WriteListSerializeFriendlyRecursiveField
+from unicef_restlib.serializers import RecursiveListSerializer, WritableListSerializer, WritableNestedSerializerMixin
 
 from etools.applications.audit.models import Risk, RiskBluePrint, RiskCategory
-from etools.applications.utils.common.serializers.fields import (RecursiveListSerializer,
-                                                                 WriteListSerializeFriendlyRecursiveField,
-                                                                 DynamicChoicesField)
-from etools.applications.utils.writable_serializers.serializers import (WritableListSerializer,
-                                                                        WritableNestedSerializerMixin,)
 
 
 class BaseRiskSerializer(WritableNestedSerializerMixin, serializers.ModelSerializer):

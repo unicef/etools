@@ -4,20 +4,13 @@ from django.utils.translation import ugettext as _
 
 from rest_framework import serializers
 from rest_framework.exceptions import ValidationError
+from unicef_restlib.fields import SeparatedReadWriteField
+from unicef_restlib.serializers import UserContextSerializerMixin
 
-from etools.applications.attachments.models import (
-    Attachment,
-    AttachmentFlat,
-    FileType,
-)
-from etools.applications.attachments.serializers_fields import (
-    AttachmentSingleFileField,
-    Base64FileField,
-)
+from etools.applications.attachments.models import Attachment, AttachmentFlat, FileType
+from etools.applications.attachments.serializers_fields import AttachmentSingleFileField, Base64FileField
 from etools.applications.attachments.validators import AttachmentRequiresFileOrLink
 from etools.applications.users.serializers import SimpleUserSerializer
-from etools.applications.utils.common.serializers.fields import SeparatedReadWriteField
-from etools.applications.utils.common.serializers.mixins import UserContextSerializerMixin
 from etools.applications.utils.common.urlresolvers import build_absolute_url
 
 

@@ -139,8 +139,10 @@ text-unidecode==1.2       # via faker
 tornado==4.2.0
 tox==3.0.0
 traitlets==4.3.2          # via ipython
+unicef-djangolib==0.4
 unicef-locations==1.3
 unicef_notification==0.2.0
+unicef_restlib==0.1.0
 unicef_snapshot==0.1.0
 unicodecsv==0.14.1
 uritemplate==3.0.0

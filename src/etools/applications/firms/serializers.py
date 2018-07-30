@@ -1,13 +1,12 @@
-
 from django.contrib.auth import get_user_model
 from django.utils.translation import ugettext_lazy as _
 
 from rest_framework import serializers
 from rest_framework.validators import UniqueValidator
+from unicef_restlib.serializers import WritableNestedSerializerMixin
 
 from etools.applications.firms.utils import generate_username
 from etools.applications.users.models import UserProfile
-from etools.applications.utils.writable_serializers.serializers import WritableNestedSerializerMixin
 
 
 class UserProfileSerializer(WritableNestedSerializerMixin, serializers.ModelSerializer):

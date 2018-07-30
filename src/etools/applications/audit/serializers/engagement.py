@@ -1,32 +1,55 @@
 from copy import copy
 
 from django.utils.translation import ugettext as _
+
 from rest_framework import serializers
+from unicef_restlib.fields import SeparatedReadWriteField
+from unicef_restlib.serializers import WritableNestedParentSerializerMixin, WritableNestedSerializerMixin
 
 from etools.applications.action_points.models import Category
-from etools.applications.action_points.serializers import ActionPointBaseSerializer, HistorySerializer, \
-    CategoryModelChoiceField
+from etools.applications.action_points.serializers import (
+    ActionPointBaseSerializer,
+    CategoryModelChoiceField,
+    HistorySerializer,
+)
 from etools.applications.attachments.models import FileType
 from etools.applications.attachments.serializers import BaseAttachmentSerializer
 from etools.applications.attachments.serializers_fields import FileTypeModelChoiceField
-from etools.applications.audit.models import (Audit, DetailedFindingInfo, Engagement, EngagementActionPoint,
-                                              FinancialFinding, Finding, KeyInternalControl, MicroAssessment, Risk,
-                                              SpecialAudit, SpecialAuditRecommendation, SpecificProcedure, SpotCheck, )
-from etools.applications.audit.serializers.auditor import (AuditorStaffMemberSerializer,
-                                                           PurchaseOrderItemSerializer, PurchaseOrderSerializer, )
+from etools.applications.audit.models import (
+    Audit,
+    DetailedFindingInfo,
+    Engagement,
+    EngagementActionPoint,
+    FinancialFinding,
+    Finding,
+    KeyInternalControl,
+    MicroAssessment,
+    Risk,
+    SpecialAudit,
+    SpecialAuditRecommendation,
+    SpecificProcedure,
+    SpotCheck,
+)
+from etools.applications.audit.serializers.auditor import (
+    AuditorStaffMemberSerializer,
+    PurchaseOrderItemSerializer,
+    PurchaseOrderSerializer,
+)
 from etools.applications.audit.serializers.mixins import EngagementDatesValidation, RiskCategoriesUpdateMixin
-from etools.applications.audit.serializers.risks import (AggregatedRiskRootSerializer,
-                                                         KeyInternalWeaknessSerializer, RiskRootSerializer, )
+from etools.applications.audit.serializers.risks import (
+    AggregatedRiskRootSerializer,
+    KeyInternalWeaknessSerializer,
+    RiskRootSerializer,
+)
 from etools.applications.partners.serializers.interventions_v2 import BaseInterventionListSerializer
-from etools.applications.partners.serializers.partner_organization_v2 import (PartnerOrganizationListSerializer,
-                                                                              PartnerStaffMemberNestedSerializer,
-                                                                              MinimalPartnerOrganizationListSerializer)
+from etools.applications.partners.serializers.partner_organization_v2 import (
+    MinimalPartnerOrganizationListSerializer,
+    PartnerOrganizationListSerializer,
+    PartnerStaffMemberNestedSerializer,
+)
 from etools.applications.permissions2.serializers import PermissionsBasedSerializerMixin
 from etools.applications.reports.serializers.v1 import SectionSerializer
 from etools.applications.users.serializers import OfficeSerializer
-from etools.applications.utils.common.serializers.fields import SeparatedReadWriteField
-from etools.applications.utils.writable_serializers.serializers import (WritableNestedParentSerializerMixin,
-                                                                        WritableNestedSerializerMixin, )
 
 
 class PartnerOrganizationLightSerializer(PartnerOrganizationListSerializer):
