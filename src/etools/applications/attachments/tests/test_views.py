@@ -103,6 +103,7 @@ class TestAttachmentListView(BaseTenantTestCase):
             "vendor_number",
             "pd_ssfa_number",
             "agreement_reference_number",
+            "object_link",
             "filename",
             "file_type",
             "file_link",
@@ -676,7 +677,7 @@ class TestAttachmentUpdateView(BaseTenantTestCase):
         self.assertFalse(other_attachment_update.file)
 
 
-class TestAttachmentCreatreView(BaseTenantTestCase):
+class TestAttachmentCreateView(BaseTenantTestCase):
     @classmethod
     def setUpTestData(cls):
         cls.file_type = AttachmentFileTypeFactory(code="test_code")
@@ -751,3 +752,15 @@ class TestAttachmentCreatreView(BaseTenantTestCase):
         attachment = attachment_qs.first()
         self.assertIsNone(attachment.content_object)
         self.assertEqual(attachment.uploaded_by, self.unicef_staff)
+
+    def test_post_validation(self):
+        """If no file or file link provided, should fail validation"""
+        response = self.forced_auth_req(
+            "post",
+            self.url,
+            user=self.unicef_staff,
+            data={},
+            request_format="multipart"
+        )
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertFalse(Attachment.objects.exists())

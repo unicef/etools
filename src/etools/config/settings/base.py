@@ -275,7 +275,12 @@ AUTHENTICATION_BACKENDS = (
 )
 AUTH_USER_MODEL = 'users.User'
 LOGIN_REDIRECT_URL = '/'
-LOGIN_URL = '/login/'
+
+HOST = get_from_secrets_or_env('DJANGO_ALLOWED_HOST', 'localhost:8000')
+LOGIN_URL = LOGOUT_REDIRECT_URL = 'http://etoolsinfo.unicef.org/'
+if HOST != 'etools.unicef.org':
+    host = HOST.split('.')[0]
+    LOGIN_URL = LOGOUT_REDIRECT_URL = f'{LOGIN_URL}?env={host}'
 
 # CONTRIB: GIS (GeoDjango)
 POSTGIS_VERSION = (2, 1)

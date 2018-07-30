@@ -20,19 +20,20 @@
     },
     "data": [
         {
-            "id": 1,
+            "id": 96,
             "amendment_number": "1",
-            "signed_amendment_file": "http://testserver/media/test/file_attachments/partner_organization/124/124/agreements/124/interventions/120/amendments/None/test_file.pdf",
+            "signed_amendment_file": "http://testserver/media/test/file_attachments/partner_organization/2744/2744/agreements/2820/interventions/2519/amendments/None/test_file.pdf",
             "signed_amendment_attachment": null,
-            "created": "2018-07-20T21:19:08.152000Z",
-            "modified": "2018-07-20T21:19:08.202000Z",
+            "internal_prc_review": null,
+            "created": "2018-07-26T16:42:20.076000Z",
+            "modified": "2018-07-26T16:42:20.122000Z",
             "types": [
-                "Change banking info"
+                "Change authorized officer"
             ],
-            "other_description": "ltyZLyNrCLdpTWgTmCOELHLSGBKULsSzeBXOsvBxwwgCXwycvZ",
-            "signed_date": "2018-07-20",
-            "signed_amendment": "http://testserver/media/test/file_attachments/partner_organization/124/124/agreements/124/interventions/120/amendments/None/test_file.pdf",
-            "intervention": 120
+            "other_description": "RPkOwCagmpujQkYcsIbFMPSVDJnidDLnYcXWjMXLJzEVgifDhR",
+            "signed_date": "2018-07-26",
+            "signed_amendment": "http://testserver/media/test/file_attachments/partner_organization/2744/2744/agreements/2820/interventions/2519/amendments/None/test_file.pdf",
+            "intervention": 2519
         }
     ],
     "content_type": null

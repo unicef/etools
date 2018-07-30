@@ -30,11 +30,12 @@ class Command(BaseCommand):
     def handle(self, *args, **options):
         schema = options['schema']
 
-        countries = Country.objects.all()
+        countries = Country.objects.exclude(schema_name='public')
         if schema:
             countries = countries.filter(schema_name=schema)
         for country in countries:
             logger.info(f'Update Action Points for{country.schema_name}')
+            print(f'Update Action Points for{country.schema_name}')
             set_country(country)
             ct = ContentType.objects.get(app_label='t2f', model='actionpoint')
             site = Site.objects.first()

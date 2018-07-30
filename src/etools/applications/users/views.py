@@ -83,6 +83,9 @@ class ChangeUserCountryView(APIView):
         user = self.request.user
         country = self.get_country()
 
+        if country == user.profile.country:
+            return
+
         if country not in user.profile.countries_available.all():
             raise DjangoValidationError(self.ERROR_MESSAGES['access_to_country_denied'],
                                         code='access_to_country_denied')

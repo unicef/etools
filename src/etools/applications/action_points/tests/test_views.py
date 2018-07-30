@@ -7,7 +7,7 @@ from factory import fuzzy
 from rest_framework import status
 
 from etools.applications.action_points.tests.base import ActionPointsTestCaseMixin
-from etools.applications.action_points.tests.factories import ActionPointFactory, ActionPointCategoryFactory
+from etools.applications.action_points.tests.factories import ActionPointFactory
 from etools.applications.EquiTrack.tests.cases import BaseTenantTestCase
 from etools.applications.audit.tests.factories import MicroAssessmentFactory
 from etools.applications.partners.tests.factories import PartnerFactory
@@ -26,7 +26,6 @@ class TestActionPointViewSet(TestExportMixin, ActionPointsTestCaseMixin, BaseTen
         cls.unicef_user = UserFactory(unicef_user=True)
         cls.common_user = UserFactory()
         cls.create_data = {
-            'category': ActionPointCategoryFactory().id,
             'description': 'do something',
             'due_date': date.today(),
             'assigned_to': cls.pme_user.id,
@@ -136,6 +135,28 @@ class TestActionPointViewSet(TestExportMixin, ActionPointsTestCaseMixin, BaseTen
         )
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(len(response.data['results']), 1)
+
+    def test_filter_multiple_status(self):
+        ActionPointFactory(status='open')
+        ActionPointFactory(status='completed')
+
+        response = self.forced_auth_req(
+            'get',
+            reverse('action-points:action-points-list'),
+            data={'status': 'completed'},
+            user=self.unicef_user
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(response.data['results']), 1)
+
+        response = self.forced_auth_req(
+            'get',
+            reverse('action-points:action-points-list'),
+            data={'status__in': 'open,completed'},
+            user=self.unicef_user
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(response.data['results']), 2)
 
     def test_reassign(self):
         author = UserFactory(unicef_user=True)

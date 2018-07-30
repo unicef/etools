@@ -511,6 +511,9 @@ class PartnerOrganization(TimeStampedModel):
     def __str__(self):
         return self.name
 
+    def get_object_url(self):
+        return reverse("partners_api:partner-detail", args=[self.pk])
+
     def latest_assessment(self, type):
         return self.assessments.filter(type=type).order_by('completed_date').last()
 
@@ -1248,6 +1251,9 @@ class Agreement(TimeStampedModel):
             self.signed_by_unicef_date
         )
 
+    def get_object_url(self):
+        return reverse("partners_api:agreement-detail", args=[self.pk])
+
     @classmethod
     def permission_structure(cls):
         permissions = import_permissions(cls.__name__)
@@ -1440,6 +1446,9 @@ class AgreementAmendment(TimeStampedModel):
             self.agreement.reference_number,
             self.number
         )
+
+    def get_object_url(self):
+        return reverse("partners_api:partner-detail", args=[self.pk])
 
     def compute_reference_number(self):
         if self.signed_date:
@@ -1775,6 +1784,9 @@ class Intervention(TimeStampedModel):
         return '{}'.format(
             self.number
         )
+
+    def get_object_url(self):
+        return reverse("partners_api:intervention-detail", args=[self.pk])
 
     @classmethod
     def permission_structure(cls):
@@ -2152,6 +2164,12 @@ class InterventionAmendment(TimeStampedModel):
         Attachment,
         verbose_name=_('Amendment Document'),
         code='partners_intervention_amendment_signed',
+        blank=True,
+    )
+    internal_prc_review = CodedGenericRelation(
+        Attachment,
+        verbose_name=_('Internal PRC Review'),
+        code='partners_intervention_amendment_internal_prc_review',
         blank=True,
     )
 
