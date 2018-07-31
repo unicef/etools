@@ -6,7 +6,7 @@ from model_utils.models import TimeStampedModel
 from ordered_model.models import OrderedModel
 
 
-class Category(TimeStampedModel, OrderedModel, models.Model):
+class Category(OrderedModel, TimeStampedModel):
     MODULE_CHOICES = Choices(
         ('apd', _('Action Points')),
         ('t2f', _('Trip Management')),
