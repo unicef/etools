@@ -152,6 +152,8 @@ class PurchaseOrderViewSet(
     queryset = PurchaseOrder.objects.all()
     serializer_class = PurchaseOrderSerializer
     permission_classes = (IsAuthenticated, )
+    filter_backends = (DjangoFilterBackend, )
+    filter_fields = ('auditor_firm__unicef_users_allowed', )
 
     @list_route(methods=['get'], url_path='sync/(?P<order_number>[^/]+)')
     def sync(self, request, *args, **kwargs):
