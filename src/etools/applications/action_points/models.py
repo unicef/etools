@@ -8,7 +8,6 @@ from django_fsm import FSMField, transition
 from model_utils import Choices, FieldTracker
 from model_utils.fields import MonitorField
 from model_utils.models import TimeStampedModel
-from ordered_model.models import OrderedModel
 from unicef_snapshot.models import Activity
 
 from etools.applications.action_points.categories.models import Category
