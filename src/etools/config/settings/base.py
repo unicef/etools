@@ -186,6 +186,7 @@ SHARED_APPS = (
     'etools.applications.notification',
     'django_filters',
     'etools.applications.environment',
+    'etools.applications.action_points.categories',
     'etools.applications.audit.purchase_order',
     'etools.applications.EquiTrack',
     'etools.applications.tpm.tpmpartners',
