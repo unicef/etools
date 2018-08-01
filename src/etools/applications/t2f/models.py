@@ -829,6 +829,7 @@ class T2FActionPoint(NewActionPoint):
 
 @receiver(post_save, sender=T2FActionPoint)
 def t2f_action_point_updated_receiver(instance, created, **kwargs):
+    """TODO User T2FActionPoint to notify users"""
     if created:
         instance.send_email(instance.assigned_to, 't2f/travel_activity/action_point_assigned',
                             cc=[instance.assigned_by.email])
