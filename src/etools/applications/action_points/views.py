@@ -14,11 +14,21 @@ from etools.applications.action_points.export.serializers import ActionPointExpo
 from etools.applications.action_points.filters import ReferenceNumberOrderingFilter, RelatedModuleFilter
 from etools.applications.action_points.metadata import ActionPointMetadata
 from etools.applications.action_points.models import ActionPoint
-from etools.applications.action_points.serializers import ActionPointListSerializer, ActionPointSerializer
+from etools.applications.action_points.categories.models import Category
+from etools.applications.action_points.serializers import ActionPointListSerializer, ActionPointSerializer, \
+    ActionPointCreateSerializer
+from etools.applications.action_points.categories.serializers import CategorySerializer
 from etools.applications.permissions2.conditions import ObjectStatusCondition
 from etools.applications.permissions2.views import PermittedFSMActionMixin, PermittedSerializerMixin
 from etools.applications.utils.common.pagination import DynamicPageNumberPagination
 from etools.applications.utils.common.views import MultiSerializerViewSetMixin, SafeTenantViewSetMixin
+
+
+class CategoryViewSet(mixins.ListModelMixin, viewsets.GenericViewSet):
+    serializer_class = CategorySerializer
+    queryset = Category.objects.all()
+    filter_backends = (DjangoFilterBackend,)
+    filter_fields = ('module',)
 
 
 class ActionPointViewSet(
@@ -39,6 +49,7 @@ class ActionPointViewSet(
     queryset = ActionPoint.objects.all().select_related()
     serializer_class = ActionPointSerializer
     serializer_action_classes = {
+        'create': ActionPointCreateSerializer,
         'list': ActionPointListSerializer,
     }
     filter_backends = (ReferenceNumberOrderingFilter, OrderingFilter, SearchFilter,

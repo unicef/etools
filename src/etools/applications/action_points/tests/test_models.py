@@ -58,9 +58,9 @@ class TestActionPointModel(BaseTenantTestCase):
         action_point = ActionPointFactory(travel_activity=TravelActivityFactory())
         self.assertEqual(action_point.related_module, ActionPoint.MODULE_CHOICES.t2f)
 
-    def test_none_related(self):
+    def test_not_related(self):
         action_point = ActionPointFactory()
-        self.assertEqual(action_point.related_module, None)
+        self.assertEqual(action_point.related_module, ActionPoint.MODULE_CHOICES.apd)
 
     def test_additional_data(self):
         action_point = ActionPointFactory(status='pre_completed')
