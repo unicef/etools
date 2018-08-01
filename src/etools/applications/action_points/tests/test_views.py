@@ -6,7 +6,7 @@ from factory import fuzzy
 
 from rest_framework import status
 
-from etools.applications.action_points.models import Category
+from etools.applications.action_points.categories.models import Category
 from etools.applications.action_points.tests.base import ActionPointsTestCaseMixin
 from etools.applications.action_points.tests.factories import ActionPointFactory, ActionPointCategoryFactory
 from etools.applications.EquiTrack.tests.cases import BaseTenantTestCase
