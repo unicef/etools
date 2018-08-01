@@ -485,6 +485,15 @@ class TravelActivity(models.Model):
     def travel_status(self):
         return self.travels.filter(traveler=self.primary_traveler).first().status
 
+    @property
+    def reference_number(self):
+        return "{}/{}/{}/{}".format(
+            self.pk,
+            self.partner.name if self.partner else '-',
+            self.get_travel_type_display(),
+            self.date.strftime('%d-%m-%Y') if self.date else '-'
+        )
+
     def get_object_url(self):
         # TODO: to be used for generating link from action points dashboard to related object
         return ""

@@ -251,6 +251,7 @@ class TestActionPointViewSet(TestExportMixin, ActionPointsTestCaseMixin, BaseTen
             status='open', comments__count=1,
             tpm_activity=TPMVisitFactory(tpm_activities__count=1).tpm_activities.first()
         )
+        ActionPointFactory(status='open', travel_activity=TravelActivityFactory())
 
         self._test_export(self.pme_user, 'action-points:action-points-export/csv')
 
