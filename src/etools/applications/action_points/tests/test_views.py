@@ -251,12 +251,12 @@ class TestActionPointViewSet(TestExportMixin, ActionPointsTestCaseMixin, BaseTen
             status='open', comments__count=1,
             tpm_activity=TPMVisitFactory(tpm_activities__count=1).tpm_activities.first()
         )
-        traveller = UserFactory()
+        traveler = UserFactory()
         ActionPointFactory(
             status='open',
             travel_activity=TravelActivityFactory(
-                primary_traveler=traveller,
-                travels=[TravelFactory(traveler=traveller)]
+                primary_traveler=traveler,
+                travels=[TravelFactory(traveler=traveler)]
             )
         )
 
