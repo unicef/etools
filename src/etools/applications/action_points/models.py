@@ -191,6 +191,7 @@ class ActionPoint(TimeStampedModel):
             'partner': self.partner.name if self.partner else '',
             'description': self.description,
             'due_date': self.due_date.strftime('%d %b %Y') if self.due_date else '',
+            'status': self.status,
             'object_url': self.get_object_url(user=user, include_token=include_token),
         }
 

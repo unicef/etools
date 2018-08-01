@@ -1,8 +1,10 @@
 
 from django.contrib import admin
 
+from etools.applications.action_points.admin import ActionPointAdmin
 from etools.applications.publics.admin import AdminListMixin
 from etools.applications.t2f import models
+from etools.applications.t2f.models import T2FActionPoint
 
 
 class TravelAdmin(admin.ModelAdmin):
@@ -97,6 +99,11 @@ class InvoiceAdmin(AdminListMixin, admin.ModelAdmin):
 
 
 class InvoiceItemAdmin(AdminListMixin, admin.ModelAdmin):
+    pass
+
+
+@admin.register(T2FActionPoint)
+class T2FActionPointAdmin(ActionPointAdmin):
     pass
 
 
