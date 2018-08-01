@@ -193,7 +193,7 @@ class UserAdminPlus(UserAdmin):
     def sync_user(self, request, pk):
         user = get_object_or_404(get_user_model(), pk=pk)
         sync_user.delay(user.username)
-        return HttpResponseRedirect(reverse('admin:auth_user_change', args=[user.pk]))
+        return HttpResponseRedirect(reverse('admin:users_user_change', args=[user.pk]))
 
     def office(self, obj):
         return obj.profile.office
