@@ -6,12 +6,15 @@ from functools import wraps
 from django.conf import settings
 from django.contrib.postgres.fields.array import ArrayField
 from django.db import connection, models
+from django.db.models.signals import post_save
+from django.dispatch import receiver
 from django.utils.timezone import now as timezone_now
 from django.utils.translation import ugettext, ugettext_lazy as _
 
 from django_fsm import FSMField, transition
 from unicef_notification.utils import send_notification
 
+from etools.applications.action_points.models import ActionPoint as NewActionPoint
 from etools.applications.publics.models import TravelExpenseType
 from etools.applications.t2f.helpers.cost_summary_calculator import CostSummaryCalculator
 from etools.applications.t2f.helpers.invoice_maker import InvoiceMaker
@@ -680,6 +683,7 @@ def make_action_point_number():
     return '{}/{:06d}'.format(year, action_point_number)
 
 
+# TODO remove me when migration to new AP has been finalized
 class ActionPoint(models.Model):
     """
     Represents an action point for the trip
@@ -803,3 +807,31 @@ class InvoiceItem(models.Model):
     @property
     def normalized_amount(self):
         return abs(self.amount.normalize())
+
+
+class T2FActionPointManager(models.Manager):
+    def get_queryset(self):
+        return super().get_queryset().filter(travel_activity__isnull=False)
+
+
+# TODO remove NewActionPoint alias when T2F ActionPoint model has been removed
+class T2FActionPoint(NewActionPoint):
+    """
+    This proxy class is for easier permissions assigning.
+    """
+    objects = T2FActionPointManager()
+
+    class Meta(NewActionPoint.Meta):
+        verbose_name = _('T2F Action Point')
+        verbose_name_plural = _('T2F Action Points')
+        proxy = True
+
+
+@receiver(post_save, sender=T2FActionPoint)
+def t2f_action_point_updated_receiver(instance, created, **kwargs):
+    if created:
+        instance.send_email(instance.assigned_to, 't2f/travel_activity/action_point_assigned',
+                            cc=[instance.assigned_by.email])
+    else:
+        if instance.tracker.has_changed('assigned_to'):
+            instance.send_email(instance.assigned_to, 't2f/travel_activity/action_point_assigned')
