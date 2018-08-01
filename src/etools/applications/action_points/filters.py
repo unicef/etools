@@ -22,12 +22,17 @@ class RelatedModuleFilter(BaseFilterBackend):
         if not related_module:
             return queryset
 
-        related_instance_fields = {
-            ActionPoint.MODULE_CHOICES.t2f: 'travel_activity',
-            ActionPoint.MODULE_CHOICES.tpm: 'tpm_activity',
-            ActionPoint.MODULE_CHOICES.audit: 'engagement',
+        related_instance_filters = {
+            ActionPoint.MODULE_CHOICES.t2f: {'travel_activity__isnull': False},
+            ActionPoint.MODULE_CHOICES.tpm: {'tpm_activity__isnull': False},
+            ActionPoint.MODULE_CHOICES.audit: {'engagement__isnull': False},
+            ActionPoint.MODULE_CHOICES.apd: {
+                'travel_activity__isnull': True,
+                'tpm_activity__isnull': True,
+                'engagement__isnull': True
+            },
         }
-        if related_module not in related_instance_fields:
+        if related_module not in related_instance_filters:
             return queryset
 
-        return queryset.filter(**{'{}__isnull'.format(related_instance_fields[related_module]): False})
+        return queryset.filter(**related_instance_filters[related_module])

@@ -40,8 +40,9 @@ class Category(OrderedModel, models.Model):
 
 class ActionPoint(TimeStampedModel):
     MODULE_CHOICES = Choices(
+        ('apd', _('Action Points')),
         ('t2f', _('Trip Management')),
-        ('tpm', 'Third Party Monitoring'),
+        ('tpm', _('Third Party Monitoring')),
         ('audit', _('Financial Assurance')),
     )
 
@@ -158,7 +159,7 @@ class ActionPoint(TimeStampedModel):
             return self.MODULE_CHOICES.tpm
         if self.travel_activity:
             return self.MODULE_CHOICES.t2f
-        return None
+        return self.MODULE_CHOICES.apd
 
     @property
     def reference_number(self):
