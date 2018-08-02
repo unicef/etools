@@ -577,18 +577,6 @@ class TestEngagementActionPointViewSet(EngagementTransitionsTestCaseMixin, BaseT
 
         self._test_action_point_editable(action_point, self.unicef_focal_point, editable=False)
 
-    def test_action_point_complete(self):
-        self._init_finalized_engagement()
-        action_point = ActionPointFactory(engagement=self.engagement, status='pre_completed', comments__count=0)
-
-        response = self.forced_auth_req(
-            'post',
-            '/api/audit/engagements/{}/action-points/{}/complete/'.format(self.engagement.id, action_point.id),
-            user=action_point.assigned_to
-        )
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(response.data['status'], 'completed')
-
 
 class TestStaffSpotCheck(AuditTestCaseMixin, BaseTenantTestCase):
     fixtures = ('audit_staff_organization',)
