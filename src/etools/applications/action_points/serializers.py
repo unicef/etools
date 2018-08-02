@@ -9,8 +9,9 @@ from unicef_restlib.serializers import UserContextSerializerMixin, WritableNeste
 from unicef_snapshot.models import Activity
 from unicef_snapshot.serializers import SnapshotModelSerializer
 
-from etools.applications.action_points.models import ActionPoint, Category
-from etools.applications.attachments.serializers_fields import ModelChoiceField
+from etools.applications.action_points.categories.models import Category
+from etools.applications.action_points.categories.serializers import CategorySerializer
+from etools.applications.action_points.models import ActionPoint
 from etools.applications.EquiTrack.utils import get_current_site
 from etools.applications.partners.serializers.interventions_v2 import BaseInterventionListSerializer
 from etools.applications.partners.serializers.partner_organization_v2 import MinimalPartnerOrganizationListSerializer
@@ -18,17 +19,6 @@ from etools.applications.permissions2.serializers import PermissionsBasedSeriali
 from etools.applications.reports.serializers.v1 import ResultSerializer, SectionSerializer
 from etools.applications.users.serializers import OfficeSerializer
 from etools.applications.users.serializers_v3 import MinimalUserSerializer
-
-
-class CategoryModelChoiceField(ModelChoiceField):
-    def get_choice(self, obj):
-        return obj.id, obj.description
-
-
-class CategorySerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Category
-        fields = ('id', 'module', 'description')
 
 
 class ActionPointBaseSerializer(UserContextSerializerMixin, SnapshotModelSerializer, serializers.ModelSerializer):
