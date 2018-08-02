@@ -199,7 +199,7 @@ class ActionPoint(TimeStampedModel):
         key_events = activity.data.get('key_events')
         if key_events:
             if cls.KEY_EVENTS.status_update in key_events:
-                return _('Changed status to {}').format(cls.STATUSES[activity.change['status']['after']])
+                return cls.STATUSES[activity.change['status']['after']]
             elif cls.KEY_EVENTS.reassign in key_events:
                 return _('Reassigned to {}').format(
                     get_user_model().objects.get(pk=activity.change['assigned_to']['after']).get_full_name()
