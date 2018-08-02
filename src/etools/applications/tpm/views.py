@@ -10,6 +10,7 @@ from rest_framework.decorators import detail_route, list_route
 from rest_framework.filters import OrderingFilter, SearchFilter
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
+from unicef_attachments.models import Attachment
 from unicef_restlib.pagination import DynamicPageNumberPagination
 from unicef_restlib.views import MultiSerializerViewSetMixin, NestedViewSetMixin, SafeTenantViewSetMixin
 
@@ -18,7 +19,6 @@ from etools.applications.action_points.conditions import (
     ActionPointAssigneeCondition,
     ActionPointAuthorCondition,
 )
-from etools.applications.attachments.models import Attachment
 from etools.applications.partners.models import PartnerOrganization
 from etools.applications.partners.serializers.partner_organization_v2 import MinimalPartnerOrganizationListSerializer
 from etools.applications.permissions2.conditions import ObjectStatusCondition

@@ -7,8 +7,8 @@ import json
 from django.conf import settings
 from django.contrib.postgres.fields import ArrayField, JSONField
 from django.core.cache import cache
-from django.db import models, connection, transaction
-from django.db.models import Case, Count, CharField, F, Max, Min, Q, Sum, When
+from django.db import connection, models, transaction
+from django.db.models import Case, CharField, Count, F, Max, Min, Q, Sum, When
 from django.db.models.signals import post_save, pre_delete
 from django.urls import reverse
 from django.utils import timezone
@@ -18,19 +18,21 @@ from django.utils.translation import ugettext as _
 from django_fsm import FSMField, transition
 from model_utils import Choices, FieldTracker
 from model_utils.models import TimeFramedModel, TimeStampedModel
+from unicef_attachments.models import Attachment
+from unicef_locations.models import Location
 
-from etools.applications.attachments.models import Attachment
 from etools.applications.environment.helpers import tenant_switch_is_active
 from etools.applications.EquiTrack.encoders import EToolsEncoder
 from etools.applications.EquiTrack.fields import CurrencyField
 from etools.applications.EquiTrack.serializers import StringConcat
 from etools.applications.EquiTrack.utils import get_current_year, get_quarter, import_permissions
 from etools.applications.funds.models import Grant
-from unicef_locations.models import Location
 from etools.applications.partners.validation import interventions as intervention_validation
-from etools.applications.partners.validation.agreements import (agreement_transition_to_ended_valid,
-                                                                agreement_transition_to_signed_valid,
-                                                                agreements_illegal_transition,)
+from etools.applications.partners.validation.agreements import (
+    agreement_transition_to_ended_valid,
+    agreement_transition_to_signed_valid,
+    agreements_illegal_transition,
+)
 from etools.applications.reports.models import CountryProgramme, Indicator, Result, Sector
 from etools.applications.t2f.models import Travel, TravelType
 from etools.applications.tpm.models import TPMVisit

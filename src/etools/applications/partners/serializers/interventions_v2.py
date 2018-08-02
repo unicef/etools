@@ -7,13 +7,13 @@ from django.utils.translation import ugettext as _
 
 from rest_framework import serializers
 from rest_framework.serializers import ValidationError
+from unicef_attachments.fields import AttachmentSingleFileField
+from unicef_attachments.serializers import AttachmentSerializerMixin
+from unicef_locations.serializers import LocationLightSerializer, LocationSerializer
 from unicef_snapshot.serializers import SnapshotModelSerializer
 
-from etools.applications.attachments.serializers import AttachmentSerializerMixin
-from etools.applications.attachments.serializers_fields import AttachmentSingleFileField
 from etools.applications.funds.models import FundsCommitmentItem, FundsReservationHeader
 from etools.applications.funds.serializers import FRsSerializer
-from unicef_locations.serializers import LocationLightSerializer, LocationSerializer
 from etools.applications.partners.models import (
     Intervention,
     InterventionAmendment,
@@ -25,11 +25,7 @@ from etools.applications.partners.models import (
     InterventionSectorLocationLink,
 )
 from etools.applications.partners.permissions import InterventionPermissions
-from etools.applications.reports.models import (
-    AppliedIndicator,
-    LowerResult,
-    ReportingRequirement,
-)
+from etools.applications.reports.models import AppliedIndicator, LowerResult, ReportingRequirement
 from etools.applications.reports.serializers.v1 import SectionSerializer
 from etools.applications.reports.serializers.v2 import (
     IndicatorSerializer,

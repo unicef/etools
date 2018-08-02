@@ -6,29 +6,22 @@ from django.core.cache import cache
 from django.core.files.uploadedfile import SimpleUploadedFile
 from django.db import connection
 from django.test import SimpleTestCase
-from django.urls import reverse, resolve
+from django.urls import resolve, reverse
 from django.utils import timezone
 
 from rest_framework import status
 from rest_framework.test import APIRequestFactory
+from unicef_attachments.models import Attachment
+from unicef_locations.tests.factories import LocationFactory
 from unicef_snapshot.models import Activity
 
-from etools.applications.attachments.models import Attachment
-from etools.applications.attachments.tests.factories import (
-    AttachmentFactory,
-    AttachmentFileTypeFactory,
-)
+from etools.applications.attachments.tests.factories import AttachmentFactory, AttachmentFileTypeFactory
 from etools.applications.environment.helpers import tenant_switch_is_active
 from etools.applications.environment.models import TenantSwitch
 from etools.applications.environment.tests.factories import TenantSwitchFactory
 from etools.applications.EquiTrack.tests.cases import BaseTenantTestCase
 from etools.applications.EquiTrack.tests.mixins import URLAssertionMixin
-from unicef_locations.tests.factories import LocationFactory
-from etools.applications.partners.models import (
-    Intervention,
-    InterventionAmendment,
-    InterventionResultLink,
-)
+from etools.applications.partners.models import Intervention, InterventionAmendment, InterventionResultLink
 from etools.applications.partners.tests.factories import (
     AgreementFactory,
     FileTypeFactory,

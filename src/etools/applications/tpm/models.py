@@ -11,11 +11,11 @@ from django.utils.translation import ugettext_lazy as _
 from django_fsm import FSMField, transition
 from model_utils import Choices, FieldTracker
 from model_utils.models import TimeStampedModel
+from unicef_attachments.models import Attachment
 from unicef_notification.utils import send_notification_with_template
 
 from etools.applications.action_points.models import ActionPoint
 from etools.applications.activities.models import Activity
-from etools.applications.attachments.models import Attachment
 from etools.applications.EquiTrack.utils import get_environment
 from etools.applications.permissions2.fsm import has_action_permission
 from etools.applications.publics.models import SoftDeleteMixin

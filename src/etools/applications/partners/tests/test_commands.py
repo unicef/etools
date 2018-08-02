@@ -4,15 +4,21 @@ from unittest.mock import Mock, patch
 from django.conf import settings
 from django.core.management import call_command
 
-from etools.applications.attachments.models import Attachment
+from unicef_attachments.models import Attachment
+
 from etools.applications.attachments.tests.factories import AttachmentFactory, AttachmentFileTypeFactory
 from etools.applications.EquiTrack.tests.cases import BaseTenantTestCase
 from etools.applications.partners.models import Agreement, Intervention
-from etools.applications.partners.tests.factories import (AgreementAmendmentFactory, AgreementFactory,
-                                                          AssessmentFactory, InterventionAmendmentFactory,
-                                                          InterventionAttachmentFactory,
-                                                          InterventionFactory, PartnerFactory,
-                                                          CoreValuesAssessmentFactory)
+from etools.applications.partners.tests.factories import (
+    AgreementAmendmentFactory,
+    AgreementFactory,
+    AssessmentFactory,
+    CoreValuesAssessmentFactory,
+    InterventionAmendmentFactory,
+    InterventionAttachmentFactory,
+    InterventionFactory,
+    PartnerFactory,
+)
 from etools.applications.reports.tests.factories import CountryProgrammeFactory
 
 

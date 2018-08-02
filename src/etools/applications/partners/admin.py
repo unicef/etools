@@ -7,22 +7,21 @@ from django.utils.safestring import mark_safe
 from django.utils.translation import ugettext_lazy as _
 
 from import_export.admin import ExportMixin
+from unicef_attachments.admin import AttachmentSingleInline
+from unicef_attachments.models import Attachment
 from unicef_snapshot.admin import ActivityInline, SnapshotModelAdmin
 
-from etools.applications.attachments.admin import AttachmentSingleInline
-from etools.applications.attachments.models import Attachment
 from etools.applications.partners.exports import PartnerExport
-from etools.applications.partners.forms import (
+from etools.applications.partners.forms import (  # TODO intervention sector locations cleanup
     PartnersAdminForm,
-    # TODO intervention sector locations cleanup
     PartnerStaffMemberForm,
 )
 from etools.applications.partners.mixins import CountryUsersAdminMixin, HiddenPartnerMixin
-from etools.applications.partners.models import (
+from etools.applications.partners.models import (  # TODO intervention sector locations cleanup
     Agreement,
-    # TODO intervention sector locations cleanup
     AgreementAmendment,
     Assessment,
+    CoreValuesAssessment,
     FileType,
     FundingCommitment,
     Intervention,
@@ -35,7 +34,7 @@ from etools.applications.partners.models import (
     PartnerOrganization,
     PartnerStaffMember,
     PlannedEngagement,
-    CoreValuesAssessment)
+)
 
 
 class InterventionAmendmentsAdmin(admin.ModelAdmin):
