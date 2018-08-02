@@ -8,7 +8,7 @@ defaults = {
     Dear {{ action_point.person_responsible }},
 
     {{ action_point.assigned_by }} has assigned you an action point
-    
+
     Description {{action_point.description}}
     Due Date {{action_point.due_date}}
     Please refer below for additional information.
