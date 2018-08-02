@@ -6,12 +6,9 @@ from rest_framework import serializers
 from unicef_restlib.fields import SeparatedReadWriteField
 from unicef_restlib.serializers import WritableNestedParentSerializerMixin, WritableNestedSerializerMixin
 
-from etools.applications.action_points.models import Category
-from etools.applications.action_points.serializers import (
-    ActionPointBaseSerializer,
-    CategoryModelChoiceField,
-    HistorySerializer,
-)
+from etools.applications.action_points.categories.models import Category
+from etools.applications.action_points.serializers import ActionPointBaseSerializer, HistorySerializer
+from etools.applications.action_points.categories.serializers import CategoryModelChoiceField
 from etools.applications.attachments.models import FileType
 from etools.applications.attachments.serializers import BaseAttachmentSerializer
 from etools.applications.attachments.serializers_fields import FileTypeModelChoiceField
