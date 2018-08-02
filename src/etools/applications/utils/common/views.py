@@ -182,7 +182,7 @@ class NestedViewSetMixin(object):
             return
 
         return parent_class(
-            request=self.request, kwargs=self.kwargs, lookup_url_kwarg=self.parent_lookup_kwarg
+            request=self.request, kwargs=self.kwargs, lookup_url_kwarg=self.parent_lookup_kwarg, action='parent'
         )
 
     def get_parent_object(self):
