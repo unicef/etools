@@ -4,13 +4,7 @@ from django.contrib.contenttypes.admin import GenericStackedInline
 from django_comments.models import Comment
 from unicef_snapshot.admin import ActivityInline, SnapshotModelAdmin
 
-from etools.applications.action_points.models import ActionPoint, Category
-
-
-class CategoryAdmin(admin.ModelAdmin):
-    list_display = ('module', 'description')
-    list_filter = ('module', )
-    search_fields = ('description', )
+from etools.applications.action_points.models import ActionPoint
 
 
 class CommentInline(GenericStackedInline):
@@ -37,5 +31,4 @@ class ActionPointAdmin(SnapshotModelAdmin):
                      'travel_activity', 'engagement', 'author', 'assigned_by', 'assigned_to')
 
 
-admin.site.register(Category, CategoryAdmin)
 admin.site.register(ActionPoint, ActionPointAdmin)
