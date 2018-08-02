@@ -18,6 +18,7 @@ from etools.applications.action_points.serializers import ActionPointListSeriali
     ActionPointCreateSerializer, CategorySerializer
 from etools.applications.permissions2.conditions import ObjectStatusCondition
 from etools.applications.permissions2.views import PermittedFSMActionMixin, PermittedSerializerMixin
+from etools.applications.snapshot.views import FSMSnapshotViewMixin
 from etools.applications.utils.common.pagination import DynamicPageNumberPagination
 from etools.applications.utils.common.views import MultiSerializerViewSetMixin, SafeTenantViewSetMixin
 
@@ -38,6 +39,7 @@ class ActionPointViewSet(
     mixins.RetrieveModelMixin,
     mixins.UpdateModelMixin,
     mixins.DestroyModelMixin,
+    FSMSnapshotViewMixin,
     PermittedFSMActionMixin,
     viewsets.GenericViewSet
 ):
