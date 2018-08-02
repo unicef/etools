@@ -215,6 +215,21 @@ class TestActionPointViewSet(TestExportMixin, ActionPointsTestCaseMixin, BaseTen
         self.assertEqual(len(response.data['comments']), 1)
         self.assertEqual(len(response.data['history']), 1)
 
+    def test_complete(self):
+        action_point = ActionPointFactory(status='pre_completed')
+        self.assertEqual(action_point.history.count(), 0)
+
+        response = self.forced_auth_req(
+            'post',
+            reverse('action-points:action-points-(?P<action>\D+)', args=(action_point.id, 'complete')),
+            user=action_point.assigned_to,
+            data={}
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data['status'], 'completed')
+        self.assertEqual(len(response.data['history']), 1)
+
     def test_update_wrong_category(self):
         action_point = ActionPointFactory(status='open', comments__count=0, engagement=MicroAssessmentFactory())
 

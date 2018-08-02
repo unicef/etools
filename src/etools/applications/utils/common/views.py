@@ -84,6 +84,18 @@ class FSMTransitionActionMixin(object):
         current_state = fsm_meta.field.get_state(im_self)
         return fsm_meta.get_transition(current_state).custom.get('serializer')
 
+    def pre_transition(self, instance, action):
+        """
+        hook to implement custom logic before transition
+        """
+        pass
+
+    def post_transition(self, instance, action):
+        """
+        hook to implement custom logic after transition
+        """
+        pass
+
     @detail_route(methods=['post'], url_path='(?P<action>\D+)')
     def transition(self, request, *args, **kwargs):
         """
@@ -92,6 +104,8 @@ class FSMTransitionActionMixin(object):
         action = kwargs.get('action', False)
         instance = self.get_object()
         instance_action = self.get_transition(action, instance)
+
+        self.pre_transition(instance, action)
 
         self.check_transition_permission(instance_action, request.user)
 
@@ -104,6 +118,8 @@ class FSMTransitionActionMixin(object):
             instance_action()
 
         instance.save()
+
+        self.post_transition(instance, action)
 
         return self.retrieve(request, *args, **kwargs)
 
