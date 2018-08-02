@@ -8,9 +8,9 @@ from django_fsm import FSMField, transition
 from model_utils import Choices, FieldTracker
 from model_utils.fields import MonitorField
 from model_utils.models import TimeStampedModel
-from ordered_model.models import OrderedModel
 from unicef_snapshot.models import Activity
 
+from etools.applications.action_points.categories.models import Category
 from etools.applications.action_points.transitions.conditions import ActionPointCompleteActionsTakenCheck
 from etools.applications.EquiTrack.utils import get_environment
 from etools.applications.notification.models import Notification
@@ -19,32 +19,8 @@ from etools.applications.utils.common.urlresolvers import build_frontend_url
 from etools.applications.utils.groups.wrappers import GroupWrapper
 
 
-class Category(OrderedModel, models.Model):
-    MODULE_CHOICES = Choices(
-        ('apd', _('Action Points')),
-        ('t2f', _('Trip Management')),
-        ('tpm', 'Third Party Monitoring'),
-        ('audit', _('Financial Assurance')),
-    )
-
-    module = models.CharField(max_length=10, choices=MODULE_CHOICES, verbose_name=_('Module'))
-    description = models.TextField(verbose_name=_('Description'))
-
-    class Meta:
-        unique_together = ("description", "module", )
-        ordering = ('module', 'order')
-
-    def __str__(self):
-        return '{}: {}'.format(self.module, self.description)
-
-
 class ActionPoint(TimeStampedModel):
-    MODULE_CHOICES = Choices(
-        ('apd', _('Action Points')),
-        ('t2f', _('Trip Management')),
-        ('tpm', _('Third Party Monitoring')),
-        ('audit', _('Financial Assurance')),
-    )
+    MODULE_CHOICES = Category.MODULE_CHOICES
 
     STATUSES = Choices(
         ('open', _('Open')),
@@ -199,7 +175,7 @@ class ActionPoint(TimeStampedModel):
         key_events = activity.data.get('key_events')
         if key_events:
             if cls.KEY_EVENTS.status_update in key_events:
-                return _('Changed status to {}').format(cls.STATUSES[activity.change['status']['after']])
+                return cls.STATUSES[activity.change['status']['after']]
             elif cls.KEY_EVENTS.reassign in key_events:
                 return _('Reassigned to {}').format(
                     get_user_model().objects.get(pk=activity.change['assigned_to']['after']).get_full_name()
@@ -215,6 +191,7 @@ class ActionPoint(TimeStampedModel):
             'partner': self.partner.name if self.partner else '',
             'description': self.description,
             'due_date': self.due_date.strftime('%d %b %Y') if self.due_date else '',
+            'status': self.status,
             'object_url': self.get_object_url(user=user, include_token=include_token),
         }
 

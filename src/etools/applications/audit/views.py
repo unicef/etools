@@ -36,7 +36,8 @@ from etools.applications.audit.serializers.engagement import (AuditSerializer, E
                                                               SpecialAuditSerializer, SpotCheckSerializer,
                                                               EngagementActionPointSerializer,
                                                               EngagementAttachmentSerializer,
-                                                              ReportAttachmentSerializer)
+                                                              ReportAttachmentSerializer, StaffSpotCheckSerializer,
+                                                              StaffSpotCheckListSerializer)
 from etools.applications.audit.serializers.export import (AuditDetailCSVSerializer, AuditPDFSerializer,
                                                           MicroAssessmentDetailCSVSerializer,
                                                           MicroAssessmentPDFSerializer,
@@ -99,7 +100,7 @@ class AuditorFirmViewSet(
     filter_backends = (SearchFilter, OrderingFilter, DjangoFilterBackend)
     search_fields = ('name', 'email')
     ordering_fields = ('name', )
-    filter_fields = ('country', )
+    filter_fields = ('country', 'unicef_users_allowed')
 
     def get_queryset(self):
         queryset = super(AuditorFirmViewSet, self).get_queryset()
@@ -151,6 +152,8 @@ class PurchaseOrderViewSet(
     queryset = PurchaseOrder.objects.all()
     serializer_class = PurchaseOrderSerializer
     permission_classes = (IsAuthenticated, )
+    filter_backends = (DjangoFilterBackend, )
+    filter_fields = ('auditor_firm__unicef_users_allowed', )
 
     @list_route(methods=['get'], url_path='sync/(?P<order_number>[^/]+)')
     def sync(self, request, *args, **kwargs):
@@ -205,6 +208,7 @@ class EngagementViewSet(
     viewsets.GenericViewSet
 ):
     queryset = Engagement.objects.all()
+    unicef_engagements = False
     serializer_class = EngagementSerializer
     serializer_action_classes = {
         'list': EngagementListSerializer,
@@ -273,6 +277,9 @@ class EngagementViewSet(
         queryset = queryset.prefetch_related(
             'partner', Prefetch('agreement', PurchaseOrder.objects.prefetch_related('auditor_firm'))
         )
+
+        if self.action == 'list':
+            queryset = queryset.filter(agreement__auditor_firm__unicef_users_allowed=self.unicef_engagements)
 
         return queryset
 
@@ -369,6 +376,14 @@ class SpotCheckViewSet(EngagementManagementMixin, EngagementViewSet):
     renderer_classes = [JSONRenderer, SpotCheckDetailCSVRenderer]
 
 
+class StaffSpotCheckViewSet(SpotCheckViewSet):
+    unicef_engagements = True
+    serializer_class = StaffSpotCheckSerializer
+    serializer_action_classes = {
+        'list': StaffSpotCheckListSerializer
+    }
+
+
 class SpecialAuditViewSet(EngagementManagementMixin, EngagementViewSet):
     queryset = SpecialAudit.objects.all()
     serializer_class = SpecialAuditSerializer
@@ -435,7 +450,6 @@ class AuditorStaffMembersViewSet(
 
 
 class EngagementActionPointViewSet(BaseAuditViewSet,
-                                   PermittedFSMActionMixin,
                                    mixins.ListModelMixin,
                                    mixins.CreateModelMixin,
                                    mixins.RetrieveModelMixin,
