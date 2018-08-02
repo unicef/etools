@@ -435,7 +435,6 @@ class AuditorStaffMembersViewSet(
 
 
 class EngagementActionPointViewSet(BaseAuditViewSet,
-                                   PermittedFSMActionMixin,
                                    mixins.ListModelMixin,
                                    mixins.CreateModelMixin,
                                    mixins.RetrieveModelMixin,
