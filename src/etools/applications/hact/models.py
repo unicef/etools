@@ -217,11 +217,13 @@ class AggregateHact(TimeStampedModel):
         return {
             'programmatic_visits': {
                 'completed': self._sum_json_values('hact_values__programmatic_visits__completed__total'),
-                'min_required': sum([p.min_req_programme_visits for p in PartnerOrganization.objects.all()]),
+                'min_required': sum([p.min_req_programme_visits for p in self.get_queryset()]),
             },
             'spot_checks': {
                 'completed': self._sum_json_values('hact_values__spot_checks__completed__total'),
-                'min_required': sum([p.min_req_spot_checks for p in PartnerOrganization.objects.all()]),
+                'min_required': sum([p.min_req_spot_checks for p in self.get_queryset()]),
+                'follow_up': self.get_queryset().aggregate(total=Coalesce(Sum(
+                    'planned_engagement__spot_check_follow_up'), 0))['total']
             },
             'scheduled_audit': Audit.objects.filter(
                 status=Engagement.FINAL, date_of_draft_report_to_unicef__year=datetime.now().year).count(),
@@ -384,6 +386,10 @@ class AggregateHact(TimeStampedModel):
 
             ],
             'table': [
+                {
+                    'label': 'Active Partners',
+                    'value': PartnerOrganization.objects.active().count()
+                },
                 {
                     'label': 'IPs without required PV',
                     'value': PartnerOrganization.objects.not_programmatic_visit_compliant().count()
