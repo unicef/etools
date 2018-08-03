@@ -1,6 +1,6 @@
 [
   {
-    "model": "action_points.category",
+    "model": "categories.category",
     "pk": 1,
     "fields": {
       "order": 1,
@@ -9,7 +9,7 @@
     }
   },
   {
-    "model": "action_points.category",
+    "model": "categories.category",
     "pk": 2,
     "fields": {
       "order": 2,
@@ -18,7 +18,7 @@
     }
   },
   {
-    "model": "action_points.category",
+    "model": "categories.category",
     "pk": 3,
     "fields": {
       "order": 3,
@@ -27,7 +27,7 @@
     }
   },
   {
-    "model": "action_points.category",
+    "model": "categories.category",
     "pk": 4,
     "fields": {
       "order": 4,
@@ -36,7 +36,7 @@
     }
   },
   {
-    "model": "action_points.category",
+    "model": "categories.category",
     "pk": 5,
     "fields": {
       "order": 5,
@@ -45,7 +45,7 @@
     }
   },
   {
-    "model": "action_points.category",
+    "model": "categories.category",
     "pk": 6,
     "fields": {
       "order": 6,
@@ -54,7 +54,7 @@
     }
   },
   {
-    "model": "action_points.category",
+    "model": "categories.category",
     "pk": 7,
     "fields": {
       "order": 7,
@@ -63,7 +63,7 @@
     }
   },
   {
-    "model": "action_points.category",
+    "model": "categories.category",
     "pk": 8,
     "fields": {
       "order": 8,
@@ -72,7 +72,7 @@
     }
   },
   {
-    "model": "action_points.category",
+    "model": "categories.category",
     "pk": 9,
     "fields": {
       "order": 9,
@@ -81,7 +81,7 @@
     }
   },
   {
-    "model": "action_points.category",
+    "model": "categories.category",
     "pk": 10,
     "fields": {
       "order": 10,
@@ -90,7 +90,7 @@
     }
   },
   {
-    "model": "action_points.category",
+    "model": "categories.category",
     "pk": 11,
     "fields": {
       "order": 11,
@@ -99,7 +99,7 @@
     }
   },
   {
-    "model": "action_points.category",
+    "model": "categories.category",
     "pk": 12,
     "fields": {
       "order": 12,
@@ -108,7 +108,7 @@
     }
   },
   {
-    "model": "action_points.category",
+    "model": "categories.category",
     "pk": 13,
     "fields": {
       "order": 13,
@@ -117,7 +117,7 @@
     }
   },
   {
-    "model": "action_points.category",
+    "model": "categories.category",
     "pk": 14,
     "fields": {
       "order": 14,
@@ -126,7 +126,7 @@
     }
   },
   {
-    "model": "action_points.category",
+    "model": "categories.category",
     "pk": 15,
     "fields": {
       "order": 15,

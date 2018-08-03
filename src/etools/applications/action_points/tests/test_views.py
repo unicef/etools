@@ -6,14 +6,14 @@ from factory import fuzzy
 
 from rest_framework import status
 
-from etools.applications.action_points.models import Category
+from etools.applications.action_points.categories.models import Category
 from etools.applications.action_points.tests.base import ActionPointsTestCaseMixin
 from etools.applications.action_points.tests.factories import ActionPointFactory, ActionPointCategoryFactory
 from etools.applications.EquiTrack.tests.cases import BaseTenantTestCase
 from etools.applications.audit.tests.factories import MicroAssessmentFactory
 from etools.applications.partners.tests.factories import PartnerFactory
 from etools.applications.reports.tests.factories import SectionFactory
-from etools.applications.t2f.tests.factories import TravelActivityFactory
+from etools.applications.t2f.tests.factories import TravelActivityFactory, TravelFactory
 from etools.applications.tpm.tests.factories import UserFactory, TPMVisitFactory
 from etools.applications.utils.common.tests.test_utils import TestExportMixin
 
@@ -215,6 +215,21 @@ class TestActionPointViewSet(TestExportMixin, ActionPointsTestCaseMixin, BaseTen
         self.assertEqual(len(response.data['comments']), 1)
         self.assertEqual(len(response.data['history']), 1)
 
+    def test_complete(self):
+        action_point = ActionPointFactory(status='pre_completed')
+        self.assertEqual(action_point.history.count(), 0)
+
+        response = self.forced_auth_req(
+            'post',
+            reverse('action-points:action-points-(?P<action>\D+)', args=(action_point.id, 'complete')),
+            user=action_point.assigned_to,
+            data={}
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data['status'], 'completed')
+        self.assertEqual(len(response.data['history']), 1)
+
     def test_update_wrong_category(self):
         action_point = ActionPointFactory(status='open', comments__count=0, engagement=MicroAssessmentFactory())
 
@@ -250,6 +265,14 @@ class TestActionPointViewSet(TestExportMixin, ActionPointsTestCaseMixin, BaseTen
         ActionPointFactory(
             status='open', comments__count=1,
             tpm_activity=TPMVisitFactory(tpm_activities__count=1).tpm_activities.first()
+        )
+        traveler = UserFactory()
+        ActionPointFactory(
+            status='open',
+            travel_activity=TravelActivityFactory(
+                primary_traveler=traveler,
+                travels=[TravelFactory(traveler=traveler)]
+            )
         )
 
         self._test_export(self.pme_user, 'action-points:action-points-export/csv')
