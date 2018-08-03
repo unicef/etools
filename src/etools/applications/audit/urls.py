@@ -15,6 +15,7 @@ from etools.applications.audit.views import (
     ReportAttachmentsViewSet,
     SpecialAuditViewSet,
     SpotCheckViewSet,
+    StaffSpotCheckViewSet,
 )
 
 root_api = routers.SimpleRouter()
@@ -23,6 +24,7 @@ root_api.register(r'purchase-orders', PurchaseOrderViewSet, base_name='purchase-
 root_api.register(r'engagements', EngagementViewSet, base_name='engagements')
 root_api.register(r'micro-assessments', MicroAssessmentViewSet, base_name='micro-assessments')
 root_api.register(r'spot-checks', SpotCheckViewSet, base_name='spot-checks')
+root_api.register(r'staff-spot-checks', StaffSpotCheckViewSet, base_name='staff-spot-checks')
 root_api.register(r'audits', AuditViewSet, base_name='audits')
 root_api.register(r'special-audits', SpecialAuditViewSet, base_name='special-audits')
 

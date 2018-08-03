@@ -7,8 +7,8 @@ from unicef_restlib.fields import SeparatedReadWriteField
 from unicef_restlib.serializers import WritableNestedParentSerializerMixin, WritableNestedSerializerMixin
 
 from etools.applications.action_points.categories.models import Category
-from etools.applications.action_points.serializers import ActionPointBaseSerializer, HistorySerializer
 from etools.applications.action_points.categories.serializers import CategoryModelChoiceField
+from etools.applications.action_points.serializers import ActionPointBaseSerializer, HistorySerializer
 from etools.applications.attachments.models import FileType
 from etools.applications.attachments.serializers import BaseAttachmentSerializer
 from etools.applications.attachments.serializers_fields import FileTypeModelChoiceField
@@ -27,6 +27,7 @@ from etools.applications.audit.models import (
     SpecificProcedure,
     SpotCheck,
 )
+from etools.applications.audit.purchase_order.models import PurchaseOrder
 from etools.applications.audit.serializers.auditor import (
     AuditorStaffMemberSerializer,
     PurchaseOrderItemSerializer,
@@ -359,6 +360,31 @@ class SpotCheckSerializer(ActivePDValidationMixin, EngagementSerializer):
                 'total_amount_tested', 'total_amount_of_ineligible_expenditure', 'internal_controls',
             ]
         })
+
+
+class StaffSpotCheckListSerializer(EngagementListSerializer):
+    class Meta(EngagementListSerializer.Meta):
+        fields = copy(EngagementListSerializer.Meta.fields)
+        fields.remove('po_item')
+
+
+class StaffSpotCheckSerializer(SpotCheckSerializer):
+    agreement = PurchaseOrderSerializer(read_only=True, label=_('Purchase Order'))
+
+    class Meta(SpotCheckSerializer.Meta):
+        fields = copy(SpotCheckSerializer.Meta.fields)
+        fields.remove('po_item')
+        fields.remove('related_agreement')
+
+    def create(self, validated_data):
+        purchase_order = PurchaseOrder.objects.filter(auditor_firm__unicef_users_allowed=True).first()
+        if not purchase_order:
+            raise serializers.ValidationError(
+                _("UNICEF Audit Organization is missing. Please ask administrator to handle this.")
+            )
+        validated_data['agreement'] = purchase_order
+
+        return super().create(validated_data)
 
 
 class DetailedFindingInfoSerializer(WritableNestedSerializerMixin, serializers.ModelSerializer):
