@@ -768,12 +768,6 @@ class EngagementActionPoint(ActionPoint):
         verbose_name_plural = _('Engagement Action Points')
         proxy = True
 
-    @transition('status', source=ActionPoint.STATUSES.open, target=ActionPoint.STATUSES.completed,
-                permission=has_action_permission(action='complete'),
-                conditions=[])
-    def complete(self):
-        self._do_complete()
-
     def get_mail_context(self, user=None, include_token=False):
         context = super(EngagementActionPoint, self).get_mail_context(user=user, include_token=include_token)
         if self.engagement:

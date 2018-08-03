@@ -1443,6 +1443,9 @@ class AgreementAmendment(TimeStampedModel):
     view_objects = AgreementAmendmentManager()
     objects = models.Manager()
 
+    class Meta:
+        ordering = ("-created",)
+
     def __str__(self):
         return "{} {}".format(
             self.agreement.reference_number,

@@ -329,43 +329,6 @@ class TestTPMActionPointViewSet(TPMTestCaseMixin, BaseTenantTestCase):
 
         self._test_action_point_editable(action_point, action_point.assigned_to, editable=False)
 
-    def _test_complete(self, action_point, user, can_complete=True):
-        activity = action_point.tpm_activity
-        visit = activity.tpm_visit
-
-        response = self.forced_auth_req(
-            'post',
-            '/api/tpm/visits/{}/action-points/{}/complete/'.format(visit.id, action_point.id),
-            user=user
-        )
-
-        if can_complete:
-            self.assertEqual(response.status_code, status.HTTP_200_OK)
-            self.assertEqual(response.data['status'], 'completed')
-        else:
-            self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
-
-    def test_action_point_complete_pme(self):
-        visit = TPMVisitFactory(status='tpm_reported', tpm_activities__count=1)
-        activity = visit.tpm_activities.first()
-        action_point = ActionPointFactory(tpm_activity=activity, status='pre_completed', comments__count=0)
-
-        self._test_complete(action_point, self.pme_user)
-
-    def test_action_point_complete_assignee(self):
-        visit = TPMVisitFactory(status='tpm_reported', tpm_activities__count=1)
-        activity = visit.tpm_activities.first()
-        action_point = ActionPointFactory(tpm_activity=activity, status='pre_completed', comments__count=0)
-
-        self._test_complete(action_point, action_point.assigned_to)
-
-    def test_action_point_complete_fail_unicef_user(self):
-        visit = TPMVisitFactory(status='tpm_reported', tpm_activities__count=1)
-        activity = visit.tpm_activities.first()
-        action_point = ActionPointFactory(tpm_activity=activity, status='pre_completed', comments__count=0)
-
-        self._test_complete(action_point, self.unicef_user, can_complete=False)
-
 
 class TestTPMStaffMembersViewSet(TestExportMixin, TPMTestCaseMixin, BaseTenantTestCase):
     def test_list_view(self):

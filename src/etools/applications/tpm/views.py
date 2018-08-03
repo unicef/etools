@@ -451,7 +451,6 @@ class TPMVisitViewSet(
 
 
 class TPMActionPointViewSet(BaseTPMViewSet,
-                            PermittedFSMActionMixin,
                             mixins.ListModelMixin,
                             mixins.CreateModelMixin,
                             mixins.RetrieveModelMixin,
