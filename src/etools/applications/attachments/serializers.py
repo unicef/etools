@@ -179,12 +179,16 @@ class AttachmentSerializerMixin(object):
                     if field.override is not None:
                         if field.override in self.fields:
                             self.fields[field.override].read_only = True
-                    setattr(
-                        self,
-                        "validate_{}".format(field_name),
-                        types.MethodType(validate_attachment, self)
-                    )
-                    self.attachment_list.append(field.source)
+                    # ignore values that are None
+                    if self.initial_data[field_name] is None:
+                        self.initial_data.pop(field_name)
+                    else:
+                        setattr(
+                            self,
+                            "validate_{}".format(field_name),
+                            types.MethodType(validate_attachment, self)
+                        )
+                        self.attachment_list.append(field.source)
                 else:
                     setattr(field, "read_only", True)
 
