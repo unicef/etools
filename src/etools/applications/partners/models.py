@@ -2073,7 +2073,7 @@ class Intervention(TimeStampedModel):
         elif self.status == self.DRAFT:
             self.update_reference_number()
 
-        if save_from_agreement is False:
+        if not save_from_agreement:
             self.update_ssfa_properties()
 
         super(Intervention, self).save()
