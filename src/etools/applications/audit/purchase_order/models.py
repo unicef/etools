@@ -9,7 +9,7 @@ from etools.applications.firms.models import BaseFirm, BaseStaffMember
 
 
 class AuditorFirm(BaseFirm):
-    unicef_users_allowed = models.BooleanField(default=False, verbose_name=_('UNICEF users allowed'),
+    unicef_users_allowed = models.BooleanField(default=False, editable=False, verbose_name=_('UNICEF users allowed'),
                                                help_text=_('Allow UNICEF users to join and act as auditors.'))
 
 
