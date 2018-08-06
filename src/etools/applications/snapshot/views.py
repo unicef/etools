@@ -7,6 +7,8 @@ from django.utils import timezone
 from rest_framework.generics import ListAPIView
 from rest_framework.permissions import IsAdminUser
 
+from unicef_snapshot.utils import create_dict_with_relations, create_snapshot
+
 from etools.applications.snapshot.models import Activity
 from etools.applications.snapshot.serializers import ActivitySerializer
 
@@ -60,3 +62,13 @@ class ActivityListView(ListAPIView):
                 queryset = queryset.filter(created__lte=date_to)
 
         return queryset
+
+
+class FSMSnapshotViewMixin(object):
+    def pre_transition(self, instance, action):
+        super().pre_transition(instance, action)
+        self._pre_save = create_dict_with_relations(instance)
+
+    def post_transition(self, instance, action):
+        super().post_transition(instance, action)
+        create_snapshot(instance, self._pre_save, self.request.user)
