@@ -1704,6 +1704,7 @@ class Intervention(TimeStampedModel):
         null=True,
         blank=True,
     )
+    # TODO remove in August 2018 sprint
     signed_by_unicef = models.BooleanField(
         blank=True, default=False,
         verbose_name=_("Signed By UNICEF Authorized Officer")
