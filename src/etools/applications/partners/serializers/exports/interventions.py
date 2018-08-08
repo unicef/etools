@@ -363,7 +363,6 @@ class InterventionExportSerializer(serializers.ModelSerializer):
             "partner_authorized_officer_signatory",
             "signed_by_partner_date",
             "unicef_signatory",
-            "signed_by_unicef",
             "signed_by_unicef_date",
             "days_from_submission_to_signed",
             "days_from_review_to_signed",
