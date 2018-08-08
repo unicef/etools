@@ -175,6 +175,7 @@ class InterventionListAPIView(QueryStringFilterMixin, ExportModelMixin, Interven
             filters = (
                 ('document_type', 'document_type__in'),
                 ('cp_outputs', 'result_links__cp_output__pk__in'),
+                ('country_programme', 'agreement__country_programme__in'),
                 ('sections', 'sections__in'),
                 ('cluster', 'result_links__ll_results__applied_indicators__cluster_indicator_title__icontains'),
                 ('status', 'status__in'),
