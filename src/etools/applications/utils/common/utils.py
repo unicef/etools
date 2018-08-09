@@ -53,3 +53,10 @@ class every_country:
 
 def strip_text(text):
     return '\r\n'.join(map(lambda line: line.lstrip(), text.splitlines()))
+
+
+def to_choices_list(value):
+    if isinstance(value, dict):
+        return value.items()
+
+    return value

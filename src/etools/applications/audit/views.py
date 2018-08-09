@@ -7,7 +7,7 @@ from django.utils.translation import ugettext_lazy as _
 from django_filters.rest_framework import DjangoFilterBackend
 from easy_pdf.rendering import render_to_pdf_response
 from rest_framework import generics, mixins, viewsets
-from rest_framework.decorators import detail_route, list_route
+from rest_framework.decorators import action
 from rest_framework.filters import OrderingFilter, SearchFilter
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.renderers import JSONRenderer
@@ -176,7 +176,7 @@ class AuditorFirmViewSet(
         ])
         return context
 
-    @list_route(methods=['get'], url_path='users')
+    @action(detail=False, methods=['get'], url_path='users')
     def users(self, request, *args, **kwargs):
         return AuditUsersViewSet.as_view()(request._request, *args, **kwargs)
 
@@ -195,7 +195,7 @@ class PurchaseOrderViewSet(
     filter_backends = (DjangoFilterBackend, )
     filter_fields = ('auditor_firm__unicef_users_allowed', )
 
-    @list_route(methods=['get'], url_path='sync/(?P<order_number>[^/]+)')
+    @action(detail=False, methods=['get'], url_path='sync/(?P<order_number>[^/]+)')
     def sync(self, request, *args, **kwargs):
         """
         Fetch Purchase Order by vendor number. Load from etools.applications.vision if not found.
@@ -344,12 +344,12 @@ class EngagementViewSet(
         ])
         return context
 
-    @list_route(methods=['get'], url_path='partners')
+    @action(detail=False, methods=['get'], url_path='partners')
     def partners(self, request, *args, **kwargs):
         engagements = self.get_queryset()
         return EngagementPartnerView.as_view(engagements=engagements)(request._request, *args, **kwargs)
 
-    @list_route(methods=['get'], url_path='hact')
+    @action(detail=False, methods=['get'], url_path='hact')
     def hact(self, request, *args, **kwargs):
         if "partner" not in request.query_params:
             raise Http404
@@ -361,7 +361,7 @@ class EngagementViewSet(
         serializer = EngagementHactSerializer(engagements, many=True, context={"request": request})
         return Response(serializer.data)
 
-    @detail_route(methods=['get'], url_path='pdf')
+    @action(detail=True, methods=['get'], url_path='pdf')
     def export_pdf(self, request, *args, **kwargs):
         obj = self.get_object()
 

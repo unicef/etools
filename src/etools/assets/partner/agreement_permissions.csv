@@ -14,6 +14,7 @@ Field no,Verbose Name,Field Name,Group,Condition,Status,Action,Allowed
 2.3.1,Authorized Officer,authorized_officers,Partnership Manager,,Draft,Edit,TRUE
 2.4,Amendments [array],amendments,Partnership Manager,is type PCA or MOU,Signed,Edit,TRUE
 2.3.1,Authorized Officer,authorized_officers,Partnership Manager,user adds amendment,*,Edit,TRUE
+2.3.1,Authorized Officer,authorized_officers,Partnership Manager,is type SSFA,Signed,Edit,TRUE
 2.2.1,Partner Name,partner,UNICEF User,,*,Required,TRUE
 2.2.2,Agreement Type,agreement_type,UNICEF User,,*,Required,TRUE
 2.2.12,CP Structure,agreement_number,UNICEF User,,*,Required,TRUE
