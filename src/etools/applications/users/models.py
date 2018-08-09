@@ -74,7 +74,7 @@ class User(AbstractBaseUser, PermissionsMixin):
 class Country(TenantMixin):
     """
     Tenant Schema
-    Represents a country which has many offices and sections
+    Represents a country which has many offices
 
     Relates to :model:`users.Office`
     """
@@ -198,18 +198,6 @@ class Office(models.Model):
 
     class Meta:
         ordering = ('name', )
-
-
-class Section(models.Model):
-    """
-    Represents a section for the country
-    """
-
-    name = models.CharField(max_length=64, unique=True, verbose_name=_('Name'))
-    code = models.CharField(max_length=32, null=True, unique=True, blank=True, verbose_name=_('Code'))
-
-    def __str__(self):
-        return self.name
 
 
 class UserProfileManager(models.Manager):
