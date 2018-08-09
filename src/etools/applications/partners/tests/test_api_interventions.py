@@ -6,30 +6,22 @@ from django.core.cache import cache
 from django.core.files.uploadedfile import SimpleUploadedFile
 from django.db import connection
 from django.test import SimpleTestCase
-from django.urls import reverse, resolve
+from django.urls import resolve, reverse
 from django.utils import timezone
 
 from rest_framework import status
 from rest_framework.exceptions import ErrorDetail
 from rest_framework.test import APIRequestFactory
+from unicef_locations.tests.factories import LocationFactory
 from unicef_snapshot.models import Activity
 
 from etools.applications.attachments.models import Attachment
-from etools.applications.attachments.tests.factories import (
-    AttachmentFactory,
-    AttachmentFileTypeFactory,
-)
+from etools.applications.attachments.tests.factories import AttachmentFactory, AttachmentFileTypeFactory
 from etools.applications.environment.helpers import tenant_switch_is_active
-from etools.applications.environment.models import TenantSwitch
 from etools.applications.environment.tests.factories import TenantSwitchFactory
 from etools.applications.EquiTrack.tests.cases import BaseTenantTestCase
 from etools.applications.EquiTrack.tests.mixins import URLAssertionMixin
-from unicef_locations.tests.factories import LocationFactory
-from etools.applications.partners.models import (
-    Intervention,
-    InterventionAmendment,
-    InterventionResultLink,
-)
+from etools.applications.partners.models import Intervention, InterventionAmendment, InterventionResultLink
 from etools.applications.partners.tests.factories import (
     AgreementFactory,
     FileTypeFactory,
@@ -1925,30 +1917,7 @@ class TestInterventionListMapView(BaseTenantTestCase):
         data, first = self.assertResponseFundamentals(response)
         self.assertEqual(first["id"], intervention.pk)
 
-    def test_get_param_section_wo_flag(self):
-        # make sure there is no prp_mode_off flag.. this serves to flush the cache
-        ts = TenantSwitch.get('prp_mode_off')
-        # since the cache is extremely unreliable as tests progress this is something to go around that
-        if ts.id:
-            ts.delete()
-        section = SectionFactory()
-        intervention = InterventionFactory()
-        rl = InterventionResultLinkFactory(intervention=intervention)
-        llo = LowerResultFactory(result_link=rl)
-        AppliedIndicatorFactory(lower_result=llo, section=section)
-
-        response = self.forced_auth_req(
-            'get',
-            self.url,
-            user=self.unicef_staff,
-            data={"section": section.pk},
-        )
-        data, first = self.assertResponseFundamentals(response)
-        self.assertEqual(first["id"], intervention.pk)
-
     def test_get_param_section_with_flag(self):
-        # set prp mode off flag
-        TenantSwitchFactory(name='prp_mode_off', countries=[connection.tenant])
         section = SectionFactory()
         intervention = InterventionFactory()
         intervention.sections.add(section)

@@ -5,18 +5,14 @@ import logging
 import operator
 
 from django.contrib.contenttypes.models import ContentType
-from django.db import transaction, connection
+from django.db import connection, transaction
 from django.db.models import Q
 from django.shortcuts import get_object_or_404
 
+from etools_validator.mixins import ValidatorViewMixin
 from rest_framework import status
 from rest_framework.exceptions import ValidationError
-from rest_framework.generics import (
-    DestroyAPIView,
-    ListAPIView,
-    ListCreateAPIView,
-    RetrieveUpdateDestroyAPIView,
-)
+from rest_framework.generics import DestroyAPIView, ListAPIView, ListCreateAPIView, RetrieveUpdateDestroyAPIView
 from rest_framework.permissions import IsAdminUser
 from rest_framework.renderers import JSONRenderer
 from rest_framework.response import Response
@@ -24,13 +20,9 @@ from rest_framework.views import APIView
 from rest_framework_csv import renderers as r
 from unicef_snapshot.models import Activity
 
-from etools.applications.environment.helpers import tenant_switch_is_active
 from etools.applications.EquiTrack.mixins import ExportModelMixin, QueryStringFilterMixin
 from etools.applications.EquiTrack.renderers import CSVFlatRenderer
-from etools.applications.partners.exports_v2 import (
-    InterventionCSVRenderer,
-    InterventionLocationCSVRenderer,
-)
+from etools.applications.partners.exports_v2 import InterventionCSVRenderer, InterventionLocationCSVRenderer
 from etools.applications.partners.filters import (
     AppliedIndicatorsFilter,
     InterventionFilter,
@@ -45,10 +37,7 @@ from etools.applications.partners.models import (
     InterventionResultLink,
     InterventionSectorLocationLink,
 )
-from etools.applications.partners.permissions import (
-    PartnershipManagerPermission,
-    PartnershipManagerRepPermission,
-)
+from etools.applications.partners.permissions import PartnershipManagerPermission, PartnershipManagerRepPermission
 from etools.applications.partners.serializers.exports.interventions import (
     InterventionAmendmentExportFlatSerializer,
     InterventionAmendmentExportSerializer,
@@ -70,6 +59,7 @@ from etools.applications.partners.serializers.interventions_v2 import (
     InterventionIndicatorSerializer,
     InterventionListMapSerializer,
     InterventionListSerializer,
+    InterventionLocationExportSerializer,
     InterventionReportingPeriodSerializer,
     InterventionReportingRequirementCreateSerializer,
     InterventionReportingRequirementListSerializer,
@@ -78,19 +68,11 @@ from etools.applications.partners.serializers.interventions_v2 import (
     InterventionResultSerializer,
     InterventionSectionLocationCUSerializer,
     MinimalInterventionListSerializer,
-    InterventionLocationExportSerializer)
+)
 from etools.applications.partners.validation.interventions import InterventionValid
-from etools.applications.reports.models import (
-    AppliedIndicator,
-    LowerResult,
-    ReportingRequirement,
-)
-from etools.applications.reports.serializers.v2 import (
-    AppliedIndicatorSerializer,
-    LowerResultSimpleCUSerializer,
-)
+from etools.applications.reports.models import AppliedIndicator, LowerResult, ReportingRequirement
+from etools.applications.reports.serializers.v2 import AppliedIndicatorSerializer, LowerResultSimpleCUSerializer
 from etools.applications.users.models import Country
-from etools_validator.mixins import ValidatorViewMixin
 
 
 class InterventionListBaseView(ValidatorViewMixin, ListCreateAPIView):
@@ -561,11 +543,7 @@ class InterventionListMapView(ListCreateAPIView):
             if "country_programme" in query_params.keys():
                 queries.append(Q(agreement__country_programme=query_params.get("country_programme")))
             if "section" in query_params.keys():
-                if tenant_switch_is_active("prp_mode_off"):
-                    sq = Q(sections__pk=query_params.get("section"))
-                else:
-                    sq = Q(result_links__ll_results__applied_indicators__section__pk=query_params.get("section"))
-                queries.append(sq)
+                queries.append(Q(sections__pk=query_params.get("section")))
             if "status" in query_params.keys():
                 queries.append(Q(status=query_params.get("status")))
             if "partner" in query_params.keys():
