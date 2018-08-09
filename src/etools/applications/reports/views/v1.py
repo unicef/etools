@@ -2,7 +2,7 @@ from rest_framework import mixins, viewsets
 from rest_framework.generics import ListAPIView, RetrieveAPIView
 from rest_framework.permissions import IsAdminUser
 
-from etools.applications.reports.models import CountryProgramme, Indicator, Result, ResultType, Sector, Unit
+from etools.applications.reports.models import CountryProgramme, Indicator, Result, ResultType, Section, Unit
 from etools.applications.reports.serializers.v1 import (CountryProgrammeSerializer, IndicatorCreateSerializer,
                                                         ResultSerializer, ResultTypeSerializer,
                                                         SectionCreateSerializer, UnitSerializer,)
@@ -22,9 +22,9 @@ class SectionViewSet(mixins.RetrieveModelMixin,
                      mixins.CreateModelMixin,
                      viewsets.GenericViewSet):
     """
-    Returns a list of all Sectors
+    Returns a list of all Sections
     """
-    queryset = Sector.objects.all()
+    queryset = Section.objects.all()
     serializer_class = SectionCreateSerializer
 
 

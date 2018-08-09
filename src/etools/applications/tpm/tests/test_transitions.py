@@ -23,7 +23,7 @@ class TPMTransitionTestCase(TPMTestCaseMixin, BaseTenantTestCase):
         data = data or {}
         return self.forced_auth_req(
             'post',
-            reverse('tpm:visits-(?P<action>\D+)', args=(visit.id, action)),
+            reverse('tpm:visits-transition', args=(visit.id, action)),
             user=user,
             data=data
         )
