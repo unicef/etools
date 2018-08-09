@@ -35,6 +35,13 @@ class PartnerFactory(factory.django.DjangoModelFactory):
     staff_members = factory.RelatedFactory(PartnerStaffFactory, 'partner')
 
 
+class CoreValuesAssessmentFactory(factory.django.DjangoModelFactory):
+    class Meta:
+        model = models.CoreValuesAssessment
+
+    partner = factory.SubFactory(PartnerFactory)
+
+
 class AgreementFactory(factory.django.DjangoModelFactory):
     '''Factory for Agreements. If the agreement type is PCA (the default), the agreement's end date is set from
     the country_programme so any end date passed to this factory is ignored.

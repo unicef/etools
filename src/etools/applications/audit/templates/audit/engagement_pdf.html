@@ -348,20 +348,26 @@
             <div class="content-section__wrapper">
               <table class="content-section__table">
                 <tr class="content-section__table__header">
-                  <td>{{ serializer.fields.action_points.child.fields.due_date.label }}</td>
-                  <td>{{ serializer.fields.action_points.child.fields.person_responsible.label }}</td>
-                  <td colspan="2">{{ serializer.fields.action_points.child.description.label }}</td>
-                  <td>{{ serializer.fields.action_points.child.status.label }}</td>
-                  <td>{{ serializer.fields.action_points.child.high_priority.label }}</td>
+                  <td colspan="3">Reference No.</td>
+                  <td colspan="2">Status</td>
+                  <td>High Priority</td>
+                  <td colspan="3">Due Date</td>
+                  <td colspan="3">Assigned To</td>
+                  <td colspan="2">Office</td>
+                  <td colspan="3">Section</td>
+                  <td colspan="5">Description</td>
                 </tr>
                 {% if engagement.action_points %}
                   {% for action_point in engagement.action_points %}
                     <tr>
-                      <td>{{ action_point.due_date }}</td>
-                      <td>{{ action_point.person_responsible }}</td>
-                      <td colspan="2">{{ action_point.description|default:"-" }}</td>
-                      <td>{{ action_point.status }}</td>
+                      <td colspan="3">{{ action_point.reference_number }}</td>
+                      <td colspan="2">{{ action_point.status }}</td>
                       <td>{{ action_point.high_priority|yesno:"Y,N" }}</td>
+                      <td colspan="3">{{ action_point.due_date }}</td>
+                      <td colspan="3">{{ action_point.assigned_to }}</td>
+                      <td colspan="2">{{ action_point.office|default:"-" }}</td>
+                      <td colspan="3">{{ action_point.section|default:"-" }}</td>
+                      <td colspan="5">{{ action_point.description|default:"-" }}</td>
                     </tr>
                   {% endfor %}
                 {% else %}
@@ -379,13 +385,13 @@
         <pdf:nextpage></pdf:nextpage>
         <div class="content-section">
           <div class="content-section__header">
-            <div class="content-section__header__title">{{ serializer.fields.engagement_attachments.label }}</div>
+            <div class="content-section__header__title">Related Documents</div>
           </div>
           <div class="content-section__wrapper">
             <table class="content-section__table">
               <tr class="content-section__table__header">
-                <td>{{ serializer.fields.engagement_attachments.child.fields.created.label }}</td>
-                <td>{{ serializer.fields.engagement_attachments.child.fields.file_type.label }}</td>
+                <td>Date Uploaded</td>
+                <td>Document Type</td>
                 <td colspan="5">File Attachment</td>
               </tr>
               {% if engagement.engagement_attachments %}
@@ -408,13 +414,13 @@
         </div>
         <div class="content-section">
           <div class="content-section__header">
-            <div class="content-section__header__title">{{ serializer.fields.report_attachments.label }}</div>
+            <div class="content-section__header__title">Report Attachments</div>
           </div>
           <div class="content-section__wrapper">
             <table class="content-section__table">
               <tr class="content-section__table__header">
-                <td>{{ serializer.fields.report_attachments.child.fields.created.label }}</td>
-                <td>{{ serializer.fields.report_attachments.child.fields.file_type.label }}</td>
+                <td>Date Uploaded</td>
+                <td>Document Type</td>
                 <td colspan="5">File Attachment</td>
               </tr>
               {% if engagement.report_attachments %}

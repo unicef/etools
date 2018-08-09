@@ -181,7 +181,7 @@ class Engagement(InheritedModelMixin, TimeStampedModel, models.Model):
         verbose_name_plural = _('Engagements')
 
     def __str__(self):
-        return '{}: {}, {}'.format(self.engagement_type, self.agreement.order_number, self.partner.name)
+        return '{} {}'.format(self.get_engagement_type_display(), self.reference_number)
 
     @property
     def displayed_status(self):
@@ -434,9 +434,6 @@ class SpotCheck(Engagement):
         self.partner.spot_checks(update_one=True, event_date=self.date_of_draft_report_to_unicef)
         return super(SpotCheck, self).finalize(*args, **kwargs)
 
-    def __str__(self):
-        return 'SpotCheck ({}: {}, {})'.format(self.engagement_type, self.agreement.order_number, self.partner.name)
-
     def get_object_url(self, **kwargs):
         return build_frontend_url('ap', 'spot-checks', self.id, 'overview', **kwargs)
 
@@ -535,11 +532,6 @@ class MicroAssessment(Engagement):
     def submit(self, *args, **kwargs):
         return super(MicroAssessment, self).submit(*args, **kwargs)
 
-    def __str__(self):
-        return 'MicroAssessment ({}: {}, {})'.format(
-            self.engagement_type, self.agreement.order_number, self.partner.name
-        )
-
     def get_object_url(self, **kwargs):
         return build_frontend_url('ap', 'micro-assessments', self.id, 'overview', **kwargs)
 
@@ -628,9 +620,6 @@ class Audit(Engagement):
     def finalize(self, *args, **kwargs):
         self.partner.audits_completed(update_one=True)
         return super(Audit, self).finalize(*args, **kwargs)
-
-    def __str__(self):
-        return 'Audit ({}: {}, {})'.format(self.engagement_type, self.agreement.order_number, self.partner.name)
 
     def get_object_url(self, **kwargs):
         return build_frontend_url('ap', 'audits', self.id, 'overview', **kwargs)
@@ -723,9 +712,6 @@ class SpecialAudit(Engagement):
         self.partner.audits_completed(update_one=True)
         return super(SpecialAudit, self).finalize(*args, **kwargs)
 
-    def __str__(self):
-        return 'Special Audit ({}: {}, {})'.format(self.engagement_type, self.agreement.order_number, self.partner.name)
-
     def get_object_url(self, **kwargs):
         return build_frontend_url('ap', 'special-audits', self.id, 'overview', **kwargs)
 
@@ -781,12 +767,6 @@ class EngagementActionPoint(ActionPoint):
         verbose_name = _('Engagement Action Point')
         verbose_name_plural = _('Engagement Action Points')
         proxy = True
-
-    @transition('status', source=ActionPoint.STATUSES.open, target=ActionPoint.STATUSES.completed,
-                permission=has_action_permission(action='complete'),
-                conditions=[])
-    def complete(self):
-        self._do_complete()
 
     def get_mail_context(self, user=None, include_token=False):
         context = super(EngagementActionPoint, self).get_mail_context(user=user, include_token=include_token)

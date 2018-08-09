@@ -149,6 +149,10 @@ class SpotCheckFactory(EngagementFactory):
         model = SpotCheck
 
 
+class StaffSpotCheckFactory(SpotCheckFactory):
+    agreement = factory.SubFactory(PurchaseOrderFactory, auditor_firm__unicef_users_allowed=True)
+
+
 class RiskCategoryFactory(factory.DjangoModelFactory):
     class Meta:
         model = RiskCategory

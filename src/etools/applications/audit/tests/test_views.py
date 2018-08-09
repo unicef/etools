@@ -10,14 +10,15 @@ from factory import fuzzy
 from mock import Mock, patch
 from rest_framework import status
 
-from etools.applications.action_points.tests.factories import ActionPointFactory
+from etools.applications.action_points.tests.factories import ActionPointFactory, ActionPointCategoryFactory
 from etools.applications.attachments.tests.factories import AttachmentFactory, AttachmentFileTypeFactory
 from etools.applications.audit.models import Engagement, Risk, Auditor
 from etools.applications.audit.tests.base import AuditTestCaseMixin, EngagementTransitionsTestCaseMixin
 from etools.applications.audit.tests.factories import (AuditFactory, AuditPartnerFactory,
                                                        EngagementFactory, MicroAssessmentFactory,
                                                        PurchaseOrderFactory, RiskBluePrintFactory, RiskCategoryFactory,
-                                                       SpecialAuditFactory, SpotCheckFactory, UserFactory,)
+                                                       SpecialAuditFactory, SpotCheckFactory, UserFactory,
+                                                       StaffSpotCheckFactory)
 from etools.applications.EquiTrack.tests.cases import BaseTenantTestCase
 from etools.applications.audit.tests.test_transitions import MATransitionsTestCaseMixin
 from etools.applications.partners.models import PartnerType
@@ -513,6 +514,7 @@ class TestEngagementActionPointViewSet(EngagementTransitionsTestCaseMixin, BaseT
             '/api/audit/engagements/{}/action-points/'.format(self.engagement.id),
             user=self.unicef_focal_point,
             data={
+                'category': ActionPointCategoryFactory(module='audit').id,
                 'description': fuzzy.FuzzyText(length=100).fuzz(),
                 'due_date': fuzzy.FuzzyDate(datetime.date(2001, 1, 1)).fuzz(),
                 'assigned_to': self.unicef_user.id,
@@ -523,6 +525,7 @@ class TestEngagementActionPointViewSet(EngagementTransitionsTestCaseMixin, BaseT
 
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         self.assertEqual(self.engagement.action_points.count(), 1)
+        self.assertIsNotNone(self.engagement.action_points.first().partner)
 
     def _test_action_point_editable(self, action_point, user, editable=True):
         response = self.forced_auth_req(
@@ -535,8 +538,11 @@ class TestEngagementActionPointViewSet(EngagementTransitionsTestCaseMixin, BaseT
         if editable:
             self.assertIn('PUT', response.data['actions'].keys())
             self.assertListEqual(
-                ['assigned_to', 'high_priority', 'due_date', 'description', 'section', 'office'],
-                list(response.data['actions']['PUT'].keys())
+                sorted([
+                    'category', 'assigned_to', 'high_priority', 'due_date', 'description',
+                    'section', 'office', 'intervention'
+                ]),
+                sorted(list(response.data['actions']['PUT'].keys()))
             )
         else:
             self.assertNotIn('PUT', response.data['actions'].keys())
@@ -571,17 +577,85 @@ class TestEngagementActionPointViewSet(EngagementTransitionsTestCaseMixin, BaseT
 
         self._test_action_point_editable(action_point, self.unicef_focal_point, editable=False)
 
-    def test_action_point_complete(self):
-        self._init_finalized_engagement()
-        action_point = ActionPointFactory(engagement=self.engagement, status='pre_completed', comments__count=0)
+
+class TestStaffSpotCheck(AuditTestCaseMixin, BaseTenantTestCase):
+    fixtures = ('audit_staff_organization',)
+
+    def test_list_options(self):
+        response = self.forced_auth_req(
+            'options',
+            reverse('audit:staff-spot-checks-list'),
+            user=self.unicef_focal_point
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertIn('POST', response.data['actions'])
+
+    def test_create(self):
+        spot_check = SpotCheckFactory()
+        create_data = {
+            'end_date': spot_check.end_date,
+            'start_date': spot_check.start_date,
+            'partner_contacted_at': spot_check.partner_contacted_at,
+            'total_value': spot_check.total_value,
+            'partner': spot_check.partner_id,
+            'authorized_officers': spot_check.authorized_officers.values_list('id', flat=True),
+            'staff_members': spot_check.staff_members.values_list('id', flat=True),
+            'active_pd': spot_check.active_pd.values_list('id', flat=True),
+            'shared_ip_with': spot_check.shared_ip_with,
+        }
 
         response = self.forced_auth_req(
             'post',
-            '/api/audit/engagements/{}/action-points/{}/complete/'.format(self.engagement.id, action_point.id),
-            user=action_point.assigned_to
+            reverse('audit:staff-spot-checks-list'),
+            user=self.unicef_focal_point,
+            data=create_data
         )
+
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        self.assertIsNotNone(response.data['agreement'])
+
+    def test_list(self):
+        SpotCheckFactory()
+        staff_spot_check = StaffSpotCheckFactory()
+
+        response = self.forced_auth_req(
+            'get',
+            reverse('audit:staff-spot-checks-list'),
+            user=self.unicef_focal_point
+        )
+
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(response.data['status'], 'completed')
+        self.assertEqual(len(response.data['results']), 1)
+        self.assertEqual(response.data['results'][0]['id'], staff_spot_check.id)
+
+        attachments_response = self.forced_auth_req(
+            'get',
+            reverse('audit:engagement-attachments-list', args=[staff_spot_check.id]),
+            user=self.unicef_focal_point,
+        )
+        self.assertEqual(attachments_response.status_code, status.HTTP_200_OK)
+
+    def test_engagements_list(self):
+        spot_check = SpotCheckFactory()
+        StaffSpotCheckFactory()
+
+        response = self.forced_auth_req(
+            'get',
+            reverse('audit:engagements-list'),
+            user=self.unicef_focal_point
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(response.data['results']), 1)
+        self.assertEqual(response.data['results'][0]['id'], spot_check.id)
+
+        attachments_response = self.forced_auth_req(
+            'get',
+            reverse('audit:engagement-attachments-list', args=[spot_check.id]),
+            user=self.unicef_focal_point,
+        )
+        self.assertEqual(attachments_response.status_code, status.HTTP_200_OK)
 
 
 class TestMetadataDetailViewSet(EngagementTransitionsTestCaseMixin):

@@ -6,17 +6,21 @@ from functools import wraps
 from django.conf import settings
 from django.contrib.postgres.fields.array import ArrayField
 from django.db import connection, models
+from django.db.models.signals import post_save
+from django.dispatch import receiver
 from django.utils.timezone import now as timezone_now
 from django.utils.translation import ugettext, ugettext_lazy as _
 
 from django_fsm import FSMField, transition
 from unicef_notification.utils import send_notification
 
+from etools.applications.action_points.models import ActionPoint as NewActionPoint
 from etools.applications.publics.models import TravelExpenseType
 from etools.applications.t2f.helpers.cost_summary_calculator import CostSummaryCalculator
 from etools.applications.t2f.helpers.invoice_maker import InvoiceMaker
-from etools.applications.t2f.serializers.mailing import ActionPointMailSerializer, TravelMailSerializer
+from etools.applications.t2f.serializers.mailing import TravelMailSerializer
 from etools.applications.users.models import WorkspaceCounter
+from etools.applications.utils.common.urlresolvers import build_frontend_url
 
 log = logging.getLogger(__name__)
 
@@ -202,10 +206,6 @@ class Travel(models.Model):
 
     def __str__(self):
         return self.reference_number
-
-    def get_object_url(self):
-        return 'https://{host}/t2f/edit-travel/{travel_id}/'.format(host=settings.HOST,
-                                                                    travel_id=self.id)
 
     @property
     def cost_summary(self):
@@ -451,6 +451,9 @@ class Travel(models.Model):
         maker = InvoiceMaker(self)
         maker.do_invoicing()
 
+    def get_object_url(self):
+        return build_frontend_url('t2f', 'edit-travel', self.id)
+
 
 class TravelActivity(models.Model):
     travels = models.ManyToManyField('Travel', related_name='activities', verbose_name=_('Travels'))
@@ -485,9 +488,32 @@ class TravelActivity(models.Model):
     def travel_status(self):
         return self.travels.filter(traveler=self.primary_traveler).first().status
 
+    _reference_number = None
+
+    def get_reference_number(self):
+        if self._reference_number:
+            return self._reference_number
+
+        travel = self.travels.filter(traveler=self.primary_traveler).first()
+        if not travel:
+            return
+
+        return travel.reference_number
+
+    def set_reference_number(self, value):
+        self._reference_number = value
+
+    reference_number = property(get_reference_number, set_reference_number)
+
     def get_object_url(self):
-        # TODO: to be used for generating link from action points dashboard to related object
-        return ""
+        travel = self.travels.filter(traveler=self.primary_traveler).first()
+        if not travel:
+            return
+
+        return travel.get_object_url()
+
+    def __str__(self):
+        return '{} - {}'.format(self.travel_type, self.date)
 
 
 class ItineraryItem(models.Model):
@@ -639,6 +665,7 @@ class TravelAttachment(models.Model):
     file = models.FileField(upload_to=determine_file_upload_path, max_length=255, verbose_name=_('File'))
 
 
+# TODO remove when cleaning migrations
 def make_action_point_number():
     year = timezone_now().year
     action_points_qs = ActionPoint.objects.select_for_update().filter(created_at__year=year)
@@ -656,6 +683,7 @@ def make_action_point_number():
     return '{}/{:06d}'.format(year, action_point_number)
 
 
+# TODO remove me when migration to new AP has been finalized
 class ActionPoint(models.Model):
     """
     Represents an action point for the trip
@@ -699,44 +727,6 @@ class ActionPoint(models.Model):
         settings.AUTH_USER_MODEL, related_name='+', verbose_name=_('Assigned By'),
         on_delete=models.CASCADE,
     )
-
-    def save(self, *args, **kwargs):
-        created = self.pk is None
-
-        if self.status == ActionPoint.OPEN and self.actions_taken:
-            self.status = ActionPoint.ONGOING
-
-        if self.status in [ActionPoint.OPEN, ActionPoint.ONGOING] and self.actions_taken and self.completed_at:
-            self.status = ActionPoint.COMPLETED
-
-        super(ActionPoint, self).save(*args, **kwargs)
-
-        if created:
-            self.send_notification_email()
-
-    def send_notification_email(self):
-        # TODO this could be async to avoid too long api calls in case of mail server issue
-        serializer = ActionPointMailSerializer(self, context={})
-
-        recipient = self.person_responsible.email
-        cc = self.assigned_by.email
-        subject = '[eTools] ACTION POINT ASSIGNED to {}'.format(self.person_responsible)
-        url = 'https://{host}/t2f/action-point/{action_point_id}/'.format(host=settings.HOST,
-                                                                          action_point_id=self.id)
-        trip_url = 'https://{host}/t2f/edit-travel/{travel_id}'.format(host=settings.HOST, travel_id=self.travel.id)
-
-        context = {'action_point': serializer.data, 'url': url, 'trip_url': trip_url}
-        template_name = 'emails/action_point_assigned.html'
-
-        send_notification(
-            recipients=[recipient],
-            cc=[cc],
-            from_address=settings.DEFAULT_FROM_EMAIL,  # TODO what should sender be?
-            subject=subject,
-            html_content_filename=template_name,
-            content='',
-            context=context,
-        )
 
 
 class Invoice(models.Model):
@@ -817,3 +807,32 @@ class InvoiceItem(models.Model):
     @property
     def normalized_amount(self):
         return abs(self.amount.normalize())
+
+
+class T2FActionPointManager(models.Manager):
+    def get_queryset(self):
+        return super().get_queryset().filter(travel_activity__isnull=False)
+
+
+# TODO remove NewActionPoint alias when T2F ActionPoint model has been removed
+class T2FActionPoint(NewActionPoint):
+    """
+    This proxy class is for easier permissions assigning.
+    """
+    objects = T2FActionPointManager()
+
+    class Meta(NewActionPoint.Meta):
+        verbose_name = _('T2F Action Point')
+        verbose_name_plural = _('T2F Action Points')
+        proxy = True
+
+
+@receiver(post_save, sender=T2FActionPoint)
+def t2f_action_point_updated_receiver(instance, created, **kwargs):
+    """TODO User T2FActionPoint to notify users"""
+    if created:
+        instance.send_email(instance.assigned_to, 't2f/travel_activity/action_point_assigned',
+                            cc=[instance.assigned_by.email])
+    else:
+        if instance.tracker.has_changed('assigned_to'):
+            instance.send_email(instance.assigned_to, 't2f/travel_activity/action_point_assigned')

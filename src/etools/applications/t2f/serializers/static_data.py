@@ -3,7 +3,6 @@ from django.contrib.auth import get_user_model
 
 from rest_framework import serializers
 
-from unicef_locations.models import Location
 from etools.applications.partners.models import Intervention, InterventionResultLink, PartnerOrganization
 from etools.applications.reports.models import Result, Section
 from etools.applications.users.models import Office
@@ -51,12 +50,6 @@ class PartnershipSerializer(serializers.ModelSerializer):
 class ResultSerializer(serializers.ModelSerializer):
     class Meta:
         model = Result
-        fields = ('id', 'name')
-
-
-class LocationSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Location
         fields = ('id', 'name')
 
 

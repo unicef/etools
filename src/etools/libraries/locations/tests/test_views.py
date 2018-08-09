@@ -13,7 +13,7 @@ class TestLocationViews(BaseTenantTestCase):
         cls.locations = [LocationFactory() for x in range(5)]
         # heavy_detail_expected_keys are the keys that should be in response.data.keys()
         cls.heavy_detail_expected_keys = sorted(
-            ('id', 'name', 'p_code', 'location_type', 'location_type_admin_level', 'parent', 'geo_point')
+            ('id', 'name', 'p_code', 'gateway', 'parent', 'geo_point')
         )
 
     def test_api_locationtypes_list(self):
@@ -23,7 +23,7 @@ class TestLocationViews(BaseTenantTestCase):
     def test_api_location_light_list(self):
         response = self.forced_auth_req('get', reverse('locations-light-list'), user=self.unicef_staff)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(sorted(response.data[0].keys()), ["id", "name", "p_code"])
+        self.assertEqual(sorted(response.data[0].keys()), ["gateway", "id", "name", "p_code"])
         # sort the expected locations by name, the same way the API results are sorted
         self.locations.sort(key=lambda location: location.name)
         self.assertEqual(response.data[0]["name"], '{} [{} - {}]'.format(
@@ -91,6 +91,7 @@ class TestLocationViews(BaseTenantTestCase):
                                         user=self.unicef_staff, HTTP_IF_NONE_MATCH=etag)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(len(response.data), 6)
+        # self.assertEqual(response.status_code, status.HTTP_304_NOT_MODIFIED)
 
     def test_api_location_autocomplete(self):
         response = self.forced_auth_req('get', reverse('locations:locations_autocomplete'),
@@ -98,5 +99,5 @@ class TestLocationViews(BaseTenantTestCase):
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(len(response.data), 5)
-        self.assertEqual(sorted(response.data[0].keys()), ["id", "name", "p_code"])
+        self.assertEqual(sorted(response.data[0].keys()), ["gateway", "id", "name", "p_code"])
         self.assertIn("Loc", response.data[0]["name"])

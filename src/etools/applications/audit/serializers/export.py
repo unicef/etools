@@ -17,6 +17,7 @@ from etools.applications.audit.serializers.risks import (AggregatedRiskRootSeria
                                                          KeyInternalWeaknessSerializer, RiskRootSerializer,)
 from etools.applications.partners.models import PartnerOrganization
 from etools.applications.utils.common.serializers.fields import CommaSeparatedExportField
+from etools.applications.utils.common.utils import to_choices_list
 
 
 class AuditorPDFSerializer(serializers.ModelSerializer):
@@ -67,16 +68,17 @@ class StaffMemberPDFSerializer(serializers.ModelSerializer):
 
 
 class EngagementActionPointPDFSerializer(serializers.ModelSerializer):
-    due_date = serializers.DateField(format='%d %b %Y')
-    person_responsible = serializers.CharField(source='assigned_to.get_full_name')
     status = serializers.CharField(source='get_status_display')
+    due_date = serializers.DateField(format='%d %b %Y')
+    assigned_to = serializers.CharField(source='assigned_to.get_full_name')
+    office = serializers.CharField(source='office.name')
+    section = serializers.CharField(source='section.name')
 
     class Meta:
         model = EngagementActionPoint
         fields = [
-
-            'id', 'description', 'due_date', 'person_responsible',
-            'status', 'high_priority',
+            'reference_number', 'status', 'high_priority', 'due_date',
+            'assigned_to', 'office', 'section', 'description',
         ]
 
 
@@ -152,7 +154,7 @@ class AuditPDFSerializer(EngagementPDFSerializer):
     pending_unsupported_amount = serializers.DecimalField(20, 2, label=_('Pending Unsupported Amount'), read_only=True)
     key_internal_weakness = KeyInternalWeaknessSerializer(
         code='audit_key_weakness', required=False, label=_('Key Internal Control Weaknesses'),
-        risk_choices=Risk.AUDIT_VALUES
+        risk_choices=to_choices_list(Risk.AUDIT_VALUES)
     )
     key_internal_controls = KeyInternalControlSerializer(many=True, required=False,
                                                          label=_('Assessment of Key Internal Controls'))

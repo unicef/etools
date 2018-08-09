@@ -8,7 +8,7 @@ from django.utils.translation import ugettext_lazy as _
 from django_filters.rest_framework import DjangoFilterBackend
 from easy_pdf.rendering import render_to_pdf_response
 from rest_framework import generics, mixins, viewsets
-from rest_framework.decorators import detail_route, list_route
+from rest_framework.decorators import action
 from rest_framework.filters import OrderingFilter, SearchFilter
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.renderers import JSONRenderer
@@ -36,7 +36,8 @@ from etools.applications.audit.serializers.engagement import (AuditSerializer, E
                                                               SpecialAuditSerializer, SpotCheckSerializer,
                                                               EngagementActionPointSerializer,
                                                               EngagementAttachmentSerializer,
-                                                              ReportAttachmentSerializer)
+                                                              ReportAttachmentSerializer, StaffSpotCheckSerializer,
+                                                              StaffSpotCheckListSerializer)
 from etools.applications.audit.serializers.export import (AuditDetailCSVSerializer, AuditPDFSerializer,
                                                           MicroAssessmentDetailCSVSerializer,
                                                           MicroAssessmentPDFSerializer,
@@ -99,7 +100,7 @@ class AuditorFirmViewSet(
     filter_backends = (SearchFilter, OrderingFilter, DjangoFilterBackend)
     search_fields = ('name', 'email')
     ordering_fields = ('name', )
-    filter_fields = ('country', )
+    filter_fields = ('country', 'unicef_users_allowed')
 
     def get_queryset(self):
         queryset = super(AuditorFirmViewSet, self).get_queryset()
@@ -135,7 +136,7 @@ class AuditorFirmViewSet(
         ])
         return context
 
-    @list_route(methods=['get'], url_path='users')
+    @action(detail=False, methods=['get'], url_path='users')
     def users(self, request, *args, **kwargs):
         return AuditUsersViewSet.as_view()(request._request, *args, **kwargs)
 
@@ -151,8 +152,10 @@ class PurchaseOrderViewSet(
     queryset = PurchaseOrder.objects.all()
     serializer_class = PurchaseOrderSerializer
     permission_classes = (IsAuthenticated, )
+    filter_backends = (DjangoFilterBackend, )
+    filter_fields = ('auditor_firm__unicef_users_allowed', )
 
-    @list_route(methods=['get'], url_path='sync/(?P<order_number>[^/]+)')
+    @action(detail=False, methods=['get'], url_path='sync/(?P<order_number>[^/]+)')
     def sync(self, request, *args, **kwargs):
         """
         Fetch Purchase Order by vendor number. Load from etools.applications.vision if not found.
@@ -205,6 +208,7 @@ class EngagementViewSet(
     viewsets.GenericViewSet
 ):
     queryset = Engagement.objects.all()
+    unicef_engagements = False
     serializer_class = EngagementSerializer
     serializer_action_classes = {
         'list': EngagementListSerializer,
@@ -274,6 +278,9 @@ class EngagementViewSet(
             'partner', Prefetch('agreement', PurchaseOrder.objects.prefetch_related('auditor_firm'))
         )
 
+        if self.action == 'list':
+            queryset = queryset.filter(agreement__auditor_firm__unicef_users_allowed=self.unicef_engagements)
+
         return queryset
 
     def get_permission_context(self):
@@ -297,12 +304,12 @@ class EngagementViewSet(
         ])
         return context
 
-    @list_route(methods=['get'], url_path='partners')
+    @action(detail=False, methods=['get'], url_path='partners')
     def partners(self, request, *args, **kwargs):
         engagements = self.get_queryset()
         return EngagementPartnerView.as_view(engagements=engagements)(request._request, *args, **kwargs)
 
-    @list_route(methods=['get'], url_path='hact')
+    @action(detail=False, methods=['get'], url_path='hact')
     def hact(self, request, *args, **kwargs):
         if "partner" not in request.query_params:
             raise Http404
@@ -314,7 +321,7 @@ class EngagementViewSet(
         serializer = EngagementHactSerializer(engagements, many=True, context={"request": request})
         return Response(serializer.data)
 
-    @detail_route(methods=['get'], url_path='pdf')
+    @action(detail=True, methods=['get'], url_path='pdf')
     def export_pdf(self, request, *args, **kwargs):
         obj = self.get_object()
 
@@ -367,6 +374,14 @@ class SpotCheckViewSet(EngagementManagementMixin, EngagementViewSet):
     serializer_class = SpotCheckSerializer
     export_serializer_class = SpotCheckDetailCSVSerializer
     renderer_classes = [JSONRenderer, SpotCheckDetailCSVRenderer]
+
+
+class StaffSpotCheckViewSet(SpotCheckViewSet):
+    unicef_engagements = True
+    serializer_class = StaffSpotCheckSerializer
+    serializer_action_classes = {
+        'list': StaffSpotCheckListSerializer
+    }
 
 
 class SpecialAuditViewSet(EngagementManagementMixin, EngagementViewSet):
@@ -435,7 +450,6 @@ class AuditorStaffMembersViewSet(
 
 
 class EngagementActionPointViewSet(BaseAuditViewSet,
-                                   PermittedFSMActionMixin,
                                    mixins.ListModelMixin,
                                    mixins.CreateModelMixin,
                                    mixins.RetrieveModelMixin,
@@ -445,7 +459,6 @@ class EngagementActionPointViewSet(BaseAuditViewSet,
     metadata_class = AuditPermissionBasedMetadata
     queryset = EngagementActionPoint.objects.all()
     serializer_class = EngagementActionPointSerializer
-
     permission_classes = BaseAuditViewSet.permission_classes + [NestedPermission]
 
     def get_obj_permission_context(self, obj):
@@ -460,7 +473,7 @@ class EngagementActionPointViewSet(BaseAuditViewSet,
 
     def perform_create(self, serializer):
         engagement = self.get_parent_object()
-        serializer.save(engagement=engagement, partner_id=engagement.partner_id)
+        serializer.save(engagement=engagement)
 
 
 class BaseAuditAttachmentsViewSet(BaseAuditViewSet,
