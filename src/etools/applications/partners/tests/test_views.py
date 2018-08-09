@@ -34,7 +34,7 @@ from etools.applications.partners.models import (
     InterventionBudget,
     InterventionPlannedVisits,
     InterventionReportingPeriod,
-    InterventionSectorLocationLink,
+    InterventionSectionLocationLink,
     PartnerOrganization,
     PartnerType,
 )
@@ -1703,7 +1703,7 @@ class TestInterventionViews(BaseTenantTestCase):
         intervention_obj = Intervention.objects.get(id=self.intervention_data["id"])
         intervention_obj.status = Intervention.DRAFT
         intervention_obj.save()
-        InterventionSectorLocationLink.objects.filter(intervention=self.intervention_data.get("id")).delete()
+        InterventionSectionLocationLink.objects.filter(intervention=self.intervention_data.get("id")).delete()
         self.intervention_data.update(sector_locations=[])
         self.intervention_data.update(status="active")
         response = self.forced_auth_req(
@@ -1719,7 +1719,7 @@ class TestInterventionViews(BaseTenantTestCase):
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertEqual(
             response.data,
-            ["Sector locations are required if Intervention status is ACTIVE or IMPLEMENTED."])
+            ["Section locations are required if Intervention status is ACTIVE or IMPLEMENTED."])
 
     def test_intervention_validation(self):
         response = self.forced_auth_req(

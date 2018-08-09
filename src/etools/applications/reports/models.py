@@ -131,9 +131,9 @@ class ResultType(models.Model):
         return self.name
 
 
-class Sector(TimeStampedModel):
+class Section(TimeStampedModel):
     """
-    Represents a sector
+    Represents a section
     """
 
     name = models.CharField(max_length=45, unique=True, verbose_name=_('Name'))
@@ -170,7 +170,7 @@ class Result(MPTTModel):
     Represents a result, wbs is unique
 
     Relates to :model:`reports.CountryProgramme`
-    Relates to :model:`reports.Sector`
+    Relates to :model:`reports.Section`
     Relates to :model:`reports.ResultType`
     """
     country_programme = models.ForeignKey(
@@ -185,7 +185,7 @@ class Result(MPTTModel):
         on_delete=models.CASCADE,
     )
     sector = models.ForeignKey(
-        Sector,
+        Section,
         verbose_name=_("Section"),
         null=True,
         blank=True,
@@ -561,7 +561,7 @@ class AppliedIndicator(TimeStampedModel):
     denominator_label = models.CharField(max_length=256, blank=True, null=True)
 
     section = models.ForeignKey(
-        Sector,
+        Section,
         verbose_name=_("Section"),
         null=True,
         blank=True,
@@ -668,7 +668,7 @@ class Indicator(TimeStampedModel):
     # TODO: rename this to RAMIndicator
 
     sector = models.ForeignKey(
-        Sector,
+        Section,
         verbose_name=_("Section"),
         blank=True, null=True,
         on_delete=models.CASCADE,

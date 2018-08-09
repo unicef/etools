@@ -198,7 +198,7 @@ class InterventionResultLinkFactory(factory.django.DjangoModelFactory):
 class InterventionSectionLocationLinkFactory(factory.django.DjangoModelFactory):
 
     class Meta:
-        model = models.InterventionSectorLocationLink
+        model = models.InterventionSectionLocationLink
 
     intervention = factory.SubFactory(InterventionFactory)
     sector = factory.SubFactory(SectionFactory)
