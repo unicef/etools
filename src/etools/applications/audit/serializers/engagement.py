@@ -169,7 +169,7 @@ class EngagementLightSerializer(serializers.ModelSerializer):
         fields = [
             'id', 'unique_id', 'agreement', 'po_item',
             'related_agreement', 'partner', 'engagement_type',
-            'status', 'status_date',
+            'status', 'status_date', 'total_value',
 
         ]
 
