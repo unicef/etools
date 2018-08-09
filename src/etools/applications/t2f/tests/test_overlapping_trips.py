@@ -10,9 +10,13 @@ from freezegun import freeze_time
 from pytz import UTC
 
 from etools.applications.EquiTrack.tests.cases import BaseTenantTestCase
-from etools.applications.publics.tests.factories import (PublicsBusinessAreaFactory, PublicsCurrencyFactory,
-                                                         PublicsDSARateFactory, PublicsDSARegionFactory,
-                                                         PublicsTravelExpenseTypeFactory,)
+from etools.applications.publics.tests.factories import (
+    PublicsBusinessAreaFactory,
+    PublicsCurrencyFactory,
+    PublicsDSARateFactory,
+    PublicsDSARegionFactory,
+    PublicsTravelExpenseTypeFactory,
+)
 from etools.applications.t2f.models import make_travel_reference_number, ModeOfTravel, Travel
 from etools.applications.t2f.tests.factories import ItineraryItemFactory, TravelFactory
 from etools.applications.users.tests.factories import UserFactory

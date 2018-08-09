@@ -6,12 +6,14 @@ from factory import fuzzy
 
 from rest_framework import status
 
+from etools.applications.action_points.categories.models import Category
 from etools.applications.action_points.tests.base import ActionPointsTestCaseMixin
-from etools.applications.action_points.tests.factories import ActionPointFactory
+from etools.applications.action_points.tests.factories import ActionPointFactory, ActionPointCategoryFactory
 from etools.applications.EquiTrack.tests.cases import BaseTenantTestCase
 from etools.applications.audit.tests.factories import MicroAssessmentFactory
 from etools.applications.partners.tests.factories import PartnerFactory
-from etools.applications.reports.tests.factories import SectorFactory
+from etools.applications.reports.tests.factories import SectionFactory
+from etools.applications.t2f.tests.factories import TravelActivityFactory, TravelFactory
 from etools.applications.tpm.tests.factories import UserFactory, TPMVisitFactory
 from etools.applications.utils.common.tests.test_utils import TestExportMixin
 
@@ -24,6 +26,14 @@ class TestActionPointViewSet(TestExportMixin, ActionPointsTestCaseMixin, BaseTen
         cls.pme_user = UserFactory(pme=True)
         cls.unicef_user = UserFactory(unicef_user=True)
         cls.common_user = UserFactory()
+        cls.create_data = {
+            'description': 'do something',
+            'due_date': date.today(),
+            'assigned_to': cls.pme_user.id,
+            'office': cls.pme_user.profile.office.id,
+            'section': SectionFactory().id,
+            'partner': PartnerFactory().id,
+        }
 
     def _test_list_view(self, user, expected_visits):
         response = self.forced_auth_req(
@@ -86,19 +96,10 @@ class TestActionPointViewSet(TestExportMixin, ActionPointsTestCaseMixin, BaseTen
         self.assertEquals(response.status_code, status.HTTP_403_FORBIDDEN)
 
     def test_create_author(self):
-        action_point_data = {
-            'description': 'do something',
-            'due_date': date.today(),
-            'assigned_to': self.pme_user.id,
-            'office': self.pme_user.profile.office.id,
-            'section': SectorFactory().id,
-            'partner': PartnerFactory().id,
-        }
-
         response = self.forced_auth_req(
             'post',
             reverse('action-points:action-points-list'),
-            data=action_point_data,
+            data=self.create_data,
             user=self.unicef_user
         )
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
@@ -106,6 +107,71 @@ class TestActionPointViewSet(TestExportMixin, ActionPointsTestCaseMixin, BaseTen
         self.assertEqual(response.data['author']['id'], self.unicef_user.id)
         self.assertIn('assigned_by', response.data)
         self.assertEqual(response.data['assigned_by']['id'], self.unicef_user.id)
+
+    def test_create_t2f_related(self):
+        travel_activity = TravelActivityFactory()
+        data = {'travel_activity': travel_activity.id}
+        data.update(self.create_data)
+
+        response = self.forced_auth_req(
+            'post',
+            reverse('action-points:action-points-list'),
+            data=data,
+            user=self.unicef_user
+        )
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        self.assertIsNotNone(response.data['travel_activity'])
+        self.assertEqual(response.data['travel_activity'], travel_activity.id)
+
+    def test_create_wrong_category(self):
+        data = {'category': ActionPointCategoryFactory(module=Category.MODULE_CHOICES.audit).id}
+        data.update(self.create_data)
+
+        response = self.forced_auth_req(
+            'post',
+            reverse('action-points:action-points-list'),
+            data=data,
+            user=self.unicef_user
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn('category', response.data)
+
+    def test_travel_filter(self):
+        travel_activity = TravelActivityFactory()
+        ActionPointFactory()  # common action point, shouldn't appear while filtering
+        ActionPointFactory(travel_activity=travel_activity)
+
+        response = self.forced_auth_req(
+            'get',
+            reverse('action-points:action-points-list'),
+            data={'travel_activity': travel_activity.id},
+            user=self.unicef_user
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(response.data['results']), 1)
+
+    def test_filter_multiple_status(self):
+        ActionPointFactory(status='open')
+        ActionPointFactory(status='completed')
+
+        response = self.forced_auth_req(
+            'get',
+            reverse('action-points:action-points-list'),
+            data={'status': 'completed'},
+            user=self.unicef_user
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(response.data['results']), 1)
+
+        response = self.forced_auth_req(
+            'get',
+            reverse('action-points:action-points-list'),
+            data={'status__in': 'open,completed'},
+            user=self.unicef_user
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(response.data['results']), 2)
 
     def test_reassign(self):
         author = UserFactory(unicef_user=True)
@@ -149,12 +215,64 @@ class TestActionPointViewSet(TestExportMixin, ActionPointsTestCaseMixin, BaseTen
         self.assertEqual(len(response.data['comments']), 1)
         self.assertEqual(len(response.data['history']), 1)
 
+    def test_complete(self):
+        action_point = ActionPointFactory(status='pre_completed')
+        self.assertEqual(action_point.history.count(), 0)
+
+        response = self.forced_auth_req(
+            'post',
+            reverse('action-points:action-points-(?P<action>\D+)', args=(action_point.id, 'complete')),
+            user=action_point.assigned_to,
+            data={}
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data['status'], 'completed')
+        self.assertEqual(len(response.data['history']), 1)
+
+    def test_update_wrong_category(self):
+        action_point = ActionPointFactory(status='open', comments__count=0, engagement=MicroAssessmentFactory())
+
+        response = self.forced_auth_req(
+            'patch',
+            reverse('action-points:action-points-detail', args=(action_point.id,)),
+            user=action_point.author,
+            data={
+                'category': ActionPointCategoryFactory(module=Category.MODULE_CHOICES.apd).id
+            }
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn('category', response.data)
+
+    def test_update_related_category(self):
+        action_point = ActionPointFactory(status='open', comments__count=0, engagement=MicroAssessmentFactory())
+
+        response = self.forced_auth_req(
+            'patch',
+            reverse('action-points:action-points-detail', args=(action_point.id,)),
+            user=action_point.author,
+            data={
+                'category': ActionPointCategoryFactory(module=Category.MODULE_CHOICES.audit).id
+            }
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
     def test_list_csv(self):
         ActionPointFactory(status='open', comments__count=1)
         ActionPointFactory(status='open', comments__count=1, engagement=MicroAssessmentFactory())
         ActionPointFactory(
             status='open', comments__count=1,
             tpm_activity=TPMVisitFactory(tpm_activities__count=1).tpm_activities.first()
+        )
+        traveler = UserFactory()
+        ActionPointFactory(
+            status='open',
+            travel_activity=TravelActivityFactory(
+                primary_traveler=traveler,
+                travels=[TravelFactory(traveler=traveler)]
+            )
         )
 
         self._test_export(self.pme_user, 'action-points:action-points-export/csv')
@@ -199,6 +317,7 @@ class TestActionPointsListViewMetadada(TestActionPointsViewMetadata, BaseTenantT
         self._test_list_options(
             self.pme_user,
             writable_fields=[
+                'category',
                 'description',
                 'due_date',
                 'assigned_to',
@@ -211,6 +330,10 @@ class TestActionPointsListViewMetadada(TestActionPointsViewMetadata, BaseTenantT
                 'location',
                 'section',
                 'office',
+
+                'travel_activity',
+                'engagement',
+                'tpm_activity',
             ]
         )
 
@@ -247,6 +370,7 @@ class TestActionPointsDetailViewMetadata(TestActionPointsViewMetadata):
 class TestOpenActionPointDetailViewMetadata(TestActionPointsDetailViewMetadata, BaseTenantTestCase):
     status = 'open'
     editable_fields = [
+        'category',
         'description',
         'due_date',
         'assigned_to',
@@ -279,6 +403,7 @@ class TestOpenActionPointDetailViewMetadata(TestActionPointsDetailViewMetadata, 
 
 class TestRelatedOpenActionPointDetailViewMetadata(TestOpenActionPointDetailViewMetadata):
     editable_fields = [
+        'category',
         'description',
         'due_date',
         'assigned_to',
@@ -312,3 +437,31 @@ class TestClosedActionPointDetailViewMetadata(TestActionPointsDetailViewMetadata
 
     def test_assignee_editable_fields(self):
         self._test_detail_options(self.assignee, can_update=False)
+
+
+class TestCategoriesViewSet(BaseTenantTestCase):
+    @classmethod
+    def setUpTestData(cls):
+        cls.user = UserFactory(unicef_user=True)
+
+        for module, display_value in Category.MODULE_CHOICES:
+            ActionPointCategoryFactory(module=module)
+
+    def test_list_view(self):
+        response = self.forced_auth_req(
+            'get',
+            reverse('action-points:categories-list'),
+            user=self.user
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(response.data), Category.objects.all().count())
+
+    def test_list_filter(self):
+        response = self.forced_auth_req(
+            'get',
+            reverse('action-points:categories-list'),
+            user=self.user,
+            data={'module': Category.MODULE_CHOICES.apd}
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(response.data), Category.objects.filter(module=Category.MODULE_CHOICES.apd).count())

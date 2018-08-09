@@ -1,4 +1,3 @@
-
 import json
 import logging
 
@@ -15,7 +14,7 @@ from model_utils import Choices
 from post_office import mail
 from post_office.models import EmailTemplate
 
-from etools.applications.EquiTrack.utils import make_dictionary_serializable
+from unicef_notification.utils import serialize_dict
 
 logger = logging.getLogger(__name__)
 
@@ -43,8 +42,14 @@ class Notification(models.Model):
 
     type = models.CharField(max_length=255, default='Email', validators=[validate_notification_type],
                             verbose_name=_('Type'))
-    content_type = models.ForeignKey(ContentType, null=True, on_delete=models.CASCADE, blank=True,
-                                     verbose_name=_('Content Type'))
+    content_type = models.ForeignKey(
+        ContentType,
+        null=True,
+        on_delete=models.CASCADE,
+        blank=True,
+        verbose_name=_('Content Type'),
+        related_name="content_type_old",
+    )
     object_id = models.PositiveIntegerField(null=True, blank=True, verbose_name=_('Object ID'))
     sender = GenericForeignKey('content_type', 'object_id')
     # from_address can be used as the notification from address if sender is
@@ -72,7 +77,13 @@ class Notification(models.Model):
     # template_data is the context for rendering any templates.
     template_data = JSONField(null=True, blank=True, verbose_name=_('Template Data'))
     # Save a link to the actual post_office.Email object that was sent
-    sent_email = models.ForeignKey('post_office.Email', null=True, on_delete=models.CASCADE, blank=True)
+    sent_email = models.ForeignKey(
+        'post_office.Email',
+        null=True,
+        on_delete=models.CASCADE,
+        blank=True,
+        related_name="sent_email_old",
+    )
     # Content of template used to render subject if template_name not specified.
     subject = models.TextField(default='', blank=True)
     # Content of template used to render plain text message if template_name not specified.
@@ -90,7 +101,7 @@ class Notification(models.Model):
             json.dumps(template_data)
         except TypeError:
             assert isinstance(template_data, dict)
-            template_data = make_dictionary_serializable(template_data)
+            template_data = serialize_dict(template_data)
         kwargs['template_data'] = template_data
         super(Notification, self).__init__(*args, **kwargs)
 

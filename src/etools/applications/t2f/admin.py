@@ -1,8 +1,10 @@
 
 from django.contrib import admin
 
+from etools.applications.action_points.admin import ActionPointAdmin
 from etools.applications.publics.admin import AdminListMixin
 from etools.applications.t2f import models
+from etools.applications.t2f.models import T2FActionPoint
 
 
 class TravelAdmin(admin.ModelAdmin):
@@ -10,7 +12,7 @@ class TravelAdmin(admin.ModelAdmin):
     list_filter = (
         'status',
         'traveler',
-        'sector'
+        'section'
     )
     search_fields = (
         'reference_number',
@@ -21,8 +23,7 @@ class TravelAdmin(admin.ModelAdmin):
         'status',
         'start_date',
         'end_date',
-        'section',
-        'sector'
+        'section'
     )
     readonly_fields = (
         'status',
@@ -69,25 +70,6 @@ class ItineraryItemAdmin(admin.ModelAdmin):
     )
 
 
-class ActionPointAdmin(admin.ModelAdmin):
-    model = models.ActionPoint
-    list_filter = (
-        'travel',
-        'status',
-    )
-    search_fields = (
-        'action_point_number',
-        'travel__reference_number'
-    )
-    list_display = (
-        'action_point_number',
-        'travel',
-        'description',
-        'status',
-        'completed_at',
-    )
-
-
 class ExpenseAdmin(AdminListMixin, admin.ModelAdmin):
     pass
 
@@ -120,10 +102,14 @@ class InvoiceItemAdmin(AdminListMixin, admin.ModelAdmin):
     pass
 
 
+@admin.register(T2FActionPoint)
+class T2FActionPointAdmin(ActionPointAdmin):
+    pass
+
+
 admin.site.register(models.TravelActivity, TravelActivityAdmin)
 admin.site.register(models.Travel, TravelAdmin)
 admin.site.register(models.ItineraryItem, ItineraryItemAdmin)
-admin.site.register(models.ActionPoint, ActionPointAdmin)
 admin.site.register(models.Expense, ExpenseAdmin)
 admin.site.register(models.Deduction, DeductionAdmin)
 admin.site.register(models.CostAssignment, CostAssignmentAdmin)

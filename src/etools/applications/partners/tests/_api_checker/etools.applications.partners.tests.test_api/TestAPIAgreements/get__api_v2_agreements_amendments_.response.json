@@ -1,0 +1,36 @@
+{
+    "status_code": 200,
+    "headers": {
+        "content-type": [
+            "Content-Type",
+            "application/json"
+        ],
+        "vary": [
+            "Vary",
+            "Accept, Cookie"
+        ],
+        "allow": [
+            "Allow",
+            "GET, HEAD, OPTIONS"
+        ],
+        "x-frame-options": [
+            "X-Frame-Options",
+            "SAMEORIGIN"
+        ]
+    },
+    "data": [
+        {
+            "id": 24,
+            "created": "2018-08-08T17:43:32.944998Z",
+            "modified": "2018-08-08T17:43:32.947060Z",
+            "number": "tmp01",
+            "signed_amendment": null,
+            "types": [
+                "Change in clause"
+            ],
+            "signed_date": null,
+            "agreement": 1672
+        }
+    ],
+    "content_type": null
+}

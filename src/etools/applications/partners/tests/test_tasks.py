@@ -16,7 +16,8 @@ from etools.applications.attachments.tests.factories import AttachmentFactory, A
 from etools.applications.EquiTrack.tests.cases import BaseTenantTestCase
 from etools.applications.funds.tests.factories import FundsReservationHeaderFactory
 from etools.applications.partners.models import Agreement, Intervention
-from etools.applications.partners.tests.factories import AgreementFactory, InterventionFactory, PartnerFactory
+from etools.applications.partners.tests.factories import AgreementFactory, InterventionFactory, PartnerFactory, \
+    CoreValuesAssessmentFactory
 from etools.applications.reports.tests.factories import CountryProgrammeFactory
 from etools.applications.users.tests.factories import CountryFactory, UserFactory
 
@@ -531,7 +532,7 @@ class TestNotifyOfNoFrsSignedInterventionsTask(PartnersTestBaseClass):
         ]
         self._assertCalls(mock_logger.info, expected_call_args)
 
-    @mock.patch('etools.applications.notification.utils.Notification')
+    @mock.patch('unicef_notification.models.Notification')
     def test_notify_of_signed_interventions_with_some_interventions(
             self,
             mock_notification_model,
@@ -566,7 +567,7 @@ class TestNotifyOfNoFrsSignedInterventionsTask(PartnersTestBaseClass):
 
         # Verify that Notification.objects.create() was called as expected.
         expected_call_args = [((), {
-            'type': 'Email',
+            'method_type': mock_notification_model.TYPE_EMAIL,
             'sender': intervention_,
             'recipients': [],
             'cc': [],
@@ -615,7 +616,7 @@ class TestNotifyOfMismatchedEndedInterventionsTask(PartnersTestBaseClass):
         expected_call_args = [((template.format(self.country_name), ), {})]
         self._assertCalls(mock_logger.info, expected_call_args)
 
-    @mock.patch('etools.applications.notification.utils.Notification')
+    @mock.patch('unicef_notification.models.Notification')
     def test_notify_of_ended_interventions_with_some_interventions(
             self,
             mock_notification_model,
@@ -658,7 +659,7 @@ class TestNotifyOfMismatchedEndedInterventionsTask(PartnersTestBaseClass):
 
         # Verify that Notification.objects.create() was called as expected.
         expected_call_args = [((), {
-            'type': 'Email',
+            'method_type': mock_notification_model.TYPE_EMAIL,
             'sender': intervention_,
             'recipients': [],
             'cc': [],
@@ -706,7 +707,7 @@ class TestNotifyOfInterventionsEndingSoon(PartnersTestBaseClass):
         expected_call_args = [((template.format(self.country_name), ), {})]
         self._assertCalls(mock_logger.info, expected_call_args)
 
-    @mock.patch('etools.applications.notification.utils.Notification')
+    @mock.patch('unicef_notification.models.Notification')
     def test_notify_interventions_ending_soon_with_some_interventions(
             self,
             mock_notification_model,
@@ -753,7 +754,7 @@ class TestNotifyOfInterventionsEndingSoon(PartnersTestBaseClass):
             template_data = etools.applications.partners.tasks.get_intervention_context(intervention)
             template_data['days'] = str((intervention.end - today).days)
             expected_call_args.append(((), {
-                'type': 'Email',
+                'method_type': mock_notification_model.TYPE_EMAIL,
                 'sender': intervention,
                 'recipients': [],
                 'cc': [],
@@ -774,13 +775,13 @@ class TestCopyAttachments(BaseTenantTestCase):
         cls.file_type_partner = AttachmentFileTypeFactory(
             code="partners_partner_assessment"
         )
-        cls.partner = PartnerFactory(
-            core_values_assessment="sample.pdf"
+        cls.core_value_assessment = CoreValuesAssessmentFactory(
+            assessment="sample.pdf"
         )
 
     def test_call(self):
         attachment = AttachmentFactory(
-            content_object=self.partner,
+            content_object=self.core_value_assessment,
             file_type=self.file_type_partner,
             code=self.file_type_partner.code,
             file="random.pdf"
@@ -789,7 +790,7 @@ class TestCopyAttachments(BaseTenantTestCase):
         attachment_update = Attachment.objects.get(pk=attachment.pk)
         self.assertEqual(
             attachment_update.file.name,
-            self.partner.core_values_assessment.name
+            self.core_value_assessment.assessment.name
         )
 
 
@@ -799,7 +800,7 @@ class TestCheckPCARequired(BaseTenantTestCase):
         call_command("update_notifications")
 
     def test_command(self):
-        send_path = "etools.applications.partners.utils.send_notification_using_email_template"
+        send_path = "etools.applications.partners.utils.send_notification_with_template"
         lead_date = datetime.date.today() + datetime.timedelta(
             days=settings.PCA_REQUIRED_NOTIFICATION_LEAD
         )
@@ -822,7 +823,7 @@ class TestCheckPCAMissing(BaseTenantTestCase):
         call_command("update_notifications")
 
     def test_command(self):
-        send_path = "etools.applications.partners.utils.send_notification_using_email_template"
+        send_path = "etools.applications.partners.utils.send_notification_with_template"
         date_past = datetime.date.today() - datetime.timedelta(days=10)
         date_future = datetime.date.today() + datetime.timedelta(days=10)
         partner = PartnerFactory()

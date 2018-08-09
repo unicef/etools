@@ -81,8 +81,8 @@ class TestReportViews(BaseTenantTestCase):
         response = self.forced_auth_req('get', url)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
 
-    def test_api_sectors_list(self):
-        url = reverse('sectors-list')
+    def test_api_sections_list(self):
+        url = reverse('reports:sections-list')
         response = self.forced_auth_req('get', url)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
 
@@ -843,8 +843,8 @@ class TestAppliedIndicatorExportList(BaseTenantTestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         dataset = Dataset().load(response.content.decode('utf-8'), 'csv')
         self.assertEqual(dataset.height, 1)
-        self.assertEqual(len(dataset._get_headers()), 34)
-        self.assertEqual(len(dataset[0]), 34)
+        self.assertEqual(len(dataset._get_headers()), 31)
+        self.assertEqual(len(dataset[0]), 31)
 
     def test_csv_flat_export_api(self):
         response = self.forced_auth_req(
@@ -857,8 +857,8 @@ class TestAppliedIndicatorExportList(BaseTenantTestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         dataset = Dataset().load(response.content.decode('utf-8'), 'csv')
         self.assertEqual(dataset.height, 1)
-        self.assertEqual(len(dataset._get_headers()), 34)
-        self.assertEqual(len(dataset[0]), 34)
+        self.assertEqual(len(dataset._get_headers()), 31)
+        self.assertEqual(len(dataset[0]), 31)
 
 
 class TestSpecialReportingRequirementListCreateView(BaseTenantTestCase):

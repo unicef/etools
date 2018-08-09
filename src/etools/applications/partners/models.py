@@ -26,7 +26,7 @@ from etools.applications.EquiTrack.fields import CurrencyField
 from etools.applications.EquiTrack.serializers import StringConcat
 from etools.applications.EquiTrack.utils import get_current_year, get_quarter, import_permissions
 from etools.applications.funds.models import Grant
-from etools.applications.locations.models import Location
+from unicef_locations.models import Location
 from etools.applications.partners.validation import interventions as intervention_validation
 from etools.applications.partners.validation.agreements import (agreement_transition_to_ended_valid,
                                                                 agreement_transition_to_signed_valid,
@@ -209,12 +209,12 @@ class PartnerOrganizationQuerySet(models.QuerySet):
         return self.filter(Q(reported_cy__gt=0) | Q(total_ct_cy__gt=0), hidden=False, *args, **kwargs)
 
     def not_programmatic_visit_compliant(self, *args, **kwargs):
-        return self.filter(net_ct_cy__gt=PartnerOrganization.CT_MR_AUDIT_TRIGGER_LEVEL,
+        return self.active(net_ct_cy__gt=PartnerOrganization.CT_MR_AUDIT_TRIGGER_LEVEL,
                            hact_values__programmatic_visits__completed__total=0,
                            *args, **kwargs)
 
     def not_spot_check_compliant(self, *args, **kwargs):
-        return self.filter(Q(reported_cy__gt=PartnerOrganization.CT_CP_AUDIT_TRIGGER_LEVEL) |
+        return self.active(Q(reported_cy__gt=PartnerOrganization.CT_CP_AUDIT_TRIGGER_LEVEL) |
                            Q(planned_engagement__spot_check_planned_q1__gt=0) |
                            Q(planned_engagement__spot_check_planned_q2__gt=0) |
                            Q(planned_engagement__spot_check_planned_q3__gt=0) |
@@ -511,6 +511,9 @@ class PartnerOrganization(TimeStampedModel):
     def __str__(self):
         return self.name
 
+    def get_object_url(self):
+        return reverse("partners_api:partner-detail", args=[self.pk])
+
     def latest_assessment(self, type):
         return self.assessments.filter(type=type).order_by('completed_date').last()
 
@@ -634,6 +637,10 @@ class PartnerOrganization(TimeStampedModel):
             return PartnerOrganization.ASSURANCE_COMPLETE
         else:
             return PartnerOrganization.ASSURANCE_PARTIAL
+
+    @cached_property
+    def current_core_value_assessment(self):
+        return self.core_values_assessments.filter(archived=False).first()
 
     def planned_visits_to_hact(self):
         """For current year sum all programmatic values of planned visits
@@ -819,6 +826,19 @@ class PartnerOrganization(TimeStampedModel):
     def get_admin_url(self):
         admin_url_name = 'admin:partners_partnerorganization_change'
         return reverse(admin_url_name, args=(self.id,))
+
+
+class CoreValuesAssessment(TimeStampedModel):
+    partner = models.ForeignKey(PartnerOrganization, verbose_name=_("Partner"), related_name='core_values_assessments',
+                                on_delete=models.CASCADE)
+
+    date = models.DateField(verbose_name=_('Date positively assessed against core values'), blank=True, null=True)
+    assessment = models.FileField(verbose_name=_("Core Values Assessment"), blank=True, null=True,
+                                  upload_to='partners/core_values/', max_length=1024,
+                                  help_text='Only required for CSO partners')
+    attachment = CodedGenericRelation(Attachment, verbose_name=_('Core Values Assessment'), blank=True, null=True,
+                                      code='partners_partner_assessment', help_text='Only required for CSO partners')
+    archived = models.BooleanField(default=False)
 
 
 class PartnerStaffMemberManager(models.Manager):
@@ -1172,6 +1192,9 @@ class Agreement(TimeStampedModel):
         null=True,
         blank=True,
     )
+    reference_number_year = models.IntegerField()
+
+    special_conditions_pca = models.BooleanField(default=False, verbose_name=_('Special Conditions PCA'))
 
     signed_by_unicef_date = models.DateField(
         verbose_name=_("Signed By UNICEF Date"),
@@ -1188,13 +1211,11 @@ class Agreement(TimeStampedModel):
         null=True, blank=True,
         on_delete=models.CASCADE,
     )
-
     signed_by_partner_date = models.DateField(
         verbose_name=_("Signed By Partner Date"),
         null=True,
         blank=True,
     )
-
     # Signatory on behalf of the PartnerOrganization
     partner_manager = models.ForeignKey(
         PartnerStaffMember,
@@ -1230,6 +1251,9 @@ class Agreement(TimeStampedModel):
             self.signed_by_unicef_date
         )
 
+    def get_object_url(self):
+        return reverse("partners_api:agreement-detail", args=[self.pk])
+
     @classmethod
     def permission_structure(cls):
         permissions = import_permissions(cls.__name__)
@@ -1250,7 +1274,7 @@ class Agreement(TimeStampedModel):
         return '{code}/{type}{year}{id}'.format(
             code=connection.tenant.country_short_code or '',
             type=self.agreement_type,
-            year=self.created.year,
+            year=self.reference_number_year,
             id=self.id,
         )
 
@@ -1334,6 +1358,11 @@ class Agreement(TimeStampedModel):
             super(Agreement, self).save()
             self.update_reference_number()
         else:
+            # if it's draft and not SSFA or SSFA and no interventions, update ref number on every save.
+            if self.status == self.DRAFT:
+                self.update_reference_number()
+                for i in self.interventions.all():
+                    i.save(save_from_agreement=True)
             self.update_related_interventions(oldself)
 
         # update reference number if needed
@@ -1412,11 +1441,17 @@ class AgreementAmendment(TimeStampedModel):
     view_objects = AgreementAmendmentManager()
     objects = models.Manager()
 
+    class Meta:
+        ordering = ("-created",)
+
     def __str__(self):
         return "{} {}".format(
             self.agreement.reference_number,
             self.number
         )
+
+    def get_object_url(self):
+        return reverse("partners_api:partner-detail", args=[self.pk])
 
     def compute_reference_number(self):
         if self.signed_date:
@@ -1624,6 +1659,7 @@ class Intervention(TimeStampedModel):
         null=True,
         blank=True,
     )
+    reference_number_year = models.IntegerField(null=True)
     review_date_prc = models.DateField(
         verbose_name=_('Review Date by PRC'),
         help_text='The date the PRC reviewed the partnership',
@@ -1668,7 +1704,11 @@ class Intervention(TimeStampedModel):
         null=True,
         blank=True,
     )
-
+    # TODO remove in August 2018 sprint
+    signed_by_unicef = models.BooleanField(
+        blank=True, default=False,
+        verbose_name=_("Signed By UNICEF Authorized Officer")
+    )
     # partnership managers
     unicef_signatory = models.ForeignKey(
         settings.AUTH_USER_MODEL,
@@ -1748,6 +1788,9 @@ class Intervention(TimeStampedModel):
         return '{}'.format(
             self.number
         )
+
+    def get_object_url(self):
+        return reverse("partners_api:intervention-detail", args=[self.pk])
 
     @classmethod
     def permission_structure(cls):
@@ -1884,22 +1927,12 @@ class Intervention(TimeStampedModel):
 
         return sections
 
-    def intervention_clusters(self, reset=False):
-        # return intervention clusters as an array of strings
-        cache_key = INTERVENTION_CLUSTERS_CACHE_KEY.format(self.pk)
-        if reset:
-            cache.delete(cache_key)
-            return
-
-        clusters = cache.get(cache_key)
-        if clusters is None:
-            clusters = set()
-            for lower_result in self.all_lower_results:
-                for applied_indicator in lower_result.applied_indicators.all():
-                    if applied_indicator.cluster_name:
-                        clusters.add(applied_indicator.cluster_name)
-            cache.set(cache_key, clusters)
-
+    def intervention_clusters(self):
+        clusters = set()
+        for lower_result in self.all_lower_results:
+            for applied_indicator in lower_result.applied_indicators.all():
+                if applied_indicator.cluster_name:
+                    clusters.add(applied_indicator.cluster_name)
         return clusters
 
     @cached_property
@@ -1933,6 +1966,7 @@ class Intervention(TimeStampedModel):
                 r['latest_end_date'] = fr.end_date
         return r
 
+    # TODO: check if this is used anywhere and remove if possible.
     @property
     def year(self):
         if self.id:
@@ -2006,7 +2040,7 @@ class Intervention(TimeStampedModel):
             number = '{agreement}/{type}{year}{id}'.format(
                 agreement=self.agreement.base_number,
                 type=self.document_type,
-                year=self.year,
+                year=self.reference_number_year,
                 id=self.id
             )
             return number
@@ -2050,10 +2084,9 @@ class Intervention(TimeStampedModel):
     def clear_caches(self):
         self.intervention_locations(reset=True)
         self.flagged_sections(reset=True)
-        self.intervention_clusters(reset=True)
 
     @transaction.atomic
-    def save(self, force_insert=False, **kwargs):
+    def save(self, force_insert=False, save_from_agreement=False, **kwargs):
         # check status auto updates
         # TODO: move this outside of save in the future to properly check transitions
         # self.check_status_auto_updates()
@@ -2071,8 +2104,11 @@ class Intervention(TimeStampedModel):
             # to create a reference number we need a pk
             super(Intervention, self).save()
             self.update_reference_number()
+        elif self.status == self.DRAFT:
+            self.update_reference_number()
 
-        self.update_ssfa_properties()
+        if save_from_agreement is False:
+            self.update_ssfa_properties()
 
         super(Intervention, self).save()
 
@@ -2132,6 +2168,12 @@ class InterventionAmendment(TimeStampedModel):
         Attachment,
         verbose_name=_('Amendment Document'),
         code='partners_intervention_amendment_signed',
+        blank=True,
+    )
+    internal_prc_review = CodedGenericRelation(
+        Attachment,
+        verbose_name=_('Internal PRC Review'),
+        code='partners_intervention_amendment_internal_prc_review',
         blank=True,
     )
 

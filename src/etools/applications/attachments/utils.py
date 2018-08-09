@@ -1,6 +1,13 @@
 from etools.applications.audit.models import Engagement
-from etools.applications.partners.models import (Agreement, AgreementAmendment, Assessment, Intervention,
-                                                 InterventionAmendment, InterventionAttachment, PartnerOrganization,)
+from etools.applications.partners.models import (
+    Agreement,
+    AgreementAmendment,
+    Assessment,
+    Intervention,
+    InterventionAmendment,
+    InterventionAttachment,
+    PartnerOrganization,
+)
 from etools.applications.tpm.models import TPMActivity
 
 
@@ -10,7 +17,9 @@ def get_file_type(obj):
     """
     if isinstance(obj.content_object, InterventionAttachment):
         return obj.content_object.type.name
-    return obj.file_type.label
+    elif obj.file_type:
+        return obj.file_type.label
+    return ""
 
 
 def get_partner_obj(obj):
@@ -61,7 +70,8 @@ def get_pd_ssfa_number(obj):
             InterventionAmendment,
             InterventionAttachment,
     )):
-        return obj.content_object.intervention.number if obj.content_object.intervention else ""
+        if obj.content_object.intervention:
+            return obj.content_object.intervention.number
     return ""
 
 
@@ -78,7 +88,8 @@ def get_agreement_obj(obj):
             InterventionAttachment,
             TPMActivity
     )):
-        return obj.content_object.intervention.agreement if obj.content_object.intervention else None
+        if obj.content_object.intervention:
+            return obj.content_object.intervention.agreement
     return ""
 
 
@@ -87,6 +98,13 @@ def get_agreement_reference_number(obj):
     if agreement:
         return agreement.reference_number
     return ""
+
+
+def get_object_url(obj):
+    try:
+        return obj.content_object.get_object_url()
+    except AttributeError:
+        return ""
 
 
 def denormalize_attachment(attachment):
@@ -98,6 +116,7 @@ def denormalize_attachment(attachment):
     pd_ssfa_number = get_pd_ssfa_number(attachment)
     agreement_reference_number = get_agreement_reference_number(attachment)
     file_type = get_file_type(attachment)
+    object_link = get_object_url(attachment)
     uploaded_by = attachment.uploaded_by.get_full_name() if attachment.uploaded_by else ""
 
     flat, created = AttachmentFlat.objects.update_or_create(
@@ -108,6 +127,7 @@ def denormalize_attachment(attachment):
             "vendor_number": vendor_number,
             "pd_ssfa_number": pd_ssfa_number,
             "agreement_reference_number": agreement_reference_number,
+            "object_link": object_link,
             "file_type": file_type,
             "file_link": attachment.file_link,
             "filename": attachment.filename,

@@ -1,0 +1,37 @@
+{
+    "status_code": 200,
+    "headers": {
+        "content-type": [
+            "Content-Type",
+            "application/json"
+        ],
+        "vary": [
+            "Vary",
+            "Accept, Cookie"
+        ],
+        "allow": [
+            "Allow",
+            "GET, POST, HEAD, OPTIONS"
+        ],
+        "x-frame-options": [
+            "X-Frame-Options",
+            "SAMEORIGIN"
+        ]
+    },
+    "data": [
+        {
+            "id": 1672,
+            "partner": 1660,
+            "country_programme": 1645,
+            "agreement_number": "TST/PCA20181672",
+            "partner_name": "Partner 4",
+            "agreement_type": "PCA",
+            "end": "2018-12-31",
+            "start": "2018-08-08",
+            "signed_by_unicef_date": "2018-08-08",
+            "signed_by_partner_date": "2018-08-08",
+            "status": "signed"
+        }
+    ],
+    "content_type": null
+}

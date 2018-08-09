@@ -5,12 +5,19 @@ from django.conf import settings
 from django.contrib.contenttypes.models import ContentType
 from django.db.models import F, Q
 from django.urls import reverse
-from django.utils.timezone import now, make_aware
+from django.utils.timezone import make_aware, now
+
+from unicef_notification.utils import send_notification_with_template
 
 from etools.applications.attachments.models import Attachment, FileType
-from etools.applications.notification.utils import send_notification_using_email_template
-from etools.applications.partners.models import (Agreement, AgreementAmendment, Assessment, Intervention,
-                                                 InterventionAmendment, InterventionAttachment, PartnerOrganization,)
+from etools.applications.partners.models import (
+    Agreement,
+    AgreementAmendment,
+    Assessment,
+    Intervention,
+    InterventionAmendment,
+    InterventionAttachment,
+    CoreValuesAssessment)
 from etools.applications.reports.models import CountryProgramme
 from etools.applications.utils.common.utils import run_on_all_tenants
 
@@ -21,7 +28,7 @@ def update_or_create_attachment(file_type, content_type, object_id, filename):
     logger.info("code: {}".format(file_type.code))
     logger.info("content type: {}".format(content_type))
     logger.info("object_id: {}".format(object_id))
-    attachment, created = Attachment.objects.update_or_create(
+    Attachment.objects.update_or_create(
         code=file_type.code,
         content_type=content_type,
         object_id=object_id,
@@ -90,17 +97,17 @@ def copy_core_values_assessments(**kwargs):
         }
     )
 
-    content_type = ContentType.objects.get_for_model(PartnerOrganization)
+    content_type = ContentType.objects.get_for_model(CoreValuesAssessment)
 
-    for partner in PartnerOrganization.objects.filter(
-            core_values_assessment__isnull=False,
+    for core_values_assessment in CoreValuesAssessment.objects.filter(
+            assessment__isnull=False,
             modified__gte=get_from_datetime(**kwargs)
     ).all():
         update_or_create_attachment(
             file_type,
             content_type,
-            partner.pk,
-            partner.core_values_assessment,
+            core_values_assessment.pk,
+            core_values_assessment.assessment,
         )
 
 
@@ -297,9 +304,9 @@ def send_pca_required_notifications():
                 args=[pd.pk]
             ),
         }
-        send_notification_using_email_template(
+        send_notification_with_template(
             recipients=recipients,
-            email_template_name='partners/intervention/new_pca_required',
+            template_name='partners/intervention/new_pca_required',
             context=context
         )
 
@@ -337,8 +344,8 @@ def send_pca_missing_notifications():
                     args=[pd.pk]
                 ),
             }
-            send_notification_using_email_template(
+            send_notification_with_template(
                 recipients=recipients,
-                email_template_name='partners/intervention/pca_missing',
+                template_name='partners/intervention/pca_missing',
                 context=context
             )

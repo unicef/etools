@@ -10,8 +10,12 @@ from rest_framework_csv import renderers
 from etools.applications.EquiTrack.mixins import QueryStringFilterMixin
 from etools.applications.t2f.filters import travel_list
 from etools.applications.t2f.models import InvoiceItem, ItineraryItem, Travel, TravelActivity
-from etools.applications.t2f.serializers.export import (FinanceExportSerializer, InvoiceExportSerializer,
-                                                        TravelActivityExportSerializer, TravelAdminExportSerializer,)
+from etools.applications.t2f.serializers.export import (
+    FinanceExportSerializer,
+    InvoiceExportSerializer,
+    TravelActivityExportSerializer,
+    TravelAdminExportSerializer,
+)
 from etools.applications.t2f.views import T2FPagePagination
 
 
@@ -41,14 +45,14 @@ class TravelActivityExport(QueryStringFilterMixin, ExportBaseView):
 
     def get_queryset(self):
         queryset = TravelActivity.objects.prefetch_related('travels', 'travels__traveler', 'travels__office',
-                                                           'travels__sector', 'locations')
+                                                           'travels__section', 'locations')
         queryset = queryset.select_related('partner', 'partnership', 'result', 'primary_traveler')
         queryset = queryset.order_by('id')
 
         filters = (
             ('f_supervisor', 'travels__supervisor__pk__in'),
             ('f_office', 'travels__office__pk__in'),
-            ('f_section', 'travels__sector__pk__in'),
+            ('f_section', 'travels__section__pk__in'),
             ('f_status', 'travels__status__in'),
             ('f_traveler', 'travels__traveler__pk__in'),
             ('f_partner', 'partner__pk__in'),
@@ -88,7 +92,7 @@ class FinanceExport(ExportBaseView):
 
     def get(self, request):
         queryset = self.filter_queryset(self.get_queryset())
-        queryset = queryset.select_related('traveler', 'office', 'sector', 'supervisor')
+        queryset = queryset.select_related('traveler', 'office', 'section', 'supervisor')
         serializer = self.get_serializer(queryset, many=True)
 
         response = Response(data=serializer.data, status=status.HTTP_200_OK)
@@ -102,7 +106,7 @@ class TravelAdminExport(ExportBaseView):
     def get(self, request):
         travel_queryset = self.filter_queryset(self.get_queryset())
         queryset = ItineraryItem.objects.filter(travel__in=travel_queryset).order_by('travel__reference_number', 'id')
-        queryset = queryset.select_related('travel', 'travel__office', 'travel__sector', 'travel__traveler',
+        queryset = queryset.select_related('travel', 'travel__office', 'travel__section', 'travel__traveler',
                                            'dsa_region')
         serializer = self.get_serializer(queryset, many=True)
 

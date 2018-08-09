@@ -2,14 +2,14 @@ from django.db import models
 from django.utils.translation import ugettext_lazy as _
 
 from model_utils.models import TimeStampedModel
+from unicef_notification.utils import send_notification_with_template
 
 from etools.applications.EquiTrack.utils import get_environment
 from etools.applications.firms.models import BaseFirm, BaseStaffMember
-from etools.applications.notification.utils import send_notification_using_email_template
 
 
 class AuditorFirm(BaseFirm):
-    unicef_users_allowed = models.BooleanField(default=False, verbose_name=_('UNICEF users allowed'),
+    unicef_users_allowed = models.BooleanField(default=False, editable=False, verbose_name=_('UNICEF users allowed'),
                                                help_text=_('Allow UNICEF users to join and act as auditors.'))
 
 
@@ -18,6 +18,7 @@ class AuditorStaffMember(BaseStaffMember):
         AuditorFirm, verbose_name=_('Auditor'), related_name='staff_members',
         on_delete=models.CASCADE,
     )
+    hidden = models.BooleanField(verbose_name=_('Hidden'), default=False)
 
     def __str__(self):
         auditor_firm_name = ' ({})'.format(self.auditor_firm.name) if hasattr(self, 'auditor_firm') else ''
@@ -30,9 +31,9 @@ class AuditorStaffMember(BaseStaffMember):
             'staff_member': self.user.get_full_name(),
         }
 
-        send_notification_using_email_template(
+        send_notification_with_template(
             recipients=[self.user.email],
-            email_template_name='audit/engagement/submit_to_auditor',
+            template_name='audit/engagement/submit_to_auditor',
             context=context,
         )
 

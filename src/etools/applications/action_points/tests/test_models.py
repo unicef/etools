@@ -2,14 +2,14 @@ from django.core.management import call_command
 from django.db import connection
 
 from rest_framework.exceptions import ValidationError
+from unicef_snapshot.utils import create_dict_with_relations, create_snapshot
 
 from etools.applications.action_points.models import ActionPoint
 from etools.applications.action_points.tests.factories import ActionPointFactory
 from etools.applications.audit.models import MicroAssessment
 from etools.applications.audit.tests.factories import MicroAssessmentFactory
 from etools.applications.EquiTrack.tests.cases import BaseTenantTestCase
-from etools.applications.snapshot.utils import create_dict_with_relations, create_snapshot
-from etools.applications.t2f.tests.factories import TravelFactory
+from etools.applications.t2f.tests.factories import TravelActivityFactory
 from etools.applications.tpm.tests.factories import TPMVisitFactory
 from etools.applications.users.tests.factories import UserFactory
 
@@ -55,12 +55,12 @@ class TestActionPointModel(BaseTenantTestCase):
         self.assertEqual(action_point.related_module, ActionPoint.MODULE_CHOICES.tpm)
 
     def test_t2f_related(self):
-        action_point = ActionPointFactory(travel=TravelFactory())
+        action_point = ActionPointFactory(travel_activity=TravelActivityFactory())
         self.assertEqual(action_point.related_module, ActionPoint.MODULE_CHOICES.t2f)
 
-    def test_none_related(self):
+    def test_not_related(self):
         action_point = ActionPointFactory()
-        self.assertEqual(action_point.related_module, None)
+        self.assertEqual(action_point.related_module, ActionPoint.MODULE_CHOICES.apd)
 
     def test_additional_data(self):
         action_point = ActionPointFactory(status='pre_completed')

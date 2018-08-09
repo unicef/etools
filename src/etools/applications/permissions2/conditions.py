@@ -109,7 +109,9 @@ class NewObjectCondition(TemplateCondition):
     def __init__(self, model=None):
         self.model = model
 
-    def get_context(self):
-        return {
-            'model': get_model_target(self.model)
-        }
+    def to_internal_value(self):
+        models_stack = [self.model] + collect_parent_models(self.model)
+        return [
+            self.predicate_template.format(model=get_model_target(model))
+            for model in models_stack
+        ]

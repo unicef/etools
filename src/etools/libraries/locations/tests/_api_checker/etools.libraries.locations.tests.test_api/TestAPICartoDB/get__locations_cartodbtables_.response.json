@@ -1,0 +1,35 @@
+{
+    "status_code": 200,
+    "headers": {
+        "content-type": [
+            "Content-Type",
+            "application/json"
+        ],
+        "vary": [
+            "Vary",
+            "Accept, Cookie"
+        ],
+        "allow": [
+            "Allow",
+            "GET, HEAD, OPTIONS"
+        ],
+        "x-frame-options": [
+            "X-Frame-Options",
+            "SAMEORIGIN"
+        ]
+    },
+    "data": [
+        {
+            "id": "127",
+            "domain": "Domain 0",
+            "api_key": "API Key 0",
+            "table_name": "table_name_0",
+            "display_name": "",
+            "pcode_col": "pcode",
+            "color": "#807EF2",
+            "location_type": 2765,
+            "name_col": "name"
+        }
+    ],
+    "content_type": null
+}
