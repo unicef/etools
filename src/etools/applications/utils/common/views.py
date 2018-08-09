@@ -5,7 +5,7 @@ from django.http import Http404, QueryDict
 
 from django_fsm import can_proceed, has_transition_perm
 from rest_framework import exceptions
-from rest_framework.decorators import detail_route
+from rest_framework.decorators import action
 from rest_framework.exceptions import PermissionDenied, ValidationError
 from rest_framework.serializers import Serializer
 
@@ -96,7 +96,7 @@ class FSMTransitionActionMixin(object):
         """
         pass
 
-    @detail_route(methods=['post'], url_path='(?P<action>\D+)')
+    @action(detail=True, methods=['post'], url_path='(?P<action>\D+)')
     def transition(self, request, *args, **kwargs):
         """
         Change status of FSM controlled object
