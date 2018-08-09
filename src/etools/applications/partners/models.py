@@ -2404,7 +2404,7 @@ class InterventionReportingPeriod(TimeStampedModel):
 
 
 # TODO intervention sector locations cleanup
-class InterventionSectionLocationLink(TimeStampedModel):
+class InterventionSectorLocationLink(TimeStampedModel):
     intervention = models.ForeignKey(
         Intervention, related_name='sector_locations', verbose_name=_('Intervention'),
         on_delete=models.CASCADE,
@@ -2417,6 +2417,9 @@ class InterventionSectionLocationLink(TimeStampedModel):
                                        verbose_name=_('Locations'))
 
     tracker = FieldTracker()
+
+
+InterventionSectionLocationLink = InterventionSectorLocationLink
 
 
 # TODO: Move to funds
