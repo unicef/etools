@@ -218,10 +218,9 @@ class TestActionPointViewSet(TestExportMixin, ActionPointsTestCaseMixin, BaseTen
     def test_complete(self):
         action_point = ActionPointFactory(status='pre_completed')
         self.assertEqual(action_point.history.count(), 0)
-
         response = self.forced_auth_req(
             'post',
-            reverse('action-points:action-points-(?P<action>\D+)', args=(action_point.id, 'complete')),
+            reverse('action-points:action-points-transition', args=(action_point.id, 'complete')),
             user=action_point.assigned_to,
             data={}
         )
@@ -275,12 +274,12 @@ class TestActionPointViewSet(TestExportMixin, ActionPointsTestCaseMixin, BaseTen
             )
         )
 
-        self._test_export(self.pme_user, 'action-points:action-points-export/csv')
+        self._test_export(self.pme_user, 'action-points:action-points-list-csv-export')
 
     def test_single_csv(self):
         action_point = ActionPointFactory(status='open', comments__count=1, engagement=MicroAssessmentFactory())
 
-        self._test_export(self.pme_user, 'action-points:action-points-export/csv', args=[action_point.id])
+        self._test_export(self.pme_user, 'action-points:action-points-single-csv-export', args=[action_point.id])
 
 
 class TestActionPointsViewMetadata(ActionPointsTestCaseMixin):
