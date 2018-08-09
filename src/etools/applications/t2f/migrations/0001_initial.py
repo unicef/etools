@@ -189,8 +189,6 @@ class Migration(migrations.Migration):
                                                related_name='+', to='publics.Currency', verbose_name='Currency')),
                 ('office', models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.CASCADE,
                                              related_name='+', to='users.Office', verbose_name='Office')),
-                ('section', models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.CASCADE,
-                                              related_name='+', to='users.Section', verbose_name='Section')),
                 ('sector', models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.CASCADE,
                                              related_name='+', to='reports.Sector', verbose_name='Sector')),
                 ('supervisor', models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.CASCADE,
