@@ -17,6 +17,7 @@ from etools.applications.audit.serializers.risks import (AggregatedRiskRootSeria
                                                          KeyInternalWeaknessSerializer, RiskRootSerializer,)
 from etools.applications.partners.models import PartnerOrganization
 from etools.applications.utils.common.serializers.fields import CommaSeparatedExportField
+from etools.applications.utils.common.utils import to_choices_list
 
 
 class AuditorPDFSerializer(serializers.ModelSerializer):
@@ -153,7 +154,7 @@ class AuditPDFSerializer(EngagementPDFSerializer):
     pending_unsupported_amount = serializers.DecimalField(20, 2, label=_('Pending Unsupported Amount'), read_only=True)
     key_internal_weakness = KeyInternalWeaknessSerializer(
         code='audit_key_weakness', required=False, label=_('Key Internal Control Weaknesses'),
-        risk_choices=Risk.AUDIT_VALUES
+        risk_choices=to_choices_list(Risk.AUDIT_VALUES)
     )
     key_internal_controls = KeyInternalControlSerializer(many=True, required=False,
                                                          label=_('Assessment of Key Internal Controls'))

@@ -22,7 +22,7 @@ from etools.applications.partners.models import (
     InterventionPlannedVisits,
     InterventionReportingPeriod,
     InterventionResultLink,
-    InterventionSectorLocationLink,
+    InterventionSectionLocationLink,
 )
 from etools.applications.partners.permissions import InterventionPermissions
 from etools.applications.reports.models import (
@@ -253,7 +253,7 @@ class InterventionLocationSectionNestedSerializer(serializers.ModelSerializer):
     sector = SectionSerializer()
 
     class Meta:
-        model = InterventionSectorLocationLink
+        model = InterventionSectionLocationLink
         fields = (
             'id', 'sector', 'locations'
         )
@@ -262,7 +262,7 @@ class InterventionLocationSectionNestedSerializer(serializers.ModelSerializer):
 # TODO intervention sector locations cleanup
 class InterventionSectionLocationCUSerializer(serializers.ModelSerializer):
     class Meta:
-        model = InterventionSectorLocationLink
+        model = InterventionSectionLocationLink
         fields = (
             'id', 'intervention', 'sector', 'locations'
         )
