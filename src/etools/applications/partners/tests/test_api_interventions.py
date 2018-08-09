@@ -1825,7 +1825,7 @@ class TestInterventionSectionLocationLinkListAPIView(BaseTenantTestCase):
         cls.unicef_staff = UserFactory(is_staff=True)
         InterventionSectionLocationLinkFactory()
         cls.intervention = InterventionFactory()
-        cls.section = SectionFactory(name="Sector Name")
+        cls.section = SectionFactory(name="Section Name")
         cls.link = InterventionSectionLocationLinkFactory(
             intervention=cls.intervention,
             sector=cls.section

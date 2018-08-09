@@ -66,7 +66,7 @@ class InterventionSectionLocationLinkExportFlatSerializer(
     intervention = serializers.SerializerMethodField(
         label=_("Reference Number"),
     )
-    sector = serializers.SerializerMethodField(label=_("Sector"))
+    sector = serializers.SerializerMethodField(label=_("Section"))
 
     class Meta:
         model = Location
@@ -103,7 +103,7 @@ class InterventionResultExportSerializer(InterventionResultSerializer):
         read_only=True
     )
     sector = serializers.CharField(
-        label=_("Sector"),
+        label=_("Section"),
         source="cp_output.sector.name",
         read_only=True,
         allow_null=True,

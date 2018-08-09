@@ -21,10 +21,10 @@ class Migration(migrations.Migration):
 
     operations = [
         migrations.AddField(
-            model_name='interventionsectorlocationlink',
+            model_name='interventionsectionlocationlink',
             name='sector',
             field=models.ForeignKey(on_delete=django.db.models.deletion.CASCADE,
-                                    related_name='intervention_locations', to='reports.Sector', verbose_name='Sector'),
+                                    related_name='intervention_locations', to='reports.Section', verbose_name='Sector'),
         ),
         migrations.AddField(
             model_name='interventionresultlink',
@@ -119,7 +119,7 @@ class Migration(migrations.Migration):
             model_name='intervention',
             name='sections',
             field=models.ManyToManyField(blank=True, related_name='interventions',
-                                         to='reports.Sector', verbose_name='Sections'),
+                                         to='reports.Section', verbose_name='Sections'),
         ),
         migrations.AddField(
             model_name='intervention',
