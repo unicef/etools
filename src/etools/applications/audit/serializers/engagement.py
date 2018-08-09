@@ -280,6 +280,7 @@ class ActivePDValidationMixin(object):
 class EngagementHactSerializer(EngagementLightSerializer):
     amount_tested = serializers.SerializerMethodField()
     outstanding_findings = serializers.SerializerMethodField()
+    object_url = serializers.ReadOnlyField(source='get_object_url')
 
     def get_amount_tested(self, obj):
         if obj.engagement_type == 'audit':
@@ -297,7 +298,7 @@ class EngagementHactSerializer(EngagementLightSerializer):
 
     class Meta(EngagementLightSerializer.Meta):
         fields = EngagementLightSerializer.Meta.fields + [
-            "amount_tested", "outstanding_findings"
+            "amount_tested", "outstanding_findings", "object_url"
         ]
 
 
