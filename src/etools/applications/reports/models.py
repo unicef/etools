@@ -131,7 +131,7 @@ class ResultType(models.Model):
         return self.name
 
 
-class Section(TimeStampedModel):
+class Sector(TimeStampedModel):
     """
     Represents a section
     """
@@ -153,6 +153,9 @@ class Section(TimeStampedModel):
         )
 
 
+Section = Sector
+
+
 class ResultManager(models.Manager):
     def get_queryset(self):
         return super(ResultManager, self).get_queryset().select_related(
@@ -170,7 +173,7 @@ class Result(MPTTModel):
     Represents a result, wbs is unique
 
     Relates to :model:`reports.CountryProgramme`
-    Relates to :model:`reports.Section`
+    Relates to :model:`reports.Sector`
     Relates to :model:`reports.ResultType`
     """
     country_programme = models.ForeignKey(
