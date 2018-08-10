@@ -10,6 +10,7 @@ from django.urls import resolve, reverse
 from django.utils import timezone
 
 from rest_framework import status
+from rest_framework.exceptions import ErrorDetail
 from rest_framework.test import APIRequestFactory
 from unicef_attachments.models import Attachment
 from unicef_locations.tests.factories import LocationFactory
@@ -1646,7 +1647,8 @@ class TestInterventionAmendmentCreateAPIView(BaseTenantTestCase):
         )
 
         self.assertEquals(response.status_code, status.HTTP_400_BAD_REQUEST)
-        self.assertEquals(response.data['types'], [u'"%s" is not a valid choice.' % invalid_type])
+        self.assertEquals(response.data['types'],
+                          {0: [ErrorDetail(string='"invalid_choice" is not a valid choice.', code=f'{invalid_type}')]})
 
     def test_create_amendment_invalid_file(self):
         response = self._make_request(
@@ -1823,7 +1825,7 @@ class TestInterventionSectionLocationLinkListAPIView(BaseTenantTestCase):
         cls.unicef_staff = UserFactory(is_staff=True)
         InterventionSectionLocationLinkFactory()
         cls.intervention = InterventionFactory()
-        cls.section = SectionFactory(name="Sector Name")
+        cls.section = SectionFactory(name="Section Name")
         cls.link = InterventionSectionLocationLinkFactory(
             intervention=cls.intervention,
             sector=cls.section

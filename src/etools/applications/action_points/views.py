@@ -1,13 +1,17 @@
 from django.utils import timezone
+from django_filters.rest_framework import DjangoFilterBackend
 
 from rest_framework import mixins, viewsets
-from rest_framework.decorators import detail_route, list_route
-from rest_framework.filters import DjangoFilterBackend, OrderingFilter, SearchFilter
+from rest_framework.decorators import action
+from rest_framework.filters import OrderingFilter, SearchFilter
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from unicef_restlib.pagination import DynamicPageNumberPagination
 from unicef_restlib.views import MultiSerializerViewSetMixin, SafeTenantViewSetMixin
+from unicef_snapshot.views import FSMSnapshotViewMixin
 
+from etools.applications.action_points.categories.models import Category
+from etools.applications.action_points.categories.serializers import CategorySerializer
 from etools.applications.action_points.conditions import (
     ActionPointAssignedByCondition,
     ActionPointAssigneeCondition,
@@ -21,13 +25,13 @@ from etools.applications.action_points.export.serializers import ActionPointExpo
 from etools.applications.action_points.filters import ReferenceNumberOrderingFilter, RelatedModuleFilter
 from etools.applications.action_points.metadata import ActionPointMetadata
 from etools.applications.action_points.models import ActionPoint
-from etools.applications.action_points.categories.models import Category
-from etools.applications.action_points.serializers import ActionPointListSerializer, ActionPointSerializer, \
-    ActionPointCreateSerializer
-from etools.applications.action_points.categories.serializers import CategorySerializer
+from etools.applications.action_points.serializers import (
+    ActionPointCreateSerializer,
+    ActionPointListSerializer,
+    ActionPointSerializer,
+)
 from etools.applications.permissions2.conditions import ObjectStatusCondition
 from etools.applications.permissions2.views import PermittedFSMActionMixin, PermittedSerializerMixin
-from etools.applications.snapshot.views import FSMSnapshotViewMixin
 
 
 class CategoryViewSet(mixins.ListModelMixin, viewsets.GenericViewSet):
@@ -99,14 +103,14 @@ class ActionPointViewSet(
         ])
         return context
 
-    @list_route(methods=['get'], url_path='export/csv', renderer_classes=(ActionPointCSVRenderer,))
+    @action(detail=False, methods=['get'], url_path='export/csv', renderer_classes=(ActionPointCSVRenderer,))
     def list_csv_export(self, request, *args, **kwargs):
         serializer = ActionPointExportSerializer(self.get_queryset(), many=True)
         return Response(serializer.data, headers={
             'Content-Disposition': 'attachment;filename=action_points_{}.csv'.format(timezone.now().date())
         })
 
-    @detail_route(methods=['get'], url_path='export/csv', renderer_classes=(ActionPointCSVRenderer,))
+    @action(detail=True, methods=['get'], url_path='export/csv', renderer_classes=(ActionPointCSVRenderer,))
     def single_csv_export(self, request, *args, **kwargs):
         serializer = ActionPointExportSerializer(self.get_object())
         return Response(serializer.data, headers={

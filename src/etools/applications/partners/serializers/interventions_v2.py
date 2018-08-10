@@ -22,7 +22,7 @@ from etools.applications.partners.models import (
     InterventionPlannedVisits,
     InterventionReportingPeriod,
     InterventionResultLink,
-    InterventionSectorLocationLink,
+    InterventionSectionLocationLink,
 )
 from etools.applications.partners.permissions import InterventionPermissions
 from etools.applications.reports.models import AppliedIndicator, LowerResult, ReportingRequirement
@@ -249,7 +249,7 @@ class InterventionLocationSectionNestedSerializer(serializers.ModelSerializer):
     sector = SectionSerializer()
 
     class Meta:
-        model = InterventionSectorLocationLink
+        model = InterventionSectionLocationLink
         fields = (
             'id', 'sector', 'locations'
         )
@@ -258,7 +258,7 @@ class InterventionLocationSectionNestedSerializer(serializers.ModelSerializer):
 # TODO intervention sector locations cleanup
 class InterventionSectionLocationCUSerializer(serializers.ModelSerializer):
     class Meta:
-        model = InterventionSectorLocationLink
+        model = InterventionSectionLocationLink
         fields = (
             'id', 'intervention', 'sector', 'locations'
         )
@@ -603,7 +603,6 @@ class InterventionDetailSerializer(serializers.ModelSerializer):
             "id", 'frs', "partner", "agreement", "document_type", "number", "prc_review_document_file", "frs_details",
             "signed_pd_document_file", "title", "status", "start", "end", "submission_date_prc", "review_date_prc",
             "submission_date", "prc_review_document", "submitted_to_prc", "signed_pd_document", "signed_by_unicef_date",
-            "signed_by_unicef",
             "unicef_signatory", "unicef_focal_points", "partner_focal_points", "partner_authorized_officer_signatory",
             "offices", "population_focus", "signed_by_partner_date", "created", "modified",
             "planned_budget", "result_links", 'country_programme', 'metadata', 'contingency_pd', "amendments",

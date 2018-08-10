@@ -17,10 +17,11 @@ from etools.applications.reports.serializers.exports import IndicatorExportFlatS
 
 class InterventionAmendmentExportSerializer(InterventionAmendmentCUSerializer):
     types = TypeArrayField(label=_("Types"))
+    signed_amendment_attachment = internal_prc_review = None
 
     class Meta:
         model = InterventionAmendment
-        exclude = ("signed_amendment_attachment", "internal_prc_review")
+        fields = "__all__"
 
 
 class InterventionAmendmentExportFlatSerializer(
@@ -31,10 +32,11 @@ class InterventionAmendmentExportFlatSerializer(
         label=_("Reference Number"),
         source="intervention.number",
     )
+    signed_amendment_attachment = internal_prc_review = None
 
     class Meta:
         model = InterventionAmendment
-        exclude = ("signed_amendment_attachment", "internal_prc_review")
+        fields = "__all__"
 
 
 class InterventionSectionLocationLinkExportSerializer(LocationExportSerializer):
@@ -66,7 +68,7 @@ class InterventionSectionLocationLinkExportFlatSerializer(
     intervention = serializers.SerializerMethodField(
         label=_("Reference Number"),
     )
-    sector = serializers.SerializerMethodField(label=_("Sector"))
+    sector = serializers.SerializerMethodField(label=_("Section"))
 
     class Meta:
         model = Location
@@ -94,7 +96,8 @@ class InterventionResultExportSerializer(InterventionResultSerializer):
     country_programme = serializers.CharField(
         label=_("Country Programme"),
         source="cp_output.country_programme.name",
-        read_only=True
+        read_only=True,
+        allow_null=True,
     )
     result_type = serializers.CharField(
         label=_("Result Type"),
@@ -102,9 +105,10 @@ class InterventionResultExportSerializer(InterventionResultSerializer):
         read_only=True
     )
     sector = serializers.CharField(
-        label=_("Sector"),
+        label=_("Section"),
         source="cp_output.sector.name",
-        read_only=True
+        read_only=True,
+        allow_null=True,
     )
     name = serializers.CharField(
         label=_("Name"),
@@ -129,7 +133,8 @@ class InterventionResultExportSerializer(InterventionResultSerializer):
     parent = serializers.CharField(
         label=_("Parent"),
         source="cp_output.parent.pk",
-        read_only=True
+        read_only=True,
+        allow_null=True,
     )
     wbs = serializers.CharField(
         label=_("WBS"),
@@ -184,7 +189,8 @@ class InterventionResultExportFlatSerializer(
     parent = serializers.CharField(
         label=_("Parent"),
         source="cp_output.parent.name",
-        read_only=True
+        read_only=True,
+        allow_null=True,
     )
 
     class Meta:
@@ -365,7 +371,6 @@ class InterventionExportSerializer(serializers.ModelSerializer):
             "partner_authorized_officer_signatory",
             "signed_by_partner_date",
             "unicef_signatory",
-            "signed_by_unicef",
             "signed_by_unicef_date",
             "days_from_submission_to_signed",
             "days_from_review_to_signed",

@@ -267,7 +267,7 @@ class AppliedIndicatorLocationExportView(QueryStringFilterMixin, APIView):
 
         fieldnames = {
             'partner': 'Partner Name',
-            'partner_number': 'Vendor Number',
+            'vendor_number': 'Vendor Number',
             'vendor': 'Vendor',
             'int_status': 'PD / SSFA status',
             'int_start_date': 'PD / SSFA start date',
@@ -302,7 +302,7 @@ class AppliedIndicatorLocationExportView(QueryStringFilterMixin, APIView):
         for intervention in interventions:
             intervention_dict = {
                 'partner': str(intervention.agreement.partner),
-                'partner_vendor_number': str(intervention.agreement.partner.vendor_number),
+                'vendor_number': str(intervention.agreement.partner.vendor_number),
                 'vendor': intervention.agreement.partner.cso_type,
                 'int_status': intervention.get_status_display(),
                 'int_start_date': intervention.start,
