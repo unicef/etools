@@ -180,10 +180,29 @@ def copy_interventions(**kwargs):
         }
     )
 
+    activation_letter, _ = FileType.objects.get_or_create(
+        code="partners_intervention_activation_letter",
+        defaults={
+            "label": "PD Activation Letter",
+            "name": "activation_letter",
+            "order": 0,
+        }
+    )
+    termination_doc, _ = FileType.objects.get_or_create(
+        code="partners_intervention_termination_doc",
+        defaults={
+            "label": "PD Termination Document",
+            "name": "termination_doc",
+            "order": 0,
+        }
+    )
+
     content_type = ContentType.objects.get_for_model(Intervention)
 
     for intervention in Intervention.objects.filter(
             Q(prc_review_document__isnull=False) |
+            Q(activation_letter__isnull=False) |
+            Q(termination_doc__isnull=False) |
             Q(signed_pd_document__isnull=False),
             modified__gte=get_from_datetime(**kwargs)
     ).all():
@@ -200,6 +219,20 @@ def copy_interventions(**kwargs):
                 content_type,
                 intervention.pk,
                 intervention.signed_pd_document,
+            )
+        if intervention.activation_letter:
+            update_or_create_attachment(
+                activation_letter,
+                content_type,
+                intervention.pk,
+                intervention.activation_letter_attachment,
+            )
+        if intervention.termination_doc:
+            update_or_create_attachment(
+                termination_doc,
+                content_type,
+                intervention.pk,
+                intervention.termination_doc_attachment,
             )
 
 

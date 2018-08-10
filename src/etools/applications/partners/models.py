@@ -1746,6 +1746,34 @@ class Intervention(TimeStampedModel):
         verbose_name=_("Contingency PD"),
         default=False,
     )
+    activation_letter = models.FileField(
+        verbose_name=_("Activation Document for Contingency PDs"),
+        max_length=1024,
+        null=True,
+        blank=True,
+        upload_to=get_intervention_file_path
+    )
+    activation_letter_attachment = CodedGenericRelation(
+        Attachment,
+        verbose_name=_('Activation Document for Contingency PDs'),
+        code='partners_intervention_activation_letter',
+        blank=True,
+        null=True
+    )
+    termination_doc = models.FileField(
+        verbose_name=_("Termination document for PDs"),
+        max_length=1024,
+        null=True,
+        blank=True,
+        upload_to=get_intervention_file_path
+    )
+    termination_doc_attachment = CodedGenericRelation(
+        Attachment,
+        verbose_name=_('Termination document for PDs'),
+        code='partners_intervention_activation_letter',
+        blank=True,
+        null=True
+    )
     sections = models.ManyToManyField(
         Section,
         verbose_name=_("Sections"),

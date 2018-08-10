@@ -13,7 +13,7 @@ Field no,Field Name,Group,Condition,Status,Action,Allowed
 3.2.9,unicef_focal_points,Partnership Manager,,Active,Edit,TRUE
 3.3.1,country_programme,Partnership Manager,,Draft,Edit,TRUE
 3.3.7,contingency_pd,Partnership Manager,,Draft,Edit,TRUE
-3.3.7,contingency_pd,Partnership Manager,,Signed,Edit,TRUE
+3.3.7,activation_letter,Partnership Manager,contingency on,Signed,Edit,TRUE
 3.3.2,start,Partnership Manager,,Draft,Edit,TRUE
 3.3.2,start,Partnership Manager,,Signed,Edit,TRUE
 3.3.3,end,Partnership Manager,,Draft,Edit,TRUE
@@ -73,6 +73,8 @@ Field no,Field Name,Group,Condition,Status,Action,Allowed
 3.3.3,end,UNICEF User,contingency on,Signed,Required,FALSE
 3.3.5,sections_present,UNICEF User,,Draft,Required,FALSE
 3.9.11,signed_pd_document,UNICEF User,,Draft,Required,FALSE
+3.9.11,activation_letter,UNICEF User,contingency on,Active,Required,True
+3.9.11,termination_doc,UNICEF User,,Terminated,Required,True
 3.9.5,partner_authorized_officer_signatory,UNICEF User,,Draft,Required,FALSE
 3.9.6,signed_by_partner_date,UNICEF User,,Draft,Required,FALSE
 3.9.7,unicef_signatory,UNICEF User,,*,Required,FALSE

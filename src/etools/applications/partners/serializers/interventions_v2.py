@@ -487,6 +487,10 @@ class InterventionCreateUpdateSerializer(AttachmentSerializerMixin, SnapshotMode
     prc_review_attachment = AttachmentSingleFileField()
     signed_pd_document_file = serializers.FileField(source='signed_pd_document', read_only=True)
     signed_pd_attachment = AttachmentSingleFileField()
+    activation_letter_file = serializers.FileField(source='activation_letter', read_only=True)
+    activation_letter_attachment = AttachmentSingleFileField()
+    termination_doc_file = serializers.FileField(source='termination_doc', read_only=True)
+    termination_doc_attachment = AttachmentSingleFileField()
     planned_visits = PlannedVisitsNestedSerializer(many=True, read_only=True, required=False)
     attachments = InterventionAttachmentSerializer(many=True, read_only=True, required=False)
     result_links = InterventionResultCUSerializer(many=True, read_only=True, required=False)
@@ -536,6 +540,10 @@ class InterventionDetailSerializer(serializers.ModelSerializer):
     prc_review_attachment = AttachmentSingleFileField(read_only=True)
     signed_pd_document_file = serializers.FileField(source='signed_pd_document', read_only=True)
     signed_pd_attachment = AttachmentSingleFileField(read_only=True)
+    activation_letter_file = serializers.FileField(source='activation_letter', read_only=True)
+    activation_letter_attachment = AttachmentSingleFileField(read_only=True)
+    termination_doc_file = serializers.FileField(source='termination_doc', read_only=True)
+    termination_doc_attachment = AttachmentSingleFileField(read_only=True)
     amendments = InterventionAmendmentCUSerializer(many=True, read_only=True, required=False)
     attachments = InterventionAttachmentSerializer(many=True, read_only=True, required=False)
     result_links = InterventionResultNestedSerializer(many=True, read_only=True, required=False)
@@ -617,7 +625,9 @@ class InterventionDetailSerializer(serializers.ModelSerializer):
             "days_from_submission_to_signed",
             "days_from_review_to_signed",
             "partner_vendor",
-            "reference_number_year"
+            "reference_number_year",
+            "activation_letter_file", "activation_letter_attachment",
+            "termination_doc_file", "termination_doc_attachment"
         )
 
 
