@@ -75,9 +75,9 @@ class IndicatorExportSerializer(serializers.ModelSerializer):
 
 
 class IndicatorExportFlatSerializer(ExportSerializerMixin, IndicatorExportSerializer):
-    sector = serializers.CharField(source="sector.name", read_only=True)
-    result = serializers.CharField(source="result.name", read_only=True)
-    unit = serializers.CharField(source="unit.type", read_only=True)
+    sector = serializers.CharField(source="sector.name", read_only=True, allow_null=True)
+    result = serializers.CharField(source="result.name", read_only=True, allow_null=True)
+    unit = serializers.CharField(source="unit.type", read_only=True, allow_null=True)
 
 
 class AppliedIndicatorLocationExportSerializer(serializers.Serializer):

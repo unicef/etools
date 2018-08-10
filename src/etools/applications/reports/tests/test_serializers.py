@@ -5,7 +5,7 @@ from django.test import RequestFactory
 from rest_framework.exceptions import ValidationError
 
 from etools.applications.EquiTrack.tests.cases import BaseTenantTestCase
-from etools.applications.locations.tests.factories import LocationFactory
+from unicef_locations.tests.factories import LocationFactory
 from etools.applications.partners.tests.factories import InterventionFactory, InterventionResultLinkFactory
 from etools.applications.reports.models import AppliedIndicator, IndicatorBlueprint, LowerResult
 from etools.applications.reports.serializers.v2 import (AppliedIndicatorSerializer, DisaggregationSerializer,

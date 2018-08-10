@@ -14,9 +14,11 @@ from etools.applications.attachments.serializers_fields import (
     AttachmentSingleFileField,
     Base64FileField,
 )
+from etools.applications.attachments.validators import AttachmentRequiresFileOrLink
 from etools.applications.users.serializers import SimpleUserSerializer
 from etools.applications.utils.common.serializers.fields import SeparatedReadWriteField
 from etools.applications.utils.common.serializers.mixins import UserContextSerializerMixin
+from etools.applications.utils.common.urlresolvers import build_absolute_url
 
 
 class BaseAttachmentSerializer(UserContextSerializerMixin, serializers.ModelSerializer):
@@ -91,6 +93,7 @@ class AttachmentFileUploadSerializer(serializers.ModelSerializer):
     class Meta:
         model = Attachment
         fields = ["file", "uploaded_by"]
+        validators = [AttachmentRequiresFileOrLink]
 
 
 def validate_attachment(cls, data):
@@ -117,8 +120,13 @@ def validate_attachment(cls, data):
         attachment = Attachment.objects.get(pk=int(value))
     except Attachment.DoesNotExist:
         raise serializers.ValidationError("Attachment does not exist")
+    except ValueError:
+        raise serializers.ValidationError("Attachment expects an integer")
 
-    file_type = FileType.objects.get(code=code)
+    file_type, __ = FileType.objects.get_or_create(
+        code=code,
+        defaults={"name": code.replace("_", " ").title()}
+    )
     if attachment.content_object is not None:
         if not cls.instance or attachment.content_object != cls.instance:
             # If content object exists, expect instance to exist
@@ -171,12 +179,16 @@ class AttachmentSerializerMixin(object):
                     if field.override is not None:
                         if field.override in self.fields:
                             self.fields[field.override].read_only = True
-                    setattr(
-                        self,
-                        "validate_{}".format(field_name),
-                        types.MethodType(validate_attachment, self)
-                    )
-                    self.attachment_list.append(field.source)
+                    # ignore values that are None
+                    if self.initial_data[field_name] is None:
+                        self.initial_data.pop(field_name)
+                    else:
+                        setattr(
+                            self,
+                            "validate_{}".format(field_name),
+                            types.MethodType(validate_attachment, self)
+                        )
+                        self.attachment_list.append(field.source)
                 else:
                     setattr(field, "read_only", True)
 
@@ -203,9 +215,13 @@ class AttachmentSerializerMixin(object):
 class AttachmentPDFSerializer(serializers.ModelSerializer):
     file_type_display = serializers.ReadOnlyField(source='file_type.label')
     created = serializers.DateTimeField(format='%d %b %Y')
+    url = serializers.SerializerMethodField()
 
     class Meta:
         model = Attachment
         fields = [
             'file_type_display', 'filename', 'url', 'created',
         ]
+
+    def get_url(self, obj):
+        return build_absolute_url(obj.file_link)

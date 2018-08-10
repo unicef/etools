@@ -13,7 +13,7 @@ from etools.applications.attachments.serializers import AttachmentSerializerMixi
 from etools.applications.attachments.serializers_fields import AttachmentSingleFileField
 from etools.applications.funds.models import FundsCommitmentItem, FundsReservationHeader
 from etools.applications.funds.serializers import FRsSerializer
-from etools.applications.locations.serializers import LocationLightSerializer, LocationSerializer
+from unicef_locations.serializers import LocationLightSerializer, LocationSerializer
 from etools.applications.partners.models import (
     Intervention,
     InterventionAmendment,
@@ -22,7 +22,7 @@ from etools.applications.partners.models import (
     InterventionPlannedVisits,
     InterventionReportingPeriod,
     InterventionResultLink,
-    InterventionSectorLocationLink,
+    InterventionSectionLocationLink,
 )
 from etools.applications.partners.permissions import InterventionPermissions
 from etools.applications.reports.models import (
@@ -62,6 +62,7 @@ class InterventionAmendmentCUSerializer(AttachmentSerializerMixin, serializers.M
     signed_amendment_attachment = AttachmentSingleFileField(
         override="signed_amendment"
     )
+    internal_prc_review = AttachmentSingleFileField()
 
     class Meta:
         model = InterventionAmendment
@@ -252,7 +253,7 @@ class InterventionLocationSectionNestedSerializer(serializers.ModelSerializer):
     sector = SectionSerializer()
 
     class Meta:
-        model = InterventionSectorLocationLink
+        model = InterventionSectionLocationLink
         fields = (
             'id', 'sector', 'locations'
         )
@@ -261,7 +262,7 @@ class InterventionLocationSectionNestedSerializer(serializers.ModelSerializer):
 # TODO intervention sector locations cleanup
 class InterventionSectionLocationCUSerializer(serializers.ModelSerializer):
     class Meta:
-        model = InterventionSectorLocationLink
+        model = InterventionSectionLocationLink
         fields = (
             'id', 'intervention', 'sector', 'locations'
         )
@@ -616,6 +617,7 @@ class InterventionDetailSerializer(serializers.ModelSerializer):
             "days_from_submission_to_signed",
             "days_from_review_to_signed",
             "partner_vendor",
+            "reference_number_year"
         )
 
 

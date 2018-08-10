@@ -6,7 +6,7 @@ from rest_framework import status
 from tablib.core import Dataset
 
 from etools.applications.EquiTrack.tests.cases import BaseTenantTestCase
-from etools.applications.locations.tests.factories import LocationFactory
+from unicef_locations.tests.factories import LocationFactory
 from etools.applications.partners.tests.factories import (
     AgreementFactory,
     InterventionAmendmentFactory,
@@ -209,8 +209,8 @@ class TestInterventionModelExport(BaseInterventionModelExportTestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         dataset = Dataset().load(response.content.decode('utf-8'), 'csv')
         self.assertEqual(dataset.height, 1)
-        self.assertEqual(len(dataset._get_headers()), 61)
-        self.assertEqual(len(dataset[0]), 61)
+        self.assertEqual(len(dataset._get_headers()), 63)
+        self.assertEqual(len(dataset[0]), 63)
 
 
 class TestInterventionAmendmentModelExport(BaseInterventionModelExportTestCase):

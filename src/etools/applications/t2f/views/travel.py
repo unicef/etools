@@ -13,17 +13,23 @@ from rest_framework.response import Response
 from rest_framework_csv import renderers
 
 from etools.applications.EquiTrack.mixins import QueryStringFilterMixin
-from etools.applications.t2f.filters import (action_points, travel_list, TravelActivityInterventionFilter,
-                                             TravelActivityPartnerFilter, TravelRelatedModelFilter,)
+from etools.applications.t2f.filters import (
+    travel_list,
+    TravelActivityInterventionFilter,
+    TravelActivityPartnerFilter,
+    TravelRelatedModelFilter,
+)
 from etools.applications.t2f.helpers.clone_travel import CloneTravelHelper
 from etools.applications.t2f.helpers.permission_matrix import FakePermissionMatrix, PermissionMatrix
-from etools.applications.t2f.models import ActionPoint, Travel, TravelActivity, TravelAttachment, TravelType
-from etools.applications.t2f.renderers import ActionPointCSVRenderer
-from etools.applications.t2f.serializers.export import ActionPointExportSerializer
-from etools.applications.t2f.serializers.travel import (ActionPointSerializer, CloneOutputSerializer,
-                                                        CloneParameterSerializer, TravelActivityByPartnerSerializer,
-                                                        TravelAttachmentSerializer, TravelDetailsSerializer,
-                                                        TravelListSerializer,)
+from etools.applications.t2f.models import Travel, TravelActivity, TravelAttachment, TravelType
+from etools.applications.t2f.serializers.travel import (
+    CloneOutputSerializer,
+    CloneParameterSerializer,
+    TravelActivityByPartnerSerializer,
+    TravelAttachmentSerializer,
+    TravelDetailsSerializer,
+    TravelListSerializer,
+)
 from etools.applications.t2f.views import run_transition, T2FPagePagination
 
 
@@ -204,26 +210,3 @@ class TravelActivityPerInterventionViewSet(QueryStringFilterMixin, mixins.ListMo
             .distinct('id')
         qs = qs.exclude(status__in=[Travel.CANCELLED, Travel.REJECTED, Travel.PLANNED])
         return qs
-
-
-class ActionPointViewSet(mixins.ListModelMixin,
-                         mixins.RetrieveModelMixin,
-                         mixins.UpdateModelMixin,
-                         viewsets.GenericViewSet):
-    queryset = ActionPoint.objects.all()
-    serializer_class = ActionPointSerializer
-    pagination_class = T2FPagePagination
-    permission_classes = (IsAdminUser,)
-    filter_backends = (action_points.ActionPointSearchFilter,
-                       action_points.ActionPointSortFilter,
-                       action_points.ActionPointFilterBoxFilter)
-    renderer_classes = (renderers.JSONRenderer, ActionPointCSVRenderer)
-    lookup_url_kwarg = 'action_point_pk'
-
-    def export(self, request, *args, **kwargs):
-        queryset = self.filter_queryset(self.get_queryset())
-        serializer = ActionPointExportSerializer(queryset, many=True, context=self.get_serializer_context())
-
-        response = Response(data=serializer.data, status=status.HTTP_200_OK)
-        response['Content-Disposition'] = 'attachment; filename="ActionPointExport.csv"'
-        return response

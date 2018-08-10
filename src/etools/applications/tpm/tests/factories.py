@@ -11,8 +11,8 @@ from factory import fuzzy
 from etools.applications.action_points.tests.factories import ActionPointFactory
 from etools.applications.attachments.tests.factories import AttachmentFactory
 from etools.applications.firms.tests.factories import BaseFirmFactory, BaseStaffMemberFactory, BaseUserFactory
-from etools.applications.locations.tests.factories import LocationFactory
-from etools.applications.partners.models import InterventionResultLink, InterventionSectorLocationLink
+from unicef_locations.tests.factories import LocationFactory
+from etools.applications.partners.models import InterventionResultLink, InterventionSectionLocationLink
 from etools.applications.partners.tests.factories import InterventionFactory
 from etools.applications.reports.tests.factories import ResultFactory, SectionFactory
 from etools.applications.tpm.models import TPMActivity, TPMVisit, TPMVisitReportRejectComment
@@ -54,7 +54,7 @@ class InterventionResultLinkFactory(factory.django.DjangoModelFactory):
 
 class InterventionSectionLocationLinkFactory(factory.django.DjangoModelFactory):
     class Meta:
-        model = InterventionSectorLocationLink
+        model = InterventionSectionLocationLink
 
     sector = factory.SubFactory(SectionFactory)
 

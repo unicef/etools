@@ -34,7 +34,7 @@ from etools.applications.partners.models import (
     InterventionBudget,
     InterventionPlannedVisits,
     InterventionReportingPeriod,
-    InterventionSectorLocationLink,
+    InterventionSectionLocationLink,
     PartnerOrganization,
     PartnerType,
 )
@@ -865,6 +865,7 @@ class TestAgreementCreateAPIView(BaseTenantTestCase):
         data = {
             "agreement_type": Agreement.MOU,
             "partner": self.partner.id,
+            "reference_number_year": datetime.date.today().year
         }
         response = self.forced_auth_req(
             'post',
@@ -886,6 +887,7 @@ class TestAgreementCreateAPIView(BaseTenantTestCase):
         data = {
             "agreement_type": Agreement.PCA,
             "partner": self.partner.id,
+            "reference_number_year": datetime.date.today().year
         }
         response = self.forced_auth_req(
             'post',
@@ -1023,11 +1025,6 @@ class TestAgreementAPIFileAttachments(BaseTenantTestCase):
 class TestAgreementAPIView(BaseTenantTestCase):
     @classmethod
     def setUpTestData(cls):
-        cls.unicef_staff = UserFactory(is_staff=True)
-        cls.partner = PartnerFactory(partner_type=PartnerType.CIVIL_SOCIETY_ORGANIZATION)
-        cls.partner_staff = PartnerStaffFactory(partner=cls.partner)
-        cls.partner_staff2 = PartnerStaffFactory(partner=cls.partner)
-
         cls.unicef_staff = UserFactory(is_staff=True)
         cls.partner = PartnerFactory(partner_type=PartnerType.CIVIL_SOCIETY_ORGANIZATION)
         cls.partner_staff = PartnerStaffFactory(partner=cls.partner)
@@ -1334,14 +1331,13 @@ class TestAgreementAPIView(BaseTenantTestCase):
         self.assertEqual(response.data, ["Cannot delete a signed amendment"])
 
     def test_agreement_generate_pdf_default(self):
+        self.client.force_login(self.unicef_staff)
         with mock.patch('etools.applications.partners.views.v1.get_data_from_insight') as mock_get_insight:
             # FIXME: need to return some fake data here (not just {}) to actually get a PDF that
             # has more in it than an error message
             mock_get_insight.return_value = (True, {})
-            response = self.forced_auth_req(
-                'get',
-                reverse('partners_api:pca_pdf', args=[self.agreement.pk]),
-                user=self.unicef_staff
+            response = self.client.get(
+                reverse('partners_api:pca_pdf', args=[self.agreement.pk])
             )
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
@@ -1351,6 +1347,7 @@ class TestAgreementAPIView(BaseTenantTestCase):
 
     @skip('figure out why this is failing with a random vendor number')
     def test_agreement_generate_pdf_lang(self):
+        self.client.force_login(self.unicef_staff)
         params = {
             "lang": "spanish",
         }
@@ -1358,10 +1355,8 @@ class TestAgreementAPIView(BaseTenantTestCase):
             # FIXME: need to return some fake data here (not just {}) to actually get a PDF that
             # has more in it than an error message
             mock_get_insight.return_value = (True, {})
-            response = self.forced_auth_req(
-                'get',
+            response = self.client.get(
                 reverse('partners_api:pca_pdf', args=[self.agreement.pk]),
-                user=self.unicef_staff,
                 data=params
             )
         self.assertEqual(response.status_code, status.HTTP_200_OK)
@@ -1438,6 +1433,7 @@ class TestInterventionViews(BaseTenantTestCase):
             "end": (timezone.now().date() + datetime.timedelta(days=31)).isoformat(),
             "unicef_budget": 0,
             "agreement": self.agreement.id,
+            "reference_number_year": datetime.date.today().year
         }
         response = self.forced_auth_req(
             'post',
@@ -1526,6 +1522,7 @@ class TestInterventionViews(BaseTenantTestCase):
             ],
             "amendments": [],
             "attachments": [],
+            "reference_number_year": datetime.date.today().year
         }
 
         response = self.forced_auth_req(
@@ -1590,6 +1587,7 @@ class TestInterventionViews(BaseTenantTestCase):
             "end": (timezone.now().date() + datetime.timedelta(days=31)).isoformat(),
             "unicef_budget": 0,
             "agreement": self.agreement.id,
+            "reference_number_year": datetime.date.today().year
         }
         response = self.forced_auth_req(
             'post',
@@ -1608,6 +1606,7 @@ class TestInterventionViews(BaseTenantTestCase):
             "end": (timezone.now().date() + datetime.timedelta(days=31)).isoformat(),
             "unicef_budget": 0,
             "agreement": self.agreement.id,
+            "reference_number_year": datetime.date.today().year
         }
         response = self.forced_auth_req(
             'post',
@@ -1704,7 +1703,7 @@ class TestInterventionViews(BaseTenantTestCase):
         intervention_obj = Intervention.objects.get(id=self.intervention_data["id"])
         intervention_obj.status = Intervention.DRAFT
         intervention_obj.save()
-        InterventionSectorLocationLink.objects.filter(intervention=self.intervention_data.get("id")).delete()
+        InterventionSectionLocationLink.objects.filter(intervention=self.intervention_data.get("id")).delete()
         self.intervention_data.update(sector_locations=[])
         self.intervention_data.update(status="active")
         response = self.forced_auth_req(
@@ -1720,7 +1719,7 @@ class TestInterventionViews(BaseTenantTestCase):
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertEqual(
             response.data,
-            ["Sector locations are required if Intervention status is ACTIVE or IMPLEMENTED."])
+            ["Section locations are required if Intervention status is ACTIVE or IMPLEMENTED."])
 
     def test_intervention_validation(self):
         response = self.forced_auth_req(
@@ -1826,7 +1825,8 @@ class TestInterventionViews(BaseTenantTestCase):
             "document_type": Intervention.PD,
             "country_programme": country_programme.pk,
             "unicef_focal_points": user.pk,
-            "office": office.pk
+            "office": office.pk,
+            "reference_number_year": datetime.date.today().year
         }
         response = self.forced_auth_req(
             'get',

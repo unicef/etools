@@ -31,11 +31,11 @@ from etools.applications.partners.models import (
     InterventionBudget,
     InterventionPlannedVisits,
     InterventionResultLink,
-    InterventionSectorLocationLink,
+    InterventionSectionLocationLink,
     PartnerOrganization,
     PartnerStaffMember,
     PlannedEngagement,
-)
+    CoreValuesAssessment)
 
 
 class InterventionAmendmentsAdmin(admin.ModelAdmin):
@@ -182,7 +182,7 @@ class InterventionResultsLinkAdmin(admin.ModelAdmin):
 
 # TODO intervention sector locations cleanup
 class InterventionSectionLocationAdmin(admin.ModelAdmin):
-    model = InterventionSectorLocationLink
+    model = InterventionSectionLocationLink
     fields = (
         'intervention',
         'sector',
@@ -271,7 +271,7 @@ class InterventionAdmin(CountryUsersAdminMixin, HiddenPartnerMixin, SnapshotMode
                  'prc_review_document',
                  'signed_pd_document',
                  ('partner_authorized_officer_signatory', 'signed_by_partner_date',),
-                 ('unicef_signatory', 'signed_by_unicef_date',),
+                 ('signed_by_unicef', 'unicef_signatory', 'signed_by_unicef_date',),
                  'partner_focal_points',
                  'unicef_focal_points',
                  ('start', 'end'),
@@ -387,8 +387,9 @@ class HiddenPartnerFilter(admin.SimpleListFilter):
         return queryset.filter(hidden=False)
 
 
-class CoreValueAssessmentInline(AttachmentSingleInline):
-    verbose_name_plural = "Core Value Assessment Attachment"
+class CoreValueAssessmentInline(admin.StackedInline):
+    model = CoreValuesAssessment
+    extra = 0
 
 
 class PartnerAdmin(ExportMixin, admin.ModelAdmin):
@@ -676,7 +677,7 @@ admin.site.register(InterventionBudget, InterventionBudgetAdmin)
 admin.site.register(InterventionPlannedVisits, InterventionPlannedVisitsAdmin)
 admin.site.register(InterventionAttachment, InterventionAttachmentAdmin)
 # TODO intervention sector locations cleanup
-admin.site.register(InterventionSectorLocationLink, InterventionSectionLocationAdmin)
+admin.site.register(InterventionSectionLocationLink, InterventionSectionLocationAdmin)
 
 
 admin.site.register(FileType, FileTypeAdmin)

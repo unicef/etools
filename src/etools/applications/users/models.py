@@ -69,10 +69,9 @@ class User(AbstractBaseUser, PermissionsMixin):
 class Country(TenantMixin):
     """
     Tenant Schema
-    Represents a country which has many offices and sections
+    Represents a country which has many offices
 
     Relates to :model:`users.Office`
-    Relates to :model:`users.Section`
     """
 
     name = models.CharField(max_length=100, verbose_name=_('Name'))
@@ -196,18 +195,6 @@ class Office(models.Model):
         ordering = ('name', )
 
 
-class Section(models.Model):
-    """
-    Represents a section for the country
-    """
-
-    name = models.CharField(max_length=64, unique=True, verbose_name=_('Name'))
-    code = models.CharField(max_length=32, null=True, unique=True, blank=True, verbose_name=_('Code'))
-
-    def __str__(self):
-        return self.name
-
-
 class UserProfileManager(models.Manager):
     def get_queryset(self):
         return super(UserProfileManager, self).get_queryset().select_related('country')
@@ -219,7 +206,6 @@ class UserProfile(models.Model):
 
     Relates to :model:`AUTH_USER_MODEL`
     Relates to :model:`users.Country`
-    Relates to :model:`users.Section`
     Relates to :model:`users.Office`
     """
 

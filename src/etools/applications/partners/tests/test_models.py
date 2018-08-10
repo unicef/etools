@@ -15,7 +15,7 @@ from etools.applications.audit.models import Engagement
 from etools.applications.audit.tests.factories import AuditFactory, SpecialAuditFactory, SpotCheckFactory
 from etools.applications.EquiTrack.tests.cases import BaseTenantTestCase
 from etools.applications.funds.tests.factories import DonorFactory, FundsReservationHeaderFactory, GrantFactory
-from etools.applications.locations.tests.factories import LocationFactory
+from unicef_locations.tests.factories import LocationFactory
 from etools.applications.partners import models
 from etools.applications.partners.tests.factories import (
     AgreementAmendmentFactory,
@@ -849,7 +849,7 @@ class TestInterventionModel(BaseTenantTestCase):
 
         expected_reference_number = self.intervention.agreement.base_number + '/' + self.intervention.document_type
         expected_reference_number += \
-            str(self.intervention.signed_by_unicef_date.year) + str(self.intervention.id)
+            str(self.intervention.reference_number_year) + str(self.intervention.id)
         self.assertEqual(self.intervention.reference_number, expected_reference_number)
 
     def test_all_lower_results_empty(self):

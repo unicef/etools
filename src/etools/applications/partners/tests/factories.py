@@ -35,6 +35,13 @@ class PartnerFactory(factory.django.DjangoModelFactory):
     staff_members = factory.RelatedFactory(PartnerStaffFactory, 'partner')
 
 
+class CoreValuesAssessmentFactory(factory.django.DjangoModelFactory):
+    class Meta:
+        model = models.CoreValuesAssessment
+
+    partner = factory.SubFactory(PartnerFactory)
+
+
 class AgreementFactory(factory.django.DjangoModelFactory):
     '''Factory for Agreements. If the agreement type is PCA (the default), the agreement's end date is set from
     the country_programme so any end date passed to this factory is ignored.
@@ -47,6 +54,7 @@ class AgreementFactory(factory.django.DjangoModelFactory):
     signed_by_unicef_date = datetime.date.today()
     signed_by_partner_date = datetime.date.today()
     status = 'signed'
+    reference_number_year = datetime.date.today().year
     attached_agreement = factory.django.FileField(filename='test_file.pdf')
     country_programme = factory.SubFactory(CountryProgrammeFactory)
 
@@ -99,6 +107,7 @@ class InterventionFactory(factory.django.DjangoModelFactory):
     agreement = factory.SubFactory(AgreementFactory)
     title = factory.Sequence(lambda n: 'Intervention Title {}'.format(n))
     submission_date = datetime.datetime.today()
+    reference_number_year = datetime.date.today().year
 
 
 class InterventionAmendmentFactory(factory.django.DjangoModelFactory):
@@ -189,7 +198,7 @@ class InterventionResultLinkFactory(factory.django.DjangoModelFactory):
 class InterventionSectionLocationLinkFactory(factory.django.DjangoModelFactory):
 
     class Meta:
-        model = models.InterventionSectorLocationLink
+        model = models.InterventionSectionLocationLink
 
     intervention = factory.SubFactory(InterventionFactory)
     sector = factory.SubFactory(SectionFactory)

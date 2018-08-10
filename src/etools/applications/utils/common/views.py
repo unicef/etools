@@ -5,7 +5,7 @@ from django.http import Http404, QueryDict
 
 from django_fsm import can_proceed, has_transition_perm
 from rest_framework import exceptions
-from rest_framework.decorators import detail_route
+from rest_framework.decorators import action
 from rest_framework.exceptions import PermissionDenied, ValidationError
 from rest_framework.serializers import Serializer
 
@@ -84,7 +84,19 @@ class FSMTransitionActionMixin(object):
         current_state = fsm_meta.field.get_state(im_self)
         return fsm_meta.get_transition(current_state).custom.get('serializer')
 
-    @detail_route(methods=['post'], url_path='(?P<action>\D+)')
+    def pre_transition(self, instance, action):
+        """
+        hook to implement custom logic before transition
+        """
+        pass
+
+    def post_transition(self, instance, action):
+        """
+        hook to implement custom logic after transition
+        """
+        pass
+
+    @action(detail=True, methods=['post'], url_path='(?P<action>\D+)')
     def transition(self, request, *args, **kwargs):
         """
         Change status of FSM controlled object
@@ -92,6 +104,8 @@ class FSMTransitionActionMixin(object):
         action = kwargs.get('action', False)
         instance = self.get_object()
         instance_action = self.get_transition(action, instance)
+
+        self.pre_transition(instance, action)
 
         self.check_transition_permission(instance_action, request.user)
 
@@ -104,6 +118,8 @@ class FSMTransitionActionMixin(object):
             instance_action()
 
         instance.save()
+
+        self.post_transition(instance, action)
 
         return self.retrieve(request, *args, **kwargs)
 
@@ -166,7 +182,7 @@ class NestedViewSetMixin(object):
             return
 
         return parent_class(
-            request=self.request, kwargs=self.kwargs, lookup_url_kwarg=self.parent_lookup_kwarg
+            request=self.request, kwargs=self.kwargs, lookup_url_kwarg=self.parent_lookup_kwarg, action='parent'
         )
 
     def get_parent_object(self):

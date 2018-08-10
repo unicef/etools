@@ -12,8 +12,9 @@ class ActionPointsEmailsTestCase(BaseTenantTestCase):
         call_command('update_notifications')
 
     def test_create_unlinked(self):
-        ActionPointFactory()
+        action_point = ActionPointFactory()
         self.assertEqual(len(mail.outbox), 1)
+        self.assertEqual(mail.outbox[0].cc, [action_point.assigned_by.email])
 
     def test_create_linked(self):
         # no email should be send for now
@@ -29,3 +30,4 @@ class ActionPointsEmailsTestCase(BaseTenantTestCase):
 
         action_point.complete()
         self.assertEqual(len(mail.outbox), 1)
+        self.assertEqual(mail.outbox[0].cc, [action_point.assigned_to.email])

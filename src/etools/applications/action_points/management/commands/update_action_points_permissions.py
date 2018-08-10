@@ -20,11 +20,12 @@ class Command(BaseCommand):
     action_point_related_objects = [
         'action_points.actionpoint.engagement',
         'action_points.actionpoint.tpm_activity',
-        'action_points.actionpoint.travel',
+        'action_points.actionpoint.travel_activity',
     ]
 
     # editable fields on create
     action_point_create = [
+        'action_points.actionpoint.category',
         'action_points.actionpoint.description',
         'action_points.actionpoint.due_date',
         'action_points.actionpoint.assigned_to',
@@ -35,6 +36,7 @@ class Command(BaseCommand):
 
     # editable fields on edit
     action_point_base_edit = [
+        'action_points.actionpoint.category',
         'action_points.actionpoint.description',
         'action_points.actionpoint.due_date',
         'action_points.actionpoint.assigned_to',
@@ -51,6 +53,7 @@ class Command(BaseCommand):
     action_point_list = [
         'action_points.actionpoint.reference_number',
         'action_points.actionpoint.related_module',
+        'action_points.actionpoint.category',
         'action_points.actionpoint.description',
         'action_points.actionpoint.due_date',
         'action_points.actionpoint.assigned_to',
