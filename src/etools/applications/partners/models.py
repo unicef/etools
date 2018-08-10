@@ -31,7 +31,7 @@ from etools.applications.partners.validation import interventions as interventio
 from etools.applications.partners.validation.agreements import (agreement_transition_to_ended_valid,
                                                                 agreement_transition_to_signed_valid,
                                                                 agreements_illegal_transition,)
-from etools.applications.reports.models import CountryProgramme, Indicator, Result, Sector
+from etools.applications.reports.models import CountryProgramme, Indicator, Result, Section
 from etools.applications.t2f.models import Travel, TravelType
 from etools.applications.tpm.models import TPMVisit
 from etools.applications.users.models import Office
@@ -1747,7 +1747,7 @@ class Intervention(TimeStampedModel):
         default=False,
     )
     sections = models.ManyToManyField(
-        Sector,
+        Section,
         verbose_name=_("Sections"),
         blank=True,
         related_name='interventions',
@@ -1825,7 +1825,7 @@ class Intervention(TimeStampedModel):
 
     @property
     def sector_names(self):
-        return ', '.join(Sector.objects.filter(intervention_locations__intervention=self).
+        return ', '.join(Section.objects.filter(intervention_locations__intervention=self).
                          values_list('name', flat=True))
 
     @property
@@ -2107,7 +2107,7 @@ class Intervention(TimeStampedModel):
         elif self.status == self.DRAFT:
             self.update_reference_number()
 
-        if save_from_agreement is False:
+        if not save_from_agreement:
             self.update_ssfa_properties()
 
         super(Intervention, self).save()
@@ -2410,13 +2410,16 @@ class InterventionSectorLocationLink(TimeStampedModel):
         on_delete=models.CASCADE,
     )
     sector = models.ForeignKey(
-        Sector, related_name='intervention_locations', verbose_name=_('Sector'),
+        Section, related_name='intervention_locations', verbose_name=_('Sector'),
         on_delete=models.CASCADE,
     )
     locations = models.ManyToManyField(Location, related_name='intervention_sector_locations', blank=True,
                                        verbose_name=_('Locations'))
 
     tracker = FieldTracker()
+
+
+InterventionSectionLocationLink = InterventionSectorLocationLink
 
 
 # TODO: Move to funds

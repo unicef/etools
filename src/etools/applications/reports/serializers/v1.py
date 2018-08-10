@@ -3,13 +3,13 @@ from django.db import connection
 
 from rest_framework import serializers
 
-from etools.applications.reports.models import CountryProgramme, Indicator, Result, ResultType, Sector, Unit
+from etools.applications.reports.models import CountryProgramme, Indicator, Result, ResultType, Section, Unit
 
 
 class SectionSerializer(serializers.ModelSerializer):
 
     class Meta:
-        model = Sector
+        model = Section
         fields = ('id', 'name')
 
 
@@ -36,7 +36,7 @@ class SectionCreateSerializer(serializers.ModelSerializer):
     id = serializers.CharField(read_only=True)
 
     class Meta:
-        model = Sector
+        model = Section
         fields = '__all__'
 
 

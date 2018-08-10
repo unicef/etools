@@ -7,7 +7,7 @@ from etools.applications.EquiTrack.forms import AutoSizeTextForm
 from etools.applications.reports.forms import IndicatorAdminForm
 from etools.applications.reports.models import (AppliedIndicator, CountryProgramme, Disaggregation,
                                                 DisaggregationValue, Indicator, IndicatorBlueprint,
-                                                LowerResult, Result, Sector, Unit,)
+                                                LowerResult, Result, Section, Unit,)
 
 
 class SectionListFilter(admin.SimpleListFilter):
@@ -25,7 +25,7 @@ class SectionListFilter(admin.SimpleListFilter):
         in the right sidebar.
         """
         return [
-            (section.id, section.name) for section in Sector.objects.all()
+            (section.id, section.name) for section in Section.objects.all()
         ]
 
     def queryset(self, request, queryset):
@@ -205,7 +205,7 @@ class DisaggregationValueAdmin(admin.ModelAdmin):
 
 admin.site.register(Result, ResultAdmin)
 admin.site.register(CountryProgramme)
-admin.site.register(Sector, SectionAdmin)
+admin.site.register(Section, SectionAdmin)
 admin.site.register(Unit, ImportExportModelAdmin)
 admin.site.register(Indicator, IndicatorAdmin)
 # admin.site.register(ResultChain)
