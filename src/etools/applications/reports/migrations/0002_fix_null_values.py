@@ -47,7 +47,7 @@ def fix_nulls(apps, schema):
         ]
     )
     fix_null_values(
-        apps.get_model('reports.section'),
+        apps.get_model('reports.sector'),
         [
             'alternate_name',
             'color',

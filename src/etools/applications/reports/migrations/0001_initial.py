@@ -212,7 +212,7 @@ class Migration(migrations.Migration):
             ],
         ),
         migrations.CreateModel(
-            name='Section',
+            name='Sector',
             fields=[
                 ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
                 ('created', model_utils.fields.AutoCreatedField(
@@ -250,7 +250,7 @@ class Migration(migrations.Migration):
             model_name='result',
             name='sector',
             field=models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.CASCADE,
-                                    to='reports.Section', verbose_name='Section'),
+                                    to='reports.Sector', verbose_name='Section'),
         ),
         migrations.AddField(
             model_name='indicator',
@@ -262,7 +262,7 @@ class Migration(migrations.Migration):
             model_name='indicator',
             name='sector',
             field=models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.CASCADE,
-                                    to='reports.Section', verbose_name='Section'),
+                                    to='reports.Sector', verbose_name='Section'),
         ),
         migrations.AddField(
             model_name='indicator',
@@ -298,7 +298,7 @@ class Migration(migrations.Migration):
             model_name='appliedindicator',
             name='section',
             field=models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.CASCADE,
-                                    to='reports.Section', verbose_name='Section'),
+                                    to='reports.Sector', verbose_name='Section'),
         ),
         migrations.AlterUniqueTogether(
             name='result',

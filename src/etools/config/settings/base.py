@@ -215,7 +215,6 @@ TENANT_APPS = (
     'etools.applications.audit',
     'etools.applications.firms',
     'etools.applications.management',
-    'etools.applications.snapshot',
     'etools.applications.action_points',
     'unicef_snapshot',
 )
