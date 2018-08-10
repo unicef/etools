@@ -103,7 +103,8 @@ class TestInterventionsAPI(BaseTenantTestCase):
                   "offices", "population_focus", "country_programme_id", "engagement", "sections",
                   "sections_present", "flat_locations", "reporting_periods", "activity",
                   "prc_review_attachment", "signed_pd_attachment", "actionpoint",
-                  "reporting_requirements", "special_reporting_requirements", "reference_number_year", "number"],
+                  "reporting_requirements", "special_reporting_requirements", "reference_number_year", "number",
+                  "activation_letter_attachment", "termination_doc_attachment"],
         'signed': [],
         'active': ['']
     }
