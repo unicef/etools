@@ -5,20 +5,6 @@ from __future__ import unicode_literals
 from django.db import migrations
 
 
-def update_intervention_signed_by(apps, schema):
-    from django.db import IntegrityError
-    Intervention = apps.get_model("partners", "Intervention")
-
-    for i in Intervention.objects.all():
-        if i.signed_by_unicef_date:
-            try:
-                i.signed_by_unicef = True
-                i.save()
-            except IntegrityError:
-                if i.status in ['Signed', 'Active', 'Suspended', 'Ended']:
-                    raise
-
-
 class Migration(migrations.Migration):
 
     dependencies = [
@@ -26,5 +12,4 @@ class Migration(migrations.Migration):
     ]
 
     operations = [
-        migrations.RunPython(update_intervention_signed_by, reverse_code=migrations.RunPython.noop),
     ]

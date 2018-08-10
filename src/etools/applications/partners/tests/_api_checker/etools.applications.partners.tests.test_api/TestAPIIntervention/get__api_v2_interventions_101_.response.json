@@ -68,7 +68,6 @@
         "permissions": {
             "edit": {
                 "special_reporting_requirements": true,
-                "signed_by_unicef": true,
                 "country_programme": false,
                 "start": false,
                 "prc_review_document": false,
@@ -122,7 +121,6 @@
             },
             "required": {
                 "special_reporting_requirements": false,
-                "signed_by_unicef": false,
                 "country_programme": false,
                 "start": false,
                 "prc_review_document": false,
@@ -176,7 +174,6 @@
             },
             "view": {
                 "special_reporting_requirements": true,
-                "signed_by_unicef": true,
                 "country_programme": false,
                 "start": false,
                 "prc_review_document": false,

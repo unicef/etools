@@ -271,7 +271,7 @@ class InterventionAdmin(CountryUsersAdminMixin, HiddenPartnerMixin, SnapshotMode
                  'prc_review_document',
                  'signed_pd_document',
                  ('partner_authorized_officer_signatory', 'signed_by_partner_date',),
-                 ('signed_by_unicef', 'unicef_signatory', 'signed_by_unicef_date',),
+                 ('unicef_signatory', 'signed_by_unicef_date',),
                  'partner_focal_points',
                  'unicef_focal_points',
                  ('start', 'end'),
