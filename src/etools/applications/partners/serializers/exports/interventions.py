@@ -1,14 +1,16 @@
 from django.utils.translation import ugettext as _
 
 from rest_framework import serializers
-
-from etools.applications.EquiTrack.mixins import ExportSerializerMixin
 from unicef_locations.models import Location
 from unicef_locations.serializers import LocationExportFlatSerializer, LocationExportSerializer
+
+from etools.applications.EquiTrack.mixins import ExportSerializerMixin
 from etools.applications.partners.models import Intervention, InterventionAmendment, InterventionResultLink
 from etools.applications.partners.serializers.fields import TypeArrayField
-from etools.applications.partners.serializers.interventions_v2 import (InterventionAmendmentCUSerializer,
-                                                                       InterventionResultSerializer,)
+from etools.applications.partners.serializers.interventions_v2 import (
+    InterventionAmendmentCUSerializer,
+    InterventionResultSerializer,
+)
 from etools.applications.reports.models import Indicator
 from etools.applications.reports.serializers.exports import IndicatorExportFlatSerializer, IndicatorExportSerializer
 
