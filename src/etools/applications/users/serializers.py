@@ -15,8 +15,8 @@ class SimpleCountrySerializer(serializers.ModelSerializer):
 
 class UserProfileSerializer(serializers.ModelSerializer):
 
-    office = serializers.CharField(source='office.name')
-    country_name = serializers.CharField(source='country.name')
+    office = serializers.CharField(source='office.name', read_only=True)
+    country_name = serializers.CharField(source='country.name', read_only=True)
     countries_available = SimpleCountrySerializer(many=True, read_only=True)
 
     class Meta:
