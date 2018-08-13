@@ -12,10 +12,10 @@ from django.utils import timezone
 from rest_framework import status
 from rest_framework.exceptions import ErrorDetail
 from rest_framework.test import APIRequestFactory
+from unicef_attachments.models import Attachment
 from unicef_locations.tests.factories import LocationFactory
 from unicef_snapshot.models import Activity
 
-from etools.applications.attachments.models import Attachment
 from etools.applications.attachments.tests.factories import AttachmentFactory, AttachmentFileTypeFactory
 from etools.applications.environment.helpers import tenant_switch_is_active
 from etools.applications.environment.tests.factories import TenantSwitchFactory

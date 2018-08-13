@@ -1,8 +1,7 @@
 from rest_framework import serializers
 from rest_framework.utils import model_meta
 from rest_framework_recursive.fields import RecursiveField
-
-from etools.applications.utils.common.serializers.fields import SeparatedReadWriteField
+from unicef_restlib.fields import SeparatedReadWriteField
 
 from .models import Permission
 

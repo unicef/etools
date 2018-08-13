@@ -1,6 +1,6 @@
 from django.core.management import call_command
 
-from etools.applications.attachments.models import AttachmentFlat
+from unicef_attachments.utils import get_attachment_flat_model
 from etools.applications.attachments.tests.factories import AttachmentFactory, AttachmentFileTypeFactory
 from etools.applications.EquiTrack.tests.cases import BaseTenantTestCase
 from etools.applications.users.tests.factories import UserFactory
@@ -8,6 +8,7 @@ from etools.applications.users.tests.factories import UserFactory
 
 class TestDenormalizeAttachmentCommand(BaseTenantTestCase):
     def test_run(self):
+        AttachmentFlat = get_attachment_flat_model()
         user = UserFactory()
         code = "test_code"
         file_type = AttachmentFileTypeFactory(code=code)
