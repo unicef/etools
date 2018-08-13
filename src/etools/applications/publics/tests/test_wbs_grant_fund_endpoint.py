@@ -2,7 +2,7 @@
 import json
 
 from django.core.cache import cache
-from django.core.urlresolvers import reverse
+from django.urls import reverse
 
 from etools.applications.EquiTrack.tests.cases import BaseTenantTestCase
 from etools.applications.publics.tests.factories import PublicsBusinessAreaFactory, PublicsWBSFactory
