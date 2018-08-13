@@ -8,9 +8,9 @@ from django.core.management import call_command
 from django.db import connection
 from django.utils import timezone
 
+from unicef_attachments.models import Attachment, FileType
 from unicef_notification.models import EmailTemplate
 
-from etools.applications.attachments.models import Attachment, FileType
 from etools.applications.audit.models import RiskBluePrint
 from etools.applications.audit.tests.factories import (
     AuditorStaffMemberFactory,

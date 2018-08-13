@@ -1,12 +1,11 @@
-
 import itertools
 from urllib.parse import urljoin
 
 from django.db.models import Manager, QuerySet
 
 from rest_framework import serializers
+from unicef_restlib.fields import CommaSeparatedExportField
 
-from etools.applications.utils.common.serializers.fields import CommaSeparatedExportField
 from etools.applications.utils.common.urlresolvers import build_frontend_url, site_url
 
 

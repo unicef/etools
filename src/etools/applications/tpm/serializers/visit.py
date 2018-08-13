@@ -1,4 +1,3 @@
-
 import itertools
 from copy import copy
 
@@ -6,13 +5,21 @@ from django.utils.translation import ugettext_lazy as _
 
 from rest_framework import serializers
 from rest_framework.exceptions import ValidationError
+from unicef_locations.serializers import LocationLightSerializer
+from unicef_restlib.fields import SeparatedReadWriteField
+from unicef_restlib.serializers import (
+    UserContextSerializerMixin,
+    WritableNestedParentSerializerMixin,
+    WritableNestedSerializerMixin,
+)
 
 from etools.applications.action_points.serializers import ActionPointBaseSerializer, HistorySerializer
 from etools.applications.activities.serializers import ActivitySerializer
-from unicef_locations.serializers import LocationLightSerializer
 from etools.applications.partners.models import InterventionResultLink, PartnerType
-from etools.applications.partners.serializers.interventions_v2 import InterventionCreateUpdateSerializer, \
-    BaseInterventionListSerializer
+from etools.applications.partners.serializers.interventions_v2 import (
+    BaseInterventionListSerializer,
+    InterventionCreateUpdateSerializer,
+)
 from etools.applications.partners.serializers.partner_organization_v2 import MinimalPartnerOrganizationListSerializer
 from etools.applications.permissions2.serializers import PermissionsBasedSerializerMixin
 from etools.applications.reports.serializers.v1 import ResultSerializer, SectionSerializer
@@ -20,10 +27,6 @@ from etools.applications.tpm.models import TPMActionPoint, TPMActivity, TPMVisit
 from etools.applications.tpm.serializers.partner import TPMPartnerLightSerializer, TPMPartnerStaffMemberSerializer
 from etools.applications.tpm.tpmpartners.models import TPMPartnerStaffMember
 from etools.applications.users.serializers import MinimalUserSerializer, OfficeSerializer
-from etools.applications.utils.common.serializers.fields import SeparatedReadWriteField
-from etools.applications.utils.common.serializers.mixins import UserContextSerializerMixin
-from etools.applications.utils.writable_serializers.serializers import (
-    WritableNestedParentSerializerMixin, WritableNestedSerializerMixin,)
 
 
 class InterventionResultLinkVisitSerializer(serializers.ModelSerializer):
