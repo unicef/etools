@@ -8,8 +8,8 @@ from django.db.models import F, Sum
 from django.db.models.functions import Coalesce
 
 from celery.utils.log import get_task_logger
-from unicef_notification.utils import send_notification_with_template
 from tenant_schemas.utils import schema_context
+from unicef_notification.utils import send_notification_with_template
 
 from etools.applications.EquiTrack.utils import get_environment
 from etools.applications.partners.models import Agreement, Intervention, PartnerOrganization
