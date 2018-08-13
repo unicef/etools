@@ -1,11 +1,11 @@
-
 from django.contrib.auth import get_user_model
 from django.core import mail
 from django.core.management import call_command
 
-from etools.applications.EquiTrack.tests.cases import BaseTenantTestCase
+from unicef_attachments.utils import get_denormalize_func
+
 from etools.applications.attachments.tests.factories import AttachmentFactory
-from etools.applications.attachments.utils import denormalize_attachment
+from etools.applications.EquiTrack.tests.cases import BaseTenantTestCase
 from etools.applications.tpm.models import ThirdPartyMonitor
 from etools.applications.tpm.tests.factories import TPMPartnerFactory, TPMPartnerStaffMemberFactory, TPMVisitFactory
 
@@ -43,7 +43,7 @@ class TestTPMActivity(BaseTenantTestCase):
         activity.save()
 
         attachment = AttachmentFactory(content_object=activity)
-        denormalize_attachment(attachment)
+        get_denormalize_func()(attachment)
 
 
 class TPMStaffMemberTestCase(BaseTenantTestCase):

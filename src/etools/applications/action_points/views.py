@@ -6,6 +6,8 @@ from rest_framework.decorators import action
 from rest_framework.filters import OrderingFilter, SearchFilter
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
+from unicef_restlib.pagination import DynamicPageNumberPagination
+from unicef_restlib.views import MultiSerializerViewSetMixin, SafeTenantViewSetMixin
 from unicef_snapshot.views import FSMSnapshotViewMixin
 
 from etools.applications.action_points.categories.models import Category
@@ -30,8 +32,6 @@ from etools.applications.action_points.serializers import (
 )
 from etools.applications.permissions2.conditions import ObjectStatusCondition
 from etools.applications.permissions2.views import PermittedFSMActionMixin, PermittedSerializerMixin
-from etools.applications.utils.common.pagination import DynamicPageNumberPagination
-from etools.applications.utils.common.views import MultiSerializerViewSetMixin, SafeTenantViewSetMixin
 
 
 class CategoryViewSet(mixins.ListModelMixin, viewsets.GenericViewSet):

@@ -1,15 +1,18 @@
-
 from django.contrib.auth import get_user_model
 from django.utils.translation import ugettext_lazy as _
 
 from rest_framework import serializers
+from unicef_restlib.fields import SeparatedReadWriteField
+from unicef_restlib.serializers import WritableNestedSerializerMixin
 
-from etools.applications.audit.purchase_order.models import (AuditorFirm, AuditorStaffMember,
-                                                             PurchaseOrder, PurchaseOrderItem,)
+from etools.applications.audit.purchase_order.models import (
+    AuditorFirm,
+    AuditorStaffMember,
+    PurchaseOrder,
+    PurchaseOrderItem,
+)
 from etools.applications.firms.serializers import BaseStaffMemberSerializer, UserSerializer as BaseUserSerializer
 from etools.applications.permissions2.serializers import PermissionsBasedSerializerMixin
-from etools.applications.utils.common.serializers.fields import SeparatedReadWriteField
-from etools.applications.utils.writable_serializers.serializers import WritableNestedSerializerMixin
 
 
 class UserSerializer(BaseUserSerializer):
