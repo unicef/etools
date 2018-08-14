@@ -3,7 +3,7 @@ import logging
 
 from django.conf import settings
 from django.contrib.contenttypes.models import ContentType
-from django.db.models import F, Q
+from django.db.models import F, Q, Aggregate
 from django.urls import reverse
 from django.utils.timezone import make_aware, now
 
@@ -22,6 +22,12 @@ from etools.applications.reports.models import CountryProgramme
 from etools.applications.utils.common.utils import run_on_all_tenants
 
 logger = logging.getLogger(__name__)
+
+
+class DSum(Aggregate):
+    function = 'SUM'
+    template = '%(function)s(DISTINCT %(expressions)s)'
+    name = 'Sum'
 
 
 def update_or_create_attachment(file_type, content_type, object_id, filename):

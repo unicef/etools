@@ -27,6 +27,7 @@ from etools.applications.EquiTrack.serializers import StringConcat
 from etools.applications.EquiTrack.utils import get_current_year, get_quarter, import_permissions
 from etools.applications.funds.models import Grant
 from unicef_locations.models import Location
+from etools.applications.partners.utils import DSum
 from etools.applications.partners.validation import interventions as intervention_validation
 from etools.applications.partners.validation.agreements import (agreement_transition_to_ended_valid,
                                                                 agreement_transition_to_signed_valid,
@@ -1517,11 +1518,11 @@ class InterventionManager(models.Manager):
         qs = qs.annotate(
             Max("frs__end_date"),
             Min("frs__start_date"),
-            Sum("frs__total_amt_local"),
-            Sum("frs__outstanding_amt_local"),
-            Sum("frs__actual_amt_local"),
-            Sum("frs__intervention_amt"),
             Count("frs__currency", distinct=True),
+            frs__outstanding_amt_local=DSum("frs__outstanding_amt_local"),
+            frs__actual_amt_local__sum=DSum("frs__actual_amt_local"),
+            frs__total_amt_local__sum=DSum("frs__total_amt_local"),
+            frs__intervention_amt__sum=DSum("frs__intervention_amt"),
             location_p_codes=StringConcat("flat_locations__p_code", separator="|", distinct=True),
             donors=StringConcat("frs__fr_items__donor", separator="|", distinct=True),
             donor_codes=StringConcat("frs__fr_items__donor_code", separator="|", distinct=True),
@@ -1529,7 +1530,6 @@ class InterventionManager(models.Manager):
             max_fr_currency=Max("frs__currency", output_field=CharField(), distinct=True),
             multi_curr_flag=Count(Case(When(frs__multi_curr_flag=True, then=1)))
         )
-
         return qs
 
 
