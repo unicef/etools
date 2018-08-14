@@ -3,7 +3,7 @@ import json
 from datetime import date, datetime
 from decimal import Decimal
 
-from django.core.urlresolvers import reverse
+from django.urls import reverse
 from django.utils.timezone import now
 
 from freezegun import freeze_time

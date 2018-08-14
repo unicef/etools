@@ -47,7 +47,7 @@ class Parent(models.Model):
 
 
 class Child1(models.Model):
-    parent = models.OneToOneField(Parent)
+    parent = models.OneToOneField(Parent, on_delete=models.CASCADE)
     field = models.IntegerField()
     field2 = models.IntegerField(null=True)
 

@@ -1,6 +1,6 @@
 from django.core.exceptions import ObjectDoesNotExist
 from django.core.management import call_command
-from django.core.urlresolvers import resolve
+from django.urls import resolve
 from django.db import connection
 
 from rest_framework.test import APIClient, APIRequestFactory, force_authenticate

@@ -2,7 +2,7 @@
 import json
 from decimal import getcontext
 
-from django.core.urlresolvers import reverse
+from django.urls import reverse
 
 from etools.applications.EquiTrack.tests.cases import BaseTenantTestCase
 from etools.applications.t2f.helpers.invoice_maker import InvoiceMaker
