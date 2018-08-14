@@ -50,7 +50,6 @@ class TestCopyAttachments(BaseTenantTestCase):
             code="partners_intervention_attachment"
         )
         cls.partner = PartnerFactory(
-            core_values_assessment="sample.pdf"
         )
         cls.core_values_assessment = CoreValuesAssessmentFactory(
             assessment="sample.pdf"
@@ -87,7 +86,7 @@ class TestCopyAttachments(BaseTenantTestCase):
         attachment = attachment_qs.last()
         self.assertEqual(
             attachment.file.name,
-            self.partner.core_values_assessment.name
+            self.core_values_assessment.assessment
         )
 
     def test_partner_update(self):
@@ -101,7 +100,7 @@ class TestCopyAttachments(BaseTenantTestCase):
         attachment_update = Attachment.objects.get(pk=attachment.pk)
         self.assertEqual(
             attachment_update.file.name,
-            self.partner.core_values_assessment.name
+            self.core_values_assessment.assessment
         )
 
     def test_agreement_create(self):

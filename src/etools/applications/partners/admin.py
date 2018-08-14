@@ -453,7 +453,6 @@ class PartnerAdmin(ExportMixin, admin.ModelAdmin):
                  'phone_number',
                  'email',
                  'core_values_assessment_date',
-                 'core_values_assessment',
                  'manually_blocked',
                  'deleted_flag',
                  'blocked',

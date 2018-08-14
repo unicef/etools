@@ -434,22 +434,6 @@ class PartnerOrganization(TimeStampedModel):
         blank=True,
         null=True,
     )
-    core_values_assessment = models.FileField(
-        verbose_name=_("Core Values Assessment"),
-        blank=True,
-        null=True,
-        upload_to='partners/core_values/',
-        max_length=1024,
-        help_text='Only required for CSO partners'
-    )
-    core_values_assessment_attachment = CodedGenericRelation(
-        Attachment,
-        verbose_name=_('Core Values Assessment'),
-        code='partners_partner_assessment',
-        blank=True,
-        null=True,
-        help_text='Only required for CSO partners'
-    )
     vision_synced = models.BooleanField(
         verbose_name=_("VISION Synced"),
         default=False,
