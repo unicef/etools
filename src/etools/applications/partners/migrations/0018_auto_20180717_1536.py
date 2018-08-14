@@ -5,17 +5,6 @@ from __future__ import unicode_literals
 from django.db import migrations
 
 
-def migrate_core_value_assessment(apps, schema_editor):
-    PartnerOrganization = apps.get_model('partners', 'PartnerOrganization')
-    CoreValuesAssessment = apps.get_model('partners', 'CoreValuesAssessment')
-    for partner in PartnerOrganization.objects.all():
-        CoreValuesAssessment.objects.create(
-            partner=partner,
-            date=partner.core_values_assessment_date,
-            assessment=partner.core_values_assessment,
-            archived=False
-        )
-
 
 class Migration(migrations.Migration):
 
@@ -24,5 +13,4 @@ class Migration(migrations.Migration):
     ]
 
     operations = [
-        migrations.RunPython(migrate_core_value_assessment, migrations.RunPython.noop)
     ]
