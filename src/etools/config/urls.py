@@ -103,7 +103,7 @@ urlpatterns = [
     url(r'^api/v2/funds/', include('etools.applications.funds.urls')),
     url(r'^api/v2/activity/', include('unicef_snapshot.urls')),
     url(r'^api/v2/environment/', include('etools.applications.environment.urls_v2')),
-    url(r'^api/v2/attachments/', include('etools.applications.attachments.urls')),
+    url(r'^api/v2/attachments/', include('unicef_attachments.urls')),
 
     # ***************  API version 3  ******************
     url(r'^api/v3/users/', include('etools.applications.users.urls_v3', namespace='users_v3')),
