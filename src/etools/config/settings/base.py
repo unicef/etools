@@ -197,6 +197,7 @@ SHARED_APPS = (
     'etools.applications.permissions2',
     'unicef_notification',
 )
+
 TENANT_APPS = (
     'django_fsm',
     'django_comments',
