@@ -42,6 +42,7 @@ class TestUserProfileModel(BaseTenantTestCase):
         cls.user = UserFactory(
             email="user@example.com",
             first_name="First",
+            middle_name="Middle",
             last_name="Last",
         )
 
@@ -52,6 +53,10 @@ class TestUserProfileModel(BaseTenantTestCase):
     def test_first_name(self):
         p = models.UserProfile(user=self.user)
         self.assertEqual(p.first_name(), "First")
+
+    def test_middle_name(self):
+        p = models.UserProfile(user=self.user)
+        self.assertEqual(p.middle_name(), "Middle")
 
     def test_last_name(self):
         p = models.UserProfile(user=self.user)
