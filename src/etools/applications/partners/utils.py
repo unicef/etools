@@ -14,10 +14,11 @@ from etools.applications.partners.models import (
     Agreement,
     AgreementAmendment,
     Assessment,
+    CoreValuesAssessment,
     Intervention,
     InterventionAmendment,
     InterventionAttachment,
-    CoreValuesAssessment)
+)
 from etools.applications.reports.models import CountryProgramme
 from etools.applications.utils.common.utils import run_on_all_tenants
 
