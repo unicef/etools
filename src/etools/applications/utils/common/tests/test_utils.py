@@ -41,8 +41,8 @@ class CommonUtilsTest(TestCase):
             field09 = models.IntegerField(default=42)
             # fields 10 and 11 should be in the list of field names, along with the automatically-created fields
             # 'field10_id' and 'field11_id'
-            field10 = models.ForeignKey(Group)
-            field11 = models.OneToOneField(Group)
+            field10 = models.ForeignKey(Group, on_delete=models.CASCADE)
+            field11 = models.OneToOneField(Group, on_delete=models.CASCADE)
             # field 12 should be in the list of field names, but it doesn't get a 'field12_id' because it's M2M
             field12 = models.ManyToManyField(Group)
             # field 13 shouldn't be in the list of field names. Generic FKs are excluded according to the Django doc.
