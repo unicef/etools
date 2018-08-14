@@ -15,10 +15,10 @@ from model_utils import Choices, FieldTracker
 from model_utils.managers import InheritanceManager
 from model_utils.models import TimeStampedModel
 from ordered_model.models import OrderedModel
+from unicef_attachments.models import Attachment
 from unicef_notification.utils import send_notification_with_template
 
 from etools.applications.action_points.models import ActionPoint
-from etools.applications.attachments.models import Attachment
 from etools.applications.audit.purchase_order.models import AuditorStaffMember, PurchaseOrder, PurchaseOrderItem
 from etools.applications.audit.transitions.conditions import (
     AuditSubmitReportRequiredFieldsCheck,
