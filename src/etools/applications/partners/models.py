@@ -1521,7 +1521,7 @@ class InterventionManager(models.Manager):
             Max("frs__end_date"),
             Min("frs__start_date"),
             Count("frs__currency", distinct=True),
-            frs__outstanding_amt_local=DSum("frs__outstanding_amt_local"),
+            frs__outstanding_amt_local__sum=DSum("frs__outstanding_amt_local"),
             frs__actual_amt_local__sum=DSum("frs__actual_amt_local"),
             frs__total_amt_local__sum=DSum("frs__total_amt_local"),
             frs__intervention_amt__sum=DSum("frs__intervention_amt"),
