@@ -174,7 +174,8 @@ class InterventionListAPIView(QueryStringFilterMixin, ExportModelMixin, Interven
 
             filters = (
                 ('document_type', 'document_type__in'),
-                ('cp_outputs', 'agreement__country_programme__in'),
+                ('cp_outputs', 'result_links__cp_output__pk__in'),
+                ('country_programme', 'country_programme__in'),
                 ('sections', 'sections__in'),
                 ('cluster', 'result_links__ll_results__applied_indicators__cluster_indicator_title__icontains'),
                 ('status', 'status__in'),
@@ -387,24 +388,6 @@ class InterventionIndicatorListAPIView(ExportModelMixin, ListAPIView):
             return res
 
         return q
-
-
-class InterventionResultLinkDeleteView(DestroyAPIView):
-    permission_classes = (PartnershipManagerRepPermission,)
-
-    def delete(self, request, *args, **kwargs):
-        try:
-            intervention_result = InterventionResultLink.objects.get(id=int(kwargs['pk']))
-        except InterventionResultLink.DoesNotExist:
-            return Response(status=status.HTTP_404_NOT_FOUND)
-        if intervention_result.intervention.status in [Intervention.DRAFT] or \
-            request.user in intervention_result.intervention.unicef_focal_points.all() or \
-            request.user.groups.filter(name__in=['Partnership Manager',
-                                                 'Senior Management Team']).exists():
-            intervention_result.delete()
-            return Response(status=status.HTTP_204_NO_CONTENT)
-        else:
-            raise ValidationError("You do not have permissions to delete a result")
 
 
 class InterventionAmendmentListAPIView(ExportModelMixin, ValidatorViewMixin, ListCreateAPIView):

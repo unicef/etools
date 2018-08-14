@@ -8,12 +8,12 @@ from django_fsm import FSMField, transition
 from model_utils import Choices, FieldTracker
 from model_utils.fields import MonitorField
 from model_utils.models import TimeStampedModel
+from unicef_notification.models import Notification
 from unicef_snapshot.models import Activity
 
 from etools.applications.action_points.categories.models import Category
 from etools.applications.action_points.transitions.conditions import ActionPointCompleteActionsTakenCheck
 from etools.applications.EquiTrack.utils import get_environment
-from etools.applications.notification.models import Notification
 from etools.applications.permissions2.fsm import has_action_permission
 from etools.applications.utils.common.urlresolvers import build_frontend_url
 from etools.applications.utils.groups.wrappers import GroupWrapper

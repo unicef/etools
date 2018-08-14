@@ -182,7 +182,6 @@ SHARED_APPS = (
     'etools.applications.publics',
     # you must list the app where your tenant model resides in
     'etools.applications.users',
-    'etools.applications.notification',
     'django_filters',
     'etools.applications.environment',
     'etools.applications.action_points.categories',

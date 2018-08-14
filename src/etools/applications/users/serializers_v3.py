@@ -25,7 +25,7 @@ class MinimalUserSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = get_user_model()
-        fields = ('id', 'name', 'first_name', 'last_name', 'username', 'email', )
+        fields = ('id', 'name', 'first_name', 'middle_name', 'last_name', 'username', 'email', )
 
 
 # used for user detail view
@@ -36,7 +36,7 @@ class MinimalUserDetailSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = get_user_model()
-        fields = ('name', 'first_name', 'last_name', 'username', 'email', 'job_title', 'vendor_number',)
+        fields = ('name', 'first_name', 'middle_name', 'last_name', 'username', 'email', 'job_title', 'vendor_number',)
 
 
 class CountrySerializer(serializers.ModelSerializer):
@@ -86,6 +86,7 @@ class ProfileRetrieveUpdateSerializer(serializers.ModelSerializer):
     is_superuser = serializers.CharField(source='user.is_superuser', read_only=True)
     username = serializers.CharField(source='user.username', read_only=True)
     first_name = serializers.CharField(source='user.first_name', read_only=True)
+    middle_name = serializers.CharField(source='user.middle_name', read_only=True)
     last_name = serializers.CharField(source='user.last_name', read_only=True)
     email = serializers.CharField(source='user.email', read_only=True)
     is_staff = serializers.CharField(source='user.is_staff', read_only=True)
@@ -118,6 +119,7 @@ class SimpleUserSerializer(serializers.ModelSerializer):
             'email',
             'is_superuser',
             'first_name',
+            'middle_name',
             'last_name',
             'is_staff',
             'is_active',

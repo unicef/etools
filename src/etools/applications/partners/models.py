@@ -2482,22 +2482,6 @@ class DirectCashTransfer(models.Model):
     tracker = FieldTracker()
 
 
-# get_file_path() isn't used as of October 2017, but it's referenced by partners/migrations/0001_initial.py.
-# Once migrations are squashed, this can be removed.
-def get_file_path(instance, filename):
-    return '/'.join(
-        [connection.schema_name,
-         'file_attachments',
-         'partner_org',
-         str(instance.pca.agreement.partner.id),
-         'agreements',
-         str(instance.pca.agreement.id),
-         'interventions',
-         str(instance.pca.id),
-         filename]
-    )
-
-
 class PartnerPlannedVisits(TimeStampedModel):
     """Represents planned visits for the partner"""
 
