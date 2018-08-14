@@ -204,16 +204,6 @@ class InterventionSectionLocationLinkFactory(factory.django.DjangoModelFactory):
     sector = factory.SubFactory(SectionFactory)
 
 
-class FundingCommitmentFactory(factory.django.DjangoModelFactory):
-    class Meta:
-        model = models.FundingCommitment
-
-    grant = factory.SubFactory("etools.applications.funds.tests.factories.GrantFactory")
-    fr_number = fuzzy.FuzzyText(length=50)
-    wbs = fuzzy.FuzzyText(length=50)
-    fc_type = fuzzy.FuzzyText(length=50)
-
-
 class PlannedEngagementFactory(factory.django.DjangoModelFactory):
     class Meta:
         model = models.PlannedEngagement

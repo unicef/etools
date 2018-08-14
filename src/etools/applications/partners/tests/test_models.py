@@ -14,7 +14,7 @@ from mock import Mock, patch
 from etools.applications.audit.models import Engagement
 from etools.applications.audit.tests.factories import AuditFactory, SpecialAuditFactory, SpotCheckFactory
 from etools.applications.EquiTrack.tests.cases import BaseTenantTestCase
-from etools.applications.funds.tests.factories import DonorFactory, FundsReservationHeaderFactory, GrantFactory
+from etools.applications.funds.tests.factories import FundsReservationHeaderFactory
 from unicef_locations.tests.factories import LocationFactory
 from etools.applications.partners import models
 from etools.applications.partners.tests.factories import (
@@ -166,10 +166,6 @@ class TestHACTCalculations(BaseTenantTestCase):
             from_date=datetime.date(year, 1, 1),
             to_date=datetime.date(year + 1, 12, 31)
         )
-        grant = GrantFactory(
-            donor=DonorFactory(name='Test Donor'),
-            name='SM12345678'
-        )
         InterventionBudgetFactory(
             intervention=cls.intervention,
             partner_contribution=10000,
@@ -182,28 +178,9 @@ class TestHACTCalculations(BaseTenantTestCase):
         start = datetime.datetime.combine(current_cp.from_date, datetime.time(0, 0, 1, tzinfo=tz))
         end = current_cp.from_date + datetime.timedelta(days=200)
         end = datetime.datetime.combine(end, datetime.time(23, 59, 59, tzinfo=tz))
-        models.FundingCommitment.objects.create(
-            start=start,
-            end=end,
-            grant=grant,
-            fr_number='0123456789',
-            wbs='Test',
-            fc_type='PCA',
-            expenditure_amount=40000.00
-        )
-
         start = current_cp.from_date + datetime.timedelta(days=200)
         start = datetime.datetime.combine(start, datetime.time(0, 0, 1, tzinfo=tz))
         end = datetime.datetime.combine(current_cp.to_date, datetime.time(23, 59, 59, tzinfo=tz))
-        models.FundingCommitment.objects.create(
-            start=start,
-            end=end,
-            grant=grant,
-            fr_number='0123456789',
-            wbs='Test',
-            fc_type='PCA',
-            expenditure_amount=40000.00
-        )
 
 
 class TestPartnerOrganizationModel(BaseTenantTestCase):
