@@ -1,12 +1,11 @@
-
 from django.db import models
 
 from rest_framework import serializers
 from rest_framework.utils import model_meta
 from rest_framework_recursive.fields import RecursiveField
+from unicef_restlib.fields import SeparatedReadWriteField
+from unicef_restlib.serializers import UserContextSerializerMixin
 
-from etools.applications.utils.common.serializers.fields import SeparatedReadWriteField
-from etools.applications.utils.common.serializers.mixins import UserContextSerializerMixin
 from etools.applications.utils.permissions.models.models import BasePermission
 from etools.applications.utils.permissions.utils import collect_parent_models
 

@@ -1,12 +1,18 @@
-
 from django.conf.urls import include, url
 
 from rest_framework_nested import routers
+from unicef_restlib.routers import NestedComplexRouter
 
 from etools.applications.tpm.views import (
-    TPMActionPointViewSet, TPMPartnerViewSet, TPMStaffMembersViewSet, TPMVisitViewSet, PartnerAttachmentsViewSet,
-    VisitReportAttachmentsViewSet, ActivityReportAttachmentsViewSet, ActivityAttachmentsViewSet)
-from etools.applications.utils.common.routers import NestedComplexRouter
+    ActivityAttachmentsViewSet,
+    ActivityReportAttachmentsViewSet,
+    PartnerAttachmentsViewSet,
+    TPMActionPointViewSet,
+    TPMPartnerViewSet,
+    TPMStaffMembersViewSet,
+    TPMVisitViewSet,
+    VisitReportAttachmentsViewSet,
+)
 
 tpm_partners_api = routers.SimpleRouter()
 tpm_partners_api.register(r'partners', TPMPartnerViewSet, base_name='partners')
