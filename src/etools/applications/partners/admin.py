@@ -23,7 +23,6 @@ from etools.applications.partners.models import (  # TODO intervention sector lo
     Assessment,
     CoreValuesAssessment,
     FileType,
-    FundingCommitment,
     Intervention,
     InterventionAmendment,
     InterventionAttachment,
@@ -617,43 +616,6 @@ class AgreementAdmin(ExportMixin, HiddenPartnerMixin, CountryUsersAdminMixin, Sn
         return request.user.is_superuser
 
 
-class FundingCommitmentAdmin(SnapshotModelAdmin):
-    search_fields = (
-        'fr_number',
-        'grant__name',
-    )
-    list_filter = (
-        'grant',
-    )
-    list_display = (
-        'fc_ref',
-        'grant',
-        'fr_number',
-        'fr_item_amount_usd',
-        'agreement_amount',
-        'commitment_amount',
-        'expenditure_amount',
-    )
-    readonly_fields = list_display + (
-        'wbs',
-        'fc_type',
-        'start',
-        'end',
-    )
-    inlines = [
-        ActivityInline,
-    ]
-
-    def has_add_permission(self, request):
-        return False
-
-    def has_delete_permission(self, request, obj=None):
-        return False
-
-    def has_module_permission(self, request):
-        return request.user.is_superuser
-
-
 class FileTypeAdmin(admin.ModelAdmin):
 
     def has_module_permission(self, request):
@@ -680,4 +642,3 @@ admin.site.register(InterventionSectionLocationLink, InterventionSectionLocation
 
 
 admin.site.register(FileType, FileTypeAdmin)
-admin.site.register(FundingCommitment, FundingCommitmentAdmin)

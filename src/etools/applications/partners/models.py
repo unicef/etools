@@ -17,7 +17,7 @@ from django.utils.translation import ugettext as _
 
 from django_fsm import FSMField, transition
 from model_utils import Choices, FieldTracker
-from model_utils.models import TimeFramedModel, TimeStampedModel
+from model_utils.models import TimeStampedModel
 from unicef_attachments.models import Attachment
 from unicef_locations.models import Location
 
@@ -26,7 +26,6 @@ from etools.applications.EquiTrack.encoders import EToolsEncoder
 from etools.applications.EquiTrack.fields import CurrencyField
 from etools.applications.EquiTrack.serializers import StringConcat
 from etools.applications.EquiTrack.utils import get_current_year, get_quarter, import_permissions
-from etools.applications.funds.models import Grant
 from etools.applications.partners.validation import interventions as intervention_validation
 from etools.applications.partners.validation.agreements import (
     agreement_transition_to_ended_valid,
@@ -2424,35 +2423,6 @@ class FCManager(models.Manager):
 
     def get_queryset(self):
         return super(FCManager, self).get_queryset().select_related('grant__donor')
-
-
-class FundingCommitment(TimeFramedModel):
-    """
-    Represents a funding commitment for the grant
-
-    Relates to :model:`funds.Grant`
-    """
-
-    grant = models.ForeignKey(
-        Grant, null=True, blank=True, verbose_name=_('Grant'),
-        on_delete=models.CASCADE,
-    )
-    fr_number = models.CharField(max_length=50, verbose_name=_('FR Number'))
-    wbs = models.CharField(max_length=50, verbose_name=_('WBS'))
-    fc_type = models.CharField(max_length=50, verbose_name=_('Type'))
-    fc_ref = models.CharField(
-        max_length=50, blank=True, null=True, unique=True, verbose_name=_('Reference'))
-    fr_item_amount_usd = models.DecimalField(
-        decimal_places=2, max_digits=20, blank=True, null=True, verbose_name=_('Item Amount (USD)'))
-    agreement_amount = models.DecimalField(
-        decimal_places=2, max_digits=20, blank=True, null=True, verbose_name=_('Agreement Amount'))
-    commitment_amount = models.DecimalField(
-        decimal_places=2, max_digits=20, blank=True, null=True, verbose_name=_('Commitment Amount'))
-    expenditure_amount = models.DecimalField(
-        decimal_places=2, max_digits=20, blank=True, null=True, verbose_name=_('Expenditure Amount'))
-
-    tracker = FieldTracker()
-    objects = FCManager()
 
 
 class DirectCashTransfer(models.Model):
