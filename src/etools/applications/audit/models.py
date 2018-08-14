@@ -16,6 +16,7 @@ from model_utils.managers import InheritanceManager
 from model_utils.models import TimeStampedModel
 from ordered_model.models import OrderedModel
 from unicef_attachments.models import Attachment
+from unicef_djangolib.fields import CodedGenericRelation
 from unicef_notification.utils import send_notification_with_template
 
 from etools.applications.action_points.models import ActionPoint
@@ -33,7 +34,6 @@ from etools.applications.audit.transitions.serializers import EngagementCancelSe
 from etools.applications.EquiTrack.utils import get_environment
 from etools.applications.partners.models import PartnerOrganization, PartnerStaffMember
 from etools.applications.permissions2.fsm import has_action_permission
-from etools.applications.utils.common.models.fields import CodedGenericRelation
 from etools.applications.utils.common.models.mixins import InheritedModelMixin
 from etools.applications.utils.common.urlresolvers import build_frontend_url
 from etools.applications.utils.groups.wrappers import GroupWrapper

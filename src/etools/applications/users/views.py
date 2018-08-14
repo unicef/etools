@@ -5,7 +5,6 @@ from django.contrib.auth.models import Group
 from django.core.exceptions import ValidationError as DjangoValidationError
 from django.db import connection
 from django.http import HttpResponseForbidden, HttpResponseRedirect
-
 from django.views.generic import FormView, RedirectView
 from django.views.generic.detail import DetailView
 
@@ -21,10 +20,17 @@ from etools.applications.EquiTrack.permissions import IsSuperUserOrStaff
 from etools.applications.tpm.models import ThirdPartyMonitor
 from etools.applications.users.forms import ProfileForm
 from etools.applications.users.models import Country, Office, UserProfile
-from etools.applications.users.serializers import (CountrySerializer, GroupSerializer, MinimalUserSerializer,
-                                                   OfficeSerializer, ProfileRetrieveUpdateSerializer,
-                                                   SimpleProfileSerializer, SimpleUserSerializer,
-                                                   UserCreationSerializer, UserSerializer,)
+from etools.applications.users.serializers import (
+    CountrySerializer,
+    GroupSerializer,
+    MinimalUserSerializer,
+    OfficeSerializer,
+    ProfileRetrieveUpdateSerializer,
+    SimpleProfileSerializer,
+    SimpleUserSerializer,
+    UserCreationSerializer,
+    UserSerializer,
+)
 from etools.libraries.azure_graph_api.tasks import retrieve_user_info
 
 logger = logging.getLogger(__name__)

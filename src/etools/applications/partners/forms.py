@@ -8,10 +8,9 @@ from django.core.validators import validate_email
 from django.db.models import Q
 from django.utils.translation import ugettext as _
 
-from etools.applications.EquiTrack.forms import AutoSizeTextForm
-from etools.applications.partners.models import (
-    PartnerOrganization, PartnerStaffMember, PartnerType
-)
+from unicef_djangolib.forms import AutoSizeTextForm
+
+from etools.applications.partners.models import PartnerOrganization, PartnerStaffMember, PartnerType
 
 logger = logging.getLogger('partners.forms')
 
