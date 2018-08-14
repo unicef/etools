@@ -4,9 +4,9 @@ from collections import OrderedDict
 from django.utils.translation import ugettext_lazy as _
 
 from rest_framework import serializers
+from unicef_attachments.serializers import AttachmentPDFSerializer
 from unicef_restlib.fields import CommaSeparatedExportField
 
-from etools.applications.attachments.serializers import AttachmentPDFSerializer
 from etools.applications.audit.models import (
     Audit,
     Engagement,

@@ -9,10 +9,10 @@ from unicef_restlib.serializers import UserContextSerializerMixin, WritableNeste
 from unicef_snapshot.models import Activity
 from unicef_snapshot.serializers import SnapshotModelSerializer
 
-from etools.applications.EquiTrack.utils import get_current_site
+from etools.applications.action_points.categories.models import Category
 from etools.applications.action_points.categories.serializers import CategorySerializer
 from etools.applications.action_points.models import ActionPoint
-from etools.applications.action_points.categories.models import Category
+from etools.applications.EquiTrack.utils import get_current_site
 from etools.applications.partners.serializers.interventions_v2 import BaseInterventionListSerializer
 from etools.applications.partners.serializers.partner_organization_v2 import MinimalPartnerOrganizationListSerializer
 from etools.applications.permissions2.serializers import PermissionsBasedSerializerMixin

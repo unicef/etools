@@ -2,7 +2,8 @@ from django.contrib.contenttypes.fields import GenericRelation
 from django.db import connection, models
 from django.utils.translation import ugettext_lazy as _
 
-from etools.applications.attachments.models import Attachment
+from unicef_attachments.models import Attachment
+
 from etools.applications.firms.models import BaseFirm, BaseStaffMember
 
 

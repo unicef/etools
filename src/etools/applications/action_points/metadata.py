@@ -1,11 +1,11 @@
 from rest_framework.metadata import SimpleMetadata
 from unicef_restlib.metadata import (
     CRUActionsMetadataMixin,
+    ModelChoiceFieldMixin,
     ReadOnlyFieldWithChoicesMixin,
     SeparatedReadWriteFieldMetadata,
 )
 
-from etools.applications.attachments.metadata import ModelChoiceFieldMixin
 from etools.applications.permissions2.metadata import PermittedFSMTransitionActionMetadataMixin
 from etools.applications.utils.permissions.metadata import PermissionsBasedMetadataMixin
 

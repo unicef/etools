@@ -10,14 +10,19 @@ from django.contrib.auth import get_user_model
 from django.core.management import call_command
 from django.utils import timezone
 
+from unicef_attachments.models import Attachment
+
 import etools.applications.partners.tasks
-from etools.applications.attachments.models import Attachment
 from etools.applications.attachments.tests.factories import AttachmentFactory, AttachmentFileTypeFactory
 from etools.applications.EquiTrack.tests.cases import BaseTenantTestCase
 from etools.applications.funds.tests.factories import FundsReservationHeaderFactory
 from etools.applications.partners.models import Agreement, Intervention
-from etools.applications.partners.tests.factories import AgreementFactory, InterventionFactory, PartnerFactory, \
-    CoreValuesAssessmentFactory
+from etools.applications.partners.tests.factories import (
+    AgreementFactory,
+    CoreValuesAssessmentFactory,
+    InterventionFactory,
+    PartnerFactory,
+)
 from etools.applications.reports.tests.factories import CountryProgrammeFactory
 from etools.applications.users.tests.factories import CountryFactory, UserFactory
 
