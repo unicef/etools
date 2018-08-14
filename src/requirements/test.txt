@@ -32,7 +32,7 @@ django-debug-toolbar==1.9.1
 django-easy-pdf==0.1.1
 django-extensions==2.0.7
 django-filter==1.0.2
-django-fsm==2.6.0
+django-fsm==2.6
 django-import-export==1.0
 django-js-asset==1.1.0
 django-leaflet==0.23
@@ -58,7 +58,7 @@ drf-api-checker==0.3.0
 drf-nested-routers==0.90.2
 drfpasswordless==1.2
 et-xmlfile==1.0.1
-etools-validator==0.2.1
+etools-validator==0.3.2
 factory-boy==2.8
 faker==0.8.12
 fancycompleter==0.8       # via pdbpp
