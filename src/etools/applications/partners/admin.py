@@ -1,30 +1,28 @@
 from django.contrib import admin
 from django.contrib.contenttypes.models import ContentType
-from django.core.urlresolvers import reverse
 from django.db import models
 from django.forms import SelectMultiple
+from django.urls import reverse
 from django.utils.safestring import mark_safe
 from django.utils.translation import ugettext_lazy as _
 
 from import_export.admin import ExportMixin
+from unicef_attachments.admin import AttachmentSingleInline
+from unicef_attachments.models import Attachment
 from unicef_snapshot.admin import ActivityInline, SnapshotModelAdmin
 
-from etools.applications.attachments.admin import AttachmentSingleInline
-from etools.applications.attachments.models import Attachment
 from etools.applications.partners.exports import PartnerExport
-from etools.applications.partners.forms import (
+from etools.applications.partners.forms import (  # TODO intervention sector locations cleanup
     PartnersAdminForm,
-    # TODO intervention sector locations cleanup
     PartnerStaffMemberForm,
 )
 from etools.applications.partners.mixins import CountryUsersAdminMixin, HiddenPartnerMixin
-from etools.applications.partners.models import (
+from etools.applications.partners.models import (  # TODO intervention sector locations cleanup
     Agreement,
-    # TODO intervention sector locations cleanup
     AgreementAmendment,
     Assessment,
+    CoreValuesAssessment,
     FileType,
-    FundingCommitment,
     Intervention,
     InterventionAmendment,
     InterventionAttachment,
@@ -35,7 +33,7 @@ from etools.applications.partners.models import (
     PartnerOrganization,
     PartnerStaffMember,
     PlannedEngagement,
-    CoreValuesAssessment)
+)
 
 
 class InterventionAmendmentsAdmin(admin.ModelAdmin):
@@ -271,7 +269,7 @@ class InterventionAdmin(CountryUsersAdminMixin, HiddenPartnerMixin, SnapshotMode
                  'prc_review_document',
                  'signed_pd_document',
                  ('partner_authorized_officer_signatory', 'signed_by_partner_date',),
-                 ('signed_by_unicef', 'unicef_signatory', 'signed_by_unicef_date',),
+                 ('unicef_signatory', 'signed_by_unicef_date',),
                  'partner_focal_points',
                  'unicef_focal_points',
                  ('start', 'end'),
@@ -455,7 +453,6 @@ class PartnerAdmin(ExportMixin, admin.ModelAdmin):
                  'phone_number',
                  'email',
                  'core_values_assessment_date',
-                 'core_values_assessment',
                  'manually_blocked',
                  'deleted_flag',
                  'blocked',
@@ -618,43 +615,6 @@ class AgreementAdmin(ExportMixin, HiddenPartnerMixin, CountryUsersAdminMixin, Sn
         return request.user.is_superuser
 
 
-class FundingCommitmentAdmin(SnapshotModelAdmin):
-    search_fields = (
-        'fr_number',
-        'grant__name',
-    )
-    list_filter = (
-        'grant',
-    )
-    list_display = (
-        'fc_ref',
-        'grant',
-        'fr_number',
-        'fr_item_amount_usd',
-        'agreement_amount',
-        'commitment_amount',
-        'expenditure_amount',
-    )
-    readonly_fields = list_display + (
-        'wbs',
-        'fc_type',
-        'start',
-        'end',
-    )
-    inlines = [
-        ActivityInline,
-    ]
-
-    def has_add_permission(self, request):
-        return False
-
-    def has_delete_permission(self, request, obj=None):
-        return False
-
-    def has_module_permission(self, request):
-        return request.user.is_superuser
-
-
 class FileTypeAdmin(admin.ModelAdmin):
 
     def has_module_permission(self, request):
@@ -681,4 +641,3 @@ admin.site.register(InterventionSectionLocationLink, InterventionSectionLocation
 
 
 admin.site.register(FileType, FileTypeAdmin)
-admin.site.register(FundingCommitment, FundingCommitmentAdmin)

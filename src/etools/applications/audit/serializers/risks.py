@@ -1,17 +1,14 @@
 import itertools
 
 from django.db import models
-
 from django.utils.translation import ugettext_lazy as _
 
 from rest_framework import serializers
+from unicef_restlib.fields import WriteListSerializeFriendlyRecursiveField
+from unicef_restlib.serializers import RecursiveListSerializer, WritableListSerializer, WritableNestedSerializerMixin
 
 from etools.applications.audit.models import Risk, RiskBluePrint, RiskCategory
-from etools.applications.utils.common.serializers.fields import (RecursiveListSerializer,
-                                                                 WriteListSerializeFriendlyRecursiveField)
 from etools.applications.utils.common.utils import to_choices_list
-from etools.applications.utils.writable_serializers.serializers import (WritableListSerializer,
-                                                                        WritableNestedSerializerMixin,)
 
 
 class BaseRiskSerializer(WritableNestedSerializerMixin, serializers.ModelSerializer):

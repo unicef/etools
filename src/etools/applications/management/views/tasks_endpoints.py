@@ -7,8 +7,8 @@ from django.http import HttpResponse
 
 from rest_framework.response import Response
 from rest_framework.views import APIView
+from unicef_restlib.permissions import IsSuperUser
 
-from etools.applications.EquiTrack.permissions import IsSuperUser
 from etools.applications.hact.tasks import update_aggregate_hact_values, update_hact_values
 from etools.applications.management.tasks import send_test_email
 from etools.applications.partners.tasks import pmp_indicator_report

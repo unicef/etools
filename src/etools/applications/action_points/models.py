@@ -8,13 +8,13 @@ from django_fsm import FSMField, transition
 from model_utils import Choices, FieldTracker
 from model_utils.fields import MonitorField
 from model_utils.models import TimeStampedModel
+from unicef_notification.models import Notification
 from unicef_snapshot.models import Activity
 
 from etools.applications.action_points.categories.models import Category
 from etools.applications.action_points.transitions.conditions import ActionPointCompleteActionsTakenCheck
 from etools.applications.EquiTrack.utils import get_environment
 from etools.applications.action_points.transitions.serializers.serializers import ActionPointCompleteSerializer
-from etools.applications.notification.models import Notification
 from etools.applications.permissions2.fsm import has_action_permission
 from etools.applications.utils.common.urlresolvers import build_frontend_url
 from etools.applications.utils.groups.wrappers import GroupWrapper
@@ -52,7 +52,7 @@ class ActionPoint(TimeStampedModel):
 
     status = FSMField(verbose_name=_('Status'), max_length=10, choices=STATUSES, default=STATUSES.open, protected=True)
 
-    category = models.ForeignKey(Category, verbose_name=_('Category'), blank=True, null=True)
+    category = models.ForeignKey(Category, verbose_name=_('Category'), blank=True, null=True, on_delete=models.CASCADE)
     description = models.TextField(verbose_name=_('Description'))
     due_date = models.DateField(verbose_name=_('Due Date'), blank=True, null=True)
     high_priority = models.BooleanField(default=False, verbose_name=_('High Priority'))
