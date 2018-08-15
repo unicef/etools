@@ -8,7 +8,7 @@ from django.conf import settings
 from django.contrib.postgres.fields import ArrayField, JSONField
 from django.core.cache import cache
 from django.db import connection, models, transaction
-from django.db.models import Case, CharField, Count, F, Max, Min, Q, Sum, When
+from django.db.models import Case, CharField, Count, F, Max, Min, Q, When
 from django.db.models.signals import post_save, pre_delete
 from django.urls import reverse
 from django.utils import timezone
