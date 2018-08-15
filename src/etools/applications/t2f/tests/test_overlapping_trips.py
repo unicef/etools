@@ -3,7 +3,7 @@ import json
 import logging
 from datetime import datetime
 
-from django.core.urlresolvers import reverse
+from django.urls import reverse
 
 import pytz
 from freezegun import freeze_time

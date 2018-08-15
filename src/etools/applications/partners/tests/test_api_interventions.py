@@ -12,10 +12,10 @@ from django.utils import timezone
 from rest_framework import status
 from rest_framework.exceptions import ErrorDetail
 from rest_framework.test import APIRequestFactory
+from unicef_attachments.models import Attachment
 from unicef_locations.tests.factories import LocationFactory
 from unicef_snapshot.models import Activity
 
-from etools.applications.attachments.models import Attachment
 from etools.applications.attachments.tests.factories import AttachmentFactory, AttachmentFileTypeFactory
 from etools.applications.environment.helpers import tenant_switch_is_active
 from etools.applications.environment.tests.factories import TenantSwitchFactory
@@ -65,7 +65,6 @@ class URLsTestCase(URLAssertionMixin, SimpleTestCase):
             ('intervention-attachments-del', 'attachments/1/', {'pk': 1}),
             ('intervention-indicators', 'indicators/', {}),
             ('intervention-results', 'results/', {}),
-            ('intervention-results-del', 'results/1/', {'pk': 1}),
             ('intervention-amendments', 'amendments/', {}),
             ('intervention-amendments-del', 'amendments/1/', {'pk': 1}),
             ('intervention-sector-locations', 'sector-locations/', {}),
@@ -96,8 +95,7 @@ class TestInterventionsAPI(BaseTenantTestCase):
                   "country_programme", "amendments", "unicef_focal_points", "end", "title",
                   "signed_by_partner_date", "review_date_prc", "frs", "start",
                   "metadata", "submission_date", "agreement", "unicef_signatory_id",
-                  "result_links", "contingency_pd", "unicef_signatory", "signed_by_unicef", "agreement_id",
-                  "signed_by_unicef_date",
+                  "result_links", "contingency_pd", "unicef_signatory", "agreement_id", "signed_by_unicef_date",
                   "partner_authorized_officer_signatory_id", "created", "planned_visits",
                   "planned_budget", "modified", "signed_pd_document", "submission_date_prc", "document_type",
                   "offices", "population_focus", "country_programme_id", "engagement", "sections",
@@ -1487,48 +1485,6 @@ class TestInterventionIndicatorListAPIView(BaseTenantTestCase):
         response_json = json.loads(response.rendered_content)
         self.assertIsInstance(response_json, list)
         self.assertFalse(response_json)
-
-
-class TestInterventionResultLinkDeleteView(BaseTenantTestCase):
-    @classmethod
-    def setUpTestData(cls):
-        cls.unicef_staff = UserFactory(is_staff=True)
-        cls.intervention = InterventionFactory()
-        cls.result = InterventionResultLinkFactory(
-            intervention=cls.intervention,
-        )
-        cls.url = reverse(
-            "partners_api:intervention-results-del",
-            args=[cls.result.pk]
-        )
-
-    def test_delete(self):
-        response = self.forced_auth_req(
-            'delete',
-            self.url,
-            user=self.unicef_staff,
-        )
-        self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
-
-    def test_delete_invalid(self):
-        self.intervention.status = Intervention.ACTIVE
-        self.intervention.save()
-        response = self.forced_auth_req(
-            'delete',
-            self.url,
-            user=self.unicef_staff,
-        )
-
-        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
-        self.assertEqual(response.data, ["You do not have permissions to delete a result"])
-
-    def test_delete_not_found(self):
-        response = self.forced_auth_req(
-            'delete',
-            reverse("partners_api:intervention-results-del", args=[404]),
-            user=self.unicef_staff,
-        )
-        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
 
 
 class TestInterventionAmendmentListAPIView(BaseTenantTestCase):

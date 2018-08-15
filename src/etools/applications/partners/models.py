@@ -7,8 +7,8 @@ import json
 from django.conf import settings
 from django.contrib.postgres.fields import ArrayField, JSONField
 from django.core.cache import cache
-from django.db import models, connection, transaction
-from django.db.models import Case, Count, CharField, F, Max, Min, Q, Sum, When
+from django.db import connection, models, transaction
+from django.db.models import Case, CharField, Count, F, Max, Min, Q, Sum, When
 from django.db.models.signals import post_save, pre_delete
 from django.urls import reverse
 from django.utils import timezone
@@ -17,20 +17,22 @@ from django.utils.translation import ugettext as _
 
 from django_fsm import FSMField, transition
 from model_utils import Choices, FieldTracker
-from model_utils.models import TimeFramedModel, TimeStampedModel
+from model_utils.models import TimeStampedModel
+from unicef_attachments.models import Attachment
+from unicef_locations.models import Location
 
-from etools.applications.attachments.models import Attachment
 from etools.applications.environment.helpers import tenant_switch_is_active
 from etools.applications.EquiTrack.encoders import EToolsEncoder
 from etools.applications.EquiTrack.fields import CurrencyField
+from etools.applications.EquiTrack.models import DSum
 from etools.applications.EquiTrack.serializers import StringConcat
 from etools.applications.EquiTrack.utils import get_current_year, get_quarter, import_permissions
-from etools.applications.funds.models import Grant
-from unicef_locations.models import Location
 from etools.applications.partners.validation import interventions as intervention_validation
-from etools.applications.partners.validation.agreements import (agreement_transition_to_ended_valid,
-                                                                agreement_transition_to_signed_valid,
-                                                                agreements_illegal_transition,)
+from etools.applications.partners.validation.agreements import (
+    agreement_transition_to_ended_valid,
+    agreement_transition_to_signed_valid,
+    agreements_illegal_transition,
+)
 from etools.applications.reports.models import CountryProgramme, Indicator, Result, Section
 from etools.applications.t2f.models import Travel, TravelType
 from etools.applications.tpm.models import TPMVisit
@@ -1517,11 +1519,11 @@ class InterventionManager(models.Manager):
         qs = qs.annotate(
             Max("frs__end_date"),
             Min("frs__start_date"),
-            Sum("frs__total_amt_local"),
-            Sum("frs__outstanding_amt_local"),
-            Sum("frs__actual_amt_local"),
-            Sum("frs__intervention_amt"),
             Count("frs__currency", distinct=True),
+            frs__outstanding_amt_local__sum=DSum("frs__outstanding_amt_local"),
+            frs__actual_amt_local__sum=DSum("frs__actual_amt_local"),
+            frs__total_amt_local__sum=DSum("frs__total_amt_local"),
+            frs__intervention_amt__sum=DSum("frs__intervention_amt"),
             location_p_codes=StringConcat("flat_locations__p_code", separator="|", distinct=True),
             donors=StringConcat("frs__fr_items__donor", separator="|", distinct=True),
             donor_codes=StringConcat("frs__fr_items__donor_code", separator="|", distinct=True),
@@ -1529,7 +1531,6 @@ class InterventionManager(models.Manager):
             max_fr_currency=Max("frs__currency", output_field=CharField(), distinct=True),
             multi_curr_flag=Count(Case(When(frs__multi_curr_flag=True, then=1)))
         )
-
         return qs
 
 
@@ -1703,11 +1704,6 @@ class Intervention(TimeStampedModel):
         verbose_name=_("Signed by Partner Date"),
         null=True,
         blank=True,
-    )
-    # TODO remove in August 2018 sprint
-    signed_by_unicef = models.BooleanField(
-        blank=True, default=False,
-        verbose_name=_("Signed By UNICEF Authorized Officer")
     )
     # partnership managers
     unicef_signatory = models.ForeignKey(
@@ -2457,35 +2453,6 @@ class FCManager(models.Manager):
         return super(FCManager, self).get_queryset().select_related('grant__donor')
 
 
-class FundingCommitment(TimeFramedModel):
-    """
-    Represents a funding commitment for the grant
-
-    Relates to :model:`funds.Grant`
-    """
-
-    grant = models.ForeignKey(
-        Grant, null=True, blank=True, verbose_name=_('Grant'),
-        on_delete=models.CASCADE,
-    )
-    fr_number = models.CharField(max_length=50, verbose_name=_('FR Number'))
-    wbs = models.CharField(max_length=50, verbose_name=_('WBS'))
-    fc_type = models.CharField(max_length=50, verbose_name=_('Type'))
-    fc_ref = models.CharField(
-        max_length=50, blank=True, null=True, unique=True, verbose_name=_('Reference'))
-    fr_item_amount_usd = models.DecimalField(
-        decimal_places=2, max_digits=20, blank=True, null=True, verbose_name=_('Item Amount (USD)'))
-    agreement_amount = models.DecimalField(
-        decimal_places=2, max_digits=20, blank=True, null=True, verbose_name=_('Agreement Amount'))
-    commitment_amount = models.DecimalField(
-        decimal_places=2, max_digits=20, blank=True, null=True, verbose_name=_('Commitment Amount'))
-    expenditure_amount = models.DecimalField(
-        decimal_places=2, max_digits=20, blank=True, null=True, verbose_name=_('Expenditure Amount'))
-
-    tracker = FieldTracker()
-    objects = FCManager()
-
-
 class DirectCashTransfer(models.Model):
     """
     Represents a direct cash transfer
@@ -2506,22 +2473,6 @@ class DirectCashTransfer(models.Model):
                                                         verbose_name=_('Amount more than 9 months (USD)'))
 
     tracker = FieldTracker()
-
-
-# get_file_path() isn't used as of October 2017, but it's referenced by partners/migrations/0001_initial.py.
-# Once migrations are squashed, this can be removed.
-def get_file_path(instance, filename):
-    return '/'.join(
-        [connection.schema_name,
-         'file_attachments',
-         'partner_org',
-         str(instance.pca.agreement.partner.id),
-         'agreements',
-         str(instance.pca.agreement.id),
-         'interventions',
-         str(instance.pca.id),
-         filename]
-    )
 
 
 class PartnerPlannedVisits(TimeStampedModel):

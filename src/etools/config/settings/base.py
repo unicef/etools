@@ -111,7 +111,6 @@ USE_TZ = True
 # DJANGO: HTTP
 MIDDLEWARE = (
     'django.contrib.sessions.middleware.SessionMiddleware',
-    'django.contrib.auth.middleware.SessionAuthenticationMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'etools.applications.tokens.middleware.TokenAuthenticationMiddleware',
     'django.middleware.common.CommonMiddleware',
@@ -183,7 +182,6 @@ SHARED_APPS = (
     'etools.applications.publics',
     # you must list the app where your tenant model resides in
     'etools.applications.users',
-    'etools.applications.notification',
     'django_filters',
     'etools.applications.environment',
     'etools.applications.action_points.categories',
@@ -199,6 +197,7 @@ SHARED_APPS = (
     'etools.applications.permissions2',
     'unicef_notification',
 )
+
 TENANT_APPS = (
     'django_fsm',
     'django_comments',
@@ -217,6 +216,7 @@ TENANT_APPS = (
     'etools.applications.management',
     'etools.applications.action_points',
     'unicef_snapshot',
+    'unicef_attachments',
 )
 INSTALLED_APPS = ('tenant_schemas',) + SHARED_APPS + TENANT_APPS
 
@@ -596,3 +596,7 @@ PCA_REQUIRED_NOTIFICATION_LEAD = 30
 
 UNICEF_NOTIFICATION_TEMPLATE_DIR = "notifications"
 UNICEF_LOCATIONS_GET_CACHE_KEY = 'etools.libraries.locations.views.cache_key'
+
+ATTACHMENT_FILEPATH_PREFIX_FUNC = "etools.applications.attachments.utils.get_filepath_prefix"
+ATTACHMENT_FLAT_MODEL = "etools.applications.attachments.models.AttachmentFlat"
+ATTACHMENT_DENORMALIZE_FUNC = "etools.applications.attachments.utils.denormalize_attachment"

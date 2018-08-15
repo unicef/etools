@@ -2,7 +2,7 @@ import json
 from datetime import datetime
 from io import StringIO
 
-from django.core.urlresolvers import reverse
+from django.urls import reverse
 
 import factory
 from pytz import UTC

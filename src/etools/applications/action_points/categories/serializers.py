@@ -1,7 +1,7 @@
 from rest_framework import serializers
+from unicef_restlib.fields import ModelChoiceField
 
 from etools.applications.action_points.categories.models import Category
-from etools.applications.attachments.serializers_fields import ModelChoiceField
 
 
 class CategoryModelChoiceField(ModelChoiceField):
