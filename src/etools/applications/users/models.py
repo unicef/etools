@@ -14,7 +14,6 @@ from django.db import connection, models
 from django.db.models.signals import post_save
 from django.utils.translation import ugettext_lazy as _
 
-from djangosaml2.signals import pre_user_save
 from tenant_schemas.models import TenantMixin
 
 logger = logging.getLogger(__name__)
@@ -338,4 +337,3 @@ class UserProfile(models.Model):
 
 
 post_save.connect(UserProfile.create_user_profile, sender=settings.AUTH_USER_MODEL)
-pre_user_save.connect(UserProfile.custom_update_user)  # TODO: The sender should be set

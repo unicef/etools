@@ -1,5 +1,8 @@
 from django.conf import settings
+from django.contrib.auth import logout
+from django.http import HttpResponseRedirect
 from django.shortcuts import redirect
+from django.urls import reverse
 from django.views.generic import RedirectView, TemplateView
 
 from rest_framework.response import Response
@@ -32,3 +35,8 @@ class IssueJWTRedirectView(APIView):
         response_data = jwt_response_payload_handler(token, user, request)
 
         return Response(data=response_data)
+
+
+def logout_view(request):
+    logout(request)
+    return HttpResponseRedirect(reverse("main"))
