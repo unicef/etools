@@ -19,11 +19,11 @@ from django_fsm import FSMField, transition
 from model_utils import Choices, FieldTracker
 from model_utils.models import TimeStampedModel
 from unicef_attachments.models import Attachment
+from unicef_djangolib.fields import CodedGenericRelation, CurrencyField
 from unicef_locations.models import Location
 
 from etools.applications.environment.helpers import tenant_switch_is_active
 from etools.applications.EquiTrack.encoders import EToolsEncoder
-from etools.applications.EquiTrack.fields import CurrencyField
 from etools.applications.EquiTrack.models import DSum
 from etools.applications.EquiTrack.serializers import StringConcat
 from etools.applications.EquiTrack.utils import get_current_year, get_quarter, import_permissions
@@ -37,7 +37,6 @@ from etools.applications.reports.models import CountryProgramme, Indicator, Resu
 from etools.applications.t2f.models import Travel, TravelType
 from etools.applications.tpm.models import TPMVisit
 from etools.applications.users.models import Office
-from etools.applications.utils.common.models.fields import CodedGenericRelation
 
 INTERVENTION_LOWER_RESULTS_CACHE_KEY = "{}_intervention_lower_result"
 INTERVENTION_LOCATIONS_CACHE_KEY = "{}_intervention_locations"
@@ -434,22 +433,6 @@ class PartnerOrganization(TimeStampedModel):
         verbose_name=_('Date positively assessed against core values'),
         blank=True,
         null=True,
-    )
-    core_values_assessment = models.FileField(
-        verbose_name=_("Core Values Assessment"),
-        blank=True,
-        null=True,
-        upload_to='partners/core_values/',
-        max_length=1024,
-        help_text='Only required for CSO partners'
-    )
-    core_values_assessment_attachment = CodedGenericRelation(
-        Attachment,
-        verbose_name=_('Core Values Assessment'),
-        code='partners_partner_assessment',
-        blank=True,
-        null=True,
-        help_text='Only required for CSO partners'
     )
     vision_synced = models.BooleanField(
         verbose_name=_("VISION Synced"),

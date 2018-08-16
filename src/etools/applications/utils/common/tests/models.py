@@ -1,9 +1,8 @@
-
 from django.contrib.contenttypes.models import ContentType
 from django.db import models
 from django.utils.translation import ugettext_lazy as _
 
-from etools.applications.utils.common.models.fields import CodedGenericRelation
+from unicef_djangolib.fields import CodedGenericRelation
 
 
 class CodedGenericChild(models.Model):

@@ -9,7 +9,7 @@ import etools.applications.partners.models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('partners', '0023_auto_20180814_1754'),
+        ('partners', '0024_remove_partnerorganization_core_values_assessment'),
     ]
 
     operations = [
