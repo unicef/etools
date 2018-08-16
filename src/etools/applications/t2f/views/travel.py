@@ -11,8 +11,8 @@ from rest_framework.parsers import FileUploadParser, FormParser, MultiPartParser
 from rest_framework.permissions import IsAdminUser
 from rest_framework.response import Response
 from rest_framework_csv import renderers
+from unicef_restlib.views import QueryStringFilterMixin
 
-from etools.applications.EquiTrack.mixins import QueryStringFilterMixin
 from etools.applications.t2f.filters import (
     travel_list,
     TravelActivityInterventionFilter,
@@ -151,6 +151,10 @@ class TravelActivityViewSet(QueryStringFilterMixin, mixins.ListModelMixin, views
     serializer_class = TravelActivityByPartnerSerializer
     filter_backends = (TravelActivityPartnerFilter,)
     lookup_url_kwarg = 'partner_organization_pk'
+    filters = (
+        ('year', 'travels__end_date__year'),
+        ('status', 'travels__status'),
+    )
 
     def get_queryset(self):
         qs = TravelActivity.objects.prefetch_related('travels', 'primary_traveler', 'locations')
@@ -158,11 +162,7 @@ class TravelActivityViewSet(QueryStringFilterMixin, mixins.ListModelMixin, views
         query_params = self.request.query_params
         if query_params:
             queries = []
-            filters = (
-                ('year', 'travels__end_date__year'),
-                ('status', 'travels__status'),
-            )
-            queries.extend(self.filter_params(filters))
+            queries.extend(self.filter_params())
             if queries:
                 expression = functools.reduce(operator.and_, queries)
                 qs = qs.filter(expression)
@@ -186,6 +186,10 @@ class TravelActivityPerInterventionViewSet(QueryStringFilterMixin, mixins.ListMo
     filter_backends = (TravelActivityInterventionFilter,)
     lookup_url_kwarg = 'partnership_pk'
 
+    filters = (
+        ('year', 'travels__end_date__year'),
+    )
+
     def get_queryset(self):
         qs = TravelActivity.objects.prefetch_related('travels', 'primary_traveler', 'locations')
         qs = qs.filter(travel_type__in=[TravelType.SPOT_CHECK, TravelType.PROGRAMME_MONITORING])
@@ -193,10 +197,7 @@ class TravelActivityPerInterventionViewSet(QueryStringFilterMixin, mixins.ListMo
         query_params = self.request.query_params
         if query_params:
             queries = []
-            filters = (
-                ('year', 'travels__end_date__year'),
-            )
-            queries.extend(self.filter_params(filters))
+            queries.extend(self.filter_params())
             if queries:
                 expression = functools.reduce(operator.and_, queries)
                 qs = qs.filter(expression)

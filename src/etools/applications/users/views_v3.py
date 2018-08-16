@@ -1,4 +1,3 @@
-
 import logging
 
 from django.contrib.auth import get_user_model
@@ -10,8 +9,12 @@ from rest_framework.response import Response
 
 from etools.applications.EquiTrack.permissions import IsSuperUserOrStaff
 from etools.applications.users import views as v1, views_v2 as v2
-from etools.applications.users.serializers_v3 import (CountryDetailSerializer, MinimalUserDetailSerializer,
-                                                      MinimalUserSerializer, ProfileRetrieveUpdateSerializer,)
+from etools.applications.users.serializers_v3 import (
+    CountryDetailSerializer,
+    MinimalUserDetailSerializer,
+    MinimalUserSerializer,
+    ProfileRetrieveUpdateSerializer,
+)
 
 logger = logging.getLogger(__name__)
 

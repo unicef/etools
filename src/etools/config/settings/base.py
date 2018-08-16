@@ -111,7 +111,6 @@ USE_TZ = True
 # DJANGO: HTTP
 MIDDLEWARE = (
     'django.contrib.sessions.middleware.SessionMiddleware',
-    'django.contrib.auth.middleware.SessionAuthenticationMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'etools.applications.tokens.middleware.TokenAuthenticationMiddleware',
     'django.middleware.common.CommonMiddleware',
@@ -183,7 +182,6 @@ SHARED_APPS = (
     'etools.applications.publics',
     # you must list the app where your tenant model resides in
     'etools.applications.users',
-    'etools.applications.notification',
     'django_filters',
     'etools.applications.environment',
     'etools.applications.action_points.categories',
@@ -199,6 +197,7 @@ SHARED_APPS = (
     'etools.applications.permissions2',
     'unicef_notification',
 )
+
 TENANT_APPS = (
     'django_fsm',
     'django_comments',

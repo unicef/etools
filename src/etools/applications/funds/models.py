@@ -4,8 +4,7 @@ from django.utils import timezone
 from django.utils.translation import ugettext as _
 
 from model_utils.models import TimeStampedModel
-
-from etools.applications.EquiTrack.fields import CurrencyField
+from unicef_djangolib.fields import CurrencyField
 
 
 class Donor(TimeStampedModel):

@@ -6,10 +6,11 @@ from rest_framework import generics, status
 from rest_framework.permissions import IsAdminUser
 from rest_framework.response import Response
 from rest_framework_csv import renderers
+from unicef_restlib.views import QueryStringFilterMixin
 
-from etools.applications.EquiTrack.mixins import QueryStringFilterMixin
 from etools.applications.t2f.filters import travel_list
 from etools.applications.t2f.models import InvoiceItem, ItineraryItem, Travel, TravelActivity
+
 from etools.applications.t2f.serializers.export import (
     FinanceExportSerializer,
     InvoiceExportSerializer,
@@ -37,6 +38,19 @@ class ExportBaseView(generics.GenericAPIView):
 
 class TravelActivityExport(QueryStringFilterMixin, ExportBaseView):
     serializer_class = TravelActivityExportSerializer
+    filters = (
+        ('f_supervisor', 'travels__supervisor__pk__in'),
+        ('f_office', 'travels__office__pk__in'),
+        ('f_section', 'travels__section__pk__in'),
+        ('f_status', 'travels__status__in'),
+        ('f_traveler', 'travels__traveler__pk__in'),
+        ('f_partner', 'partner__pk__in'),
+        ('f_result', 'result__pk__in'),
+        ('f_travel_type', 'travel_type__in'),
+        ('f_year', 'date__year'),
+        ('f_month', 'date__month'),
+        ('f_location', 'locations__pk__in'),
+    )
 
     class SimpleDTO(object):
         def __init__(self, travel, activity):
@@ -49,22 +63,8 @@ class TravelActivityExport(QueryStringFilterMixin, ExportBaseView):
         queryset = queryset.select_related('partner', 'partnership', 'result', 'primary_traveler')
         queryset = queryset.order_by('id')
 
-        filters = (
-            ('f_supervisor', 'travels__supervisor__pk__in'),
-            ('f_office', 'travels__office__pk__in'),
-            ('f_section', 'travels__section__pk__in'),
-            ('f_status', 'travels__status__in'),
-            ('f_traveler', 'travels__traveler__pk__in'),
-            ('f_partner', 'partner__pk__in'),
-            ('f_result', 'result__pk__in'),
-            ('f_travel_type', 'travel_type__in'),
-            ('f_year', 'date__year'),
-            ('f_month', 'date__month'),
-            ('f_location', 'locations__pk__in'),
-        )
-
         queries = []
-        queries.extend(self.filter_params(filters))
+        queries.extend(self.filter_params())
         if queries:
             expression = functools.reduce(operator.and_, queries)
             queryset = queryset.filter(expression)

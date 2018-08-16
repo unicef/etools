@@ -2,7 +2,7 @@
 import json
 import logging
 
-from django.core.urlresolvers import NoReverseMatch, reverse
+from django.urls import NoReverseMatch, reverse
 from django.db import connection
 
 from freezegun import freeze_time
