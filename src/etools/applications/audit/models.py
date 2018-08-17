@@ -410,7 +410,7 @@ class SpotCheck(Engagement):
             return self.total_amount_of_ineligible_expenditure - self.additional_supporting_documentation_provided \
                 - self.justification_provided_and_accepted - self.write_off_required
         except TypeError:
-            return None
+            return 0
 
     def save(self, *args, **kwargs):
         self.engagement_type = Engagement.TYPES.sc
