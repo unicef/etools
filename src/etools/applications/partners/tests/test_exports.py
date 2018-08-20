@@ -15,6 +15,7 @@ from etools.applications.partners.tests.factories import (
     PartnerFactory,
     PartnerPlannedVisitsFactory,
     PartnerStaffFactory,
+    InterventionPlannedVisitsFactory
 )
 from etools.applications.reports.models import ResultType
 from etools.applications.reports.tests.factories import ResultFactory
@@ -83,6 +84,9 @@ class TestModelExport(BaseTenantTestCase):
 
         output_res_type, _ = ResultType.objects.get_or_create(name='Output')
         cls.result = ResultFactory(result_type=output_res_type)
+        cls.planned_visit = InterventionPlannedVisitsFactory(
+            intervention=cls.intervention,
+        )
 
     def test_intervention_export_api(self):
         response = self.forced_auth_req(
@@ -126,6 +130,7 @@ class TestModelExport(BaseTenantTestCase):
             "FR Amount",
             "FR Actual CT",
             "Outstanding DCT",
+            "Planned Programmatic Visits",
             "Document Submission Date by CSO",
             "Submission Date to PRC",
             "Review Date by PRC",
@@ -173,6 +178,11 @@ class TestModelExport(BaseTenantTestCase):
             u'',
             u'',
             u'',
+            u'{} (Q1:{} Q2:{}, Q3:{}, Q4:{})'.format(self.planned_visit.year,
+                                                     self.planned_visit.programmatic_q1,
+                                                     self.planned_visit.programmatic_q2,
+                                                     self.planned_visit.programmatic_q3,
+                                                     self.planned_visit.programmatic_q4, ),
             '{}'.format(self.intervention.submission_date),
             '{}'.format(self.intervention.submission_date_prc),
             '{}'.format(self.intervention.review_date_prc),

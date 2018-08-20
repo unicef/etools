@@ -39,9 +39,7 @@ from etools.applications.partners.models import (
     PartnerType,
 )
 from etools.applications.partners.permissions import READ_ONLY_API_GROUP_NAME
-from etools.applications.partners.serializers.exports.partner_organization import (
-    PartnerOrganizationExportSerializer,
-)
+from etools.applications.partners.serializers.exports.partner_organization import PartnerOrganizationExportSerializer
 from etools.applications.partners.tests.factories import (
     AgreementAmendmentFactory,
     AgreementFactory,
@@ -60,11 +58,7 @@ from etools.applications.reports.tests.factories import (
     ResultTypeFactory,
     SectionFactory,
 )
-from etools.applications.users.tests.factories import (
-    GroupFactory,
-    OfficeFactory,
-    UserFactory,
-)
+from etools.applications.users.tests.factories import GroupFactory, OfficeFactory, UserFactory
 
 
 class URLsTestCase(URLAssertionMixin, SimpleTestCase):
@@ -1807,6 +1801,86 @@ class TestInterventionViews(BaseTenantTestCase):
 
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertEqual(response.data, ['Start date must precede end date'])
+
+    def test_intervention_update_planned_visits(self):
+        import copy
+        a = copy.deepcopy(self.intervention_data["planned_visits"])
+        a.append({
+            "year": 2015,
+            "programmatic": 2,
+            "spot_checks": 1,
+            "audit": 1,
+            "quarter": 'q3'
+        })
+        data = {
+            "planned_visits": a,
+        }
+
+        response = self.forced_auth_req(
+            'patch',
+            reverse(
+                "partners_api:intervention-detail",
+                args=[self.intervention["id"]]
+            ),
+            user=self.partnership_manager_user,
+            data=data,
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+    def test_intervention_update_planned_visits_fail_due_terminated_status(self):
+        self.intervention_obj.status = Intervention.TERMINATED
+        self.intervention_obj.save()
+        data = {
+            "planned_visits": {
+                "id": self.intervention_data['planned_visits'][0]['id'],
+                "year": 2016,
+                "programmatic": 2,
+                "spot_checks": 1,
+                "audit": 1,
+                "quarter": 'q3'
+            },
+        }
+
+        response = self.forced_auth_req(
+            'patch',
+            reverse(
+                "partners_api:intervention-detail",
+                args=[self.intervention_obj.id]
+            ),
+            user=self.partnership_manager_user,
+            data=data,
+        )
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertEqual(response.data['planned_visits'], ['Planned Visit cannot be set for Terminated interventions'])
+
+    def test_intervention_update_planned_visits_fail_due_government_type(self):
+        partner = self.intervention_obj.agreement.partner
+        partner.partner_type = PartnerType.GOVERNMENT
+        partner.save()
+
+        data = {
+            "planned_visits": {
+                "id": self.intervention_data['planned_visits'][0]['id'],
+                "year": 2016,
+                "programmatic": 2,
+                "spot_checks": 1,
+                "audit": 1,
+                "quarter": 'q3'
+            },
+        }
+
+        response = self.forced_auth_req(
+            'patch',
+            reverse(
+                "partners_api:intervention-detail",
+                args=[self.intervention_obj.id]
+            ),
+            user=self.partnership_manager_user,
+            data=data,
+        )
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertEqual(response.data['planned_visits'], ['Planned Visit to be set only at Partner level'])
 
     def test_intervention_filter(self):
         country_programme = CountryProgrammeFactory()
