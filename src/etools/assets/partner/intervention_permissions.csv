@@ -18,6 +18,7 @@ Field no,Field Name,Group,Condition,Status,Action,Allowed
 3.3.2,start,Partnership Manager,,Signed,Edit,TRUE
 3.3.3,end,Partnership Manager,,Draft,Edit,TRUE
 3.3.3,end,Partnership Manager,,Signed,Edit,TRUE
+3.3.3,end,Partnership Manager,termination_doc_attached,Active,Edit,TRUE
 3.3.5,sections,Partnership Manager,,Draft,Edit,TRUE
 3.3.5,sections_present,UNICEF User,,*,Edit,TRUE
 3.4.1,result_links,Partnership Manager,prp_mode_on,Draft,Edit,TRUE

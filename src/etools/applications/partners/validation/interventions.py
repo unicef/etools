@@ -92,6 +92,8 @@ def transition_to_closed(i):
 
 
 def transition_to_terminated(i):
+    if not i.termination_doc.name:
+        raise TransitionError([_('Cannot Transition without termination doc attached')])
     if i.in_amendment is True:
         raise TransitionError([_('Cannot Transition status while adding an amendment')])
 
@@ -99,6 +101,8 @@ def transition_to_terminated(i):
 
 
 def transition_to_ended(i):
+    if i.termination_doc.name:
+        raise TransitionError([_('Cannot Transition to ended if termination_doc attached')])
     if i.in_amendment is True:
         raise TransitionError([_('Cannot Transition status while adding an amendment')])
 
