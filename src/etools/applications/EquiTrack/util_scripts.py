@@ -283,15 +283,6 @@ def clean_result_types(country_name):
     _run_clean(dupes)
 
 
-def delete_all_fcs(country_name):
-    if not country_name:
-        printtf("country name required /n")
-    set_country(country_name)
-    printtf("Deleting all FCs for {}".format(country_name))
-    fcs = FundingCommitment.objects.all()
-    fcs.delete()
-
-
 def dissasociate_result_structures(country_name):
     if not country_name:
         printtf("country name required /n")

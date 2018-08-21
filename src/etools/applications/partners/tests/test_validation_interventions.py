@@ -1,7 +1,6 @@
 import datetime
 from unittest import skip
 
-import factory
 from mock import Mock, patch
 
 from etools.applications.EquiTrack.tests.cases import BaseTenantTestCase
