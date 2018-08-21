@@ -1749,7 +1749,7 @@ class Intervention(TimeStampedModel):
     termination_doc_attachment = CodedGenericRelation(
         Attachment,
         verbose_name=_('Termination document for PDs'),
-        code='partners_intervention_activation_letter',
+        code='partners_intervention_termination_doc',
         blank=True,
         null=True
     )
