@@ -25,7 +25,10 @@ def migrate_attachments(apps, schema_editor):
     Attachment = apps.get_model("unicef_attachments", "attachment")
     FileType = apps.get_model("unicef_attachments", "filetype")
     for a in AttachmentOld.objects.all():
-        ft = FileType.objects.get(pk=a.file_type.pk)
+        try:
+            ft = FileType.objects.get(pk=a.file_type.pk)
+        except AttributeErrir:
+            ft = None
         Attachment.objects.create(
             id=a.pk,
             file_type=ft,
