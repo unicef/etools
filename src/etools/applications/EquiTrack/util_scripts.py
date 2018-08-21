@@ -11,7 +11,7 @@ from django.db import connection
 from django.db.models import Count
 
 
-from etools.applications.partners.models import (Agreement, Assessment, FundingCommitment, Intervention,
+from etools.applications.partners.models import (Agreement, Assessment, Intervention,
                                                  InterventionPlannedVisits, PartnerOrganization, PartnerStaffMember,)
 from etools.applications.reports.models import CountryProgramme, Indicator, Result, ResultType
 from etools.applications.t2f.models import TravelActivity

@@ -776,14 +776,12 @@ class InterventionReportingRequirementCreateSerializer(serializers.ModelSerializ
         """
         self.intervention = self.context["intervention"]
 
-        in_termination_mode = self.intervention.status != Intervention.ACTIVE and \
-                                self.intervention.termination_doc_attachment
+        if self.intervention.status != Intervention.DRAFT:
+            if not self.intervention.in_amendment and not self.intervention.termination_doc_attachment.exists():
+                raise serializers.ValidationError(
+                    _("Changes not allowed when PD not in amendment state.")
+                )
 
-        if self.intervention.status != Intervention.DRAFT and (not in_termination_mode or
-                                                               not self.intervention.in_amendment):
-            raise serializers.ValidationError(
-                _("Changes not allowed when PD not in amendment state.")
-            )
         if not self.intervention.start:
             raise serializers.ValidationError(
                 _("PD needs to have a start date.")
