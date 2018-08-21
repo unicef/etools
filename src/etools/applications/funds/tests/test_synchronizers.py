@@ -9,7 +9,7 @@ from etools.applications.funds.models import (FundsCommitmentHeader, FundsCommit
 from etools.applications.funds.tests.factories import (FundsCommitmentHeaderFactory, FundsCommitmentItemFactory,
                                                        FundsReservationHeaderFactory, FundsReservationItemFactory,)
 from etools.applications.users.models import Country
-from etools.applications.vision.adapters import funding as adapter
+from etools.applications.funds import synchronizers
 
 
 class TestFundReservationsSynchronizer(BaseTenantTestCase):
@@ -102,10 +102,10 @@ class TestFundReservationsSynchronizer(BaseTenantTestCase):
             start_date=datetime.date(2015, 1, 13),
             end_date=datetime.date(2015, 12, 20),
         )
-        self.adapter = adapter.FundReservationsSynchronizer(self.country)
+        self.adapter = synchronizers.FundReservationsSynchronizer(self.country)
 
     def test_init(self):
-        a = adapter.FundReservationsSynchronizer(self.country)
+        a = synchronizers.FundReservationsSynchronizer(self.country)
         self.assertEqual(a.header_records, {})
         self.assertEqual(a.item_records, {})
         self.assertEqual(a.fr_headers, {})
@@ -366,10 +366,10 @@ class TestFundCommitmentSynchronizer(BaseTenantTestCase):
             exchange_rate=self.data["EXCHANGE_RATE"],
             responsible_person=self.data["RESP_PERSON"],
         )
-        self.adapter = adapter.FundCommitmentSynchronizer(self.country)
+        self.adapter = synchronizers.FundCommitmentSynchronizer(self.country)
 
     def test_init(self):
-        a = adapter.FundCommitmentSynchronizer(self.country)
+        a = synchronizers.FundCommitmentSynchronizer(self.country)
         self.assertEqual(a.header_records, {})
         self.assertEqual(a.item_records, {})
         self.assertEqual(a.fc_headers, {})

@@ -5,9 +5,12 @@ from decimal import Decimal
 
 from django.db.models import Sum
 
-
-from etools.applications.funds.models import (FundsCommitmentHeader, FundsCommitmentItem,
-                                              FundsReservationHeader, FundsReservationItem,)
+from etools.applications.funds.models import (
+    FundsCommitmentHeader,
+    FundsCommitmentItem,
+    FundsReservationHeader,
+    FundsReservationItem,
+)
 from etools.applications.vision.utils import comp_decimals
 from etools.applications.vision.vision_data_synchronizer import FileDataSynchronizer, VisionDataSynchronizer
 

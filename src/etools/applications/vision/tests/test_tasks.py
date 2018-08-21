@@ -10,7 +10,6 @@ import mock
 
 import etools.applications.vision.tasks
 from etools.applications.EquiTrack.tests.cases import BaseTenantTestCase
-from etools.applications.users.models import Country
 from etools.applications.users.tests.factories import CountryFactory
 from etools.applications.vision.exceptions import VisionException
 
@@ -296,23 +295,3 @@ class TestSyncHandlerTask(BaseTenantTestCase):
         )
         self.assertEqual(mock_logger.call_args[0], (expected_msg,))
         self.assertEqual(mock_logger.call_args[1], {})
-
-
-class TestUpdatePurchaseOrders(BaseTenantTestCase):
-    @classmethod
-    def setUpTestData(cls):
-        cls.country = Country.objects.first()
-
-    @mock.patch("etools.applications.vision.tasks.logger.exception")
-    def test_update_purchase_orders_no_country(self, mock_logger_exception):
-        """Ensure no exceptions if no countries"""
-        etools.applications.vision.tasks.update_purchase_orders(country_name="Wrong")
-        self.assertEqual(mock_logger_exception.call_count, 0)
-
-    @mock.patch("etools.applications.vision.tasks.logger.exception")
-    @mock.patch("etools.applications.vision.tasks.POSynchronizer")
-    def test_update_purchase_orders(self, synchronizer, mock_logger_exception):
-        """Ensure no exceptions if no countries"""
-        etools.applications.vision.tasks.update_purchase_orders()
-        self.assertEqual(mock_logger_exception.call_count, 0)
-        self.assertEqual(synchronizer.call_count, 1)

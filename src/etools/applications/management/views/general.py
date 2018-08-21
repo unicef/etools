@@ -4,9 +4,9 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 from unicef_restlib.permissions import IsSuperUser
 
+from etools.applications.funds.synchronizers import FundReservationsSynchronizer
+from etools.applications.publics.synchronizers import CountryLongNameSync
 from etools.applications.users.models import Country
-from etools.applications.vision.adapters.funding import FundReservationsSynchronizer
-from etools.applications.vision.adapters.workspaces import CountryLongNameSync
 
 
 class InvalidateCache(APIView):
