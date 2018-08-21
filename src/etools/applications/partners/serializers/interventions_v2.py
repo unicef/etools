@@ -776,9 +776,11 @@ class InterventionReportingRequirementCreateSerializer(serializers.ModelSerializ
         """
         self.intervention = self.context["intervention"]
 
-        # Only able to change reporting requirements when PD
-        # is in amendment status
-        if not self.intervention.in_amendment and self.intervention.status != Intervention.DRAFT:
+        in_termination_mode = self.intervention.status != Intervention.ACTIVE and \
+                                self.intervention.termination_doc_attachment
+
+        if self.intervention.status != Intervention.DRAFT and (not in_termination_mode or
+                                                               not self.intervention.in_amendment):
             raise serializers.ValidationError(
                 _("Changes not allowed when PD not in amendment state.")
             )
