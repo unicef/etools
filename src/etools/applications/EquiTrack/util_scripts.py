@@ -310,12 +310,6 @@ def before_code_merge():
     # clean result types
     all_countries_do(clean_result_types, 'Result Types Cleaning')
 
-    # Clean indicators
-    all_countries_do(fix_duplicate_indicators, 'Indicators Cleaning')
-
-    # Delete all fcs
-    all_countries_do(delete_all_fcs, 'Deleting FCs')
-
     logger.info(u'FINISHED WITH BEFORE MERGE')
 
 
