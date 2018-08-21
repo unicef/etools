@@ -123,7 +123,7 @@ class InterventionPermissions(PMPPermissions):
             'prp_mode_off': prp_mode_off(),
             'prp_server_on': prp_server_on(),
             'user_adds_amendment+prp_mode_on': user_added_amendment(self.instance) and not prp_mode_off(),
-            'termination_doc_attached': bool(self.instance.termination_doc.name)
+            'termination_doc_attached': bool(self.instance.termination_doc_attachment)
         }
 
 
