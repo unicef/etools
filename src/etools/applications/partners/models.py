@@ -1549,7 +1549,7 @@ class Intervention(TimeStampedModel):
     AUTO_TRANSITIONS = {
         DRAFT: [SIGNED],
         SIGNED: [ACTIVE],
-        ACTIVE: [ENDED],
+        ACTIVE: [ENDED, TERMINATED],
         ENDED: [CLOSED]
     }
     TRANSITION_SIDE_EFFECTS = {
@@ -1724,6 +1724,34 @@ class Intervention(TimeStampedModel):
     contingency_pd = models.BooleanField(
         verbose_name=_("Contingency PD"),
         default=False,
+    )
+    activation_letter = models.FileField(
+        verbose_name=_("Activation Document for Contingency PDs"),
+        max_length=1024,
+        null=True,
+        blank=True,
+        upload_to=get_intervention_file_path
+    )
+    activation_letter_attachment = CodedGenericRelation(
+        Attachment,
+        verbose_name=_('Activation Document for Contingency PDs'),
+        code='partners_intervention_activation_letter',
+        blank=True,
+        null=True
+    )
+    termination_doc = models.FileField(
+        verbose_name=_("Termination document for PDs"),
+        max_length=1024,
+        null=True,
+        blank=True,
+        upload_to=get_intervention_file_path
+    )
+    termination_doc_attachment = CodedGenericRelation(
+        Attachment,
+        verbose_name=_('Termination document for PDs'),
+        code='partners_intervention_termination_doc',
+        blank=True,
+        null=True
     )
     sections = models.ManyToManyField(
         Section,
