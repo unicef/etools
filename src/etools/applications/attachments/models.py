@@ -258,6 +258,11 @@ class AttachmentFlat(models.Model):
         blank=True,
         verbose_name=_('File Name')
     )
+    source = models.CharField(
+        max_length=150,
+        blank=True,
+        verbose_name=_('Source'),
+    )
     uploaded_by = models.CharField(
         max_length=255,
         blank=True,
