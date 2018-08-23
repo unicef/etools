@@ -131,13 +131,14 @@ def get_object_url(obj):
 
 
 def get_source(obj):
-    app_label = obj.content_type.app_label
-    if app_label == "partners":
-        return "Partnership Management Portal"
-    elif app_label == "audit":
-        return "Financial Assurance (FAM)"
-    elif app_label == "tpm":
-        return "Third Party Monitoring"
+    if obj.content_type:
+        app_label = obj.content_type.app_label
+        if app_label == "partners":
+            return "Partnership Management Portal"
+        elif app_label == "audit":
+            return "Financial Assurance (FAM)"
+        elif app_label == "tpm":
+            return "Third Party Monitoring"
     return ""
 
 
