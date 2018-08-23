@@ -268,6 +268,9 @@ class InterventionExportSerializer(serializers.ModelSerializer):
     fr_outstanding_amt = serializers.SerializerMethodField(
         label=_("Outstanding DCT"),
     )
+    planned_visits = serializers.SerializerMethodField(
+        label=_("Planned Programmatic Visits"),
+    )
     budget_currency = serializers.CharField(
         label=_("Budget Currency"),
         source="planned_budget.currency"
@@ -365,6 +368,7 @@ class InterventionExportSerializer(serializers.ModelSerializer):
             "fr_amount",
             "fr_actual_amount",
             "fr_outstanding_amt",
+            "planned_visits",
             "submission_date",
             "submission_date_prc",
             "review_date_prc",
@@ -458,6 +462,13 @@ class InterventionExportSerializer(serializers.ModelSerializer):
     def get_total_attachments(self, obj):
         return obj.attachments.count()
 
+    def get_planned_visits(self, obj):
+        if obj.agreement.partner.partner_type == 'Government':
+            return _('N/A')
+        return ', '.join(['{} (Q1:{} Q2:{}, Q3:{}, Q4:{})'.format(
+            pv.year, pv.programmatic_q1, pv.programmatic_q2, pv.programmatic_q3, pv.programmatic_q4
+        ) for pv in obj.planned_visits.all()])
+
 
 class InterventionExportFlatSerializer(ExportSerializerMixin, InterventionExportSerializer):
     attachments = serializers.SerializerMethodField(label=_("Attachments"))
@@ -506,6 +517,9 @@ class InterventionExportFlatSerializer(ExportSerializerMixin, InterventionExport
         source='planned_budget.total',
         read_only=True
     )
+    planned_visits = serializers.SerializerMethodField(
+        label=_("Planned Programmatic Visits"),
+    )
 
     class Meta:
         model = Intervention
@@ -516,3 +530,10 @@ class InterventionExportFlatSerializer(ExportSerializerMixin, InterventionExport
             ["{}: {}".format(a.type.name, a.attachment.url)
              for a in obj.attachments.all()]
         )
+
+    def get_planned_visits(self, obj):
+        if obj.agreement.partner.partner_type == 'Government':
+            return _('N/A')
+        return ', '.join(['{} (Q1:{} Q2:{}, Q3:{}, Q4:{})'.format(
+            pv.year, pv.programmatic_q1, pv.programmatic_q2, pv.programmatic_q3, pv.programmatic_q4
+        ) for pv in obj.planned_visits.all()])

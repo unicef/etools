@@ -17,6 +17,7 @@ from etools.applications.partners.tests.factories import (
     InterventionSectionLocationLinkFactory,
     PartnerFactory,
     PartnerStaffFactory,
+    InterventionPlannedVisitsFactory
 )
 from etools.applications.reports.tests.factories import CountryProgrammeFactory, IndicatorFactory, ResultFactory, SectionFactory
 from etools.applications.users.tests.factories import UserFactory
@@ -81,6 +82,9 @@ class BaseInterventionModelExportTestCase(BaseTenantTestCase):
         cls.attachment = InterventionAttachmentFactory(
             intervention=cls.intervention,
         )
+        cls.planned_visit = InterventionPlannedVisitsFactory(
+            intervention=cls.intervention,
+        )
 
 
 class TestInterventionModelExport(BaseInterventionModelExportTestCase):
@@ -134,6 +138,7 @@ class TestInterventionModelExport(BaseInterventionModelExportTestCase):
             "FR Amount",
             "FR Actual CT",
             "Outstanding DCT",
+            "Planned Programmatic Visits",
             "Document Submission Date by CSO",
             "Submission Date to PRC",
             "Review Date by PRC",
@@ -181,6 +186,7 @@ class TestInterventionModelExport(BaseInterventionModelExportTestCase):
             u'',
             u'',
             u'',
+            u'N/A',
             '{}'.format(self.intervention.submission_date),
             '{}'.format(self.intervention.submission_date_prc),
             '{}'.format(self.intervention.review_date_prc),
@@ -209,8 +215,8 @@ class TestInterventionModelExport(BaseInterventionModelExportTestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         dataset = Dataset().load(response.content.decode('utf-8'), 'csv')
         self.assertEqual(dataset.height, 1)
-        self.assertEqual(len(dataset._get_headers()), 64)
-        self.assertEqual(len(dataset[0]), 64)
+        self.assertEqual(len(dataset._get_headers()), 65)
+        self.assertEqual(len(dataset[0]), 65)
 
 
 class TestInterventionAmendmentModelExport(BaseInterventionModelExportTestCase):

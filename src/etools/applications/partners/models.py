@@ -628,20 +628,24 @@ class PartnerOrganization(TimeStampedModel):
         return self.core_values_assessments.filter(archived=False).first()
 
     def planned_visits_to_hact(self):
-        """For current year sum all programmatic values of planned visits
-        records for partner
-
-        If partner type is Government, then default to 0 planned visits
-        """
+        """For current year sum all programmatic values of planned visits records for partner"""
         year = datetime.date.today().year
-        try:
-            pv = self.planned_visits.get(year=year)
-            pvq1 = pv.programmatic_q1
-            pvq2 = pv.programmatic_q2
-            pvq3 = pv.programmatic_q3
-            pvq4 = pv.programmatic_q4
-        except PartnerPlannedVisits.DoesNotExist:
-            pvq1 = pvq2 = pvq3 = pvq4 = 0
+        if self.partner_type != 'Government':
+            pv = InterventionPlannedVisits.objects.filter(
+                intervention__agreement__partner=self, year=year).exclude(intervention__status=Intervention.DRAFT)
+            pvq1 = pv.aggregate(models.Sum('programmatic_q1'))['programmatic_q1__sum'] or 0
+            pvq2 = pv.aggregate(models.Sum('programmatic_q2'))['programmatic_q2__sum'] or 0
+            pvq3 = pv.aggregate(models.Sum('programmatic_q3'))['programmatic_q3__sum'] or 0
+            pvq4 = pv.aggregate(models.Sum('programmatic_q4'))['programmatic_q4__sum'] or 0
+        else:
+            try:
+                pv = self.planned_visits.get(year=year)
+                pvq1 = pv.programmatic_q1
+                pvq2 = pv.programmatic_q2
+                pvq3 = pv.programmatic_q3
+                pvq4 = pv.programmatic_q4
+            except PartnerPlannedVisits.DoesNotExist:
+                pvq1 = pvq2 = pvq3 = pvq4 = 0
 
         hact = self.get_hact_json()
         hact['programmatic_visits']['planned']['q1'] = pvq1
@@ -649,6 +653,7 @@ class PartnerOrganization(TimeStampedModel):
         hact['programmatic_visits']['planned']['q3'] = pvq3
         hact['programmatic_visits']['planned']['q4'] = pvq4
         hact['programmatic_visits']['planned']['total'] = pvq1 + pvq2 + pvq3 + pvq4
+
         self.hact_values = hact
         self.save()
 
@@ -2220,9 +2225,7 @@ class InterventionAmendment(TimeStampedModel):
 
 
 class InterventionPlannedVisits(TimeStampedModel):
-    """
-    Represents planned visits for the intervention
-    """
+    """Represents planned visits for the intervention"""
 
     intervention = models.ForeignKey(
         Intervention, related_name='planned_visits', verbose_name=_('Intervention'),

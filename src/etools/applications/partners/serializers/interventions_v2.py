@@ -23,6 +23,7 @@ from etools.applications.partners.models import (
     InterventionReportingPeriod,
     InterventionResultLink,
     InterventionSectionLocationLink,
+    PartnerType,
 )
 from etools.applications.partners.permissions import InterventionPermissions
 from etools.applications.reports.models import AppliedIndicator, LowerResult, ReportingRequirement
@@ -83,6 +84,21 @@ class PlannedVisitsCUSerializer(serializers.ModelSerializer):
     class Meta:
         model = InterventionPlannedVisits
         fields = "__all__"
+
+    def is_valid(self, raise_exception=True):
+        try:
+            self.instance = self.Meta.model.objects.get(
+                intervention=self.initial_data.get("intervention"),
+                year=self.initial_data.get("year"),
+            )
+            if self.instance.intervention.agreement.partner.partner_type == PartnerType.GOVERNMENT:
+                raise ValidationError("Planned Visit to be set only at Partner level")
+            if self.instance.intervention.status == Intervention.TERMINATED:
+                raise ValidationError("Planned Visit cannot be set for Terminated interventions")
+
+        except self.Meta.model.DoesNotExist:
+            self.instance = None
+        return super().is_valid(raise_exception=True)
 
 
 class PlannedVisitsNestedSerializer(serializers.ModelSerializer):
@@ -542,6 +558,7 @@ class InterventionDetailSerializer(serializers.ModelSerializer):
     termination_doc_attachment = AttachmentSingleFileField(read_only=True)
     amendments = InterventionAmendmentCUSerializer(many=True, read_only=True, required=False)
     attachments = InterventionAttachmentSerializer(many=True, read_only=True, required=False)
+    planned_visits = PlannedVisitsNestedSerializer(many=True, read_only=True, required=False)
     result_links = InterventionResultNestedSerializer(many=True, read_only=True, required=False)
     submitted_to_prc = serializers.ReadOnlyField()
     frs_details = FRsSerializer(source='frs', read_only=True)
@@ -614,7 +631,7 @@ class InterventionDetailSerializer(serializers.ModelSerializer):
             "unicef_signatory", "unicef_focal_points", "partner_focal_points", "partner_authorized_officer_signatory",
             "offices", "population_focus", "signed_by_partner_date", "created", "modified",
             "planned_budget", "result_links", 'country_programme', 'metadata', 'contingency_pd', "amendments",
-            "attachments", 'permissions', 'partner_id', "sections",
+            "attachments", 'permissions', 'partner_id', "sections", "planned_visits",
             "locations", "location_names", "cluster_names", "flat_locations", "flagged_sections", "section_names",
             "in_amendment", "prc_review_attachment", "signed_pd_attachment", "donors", "donor_codes", "grants",
             "location_p_codes",
