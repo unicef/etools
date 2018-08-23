@@ -130,6 +130,17 @@ def get_object_url(obj):
         return ""
 
 
+def get_source(obj):
+    app_label = obj.content_type.app_label
+    if app_label == "partners":
+        return "Partnership Management Portal"
+    elif app_label == "audit":
+        return "Financial Assurance (FAM)"
+    elif app_label == "tpm":
+        return "Third Party Monitoring"
+    return ""
+
+
 def denormalize_attachment(attachment):
     from etools.applications.attachments.models import AttachmentFlat
 
@@ -140,6 +151,7 @@ def denormalize_attachment(attachment):
     agreement_reference_number = get_agreement_reference_number(attachment)
     file_type = get_file_type(attachment)
     object_link = get_object_url(attachment)
+    source = get_source(attachment)
     uploaded_by = attachment.uploaded_by.get_full_name() if attachment.uploaded_by else ""
 
     flat, created = AttachmentFlat.objects.update_or_create(
@@ -155,6 +167,7 @@ def denormalize_attachment(attachment):
             "file_link": attachment.file_link,
             "filename": attachment.filename,
             "uploaded_by": uploaded_by,
+            "source": source,
             "created": attachment.created.strftime("%d %b %Y"),
         }
     )
