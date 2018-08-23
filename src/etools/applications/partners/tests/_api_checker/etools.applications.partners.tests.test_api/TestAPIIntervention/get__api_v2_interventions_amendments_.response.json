@@ -20,20 +20,20 @@
     },
     "data": [
         {
-            "id": 8,
+            "id": 483,
             "amendment_number": "1",
-            "signed_amendment_file": "http://testserver/media/test/file_attachments/partner_organization/258/258/agreements/244/interventions/236/amendments/None/test_file_tIghN54.pdf",
+            "signed_amendment_file": "http://testserver/media/test/file_attachments/partner_organization/13064/13064/agreements/13648/interventions/11905/amendments/None/test_file.pdf",
             "signed_amendment_attachment": null,
             "internal_prc_review": null,
-            "created": "2018-08-14T21:21:49.404000Z",
-            "modified": "2018-08-14T21:21:49.422000Z",
+            "created": "2018-08-22T16:07:42.387000Z",
+            "modified": "2018-08-22T16:07:42.422000Z",
             "types": [
-                "Change in clause"
+                "Change banking info"
             ],
-            "other_description": "ItYVcHuBrqzjEimniPCOskfhfrxSHIdfaKXGMYxaJaliZbFZSi",
-            "signed_date": "2018-08-14",
-            "signed_amendment": "http://testserver/media/test/file_attachments/partner_organization/258/258/agreements/244/interventions/236/amendments/None/test_file_tIghN54.pdf",
-            "intervention": 236
+            "other_description": "zzOlZIAPSrklVGiOPJUCCqFwrPZzUkpQmUGqaICJsNXwuBrUPN",
+            "signed_date": "2018-08-22",
+            "signed_amendment": "http://testserver/media/test/file_attachments/partner_organization/13064/13064/agreements/13648/interventions/11905/amendments/None/test_file.pdf",
+            "intervention": 11905
         }
     ],
     "content_type": null

@@ -1864,12 +1864,12 @@ class TestInterventionListMapView(BaseTenantTestCase):
     def test_get_param_country_programme(self):
         country_programme = CountryProgrammeFactory()
         agreement = AgreementFactory(country_programme=country_programme)
-        intervention = InterventionFactory(agreement=agreement)
+        intervention = InterventionFactory(agreement=agreement, country_programme=country_programme)
         response = self.forced_auth_req(
             'get',
             self.url,
             user=self.unicef_staff,
-            data={"country_programme": country_programme.pk},
+            data={"country_programmes": country_programme.pk},
         )
         data, first = self.assertResponseFundamentals(response)
         self.assertEqual(first["id"], intervention.pk)
@@ -1883,7 +1883,7 @@ class TestInterventionListMapView(BaseTenantTestCase):
             'get',
             self.url,
             user=self.unicef_staff,
-            data={"section": section.pk},
+            data={"sections": section.pk},
         )
         data, first = self.assertResponseFundamentals(response)
         self.assertEqual(first["id"], intervention.pk)
@@ -1907,7 +1907,7 @@ class TestInterventionListMapView(BaseTenantTestCase):
             'get',
             self.url,
             user=self.unicef_staff,
-            data={"partner": partner.pk},
+            data={"partners": partner.pk},
         )
         data, first = self.assertResponseFundamentals(response)
         self.assertEqual(first["id"], intervention.pk)

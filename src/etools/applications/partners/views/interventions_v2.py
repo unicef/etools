@@ -110,7 +110,6 @@ class InterventionListAPIView(QueryStringFilterMixin, ExportModelMixin, Interven
         ('office', 'offices__in'),
         ('location', 'result_links__ll_results__applied_indicators__locations__name__icontains'),
     )
-    search_terms = ['title__icontains', 'agreement__partner__name__icontains', 'number__icontains']
 
     SERIALIZER_MAP = {
         'planned_budget': InterventionBudgetCUSerializer,
@@ -511,34 +510,41 @@ class InterventionSectionLocationLinkListAPIView(ExportModelMixin, ListAPIView):
         return q
 
 
-class InterventionListMapView(ListCreateAPIView):
+class InterventionListMapView(QueryStringFilterMixin, ListCreateAPIView):
     """
-    Create new Interventions.
     Returns a list of Interventions.
     """
     serializer_class = InterventionListMapSerializer
     permission_classes = (IsAdminUser,)
 
+    filters = (
+        ('sections', 'sections__in'),
+        ('country_programmes', 'country_programme__in'),
+        ('status', 'status__in'),
+        ('partners', 'agreement__partner__in'),
+        ('offices', 'offices__in'),
+        ('results', 'result_links__cp_output__in'),
+        ('donors', 'frs__fr_items__donor__in'),
+        ('grants', 'frs__fr_items__grant_number__in'),
+        ('unicef_focal_points', 'unicef_focal_points__in'),
+        ('interventions', 'pk__in'),
+        ('clusters', 'result_links__ll_results__applied_indicators__cluster_indicator_title__icontains'),
+    )
+
     def get_queryset(self):
-        q = Intervention.objects.prefetch_related("flat_locations")
+        qs = Intervention.objects.maps_qs()
 
         query_params = self.request.query_params
 
         if query_params:
             queries = []
-            if "country_programme" in query_params.keys():
-                queries.append(Q(agreement__country_programme=query_params.get("country_programme")))
-            if "section" in query_params.keys():
-                queries.append(Q(sections__pk=query_params.get("section")))
-            if "status" in query_params.keys():
-                queries.append(Q(status=query_params.get("status")))
-            if "partner" in query_params.keys():
-                queries.append(Q(agreement__partner=query_params.get("partner")))
+            queries.extend(self.filter_params())
+            queries.append(self.search_params())
             if queries:
                 expression = functools.reduce(operator.and_, queries)
-                q = q.filter(expression).distinct()
+                qs = qs.filter(expression).distinct()
 
-        return q
+        return qs
 
 
 class InterventionLowerResultListCreateView(ListCreateAPIView):

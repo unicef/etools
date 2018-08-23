@@ -10,9 +10,14 @@ from django.contrib.auth.models import Group
 from django.db import connection
 from django.db.models import Count
 
-
-from etools.applications.partners.models import (Agreement, Assessment, Intervention,
-                                                 InterventionPlannedVisits, PartnerOrganization, PartnerStaffMember,)
+from etools.applications.partners.models import (
+    Agreement,
+    Assessment,
+    Intervention,
+    InterventionPlannedVisits,
+    PartnerOrganization,
+    PartnerStaffMember,
+)
 from etools.applications.reports.models import CountryProgramme, Indicator, Result, ResultType
 from etools.applications.t2f.models import TravelActivity
 from etools.applications.users.models import Country, UserProfile

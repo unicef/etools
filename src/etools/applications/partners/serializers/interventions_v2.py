@@ -631,6 +631,11 @@ class InterventionListMapSerializer(serializers.ModelSerializer):
     partner_name = serializers.CharField(source='agreement.partner.name')
     partner_id = serializers.CharField(source='agreement.partner.id')
     locations = LocationSerializer(source="flat_locations", many=True)
+    donors = serializers.ReadOnlyField(read_only=True)
+    donor_codes = serializers.ReadOnlyField(read_only=True)
+    grants = serializers.ReadOnlyField(read_only=True)
+    results = serializers.ReadOnlyField(read_only=True)
+    clusters = serializers.ReadOnlyField(read_only=True)
 
     class Meta:
         model = Intervention
@@ -639,11 +644,21 @@ class InterventionListMapSerializer(serializers.ModelSerializer):
             "partner_id",
             "partner_name",
             "agreement",
-            "document_type", "number", "title", "status",
-            "start", "end",
+            "document_type",
+            "number",
+            "title",
+            "status",
+            "start",
+            "end",
             "offices",
             "sections",
-            "locations"
+            "locations",
+            "unicef_focal_points",
+            "donors",
+            "donor_codes",
+            "grants",
+            "results",
+            "clusters",
         )
 
 
