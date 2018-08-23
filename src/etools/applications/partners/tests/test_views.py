@@ -15,6 +15,7 @@ from django.utils import timezone
 import mock
 from model_utils import Choices
 from rest_framework import status
+from rest_framework.exceptions import ErrorDetail
 from rest_framework.test import APIRequestFactory
 from unicef_snapshot.models import Activity
 
@@ -536,8 +537,10 @@ class TestPartnerOrganizationRetrieveUpdateDeleteViews(BaseTenantTestCase):
         )
 
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        error = [
+            ErrorDetail(string='The basis for risk rating has to be blank if Type is Low or High', code='invalid')]
         self.assertEqual(response.data, {
-            "non_field_errors": ["The basis for risk rating has to be blank if Type is Low or High"]})
+            "basis_for_risk_rating": error})
 
     def test_api_partners_update_assessments_invalid(self):
         self.assertFalse(Activity.objects.exists())
