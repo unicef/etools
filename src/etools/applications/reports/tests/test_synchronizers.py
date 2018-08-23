@@ -3,9 +3,8 @@ import datetime
 import json
 
 from etools.applications.EquiTrack.tests.cases import BaseTenantTestCase
-from etools.applications.reports.models import CountryProgramme, Indicator, Result, ResultType
-from etools.applications.reports.tests.factories import (CountryProgrammeFactory, IndicatorFactory,
-                                                         ResultFactory, ResultTypeFactory,)
+from etools.applications.reports.models import CountryProgramme, Indicator, Result
+from etools.applications.reports.tests.factories import CountryProgrammeFactory, IndicatorFactory, ResultFactory
 from etools.applications.users.models import Country
 from etools.applications.reports import synchronizers
 
@@ -13,9 +12,9 @@ from etools.applications.reports import synchronizers
 class TestResultStructureSynchronizer(BaseTenantTestCase):
     @classmethod
     def setUpTestData(cls):
-        cls.result_type_outcome = ResultTypeFactory(name=ResultType.OUTCOME)
-        cls.result_type_output = ResultTypeFactory(name=ResultType.OUTPUT)
-        cls.result_type_activity = ResultTypeFactory(name=ResultType.ACTIVITY)
+        cls.result_type_outcome = Result.OUTCOME
+        cls.result_type_output = Result.OUTPUT
+        cls.result_type_activity = Result.ACTIVITY
 
     def setUp(self):
         self.data = {"test": "123"}
@@ -117,7 +116,7 @@ class TestResultStructureSynchronizer(BaseTenantTestCase):
         result = ResultFactory(
             name="New",
             wbs="R1",
-            result_type=self.result_type_outcome
+            type=self.result_type_outcome
         )
         self.data["outcomes"] = {"R1": {"name": "Changed"}}
         self.adapter.data = self.data
@@ -135,7 +134,7 @@ class TestResultStructureSynchronizer(BaseTenantTestCase):
         ResultFactory(
             name="New",
             wbs="R1",
-            result_type=self.result_type_outcome
+            type=self.result_type_outcome
         )
         self.data["outcomes"] = {"R1": {"name": "New"}}
         self.adapter.data = self.data
@@ -150,11 +149,11 @@ class TestResultStructureSynchronizer(BaseTenantTestCase):
         """
         CountryProgrammeFactory(wbs="C1")
         init_result_count = Result.objects.filter(
-            result_type=self.result_type_outcome
+            type=self.result_type_outcome
         ).count()
         result_qs = Result.objects.filter(
             name="Changed",
-            result_type=self.result_type_outcome
+            type=self.result_type_outcome
         )
         today = datetime.date.today()
         self.assertFalse(result_qs.exists())
@@ -180,7 +179,7 @@ class TestResultStructureSynchronizer(BaseTenantTestCase):
         result = ResultFactory(
             name="New",
             wbs="R1",
-            result_type=self.result_type_output
+            type=self.result_type_output
         )
         self.data["outputs"] = {"R1": {"name": "Changed"}}
         self.adapter.data = self.data
@@ -198,7 +197,7 @@ class TestResultStructureSynchronizer(BaseTenantTestCase):
         ResultFactory(
             name="New",
             wbs="R1",
-            result_type=self.result_type_output
+            type=self.result_type_output
         )
         self.data["outputs"] = {"R1": {"name": "New"}}
         self.adapter.data = self.data
@@ -213,11 +212,11 @@ class TestResultStructureSynchronizer(BaseTenantTestCase):
         """
         CountryProgrammeFactory(wbs="C1")
         init_result_count = Result.objects.filter(
-            result_type=self.result_type_output
+            type=self.result_type_output
         ).count()
         result_qs = Result.objects.filter(
             name="Changed",
-            result_type=self.result_type_output
+            type=self.result_type_output
         )
         today = datetime.date.today()
         self.assertFalse(result_qs.exists())
@@ -243,7 +242,7 @@ class TestResultStructureSynchronizer(BaseTenantTestCase):
         result = ResultFactory(
             name="New",
             wbs="R1",
-            result_type=self.result_type_activity
+            type=self.result_type_activity
         )
         self.data["activities"] = {"R1": {"name": "Changed"}}
         self.adapter.data = self.data
@@ -261,7 +260,7 @@ class TestResultStructureSynchronizer(BaseTenantTestCase):
         ResultFactory(
             name="New",
             wbs="R1",
-            result_type=self.result_type_activity
+            type=self.result_type_activity
         )
         self.data["activities"] = {"R1": {"name": "New"}}
         self.adapter.data = self.data
@@ -276,11 +275,11 @@ class TestResultStructureSynchronizer(BaseTenantTestCase):
         """
         CountryProgrammeFactory(wbs="C1")
         init_result_count = Result.objects.filter(
-            result_type=self.result_type_activity
+            type=self.result_type_activity
         ).count()
         result_qs = Result.objects.filter(
             name="Changed",
-            result_type=self.result_type_activity
+            type=self.result_type_activity
         )
         today = datetime.date.today()
         self.assertFalse(result_qs.exists())
@@ -311,17 +310,17 @@ class TestResultStructureSynchronizer(BaseTenantTestCase):
         ResultFactory(
             name="New Outcome",
             wbs="R1",
-            result_type=self.result_type_outcome
+            type=self.result_type_outcome
         )
         ResultFactory(
             name="New Output",
             wbs="R2",
-            result_type=self.result_type_output
+            type=self.result_type_output
         )
         ResultFactory(
             name="New Activity",
             wbs="R3",
-            result_type=self.result_type_activity
+            type=self.result_type_activity
         )
         self.data["cps"] = {"C1": {"name": "New CP"}}
         self.data["outcomes"] = {"R1": {"name": "New Outcome"}}
@@ -571,7 +570,7 @@ class TestRAMSynchronizer(BaseTenantTestCase):
     @classmethod
     def setUpTestData(cls):
         cls.country = Country.objects.first()
-        cls.result_type_output = ResultTypeFactory(name=ResultType.OUTPUT)
+        cls.result_type_output = Result.OUTPUT
 
     def setUp(self):
         self.data = {
@@ -602,7 +601,7 @@ class TestRAMSynchronizer(BaseTenantTestCase):
     def test_process_indicators_update(self):
         """Check that update happens if field name changed"""
         result = ResultFactory(
-            result_type=self.result_type_output,
+            type=self.result_type_output,
             wbs="1234/56/78/90A/BCD"
         )
         indicator = IndicatorFactory(
@@ -631,7 +630,7 @@ class TestRAMSynchronizer(BaseTenantTestCase):
         update is skipped
         """
         result = ResultFactory(
-            result_type=self.result_type_output,
+            type=self.result_type_output,
             wbs="1234/56/78/90A/EFG"
         )
         IndicatorFactory(
@@ -682,11 +681,11 @@ class TestRAMSynchronizer(BaseTenantTestCase):
     def test_process_indicators_wbs_found(self):
         """Check that update happens if result wbs differs and found"""
         result_old = ResultFactory(
-            result_type=self.result_type_output,
+            type=self.result_type_output,
             wbs="1234/56/78/90A/EFG"
         )
         result_new = ResultFactory(
-            result_type=self.result_type_output,
+            type=self.result_type_output,
             wbs="1234/56/78/90A/BCD"
         )
         indicator = IndicatorFactory(
@@ -713,7 +712,7 @@ class TestRAMSynchronizer(BaseTenantTestCase):
     def test_process_indicators_add_result(self):
         """Check that result is added to indicator, if found"""
         result = ResultFactory(
-            result_type=self.result_type_output,
+            type=self.result_type_output,
             wbs="1234/56/78/90A/BCD"
         )
         indicator = IndicatorFactory(
@@ -739,7 +738,7 @@ class TestRAMSynchronizer(BaseTenantTestCase):
     def test_process_indicators_create(self):
         """Check that indicator is created"""
         ResultFactory(
-            result_type=self.result_type_output,
+            type=self.result_type_output,
             wbs="1234/56/78/90A/BCD"
         )
         indicator_qs = Indicator.objects.filter(name="NAME")

@@ -35,18 +35,10 @@ class CountryProgrammeFactory(factory.DjangoModelFactory):
     to_date = datetime.date(datetime.date.today().year, 12, 31)
 
 
-class ResultTypeFactory(factory.django.DjangoModelFactory):
-    class Meta:
-        model = models.ResultType
-
-    name = factory.Sequence(lambda n: 'ResultType {}'.format(n))
-
-
 class ResultFactory(factory.django.DjangoModelFactory):
     class Meta:
         model = models.Result
 
-    result_type = factory.SubFactory(ResultTypeFactory)
     name = factory.Sequence(lambda n: 'Result {}'.format(n))
     from_date = datetime.date(datetime.date.today().year, 1, 1)
     to_date = datetime.date(datetime.date.today().year, 12, 31)

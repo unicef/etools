@@ -2,7 +2,12 @@ from django.conf.urls import include, url
 
 from rest_framework import routers
 
-from etools.applications.reports.views.v1 import CountryProgrammeListView, CountryProgrammeRetrieveView, SectionViewSet
+from etools.applications.reports.views.v1 import (
+    CountryProgrammeListView,
+    CountryProgrammeRetrieveView,
+    ResultTypeView,
+    SectionViewSet,
+)
 from etools.applications.reports.views.v2 import (
     AppliedIndicatorListAPIView,
     AppliedIndicatorLocationExportView,
@@ -24,6 +29,7 @@ api.register(r'sections', SectionViewSet, base_name='sections')
 app_name = 'reports'
 urlpatterns = (
     url(r'^results/$', view=OutputListAPIView.as_view(), name='report-result-list'),
+    url(r'^result-types/$', view=ResultTypeView.as_view(), name='report-result-type-list'),
     url(r'^applied-indicators/$',
         view=AppliedIndicatorListAPIView.as_view(http_method_names=['get']),
         name='applied-indicator'),

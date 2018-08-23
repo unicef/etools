@@ -55,7 +55,7 @@ class IndicatorAdmin(admin.ModelAdmin):
     )
     list_filter = (
         SectionListFilter,
-        'result__result_type',
+        'result__type',
         'ram_indicator',
     )
     list_display = (
@@ -107,7 +107,7 @@ class ResultAdmin(MPTTModelAdmin):
     list_filter = (
         'country_programme',
         'sector',
-        'result_type',
+        'type',
         HiddenResultFilter,
     )
     list_display = (
@@ -210,7 +210,6 @@ admin.site.register(Unit, ImportExportModelAdmin)
 admin.site.register(Indicator, IndicatorAdmin)
 # admin.site.register(ResultChain)
 admin.site.register(LowerResult, LowerResultAdmin)
-# admin.site.register(ResultType)
 admin.site.register(IndicatorBlueprint)
 admin.site.register(AppliedIndicator, AppliedIndicatorAdmin)
 admin.site.register(Disaggregation)

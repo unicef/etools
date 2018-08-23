@@ -32,10 +32,11 @@ from etools.applications.reports.models import (
     CountryProgramme,
     Disaggregation,
     Indicator,
+    IndicatorBlueprint,
     LowerResult,
     Result,
     SpecialReportingRequirement,
-    ResultType, IndicatorBlueprint)
+)
 from etools.applications.reports.permissions import PMEPermission
 from etools.applications.reports.serializers.exports import (
     AppliedIndicatorExportFlatSerializer,
@@ -82,9 +83,9 @@ class OutputListAPIView(ListAPIView):
             queries.append(Q(country_programme__to_date__year__gte=cp_year))
 
         if "result_type" in query_params.keys():
-            queries.append(Q(result_type__name=query_params.get("result_type").title()))
+            queries.append(Q(type=query_params.get("result_type").title()))
         else:
-            queries.append(Q(result_type__name=ResultType.OUTPUT))
+            queries.append(Q(type=Result.OUTPUT))
 
         if "country_programme" in query_params.keys():
             cp = query_params.get("country_programme", None)

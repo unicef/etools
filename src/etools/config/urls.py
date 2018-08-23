@@ -14,7 +14,7 @@ from etools.applications.management.urls import urlpatterns as management_urls
 from etools.applications.partners.views.v1 import FileTypeViewSet
 from etools.applications.publics import urls as publics_patterns
 from etools.applications.publics.views import StaticDataView
-from etools.applications.reports.views.v1 import IndicatorViewSet, ResultTypeViewSet, ResultViewSet, UnitViewSet, \
+from etools.applications.reports.views.v1 import IndicatorViewSet, ResultViewSet, UnitViewSet, \
     SectionViewSet
 from etools.applications.t2f.urls import urlpatterns as t2f_patterns
 from etools.applications.users.views import (
@@ -54,7 +54,6 @@ api.register(r'offices', OfficeViewSet, base_name='offices')
 
 api.register(r'sections', SectionViewSet, base_name='sections')
 
-api.register(r'reports/result-types', ResultTypeViewSet, base_name='resulttypes')
 api.register(r'reports/indicators', IndicatorViewSet, base_name='indicators')
 api.register(r'reports/results', ResultViewSet, base_name='results')
 api.register(r'reports/units', UnitViewSet, base_name='units')

@@ -5,7 +5,7 @@ import logging
 
 from django.db import transaction
 
-from etools.applications.reports.models import CountryProgramme, Indicator, Result, ResultType
+from etools.applications.reports.models import CountryProgramme, Indicator, Result
 from etools.applications.vision.utils import wcf_json_date_as_date
 from etools.applications.vision.vision_data_synchronizer import VISION_NO_DATA_MESSAGE, VisionDataSynchronizer
 
@@ -68,12 +68,12 @@ class ResultStructureSynchronizer(object):
 
     def update_outcomes(self):
         remote_outcomes = self.data['outcomes']
-        outcome_type = ResultType.objects.get(name=ResultType.OUTCOME)
+        outcome_type = Result.OUTCOME
         total_data = len(remote_outcomes)
         total_updated = 0
 
         local_outcomes = dict([(r.wbs, r) for r in Result.objects.filter(wbs__in=list(remote_outcomes.keys()),
-                                                                         result_type__name=ResultType.OUTCOME
+                                                                         type=Result.OUTCOME
                                                                          )])
 
         for local_outcome in local_outcomes.values():
@@ -86,7 +86,7 @@ class ResultStructureSynchronizer(object):
         new_outcomes = {}
         for remote_outcome in remote_outcomes.values():
             remote_outcome['country_programme'] = self._get_local_parent(remote_outcome['wbs'], 'cp')
-            remote_outcome['result_type'] = outcome_type
+            remote_outcome['type'] = outcome_type
 
             new_outcomes[remote_outcome['wbs']], _ = Result.objects.get_or_create(**remote_outcome)
 
@@ -97,12 +97,12 @@ class ResultStructureSynchronizer(object):
 
     def update_outputs(self):
         rem_outputs = self.data['outputs']
-        output_type = ResultType.objects.get(name=ResultType.OUTPUT)
+        output_type = Result.OUTPUT
         total_data = len(rem_outputs)
         total_updated = 0
 
         loc_outputs = dict([(r.wbs, r) for r in Result.objects.filter(wbs__in=list(rem_outputs.keys()),
-                                                                      result_type__name=ResultType.OUTPUT)])
+                                                                      type=Result.OUTPUT)])
 
         for loc_output in loc_outputs.values():
             if self._update_changes(loc_output, rem_outputs[loc_output.wbs]):
@@ -115,7 +115,7 @@ class ResultStructureSynchronizer(object):
         for rem_output in rem_outputs.values():
             rem_output['country_programme'] = self._get_local_parent(rem_output['wbs'], 'cp')
             rem_output['parent'] = self._get_local_parent(rem_output['wbs'], 'outcome')
-            rem_output['result_type'] = output_type
+            rem_output['type'] = output_type
 
             new_outputs[rem_output['wbs']], _ = Result.objects.get_or_create(**rem_output)
 
@@ -126,12 +126,12 @@ class ResultStructureSynchronizer(object):
 
     def update_activities(self):
         rem_activities = self.data['activities']
-        activity_type = ResultType.objects.get(name=ResultType.ACTIVITY)
+        activity_type = Result.ACTIVITY
         total_data = len(rem_activities)
         total_updated = 0
 
         loc_activities = dict([(r.wbs, r) for r in Result.objects.filter(wbs__in=list(rem_activities.keys()),
-                                                                         result_type__name=ResultType.ACTIVITY)])
+                                                                         type=Result.ACTIVITY)])
 
         for loc_activity in loc_activities.values():
             if self._update_changes(loc_activity, rem_activities[loc_activity.wbs]):
@@ -144,7 +144,7 @@ class ResultStructureSynchronizer(object):
         for rem_activity in rem_activities.values():
             rem_activity['country_programme'] = self._get_local_parent(rem_activity['wbs'], 'cp')
             rem_activity['parent'] = self._get_local_parent(rem_activity['wbs'], 'output')
-            rem_activity['result_type'] = activity_type
+            rem_activity['type'] = activity_type
 
             new_activities[rem_activity['wbs']], _ = Result.objects.get_or_create(**rem_activity)
 
@@ -369,7 +369,7 @@ class RAMSynchronizer(VisionDataSynchronizer):
         # get all the indicators that are present in our db:
         records, wbss = self._clean_records(records)
 
-        results = Result.objects.filter(result_type__name='Output', wbs__in=wbss).all()
+        results = Result.objects.filter(type='Output', wbs__in=wbss).all()
         result_map = dict([(r.wbs, r) for r in results])
 
         existing_records = Indicator.objects.filter(code__in=records.keys()).prefetch_related('result').all()

@@ -51,7 +51,7 @@ class InterventionResultExportSerializer(InterventionResultSerializer):
     )
     result_type = serializers.CharField(
         label=_("Result Type"),
-        source="cp_output.result_type.name",
+        source="cp_output.type",
         read_only=True
     )
     sector = serializers.CharField(

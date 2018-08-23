@@ -10,7 +10,7 @@ from etools.applications.partners.tests.factories import AgreementFactory
 from etools.applications.reports.models import CountryProgramme, Indicator, IndicatorBlueprint, Quarter
 from etools.applications.reports.tests.factories import (CountryProgrammeFactory, IndicatorBlueprintFactory,
                                                          IndicatorFactory, LowerResultFactory, QuarterFactory,
-                                                         ResultFactory, ResultTypeFactory, SectionFactory, UnitFactory,)
+                                                         ResultFactory, SectionFactory, UnitFactory,)
 
 
 class TestStrUnicode(SimpleTestCase):
@@ -25,13 +25,6 @@ class TestStrUnicode(SimpleTestCase):
 
         instance = CountryProgrammeFactory.build(name=u'\xccsland', wbs=u'xyz')
         self.assertEqual(str(instance), u'\xccsland xyz')
-
-    def test_result_type(self):
-        instance = ResultTypeFactory.build(name='xyz')
-        self.assertEqual(str(instance), u'xyz')
-
-        instance = ResultTypeFactory.build(name=u'\xccsland')
-        self.assertEqual(str(instance), u'\xccsland')
 
     def test_section(self):
         instance = SectionFactory.build(name='xyz')
@@ -183,22 +176,18 @@ class TestCountryProgramme(BaseTenantTestCase):
 
 class TestResult(BaseTenantTestCase):
     def test_result_name(self):
-        result_type = ResultTypeFactory(name="RType")
         result = ResultFactory(
             code="C123",
-            result_type=result_type,
             name="Result"
         )
-        self.assertEqual(result.result_name, "C123 RType: Result")
+        self.assertEqual(result.result_name, "C123 Output: Result")
 
     def test_result_name_no_code(self):
-        result_type = ResultTypeFactory(name="RType")
         result = ResultFactory(
             code="",
-            result_type=result_type,
             name="Result"
         )
-        self.assertEqual(result.result_name, " RType: Result")
+        self.assertEqual(result.result_name, " Output: Result")
 
     def test_valid_entry(self):
         programme = CountryProgrammeFactory(wbs="WBS")

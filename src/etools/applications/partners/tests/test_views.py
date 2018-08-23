@@ -55,11 +55,10 @@ from etools.applications.partners.tests.factories import (
     PlannedEngagementFactory,
 )
 from etools.applications.partners.views import partner_organization_v2, v2
-from etools.applications.reports.models import ResultType
+from etools.applications.reports.models import Result
 from etools.applications.reports.tests.factories import (
     CountryProgrammeFactory,
     ResultFactory,
-    ResultTypeFactory,
     SectionFactory,
 )
 from etools.applications.t2f.models import Travel, TravelType
@@ -432,10 +431,10 @@ class TestPartnerOrganizationRetrieveUpdateDeleteViews(BaseTenantTestCase):
             signed_by_unicef_date=datetime.date.today())
 
         cls.intervention = InterventionFactory(agreement=agreement)
-        cls.output_res_type = ResultTypeFactory(name=ResultType.OUTPUT)
+        cls.output_res_type = Result.OUTPUT
 
         cls.result = ResultFactory(
-            result_type=cls.output_res_type,)
+            type=cls.output_res_type,)
 
         cls.partnership_budget = InterventionBudget.objects.create(
             intervention=cls.intervention,
@@ -451,7 +450,7 @@ class TestPartnerOrganizationRetrieveUpdateDeleteViews(BaseTenantTestCase):
         )
 
         cls.cp = CountryProgrammeFactory(__sequence=10)
-        cls.cp_output = ResultFactory(result_type=cls.output_res_type)
+        cls.cp_output = ResultFactory(type=cls.output_res_type)
 
     def test_api_partners_update_with_members(self):
         self.assertFalse(Activity.objects.exists())
@@ -764,8 +763,7 @@ class TestPartnershipViews(BaseTenantTestCase):
                                      partner_manager=cls.partner_staff_member)
         cls.intervention = InterventionFactory(agreement=agreement)
 
-        cls.result_type = ResultTypeFactory()
-        cls.result = ResultFactory(result_type=cls.result_type)
+        cls.result = ResultFactory(type=Result.OUTPUT)
         cls.partnership_budget = InterventionBudget.objects.create(
             intervention=cls.intervention,
             unicef_cash=100,
@@ -1457,7 +1455,7 @@ class TestInterventionViews(BaseTenantTestCase):
         self.fr_header_1 = FundsReservationHeaderFactory(fr_number=self.funding_commitment1.fr_number)
         self.fr_header_2 = FundsReservationHeaderFactory(fr_number=self.funding_commitment2.fr_number)
 
-        output_type = ResultTypeFactory(name=ResultType.OUTPUT)
+        output_type = Result.OUTPUT
         # Basic data to adjust in tests
         self.intervention_data = {
             "agreement": self.agreement2.id,
@@ -1500,7 +1498,7 @@ class TestInterventionViews(BaseTenantTestCase):
             "sections": [self.section.id],
             "result_links": [
                 {
-                    "cp_output": ResultFactory(result_type=output_type).id,
+                    "cp_output": ResultFactory(type=output_type).id,
                     "ram_indicators": []
                 }
             ],
@@ -1528,7 +1526,7 @@ class TestInterventionViews(BaseTenantTestCase):
             type=FileType.objects.create(name="pdf")
         )
         self.result = InterventionResultLinkFactory(intervention=self.intervention_obj,
-                                                    cp_output__result_type=output_type)
+                                                    cp_output__type=output_type)
         amendment = "amendment.pdf"
         self.amendment = InterventionAmendment.objects.create(
             intervention=self.intervention_obj,

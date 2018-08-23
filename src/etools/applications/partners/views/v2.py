@@ -5,7 +5,6 @@ from django.contrib.auth import get_user_model
 from django.db.models import Value
 from django.db.models.functions import Concat
 
-from model_utils import Choices
 from rest_framework import status
 from rest_framework.generics import RetrieveUpdateDestroyAPIView
 from rest_framework.permissions import IsAdminUser, IsAuthenticated
@@ -15,6 +14,7 @@ from unicef_attachments.models import FileType as AttachmentFileType
 from unicef_djangolib.fields import CURRENCIES
 from unicef_locations.models import GatewayType
 
+from etools.applications.EquiTrack.utils import choices_to_json_ready
 from etools.applications.funds.models import FundsReservationItem
 from etools.applications.partners.filters import PartnerScopeFilter
 from etools.applications.partners.models import (
@@ -33,7 +33,7 @@ from etools.applications.partners.serializers.partner_organization_v2 import (
     PartnerStaffMemberCreateUpdateSerializer,
     PartnerStaffMemberDetailSerializer,
 )
-from etools.applications.reports.models import CountryProgramme, Result, ResultType
+from etools.applications.reports.models import CountryProgramme, Result
 
 
 class PartnerStaffMemberDetailAPIView(RetrieveUpdateDestroyAPIView):
@@ -46,27 +46,6 @@ class PartnerStaffMemberDetailAPIView(RetrieveUpdateDestroyAPIView):
         if self.request.method in ["PUT", "PATCH"]:
             return PartnerStaffMemberCreateUpdateSerializer
         return super().get_serializer_class()
-
-
-# TODO move in EquiTrack (after utils package has been merged in EquiTrack)
-def choices_to_json_ready(choices, sort_choices=True):
-    if isinstance(choices, dict):
-        choice_list = [(k, v) for k, v in choices.items()]
-    elif isinstance(choices, Choices):
-        choice_list = [(k, v) for k, v in choices]
-    elif isinstance(choices, list):
-        choice_list = []
-        for c in choices:
-            if isinstance(c, tuple):
-                choice_list.append((c[0], c[1]))
-            else:
-                choice_list.append((c, c))
-    else:
-        choice_list = choices
-
-    if sort_choices:
-        choice_list = sorted(choice_list, key=lambda tup: tup[1])
-    return [{'label': choice[1], 'value': choice[0]} for choice in choice_list]
 
 
 class PMPStaticDropdownsListAPIView(APIView):
@@ -145,7 +124,7 @@ class PMPDropdownsListApiView(APIView):
         country_programmes = list(CountryProgramme.objects.all_active_and_future.values('id', 'wbs', 'name',
                                                                                         'from_date', 'to_date'))
         cp_outputs = [{"id": r.id, "name": r.output_name, "wbs": r.wbs, "country_programme": r.country_programme.id}
-                      for r in Result.objects.filter(result_type__name=ResultType.OUTPUT, wbs__isnull=False)]
+                      for r in Result.objects.filter(type=Result.OUTPUT, wbs__isnull=False)]
         file_types = list(FileType.objects.filter(name__in=[i[0] for i in FileType.NAME_CHOICES])
                           .all().values())
 

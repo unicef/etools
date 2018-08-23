@@ -14,7 +14,6 @@ from etools.applications.reports.models import (
     LowerResult,
     ReportingRequirement,
     Result,
-    ResultType,
     SpecialReportingRequirement,
 )
 
@@ -30,7 +29,7 @@ class MinimalOutputListSerializer(serializers.ModelSerializer):
         )
 
     def get_name(self, obj):
-        if obj.result_type == ResultType.OUTPUT:
+        if obj.type == Result.OUTPUT:
             return obj.output_name
         else:
             return obj.result_name

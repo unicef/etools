@@ -1,20 +1,26 @@
 from rest_framework import mixins, viewsets
 from rest_framework.generics import ListAPIView, RetrieveAPIView
 from rest_framework.permissions import IsAdminUser
+from rest_framework.response import Response
+from rest_framework.views import APIView
 
-from etools.applications.reports.models import CountryProgramme, Indicator, Result, ResultType, Section, Unit
-from etools.applications.reports.serializers.v1 import (CountryProgrammeSerializer, IndicatorCreateSerializer,
-                                                        ResultSerializer, ResultTypeSerializer,
-                                                        SectionCreateSerializer, UnitSerializer,)
+from etools.applications.partners.views.v2 import choices_to_json_ready
+from etools.applications.reports.models import CountryProgramme, Indicator, Result, Section, Unit
+from etools.applications.reports.serializers.v1 import (
+    CountryProgrammeSerializer,
+    IndicatorCreateSerializer,
+    ResultSerializer,
+    SectionCreateSerializer,
+    UnitSerializer,
+)
 
 
-class ResultTypeViewSet(mixins.ListModelMixin,
-                        viewsets.GenericViewSet):
-    """
-    Returns a list of all Result Types
-    """
-    queryset = ResultType.objects.all()
-    serializer_class = ResultTypeSerializer
+class ResultTypeView(APIView):
+    """Returns a list of all Result Types"""
+    def get(self, request):
+        return Response(
+            choices_to_json_ready(Result.RESULT_TYPE_CHOICE)
+        )
 
 
 class SectionViewSet(mixins.RetrieveModelMixin,

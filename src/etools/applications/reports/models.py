@@ -110,26 +110,6 @@ class CountryProgramme(models.Model):
         super().save(*args, **kwargs)
 
 
-class ResultType(models.Model):
-    """
-    Represents a result type
-    """
-
-    OUTCOME = 'Outcome'
-    OUTPUT = 'Output'
-    ACTIVITY = 'Activity'
-
-    NAME_CHOICES = (
-        (OUTCOME, 'Outcome'),
-        (OUTPUT, 'Output'),
-        (ACTIVITY, 'Activity'),
-    )
-    name = models.CharField(max_length=150, unique=True, choices=NAME_CHOICES, verbose_name=_('Name'))
-
-    def __str__(self):
-        return self.name
-
-
 class Sector(TimeStampedModel):
     """
     Represents a section
@@ -158,13 +138,13 @@ Section = Sector
 class ResultManager(models.Manager):
     def get_queryset(self):
         return super().get_queryset().select_related(
-            'country_programme', 'result_type')
+            'country_programme')
 
 
 class OutputManager(models.Manager):
     def get_queryset(self):
-        return super().get_queryset().filter(result_type__name=ResultType.OUTPUT).select_related(
-            'country_programme', 'result_type')
+        return super().get_queryset().filter(type=Result.OUTPUT).select_related(
+            'country_programme')
 
 
 class Result(MPTTModel):
@@ -173,8 +153,17 @@ class Result(MPTTModel):
 
     Relates to :model:`reports.CountryProgramme`
     Relates to :model:`reports.Sector`
-    Relates to :model:`reports.ResultType`
     """
+
+    OUTCOME = 'Outcome'
+    OUTPUT = 'Output'
+    ACTIVITY = 'Activity'
+
+    RESULT_TYPE_CHOICE = (
+        (OUTCOME, 'Outcome'),
+        (OUTPUT, 'Output'),
+        (ACTIVITY, 'Activity'),
+    )
     country_programme = models.ForeignKey(
         CountryProgramme,
         verbose_name=_("Country Programme"),
@@ -182,9 +171,11 @@ class Result(MPTTModel):
         blank=True,
         on_delete=models.CASCADE,
     )
-    result_type = models.ForeignKey(
-        ResultType, verbose_name=_("Result Type"),
-        on_delete=models.CASCADE,
+    type = models.CharField(
+        verbose_name=_("Result Type"),
+        max_length=10,
+        choices=RESULT_TYPE_CHOICE,
+        default=OUTPUT
     )
     sector = models.ForeignKey(
         Section,
@@ -292,13 +283,13 @@ class Result(MPTTModel):
     def result_name(self):
         return u'{} {}: {}'.format(
             self.code if self.code else u'',
-            self.result_type.name,
+            self.type,
             self.name
         )
 
     @cached_property
     def output_name(self):
-        assert self.result_type.name == ResultType.OUTPUT
+        assert self.type == Result.OUTPUT
 
         return u'{}{}{}'.format(
             '[Expired] ' if self.expired else '',
@@ -321,7 +312,7 @@ class Result(MPTTModel):
     def __str__(self):
         return u'{} {}: {}'.format(
             self.code if self.code else u'',
-            self.result_type.name,
+            self.type,
             self.name
         )
 

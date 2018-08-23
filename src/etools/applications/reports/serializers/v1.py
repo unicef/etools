@@ -3,7 +3,7 @@ from django.db import connection
 
 from rest_framework import serializers
 
-from etools.applications.reports.models import CountryProgramme, Indicator, Result, ResultType, Section, Unit
+from etools.applications.reports.models import CountryProgramme, Indicator, Result, Section, Unit
 
 
 class SectionSerializer(serializers.ModelSerializer):
@@ -70,15 +70,6 @@ class ResultLightSerializer(serializers.ModelSerializer):
     class Meta:
         model = Result
         fields = ('id', 'result_name')
-
-
-class ResultTypeSerializer(serializers.ModelSerializer):
-
-    id = serializers.CharField(read_only=True)
-
-    class Meta:
-        model = ResultType
-        fields = '__all__'
 
 
 class UnitSerializer(serializers.ModelSerializer):
