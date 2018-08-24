@@ -1,6 +1,7 @@
 import datetime
 import json
 
+from django.core.exceptions import ValidationError
 from django.test import SimpleTestCase
 from django.urls import reverse
 
@@ -47,7 +48,7 @@ class TestPartnerOrganizationDetailAPIView(BaseTenantTestCase):
     def setUpTestData(cls):
         cls.unicef_staff = UserFactory(is_staff=True)
         cls.partner = PartnerFactory(
-            partner_type=PartnerType.CIVIL_SOCIETY_ORGANIZATION,
+            partner_type=PartnerType.GOVERNMENT,
             cso_type="International",
             hidden=False,
             vendor_number="DDD",
@@ -296,6 +297,59 @@ class TestPartnerOrganizationDetailAPIView(BaseTenantTestCase):
         self.assertEqual(data["programmatic_q2"], 3)
         self.assertEqual(data["programmatic_q3"], 2)
         self.assertEqual(data["programmatic_q4"], 1)
+
+    def test_validation_fail_non_government(self):
+        """Ensure update happens if no id value provided"""
+        current_year = datetime.date.today().year
+        cso_partner = PartnerFactory(
+            partner_type=PartnerType.CIVIL_SOCIETY_ORGANIZATION,
+            cso_type="International",
+            hidden=False,
+            vendor_number="XYZ",
+            short_name="City Hunter",
+        )
+
+        planned_visit = PartnerPlannedVisitsFactory(
+            partner=cso_partner,
+            year=current_year,
+            programmatic_q1=1,
+            programmatic_q2=2,
+            programmatic_q3=3,
+            programmatic_q4=4,
+        )
+        response = self.forced_auth_req(
+            'get',
+            reverse('partners_api:partner-detail', args=[cso_partner.pk]),
+            user=self.unicef_staff,
+        )
+        planned_visits = [{
+            "programmatic_q1": 4,
+            "programmatic_q2": 3,
+            "programmatic_q3": 2,
+            "programmatic_q4": 1,
+        }]
+        data = {
+            "name": cso_partner.name + ' Updated',
+            "partner_type": cso_partner.partner_type,
+            "vendor_number": cso_partner.vendor_number,
+            "planned_visits": planned_visits,
+        }
+        with self.assertRaises(ValidationError):
+            response = self.forced_auth_req(
+                'patch',
+                reverse('partners_api:partner-detail', args=[cso_partner.pk]),
+                user=self.unicef_staff,
+                data=data,
+            )
+            self.assertEqual(response.status_code, status.HTTP_200_OK)
+            self.assertEqual(len(response.data["planned_visits"]), 1)
+            data = response.data["planned_visits"][0]
+            self.assertEqual(data["id"], planned_visit.pk)
+            self.assertEqual(data["year"], current_year)
+            self.assertEqual(data["programmatic_q1"], 4)
+            self.assertEqual(data["programmatic_q2"], 3)
+            self.assertEqual(data["programmatic_q3"], 2)
+            self.assertEqual(data["programmatic_q4"], 1)
 
 
 class TestPartnerOrganizationHactAPIView(BaseTenantTestCase):

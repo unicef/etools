@@ -34,6 +34,7 @@ from etools.applications.partners.tests.factories import (
     PartnerStaffFactory,
     PlannedEngagementFactory,
     WorkspaceFileTypeFactory,
+    InterventionPlannedVisitsFactory
 )
 from etools.applications.reports.tests.factories import (AppliedIndicatorFactory, CountryProgrammeFactory,
                                                          LowerResultFactory, ResultFactory, SectionFactory,)
@@ -371,10 +372,7 @@ class TestPartnerOrganizationModel(BaseTenantTestCase):
             year=year - 1,
             programmatic_q3=2
         )
-        self.assertEqual(
-            self.partner_organization.hact_values['programmatic_visits']['planned']['total'],
-            3
-        )
+        self.assertEqual(self.partner_organization.hact_values['programmatic_visits']['planned']['total'], 3)
 
     def test_planned_visits_non_gov(self):
         self.partner_organization.partner_type = models.PartnerType.UN_AGENCY
@@ -386,16 +384,53 @@ class TestPartnerOrganizationModel(BaseTenantTestCase):
             programmatic_q1=3,
             programmatic_q4=4,
         )
-        PartnerPlannedVisitsFactory(
-            partner=self.partner_organization,
+        intervention = InterventionFactory(
+            agreement=self.pca_signed1,
+            status=models.Intervention.ACTIVE
+        )
+        InterventionPlannedVisitsFactory(
+            intervention=intervention,
             year=year - 1,
             programmatic_q2=2
+        )
+        InterventionPlannedVisitsFactory(
+            intervention=intervention,
+            year=year,
+            programmatic_q1=1,
+            programmatic_q3=3,
         )
         self.partner_organization.planned_visits_to_hact()
         self.assertEqual(
             self.partner_organization.hact_values['programmatic_visits']['planned']['total'],
-            7
+            4
         )
+
+    def test_planned_visits_non_gov_no_pv_intervention(self):
+        self.partner_organization.partner_type = models.PartnerType.UN_AGENCY
+        self.partner_organization.save()
+        intervention1 = InterventionFactory(
+            agreement=self.pca_signed1,
+            status=models.Intervention.ACTIVE
+        )
+        intervention2 = InterventionFactory(
+            agreement=self.pca_signed1,
+            status=models.Intervention.ACTIVE
+        )
+        year = datetime.date.today().year
+        InterventionPlannedVisitsFactory(
+            intervention=intervention1,
+            year=year,
+            programmatic_q1=1,
+            programmatic_q3=3,
+        )
+        InterventionPlannedVisitsFactory(
+            intervention=intervention2,
+            year=year - 1,
+            programmatic_q4=2
+        )
+        self.partner_organization.planned_visits_to_hact()
+        self.assertEqual(self.partner_organization.hact_values['programmatic_visits']['planned']['total'], 4)
+        self.assertEqual(self.partner_organization.hact_values['programmatic_visits']['planned']['q3'], 3)
 
     def test_programmatic_visits_update_one(self):
         self.assertEqual(self.partner_organization.hact_values['programmatic_visits']['completed']['total'], 0)
