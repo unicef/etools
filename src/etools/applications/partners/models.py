@@ -628,20 +628,24 @@ class PartnerOrganization(TimeStampedModel):
         return self.core_values_assessments.filter(archived=False).first()
 
     def planned_visits_to_hact(self):
-        """For current year sum all programmatic values of planned visits
-        records for partner
-
-        If partner type is Government, then default to 0 planned visits
-        """
+        """For current year sum all programmatic values of planned visits records for partner"""
         year = datetime.date.today().year
-        try:
-            pv = self.planned_visits.get(year=year)
-            pvq1 = pv.programmatic_q1
-            pvq2 = pv.programmatic_q2
-            pvq3 = pv.programmatic_q3
-            pvq4 = pv.programmatic_q4
-        except PartnerPlannedVisits.DoesNotExist:
-            pvq1 = pvq2 = pvq3 = pvq4 = 0
+        if self.partner_type != 'Government':
+            pv = InterventionPlannedVisits.objects.filter(
+                intervention__agreement__partner=self, year=year).exclude(intervention__status=Intervention.DRAFT)
+            pvq1 = pv.aggregate(models.Sum('programmatic_q1'))['programmatic_q1__sum'] or 0
+            pvq2 = pv.aggregate(models.Sum('programmatic_q2'))['programmatic_q2__sum'] or 0
+            pvq3 = pv.aggregate(models.Sum('programmatic_q3'))['programmatic_q3__sum'] or 0
+            pvq4 = pv.aggregate(models.Sum('programmatic_q4'))['programmatic_q4__sum'] or 0
+        else:
+            try:
+                pv = self.planned_visits.get(year=year)
+                pvq1 = pv.programmatic_q1
+                pvq2 = pv.programmatic_q2
+                pvq3 = pv.programmatic_q3
+                pvq4 = pv.programmatic_q4
+            except PartnerPlannedVisits.DoesNotExist:
+                pvq1 = pvq2 = pvq3 = pvq4 = 0
 
         hact = self.get_hact_json()
         hact['programmatic_visits']['planned']['q1'] = pvq1
@@ -649,6 +653,7 @@ class PartnerOrganization(TimeStampedModel):
         hact['programmatic_visits']['planned']['q3'] = pvq3
         hact['programmatic_visits']['planned']['q4'] = pvq4
         hact['programmatic_visits']['planned']['total'] = pvq1 + pvq2 + pvq3 + pvq4
+
         self.hact_values = hact
         self.save()
 
@@ -1489,15 +1494,10 @@ class InterventionManager(models.Manager):
 
     def frs_qs(self):
         qs = self.get_queryset().prefetch_related(
-            'agreement__partner',
-            'planned_budget',
-            'offices',
-            'sections',
             # 'frs__fr_items',
             # TODO: Figure out a way in which to add locations that is more performant
             # 'flat_locations',
             'result_links__cp_output',
-            'unicef_focal_points',
         )
         qs = qs.annotate(
             Max("frs__end_date"),
@@ -1513,6 +1513,17 @@ class InterventionManager(models.Manager):
             grants=StringConcat("frs__fr_items__grant_number", separator="|", distinct=True),
             max_fr_currency=Max("frs__currency", output_field=CharField(), distinct=True),
             multi_curr_flag=Count(Case(When(frs__multi_curr_flag=True, then=1)))
+        )
+        return qs
+
+    def maps_qs(self):
+        qs = self.get_queryset().prefetch_related('flat_locations').distinct().annotate(
+            donors=StringConcat("frs__fr_items__donor", separator="|", distinct=True),
+            donor_codes=StringConcat("frs__fr_items__donor_code", separator="|", distinct=True),
+            grants=StringConcat("frs__fr_items__grant_number", separator="|", distinct=True),
+            results=StringConcat("result_links__cp_output__name", separator="|", distinct=True),
+            clusters=StringConcat("result_links__ll_results__applied_indicators__cluster_indicator_title",
+                                  separator="|", distinct=True),
         )
         return qs
 
@@ -1549,7 +1560,7 @@ class Intervention(TimeStampedModel):
     AUTO_TRANSITIONS = {
         DRAFT: [SIGNED],
         SIGNED: [ACTIVE],
-        ACTIVE: [ENDED],
+        ACTIVE: [ENDED, TERMINATED],
         ENDED: [CLOSED]
     }
     TRANSITION_SIDE_EFFECTS = {
@@ -1724,6 +1735,34 @@ class Intervention(TimeStampedModel):
     contingency_pd = models.BooleanField(
         verbose_name=_("Contingency PD"),
         default=False,
+    )
+    activation_letter = models.FileField(
+        verbose_name=_("Activation Document for Contingency PDs"),
+        max_length=1024,
+        null=True,
+        blank=True,
+        upload_to=get_intervention_file_path
+    )
+    activation_letter_attachment = CodedGenericRelation(
+        Attachment,
+        verbose_name=_('Activation Document for Contingency PDs'),
+        code='partners_intervention_activation_letter',
+        blank=True,
+        null=True
+    )
+    termination_doc = models.FileField(
+        verbose_name=_("Termination document for PDs"),
+        max_length=1024,
+        null=True,
+        blank=True,
+        upload_to=get_intervention_file_path
+    )
+    termination_doc_attachment = CodedGenericRelation(
+        Attachment,
+        verbose_name=_('Termination document for PDs'),
+        code='partners_intervention_termination_doc',
+        blank=True,
+        null=True
     )
     sections = models.ManyToManyField(
         Section,
@@ -2196,9 +2235,7 @@ class InterventionAmendment(TimeStampedModel):
 
 
 class InterventionPlannedVisits(TimeStampedModel):
-    """
-    Represents planned visits for the intervention
-    """
+    """Represents planned visits for the intervention"""
 
     intervention = models.ForeignKey(
         Intervention, related_name='planned_visits', verbose_name=_('Intervention'),
@@ -2409,13 +2446,6 @@ class InterventionSectorLocationLink(TimeStampedModel):
 
 
 InterventionSectionLocationLink = InterventionSectorLocationLink
-
-
-# TODO: Move to funds
-class FCManager(models.Manager):
-
-    def get_queryset(self):
-        return super(FCManager, self).get_queryset().select_related('grant__donor')
 
 
 class DirectCashTransfer(models.Model):

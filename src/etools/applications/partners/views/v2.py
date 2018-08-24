@@ -100,16 +100,7 @@ class PMPStaticDropdownsListAPIView(APIView):
         attachment_types = AttachmentFileType.objects.values_list(
             'label',
             flat=True
-        ).filter(code__in=[
-            "partners_agreement",
-            "partners_partner_assessment",
-            "partners_assessment_report",
-            "partners_agreement_amendment",
-            "partners_intervention_prc_review",
-            "partners_intervention_signed_pd",
-            "partners_intervention_amendment_signed",
-            "partners_intervention_attachment",
-        ])
+        )
         partner_file_types = FileType.objects.values_list("name", flat=True)
 
         local_currency = local_workspace.local_currency.id if local_workspace.local_currency else None

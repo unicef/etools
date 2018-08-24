@@ -351,17 +351,17 @@ class TPMVisitViewSet(
     @action(detail=False, methods=['get'], url_path='activities/implementing-partners')
     def implementing_partners(self, request, *args, **kwargs):
         visits = self.get_queryset()
-        return ImplementingPartnerView.as_view(visits=visits)(request, *args, **kwargs)
+        return ImplementingPartnerView.as_view(visits=visits)(request._request, *args, **kwargs)
 
     @action(detail=False, methods=['get'], url_path='activities/sections')
     def sections(self, request, *args, **kwargs):
         visits = self.get_queryset()
-        return VisitsSectionView.as_view(visits=visits)(request, *args, **kwargs)
+        return VisitsSectionView.as_view(visits=visits)(request._request, *args, **kwargs)
 
     @action(detail=False, methods=['get'], url_path='activities/cp-outputs')
     def cp_outputs(self, request, *args, **kwargs):
         visits = self.get_queryset()
-        return VisitsCPOutputView.as_view(visits=visits)(request, *args, **kwargs)
+        return VisitsCPOutputView.as_view(visits=visits)(request._request, *args, **kwargs)
 
     @action(detail=False, methods=['get'], url_path='export', renderer_classes=(TPMVisitCSVRenderer,))
     def visits_export(self, request, *args, **kwargs):

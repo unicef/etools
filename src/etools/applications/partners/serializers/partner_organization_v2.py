@@ -18,7 +18,7 @@ from etools.applications.partners.models import (
     PartnerPlannedVisits,
     PartnerStaffMember,
     PlannedEngagement,
-)
+    PartnerType)
 from etools.applications.partners.serializers.interventions_v2 import InterventionListSerializer
 
 
@@ -255,6 +255,9 @@ class PartnerPlannedVisitsSerializer(serializers.ModelSerializer):
                 partner=self.initial_data.get("partner"),
                 year=self.initial_data.get("year"),
             )
+            if self.instance.partner.partner_type != PartnerType.GOVERNMENT:
+                raise ValidationError({'partner': 'Planned Visit can be set only for Government partners'})
+
         except self.Meta.model.DoesNotExist:
             self.instance = None
 

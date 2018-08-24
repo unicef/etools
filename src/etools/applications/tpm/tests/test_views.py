@@ -227,6 +227,36 @@ class TestTPMVisitViewSet(TestExportMixin, TPMTestCaseMixin, BaseTenantTestCase)
         visit = TPMVisitFactory(status='tpm_accepted')
         self._test_export(self.pme_user, 'tpm:visits-tpm-visit-letter', args=(visit.id,))
 
+    def test_implementing_partners_subview(self):
+        TPMVisitFactory(tpm_activities__count=1)
+
+        response = self.forced_auth_req(
+            'get',
+            reverse('tpm:visits-implementing-partners'),
+            user=self.unicef_user
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+    def test_sections_subview(self):
+        TPMVisitFactory(tpm_activities__count=1)
+
+        response = self.forced_auth_req(
+            'get',
+            reverse('tpm:visits-sections'),
+            user=self.unicef_user
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+    def test_cp_outputs_subview(self):
+        TPMVisitFactory(tpm_activities__count=1)
+
+        response = self.forced_auth_req(
+            'get',
+            reverse('tpm:visits-cp-outputs'),
+            user=self.unicef_user
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
 
 class TestTPMActionPointViewSet(TPMTestCaseMixin, BaseTenantTestCase):
     def test_action_point_added(self):
