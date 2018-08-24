@@ -14,6 +14,7 @@ from unicef_snapshot.models import Activity
 from etools.applications.action_points.categories.models import Category
 from etools.applications.action_points.transitions.conditions import ActionPointCompleteActionsTakenCheck
 from etools.applications.EquiTrack.utils import get_environment
+from etools.applications.action_points.transitions.serializers.serializers import ActionPointCompleteSerializer
 from etools.applications.permissions2.fsm import has_action_permission
 from etools.applications.utils.common.urlresolvers import build_frontend_url
 from etools.applications.utils.groups.wrappers import GroupWrapper
@@ -210,16 +211,18 @@ class ActionPoint(TimeStampedModel):
         )
         notification.send_notification()
 
-    def _do_complete(self):
-        self.send_email(self.assigned_by, 'action_points/action_point/completed', cc=[self.assigned_to.email])
+    def _do_complete(self, completed_by=None):
+        self.send_email(self.assigned_by, 'action_points/action_point/completed', cc=[self.assigned_to.email],
+                        additional_context={'completed_by': (completed_by or self.assigned_to).get_full_name()})
 
     @transition(status, source=STATUSES.open, target=STATUSES.completed,
                 permission=has_action_permission(action='complete'),
                 conditions=[
                     ActionPointCompleteActionsTakenCheck.as_condition()
-                ])
-    def complete(self):
-        self._do_complete()
+                ],
+                custom={'serializer': ActionPointCompleteSerializer})
+    def complete(self, completed_by=None):
+        self._do_complete(completed_by=completed_by)
 
 
 PME = GroupWrapper(code='pme',

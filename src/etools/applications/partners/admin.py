@@ -116,6 +116,19 @@ class InterventionPlannedVisitsAdmin(admin.ModelAdmin):
     )
 
 
+class InterventionPlannedVisitsInline(admin.TabularInline):
+    model = InterventionPlannedVisits
+    fields = (
+        'intervention',
+        'year',
+        'programmatic_q1',
+        'programmatic_q2',
+        'programmatic_q3',
+        'programmatic_q4',
+    )
+    extra = 0
+
+
 class AttachmentFileInline(AttachmentSingleInline):
     verbose_name_plural = "Attachment"
 
@@ -282,6 +295,7 @@ class InterventionAdmin(CountryUsersAdminMixin, HiddenPartnerMixin, SnapshotMode
         ActivityInline,
         PRCReviewAttachmentInline,
         SignedPDAttachmentInline,
+        InterventionPlannedVisitsInline,
     )
 
     def created_date(self, obj):
