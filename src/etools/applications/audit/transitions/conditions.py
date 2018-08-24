@@ -94,7 +94,7 @@ class BaseRequiredFieldsCheck(BaseTransitionCheck):
                     errors[field] = _('This field is required.')
                     continue
 
-                if not value and value != 0:
+                if not value or value == instance._meta.get_field(field).default:
                     errors[field] = _('This field is required.')
 
         return errors
