@@ -648,10 +648,13 @@ class InterventionListMapSerializer(serializers.ModelSerializer):
     partner_name = serializers.CharField(source='agreement.partner.name')
     partner_id = serializers.CharField(source='agreement.partner.id')
     locations = LocationSerializer(source="flat_locations", many=True)
+    offices = serializers.StringRelatedField(many=True)
+    sections = serializers.StringRelatedField(many=True)
+    unicef_focal_points = serializers.StringRelatedField(many=True)
     donors = serializers.ReadOnlyField(read_only=True)
     donor_codes = serializers.ReadOnlyField(read_only=True)
     grants = serializers.ReadOnlyField(read_only=True)
-    results = serializers.ReadOnlyField(read_only=True)
+    results = serializers.ReadOnlyField(source='cp_output_names', read_only=True)
     clusters = serializers.ReadOnlyField(read_only=True)
 
     class Meta:
