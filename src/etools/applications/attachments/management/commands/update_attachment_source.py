@@ -1,5 +1,6 @@
 from django.core.management.base import BaseCommand
 
+from unicef_attachments.models import Attachment
 from unicef_attachments.utils import get_attachment_flat_model
 
 from etools.applications.attachments.utils import get_source
@@ -12,8 +13,11 @@ class Command(BaseCommand):
     def run(self):
         attachment_qs = get_attachment_flat_model().objects.filter(source="")
         for flat in attachment_qs:
-            flat.source = get_source(flat.attachment)
-            flat.save()
+            try:
+                flat.source = get_source(flat.attachment)
+                flat.save()
+            except Attachment.DoesNotExist:
+                pass
 
     def handle(self, *args, **options):
         run_on_all_tenants(self.run)
