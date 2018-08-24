@@ -27,7 +27,7 @@ def migrate_attachments(apps, schema_editor):
     for a in AttachmentOld.objects.all():
         try:
             ft = FileType.objects.get(pk=a.file_type.pk)
-        except AttributeErrir:
+        except AttributeError:
             ft = None
         Attachment.objects.create(
             id=a.pk,
