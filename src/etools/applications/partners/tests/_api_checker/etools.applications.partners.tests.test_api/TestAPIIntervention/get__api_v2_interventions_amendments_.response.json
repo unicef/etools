@@ -20,20 +20,20 @@
     },
     "data": [
         {
-            "id": 38,
+            "id": 674,
             "amendment_number": "1",
-            "signed_amendment_file": "http://testserver/media/test/file_attachments/partner_organization/1662/1662/agreements/1674/interventions/1562/amendments/None/test_file.pdf",
+            "signed_amendment_file": "http://testserver/media/test/file_attachments/partner_organization/15302/15302/agreements/16002/interventions/13915/amendments/None/test_file.pdf",
             "signed_amendment_attachment": null,
             "internal_prc_review": null,
-            "created": "2018-08-08T17:43:34.372000Z",
-            "modified": "2018-08-08T17:43:34.398000Z",
+            "created": "2018-08-23T15:20:15.369000Z",
+            "modified": "2018-08-23T15:20:15.388000Z",
             "types": [
-                "Change IP name"
+                "Change in clause"
             ],
-            "other_description": "CFkZKtCnmxOPlSfXuDZOoFoHlFmwrXUEWtGQTWqMazONhmQFMF",
-            "signed_date": "2018-08-08",
-            "signed_amendment": "http://testserver/media/test/file_attachments/partner_organization/1662/1662/agreements/1674/interventions/1562/amendments/None/test_file.pdf",
-            "intervention": 1562
+            "other_description": "nsVZMcJfJpIZWElxzhLSmnvQaXJLijVgcfvqdQMBcBXQHtGQIR",
+            "signed_date": "2018-08-23",
+            "signed_amendment": "http://testserver/media/test/file_attachments/partner_organization/15302/15302/agreements/16002/interventions/13915/amendments/None/test_file.pdf",
+            "intervention": 13915
         }
     ],
     "content_type": null

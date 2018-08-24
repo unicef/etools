@@ -10,11 +10,12 @@ from django.urls import resolve, reverse
 from django.utils import timezone
 
 from rest_framework import status
+from rest_framework.exceptions import ErrorDetail
 from rest_framework.test import APIRequestFactory
+from unicef_attachments.models import Attachment
 from unicef_locations.tests.factories import LocationFactory
 from unicef_snapshot.models import Activity
 
-from etools.applications.attachments.models import Attachment
 from etools.applications.attachments.tests.factories import AttachmentFactory, AttachmentFileTypeFactory
 from etools.applications.environment.helpers import tenant_switch_is_active
 from etools.applications.environment.tests.factories import TenantSwitchFactory
@@ -64,7 +65,6 @@ class URLsTestCase(URLAssertionMixin, SimpleTestCase):
             ('intervention-attachments-del', 'attachments/1/', {'pk': 1}),
             ('intervention-indicators', 'indicators/', {}),
             ('intervention-results', 'results/', {}),
-            ('intervention-results-del', 'results/1/', {'pk': 1}),
             ('intervention-amendments', 'amendments/', {}),
             ('intervention-amendments-del', 'amendments/1/', {'pk': 1}),
             ('intervention-sector-locations', 'sector-locations/', {}),
@@ -95,14 +95,14 @@ class TestInterventionsAPI(BaseTenantTestCase):
                   "country_programme", "amendments", "unicef_focal_points", "end", "title",
                   "signed_by_partner_date", "review_date_prc", "frs", "start",
                   "metadata", "submission_date", "agreement", "unicef_signatory_id",
-                  "result_links", "contingency_pd", "unicef_signatory", "signed_by_unicef", "agreement_id",
-                  "signed_by_unicef_date",
+                  "result_links", "contingency_pd", "unicef_signatory", "agreement_id", "signed_by_unicef_date",
                   "partner_authorized_officer_signatory_id", "created", "planned_visits",
                   "planned_budget", "modified", "signed_pd_document", "submission_date_prc", "document_type",
                   "offices", "population_focus", "country_programme_id", "engagement", "sections",
                   "sections_present", "flat_locations", "reporting_periods", "activity",
                   "prc_review_attachment", "signed_pd_attachment", "actionpoint",
-                  "reporting_requirements", "special_reporting_requirements", "reference_number_year", "number"],
+                  "reporting_requirements", "special_reporting_requirements", "reference_number_year", "number",
+                  "termination_doc_attachment"],
         'signed': [],
         'active': ['']
     }
@@ -1487,48 +1487,6 @@ class TestInterventionIndicatorListAPIView(BaseTenantTestCase):
         self.assertFalse(response_json)
 
 
-class TestInterventionResultLinkDeleteView(BaseTenantTestCase):
-    @classmethod
-    def setUpTestData(cls):
-        cls.unicef_staff = UserFactory(is_staff=True)
-        cls.intervention = InterventionFactory()
-        cls.result = InterventionResultLinkFactory(
-            intervention=cls.intervention,
-        )
-        cls.url = reverse(
-            "partners_api:intervention-results-del",
-            args=[cls.result.pk]
-        )
-
-    def test_delete(self):
-        response = self.forced_auth_req(
-            'delete',
-            self.url,
-            user=self.unicef_staff,
-        )
-        self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
-
-    def test_delete_invalid(self):
-        self.intervention.status = Intervention.ACTIVE
-        self.intervention.save()
-        response = self.forced_auth_req(
-            'delete',
-            self.url,
-            user=self.unicef_staff,
-        )
-
-        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
-        self.assertEqual(response.data, ["You do not have permissions to delete a result"])
-
-    def test_delete_not_found(self):
-        response = self.forced_auth_req(
-            'delete',
-            reverse("partners_api:intervention-results-del", args=[404]),
-            user=self.unicef_staff,
-        )
-        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
-
-
 class TestInterventionAmendmentListAPIView(BaseTenantTestCase):
     @classmethod
     def setUpTestData(cls):
@@ -1646,7 +1604,8 @@ class TestInterventionAmendmentCreateAPIView(BaseTenantTestCase):
         )
 
         self.assertEquals(response.status_code, status.HTTP_400_BAD_REQUEST)
-        self.assertEquals(response.data['types'], [u'"%s" is not a valid choice.' % invalid_type])
+        self.assertEquals(response.data['types'],
+                          {0: [ErrorDetail(string='"invalid_choice" is not a valid choice.', code=f'{invalid_type}')]})
 
     def test_create_amendment_invalid_file(self):
         response = self._make_request(
@@ -1823,7 +1782,7 @@ class TestInterventionSectionLocationLinkListAPIView(BaseTenantTestCase):
         cls.unicef_staff = UserFactory(is_staff=True)
         InterventionSectionLocationLinkFactory()
         cls.intervention = InterventionFactory()
-        cls.section = SectionFactory(name="Sector Name")
+        cls.section = SectionFactory(name="Section Name")
         cls.link = InterventionSectionLocationLinkFactory(
             intervention=cls.intervention,
             sector=cls.section
@@ -1905,12 +1864,12 @@ class TestInterventionListMapView(BaseTenantTestCase):
     def test_get_param_country_programme(self):
         country_programme = CountryProgrammeFactory()
         agreement = AgreementFactory(country_programme=country_programme)
-        intervention = InterventionFactory(agreement=agreement)
+        intervention = InterventionFactory(agreement=agreement, country_programme=country_programme)
         response = self.forced_auth_req(
             'get',
             self.url,
             user=self.unicef_staff,
-            data={"country_programme": country_programme.pk},
+            data={"country_programmes": country_programme.pk},
         )
         data, first = self.assertResponseFundamentals(response)
         self.assertEqual(first["id"], intervention.pk)
@@ -1924,7 +1883,7 @@ class TestInterventionListMapView(BaseTenantTestCase):
             'get',
             self.url,
             user=self.unicef_staff,
-            data={"section": section.pk},
+            data={"sections": section.pk},
         )
         data, first = self.assertResponseFundamentals(response)
         self.assertEqual(first["id"], intervention.pk)
@@ -1948,7 +1907,7 @@ class TestInterventionListMapView(BaseTenantTestCase):
             'get',
             self.url,
             user=self.unicef_staff,
-            data={"partner": partner.pk},
+            data={"partners": partner.pk},
         )
         data, first = self.assertResponseFundamentals(response)
         self.assertEqual(first["id"], intervention.pk)

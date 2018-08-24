@@ -1,4 +1,3 @@
-
 from django.utils.translation import ugettext as _
 
 from rest_framework import serializers
@@ -45,6 +44,7 @@ class AgreementExportSerializer(serializers.ModelSerializer):
         label=_("Signed By Partner"),
         source='partner_manager.get_full_name',
         read_only=True,
+        allow_null=True,
     )
     signed_by_name = serializers.CharField(
         label=_("Signed By UNICEF"),

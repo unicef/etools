@@ -1,20 +1,16 @@
-from etools.applications.audit.models import Engagement
-from etools.applications.partners.models import (
-    Agreement,
-    AgreementAmendment,
-    Assessment,
-    Intervention,
-    InterventionAmendment,
-    InterventionAttachment,
-    PartnerOrganization,
-)
-from etools.applications.tpm.models import TPMActivity
+from django.db import connection
+
+
+def get_filepath_prefix():
+    return connection.schema_name
 
 
 def get_file_type(obj):
     """If dealing with intervention attachment then use
     partner file type instead of attachment file type
     """
+    from etools.applications.partners.models import InterventionAttachment
+
     if isinstance(obj.content_object, InterventionAttachment):
         return obj.content_object.type.name
     elif obj.file_type:
@@ -24,6 +20,18 @@ def get_file_type(obj):
 
 def get_partner_obj(obj):
     """Try and get partner value"""
+    from etools.applications.audit.models import Engagement
+    from etools.applications.partners.models import (
+        Agreement,
+        AgreementAmendment,
+        Assessment,
+        Intervention,
+        InterventionAmendment,
+        InterventionAttachment,
+        PartnerOrganization,
+    )
+    from etools.applications.tpm.models import TPMActivity
+
     if isinstance(obj.content_object, PartnerOrganization):
         return obj.content_object
     elif isinstance(obj.content_object, (AgreementAmendment, Intervention)):
@@ -63,6 +71,13 @@ def get_pd_ssfa_number(obj):
     InterventionAttachment
     InterventionAmendment
     """
+    from etools.applications.partners.models import (
+        Intervention,
+        InterventionAmendment,
+        InterventionAttachment,
+    )
+    from etools.applications.tpm.models import TPMActivity
+
     if isinstance(obj.content_object, Intervention):
         return obj.content_object.number
     elif isinstance(obj.content_object, (
@@ -79,6 +94,14 @@ def get_agreement_obj(obj):
     """Not able to get specific agreement for partners, engagements,
     and assessments
     """
+    from etools.applications.partners.models import (
+        Agreement,
+        AgreementAmendment,
+        Intervention,
+        InterventionAmendment,
+        InterventionAttachment,
+    )
+    from etools.applications.tpm.models import TPMActivity
     if isinstance(obj.content_object, (Agreement)):
         return obj.content_object
     elif isinstance(obj.content_object, (AgreementAmendment, Intervention)):
@@ -107,6 +130,18 @@ def get_object_url(obj):
         return ""
 
 
+def get_source(obj):
+    if obj.content_type:
+        app_label = obj.content_type.app_label
+        if app_label == "partners":
+            return "Partnership Management Portal"
+        elif app_label == "audit":
+            return "Financial Assurance (FAM)"
+        elif app_label == "tpm":
+            return "Third Party Monitoring"
+    return ""
+
+
 def denormalize_attachment(attachment):
     from etools.applications.attachments.models import AttachmentFlat
 
@@ -117,6 +152,7 @@ def denormalize_attachment(attachment):
     agreement_reference_number = get_agreement_reference_number(attachment)
     file_type = get_file_type(attachment)
     object_link = get_object_url(attachment)
+    source = get_source(attachment)
     uploaded_by = attachment.uploaded_by.get_full_name() if attachment.uploaded_by else ""
 
     flat, created = AttachmentFlat.objects.update_or_create(
@@ -132,6 +168,7 @@ def denormalize_attachment(attachment):
             "file_link": attachment.file_link,
             "filename": attachment.filename,
             "uploaded_by": uploaded_by,
+            "source": source,
             "created": attachment.created.strftime("%d %b %Y"),
         }
     )

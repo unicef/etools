@@ -18,9 +18,10 @@ from rest_framework.renderers import JSONRenderer
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework_csv import renderers as r
+from unicef_restlib.views import QueryStringFilterMixin
 from unicef_snapshot.models import Activity
 
-from etools.applications.EquiTrack.mixins import ExportModelMixin, QueryStringFilterMixin
+from etools.applications.EquiTrack.mixins import ExportModelMixin
 from etools.applications.EquiTrack.renderers import CSVFlatRenderer
 from etools.applications.partners.exports_v2 import InterventionCSVRenderer, InterventionLocationCSVRenderer
 from etools.applications.partners.filters import (
@@ -35,7 +36,7 @@ from etools.applications.partners.models import (
     InterventionAttachment,
     InterventionReportingPeriod,
     InterventionResultLink,
-    InterventionSectorLocationLink,
+    InterventionSectionLocationLink,
 )
 from etools.applications.partners.permissions import PartnershipManagerPermission, PartnershipManagerRepPermission
 from etools.applications.partners.serializers.exports.interventions import (
@@ -68,7 +69,7 @@ from etools.applications.partners.serializers.interventions_v2 import (
     InterventionResultSerializer,
     InterventionSectionLocationCUSerializer,
     MinimalInterventionListSerializer,
-)
+    PlannedVisitsCUSerializer)
 from etools.applications.partners.validation.interventions import InterventionValid
 from etools.applications.reports.models import AppliedIndicator, LowerResult, ReportingRequirement
 from etools.applications.reports.serializers.v2 import AppliedIndicatorSerializer, LowerResultSimpleCUSerializer
@@ -95,8 +96,24 @@ class InterventionListAPIView(QueryStringFilterMixin, ExportModelMixin, Interven
         CSVFlatRenderer,
     )
 
+    search_terms = ('title__icontains', 'agreement__partner__name__icontains', 'number__icontains')
+    filters = (
+        ('document_type', 'document_type__in'),
+        ('cp_outputs', 'result_links__cp_output__pk__in'),
+        ('country_programme', 'country_programme__in'),
+        ('sections', 'sections__in'),
+        ('cluster', 'result_links__ll_results__applied_indicators__cluster_indicator_title__icontains'),
+        ('status', 'status__in'),
+        ('unicef_focal_points', 'unicef_focal_points__in'),
+        ('start', 'start__gte'),
+        ('end', 'end__lte'),
+        ('office', 'offices__in'),
+        ('location', 'result_links__ll_results__applied_indicators__locations__name__icontains'),
+    )
+
     SERIALIZER_MAP = {
         'planned_budget': InterventionBudgetCUSerializer,
+        'planned_visits': PlannedVisitsCUSerializer,
         'attachments': InterventionAttachmentSerializer,
         'result_links': InterventionResultCUSerializer
     }
@@ -127,6 +144,7 @@ class InterventionListAPIView(QueryStringFilterMixin, ExportModelMixin, Interven
         """
         related_fields = [
             'planned_budget',
+            'planned_visits',
             'attachments',
             'result_links'
         ]
@@ -172,21 +190,8 @@ class InterventionListAPIView(QueryStringFilterMixin, ExportModelMixin, Interven
                 queries.append(Q(unicef_focal_points__in=[self.request.user.id]) |
                                Q(unicef_signatory=self.request.user))
 
-            filters = (
-                ('document_type', 'document_type__in'),
-                ('cp_outputs', 'agreement__country_programme__in'),
-                ('sections', 'sections__in'),
-                ('cluster', 'result_links__ll_results__applied_indicators__cluster_indicator_title__icontains'),
-                ('status', 'status__in'),
-                ('unicef_focal_points', 'unicef_focal_points__in'),
-                ('start', 'start__gte'),
-                ('end', 'end__lte'),
-                ('office', 'offices__in'),
-                ('location', 'result_links__ll_results__applied_indicators__locations__name__icontains'),
-            )
-            search_terms = ['title__icontains', 'agreement__partner__name__icontains', 'number__icontains']
-            queries.extend(self.filter_params(filters))
-            queries.append(self.search_params(search_terms))
+            queries.extend(self.filter_params())
+            queries.append(self.search_params())
 
             if queries:
                 expression = functools.reduce(operator.and_, queries)
@@ -242,6 +247,7 @@ class InterventionDetailAPIView(ValidatorViewMixin, RetrieveUpdateDestroyAPIView
 
     SERIALIZER_MAP = {
         'planned_budget': InterventionBudgetCUSerializer,
+        'planned_visits': PlannedVisitsCUSerializer,
         'attachments': InterventionAttachmentSerializer,
         'result_links': InterventionResultCUSerializer
     }
@@ -257,6 +263,7 @@ class InterventionDetailAPIView(ValidatorViewMixin, RetrieveUpdateDestroyAPIView
     @transaction.atomic
     def update(self, request, *args, **kwargs):
         related_fields = ['planned_budget',
+                          'planned_visits',
                           'attachments',
                           'result_links']
         nested_related_names = ['ll_results']
@@ -389,24 +396,6 @@ class InterventionIndicatorListAPIView(ExportModelMixin, ListAPIView):
         return q
 
 
-class InterventionResultLinkDeleteView(DestroyAPIView):
-    permission_classes = (PartnershipManagerRepPermission,)
-
-    def delete(self, request, *args, **kwargs):
-        try:
-            intervention_result = InterventionResultLink.objects.get(id=int(kwargs['pk']))
-        except InterventionResultLink.DoesNotExist:
-            return Response(status=status.HTTP_404_NOT_FOUND)
-        if intervention_result.intervention.status in [Intervention.DRAFT] or \
-            request.user in intervention_result.intervention.unicef_focal_points.all() or \
-            request.user.groups.filter(name__in=['Partnership Manager',
-                                                 'Senior Management Team']).exists():
-            intervention_result.delete()
-            return Response(status=status.HTTP_204_NO_CONTENT)
-        else:
-            raise ValidationError("You do not have permissions to delete a result")
-
-
 class InterventionAmendmentListAPIView(ExportModelMixin, ValidatorViewMixin, ListCreateAPIView):
     """
     Returns a list of InterventionAmendments.
@@ -502,7 +491,7 @@ class InterventionSectionLocationLinkListAPIView(ExportModelMixin, ListAPIView):
         return super(InterventionSectionLocationLinkListAPIView, self).get_serializer_class()
 
     def get_queryset(self, format=None):
-        q = InterventionSectorLocationLink.objects.all()
+        q = InterventionSectionLocationLink.objects.all()
         query_params = self.request.query_params
 
         if query_params:
@@ -525,34 +514,41 @@ class InterventionSectionLocationLinkListAPIView(ExportModelMixin, ListAPIView):
         return q
 
 
-class InterventionListMapView(ListCreateAPIView):
+class InterventionListMapView(QueryStringFilterMixin, ListCreateAPIView):
     """
-    Create new Interventions.
     Returns a list of Interventions.
     """
     serializer_class = InterventionListMapSerializer
     permission_classes = (IsAdminUser,)
 
+    filters = (
+        ('sections', 'sections__in'),
+        ('country_programmes', 'country_programme__in'),
+        ('status', 'status__in'),
+        ('partners', 'agreement__partner__in'),
+        ('offices', 'offices__in'),
+        ('results', 'result_links__cp_output__in'),
+        ('donors', 'frs__fr_items__donor__in'),
+        ('grants', 'frs__fr_items__grant_number__in'),
+        ('unicef_focal_points', 'unicef_focal_points__in'),
+        ('interventions', 'pk__in'),
+        ('clusters', 'result_links__ll_results__applied_indicators__cluster_indicator_title__icontains'),
+    )
+
     def get_queryset(self):
-        q = Intervention.objects.prefetch_related("flat_locations")
+        qs = Intervention.objects.maps_qs()
 
         query_params = self.request.query_params
 
         if query_params:
             queries = []
-            if "country_programme" in query_params.keys():
-                queries.append(Q(agreement__country_programme=query_params.get("country_programme")))
-            if "section" in query_params.keys():
-                queries.append(Q(sections__pk=query_params.get("section")))
-            if "status" in query_params.keys():
-                queries.append(Q(status=query_params.get("status")))
-            if "partner" in query_params.keys():
-                queries.append(Q(agreement__partner=query_params.get("partner")))
+            queries.extend(self.filter_params())
+            queries.append(self.search_params())
             if queries:
                 expression = functools.reduce(operator.and_, queries)
-                q = q.filter(expression).distinct()
+                qs = qs.filter(expression).distinct()
 
-        return q
+        return qs
 
 
 class InterventionLowerResultListCreateView(ListCreateAPIView):

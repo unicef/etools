@@ -2,7 +2,7 @@
 import json
 
 from django.contrib.auth.models import Group
-from django.core.urlresolvers import reverse
+from django.urls import reverse
 
 import mock
 from unicef_locations.tests.factories import LocationFactory

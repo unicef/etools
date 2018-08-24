@@ -4,7 +4,7 @@ from django.contrib.auth import get_user_model
 from rest_framework import serializers
 
 from etools.applications.partners.models import Intervention, InterventionResultLink, PartnerOrganization
-from etools.applications.reports.models import Result, Sector
+from etools.applications.reports.models import Result, Section
 from etools.applications.users.models import Office
 
 
@@ -24,7 +24,7 @@ class OfficeSerializer(serializers.ModelSerializer):
 
 class SectionSerializer(serializers.ModelSerializer):
     class Meta:
-        model = Sector
+        model = Section
         fields = ('id', 'name', 'description')
 
 

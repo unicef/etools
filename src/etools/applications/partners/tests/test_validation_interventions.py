@@ -4,6 +4,7 @@ from unittest import skip
 from mock import Mock, patch
 
 from etools.applications.EquiTrack.tests.cases import BaseTenantTestCase
+from etools.applications.attachments.tests.factories import AttachmentFactory
 from etools.applications.funds.tests.factories import FundsReservationHeaderFactory
 from etools.applications.partners.models import (
     Agreement,
@@ -374,11 +375,13 @@ class TestTransitionToTerminated(BaseTenantTestCase):
     def test_intervention_terminable_statuses(self):
         """Interventions in amendment cannot be terminated"""
         terminable_statuses = [Intervention.SIGNED, Intervention.ACTIVE]
-
         for terminable_status in terminable_statuses:
             intervention = InterventionFactory(
                 status=terminable_status,
+                end=datetime.date.today()
             )
+            a = AttachmentFactory(code='partners_intervention_termination_doc', content_object=intervention)
+            intervention.termination_doc_attachment.add(a)
             self.assertTrue(transition_to_terminated(intervention))
 
             intervention.in_amendment = True
@@ -727,7 +730,6 @@ class TestInterventionValid(BaseTenantTestCase):
     def test_state_signed_valid(self):
         """Valid if unicef budget is not 0"""
         self.intervention.total_unicef_budget = 10
-        self.intervention.signed_by_unicef = True
         self.assertTrue(self.validator.state_signed_valid(self.intervention))
 
     def test_state_suspended_valid(self):
@@ -754,7 +756,6 @@ class TestInterventionValid(BaseTenantTestCase):
         """Valid if unicef budget is not 0 and start is before today"""
         self.intervention.total_unicef_budget = 10
         self.intervention.start = datetime.date(2001, 1, 1)
-        self.intervention.signed_by_unicef = True
         self.assertTrue(
             self.validator.state_active_valid(self.intervention)
         )
@@ -771,5 +772,4 @@ class TestInterventionValid(BaseTenantTestCase):
     def test_state_ended_valid(self):
         """Invalid if end date is after today"""
         self.intervention.end = datetime.date(2001, 1, 1)
-        self.intervention.signed_by_unicef = True
         self.assertTrue(self.validator.state_ended_valid(self.intervention))

@@ -1,13 +1,12 @@
-
 from django.utils.translation import ugettext_lazy as _
 
 from rest_framework import serializers
+from unicef_restlib.serializers import WritableNestedSerializerMixin
 
 from etools.applications.firms.serializers import BaseStaffMemberSerializer
 from etools.applications.permissions2.serializers import PermissionsBasedSerializerMixin
 from etools.applications.tpm.models import TPMPartnerStaffMember
 from etools.applications.tpm.tpmpartners.models import TPMPartner
-from etools.applications.utils.writable_serializers.serializers import WritableNestedSerializerMixin
 
 
 class TPMPartnerStaffMemberSerializer(PermissionsBasedSerializerMixin, BaseStaffMemberSerializer):

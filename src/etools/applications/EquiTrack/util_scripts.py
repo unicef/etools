@@ -10,9 +10,14 @@ from django.contrib.auth.models import Group
 from django.db import connection
 from django.db.models import Count
 
-
-from etools.applications.partners.models import (Agreement, Assessment, FundingCommitment, Intervention,
-                                                 InterventionPlannedVisits, PartnerOrganization, PartnerStaffMember,)
+from etools.applications.partners.models import (
+    Agreement,
+    Assessment,
+    Intervention,
+    InterventionPlannedVisits,
+    PartnerOrganization,
+    PartnerStaffMember,
+)
 from etools.applications.reports.models import CountryProgramme, Indicator, Result, ResultType
 from etools.applications.t2f.models import TravelActivity
 from etools.applications.users.models import Country, UserProfile
@@ -283,15 +288,6 @@ def clean_result_types(country_name):
     _run_clean(dupes)
 
 
-def delete_all_fcs(country_name):
-    if not country_name:
-        printtf("country name required /n")
-    set_country(country_name)
-    printtf("Deleting all FCs for {}".format(country_name))
-    fcs = FundingCommitment.objects.all()
-    fcs.delete()
-
-
 def dissasociate_result_structures(country_name):
     if not country_name:
         printtf("country name required /n")
@@ -318,12 +314,6 @@ def before_code_merge():
 
     # clean result types
     all_countries_do(clean_result_types, 'Result Types Cleaning')
-
-    # Clean indicators
-    all_countries_do(fix_duplicate_indicators, 'Indicators Cleaning')
-
-    # Delete all fcs
-    all_countries_do(delete_all_fcs, 'Deleting FCs')
 
     logger.info(u'FINISHED WITH BEFORE MERGE')
 

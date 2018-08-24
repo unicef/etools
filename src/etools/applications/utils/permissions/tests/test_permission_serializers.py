@@ -1,14 +1,12 @@
-
 from django.db import IntegrityError
 from django.test import TestCase
 
-
 from rest_framework import serializers
+from unicef_restlib.serializers import WritableNestedSerializerMixin
 
 from etools.applications.users.tests.factories import GroupFactory, UserFactory
 from etools.applications.utils.permissions.serializers import PermissionsBasedSerializerMixin
 from etools.applications.utils.permissions.tests.models import Child2, Parent, Permission
-from etools.applications.utils.writable_serializers.serializers import WritableNestedSerializerMixin
 
 
 class PermissionsBasedSerializerTestCase(TestCase):

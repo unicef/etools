@@ -9,8 +9,8 @@ from rest_framework.generics import ListCreateAPIView
 from rest_framework.permissions import IsAdminUser
 from rest_framework.response import Response
 from rest_framework_csv import renderers as r
+from unicef_restlib.views import QueryStringFilterMixin
 
-from etools.applications.EquiTrack.mixins import QueryStringFilterMixin
 from etools.applications.partners.exports_v2 import PartnershipDashCSVRenderer
 from etools.applications.partners.models import Intervention, FileType
 from etools.applications.partners.serializers.dashboards import InterventionDashSerializer
@@ -24,6 +24,16 @@ class InterventionPartnershipDashView(QueryStringFilterMixin, ListCreateAPIView)
     renderer_classes = (r.JSONRenderer, PartnershipDashCSVRenderer)
 
     search_param = 'qs'
+    filters = (
+        ('status', 'status__in'),
+        ('startAfter', 'start__gt'),
+        ('startBefore', 'start__lt'),
+        ('endAfter', 'end__gt'),
+        ('endBefore', 'end__lt'),
+        ('offices', 'offices__name__in'),
+        ('sectors', 'sections__in'),
+    )
+    search_terms = ('agreement__partner__name__icontains', )
 
     def get_queryset(self):
         qs = Intervention.objects.exclude(status=Intervention.DRAFT).prefetch_related('agreement__partner')
@@ -45,18 +55,8 @@ class InterventionPartnershipDashView(QueryStringFilterMixin, ListCreateAPIView)
         query_params = self.request.query_params
         if query_params:
             queries = []
-            filters = (
-                ('status', 'status__in'),
-                ('startAfter', 'start__gt'),
-                ('startBefore', 'start__lt'),
-                ('endAfter', 'end__gt'),
-                ('endBefore', 'end__lt'),
-                ('offices', 'offices__name__in'),
-                ('sectors', 'sections__in'),
-            )
-            search_terms = ['agreement__partner__name__icontains', ]
-            queries.extend(self.filter_params(filters))
-            queries.append(self.search_params(search_terms))
+            queries.extend(self.filter_params())
+            queries.append(self.search_params())
 
             if queries:
                 expression = functools.reduce(operator.and_, queries)

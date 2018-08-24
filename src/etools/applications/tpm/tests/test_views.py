@@ -2,7 +2,7 @@
 from datetime import datetime
 
 from django.core.files.uploadedfile import SimpleUploadedFile
-from django.core.urlresolvers import reverse
+from django.urls import reverse
 from django.utils import timezone
 from django.utils.translation import ugettext_lazy as _
 from factory import fuzzy
@@ -207,25 +207,55 @@ class TestTPMVisitViewSet(TestExportMixin, TPMTestCaseMixin, BaseTenantTestCase)
         self._test_partner()
 
     def test_visits_csv(self):
-        self._test_export(self.pme_user, 'tpm:visits-export')
+        self._test_export(self.pme_user, 'tpm:visits-visits-export')
 
     def test_activities_csv(self):
-        self._test_export(self.pme_user, 'tpm:visits-activities/export')
+        self._test_export(self.pme_user, 'tpm:visits-activities-export')
 
     def test_locations_csv(self):
-        self._test_export(self.pme_user, 'tpm:visits-locations/export')
+        self._test_export(self.pme_user, 'tpm:visits-locations-export')
 
     def test_action_points_csv(self):
         TPMVisitFactory(status='unicef_approved', tpm_activities__action_points__count=3)
-        self._test_export(self.pme_user, 'tpm:visits-action-points/export')
+        self._test_export(self.pme_user, 'tpm:visits-action-points-export')
 
     def test_visit_action_points_csv(self):
         visit = TPMVisitFactory(status='unicef_approved', tpm_activities__action_points__count=3)
-        self._test_export(self.pme_user, 'tpm:action-points-export', args=(visit.id,))
+        self._test_export(self.pme_user, 'tpm:action-points-csv-export', args=(visit.id,))
 
     def test_visit_letter(self):
         visit = TPMVisitFactory(status='tpm_accepted')
-        self._test_export(self.pme_user, 'tpm:visits-visit-letter', args=(visit.id,))
+        self._test_export(self.pme_user, 'tpm:visits-tpm-visit-letter', args=(visit.id,))
+
+    def test_implementing_partners_subview(self):
+        TPMVisitFactory(tpm_activities__count=1)
+
+        response = self.forced_auth_req(
+            'get',
+            reverse('tpm:visits-implementing-partners'),
+            user=self.unicef_user
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+    def test_sections_subview(self):
+        TPMVisitFactory(tpm_activities__count=1)
+
+        response = self.forced_auth_req(
+            'get',
+            reverse('tpm:visits-sections'),
+            user=self.unicef_user
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+    def test_cp_outputs_subview(self):
+        TPMVisitFactory(tpm_activities__count=1)
+
+        response = self.forced_auth_req(
+            'get',
+            reverse('tpm:visits-cp-outputs'),
+            user=self.unicef_user
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
 
 
 class TestTPMActionPointViewSet(TPMTestCaseMixin, BaseTenantTestCase):

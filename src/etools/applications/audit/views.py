@@ -1,4 +1,3 @@
-
 from django.contrib.auth import get_user_model
 from django.contrib.contenttypes.models import ContentType
 from django.db.models import Prefetch
@@ -8,49 +7,86 @@ from django.utils.translation import ugettext_lazy as _
 from django_filters.rest_framework import DjangoFilterBackend
 from easy_pdf.rendering import render_to_pdf_response
 from rest_framework import generics, mixins, viewsets
-from rest_framework.decorators import detail_route, list_route
+from rest_framework.decorators import action
 from rest_framework.filters import OrderingFilter, SearchFilter
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.renderers import JSONRenderer
 from rest_framework.response import Response
+from unicef_attachments.models import Attachment
+from unicef_restlib.pagination import DynamicPageNumberPagination
+from unicef_restlib.views import MultiSerializerViewSetMixin, NestedViewSetMixin, SafeTenantViewSetMixin
 
-from etools.applications.attachments.models import Attachment
-from etools.applications.action_points.conditions import ActionPointAuthorCondition, ActionPointAssignedByCondition, \
-    ActionPointAssigneeCondition
-from etools.applications.audit.conditions import (AuditModuleCondition, AuditStaffMemberCondition,
-                                                  EngagementStaffMemberCondition,)
-from etools.applications.audit.exports import (AuditDetailCSVRenderer, AuditorFirmCSVRenderer,
-                                               EngagementCSVRenderer, MicroAssessmentDetailCSVRenderer,
-                                               SpecialAuditDetailCSVRenderer, SpotCheckDetailCSVRenderer,)
+from etools.applications.action_points.conditions import (
+    ActionPointAssignedByCondition,
+    ActionPointAssigneeCondition,
+    ActionPointAuthorCondition,
+)
+from etools.applications.audit.conditions import (
+    AuditModuleCondition,
+    AuditStaffMemberCondition,
+    EngagementStaffMemberCondition,
+)
+from etools.applications.audit.exports import (
+    AuditDetailCSVRenderer,
+    AuditorFirmCSVRenderer,
+    EngagementCSVRenderer,
+    MicroAssessmentDetailCSVRenderer,
+    SpecialAuditDetailCSVRenderer,
+    SpotCheckDetailCSVRenderer,
+)
 from etools.applications.audit.filters import DisplayStatusFilter, UniqueIDOrderingFilter
 from etools.applications.audit.metadata import AuditBaseMetadata, AuditPermissionBasedMetadata
-from etools.applications.audit.models import (Audit, Auditor, Engagement, MicroAssessment, SpecialAudit,
-                                              SpotCheck, UNICEFAuditFocalPoint, UNICEFUser, EngagementActionPoint)
+from etools.applications.audit.models import (
+    Audit,
+    Auditor,
+    Engagement,
+    EngagementActionPoint,
+    MicroAssessment,
+    SpecialAudit,
+    SpotCheck,
+    UNICEFAuditFocalPoint,
+    UNICEFUser,
+)
 from etools.applications.audit.purchase_order.models import AuditorFirm, AuditorStaffMember, PurchaseOrder
-from etools.applications.audit.serializers.auditor import (AuditorFirmExportSerializer, AuditorFirmLightSerializer,
-                                                           AuditorFirmSerializer, AuditorStaffMemberSerializer,
-                                                           AuditUserSerializer, PurchaseOrderSerializer,)
-from etools.applications.audit.serializers.engagement import (AuditSerializer, EngagementExportSerializer,
-                                                              EngagementHactSerializer, EngagementListSerializer,
-                                                              EngagementSerializer, MicroAssessmentSerializer,
-                                                              SpecialAuditSerializer, SpotCheckSerializer,
-                                                              EngagementActionPointSerializer,
-                                                              EngagementAttachmentSerializer,
-                                                              ReportAttachmentSerializer, StaffSpotCheckSerializer,
-                                                              StaffSpotCheckListSerializer)
-from etools.applications.audit.serializers.export import (AuditDetailCSVSerializer, AuditPDFSerializer,
-                                                          MicroAssessmentDetailCSVSerializer,
-                                                          MicroAssessmentPDFSerializer,
-                                                          SpecialAuditDetailPDFSerializer, SpecialAuditPDFSerializer,
-                                                          SpotCheckDetailCSVSerializer, SpotCheckPDFSerializer,)
+from etools.applications.audit.serializers.auditor import (
+    AuditorFirmExportSerializer,
+    AuditorFirmLightSerializer,
+    AuditorFirmSerializer,
+    AuditorStaffMemberSerializer,
+    AuditUserSerializer,
+    PurchaseOrderSerializer,
+)
+from etools.applications.audit.serializers.engagement import (
+    AuditSerializer,
+    EngagementActionPointSerializer,
+    EngagementAttachmentSerializer,
+    EngagementExportSerializer,
+    EngagementHactSerializer,
+    EngagementListSerializer,
+    EngagementSerializer,
+    MicroAssessmentSerializer,
+    ReportAttachmentSerializer,
+    SpecialAuditSerializer,
+    SpotCheckSerializer,
+    StaffSpotCheckSerializer,
+    StaffSpotCheckListSerializer,
+)
+from etools.applications.audit.serializers.export import (
+    AuditDetailCSVSerializer,
+    AuditPDFSerializer,
+    MicroAssessmentDetailCSVSerializer,
+    MicroAssessmentPDFSerializer,
+    SpecialAuditDetailPDFSerializer,
+    SpecialAuditPDFSerializer,
+    SpotCheckDetailCSVSerializer,
+    SpotCheckPDFSerializer,
+)
 from etools.applications.partners.models import PartnerOrganization
 from etools.applications.partners.serializers.partner_organization_v2 import MinimalPartnerOrganizationListSerializer
 from etools.applications.permissions2.conditions import ObjectStatusCondition
-from etools.applications.permissions2.drf_permissions import NestedPermission, get_permission_for_targets
+from etools.applications.permissions2.drf_permissions import get_permission_for_targets, NestedPermission
 from etools.applications.permissions2.views import PermittedFSMActionMixin, PermittedSerializerMixin
-from etools.applications.utils.common.pagination import DynamicPageNumberPagination
-from etools.applications.utils.common.views import (ExportViewSetDataMixin, MultiSerializerViewSetMixin,
-                                                    NestedViewSetMixin, SafeTenantViewSetMixin,)
+from etools.applications.utils.common.views import ExportViewSetDataMixin
 from etools.applications.vision.adapters.purchase_order import POSynchronizer
 
 
@@ -136,7 +172,7 @@ class AuditorFirmViewSet(
         ])
         return context
 
-    @list_route(methods=['get'], url_path='users')
+    @action(detail=False, methods=['get'], url_path='users')
     def users(self, request, *args, **kwargs):
         return AuditUsersViewSet.as_view()(request._request, *args, **kwargs)
 
@@ -155,7 +191,7 @@ class PurchaseOrderViewSet(
     filter_backends = (DjangoFilterBackend, )
     filter_fields = ('auditor_firm__unicef_users_allowed', )
 
-    @list_route(methods=['get'], url_path='sync/(?P<order_number>[^/]+)')
+    @action(detail=False, methods=['get'], url_path='sync/(?P<order_number>[^/]+)')
     def sync(self, request, *args, **kwargs):
         """
         Fetch Purchase Order by vendor number. Load from etools.applications.vision if not found.
@@ -304,12 +340,12 @@ class EngagementViewSet(
         ])
         return context
 
-    @list_route(methods=['get'], url_path='partners')
+    @action(detail=False, methods=['get'], url_path='partners')
     def partners(self, request, *args, **kwargs):
         engagements = self.get_queryset()
         return EngagementPartnerView.as_view(engagements=engagements)(request._request, *args, **kwargs)
 
-    @list_route(methods=['get'], url_path='hact')
+    @action(detail=False, methods=['get'], url_path='hact')
     def hact(self, request, *args, **kwargs):
         if "partner" not in request.query_params:
             raise Http404
@@ -321,7 +357,7 @@ class EngagementViewSet(
         serializer = EngagementHactSerializer(engagements, many=True, context={"request": request})
         return Response(serializer.data)
 
-    @detail_route(methods=['get'], url_path='pdf')
+    @action(detail=True, methods=['get'], url_path='pdf')
     def export_pdf(self, request, *args, **kwargs):
         obj = self.get_object()
 

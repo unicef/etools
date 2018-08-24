@@ -1,12 +1,12 @@
 name = 'action_points/action_point/completed'
 defaults = {
     'description': 'Action point completed',
-    'subject': '[eTools] ACTION POINT CLOSURE to {{ action_point.person_responsible }}',
+    'subject': '[eTools] ACTION POINT CLOSURE to {{ completed_by }}',
 
     'content': """
     Dear {{ recipient }},
 
-    {{ action_point.person_responsible }} has closed the following action point:
+    {{ completed_by }} has closed the following action point:
     Reference Number: {{ action_point.reference_number }}
     Description: {{ action_point.description }}
     Due Date: {{ action_point.due_date }}
@@ -19,7 +19,7 @@ defaults = {
     {% block content %}
     Dear {{ recipient }},<br/><br/>
 
-    {{ action_point.person_responsible }} has closed the following action point:<br/>
+    {{ completed_by }} has closed the following action point:<br/>
     Reference Number: {{ action_point.reference_number }}<br/>
     Description: {{ action_point.description }}<br/>
     Due Date: {{ action_point.due_date }}<br/>
