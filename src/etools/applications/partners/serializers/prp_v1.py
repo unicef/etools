@@ -156,7 +156,9 @@ class PRPIndicatorSerializer(serializers.ModelSerializer):
             'is_high_frequency',
             'is_active',
             'numerator_label',
-            'denominator_label'
+            'denominator_label',
+            'unit',
+            'display_type'
         )
 
 
