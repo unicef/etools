@@ -9,7 +9,7 @@ from etools.applications.partners.models import (Intervention, InterventionAmend
                                                  PartnerOrganization, PartnerStaffMember,)
 from etools.applications.reports.models import (AppliedIndicator, Disaggregation,
                                                 DisaggregationValue, LowerResult, Result, ReportingRequirement,
-                                                SpecialReportingRequirement)
+                                                SpecialReportingRequirement, IndicatorBlueprint)
 from etools.applications.reports.serializers.v1 import SectionSerializer
 
 
@@ -119,6 +119,8 @@ class PRPIndicatorSerializer(serializers.ModelSerializer):
     # todo: this class hasn't been tested at all because there are no `AppliedIndicator`s in the current DB
     # todo: need to validate these and fill in missing fields
     title = serializers.SerializerMethodField()
+    unit = serializers.SerializerMethodField()
+    display_type = serializers.SerializerMethodField()
     blueprint_id = serializers.PrimaryKeyRelatedField(source='indicator', read_only=True)
     locations = PRPLocationSerializer(read_only=True, many=True)
     disaggregation = DisaggregationSerializer(read_only=True, many=True)
@@ -127,6 +129,12 @@ class PRPIndicatorSerializer(serializers.ModelSerializer):
 
     def get_title(self, ai):
         return ai.indicator.title if ai.indicator else ''
+
+    def get_unit(self, ai):
+        return ai.indicator.unit if ai.indicator else ''
+
+    def get_display_type(self, ai):
+        return ai.indicator.display_type if ai.indicator else ''
 
     class Meta:
         model = AppliedIndicator
