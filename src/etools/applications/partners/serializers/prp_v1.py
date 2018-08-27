@@ -9,7 +9,7 @@ from etools.applications.partners.models import (Intervention, InterventionAmend
                                                  PartnerOrganization, PartnerStaffMember,)
 from etools.applications.reports.models import (AppliedIndicator, Disaggregation,
                                                 DisaggregationValue, LowerResult, Result, ReportingRequirement,
-                                                SpecialReportingRequirement, IndicatorBlueprint)
+                                                SpecialReportingRequirement)
 from etools.applications.reports.serializers.v1 import SectionSerializer
 
 
