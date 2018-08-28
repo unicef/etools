@@ -5,6 +5,8 @@
         "indicators": [
           {
             "blueprint_id": 0,
+            "unit": "number",
+            "display_type": "number",
             "means_of_verification": null,
             "target": {"d": 1, "v": 0},
             "title": "The Blueprint",
