@@ -1,6 +1,6 @@
 import datetime
 
-from pytest import skip
+from unittest import skip
 
 from etools.applications.EquiTrack.tests.cases import BaseTenantTestCase
 from etools.applications.partners.models import Agreement

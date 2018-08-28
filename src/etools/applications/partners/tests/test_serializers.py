@@ -1,7 +1,7 @@
 # Python imports
 import datetime
 
-from pytest import skip
+from unittest import skip
 from rest_framework import serializers
 
 from etools.applications.EquiTrack.tests.cases import BaseTenantTestCase
