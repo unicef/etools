@@ -118,9 +118,11 @@ class UserMapper(object):
 
     @transaction.atomic
     def create_or_update_user(self, record):
-
+        status = {'processed': 0, 'created': 0, 'updated': 0, 'skipped': 0, 'errors': 0}
+        status['processed'] = 1
         if not self.record_is_valid(record):
-            return
+            status['skipped'] = 1
+            return status
 
         key_value = record[self.KEY_ATTRIBUTE]
         logger.debug(key_value)
@@ -130,6 +132,7 @@ class UserMapper(object):
                 email=key_value, username=key_value, is_staff=True)
 
             if created:
+                status['created'] = int(created)
                 user.set_unusable_password()
                 user.groups.add(self.groups['UNICEF User'])
                 logger.info(u'Group added to user {}'.format(user))
@@ -140,11 +143,18 @@ class UserMapper(object):
                 logger.warning(u'No profile for user {}'.format(user))
                 return
 
-            self.update_user(user, record)
-            self.update_profile(profile, record)
+            user_updated = self.update_user(user, record)
+            profile_updated = self.update_profile(profile, record)
+
+            if not created and (user_updated or profile_updated):
+                status['updated'] = 1
 
         except IntegrityError as e:
             logger.exception(u'Integrity error on user retrieving: {} - exception {}'.format(key_value, e))
+            status['created'] = status['updated'] = 0
+            status['errors'] = 1
+
+        return status
 
     def record_is_valid(self, record):
         if self.KEY_ATTRIBUTE not in record:
@@ -178,6 +188,8 @@ class UserMapper(object):
             logger.debug(f'Updated User: {user}')
             user.save()
 
+        return modified
+
     def update_profile(self, profile, record):
         modified = False
         for attr, record_attr in self.PROFILE_ATTR_MAP.items():
@@ -189,6 +201,8 @@ class UserMapper(object):
         if modified:
             logger.debug(f'Updated Profile: {profile.user}')
             profile.save()
+
+        return modified
 
 
 class AzureUserMapper(UserMapper):
