@@ -1,5 +1,7 @@
 import datetime
 
+from pytest import skip
+
 from etools.applications.EquiTrack.tests.cases import BaseTenantTestCase
 from etools.applications.partners.models import Agreement
 from etools.applications.partners.tests.factories import (
@@ -182,6 +184,7 @@ class TestSignedByEveryoneValid(BaseTenantTestCase):
 
 
 class TestSignaturesValid(BaseTenantTestCase):
+    @skip("this validation is removed for now")
     def test_exception(self):
         agreement = AgreementFactory(
             agreement_type=Agreement.SSFA,
