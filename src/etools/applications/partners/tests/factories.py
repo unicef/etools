@@ -64,6 +64,7 @@ class AgreementFactory(factory.django.DjangoModelFactory):
             return
         AttachmentFactory(code='partners_agreement', content_object=self)
 
+
 class AssessmentFactory(factory.django.DjangoModelFactory):
     class Meta:
         model = models.Assessment
