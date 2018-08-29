@@ -111,7 +111,6 @@ USE_TZ = True
 # DJANGO: HTTP
 MIDDLEWARE = (
     'django.contrib.sessions.middleware.SessionMiddleware',
-    'django.contrib.auth.middleware.SessionAuthenticationMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'etools.applications.tokens.middleware.TokenAuthenticationMiddleware',
     'django.middleware.common.CommonMiddleware',
@@ -183,9 +182,9 @@ SHARED_APPS = (
     'etools.applications.publics',
     # you must list the app where your tenant model resides in
     'etools.applications.users',
-    'etools.applications.notification',
     'django_filters',
     'etools.applications.environment',
+    'etools.applications.action_points.categories',
     'etools.applications.audit.purchase_order',
     'etools.applications.EquiTrack',
     'etools.applications.tpm.tpmpartners',
@@ -198,12 +197,13 @@ SHARED_APPS = (
     'etools.applications.permissions2',
     'unicef_notification',
 )
+
 TENANT_APPS = (
     'django_fsm',
     'django_comments',
     'logentry_admin',
     'etools.applications.funds',
-    'etools.applications.locations',
+    'unicef_locations',
     'etools.applications.reports',
     'etools.applications.partners',
     'etools.applications.hact',
@@ -214,9 +214,9 @@ TENANT_APPS = (
     'etools.applications.audit',
     'etools.applications.firms',
     'etools.applications.management',
-    'etools.applications.snapshot',
     'etools.applications.action_points',
     'unicef_snapshot',
+    'unicef_attachments',
 )
 INSTALLED_APPS = ('tenant_schemas',) + SHARED_APPS + TENANT_APPS
 
@@ -273,7 +273,12 @@ AUTHENTICATION_BACKENDS = (
 )
 AUTH_USER_MODEL = 'users.User'
 LOGIN_REDIRECT_URL = '/'
-LOGIN_URL = '/login/'
+
+HOST = get_from_secrets_or_env('DJANGO_ALLOWED_HOST', 'localhost:8000')
+LOGIN_URL = LOGOUT_REDIRECT_URL = 'http://etoolsinfo.unicef.org/'
+if HOST != 'etools.unicef.org':
+    host = HOST.split('.')[0]
+    LOGIN_URL = LOGOUT_REDIRECT_URL = f'{LOGIN_URL}?env={host}'
 
 # CONTRIB: GIS (GeoDjango)
 POSTGIS_VERSION = (2, 1)
@@ -364,7 +369,8 @@ REST_FRAMEWORK = {
         'rest_framework_csv.renderers.CSVRenderer',
         'rest_framework_xml.renderers.XMLRenderer',
         'rest_framework.renderers.MultiPartRenderer',
-    )
+    ),
+    'DEFAULT_SCHEMA_CLASS': 'etools.applications.utils.common.inspectors.EToolsSchema',
 }
 
 # django-cors-headers: https://github.com/ottoyiu/django-cors-headers
@@ -395,7 +401,6 @@ TENANT_MODEL = "users.Country"  # app.Model
 TENANT_LIMIT_SET_CALLS = True
 
 # django-saml2: https://github.com/robertavram/djangosaml2
-HOST = get_from_secrets_or_env('DJANGO_ALLOWED_HOST', 'localhost:8000')
 SAML_ATTRIBUTE_MAPPING = {
     'upn': ('username',),
     'emailAddress': ('email',),
@@ -590,3 +595,8 @@ SCHEMA_OVERRIDE_PARAM = "schema"
 PCA_REQUIRED_NOTIFICATION_LEAD = 30
 
 UNICEF_NOTIFICATION_TEMPLATE_DIR = "notifications"
+UNICEF_LOCATIONS_GET_CACHE_KEY = 'etools.libraries.locations.views.cache_key'
+
+ATTACHMENT_FILEPATH_PREFIX_FUNC = "etools.applications.attachments.utils.get_filepath_prefix"
+ATTACHMENT_FLAT_MODEL = "etools.applications.attachments.models.AttachmentFlat"
+ATTACHMENT_DENORMALIZE_FUNC = "etools.applications.attachments.utils.denormalize_attachment"

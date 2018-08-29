@@ -1,15 +1,18 @@
-
 from django.contrib.auth import get_user_model
 from django.utils.translation import ugettext_lazy as _
 
 from rest_framework import serializers
+from unicef_restlib.fields import SeparatedReadWriteField
+from unicef_restlib.serializers import WritableNestedSerializerMixin
 
-from etools.applications.audit.purchase_order.models import (AuditorFirm, AuditorStaffMember,
-                                                             PurchaseOrder, PurchaseOrderItem,)
+from etools.applications.audit.purchase_order.models import (
+    AuditorFirm,
+    AuditorStaffMember,
+    PurchaseOrder,
+    PurchaseOrderItem,
+)
 from etools.applications.firms.serializers import BaseStaffMemberSerializer, UserSerializer as BaseUserSerializer
 from etools.applications.permissions2.serializers import PermissionsBasedSerializerMixin
-from etools.applications.utils.common.serializers.fields import SeparatedReadWriteField
-from etools.applications.utils.writable_serializers.serializers import WritableNestedSerializerMixin
 
 
 class UserSerializer(BaseUserSerializer):
@@ -51,7 +54,7 @@ class AuditorStaffMemberSerializer(BaseStaffMemberSerializer):
 
     class Meta(BaseStaffMemberSerializer.Meta):
         model = AuditorStaffMember
-        fields = BaseStaffMemberSerializer.Meta.fields + ['user_pk', ]
+        fields = BaseStaffMemberSerializer.Meta.fields + ['user_pk', 'hidden', ]
 
 
 class AuditorFirmLightSerializer(PermissionsBasedSerializerMixin, serializers.ModelSerializer):
@@ -110,11 +113,20 @@ class PurchaseOrderSerializer(
 
 class AuditUserSerializer(UserSerializer):
     auditor_firm = serializers.SerializerMethodField()
+    hidden = serializers.SerializerMethodField()
+    staff_member_id = serializers.ReadOnlyField(source='purchase_order_auditorstaffmember.id')
 
     class Meta(UserSerializer.Meta):
-        fields = UserSerializer.Meta.fields + ['id', 'auditor_firm', ]
+        fields = UserSerializer.Meta.fields + ['id', 'auditor_firm', 'hidden', 'staff_member_id', ]
 
     def get_auditor_firm(self, obj):
         if hasattr(obj, 'purchase_order_auditorstaffmember'):
             return obj.purchase_order_auditorstaffmember.auditor_firm.id
         return
+
+    def get_hidden(self, obj):
+        hidden = not obj.is_active
+        if hasattr(obj, 'purchase_order_auditorstaffmember'):
+            hidden = hidden and obj.purchase_order_auditorstaffmember.hidden
+
+        return hidden

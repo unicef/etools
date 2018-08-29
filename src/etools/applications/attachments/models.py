@@ -13,6 +13,8 @@ from django.utils.translation import ugettext as _
 from model_utils.models import TimeStampedModel
 from ordered_model.models import OrderedModel
 
+from unicef_attachments.models import Attachment as NewAttachment
+
 
 class FileType(OrderedModel, models.Model):
     name = models.CharField(max_length=64, verbose_name=_('Name'))
@@ -133,6 +135,7 @@ class Attachment(TimeStampedModel, models.Model):
         FileType,
         verbose_name=_('Document Type'),
         null=True,
+        related_name="attachments_old",
         on_delete=models.CASCADE,
     )
     file = models.FileField(
@@ -153,6 +156,7 @@ class Attachment(TimeStampedModel, models.Model):
         blank=True,
         null=True,
         verbose_name=_('Content Type'),
+        related_name="attachments_old",
         on_delete=models.CASCADE,
     )
     object_id = models.IntegerField(
@@ -165,7 +169,7 @@ class Attachment(TimeStampedModel, models.Model):
     uploaded_by = models.ForeignKey(
         settings.AUTH_USER_MODEL,
         verbose_name=_("Uploaded By"),
-        related_name='attachments',
+        related_name='attachments_old',
         blank=True,
         null=True,
         on_delete=models.CASCADE,
@@ -206,7 +210,7 @@ class Attachment(TimeStampedModel, models.Model):
 
 class AttachmentFlat(models.Model):
     attachment = models.ForeignKey(
-        Attachment,
+        NewAttachment,
         related_name="denormalized",
         on_delete=models.CASCADE,
     )
@@ -235,6 +239,10 @@ class AttachmentFlat(models.Model):
         blank=True,
         verbose_name=_('Agreement Reference Number')
     )
+    object_link = models.URLField(
+        blank=True,
+        verbose_name=_('Object Link')
+    )
     file_type = models.CharField(
         max_length=100,
         blank=True,
@@ -249,6 +257,11 @@ class AttachmentFlat(models.Model):
         max_length=1024,
         blank=True,
         verbose_name=_('File Name')
+    )
+    source = models.CharField(
+        max_length=150,
+        blank=True,
+        verbose_name=_('Source'),
     )
     uploaded_by = models.CharField(
         max_length=255,

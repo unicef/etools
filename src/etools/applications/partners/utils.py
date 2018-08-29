@@ -7,17 +7,17 @@ from django.db.models import F, Q
 from django.urls import reverse
 from django.utils.timezone import make_aware, now
 
+from unicef_attachments.models import Attachment, FileType
 from unicef_notification.utils import send_notification_with_template
 
-from etools.applications.attachments.models import Attachment, FileType
 from etools.applications.partners.models import (
     Agreement,
     AgreementAmendment,
     Assessment,
+    CoreValuesAssessment,
     Intervention,
     InterventionAmendment,
     InterventionAttachment,
-    PartnerOrganization,
 )
 from etools.applications.reports.models import CountryProgramme
 from etools.applications.utils.common.utils import run_on_all_tenants
@@ -29,7 +29,7 @@ def update_or_create_attachment(file_type, content_type, object_id, filename):
     logger.info("code: {}".format(file_type.code))
     logger.info("content type: {}".format(content_type))
     logger.info("object_id: {}".format(object_id))
-    attachment, created = Attachment.objects.update_or_create(
+    Attachment.objects.update_or_create(
         code=file_type.code,
         content_type=content_type,
         object_id=object_id,
@@ -98,17 +98,17 @@ def copy_core_values_assessments(**kwargs):
         }
     )
 
-    content_type = ContentType.objects.get_for_model(PartnerOrganization)
+    content_type = ContentType.objects.get_for_model(CoreValuesAssessment)
 
-    for partner in PartnerOrganization.objects.filter(
-            core_values_assessment__isnull=False,
+    for core_values_assessment in CoreValuesAssessment.objects.filter(
+            assessment__isnull=False,
             modified__gte=get_from_datetime(**kwargs)
     ).all():
         update_or_create_attachment(
             file_type,
             content_type,
-            partner.pk,
-            partner.core_values_assessment,
+            core_values_assessment.pk,
+            core_values_assessment.assessment,
         )
 
 
@@ -181,10 +181,29 @@ def copy_interventions(**kwargs):
         }
     )
 
+    activation_letter, _ = FileType.objects.get_or_create(
+        code="partners_intervention_activation_letter",
+        defaults={
+            "label": "PD Activation Letter",
+            "name": "activation_letter",
+            "order": 0,
+        }
+    )
+    termination_doc, _ = FileType.objects.get_or_create(
+        code="partners_intervention_termination_doc",
+        defaults={
+            "label": "PD Termination Document",
+            "name": "termination_doc",
+            "order": 0,
+        }
+    )
+
     content_type = ContentType.objects.get_for_model(Intervention)
 
     for intervention in Intervention.objects.filter(
             Q(prc_review_document__isnull=False) |
+            Q(activation_letter__isnull=False) |
+            Q(termination_doc__isnull=False) |
             Q(signed_pd_document__isnull=False),
             modified__gte=get_from_datetime(**kwargs)
     ).all():
@@ -201,6 +220,20 @@ def copy_interventions(**kwargs):
                 content_type,
                 intervention.pk,
                 intervention.signed_pd_document,
+            )
+        if intervention.activation_letter:
+            update_or_create_attachment(
+                activation_letter,
+                content_type,
+                intervention.pk,
+                intervention.activation_letter_attachment,
+            )
+        if intervention.termination_doc:
+            update_or_create_attachment(
+                termination_doc,
+                content_type,
+                intervention.pk,
+                intervention.termination_doc_attachment,
             )
 
 

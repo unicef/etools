@@ -1,0 +1,146 @@
+{
+    "status_code": 200,
+    "headers": {
+        "content-type": [
+            "Content-Type",
+            "application/json"
+        ],
+        "vary": [
+            "Vary",
+            "Accept, Cookie"
+        ],
+        "allow": [
+            "Allow",
+            "GET, PATCH"
+        ],
+        "x-frame-options": [
+            "X-Frame-Options",
+            "SAMEORIGIN"
+        ]
+    },
+    "data": {
+        "id": 16000,
+        "partner_name": "Partner 4",
+        "authorized_officers": [],
+        "amendments": [
+            {
+                "id": 383,
+                "number": "tmp01",
+                "created": "2018-08-23T15:20:14.104000Z",
+                "modified": "2018-08-23T15:20:14.108000Z",
+                "signed_amendment_file": null,
+                "signed_amendment_attachment": null,
+                "signed_amendment": null,
+                "types": [
+                    "Change in clause"
+                ],
+                "signed_date": null,
+                "agreement": 16000
+            }
+        ],
+        "unicef_signatory": null,
+        "partner_signatory": null,
+        "attached_agreement_file": "http://testserver/media/test/file_attachments/partner_organization/15300/agreements/test_file.pdf",
+        "attachment": null,
+        "permissions": {
+            "edit": {
+                "end": false,
+                "interventions": true,
+                "amendments": false,
+                "signed_by": false,
+                "status": true,
+                "partner_manager": false,
+                "attachment": true,
+                "signed_by_unicef_date": false,
+                "reference_number_year": false,
+                "signed_by_partner_date": false,
+                "signed_by_id": true,
+                "created": true,
+                "partner_id": true,
+                "attached_agreement": false,
+                "partner_manager_id": true,
+                "special_conditions_pca": false,
+                "id": true,
+                "country_programme_id": true,
+                "agreement_number": false,
+                "agreement_type": false,
+                "modified": true,
+                "start": false,
+                "partner": false,
+                "authorized_officers": false,
+                "country_programme": false
+            },
+            "required": {
+                "end": false,
+                "interventions": false,
+                "amendments": false,
+                "signed_by": false,
+                "status": false,
+                "partner_manager": false,
+                "attachment": false,
+                "signed_by_unicef_date": false,
+                "reference_number_year": true,
+                "signed_by_partner_date": false,
+                "signed_by_id": false,
+                "created": false,
+                "partner_id": false,
+                "attached_agreement": false,
+                "partner_manager_id": false,
+                "special_conditions_pca": false,
+                "id": false,
+                "country_programme_id": false,
+                "agreement_number": true,
+                "agreement_type": true,
+                "modified": false,
+                "start": false,
+                "partner": true,
+                "authorized_officers": false,
+                "country_programme": false
+            },
+            "view": {
+                "end": false,
+                "interventions": true,
+                "amendments": false,
+                "signed_by": false,
+                "status": true,
+                "partner_manager": false,
+                "attachment": true,
+                "signed_by_unicef_date": false,
+                "reference_number_year": true,
+                "signed_by_partner_date": false,
+                "signed_by_id": true,
+                "created": true,
+                "partner_id": true,
+                "attached_agreement": false,
+                "partner_manager_id": true,
+                "special_conditions_pca": true,
+                "id": true,
+                "country_programme_id": true,
+                "agreement_number": false,
+                "agreement_type": false,
+                "modified": true,
+                "start": false,
+                "partner": false,
+                "authorized_officers": false,
+                "country_programme": false
+            }
+        },
+        "created": "2018-08-23T15:20:14.100000Z",
+        "modified": "2018-08-23T15:20:14.103000Z",
+        "agreement_type": "PCA",
+        "agreement_number": "TST/PCA201816000",
+        "attached_agreement": "http://testserver/media/test/file_attachments/partner_organization/15300/agreements/test_file.pdf",
+        "start": "2018-08-23",
+        "end": "2018-12-31",
+        "reference_number_year": 2018,
+        "special_conditions_pca": false,
+        "signed_by_unicef_date": "2018-08-23",
+        "signed_by_partner_date": "2018-08-23",
+        "status": "signed",
+        "partner": 15300,
+        "country_programme": 14932,
+        "signed_by": null,
+        "partner_manager": null
+    },
+    "content_type": null
+}

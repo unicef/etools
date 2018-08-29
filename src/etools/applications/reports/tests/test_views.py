@@ -1,7 +1,7 @@
 import datetime
 from operator import itemgetter
 
-from django.core.urlresolvers import reverse
+from django.urls import reverse
 from django.test import SimpleTestCase
 
 
@@ -82,7 +82,7 @@ class TestReportViews(BaseTenantTestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
 
     def test_api_sections_list(self):
-        url = reverse('sectors-list')
+        url = reverse('reports:sections-list')
         response = self.forced_auth_req('get', url)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
 

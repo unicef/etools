@@ -1,14 +1,22 @@
-
 from django.conf.urls import include, url
 
 from rest_framework_nested import routers
+from unicef_restlib.routers import NestedComplexRouter
 
-from etools.applications.audit.views import (AuditorFirmViewSet, AuditorStaffMembersViewSet, AuditViewSet,
-                                             EngagementViewSet, MicroAssessmentViewSet, PurchaseOrderViewSet,
-                                             SpecialAuditViewSet, SpotCheckViewSet, EngagementActionPointViewSet,
-                                             EngagementAttachmentsViewSet, ReportAttachmentsViewSet)
-from etools.applications.utils.common.routers import NestedComplexRouter
-
+from etools.applications.audit.views import (
+    AuditorFirmViewSet,
+    AuditorStaffMembersViewSet,
+    AuditViewSet,
+    EngagementActionPointViewSet,
+    EngagementAttachmentsViewSet,
+    EngagementViewSet,
+    MicroAssessmentViewSet,
+    PurchaseOrderViewSet,
+    ReportAttachmentsViewSet,
+    SpecialAuditViewSet,
+    SpotCheckViewSet,
+    StaffSpotCheckViewSet,
+)
 
 root_api = routers.SimpleRouter()
 root_api.register(r'audit-firms', AuditorFirmViewSet, base_name='audit-firms')
@@ -16,6 +24,7 @@ root_api.register(r'purchase-orders', PurchaseOrderViewSet, base_name='purchase-
 root_api.register(r'engagements', EngagementViewSet, base_name='engagements')
 root_api.register(r'micro-assessments', MicroAssessmentViewSet, base_name='micro-assessments')
 root_api.register(r'spot-checks', SpotCheckViewSet, base_name='spot-checks')
+root_api.register(r'staff-spot-checks', StaffSpotCheckViewSet, base_name='staff-spot-checks')
 root_api.register(r'audits', AuditViewSet, base_name='audits')
 root_api.register(r'special-audits', SpecialAuditViewSet, base_name='special-audits')
 

@@ -117,11 +117,14 @@ class InterventionPermissions(PMPPermissions):
             'condition2': self.user in self.instance.partner_focal_points.all(),
             'contingency on': self.instance.contingency_pd is True,
             'not_in_amendment_mode': not user_added_amendment(self.instance),
+            'not_ssfa': self.instance.document_type != self.instance.SSFA,
             'user_adds_amendment': user_added_amendment(self.instance),
             'prp_mode_on': not prp_mode_off(),
+            'prp_mode_on+contingency_on': not prp_mode_off() and self.instance.contingency_pd,
             'prp_mode_off': prp_mode_off(),
             'prp_server_on': prp_server_on(),
-            'user_adds_amendment+prp_mode_on': user_added_amendment(self.instance) and not prp_mode_off()
+            'user_adds_amendment+prp_mode_on': user_added_amendment(self.instance) and not prp_mode_off(),
+            'termination_doc_attached': self.instance.termination_doc_attachment.exists()
         }
 
 
@@ -150,6 +153,7 @@ class AgreementPermissions(PMPPermissions):
         self.condition_map = {
             'is type PCA or MOU': self.instance.agreement_type in [self.instance.PCA, self.instance.MOU],
             'is type PCA or SSFA': self.instance.agreement_type in [self.instance.PCA, self.instance.SSFA],
+            'is type SSFA': self.instance.agreement_type == self.instance.SSFA,
             'is type MOU': self.instance.agreement_type == self.instance.MOU,
             # this condition can only be checked on data save
             'user adds amendment': False if not inbound_check else user_added_amendment(self.instance)

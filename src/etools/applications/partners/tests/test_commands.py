@@ -4,14 +4,21 @@ from unittest.mock import Mock, patch
 from django.conf import settings
 from django.core.management import call_command
 
-from etools.applications.attachments.models import Attachment
+from unicef_attachments.models import Attachment
+
 from etools.applications.attachments.tests.factories import AttachmentFactory, AttachmentFileTypeFactory
 from etools.applications.EquiTrack.tests.cases import BaseTenantTestCase
 from etools.applications.partners.models import Agreement, Intervention
-from etools.applications.partners.tests.factories import (AgreementAmendmentFactory, AgreementFactory,
-                                                          AssessmentFactory, InterventionAmendmentFactory,
-                                                          InterventionAttachmentFactory,
-                                                          InterventionFactory, PartnerFactory,)
+from etools.applications.partners.tests.factories import (
+    AgreementAmendmentFactory,
+    AgreementFactory,
+    AssessmentFactory,
+    CoreValuesAssessmentFactory,
+    InterventionAmendmentFactory,
+    InterventionAttachmentFactory,
+    InterventionFactory,
+    PartnerFactory,
+)
 from etools.applications.reports.tests.factories import CountryProgrammeFactory
 
 
@@ -43,7 +50,9 @@ class TestCopyAttachments(BaseTenantTestCase):
             code="partners_intervention_attachment"
         )
         cls.partner = PartnerFactory(
-            core_values_assessment="sample.pdf"
+        )
+        cls.core_values_assessment = CoreValuesAssessmentFactory(
+            assessment="sample.pdf"
         )
         cls.agreement = AgreementFactory(
             attached_agreement="sample.pdf"
@@ -67,7 +76,7 @@ class TestCopyAttachments(BaseTenantTestCase):
 
     def test_partner_create(self):
         attachment_qs = Attachment.objects.filter(
-            object_id=self.partner.pk,
+            object_id=self.core_values_assessment.pk,
             code=self.file_type_partner.code,
             file_type=self.file_type_partner
         )
@@ -77,12 +86,12 @@ class TestCopyAttachments(BaseTenantTestCase):
         attachment = attachment_qs.last()
         self.assertEqual(
             attachment.file.name,
-            self.partner.core_values_assessment.name
+            self.core_values_assessment.assessment
         )
 
     def test_partner_update(self):
         attachment = AttachmentFactory(
-            content_object=self.partner,
+            content_object=self.core_values_assessment,
             file_type=self.file_type_partner,
             code=self.file_type_partner.code,
             file="random.pdf"
@@ -91,7 +100,7 @@ class TestCopyAttachments(BaseTenantTestCase):
         attachment_update = Attachment.objects.get(pk=attachment.pk)
         self.assertEqual(
             attachment_update.file.name,
-            self.partner.core_values_assessment.name
+            self.core_values_assessment.assessment
         )
 
     def test_agreement_create(self):

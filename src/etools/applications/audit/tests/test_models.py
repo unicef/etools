@@ -298,3 +298,26 @@ class TestRiskCategory(BaseTenantTestCase):
         self.assertEqual(r.code_tracker.previous("code"), "321")
         r_updated = RiskCategory.objects.get(pk=r.pk)
         self.assertEqual(r_updated.code, "321")
+
+
+class TestSpotCheck(BaseTenantTestCase):
+    def test_pending_unsupported_amount(self):
+        spot_check = SpotCheckFactory(
+            total_amount_of_ineligible_expenditure=0,
+            additional_supporting_documentation_provided=0,
+            justification_provided_and_accepted=0,
+            write_off_required=0
+        )
+        self.assertEqual(spot_check.pending_unsupported_amount, 0)
+
+
+class TestAudit(BaseTenantTestCase):
+    def test_pending_unsupported_amount(self):
+        audit = AuditFactory(
+            financial_findings=0,
+            amount_refunded=0,
+            additional_supporting_documentation_provided=0,
+            justification_provided_and_accepted=0,
+            write_off_required=0,
+        )
+        self.assertEqual(audit.pending_unsupported_amount, 0)

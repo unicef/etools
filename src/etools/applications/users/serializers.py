@@ -15,8 +15,8 @@ class SimpleCountrySerializer(serializers.ModelSerializer):
 
 class UserProfileSerializer(serializers.ModelSerializer):
 
-    office = serializers.CharField(source='office.name')
-    country_name = serializers.CharField(source='country.name')
+    office = serializers.CharField(source='office.name', read_only=True)
+    country_name = serializers.CharField(source='country.name', read_only=True)
     countries_available = SimpleCountrySerializer(many=True, read_only=True)
 
     class Meta:
@@ -135,6 +135,7 @@ class SimpleUserSerializer(serializers.ModelSerializer):
             'email',
             'is_superuser',
             'first_name',
+            'middle_name',
             'last_name',
             'is_staff',
             'is_active',
@@ -147,7 +148,7 @@ class MinimalUserSerializer(SimpleUserSerializer):
 
     class Meta:
         model = get_user_model()
-        fields = ('id', 'name', 'first_name', 'last_name')
+        fields = ('id', 'name', 'first_name', 'middle_name', 'last_name')
 
 
 class UserCreationSerializer(serializers.ModelSerializer):
@@ -202,6 +203,7 @@ class UserCreationSerializer(serializers.ModelSerializer):
             'email',
             'is_superuser',
             'first_name',
+            'middle_name',
             'last_name',
             'is_staff',
             'is_active',

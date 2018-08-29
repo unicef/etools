@@ -1,19 +1,18 @@
+import datetime
+
 from django.contrib.admin.sites import AdminSite
 
 from unicef_snapshot.models import Activity
 
 from etools.applications.EquiTrack.tests.cases import BaseTenantTestCase
-from etools.applications.funds.tests.factories import GrantFactory
 from etools.applications.partners.admin import (
     AgreementAdmin,
-    FundingCommitmentAdmin,
     InterventionAdmin,
     PartnerStaffMemberAdmin,
 )
-from etools.applications.partners.models import Agreement, FundingCommitment, Intervention, PartnerStaffMember
+from etools.applications.partners.models import Agreement, Intervention, PartnerStaffMember
 from etools.applications.partners.tests.factories import (
     AgreementFactory,
-    FundingCommitmentFactory,
     InterventionFactory,
     PartnerFactory,
     PartnerStaffFactory,
@@ -124,6 +123,7 @@ class TestAgreementAdmin(TestAdminCase):
             partner=self.partner,
             country_programme=CountryProgrammeFactory(),
             agreement_type=Agreement.PCA,
+            reference_number_year=datetime.date.today().year
         )
         aa = AgreementAdmin(Agreement, self.site)
         aa.save_model(self.request, obj, {}, False)
@@ -152,49 +152,5 @@ class TestAgreementAdmin(TestAdminCase):
             "status": {
                 "before": status_before,
                 "after": Agreement.TERMINATED
-            }
-        })
-
-
-class TestFundingCommitmentAdmin(TestAdminCase):
-    @classmethod
-    def setUpTestData(cls):
-        cls.grant = GrantFactory()
-
-    def test_save_model_create(self):
-        self.assertFalse(Activity.objects.exists())
-        obj = FundingCommitment(
-            grant=self.grant,
-            fr_number="123",
-            wbs="WBS",
-            fc_type="Type"
-        )
-        fa = FundingCommitmentAdmin(FundingCommitment, self.site)
-        fa.save_model(self.request, obj, {}, False)
-        self.assertTrue(
-            Activity.objects.filter(action=Activity.CREATE).exists()
-        )
-        activity = Activity.objects.first()
-        self.assertEqual(activity.target, obj)
-        self.assertEqual(activity.by_user, self.user)
-        self.assertEqual(activity.change, {})
-
-    def test_save_model_update(self):
-        self.assertFalse(Activity.objects.exists())
-        obj = FundingCommitmentFactory(grant=self.grant)
-        type_before = obj.fc_type
-        obj.fc_type = "Type Changed"
-        fa = FundingCommitmentAdmin(FundingCommitment, self.site)
-        fa.save_model(self.request, obj, {}, True)
-        self.assertTrue(
-            Activity.objects.filter(action=Activity.UPDATE).exists()
-        )
-        activity = Activity.objects.first()
-        self.assertEqual(activity.target, obj)
-        self.assertEqual(activity.by_user, self.user)
-        self.assertEqual(activity.change, {
-            "fc_type": {
-                "before": type_before,
-                "after": "Type Changed"
             }
         })

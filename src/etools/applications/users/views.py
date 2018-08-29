@@ -5,7 +5,6 @@ from django.contrib.auth.models import Group
 from django.core.exceptions import ValidationError as DjangoValidationError
 from django.db import connection
 from django.http import HttpResponseForbidden, HttpResponseRedirect
-
 from django.views.generic import FormView, RedirectView
 from django.views.generic.detail import DetailView
 
@@ -18,15 +17,20 @@ from rest_framework.views import APIView
 
 from etools.applications.audit.models import Auditor
 from etools.applications.EquiTrack.permissions import IsSuperUserOrStaff
-from etools.applications.reports.models import Sector
-from etools.applications.reports.serializers.v1 import SectionSerializer
 from etools.applications.tpm.models import ThirdPartyMonitor
 from etools.applications.users.forms import ProfileForm
 from etools.applications.users.models import Country, Office, UserProfile
-from etools.applications.users.serializers import (CountrySerializer, GroupSerializer, MinimalUserSerializer,
-                                                   OfficeSerializer, ProfileRetrieveUpdateSerializer,
-                                                   SimpleProfileSerializer, SimpleUserSerializer,
-                                                   UserCreationSerializer, UserSerializer,)
+from etools.applications.users.serializers import (
+    CountrySerializer,
+    GroupSerializer,
+    MinimalUserSerializer,
+    OfficeSerializer,
+    ProfileRetrieveUpdateSerializer,
+    SimpleProfileSerializer,
+    SimpleUserSerializer,
+    UserCreationSerializer,
+    UserSerializer,
+)
 from etools.libraries.azure_graph_api.tasks import retrieve_user_info
 
 logger = logging.getLogger(__name__)
@@ -84,6 +88,9 @@ class ChangeUserCountryView(APIView):
     def change_country(self):
         user = self.request.user
         country = self.get_country()
+
+        if country == user.profile.country:
+            return
 
         if country not in user.profile.countries_available.all():
             raise DjangoValidationError(self.ERROR_MESSAGES['access_to_country_denied'],
@@ -357,28 +364,6 @@ class CountriesViewSet(ListAPIView):
 
     def get_queryset(self):
         return Country.objects.all()
-
-
-class SectionViewSet(mixins.RetrieveModelMixin,
-                     mixins.ListModelMixin,
-                     viewsets.GenericViewSet):
-    """
-    Returns a list of all Sections
-    """
-    serializer_class = SectionSerializer
-    permission_classes = (IsAdminUser,)
-
-    def get_queryset(self):
-        queryset = Sector.objects.all()
-        if "values" in self.request.query_params.keys():
-            # Used for ghost data - filter in all(), and return straight away.
-            try:
-                ids = [int(x) for x in self.request.query_params.get("values").split(",")]
-            except ValueError:
-                raise ValidationError("ID values must be integers")
-            else:
-                queryset = queryset.filter(id__in=ids)
-        return queryset
 
 
 class ModuleRedirectView(RedirectView):

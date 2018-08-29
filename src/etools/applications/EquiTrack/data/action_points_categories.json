@@ -1,0 +1,137 @@
+[
+  {
+    "model": "categories.category",
+    "pk": 1,
+    "fields": {
+      "order": 1,
+      "module": "audit",
+      "description": "Invoice and receive reimbursement of ineligible expenditure"
+    }
+  },
+  {
+    "model": "categories.category",
+    "pk": 2,
+    "fields": {
+      "order": 2,
+      "module": "audit",
+      "description": "Change cash transfer modality (DCT, reimbursement or direct payment)"
+    }
+  },
+  {
+    "model": "categories.category",
+    "pk": 3,
+    "fields": {
+      "order": 3,
+      "module": "audit",
+      "description": "IP to incur and report on additional expenditure"
+    }
+  },
+  {
+    "model": "categories.category",
+    "pk": 4,
+    "fields": {
+      "order": 4,
+      "module": "audit",
+      "description": "Review and amend ICE or budget"
+    }
+  },
+  {
+    "model": "categories.category",
+    "pk": 5,
+    "fields": {
+      "order": 5,
+      "module": "audit",
+      "description": "IP to correct FACE form or Statement of Expenditure"
+    }
+  },
+  {
+    "model": "categories.category",
+    "pk": 6,
+    "fields": {
+      "order": 6,
+      "module": "audit",
+      "description": "Schedule a programmatic visit"
+    }
+  },
+  {
+    "model": "categories.category",
+    "pk": 7,
+    "fields": {
+      "order": 7,
+      "module": "audit",
+      "description": "Schedule a follow-up spot check"
+    }
+  },
+  {
+    "model": "categories.category",
+    "pk": 8,
+    "fields": {
+      "order": 8,
+      "module": "audit",
+      "description": "Schedule an audit"
+    }
+  },
+  {
+    "model": "categories.category",
+    "pk": 9,
+    "fields": {
+      "order": 9,
+      "module": "audit",
+      "description": "Block future cash transfers"
+    }
+  },
+  {
+    "model": "categories.category",
+    "pk": 10,
+    "fields": {
+      "order": 10,
+      "module": "audit",
+      "description": "Block or mark vendor for deletion"
+    }
+  },
+  {
+    "model": "categories.category",
+    "pk": 11,
+    "fields": {
+      "order": 11,
+      "module": "audit",
+      "description": "Escalate to Chief of Operations, Dep Rep, or Rep"
+    }
+  },
+  {
+    "model": "categories.category",
+    "pk": 12,
+    "fields": {
+      "order": 12,
+      "module": "audit",
+      "description": "Escalate to Investigation"
+    }
+  },
+  {
+    "model": "categories.category",
+    "pk": 13,
+    "fields": {
+      "order": 13,
+      "module": "audit",
+      "description": "Capacity building / Discussion with partner"
+    }
+  },
+  {
+    "model": "categories.category",
+    "pk": 14,
+    "fields": {
+      "order": 14,
+      "module": "audit",
+      "description": "Change IP risk rating"
+    }
+  },
+  {
+    "model": "categories.category",
+    "pk": 15,
+    "fields": {
+      "order": 15,
+      "module": "audit",
+      "description": "Other"
+    }
+  }
+]

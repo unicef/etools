@@ -10,7 +10,7 @@ from model_utils.fields import AutoCreatedField, AutoLastModifiedField
 from model_utils.models import TimeStampedModel
 from mptt.models import MPTTModel, TreeForeignKey
 
-from etools.applications.locations.models import Location
+from unicef_locations.models import Location
 
 
 class Quarter(models.Model):
@@ -133,7 +133,7 @@ class ResultType(models.Model):
 
 class Sector(TimeStampedModel):
     """
-    Represents a sector
+    Represents a section
     """
 
     name = models.CharField(max_length=45, unique=True, verbose_name=_('Name'))
@@ -151,6 +151,9 @@ class Sector(TimeStampedModel):
             self.alternate_id if self.alternate_id else '',
             self.name
         )
+
+
+Section = Sector
 
 
 class ResultManager(models.Manager):
@@ -185,7 +188,7 @@ class Result(MPTTModel):
         on_delete=models.CASCADE,
     )
     sector = models.ForeignKey(
-        Sector,
+        Section,
         verbose_name=_("Section"),
         null=True,
         blank=True,
@@ -306,6 +309,9 @@ class Result(MPTTModel):
 
     @cached_property
     def expired(self):
+        if not self.to_date:
+            return False
+
         today = date.today()
         return self.to_date < today
 
@@ -558,7 +564,7 @@ class AppliedIndicator(TimeStampedModel):
     denominator_label = models.CharField(max_length=256, blank=True, null=True)
 
     section = models.ForeignKey(
-        Sector,
+        Section,
         verbose_name=_("Section"),
         null=True,
         blank=True,
@@ -665,7 +671,7 @@ class Indicator(TimeStampedModel):
     # TODO: rename this to RAMIndicator
 
     sector = models.ForeignKey(
-        Sector,
+        Section,
         verbose_name=_("Section"),
         blank=True, null=True,
         on_delete=models.CASCADE,

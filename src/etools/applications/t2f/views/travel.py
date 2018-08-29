@@ -11,19 +11,25 @@ from rest_framework.parsers import FileUploadParser, FormParser, MultiPartParser
 from rest_framework.permissions import IsAdminUser
 from rest_framework.response import Response
 from rest_framework_csv import renderers
+from unicef_restlib.views import QueryStringFilterMixin
 
-from etools.applications.EquiTrack.mixins import QueryStringFilterMixin
-from etools.applications.t2f.filters import (action_points, travel_list, TravelActivityInterventionFilter,
-                                             TravelActivityPartnerFilter, TravelRelatedModelFilter,)
+from etools.applications.t2f.filters import (
+    travel_list,
+    TravelActivityInterventionFilter,
+    TravelActivityPartnerFilter,
+    TravelRelatedModelFilter,
+)
 from etools.applications.t2f.helpers.clone_travel import CloneTravelHelper
 from etools.applications.t2f.helpers.permission_matrix import FakePermissionMatrix, PermissionMatrix
-from etools.applications.t2f.models import ActionPoint, Travel, TravelActivity, TravelAttachment, TravelType
-from etools.applications.t2f.renderers import ActionPointCSVRenderer
-from etools.applications.t2f.serializers.export import ActionPointExportSerializer
-from etools.applications.t2f.serializers.travel import (ActionPointSerializer, CloneOutputSerializer,
-                                                        CloneParameterSerializer, TravelActivityByPartnerSerializer,
-                                                        TravelAttachmentSerializer, TravelDetailsSerializer,
-                                                        TravelListSerializer,)
+from etools.applications.t2f.models import Travel, TravelActivity, TravelAttachment, TravelType
+from etools.applications.t2f.serializers.travel import (
+    CloneOutputSerializer,
+    CloneParameterSerializer,
+    TravelActivityByPartnerSerializer,
+    TravelAttachmentSerializer,
+    TravelDetailsSerializer,
+    TravelListSerializer,
+)
 from etools.applications.t2f.views import run_transition, T2FPagePagination
 
 
@@ -145,6 +151,10 @@ class TravelActivityViewSet(QueryStringFilterMixin, mixins.ListModelMixin, views
     serializer_class = TravelActivityByPartnerSerializer
     filter_backends = (TravelActivityPartnerFilter,)
     lookup_url_kwarg = 'partner_organization_pk'
+    filters = (
+        ('year', 'travels__end_date__year'),
+        ('status', 'travels__status'),
+    )
 
     def get_queryset(self):
         qs = TravelActivity.objects.prefetch_related('travels', 'primary_traveler', 'locations')
@@ -152,11 +162,7 @@ class TravelActivityViewSet(QueryStringFilterMixin, mixins.ListModelMixin, views
         query_params = self.request.query_params
         if query_params:
             queries = []
-            filters = (
-                ('year', 'travels__end_date__year'),
-                ('status', 'travels__status'),
-            )
-            queries.extend(self.filter_params(filters))
+            queries.extend(self.filter_params())
             if queries:
                 expression = functools.reduce(operator.and_, queries)
                 qs = qs.filter(expression)
@@ -180,6 +186,10 @@ class TravelActivityPerInterventionViewSet(QueryStringFilterMixin, mixins.ListMo
     filter_backends = (TravelActivityInterventionFilter,)
     lookup_url_kwarg = 'partnership_pk'
 
+    filters = (
+        ('year', 'travels__end_date__year'),
+    )
+
     def get_queryset(self):
         qs = TravelActivity.objects.prefetch_related('travels', 'primary_traveler', 'locations')
         qs = qs.filter(travel_type__in=[TravelType.SPOT_CHECK, TravelType.PROGRAMME_MONITORING])
@@ -187,10 +197,7 @@ class TravelActivityPerInterventionViewSet(QueryStringFilterMixin, mixins.ListMo
         query_params = self.request.query_params
         if query_params:
             queries = []
-            filters = (
-                ('year', 'travels__end_date__year'),
-            )
-            queries.extend(self.filter_params(filters))
+            queries.extend(self.filter_params())
             if queries:
                 expression = functools.reduce(operator.and_, queries)
                 qs = qs.filter(expression)
@@ -204,26 +211,3 @@ class TravelActivityPerInterventionViewSet(QueryStringFilterMixin, mixins.ListMo
             .distinct('id')
         qs = qs.exclude(status__in=[Travel.CANCELLED, Travel.REJECTED, Travel.PLANNED])
         return qs
-
-
-class ActionPointViewSet(mixins.ListModelMixin,
-                         mixins.RetrieveModelMixin,
-                         mixins.UpdateModelMixin,
-                         viewsets.GenericViewSet):
-    queryset = ActionPoint.objects.all()
-    serializer_class = ActionPointSerializer
-    pagination_class = T2FPagePagination
-    permission_classes = (IsAdminUser,)
-    filter_backends = (action_points.ActionPointSearchFilter,
-                       action_points.ActionPointSortFilter,
-                       action_points.ActionPointFilterBoxFilter)
-    renderer_classes = (renderers.JSONRenderer, ActionPointCSVRenderer)
-    lookup_url_kwarg = 'action_point_pk'
-
-    def export(self, request, *args, **kwargs):
-        queryset = self.filter_queryset(self.get_queryset())
-        serializer = ActionPointExportSerializer(queryset, many=True, context=self.get_serializer_context())
-
-        response = Response(data=serializer.data, status=status.HTTP_200_OK)
-        response['Content-Disposition'] = 'attachment; filename="ActionPointExport.csv"'
-        return response

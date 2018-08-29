@@ -4,6 +4,7 @@ from unittest import skip
 from mock import Mock, patch
 
 from etools.applications.EquiTrack.tests.cases import BaseTenantTestCase
+from etools.applications.attachments.tests.factories import AttachmentFactory
 from etools.applications.funds.tests.factories import FundsReservationHeaderFactory
 from etools.applications.partners.models import (
     Agreement,
@@ -304,7 +305,7 @@ class TestTransitionToSigned(BaseTenantTestCase):
                 )
                 with self.assertRaisesRegexp(
                         TransitionError,
-                        "The PCA related to this record is Suspended or Terminated."
+                        "The PCA related to this record is Draft, Suspended or Terminated."
                 ):
                     transition_to_signed(intervention)
 
@@ -374,11 +375,13 @@ class TestTransitionToTerminated(BaseTenantTestCase):
     def test_intervention_terminable_statuses(self):
         """Interventions in amendment cannot be terminated"""
         terminable_statuses = [Intervention.SIGNED, Intervention.ACTIVE]
-
         for terminable_status in terminable_statuses:
             intervention = InterventionFactory(
                 status=terminable_status,
+                end=datetime.date.today()
             )
+            a = AttachmentFactory(code='partners_intervention_termination_doc', content_object=intervention)
+            intervention.termination_doc_attachment.add(a)
             self.assertTrue(transition_to_terminated(intervention))
 
             intervention.in_amendment = True

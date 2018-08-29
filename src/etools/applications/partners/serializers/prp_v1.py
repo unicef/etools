@@ -4,7 +4,7 @@ from django.db import connection
 
 from rest_framework import serializers
 
-from etools.applications.locations.models import Location
+from unicef_locations.models import Location
 from etools.applications.partners.models import (Intervention, InterventionAmendment,
                                                  PartnerOrganization, PartnerStaffMember,)
 from etools.applications.reports.models import (AppliedIndicator, Disaggregation,
@@ -118,12 +118,15 @@ class DisaggregationSerializer(serializers.ModelSerializer):
 class PRPIndicatorSerializer(serializers.ModelSerializer):
     # todo: this class hasn't been tested at all because there are no `AppliedIndicator`s in the current DB
     # todo: need to validate these and fill in missing fields
-    title = serializers.CharField(source='indicator.title', read_only=True)
-    blueprint_id = serializers.IntegerField(source='indicator.id', read_only=True)
+    title = serializers.SerializerMethodField()
+    blueprint_id = serializers.PrimaryKeyRelatedField(source='indicator', read_only=True)
     locations = PRPLocationSerializer(read_only=True, many=True)
     disaggregation = DisaggregationSerializer(read_only=True, many=True)
     target = serializers.JSONField(required=False)
     baseline = serializers.JSONField(required=False)
+
+    def get_title(self, ai):
+        return ai.indicator.title if ai.indicator else ''
 
     class Meta:
         model = AppliedIndicator
@@ -161,7 +164,6 @@ class PRPCPOutputResultSerializer(serializers.ModelSerializer):
 
 
 class PRPResultSerializer(serializers.ModelSerializer):
-    # todo: figure out where this comes from / if this is right
     title = serializers.CharField(source='name', read_only=True)
     indicators = PRPIndicatorSerializer(many=True, read_only=True, source='applied_indicators')
     cp_output = PRPCPOutputResultSerializer(source='result_link.cp_output', read_only=True)

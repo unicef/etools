@@ -15,10 +15,11 @@ from model_utils import Choices, FieldTracker
 from model_utils.managers import InheritanceManager
 from model_utils.models import TimeStampedModel
 from ordered_model.models import OrderedModel
+from unicef_attachments.models import Attachment
+from unicef_djangolib.fields import CodedGenericRelation
 from unicef_notification.utils import send_notification_with_template
 
 from etools.applications.action_points.models import ActionPoint
-from etools.applications.attachments.models import Attachment
 from etools.applications.audit.purchase_order.models import AuditorStaffMember, PurchaseOrder, PurchaseOrderItem
 from etools.applications.audit.transitions.conditions import (
     AuditSubmitReportRequiredFieldsCheck,
@@ -33,7 +34,6 @@ from etools.applications.audit.transitions.serializers import EngagementCancelSe
 from etools.applications.EquiTrack.utils import get_environment
 from etools.applications.partners.models import PartnerOrganization, PartnerStaffMember
 from etools.applications.permissions2.fsm import has_action_permission
-from etools.applications.utils.common.models.fields import CodedGenericRelation
 from etools.applications.utils.common.models.mixins import InheritedModelMixin
 from etools.applications.utils.common.urlresolvers import build_frontend_url
 from etools.applications.utils.groups.wrappers import GroupWrapper
@@ -109,10 +109,10 @@ class Engagement(InheritedModelMixin, TimeStampedModel, models.Model):
     start_date = models.DateField(verbose_name=_('Period Start Date'), blank=True, null=True)
     end_date = models.DateField(verbose_name=_('Period End Date'), blank=True, null=True)
     total_value = models.DecimalField(
-        verbose_name=_('Total value of selected FACE form(s)'), blank=True, null=True, decimal_places=2, max_digits=20
+        verbose_name=_('Total value of selected FACE form(s)'), blank=True, default=0, decimal_places=2, max_digits=20
     )
     exchange_rate = models.DecimalField(
-        verbose_name=_('Exchange Rate'), blank=True, null=True, decimal_places=2, max_digits=20
+        verbose_name=_('Exchange Rate'), blank=True, default=0, decimal_places=2, max_digits=20
     )
 
     engagement_attachments = CodedGenericRelation(
@@ -141,17 +141,17 @@ class Engagement(InheritedModelMixin, TimeStampedModel, models.Model):
     date_of_cancel = models.DateField(verbose_name=_('Date Report Cancelled'), null=True, blank=True)
 
     amount_refunded = models.DecimalField(
-        verbose_name=_('Amount Refunded'), null=True, blank=True, decimal_places=2, max_digits=20
+        verbose_name=_('Amount Refunded'), blank=True, default=0, decimal_places=2, max_digits=20
     )
     additional_supporting_documentation_provided = models.DecimalField(
-        verbose_name=_('Additional Supporting Documentation Provided'), null=True, blank=True,
+        verbose_name=_('Additional Supporting Documentation Provided'), blank=True, default=0,
         decimal_places=2, max_digits=20
     )
     justification_provided_and_accepted = models.DecimalField(
-        verbose_name=_('Justification Provided and Accepted'), null=True, blank=True, decimal_places=2, max_digits=20
+        verbose_name=_('Justification Provided and Accepted'), blank=True, default=0, decimal_places=2, max_digits=20
     )
     write_off_required = models.DecimalField(
-        verbose_name=_('Impairment'), null=True, blank=True, decimal_places=2, max_digits=20
+        verbose_name=_('Impairment'), blank=True, default=0, decimal_places=2, max_digits=20
     )
     explanation_for_additional_information = models.TextField(
         verbose_name=_('Provide explanation for additional information received from the IP or add attachments'),
@@ -181,7 +181,7 @@ class Engagement(InheritedModelMixin, TimeStampedModel, models.Model):
         verbose_name_plural = _('Engagements')
 
     def __str__(self):
-        return '{}: {}, {}'.format(self.engagement_type, self.agreement.order_number, self.partner.name)
+        return '{} {}'.format(self.get_engagement_type_display(), self.reference_number)
 
     @property
     def displayed_status(self):
@@ -235,7 +235,8 @@ class Engagement(InheritedModelMixin, TimeStampedModel, models.Model):
         }
 
     def _notify_focal_points(self, template_name, context=None):
-        for focal_point in get_user_model().objects.filter(groups=UNICEFAuditFocalPoint.as_group()):
+        for focal_point in get_user_model().objects.filter(groups=UNICEFAuditFocalPoint.as_group(),
+                                                           profile__countries_available=connection.tenant):
             # Build the context in the same order the previous version of the code did,
             # just in case something relies on it (intentionally or not).
             ctx = {
@@ -387,10 +388,10 @@ class Risk(models.Model):
 
 
 class SpotCheck(Engagement):
-    total_amount_tested = models.DecimalField(verbose_name=_('Total Amount Tested'), null=True, blank=True,
+    total_amount_tested = models.DecimalField(verbose_name=_('Total Amount Tested'), blank=True, default=0,
                                               decimal_places=2, max_digits=20)
     total_amount_of_ineligible_expenditure = models.DecimalField(
-        verbose_name=_('Total Amount of Ineligible Expenditure'), null=True, blank=True,
+        verbose_name=_('Total Amount of Ineligible Expenditure'), default=0, blank=True,
         decimal_places=2, max_digits=20,
     )
 
@@ -405,11 +406,8 @@ class SpotCheck(Engagement):
 
     @property
     def pending_unsupported_amount(self):
-        try:
-            return self.total_amount_of_ineligible_expenditure - self.additional_supporting_documentation_provided \
-                - self.justification_provided_and_accepted - self.write_off_required
-        except TypeError:
-            return None
+        return self.total_amount_of_ineligible_expenditure - self.additional_supporting_documentation_provided \
+            - self.justification_provided_and_accepted - self.write_off_required
 
     def save(self, *args, **kwargs):
         self.engagement_type = Engagement.TYPES.sc
@@ -432,9 +430,6 @@ class SpotCheck(Engagement):
     def finalize(self, *args, **kwargs):
         self.partner.spot_checks(update_one=True, event_date=self.date_of_draft_report_to_unicef)
         return super(SpotCheck, self).finalize(*args, **kwargs)
-
-    def __str__(self):
-        return 'SpotCheck ({}: {}, {})'.format(self.engagement_type, self.agreement.order_number, self.partner.name)
 
     def get_object_url(self, **kwargs):
         return build_frontend_url('ap', 'spot-checks', self.id, 'overview', **kwargs)
@@ -534,11 +529,6 @@ class MicroAssessment(Engagement):
     def submit(self, *args, **kwargs):
         return super(MicroAssessment, self).submit(*args, **kwargs)
 
-    def __str__(self):
-        return 'MicroAssessment ({}: {}, {})'.format(
-            self.engagement_type, self.agreement.order_number, self.partner.name
-        )
-
     def get_object_url(self, **kwargs):
         return build_frontend_url('ap', 'micro-assessments', self.id, 'overview', **kwargs)
 
@@ -575,9 +565,9 @@ class Audit(Engagement):
         (OPTION_ADVERSE, _("Adverse opinion")),
     )
 
-    audited_expenditure = models.DecimalField(verbose_name=_('Audited Expenditure $'), null=True, blank=True,
+    audited_expenditure = models.DecimalField(verbose_name=_('Audited Expenditure $'), blank=True, default=0,
                                               decimal_places=2, max_digits=20)
-    financial_findings = models.DecimalField(verbose_name=_('Financial Findings $'), null=True, blank=True,
+    financial_findings = models.DecimalField(verbose_name=_('Financial Findings $'), blank=True, default=0,
                                              decimal_places=2, max_digits=20)
     audit_opinion = models.CharField(
         verbose_name=_('Audit Opinion'), max_length=20, choices=OPTIONS, default='', blank=True,
@@ -596,12 +586,9 @@ class Audit(Engagement):
 
     @property
     def pending_unsupported_amount(self):
-        try:
-            return self.financial_findings - self.amount_refunded \
-                - self.additional_supporting_documentation_provided \
-                - self.justification_provided_and_accepted - self.write_off_required
-        except TypeError:
-            return None
+        return self.financial_findings - self.amount_refunded \
+            - self.additional_supporting_documentation_provided \
+            - self.justification_provided_and_accepted - self.write_off_required
 
     @property
     def percent_of_audited_expenditure(self):
@@ -627,9 +614,6 @@ class Audit(Engagement):
     def finalize(self, *args, **kwargs):
         self.partner.audits_completed(update_one=True)
         return super(Audit, self).finalize(*args, **kwargs)
-
-    def __str__(self):
-        return 'Audit ({}: {}, {})'.format(self.engagement_type, self.agreement.order_number, self.partner.name)
 
     def get_object_url(self, **kwargs):
         return build_frontend_url('ap', 'audits', self.id, 'overview', **kwargs)
@@ -722,9 +706,6 @@ class SpecialAudit(Engagement):
         self.partner.audits_completed(update_one=True)
         return super(SpecialAudit, self).finalize(*args, **kwargs)
 
-    def __str__(self):
-        return 'Special Audit ({}: {}, {})'.format(self.engagement_type, self.agreement.order_number, self.partner.name)
-
     def get_object_url(self, **kwargs):
         return build_frontend_url('ap', 'special-audits', self.id, 'overview', **kwargs)
 
@@ -780,12 +761,6 @@ class EngagementActionPoint(ActionPoint):
         verbose_name = _('Engagement Action Point')
         verbose_name_plural = _('Engagement Action Points')
         proxy = True
-
-    @transition('status', source=ActionPoint.STATUSES.open, target=ActionPoint.STATUSES.completed,
-                permission=has_action_permission(action='complete'),
-                conditions=[])
-    def complete(self):
-        self._do_complete()
 
     def get_mail_context(self, user=None, include_token=False):
         context = super(EngagementActionPoint, self).get_mail_context(user=user, include_token=include_token)

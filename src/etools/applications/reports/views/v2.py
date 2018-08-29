@@ -19,10 +19,10 @@ from rest_framework.generics import (
 )
 from rest_framework.permissions import IsAdminUser
 from rest_framework.response import Response
-from rest_framework.views import APIView
 from rest_framework_csv.renderers import CSVRenderer, JSONRenderer
+from unicef_restlib.views import QueryStringFilterMixin
 
-from etools.applications.EquiTrack.mixins import ExportModelMixin, QueryStringFilterMixin
+from etools.applications.EquiTrack.mixins import ExportModelMixin
 from etools.applications.EquiTrack.renderers import CSVFlatRenderer
 from etools.applications.partners.filters import PartnerScopeFilter
 from etools.applications.partners.models import Intervention
@@ -261,13 +261,13 @@ class AppliedIndicatorListAPIView(ExportModelMixin, ListAPIView):
         return q
 
 
-class AppliedIndicatorLocationExportView(QueryStringFilterMixin, APIView):
+class AppliedIndicatorLocationExportView(QueryStringFilterMixin, ListAPIView):
 
     def get(self, request, *args, **kwargs):
 
         fieldnames = {
             'partner': 'Partner Name',
-            'partner_number': 'Vendor Number',
+            'vendor_number': 'Vendor Number',
             'vendor': 'Vendor',
             'int_status': 'PD / SSFA status',
             'int_start_date': 'PD / SSFA start date',
@@ -302,7 +302,7 @@ class AppliedIndicatorLocationExportView(QueryStringFilterMixin, APIView):
         for intervention in interventions:
             intervention_dict = {
                 'partner': str(intervention.agreement.partner),
-                'partner_vendor_number': str(intervention.agreement.partner.vendor_number),
+                'vendor_number': str(intervention.agreement.partner.vendor_number),
                 'vendor': intervention.agreement.partner.cso_type,
                 'int_status': intervention.get_status_display(),
                 'int_start_date': intervention.start,
@@ -354,7 +354,7 @@ class AppliedIndicatorLocationExportView(QueryStringFilterMixin, APIView):
                 ('unicef_focal_points', 'unicef_focal_points__in'),
             )
 
-            search_terms = ['title__icontains', 'agreement__partner__name__icontains', 'number__icontains']
+            search_terms = ('title__icontains', 'agreement__partner__name__icontains', 'number__icontains')
             queries.extend(self.filter_params(filters))
             queries.append(self.search_params(search_terms))
 
@@ -377,7 +377,7 @@ class AppliedIndicatorLocationExportView(QueryStringFilterMixin, APIView):
                 ('sections', 'section__in'),
             )
 
-            search_terms = ['title__icontains', 'agreement__partner__name__icontains', 'number__icontains']
+            search_terms = ('title__icontains', 'agreement__partner__name__icontains', 'number__icontains')
             queries.extend(self.filter_params(filters))
             queries.append(self.search_params(search_terms))
 

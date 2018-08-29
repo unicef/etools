@@ -1,10 +1,7 @@
-from django.core.files.uploadedfile import SimpleUploadedFile
-from django.core.urlresolvers import reverse
-
+from django.urls import reverse
 
 from rest_framework import status
 
-from etools.applications.attachments.models import Attachment
 from etools.applications.attachments.tests.factories import (
     AttachmentFactory,
     AttachmentFileTypeFactory,
@@ -93,6 +90,7 @@ class TestAttachmentListView(BaseTenantTestCase):
             "vendor_number": "",
             "pd_ssfa_number": "",
             "agreement_reference_number": "",
+            "source": "",
         }] * 2
 
     def assert_keys(self, response):
@@ -103,11 +101,14 @@ class TestAttachmentListView(BaseTenantTestCase):
             "vendor_number",
             "pd_ssfa_number",
             "agreement_reference_number",
+            "object_link",
             "filename",
             "file_type",
             "file_link",
             "uploaded_by",
             "created",
+            "attachment",
+            "source",
         ]
         for row in response.data:
             self.assertCountEqual(list(row.keys()), expected_keys)
@@ -119,6 +120,7 @@ class TestAttachmentListView(BaseTenantTestCase):
             "vendor_number": x["vendor_number"],
             "pd_ssfa_number": x["pd_ssfa_number"],
             "agreement_reference_number": x["agreement_reference_number"],
+            "source": x["source"],
         } for x in response.data]
         self.assertCountEqual(received, expected)
 
@@ -189,6 +191,7 @@ class TestAttachmentListView(BaseTenantTestCase):
             "vendor_number": self.partner.vendor_number,
             "pd_ssfa_number": "",
             "agreement_reference_number": "",
+            "source": "Partnership Management Portal",
         }])
 
     def test_assessment(self):
@@ -215,6 +218,7 @@ class TestAttachmentListView(BaseTenantTestCase):
             "vendor_number": self.partner.vendor_number,
             "pd_ssfa_number": "",
             "agreement_reference_number": "",
+            "source": "Partnership Management Portal",
         }])
 
     def test_agreement(self):
@@ -241,6 +245,7 @@ class TestAttachmentListView(BaseTenantTestCase):
             "vendor_number": self.partner.vendor_number,
             "pd_ssfa_number": "",
             "agreement_reference_number": self.agreement.reference_number,
+            "source": "Partnership Management Portal",
         }])
 
     def test_agreement_amendment(self):
@@ -267,6 +272,7 @@ class TestAttachmentListView(BaseTenantTestCase):
             "vendor_number": self.partner.vendor_number,
             "pd_ssfa_number": "",
             "agreement_reference_number": self.amendment.agreement.reference_number,
+            "source": "Partnership Management Portal",
         }])
 
     def test_intervention_amendment(self):
@@ -293,6 +299,7 @@ class TestAttachmentListView(BaseTenantTestCase):
             "vendor_number": self.partner.vendor_number,
             "pd_ssfa_number": self.intervention.number,
             "agreement_reference_number": self.intervention.agreement.reference_number,
+            "source": "Partnership Management Portal",
         }])
 
     def test_intervention_attachment(self):
@@ -319,6 +326,7 @@ class TestAttachmentListView(BaseTenantTestCase):
             "vendor_number": self.partner.vendor_number,
             "pd_ssfa_number": self.intervention.number,
             "agreement_reference_number": self.intervention.agreement.reference_number,
+            "source": "Partnership Management Portal",
         }])
         self.assertCountEqual([x["file_type"] for x in response.data], [
             self.file_type_1.label,
@@ -359,12 +367,14 @@ class TestAttachmentListView(BaseTenantTestCase):
             "vendor_number": self.partner.vendor_number,
             "pd_ssfa_number": self.intervention.number,
             "agreement_reference_number": self.intervention.agreement.reference_number,
+            "source": "Partnership Management Portal",
         }, {
             "partner": self.partner.name,
             "partner_type": self.partner.partner_type,
             "vendor_number": self.partner.vendor_number,
             "pd_ssfa_number": self.intervention.number,
             "agreement_reference_number": self.intervention.agreement.reference_number,
+            "source": "Partnership Management Portal",
         }])
 
     def test_tpm_activity_attachments(self):
@@ -394,6 +404,7 @@ class TestAttachmentListView(BaseTenantTestCase):
             "vendor_number": self.partner.vendor_number,
             "pd_ssfa_number": self.intervention.number,
             "agreement_reference_number": self.intervention.agreement.reference_number,
+            "source": "Third Party Monitoring",
         }])
         self.assertCountEqual([x["file_type"] for x in response.data], [
             self.file_type_1.label,
@@ -428,6 +439,7 @@ class TestAttachmentListView(BaseTenantTestCase):
             "vendor_number": self.partner.vendor_number,
             "pd_ssfa_number": self.intervention.number,
             "agreement_reference_number": self.intervention.agreement.reference_number,
+            "source": "Third Party Monitoring",
         }])
         self.assertCountEqual([x["file_type"] for x in response.data], [
             self.file_type_1.label,
@@ -462,6 +474,7 @@ class TestAttachmentListView(BaseTenantTestCase):
             "vendor_number": self.partner.vendor_number,
             "pd_ssfa_number": "",
             "agreement_reference_number": "",
+            "source": "Financial Assurance (FAM)",
         }])
         self.assertCountEqual([x["file_type"] for x in response.data], [
             self.file_type_1.label,
@@ -496,258 +509,10 @@ class TestAttachmentListView(BaseTenantTestCase):
             "vendor_number": self.partner.vendor_number,
             "pd_ssfa_number": "",
             "agreement_reference_number": "",
+            "source": "Financial Assurance (FAM)",
         }])
         self.assertCountEqual([x["file_type"] for x in response.data], [
             self.file_type_1.label,
             self.file_type_2.label,
             file_type.label
         ])
-
-
-class TestAttachmentFileView(BaseTenantTestCase):
-    @classmethod
-    def setUpTestData(cls):
-        cls.code = "test_code_1"
-        cls.file_type = AttachmentFileTypeFactory(code=cls.code)
-        cls.unicef_staff = UserFactory(is_staff=True)
-        cls.attachment = AttachmentFactory(
-            file_type=cls.file_type,
-            code=cls.code,
-            file="sample1.pdf",
-            content_object=cls.file_type,
-            uploaded_by=cls.unicef_staff
-        )
-        cls.url = reverse("attachments:file", args=[cls.attachment.pk])
-
-    def test_not_found(self):
-        response = self.forced_auth_req(
-            "get",
-            reverse("attachments:file", args=[404]),
-            user=self.unicef_staff,
-        )
-        self.assertContains(response, "No Attachment matches the given query",
-                            status_code=status.HTTP_404_NOT_FOUND)
-
-    def test_no_url(self):
-        attachment = AttachmentFactory(
-            file_type=self.file_type,
-            code=self.code,
-            file=None,
-            content_object=self.file_type,
-            uploaded_by=self.unicef_staff
-        )
-        response = self.forced_auth_req(
-            "get",
-            reverse("attachments:file", args=[attachment.pk]),
-            user=self.unicef_staff,
-        )
-        self.assertContains(response, "Attachment has no file or hyperlink",
-                            status_code=status.HTTP_404_NOT_FOUND)
-
-    def test_redirect(self):
-        response = self.forced_auth_req(
-            "get",
-            self.url,
-            user=self.unicef_staff,
-        )
-        self.assertEqual(response.status_code, status.HTTP_302_FOUND)
-
-
-class TestAttachmentUpdateView(BaseTenantTestCase):
-    @classmethod
-    def setUpTestData(cls):
-        cls.file_type = AttachmentFileTypeFactory(code="test_code")
-        cls.unicef_staff = UserFactory(is_staff=True)
-
-    def setUp(self):
-        self.attachment = AttachmentFactory(
-            file_type=self.file_type,
-            code=self.file_type.code,
-            content_object=self.file_type
-        )
-        self.file_data = SimpleUploadedFile(
-            'hello_world.txt',
-            u'hello world!'.encode('utf-8')
-        )
-        self.url = reverse("attachments:update", args=[self.attachment.pk])
-
-    def test_get(self):
-        response = self.forced_auth_req(
-            "get",
-            self.url,
-            user=self.unicef_staff,
-            data={"file": self.file_data}
-        )
-        self.assertEqual(
-            response.status_code,
-            status.HTTP_405_METHOD_NOT_ALLOWED
-        )
-
-    def test_post(self):
-        response = self.forced_auth_req(
-            "post",
-            self.url,
-            user=self.unicef_staff,
-            data={"file": self.file_data}
-        )
-        self.assertEqual(
-            response.status_code,
-            status.HTTP_405_METHOD_NOT_ALLOWED
-        )
-
-    def test_permission(self):
-        user = UserFactory()
-        self.assertFalse(self.attachment.file)
-        response = self.forced_auth_req(
-            "put",
-            self.url,
-            user=user,
-            data={"file": self.file_data},
-            request_format="multipart"
-        )
-        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
-
-    def test_put(self):
-        self.assertFalse(self.attachment.file)
-        self.assertIsNone(self.attachment.uploaded_by)
-        response = self.forced_auth_req(
-            "put",
-            self.url,
-            user=self.unicef_staff,
-            data={"file": self.file_data},
-            request_format="multipart"
-        )
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(response.data["id"], self.attachment.pk)
-        self.assertEqual(
-            response.data["file_link"],
-            reverse("attachments:file", args=[self.attachment.pk])
-        )
-        attachment_update = Attachment.objects.get(pk=self.attachment.pk)
-        self.assertTrue(attachment_update.file)
-        self.assertEqual(attachment_update.uploaded_by, self.unicef_staff)
-
-    def test_patch(self):
-        self.assertFalse(self.attachment.file)
-        self.assertIsNone(self.attachment.uploaded_by)
-        response = self.forced_auth_req(
-            "patch",
-            self.url,
-            user=self.unicef_staff,
-            data={"file": self.file_data},
-            request_format="multipart"
-        )
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
-        attachment_update = Attachment.objects.get(pk=self.attachment.pk)
-        self.assertTrue(attachment_update.file)
-        self.assertEqual(
-            response.data["file_link"],
-            reverse("attachments:file", args=[self.attachment.pk])
-        )
-        self.assertEqual(attachment_update.uploaded_by, self.unicef_staff)
-
-    def test_put_target(self):
-        """Ensure update only affects specified attachment"""
-        attachment = AttachmentFactory(
-            file_type=self.file_type,
-            code=self.file_type.code,
-            content_object=self.file_type
-        )
-        self.assertFalse(self.attachment.file)
-        self.assertFalse(attachment.file)
-        self.assertIsNone(self.attachment.uploaded_by)
-        response = self.forced_auth_req(
-            "put",
-            self.url,
-            user=self.unicef_staff,
-            data={"file": self.file_data},
-            request_format="multipart"
-        )
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(response.data["id"], self.attachment.pk)
-        self.assertEqual(
-            response.data["file_link"],
-            reverse("attachments:file", args=[self.attachment.pk])
-        )
-        attachment_update = Attachment.objects.get(pk=self.attachment.pk)
-        self.assertTrue(attachment_update.file)
-        self.assertEqual(attachment_update.uploaded_by, self.unicef_staff)
-        other_attachment_update = Attachment.objects.get(pk=attachment.pk)
-        self.assertFalse(other_attachment_update.file)
-
-
-class TestAttachmentCreatreView(BaseTenantTestCase):
-    @classmethod
-    def setUpTestData(cls):
-        cls.file_type = AttachmentFileTypeFactory(code="test_code")
-        cls.unicef_staff = UserFactory(is_staff=True)
-
-    def setUp(self):
-        self.file_data = SimpleUploadedFile(
-            'hello_world.txt',
-            u'hello world!'.encode('utf-8')
-        )
-        self.url = reverse("attachments:create")
-
-    def test_get(self):
-        response = self.forced_auth_req(
-            "get",
-            self.url,
-            user=self.unicef_staff,
-            data={"file": self.file_data}
-        )
-        self.assertEqual(
-            response.status_code,
-            status.HTTP_405_METHOD_NOT_ALLOWED
-        )
-
-    def test_put(self):
-        response = self.forced_auth_req(
-            "put",
-            self.url,
-            user=self.unicef_staff,
-            data={"file": self.file_data}
-        )
-        self.assertEqual(
-            response.status_code,
-            status.HTTP_405_METHOD_NOT_ALLOWED
-        )
-
-    def test_patch(self):
-        response = self.forced_auth_req(
-            "patch",
-            self.url,
-            user=self.unicef_staff,
-            data={"file": self.file_data}
-        )
-        self.assertEqual(
-            response.status_code,
-            status.HTTP_405_METHOD_NOT_ALLOWED
-        )
-
-    def test_permission(self):
-        user = UserFactory()
-        response = self.forced_auth_req(
-            "post",
-            self.url,
-            user=user,
-            data={"file": self.file_data},
-            request_format="multipart"
-        )
-        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
-
-    def test_post(self):
-        response = self.forced_auth_req(
-            "post",
-            self.url,
-            user=self.unicef_staff,
-            data={"file": self.file_data},
-            request_format="multipart"
-        )
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertTrue(response.data["file_link"])
-        attachment_qs = Attachment.objects.filter(pk=response.data["id"])
-        self.assertTrue(attachment_qs.exists())
-        attachment = attachment_qs.first()
-        self.assertIsNone(attachment.content_object)
-        self.assertEqual(attachment.uploaded_by, self.unicef_staff)

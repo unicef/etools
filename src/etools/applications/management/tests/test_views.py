@@ -1,11 +1,11 @@
-from django.core.urlresolvers import reverse
+from django.urls import reverse
 
 from mock import patch
 from rest_framework import status
 from tenant_schemas.test.client import TenantClient
 
 from etools.applications.EquiTrack.tests.cases import BaseTenantTestCase
-from etools.applications.locations.tests.factories import LocationFactory
+from unicef_locations.tests.factories import LocationFactory
 from etools.applications.partners.models import Intervention
 from etools.applications.activities.models import Activity
 from etools.applications.partners.tests.factories import InterventionFactory, AgreementFactory, PartnerFactory

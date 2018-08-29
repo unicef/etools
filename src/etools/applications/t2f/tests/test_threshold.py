@@ -1,14 +1,18 @@
 
 import json
 
-from django.core.urlresolvers import reverse
+from django.urls import reverse
 from django.test.utils import override_settings
 
 import mock
 
 from etools.applications.EquiTrack.tests.cases import BaseTenantTestCase
-from etools.applications.publics.tests.factories import (PublicsAirlineCompanyFactory, PublicsCurrencyFactory,
-                                                         PublicsDSARegionFactory, PublicsTravelExpenseTypeFactory,)
+from etools.applications.publics.tests.factories import (
+    PublicsAirlineCompanyFactory,
+    PublicsCurrencyFactory,
+    PublicsDSARegionFactory,
+    PublicsTravelExpenseTypeFactory,
+)
 from etools.applications.t2f.models import ModeOfTravel, Travel
 from etools.applications.users.tests.factories import UserFactory
 

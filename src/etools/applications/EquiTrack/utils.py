@@ -4,20 +4,15 @@ Project wide base classes and utility functions for apps
 import codecs
 import csv
 import json
-import uuid
 from datetime import datetime
-from functools import wraps
 
 from django.conf import settings
 from django.contrib.sites.models import Site
 from django.core.cache import cache
 from django.db import connection
 from django.db.models import Q
-from django.utils.cache import patch_cache_control
 
 import requests
-from rest_framework import status
-from rest_framework.response import Response
 
 
 def get_environment():
@@ -69,51 +64,6 @@ def get_data_from_insight(endpoint, data={}):
     except ValueError:
         return False, 'Loading data from Vision Failed, no valid response returned for data: {}'.format(data)
     return True, result
-
-
-def etag_cached(cache_key, public_cache=False):
-    """
-    Returns list of instances only if there's a new ETag, and it does not
-    match the one sent along with the request.
-    Otherwise it returns 304 NOT MODIFIED.
-    """
-    assert isinstance(cache_key, str), 'Cache key has to be a string'
-
-    def make_cache_key():
-        if public_cache:
-            schema_name = 'public'
-        else:
-            schema_name = connection.schema_name
-
-        return '{}-{}-etag'.format(schema_name, cache_key)
-
-    def decorator(func):
-        @wraps(func)
-        def wrapper(self, *args, **kwargs):
-
-            cache_etag = cache.get(make_cache_key())
-            request_etag = self.request.META.get("HTTP_IF_NONE_MATCH", None)
-
-            local_etag = cache_etag if cache_etag else '"{}"'.format(uuid.uuid4().hex)
-
-            if cache_etag and request_etag and cache_etag == request_etag:
-                response = Response(status=status.HTTP_304_NOT_MODIFIED)
-            else:
-                response = func(self, *args, **kwargs)
-                response["ETag"] = local_etag
-
-            if not cache_etag:
-                cache.set(make_cache_key(), local_etag)
-
-            patch_cache_control(response, private=True, must_revalidate=True)
-            return response
-
-        def invalidate():
-            cache.delete(make_cache_key())
-
-        wrapper.invalidate = invalidate
-        return wrapper
-    return decorator
 
 
 class Vividict(dict):

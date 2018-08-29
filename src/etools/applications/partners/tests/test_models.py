@@ -14,8 +14,8 @@ from mock import Mock, patch
 from etools.applications.audit.models import Engagement
 from etools.applications.audit.tests.factories import AuditFactory, SpecialAuditFactory, SpotCheckFactory
 from etools.applications.EquiTrack.tests.cases import BaseTenantTestCase
-from etools.applications.funds.tests.factories import DonorFactory, FundsReservationHeaderFactory, GrantFactory
-from etools.applications.locations.tests.factories import LocationFactory
+from etools.applications.funds.tests.factories import FundsReservationHeaderFactory
+from unicef_locations.tests.factories import LocationFactory
 from etools.applications.partners import models
 from etools.applications.partners.tests.factories import (
     AgreementAmendmentFactory,
@@ -34,6 +34,7 @@ from etools.applications.partners.tests.factories import (
     PartnerStaffFactory,
     PlannedEngagementFactory,
     WorkspaceFileTypeFactory,
+    InterventionPlannedVisitsFactory
 )
 from etools.applications.reports.tests.factories import (AppliedIndicatorFactory, CountryProgrammeFactory,
                                                          LowerResultFactory, ResultFactory, SectionFactory,)
@@ -166,10 +167,6 @@ class TestHACTCalculations(BaseTenantTestCase):
             from_date=datetime.date(year, 1, 1),
             to_date=datetime.date(year + 1, 12, 31)
         )
-        grant = GrantFactory(
-            donor=DonorFactory(name='Test Donor'),
-            name='SM12345678'
-        )
         InterventionBudgetFactory(
             intervention=cls.intervention,
             partner_contribution=10000,
@@ -182,28 +179,9 @@ class TestHACTCalculations(BaseTenantTestCase):
         start = datetime.datetime.combine(current_cp.from_date, datetime.time(0, 0, 1, tzinfo=tz))
         end = current_cp.from_date + datetime.timedelta(days=200)
         end = datetime.datetime.combine(end, datetime.time(23, 59, 59, tzinfo=tz))
-        models.FundingCommitment.objects.create(
-            start=start,
-            end=end,
-            grant=grant,
-            fr_number='0123456789',
-            wbs='Test',
-            fc_type='PCA',
-            expenditure_amount=40000.00
-        )
-
         start = current_cp.from_date + datetime.timedelta(days=200)
         start = datetime.datetime.combine(start, datetime.time(0, 0, 1, tzinfo=tz))
         end = datetime.datetime.combine(current_cp.to_date, datetime.time(23, 59, 59, tzinfo=tz))
-        models.FundingCommitment.objects.create(
-            start=start,
-            end=end,
-            grant=grant,
-            fr_number='0123456789',
-            wbs='Test',
-            fc_type='PCA',
-            expenditure_amount=40000.00
-        )
 
 
 class TestPartnerOrganizationModel(BaseTenantTestCase):
@@ -394,10 +372,7 @@ class TestPartnerOrganizationModel(BaseTenantTestCase):
             year=year - 1,
             programmatic_q3=2
         )
-        self.assertEqual(
-            self.partner_organization.hact_values['programmatic_visits']['planned']['total'],
-            3
-        )
+        self.assertEqual(self.partner_organization.hact_values['programmatic_visits']['planned']['total'], 3)
 
     def test_planned_visits_non_gov(self):
         self.partner_organization.partner_type = models.PartnerType.UN_AGENCY
@@ -409,16 +384,53 @@ class TestPartnerOrganizationModel(BaseTenantTestCase):
             programmatic_q1=3,
             programmatic_q4=4,
         )
-        PartnerPlannedVisitsFactory(
-            partner=self.partner_organization,
+        intervention = InterventionFactory(
+            agreement=self.pca_signed1,
+            status=models.Intervention.ACTIVE
+        )
+        InterventionPlannedVisitsFactory(
+            intervention=intervention,
             year=year - 1,
             programmatic_q2=2
+        )
+        InterventionPlannedVisitsFactory(
+            intervention=intervention,
+            year=year,
+            programmatic_q1=1,
+            programmatic_q3=3,
         )
         self.partner_organization.planned_visits_to_hact()
         self.assertEqual(
             self.partner_organization.hact_values['programmatic_visits']['planned']['total'],
-            7
+            4
         )
+
+    def test_planned_visits_non_gov_no_pv_intervention(self):
+        self.partner_organization.partner_type = models.PartnerType.UN_AGENCY
+        self.partner_organization.save()
+        intervention1 = InterventionFactory(
+            agreement=self.pca_signed1,
+            status=models.Intervention.ACTIVE
+        )
+        intervention2 = InterventionFactory(
+            agreement=self.pca_signed1,
+            status=models.Intervention.ACTIVE
+        )
+        year = datetime.date.today().year
+        InterventionPlannedVisitsFactory(
+            intervention=intervention1,
+            year=year,
+            programmatic_q1=1,
+            programmatic_q3=3,
+        )
+        InterventionPlannedVisitsFactory(
+            intervention=intervention2,
+            year=year - 1,
+            programmatic_q4=2
+        )
+        self.partner_organization.planned_visits_to_hact()
+        self.assertEqual(self.partner_organization.hact_values['programmatic_visits']['planned']['total'], 4)
+        self.assertEqual(self.partner_organization.hact_values['programmatic_visits']['planned']['q3'], 3)
 
     def test_programmatic_visits_update_one(self):
         self.assertEqual(self.partner_organization.hact_values['programmatic_visits']['completed']['total'], 0)
@@ -849,7 +861,7 @@ class TestInterventionModel(BaseTenantTestCase):
 
         expected_reference_number = self.intervention.agreement.base_number + '/' + self.intervention.document_type
         expected_reference_number += \
-            str(self.intervention.signed_by_unicef_date.year) + str(self.intervention.id)
+            str(self.intervention.reference_number_year) + str(self.intervention.id)
         self.assertEqual(self.intervention.reference_number, expected_reference_number)
 
     def test_all_lower_results_empty(self):

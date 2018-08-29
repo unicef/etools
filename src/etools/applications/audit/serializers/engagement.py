@@ -1,29 +1,53 @@
 from copy import copy
 
 from django.utils.translation import ugettext as _
-from rest_framework import serializers
 
+from rest_framework import serializers
+from unicef_attachments.fields import FileTypeModelChoiceField
+from unicef_attachments.models import FileType
+from unicef_attachments.serializers import BaseAttachmentSerializer
+from unicef_restlib.fields import SeparatedReadWriteField
+from unicef_restlib.serializers import WritableNestedParentSerializerMixin, WritableNestedSerializerMixin
+
+from etools.applications.action_points.categories.models import Category
+from etools.applications.action_points.categories.serializers import CategoryModelChoiceField
 from etools.applications.action_points.serializers import ActionPointBaseSerializer, HistorySerializer
-from etools.applications.attachments.models import FileType
-from etools.applications.attachments.serializers import BaseAttachmentSerializer
-from etools.applications.attachments.serializers_fields import FileTypeModelChoiceField
-from etools.applications.audit.models import (Audit, DetailedFindingInfo, Engagement, EngagementActionPoint,
-                                              FinancialFinding, Finding, KeyInternalControl, MicroAssessment, Risk,
-                                              SpecialAudit, SpecialAuditRecommendation, SpecificProcedure, SpotCheck, )
-from etools.applications.audit.serializers.auditor import (AuditorStaffMemberSerializer,
-                                                           PurchaseOrderItemSerializer, PurchaseOrderSerializer, )
+from etools.applications.audit.models import (
+    Audit,
+    DetailedFindingInfo,
+    Engagement,
+    EngagementActionPoint,
+    FinancialFinding,
+    Finding,
+    KeyInternalControl,
+    MicroAssessment,
+    Risk,
+    SpecialAudit,
+    SpecialAuditRecommendation,
+    SpecificProcedure,
+    SpotCheck,
+)
+from etools.applications.audit.purchase_order.models import PurchaseOrder
+from etools.applications.audit.serializers.auditor import (
+    AuditorStaffMemberSerializer,
+    PurchaseOrderItemSerializer,
+    PurchaseOrderSerializer,
+)
 from etools.applications.audit.serializers.mixins import EngagementDatesValidation, RiskCategoriesUpdateMixin
-from etools.applications.audit.serializers.risks import (AggregatedRiskRootSerializer,
-                                                         KeyInternalWeaknessSerializer, RiskRootSerializer, )
+from etools.applications.audit.serializers.risks import (
+    AggregatedRiskRootSerializer,
+    KeyInternalWeaknessSerializer,
+    RiskRootSerializer,
+)
 from etools.applications.partners.serializers.interventions_v2 import BaseInterventionListSerializer
-from etools.applications.partners.serializers.partner_organization_v2 import (PartnerOrganizationListSerializer,
-                                                                              PartnerStaffMemberNestedSerializer, )
+from etools.applications.partners.serializers.partner_organization_v2 import (
+    MinimalPartnerOrganizationListSerializer,
+    PartnerOrganizationListSerializer,
+    PartnerStaffMemberNestedSerializer,
+)
 from etools.applications.permissions2.serializers import PermissionsBasedSerializerMixin
 from etools.applications.reports.serializers.v1 import SectionSerializer
 from etools.applications.users.serializers import OfficeSerializer
-from etools.applications.utils.common.serializers.fields import SeparatedReadWriteField
-from etools.applications.utils.writable_serializers.serializers import (WritableNestedParentSerializerMixin,
-                                                                        WritableNestedSerializerMixin, )
 
 
 class PartnerOrganizationLightSerializer(PartnerOrganizationListSerializer):
@@ -68,13 +92,24 @@ class ReportAttachmentSerializer(BaseAttachmentSerializer):
 
 
 class EngagementActionPointSerializer(PermissionsBasedSerializerMixin, ActionPointBaseSerializer):
+    reference_number = serializers.ReadOnlyField(label=_('Reference No.'))
+
+    partner = MinimalPartnerOrganizationListSerializer(read_only=True, label=_('Related Partner'))
+    intervention = SeparatedReadWriteField(
+        label=_('Related PD/SSFA'), read_field=BaseInterventionListSerializer(), required=False,
+    )
+
     section = SeparatedReadWriteField(
-        read_field=SectionSerializer(read_only=True, label=_('Section')),
-        required=True,
+        read_field=SectionSerializer(read_only=True),
+        required=True, label=_('Section of Assignee')
     )
     office = SeparatedReadWriteField(
-        read_field=OfficeSerializer(read_only=True, label=_('Office')),
-        required=True
+        read_field=OfficeSerializer(read_only=True),
+        required=True, label=_('Office of Assignee')
+    )
+    category = CategoryModelChoiceField(
+        label=_('Action Point Category'), required=True,
+        queryset=Category.objects.filter(module=Category.MODULE_CHOICES.audit)
     )
 
     history = HistorySerializer(many=True, label=_('History'), read_only=True, source='get_meaningful_history')
@@ -84,12 +119,20 @@ class EngagementActionPointSerializer(PermissionsBasedSerializerMixin, ActionPoi
     class Meta(ActionPointBaseSerializer.Meta):
         model = EngagementActionPoint
         fields = ActionPointBaseSerializer.Meta.fields + [
-            'section', 'office', 'history', 'url',
+            'partner', 'intervention', 'history', 'url',
         ]
         extra_kwargs = copy(ActionPointBaseSerializer.Meta.extra_kwargs)
         extra_kwargs.update({
-            'assigned_to': {'label': _('Person Responsible')}
+            'high_priority': {'label': _('Priority')},
         })
+
+    def create(self, validated_data):
+        engagement = validated_data['engagement']
+        validated_data.update({
+            'partner_id': engagement.partner_id,
+        })
+
+        return super().create(validated_data)
 
 
 class EngagementExportSerializer(serializers.ModelSerializer):
@@ -146,7 +189,7 @@ class EngagementLightSerializer(serializers.ModelSerializer):
         fields = [
             'id', 'unique_id', 'agreement', 'po_item',
             'related_agreement', 'partner', 'engagement_type',
-            'status', 'status_date',
+            'status', 'status_date', 'total_value',
 
         ]
 
@@ -257,6 +300,7 @@ class ActivePDValidationMixin(object):
 class EngagementHactSerializer(EngagementLightSerializer):
     amount_tested = serializers.SerializerMethodField()
     outstanding_findings = serializers.SerializerMethodField()
+    object_url = serializers.ReadOnlyField(source='get_object_url')
 
     def get_amount_tested(self, obj):
         if obj.engagement_type == 'audit':
@@ -274,7 +318,7 @@ class EngagementHactSerializer(EngagementLightSerializer):
 
     class Meta(EngagementLightSerializer.Meta):
         fields = EngagementLightSerializer.Meta.fields + [
-            "amount_tested", "outstanding_findings"
+            "amount_tested", "outstanding_findings", "object_url"
         ]
 
 
@@ -317,6 +361,31 @@ class SpotCheckSerializer(ActivePDValidationMixin, EngagementSerializer):
                 'total_amount_tested', 'total_amount_of_ineligible_expenditure', 'internal_controls',
             ]
         })
+
+
+class StaffSpotCheckListSerializer(EngagementListSerializer):
+    class Meta(EngagementListSerializer.Meta):
+        fields = copy(EngagementListSerializer.Meta.fields)
+        fields.remove('po_item')
+
+
+class StaffSpotCheckSerializer(SpotCheckSerializer):
+    agreement = PurchaseOrderSerializer(read_only=True, label=_('Purchase Order'))
+
+    class Meta(SpotCheckSerializer.Meta):
+        fields = copy(SpotCheckSerializer.Meta.fields)
+        fields.remove('po_item')
+        fields.remove('related_agreement')
+
+    def create(self, validated_data):
+        purchase_order = PurchaseOrder.objects.filter(auditor_firm__unicef_users_allowed=True).first()
+        if not purchase_order:
+            raise serializers.ValidationError(
+                _("UNICEF Audit Organization is missing. Please ask administrator to handle this.")
+            )
+        validated_data['agreement'] = purchase_order
+
+        return super().create(validated_data)
 
 
 class DetailedFindingInfoSerializer(WritableNestedSerializerMixin, serializers.ModelSerializer):

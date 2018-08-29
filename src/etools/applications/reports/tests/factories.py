@@ -112,9 +112,9 @@ class AppliedIndicatorFactory(factory.django.DjangoModelFactory):
 
 class SectionFactory(factory.django.DjangoModelFactory):
     class Meta:
-        model = models.Sector
+        model = models.Section
 
-    name = factory.Sequence(lambda n: 'Sector {}'.format(n))
+    name = factory.Sequence(lambda n: 'Section {}'.format(n))
 
 
 class ReportingRequirementFactory(factory.django.DjangoModelFactory):

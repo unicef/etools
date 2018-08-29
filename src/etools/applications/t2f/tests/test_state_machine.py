@@ -5,14 +5,17 @@ from datetime import datetime, timedelta
 from decimal import Decimal
 
 from django.core import mail
-from django.core.urlresolvers import reverse
+from django.urls import reverse
 from django.test.utils import override_settings
 
-
 from etools.applications.EquiTrack.tests.cases import BaseTenantTestCase
-from etools.applications.publics.tests.factories import (PublicsBusinessAreaFactory, PublicsCurrencyFactory,
-                                                         PublicsDSARegionFactory, PublicsTravelExpenseTypeFactory,
-                                                         PublicsWBSFactory,)
+from etools.applications.publics.tests.factories import (
+    PublicsBusinessAreaFactory,
+    PublicsCurrencyFactory,
+    PublicsDSARegionFactory,
+    PublicsTravelExpenseTypeFactory,
+    PublicsWBSFactory,
+)
 from etools.applications.t2f.models import Invoice, ModeOfTravel, Travel
 from etools.applications.t2f.tests.factories import TravelFactory
 from etools.applications.users.tests.factories import UserFactory

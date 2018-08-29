@@ -1,11 +1,12 @@
-from django.conf.urls import url
+from django.conf.urls import url, include
+from rest_framework import routers
 
-from etools.applications.reports.views.v1 import CountryProgrammeListView, CountryProgrammeRetrieveView
+from etools.applications.reports.views.v1 import CountryProgrammeListView, CountryProgrammeRetrieveView, SectionViewSet
 from etools.applications.reports.views.v2 import (
     AppliedIndicatorListAPIView,
+    AppliedIndicatorLocationExportView,
     DisaggregationListCreateView,
     DisaggregationRetrieveUpdateView,
-    AppliedIndicatorLocationExportView,
     LowerResultsDeleteView,
     LowerResultsListAPIView,
     OutputDetailAPIView,
@@ -14,6 +15,9 @@ from etools.applications.reports.views.v2 import (
     SpecialReportingRequirementListCreateView,
     SpecialReportingRequirementRetrieveUpdateDestroyView,
 )
+
+api = routers.DefaultRouter()
+api.register(r'sections', SectionViewSet, base_name='sections')
 
 app_name = 'reports'
 urlpatterns = (
@@ -51,5 +55,6 @@ urlpatterns = (
         r'interventions/special-reporting-requirements/(?P<pk>\d+)/$',
         view=SpecialReportingRequirementRetrieveUpdateDestroyView.as_view(),
         name="interventions-special-reporting-requirements-update",
-    )
+    ),
+    url(r'^', include(api.urls))
 )

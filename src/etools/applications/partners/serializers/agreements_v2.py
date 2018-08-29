@@ -1,9 +1,9 @@
 from rest_framework import serializers
 from rest_framework.serializers import ValidationError
+from unicef_attachments.fields import AttachmentSingleFileField
+from unicef_attachments.serializers import AttachmentSerializerMixin
 from unicef_snapshot.serializers import SnapshotModelSerializer
 
-from etools.applications.attachments.serializers import AttachmentSerializerMixin
-from etools.applications.attachments.serializers_fields import AttachmentSingleFileField
 from etools.applications.partners.models import Agreement, AgreementAmendment
 from etools.applications.partners.permissions import AgreementPermissions
 from etools.applications.partners.serializers.partner_organization_v2 import (
@@ -52,7 +52,6 @@ class AgreementListSerializer(serializers.ModelSerializer):
             "signed_by_unicef_date",
             "signed_by_partner_date",
             "status",
-            "signed_by",
         )
 
 
@@ -83,6 +82,7 @@ class AgreementCreateUpdateSerializer(AttachmentSerializerMixin, SnapshotModelSe
     partner_name = serializers.CharField(source='partner.name', read_only=True)
     agreement_type = serializers.CharField(required=True)
     amendments = AgreementAmendmentCreateUpdateSerializer(many=True, read_only=True)
+    signed_by = serializers.CharField(read_only=True, allow_null=True)
     country_programme = serializers.PrimaryKeyRelatedField(queryset=CountryProgramme.objects.all(), required=False,
                                                            allow_null=True)
     unicef_signatory = SimpleUserSerializer(source='signed_by', read_only=True)

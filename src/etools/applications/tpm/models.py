@@ -5,16 +5,18 @@ from django.contrib.contenttypes.fields import GenericRelation
 from django.db import connection, models
 from django.utils import timezone
 from django.utils.encoding import force_text
+from django.utils.functional import cached_property
 from django.utils.translation import ugettext_lazy as _
 
 from django_fsm import FSMField, transition
 from model_utils import Choices, FieldTracker
 from model_utils.models import TimeStampedModel
+from unicef_attachments.models import Attachment
+from unicef_djangolib.fields import CodedGenericRelation
 from unicef_notification.utils import send_notification_with_template
 
 from etools.applications.action_points.models import ActionPoint
 from etools.applications.activities.models import Activity
-from etools.applications.attachments.models import Attachment
 from etools.applications.EquiTrack.utils import get_environment
 from etools.applications.permissions2.fsm import has_action_permission
 from etools.applications.publics.models import SoftDeleteMixin
@@ -29,7 +31,6 @@ from etools.applications.tpm.transitions.serializers import (
     TPMVisitCancelSerializer,
     TPMVisitRejectSerializer,
 )
-from etools.applications.utils.common.models.fields import CodedGenericRelation
 from etools.applications.utils.common.urlresolvers import build_frontend_url
 from etools.applications.utils.groups.wrappers import GroupWrapper
 
@@ -408,6 +409,10 @@ class TPMActivity(Activity):
     def __str__(self):
         return 'Task #{0} for {1}'.format(self.id, self.tpm_visit)
 
+    @cached_property
+    def task_number(self):
+        return list(self.tpm_visit.tpm_activities.values_list('id', flat=True)).index(self.id) + 1
+
     @property
     def reference_number(self):
         return self.tpm_visit.reference_number
@@ -466,12 +471,6 @@ class TPMActionPoint(ActionPoint):
         verbose_name = _('Engagement Action Point')
         verbose_name_plural = _('Engagement Action Points')
         proxy = True
-
-    @transition('status', source=ActionPoint.STATUSES.open, target=ActionPoint.STATUSES.completed,
-                permission=has_action_permission(action='complete'),
-                conditions=[])
-    def complete(self):
-        self._do_complete()
 
     def get_mail_context(self, user=None, include_token=False):
         context = super(TPMActionPoint, self).get_mail_context(user=user, include_token=include_token)

@@ -3,7 +3,8 @@ from rest_framework import mixins, viewsets
 from rest_framework.permissions import IsAdminUser
 from rest_framework.response import Response
 
-from etools.applications.t2f.models import ActionPoint, Travel
+from etools.applications.action_points.models import ActionPoint
+from etools.applications.t2f.models import Travel
 
 
 class TravelDashboardViewSet(mixins.ListModelMixin,
@@ -58,8 +59,7 @@ class TravelDashboardViewSet(mixins.ListModelMixin,
         return Response(data)
 
 
-class ActionPointDashboardViewSet(mixins.ListModelMixin,
-                                  viewsets.GenericViewSet):
+class ActionPointDashboardViewSet(mixins.ListModelMixin, viewsets.GenericViewSet):
     queryset = ActionPoint.objects.all()
     permission_classes = (IsAdminUser,)
 
@@ -68,14 +68,14 @@ class ActionPointDashboardViewSet(mixins.ListModelMixin,
         office_id = request.query_params.get("office_id", None)
         if office_id:
             office_id = office_id.split(',')
-        section_ids = Travel.objects.all().values_list('section', flat=True).distinct()
+        section_ids = Travel.objects.values_list('section', flat=True).distinct()
         action_points_by_section = []
         for section_id in section_ids:
             travels = Travel.objects.filter(section=section_id)
             if office_id:
                 travels = travels.filter(office_id__in=office_id)
             if travels.exists():
-                action_points = ActionPoint.objects.filter(travel__in=travels)
+                action_points = ActionPoint.objects.filter(travel_activity__travels__in=travels)
                 total = action_points.count()
                 completed = action_points.filter(status=Travel.COMPLETED).count()
                 section = travels.first().section

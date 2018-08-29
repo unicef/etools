@@ -1,4 +1,3 @@
-
 import itertools
 from copy import copy
 
@@ -6,12 +5,21 @@ from django.utils.translation import ugettext_lazy as _
 
 from rest_framework import serializers
 from rest_framework.exceptions import ValidationError
+from unicef_locations.serializers import LocationLightSerializer
+from unicef_restlib.fields import SeparatedReadWriteField
+from unicef_restlib.serializers import (
+    UserContextSerializerMixin,
+    WritableNestedParentSerializerMixin,
+    WritableNestedSerializerMixin,
+)
 
 from etools.applications.action_points.serializers import ActionPointBaseSerializer, HistorySerializer
 from etools.applications.activities.serializers import ActivitySerializer
-from etools.applications.locations.serializers import LocationLightSerializer
 from etools.applications.partners.models import InterventionResultLink, PartnerType
-from etools.applications.partners.serializers.interventions_v2 import InterventionCreateUpdateSerializer
+from etools.applications.partners.serializers.interventions_v2 import (
+    BaseInterventionListSerializer,
+    InterventionCreateUpdateSerializer,
+)
 from etools.applications.partners.serializers.partner_organization_v2 import MinimalPartnerOrganizationListSerializer
 from etools.applications.permissions2.serializers import PermissionsBasedSerializerMixin
 from etools.applications.reports.serializers.v1 import ResultSerializer, SectionSerializer
@@ -19,10 +27,6 @@ from etools.applications.tpm.models import TPMActionPoint, TPMActivity, TPMVisit
 from etools.applications.tpm.serializers.partner import TPMPartnerLightSerializer, TPMPartnerStaffMemberSerializer
 from etools.applications.tpm.tpmpartners.models import TPMPartnerStaffMember
 from etools.applications.users.serializers import MinimalUserSerializer, OfficeSerializer
-from etools.applications.utils.common.serializers.fields import SeparatedReadWriteField
-from etools.applications.utils.common.serializers.mixins import UserContextSerializerMixin
-from etools.applications.utils.writable_serializers.serializers import (
-    WritableNestedParentSerializerMixin, WritableNestedSerializerMixin,)
 
 
 class InterventionResultLinkVisitSerializer(serializers.ModelSerializer):
@@ -43,13 +47,30 @@ class TPMVisitReportRejectCommentSerializer(WritableNestedSerializerMixin,
 
 
 class TPMActionPointSerializer(PermissionsBasedSerializerMixin, ActionPointBaseSerializer):
+    reference_number = serializers.ReadOnlyField(label=_('Reference No.'))
+
+    partner = MinimalPartnerOrganizationListSerializer(read_only=True, label=_('Related Partner'))
+    intervention = SeparatedReadWriteField(
+        read_field=BaseInterventionListSerializer(),
+        required=False, label=_('Related PD/SSFA')
+    )
+    cp_output = SeparatedReadWriteField(
+        read_field=ResultSerializer(),
+        required=False, label=_('Related CP Output')
+    )
+
+    location = SeparatedReadWriteField(
+        read_field=LocationLightSerializer(),
+        required=False, label=_('Related Location')
+    )
+
     section = SeparatedReadWriteField(
-        read_field=SectionSerializer(read_only=True, label=_('Section')),
-        read_only=True
+        read_field=SectionSerializer(),
+        required=True, label=_('Section of Assignee')
     )
     office = SeparatedReadWriteField(
-        read_field=OfficeSerializer(read_only=True, label=_('Office')),
-        required=True
+        read_field=OfficeSerializer(),
+        required=True, label=_('Office of Assignee')
     )
 
     is_responsible = serializers.SerializerMethodField()
@@ -60,12 +81,14 @@ class TPMActionPointSerializer(PermissionsBasedSerializerMixin, ActionPointBaseS
     class Meta(ActionPointBaseSerializer.Meta):
         model = TPMActionPoint
         fields = ActionPointBaseSerializer.Meta.fields + [
-            'tpm_activity', 'section', 'office', 'history', 'is_responsible', 'url'
+            'partner', 'intervention', 'cp_output', 'location', 'tpm_activity',
+            'section', 'office', 'history', 'is_responsible', 'url'
         ]
+        fields.remove('category')
         extra_kwargs = copy(ActionPointBaseSerializer.Meta.extra_kwargs)
         extra_kwargs.update({
-            'tpm_activity': {'label': _('Site Visit Schedule')},
-            'assigned_to': {'label': _('Person Responsible')}
+            'tpm_activity': {'label': _('Related Task')},
+            'high_priority': {'label': _('Priority')},
         })
 
     def get_is_responsible(self, obj):
@@ -76,9 +99,6 @@ class TPMActionPointSerializer(PermissionsBasedSerializerMixin, ActionPointBaseS
 
         validated_data.update({
             'partner_id': activity.partner_id,
-            'intervention_id': activity.intervention_id,
-            'cp_output_id': activity.cp_output_id,
-            'section': activity.section,
         })
         return super(TPMActionPointSerializer, self).create(validated_data)
 

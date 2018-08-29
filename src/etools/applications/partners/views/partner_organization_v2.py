@@ -6,6 +6,7 @@ from django.db import transaction
 from django.db.models import Q
 from django.shortcuts import get_object_or_404
 
+from etools_validator.mixins import ValidatorViewMixin
 from rest_framework import status
 from rest_framework.exceptions import ValidationError
 from rest_framework.generics import (
@@ -18,8 +19,9 @@ from rest_framework.generics import (
 from rest_framework.permissions import IsAdminUser
 from rest_framework.response import Response
 from rest_framework_csv import renderers as r
+from unicef_restlib.views import QueryStringFilterMixin
 
-from etools.applications.EquiTrack.mixins import ExportModelMixin, QueryStringFilterMixin
+from etools.applications.EquiTrack.mixins import ExportModelMixin
 from etools.applications.EquiTrack.renderers import CSVFlatRenderer
 from etools.applications.EquiTrack.utils import get_data_from_insight
 from etools.applications.partners.exports_v2 import (
@@ -51,6 +53,7 @@ from etools.applications.partners.serializers.exports.partner_organization impor
 )
 from etools.applications.partners.serializers.partner_organization_v2 import (
     AssessmentDetailSerializer,
+    CoreValuesAssessmentSerializer,
     MinimalPartnerOrganizationListSerializer,
     PartnerOrganizationCreateUpdateSerializer,
     PartnerOrganizationDetailSerializer,
@@ -65,7 +68,6 @@ from etools.applications.partners.serializers.partner_organization_v2 import (
 from etools.applications.partners.views.helpers import set_tenant_or_fail
 from etools.applications.t2f.models import TravelActivity
 from etools.applications.vision.adapters.partner import PartnerSynchronizer
-from etools_validator.mixins import ValidatorViewMixin
 
 
 class PartnerOrganizationListAPIView(QueryStringFilterMixin, ExportModelMixin, ListCreateAPIView):
@@ -82,6 +84,12 @@ class PartnerOrganizationListAPIView(QueryStringFilterMixin, ExportModelMixin, L
         PartnerOrganizationCSVRenderer,
         CSVFlatRenderer
     )
+    filters = (
+        ('partner_type', 'partner_type__in'),
+        ('cso_type', 'cso_type__in'),
+        ('rating', 'rating__in'),
+    )
+    search_terms = ('name__icontains', 'vendor_number__icontains', 'short_name__icontains')
 
     def get_serializer_class(self, format=None):
         """
@@ -115,14 +123,8 @@ class PartnerOrganizationListAPIView(QueryStringFilterMixin, ExportModelMixin, L
                 else:
                     return PartnerOrganization.objects.filter(id__in=ids)
             queries = []
-            filters = (
-                ('partner_type', 'partner_type__in'),
-                ('cso_type', 'cso_type__in'),
-                ('rating', 'rating__in'),
-            )
-            search_terms = ['name__icontains', 'vendor_number__icontains', 'short_name__icontains']
-            queries.extend(self.filter_params(filters))
-            queries.append(self.search_params(search_terms))
+            queries.extend(self.filter_params())
+            queries.append(self.search_params())
 
             if "hidden" in query_params.keys():
                 hidden = None
@@ -167,7 +169,8 @@ class PartnerOrganizationDetailAPIView(ValidatorViewMixin, RetrieveUpdateDestroy
         'assessments': AssessmentDetailSerializer,
         'planned_visits': PartnerPlannedVisitsSerializer,
         'staff_members': PartnerStaffMemberCreateUpdateSerializer,
-        'planned_engagement': PlannedEngagementNestedSerializer
+        'planned_engagement': PlannedEngagementNestedSerializer,
+        'core_values_assessments': CoreValuesAssessmentSerializer
     }
 
     def get_serializer_class(self, format=None):
@@ -183,6 +186,7 @@ class PartnerOrganizationDetailAPIView(ValidatorViewMixin, RetrieveUpdateDestroy
             'staff_members',
             'planned_engagement',
             'planned_visits',
+            'core_values_assessments'
         ]
 
         instance, old_instance, serializer = self.my_update(

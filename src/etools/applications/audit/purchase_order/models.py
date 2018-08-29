@@ -9,7 +9,7 @@ from etools.applications.firms.models import BaseFirm, BaseStaffMember
 
 
 class AuditorFirm(BaseFirm):
-    unicef_users_allowed = models.BooleanField(default=False, verbose_name=_('UNICEF users allowed'),
+    unicef_users_allowed = models.BooleanField(default=False, editable=False, verbose_name=_('UNICEF users allowed'),
                                                help_text=_('Allow UNICEF users to join and act as auditors.'))
 
 
@@ -18,6 +18,7 @@ class AuditorStaffMember(BaseStaffMember):
         AuditorFirm, verbose_name=_('Auditor'), related_name='staff_members',
         on_delete=models.CASCADE,
     )
+    hidden = models.BooleanField(verbose_name=_('Hidden'), default=False)
 
     def __str__(self):
         auditor_firm_name = ' ({})'.format(self.auditor_firm.name) if hasattr(self, 'auditor_firm') else ''
