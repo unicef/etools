@@ -1038,7 +1038,6 @@ class TestAgreementAPIView(BaseTenantTestCase):
             from_date=datetime.date(today.year - 1, 1, 1),
             to_date=datetime.date(today.year + 1, 1, 1))
 
-        attached_agreement = "agreement.pdf"
         cls.agreement = AgreementFactory(
             partner=cls.partner,
             partner_manager=cls.partner_staff,
@@ -1048,7 +1047,6 @@ class TestAgreementAPIView(BaseTenantTestCase):
             signed_by_unicef_date=datetime.date.today(),
             signed_by_partner_date=datetime.date.today(),
             signed_by=cls.unicef_staff,
-            attached_agreement=attached_agreement,
         )
         cls.agreement.authorized_officers.add(cls.partner_staff)
         cls.agreement.save()

@@ -29,13 +29,18 @@ def update_or_create_attachment(file_type, content_type, object_id, filename):
     logger.info("code: {}".format(file_type.code))
     logger.info("content type: {}".format(content_type))
     logger.info("object_id: {}".format(object_id))
-    Attachment.objects.update_or_create(
-        code=file_type.code,
-        content_type=content_type,
-        object_id=object_id,
-        file_type=file_type,
-        defaults={"file": filename}
-    )
+    try:
+        Attachment.objects.update_or_create(
+            code=file_type.code,
+            content_type=content_type,
+            object_id=object_id,
+            file_type=file_type,
+            defaults={"file": filename}
+        )
+    except Attachment.MultipleObjectsReturned:
+        # If there are multiple objects already, this indicates
+        # that the records exist, so things are ok.
+        pass
 
 
 def get_from_datetime(**kwargs):
