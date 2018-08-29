@@ -104,7 +104,9 @@ class UnicefUserPermissionsForActionPointTransitionTestCase(ActionPointTransitio
 
 
 class AuthorPermissionsForActionPointTransitionTestCase(ActionPointTransitionPermissionsTestCase):
-    ALLOWED_TRANSITION = []
+    ALLOWED_TRANSITION = [
+        ('open', 'complete'),
+    ]
 
     @classmethod
     def setUpTestData(cls):
@@ -125,7 +127,9 @@ class AuthorPermissionsForActionPointTransitionTestCase(ActionPointTransitionPer
 
 
 class AssignedByPermissionsForActionPointTransitionTestCase(ActionPointTransitionPermissionsTestCase):
-    ALLOWED_TRANSITION = []
+    ALLOWED_TRANSITION = [
+        ('open', 'complete'),
+    ]
 
     @classmethod
     def setUpTestData(cls):
