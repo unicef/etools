@@ -309,7 +309,7 @@ class InterventionAdmin(CountryUsersAdminMixin, HiddenPartnerMixin, SnapshotMode
     section_names.short_description = "Sections"
 
     def has_module_permission(self, request):
-        return request.user.is_superuser
+        return request.user.is_superuser or request.user.groups.filter(name='Country Office Administrator').exists()
 
     def attachments_link(self, obj):
         url = "{}?intervention__id__exact={}".format(
@@ -376,7 +376,7 @@ class PartnerStaffMemberAdmin(SnapshotModelAdmin):
     ]
 
     def has_module_permission(self, request):
-        return request.user.is_superuser
+        return request.user.is_superuser or request.user.groups.filter(name='Country Office Administrator').exists()
 
 
 class HiddenPartnerFilter(admin.SimpleListFilter):
@@ -508,7 +508,7 @@ class PartnerAdmin(ExportMixin, admin.ModelAdmin):
         self.message_user(request, '{} partners were shown'.format(partners))
 
     def has_module_permission(self, request):
-        return request.user.is_superuser
+        return request.user.is_superuser or request.user.groups.filter(name='Country Office Administrator').exists()
 
 
 class PlannedEngagementAdmin(admin.ModelAdmin):
@@ -549,6 +549,7 @@ class AgreementAmendmentAdmin(admin.ModelAdmin):
     verbose_name = 'Amendment'
     model = AgreementAmendment
     fields = (
+        'agreement',
         'signed_amendment',
         'signed_date',
         'number',
@@ -626,13 +627,13 @@ class AgreementAdmin(ExportMixin, HiddenPartnerMixin, CountryUsersAdminMixin, Sn
     ]
 
     def has_module_permission(self, request):
-        return request.user.is_superuser
+        return request.user.is_superuser or request.user.groups.filter(name='Country Office Administrator').exists()
 
 
 class FileTypeAdmin(admin.ModelAdmin):
 
     def has_module_permission(self, request):
-        return request.user.is_superuser
+        return request.user.is_superuser or request.user.groups.filter(name='Country Office Administrator').exists()
 
 
 admin.site.register(PartnerOrganization, PartnerAdmin)
