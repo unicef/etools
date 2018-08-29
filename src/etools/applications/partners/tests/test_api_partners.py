@@ -1,12 +1,12 @@
 import datetime
 import json
 
-from django.core.exceptions import ValidationError
 from django.test import SimpleTestCase
 from django.urls import reverse
 
 from mock import Mock, patch
 from rest_framework import status
+from rest_framework.exceptions import ErrorDetail
 
 from etools.applications.attachments.tests.factories import AttachmentFactory, AttachmentFileTypeFactory
 from etools.applications.EquiTrack.tests.cases import BaseTenantTestCase
@@ -309,18 +309,13 @@ class TestPartnerOrganizationDetailAPIView(BaseTenantTestCase):
             short_name="City Hunter",
         )
 
-        planned_visit = PartnerPlannedVisitsFactory(
+        PartnerPlannedVisitsFactory(
             partner=cso_partner,
             year=current_year,
             programmatic_q1=1,
             programmatic_q2=2,
             programmatic_q3=3,
             programmatic_q4=4,
-        )
-        response = self.forced_auth_req(
-            'get',
-            reverse('partners_api:partner-detail', args=[cso_partner.pk]),
-            user=self.unicef_staff,
         )
         planned_visits = [{
             "programmatic_q1": 4,
@@ -334,22 +329,15 @@ class TestPartnerOrganizationDetailAPIView(BaseTenantTestCase):
             "vendor_number": cso_partner.vendor_number,
             "planned_visits": planned_visits,
         }
-        with self.assertRaises(ValidationError):
-            response = self.forced_auth_req(
-                'patch',
-                reverse('partners_api:partner-detail', args=[cso_partner.pk]),
-                user=self.unicef_staff,
-                data=data,
-            )
-            self.assertEqual(response.status_code, status.HTTP_200_OK)
-            self.assertEqual(len(response.data["planned_visits"]), 1)
-            data = response.data["planned_visits"][0]
-            self.assertEqual(data["id"], planned_visit.pk)
-            self.assertEqual(data["year"], current_year)
-            self.assertEqual(data["programmatic_q1"], 4)
-            self.assertEqual(data["programmatic_q2"], 3)
-            self.assertEqual(data["programmatic_q3"], 2)
-            self.assertEqual(data["programmatic_q4"], 1)
+        response = self.forced_auth_req(
+            'patch',
+            reverse('partners_api:partner-detail', args=[cso_partner.pk]),
+            user=self.unicef_staff,
+            data=data,
+        )
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertEqual(response.data["planned_visits"]["partner"],
+                         ErrorDetail(string='Planned Visit can be set only for Government partners', code='invalid'))
 
 
 class TestPartnerOrganizationHactAPIView(BaseTenantTestCase):
