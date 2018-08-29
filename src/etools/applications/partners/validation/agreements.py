@@ -86,12 +86,14 @@ def signed_by_everyone_valid(agreement):
 
 def signatures_valid(agreement):
     today = date.today()
-    unicef_signing_requirements = [agreement.signed_by_unicef_date]
-    partner_signing_requirements = [agreement.signed_by_partner_date, agreement.partner_manager]
-    if agreement.agreement_type == agreement.SSFA:
-        if any(unicef_signing_requirements + partner_signing_requirements):
-            raise BasicValidationError(_('SSFA signatures are captured at the Document (TOR) level, please clear the '
-                                         'signatures and dates and add them to the TOR'))
+
+    # temporary remove this validation as it's creating issues for old SSFAs
+    # unicef_signing_requirements = [agreement.signed_by_unicef_date]
+    # partner_signing_requirements = [agreement.signed_by_partner_date, agreement.partner_manager]
+    # if agreement.agreement_type == agreement.SSFA:
+    #     if any(unicef_signing_requirements + partner_signing_requirements):
+    #         raise BasicValidationError(_('SSFA signatures are captured at the Document (TOR) level, please clear the '
+    #                                      'signatures and dates and add them to the TOR'))
 
     if (agreement.signed_by_partner_date and agreement.signed_by_partner_date > today) or \
             (agreement.signed_by_unicef_date and agreement.signed_by_unicef_date > today):
@@ -181,10 +183,6 @@ class AgreementValid(CompleteValidation):
         return True
 
     def state_signed_valid(self, agreement, user=None):
-        # for SSFAs there will be no states valid since the states are forced by the Interventions
-        # Once signed, nothing will be editable on the agreement level
-        if agreement.agreement_type == agreement.SSFA:
-            return False
         self.check_required_fields(agreement)
         self.check_rigid_fields(agreement, related=True)
         return True
