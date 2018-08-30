@@ -2,11 +2,11 @@ import datetime
 import json
 
 from django.contrib.auth import get_user_model
-from django.core.exceptions import ValidationError
 from django.db.models import Q
 from django.utils import timezone
 
 from rest_framework import serializers
+from rest_framework.exceptions import ValidationError
 from unicef_attachments.fields import AttachmentSingleFileField
 from unicef_snapshot.serializers import SnapshotModelSerializer
 
