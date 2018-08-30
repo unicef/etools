@@ -15,6 +15,7 @@ from django.utils import timezone
 import mock
 from model_utils import Choices
 from rest_framework import status
+from rest_framework.exceptions import ErrorDetail
 from rest_framework.test import APIRequestFactory
 from unicef_snapshot.models import Activity
 
@@ -536,8 +537,10 @@ class TestPartnerOrganizationRetrieveUpdateDeleteViews(BaseTenantTestCase):
         )
 
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        error = [
+            ErrorDetail(string='The basis for risk rating has to be blank if Type is Low or High', code='invalid')]
         self.assertEqual(response.data, {
-            "non_field_errors": ["The basis for risk rating has to be blank if Type is Low or High"]})
+            "basis_for_risk_rating": error})
 
     def test_api_partners_update_assessments_invalid(self):
         self.assertFalse(Activity.objects.exists())
@@ -1038,7 +1041,6 @@ class TestAgreementAPIView(BaseTenantTestCase):
             from_date=datetime.date(today.year - 1, 1, 1),
             to_date=datetime.date(today.year + 1, 1, 1))
 
-        attached_agreement = "agreement.pdf"
         cls.agreement = AgreementFactory(
             partner=cls.partner,
             partner_manager=cls.partner_staff,
@@ -1048,7 +1050,6 @@ class TestAgreementAPIView(BaseTenantTestCase):
             signed_by_unicef_date=datetime.date.today(),
             signed_by_partner_date=datetime.date.today(),
             signed_by=cls.unicef_staff,
-            attached_agreement=attached_agreement,
         )
         cls.agreement.authorized_officers.add(cls.partner_staff)
         cls.agreement.save()

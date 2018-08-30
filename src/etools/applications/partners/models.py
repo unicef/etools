@@ -1559,7 +1559,7 @@ class Intervention(TimeStampedModel):
 
     AUTO_TRANSITIONS = {
         DRAFT: [SIGNED],
-        SIGNED: [ACTIVE],
+        SIGNED: [ACTIVE, TERMINATED],
         ACTIVE: [ENDED, TERMINATED],
         ENDED: [CLOSED]
     }
