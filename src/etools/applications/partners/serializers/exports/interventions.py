@@ -232,22 +232,27 @@ class InterventionExportSerializer(serializers.ModelSerializer):
     partner_name = serializers.CharField(
         label=_("Partner"),
         source='agreement.partner.name',
+        allow_null=True,
     )
     vendor_number = serializers.CharField(
         label=_("Vendor Number"),
         source='agreement.partner.vendor_number',
+        allow_null=True,
     )
     partner_type = serializers.CharField(
         label=_("Partner Type"),
         source='agreement.partner.partner_type',
+        allow_null=True,
     )
     agreement_number = serializers.CharField(
         label=_("Agreement"),
         source='agreement.agreement_number',
+        allow_null=True,
     )
     country_programme = serializers.CharField(
         label=_("Country Programme"),
         source='country_programme.name',
+        allow_null=True,
     )
     offices = serializers.SerializerMethodField(label=_("UNICEF Office"))
     sectors = serializers.SerializerMethodField(label=_("Sections"))
@@ -273,7 +278,8 @@ class InterventionExportSerializer(serializers.ModelSerializer):
     )
     budget_currency = serializers.CharField(
         label=_("Budget Currency"),
-        source="planned_budget.currency"
+        source="planned_budget.currency",
+        allow_null=True,
     )
     cso_contribution = serializers.DecimalField(
         label=_("Total CSO Contribution"),
@@ -475,47 +481,56 @@ class InterventionExportFlatSerializer(ExportSerializerMixin, InterventionExport
     country_programme = serializers.CharField(
         label=_("Country Programme"),
         source='country_programme.name',
-        read_only=True
+        read_only=True,
+        allow_null=True,
     )
     partner_contribution = serializers.CharField(
         label=_("CSO Contribution"),
         source='planned_budget.partner_contribution',
-        read_only=True
+        read_only=True,
+        allow_null=True,
     )
     unicef_cash = serializers.CharField(
         label=_("UNICEF Cash"),
         source='planned_budget.unicef_cash',
-        read_only=True
+        read_only=True,
+        allow_null=True,
     )
     in_kind_amount = serializers.CharField(
         label=_("In Kind Amount"),
         source='planned_budget.in_kind_amount',
-        read_only=True
+        read_only=True,
+        allow_null=True,
     )
     partner_contribution_local = serializers.CharField(
         label=_("CSO Contribution (Local)"),
         source='planned_budget.partner_contribution_local',
-        read_only=True
+        read_only=True,
+        allow_null=True,
     )
     unicef_cash_local = serializers.CharField(
         label=_("UNICEF Cash (Local)"),
         source='planned_budget.unicef_cash_local',
-        read_only=True
+        read_only=True,
+        allow_null=True,
     )
     in_kind_amount_local = serializers.CharField(
         label=_("In Kind Amount (Local)"),
         source='planned_budget.in_kind_amount_local',
-        read_only=True
+        read_only=True,
+        allow_null=True,
     )
     currency = serializers.CharField(
         label=_("Currency"),
         source='planned_budget.currency',
-        read_only=True
+        read_only=True,
+        allow_null=True,
     )
     total = serializers.CharField(
         label=_("Total"),
         source='planned_budget.total',
-        read_only=True
+        read_only=True,
+        allow_null=True,
     )
     planned_visits = serializers.SerializerMethodField(
         label=_("Planned Programmatic Visits"),
