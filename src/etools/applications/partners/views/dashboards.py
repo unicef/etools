@@ -1,9 +1,21 @@
 import functools
 import operator
-from datetime import datetime
+from datetime import datetime, timedelta
 
 from django.db.models import (
-    Case, CharField, Count, DateTimeField, DurationField, ExpressionWrapper, F, Max, Min, Sum, When)
+    Case,
+    CharField,
+    Count,
+    DateTimeField,
+    DurationField,
+    ExpressionWrapper,
+    F,
+    Max,
+    Min,
+    Q,
+    Sum,
+    When,
+)
 
 from rest_framework.generics import ListCreateAPIView
 from rest_framework.permissions import IsAdminUser
@@ -12,7 +24,7 @@ from rest_framework_csv import renderers as r
 from unicef_restlib.views import QueryStringFilterMixin
 
 from etools.applications.partners.exports_v2 import PartnershipDashCSVRenderer
-from etools.applications.partners.models import Intervention, FileType
+from etools.applications.partners.models import FileType, Intervention
 from etools.applications.partners.serializers.dashboards import InterventionDashSerializer
 from etools.applications.t2f.models import Travel, TravelType
 
@@ -36,6 +48,25 @@ class InterventionPartnershipDashView(QueryStringFilterMixin, ListCreateAPIView)
     )
     search_terms = ('agreement__partner__name__icontains', )
 
+    def qs_filter_by_alert(self, alert):
+        today = datetime.today()
+        queries = []
+        alerts = {
+            'expired_without_FR': [('status', 'signed'), ('start__lt', today), ('frs__total_amt_local__sum__gt', 0)],
+            'planned_amount_different_FR': [('status__in', ['active', 'ended', 'suspended']), ('planned_difference__gt', 0)],
+            'no_recent_PV': [('status__in', ['active', 'ended']), ('days_since_last_pv__gt', timedelta(180))],
+            'expiring': [('status__in', ['active', 'ended'], ('end__gt', today), ('end__lt', today - timedelta(days=30)))],
+            'disbursment_less_FR_planned': [('status', 'ended'), ('disbursment_planned_difference__gt', 0)],
+            'missing_final_partnership_review': [('status', 'ended'), ('has_final_partnership_review', 0),
+                                                 ('frs__actual_amt__sum__gt', 100000)
+                                                 ],
+        }
+
+        alert_filters = alerts.get(alert, [])
+        for query_filter, value in alert_filters:
+            queries.append(Q(**{query_filter: value}))
+        return queries
+
     def get_queryset(self):
         qs = Intervention.objects.exclude(status=Intervention.DRAFT).prefetch_related('agreement__partner')
         qs = qs.annotate(
@@ -49,48 +80,13 @@ class InterventionPartnershipDashView(QueryStringFilterMixin, ListCreateAPIView)
             Sum("frs__actual_amt"),
             Sum("frs__actual_amt_local"),
             Count("frs__currency", distinct=True),
+            planned_difference=Sum("frs__total_amt_local") - F('planned_budget__unicef_cash_local'),
+            disbursment_planned_difference=Sum("frs__total_amt_local") - Sum("frs__actual_amt_local"),
+
             max_fr_currency=Max("frs__currency", output_field=CharField(), distinct=True),
             multi_curr_flag=Count(Case(When(frs__multi_curr_flag=True, then=1))),
-        )
-
-        query_params = self.request.query_params
-        if query_params:
-            queries = []
-            queries.extend(self.filter_params())
-            queries.append(self.search_params())
-
-            if queries:
-                expression = functools.reduce(operator.and_, queries)
-                qs = qs.filter(expression)
-
-        return qs.order_by('agreement__partner__name')
-
-    def append_final_partnership_review(self, serializer):
-        qs = Intervention.objects.exclude(
-            status=Intervention.DRAFT
-        ).annotate(
             has_final_partnership_review=Count(Case(When(attachments__type__name=FileType.FINAL_PARTNERSHIP_REVIEW,
-                                                         then=1)))
-        )
-        fpr = {}
-        for i in qs:
-            fpr[str(i.pk)] = {
-                "has_final_partnership_review": i.has_final_partnership_review,
-            }
-        # Add last_pv_date
-        for d in serializer.data:
-            pk = d["intervention_id"]
-            d["has_final_partnership_review"] = bool(fpr[pk]["has_final_partnership_review"])
-        return serializer
-
-    def append_last_pv_date(self, serializer):
-        delta = ExpressionWrapper(
-            datetime.now() - F('last_pv_date'),
-            output_field=DurationField()
-        )
-        qs = Intervention.objects.exclude(
-            status=Intervention.DRAFT
-        ).annotate(
+                                                         then=1))),
             last_pv_date=Max(
                 Case(
                     When(
@@ -103,9 +99,41 @@ class InterventionPartnershipDashView(QueryStringFilterMixin, ListCreateAPIView)
                     ),
                     output_field=DateTimeField()
                 )
-            )
+            ),
+            days_since_last_pv=ExpressionWrapper(datetime.now() - F('last_pv_date'), output_field=DurationField()),
+            # days_since_last_pv=ExpressionWrapper(datetime.now() - F('last_pv_date'), output_field=IntegerField()),
         )
-        qs = qs.annotate(days_since_last_pv=delta)
+
+        query_params = self.request.query_params
+        if query_params:
+            queries = []
+            queries.extend(self.filter_params())
+            queries.append(self.search_params())
+
+            if 'alerts' in query_params:
+                queries.extend(self.qs_filter_by_alert(self.request.query_params.get('alerts')))
+
+            if queries:
+                expression = functools.reduce(operator.and_, queries)
+                qs = qs.filter(expression)
+
+        return qs.order_by('agreement__partner__name')
+
+    def append_final_partnership_review(self, serializer):
+        qs = self.get_queryset()
+        fpr = {}
+        for i in qs:
+            fpr[str(i.pk)] = {
+                "has_final_partnership_review": i.has_final_partnership_review,
+            }
+        # Add last_pv_date
+        for d in serializer.data:
+            pk = d["intervention_id"]
+            d["has_final_partnership_review"] = bool(fpr[pk]["has_final_partnership_review"])
+        return serializer
+
+    def append_last_pv_date(self, serializer):
+        qs = self.get_queryset()
         pv_dates = {}
         for i in qs:
             pv_dates[str(i.pk)] = {
@@ -127,8 +155,8 @@ class InterventionPartnershipDashView(QueryStringFilterMixin, ListCreateAPIView)
         query_params = self.request.query_params
         queryset = self.filter_queryset(self.get_queryset())
 
-        page = self.paginate_queryset(queryset)
-        if page is not None:
+        if self.paginator:
+            page = self.paginate_queryset(queryset)
             serializer = self.get_serializer(page, many=True)
             self.append_last_pv_date(serializer)
             return self.get_paginated_response(serializer.data)
