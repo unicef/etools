@@ -12,7 +12,6 @@ from django.db.models import (
     F,
     Max,
     Min,
-    Q,
     Sum,
     When,
 )
@@ -45,27 +44,25 @@ class InterventionPartnershipDashView(QueryStringFilterMixin, ListCreateAPIView)
         ('endBefore', 'end__lt'),
         ('offices', 'offices__name__in'),
         ('sectors', 'sections__in'),
+        ('alerts', {
+            'expired_without_FR': [('status', 'signed'),
+                                   ('start__lt', datetime.today()),
+                                   ('frs__total_amt_local__sum__gt', 0)],
+            'planned_amount_different_FR': [('status__in', ['active', 'ended', 'suspended']),
+                                            ('planned_difference__gt', 0)],
+            'no_recent_PV': [('status__in', ['active', 'ended']),
+                             ('days_since_last_pv__gt', timedelta(180))],
+            'expiring': [('status__in', ['active', 'ended'],
+                          ('end__gt', datetime.today()),
+                          ('end__lt', datetime.today() - timedelta(days=30)))],
+            'disbursment_less_FR_planned': [('status', 'ended'),
+                                            ('disbursment_planned_difference__gt', 0)],
+            'missing_final_partnership_review': [('status', 'ended'),
+                                                 ('has_final_partnership_review', 0),
+                                                 ('frs__actual_amt__sum__gt', 100000)],
+        })
     )
     search_terms = ('agreement__partner__name__icontains', )
-
-    def qs_filter_by_alert(self, alert):
-        today = datetime.today()
-        queries = []
-        alerts = {
-            'expired_without_FR': [('status', 'signed'), ('start__lt', today), ('frs__total_amt_local__sum__gt', 0)],
-            'planned_amount_different_FR': [('status__in', ['active', 'ended', 'suspended']), ('planned_difference__gt', 0)],
-            'no_recent_PV': [('status__in', ['active', 'ended']), ('days_since_last_pv__gt', timedelta(180))],
-            'expiring': [('status__in', ['active', 'ended'], ('end__gt', today), ('end__lt', today - timedelta(days=30)))],
-            'disbursment_less_FR_planned': [('status', 'ended'), ('disbursment_planned_difference__gt', 0)],
-            'missing_final_partnership_review': [('status', 'ended'), ('has_final_partnership_review', 0),
-                                                 ('frs__actual_amt__sum__gt', 100000)
-                                                 ],
-        }
-
-        alert_filters = alerts.get(alert, [])
-        for query_filter, value in alert_filters:
-            queries.append(Q(**{query_filter: value}))
-        return queries
 
     def get_queryset(self):
         qs = Intervention.objects.exclude(status=Intervention.DRAFT).prefetch_related('agreement__partner')
@@ -101,7 +98,6 @@ class InterventionPartnershipDashView(QueryStringFilterMixin, ListCreateAPIView)
                 )
             ),
             days_since_last_pv=ExpressionWrapper(datetime.now() - F('last_pv_date'), output_field=DurationField()),
-            # days_since_last_pv=ExpressionWrapper(datetime.now() - F('last_pv_date'), output_field=IntegerField()),
         )
 
         query_params = self.request.query_params
@@ -109,9 +105,6 @@ class InterventionPartnershipDashView(QueryStringFilterMixin, ListCreateAPIView)
             queries = []
             queries.extend(self.filter_params())
             queries.append(self.search_params())
-
-            if 'alerts' in query_params:
-                queries.extend(self.qs_filter_by_alert(self.request.query_params.get('alerts')))
 
             if queries:
                 expression = functools.reduce(operator.and_, queries)
