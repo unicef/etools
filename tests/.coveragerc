@@ -2,6 +2,7 @@
 branch = true
 omit =  */tests/*,
         */migrations/*,
+        */settings/*,
 
 source = etools
 
@@ -11,8 +12,6 @@ show_missing = true
 skip_covered = True
 exclude_lines =
    pragma: no cover
-   from\s+__future__\s+import\s+
-   __author__\s+=
 
 [html]
 directory = build/coverage
