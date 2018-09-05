@@ -46,6 +46,13 @@ def get_requirements(env):
 install_requires = get_requirements('base')
 test_requires = get_requirements('test')
 
+# djangosaml2 has a wrong version. It has declared as 0.16.11.2 but internally is has 0.16.11
+# this make pip fails. Until not fixed (or better any dependecy properly packaged) we cannot
+# rely on setuptools/distutils dependency management
+install_requires = []
+dev_requires = []
+test_requires = []
+
 setup(
     name=NAME,
     version=VERSION,

@@ -14,3 +14,9 @@ django-extensions
 invoke
 pip-tools
 sphinx
+flake8-html
+pytest-cov
+pytest-django
+pytest-echo
+pytest-html
+pytest-pythonpath

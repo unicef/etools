@@ -1,6 +1,7 @@
 import os
 from datetime import datetime
 from io import BytesIO
+from unittest import skipIf
 from urllib.parse import urlparse
 
 from django.test import override_settings, TestCase
@@ -14,6 +15,7 @@ TEST_FILECONTENT = b'a'
 TEST_FILESIZE = len('a')
 
 
+@skipIf(not os.environ.get('AZURE_ACCOUNT_NAME'), reason='Skipped as not Azure connection informations available')
 @override_settings(AZURE_ACCOUNT_NAME=os.environ.get('AZURE_ACCOUNT_NAME', ''),
                    AZURE_ACCOUNT_KEY=os.environ.get('AZURE_ACCOUNT_KEY', ''),
                    AZURE_CONTAINER=os.environ.get('AZURE_CONTAINER', ''),
