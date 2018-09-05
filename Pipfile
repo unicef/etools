@@ -16,6 +16,13 @@ tox = "*"
 drf-api-checker = "*"
 factory-boy = ">=2.11"
 sphinx = "*"
+flake8-html = "*"
+pytest = "*"
+pytest-cov = "*"
+pytest-django = "*"
+pytest-echo = "*"
+pytest-html = "*"
+pytest-pythonpath = "*"
 vcrpy = "*"
 
 [packages]
