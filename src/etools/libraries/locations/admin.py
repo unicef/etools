@@ -18,3 +18,4 @@ class BackendCartoDBTableAdmin(CartoDBTableAdmin):
 
 admin.site.unregister(CartoDBTable)
 admin.site.register(CartoDBTable, BackendCartoDBTableAdmin)
+

@@ -71,7 +71,7 @@ class GisLocationsInUseViewset(ListAPIView):
                     location_ids.add(act_loc.id)
 
             # action points
-            for acp in ActionPoint.objects.all():
+            for acp in ActionPoint.objects.filter(location__isnull=False):
                 location_ids.add(acp.location.id)
 
             locations = Location.objects.filter(

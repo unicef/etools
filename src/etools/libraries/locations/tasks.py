@@ -37,9 +37,17 @@ def save_location_remap_history(imported_locations):
     # remap related entities to the newly added locations, and save the location remap history
     # interventions
     ctp = ContentType.objects.get(app_label='partners', model='intervention')
+    '''
+    for intervention in Intervention.objects.filter(flat_locations__in=list(remapped_locations.keys())).distinct():
+        print("-------------------")
+        print(intervention.id)
+        print(",".join([str(ix.id) for ix in intervention.flat_locations.all()]))
+        return
+    '''
+
     for intervention in Intervention.objects.filter(flat_locations__in=remapped_locations.keys()).distinct():
-        for remapped_location in intervention.flat_locations.all():
-            new_location = remapped_locations.get(remapped_location)
+        for remapped_location in intervention.flat_locations.filter(id__in=list(remapped_locations.keys())):
+            new_location = remapped_locations.get(remapped_location.id)
             LocationRemapHistory.objects.create(
                 old_location=remapped_location,
                 new_location=new_location,
@@ -52,9 +60,9 @@ def save_location_remap_history(imported_locations):
 
     # intervention indicators
     ctp = ContentType.objects.get(app_label='reports', model='appliedindicator')
-    for appliedindicator in AppliedIndicator.objects.filter(locations__in=remapped_locations.keys()).distinct():
-        for remapped_location in appliedindicator.locations.all():
-            new_location = remapped_locations.get(remapped_location)
+    for appliedindicator in AppliedIndicator.objects.filter(locations__in=list(remapped_locations.keys())).distinct():
+        for remapped_location in appliedindicator.locations.filter(id__in=list(remapped_locations.keys())):
+            new_location = remapped_locations.get(remapped_location.id)
             LocationRemapHistory.objects.create(
                 old_location=remapped_location,
                 new_location=new_location,
@@ -67,9 +75,9 @@ def save_location_remap_history(imported_locations):
 
     # travel activities
     ctp = ContentType.objects.get(app_label='t2f', model='travelactivity')
-    for travelactivity in TravelActivity.objects.filter(locations__in=remapped_locations.keys()).distinct():
-        for remapped_location in travelactivity.locations.all():
-            new_location = remapped_locations.get(remapped_location)
+    for travelactivity in TravelActivity.objects.filter(locations__in=list(remapped_locations.keys())).distinct():
+        for remapped_location in travelactivity.locations.filter(id__in=list(remapped_locations.keys())):
+            new_location = remapped_locations.get(remapped_location.id)
             LocationRemapHistory.objects.create(
                 old_location=remapped_location,
                 new_location=new_location,
@@ -82,9 +90,9 @@ def save_location_remap_history(imported_locations):
 
     # activities
     ctp = ContentType.objects.get(app_label='activities', model='activity')
-    for activity in Activity.objects.filter(locations__in=remapped_locations.keys()).distinct():
-        for remapped_location in activity.locations.all():
-            new_location = remapped_locations.get(remapped_location)
+    for activity in Activity.objects.filter(locations__in=list(remapped_locations.keys())).distinct():
+        for remapped_location in activity.locations.filter(id__in=list(remapped_locations.keys())):
+            new_location = remapped_locations.get(remapped_location.id)
             LocationRemapHistory.objects.create(
                 old_location=remapped_location,
                 new_location=new_location,
@@ -94,9 +102,9 @@ def save_location_remap_history(imported_locations):
             activity.locations.remove(remapped_location)
             activity.locations.add(new_location)
             # TODO: logs
-
+    # action points
     ctp = ContentType.objects.get(app_label='action_points', model='actionpoint')
-    for actionpoint in ActionPoint.objects.filter(location__in=remapped_locations.keys()).distinct():
+    for actionpoint in ActionPoint.objects.filter(location__in=list(remapped_locations.keys())).distinct():
         new_location = remapped_locations.get(actionpoint.location.id)
         LocationRemapHistory.objects.create(
             old_location=actionpoint.location.id,
