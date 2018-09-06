@@ -145,7 +145,6 @@ class Migration(migrations.Migration):
                 ('country_override', models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.CASCADE, related_name='country_override', to='users.Country', verbose_name='Country Override')),
                 ('office', models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.CASCADE, to='users.Office', verbose_name='Office')),
                 ('oic', models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.SET_NULL, to=settings.AUTH_USER_MODEL, verbose_name='OIC')),
-                ('section', models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.CASCADE, to='users.Section', verbose_name='Section')),
                 ('supervisor', models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.SET_NULL, related_name='supervisee', to=settings.AUTH_USER_MODEL, verbose_name='Supervisor')),
                 ('user', models.OneToOneField(on_delete=django.db.models.deletion.CASCADE, related_name='profile', to=settings.AUTH_USER_MODEL, verbose_name='User')),
             ],
@@ -163,11 +162,6 @@ class Migration(migrations.Migration):
             model_name='country',
             name='offices',
             field=models.ManyToManyField(related_name='offices', to='users.Office', verbose_name='Offices'),
-        ),
-        migrations.AddField(
-            model_name='country',
-            name='sections',
-            field=models.ManyToManyField(related_name='sections', to='users.Section', verbose_name='Sections'),
         ),
         migrations.RunPython(
             code=fix_nulls,

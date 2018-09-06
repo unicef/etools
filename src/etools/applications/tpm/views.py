@@ -6,44 +6,71 @@ from django.utils.translation import ugettext_lazy as _
 from django_filters.rest_framework import DjangoFilterBackend
 from easy_pdf.rendering import render_to_pdf_response
 from rest_framework import generics, mixins, viewsets
-from rest_framework.decorators import detail_route, list_route
+from rest_framework.decorators import action
 from rest_framework.filters import OrderingFilter, SearchFilter
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
+from unicef_attachments.models import Attachment
+from unicef_restlib.pagination import DynamicPageNumberPagination
+from unicef_restlib.views import MultiSerializerViewSetMixin, NestedViewSetMixin, SafeTenantViewSetMixin
 
-from etools.applications.action_points.conditions import ActionPointAuthorCondition, ActionPointAssignedByCondition, \
-    ActionPointAssigneeCondition
-from etools.applications.attachments.models import Attachment
+from etools.applications.action_points.conditions import (
+    ActionPointAssignedByCondition,
+    ActionPointAssigneeCondition,
+    ActionPointAuthorCondition,
+)
 from etools.applications.partners.models import PartnerOrganization
 from etools.applications.partners.serializers.partner_organization_v2 import MinimalPartnerOrganizationListSerializer
 from etools.applications.permissions2.conditions import ObjectStatusCondition
-from etools.applications.permissions2.drf_permissions import NestedPermission, get_permission_for_targets
+from etools.applications.permissions2.drf_permissions import get_permission_for_targets, NestedPermission
 from etools.applications.permissions2.views import PermittedFSMActionMixin, PermittedSerializerMixin
-from etools.applications.reports.models import Result, Sector
+from etools.applications.reports.models import Result, Section
 from etools.applications.reports.serializers.v1 import ResultLightSerializer, SectionSerializer
-
 from etools.applications.tpm.conditions import (
-    TPMModuleCondition, TPMStaffMemberCondition, TPMVisitTPMFocalPointCondition, TPMVisitUNICEFFocalPointCondition,)
+    TPMModuleCondition,
+    TPMStaffMemberCondition,
+    TPMVisitTPMFocalPointCondition,
+    TPMVisitUNICEFFocalPointCondition,
+)
 from etools.applications.tpm.export.renderers import (
-    TPMActionPointCSVRenderer, TPMActionPointFullCSVRenderer, TPMActivityCSVRenderer, TPMLocationCSVRenderer,
-    TPMPartnerContactsCSVRenderer, TPMPartnerCSVRenderer, TPMVisitCSVRenderer,)
+    TPMActionPointCSVRenderer,
+    TPMActionPointFullCSVRenderer,
+    TPMActivityCSVRenderer,
+    TPMLocationCSVRenderer,
+    TPMPartnerContactsCSVRenderer,
+    TPMPartnerCSVRenderer,
+    TPMVisitCSVRenderer,
+)
 from etools.applications.tpm.export.serializers import (
-    TPMActionPointExportSerializer, TPMActionPointFullExportSerializer, TPMActivityExportSerializer,
-    TPMLocationExportSerializer, TPMPartnerContactsSerializer, TPMPartnerExportSerializer, TPMVisitExportSerializer,)
+    TPMActionPointExportSerializer,
+    TPMActionPointFullExportSerializer,
+    TPMActivityExportSerializer,
+    TPMLocationExportSerializer,
+    TPMPartnerContactsSerializer,
+    TPMPartnerExportSerializer,
+    TPMVisitExportSerializer,
+)
 from etools.applications.tpm.filters import ReferenceNumberOrderingFilter
 from etools.applications.tpm.metadata import TPMBaseMetadata, TPMPermissionBasedMetadata
 from etools.applications.tpm.models import PME, ThirdPartyMonitor, TPMActionPoint, TPMActivity, TPMVisit, UNICEFUser
-from etools.applications.tpm.serializers.attachments import TPMPartnerAttachmentsSerializer, \
-    TPMVisitReportAttachmentsSerializer, ActivityAttachmentsSerializer, ActivityReportSerializer
+from etools.applications.tpm.serializers.attachments import (
+    ActivityAttachmentsSerializer,
+    ActivityReportSerializer,
+    TPMPartnerAttachmentsSerializer,
+    TPMVisitReportAttachmentsSerializer,
+)
 from etools.applications.tpm.serializers.partner import (
-    TPMPartnerLightSerializer, TPMPartnerSerializer, TPMPartnerStaffMemberSerializer,)
+    TPMPartnerLightSerializer,
+    TPMPartnerSerializer,
+    TPMPartnerStaffMemberSerializer,
+)
 from etools.applications.tpm.serializers.visit import (
-    TPMActionPointSerializer, TPMVisitDraftSerializer, TPMVisitLightSerializer, TPMVisitSerializer)
-
+    TPMActionPointSerializer,
+    TPMVisitDraftSerializer,
+    TPMVisitLightSerializer,
+    TPMVisitSerializer,
+)
 from etools.applications.tpm.tpmpartners.models import TPMPartner, TPMPartnerStaffMember
-from etools.applications.utils.common.pagination import DynamicPageNumberPagination
-from etools.applications.utils.common.views import (
-    MultiSerializerViewSetMixin, NestedViewSetMixin, SafeTenantViewSetMixin,)
 from etools.applications.vision.adapters.tpm_adapter import TPMPartnerManualSynchronizer
 
 
@@ -124,7 +151,7 @@ class TPMPartnerViewSet(
         ])
         return context
 
-    @list_route(methods=['get'], url_path='sync/(?P<vendor_number>[^/]+)')
+    @action(detail=False, methods=['get'], url_path='sync/(?P<vendor_number>[^/]+)')
     def sync(self, request, *args, **kwargs):
         """
         Fetch TPM Partner by vendor number. Load from etools.applications.vision if not found.
@@ -148,14 +175,14 @@ class TPMPartnerViewSet(
         serializer = self.get_serializer(instance)
         return Response(serializer.data)
 
-    @detail_route(methods=['post'], url_path='activate')
+    @action(detail=True, methods=['post'], url_path='activate')
     def activate(self, request, *args, **kwargs):
         tpm_partner = self.get_object()
         tpm_partner.activate(request.user.profile.country)
 
         return Response(TPMPartnerSerializer(instance=tpm_partner).data)
 
-    @list_route(methods=['get'], url_path='export', renderer_classes=(TPMPartnerCSVRenderer,))
+    @action(detail=False, methods=['get'], url_path='export', renderer_classes=(TPMPartnerCSVRenderer,))
     def export(self, request, *args, **kwargs):
         tpm_partners = TPMPartner.objects.all().order_by('vendor_number')
         serializer = TPMPartnerExportSerializer(tpm_partners, many=True)
@@ -191,7 +218,7 @@ class TPMStaffMembersViewSet(
         instance.user.profile.country = self.request.user.profile.country
         instance.user.profile.save()
 
-    @list_route(methods=['get'], url_path='export', renderer_classes=(TPMPartnerContactsCSVRenderer,))
+    @action(detail=False, methods=['get'], url_path='export', renderer_classes=(TPMPartnerContactsCSVRenderer,))
     def export(self, request, *args, **kwargs):
         partner = self.get_parent_object()
         queryset = self.filter_queryset(self.get_queryset())
@@ -224,7 +251,7 @@ class ImplementingPartnerView(generics.ListAPIView):
 
 
 class VisitsSectionView(generics.ListAPIView):
-    queryset = Sector.objects.all()
+    queryset = Section.objects.all()
     serializer_class = SectionSerializer
     permission_classes = (IsAuthenticated,)
 
@@ -321,22 +348,22 @@ class TPMVisitViewSet(
             return TPMVisitDraftSerializer
         return super(TPMVisitViewSet, self).get_serializer_class()
 
-    @list_route(methods=['get'], url_path='activities/implementing-partners')
+    @action(detail=False, methods=['get'], url_path='activities/implementing-partners')
     def implementing_partners(self, request, *args, **kwargs):
         visits = self.get_queryset()
-        return ImplementingPartnerView.as_view(visits=visits)(request, *args, **kwargs)
+        return ImplementingPartnerView.as_view(visits=visits)(request._request, *args, **kwargs)
 
-    @list_route(methods=['get'], url_path='activities/sections')
+    @action(detail=False, methods=['get'], url_path='activities/sections')
     def sections(self, request, *args, **kwargs):
         visits = self.get_queryset()
-        return VisitsSectionView.as_view(visits=visits)(request, *args, **kwargs)
+        return VisitsSectionView.as_view(visits=visits)(request._request, *args, **kwargs)
 
-    @list_route(methods=['get'], url_path='activities/cp-outputs')
+    @action(detail=False, methods=['get'], url_path='activities/cp-outputs')
     def cp_outputs(self, request, *args, **kwargs):
         visits = self.get_queryset()
-        return VisitsCPOutputView.as_view(visits=visits)(request, *args, **kwargs)
+        return VisitsCPOutputView.as_view(visits=visits)(request._request, *args, **kwargs)
 
-    @list_route(methods=['get'], url_path='export', renderer_classes=(TPMVisitCSVRenderer,))
+    @action(detail=False, methods=['get'], url_path='export', renderer_classes=(TPMVisitCSVRenderer,))
     def visits_export(self, request, *args, **kwargs):
         tpm_visits = self.get_queryset().prefetch_related(
             'tpm_activities', 'tpm_activities__section', 'tpm_activities__partner',
@@ -372,7 +399,7 @@ class TPMVisitViewSet(
         ])
         return context
 
-    @list_route(methods=['get'], url_path='activities/export', renderer_classes=(TPMActivityCSVRenderer,))
+    @action(detail=False, methods=['get'], url_path='activities/export', renderer_classes=(TPMActivityCSVRenderer,))
     def activities_export(self, request, *args, **kwargs):
         tpm_activities = TPMActivity.objects.filter(
             tpm_visit__in=self.get_queryset(),
@@ -384,7 +411,7 @@ class TPMVisitViewSet(
             'Content-Disposition': 'attachment;filename=tpm_tasks_{}.csv'.format(timezone.now().date())
         })
 
-    @list_route(methods=['get'], url_path='locations/export', renderer_classes=(TPMLocationCSVRenderer,))
+    @action(detail=False, methods=['get'], url_path='locations/export', renderer_classes=(TPMLocationCSVRenderer,))
     def locations_export(self, request, *args, **kwargs):
         tpm_locations = TPMActivity.locations.through.objects.filter(
             activity__in=self.get_queryset().values_list('tpm_activities__id', flat=True),
@@ -397,7 +424,7 @@ class TPMVisitViewSet(
             'Content-Disposition': 'attachment;filename=tpm_locations_{}.csv'.format(timezone.now().date())
         })
 
-    @list_route(methods=['get'], url_path='action-points/export', renderer_classes=(TPMActionPointFullCSVRenderer,))
+    @action(detail=False, methods=['get'], url_path='action-points/export', renderer_classes=(TPMActionPointFullCSVRenderer,))
     def action_points_export(self, request, *args, **kwargs):
         action_points = TPMActionPoint.objects.filter(tpm_activity__tpm_visit__in=self.get_queryset()).order_by('id')
 
@@ -406,13 +433,13 @@ class TPMVisitViewSet(
             'Content-Disposition': 'attachment;filename=tpm_action_points_{}.csv'.format(timezone.now().date())
         })
 
-    @detail_route(methods=['get'])
+    @action(detail=True, methods=['get'])
     def export_pdf(self, request, *args, **kwargs):
         return render_to_pdf_response(request, "tpm/activities_list_pdf.html", context={
             "activities": self.get_object().tpm_activities.all(),
         })
 
-    @detail_route(methods=['get'], url_path='visit-letter')
+    @action(detail=True, methods=['get'], url_path='visit-letter')
     def tpm_visit_letter(self, request, *args, **kwargs):
         visit = self.get_object()
         return render_to_pdf_response(
@@ -445,7 +472,7 @@ class TPMActionPointViewSet(BaseTPMViewSet,
         ])
         return context
 
-    @list_route(methods=['get'], url_path='export', renderer_classes=(TPMActionPointCSVRenderer,))
+    @action(detail=False, methods=['get'], url_path='export', renderer_classes=(TPMActionPointCSVRenderer,))
     def csv_export(self, request, *args, **kwargs):
         serializer = TPMActionPointExportSerializer(self.filter_queryset(self.get_queryset()), many=True)
         return Response(serializer.data, headers={

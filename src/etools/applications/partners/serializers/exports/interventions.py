@@ -1,24 +1,27 @@
 from django.utils.translation import ugettext as _
 
 from rest_framework import serializers
-
-from etools.applications.EquiTrack.mixins import ExportSerializerMixin
 from unicef_locations.models import Location
 from unicef_locations.serializers import LocationExportFlatSerializer, LocationExportSerializer
+
+from etools.applications.EquiTrack.mixins import ExportSerializerMixin
 from etools.applications.partners.models import Intervention, InterventionAmendment, InterventionResultLink
 from etools.applications.partners.serializers.fields import TypeArrayField
-from etools.applications.partners.serializers.interventions_v2 import (InterventionAmendmentCUSerializer,
-                                                                       InterventionResultSerializer,)
+from etools.applications.partners.serializers.interventions_v2 import (
+    InterventionAmendmentCUSerializer,
+    InterventionResultSerializer,
+)
 from etools.applications.reports.models import Indicator
 from etools.applications.reports.serializers.exports import IndicatorExportFlatSerializer, IndicatorExportSerializer
 
 
 class InterventionAmendmentExportSerializer(InterventionAmendmentCUSerializer):
     types = TypeArrayField(label=_("Types"))
+    signed_amendment_attachment = internal_prc_review = None
 
     class Meta:
         model = InterventionAmendment
-        exclude = ("signed_amendment_attachment", "internal_prc_review")
+        fields = "__all__"
 
 
 class InterventionAmendmentExportFlatSerializer(
@@ -29,10 +32,11 @@ class InterventionAmendmentExportFlatSerializer(
         label=_("Reference Number"),
         source="intervention.number",
     )
+    signed_amendment_attachment = internal_prc_review = None
 
     class Meta:
         model = InterventionAmendment
-        exclude = ("signed_amendment_attachment", "internal_prc_review")
+        fields = "__all__"
 
 
 class InterventionSectionLocationLinkExportSerializer(LocationExportSerializer):
@@ -64,7 +68,7 @@ class InterventionSectionLocationLinkExportFlatSerializer(
     intervention = serializers.SerializerMethodField(
         label=_("Reference Number"),
     )
-    sector = serializers.SerializerMethodField(label=_("Sector"))
+    sector = serializers.SerializerMethodField(label=_("Section"))
 
     class Meta:
         model = Location
@@ -92,7 +96,8 @@ class InterventionResultExportSerializer(InterventionResultSerializer):
     country_programme = serializers.CharField(
         label=_("Country Programme"),
         source="cp_output.country_programme.name",
-        read_only=True
+        read_only=True,
+        allow_null=True,
     )
     result_type = serializers.CharField(
         label=_("Result Type"),
@@ -100,9 +105,10 @@ class InterventionResultExportSerializer(InterventionResultSerializer):
         read_only=True
     )
     sector = serializers.CharField(
-        label=_("Sector"),
+        label=_("Section"),
         source="cp_output.sector.name",
-        read_only=True
+        read_only=True,
+        allow_null=True,
     )
     name = serializers.CharField(
         label=_("Name"),
@@ -127,7 +133,8 @@ class InterventionResultExportSerializer(InterventionResultSerializer):
     parent = serializers.CharField(
         label=_("Parent"),
         source="cp_output.parent.pk",
-        read_only=True
+        read_only=True,
+        allow_null=True,
     )
     wbs = serializers.CharField(
         label=_("WBS"),
@@ -182,7 +189,8 @@ class InterventionResultExportFlatSerializer(
     parent = serializers.CharField(
         label=_("Parent"),
         source="cp_output.parent.name",
-        read_only=True
+        read_only=True,
+        allow_null=True,
     )
 
     class Meta:
@@ -224,22 +232,27 @@ class InterventionExportSerializer(serializers.ModelSerializer):
     partner_name = serializers.CharField(
         label=_("Partner"),
         source='agreement.partner.name',
+        allow_null=True,
     )
     vendor_number = serializers.CharField(
         label=_("Vendor Number"),
         source='agreement.partner.vendor_number',
+        allow_null=True,
     )
     partner_type = serializers.CharField(
         label=_("Partner Type"),
         source='agreement.partner.partner_type',
+        allow_null=True,
     )
     agreement_number = serializers.CharField(
         label=_("Agreement"),
         source='agreement.agreement_number',
+        allow_null=True,
     )
     country_programme = serializers.CharField(
         label=_("Country Programme"),
         source='country_programme.name',
+        allow_null=True,
     )
     offices = serializers.SerializerMethodField(label=_("UNICEF Office"))
     sectors = serializers.SerializerMethodField(label=_("Sections"))
@@ -260,9 +273,13 @@ class InterventionExportSerializer(serializers.ModelSerializer):
     fr_outstanding_amt = serializers.SerializerMethodField(
         label=_("Outstanding DCT"),
     )
+    planned_visits = serializers.SerializerMethodField(
+        label=_("Planned Programmatic Visits"),
+    )
     budget_currency = serializers.CharField(
         label=_("Budget Currency"),
-        source="planned_budget.currency"
+        source="planned_budget.currency",
+        allow_null=True,
     )
     cso_contribution = serializers.DecimalField(
         label=_("Total CSO Contribution"),
@@ -357,6 +374,7 @@ class InterventionExportSerializer(serializers.ModelSerializer):
             "fr_amount",
             "fr_actual_amount",
             "fr_outstanding_amt",
+            "planned_visits",
             "submission_date",
             "submission_date_prc",
             "review_date_prc",
@@ -450,53 +468,72 @@ class InterventionExportSerializer(serializers.ModelSerializer):
     def get_total_attachments(self, obj):
         return obj.attachments.count()
 
+    def get_planned_visits(self, obj):
+        if obj.agreement.partner.partner_type == 'Government':
+            return _('N/A')
+        return ', '.join(['{} (Q1:{} Q2:{}, Q3:{}, Q4:{})'.format(
+            pv.year, pv.programmatic_q1, pv.programmatic_q2, pv.programmatic_q3, pv.programmatic_q4
+        ) for pv in obj.planned_visits.all()])
+
 
 class InterventionExportFlatSerializer(ExportSerializerMixin, InterventionExportSerializer):
     attachments = serializers.SerializerMethodField(label=_("Attachments"))
     country_programme = serializers.CharField(
         label=_("Country Programme"),
         source='country_programme.name',
-        read_only=True
+        read_only=True,
+        allow_null=True,
     )
     partner_contribution = serializers.CharField(
         label=_("CSO Contribution"),
         source='planned_budget.partner_contribution',
-        read_only=True
+        read_only=True,
+        allow_null=True,
     )
     unicef_cash = serializers.CharField(
         label=_("UNICEF Cash"),
         source='planned_budget.unicef_cash',
-        read_only=True
+        read_only=True,
+        allow_null=True,
     )
     in_kind_amount = serializers.CharField(
         label=_("In Kind Amount"),
         source='planned_budget.in_kind_amount',
-        read_only=True
+        read_only=True,
+        allow_null=True,
     )
     partner_contribution_local = serializers.CharField(
         label=_("CSO Contribution (Local)"),
         source='planned_budget.partner_contribution_local',
-        read_only=True
+        read_only=True,
+        allow_null=True,
     )
     unicef_cash_local = serializers.CharField(
         label=_("UNICEF Cash (Local)"),
         source='planned_budget.unicef_cash_local',
-        read_only=True
+        read_only=True,
+        allow_null=True,
     )
     in_kind_amount_local = serializers.CharField(
         label=_("In Kind Amount (Local)"),
         source='planned_budget.in_kind_amount_local',
-        read_only=True
+        read_only=True,
+        allow_null=True,
     )
     currency = serializers.CharField(
         label=_("Currency"),
         source='planned_budget.currency',
-        read_only=True
+        read_only=True,
+        allow_null=True,
     )
     total = serializers.CharField(
         label=_("Total"),
         source='planned_budget.total',
-        read_only=True
+        read_only=True,
+        allow_null=True,
+    )
+    planned_visits = serializers.SerializerMethodField(
+        label=_("Planned Programmatic Visits"),
     )
 
     class Meta:
@@ -508,3 +545,10 @@ class InterventionExportFlatSerializer(ExportSerializerMixin, InterventionExport
             ["{}: {}".format(a.type.name, a.attachment.url)
              for a in obj.attachments.all()]
         )
+
+    def get_planned_visits(self, obj):
+        if obj.agreement.partner.partner_type == 'Government':
+            return _('N/A')
+        return ', '.join(['{} (Q1:{} Q2:{}, Q3:{}, Q4:{})'.format(
+            pv.year, pv.programmatic_q1, pv.programmatic_q2, pv.programmatic_q3, pv.programmatic_q4
+        ) for pv in obj.planned_visits.all()])

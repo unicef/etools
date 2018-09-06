@@ -171,7 +171,9 @@ class Command(BaseCommand):
 
         if self.verbosity >= 1:
             self.stdout.write(
-                'Action Points permissions updated ({}) -> ({}).'.format(old_permissions_count, len(self.defined_permissions))
+                'Action Points permissions updated ({}) -> ({}).'.format(
+                    old_permissions_count, len(self.defined_permissions)
+                )
             )
 
     def assign_permissions(self):
@@ -194,5 +196,9 @@ class Command(BaseCommand):
             condition=self.action_point_status(ActionPoint.STATUSES.open) + self.not_related_action_point()
         )
 
-        self.add_permission([self.pme, self.assignee], 'action', 'action_points.actionpoint.complete',
-                            condition=self.action_point_status(ActionPoint.STATUSES.open))
+        self.add_permission(
+            [self.pme, self.author, self.assigned_by, self.assignee],
+            'action',
+            'action_points.actionpoint.complete',
+            condition=self.action_point_status(ActionPoint.STATUSES.open)
+        )

@@ -2,13 +2,13 @@ from django.db import connection
 
 from rest_framework.generics import ListAPIView, RetrieveAPIView
 from rest_framework.response import Response
-
-from etools.applications.EquiTrack.permissions import IsSuperUser
 from unicef_locations.models import Location
+from unicef_restlib.permissions import IsSuperUser
+
 from etools.applications.management.serializers import (
-    GisLocationWktSerializer,
+    GisLocationGeojsonSerializer,
     GisLocationListSerializer,
-    GisLocationGeojsonSerializer
+    GisLocationWktSerializer,
 )
 from etools.applications.partners.models import Intervention
 from etools.applications.reports.models import AppliedIndicator

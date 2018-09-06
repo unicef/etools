@@ -1,8 +1,7 @@
-
 import factory.django
 from factory import fuzzy
 
-from etools.applications.attachments.models import Attachment, FileType
+from unicef_attachments.models import Attachment, FileType
 
 
 class AttachmentFileTypeFactory(factory.django.DjangoModelFactory):

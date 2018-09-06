@@ -92,13 +92,16 @@ def transition_to_closed(i):
 
 
 def transition_to_terminated(i):
+    if not i.termination_doc_attachment.exists():
+        raise TransitionError([_('Cannot Transition without termination doc attached')])
     if i.in_amendment is True:
         raise TransitionError([_('Cannot Transition status while adding an amendment')])
-
     return True
 
 
 def transition_to_ended(i):
+    if i.termination_doc_attachment.exists():
+        raise TransitionError([_('Cannot Transition to ended if termination_doc attached')])
     if i.in_amendment is True:
         raise TransitionError([_('Cannot Transition status while adding an amendment')])
 
@@ -318,7 +321,7 @@ class InterventionValid(CompleteValidation):
     def state_signed_valid(self, intervention, user=None):
         self.check_required_fields(intervention)
         self.check_rigid_fields(intervention, related=True)
-        if intervention.total_unicef_budget == 0:
+        if intervention.contingency_pd is False and intervention.total_unicef_budget == 0:
             raise StateValidationError([_('UNICEF Cash $ or UNICEF Supplies $ should not be 0')])
         return True
 

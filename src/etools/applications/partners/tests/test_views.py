@@ -15,6 +15,7 @@ from django.utils import timezone
 import mock
 from model_utils import Choices
 from rest_framework import status
+from rest_framework.exceptions import ErrorDetail
 from rest_framework.test import APIRequestFactory
 from unicef_snapshot.models import Activity
 
@@ -34,14 +35,12 @@ from etools.applications.partners.models import (
     InterventionBudget,
     InterventionPlannedVisits,
     InterventionReportingPeriod,
-    InterventionSectorLocationLink,
+    InterventionSectionLocationLink,
     PartnerOrganization,
     PartnerType,
 )
 from etools.applications.partners.permissions import READ_ONLY_API_GROUP_NAME
-from etools.applications.partners.serializers.exports.partner_organization import (
-    PartnerOrganizationExportSerializer,
-)
+from etools.applications.partners.serializers.exports.partner_organization import PartnerOrganizationExportSerializer
 from etools.applications.partners.tests.factories import (
     AgreementAmendmentFactory,
     AgreementFactory,
@@ -60,11 +59,7 @@ from etools.applications.reports.tests.factories import (
     ResultTypeFactory,
     SectionFactory,
 )
-from etools.applications.users.tests.factories import (
-    GroupFactory,
-    OfficeFactory,
-    UserFactory,
-)
+from etools.applications.users.tests.factories import GroupFactory, OfficeFactory, UserFactory
 
 
 class URLsTestCase(URLAssertionMixin, SimpleTestCase):
@@ -542,8 +537,10 @@ class TestPartnerOrganizationRetrieveUpdateDeleteViews(BaseTenantTestCase):
         )
 
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        error = [
+            ErrorDetail(string='The basis for risk rating has to be blank if Type is Low or High', code='invalid')]
         self.assertEqual(response.data, {
-            "non_field_errors": ["The basis for risk rating has to be blank if Type is Low or High"]})
+            "basis_for_risk_rating": error})
 
     def test_api_partners_update_assessments_invalid(self):
         self.assertFalse(Activity.objects.exists())
@@ -1044,7 +1041,6 @@ class TestAgreementAPIView(BaseTenantTestCase):
             from_date=datetime.date(today.year - 1, 1, 1),
             to_date=datetime.date(today.year + 1, 1, 1))
 
-        attached_agreement = "agreement.pdf"
         cls.agreement = AgreementFactory(
             partner=cls.partner,
             partner_manager=cls.partner_staff,
@@ -1054,7 +1050,6 @@ class TestAgreementAPIView(BaseTenantTestCase):
             signed_by_unicef_date=datetime.date.today(),
             signed_by_partner_date=datetime.date.today(),
             signed_by=cls.unicef_staff,
-            attached_agreement=attached_agreement,
         )
         cls.agreement.authorized_officers.add(cls.partner_staff)
         cls.agreement.save()
@@ -1703,7 +1698,7 @@ class TestInterventionViews(BaseTenantTestCase):
         intervention_obj = Intervention.objects.get(id=self.intervention_data["id"])
         intervention_obj.status = Intervention.DRAFT
         intervention_obj.save()
-        InterventionSectorLocationLink.objects.filter(intervention=self.intervention_data.get("id")).delete()
+        InterventionSectionLocationLink.objects.filter(intervention=self.intervention_data.get("id")).delete()
         self.intervention_data.update(sector_locations=[])
         self.intervention_data.update(status="active")
         response = self.forced_auth_req(
@@ -1719,7 +1714,7 @@ class TestInterventionViews(BaseTenantTestCase):
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertEqual(
             response.data,
-            ["Sector locations are required if Intervention status is ACTIVE or IMPLEMENTED."])
+            ["Section locations are required if Intervention status is ACTIVE or IMPLEMENTED."])
 
     def test_intervention_validation(self):
         response = self.forced_auth_req(
@@ -1807,6 +1802,86 @@ class TestInterventionViews(BaseTenantTestCase):
 
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertEqual(response.data, ['Start date must precede end date'])
+
+    def test_intervention_update_planned_visits(self):
+        import copy
+        a = copy.deepcopy(self.intervention_data["planned_visits"])
+        a.append({
+            "year": 2015,
+            "programmatic": 2,
+            "spot_checks": 1,
+            "audit": 1,
+            "quarter": 'q3'
+        })
+        data = {
+            "planned_visits": a,
+        }
+
+        response = self.forced_auth_req(
+            'patch',
+            reverse(
+                "partners_api:intervention-detail",
+                args=[self.intervention["id"]]
+            ),
+            user=self.partnership_manager_user,
+            data=data,
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+    def test_intervention_update_planned_visits_fail_due_terminated_status(self):
+        self.intervention_obj.status = Intervention.TERMINATED
+        self.intervention_obj.save()
+        data = {
+            "planned_visits": {
+                "id": self.intervention_data['planned_visits'][0]['id'],
+                "year": 2016,
+                "programmatic": 2,
+                "spot_checks": 1,
+                "audit": 1,
+                "quarter": 'q3'
+            },
+        }
+
+        response = self.forced_auth_req(
+            'patch',
+            reverse(
+                "partners_api:intervention-detail",
+                args=[self.intervention_obj.id]
+            ),
+            user=self.partnership_manager_user,
+            data=data,
+        )
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertEqual(response.data['planned_visits'], ['Planned Visit cannot be set for Terminated interventions'])
+
+    def test_intervention_update_planned_visits_fail_due_government_type(self):
+        partner = self.intervention_obj.agreement.partner
+        partner.partner_type = PartnerType.GOVERNMENT
+        partner.save()
+
+        data = {
+            "planned_visits": {
+                "id": self.intervention_data['planned_visits'][0]['id'],
+                "year": 2016,
+                "programmatic": 2,
+                "spot_checks": 1,
+                "audit": 1,
+                "quarter": 'q3'
+            },
+        }
+
+        response = self.forced_auth_req(
+            'patch',
+            reverse(
+                "partners_api:intervention-detail",
+                args=[self.intervention_obj.id]
+            ),
+            user=self.partnership_manager_user,
+            data=data,
+        )
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertEqual(response.data['planned_visits'], ['Planned Visit to be set only at Partner level'])
 
     def test_intervention_filter(self):
         country_programme = CountryProgrammeFactory()

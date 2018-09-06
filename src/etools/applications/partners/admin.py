@@ -1,41 +1,39 @@
 from django.contrib import admin
 from django.contrib.contenttypes.models import ContentType
-from django.core.urlresolvers import reverse
 from django.db import models
 from django.forms import SelectMultiple
+from django.urls import reverse
 from django.utils.safestring import mark_safe
 from django.utils.translation import ugettext_lazy as _
 
 from import_export.admin import ExportMixin
+from unicef_attachments.admin import AttachmentSingleInline
+from unicef_attachments.models import Attachment
 from unicef_snapshot.admin import ActivityInline, SnapshotModelAdmin
 
-from etools.applications.attachments.admin import AttachmentSingleInline
-from etools.applications.attachments.models import Attachment
 from etools.applications.partners.exports import PartnerExport
-from etools.applications.partners.forms import (
+from etools.applications.partners.forms import (  # TODO intervention sector locations cleanup
     PartnersAdminForm,
-    # TODO intervention sector locations cleanup
     PartnerStaffMemberForm,
 )
 from etools.applications.partners.mixins import CountryUsersAdminMixin, HiddenPartnerMixin
-from etools.applications.partners.models import (
+from etools.applications.partners.models import (  # TODO intervention sector locations cleanup
     Agreement,
-    # TODO intervention sector locations cleanup
     AgreementAmendment,
     Assessment,
+    CoreValuesAssessment,
     FileType,
-    FundingCommitment,
     Intervention,
     InterventionAmendment,
     InterventionAttachment,
     InterventionBudget,
     InterventionPlannedVisits,
     InterventionResultLink,
-    InterventionSectorLocationLink,
+    InterventionSectionLocationLink,
     PartnerOrganization,
     PartnerStaffMember,
     PlannedEngagement,
-    CoreValuesAssessment)
+)
 
 
 class InterventionAmendmentsAdmin(admin.ModelAdmin):
@@ -118,6 +116,19 @@ class InterventionPlannedVisitsAdmin(admin.ModelAdmin):
     )
 
 
+class InterventionPlannedVisitsInline(admin.TabularInline):
+    model = InterventionPlannedVisits
+    fields = (
+        'intervention',
+        'year',
+        'programmatic_q1',
+        'programmatic_q2',
+        'programmatic_q3',
+        'programmatic_q4',
+    )
+    extra = 0
+
+
 class AttachmentFileInline(AttachmentSingleInline):
     verbose_name_plural = "Attachment"
 
@@ -182,7 +193,7 @@ class InterventionResultsLinkAdmin(admin.ModelAdmin):
 
 # TODO intervention sector locations cleanup
 class InterventionSectionLocationAdmin(admin.ModelAdmin):
-    model = InterventionSectorLocationLink
+    model = InterventionSectionLocationLink
     fields = (
         'intervention',
         'sector',
@@ -271,7 +282,7 @@ class InterventionAdmin(CountryUsersAdminMixin, HiddenPartnerMixin, SnapshotMode
                  'prc_review_document',
                  'signed_pd_document',
                  ('partner_authorized_officer_signatory', 'signed_by_partner_date',),
-                 ('signed_by_unicef', 'unicef_signatory', 'signed_by_unicef_date',),
+                 ('unicef_signatory', 'signed_by_unicef_date',),
                  'partner_focal_points',
                  'unicef_focal_points',
                  ('start', 'end'),
@@ -284,6 +295,7 @@ class InterventionAdmin(CountryUsersAdminMixin, HiddenPartnerMixin, SnapshotMode
         ActivityInline,
         PRCReviewAttachmentInline,
         SignedPDAttachmentInline,
+        InterventionPlannedVisitsInline,
     )
 
     def created_date(self, obj):
@@ -297,7 +309,7 @@ class InterventionAdmin(CountryUsersAdminMixin, HiddenPartnerMixin, SnapshotMode
     section_names.short_description = "Sections"
 
     def has_module_permission(self, request):
-        return request.user.is_superuser
+        return request.user.is_superuser or request.user.groups.filter(name='Country Office Administrator').exists()
 
     def attachments_link(self, obj):
         url = "{}?intervention__id__exact={}".format(
@@ -364,7 +376,7 @@ class PartnerStaffMemberAdmin(SnapshotModelAdmin):
     ]
 
     def has_module_permission(self, request):
-        return request.user.is_superuser
+        return request.user.is_superuser or request.user.groups.filter(name='Country Office Administrator').exists()
 
 
 class HiddenPartnerFilter(admin.SimpleListFilter):
@@ -455,7 +467,6 @@ class PartnerAdmin(ExportMixin, admin.ModelAdmin):
                  'phone_number',
                  'email',
                  'core_values_assessment_date',
-                 'core_values_assessment',
                  'manually_blocked',
                  'deleted_flag',
                  'blocked',
@@ -497,7 +508,7 @@ class PartnerAdmin(ExportMixin, admin.ModelAdmin):
         self.message_user(request, '{} partners were shown'.format(partners))
 
     def has_module_permission(self, request):
-        return request.user.is_superuser
+        return request.user.is_superuser or request.user.groups.filter(name='Country Office Administrator').exists()
 
 
 class PlannedEngagementAdmin(admin.ModelAdmin):
@@ -538,6 +549,7 @@ class AgreementAmendmentAdmin(admin.ModelAdmin):
     verbose_name = 'Amendment'
     model = AgreementAmendment
     fields = (
+        'agreement',
         'signed_amendment',
         'signed_date',
         'number',
@@ -615,50 +627,13 @@ class AgreementAdmin(ExportMixin, HiddenPartnerMixin, CountryUsersAdminMixin, Sn
     ]
 
     def has_module_permission(self, request):
-        return request.user.is_superuser
-
-
-class FundingCommitmentAdmin(SnapshotModelAdmin):
-    search_fields = (
-        'fr_number',
-        'grant__name',
-    )
-    list_filter = (
-        'grant',
-    )
-    list_display = (
-        'fc_ref',
-        'grant',
-        'fr_number',
-        'fr_item_amount_usd',
-        'agreement_amount',
-        'commitment_amount',
-        'expenditure_amount',
-    )
-    readonly_fields = list_display + (
-        'wbs',
-        'fc_type',
-        'start',
-        'end',
-    )
-    inlines = [
-        ActivityInline,
-    ]
-
-    def has_add_permission(self, request):
-        return False
-
-    def has_delete_permission(self, request, obj=None):
-        return False
-
-    def has_module_permission(self, request):
-        return request.user.is_superuser
+        return request.user.is_superuser or request.user.groups.filter(name='Country Office Administrator').exists()
 
 
 class FileTypeAdmin(admin.ModelAdmin):
 
     def has_module_permission(self, request):
-        return request.user.is_superuser
+        return request.user.is_superuser or request.user.groups.filter(name='Country Office Administrator').exists()
 
 
 admin.site.register(PartnerOrganization, PartnerAdmin)
@@ -677,8 +652,7 @@ admin.site.register(InterventionBudget, InterventionBudgetAdmin)
 admin.site.register(InterventionPlannedVisits, InterventionPlannedVisitsAdmin)
 admin.site.register(InterventionAttachment, InterventionAttachmentAdmin)
 # TODO intervention sector locations cleanup
-admin.site.register(InterventionSectorLocationLink, InterventionSectionLocationAdmin)
+admin.site.register(InterventionSectionLocationLink, InterventionSectionLocationAdmin)
 
 
 admin.site.register(FileType, FileTypeAdmin)
-admin.site.register(FundingCommitment, FundingCommitmentAdmin)

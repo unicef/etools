@@ -1,6 +1,7 @@
 
 import collections
 
+from django.core.exceptions import FieldDoesNotExist
 from django.db import models
 from django.utils.decorators import classonlymethod
 from django.utils.translation import ugettext as _
@@ -94,8 +95,13 @@ class BaseRequiredFieldsCheck(BaseTransitionCheck):
                     errors[field] = _('This field is required.')
                     continue
 
-                if not value and value != 0:
-                    errors[field] = _('This field is required.')
+                try:
+                    model_field = instance._meta.get_field(field)
+                    if not value or value == model_field.default:
+                        errors[field] = _('This field is required.')
+                except FieldDoesNotExist:
+                    if not value:
+                        errors[field] = _('This field is required.')
 
         return errors
 

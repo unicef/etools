@@ -170,6 +170,7 @@ class UserAdminPlus(UserAdmin):
     list_display = [
         'email',
         'first_name',
+        'middle_name',
         'last_name',
         'office',
         'is_staff',

@@ -2,14 +2,14 @@ import datetime
 import json
 
 from django.contrib.auth import get_user_model
-from django.core.exceptions import ValidationError
 from django.db.models import Q
 from django.utils import timezone
 
 from rest_framework import serializers
+from rest_framework.exceptions import ValidationError
+from unicef_attachments.fields import AttachmentSingleFileField
 from unicef_snapshot.serializers import SnapshotModelSerializer
 
-from etools.applications.attachments.serializers_fields import AttachmentSingleFileField
 from etools.applications.partners.models import (
     Assessment,
     CoreValuesAssessment,
@@ -18,7 +18,7 @@ from etools.applications.partners.models import (
     PartnerPlannedVisits,
     PartnerStaffMember,
     PlannedEngagement,
-)
+    PartnerType)
 from etools.applications.partners.serializers.interventions_v2 import InterventionListSerializer
 
 
@@ -255,6 +255,9 @@ class PartnerPlannedVisitsSerializer(serializers.ModelSerializer):
                 partner=self.initial_data.get("partner"),
                 year=self.initial_data.get("year"),
             )
+            if self.instance.partner.partner_type != PartnerType.GOVERNMENT:
+                raise ValidationError({'partner': 'Planned Visit can be set only for Government partners'})
+
         except self.Meta.model.DoesNotExist:
             self.instance = None
 
@@ -337,47 +340,6 @@ class PartnerOrganizationCreateUpdateSerializer(SnapshotModelSerializer):
                 }
             }
         }
-
-    # def set_core_values_assessments(self, partner, data):
-    #     for core_value_assessment in data:
-    #         assessment, _ = CoreValuesAssessment.objects.get_or_create(
-    #             partner=partner
-    #         )
-    #         pk, code = core_value_assessment["attachment"]
-    #         Attachment.objects.update_or_create(
-    #             pk=pk,
-    #             defaults={
-    #                 "code": code,
-    #                 "content_object": assessment,
-    #             }
-    #         )
-    #
-    # def create(self, validated_data):
-    #     try:
-    #         core_values_assessments = validated_data.pop("core_values_assessments")
-    #     except KeyError:
-    #         core_values_assessments = []
-    #
-    #     partner = PartnerOrganization.objects.create(**validated_data)
-    #     self.set_core_values_assessments(partner, core_values_assessments)
-    #     return partner
-    #
-    # def update(self, instance, validated_data):
-    #     try:
-    #         core_values_assessments = validated_data.pop("core_values_assessments")
-    #     except KeyError:
-    #         core_values_assessments = []
-    #
-    #     info = model_meta.get_field_info(instance)
-    #     for attr, value in validated_data.items():
-    #         if attr in info.relations and info.relations[attr].to_many:
-    #             field = getattr(instance, attr)
-    #             field.set(value)
-    #         else:
-    #             setattr(instance, attr, value)
-    #     instance.save()
-    #     self.set_core_values_assessments(instance, core_values_assessments)
-    #     return instance
 
 
 class PartnerOrganizationHactSerializer(serializers.ModelSerializer):

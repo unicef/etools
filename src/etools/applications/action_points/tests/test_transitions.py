@@ -1,5 +1,5 @@
 from django.core.management import call_command
-from django.core.urlresolvers import reverse
+from django.urls import reverse
 
 from rest_framework import status
 
@@ -19,7 +19,7 @@ class ActionPointTransitionTestCase(ActionPointsTestCaseMixin, BaseTenantTestCas
         data = data or {}
         return self.forced_auth_req(
             'post',
-            reverse('action-points:action-points-(?P<action>\D+)', args=(action_point.id, action)),
+            reverse('action-points:action-points-transition', args=(action_point.id, action)),
             user=user,
             data=data
         )
@@ -104,7 +104,9 @@ class UnicefUserPermissionsForActionPointTransitionTestCase(ActionPointTransitio
 
 
 class AuthorPermissionsForActionPointTransitionTestCase(ActionPointTransitionPermissionsTestCase):
-    ALLOWED_TRANSITION = []
+    ALLOWED_TRANSITION = [
+        ('open', 'complete'),
+    ]
 
     @classmethod
     def setUpTestData(cls):
@@ -125,7 +127,9 @@ class AuthorPermissionsForActionPointTransitionTestCase(ActionPointTransitionPer
 
 
 class AssignedByPermissionsForActionPointTransitionTestCase(ActionPointTransitionPermissionsTestCase):
-    ALLOWED_TRANSITION = []
+    ALLOWED_TRANSITION = [
+        ('open', 'complete'),
+    ]
 
     @classmethod
     def setUpTestData(cls):

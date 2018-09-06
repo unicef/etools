@@ -7,13 +7,13 @@ from django.utils.translation import ugettext as _
 
 from rest_framework import serializers
 from rest_framework.serializers import ValidationError
+from unicef_attachments.fields import AttachmentSingleFileField
+from unicef_attachments.serializers import AttachmentSerializerMixin
+from unicef_locations.serializers import LocationLightSerializer, LocationSerializer
 from unicef_snapshot.serializers import SnapshotModelSerializer
 
-from etools.applications.attachments.serializers import AttachmentSerializerMixin
-from etools.applications.attachments.serializers_fields import AttachmentSingleFileField
 from etools.applications.funds.models import FundsCommitmentItem, FundsReservationHeader
 from etools.applications.funds.serializers import FRsSerializer
-from unicef_locations.serializers import LocationLightSerializer, LocationSerializer
 from etools.applications.partners.models import (
     Intervention,
     InterventionAmendment,
@@ -22,14 +22,11 @@ from etools.applications.partners.models import (
     InterventionPlannedVisits,
     InterventionReportingPeriod,
     InterventionResultLink,
-    InterventionSectorLocationLink,
+    InterventionSectionLocationLink,
+    PartnerType,
 )
 from etools.applications.partners.permissions import InterventionPermissions
-from etools.applications.reports.models import (
-    AppliedIndicator,
-    LowerResult,
-    ReportingRequirement,
-)
+from etools.applications.reports.models import AppliedIndicator, LowerResult, ReportingRequirement
 from etools.applications.reports.serializers.v1 import SectionSerializer
 from etools.applications.reports.serializers.v2 import (
     IndicatorSerializer,
@@ -87,6 +84,21 @@ class PlannedVisitsCUSerializer(serializers.ModelSerializer):
     class Meta:
         model = InterventionPlannedVisits
         fields = "__all__"
+
+    def is_valid(self, raise_exception=True):
+        try:
+            self.instance = self.Meta.model.objects.get(
+                intervention=self.initial_data.get("intervention"),
+                year=self.initial_data.get("year"),
+            )
+            if self.instance.intervention.agreement.partner.partner_type == PartnerType.GOVERNMENT:
+                raise ValidationError("Planned Visit to be set only at Partner level")
+            if self.instance.intervention.status == Intervention.TERMINATED:
+                raise ValidationError("Planned Visit cannot be set for Terminated interventions")
+
+        except self.Meta.model.DoesNotExist:
+            self.instance = None
+        return super().is_valid(raise_exception=True)
 
 
 class PlannedVisitsNestedSerializer(serializers.ModelSerializer):
@@ -253,7 +265,7 @@ class InterventionLocationSectionNestedSerializer(serializers.ModelSerializer):
     sector = SectionSerializer()
 
     class Meta:
-        model = InterventionSectorLocationLink
+        model = InterventionSectionLocationLink
         fields = (
             'id', 'sector', 'locations'
         )
@@ -262,7 +274,7 @@ class InterventionLocationSectionNestedSerializer(serializers.ModelSerializer):
 # TODO intervention sector locations cleanup
 class InterventionSectionLocationCUSerializer(serializers.ModelSerializer):
     class Meta:
-        model = InterventionSectorLocationLink
+        model = InterventionSectionLocationLink
         fields = (
             'id', 'intervention', 'sector', 'locations'
         )
@@ -487,6 +499,10 @@ class InterventionCreateUpdateSerializer(AttachmentSerializerMixin, SnapshotMode
     prc_review_attachment = AttachmentSingleFileField()
     signed_pd_document_file = serializers.FileField(source='signed_pd_document', read_only=True)
     signed_pd_attachment = AttachmentSingleFileField()
+    activation_letter_file = serializers.FileField(source='activation_letter', read_only=True)
+    activation_letter_attachment = AttachmentSingleFileField()
+    termination_doc_file = serializers.FileField(source='termination_doc', read_only=True)
+    termination_doc_attachment = AttachmentSingleFileField()
     planned_visits = PlannedVisitsNestedSerializer(many=True, read_only=True, required=False)
     attachments = InterventionAttachmentSerializer(many=True, read_only=True, required=False)
     result_links = InterventionResultCUSerializer(many=True, read_only=True, required=False)
@@ -536,8 +552,13 @@ class InterventionDetailSerializer(serializers.ModelSerializer):
     prc_review_attachment = AttachmentSingleFileField(read_only=True)
     signed_pd_document_file = serializers.FileField(source='signed_pd_document', read_only=True)
     signed_pd_attachment = AttachmentSingleFileField(read_only=True)
+    activation_letter_file = serializers.FileField(source='activation_letter', read_only=True)
+    activation_letter_attachment = AttachmentSingleFileField(read_only=True)
+    termination_doc_file = serializers.FileField(source='termination_doc', read_only=True)
+    termination_doc_attachment = AttachmentSingleFileField(read_only=True)
     amendments = InterventionAmendmentCUSerializer(many=True, read_only=True, required=False)
     attachments = InterventionAttachmentSerializer(many=True, read_only=True, required=False)
+    planned_visits = PlannedVisitsNestedSerializer(many=True, read_only=True, required=False)
     result_links = InterventionResultNestedSerializer(many=True, read_only=True, required=False)
     submitted_to_prc = serializers.ReadOnlyField()
     frs_details = FRsSerializer(source='frs', read_only=True)
@@ -610,14 +631,16 @@ class InterventionDetailSerializer(serializers.ModelSerializer):
             "unicef_signatory", "unicef_focal_points", "partner_focal_points", "partner_authorized_officer_signatory",
             "offices", "population_focus", "signed_by_partner_date", "created", "modified",
             "planned_budget", "result_links", 'country_programme', 'metadata', 'contingency_pd', "amendments",
-            "attachments", 'permissions', 'partner_id', "sections",
+            "attachments", 'permissions', 'partner_id', "sections", "planned_visits",
             "locations", "location_names", "cluster_names", "flat_locations", "flagged_sections", "section_names",
             "in_amendment", "prc_review_attachment", "signed_pd_attachment", "donors", "donor_codes", "grants",
             "location_p_codes",
             "days_from_submission_to_signed",
             "days_from_review_to_signed",
             "partner_vendor",
-            "reference_number_year"
+            "reference_number_year",
+            "activation_letter_file", "activation_letter_attachment",
+            "termination_doc_file", "termination_doc_attachment"
         )
 
 
@@ -625,6 +648,14 @@ class InterventionListMapSerializer(serializers.ModelSerializer):
     partner_name = serializers.CharField(source='agreement.partner.name')
     partner_id = serializers.CharField(source='agreement.partner.id')
     locations = LocationSerializer(source="flat_locations", many=True)
+    offices = serializers.StringRelatedField(many=True)
+    sections = serializers.StringRelatedField(many=True)
+    unicef_focal_points = serializers.StringRelatedField(many=True)
+    donors = serializers.ReadOnlyField(read_only=True)
+    donor_codes = serializers.ReadOnlyField(read_only=True)
+    grants = serializers.ReadOnlyField(read_only=True)
+    results = serializers.ReadOnlyField(source='cp_output_names', read_only=True)
+    clusters = serializers.ReadOnlyField(read_only=True)
 
     class Meta:
         model = Intervention
@@ -633,11 +664,21 @@ class InterventionListMapSerializer(serializers.ModelSerializer):
             "partner_id",
             "partner_name",
             "agreement",
-            "document_type", "number", "title", "status",
-            "start", "end",
+            "document_type",
+            "number",
+            "title",
+            "status",
+            "start",
+            "end",
             "offices",
             "sections",
-            "locations"
+            "locations",
+            "unicef_focal_points",
+            "donors",
+            "donor_codes",
+            "grants",
+            "results",
+            "clusters",
         )
 
 
@@ -770,12 +811,12 @@ class InterventionReportingRequirementCreateSerializer(serializers.ModelSerializ
         """
         self.intervention = self.context["intervention"]
 
-        # Only able to change reporting requirements when PD
-        # is in amendment status
-        if not self.intervention.in_amendment and self.intervention.status != Intervention.DRAFT:
-            raise serializers.ValidationError(
-                _("Changes not allowed when PD not in amendment state.")
-            )
+        if self.intervention.status != Intervention.DRAFT:
+            if not self.intervention.in_amendment and not self.intervention.termination_doc_attachment.exists():
+                raise serializers.ValidationError(
+                    _("Changes not allowed when PD not in amendment state.")
+                )
+
         if not self.intervention.start:
             raise serializers.ValidationError(
                 _("PD needs to have a start date.")

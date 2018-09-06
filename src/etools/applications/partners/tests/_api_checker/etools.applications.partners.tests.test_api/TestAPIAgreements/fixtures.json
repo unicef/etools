@@ -2,22 +2,22 @@
     "agreement": {
         "master": {
             "model": "partners.agreement",
-            "pk": 1672,
+            "pk": 10593,
             "fields": {
-                "created": "2018-08-08T17:43:32.941Z",
-                "modified": "2018-08-08T17:43:32.943Z",
-                "partner": 1660,
-                "country_programme": 1645,
+                "created": "2018-08-28T19:00:48.864Z",
+                "modified": "2018-08-28T19:00:48.879Z",
+                "partner": 9893,
+                "country_programme": 9647,
                 "agreement_type": "PCA",
-                "agreement_number": "TST/PCA20181672",
-                "attached_agreement": "test/file_attachments/partner_organization/1660/agreements/test_file.pdf",
-                "start": "2018-08-08",
+                "agreement_number": "TST/PCA201810593",
+                "attached_agreement": "",
+                "start": "2018-08-28",
                 "end": "2018-12-31",
                 "reference_number_year": 2018,
                 "special_conditions_pca": false,
-                "signed_by_unicef_date": "2018-08-08",
+                "signed_by_unicef_date": "2018-08-28",
                 "signed_by": null,
-                "signed_by_partner_date": "2018-08-08",
+                "signed_by_partner_date": "2018-08-28",
                 "partner_manager": null,
                 "status": "signed",
                 "authorized_officers": []
@@ -26,10 +26,10 @@
         "deps": [
             {
                 "model": "partners.partnerorganization",
-                "pk": 1660,
+                "pk": 9893,
                 "fields": {
-                    "created": "2018-08-08T17:43:32.933Z",
-                    "modified": "2018-08-08T17:43:32.937Z",
+                    "created": "2018-08-28T19:00:48.857Z",
+                    "modified": "2018-08-28T19:00:48.861Z",
                     "partner_type": "",
                     "cso_type": null,
                     "name": "Partner 4",
@@ -50,7 +50,6 @@
                     "type_of_assessment": null,
                     "last_assessment_date": null,
                     "core_values_assessment_date": null,
-                    "core_values_assessment": "",
                     "vision_synced": false,
                     "blocked": false,
                     "deleted_flag": false,
@@ -107,7 +106,7 @@
             },
             {
                 "model": "reports.countryprogramme",
-                "pk": 1645,
+                "pk": 9647,
                 "fields": {
                     "name": "Country Programme 4",
                     "wbs": "0000/A0/04",
@@ -121,12 +120,12 @@
     "agreement_amendment": {
         "master": {
             "model": "partners.agreementamendment",
-            "pk": 24,
+            "pk": 373,
             "fields": {
-                "created": "2018-08-08T17:43:32.944Z",
-                "modified": "2018-08-08T17:43:32.947Z",
+                "created": "2018-08-28T19:00:48.880Z",
+                "modified": "2018-08-28T19:00:48.882Z",
                 "number": "tmp01",
-                "agreement": 1672,
+                "agreement": 10593,
                 "signed_amendment": "",
                 "types": "[\"Change in clause\"]",
                 "signed_date": null
@@ -135,22 +134,22 @@
         "deps": [
             {
                 "model": "partners.agreement",
-                "pk": 1672,
+                "pk": 10593,
                 "fields": {
-                    "created": "2018-08-08T17:43:32.941Z",
-                    "modified": "2018-08-08T17:43:32.943Z",
-                    "partner": 1660,
-                    "country_programme": 1645,
+                    "created": "2018-08-28T19:00:48.864Z",
+                    "modified": "2018-08-28T19:00:48.879Z",
+                    "partner": 9893,
+                    "country_programme": 9647,
                     "agreement_type": "PCA",
-                    "agreement_number": "TST/PCA20181672",
-                    "attached_agreement": "test/file_attachments/partner_organization/1660/agreements/test_file.pdf",
-                    "start": "2018-08-08",
+                    "agreement_number": "TST/PCA201810593",
+                    "attached_agreement": "",
+                    "start": "2018-08-28",
                     "end": "2018-12-31",
                     "reference_number_year": 2018,
                     "special_conditions_pca": false,
-                    "signed_by_unicef_date": "2018-08-08",
+                    "signed_by_unicef_date": "2018-08-28",
                     "signed_by": null,
-                    "signed_by_partner_date": "2018-08-08",
+                    "signed_by_partner_date": "2018-08-28",
                     "partner_manager": null,
                     "status": "signed",
                     "authorized_officers": []
@@ -158,10 +157,10 @@
             },
             {
                 "model": "partners.partnerorganization",
-                "pk": 1660,
+                "pk": 9893,
                 "fields": {
-                    "created": "2018-08-08T17:43:32.933Z",
-                    "modified": "2018-08-08T17:43:32.937Z",
+                    "created": "2018-08-28T19:00:48.857Z",
+                    "modified": "2018-08-28T19:00:48.861Z",
                     "partner_type": "",
                     "cso_type": null,
                     "name": "Partner 4",
@@ -182,7 +181,6 @@
                     "type_of_assessment": null,
                     "last_assessment_date": null,
                     "core_values_assessment_date": null,
-                    "core_values_assessment": "",
                     "vision_synced": false,
                     "blocked": false,
                     "deleted_flag": false,
@@ -239,7 +237,7 @@
             },
             {
                 "model": "reports.countryprogramme",
-                "pk": 1645,
+                "pk": 9647,
                 "fields": {
                     "name": "Country Programme 4",
                     "wbs": "0000/A0/04",

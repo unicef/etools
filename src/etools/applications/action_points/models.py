@@ -8,12 +8,13 @@ from django_fsm import FSMField, transition
 from model_utils import Choices, FieldTracker
 from model_utils.fields import MonitorField
 from model_utils.models import TimeStampedModel
+from unicef_notification.models import Notification
 from unicef_snapshot.models import Activity
 
 from etools.applications.action_points.categories.models import Category
 from etools.applications.action_points.transitions.conditions import ActionPointCompleteActionsTakenCheck
 from etools.applications.EquiTrack.utils import get_environment
-from etools.applications.notification.models import Notification
+from etools.applications.action_points.transitions.serializers.serializers import ActionPointCompleteSerializer
 from etools.applications.permissions2.fsm import has_action_permission
 from etools.applications.utils.common.urlresolvers import build_frontend_url
 from etools.applications.utils.groups.wrappers import GroupWrapper
@@ -51,7 +52,7 @@ class ActionPoint(TimeStampedModel):
 
     status = FSMField(verbose_name=_('Status'), max_length=10, choices=STATUSES, default=STATUSES.open, protected=True)
 
-    category = models.ForeignKey(Category, verbose_name=_('Category'), blank=True, null=True)
+    category = models.ForeignKey(Category, verbose_name=_('Category'), blank=True, null=True, on_delete=models.CASCADE)
     description = models.TextField(verbose_name=_('Description'))
     due_date = models.DateField(verbose_name=_('Due Date'), blank=True, null=True)
     high_priority = models.BooleanField(default=False, verbose_name=_('High Priority'))
@@ -116,6 +117,12 @@ class ActionPoint(TimeStampedModel):
 
         if self.tpm_activity:
             return 'Task No {0} for Visit {1}'.format(obj.task_number, obj.tpm_visit.reference_number)
+
+        if self.travel_activity:
+            if self.travel_activity.travel:
+                return 'Task No {0} for Visit {1}'.format(obj.task_number, obj.travel.reference_number)
+            else:
+                return 'Task not assigned to Visit'
 
         return str(obj)
 
@@ -210,16 +217,18 @@ class ActionPoint(TimeStampedModel):
         )
         notification.send_notification()
 
-    def _do_complete(self):
-        self.send_email(self.assigned_by, 'action_points/action_point/completed', cc=[self.assigned_to.email])
+    def _do_complete(self, completed_by=None):
+        self.send_email(self.assigned_by, 'action_points/action_point/completed', cc=[self.assigned_to.email],
+                        additional_context={'completed_by': (completed_by or self.assigned_to).get_full_name()})
 
     @transition(status, source=STATUSES.open, target=STATUSES.completed,
                 permission=has_action_permission(action='complete'),
                 conditions=[
                     ActionPointCompleteActionsTakenCheck.as_condition()
-                ])
-    def complete(self):
-        self._do_complete()
+                ],
+                custom={'serializer': ActionPointCompleteSerializer})
+    def complete(self, completed_by=None):
+        self._do_complete(completed_by=completed_by)
 
 
 PME = GroupWrapper(code='pme',

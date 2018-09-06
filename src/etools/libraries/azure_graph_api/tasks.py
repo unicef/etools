@@ -1,9 +1,13 @@
-import requests
 from django.conf import settings
 from django.core.cache import cache
+from django.utils.encoding import force_text
 
+import requests
 from celery.utils.log import get_task_logger
 
+from etools.applications.users.models import Country
+from etools.applications.vision.exceptions import VisionException
+from etools.applications.vision.models import VisionSyncLog
 from etools.config.celery import app
 from etools.libraries.azure_graph_api.client import azure_sync_users, get_token
 from etools.libraries.azure_graph_api.utils import handle_record
@@ -28,28 +32,46 @@ def sync_user(username):
 @app.task
 def sync_all_users():
     logger.info('Azure Complete Sync Process started')
-    url = '{}/{}/users?$top={}'.format(
-        settings.AZURE_GRAPH_API_BASE_URL,
-        settings.AZURE_GRAPH_API_VERSION,
-        settings.AZURE_GRAPH_API_PAGE_SIZE
-    )
-    azure_sync_users(url)
+    log = VisionSyncLog(country=Country.objects.get(schema_name="public"), handler_name='UserADSync')
+    try:
+        url = '{}/{}/users?$top={}'.format(
+            settings.AZURE_GRAPH_API_BASE_URL,
+            settings.AZURE_GRAPH_API_VERSION,
+            settings.AZURE_GRAPH_API_PAGE_SIZE
+        )
+        azure_sync_users(url)
+    except Exception as e:
+        log.exception_message = force_text(e)
+        raise VisionException(*e.args)
+    else:
+        log.successful = True
+    finally:
+        log.save()
     logger.info('Azure Complete Sync Process finished')
 
 
 @app.task
 def sync_delta_users():
     logger.info('Azure Delta Sync Process started')
-    url = cache.get(
-        AZURE_GRAPH_API_USER_CACHE_KEY,
-        '{}/{}/users/delta?$top={}'.format(
-            settings.AZURE_GRAPH_API_BASE_URL,
-            settings.AZURE_GRAPH_API_VERSION,
-            settings.AZURE_GRAPH_API_PAGE_SIZE
+    log = VisionSyncLog(country=Country.objects.get(schema_name="public"), handler_name='UserADSyncDelta')
+    try:
+        url = cache.get(
+            AZURE_GRAPH_API_USER_CACHE_KEY,
+            '{}/{}/users/delta?$top={}'.format(
+                settings.AZURE_GRAPH_API_BASE_URL,
+                settings.AZURE_GRAPH_API_VERSION,
+                settings.AZURE_GRAPH_API_PAGE_SIZE
+            )
         )
-    )
-    delta_link = azure_sync_users(url)
-    cache.set(AZURE_GRAPH_API_USER_CACHE_KEY, delta_link)
+        delta_link = azure_sync_users(url)
+        cache.set(AZURE_GRAPH_API_USER_CACHE_KEY, delta_link)
+    except Exception as e:
+        log.exception_message = force_text(e)
+        raise VisionException(*e.args)
+    else:
+        log.successful = True
+    finally:
+        log.save()
     logger.info('Azure Delta Sync Process finished')
     return delta_link
 

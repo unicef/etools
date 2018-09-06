@@ -127,7 +127,7 @@ class UserMapper(object):
 
         try:
             user, created = get_user_model().objects.get_or_create(
-                email=key_value, username=key_value, is_staff=True)
+                email=key_value, username=key_value, defaults={'is_staff': True})
 
             if created:
                 user.set_unusable_password()

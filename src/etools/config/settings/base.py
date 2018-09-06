@@ -111,7 +111,6 @@ USE_TZ = True
 # DJANGO: HTTP
 MIDDLEWARE = (
     'django.contrib.sessions.middleware.SessionMiddleware',
-    'django.contrib.auth.middleware.SessionAuthenticationMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'etools.applications.tokens.middleware.TokenAuthenticationMiddleware',
     'django.middleware.common.CommonMiddleware',
@@ -183,7 +182,6 @@ SHARED_APPS = (
     'etools.applications.publics',
     # you must list the app where your tenant model resides in
     'etools.applications.users',
-    'etools.applications.notification',
     'django_filters',
     'etools.applications.environment',
     'etools.applications.action_points.categories',
@@ -216,9 +214,9 @@ TENANT_APPS = (
     'etools.applications.audit',
     'etools.applications.firms',
     'etools.applications.management',
-    'etools.applications.snapshot',
     'etools.applications.action_points',
     'unicef_snapshot',
+    'unicef_attachments',
 )
 INSTALLED_APPS = ('tenant_schemas',) + SHARED_APPS + TENANT_APPS
 
@@ -371,7 +369,8 @@ REST_FRAMEWORK = {
         'rest_framework_csv.renderers.CSVRenderer',
         'rest_framework_xml.renderers.XMLRenderer',
         'rest_framework.renderers.MultiPartRenderer',
-    )
+    ),
+    'DEFAULT_SCHEMA_CLASS': 'etools.applications.utils.common.inspectors.EToolsSchema',
 }
 
 # django-cors-headers: https://github.com/ottoyiu/django-cors-headers
@@ -597,3 +596,7 @@ PCA_REQUIRED_NOTIFICATION_LEAD = 30
 
 UNICEF_NOTIFICATION_TEMPLATE_DIR = "notifications"
 UNICEF_LOCATIONS_GET_CACHE_KEY = 'etools.libraries.locations.views.cache_key'
+
+ATTACHMENT_FILEPATH_PREFIX_FUNC = "etools.applications.attachments.utils.get_filepath_prefix"
+ATTACHMENT_FLAT_MODEL = "etools.applications.attachments.models.AttachmentFlat"
+ATTACHMENT_DENORMALIZE_FUNC = "etools.applications.attachments.utils.denormalize_attachment"

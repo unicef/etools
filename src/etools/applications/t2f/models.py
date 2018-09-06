@@ -170,7 +170,7 @@ class Travel(models.Model):
         on_delete=models.CASCADE,
     )
     section = models.ForeignKey(
-        'reports.Sector', null=True, blank=True, related_name='+', verbose_name=_('Sector'),
+        'reports.Sector', null=True, blank=True, related_name='+', verbose_name=_('Section'),
         on_delete=models.CASCADE,
     )
     start_date = models.DateTimeField(null=True, blank=True, verbose_name=_('Start Date'))
@@ -485,8 +485,16 @@ class TravelActivity(models.Model):
         verbose_name_plural = _("Travel Activities")
 
     @property
+    def travel(self):
+        return self.travels.filter(traveler=self.primary_traveler).first()
+
+    @property
+    def task_number(self):
+        return list(self.travel.activities.values_list('id', flat=True)).index(self.id) + 1
+
+    @property
     def travel_status(self):
-        return self.travels.filter(traveler=self.primary_traveler).first().status
+        return self.travel.status
 
     _reference_number = None
 

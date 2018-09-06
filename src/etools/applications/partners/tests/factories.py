@@ -4,6 +4,7 @@ import datetime
 import factory
 from factory import fuzzy
 
+from etools.applications.attachments.tests.factories import AttachmentFactory
 from etools.applications.partners import models
 from etools.applications.reports.tests.factories import CountryProgrammeFactory, ResultFactory, SectionFactory
 from etools.applications.users.tests.factories import UserFactory
@@ -55,8 +56,13 @@ class AgreementFactory(factory.django.DjangoModelFactory):
     signed_by_partner_date = datetime.date.today()
     status = 'signed'
     reference_number_year = datetime.date.today().year
-    attached_agreement = factory.django.FileField(filename='test_file.pdf')
     country_programme = factory.SubFactory(CountryProgrammeFactory)
+
+    @factory.post_generation
+    def attachment(self, create, extracted, **kwargs):
+        if not create:
+            return
+        AttachmentFactory(code='partners_agreement', content_object=self)
 
 
 class AssessmentFactory(factory.django.DjangoModelFactory):
@@ -198,20 +204,10 @@ class InterventionResultLinkFactory(factory.django.DjangoModelFactory):
 class InterventionSectionLocationLinkFactory(factory.django.DjangoModelFactory):
 
     class Meta:
-        model = models.InterventionSectorLocationLink
+        model = models.InterventionSectionLocationLink
 
     intervention = factory.SubFactory(InterventionFactory)
     sector = factory.SubFactory(SectionFactory)
-
-
-class FundingCommitmentFactory(factory.django.DjangoModelFactory):
-    class Meta:
-        model = models.FundingCommitment
-
-    grant = factory.SubFactory("etools.applications.funds.tests.factories.GrantFactory")
-    fr_number = fuzzy.FuzzyText(length=50)
-    wbs = fuzzy.FuzzyText(length=50)
-    fc_type = fuzzy.FuzzyText(length=50)
 
 
 class PlannedEngagementFactory(factory.django.DjangoModelFactory):
