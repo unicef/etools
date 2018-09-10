@@ -388,7 +388,12 @@ class EngagementManagementMixin(
     PermittedFSMActionMixin,
 ):
     def get_export_filename(self, format=None):
-        return '{}.{}'.format(self.get_object().unique_id, (format or '').lower())
+        instance = self.get_object()
+
+        if instance:
+            return '{}.{}'.format(instance.unique_id, (format or '').lower())
+
+        return super().get_export_filename(format=format)
 
 
 class MicroAssessmentViewSet(EngagementManagementMixin, EngagementViewSet):
@@ -396,6 +401,7 @@ class MicroAssessmentViewSet(EngagementManagementMixin, EngagementViewSet):
     serializer_class = MicroAssessmentSerializer
     export_serializer_class = MicroAssessmentDetailCSVSerializer
     renderer_classes = [JSONRenderer, MicroAssessmentDetailCSVRenderer]
+    export_filename = 'microassessments'
 
 
 class AuditViewSet(EngagementManagementMixin, EngagementViewSet):
@@ -403,6 +409,7 @@ class AuditViewSet(EngagementManagementMixin, EngagementViewSet):
     serializer_class = AuditSerializer
     export_serializer_class = AuditDetailCSVSerializer
     renderer_classes = [JSONRenderer, AuditDetailCSVRenderer]
+    export_filename = 'audits'
 
 
 class SpotCheckViewSet(EngagementManagementMixin, EngagementViewSet):
@@ -410,6 +417,7 @@ class SpotCheckViewSet(EngagementManagementMixin, EngagementViewSet):
     serializer_class = SpotCheckSerializer
     export_serializer_class = SpotCheckDetailCSVSerializer
     renderer_classes = [JSONRenderer, SpotCheckDetailCSVRenderer]
+    export_filename = 'spot-checks'
 
 
 class StaffSpotCheckViewSet(SpotCheckViewSet):
@@ -418,6 +426,7 @@ class StaffSpotCheckViewSet(SpotCheckViewSet):
     serializer_action_classes = {
         'list': StaffSpotCheckListSerializer
     }
+    export_filename = 'staff-spot-checks'
 
 
 class SpecialAuditViewSet(EngagementManagementMixin, EngagementViewSet):
