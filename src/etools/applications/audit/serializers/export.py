@@ -69,8 +69,8 @@ class PartnerPDFSerializer(serializers.ModelSerializer):
 class StaffMemberPDFSerializer(serializers.ModelSerializer):
     first_name = serializers.CharField(source='user.first_name')
     last_name = serializers.CharField(source='user.last_name')
-    job_title = serializers.CharField(source='user.profile.job_title')
-    phone_number = serializers.CharField(source='user.profile.phone_number')
+    job_title = serializers.CharField(source='user.profile.job_title', default='')
+    phone_number = serializers.CharField(source='user.profile.phone_number', default='')
     email = serializers.CharField(source='user.email')
 
     class Meta:
@@ -84,8 +84,8 @@ class EngagementActionPointPDFSerializer(serializers.ModelSerializer):
     status = serializers.CharField(source='get_status_display')
     due_date = serializers.DateField(format='%d %b %Y')
     assigned_to = serializers.CharField(source='assigned_to.get_full_name')
-    office = serializers.CharField(source='office.name')
-    section = serializers.CharField(source='section.name')
+    office = serializers.CharField(source='office.name', default='')
+    section = serializers.CharField(source='section.name', default='')
 
     class Meta:
         model = EngagementActionPoint
@@ -245,8 +245,8 @@ class SpecialAuditPDFSerializer(EngagementPDFSerializer):
 class EngagementBaseDetailCSVSerializer(serializers.Serializer):
     unique_id = serializers.ReadOnlyField()
     link = serializers.ReadOnlyField(source='get_object_url')
-    auditor = serializers.ReadOnlyField(source='agreement.auditor_firm.__str__')
-    partner = serializers.ReadOnlyField(source='partner.__str__')
+    auditor = serializers.ReadOnlyField(source='agreement.auditor_firm')
+    partner = serializers.ReadOnlyField(source='partner')
     status_display = serializers.SerializerMethodField()
 
     def get_status_display(self, obj):

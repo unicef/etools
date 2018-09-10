@@ -136,11 +136,11 @@ class EngagementActionPointSerializer(PermissionsBasedSerializerMixin, ActionPoi
 
 
 class EngagementExportSerializer(serializers.ModelSerializer):
-    agreement_number = serializers.ReadOnlyField(source='agreement.order_number')
+    agreement_number = serializers.ReadOnlyField(source='agreement.order_number', default='')
     engagement_type = serializers.ReadOnlyField(source='get_engagement_type_display')
-    partner_name = serializers.ReadOnlyField(source='partner.name')
-    auditor_firm_vendor_number = serializers.ReadOnlyField(source='agreement.auditor_firm.vendor_number')
-    auditor_firm_name = serializers.ReadOnlyField(source='agreement.auditor_firm.name')
+    partner_name = serializers.ReadOnlyField(source='partner.name', default='')
+    auditor_firm_vendor_number = serializers.ReadOnlyField(source='agreement.auditor_firm.vendor_number', default='')
+    auditor_firm_name = serializers.ReadOnlyField(source='agreement.auditor_firm.name', default='')
     status = serializers.ChoiceField(
         choices=Engagement.DISPLAY_STATUSES,
         source='displayed_status',
