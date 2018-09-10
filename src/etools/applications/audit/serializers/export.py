@@ -246,7 +246,7 @@ class EngagementBaseDetailCSVSerializer(serializers.Serializer):
     unique_id = serializers.ReadOnlyField()
     link = serializers.ReadOnlyField(source='get_object_url')
     auditor = serializers.ReadOnlyField(source='agreement.auditor_firm')
-    partner = serializers.ReadOnlyField(source='partner')
+    partner = serializers.ReadOnlyField()
     status_display = serializers.SerializerMethodField()
 
     def get_status_display(self, obj):
