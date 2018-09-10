@@ -9,7 +9,7 @@ from etools.applications.action_points.tests.factories import ActionPointFactory
 from etools.applications.audit.models import MicroAssessment
 from etools.applications.audit.tests.factories import MicroAssessmentFactory
 from etools.applications.EquiTrack.tests.cases import BaseTenantTestCase
-from etools.applications.t2f.tests.factories import TravelActivityFactory
+from etools.applications.t2f.tests.factories import TravelActivityFactory, TravelFactory
 from etools.applications.tpm.tests.factories import TPMVisitFactory
 from etools.applications.users.tests.factories import UserFactory
 
@@ -79,3 +79,29 @@ class TestActionPointModel(BaseTenantTestCase):
         self.assertIn('key_events', snapshot.data)
         self.assertIn(ActionPoint.KEY_EVENTS.status_update, snapshot.data['key_events'])
         self.assertIn(ActionPoint.KEY_EVENTS.reassign, snapshot.data['key_events'])
+
+    def test_audit_related_str(self):
+        action_point = ActionPointFactory(engagement=MicroAssessmentFactory())
+        self.assertEqual(
+            action_point.related_object_str,
+            'Micro Assessment {}'.format(action_point.engagement.reference_number)
+        )
+
+    def test_tpm_related_str(self):
+        action_point = ActionPointFactory(tpm_activity=TPMVisitFactory(tpm_activities__count=1).tpm_activities.first())
+        self.assertEqual(
+            action_point.related_object_str,
+            'Task No 1 for Visit {}'.format(action_point.tpm_activity.tpm_visit.reference_number)
+        )
+
+    def test_t2f_related_str(self):
+        action_point = ActionPointFactory(travel_activity=TravelActivityFactory())
+        self.assertEqual(
+            action_point.related_object_str,
+            'Task not assigned to Visit'
+        )
+        action_point.travel_activity.travels.add(TravelFactory(traveler=action_point.travel_activity.primary_traveler))
+        self.assertEqual(
+            action_point.related_object_str,
+            'Task No 1 for Visit {}'.format(action_point.travel_activity.travel.reference_number)
+        )

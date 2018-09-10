@@ -1,6 +1,5 @@
 [
   {
-    "pk": 1,
     "model": "auth.group",
     "fields": {
       "name": "Programme Staff",
@@ -157,7 +156,6 @@
     }
   },
   {
-    "pk": 2,
     "model": "auth.group",
     "fields": {
       "name": "Third Party Monitor",
@@ -177,7 +175,6 @@
     }
   },
   {
-    "pk": 3,
     "model": "auth.group",
     "fields": {
       "name": "Human Resources",
@@ -185,7 +182,6 @@
     }
   },
   {
-    "pk": 4,
     "model": "auth.group",
     "fields": {
       "name": "Representative Office",
@@ -193,11 +189,87 @@
     }
   },
   {
-    "pk": 5,
     "model": "auth.group",
     "fields": {
       "name": "Driver",
       "permissions": []
+    }
+  },
+  {
+    "model": "auth.group",
+    "fields": {
+      "name": "Country Office Administrator",
+      "permissions": [
+        756,
+        753,
+        757,
+        754,
+        758,
+        755,
+        611,
+        612,
+        613,
+        740,
+        738,
+        739,
+        215,
+        216,
+        217,
+        446,
+        447,
+        448,
+        209,
+        210,
+        211,
+        765,
+        766,
+        767,
+        452,
+        453,
+        454,
+        455,
+        456,
+        457,
+        467,
+        468,
+        469,
+        464,
+        465,
+        466,
+        203,
+        204,
+        205,
+        353,
+        354,
+        355,
+        503,
+        504,
+        505,
+        563,
+        564,
+        565,
+        476,
+        477,
+        478,
+        479,
+        480,
+        481,
+        497,
+        498,
+        499,
+        713,
+        714,
+        715,
+        281,
+        282,
+        283,
+        774,
+        775,
+        776,
+        762,
+        763,
+        764
+      ]
     }
   }
 ]
