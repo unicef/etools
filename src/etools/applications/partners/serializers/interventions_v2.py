@@ -13,7 +13,7 @@ from unicef_locations.serializers import LocationLightSerializer, LocationSerial
 from unicef_snapshot.serializers import SnapshotModelSerializer
 
 from etools.applications.funds.models import FundsCommitmentItem, FundsReservationHeader
-from etools.applications.funds.serializers import FRsSerializer
+from etools.applications.funds.serializers import FRsSerializer, FRHeaderSerializer
 from etools.applications.partners.models import (
     Intervention,
     InterventionAmendment,
@@ -657,6 +657,7 @@ class InterventionListMapSerializer(serializers.ModelSerializer):
     grants = serializers.ReadOnlyField(read_only=True)
     results = serializers.ReadOnlyField(source='cp_output_names', read_only=True)
     clusters = serializers.ReadOnlyField(read_only=True)
+    frs = FRHeaderSerializer(many=True, read_only=True)
 
     class Meta:
         model = Intervention
@@ -680,6 +681,7 @@ class InterventionListMapSerializer(serializers.ModelSerializer):
             "grants",
             "results",
             "clusters",
+            "frs",
         )
 
 
