@@ -118,6 +118,12 @@ class ActionPoint(TimeStampedModel):
         if self.tpm_activity:
             return 'Task No {0} for Visit {1}'.format(obj.task_number, obj.tpm_visit.reference_number)
 
+        if self.travel_activity:
+            if self.travel_activity.travel:
+                return 'Task No {0} for Visit {1}'.format(obj.task_number, obj.travel.reference_number)
+            else:
+                return 'Task not assigned to Visit'
+
         return str(obj)
 
     @property
