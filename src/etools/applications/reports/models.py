@@ -761,6 +761,13 @@ class Indicator(TimeStampedModel):
             u'Target: {}'.format(self.target) if self.target else u''
         )
 
+    @property
+    def light_repr(self):
+        return u'{}{}'.format(
+            u'' if self.active else u'[Inactive] ',
+            self.name
+        )
+
     def save(self, *args, **kwargs):
         # Prevent from saving empty strings as code because of the unique together constraint
         if not self.code:

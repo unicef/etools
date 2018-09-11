@@ -33,6 +33,7 @@ from etools.applications.reports.serializers.v2 import (
     LowerResultCUSerializer,
     LowerResultSerializer,
     ReportingRequirementSerializer,
+    RAMIndicatorSerializer
 )
 
 
@@ -693,6 +694,19 @@ class InterventionReportingRequirementListSerializer(serializers.ModelSerializer
     class Meta:
         model = Intervention
         fields = ("reporting_requirements", )
+
+
+class InterventionRAMIndicatorsListSerializer(serializers.ModelSerializer):
+
+    ram_indicators = RAMIndicatorSerializer(
+        many=True,
+        read_only=True
+    )
+    cp_output_name = serializers.CharField(source="cp_output.output_name")
+
+    class Meta:
+        model = InterventionResultLink
+        fields = ("ram_indicators", "cp_output_name")
 
 
 class InterventionReportingRequirementCreateSerializer(serializers.ModelSerializer):

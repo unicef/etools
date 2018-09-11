@@ -25,6 +25,7 @@ class InterventionPartnershipDashView(QueryStringFilterMixin, ListCreateAPIView)
 
     search_param = 'qs'
     filters = (
+        ('pk', 'pk__in'),
         ('status', 'status__in'),
         ('startAfter', 'start__gt'),
         ('startBefore', 'start__lt'),
