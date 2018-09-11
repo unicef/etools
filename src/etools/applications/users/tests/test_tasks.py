@@ -21,7 +21,7 @@ class TestUserMapper(BaseTenantTestCase):
         cls.group = GroupFactory(name="UNICEF User")
 
     def setUp(self):
-        self.mapper = tasks.UserMapper()
+        self.mapper = tasks.AzureUserMapper()
 
     def test_init(self):
         self.assertEqual(self.mapper.countries, {})
@@ -114,20 +114,23 @@ class TestUserMapper(BaseTenantTestCase):
     def test_create_or_update_user_missing_fields(self):
         """If missing field, then don't create user record'"""
         email = "tester@example.com"
-        res = self.mapper.create_or_update_user({"internetaddress": email})
-        self.assertIsNone(res)
+        res = self.mapper.create_or_update_user({"userPrincipalName": email})
+        self.assertEqual(res, {'processed': 1, 'created': 0, 'updated': 0, 'skipped': 1, 'errors': 0})
         self.assertFalse(get_user_model().objects.filter(email=email).exists())
 
     def test_create_or_update_user_created(self):
         """Ensure user is created and added to default group"""
         email = "tester@example.com"
         res = self.mapper.create_or_update_user({
+            "userPrincipalName": email,
             "internetaddress": email,
             "givenName": "Tester",
             "mail": email,
-            "sn": "Last"
+            "surname": "Last",
+            "userType": "Internal",
+            "companyName": "UNICEF",
         })
-        self.assertIsNone(res)
+        self.assertEqual(res, {'processed': 1, 'created': 1, 'updated': 0, 'skipped': 0, 'errors': 0})
         self.assertTrue(get_user_model().objects.filter(email=email).exists())
         self.assertTrue(
             UserProfile.objects.filter(user__email=email).exists()
@@ -145,12 +148,16 @@ class TestUserMapper(BaseTenantTestCase):
             last_name="Last",
         )
         res = self.mapper.create_or_update_user({
+            "userPrincipalName": email,
             "internetaddress": email,
             "givenName": "Tester",
             "mail": email,
-            "sn": "Last"
+            "surname": "Last",
+            "userType": "Internal",
+            "companyName": "UNICEF",
+
         })
-        self.assertIsNone(res)
+        self.assertEqual(res, {'processed': 1, 'created': 0, 'updated': 0, 'skipped': 0, 'errors': 1})
         user = get_user_model().objects.get(email=email)
         self.assertIn(self.group, user.groups.all())
 
@@ -160,12 +167,15 @@ class TestUserMapper(BaseTenantTestCase):
         phone = "0987654321"
         res = self.mapper.create_or_update_user({
             "internetaddress": email,
+            "userPrincipalName": email,
             "givenName": "Tester",
             "mail": email,
-            "sn": "Last",
-            "telephoneNumber": phone
+            "surname": "Last",
+            "userType": "Internal",
+            "companyName": "UNICEF",
+            "businessPhones": phone
         })
-        self.assertIsNone(res)
+        self.assertEqual(res, {'processed': 1, 'created': 1, 'updated': 0, 'skipped': 0, 'errors': 0})
         self.assertTrue(get_user_model().objects.filter(email=email).exists())
         self.assertTrue(
             UserProfile.objects.filter(user__email=email).exists()
