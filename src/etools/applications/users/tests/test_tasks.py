@@ -157,7 +157,7 @@ class TestUserMapper(BaseTenantTestCase):
             "companyName": "UNICEF",
 
         })
-        self.assertEqual(res, {'processed': 1, 'created': 0, 'updated': 0, 'skipped': 0, 'errors': 1})
+        self.assertEqual(res, {'processed': 1, 'created': 0, 'updated': 0, 'skipped': 0, 'errors': 0})
         user = get_user_model().objects.get(email=email)
         self.assertIn(self.group, user.groups.all())
 
