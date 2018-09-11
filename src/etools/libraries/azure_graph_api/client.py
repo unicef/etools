@@ -55,12 +55,12 @@ def analyse_page(url, access_token):
     jresponse = response.json()
     if response.status_code == 200:
         logger.info('Azure: Information retrieved')
-        handle_records(jresponse)
+        status = handle_records(jresponse)
         url = jresponse.get('@odata.nextLink', None)
     else:
         logger.error('Error during synchronization process')
         raise AzureHttpError('Error processing the response {}'.format(response.status_code), response.status_code)
-    return url, jresponse.get('@odata.deltaLink', None)
+    return url, status, jresponse.get('@odata.deltaLink', None)
 
 
 def azure_sync_users(url):
@@ -72,5 +72,5 @@ def azure_sync_users(url):
     access_token = get_token()
     delta_link = None
     while url:
-        url, delta_link = analyse_page(url, access_token)
-    return delta_link
+        url, status, delta_link = analyse_page(url, access_token)
+    return status, delta_link

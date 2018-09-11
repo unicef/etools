@@ -18,13 +18,14 @@ from etools.applications.partners.views.interventions_v2 import (InterventionAme
                                                                  InterventionLocationListAPIView,
                                                                  InterventionLowerResultListCreateView,
                                                                  InterventionLowerResultUpdateView,
+                                                                 InterventionRamIndicatorsView,
                                                                  InterventionReportingPeriodDetailView,
                                                                  InterventionReportingPeriodListCreateView,
                                                                  InterventionReportingRequirementView,
                                                                  InterventionResultLinkListCreateView,
                                                                  InterventionResultLinkUpdateView,
                                                                  InterventionResultListAPIView,
-                                                                 InterventionSectionLocationLinkListAPIView, )
+                                                                 InterventionSectionLocationLinkListAPIView)
 from etools.applications.partners.views.partner_organization_v2 import (
     PartnerOrganizationAddView,
     PartnerOrganizationAssessmentDeleteView,
@@ -201,9 +202,12 @@ urlpatterns = (
         ),
         name='intervention-reporting-requirements'
     ),
+    url(
+        r'interventions/(?P<intervention_pk>\d+)/output_cp_indicators/(?P<cp_output_pk>\d+)/$',
+        view=InterventionRamIndicatorsView.as_view(http_method_names=['get']),
+        name="interventions-output-cp-indicators",
+    ),
 
-    # TODO: figure this out
-    # url(r'^partners/interventions/$', view=InterventionsView.as_view()),
     url(r'^dropdowns/static/$',
         view=PMPStaticDropdownsListAPIView.as_view(http_method_names=['get']),
         name='dropdown-static-list'),

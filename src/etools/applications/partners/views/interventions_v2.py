@@ -61,6 +61,7 @@ from etools.applications.partners.serializers.interventions_v2 import (
     InterventionListMapSerializer,
     InterventionListSerializer,
     InterventionLocationExportSerializer,
+    InterventionRAMIndicatorsListSerializer,
     InterventionReportingPeriodSerializer,
     InterventionReportingRequirementCreateSerializer,
     InterventionReportingRequirementListSerializer,
@@ -803,3 +804,19 @@ class InterventionReportingRequirementView(APIView):
                 self.serializer_list_class(self.get_data()).data
             )
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+class InterventionRamIndicatorsView(APIView):
+
+    serializer_class = InterventionRAMIndicatorsListSerializer
+
+    def get(self, request, intervention_pk, cp_output_pk):
+
+        intervention = get_object_or_404(Intervention, pk=intervention_pk)
+
+        data = get_object_or_404(intervention.result_links.prefetch_related('cp_output__result_type', 'ram_indicators'),
+                                 cp_output__pk=cp_output_pk)
+
+        return Response(
+            self.serializer_class(data).data
+        )
