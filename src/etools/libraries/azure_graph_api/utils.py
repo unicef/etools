@@ -7,17 +7,26 @@ logger = logging.getLogger(__name__)
 
 
 def handle_records(jresponse):
+
     if 'value' in jresponse:
+        status = {'processed': 0, 'created': 0, 'updated': 0, 'skipped': 0, 'errors': 0}
         for record in jresponse['value']:
-            handle_record(record)
+            page_status, _ = handle_record(record)
+            status['processed'] += page_status['processed']
+            status['created'] += page_status['created']
+            status['updated'] += page_status['updated']
+            status['skipped'] += page_status['skipped']
+            status['errors'] += page_status['errors']
     else:
-        handle_record(jresponse)
+        status, _ = handle_record(jresponse)
+
+    return status
 
 
 def handle_record(record):
     logger.debug('Azure: Information retrieved %s', record.get('userPrincipalName', '-'))
     user_sync = AzureUserMapper()
-    user_sync.create_or_update_user(record)
+    status = user_sync.create_or_update_user(record)
 
     record_dict = {
         'ID': record.get('id', '-'),
@@ -59,4 +68,4 @@ def handle_record(record):
         logger.debug(f'{label}: {value}')
     logger.debug('----------------------------------------')
 
-    return record_dict
+    return status, record_dict
