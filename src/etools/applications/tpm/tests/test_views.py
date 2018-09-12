@@ -42,8 +42,9 @@ class TestTPMVisitViewSet(TestExportMixin, TPMTestCaseMixin, BaseTenantTestCase)
 
     def test_tpm_list_view(self):
         TPMVisitFactory()
+        TPMVisitFactory(status='cancelled', date_of_assigned=None)
 
-        # drafts shouldn't be available for tpm
+        # drafts shouldn't be available for tpm, including cancelled from draft
         self._test_list_view(self.tpm_user, [])
 
         visit = TPMVisitFactory(status='assigned',
