@@ -298,7 +298,7 @@ class AuditDetailCSVSerializer(EngagementBaseDetailCSVSerializer):
         weaknesses = serializer.to_representation(serializer.get_attribute(instance=obj))
 
         return OrderedDict(
-            (b['id'], ', '.join([risk['value_display'] for risk in b['risks']]) or '-')
+            (b['id'], ', '.join([str(risk['value_display']) for risk in b['risks']]) or '-')
             for b in weaknesses['blueprints']
         )
 
@@ -339,7 +339,7 @@ class MicroAssessmentDetailCSVSerializer(EngagementBaseDetailCSVSerializer):
         )
 
 
-class SpecialAuditDetailPDFSerializer(EngagementBaseDetailCSVSerializer):
+class SpecialAuditDetailCSVSerializer(EngagementBaseDetailCSVSerializer):
     """
 
     """

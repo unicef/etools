@@ -4,47 +4,6 @@ from django.http import Http404
 from django_fsm import can_proceed, has_transition_perm
 from rest_framework.decorators import action
 from rest_framework.exceptions import PermissionDenied, ValidationError
-from rest_framework.serializers import Serializer
-
-
-class ExportViewSetDataMixin(object):
-    export_serializer_class = None
-    allowed_formats = ['csv', ]
-    export_filename = ''
-
-    def get_export_filename(self, format=None):
-        return self.export_filename + '.' + (format or '').lower()
-
-    def get_export_serializer_class(self, export_format=None):
-        if isinstance(self.export_serializer_class, Serializer):
-            return self.export_serializer_class
-
-        if isinstance(self.export_serializer_class, dict):
-            serializer_class = self.export_serializer_class.get(
-                export_format,
-                self.export_serializer_class['default']
-            )
-            if not serializer_class:
-                raise KeyError
-            return serializer_class
-
-        return self.export_serializer_class
-
-    def get_serializer_class(self):
-        if self.request.method == "GET":
-            query_params = self.request.query_params
-            export_format = query_params.get('format')
-            if export_format and self.export_serializer_class:
-                return self.get_export_serializer_class(export_format=export_format)
-        return super(ExportViewSetDataMixin, self).get_serializer_class()
-
-    def dispatch(self, request, *args, **kwargs):
-        response = super(ExportViewSetDataMixin, self).dispatch(request, *args, **kwargs)
-        if self.request.method == "GET" and 'format' in self.request.query_params.keys():
-            response['Content-Disposition'] = "attachment;filename={}".format(
-                self.get_export_filename(format=self.request.query_params.get('format'))
-            )
-        return response
 
 
 class FSMTransitionActionMixin(object):
