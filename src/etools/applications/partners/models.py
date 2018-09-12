@@ -1518,9 +1518,6 @@ class InterventionManager(models.Manager):
 
     def maps_qs(self):
         qs = self.get_queryset().prefetch_related('flat_locations').distinct().annotate(
-            donors=StringConcat("frs__fr_items__donor", separator="|", distinct=True),
-            donor_codes=StringConcat("frs__fr_items__donor_code", separator="|", distinct=True),
-            grants=StringConcat("frs__fr_items__grant_number", separator="|", distinct=True),
             results=StringConcat("result_links__cp_output__name", separator="|", distinct=True),
             clusters=StringConcat("result_links__ll_results__applied_indicators__cluster_indicator_title",
                                   separator="|", distinct=True),
