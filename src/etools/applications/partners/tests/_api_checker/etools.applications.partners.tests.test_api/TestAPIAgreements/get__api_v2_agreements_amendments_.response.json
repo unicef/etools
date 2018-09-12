@@ -20,16 +20,16 @@
     },
     "data": [
         {
-            "id": 373,
-            "created": "2018-08-28T19:00:48.880653Z",
-            "modified": "2018-08-28T19:00:48.882599Z",
+            "id": 1,
+            "created": "2018-09-10T10:17:05.234037Z",
+            "modified": "2018-09-10T10:17:05.267219Z",
             "number": "tmp01",
             "signed_amendment": null,
             "types": [
                 "Change in clause"
             ],
             "signed_date": null,
-            "agreement": 10593
+            "agreement": 5
         }
     ],
     "content_type": null
