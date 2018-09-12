@@ -50,7 +50,6 @@ from etools.applications.audit.models import (
 )
 from etools.applications.audit.purchase_order.models import AuditorFirm, AuditorStaffMember, PurchaseOrder
 from etools.applications.audit.serializers.auditor import (
-    AuditorFirmExportSerializer,
     AuditorFirmLightSerializer,
     AuditorFirmSerializer,
     AuditorStaffMemberSerializer,
