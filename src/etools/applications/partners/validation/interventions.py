@@ -96,9 +96,6 @@ def transition_to_terminated(i):
         raise TransitionError([_('Cannot Transition without termination doc attached')])
     if i.in_amendment is True:
         raise TransitionError([_('Cannot Transition status while adding an amendment')])
-
-    if not i.end or i.end > date.today():
-        raise TransitionError([_('Cannot Transition while the end date is in the future')])
     return True
 
 
