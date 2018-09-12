@@ -3,15 +3,31 @@ import operator
 
 from django.db.models import Q
 
-from rest_framework.generics import ListAPIView
+from rest_framework.generics import ListAPIView, get_object_or_404
+from rest_framework.response import Response
+from rest_framework.views import APIView
 from rest_framework.pagination import LimitOffsetPagination
+
 
 from etools.applications.partners.filters import PartnerScopeFilter
 from etools.applications.partners.models import Intervention, PartnerOrganization
-from etools.applications.partners.permissions import ListCreateAPIMixedPermission
+from etools.applications.partners.permissions import ListCreateAPIMixedPermission, ReadOnlyAPIUser
 from etools.applications.partners.serializers.prp_v1 import PRPInterventionListSerializer, \
-    PRPPartnerOrganizationListSerializer
+    PRPPartnerOrganizationListSerializer, InterventionPDFileSerializer
 from etools.applications.partners.views.helpers import set_tenant_or_fail
+
+
+class PRPPDFileView(APIView):
+    permission_classes = (ReadOnlyAPIUser,)
+
+    def get(self, request, intervention_pk):
+
+        workspace = request.query_params.get('workspace', None)
+        set_tenant_or_fail(workspace)
+
+        intervention = get_object_or_404(Intervention, pk=intervention_pk)
+
+        return Response(InterventionPDFileSerializer(intervention).data)
 
 
 class PRPInterventionPagination(LimitOffsetPagination):

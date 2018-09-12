@@ -280,3 +280,18 @@ class ListCreateAPIMixedPermission(permissions.BasePermission):
         else:
             # This class shouldn't see methods other than GET and POST, but regardless the answer is 'no you may not'.
             return False
+
+
+class ReadOnlyAPIUser(permissions.BasePermission):
+    '''Permission class for Views that only allow read and only for backend api users or superusers
+        GET users must be either (a) superusers or (b) in the Limited API group.
+    '''
+    def has_permission(self, request, view):
+        if request.method in permissions.SAFE_METHODS:
+            if request.user.is_authenticated:
+                if request.user.is_superuser or is_user_in_groups(request.user, [READ_ONLY_API_GROUP_NAME]):
+                    return True
+            return False
+        else:
+            # This class shouldn't see methods other than GET, but regardless the answer is 'no you may not'.
+            return False
