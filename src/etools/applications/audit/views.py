@@ -310,7 +310,8 @@ class EngagementViewSet(
             'partner', Prefetch('agreement', PurchaseOrder.objects.prefetch_related('auditor_firm'))
         )
 
-        queryset = queryset.filter(agreement__auditor_firm__unicef_users_allowed=self.unicef_engagements)
+        if self.action in ['list', 'export_list_csv']:
+            queryset = queryset.filter(agreement__auditor_firm__unicef_users_allowed=self.unicef_engagements)
 
         return queryset
 
