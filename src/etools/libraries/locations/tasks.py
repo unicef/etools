@@ -4,11 +4,9 @@ from carto.sql import SQLClient
 from celery.utils.log import get_task_logger
 
 from django.contrib.contenttypes.models import ContentType
-# from django.db import IntegrityError, transaction
-# from django.utils.encoding import force_text
 
 from unicef_locations.models import CartoDBTable, Location, LocationRemapHistory
-# from unicef_locations.tasks import update_sites_from_cartodb
+from unicef_locations.auth import LocationsCartoNoAuthClient
 
 from etools.applications.partners.models import Intervention
 from etools.applications.reports.models import AppliedIndicator
@@ -19,8 +17,55 @@ from etools.applications.action_points.models import ActionPoint
 
 logger = get_task_logger(__name__)
 
-@celery.current_app.task
-def save_location_remap_history(imported_locations):
+@celery.current_app.task(bind=True)
+def validate_locations_in_use(self, carto_table_pk):
+    try:
+        carto_table = CartoDBTable.objects.get(pk=carto_table_pk)
+    except CartoDBTable.DoesNotExist as e:
+        logger.exception('Cannot retrieve CartoDBTable with pk: %s', carto_table_pk)
+        raise e
+
+    database_pcodes = []
+    for row in Location.all_locations.filter(gateway=carto_table.location_type).values('p_code'):
+        database_pcodes.append(row['p_code'])
+
+    auth_client = LocationsCartoNoAuthClient(base_url="https://{}.carto.com/".format(carto_table.domain))
+    sql_client = SQLClient(auth_client)
+
+    try:
+        qry = sql_client.send('select array_agg({}) AS aggregated_pcodes from {}'.format(
+            carto_table.pcode_col,
+            carto_table.table_name,
+        ))
+        new_carto_pcodes = qry['rows'][0]['aggregated_pcodes']
+
+        remapped_pcode_pairs = []
+        if carto_table.remap_table_name:
+            remap_qry = 'select old_pcode::text, new_pcode::text from {}'.format(carto_table.remap_table_name)
+            remapped_pcode_pairs = sql_client.send(remap_qry)['rows']
+
+    except CartoException as e:
+        logger.exception("CartoDB exception occured during the data validation.")
+        raise e
+
+    remap_old_pcodes = [remap_row['old_pcode'] for remap_row in remapped_pcode_pairs]
+    orphaned_pcodes = set(database_pcodes) - (set(new_carto_pcodes) | set(remap_old_pcodes))
+    orphaned_location_ids = Location.all_locations.filter(p_code__in=list(orphaned_pcodes))
+
+    # location ids with no remap but in use
+    location_ids_bnriu = get_location_ids_in_use(orphaned_location_ids)
+    if location_ids_bnriu:
+        msg = "Location ids in use without remap found: {}". format(','.join([str(iu) for iu in location_ids_bnriu]))
+        logger.exception(msg)
+        # why this does not work..
+        # self.request.callbacks = self.request.chain = None
+        raise Exception(msg)
+
+    return True
+
+
+@celery.current_app.task(bind=True)
+def save_location_remap_history(self, imported_locations):
     '''
     :param imported_locations: set of (new_location, remapped_location) tuples
     :return:
@@ -37,14 +82,6 @@ def save_location_remap_history(imported_locations):
     # remap related entities to the newly added locations, and save the location remap history
     # interventions
     ctp = ContentType.objects.get(app_label='partners', model='intervention')
-    '''
-    for intervention in Intervention.objects.filter(flat_locations__in=list(remapped_locations.keys())).distinct():
-        print("-------------------")
-        print(intervention.id)
-        print(",".join([str(ix.id) for ix in intervention.flat_locations.all()]))
-        return
-    '''
-
     for intervention in Intervention.objects.filter(flat_locations__in=remapped_locations.keys()).distinct():
         for remapped_location in intervention.flat_locations.filter(id__in=list(remapped_locations.keys())):
             new_location = remapped_locations.get(remapped_location.id)
@@ -102,6 +139,7 @@ def save_location_remap_history(imported_locations):
             activity.locations.remove(remapped_location)
             activity.locations.add(new_location)
             # TODO: logs
+
     # action points
     ctp = ContentType.objects.get(app_label='action_points', model='actionpoint')
     for actionpoint in ActionPoint.objects.filter(location__in=list(remapped_locations.keys())).distinct():
@@ -115,3 +153,83 @@ def save_location_remap_history(imported_locations):
         actionpoint.location.id=new_location
         actionpoint.save()
         # TODO: logs
+
+
+@celery.current_app.task(bind=True)
+def cleanup_obsolete_locations(self, carto_table_pk):
+
+    try:
+        carto_table = CartoDBTable.objects.get(pk=carto_table_pk)
+    except CartoDBTable.DoesNotExist as e:
+        logger.exception('Cannot retrieve CartoDBTable with pk: %s', carto_table_pk)
+        raise e
+
+    database_pcodes = []
+    for row in Location.all_locations.filter(gateway=carto_table.location_type).values('p_code'):
+        database_pcodes.append(row['p_code'])
+
+    auth_client = LocationsCartoNoAuthClient(base_url="https://{}.carto.com/".format(carto_table.domain))
+    sql_client = SQLClient(auth_client)
+
+    try:
+        qry = sql_client.send('select array_agg({}) AS aggregated_pcodes from {}'.format(
+            carto_table.pcode_col,
+            carto_table.table_name,
+        ))
+        new_carto_pcodes = qry['rows'][0]['aggregated_pcodes']
+
+        remapped_pcode_pairs = []
+        if carto_table.remap_table_name:
+            remap_qry = 'select old_pcode::text, new_pcode::text from {}'.format(carto_table.remap_table_name)
+            remapped_pcode_pairs = sql_client.send(remap_qry)['rows']
+
+    except CartoException as e:
+        logger.exception("CartoDB exception occured during the data validation.")
+        raise e
+
+    remapped_pcodes = [remap_row['old_pcode'] for remap_row in remapped_pcode_pairs]
+    remapped_pcodes += [remap_row['new_pcode'] for remap_row in remapped_pcode_pairs]
+    deleteable_pcodes = set(database_pcodes) - (set(new_carto_pcodes) | set(remapped_pcodes))
+
+    for deleteable_pcode in deleteable_pcodes:
+        try:
+            deleteable_location = Location.all_locations.get(p_code=deleteable_pcode)
+        except Location.DoesNotExist:
+            logger.warning("Cannot find orphaned pcode {}.".format(deleteable_pcode))
+        else:
+            if deleteable_location.is_leaf_node():
+                logger.info("Deleting orphaned and unused location with pcode {}".format(deleteable_location.p_code))
+                deleteable_location.delete()
+
+
+@celery.current_app.task
+def catch_task_errors():
+    pass
+
+
+def get_location_ids_in_use(location_ids):
+    """
+    :param location_ids:
+    :return location_ids_in_use:
+    """
+    location_ids_in_use = []
+
+    for intervention in Intervention.objects.all():
+        location_ids_in_use += [l.id for l in intervention.flat_locations.filter(id__in=location_ids)]
+
+    for indicator in AppliedIndicator.objects.all():
+        location_ids_in_use += [l.id for l in indicator.locations.filter(id__in=location_ids)]
+
+    for travelactivity in TravelActivity.objects.all():
+        location_ids_in_use += [l.id for l in travelactivity.locations.filter(id__in=location_ids)]
+
+    for activity in Activity.objects.all():
+        location_ids_in_use += [l.id for l in activity.locations.filter(id__in=location_ids)]
+
+    location_ids_in_use += [a.location_id for a in ActionPoint.objects.filter(location__in=location_ids).distinct()]
+
+    return list(set(location_ids_in_use))
+
+
+class BnriuException(Exception):
+    pass
