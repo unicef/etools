@@ -14,6 +14,7 @@ from etools.applications.t2f.tests.factories import TravelActivityFactory, Trave
 from etools.applications.users.tests.factories import CountryFactory, GroupFactory, UserFactory
 from etools.applications.action_points.tests.factories import ActionPointFactory
 
+
 class InvalidateCacheTest(BaseTenantTestCase):
 
     def setUp(self):
@@ -221,7 +222,7 @@ class TestGisLocationViews(BaseTenantTestCase):
 
     def test_intervention_locations_in_use(self):
         self.client.force_login(self.unicef_staff)
-        url = reverse("locations-gis-in-use")
+        # url = reverse("locations-gis-in-use")
 
         # add intervention locations and test the response
         intervention = InterventionFactory(status=Intervention.SIGNED)
@@ -278,7 +279,7 @@ class TestGisLocationViews(BaseTenantTestCase):
             "{}?country_id={}".format(reverse("locations-gis-in-use"), self.country.id),
             user=self.unicef_staff
         )
-        
+
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(len(response.data), 1)
         self.assertEqual(sorted(response.data[0].keys()), ["gateway_id", "id", "level", "name", "p_code", "parent_id"])

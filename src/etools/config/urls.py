@@ -33,7 +33,7 @@ from etools.libraries.locations.views import (
     LocationTypesViewSet,
 )
 # this import is us to autodiscover the customised locations admin form(which is outside of INSTALLED_APPS)
-from etools.libraries.locations import admin as locations_admin
+from etools.libraries.locations import admin as locations_admin # noqa: ignore=F401
 
 # ******************  API docs and schemas  ******************************
 schema_view = get_swagger_view(title='eTools API')
