@@ -13,7 +13,7 @@ from unicef_locations.serializers import LocationLightSerializer, LocationSerial
 from unicef_snapshot.serializers import SnapshotModelSerializer
 
 from etools.applications.funds.models import FundsCommitmentItem, FundsReservationHeader
-from etools.applications.funds.serializers import FRsSerializer
+from etools.applications.funds.serializers import FRsSerializer, FRHeaderSerializer
 from etools.applications.partners.models import (
     Intervention,
     InterventionAmendment,
@@ -33,6 +33,7 @@ from etools.applications.reports.serializers.v2 import (
     LowerResultCUSerializer,
     LowerResultSerializer,
     ReportingRequirementSerializer,
+    RAMIndicatorSerializer
 )
 
 
@@ -656,6 +657,7 @@ class InterventionListMapSerializer(serializers.ModelSerializer):
     grants = serializers.ReadOnlyField(read_only=True)
     results = serializers.ReadOnlyField(source='cp_output_names', read_only=True)
     clusters = serializers.ReadOnlyField(read_only=True)
+    frs = FRHeaderSerializer(many=True, read_only=True)
 
     class Meta:
         model = Intervention
@@ -679,6 +681,7 @@ class InterventionListMapSerializer(serializers.ModelSerializer):
             "grants",
             "results",
             "clusters",
+            "frs",
         )
 
 
@@ -691,6 +694,19 @@ class InterventionReportingRequirementListSerializer(serializers.ModelSerializer
     class Meta:
         model = Intervention
         fields = ("reporting_requirements", )
+
+
+class InterventionRAMIndicatorsListSerializer(serializers.ModelSerializer):
+
+    ram_indicators = RAMIndicatorSerializer(
+        many=True,
+        read_only=True
+    )
+    cp_output_name = serializers.CharField(source="cp_output.output_name")
+
+    class Meta:
+        model = InterventionResultLink
+        fields = ("ram_indicators", "cp_output_name")
 
 
 class InterventionReportingRequirementCreateSerializer(serializers.ModelSerializer):
