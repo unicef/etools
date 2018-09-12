@@ -11,13 +11,14 @@ from etools.libraries.locations.tasks import (
     # catch_task_errors,
 )
 
+
 class BackendCartoDBTableAdmin(CartoDBTableAdmin):
 
     def import_sites(self, request, queryset):
         task_list = []
 
         # import locations from top to bottom
-        queryset = sorted(queryset, key = lambda  l: (l.tree_id, l.lft, l.pk))
+        queryset = sorted(queryset, key=lambda l: (l.tree_id, l.lft, l.pk))
         carto_tables = [qry.pk for qry in queryset]
 
         for table in carto_tables:
@@ -35,6 +36,7 @@ class BackendCartoDBTableAdmin(CartoDBTableAdmin):
             # Trying to force the tasks to execute in correct sequence
             # chain(task_list).on_error(catch_task_errors.s()).delay()
             chain(task_list).delay()
+
 
 admin.site.unregister(CartoDBTable)
 admin.site.register(CartoDBTable, BackendCartoDBTableAdmin)

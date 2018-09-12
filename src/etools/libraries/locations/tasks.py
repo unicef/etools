@@ -17,6 +17,7 @@ from etools.applications.action_points.models import ActionPoint
 
 logger = get_task_logger(__name__)
 
+
 @celery.current_app.task(bind=True)
 def validate_locations_in_use(self, carto_table_pk):
     try:
@@ -74,7 +75,7 @@ def save_location_remap_history(self, imported_locations):
     if not imported_locations:
         return
 
-    remapped_locations = {loc[1]:loc[0] for loc in imported_locations if loc[1]}
+    remapped_locations = {loc[1]: loc[0] for loc in imported_locations if loc[1]}
 
     if not remapped_locations:
         return
@@ -150,7 +151,7 @@ def save_location_remap_history(self, imported_locations):
             content_type=ctp,
             object_id=actionpoint.id,
         )
-        actionpoint.location.id=new_location
+        actionpoint.location.id = new_location
         actionpoint.save()
         # TODO: logs
 
