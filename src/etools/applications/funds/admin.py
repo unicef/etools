@@ -11,10 +11,12 @@ class GrantAdmin(admin.ModelAdmin):
 
 class FRAdmin(admin.ModelAdmin):
     search_fields = ('fr_number',)
+    list_display = ('fr_number', 'vendor_code')
 
 
 class FRAdminLi(admin.ModelAdmin):
     search_fields = ('fr_ref_number',)
+    list_display = ('fr_ref_number', 'donor', 'donor_code', 'grant_number')
 
 
 admin.site.register(Grant, GrantAdmin)

@@ -296,6 +296,17 @@ class IndicatorSerializer(serializers.ModelSerializer):
         fields = "__all__"
 
 
+class RAMIndicatorSerializer(serializers.ModelSerializer):
+    indicator_name = serializers.SerializerMethodField()
+
+    def get_indicator_name(self, obj):
+        return obj.light_repr
+
+    class Meta:
+        model = Indicator
+        fields = ("indicator_name",)
+
+
 class ReportingRequirementSerializer(serializers.ModelSerializer):
     id = serializers.IntegerField(required=False)
 

@@ -245,8 +245,8 @@ class SpecialAuditPDFSerializer(EngagementPDFSerializer):
 class EngagementBaseDetailCSVSerializer(serializers.Serializer):
     unique_id = serializers.ReadOnlyField()
     link = serializers.ReadOnlyField(source='get_object_url')
-    auditor = serializers.ReadOnlyField(source='agreement.auditor_firm.__str__')
-    partner = serializers.ReadOnlyField(source='partner.__str__')
+    auditor = serializers.ReadOnlyField(source='agreement.auditor_firm')
+    partner = serializers.ReadOnlyField()
     status_display = serializers.SerializerMethodField()
 
     def get_status_display(self, obj):
@@ -298,7 +298,7 @@ class AuditDetailCSVSerializer(EngagementBaseDetailCSVSerializer):
         weaknesses = serializer.to_representation(serializer.get_attribute(instance=obj))
 
         return OrderedDict(
-            (b['id'], ', '.join([risk['value_display'] for risk in b['risks']]) or '-')
+            (b['id'], ', '.join([str(risk['value_display']) for risk in b['risks']]) or '-')
             for b in weaknesses['blueprints']
         )
 
@@ -339,7 +339,7 @@ class MicroAssessmentDetailCSVSerializer(EngagementBaseDetailCSVSerializer):
         )
 
 
-class SpecialAuditDetailPDFSerializer(EngagementBaseDetailCSVSerializer):
+class SpecialAuditDetailCSVSerializer(EngagementBaseDetailCSVSerializer):
     """
 
     """
