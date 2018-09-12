@@ -114,7 +114,7 @@ class PurchaseOrderSerializer(
 class AuditUserSerializer(UserSerializer):
     auditor_firm = serializers.SerializerMethodField()
     hidden = serializers.SerializerMethodField()
-    staff_member_id = serializers.ReadOnlyField(source='purchase_order_auditorstaffmember_id')
+    staff_member_id = serializers.ReadOnlyField(source='purchase_order_auditorstaffmember.id')
 
     class Meta(UserSerializer.Meta):
         fields = UserSerializer.Meta.fields + ['id', 'auditor_firm', 'hidden', 'staff_member_id', ]

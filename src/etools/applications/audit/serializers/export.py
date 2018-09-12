@@ -69,8 +69,8 @@ class PartnerPDFSerializer(serializers.ModelSerializer):
 class StaffMemberPDFSerializer(serializers.ModelSerializer):
     first_name = serializers.CharField(source='user.first_name')
     last_name = serializers.CharField(source='user.last_name')
-    job_title = serializers.CharField(source='user.profile.job_title', default='')
-    phone_number = serializers.CharField(source='user.profile.phone_number', default='')
+    job_title = serializers.CharField(source='user.profile.job_title')
+    phone_number = serializers.CharField(source='user.profile.phone_number')
     email = serializers.CharField(source='user.email')
 
     class Meta:
@@ -84,8 +84,8 @@ class EngagementActionPointPDFSerializer(serializers.ModelSerializer):
     status = serializers.CharField(source='get_status_display')
     due_date = serializers.DateField(format='%d %b %Y')
     assigned_to = serializers.CharField(source='assigned_to.get_full_name')
-    office = serializers.CharField(source='office.name', default='')
-    section = serializers.CharField(source='section.name', default='')
+    office = serializers.CharField(source='office.name')
+    section = serializers.CharField(source='section.name')
 
     class Meta:
         model = EngagementActionPoint
