@@ -500,6 +500,9 @@ class BaseTPMAttachmentsViewSet(BaseTPMViewSet,
 
 class PartnerAttachmentsViewSet(BaseTPMAttachmentsViewSet):
     serializer_class = TPMPartnerAttachmentsSerializer
+    permission_classes = BaseTPMViewSet.permission_classes + [
+        get_permission_for_targets('tpmpartners.tpmpartner.attachments')
+    ]
 
     def get_view_name(self):
         return _('Attachments')

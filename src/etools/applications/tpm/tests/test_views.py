@@ -611,6 +611,21 @@ class TestPartnerAttachmentsView(TPMTestCaseMixin, BaseTenantTestCase):
         )
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
 
+    def test_not_editable_by_tpm(self):
+        partner = TPMPartnerFactory()
+
+        response = self.forced_auth_req(
+            'post',
+            reverse('tpm:partner-attachments-list', args=[partner.id]),
+            user=UserFactory(tpm=True, tpm_partner=partner),
+            request_format='multipart',
+            data={
+                'file_type': AttachmentFileTypeFactory(code='tpm_partner').id,
+                'file': SimpleUploadedFile('hello_world.txt', u'hello world!'.encode('utf-8')),
+            }
+        )
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+
 
 class TestVisitReportAttachmentsView(TPMTestCaseMixin, BaseTenantTestCase):
     @classmethod
