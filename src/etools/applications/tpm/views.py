@@ -72,7 +72,7 @@ from etools.applications.tpm.serializers.visit import (
     TPMVisitSerializer,
 )
 from etools.applications.tpm.tpmpartners.models import TPMPartner, TPMPartnerStaffMember
-from etools.applications.vision.adapters.tpm_adapter import TPMPartnerManualSynchronizer
+from etools.applications.tpm.tpmpartners.synchronizers import TPMPartnerManualSynchronizer
 
 
 class BaseTPMViewSet(
