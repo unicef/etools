@@ -5,7 +5,6 @@ import logging
 
 from django.db import transaction
 
-
 from etools.applications.reports.models import CountryProgramme, Indicator, Result, ResultType
 from etools.applications.vision.utils import wcf_json_date_as_date
 from etools.applications.vision.vision_data_synchronizer import VISION_NO_DATA_MESSAGE, VisionDataSynchronizer

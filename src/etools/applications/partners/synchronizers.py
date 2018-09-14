@@ -9,7 +9,10 @@ from etools.applications.partners.models import PartnerOrganization, PlannedEnga
 from etools.applications.partners.tasks import notify_partner_hidden
 from etools.applications.vision.utils import comp_decimals
 from etools.applications.vision.vision_data_synchronizer import (
-    FileDataSynchronizer, VISION_NO_DATA_MESSAGE, VisionDataSynchronizer,)
+    FileDataSynchronizer,
+    VISION_NO_DATA_MESSAGE,
+    VisionDataSynchronizer,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -283,7 +286,7 @@ class PartnerSynchronizer(VisionDataSynchronizer):
 
 class FilePartnerSynchronizer(FileDataSynchronizer, PartnerSynchronizer):
     """
-    >>> from etools.applications.vision.adapters.partner import FilePartnerSynchronizer
+    >>> from etools.applications.partners.synchronizers import FilePartnerSynchronizer
     >>> from etools.applications.users.models import Country
     >>> country = Country.objects.get(name='Indonesia')
     >>> filename = '/home/user/Downloads/partners.json'

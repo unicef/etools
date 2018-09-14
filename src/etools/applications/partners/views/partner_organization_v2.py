@@ -65,9 +65,9 @@ from etools.applications.partners.serializers.partner_organization_v2 import (
     PlannedEngagementNestedSerializer,
     PlannedEngagementSerializer,
 )
+from etools.applications.partners.synchronizers import PartnerSynchronizer
 from etools.applications.partners.views.helpers import set_tenant_or_fail
 from etools.applications.t2f.models import TravelActivity
-from etools.applications.vision.adapters.partner import PartnerSynchronizer
 
 
 class PartnerOrganizationListAPIView(QueryStringFilterMixin, ExportModelMixin, ListCreateAPIView):
