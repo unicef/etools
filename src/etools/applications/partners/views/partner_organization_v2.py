@@ -206,13 +206,21 @@ class PartnerOrganizationDetailAPIView(ValidatorViewMixin, RetrieveUpdateDestroy
         return Response(PartnerOrganizationDetailSerializer(instance).data)
 
 
-class PartnerOrganizationDashboardAPIView(ExportModelMixin, ListAPIView):
+class PartnerOrganizationDashboardAPIView(ExportModelMixin, QueryStringFilterMixin, ListAPIView):
     """Returns a list of Implementing partners for the dashboard."""
 
     permission_classes = (IsAuthenticatedOrReadOnly,)
     serializer_class = PartnerOrganizationDashboardSerializer
     base_filename = 'IP_dashboard'
     renderer_classes = (r.JSONRenderer, PartnerOrganizationDashboardCsvRenderer)
+
+    filters = (
+        ('pk', 'pk__in'),
+        ('partner_type', 'partner_type__in'),
+        ('cso_type', 'cso_type__in'),
+        ('rating', 'rating__in'),
+    )
+    search_terms = ('partner__name__icontains', 'vendor_number__icontains')
 
     def base_queryset(self):
         return PartnerOrganization.objects.active()
