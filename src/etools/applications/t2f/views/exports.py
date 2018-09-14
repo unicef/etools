@@ -58,9 +58,10 @@ class TravelActivityExport(QueryStringFilterMixin, ExportBaseView):
             self.activity = activity
 
     def get_queryset(self):
-        queryset = TravelActivity.objects.prefetch_related('travels', 'travels__traveler', 'travels__office',
+        queryset = TravelActivity.objects.prefetch_related('travels', 'travels__traveler', 'travels__office', 'travels__supervisor',
                                                            'travels__section', 'locations')
-        queryset = queryset.select_related('partner', 'partnership', 'result', 'primary_traveler')
+        queryset = queryset.select_related(
+            'partner', 'partnership', 'result', 'primary_traveler')
         queryset = queryset.order_by('id')
 
         queries = []
@@ -92,7 +93,8 @@ class FinanceExport(ExportBaseView):
 
     def get(self, request):
         queryset = self.filter_queryset(self.get_queryset())
-        queryset = queryset.select_related('traveler', 'office', 'section', 'supervisor')
+        queryset = queryset.select_related(
+            'traveler', 'office', 'section', 'supervisor')
         serializer = self.get_serializer(queryset, many=True)
 
         response = Response(data=serializer.data, status=status.HTTP_200_OK)
@@ -105,7 +107,8 @@ class TravelAdminExport(ExportBaseView):
 
     def get(self, request):
         travel_queryset = self.filter_queryset(self.get_queryset())
-        queryset = ItineraryItem.objects.filter(travel__in=travel_queryset).order_by('travel__reference_number', 'id')
+        queryset = ItineraryItem.objects.filter(
+            travel__in=travel_queryset).order_by('travel__reference_number', 'id')
         queryset = queryset.select_related('travel', 'travel__office', 'travel__section', 'travel__traveler',
                                            'dsa_region')
         serializer = self.get_serializer(queryset, many=True)
@@ -120,9 +123,11 @@ class InvoiceExport(ExportBaseView):
 
     def get(self, request):
         travel_queryset = self.filter_queryset(self.get_queryset())
-        queryset = InvoiceItem.objects.filter(invoice__travel__in=travel_queryset)
+        queryset = InvoiceItem.objects.filter(
+            invoice__travel__in=travel_queryset)
         queryset = queryset.order_by('invoice__travel__reference_number', 'id')
-        queryset = queryset.select_related('invoice', 'invoice__travel', 'invoice__currency', 'wbs', 'grant', 'fund')
+        queryset = queryset.select_related(
+            'invoice', 'invoice__travel', 'invoice__currency', 'wbs', 'grant', 'fund')
 
         serializer = self.get_serializer(queryset, many=True)
 

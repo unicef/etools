@@ -5,8 +5,17 @@ from datetime import datetime
 
 from django.core.exceptions import ObjectDoesNotExist
 
-from etools.applications.publics.models import (BusinessArea, Country, Currency, ExchangeRate,
-                                                Fund, Grant, TravelAgent, TravelExpenseType, WBS,)
+from etools.applications.publics.models import (
+    BusinessArea,
+    Country,
+    Currency,
+    ExchangeRate,
+    Fund,
+    Grant,
+    TravelAgent,
+    TravelExpenseType,
+    WBS,
+)
 from etools.applications.publics.views import WBSGrantFundView
 from etools.applications.vision.vision_data_synchronizer import VisionDataSynchronizer
 

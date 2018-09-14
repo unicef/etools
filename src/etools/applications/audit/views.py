@@ -2,6 +2,7 @@ from django.contrib.auth import get_user_model
 from django.contrib.contenttypes.models import ContentType
 from django.db.models import Prefetch
 from django.http import Http404
+from django.utils import timezone
 from django.utils.translation import ugettext_lazy as _
 
 from django_filters.rest_framework import DjangoFilterBackend
@@ -48,8 +49,8 @@ from etools.applications.audit.models import (
     UNICEFUser,
 )
 from etools.applications.audit.purchase_order.models import AuditorFirm, AuditorStaffMember, PurchaseOrder
+from etools.applications.audit.purchase_order.synchronizers import POSynchronizer
 from etools.applications.audit.serializers.auditor import (
-    AuditorFirmExportSerializer,
     AuditorFirmLightSerializer,
     AuditorFirmSerializer,
     AuditorStaffMemberSerializer,
@@ -68,15 +69,15 @@ from etools.applications.audit.serializers.engagement import (
     ReportAttachmentSerializer,
     SpecialAuditSerializer,
     SpotCheckSerializer,
-    StaffSpotCheckSerializer,
     StaffSpotCheckListSerializer,
+    StaffSpotCheckSerializer,
 )
 from etools.applications.audit.serializers.export import (
     AuditDetailCSVSerializer,
     AuditPDFSerializer,
     MicroAssessmentDetailCSVSerializer,
     MicroAssessmentPDFSerializer,
-    SpecialAuditDetailPDFSerializer,
+    SpecialAuditDetailCSVSerializer,
     SpecialAuditPDFSerializer,
     SpotCheckDetailCSVSerializer,
     SpotCheckPDFSerializer,
@@ -86,13 +87,10 @@ from etools.applications.partners.serializers.partner_organization_v2 import Min
 from etools.applications.permissions2.conditions import ObjectStatusCondition
 from etools.applications.permissions2.drf_permissions import get_permission_for_targets, NestedPermission
 from etools.applications.permissions2.views import PermittedFSMActionMixin, PermittedSerializerMixin
-from etools.applications.utils.common.views import ExportViewSetDataMixin
-from etools.applications.vision.adapters.purchase_order import POSynchronizer
 
 
 class BaseAuditViewSet(
     SafeTenantViewSetMixin,
-    ExportViewSetDataMixin,
     MultiSerializerViewSetMixin,
     PermittedSerializerMixin,
 ):
@@ -131,7 +129,6 @@ class AuditorFirmViewSet(
     serializer_action_classes = {
         'list': AuditorFirmLightSerializer
     }
-    export_serializer_class = AuditorFirmExportSerializer
     renderer_classes = [JSONRenderer, AuditorFirmCSVRenderer]
     filter_backends = (SearchFilter, OrderingFilter, DjangoFilterBackend)
     search_fields = ('name', 'email')
@@ -251,8 +248,6 @@ class EngagementViewSet(
     }
     metadata_class = AuditPermissionBasedMetadata
 
-    export_serializer_class = EngagementExportSerializer
-    export_filename = 'engagements'
     renderer_classes = [JSONRenderer, EngagementCSVRenderer]
 
     filter_backends = (
@@ -314,7 +309,7 @@ class EngagementViewSet(
             'partner', Prefetch('agreement', PurchaseOrder.objects.prefetch_related('auditor_firm'))
         )
 
-        if self.action == 'list':
+        if self.action in ['list', 'export_list_csv']:
             queryset = queryset.filter(agreement__auditor_firm__unicef_users_allowed=self.unicef_engagements)
 
         return queryset
@@ -380,6 +375,15 @@ class EngagementViewSet(
             filename='engagement_{}.pdf'.format(obj.unique_id),
         )
 
+    @action(detail=False, methods=['get'], url_path='csv', renderer_classes=[EngagementCSVRenderer])
+    def export_list_csv(self, request, *args, **kwargs):
+        engagements = self.get_queryset()
+        serializer = EngagementExportSerializer(engagements, many=True)
+
+        return Response(serializer.data, headers={
+            'Content-Disposition': 'attachment;filename=engagements_{}.csv'.format(timezone.now().date())
+        })
+
 
 class EngagementManagementMixin(
     mixins.RetrieveModelMixin,
@@ -387,29 +391,46 @@ class EngagementManagementMixin(
     mixins.DestroyModelMixin,
     PermittedFSMActionMixin,
 ):
-    def get_export_filename(self, format=None):
-        return '{}.{}'.format(self.get_object().unique_id, (format or '').lower())
+    csv_export_serializer = EngagementExportSerializer
+
+    @action(detail=True, methods=['get'], url_path='csv', renderer_classes=[EngagementCSVRenderer])
+    def export_csv(self, request, *args, **kwargs):
+        engagement = self.get_object()
+        serializer = self.csv_export_serializer(engagement)
+
+        return Response(serializer.data, headers={
+            'Content-Disposition': 'attachment;filename={}.csv'.format(engagement.unique_id)
+        })
 
 
 class MicroAssessmentViewSet(EngagementManagementMixin, EngagementViewSet):
     queryset = MicroAssessment.objects.all()
     serializer_class = MicroAssessmentSerializer
-    export_serializer_class = MicroAssessmentDetailCSVSerializer
-    renderer_classes = [JSONRenderer, MicroAssessmentDetailCSVRenderer]
+    csv_export_serializer = MicroAssessmentDetailCSVSerializer
+
+    @action(detail=True, methods=['get'], url_path='csv', renderer_classes=[MicroAssessmentDetailCSVRenderer])
+    def export_csv(self, request, *args, **kwargs):
+        return super().export_csv(request, *args, **kwargs)
 
 
 class AuditViewSet(EngagementManagementMixin, EngagementViewSet):
     queryset = Audit.objects.all()
     serializer_class = AuditSerializer
-    export_serializer_class = AuditDetailCSVSerializer
-    renderer_classes = [JSONRenderer, AuditDetailCSVRenderer]
+    csv_export_serializer = AuditDetailCSVSerializer
+
+    @action(detail=True, methods=['get'], url_path='csv', renderer_classes=[AuditDetailCSVRenderer])
+    def export_csv(self, request, *args, **kwargs):
+        return super().export_csv(request, *args, **kwargs)
 
 
 class SpotCheckViewSet(EngagementManagementMixin, EngagementViewSet):
     queryset = SpotCheck.objects.all()
     serializer_class = SpotCheckSerializer
-    export_serializer_class = SpotCheckDetailCSVSerializer
-    renderer_classes = [JSONRenderer, SpotCheckDetailCSVRenderer]
+    csv_export_serializer = SpotCheckDetailCSVSerializer
+
+    @action(detail=True, methods=['get'], url_path='csv', renderer_classes=[SpotCheckDetailCSVRenderer])
+    def export_csv(self, request, *args, **kwargs):
+        return super().export_csv(request, *args, **kwargs)
 
 
 class StaffSpotCheckViewSet(SpotCheckViewSet):
@@ -423,8 +444,11 @@ class StaffSpotCheckViewSet(SpotCheckViewSet):
 class SpecialAuditViewSet(EngagementManagementMixin, EngagementViewSet):
     queryset = SpecialAudit.objects.all()
     serializer_class = SpecialAuditSerializer
-    export_serializer_class = SpecialAuditDetailPDFSerializer
-    renderer_classes = [JSONRenderer, SpecialAuditDetailCSVRenderer]
+    csv_export_serializer = SpecialAuditDetailCSVSerializer
+
+    @action(detail=True, methods=['get'], url_path='csv', renderer_classes=[SpecialAuditDetailCSVRenderer])
+    def export_csv(self, request, *args, **kwargs):
+        return super().export_csv(request, *args, **kwargs)
 
 
 class AuditorStaffMembersViewSet(
