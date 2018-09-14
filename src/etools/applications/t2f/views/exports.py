@@ -58,7 +58,7 @@ class TravelActivityExport(QueryStringFilterMixin, ExportBaseView):
             self.activity = activity
 
     def get_queryset(self):
-        queryset = TravelActivity.objects.prefetch_related('travels', 'travels__traveler', 'travels__office',
+        queryset = TravelActivity.objects.prefetch_related('travels', 'travels__traveler', 'travels__office','travels__supervisor',
                                                            'travels__section', 'locations')
         queryset = queryset.select_related('partner', 'partnership', 'result', 'primary_traveler')
         queryset = queryset.order_by('id')
