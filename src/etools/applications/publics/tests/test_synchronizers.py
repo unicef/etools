@@ -7,7 +7,7 @@ from etools.applications.publics.models import (Country as PublicsCountry, Curre
 from etools.applications.publics.tests.factories import (PublicsBusinessAreaFactory, PublicsCountryFactory,
                                                          PublicsFundFactory, PublicsGrantFactory, TravelAgentFactory,)
 from etools.applications.users.models import Country
-from etools.applications.vision.adapters import publics_adapter as adapter
+from etools.applications.publics import synchronizers
 
 
 class TestCostAssignmentSynch(BaseTenantTestCase):
@@ -31,10 +31,10 @@ class TestCostAssignmentSynch(BaseTenantTestCase):
                 {"grant_name": "123", "fund_type": "321"}
             ]
         }
-        self.adapter = adapter.CostAssignmentSynch(self.country)
+        self.adapter = synchronizers.CostAssignmentSynch(self.country)
 
     def test_init(self):
-        a = adapter.CostAssignmentSynch(self.country)
+        a = synchronizers.CostAssignmentSynch(self.country)
         self.assertEqual(len(a.grants.keys()), Grant.objects.count())
         self.assertEqual(len(a.funds.keys()), Fund.objects.count())
         self.assertIsNone(a.business_area)
@@ -146,7 +146,7 @@ class TestCurrencySynchronizer(BaseTenantTestCase):
             "VALID_FROM": "1-Jan-16",
             "VALID_TO": "31-Dec-17",
         }
-        self.adapter = adapter.CurrencySynchronizer(self.country)
+        self.adapter = synchronizers.CurrencySynchronizer(self.country)
 
     def test_convert_records(self):
         self.assertEqual(
@@ -176,7 +176,7 @@ class TestTravelAgenciesSynchronizer(BaseTenantTestCase):
             "VENDOR_CITY": "New York",
             "VENDOR_CTRY_CODE": "USD",
         }
-        self.adapter = adapter.TravelAgenciesSynchronizer(self.country)
+        self.adapter = synchronizers.TravelAgenciesSynchronizer(self.country)
 
     def test_convert_records(self):
         self.assertEqual(

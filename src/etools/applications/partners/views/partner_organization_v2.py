@@ -1,9 +1,9 @@
 import functools
 import operator
-from datetime import datetime
+from datetime import date, datetime
 
-from django.db import transaction
-from django.db.models import Q
+from django.db import models, transaction
+from django.db.models import Case, DateTimeField, DurationField, ExpressionWrapper, F, Max, Q, When
 from django.shortcuts import get_object_or_404
 
 from etools_validator.mixins import ValidatorViewMixin
@@ -16,16 +16,19 @@ from rest_framework.generics import (
     ListCreateAPIView,
     RetrieveUpdateDestroyAPIView,
 )
-from rest_framework.permissions import IsAdminUser
+from rest_framework.permissions import IsAdminUser, IsAuthenticatedOrReadOnly
 from rest_framework.response import Response
 from rest_framework_csv import renderers as r
 from unicef_restlib.views import QueryStringFilterMixin
 
+from etools.applications.action_points.models import ActionPoint
 from etools.applications.EquiTrack.mixins import ExportModelMixin
 from etools.applications.EquiTrack.renderers import CSVFlatRenderer
+from etools.applications.EquiTrack.serializers import StringConcat
 from etools.applications.EquiTrack.utils import get_data_from_insight
 from etools.applications.partners.exports_v2 import (
     PartnerOrganizationCSVRenderer,
+    PartnerOrganizationDashboardCsvRenderer,
     PartnerOrganizationHactCsvRenderer,
     PartnerOrganizationSimpleHactCsvRenderer,
 )
@@ -56,6 +59,7 @@ from etools.applications.partners.serializers.partner_organization_v2 import (
     CoreValuesAssessmentSerializer,
     MinimalPartnerOrganizationListSerializer,
     PartnerOrganizationCreateUpdateSerializer,
+    PartnerOrganizationDashboardSerializer,
     PartnerOrganizationDetailSerializer,
     PartnerOrganizationHactSerializer,
     PartnerOrganizationListSerializer,
@@ -65,9 +69,9 @@ from etools.applications.partners.serializers.partner_organization_v2 import (
     PlannedEngagementNestedSerializer,
     PlannedEngagementSerializer,
 )
+from etools.applications.partners.synchronizers import PartnerSynchronizer
 from etools.applications.partners.views.helpers import set_tenant_or_fail
-from etools.applications.t2f.models import TravelActivity
-from etools.applications.vision.adapters.partner import PartnerSynchronizer
+from etools.applications.t2f.models import Travel, TravelActivity, TravelType
 
 
 class PartnerOrganizationListAPIView(QueryStringFilterMixin, ExportModelMixin, ListCreateAPIView):
@@ -200,6 +204,91 @@ class PartnerOrganizationDetailAPIView(ValidatorViewMixin, RetrieveUpdateDestroy
             instance = self.get_object()
 
         return Response(PartnerOrganizationDetailSerializer(instance).data)
+
+
+class PartnerOrganizationDashboardAPIView(ExportModelMixin, ListAPIView):
+    """Returns a list of Implementing partners for the dashboard."""
+
+    permission_classes = (IsAuthenticatedOrReadOnly,)
+    serializer_class = PartnerOrganizationDashboardSerializer
+    base_filename = 'IP_dashboard'
+    renderer_classes = (r.JSONRenderer, PartnerOrganizationDashboardCsvRenderer)
+
+    def base_queryset(self):
+        return PartnerOrganization.objects.active()
+
+    def get_queryset(self, format=None):
+        qs = self.base_queryset().prefetch_related(
+            'agreements__interventions__sections',
+            'agreements__interventions__flat_locations',
+        ).annotate(
+            sections=StringConcat("agreements__interventions__sections__name", separator="|", distinct=True),
+            locations=StringConcat("agreements__interventions__flat_locations__name", separator="|", distinct=True),
+        )
+        # on hold: Cost Centre
+        # on hold: Outstanding DCT >6 and >9 months
+        return qs
+
+    def list(self, request, format=None):
+        """
+        Checks for format query parameter
+        :returns: JSON or CSV file
+        """
+        query_params = self.request.query_params
+        queryset = self.filter_queryset(self.get_queryset())
+        serializer = self.get_serializer(queryset, many=True)
+        self.update_serializer_data(serializer)
+
+        response = Response(serializer.data)
+
+        if "format" in query_params.keys():
+            if query_params.get("format") == 'csv':
+                filename = self.get_filename()
+                response['Content-Disposition'] = f"attachment;filename={filename}.csv"
+        return response
+
+    def get_filename(self):
+        today = date.today().strftime("%Y-%b-%d")
+        return f'{self.base_filename}_as_of_{today}'
+
+    def update_serializer_data(self, serializer):
+        self._add_programmatic_visits(serializer)
+        self._add_action_points(serializer)
+
+    def _add_programmatic_visits(self, serializer):
+        qs = self.base_queryset().annotate(
+            last_pv_date=Max(Case(When(
+                agreements__interventions__travel_activities__travel_type=TravelType.PROGRAMME_MONITORING,
+                agreements__interventions__travel_activities__travels__traveler=F(
+                    'agreements__interventions__travel_activities__primary_traveler'),
+                agreements__interventions__travel_activities__travels__status=Travel.COMPLETED,
+                then=F('agreements__interventions__travel_activities__date')), output_field=DateTimeField())
+            ),
+            days_since_last_pv=ExpressionWrapper(datetime.now() - F('last_pv_date'), output_field=DurationField()))
+        pv_dates = {}
+        for partner in qs:
+            pv_dates[partner.pk] = {
+                "last_pv_date": partner.last_pv_date,
+                "days_last_pv": partner.days_since_last_pv.days if partner.days_since_last_pv else None,
+            }
+
+        for item in serializer.data:  # Add last_pv_date
+            pk = item["id"]
+            item["last_pv_date"] = pv_dates[pk]["last_pv_date"]
+            item["days_last_pv"] = pv_dates[pk]["days_last_pv"]
+            item["alert_no_recent_pv"] = pv_dates[pk]["days_last_pv"] > 180 if pv_dates[pk]["days_last_pv"] else True
+            item["alert_no_pv"] = pv_dates[pk]["days_last_pv"] is None
+
+    def _add_action_points(self, serializer):
+        qs = self.base_queryset().annotate(
+            action_points=models.Sum(models.Case(models.When(
+                actionpoint__travel_activity__travel_type__in=[TravelType.PROGRAMME_MONITORING, TravelType.SPOT_CHECK],
+                actionpoint__status=ActionPoint.STATUS_OPEN, then=1),
+                default=0, output_field=models.IntegerField(), distinct=True)),
+        )
+        ap = {partner.pk: partner.action_points for partner in qs}
+        for item in serializer.data:
+            item['action_points'] = ap[item["id"]]
 
 
 class PartnerOrganizationHactAPIView(ListAPIView):
