@@ -26,6 +26,7 @@ class TravelActivityExportSerializer(serializers.Serializer):
     section = serializers.CharField(source='travel.section.name', read_only=True)
     office = serializers.CharField(source='travel.office.name', read_only=True)
     status = serializers.CharField(source='travel.status', read_only=True)
+    supervisor = serializers.CharField(source='travel.supervisor.get_full_name', read_only=True)
     trip_type = serializers.CharField(source='activity.travel_type', read_only=True)
     partner = serializers.CharField(source='activity.partner.name', read_only=True)
     partnership = serializers.CharField(source='activity.partnership.title', read_only=True)
@@ -37,7 +38,7 @@ class TravelActivityExportSerializer(serializers.Serializer):
     primary_traveler_name = serializers.SerializerMethodField()
 
     class Meta:
-        fields = ('reference_number', 'traveler', 'office', 'section', 'status', 'trip_type', 'partner', 'partnership',
+        fields = ('reference_number', 'traveler', 'office', 'section', 'status', 'supervisor', 'trip_type', 'partner', 'partnership',
                   'results', 'locations', 'start_date', 'end_date', 'is_secondary_traveler', 'primary_traveler_name')
 
     def get_locations(self, obj):

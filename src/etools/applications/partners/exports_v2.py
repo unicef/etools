@@ -110,6 +110,32 @@ class PartnerOrganizationHactCsvRenderer(FriendlyCSVRenderer):
     }
 
 
+class PartnerOrganizationDashboardCsvRenderer(FriendlyCSVRenderer):
+    header = [
+        'name',
+        'sections',
+        'locations',
+        'action_points',
+        'total_ct_cp',
+        'total_ct_ytd',
+        'days_last_pv',
+        'alert_no_recent_pv',
+        'alert_no_pv',
+    ]
+
+    labels = {
+        'name': 'Implementing Partner',
+        'sections': 'Sections',
+        'locations': 'Locations',
+        'action_points': 'Action Points #',
+        'total_ct_cp': '$ Cash in the Current CP Cycle',
+        'total_ct_ytd': '$ Cash in the Current Year',
+        'days_last_pv': 'Days Since Last PV',
+        'alert_no_recent_pv': 'Alert: No Recent PV',
+        'alert_no_pv': 'Alert: No PV',
+    }
+
+
 class PartnerOrganizationSimpleHactCsvRenderer(FriendlyCSVRenderer):
 
     header = [
