@@ -766,7 +766,8 @@ class InterventionReportingRequirementCreateSerializer(serializers.ModelSerializ
                 })
 
             if i > 0:
-                if (requirements[i]["start_date"] - requirements[i - 1]["end_date"]).days > 1:
+                if (requirements[i]["start_date"] - requirements[i - 1]["end_date"]).days > 1 or \
+                        (requirements[i]["start_date"] < requirements[i - 1]["end_date"]):
                     raise serializers.ValidationError({
                         "reporting_requirements": {
                             "start_date": _(
