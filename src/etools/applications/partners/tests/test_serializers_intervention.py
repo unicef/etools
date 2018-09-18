@@ -372,7 +372,6 @@ class TestInterventionReportingRequirementCreateSerializer(BaseTenantTestCase):
             intervention=self.intervention,
             report_type=ReportingRequirement.TYPE_QPR,
         )
-        init_count = requirement_qs.count()
         data = {
             "report_type": ReportingRequirement.TYPE_QPR,
             "reporting_requirements": [{
@@ -391,7 +390,7 @@ class TestInterventionReportingRequirementCreateSerializer(BaseTenantTestCase):
         )
         self.assertTrue(serializer.is_valid())
         serializer.create(serializer.validated_data)
-        self.assertEqual(requirement_qs.count(), init_count + 2)
+        self.assertEqual(requirement_qs.count(), 2)
 
     def test_create_hr(self):
         """Creating new hr reporting requirements
@@ -432,7 +431,6 @@ class TestInterventionReportingRequirementCreateSerializer(BaseTenantTestCase):
             intervention=self.intervention,
             report_type=report_type,
         )
-        init_count = requirement_qs.count()
         data = {
             "report_type": report_type,
             "reporting_requirements": [{
@@ -447,7 +445,7 @@ class TestInterventionReportingRequirementCreateSerializer(BaseTenantTestCase):
         )
         self.assertTrue(serializer.is_valid())
         serializer.create(serializer.validated_data)
-        self.assertEqual(requirement_qs.count(), init_count)
+        self.assertEqual(requirement_qs.count(), 1)
 
     def test_update_hr(self):
         """Updating existing hr reporting requirements"""
