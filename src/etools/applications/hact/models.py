@@ -53,7 +53,7 @@ class AggregateHact(TimeStampedModel):
 
     @staticmethod
     def get_queryset():
-        return PartnerOrganization.objects.active()
+        return PartnerOrganization.objects.hact_active()
 
     def _sum_json_values(self, qs_filters, filter_dict={}):
         partners = self.get_queryset().filter(**filter_dict)
@@ -231,7 +231,7 @@ class AggregateHact(TimeStampedModel):
                 status=Engagement.FINAL, date_of_draft_report_to_unicef__year=datetime.now().year).count(),
             'micro_assessment': MicroAssessment.objects.filter(
                 status=Engagement.FINAL, date_of_draft_report_to_unicef__year=datetime.now().year).count(),
-            'missing_micro_assessment': PartnerOrganization.objects.active(
+            'missing_micro_assessment': PartnerOrganization.objects.hact_active(
                 last_assessment_date__isnull=False, last_assessment_date__year__lte=year_limit).count(),
         }
 
@@ -365,7 +365,7 @@ class AggregateHact(TimeStampedModel):
 
     @staticmethod
     def get_assurance_coverage():
-        qs = PartnerOrganization.objects.active()
+        qs = PartnerOrganization.objects.hact_active()
 
         no_coverage = qs.filter(hact_values__assurance_coverage=PartnerOrganization.ASSURANCE_VOID)
         partial_coverage = qs.filter(hact_values__assurance_coverage=PartnerOrganization.ASSURANCE_PARTIAL)
@@ -388,7 +388,7 @@ class AggregateHact(TimeStampedModel):
             'table': [
                 {
                     'label': 'Active Partners',
-                    'value': PartnerOrganization.objects.active().count()
+                    'value': PartnerOrganization.objects.hact_active().count()
                 },
                 {
                     'label': 'IPs without required PV',
