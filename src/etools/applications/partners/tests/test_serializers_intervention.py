@@ -480,13 +480,6 @@ class TestInterventionReportingRequirementCreateSerializer(BaseTenantTestCase):
     def test_update_create_qpr(self):
         """Updating existing qpr reporting requirements and create new"""
         report_type = ReportingRequirement.TYPE_QPR
-        requirement = ReportingRequirementFactory(
-            intervention=self.intervention,
-            report_type=report_type,
-            start_date=datetime.date(2001, 1, 3),
-            end_date=datetime.date(2001, 1, 15),
-            due_date=datetime.date(2001, 4, 15),
-        )
         requirement_qs = ReportingRequirement.objects.filter(
             intervention=self.intervention,
             report_type=report_type,
