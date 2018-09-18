@@ -2008,7 +2008,7 @@ class Intervention(TimeStampedModel):
         pass
 
     @transition(field=status,
-                source=[DRAFT, SUSPENDED],
+                source=[DRAFT, SUSPENDED, SIGNED],
                 target=[ACTIVE],
                 conditions=[intervention_validation.transition_to_active],
                 permission=intervention_validation.partnership_manager_only)
