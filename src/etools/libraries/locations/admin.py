@@ -3,10 +3,9 @@ from django.contrib.gis import admin
 
 from unicef_locations.admin import CartoDBTableAdmin
 from unicef_locations.models import CartoDBTable
-from unicef_locations.tasks import update_sites_from_cartodb
 from etools.libraries.locations.tasks import (
     validate_locations_in_use,
-    save_location_remap_history,
+    update_sites_from_cartodb,
     cleanup_obsolete_locations,
     # catch_task_errors,
 )
@@ -25,10 +24,9 @@ class BackendCartoDBTableAdmin(CartoDBTableAdmin):
             task_list += [
                 validate_locations_in_use.si(table),
                 update_sites_from_cartodb.si(table),
-                save_location_remap_history.s()
             ]
 
-        # cleanup locations from bottom to top, it's easier to validate parents this way
+        # clean up locations from bottom to top, it's easier to validate parents this way
         for table in reversed(carto_tables):
             task_list += [cleanup_obsolete_locations.si(table)]
 

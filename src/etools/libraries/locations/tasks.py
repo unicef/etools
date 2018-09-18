@@ -1,25 +1,29 @@
 import celery
+
 from carto.exceptions import CartoException
 from carto.sql import SQLClient
 from celery.utils.log import get_task_logger
 
-from django.contrib.contenttypes.models import ContentType
+from django.utils.encoding import force_text
+from django.db import transaction
 
-from unicef_locations.models import CartoDBTable, Location, LocationRemapHistory
+from unicef_locations.models import CartoDBTable, Location
 from unicef_locations.auth import LocationsCartoNoAuthClient
 
-from etools.applications.partners.models import Intervention
-from etools.applications.reports.models import AppliedIndicator
-from etools.applications.t2f.models import TravelActivity
-from etools.applications.activities.models import Activity
-from etools.applications.action_points.models import ActionPoint
-
+from etools.libraries.locations.task_utils import (
+    get_location_ids_in_use,
+    get_cartodb_locations,
+    save_location_remap_history,
+    validate_remap_table,
+    duplicate_pcodes_exist,
+    create_location,
+)
 
 logger = get_task_logger(__name__)
 
 
-@celery.current_app.task(bind=True)
-def validate_locations_in_use(self, carto_table_pk):
+@celery.current_app.task()
+def validate_locations_in_use(carto_table_pk):
     try:
         carto_table = CartoDBTable.objects.get(pk=carto_table_pk)
     except CartoDBTable.DoesNotExist as e:
@@ -53,107 +57,134 @@ def validate_locations_in_use(self, carto_table_pk):
     orphaned_pcodes = set(database_pcodes) - (set(new_carto_pcodes) | set(remap_old_pcodes))
     orphaned_location_ids = Location.all_locations.filter(p_code__in=list(orphaned_pcodes))
 
-    # location ids with no remap but in use
+    # if location ids with no remap in use are found, do not continue the import
     location_ids_bnriu = get_location_ids_in_use(orphaned_location_ids)
     if location_ids_bnriu:
         msg = "Location ids in use without remap found: {}". format(','.join([str(iu) for iu in location_ids_bnriu]))
         logger.exception(msg)
-        # why this does not work..
-        # self.request.callbacks = self.request.chain = None
         raise Exception(msg)
 
     return True
 
 
-@celery.current_app.task(bind=True)
-def save_location_remap_history(self, imported_locations):
-    '''
-    :param imported_locations: set of (new_location, remapped_location) tuples
-    :return:
-    '''
+@celery.current_app.task # noqa: ignore=C901
+def update_sites_from_cartodb(carto_table_pk):
+    results = []
 
-    if not imported_locations:
-        return
+    try:
+        carto_table = CartoDBTable.objects.get(pk=carto_table_pk)
+    except CartoDBTable.DoesNotExist:
+        logger.exception('Cannot retrieve CartoDBTable with pk: %s', carto_table_pk)
+        return results
 
-    remapped_locations = {loc[1]: loc[0] for loc in imported_locations if loc[1]}
+    auth_client = LocationsCartoNoAuthClient(base_url="https://{}.carto.com/".format(carto_table.domain))
+    sql_client = SQLClient(auth_client)
+    sites_created = sites_updated = sites_remapped = sites_not_added = 0
 
-    if not remapped_locations:
-        return
+    try:
+        # query cartodb for the locations with geometries
+        carto_succesfully_queried, rows = get_cartodb_locations(sql_client, carto_table)
 
-    # remap related entities to the newly added locations, and save the location remap history
-    # interventions
-    ctp = ContentType.objects.get(app_label='partners', model='intervention')
-    for intervention in Intervention.objects.filter(flat_locations__in=remapped_locations.keys()).distinct():
-        for remapped_location in intervention.flat_locations.filter(id__in=list(remapped_locations.keys())):
-            new_location = remapped_locations.get(remapped_location.id)
-            LocationRemapHistory.objects.create(
-                old_location=remapped_location,
-                new_location=new_location,
-                content_type=ctp,
-                object_id=intervention.id,
-            )
-            intervention.flat_locations.remove(remapped_location)
-            intervention.flat_locations.add(new_location)
-            # TODO: logs
+        if not carto_succesfully_queried:
+            return results
+    except CartoException:  # pragma: no-cover
+        logger.exception("CartoDB exception occured")
+    else:
+        # validations
+        # get the list of the existing Pcodes and previous Pcodes from the database
+        database_pcodes = []
+        for row in Location.all_locations.filter(gateway=carto_table.location_type).values('p_code'):
+            database_pcodes.append(row['p_code'])
 
-    # intervention indicators
-    ctp = ContentType.objects.get(app_label='reports', model='appliedindicator')
-    for appliedindicator in AppliedIndicator.objects.filter(locations__in=list(remapped_locations.keys())).distinct():
-        for remapped_location in appliedindicator.locations.filter(id__in=list(remapped_locations.keys())):
-            new_location = remapped_locations.get(remapped_location.id)
-            LocationRemapHistory.objects.create(
-                old_location=remapped_location,
-                new_location=new_location,
-                content_type=ctp,
-                object_id=appliedindicator.id,
-            )
-            appliedindicator.locations.remove(remapped_location)
-            appliedindicator.locations.add(new_location)
-            # TODO: logs
+        # get the list of the new Pcodes from the Carto data
+        new_carto_pcodes = [str(row[carto_table.pcode_col]) for row in rows]
 
-    # travel activities
-    ctp = ContentType.objects.get(app_label='t2f', model='travelactivity')
-    for travelactivity in TravelActivity.objects.filter(locations__in=list(remapped_locations.keys())).distinct():
-        for remapped_location in travelactivity.locations.filter(id__in=list(remapped_locations.keys())):
-            new_location = remapped_locations.get(remapped_location.id)
-            LocationRemapHistory.objects.create(
-                old_location=remapped_location,
-                new_location=new_location,
-                content_type=ctp,
-                object_id=travelactivity.id,
-            )
-            travelactivity.locations.remove(remapped_location)
-            travelactivity.locations.add(new_location)
-            # TODO: logs
+        # validate remap table contents
+        remap_table_valid, remapped_pcode_pairs, remap_old_pcodes, remap_new_pcodes = \
+            validate_remap_table(database_pcodes, new_carto_pcodes, carto_table, sql_client)
 
-    # activities
-    ctp = ContentType.objects.get(app_label='activities', model='activity')
-    for activity in Activity.objects.filter(locations__in=list(remapped_locations.keys())).distinct():
-        for remapped_location in activity.locations.filter(id__in=list(remapped_locations.keys())):
-            new_location = remapped_locations.get(remapped_location.id)
-            LocationRemapHistory.objects.create(
-                old_location=remapped_location,
-                new_location=new_location,
-                content_type=ctp,
-                object_id=activity.id,
-            )
-            activity.locations.remove(remapped_location)
-            activity.locations.add(new_location)
-            # TODO: logs
+        if not remap_table_valid:
+            return results
 
-    # action points
-    ctp = ContentType.objects.get(app_label='action_points', model='actionpoint')
-    for actionpoint in ActionPoint.objects.filter(location__in=list(remapped_locations.keys())).distinct():
-        new_location = remapped_locations.get(actionpoint.location.id)
-        LocationRemapHistory.objects.create(
-            old_location=actionpoint.location.id,
-            new_location=new_location,
-            content_type=ctp,
-            object_id=actionpoint.id,
-        )
-        actionpoint.location.id = new_location
-        actionpoint.save()
-        # TODO: logs
+        # check for  duplicate pcodes in both local and Carto data
+        if duplicate_pcodes_exist(database_pcodes, new_carto_pcodes, remap_old_pcodes):
+            return results
+
+        # wrap Location tree updates in a transaction, to prevent an invalid tree state due to errors
+        with transaction.atomic():
+            # disable tree 'generation' during single row updates, rebuild the tree after.
+            # this should prevent errors happening (probably)due to invalid intermediary tree state
+            with Location.objects.disable_mptt_updates():
+                for row in rows:
+                    carto_pcode = str(row[carto_table.pcode_col]).strip()
+                    site_name = row[carto_table.name_col]
+
+                    if not site_name or site_name.isspace():
+                        logger.warning("No name for location with PCode: {}".format(carto_pcode))
+                        sites_not_added += 1
+                        continue
+
+                    parent = None
+                    parent_code = None
+                    parent_instance = None
+
+                    # attempt to reference the parent of this location
+                    if carto_table.parent_code_col and carto_table.parent:
+                        msg = None
+                        parent = carto_table.parent.__class__
+                        parent_code = row[carto_table.parent_code_col]
+                        try:
+                            parent_instance = Location.objects.get(p_code=parent_code)
+                        except Location.MultipleObjectsReturned:
+                            msg = "Multiple locations found for parent code: {}".format(
+                                parent_code
+                            )
+                        except Location.DoesNotExist:
+                            msg = "No locations found for parent code: {}".format(
+                                parent_code
+                            )
+                        except Exception as exp:
+                            msg = force_text(exp)
+
+                        if msg is not None:
+                            logger.warning(msg)
+                            sites_not_added += 1
+                            continue
+
+                    # check if the Carto location should be remapped to an old location
+                    remapped_old_pcodes = set()
+                    if carto_table.remap_table_name and len(remapped_pcode_pairs) > 0:  # pragma: no-cover
+                        for remap_row in remapped_pcode_pairs:
+                            if carto_pcode == remap_row['new_pcode']:
+                                remapped_old_pcodes.add(remap_row['old_pcode'])
+
+                    # create the location or update the existing based on type and code
+                    succ, sites_not_added, sites_created, sites_updated, sites_remapped, \
+                        partial_results = create_location(
+                            carto_pcode, carto_table,
+                            parent, parent_instance, remapped_old_pcodes,
+                            site_name, row,
+                            sites_not_added, sites_created,
+                            sites_updated, sites_remapped
+                        )
+
+                    # results += partial_results
+
+                    # crete new locations, archive old, and remap relevant etools enitites to the new location
+                    save_location_remap_history(partial_results)
+
+                orphaned_old_pcodes = set(database_pcodes) - (set(new_carto_pcodes) | set(remap_old_pcodes))
+                if orphaned_old_pcodes:  # pragma: no-cover
+                    logger.warning("Archiving unused pcodes: {}".format(','.join(orphaned_old_pcodes)))
+                    Location.objects.filter(p_code__in=list(orphaned_old_pcodes)).update(is_active=False)
+
+            # rebuild location tree
+            Location.objects.rebuild()
+
+    logger.warning("Table name {}: {} sites created, {} sites updated, {} sites remapped, {} sites skipped".format(
+        carto_table.table_name, sites_created, sites_updated, sites_remapped, sites_not_added))
+
+    # return results
 
 
 @celery.current_app.task(bind=True)
@@ -206,30 +237,6 @@ def cleanup_obsolete_locations(self, carto_table_pk):
 @celery.current_app.task
 def catch_task_errors():
     pass
-
-
-def get_location_ids_in_use(location_ids):
-    """
-    :param location_ids:
-    :return location_ids_in_use:
-    """
-    location_ids_in_use = []
-
-    for intervention in Intervention.objects.all():
-        location_ids_in_use += [l.id for l in intervention.flat_locations.filter(id__in=location_ids)]
-
-    for indicator in AppliedIndicator.objects.all():
-        location_ids_in_use += [l.id for l in indicator.locations.filter(id__in=location_ids)]
-
-    for travelactivity in TravelActivity.objects.all():
-        location_ids_in_use += [l.id for l in travelactivity.locations.filter(id__in=location_ids)]
-
-    for activity in Activity.objects.all():
-        location_ids_in_use += [l.id for l in activity.locations.filter(id__in=location_ids)]
-
-    location_ids_in_use += [a.location_id for a in ActionPoint.objects.filter(location__in=location_ids).distinct()]
-
-    return list(set(location_ids_in_use))
 
 
 class BnriuException(Exception):
