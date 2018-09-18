@@ -252,7 +252,7 @@ class TestInterventionReportingRequirementCreateSerializer(BaseTenantTestCase):
             "reporting_requirements": [
                 {"start_date": datetime.date(2001, 3, 15),
                  "due_date": datetime.date(2001, 4, 15),
-                 "end_date": datetime.date(2001, 4, 15),}
+                 "end_date": datetime.date(2001, 4, 15)}
             ]
         }
         serializer = InterventionReportingRequirementCreateSerializer(
@@ -429,12 +429,6 @@ class TestInterventionReportingRequirementCreateSerializer(BaseTenantTestCase):
     def test_update_qpr(self):
         """Updating existing qpr reporting requirements"""
         report_type = ReportingRequirement.TYPE_QPR
-        requirement = ReportingRequirementFactory(
-            intervention=self.intervention,
-            report_type=report_type,
-            start_date=datetime.date(2001, 1, 3),
-            due_date=datetime.date(2001, 4, 15),
-        )
         requirement_qs = ReportingRequirement.objects.filter(
             intervention=self.intervention,
             report_type=report_type,
@@ -463,17 +457,10 @@ class TestInterventionReportingRequirementCreateSerializer(BaseTenantTestCase):
             lower_result=self.lower_result
         )
         report_type = ReportingRequirement.TYPE_HR
-        requirement = ReportingRequirementFactory(
-            intervention=self.intervention,
-            report_type=report_type,
-            start_date=datetime.date(2001, 3, 15),
-            due_date=datetime.date(2001, 4, 15),
-        )
         requirement_qs = ReportingRequirement.objects.filter(
             intervention=self.intervention,
             report_type=report_type,
         )
-        init_count = requirement_qs.count()
         data = {
             "report_type": report_type,
             "reporting_requirements": [{
@@ -504,7 +491,6 @@ class TestInterventionReportingRequirementCreateSerializer(BaseTenantTestCase):
             intervention=self.intervention,
             report_type=report_type,
         )
-        init_count = requirement_qs.count()
         data = {
             "report_type": report_type,
             "reporting_requirements": [{
@@ -532,11 +518,6 @@ class TestInterventionReportingRequirementCreateSerializer(BaseTenantTestCase):
             lower_result=self.lower_result
         )
         report_type = ReportingRequirement.TYPE_HR
-        requirement = ReportingRequirementFactory(
-            intervention=self.intervention,
-            report_type=report_type,
-            due_date=datetime.date(2001, 4, 15),
-        )
         data = {
             "report_type": report_type,
             "reporting_requirements": [{
