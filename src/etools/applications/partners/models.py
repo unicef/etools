@@ -207,21 +207,26 @@ def hact_default():
 class PartnerOrganizationQuerySet(models.QuerySet):
 
     def active(self, *args, **kwargs):
+        return self.filter(Q(total_ct_cp__gt=0) | Q(agreements__interventions__status__in=[
+            Intervention.ACTIVE, Intervention.SIGNED, Intervention.SUSPENDED, Intervention.ENDED]
+        ), *args, **kwargs)
+
+    def hact_active(self, *args, **kwargs):
         return self.filter(Q(reported_cy__gt=0) | Q(total_ct_cy__gt=0), hidden=False, *args, **kwargs)
 
     def not_programmatic_visit_compliant(self, *args, **kwargs):
-        return self.active(net_ct_cy__gt=PartnerOrganization.CT_MR_AUDIT_TRIGGER_LEVEL,
-                           hact_values__programmatic_visits__completed__total=0,
-                           *args, **kwargs)
+        return self.hact_active(net_ct_cy__gt=PartnerOrganization.CT_MR_AUDIT_TRIGGER_LEVEL,
+                                hact_values__programmatic_visits__completed__total=0,
+                                *args, **kwargs)
 
     def not_spot_check_compliant(self, *args, **kwargs):
-        return self.active(Q(reported_cy__gt=PartnerOrganization.CT_CP_AUDIT_TRIGGER_LEVEL) |
-                           Q(planned_engagement__spot_check_planned_q1__gt=0) |
-                           Q(planned_engagement__spot_check_planned_q2__gt=0) |
-                           Q(planned_engagement__spot_check_planned_q3__gt=0) |
-                           Q(planned_engagement__spot_check_planned_q4__gt=0),  # aka required
-                           hact_values__spot_checks__completed__total=0,
-                           hact_values__audits__completed=0, *args, **kwargs)
+        return self.hact_active(Q(reported_cy__gt=PartnerOrganization.CT_CP_AUDIT_TRIGGER_LEVEL) |
+                                Q(planned_engagement__spot_check_planned_q1__gt=0) |
+                                Q(planned_engagement__spot_check_planned_q2__gt=0) |
+                                Q(planned_engagement__spot_check_planned_q3__gt=0) |
+                                Q(planned_engagement__spot_check_planned_q4__gt=0),  # aka required
+                                hact_values__spot_checks__completed__total=0,
+                                hact_values__audits__completed=0, *args, **kwargs)
 
     def not_assurance_compliant(self, *args, **kwargs):
         return self.not_programmatic_visit_compliant().not_spot_check_compliant(*args, **kwargs)
