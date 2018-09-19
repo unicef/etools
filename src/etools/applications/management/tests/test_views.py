@@ -4,6 +4,7 @@ from mock import patch
 from rest_framework import status
 from tenant_schemas.test.client import TenantClient
 
+from tenant_schemas.test.cases import TenantTestCase
 from etools.applications.EquiTrack.tests.cases import BaseTenantTestCase
 from unicef_locations.tests.factories import LocationFactory
 from etools.applications.partners.models import Intervention
@@ -164,15 +165,12 @@ class TestGisLocationViews(BaseTenantTestCase):
         self.unicef_staff = UserFactory(is_superuser=True)
         group = GroupFactory()
         self.unicef_staff.groups.add(group)
-        # The tested endpoints require the country id in the query string
         self.country = CountryFactory()
         self.unicef_staff.profile.country = self.country
         self.unicef_staff.save()
-
         self.partner = PartnerFactory()
         self.agreement = AgreementFactory(partner=self.partner)
         self.intervention = InterventionFactory(agreement=self.agreement)
-
         self.location_no_geom = LocationFactory(name="Test no geom")
         self.location_with_geom = LocationFactory(
             name="Test with geom",
@@ -181,6 +179,8 @@ class TestGisLocationViews(BaseTenantTestCase):
         self.locations = [self.location_no_geom, self.location_with_geom]
 
     def test_non_auth(self):
+        response = self.client.get(reverse("locations-gis-geom-list"))
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
         response = self.client.get(reverse("locations-gis-in-use"))
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
 
@@ -220,14 +220,20 @@ class TestGisLocationViews(BaseTenantTestCase):
         # see if no location are in use yet
         self.assertEqual(len(response.json()), 0)
 
-    def test_intervention_locations_in_use(self):
+    def test_travel_locations_in_use(self):
         self.client.force_login(self.unicef_staff)
-        # url = reverse("locations-gis-in-use")
 
-        # add intervention locations and test the response
-        intervention = InterventionFactory(status=Intervention.SIGNED)
-        intervention.flat_locations.add(self.location_no_geom, self.location_with_geom)
-        intervention.save()
+        travel = TravelFactory(
+            traveler=self.unicef_staff,
+            status=Travel.COMPLETED,
+        )
+        travel_activity = TravelActivityFactory(
+            travels=[travel],
+            primary_traveler=self.unicef_staff,
+            travel_type=TravelType.SPOT_CHECK,
+        )
+        travel_activity.locations.add(self.location_no_geom.id, self.location_with_geom.id)
+        travel_activity.save()
 
         response = self.client.get(
             "{}?country_id={}".format(reverse("locations-gis-in-use"), self.country.id),
@@ -237,11 +243,14 @@ class TestGisLocationViews(BaseTenantTestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(sorted(response.data[0].keys()), ["gateway_id", "id", "level", "name", "p_code", "parent_id"])
 
-    def test_travel_locations_in_use(self):
+    def test_intervention_locations_in_use(self):
         self.client.force_login(self.unicef_staff)
+        # url = reverse("locations-gis-in-use")
 
-        # add travel locations to the DB
-        self.addTravelLocations()
+        # add intervention locations and test the response
+        intervention = InterventionFactory(status=Intervention.SIGNED)
+        intervention.flat_locations.add(self.location_no_geom, self.location_with_geom)
+        intervention.save()
 
         response = self.client.get(
             "{}?country_id={}".format(reverse("locations-gis-in-use"), self.country.id),
@@ -420,18 +429,3 @@ class TestGisLocationViews(BaseTenantTestCase):
         self.assertEqual(response.data["geometry"]['type'], 'MultiPolygon')
         # TODO: check returned coordinates, and add 1 more test with POINT() returned
         self.assertIsNotNone(response.data["geometry"]['coordinates'])
-
-    def addTravelLocations(self):
-        # add travel locations and test the response
-        traveller = UserFactory()
-        travel = TravelFactory(
-            traveler=traveller,
-            status=Travel.COMPLETED,
-        )
-        travel_activity = TravelActivityFactory(
-            travels=[travel],
-            primary_traveler=self.unicef_staff,
-            travel_type=TravelType.SPOT_CHECK,
-        )
-        travel_activity.locations.add(self.location_no_geom.id, self.location_with_geom.id)
-        travel_activity.save()
