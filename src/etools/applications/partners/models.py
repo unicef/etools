@@ -207,9 +207,10 @@ def hact_default():
 class PartnerOrganizationQuerySet(models.QuerySet):
 
     def active(self, *args, **kwargs):
-        return self.filter(Q(total_ct_cp__gt=0) | Q(agreements__interventions__status__in=[
-            Intervention.ACTIVE, Intervention.SIGNED, Intervention.SUSPENDED, Intervention.ENDED]
-        ), *args, **kwargs)
+        return self.filter(
+            Q(partner_type=PartnerType.CIVIL_SOCIETY_ORGANIZATION, agreements__interventions__status__in=[
+                Intervention.ACTIVE, Intervention.SIGNED, Intervention.SUSPENDED, Intervention.ENDED]) |
+            Q(total_ct_cp__gt=0), *args, **kwargs)
 
     def hact_active(self, *args, **kwargs):
         return self.filter(Q(reported_cy__gt=0) | Q(total_ct_cy__gt=0), hidden=False, *args, **kwargs)
