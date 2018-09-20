@@ -41,7 +41,8 @@ class TravelExports(BaseTenantTestCase):
     @classmethod
     def setUpTestData(cls):
         cls.traveler = UserFactory(first_name='John', last_name='Doe')
-        cls.unicef_staff = UserFactory(first_name='Jakab', last_name='Gipsz', is_staff=True)
+        cls.unicef_staff = UserFactory(
+            first_name='Jakab', last_name='Gipsz', is_staff=True)
 
     def test_urls(self):
         export_url = reverse('t2f:travels:list:activity_export')
@@ -97,14 +98,17 @@ class TravelExports(BaseTenantTestCase):
                                         last_name='Carter')
         user_lenox_lewis = UserFactory(first_name='Lenox',
                                        last_name='Lewis')
+        supervisor = UserFactory(first_name='ImYour',
+                                 last_name='Supervisor')
+
         travel_1 = TravelFactory(reference_number='2016/1000',
                                  traveler=user_joe_smith,
                                  office=office,
+                                 supervisor=supervisor,
                                  section=section_health,
                                  start_date=datetime(2017, 11, 8, tzinfo=tz),
                                  end_date=datetime(2017, 11, 14, tzinfo=tz),
                                  )
-        supervisor = UserFactory()
         travel_2 = TravelFactory(reference_number='2016/1211',
                                  supervisor=supervisor,
                                  traveler=user_alice_carter,
@@ -119,7 +123,8 @@ class TravelExports(BaseTenantTestCase):
 
         # Create the activities finally
         activity_1 = TravelActivityFactory(travel_type=TravelType.PROGRAMME_MONITORING,
-                                           date=datetime(2016, 12, 3, tzinfo=UTC),
+                                           date=datetime(
+                                               2016, 12, 3, tzinfo=UTC),
                                            result=result_A11,
                                            primary_traveler=user_joe_smith)
         activity_1.travels.add(travel_1)
@@ -129,7 +134,8 @@ class TravelExports(BaseTenantTestCase):
         activity_1.save()
 
         activity_2 = TravelActivityFactory(travel_type=TravelType.PROGRAMME_MONITORING,
-                                           date=datetime(2016, 12, 4, tzinfo=UTC),
+                                           date=datetime(
+                                               2016, 12, 4, tzinfo=UTC),
                                            result=result_A21,
                                            primary_traveler=user_lenox_lewis)
         activity_2.travels.add(travel_1)
@@ -139,7 +145,8 @@ class TravelExports(BaseTenantTestCase):
         activity_2.save()
 
         activity_3 = TravelActivityFactory(travel_type=TravelType.MEETING,
-                                           date=datetime(2016, 12, 3, tzinfo=UTC),
+                                           date=datetime(
+                                               2016, 12, 3, tzinfo=UTC),
                                            result=None,
                                            primary_traveler=user_joe_smith)
         activity_3.travels.add(travel_1)
@@ -149,7 +156,8 @@ class TravelExports(BaseTenantTestCase):
         activity_3.save()
 
         activity_4 = TravelActivityFactory(travel_type=TravelType.SPOT_CHECK,
-                                           date=datetime(2016, 12, 6, tzinfo=UTC),
+                                           date=datetime(
+                                               2016, 12, 6, tzinfo=UTC),
                                            result=None,
                                            primary_traveler=user_alice_carter)
         activity_4.travels.add(travel_2)
@@ -158,14 +166,13 @@ class TravelExports(BaseTenantTestCase):
         activity_4.partnership = partnership_C1
         activity_4.save()
 
-        with self.assertNumQueries(6):
+        with self.assertNumQueries(7):
             response = self.forced_auth_req('get', reverse('t2f:travels:list:activity_export'),
                                             user=self.unicef_staff)
         export_csv = csv.reader(StringIO(response.content.decode('utf-8')))
         rows = [r for r in export_csv]
 
         self.assertEqual(len(rows), 5)
-
         # check header
         self.assertEqual(rows[0],
                          ['reference_number',
@@ -173,6 +180,7 @@ class TravelExports(BaseTenantTestCase):
                           'office',
                           'section',
                           'status',
+                          'supervisor',
                           'trip_type',
                           'partner',
                           'partnership',
@@ -189,6 +197,7 @@ class TravelExports(BaseTenantTestCase):
                           'Budapest',
                           'Health',
                           'planned',
+                          'ImYour Supervisor',
                           'Programmatic Visit',
                           'Partner A',
                           'Partnership A1',
@@ -205,6 +214,7 @@ class TravelExports(BaseTenantTestCase):
                           'Budapest',
                           'Health',
                           'planned',
+                          'ImYour Supervisor',
                           'Programmatic Visit',
                           'Partner A',
                           'Partnership A2',
@@ -221,6 +231,7 @@ class TravelExports(BaseTenantTestCase):
                           'Budapest',
                           'Health',
                           'planned',
+                          'ImYour Supervisor',
                           'Meeting',
                           'Partner B',
                           'Partnership B3',
@@ -237,6 +248,7 @@ class TravelExports(BaseTenantTestCase):
                           'Budapest',
                           'Education',
                           'planned',
+                          'ImYour Supervisor',
                           'Spot Check',
                           'Partner C',
                           'Partnership C1',
@@ -255,7 +267,8 @@ class TravelExports(BaseTenantTestCase):
                                end_date=datetime(2016, 12, 5, tzinfo=UTC),
                                mode_of_travel=[ModeOfTravel.PLANE, ModeOfTravel.CAR, ModeOfTravel.RAIL])
         travel.expenses.all().delete()
-        ExpenseFactory(travel=travel, amount=Decimal('500'), currency=currency_usd)
+        ExpenseFactory(travel=travel, amount=Decimal(
+            '500'), currency=currency_usd)
 
         travel_2 = TravelFactory(traveler=self.traveler,
                                  supervisor=self.unicef_staff,
@@ -263,7 +276,8 @@ class TravelExports(BaseTenantTestCase):
                                  end_date=datetime(2016, 12, 5, tzinfo=UTC),
                                  mode_of_travel=None)
         travel_2.expenses.all().delete()
-        ExpenseFactory(travel=travel_2, amount=Decimal('200'), currency=currency_usd)
+        ExpenseFactory(travel=travel_2, amount=Decimal(
+            '200'), currency=currency_usd)
         ExpenseFactory(travel=travel_2, amount=Decimal('100'), currency=None)
 
         with self.assertNumQueries(27):
@@ -336,14 +350,17 @@ class TravelExports(BaseTenantTestCase):
         airline_spiceair = PublicsAirlineCompanyFactory(name='SpiceAir')
 
         # First travel setup
-        travel_1 = TravelFactory(traveler=self.traveler, supervisor=self.unicef_staff)
+        travel_1 = TravelFactory(
+            traveler=self.traveler, supervisor=self.unicef_staff)
         travel_1.itinerary.all().delete()
 
         itinerary_item_1 = ItineraryItemFactory(travel=travel_1,
                                                 origin='Origin1',
                                                 destination='Origin2',
-                                                departure_date=datetime(2016, 12, 3, 11, tzinfo=UTC),
-                                                arrival_date=datetime(2016, 12, 3, 12, tzinfo=UTC),
+                                                departure_date=datetime(
+                                                    2016, 12, 3, 11, tzinfo=UTC),
+                                                arrival_date=datetime(
+                                                    2016, 12, 3, 12, tzinfo=UTC),
                                                 mode_of_travel=ModeOfTravel.CAR,
                                                 dsa_region=dsa_brd)
         itinerary_item_1.airlines.all().delete()
@@ -351,8 +368,10 @@ class TravelExports(BaseTenantTestCase):
         itinerary_item_2 = ItineraryItemFactory(travel=travel_1,
                                                 origin='Origin2',
                                                 destination='Origin3',
-                                                departure_date=datetime(2016, 12, 5, 11, tzinfo=UTC),
-                                                arrival_date=datetime(2016, 12, 5, 12, tzinfo=UTC),
+                                                departure_date=datetime(
+                                                    2016, 12, 5, 11, tzinfo=UTC),
+                                                arrival_date=datetime(
+                                                    2016, 12, 5, 12, tzinfo=UTC),
                                                 mode_of_travel=ModeOfTravel.PLANE,
                                                 dsa_region=dsa_lan)
         itinerary_item_2.airlines.all().delete()
@@ -361,23 +380,29 @@ class TravelExports(BaseTenantTestCase):
         itinerary_item_3 = ItineraryItemFactory(travel=travel_1,
                                                 origin='Origin3',
                                                 destination='Origin1',
-                                                departure_date=datetime(2016, 12, 6, 11, tzinfo=UTC),
-                                                arrival_date=datetime(2016, 12, 6, 12, tzinfo=UTC),
+                                                departure_date=datetime(
+                                                    2016, 12, 6, 11, tzinfo=UTC),
+                                                arrival_date=datetime(
+                                                    2016, 12, 6, 12, tzinfo=UTC),
                                                 mode_of_travel=ModeOfTravel.PLANE,
                                                 dsa_region=None)
         itinerary_item_3.airlines.all().delete()
         itinerary_item_3.airlines.add(airline_spiceair)
 
         # Second travel setup
-        another_traveler = UserFactory(first_name='Max', last_name='Mustermann')
-        travel_2 = TravelFactory(traveler=another_traveler, supervisor=self.unicef_staff)
+        another_traveler = UserFactory(
+            first_name='Max', last_name='Mustermann')
+        travel_2 = TravelFactory(
+            traveler=another_traveler, supervisor=self.unicef_staff)
         travel_2.itinerary.all().delete()
 
         itinerary_item_4 = ItineraryItemFactory(travel=travel_2,
                                                 origin='Origin2',
                                                 destination='Origin1',
-                                                departure_date=datetime(2016, 12, 5, 11, tzinfo=UTC),
-                                                arrival_date=datetime(2016, 12, 5, 12, tzinfo=UTC),
+                                                departure_date=datetime(
+                                                    2016, 12, 5, 11, tzinfo=UTC),
+                                                arrival_date=datetime(
+                                                    2016, 12, 5, 12, tzinfo=UTC),
                                                 mode_of_travel=ModeOfTravel.PLANE,
                                                 dsa_region=dsa_lan)
         itinerary_item_4.airlines.all().delete()
@@ -386,8 +411,10 @@ class TravelExports(BaseTenantTestCase):
         itinerary_item_5 = ItineraryItemFactory(travel=travel_2,
                                                 origin='Origin3',
                                                 destination='Origin1',
-                                                departure_date=datetime(2016, 12, 6, 11, tzinfo=UTC),
-                                                arrival_date=datetime(2016, 12, 6, 12, tzinfo=UTC),
+                                                departure_date=datetime(
+                                                    2016, 12, 6, 11, tzinfo=UTC),
+                                                arrival_date=datetime(
+                                                    2016, 12, 6, 12, tzinfo=UTC),
                                                 mode_of_travel=ModeOfTravel.CAR,
                                                 dsa_region=None)
         itinerary_item_5.airlines.all().delete()
@@ -512,8 +539,10 @@ class TravelExports(BaseTenantTestCase):
         usd = PublicsCurrencyFactory(name='USD', code='usd')
 
         # Setting up test data
-        travel_1 = TravelFactory(traveler=self.traveler, supervisor=self.unicef_staff)
-        travel_2 = TravelFactory(traveler=self.traveler, supervisor=self.unicef_staff)
+        travel_1 = TravelFactory(
+            traveler=self.traveler, supervisor=self.unicef_staff)
+        travel_2 = TravelFactory(
+            traveler=self.traveler, supervisor=self.unicef_staff)
 
         # Successful invoice
         invoice_1 = InvoiceFactory(travel=travel_1,

@@ -47,7 +47,7 @@ class InterventionAmendmentsAdmin(admin.ModelAdmin):
         'types',
         'signed_date'
     )
-    search_fields = ('intervention', )
+    search_fields = ('intervention__number', )
     list_filter = (
         'intervention',
         'types'

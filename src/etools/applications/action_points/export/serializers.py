@@ -3,42 +3,21 @@ from rest_framework import serializers
 
 class ActionPointExportSerializer(serializers.Serializer):
     ref = serializers.CharField(source='reference_number', read_only=True)
-    cp_output = serializers.SerializerMethodField()
-    partner = serializers.SerializerMethodField()
-    office = serializers.SerializerMethodField()
-    section = serializers.SerializerMethodField()
-    category = serializers.SerializerMethodField()
-    assigned_to = serializers.CharField(source='assigned_to.get_full_name')
+    cp_output = serializers.CharField(source='cp_output.__str__', allow_null=True)
+    partner = serializers.CharField(source='partner.name', allow_null=True)
+    office = serializers.CharField(source='office.name', allow_null=True)
+    section = serializers.CharField(source='section.name', allow_null=True)
+    category = serializers.CharField(source='category.description', allow_null=True)
+    assigned_to = serializers.CharField(source='assigned_to.get_full_name', allow_null=True)
     due_date = serializers.DateField(format='%d/%m/%Y')
     status = serializers.CharField(source='get_status_display')
     description = serializers.CharField()
-    intervention = serializers.CharField(source='intervention.reference_number', read_only=True)
-    pd_ssfa = serializers.SerializerMethodField()
-    location = serializers.SerializerMethodField()
+    intervention = serializers.CharField(source='intervention.reference_number', read_only=True, allow_null=True)
+    pd_ssfa = serializers.CharField(source='intervention.title', allow_null=True)
+    location = serializers.CharField(source='location.__str__', allow_null=True)
     related_module = serializers.CharField()
-    assigned_by = serializers.CharField(source='assigned_by.get_full_name')
+    assigned_by = serializers.CharField(source='assigned_by.get_full_name', allow_null=True)
     date_of_completion = serializers.DateTimeField(format='%d/%m/%Y')
-    related_ref = serializers.CharField(source='related_object.reference_number', read_only=True)
+    related_ref = serializers.CharField(source='related_object.reference_number', read_only=True, allow_null=True)
     related_object_str = serializers.CharField()
     related_object_url = serializers.CharField()
-
-    def get_cp_output(self, obj):
-        return obj.cp_output.__str__ if obj.cp_output else ""
-
-    def get_partner(self, obj):
-        return obj.partner.name if obj.partner else ""
-
-    def get_office(self, obj):
-        return obj.office.name if obj.office else ""
-
-    def get_section(self, obj):
-        return obj.section.name if obj.section else ""
-
-    def get_category(self, obj):
-        return obj.category.description if obj.category else ""
-
-    def get_pd_ssfa(self, obj):
-        return obj.intervention.title if obj.intervention else ""
-
-    def get_location(self, obj):
-        return obj.location.__str__ if obj.location else ""

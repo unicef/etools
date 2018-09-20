@@ -6,7 +6,7 @@ from etools.applications.EquiTrack.tests.cases import BaseTenantTestCase
 from etools.applications.partners.models import PartnerOrganization
 from etools.applications.partners.tests.factories import PartnerFactory
 from etools.applications.users.models import Country
-from etools.applications.vision.adapters import partner as adapter
+from etools.applications.partners import synchronizers
 
 
 class TestPartnerSynchronizer(BaseTenantTestCase):
@@ -27,7 +27,7 @@ class TestPartnerSynchronizer(BaseTenantTestCase):
             "TOTAL_CASH_TRANSFERRED_YTD": "70.00",
         }
         self.records = {"ROWSET": {"ROW": [self.data]}}
-        self.adapter = adapter.PartnerSynchronizer(self.country)
+        self.adapter = synchronizers.PartnerSynchronizer(self.country)
 
     def test_convert_records(self):
         self.assertEqual(
@@ -51,7 +51,7 @@ class TestPartnerSynchronizer(BaseTenantTestCase):
         self.assertEqual(response, self.data)
 
     def test_get_json_no_data(self):
-        response = self.adapter._get_json(adapter.VISION_NO_DATA_MESSAGE)
+        response = self.adapter._get_json(synchronizers.VISION_NO_DATA_MESSAGE)
         self.assertEqual(response, [])
 
     def test_get_cso_type_none(self):

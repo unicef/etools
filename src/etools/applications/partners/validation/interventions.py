@@ -150,6 +150,10 @@ def transition_to_signed(i):
 def transition_to_active(i):
     # Only transitional validation
 
+    # this validation needs to be here in order to attempt the next auto transitional validation
+    if i.termination_doc_attachment.exists():
+        raise TransitionError([_('Cannot Transition to ended if termination_doc attached')])
+
     # Validation id 1 -> if intervention is PD make sure the agreement is in active status
     if i.document_type in [i.PD, i.SHPD] and i.agreement.status != i.agreement.SIGNED:
         raise TransitionError([

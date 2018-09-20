@@ -9,7 +9,10 @@ from etools.applications.partners.models import PartnerOrganization, PlannedEnga
 from etools.applications.partners.tasks import notify_partner_hidden
 from etools.applications.vision.utils import comp_decimals
 from etools.applications.vision.vision_data_synchronizer import (
-    FileDataSynchronizer, VISION_NO_DATA_MESSAGE, VisionDataSynchronizer,)
+    FileDataSynchronizer,
+    VISION_NO_DATA_MESSAGE,
+    VisionDataSynchronizer,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -216,12 +219,11 @@ class PartnerSynchronizer(VisionDataSynchronizer):
 
             if new:
                 PlannedEngagement.objects.get_or_create(partner=partner_org)
-            else:
-                # if date has changed, archive old and create a new one not archived
-                core_value_date = partner_org.core_values_assessment_date
-                if not partner_org.core_values_assessments.filter(date=core_value_date).exists():
-                    partner_org.core_values_assessments.update(archived=True)
-                    partner_org.core_values_assessments.create(date=core_value_date, archived=False)
+            # if date has changed, archive old and create a new one not archived
+            core_value_date = partner_org.core_values_assessment_date
+            if not partner_org.core_values_assessments.filter(date=core_value_date).exists():
+                partner_org.core_values_assessments.update(archived=True)
+                partner_org.core_values_assessments.create(date=core_value_date, archived=False)
 
             processed = 1
 
@@ -283,7 +285,7 @@ class PartnerSynchronizer(VisionDataSynchronizer):
 
 class FilePartnerSynchronizer(FileDataSynchronizer, PartnerSynchronizer):
     """
-    >>> from etools.applications.vision.adapters.partner import FilePartnerSynchronizer
+    >>> from etools.applications.partners.synchronizers import FilePartnerSynchronizer
     >>> from etools.applications.users.models import Country
     >>> country = Country.objects.get(name='Indonesia')
     >>> filename = '/home/user/Downloads/partners.json'

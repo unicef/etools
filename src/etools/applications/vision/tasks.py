@@ -3,13 +3,10 @@ from django.utils import timezone
 
 from celery.utils.log import get_task_logger
 
-from etools.applications.tpm.tpmpartners.models import TPMPartner
+from etools.applications.funds.synchronizers import FundReservationsSynchronizer, FundCommitmentSynchronizer
+from etools.applications.partners.synchronizers import PartnerSynchronizer
+from etools.applications.reports.synchronizers import ProgrammeSynchronizer, RAMSynchronizer
 from etools.applications.users.models import Country
-from etools.applications.vision.adapters.funding import FundCommitmentSynchronizer, FundReservationsSynchronizer
-from etools.applications.vision.adapters.partner import PartnerSynchronizer
-from etools.applications.vision.adapters.programme import ProgrammeSynchronizer, RAMSynchronizer
-from etools.applications.vision.adapters.purchase_order import POSynchronizer
-from etools.applications.vision.adapters.tpm_adapter import TPMPartnerSynchronizer
 from etools.applications.vision.exceptions import VisionException
 from etools.config.celery import app, send_to_slack
 
@@ -93,54 +90,3 @@ def sync_handler(self, country_name, handler):
             # The 'autoretry_for' in the task decorator tells Celery to
             # retry this a few times on VisionExceptions, so just re-raise it
             raise
-
-
-# Not scheduled by any code in this repo, but by other means, so keep it around.
-# Continues on to the next country on any VisionException, so no need to have
-# celery retry it in that case.
-# TODO: Write some tests for it!
-@app.task
-def update_purchase_orders(country_name=None):
-    logger.info(u'Starting update values for purchase order')
-    countries = Country.objects.filter(vision_sync_enabled=True)
-    processed = []
-    if country_name is not None:
-        countries = countries.filter(name=country_name)
-    for country in countries:
-        connection.set_tenant(country)
-        try:
-            logger.info(u'Starting purchase order update for country {}'.format(
-                country.name
-            ))
-            POSynchronizer(country).sync()
-            processed.append(country.name)
-            logger.info(u"Update finished successfully for {}".format(country.name))
-        except VisionException:
-            logger.exception(u"{} sync failed".format(POSynchronizer.__name__))
-            # Keep going to the next country
-    logger.info(u'Purchase orders synced successfully for {}.'.format(u', '.join(processed)))
-
-
-@app.task
-def update_tpm_partners(country_name=None):
-    logger.info(u'Starting update values for TPM partners')
-    countries = Country.objects.filter(vision_sync_enabled=True)
-    processed = []
-    if country_name is not None:
-        countries = countries.filter(name=country_name)
-    for country in countries:
-        connection.set_tenant(country)
-        try:
-            logger.info(u'Starting TPM partners update for country {}'.format(
-                country.name
-            ))
-            for partner in TPMPartner.objects.all():
-                TPMPartnerSynchronizer(
-                    country=country,
-                    object_number=partner.vendor_number
-                ).sync()
-            processed.append(country.name)
-            logger.info(u"Update finished successfully for {}".format(country.name))
-        except VisionException:
-            logger.exception(u"{} sync failed".format(TPMPartnerSynchronizer.__name__))
-    logger.info(u'TPM Partners synced successfully for {}.'.format(u', '.join(processed)))
