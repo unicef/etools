@@ -3,6 +3,7 @@ Project wide base classes and utility functions for apps
 """
 import codecs
 import csv
+import hashlib
 import json
 from datetime import datetime
 
@@ -173,3 +174,7 @@ def get_quarter(retrieve_date=None):
     else:
         quarter = 'q4'
     return quarter
+
+
+def h11(w):
+    return hashlib.md5(w).hexdigest()[:9]

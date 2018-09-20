@@ -25,7 +25,7 @@ def update_hact_for_country(country_name):
     connection.set_tenant(country)
     logger.info('Set country {}'.format(country_name))
     try:
-        partners = PartnerOrganization.objects.active()
+        partners = PartnerOrganization.objects.hact_active()
         for partner in partners:
             logger.debug('Updating Partner {}'.format(partner.name))
             partner.planned_visits_to_hact()
