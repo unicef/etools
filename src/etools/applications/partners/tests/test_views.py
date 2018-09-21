@@ -2264,7 +2264,7 @@ class TestPartnerOrganizationDashboardAPIView(BaseTenantTestCase):
         ta = TravelActivityFactory(travel_type=TravelType.PROGRAMME_MONITORING,
                                    date=datetime.date.today() - datetime.timedelta(200),
                                    travels=[travel, ], primary_traveler=cls.unicef_staff)
-        cls.intervention = InterventionFactory(agreement=agreement)
+        cls.intervention = InterventionFactory(agreement=agreement, status=Intervention.ACTIVE)
         cls.intervention.sections.set([cls.sec1, cls.sec2])
         cls.intervention.flat_locations.set([cls.loc1, cls.loc2])
         cls.intervention.travel_activities.set([ta, ])
@@ -2280,7 +2280,7 @@ class TestPartnerOrganizationDashboardAPIView(BaseTenantTestCase):
     def setUp(self):
         self.response = self.forced_auth_req('get', reverse("partners_api:partner-dashboard"), user=self.unicef_staff)
         data = self.response.data
-        self.assertEqual(len(data), 2)
+        self.assertEqual(len(data), 1)
         self.record = data[0]
 
     def test_queryset(self):

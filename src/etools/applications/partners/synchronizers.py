@@ -219,12 +219,11 @@ class PartnerSynchronizer(VisionDataSynchronizer):
 
             if new:
                 PlannedEngagement.objects.get_or_create(partner=partner_org)
-            else:
-                # if date has changed, archive old and create a new one not archived
-                core_value_date = partner_org.core_values_assessment_date
-                if not partner_org.core_values_assessments.filter(date=core_value_date).exists():
-                    partner_org.core_values_assessments.update(archived=True)
-                    partner_org.core_values_assessments.create(date=core_value_date, archived=False)
+            # if date has changed, archive old and create a new one not archived
+            core_value_date = partner_org.core_values_assessment_date
+            if not partner_org.core_values_assessments.filter(date=core_value_date).exists():
+                partner_org.core_values_assessments.update(archived=True)
+                partner_org.core_values_assessments.create(date=core_value_date, archived=False)
 
             processed = 1
 
