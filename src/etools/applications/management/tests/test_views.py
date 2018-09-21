@@ -4,7 +4,6 @@ from mock import patch
 from rest_framework import status
 from tenant_schemas.test.client import TenantClient
 
-from tenant_schemas.test.cases import TenantTestCase
 from etools.applications.EquiTrack.tests.cases import BaseTenantTestCase
 from unicef_locations.tests.factories import LocationFactory
 from etools.applications.partners.models import Intervention
@@ -160,8 +159,9 @@ class TestPortalDashView(BaseTenantTestCase):
 
 
 class TestGisLocationViews(BaseTenantTestCase):
-    @classmethod
     def setUp(self):
+        super(TestGisLocationViews, self).setUp()
+
         self.unicef_staff = UserFactory(is_superuser=True)
         group = GroupFactory()
         self.unicef_staff.groups.add(group)
@@ -178,48 +178,49 @@ class TestGisLocationViews(BaseTenantTestCase):
         )
         self.locations = [self.location_no_geom, self.location_with_geom]
 
-    def test_non_auth(self):
-        response = self.forced_auth_req('get', reverse("locations-gis-geom-list"), user=UserFactory())
+    def test_no_permission(self):
+        response = self.forced_auth_req('get', reverse("management_gis:locations-gis-geom-list"), user=UserFactory())
         self.assertEquals(response.status_code, status.HTTP_403_FORBIDDEN)
 
-        response = self.forced_auth_req('get', reverse("locations-gis-in-use"), user=UserFactory())
+        response = self.forced_auth_req('get', reverse("management_gis:locations-gis-in-use"), user=UserFactory())
         self.assertEquals(response.status_code, status.HTTP_403_FORBIDDEN)
 
     def test_invalid_geoformat(self):
-        url = reverse("locations-gis-geom-list")
+        url = reverse("management_gis:locations-gis-geom-list")
 
         response = self.forced_auth_req(
             "get",
-            # geo_format should be either geojson or wkt
-            "{}?country_id={}&geo_format={}".format(url, self.country.id, 'asdf'),
-            user=self.unicef_staff
+            url, # geo_format should be either geojson or wkt
+            user=self.unicef_staff,
+            data={"country_id": self.country.id, "geo_format": "whatever"},
         )
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
-        url = reverse("locations-gis-get-by-pcode", kwargs={"pcode": self.location_with_geom.p_code})
-        response = response = self.forced_auth_req("get", url)
+        url = reverse("management_gis:locations-gis-get-by-pcode", kwargs={"pcode": self.location_with_geom.p_code})
+        response = self.forced_auth_req("get", url, user=self.unicef_staff)
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
-        url = reverse("locations-gis-get-by-id", kwargs={"id": self.location_with_geom.id})
-        response = self.forced_auth_req("get", url)
+        url = reverse("management_gis:locations-gis-get-by-id", kwargs={"id": self.location_with_geom.id})
+        response = self.forced_auth_req("get", url, user=self.unicef_staff)
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
     def test_locations_in_use(self):
-        url = reverse("locations-gis-in-use")
+        url = reverse("management_gis:locations-gis-in-use")
 
         # test with missing country, expect error
-        response = self.forced_auth_req("get", url)
+        response = self.forced_auth_req("get", url, user=self.unicef_staff)
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
         response = self.forced_auth_req(
             "get",
-            "{}?country_id={}".format(reverse("locations-gis-in-use"), self.country.id),
-            user=self.unicef_staff
+            reverse("management_gis:locations-gis-in-use"),
+            user=self.unicef_staff,
+            data={"country_id": self.country.id},
         )
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         # see if no location are in use yet
-        self.assertEqual(len(response.json()), 0)
+        self.assertEqual(len(response.data), 0)
 
     def test_travel_locations_in_use(self):
         travel = TravelFactory(
@@ -236,8 +237,9 @@ class TestGisLocationViews(BaseTenantTestCase):
 
         response = self.forced_auth_req(
             "get",
-            "{}?country_id={}".format(reverse("locations-gis-in-use"), self.country.id),
-            user=self.unicef_staff
+            reverse("management_gis:locations-gis-in-use"),
+            user=self.unicef_staff,
+            data={"country_id": self.country.id},
         )
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
@@ -251,8 +253,9 @@ class TestGisLocationViews(BaseTenantTestCase):
 
         response = self.forced_auth_req(
             "get",
-            "{}?country_id={}".format(reverse("locations-gis-in-use"), self.country.id),
-            user=self.unicef_staff
+            reverse("management_gis:locations-gis-in-use"),
+            user=self.unicef_staff,
+            data={"country_id": self.country.id, "geo_format": "whatever"},
         )
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
@@ -268,8 +271,9 @@ class TestGisLocationViews(BaseTenantTestCase):
 
         response = self.forced_auth_req(
             "get",
-            "{}?country_id={}".format(reverse("locations-gis-in-use"), self.country.id),
-            user=self.unicef_staff
+            reverse("management_gis:locations-gis-in-use"),
+            user=self.unicef_staff,
+            data={"country_id": self.country.id},
         )
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
@@ -283,8 +287,9 @@ class TestGisLocationViews(BaseTenantTestCase):
 
         response = self.forced_auth_req(
             "get",
-            "{}?country_id={}".format(reverse("locations-gis-in-use"), self.country.id),
-            user=self.unicef_staff
+            reverse("management_gis:locations-gis-in-use"),
+            user=self.unicef_staff,
+            data={"country_id":self.country.id},
         )
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
@@ -293,20 +298,21 @@ class TestGisLocationViews(BaseTenantTestCase):
 
     def test_intervention_locations_geom(self):
         # test with missing country in the query string, expect error
-        url = reverse("locations-gis-geom-list")
-        response = self.forced_auth_req("get", url)
+        url = reverse("management_gis:locations-gis-geom-list")
+        response = self.forced_auth_req("get", url, user=self.unicef_staff)
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
         # test with no format filter, we should expect GeoJson in the response
         response = self.forced_auth_req(
             "get",
-            "{}?country_id={}".format(url, self.country.id),
-            user=self.unicef_staff
+            url,
+            user=self.unicef_staff,
+            data={"country_id": self.country.id},
         )
         self.assertEqual(response.status_code, status.HTTP_200_OK)
 
         # see if the response is a valid GeoJson
-        self.assertEqual(len(response.json()), 2)
+        self.assertEqual(len(response.data), 2)
         self.assertEqual(sorted(response.data.keys()), ["features", "type"])
         self.assertEqual(response.data["type"], "FeatureCollection")
         for feature in response.data['features']:
@@ -314,21 +320,22 @@ class TestGisLocationViews(BaseTenantTestCase):
 
     def test_intervention_locations_geom_wkt(self):
         # test with missing country in the query string, expect error
-        url = reverse("locations-gis-geom-list")
-        response = self.forced_auth_req("get", url)
+        url = reverse("management_gis:locations-gis-geom-list")
+        response = self.forced_auth_req("get", url, user=self.unicef_staff)
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
         # test with WKT format
         response = self.forced_auth_req(
             "get",
-            "{}?country_id={}&geo_format={}&geom_type=polygon".format(url, self.country.id, 'wkt'),
-            user=self.unicef_staff
+            url,
+            user=self.unicef_staff,
+            data={"country_id": self.country.id, "geo_format": "wkt", "geom_type": "polygon"},
         )
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
 
         # only one of the test locations has GEOM
-        self.assertEqual(len(response.json()), 1)
+        self.assertEqual(len(response.data), 1)
         self.assertEqual(
             sorted(response.data[0].keys()),
             ["gateway_id", "geom", "id", "level", "name", "p_code", "parent_id", "point"]
@@ -337,38 +344,40 @@ class TestGisLocationViews(BaseTenantTestCase):
 
     def test_intervention_locations_geom_geojson(self):
         # test with missing country, expect error
-        url = reverse("locations-gis-geom-list")
-        response = self.forced_auth_req("get", url)
+        url = reverse("management_gis:locations-gis-geom-list")
+        response = self.forced_auth_req("get", url, user=self.unicef_staff)
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
         # test with GEOJSON format
         response = self.forced_auth_req(
             "get",
-            "{}?country_id={}&geo_format={}&geom_type=polygon".format(url, self.country.id, 'geojson'),
-            user=self.unicef_staff
+            url,
+            user=self.unicef_staff,
+            data={"country_id": self.country.id, "geo_format": "geojson", "geom_type": "polygon"},
         )
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
 
         # see if the response is a valid FeatureList/GeoJson
-        self.assertEqual(len(response.json()), 2)
+        self.assertEqual(len(response.data), 2)
         self.assertEqual(sorted(response.data.keys()), ["features", "type"])
         self.assertEqual(response.data["type"], "FeatureCollection")
         for feature in response.data['features']:
             self.assertKeysIn(['id', 'type', 'geometry', 'properties'], feature)
 
     def test_intervention_locations_geom_by_pcode(self):
-        url = reverse("locations-gis-get-by-pcode", kwargs={"pcode": self.location_with_geom.p_code})
+        url = reverse("management_gis:locations-gis-get-by-pcode", kwargs={"pcode": self.location_with_geom.p_code})
 
         # test with missing country, expect error
-        response = self.forced_auth_req("get", url)
+        response = self.forced_auth_req("get", url, user=self.unicef_staff)
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
         # request the result in WKT
         response = self.forced_auth_req(
             "get",
-            "{}?country_id={}&geo_format={}".format(url, self.country.id, 'wkt'),
+            url,
             user=self.unicef_staff,
+            data={"country_id": self.country.id, "geo_format": "wkt"},
         )
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
@@ -382,8 +391,9 @@ class TestGisLocationViews(BaseTenantTestCase):
         # request the result in GeoJson
         response = self.forced_auth_req(
             "get",
-            "{}?country_id={}&geo_format={}".format(url, self.country.id, 'geojson'),
+            url,
             user=self.unicef_staff,
+            data={"country_id": self.country.id, "geo_format": "geojson"},
         )
         # see if the response is a valid Feature
         self.assertKeysIn(['id', 'type', 'geometry', 'properties'], response.data)
@@ -393,17 +403,18 @@ class TestGisLocationViews(BaseTenantTestCase):
         self.assertIsNotNone(response.data["geometry"]['coordinates'])
 
     def test_intervention_locations_geom_by_id(self):
-        url = reverse("locations-gis-get-by-id", kwargs={"id": self.location_with_geom.id})
+        url = reverse("management_gis:locations-gis-get-by-id", kwargs={"id": self.location_with_geom.id})
 
         # test with missing country, expect error
-        response = self.forced_auth_req("get", url)
+        response = self.forced_auth_req("get", url, user=self.unicef_staff)
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
         # request the result in WKT
         response = self.forced_auth_req(
             "get",
-            "{}?country_id={}&geo_format={}".format(url, self.country.id, 'wkt'),
+            url,
             user=self.unicef_staff,
+            data={"country_id": self.country.id, "geo_format": "wkt"},
         )
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
@@ -417,8 +428,9 @@ class TestGisLocationViews(BaseTenantTestCase):
         # request the result in GeoJson
         response = self.forced_auth_req(
             "get",
-            "{}?country_id={}&geo_format={}".format(url, self.country.id, 'geojson'),
+            url,
             user=self.unicef_staff,
+            data={"country_id": self.country.id, "geo_format": "geojson"},
         )
         # see if the response is a valid Feature
         self.assertKeysIn(['id', 'type', 'geometry', 'properties'], response.data)
