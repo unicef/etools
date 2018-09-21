@@ -307,7 +307,7 @@ class PartnerOrganizationHactAPIView(ListAPIView):
     """
     permission_classes = (IsAdminUser,)
     queryset = PartnerOrganization.objects.select_related('planned_engagement').prefetch_related(
-        'staff_members', 'assessments').active()
+        'staff_members', 'assessments').hact_active()
     serializer_class = PartnerOrganizationHactSerializer
     renderer_classes = (r.JSONRenderer, PartnerOrganizationHactCsvRenderer)
     filename = 'detailed_hact_dashboard'
