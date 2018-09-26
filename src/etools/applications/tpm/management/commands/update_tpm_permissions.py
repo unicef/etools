@@ -240,6 +240,8 @@ class Command(BaseCommand):
         # visit assigned
         self.add_permissions(self.third_party_monitor, 'view', self.tpm_visit_details,
                              condition=self.visit_status(TPMVisit.STATUSES.assigned))
+        self.add_permissions(self.pme, 'edit', self.tpm_visit_details_editable,
+                             condition=self.visit_status(TPMVisit.STATUSES.assigned))
         self.add_permissions(self.pme, 'action', 'tpm.tpmvisit.cancel',
                              condition=self.visit_status(TPMVisit.STATUSES.assigned))
         self.add_permissions(self.third_party_focal_point, 'action', ['tpm.tpmvisit.accept', 'tpm.tpmvisit.reject'],
