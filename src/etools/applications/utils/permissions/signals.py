@@ -1,4 +1,3 @@
-
 from etools.applications.utils.permissions.models.models import BasePermission, StatusBasePermission
 
 
