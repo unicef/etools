@@ -1,16 +1,22 @@
 from django.core.management import BaseCommand
 from django.db.models import Q
 
-from etools.applications.action_points.conditions import ActionPointAuthorCondition, ActionPointAssigneeCondition, \
-    ActionPointAssignedByCondition
+from etools.applications.action_points.conditions import (
+    ActionPointAssignedByCondition,
+    ActionPointAssigneeCondition,
+    ActionPointAuthorCondition,
+)
 from etools.applications.action_points.models import ActionPoint
+from etools.applications.permissions2.conditions import GroupCondition, NewObjectCondition, ObjectStatusCondition
 from etools.applications.permissions2.models import Permission
-from etools.applications.permissions2.conditions import ObjectStatusCondition, \
-    NewObjectCondition, GroupCondition
 from etools.applications.permissions2.utils import get_model_target
-from etools.applications.tpm.conditions import TPMStaffMemberCondition, TPMVisitUNICEFFocalPointCondition, \
-    TPMVisitTPMFocalPointCondition, TPMModuleCondition
-from etools.applications.tpm.models import UNICEFUser, PME, ThirdPartyMonitor, TPMVisit, TPMActionPoint
+from etools.applications.tpm.conditions import (
+    TPMModuleCondition,
+    TPMStaffMemberCondition,
+    TPMVisitTPMFocalPointCondition,
+    TPMVisitUNICEFFocalPointCondition,
+)
+from etools.applications.tpm.models import PME, ThirdPartyMonitor, TPMActionPoint, TPMVisit, UNICEFUser
 
 
 class Command(BaseCommand):
