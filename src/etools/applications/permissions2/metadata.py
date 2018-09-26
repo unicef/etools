@@ -55,7 +55,7 @@ class PermittedFSMTransitionActionMetadataMixin(FSMTransitionActionMetadataMixin
 
 class BaseMetadata(ReadOnlyFieldWithChoicesMixin, ModelChoiceFieldMixin, SeparatedReadWriteFieldMetadata,
                    CRUActionsMetadataMixin, SimpleMetadata):
-    """Base metadata class"""
+    """Base metadata class used for OPTIONS method"""
 
 
 class PermissionBasedMetadata(PermittedFSMTransitionActionMetadataMixin, PermissionsBasedMetadataMixin, BaseMetadata):
