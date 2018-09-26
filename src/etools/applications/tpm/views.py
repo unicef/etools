@@ -24,6 +24,7 @@ from etools.applications.partners.models import PartnerOrganization
 from etools.applications.partners.serializers.partner_organization_v2 import MinimalPartnerOrganizationListSerializer
 from etools.applications.permissions2.conditions import ObjectStatusCondition
 from etools.applications.permissions2.drf_permissions import get_permission_for_targets, NestedPermission
+from etools.applications.permissions2.metadata import BaseMetadata, PermissionBasedMetadata
 from etools.applications.permissions2.views import PermittedFSMActionMixin, PermittedSerializerMixin
 from etools.applications.reports.models import Result, Section
 from etools.applications.reports.serializers.v1 import ResultLightSerializer, SectionSerializer
@@ -52,7 +53,6 @@ from etools.applications.tpm.export.serializers import (
     TPMVisitExportSerializer,
 )
 from etools.applications.tpm.filters import ReferenceNumberOrderingFilter
-from etools.applications.tpm.metadata import TPMBaseMetadata, TPMPermissionBasedMetadata
 from etools.applications.tpm.models import PME, ThirdPartyMonitor, TPMActionPoint, TPMActivity, TPMVisit, UNICEFUser
 from etools.applications.tpm.serializers.attachments import (
     ActivityAttachmentsSerializer,
@@ -81,7 +81,7 @@ class BaseTPMViewSet(
     MultiSerializerViewSetMixin,
     PermittedSerializerMixin,
 ):
-    metadata_class = TPMBaseMetadata
+    metadata_class = BaseMetadata
     pagination_class = DynamicPageNumberPagination
     permission_classes = [IsAuthenticated]
 
@@ -101,7 +101,7 @@ class TPMPartnerViewSet(
     PermittedFSMActionMixin,
     viewsets.GenericViewSet
 ):
-    metadata_class = TPMPermissionBasedMetadata
+    metadata_class = PermissionBasedMetadata
     queryset = TPMPartner.objects.all()
     serializer_class = TPMPartnerSerializer
     serializer_action_classes = {
@@ -203,7 +203,7 @@ class TPMStaffMembersViewSet(
     NestedViewSetMixin,
     viewsets.GenericViewSet
 ):
-    metadata_class = TPMPermissionBasedMetadata
+    metadata_class = PermissionBasedMetadata
     queryset = TPMPartnerStaffMember.objects.all()
     serializer_class = TPMPartnerStaffMemberSerializer
     permission_classes = BaseTPMViewSet.permission_classes + [NestedPermission]
@@ -301,7 +301,7 @@ class TPMVisitViewSet(
     PermittedFSMActionMixin,
     viewsets.GenericViewSet
 ):
-    metadata_class = TPMPermissionBasedMetadata
+    metadata_class = PermissionBasedMetadata
     queryset = TPMVisit.objects.all().prefetch_related(
         'tpm_partner',
         'tpm_activities__unicef_focal_points',
@@ -469,7 +469,7 @@ class TPMActionPointViewSet(BaseTPMViewSet,
                             mixins.UpdateModelMixin,
                             NestedViewSetMixin,
                             viewsets.GenericViewSet):
-    metadata_class = TPMPermissionBasedMetadata
+    metadata_class = PermissionBasedMetadata
     queryset = TPMActionPoint.objects.all()
     serializer_class = TPMActionPointSerializer
     permission_classes = BaseTPMViewSet.permission_classes + [NestedPermission]
@@ -502,7 +502,7 @@ class BaseTPMAttachmentsViewSet(BaseTPMViewSet,
                                 mixins.DestroyModelMixin,
                                 NestedViewSetMixin,
                                 viewsets.GenericViewSet):
-    metadata_class = TPMPermissionBasedMetadata
+    metadata_class = PermissionBasedMetadata
     queryset = Attachment.objects.all()
 
 
