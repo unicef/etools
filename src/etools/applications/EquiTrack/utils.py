@@ -4,16 +4,18 @@ Project wide base classes and utility functions for apps
 import codecs
 import csv
 import hashlib
-import json
+import logging
 from datetime import datetime
 
 from django.conf import settings
+from django.contrib.auth import get_user_model
+from django.contrib.auth.models import Group
 from django.contrib.sites.models import Site
 from django.core.cache import cache
-from django.db import connection
-from django.db.models import Q
 
-import requests
+from etools.applications.users.models import Country, UserProfile
+
+logger = logging.getLogger(__name__)
 
 
 def get_environment():
@@ -22,49 +24,6 @@ def get_environment():
 
 def get_current_site():
     return Site.objects.get_current()
-
-
-def set_country(user, request):
-    from etools.applications.users.models import Country
-
-    country = request.GET.get(settings.SCHEMA_OVERRIDE_PARAM, None)
-    if country:
-        try:
-            country = Country.objects.get(
-                Q(name=country) |
-                Q(country_short_code=country) |
-                Q(schema_name=country)
-            )
-            if country in user.profile.countries_available.all():
-                country = country
-            else:
-                country = None
-        except Country.DoesNotExist:
-            country = None
-
-    request.tenant = country or user.profile.country or user.profile.country_override
-    connection.set_tenant(request.tenant)
-
-
-def get_data_from_insight(endpoint, data={}):
-    url = '{}/{}'.format(
-        settings.VISION_URL,
-        endpoint
-    ).format(**data)
-
-    response = requests.get(
-        url,
-        headers={'Content-Type': 'application/json'},
-        auth=(settings.VISION_USER, settings.VISION_PASSWORD),
-        verify=False
-    )
-    if response.status_code != 200:
-        return False, 'Loading data from Vision Failed, status {}'.format(response.status_code)
-    try:
-        result = json.loads(response.json())
-    except ValueError:
-        return False, 'Loading data from Vision Failed, no valid response returned for data: {}'.format(data)
-    return True, result
 
 
 class Vividict(dict):
@@ -79,7 +38,7 @@ class HashableDict(dict):
 
 
 def proccess_permissions(permission_dict):
-    '''
+    """
     :param permission_dict: the csv file read as a generator of dictionaries
      where the header contains the following keys:
 
@@ -110,7 +69,7 @@ def proccess_permissions(permission_dict):
                      'view': {'true': [{'condition': 'condition1',
                                         'group': 'PM',
                                         'status': 'Active'}]}}}
-    '''
+    """
 
     result = Vividict()
     possible_actions = ['edit', 'required', 'view']
@@ -188,3 +147,59 @@ def is_user_in_groups(user, group_names):
         # Anticipate common programming oversight.
         raise ValueError('group_names parameter must be a tuple or list, not a string')
     return user.groups.filter(name__in=group_names).exists()
+
+
+def to_choices_list(value):
+    if isinstance(value, dict):
+        return value.items()
+
+    return value
+
+
+def printtf(*args):
+    """print function which write on file"""
+    file_name = 'mylogs.txt'
+    args_list = [str(arg) for arg in args]
+    logger.info(args_list)
+    with open(file_name, 'ab') as f:
+        f.write(', '.join(args_list))
+        f.write('\n')
+
+
+def create_admin_user(username, password):
+    """
+    Creates a super user ready for working
+
+    create_admin_user('macioce@unicef.org', 123)
+    username -> macioce
+    first_name -> Macioce
+    last_name -> Macioce
+    email -> macioce@unicef.org
+
+    create_admin_user('dome.nico@unicef.org', 123)
+    username -> dome.nico
+    first_name -> Dome
+    last_name -> Nico
+    email -> dome.nico@unicef.org
+
+    """
+    groups = Group.objects.filter(name__in=['Partnership Manager', 'PME', 'Third Party Monitor', 'Travel Administrator',
+                                            'Travel Focal Point', 'UNICEF Audit Focal Point', 'UNICEF User'])
+    User = get_user_model()
+    user, _ = User.objects.get_or_create(username=username, email=username + '@unicef.org', defaults={
+        'first_name': username.split(".")[0].capitalize(),
+        'last_name': username.split(".")[-1].capitalize(),
+        'is_superuser': True,
+        'is_staff': True,
+    })
+    user.groups.set(groups)
+    user.set_password(password)
+    user.save()
+    profile = UserProfile.objects.get(user=user)
+    country = Country.objects.get(name='Lebanon')
+    countries = Country.objects.all()
+    profile.country = country
+    profile.country_override = country
+    profile.countries_available.set(countries)
+    profile.save()
+    logger.info(u"user {} created".format(user.email))

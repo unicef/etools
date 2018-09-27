@@ -20,7 +20,7 @@ from etools.applications.t2f.helpers.cost_summary_calculator import CostSummaryC
 from etools.applications.t2f.helpers.invoice_maker import InvoiceMaker
 from etools.applications.t2f.serializers.mailing import TravelMailSerializer
 from etools.applications.users.models import WorkspaceCounter
-from etools.applications.utils.common.urlresolvers import build_frontend_url
+from etools.applications.EquiTrack.urlresolvers import build_frontend_url
 
 log = logging.getLogger(__name__)
 

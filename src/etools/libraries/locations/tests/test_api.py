@@ -1,7 +1,7 @@
 from django.urls import reverse
 
 from etools.applications.EquiTrack.tests.cases import BaseTenantTestCase
-from etools.libraries.utils.test.api_checker import ViewSetChecker
+from etools.libraries.tests.api_checker import ViewSetChecker
 from unicef_locations.tests.factories import LocationFactory, GatewayTypeFactory, CartoDBTableFactory
 
 

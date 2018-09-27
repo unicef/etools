@@ -7,8 +7,8 @@ from rest_framework import serializers
 from unicef_restlib.fields import WriteListSerializeFriendlyRecursiveField
 from unicef_restlib.serializers import RecursiveListSerializer, WritableListSerializer, WritableNestedSerializerMixin
 
+from etools.applications.EquiTrack.utils import to_choices_list
 from etools.applications.audit.models import Risk, RiskBluePrint, RiskCategory
-from etools.applications.utils.common.utils import to_choices_list
 
 
 class BaseRiskSerializer(WritableNestedSerializerMixin, serializers.ModelSerializer):
@@ -36,6 +36,7 @@ class RiskSerializer(BaseRiskSerializer):
 
 
 class RiskSingletoneSerializer(BaseRiskSerializer):
+    """Here we expect only one Risk (business requirement)"""
     class Meta(BaseRiskSerializer.Meta):
         pass
 
@@ -86,6 +87,7 @@ class RiskBlueprintNestedSerializer(WritableNestedSerializerMixin, serializers.M
 class ManyRiskBlueprintNestedSerializer(RiskBlueprintNestedSerializer):
     """
     Risk blueprint connected with many risk values for certain engagement instance.
+    Used only for audit
     """
 
     risks = RiskSerializer(label=_('Risk Assessment'), many=True)
@@ -153,6 +155,7 @@ class ManyRiskCategoryNestedSerializer(RiskCategoryNestedSerializer):
 class RiskRootSerializer(WritableNestedSerializerMixin, serializers.ModelSerializer):
     """
     Root serializer for recursive risks categories. Contain questions and values together for easier usage.
+    model is RiskCategory
     """
 
     blueprints = RiskBlueprintNestedSerializer(required=False, many=True)

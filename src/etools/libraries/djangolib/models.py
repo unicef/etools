@@ -1,7 +1,42 @@
-
 import weakref
+from itertools import chain
 
 from django.contrib.auth.models import Group
+from django.contrib.contenttypes.fields import GenericForeignKey
+
+from model_utils.managers import InheritanceManager
+
+
+def get_all_field_names(TheModel):
+    """Return a list of all field names that are possible for this model (including reverse relation names).
+    Any internal-only field names are not included.
+
+    Replacement for MyModel._meta.get_all_field_names() which does not exist under Django 1.10.
+    https://github.com/django/django/blob/stable/1.7.x/django/db/models/options.py#L422
+    https://docs.djangoproject.com/en/1.10/ref/models/meta/#migrating-from-the-old-api
+    """
+    return list(set(chain.from_iterable(
+        (field.name, field.attname) if hasattr(field, 'attname') else (field.name,)
+        for field in TheModel._meta.get_fields()
+        if not (field.many_to_one and field.related_model is None) and
+        not isinstance(field, GenericForeignKey)
+    )))
+
+
+class InheritedModelMixin(object):
+    """
+    Mixin for easier access to subclasses. Designed to be tightly used with InheritanceManager
+    """
+
+    def get_subclass(self):
+        if not self.pk:
+            return self
+
+        manager = self._meta.model._default_manager
+        if not isinstance(manager, InheritanceManager):
+            return self
+
+        return manager.get_subclass(pk=self.pk)
 
 
 class GroupWrapper(object):

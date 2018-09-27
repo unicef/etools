@@ -6,7 +6,7 @@ from etools.applications.EquiTrack.tests.cases import BaseTenantTestCase
 from etools.applications.partners.models import PartnerType, PartnerOrganization
 from etools.applications.partners.tests.factories import (AgreementFactory, AgreementAmendmentFactory, PartnerFactory, InterventionFactory,
                                                           InterventionAmendmentFactory, InterventionResultLinkFactory)
-from etools.libraries.utils.test.api_checker import ApiCheckerMixin, ViewSetChecker, AssertTimeStampedMixin
+from etools.libraries.tests.api_checker import ApiCheckerMixin, ViewSetChecker, AssertTimeStampedMixin
 
 
 class TestAPIAgreements(ApiCheckerMixin, AssertTimeStampedMixin, BaseTenantTestCase):

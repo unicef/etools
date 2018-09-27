@@ -3,7 +3,7 @@ import json
 from datetime import datetime
 
 
-class EToolsEncoder(json.JSONEncoder):
+class JSONEncoder(json.JSONEncoder):
     def default(self, o):
         if isinstance(o, decimal.Decimal):
             return float(o)

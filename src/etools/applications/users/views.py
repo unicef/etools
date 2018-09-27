@@ -16,7 +16,7 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from etools.applications.audit.models import Auditor
-from etools.applications.EquiTrack.permissions import IsSuperUserOrStaff
+from etools.libraries.djangolib.permissions import IsSuperUserOrStaff
 from etools.applications.tpm.models import ThirdPartyMonitor
 from etools.applications.users.forms import ProfileForm
 from etools.applications.users.models import Country, Office, UserProfile

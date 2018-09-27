@@ -17,11 +17,11 @@ TEST_FILESIZE = len('a')
 
 @skipIf(not os.environ.get('AZURE_ACCOUNT_NAME'),
         reason='Skipped as not Azure connection informations available')
-@override_settings(AZURE_ACCOUNT_NAME=os.environ['AZURE_ACCOUNT_NAME'],
-                   AZURE_ACCOUNT_KEY=os.environ['AZURE_ACCOUNT_KEY'],
-                   AZURE_CONTAINER=os.environ['AZURE_CONTAINER'],
+@override_settings(AZURE_ACCOUNT_NAME=os.environ.get('AZURE_ACCOUNT_NAME', ''),
+                   AZURE_ACCOUNT_KEY=os.environ.get('AZURE_ACCOUNT_KEY', ''),
+                   AZURE_CONTAINER=os.environ.get('AZURE_CONTAINER', ''),
                    AZURE_SSL=True, AZURE_AUTO_SIGN=False,
-                   AZURE_ACCESS_POLICY_PERMISSION=os.environ['AZURE_ACCESS_POLICY_PERMISSION'],
+                   AZURE_ACCESS_POLICY_PERMISSION=os.environ.get('AZURE_ACCESS_POLICY_PERMISSION', ''),
                    AZURE_ACCESS_POLICY_EXPIRY=3600)
 class TestAzureStorage(TestCase):
     def setUp(self):

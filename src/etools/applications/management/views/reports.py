@@ -4,9 +4,9 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 from unicef_restlib.permissions import IsSuperUser
 
-from etools.applications.EquiTrack.utils import set_country
 from etools.applications.reports.synchronizers import ProgrammeSynchronizer
 from etools.applications.users.models import Country as Workspace
+from etools.libraries.tenant_support.utils import set_country
 
 
 class LoadResultStructure(APIView):

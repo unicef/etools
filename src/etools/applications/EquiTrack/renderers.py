@@ -1,11 +1,11 @@
-from rest_framework_csv import renderers as r
+from rest_framework_csv import renderers
 
 
-class CSVFlatRenderer(r.CSVRenderer):
+class CSVFlatRenderer(renderers.CSVRenderer):
     format = 'csv_flat'
 
 
-class FriendlyCSVRenderer(r.CSVRenderer):
+class FriendlyCSVRenderer(renderers.CSVRenderer):
     def flatten_item(self, item):
         if isinstance(item, bool):
             return {'': {True: 'Yes', False: ''}[item]}

@@ -6,6 +6,7 @@ from factory import fuzzy
 
 from rest_framework import status
 
+from etools.applications.EquiTrack.tests.test_utils import TestExportMixin
 from etools.applications.action_points.categories.models import Category
 from etools.applications.action_points.tests.base import ActionPointsTestCaseMixin
 from etools.applications.action_points.tests.factories import ActionPointFactory, ActionPointCategoryFactory
@@ -15,7 +16,6 @@ from etools.applications.partners.tests.factories import PartnerFactory
 from etools.applications.reports.tests.factories import SectionFactory
 from etools.applications.t2f.tests.factories import TravelActivityFactory, TravelFactory
 from etools.applications.tpm.tests.factories import UserFactory, TPMVisitFactory
-from etools.applications.utils.common.tests.test_utils import TestExportMixin
 
 
 class TestActionPointViewSet(TestExportMixin, ActionPointsTestCaseMixin, BaseTenantTestCase):

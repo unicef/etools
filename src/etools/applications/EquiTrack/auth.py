@@ -10,7 +10,7 @@ from rest_framework_jwt.authentication import JSONWebTokenAuthentication
 from rest_framework_jwt.settings import api_settings
 from rest_framework_jwt.utils import jwt_payload_handler
 
-from etools.applications.EquiTrack.utils import set_country
+from etools.libraries.tenant_support.utils import set_country
 
 jwt_decode_handler = api_settings.JWT_DECODE_HANDLER
 logger = logging.getLogger(__name__)

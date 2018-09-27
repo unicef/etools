@@ -7,6 +7,7 @@ from rest_framework import serializers
 from unicef_attachments.serializers import AttachmentPDFSerializer
 from unicef_restlib.fields import CommaSeparatedExportField
 
+from etools.applications.EquiTrack.utils import to_choices_list
 from etools.applications.audit.models import (
     Audit,
     Engagement,
@@ -30,7 +31,6 @@ from etools.applications.audit.serializers.risks import (
     RiskRootSerializer,
 )
 from etools.applications.partners.models import PartnerOrganization
-from etools.applications.utils.common.utils import to_choices_list
 
 
 class AuditorPDFSerializer(serializers.ModelSerializer):

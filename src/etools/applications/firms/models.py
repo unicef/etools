@@ -4,7 +4,7 @@ from django.utils.translation import ugettext_lazy as _
 
 from model_utils.models import TimeStampedModel
 
-from etools.applications.utils.common.models.mixins import ModelHavingTenantRelationsMixin
+from etools.libraries.tenant_support.models import ModelHavingTenantRelationsMixin
 
 
 class BaseFirmManager(models.Manager):

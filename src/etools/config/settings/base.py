@@ -188,7 +188,6 @@ SHARED_APPS = (
     'etools.applications.audit.purchase_order',
     'etools.applications.EquiTrack',
     'etools.applications.tpm.tpmpartners',
-    'etools.applications.utils.common',
     'waffle',
     'etools.applications.tokens',
     'etools.applications.permissions2',
@@ -367,7 +366,7 @@ REST_FRAMEWORK = {
         'rest_framework_xml.renderers.XMLRenderer',
         'rest_framework.renderers.MultiPartRenderer',
     ),
-    'DEFAULT_SCHEMA_CLASS': 'etools.applications.utils.common.inspectors.EToolsSchema',
+    'DEFAULT_SCHEMA_CLASS': 'etools.libraries.unicef_restlib.inspectors.EToolsSchema',
 }
 
 # django-cors-headers: https://github.com/ottoyiu/django-cors-headers

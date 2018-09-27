@@ -20,7 +20,8 @@ from etools.applications.partners.models import (
     InterventionAttachment,
 )
 from etools.applications.reports.models import CountryProgramme
-from etools.applications.utils.common.utils import run_on_all_tenants
+from etools.libraries.tenant_support.utils import run_on_all_tenants
+
 
 logger = logging.getLogger(__name__)
 

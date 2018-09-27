@@ -21,7 +21,6 @@ from rest_framework_csv import renderers as r
 from unicef_restlib.views import QueryStringFilterMixin
 from unicef_snapshot.models import Activity
 
-from etools.applications.EquiTrack.mixins import ExportModelMixin
 from etools.applications.EquiTrack.renderers import CSVFlatRenderer
 from etools.applications.partners.exports_v2 import InterventionCSVRenderer, InterventionLocationCSVRenderer
 from etools.applications.partners.filters import (
@@ -75,6 +74,7 @@ from etools.applications.partners.validation.interventions import InterventionVa
 from etools.applications.reports.models import AppliedIndicator, LowerResult, ReportingRequirement
 from etools.applications.reports.serializers.v2 import AppliedIndicatorSerializer, LowerResultSimpleCUSerializer
 from etools.applications.users.models import Country
+from etools.libraries.unicef_restlib.serializers import ExportModelMixin
 
 
 class InterventionListBaseView(ValidatorViewMixin, ListCreateAPIView):

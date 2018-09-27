@@ -22,7 +22,6 @@ from rest_framework.response import Response
 from rest_framework_csv.renderers import CSVRenderer, JSONRenderer
 from unicef_restlib.views import QueryStringFilterMixin
 
-from etools.applications.EquiTrack.mixins import ExportModelMixin
 from etools.applications.EquiTrack.renderers import CSVFlatRenderer
 from etools.applications.partners.filters import PartnerScopeFilter
 from etools.applications.partners.models import Intervention
@@ -53,6 +52,7 @@ from etools.applications.reports.serializers.v2 import (
     OutputListSerializer,
     SpecialReportingRequirementSerializer,
 )
+from etools.libraries.unicef_restlib.serializers import ExportModelMixin
 
 
 class OutputListAPIView(ListAPIView):

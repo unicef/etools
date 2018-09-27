@@ -23,9 +23,8 @@ from unicef_djangolib.fields import CodedGenericRelation, CurrencyField
 from unicef_locations.models import Location
 
 from etools.applications.environment.helpers import tenant_switch_is_active
-from etools.applications.EquiTrack.encoders import EToolsEncoder
-from etools.applications.EquiTrack.models import DSum
-from etools.applications.EquiTrack.serializers import StringConcat
+from etools.libraries.djangolib.encoders import JSONEncoder
+from etools.libraries.djangolib.aggregates import DSum, StringConcat
 from etools.applications.EquiTrack.utils import get_current_year, get_quarter, import_permissions
 from etools.applications.partners.validation import interventions as intervention_validation
 from etools.applications.partners.validation.agreements import (
@@ -536,7 +535,7 @@ class PartnerOrganization(TimeStampedModel):
 
         super(PartnerOrganization, self).save(*args, **kwargs)
         if hact_is_string:
-            self.hact_values = json.dumps(self.hact_values, cls=EToolsEncoder)
+            self.hact_values = json.dumps(self.hact_values, cls=JSONEncoder)
 
     @cached_property
     def partner_type_slug(self):
@@ -828,7 +827,7 @@ class PartnerOrganization(TimeStampedModel):
         hact['outstanding_findings'] = sum([
             audit.pending_unsupported_amount for audit in audits if audit.pending_unsupported_amount])
         hact['assurance_coverage'] = self.assurance_coverage
-        self.hact_values = json.dumps(hact, cls=EToolsEncoder)
+        self.hact_values = json.dumps(hact, cls=JSONEncoder)
         self.save()
 
     def get_admin_url(self):

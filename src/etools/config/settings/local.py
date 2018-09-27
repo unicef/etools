@@ -51,8 +51,6 @@ if 'test' in sys.argv:
     TEST_NON_SERIALIZED_APPS = [
         # These apps contains test models that haven't been created by migration.
         # So on the serialization stage these models do not exist.
-        'etools.applications.utils.common',
-        'etools.applications.utils.writable_serializers',
         'etools.applications.permissions2',
     ]
 
@@ -94,5 +92,5 @@ LOGGING['handlers']['console']['filters'] = ['tenant_context']
 LOGGING['handlers']['console']['formatter'] = 'tenant_context'
 
 SHELL_PLUS_PRE_IMPORTS = (
-    ('etools.applications.EquiTrack.util_scripts', '*'),
+    ('etools.libraries.tenant_support.utils', 'set_workspace'),
 )

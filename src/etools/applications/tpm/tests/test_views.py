@@ -9,6 +9,7 @@ from factory import fuzzy
 from rest_framework import status
 from unicef_attachments.models import AttachmentLink
 
+from etools.applications.EquiTrack.tests.test_utils import TestExportMixin
 from etools.applications.action_points.tests.factories import ActionPointFactory
 from etools.applications.attachments.tests.factories import AttachmentFactory, AttachmentFileTypeFactory
 from etools.applications.EquiTrack.tests.cases import BaseTenantTestCase
@@ -17,7 +18,6 @@ from etools.applications.reports.tests.factories import SectionFactory
 from etools.applications.tpm.models import ThirdPartyMonitor, TPMVisit
 from etools.applications.tpm.tests.base import TPMTestCaseMixin
 from etools.applications.tpm.tests.factories import _FUZZY_END_DATE, TPMPartnerFactory, TPMVisitFactory, UserFactory
-from etools.applications.utils.common.tests.test_utils import TestExportMixin
 
 
 class TestTPMVisitViewSet(TestExportMixin, TPMTestCaseMixin, BaseTenantTestCase):
