@@ -318,11 +318,18 @@ class TPMVisitViewSet(
     ordering_fields = (
         'tpm_partner__name', 'status'
     )
-    filter_fields = (
+    filter_fields = {field: ['exact'] for field in (
         'tpm_partner', 'tpm_activities__section', 'tpm_activities__partner', 'tpm_activities__locations',
         'tpm_activities__cp_output', 'tpm_activities__intervention', 'tpm_activities__date', 'status',
         'tpm_activities__unicef_focal_points', 'tpm_partner_focal_points',
-    )
+    )}
+
+    filter_fields.update({
+        'tpm_activities__partner': ['exact', 'in'],
+        'tpm_activities__cp_output': ['exact', 'in'],
+        'tpm_activities__section': ['exact', 'in'],
+        'status': ['exact', 'in'],
+    })
 
     def get_queryset(self):
         queryset = super(TPMVisitViewSet, self).get_queryset()
