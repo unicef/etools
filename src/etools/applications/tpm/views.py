@@ -1,4 +1,5 @@
 from django.contrib.contenttypes.models import ContentType
+from django.db.models import Q
 from django.http import Http404
 from django.utils import timezone
 from django.utils.translation import ugettext_lazy as _
@@ -71,7 +72,7 @@ from etools.applications.tpm.serializers.visit import (
     TPMVisitSerializer,
 )
 from etools.applications.tpm.tpmpartners.models import TPMPartner, TPMPartnerStaffMember
-from etools.applications.vision.adapters.tpm_adapter import TPMPartnerManualSynchronizer
+from etools.applications.tpm.tpmpartners.synchronizers import TPMPartnerManualSynchronizer
 
 
 class BaseTPMViewSet(
@@ -335,7 +336,10 @@ class TPMVisitViewSet(
                 hasattr(self.request.user, 'tpmpartners_tpmpartnerstaffmember'):
             queryset = queryset.filter(
                 tpm_partner=self.request.user.tpmpartners_tpmpartnerstaffmember.tpm_partner
-            ).exclude(status=TPMVisit.STATUSES.draft)
+            ).exclude(
+                Q(status=TPMVisit.STATUSES.draft) |
+                Q(status=TPMVisit.STATUSES.cancelled, date_of_assigned__isnull=True)  # cancelled draft
+            )
         else:
             queryset = queryset.none()
 
@@ -496,6 +500,9 @@ class BaseTPMAttachmentsViewSet(BaseTPMViewSet,
 
 class PartnerAttachmentsViewSet(BaseTPMAttachmentsViewSet):
     serializer_class = TPMPartnerAttachmentsSerializer
+    permission_classes = BaseTPMViewSet.permission_classes + [
+        get_permission_for_targets('tpmpartners.tpmpartner.attachments')
+    ]
 
     def get_view_name(self):
         return _('Attachments')

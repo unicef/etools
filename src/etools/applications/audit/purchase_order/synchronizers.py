@@ -3,7 +3,7 @@ from collections import OrderedDict
 
 from etools.applications.audit.purchase_order.models import AuditorFirm, PurchaseOrder, PurchaseOrderItem
 from etools.applications.funds.models import Donor, Grant
-from etools.applications.vision.adapters.manual import ManualVisionSynchronizer
+from etools.applications.vision.synchronizers import ManualVisionSynchronizer
 
 
 class POSynchronizer(ManualVisionSynchronizer):

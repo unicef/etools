@@ -17,8 +17,11 @@ from model_utils import Choices
 from rest_framework import status
 from rest_framework.exceptions import ErrorDetail
 from rest_framework.test import APIRequestFactory
+from unicef_locations.tests.factories import LocationFactory
 from unicef_snapshot.models import Activity
 
+from etools.applications.action_points.models import ActionPoint
+from etools.applications.action_points.tests.factories import ActionPointFactory
 from etools.applications.attachments.tests.factories import AttachmentFileTypeFactory
 from etools.applications.EquiTrack.tests.cases import BaseTenantTestCase
 from etools.applications.EquiTrack.tests.mixins import URLAssertionMixin
@@ -59,6 +62,8 @@ from etools.applications.reports.tests.factories import (
     ResultTypeFactory,
     SectionFactory,
 )
+from etools.applications.t2f.models import Travel, TravelType
+from etools.applications.t2f.tests.factories import TravelActivityFactory, TravelFactory
 from etools.applications.users.tests.factories import GroupFactory, OfficeFactory, UserFactory
 
 
@@ -2234,3 +2239,67 @@ class TestPartnershipDashboardView(BaseTenantTestCase):
             data=self.intervention_data
         )
         self.intervention_data = response.data
+
+
+class TestPartnerOrganizationDashboardAPIView(BaseTenantTestCase):
+
+    @classmethod
+    def setUpTestData(cls):
+        cls.sec1, cls.sec2, _ = SectionFactory.create_batch(3)
+        cls.loc1, cls.loc2, _ = LocationFactory.create_batch(3)
+        cls.partner = PartnerFactory(
+            name="New",
+            vendor_number='007',
+            total_ct_cy=1000.00,
+            total_ct_cp=789.00,
+            total_ct_ytd=123.00,
+            # outstanding_dct_amount_6_to_9_months_usd=69,
+            # outstanding_dct_amount_more_than_9_months_usd=90,
+        )
+
+        cls.unicef_staff = UserFactory(is_staff=True)
+        today = datetime.date.today()
+        agreement = AgreementFactory(partner=cls.partner, signed_by_unicef_date=today)
+        travel = TravelFactory(status=Travel.COMPLETED, traveler=cls.unicef_staff)
+        ta = TravelActivityFactory(travel_type=TravelType.PROGRAMME_MONITORING,
+                                   date=datetime.date.today() - datetime.timedelta(200),
+                                   travels=[travel, ], primary_traveler=cls.unicef_staff)
+        cls.intervention = InterventionFactory(agreement=agreement, status=Intervention.ACTIVE)
+        cls.intervention.sections.set([cls.sec1, cls.sec2])
+        cls.intervention.flat_locations.set([cls.loc1, cls.loc2])
+        cls.intervention.travel_activities.set([ta, ])
+        cls.intervention.save()
+        cls.act = ActionPointFactory.create_batch(3, travel_activity=ta, intervention=cls.intervention,
+                                                  status=ActionPoint.STATUS_OPEN)
+
+        ActionPointFactory.create_batch(3, intervention=cls.intervention, status=ActionPoint.STATUS_OPEN)
+        par = PartnerFactory(name="Other", vendor_number='008', total_ct_cy=1000.00)
+        int = InterventionFactory(agreement=AgreementFactory(partner=par, signed_by_unicef_date=today))
+        ActionPointFactory.create_batch(3, travel_activity=ta, intervention=int, status=ActionPoint.STATUS_OPEN)
+
+    def setUp(self):
+        self.response = self.forced_auth_req('get', reverse("partners_api:partner-dashboard"), user=self.unicef_staff)
+        data = self.response.data
+        self.assertEqual(len(data), 1)
+        self.record = data[0]
+
+    def test_queryset(self):
+        self.assertEqual(self.record['total_ct_cp'], '789.00')
+        self.assertEqual(self.record['total_ct_ytd'], '123.00')
+        # self.assertEqual(self.record['outstanding_dct_amount_6_to_9_months_usd'], '69.00')
+        # self.assertEqual(self.record['outstanding_dct_amount_more_than_9_months_usd'], '90.00')
+
+    def test_sections(self):
+        self.assertEqual(self.record['sections'], '{}|{}'.format(self.sec1.name, self.sec2.name))
+
+    def test_locations(self):
+        self.assertEqual(self.record['locations'], '{}|{}'.format(self.loc1.name, self.loc2.name))
+
+    def test_action_points(self):
+        self.assertEqual(self.record['action_points'], 3)
+
+    def test_no_recent_programmatic_visit(self):
+        self.assertEquals(self.record['last_pv_date'].date(), datetime.date.today() - datetime.timedelta(200))
+        self.assertEquals(self.record['days_last_pv'], 200)
+        self.assertTrue(self.record['alert_no_recent_pv'])
+        self.assertFalse(self.record['alert_no_pv'])

@@ -13,6 +13,14 @@ from etools.applications.reports.models import (AppliedIndicator, Disaggregation
 from etools.applications.reports.serializers.v1 import SectionSerializer
 
 
+class InterventionPDFileSerializer(serializers.ModelSerializer):
+    signed_pd_document_file = serializers.FileField(source='signed_pd_document', read_only=True)
+
+    class Meta:
+        model = Intervention
+        fields = ('signed_pd_document_file',)
+
+
 class PRPPartnerOrganizationListSerializer(serializers.ModelSerializer):
     rating = serializers.CharField(source='get_rating_display')
     unicef_vendor_number = serializers.CharField(source='vendor_number', read_only=True)
