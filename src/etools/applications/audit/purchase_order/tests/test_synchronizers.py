@@ -1,11 +1,13 @@
 
 import json
+from unittest import mock
 
+from etools.applications.audit.purchase_order import synchronizers
 from etools.applications.audit.purchase_order.models import AuditorFirm, PurchaseOrder, PurchaseOrderItem
+from etools.applications.audit.purchase_order.tasks import update_purchase_orders
 from etools.applications.EquiTrack.tests.cases import BaseTenantTestCase
 from etools.applications.funds.models import Donor, Grant
 from etools.applications.users.models import Country
-from etools.applications.vision.adapters import purchase_order as adapter
 
 
 class TestPSynchronizer(BaseTenantTestCase):
@@ -25,14 +27,14 @@ class TestPSynchronizer(BaseTenantTestCase):
             "GRANT_REF": "Grantor",
             "PO_ITEM": "456",
         }
-        self.adapter = adapter.POSynchronizer(self.country)
+        self.adapter = synchronizers.POSynchronizer(self.country)
 
     def test_init_no_object_number(self):
-        a = adapter.POSynchronizer(self.country)
+        a = synchronizers.POSynchronizer(self.country)
         self.assertEqual(a.country, self.country)
 
     def test_init(self):
-        a = adapter.POSynchronizer(self.country, object_number="123")
+        a = synchronizers.POSynchronizer(self.country, object_number="123")
         self.assertEqual(a.country, self.country)
 
     def test_convert_records_list(self):
@@ -78,3 +80,23 @@ class TestPSynchronizer(BaseTenantTestCase):
         self.assertTrue(auditor_qs.exists())
         self.assertTrue(donor_qs.exists())
         self.assertTrue(grant_qs.exists())
+
+
+class TestUpdatePurchaseOrders(BaseTenantTestCase):
+    @classmethod
+    def setUpTestData(cls):
+        cls.country = Country.objects.first()
+
+    @mock.patch("etools.applications.vision.tasks.logger.exception")
+    def test_update_purchase_orders_no_country(self, mock_logger_exception):
+        """Ensure no exceptions if no countries"""
+        update_purchase_orders(country_name="Wrong")
+        self.assertEqual(mock_logger_exception.call_count, 0)
+
+    @mock.patch("etools.applications.vision.tasks.logger.exception")
+    @mock.patch("etools.applications.audit.purchase_order.tasks.POSynchronizer")
+    def test_update_purchase_orders(self, synchronizer, mock_logger_exception):
+        """Ensure no exceptions if no countries"""
+        update_purchase_orders()
+        self.assertEqual(mock_logger_exception.call_count, 0)
+        self.assertEqual(synchronizer.call_count, 1)

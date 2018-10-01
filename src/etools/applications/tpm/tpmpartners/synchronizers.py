@@ -3,7 +3,7 @@ from copy import deepcopy
 
 from etools.applications.publics.models import Country
 from etools.applications.tpm.tpmpartners.models import TPMPartner
-from etools.applications.vision.adapters.manual import ManualVisionSynchronizer
+from etools.applications.vision.synchronizers import ManualVisionSynchronizer
 
 
 def _get_country_name(value):

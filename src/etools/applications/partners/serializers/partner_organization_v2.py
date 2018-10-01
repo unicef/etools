@@ -17,8 +17,9 @@ from etools.applications.partners.models import (
     PartnerOrganization,
     PartnerPlannedVisits,
     PartnerStaffMember,
+    PartnerType,
     PlannedEngagement,
-    PartnerType)
+)
 from etools.applications.partners.serializers.interventions_v2 import InterventionListSerializer
 
 
@@ -294,6 +295,24 @@ class PartnerOrganizationDetailSerializer(serializers.ModelSerializer):
     class Meta:
         model = PartnerOrganization
         fields = "__all__"
+
+
+class PartnerOrganizationDashboardSerializer(serializers.ModelSerializer):
+    sections = serializers.ReadOnlyField(read_only=True)
+    locations = serializers.ReadOnlyField(read_only=True)
+    action_points = serializers.ReadOnlyField(read_only=True)
+
+    class Meta:
+        model = PartnerOrganization
+        fields = (
+            'id',
+            'name',
+            'sections',
+            'locations',
+            'action_points',
+            'total_ct_cp',
+            'total_ct_ytd',
+        )
 
 
 class PartnerOrganizationCreateUpdateSerializer(SnapshotModelSerializer):

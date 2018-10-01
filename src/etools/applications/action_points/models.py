@@ -13,8 +13,8 @@ from unicef_snapshot.models import Activity
 
 from etools.applications.action_points.categories.models import Category
 from etools.applications.action_points.transitions.conditions import ActionPointCompleteActionsTakenCheck
-from etools.applications.EquiTrack.utils import get_environment
 from etools.applications.action_points.transitions.serializers.serializers import ActionPointCompleteSerializer
+from etools.applications.EquiTrack.utils import get_environment
 from etools.applications.permissions2.fsm import has_action_permission
 from etools.applications.utils.common.urlresolvers import build_frontend_url
 from etools.applications.utils.groups.wrappers import GroupWrapper
@@ -23,9 +23,12 @@ from etools.applications.utils.groups.wrappers import GroupWrapper
 class ActionPoint(TimeStampedModel):
     MODULE_CHOICES = Category.MODULE_CHOICES
 
+    STATUS_OPEN = 'open'
+    STATUS_COMPLETED = 'completed'
+
     STATUSES = Choices(
-        ('open', _('Open')),
-        ('completed', _('Completed')),
+        (STATUS_OPEN, _('Open')),
+        (STATUS_COMPLETED, _('Completed')),
     )
 
     STATUSES_DATES = {
