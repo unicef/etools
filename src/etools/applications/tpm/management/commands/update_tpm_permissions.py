@@ -238,6 +238,8 @@ class Command(BaseCommand):
                              condition=self.visit_status(TPMVisit.STATUSES.draft))
         self.add_permissions(self.pme, 'action', ['tpm.tpmvisit.assign', 'tpm.tpmvisit.cancel'],
                              condition=self.visit_status(TPMVisit.STATUSES.draft))
+        self.add_permissions(self.pme, 'view', ['tpm.tpmvisit.cancel_comment'],
+                             condition=self.visit_status(TPMVisit.STATUSES.draft))
 
         # visit cancelled
         self.add_permissions([self.unicef_user, self.third_party_monitor], 'view', ['tpm.tpmvisit.cancel_comment'],
@@ -246,9 +248,15 @@ class Command(BaseCommand):
         # visit assigned
         self.add_permissions(self.third_party_monitor, 'view', self.tpm_visit_details,
                              condition=self.visit_status(TPMVisit.STATUSES.assigned))
+        self.add_permissions(self.pme, 'edit', self.tpm_visit_details_editable,
+                             condition=self.visit_status(TPMVisit.STATUSES.assigned))
         self.add_permissions(self.pme, 'action', 'tpm.tpmvisit.cancel',
                              condition=self.visit_status(TPMVisit.STATUSES.assigned))
+        self.add_permissions(self.pme, 'view', ['tpm.tpmvisit.cancel_comment'],
+                             condition=self.visit_status(TPMVisit.STATUSES.assigned))
         self.add_permissions(self.third_party_focal_point, 'action', ['tpm.tpmvisit.accept', 'tpm.tpmvisit.reject'],
+                             condition=self.visit_status(TPMVisit.STATUSES.assigned))
+        self.add_permissions(self.third_party_focal_point, 'view', ['tpm.tpmvisit.reject_comment'],
                              condition=self.visit_status(TPMVisit.STATUSES.assigned))
 
         # tpm rejected
@@ -260,6 +268,8 @@ class Command(BaseCommand):
                              condition=self.visit_status(TPMVisit.STATUSES.tpm_rejected))
         self.add_permissions(self.pme, 'action', ['tpm.tpmvisit.assign', 'tpm.tpmvisit.cancel'],
                              condition=self.visit_status(TPMVisit.STATUSES.tpm_rejected))
+        self.add_permissions(self.pme, 'view', ['tpm.tpmvisit.cancel_comment'],
+                             condition=self.visit_status(TPMVisit.STATUSES.tpm_rejected))
 
         # tpm accepted
         self.add_permissions(self.third_party_monitor, 'view', self.tpm_visit_details,
@@ -270,6 +280,8 @@ class Command(BaseCommand):
                              condition=self.visit_status(TPMVisit.STATUSES.tpm_accepted))
 
         self.add_permissions(self.pme, 'action', 'tpm.tpmvisit.cancel',
+                             condition=self.visit_status(TPMVisit.STATUSES.tpm_accepted))
+        self.add_permissions(self.pme, 'view', ['tpm.tpmvisit.cancel_comment'],
                              condition=self.visit_status(TPMVisit.STATUSES.tpm_accepted))
 
         # tpm reported

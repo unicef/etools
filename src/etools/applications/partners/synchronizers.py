@@ -3,7 +3,8 @@ import logging
 from datetime import datetime
 from decimal import Decimal
 
-from django.db import connection
+from django.core.exceptions import ValidationError
+from django.db import connection, transaction
 
 from etools.applications.partners.models import PartnerOrganization, PlannedEngagement
 from etools.applications.partners.tasks import notify_partner_hidden
@@ -291,3 +292,80 @@ class FilePartnerSynchronizer(FileDataSynchronizer, PartnerSynchronizer):
     >>> filename = '/home/user/Downloads/partners.json'
     >>> FilePartnerSynchronizer(country, filename).sync()
     """
+
+
+class DirectCashTransferSynchronizer(VisionDataSynchronizer):
+
+    model = PartnerOrganization
+
+    ENDPOINT = 'GetDCTInfo_json'
+    UNIQUE_KEY = 'VENDOR_CODE'
+
+    REQUIRED_KEYS = (
+        'VENDOR_NAME',
+        'VENDOR_CODE',
+    )
+    AGGREGATE_KEYS = (
+        'DCT_AMT_USD',
+        'LIQUIDATION_AMT_USD',
+        'OUTSTANDING_BALANCE_USD',
+        'AMT_LESS3_MONTHS_USD',
+        'AMT_3TO6_MONTHS_USD',
+        'AMT_6TO9_MONTHS_USD',
+        'AMT_MORE9_MONTHS_USD',
+    )
+    OTHER_KEYS = (
+        'WBS_ELEMENT_EX',
+        'GRANT_REF',
+        'DONOR_NAME',
+        'EXPIRY_DATE',
+        'COMMITMENT_REF',
+        'DCT_AMT_USD',
+        'LIQUIDATION_AMT_USD',
+        'OUTSTANDING_BALANCE_USD',
+        'AMT_LESS3_MONTHS_USD',
+        'AMT_3TO6_MONTHS_USD',
+        'AMT_6TO9_MONTHS_USD',
+        'AMT_MORE9_MONTHS_USD',
+    )
+
+    MAPPING = {
+        'outstanding_dct_amount_6_to_9_months_usd': 'AMT_6TO9_MONTHS_USD',
+        'outstanding_dct_amount_more_than_9_months_usd': 'AMT_MORE9_MONTHS_USD',
+    }
+
+    def create_dict(self, records):
+        dcts = {}
+        for record in records:
+            vendor_code = record[self.UNIQUE_KEY]
+            if vendor_code not in dcts:
+                dcts[vendor_code] = {key: 0 for key, value in self.MAPPING.items()}
+            for key, value in self.MAPPING.items():
+                dcts[vendor_code][key] += record[value]
+        return dcts
+
+    @transaction.atomic
+    def _save(self, dcts):
+        processed = 0
+        for key, dct_dict in dcts.items():
+            try:
+                partner = self.model.objects.get(vendor_number=key)
+                for field, value in dct_dict.items():
+                    setattr(partner, field, value)
+                partner.save()
+                processed += 1
+            except self.model.DoesNotExist:
+                logger.info('No object found')
+            except ValidationError:
+                logger.info('Validation error')
+
+        return processed
+
+    def _convert_records(self, records):
+        return json.loads(records)
+
+    def _save_records(self, records):
+        filtered_records = self._filter_records(records)
+        dcts = self.create_dict(filtered_records)
+        processed = self._save(dcts)
+        return processed
