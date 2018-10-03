@@ -58,6 +58,7 @@ from etools.applications.tpm.serializers.attachments import (
     ActivityAttachmentsSerializer,
     ActivityReportSerializer,
     TPMPartnerAttachmentsSerializer,
+    TPMVisitAttachmentsSerializer,
     TPMVisitReportAttachmentsSerializer,
 )
 from etools.applications.tpm.serializers.partner import (
@@ -543,6 +544,31 @@ class VisitReportAttachmentsViewSet(BaseTPMAttachmentsViewSet):
             return {}
 
         return {
+            'code': 'visit_report_attachments',
+            'content_type_id': ContentType.objects.get_for_model(TPMVisit).id,
+            'object_id': parent.pk,
+        }
+
+    def perform_create(self, serializer):
+        serializer.save(content_object=self.get_parent_object())
+
+
+class VisitAttachmentsViewSet(BaseTPMAttachmentsViewSet):
+    serializer_class = TPMVisitAttachmentsSerializer
+    permission_classes = BaseTPMViewSet.permission_classes + [
+        get_permission_for_targets('tpm.tpmvisit.attachments')
+    ]
+
+    def get_view_name(self):
+        return _('Visit Attachments')
+
+    def get_parent_filter(self):
+        parent = self.get_parent_object()
+        if not parent:
+            return {}
+
+        return {
+            'code': 'visit_attachments',
             'content_type_id': ContentType.objects.get_for_model(TPMVisit).id,
             'object_id': parent.pk,
         }

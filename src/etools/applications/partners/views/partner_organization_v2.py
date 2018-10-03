@@ -225,8 +225,6 @@ class PartnerOrganizationDashboardAPIView(ExportModelMixin, ListAPIView):
             sections=StringConcat("agreements__interventions__sections__name", separator="|", distinct=True),
             locations=StringConcat("agreements__interventions__flat_locations__name", separator="|", distinct=True),
         )
-        # on hold: Cost Centre
-        # on hold: Outstanding DCT >6 and >9 months
         return qs
 
     def list(self, request, format=None):

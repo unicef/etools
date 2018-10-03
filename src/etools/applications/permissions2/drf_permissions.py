@@ -27,6 +27,7 @@ class HasTargetsPermission(BasePermission):
 
 
 def get_permission_for_targets(permission_targets):
+    """Generate view level permissions based on target"""
     if isinstance(permission_targets, str):
         permission_targets = [permission_targets]
 
