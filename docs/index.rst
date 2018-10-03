@@ -12,6 +12,7 @@ Welcome to eTools's documentation!
 
    guidelines
    feature-flags
+   libraries
 
 
 Indices and tables
