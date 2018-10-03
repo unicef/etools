@@ -7,10 +7,12 @@ from tenant_schemas.test.client import TenantClient
 from etools.applications.EquiTrack.tests.cases import BaseTenantTestCase
 from unicef_locations.tests.factories import LocationFactory
 from etools.applications.partners.models import Intervention
-from etools.applications.partners.tests.factories import InterventionFactory
+from etools.applications.activities.models import Activity
+from etools.applications.partners.tests.factories import InterventionFactory, AgreementFactory, PartnerFactory
 from etools.applications.t2f.models import Travel, TravelType
 from etools.applications.t2f.tests.factories import TravelActivityFactory, TravelFactory
 from etools.applications.users.tests.factories import CountryFactory, GroupFactory, UserFactory
+from etools.applications.action_points.tests.factories import ActionPointFactory
 
 
 class InvalidateCacheTest(BaseTenantTestCase):
@@ -167,11 +169,16 @@ class TestGisLocationViews(BaseTenantTestCase):
         self.unicef_staff.profile.country = self.country
         self.unicef_staff.save()
 
+        self.partner = PartnerFactory()
+        self.agreement = AgreementFactory(partner=self.partner)
+        self.intervention = InterventionFactory(agreement=self.agreement)
+
         self.location_no_geom = LocationFactory(name="Test no geom")
         self.location_with_geom = LocationFactory(
             name="Test with geom",
             geom="MultiPolygon(((10 10, 10 20, 20 20, 20 15, 10 10)), ((10 10, 10 20, 20 20, 20 15, 10 10)))"
         )
+        self.locations = [self.location_no_geom, self.location_with_geom]
 
     def test_non_auth(self):
         response = self.client.get(reverse("locations-gis-in-use"))
@@ -196,7 +203,7 @@ class TestGisLocationViews(BaseTenantTestCase):
         response = self.client.get(url)
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
-    def test_intervention_locations_in_use(self):
+    def test_locations_in_use(self):
         self.client.force_login(self.unicef_staff)
         url = reverse("locations-gis-in-use")
 
@@ -212,6 +219,10 @@ class TestGisLocationViews(BaseTenantTestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         # see if no location are in use yet
         self.assertEqual(len(response.json()), 0)
+
+    def test_intervention_locations_in_use(self):
+        self.client.force_login(self.unicef_staff)
+        reverse("locations-gis-in-use")
 
         # add intervention locations and test the response
         intervention = InterventionFactory(status=Intervention.SIGNED)
@@ -229,19 +240,6 @@ class TestGisLocationViews(BaseTenantTestCase):
     def test_travel_locations_in_use(self):
         self.client.force_login(self.unicef_staff)
 
-        # test with missing country, expect error
-        url = reverse("locations-gis-in-use")
-        response = self.client.get(url)
-        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
-
-        response = self.client.get(
-            "{}?country_id={}".format(url, self.country.id),
-            user=self.unicef_staff
-        )
-
-        # see if no location are in use yet
-        self.assertEqual(len(response.json()), 0)
-
         # add travel locations to the DB
         self.addTravelLocations()
 
@@ -251,6 +249,39 @@ class TestGisLocationViews(BaseTenantTestCase):
         )
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(sorted(response.data[0].keys()), ["gateway_id", "id", "level", "name", "p_code", "parent_id"])
+
+    def test_activities_in_use(self):
+        self.client.force_login(self.unicef_staff)
+        activity = Activity(
+            partner=self.partner,
+            intervention=self.intervention
+        )
+        activity.save()
+        activity.locations.add(*self.locations)
+
+        response = self.client.get(
+            "{}?country_id={}".format(reverse("locations-gis-in-use"), self.country.id),
+            user=self.unicef_staff
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(response.data), 2)
+        self.assertEqual(sorted(response.data[0].keys()), ["gateway_id", "id", "level", "name", "p_code", "parent_id"])
+
+    def test_action_points_in_use(self):
+        self.client.force_login(self.unicef_staff)
+        ActionPointFactory(
+            location=self.location_no_geom
+        )
+
+        response = self.client.get(
+            "{}?country_id={}".format(reverse("locations-gis-in-use"), self.country.id),
+            user=self.unicef_staff
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(response.data), 1)
         self.assertEqual(sorted(response.data[0].keys()), ["gateway_id", "id", "level", "name", "p_code", "parent_id"])
 
     def test_intervention_locations_geom(self):
