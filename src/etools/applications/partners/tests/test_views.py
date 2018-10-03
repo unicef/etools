@@ -14,6 +14,7 @@ from django.utils import timezone
 
 import mock
 from model_utils import Choices
+from pytz import UTC
 from rest_framework import status
 from rest_framework.exceptions import ErrorDetail
 from rest_framework.test import APIRequestFactory
@@ -2259,10 +2260,12 @@ class TestPartnerOrganizationDashboardAPIView(BaseTenantTestCase):
 
         cls.unicef_staff = UserFactory(is_staff=True)
         today = datetime.date.today()
+        date_200 = datetime.datetime.now() - datetime.timedelta(200)
+        date_200 = datetime.datetime(date_200.year, date_200.month, date_200.day, tzinfo=UTC)
         agreement = AgreementFactory(partner=cls.partner, signed_by_unicef_date=today)
         travel = TravelFactory(status=Travel.COMPLETED, traveler=cls.unicef_staff)
         ta = TravelActivityFactory(travel_type=TravelType.PROGRAMME_MONITORING,
-                                   date=datetime.date.today() - datetime.timedelta(200),
+                                   date=date_200,
                                    travels=[travel, ], primary_traveler=cls.unicef_staff)
         cls.intervention = InterventionFactory(agreement=agreement, status=Intervention.ACTIVE)
         cls.intervention.sections.set([cls.sec1, cls.sec2])
