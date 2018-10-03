@@ -2,6 +2,8 @@ from django.conf.urls import url
 
 from .views.gis_v1 import GisLocationsGeomDetailsViewset, GisLocationsGeomListViewset, GisLocationsInUseViewset
 
+app_name = 'management_gis'
+
 urlpatterns = [
     # gis URLs
     url(r'^in-use/$', GisLocationsInUseViewset.as_view(), name='locations-gis-in-use'),

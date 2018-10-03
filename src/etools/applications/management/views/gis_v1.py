@@ -14,6 +14,8 @@ from etools.applications.partners.models import Intervention
 from etools.applications.reports.models import AppliedIndicator
 from etools.applications.t2f.models import TravelActivity
 from etools.applications.users.models import Country
+from etools.applications.activities.models import Activity
+from etools.applications.action_points.models import ActionPoint
 
 
 class GisLocationsInUseViewset(ListAPIView):
@@ -37,8 +39,10 @@ class GisLocationsInUseViewset(ListAPIView):
         except Country.DoesNotExist:
             return Response(status=400, data={'error': 'Country not found'})
         else:
-            interventions = Intervention.objects.all()
             location_ids = set()
+
+            # interventions
+            interventions = Intervention.objects.all()
 
             for intervention in interventions:
                 for loc in intervention.flat_locations.all():
@@ -52,6 +56,7 @@ class GisLocationsInUseViewset(ListAPIView):
                 for iloc in indicator.locations.all():
                     location_ids.add(iloc.id)
 
+            # travels
             travel_activities = TravelActivity.objects.prefetch_related(
                 'locations'
             ).all()
@@ -59,6 +64,15 @@ class GisLocationsInUseViewset(ListAPIView):
             for travel_activity in travel_activities:
                 for t2f_loc in travel_activity.locations.all():
                     location_ids.add(t2f_loc.id)
+
+            # activities
+            for activity in Activity.objects.all():
+                for act_loc in activity.locations.all():
+                    location_ids.add(act_loc.id)
+
+            # action points
+            for acp in ActionPoint.objects.filter(location__isnull=False):
+                location_ids.add(acp.location.id)
 
             locations = Location.objects.filter(
                 pk__in=list(location_ids),
