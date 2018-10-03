@@ -4,7 +4,7 @@ from django.utils import timezone
 from celery.utils.log import get_task_logger
 
 from etools.applications.funds.synchronizers import FundReservationsSynchronizer, FundCommitmentSynchronizer
-from etools.applications.partners.synchronizers import PartnerSynchronizer
+from etools.applications.partners.synchronizers import PartnerSynchronizer, DirectCashTransferSynchronizer
 from etools.applications.reports.synchronizers import ProgrammeSynchronizer, RAMSynchronizer
 from etools.applications.users.models import Country
 from etools.applications.vision.exceptions import VisionException
@@ -19,6 +19,7 @@ SYNC_HANDLERS = {
     'partner': PartnerSynchronizer,
     'fund_reservation': FundReservationsSynchronizer,
     'fund_commitment': FundCommitmentSynchronizer,
+    'dct': DirectCashTransferSynchronizer,
 }
 
 

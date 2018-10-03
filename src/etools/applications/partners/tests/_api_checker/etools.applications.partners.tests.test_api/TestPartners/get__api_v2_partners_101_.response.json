@@ -78,8 +78,8 @@
             "expiring_assessment_flag": false,
             "approaching_threshold_flag": false
         },
-        "created": "2018-09-10T10:17:07.409000Z",
-        "modified": "2018-09-10T10:17:07.412000Z",
+        "created": "2018-09-13T21:39:04.713000Z",
+        "modified": "2018-09-13T21:39:04.717000Z",
         "partner_type": "Civil Society Organization",
         "cso_type": "International",
         "name": "Partner 8",
@@ -109,6 +109,8 @@
         "net_ct_cy": null,
         "reported_cy": null,
         "total_ct_ytd": null,
+        "outstanding_dct_amount_6_to_9_months_usd": null,
+        "outstanding_dct_amount_more_than_9_months_usd": null,
         "basis_for_risk_rating": ""
     },
     "content_type": null
