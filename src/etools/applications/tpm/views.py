@@ -58,6 +58,7 @@ from etools.applications.tpm.serializers.attachments import (
     ActivityAttachmentsSerializer,
     ActivityReportSerializer,
     TPMPartnerAttachmentsSerializer,
+    TPMVisitAttachmentsSerializer,
     TPMVisitReportAttachmentsSerializer,
 )
 from etools.applications.tpm.serializers.partner import (
@@ -318,11 +319,18 @@ class TPMVisitViewSet(
     ordering_fields = (
         'tpm_partner__name', 'status'
     )
-    filter_fields = (
+    filter_fields = {field: ['exact'] for field in (
         'tpm_partner', 'tpm_activities__section', 'tpm_activities__partner', 'tpm_activities__locations',
         'tpm_activities__cp_output', 'tpm_activities__intervention', 'tpm_activities__date', 'status',
         'tpm_activities__unicef_focal_points', 'tpm_partner_focal_points',
-    )
+    )}
+
+    filter_fields.update({
+        'tpm_activities__partner': ['exact', 'in'],
+        'tpm_activities__cp_output': ['exact', 'in'],
+        'tpm_activities__section': ['exact', 'in'],
+        'status': ['exact', 'in'],
+    })
 
     def get_queryset(self):
         queryset = super(TPMVisitViewSet, self).get_queryset()
@@ -536,6 +544,31 @@ class VisitReportAttachmentsViewSet(BaseTPMAttachmentsViewSet):
             return {}
 
         return {
+            'code': 'visit_report_attachments',
+            'content_type_id': ContentType.objects.get_for_model(TPMVisit).id,
+            'object_id': parent.pk,
+        }
+
+    def perform_create(self, serializer):
+        serializer.save(content_object=self.get_parent_object())
+
+
+class VisitAttachmentsViewSet(BaseTPMAttachmentsViewSet):
+    serializer_class = TPMVisitAttachmentsSerializer
+    permission_classes = BaseTPMViewSet.permission_classes + [
+        get_permission_for_targets('tpm.tpmvisit.attachments')
+    ]
+
+    def get_view_name(self):
+        return _('Visit Attachments')
+
+    def get_parent_filter(self):
+        parent = self.get_parent_object()
+        if not parent:
+            return {}
+
+        return {
+            'code': 'visit_attachments',
             'content_type_id': ContentType.objects.get_for_model(TPMVisit).id,
             'object_id': parent.pk,
         }
