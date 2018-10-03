@@ -7,6 +7,7 @@ from etools.applications.audit.purchase_order.models import (AuditorFirm, Audito
 class AuditorStaffMemberInlineAdmin(admin.StackedInline):
     model = AuditorStaffMember
     extra = 1
+    raw_id_fields = ('user', )
 
 
 @admin.register(AuditorFirm)
