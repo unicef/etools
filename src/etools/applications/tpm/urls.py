@@ -11,6 +11,7 @@ from etools.applications.tpm.views import (
     TPMPartnerViewSet,
     TPMStaffMembersViewSet,
     TPMVisitViewSet,
+    VisitAttachmentsViewSet,
     VisitReportAttachmentsViewSet,
 )
 
@@ -29,6 +30,8 @@ tpm_visits_api.register(r'visits', TPMVisitViewSet, base_name='visits')
 visit_attachments_api = NestedComplexRouter(tpm_visits_api, r'visits')
 visit_attachments_api.register('report-attachments', VisitReportAttachmentsViewSet,
                                base_name='visit-report-attachments')
+visit_attachments_api.register('attachments', VisitAttachmentsViewSet,
+                               base_name='visit-attachments')
 visit_attachments_api.register('activities/attachments', ActivityAttachmentsViewSet,
                                base_name='activity-attachments')
 visit_attachments_api.register('activities/report-attachments', ActivityReportAttachmentsViewSet,

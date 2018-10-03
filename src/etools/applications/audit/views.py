@@ -257,8 +257,17 @@ class EngagementViewSet(
     search_fields = ('partner__name', 'agreement__auditor_firm__name')
     ordering_fields = ('agreement__order_number', 'agreement__auditor_firm__name',
                        'partner__name', 'engagement_type', 'status')
-    filter_fields = ('agreement', 'agreement__auditor_firm', 'partner', 'engagement_type', 'joint_audit',
-                     'agreement__auditor_firm__unicef_users_allowed', 'staff_members__user')
+
+    filter_fields = filter_fields = {field: ['exact'] for field in (
+        'agreement', 'agreement__auditor_firm', 'partner', 'engagement_type', 'joint_audit',
+        'agreement__auditor_firm__unicef_users_allowed', 'staff_members__user'
+    )}
+
+    filter_fields.update({
+        'agreement__auditor_firm': ['exact', 'in'],
+        'engagement_type': ['exact', 'in'],
+        'partner': ['exact', 'in'],
+    })
 
     ENGAGEMENT_MAPPING = {
         Engagement.TYPES.audit: {
@@ -468,6 +477,7 @@ class AuditorStaffMembersViewSet(
     filter_backends = (OrderingFilter, SearchFilter, DjangoFilterBackend, )
     ordering_fields = ('user__email', 'user__first_name', 'id', )
     search_fields = ('user__first_name', 'user__email', 'user__last_name', )
+    filter_fields = ('user__profile__country__schema_name', 'user__profile__country__name')
 
     def get_queryset(self):
         queryset = super(AuditorStaffMembersViewSet, self).get_queryset()

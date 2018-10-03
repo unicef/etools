@@ -1,6 +1,5 @@
 import csv
 import json
-from datetime import date, datetime
 
 from django.conf import settings
 from django.contrib.auth import get_user_model
@@ -11,7 +10,6 @@ from django.utils.encoding import force_text
 
 import requests
 from celery.utils.log import get_task_logger
-from dateutil.relativedelta import relativedelta
 
 from etools.applications.users.models import Country
 from etools.applications.vision.exceptions import VisionException
@@ -330,40 +328,3 @@ class UserVisionSynchronizer(object):
     @property
     def response(self):
         return self._filter_records(self._convert_records(self._load_records()))
-
-
-@app.task
-def user_report(writer, **kwargs):
-
-    start_date = kwargs.get('start_date', None)
-    if start_date:
-        start_date = datetime.strptime(start_date.pop(), '%Y-%m-%d')
-    else:
-        start_date = date.today() + relativedelta(months=-1)
-
-    countries = kwargs.get('countries', None)
-    qs = Country.objects.exclude(schema_name__in=['public', 'uat', 'frg'])
-    if countries:
-        qs = qs.filter(schema_name__in=countries.pop().split(','))
-    fieldnames = ['Country', 'Total Users', 'Unicef Users', 'Last month Users', 'Last month Unicef Users']
-    dict_writer = writer(fieldnames=fieldnames)
-    dict_writer.writeheader()
-
-    for country in qs:
-        dict_writer.writerow({
-            'Country': country,
-            'Total Users': get_user_model().objects.filter(profile__country=country).count(),
-            'Unicef Users': get_user_model().objects.filter(
-                profile__country=country,
-                email__endswith='@unicef.org'
-            ).count(),
-            'Last month Users': get_user_model().objects.filter(
-                profile__country=country,
-                last_login__gte=start_date
-            ).count(),
-            'Last month Unicef Users': get_user_model().objects.filter(
-                profile__country=country,
-                email__endswith='@unicef.org',
-                last_login__gte=start_date
-            ).count(),
-        })
