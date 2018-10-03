@@ -11,36 +11,6 @@ import django.db.migrations.operations.special
 import django.db.models.deletion
 import tenant_schemas.postgresql_backend.base
 
-from etools.applications.utils.common.migrating import fix_null_values
-
-# Functions from the following migrations need manual copying.
-# Move them and any dependencies into this file, then update the
-# RunPython operations to refer to the local versions:
-# users.migrations.0003_fix_null_values
-# users.migrations.0007_user
-def fix_nulls(apps, schema):
-    # Change null values in these fields to empty strings
-    fix_null_values(
-        apps.get_model('users.country'),
-        [
-            'business_area_code',
-            'country_short_code',
-            'long_name',
-        ]
-    )
-    fix_null_values(
-        apps.get_model('users.userprofile'),
-        [
-            'job_title',
-            'org_unit_code',
-            'org_unit_name',
-            'phone_number',
-            'post_number',
-            'post_title',
-            'section_code',
-        ]
-    )
-
 
 class Migration(migrations.Migration):
 
@@ -162,10 +132,6 @@ class Migration(migrations.Migration):
             model_name='country',
             name='offices',
             field=models.ManyToManyField(related_name='offices', to='users.Office', verbose_name='Offices'),
-        ),
-        migrations.RunPython(
-            code=fix_nulls,
-            reverse_code=django.db.migrations.operations.special.RunPython.noop,
         ),
         migrations.AlterField(
             model_name='country',

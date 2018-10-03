@@ -106,7 +106,7 @@ class Permission(models.Model):
         :param permissions:
         :param targets:
         :param kind:
-        :return:
+        :return: the list of allowed targets
         """
         permissions = list(permissions)
 
@@ -122,7 +122,7 @@ class Permission(models.Model):
                 children = collect_child_models(model, levels=1)
                 children_map[model] = children
 
-            # apply permissions to childs, in case of inheritance
+            # apply permissions to children, in case of inheritance
             imaginary_permissions = [Permission(permission=perm.permission,
                                                 permission_type=perm.permission_type,
                                                 condition=perm.condition,
