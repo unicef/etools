@@ -248,7 +248,7 @@ class TravelDetails(URLAssertionMixin, BaseTenantTestCase):
                                                          kwargs={'travel_pk': travel_id}),
                                         data=data, user=self.traveler)
         response_json = json.loads(response.rendered_content)
-        self.assertEqual(response_json['itinerary'][0]['airlines'], [airlines_1.id, airlines_3.id])
+        self.assertEqual(sorted(response_json['itinerary'][0]['airlines']), sorted([airlines_1.id, airlines_3.id]))
 
     def test_preserved_expenses(self):
         currency = PublicsCurrencyFactory()

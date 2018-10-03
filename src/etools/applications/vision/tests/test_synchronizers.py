@@ -1,3 +1,4 @@
+from django.conf import settings
 from django.test import override_settings
 from django.utils.timezone import now as django_now
 
@@ -7,6 +8,7 @@ from etools.applications.EquiTrack.tests.cases import BaseTenantTestCase
 from etools.applications.users.models import Country
 from etools.applications.vision.exceptions import VisionException
 from etools.applications.vision.models import VisionSyncLog
+from etools.applications.vision.synchronizers import ManualDataLoader
 from etools.applications.vision.vision_data_synchronizer import (VISION_NO_DATA_MESSAGE, VisionDataLoader,
                                                                  VisionDataSynchronizer,)
 
@@ -391,3 +393,23 @@ class TestVisionDataSynchronizerSync(BaseTenantTestCase):
         self.assertEqual(mock_logger_info.call_args_list[2][1], {'exc_info': True})
 
         self._assertVisionSyncLogFundamentals(0, 0, exception_message='Wrong!', successful=False)
+
+
+class TestManualDataLoader(BaseTenantTestCase):
+    def test_init_no_endpoint_no_object_number(self):
+        with self.assertRaisesRegexp(
+                VisionException,
+                "You must set the ENDPOINT"
+        ):
+            ManualDataLoader()
+
+    def test_init_no_endpoint(self):
+        with self.assertRaisesRegexp(
+                VisionException,
+                "You must set the ENDPOINT"
+        ):
+            ManualDataLoader(object_number="123")
+
+    def test_init(self):
+        a = ManualDataLoader(endpoint="api", object_number="123")
+        self.assertEqual(a.url, "{}/api/123".format(settings.VISION_URL))

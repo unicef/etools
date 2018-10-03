@@ -466,9 +466,8 @@ class TravelDetailsSerializer(PermissionBasedModelSerializer):
 
 
 class TravelListSerializer(TravelDetailsSerializer):
-    # TODO: reserve field names to pks for related fields and add _name for the names
-    traveler = serializers.CharField(source='traveler.get_full_name')
-    supervisor_name = serializers.CharField(source='supervisor.get_full_name')
+    traveler = serializers.CharField(source='traveler.get_full_name', allow_null=True)
+    supervisor_name = serializers.CharField(source='supervisor.get_full_name', allow_null=True)
 
     class Meta:
         model = Travel
