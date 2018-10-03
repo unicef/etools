@@ -1,13 +1,11 @@
 import celery
-from carto.exceptions import CartoException
-from carto.sql import SQLClient
 from celery.utils.log import get_task_logger
 
 from django.contrib.contenttypes.models import ContentType
 # from django.db import IntegrityError, transaction
 # from django.utils.encoding import force_text
 
-from unicef_locations.models import CartoDBTable, Location, LocationRemapHistory
+from unicef_locations.models import LocationRemapHistory
 # from unicef_locations.tasks import update_sites_from_cartodb
 
 from etools.applications.partners.models import Intervention
@@ -19,6 +17,7 @@ from etools.applications.action_points.models import ActionPoint
 
 logger = get_task_logger(__name__)
 
+
 @celery.current_app.task
 def save_location_remap_history(imported_locations):
     '''
@@ -29,7 +28,7 @@ def save_location_remap_history(imported_locations):
     if not imported_locations:
         return
 
-    remapped_locations = {loc[1]:loc[0] for loc in imported_locations if loc[1]}
+    remapped_locations = {loc[1]: loc[0] for loc in imported_locations if loc[1]}
 
     if not remapped_locations:
         return
@@ -112,6 +111,6 @@ def save_location_remap_history(imported_locations):
             content_type=ctp,
             object_id=actionpoint.id,
         )
-        actionpoint.location.id=new_location
+        actionpoint.location.id = new_location
         actionpoint.save()
         # TODO: logs

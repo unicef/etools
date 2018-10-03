@@ -14,8 +14,13 @@ from etools.applications.management.urls import urlpatterns as management_urls
 from etools.applications.partners.views.v1 import FileTypeViewSet
 from etools.applications.publics import urls as publics_patterns
 from etools.applications.publics.views import StaticDataView
-from etools.applications.reports.views.v1 import IndicatorViewSet, ResultTypeViewSet, ResultViewSet, UnitViewSet, \
-    SectionViewSet
+from etools.applications.reports.views.v1 import (
+    IndicatorViewSet,
+    ResultTypeViewSet,
+    ResultViewSet,
+    SectionViewSet,
+    UnitViewSet,
+)
 from etools.applications.t2f.urls import urlpatterns as t2f_patterns
 from etools.applications.users.views import (
     CountriesViewSet,
@@ -25,6 +30,7 @@ from etools.applications.users.views import (
     UserViewSet,
 )
 from etools.applications.utils.common.schemas import get_schema_view, get_swagger_view
+# this import is us to autodiscover the customised locations admin form(which is outside of INSTALLED_APPS)
 from etools.libraries.locations.views import (
     CartoDBTablesView,
     LocationQuerySetView,
@@ -32,8 +38,6 @@ from etools.libraries.locations.views import (
     LocationsViewSet,
     LocationTypesViewSet,
 )
-# this import is us to autodiscover the customised locations admin form(which is outside of INSTALLED_APPS)
-from etools.libraries.locations import admin as locations_admin
 
 # ******************  API docs and schemas  ******************************
 schema_view = get_swagger_view(title='eTools API')
