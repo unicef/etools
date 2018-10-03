@@ -168,10 +168,10 @@ def update_sites_from_cartodb(carto_table_pk):
                             sites_updated, sites_remapped
                         )
 
-                    # results += partial_results
-
-                    # crete new locations, archive old, and remap relevant etools enitites to the new location
-                    save_location_remap_history(partial_results)
+                    # crete remap history, and remap relevant etools enitites(interventions, travels, etc..)
+                    # from the remapped location, which is to be archived, to the new location
+                    if partial_results:
+                        save_location_remap_history(partial_results)
 
                 orphaned_old_pcodes = set(database_pcodes) - (set(new_carto_pcodes) | set(remap_old_pcodes))
                 if orphaned_old_pcodes:  # pragma: no-cover
@@ -183,8 +183,6 @@ def update_sites_from_cartodb(carto_table_pk):
 
     logger.warning("Table name {}: {} sites created, {} sites updated, {} sites remapped, {} sites skipped".format(
         carto_table.table_name, sites_created, sites_updated, sites_remapped, sites_not_added))
-
-    # return results
 
 
 @celery.current_app.task(bind=True)

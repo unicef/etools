@@ -315,9 +315,6 @@ def save_location_remap_history(imported_locations):
     :return:
     '''
 
-    if not imported_locations:
-        return
-
     remapped_locations = {loc[1]: loc[0] for loc in imported_locations if loc[1]}
 
     if not remapped_locations:
