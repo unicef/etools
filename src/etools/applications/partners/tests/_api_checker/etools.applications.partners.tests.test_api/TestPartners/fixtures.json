@@ -4,8 +4,8 @@
             "model": "partners.partnerorganization",
             "pk": 101,
             "fields": {
-                "created": "2018-09-10T10:17:07.409Z",
-                "modified": "2018-09-10T10:17:07.412Z",
+                "created": "2018-09-13T21:39:04.713Z",
+                "modified": "2018-09-13T21:39:04.717Z",
                 "partner_type": "Civil Society Organization",
                 "cso_type": "International",
                 "name": "Partner 8",
@@ -36,6 +36,8 @@
                 "net_ct_cy": null,
                 "reported_cy": null,
                 "total_ct_ytd": null,
+                "outstanding_dct_amount_6_to_9_months_usd": null,
+                "outstanding_dct_amount_more_than_9_months_usd": null,
                 "hact_values": {
                     "audits": {
                         "completed": 0,
@@ -85,10 +87,10 @@
     "partner_not_programmatic_visit_compliant": {
         "master": {
             "model": "partners.partnerorganization",
-            "pk": 9,
+            "pk": 502,
             "fields": {
-                "created": "2018-09-10T10:17:07.414Z",
-                "modified": "2018-09-10T10:17:07.416Z",
+                "created": "2018-09-13T21:39:04.719Z",
+                "modified": "2018-09-13T21:39:04.722Z",
                 "partner_type": "",
                 "cso_type": null,
                 "name": "Partner 9",
@@ -119,6 +121,8 @@
                 "net_ct_cy": "2501.00",
                 "reported_cy": "10000.00",
                 "total_ct_ytd": null,
+                "outstanding_dct_amount_6_to_9_months_usd": null,
+                "outstanding_dct_amount_more_than_9_months_usd": null,
                 "hact_values": {
                     "programmatic_visits": {
                         "completed": {
