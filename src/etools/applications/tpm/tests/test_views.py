@@ -627,6 +627,39 @@ class TestPartnerAttachmentsView(TPMTestCaseMixin, BaseTenantTestCase):
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
 
 
+class TestVisitAttachmentsView(TPMTestCaseMixin, BaseTenantTestCase):
+    @classmethod
+    def setUpTestData(cls):
+        super().setUpTestData()
+
+        cls.visit = TPMVisitFactory(status='draft',
+                                    tpm_partner=cls.tpm_user.tpmpartners_tpmpartnerstaffmember.tpm_partner,
+                                    tpm_partner_focal_points=[cls.tpm_user.tpmpartners_tpmpartnerstaffmember])
+
+    def test_add(self):
+        attachments_num = self.visit.attachments.count()
+        self.assertEqual(attachments_num, 0)
+        create_response = self.forced_auth_req(
+            'post',
+            reverse('tpm:visit-attachments-list', args=[self.visit.id]),
+            user=self.pme_user,
+            request_format='multipart',
+            data={
+                'file_type': AttachmentFileTypeFactory(code='tpm').id,
+                'file': SimpleUploadedFile('hello_world.txt', u'hello world!'.encode('utf-8')),
+            }
+        )
+        self.assertEqual(create_response.status_code, status.HTTP_201_CREATED)
+
+        list_response = self.forced_auth_req(
+            'get',
+            reverse('tpm:visit-attachments-list', args=[self.visit.id]),
+            user=self.pme_user
+        )
+        self.assertEqual(list_response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(list_response.data['results']), attachments_num + 1)
+
+
 class TestVisitReportAttachmentsView(TPMTestCaseMixin, BaseTenantTestCase):
     @classmethod
     def setUpTestData(cls):
