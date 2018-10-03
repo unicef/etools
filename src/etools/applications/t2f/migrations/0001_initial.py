@@ -29,8 +29,6 @@ class Migration(migrations.Migration):
             name='ActionPoint',
             fields=[
                 ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('action_point_number', models.CharField(default=etools.applications.t2f.models.make_action_point_number,
-                                                         max_length=11, unique=True, verbose_name='Action Point Number')),
                 ('description', models.CharField(max_length=254, verbose_name='Description')),
                 ('due_date', models.DateTimeField(verbose_name='Due Date')),
                 ('status', models.CharField(blank=True, choices=[('open', 'Open'), ('ongoing', 'Ongoing'), (

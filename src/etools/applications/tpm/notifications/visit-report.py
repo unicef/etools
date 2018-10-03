@@ -8,7 +8,7 @@ defaults = {
     'content': strip_text("""
     Dear {{ recipient }},
 
-    {{ visit.tpm_partner }} has submited the final report for the Monitoring/Verification
+    {{ visit.tpm_partner }} has submitted the final report for the Monitoring/Verification
     visit{% if partnerships %} requested for {{ visit.interventions }}{% endif %}.
     Please refer below for additional information.
 
@@ -20,7 +20,7 @@ defaults = {
     {% endfor %}
 
     Please click this link to view the final report: {{ visit.object_url }} and take
-    the appropriate action {Accept/Request for more information}
+    the appropriate action
     Thank you.
     """),
 
@@ -30,7 +30,7 @@ defaults = {
     {% block content %}
     Dear {{ recipient }},<br/>
     <br/>
-    <b>{{ visit.tpm_partner }}</b> has submited the final report for the Monitoring/Verification
+    <b>{{ visit.tpm_partner }}</b> has submitted the final report for the Monitoring/Verification
     visit{% if partnerships %} requested for <b>{{ visit.interventions }}</b>{% endif %}.<br/>
     Please refer below for additional information.<br/>
     <br/>
@@ -43,7 +43,7 @@ defaults = {
     <br/>
     Please click this link to view the final report:
     <a href="{{ visit.object_url }}">{{ visit.object_url }}</a> and take
-    the appropriate action {Accept/Request for more information}<br/><br/>
+    the appropriate action<br/><br/>
     Thank you.
     {% endblock %}
     """
