@@ -4,11 +4,11 @@
             "model": "partners.partnerorganization",
             "pk": 101,
             "fields": {
-                "created": "2018-11-14T11:36:06.224Z",
-                "modified": "2018-11-14T11:36:06.229Z",
+                "created": "2018-12-05T15:41:41.540Z",
+                "modified": "2018-12-05T15:41:41.545Z",
                 "partner_type": "Civil Society Organization",
                 "cso_type": "International",
-                "name": "Partner 341",
+                "name": "Partner 8",
                 "short_name": "Short name",
                 "description": "",
                 "shared_with": null,
@@ -44,13 +44,6 @@
                         "minimum_requirements": 0
                     },
                     "spot_checks": {
-                        "planned": {
-                            "q1": 0,
-                            "q2": 0,
-                            "q3": 0,
-                            "q4": 0,
-                            "total": 0
-                        },
                         "completed": {
                             "q1": 0,
                             "q2": 0,
@@ -87,13 +80,13 @@
     "partner_not_programmatic_visit_compliant": {
         "master": {
             "model": "partners.partnerorganization",
-            "pk": 340,
+            "pk": 9,
             "fields": {
-                "created": "2018-11-14T11:36:06.230Z",
-                "modified": "2018-11-14T11:36:06.233Z",
+                "created": "2018-12-05T15:41:41.547Z",
+                "modified": "2018-12-05T15:41:41.550Z",
                 "partner_type": "",
                 "cso_type": null,
-                "name": "Partner 342",
+                "name": "Partner 9",
                 "short_name": "",
                 "description": "",
                 "shared_with": null,

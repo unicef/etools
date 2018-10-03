@@ -4,17 +4,17 @@
             "model": "partners.intervention",
             "pk": 101,
             "fields": {
-                "created": "2018-11-14T11:36:04.679Z",
-                "modified": "2018-11-14T11:36:04.681Z",
+                "created": "2018-12-05T15:41:40.337Z",
+                "modified": "2018-12-05T15:41:40.340Z",
                 "document_type": "",
-                "agreement": 323,
+                "agreement": 6,
                 "country_programme": null,
-                "number": "TST/PCA2018323/2018101",
-                "title": "Intervention Title 317",
+                "number": "TST/PCA20186/2018101",
+                "title": "Intervention Title 1",
                 "status": "draft",
                 "start": null,
                 "end": null,
-                "submission_date": "2018-11-14",
+                "submission_date": "2018-12-05",
                 "submission_date_prc": null,
                 "reference_number_year": 2018,
                 "review_date_prc": null,
@@ -40,22 +40,22 @@
         "deps": [
             {
                 "model": "partners.agreement",
-                "pk": 323,
+                "pk": 6,
                 "fields": {
-                    "created": "2018-11-14T11:36:04.664Z",
-                    "modified": "2018-11-14T11:36:04.677Z",
-                    "partner": 337,
-                    "country_programme": 329,
+                    "created": "2018-12-05T15:41:40.325Z",
+                    "modified": "2018-12-05T15:41:40.336Z",
+                    "partner": 6,
+                    "country_programme": 6,
                     "agreement_type": "PCA",
-                    "agreement_number": "TST/PCA2018323",
+                    "agreement_number": "TST/PCA20186",
                     "attached_agreement": "",
-                    "start": "2018-11-14",
+                    "start": "2018-12-05",
                     "end": "2018-12-31",
                     "reference_number_year": 2018,
                     "special_conditions_pca": false,
-                    "signed_by_unicef_date": "2018-11-14",
+                    "signed_by_unicef_date": "2018-12-05",
                     "signed_by": null,
-                    "signed_by_partner_date": "2018-11-14",
+                    "signed_by_partner_date": "2018-12-05",
                     "partner_manager": null,
                     "status": "signed",
                     "authorized_officers": []
@@ -63,13 +63,13 @@
             },
             {
                 "model": "partners.partnerorganization",
-                "pk": 337,
+                "pk": 6,
                 "fields": {
-                    "created": "2018-11-14T11:36:04.658Z",
-                    "modified": "2018-11-14T11:36:04.662Z",
+                    "created": "2018-12-05T15:41:40.320Z",
+                    "modified": "2018-12-05T15:41:40.323Z",
                     "partner_type": "",
                     "cso_type": null,
-                    "name": "Partner 338",
+                    "name": "Partner 5",
                     "short_name": "",
                     "description": "",
                     "shared_with": null,
@@ -105,13 +105,6 @@
                             "minimum_requirements": 0
                         },
                         "spot_checks": {
-                            "planned": {
-                                "q1": 0,
-                                "q2": 0,
-                                "q3": 0,
-                                "q4": 0,
-                                "total": 0
-                            },
                             "completed": {
                                 "q1": 0,
                                 "q2": 0,
@@ -145,10 +138,10 @@
             },
             {
                 "model": "reports.countryprogramme",
-                "pk": 329,
+                "pk": 6,
                 "fields": {
-                    "name": "Country Programme 330",
-                    "wbs": "0000/A0/330",
+                    "name": "Country Programme 5",
+                    "wbs": "0000/A0/05",
                     "invalid": false,
                     "from_date": "2018-01-01",
                     "to_date": "2018-12-31"
@@ -159,34 +152,34 @@
     "amendment": {
         "master": {
             "model": "partners.interventionamendment",
-            "pk": 8,
+            "pk": 1,
             "fields": {
-                "created": "2018-11-14T11:36:04.701Z",
-                "modified": "2018-11-14T11:36:04.724Z",
-                "intervention": 317,
-                "types": "[\"Change banking info\"]",
-                "other_description": "QUYLuIcOPfpBRgTLxiNklEYgOsLdHttKaamPRxoUqCxDturivW",
-                "signed_date": "2018-11-14",
+                "created": "2018-12-05T15:41:40.358Z",
+                "modified": "2018-12-05T15:41:40.376Z",
+                "intervention": 3,
+                "types": "[\"Change IP name\"]",
+                "other_description": "DVkLFloYVzcUHbAeTqWUQxinxoRLlaflUKgMtrAySrlemFSJIc",
+                "signed_date": "2018-12-05",
                 "amendment_number": 1,
-                "signed_amendment": "test/file_attachments/partner_organization/338/338/agreements/324/interventions/317/amendments/None/test_file.pdf"
+                "signed_amendment": "test/file_attachments/partner_organization/7/7/agreements/7/interventions/3/amendments/None/test_file.pdf"
             }
         },
         "deps": [
             {
                 "model": "partners.intervention",
-                "pk": 317,
+                "pk": 3,
                 "fields": {
-                    "created": "2018-11-14T11:36:04.697Z",
-                    "modified": "2018-11-14T11:36:04.722Z",
+                    "created": "2018-12-05T15:41:40.355Z",
+                    "modified": "2018-12-05T15:41:40.375Z",
                     "document_type": "",
-                    "agreement": 324,
+                    "agreement": 7,
                     "country_programme": null,
-                    "number": "TST/PCA2018324/2018317",
-                    "title": "Intervention Title 318",
+                    "number": "TST/PCA20187/20183",
+                    "title": "Intervention Title 2",
                     "status": "draft",
                     "start": null,
                     "end": null,
-                    "submission_date": "2018-11-14",
+                    "submission_date": "2018-12-05",
                     "submission_date_prc": null,
                     "reference_number_year": 2018,
                     "review_date_prc": null,
@@ -211,22 +204,22 @@
             },
             {
                 "model": "partners.agreement",
-                "pk": 324,
+                "pk": 7,
                 "fields": {
-                    "created": "2018-11-14T11:36:04.688Z",
-                    "modified": "2018-11-14T11:36:04.696Z",
-                    "partner": 338,
-                    "country_programme": 330,
+                    "created": "2018-12-05T15:41:40.345Z",
+                    "modified": "2018-12-05T15:41:40.354Z",
+                    "partner": 7,
+                    "country_programme": 7,
                     "agreement_type": "PCA",
-                    "agreement_number": "TST/PCA2018324",
+                    "agreement_number": "TST/PCA20187",
                     "attached_agreement": "",
-                    "start": "2018-11-14",
+                    "start": "2018-12-05",
                     "end": "2018-12-31",
                     "reference_number_year": 2018,
                     "special_conditions_pca": false,
-                    "signed_by_unicef_date": "2018-11-14",
+                    "signed_by_unicef_date": "2018-12-05",
                     "signed_by": null,
-                    "signed_by_partner_date": "2018-11-14",
+                    "signed_by_partner_date": "2018-12-05",
                     "partner_manager": null,
                     "status": "signed",
                     "authorized_officers": []
@@ -234,13 +227,13 @@
             },
             {
                 "model": "partners.partnerorganization",
-                "pk": 338,
+                "pk": 7,
                 "fields": {
-                    "created": "2018-11-14T11:36:04.683Z",
-                    "modified": "2018-11-14T11:36:04.686Z",
+                    "created": "2018-12-05T15:41:40.341Z",
+                    "modified": "2018-12-05T15:41:40.343Z",
                     "partner_type": "",
                     "cso_type": null,
-                    "name": "Partner 339",
+                    "name": "Partner 6",
                     "short_name": "",
                     "description": "",
                     "shared_with": null,
@@ -276,13 +269,6 @@
                             "minimum_requirements": 0
                         },
                         "spot_checks": {
-                            "planned": {
-                                "q1": 0,
-                                "q2": 0,
-                                "q3": 0,
-                                "q4": 0,
-                                "total": 0
-                            },
                             "completed": {
                                 "q1": 0,
                                 "q2": 0,
@@ -316,10 +302,10 @@
             },
             {
                 "model": "reports.countryprogramme",
-                "pk": 330,
+                "pk": 7,
                 "fields": {
-                    "name": "Country Programme 331",
-                    "wbs": "0000/A0/331",
+                    "name": "Country Programme 6",
+                    "wbs": "0000/A0/06",
                     "invalid": false,
                     "from_date": "2018-01-01",
                     "to_date": "2018-12-31"
@@ -330,31 +316,31 @@
     "result": {
         "master": {
             "model": "partners.interventionresultlink",
-            "pk": 9,
+            "pk": 1,
             "fields": {
-                "created": "2018-11-14T11:36:04.755Z",
-                "modified": "2018-11-14T11:36:04.756Z",
-                "intervention": 318,
-                "cp_output": 88,
+                "created": "2018-12-05T15:41:40.397Z",
+                "modified": "2018-12-05T15:41:40.397Z",
+                "intervention": 4,
+                "cp_output": 1,
                 "ram_indicators": []
             }
         },
         "deps": [
             {
                 "model": "partners.intervention",
-                "pk": 318,
+                "pk": 4,
                 "fields": {
-                    "created": "2018-11-14T11:36:04.748Z",
-                    "modified": "2018-11-14T11:36:04.750Z",
+                    "created": "2018-12-05T15:41:40.391Z",
+                    "modified": "2018-12-05T15:41:40.392Z",
                     "document_type": "",
-                    "agreement": 325,
+                    "agreement": 8,
                     "country_programme": null,
-                    "number": "TST/PCA2018325/2018318",
-                    "title": "Intervention Title 319",
+                    "number": "TST/PCA20188/20184",
+                    "title": "Intervention Title 3",
                     "status": "draft",
                     "start": null,
                     "end": null,
-                    "submission_date": "2018-11-14",
+                    "submission_date": "2018-12-05",
                     "submission_date_prc": null,
                     "reference_number_year": 2018,
                     "review_date_prc": null,
@@ -379,22 +365,22 @@
             },
             {
                 "model": "partners.agreement",
-                "pk": 325,
+                "pk": 8,
                 "fields": {
-                    "created": "2018-11-14T11:36:04.736Z",
-                    "modified": "2018-11-14T11:36:04.747Z",
-                    "partner": 339,
-                    "country_programme": 331,
+                    "created": "2018-12-05T15:41:40.382Z",
+                    "modified": "2018-12-05T15:41:40.390Z",
+                    "partner": 8,
+                    "country_programme": 8,
                     "agreement_type": "PCA",
-                    "agreement_number": "TST/PCA2018325",
+                    "agreement_number": "TST/PCA20188",
                     "attached_agreement": "",
-                    "start": "2018-11-14",
+                    "start": "2018-12-05",
                     "end": "2018-12-31",
                     "reference_number_year": 2018,
                     "special_conditions_pca": false,
-                    "signed_by_unicef_date": "2018-11-14",
+                    "signed_by_unicef_date": "2018-12-05",
                     "signed_by": null,
-                    "signed_by_partner_date": "2018-11-14",
+                    "signed_by_partner_date": "2018-12-05",
                     "partner_manager": null,
                     "status": "signed",
                     "authorized_officers": []
@@ -402,13 +388,13 @@
             },
             {
                 "model": "partners.partnerorganization",
-                "pk": 339,
+                "pk": 8,
                 "fields": {
-                    "created": "2018-11-14T11:36:04.727Z",
-                    "modified": "2018-11-14T11:36:04.733Z",
+                    "created": "2018-12-05T15:41:40.378Z",
+                    "modified": "2018-12-05T15:41:40.380Z",
                     "partner_type": "",
                     "cso_type": null,
-                    "name": "Partner 340",
+                    "name": "Partner 7",
                     "short_name": "",
                     "description": "",
                     "shared_with": null,
@@ -444,13 +430,6 @@
                             "minimum_requirements": 0
                         },
                         "spot_checks": {
-                            "planned": {
-                                "q1": 0,
-                                "q2": 0,
-                                "q3": 0,
-                                "q4": 0,
-                                "total": 0
-                            },
                             "completed": {
                                 "q1": 0,
                                 "q2": 0,
@@ -484,10 +463,10 @@
             },
             {
                 "model": "reports.countryprogramme",
-                "pk": 331,
+                "pk": 8,
                 "fields": {
-                    "name": "Country Programme 332",
-                    "wbs": "0000/A0/332",
+                    "name": "Country Programme 7",
+                    "wbs": "0000/A0/07",
                     "invalid": false,
                     "from_date": "2018-01-01",
                     "to_date": "2018-12-31"
@@ -495,12 +474,12 @@
             },
             {
                 "model": "reports.result",
-                "pk": 88,
+                "pk": 1,
                 "fields": {
                     "country_programme": null,
-                    "result_type": 88,
+                    "result_type": 1,
                     "sector": null,
-                    "name": "Result 87",
+                    "name": "Result 0",
                     "code": null,
                     "from_date": "2018-01-01",
                     "to_date": "2018-12-31",
@@ -516,8 +495,8 @@
                     "activity_focus_name": null,
                     "hidden": false,
                     "ram": false,
-                    "created": "2018-11-14T11:36:04.752Z",
-                    "modified": "2018-11-14T11:36:04.754Z",
+                    "created": "2018-12-05T15:41:40.394Z",
+                    "modified": "2018-12-05T15:41:40.395Z",
                     "lft": 1,
                     "rght": 2,
                     "tree_id": 1,
@@ -526,9 +505,9 @@
             },
             {
                 "model": "reports.resulttype",
-                "pk": 88,
+                "pk": 1,
                 "fields": {
-                    "name": "ResultType 87"
+                    "name": "ResultType 0"
                 }
             }
         ]

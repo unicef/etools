@@ -7,7 +7,7 @@
         ],
         "vary": [
             "Vary",
-            "Accept, Cookie"
+            "Accept, Origin, Cookie"
         ],
         "allow": [
             "Allow",
@@ -16,24 +16,28 @@
         "x-frame-options": [
             "X-Frame-Options",
             "SAMEORIGIN"
+        ],
+        "content-length": [
+            "Content-Length",
+            "638"
         ]
     },
     "data": [
         {
-            "id": 8,
+            "id": 1,
             "amendment_number": "1",
-            "signed_amendment_file": "http://testserver/media/test/file_attachments/partner_organization/338/338/agreements/324/interventions/317/amendments/None/test_file.pdf",
+            "signed_amendment_file": "http://testserver/media/test/file_attachments/partner_organization/7/7/agreements/7/interventions/3/amendments/None/test_file.pdf",
             "signed_amendment_attachment": null,
             "internal_prc_review_attachment": null,
-            "created": "2018-11-14T11:36:04.701000Z",
-            "modified": "2018-11-14T11:36:04.724000Z",
+            "created": "2018-12-05T15:41:40.358000Z",
+            "modified": "2018-12-05T15:41:40.376000Z",
             "types": [
-                "Change banking info"
+                "Change IP name"
             ],
-            "other_description": "QUYLuIcOPfpBRgTLxiNklEYgOsLdHttKaamPRxoUqCxDturivW",
-            "signed_date": "2018-11-14",
-            "signed_amendment": "http://testserver/media/test/file_attachments/partner_organization/338/338/agreements/324/interventions/317/amendments/None/test_file.pdf",
-            "intervention": 317
+            "other_description": "DVkLFloYVzcUHbAeTqWUQxinxoRLlaflUKgMtrAySrlemFSJIc",
+            "signed_date": "2018-12-05",
+            "signed_amendment": "http://testserver/media/test/file_attachments/partner_organization/7/7/agreements/7/interventions/3/amendments/None/test_file.pdf",
+            "intervention": 3
         }
     ],
     "content_type": null
