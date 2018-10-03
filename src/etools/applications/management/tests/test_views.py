@@ -190,7 +190,7 @@ class TestGisLocationViews(BaseTenantTestCase):
 
         response = self.forced_auth_req(
             "get",
-            url, # geo_format should be either geojson or wkt
+            url,  # geo_format should be either geojson or wkt
             user=self.unicef_staff,
             data={"country_id": self.country.id, "geo_format": "whatever"},
         )
@@ -289,7 +289,7 @@ class TestGisLocationViews(BaseTenantTestCase):
             "get",
             reverse("management_gis:locations-gis-in-use"),
             user=self.unicef_staff,
-            data={"country_id":self.country.id},
+            data={"country_id": self.country.id},
         )
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)

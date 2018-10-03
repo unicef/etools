@@ -4,7 +4,6 @@ from carto.exceptions import CartoException
 from celery.utils.log import get_task_logger
 
 from django.db import IntegrityError
-from django.contrib.contenttypes.models import ContentType
 
 from unicef_locations.models import Location, LocationRemapHistory
 
@@ -364,5 +363,5 @@ def save_location_remap_history(imported_locations):
         LocationRemapHistory.objects.create(
             old_location=Location.all_locations.get(pk=old_loc),
             new_location=Location.all_locations.get(pk=new_loc),
-            comments =  "Remapped location id {} to id {}".format(old_loc, new_loc)
+            comments="Remapped location id {} to id {}".format(old_loc, new_loc)
         )
