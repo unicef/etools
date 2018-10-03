@@ -11,7 +11,7 @@ class PermissionContextMixin(object):
             return
 
         # generate fake object in case of accessing nested
-        if self.kwargs[lookup_url_kwarg] == 'new':
+        if self.kwargs[lookup_url_kwarg] == 'new':  # trick to find the creation
             return self.queryset.model()
 
         return super().get_object()
@@ -38,20 +38,24 @@ class PermissionContextMixin(object):
         return context
 
     def get_permission_context(self):
+        """independent of the instance"""
         return [
             GroupCondition(self.request.user),
         ]
 
     def get_new_obj_permission_context(self):
+        """new instance"""
         return [
             NewObjectCondition(self.queryset.model)
         ]
 
     def get_obj_permission_context(self, obj):
+        """object permissions"""
         return []
 
 
 class PermittedFSMActionMixin(PermissionContextMixin, FSMTransitionActionMixin):
+    """ """
     def check_transition_permission(self, transition, user):
         im_self = getattr(transition, 'im_self', getattr(transition, '__self__'))
         user._permission_context = self._collect_permission_context(instance=im_self)
