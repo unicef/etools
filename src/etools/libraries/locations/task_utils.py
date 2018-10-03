@@ -325,35 +325,35 @@ def save_location_remap_history(imported_locations):
 
     # remap related entities to the newly added locations
     # interventions
-    for intervention in Intervention.objects.filter(flat_locations__in=remapped_locations.keys()).distinct():
-        for remapped_location in intervention.flat_locations.filter(id__in=list(remapped_locations.keys())):
+    for intervention in Intervention.objects.filter(flat_locations__in=[*remapped_locations]).distinct():
+        for remapped_location in intervention.flat_locations.filter(id__in=[*remapped_locations]):
             new_location = remapped_locations.get(remapped_location.id)
             intervention.flat_locations.remove(remapped_location)
             intervention.flat_locations.add(new_location)
 
     # intervention indicators
-    for appliedindicator in AppliedIndicator.objects.filter(locations__in=list(remapped_locations.keys())).distinct():
-        for remapped_location in appliedindicator.locations.filter(id__in=list(remapped_locations.keys())):
+    for appliedindicator in AppliedIndicator.objects.filter(locations__in=[*remapped_locations]).distinct():
+        for remapped_location in appliedindicator.locations.filter(id__in=[*remapped_locations]):
             new_location = remapped_locations.get(remapped_location.id)
             appliedindicator.locations.remove(remapped_location)
             appliedindicator.locations.add(new_location)
 
     # travel activities
-    for travelactivity in TravelActivity.objects.filter(locations__in=list(remapped_locations.keys())).distinct():
-        for remapped_location in travelactivity.locations.filter(id__in=list(remapped_locations.keys())):
+    for travelactivity in TravelActivity.objects.filter(locations__in=[*remapped_locations]).distinct():
+        for remapped_location in travelactivity.locations.filter(id__in=[*remapped_locations]):
             new_location = remapped_locations.get(remapped_location.id)
             travelactivity.locations.remove(remapped_location)
             travelactivity.locations.add(new_location)
 
     # activities
-    for activity in Activity.objects.filter(locations__in=list(remapped_locations.keys())).distinct():
-        for remapped_location in activity.locations.filter(id__in=list(remapped_locations.keys())):
+    for activity in Activity.objects.filter(locations__in=[*remapped_locations]).distinct():
+        for remapped_location in activity.locations.filter(id__in=[*remapped_locations]):
             new_location = remapped_locations.get(remapped_location.id)
             activity.locations.remove(remapped_location)
             activity.locations.add(new_location)
 
     # action points
-    for actionpoint in ActionPoint.objects.filter(location__in=list(remapped_locations.keys())).distinct():
+    for actionpoint in ActionPoint.objects.filter(location__in=[*remapped_locations]).distinct():
         new_location = remapped_locations.get(actionpoint.location.id)
         actionpoint.location.id = new_location
         actionpoint.save()
