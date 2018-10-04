@@ -56,4 +56,3 @@ class RemapAdmin(admin.ModelAdmin):
 admin.site.unregister(CartoDBTable)
 admin.site.register(CartoDBTable, BackendCartoDBTableAdmin)
 admin.site.register(LocationRemapHistory, RemapAdmin)
-
