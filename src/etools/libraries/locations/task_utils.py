@@ -327,8 +327,6 @@ def create_location(pcode, carto_table, parent, parent_instance, remapped_old_pc
 
 def update_model_locations(remapped_locations, model, related_object, related_property, multiples):
 
-    # print("in update model", model, remapped_locations)
-    # print("in update multiples", model, multiples)
     random_object = model.objects.first()
     if random_object:
         handled_related_objects = []
@@ -341,10 +339,8 @@ def update_model_locations(remapped_locations, model, related_object, related_pr
             through table constraints disallow duplicates appearing due to multiple old locations being replaced by the
             same new location.
             '''
-            # print("in update model - loc in remapped", loc)
-            if len(multiples[new_location_id]) > 1:
-                # print('were getting in here yay!', multiples)
 
+            if len(multiples[new_location_id]) > 1:
                 # it seems Django can do the wanted grouping only if we pass the counted column in `values()`
                 # the result contains the related ref id and the nr. of duplicates, ex.:
                 # <QuerySet [{'intervention': 27, 'object_count': 2}, {'intervention': 104, 'object_count': 2}]>
@@ -352,26 +348,16 @@ def update_model_locations(remapped_locations, model, related_object, related_pr
                     values(related_object).annotate(object_count=Count(related_object)).\
                     filter(object_count__gt=1)
 
-                if model == Intervention:
-                    # print("stuff(m)", related_object, multiples[new_location_id])
-                    # print(grouped_magic)
-                    pass
-
-                # print("handled objects", handled_related_objects)
-
                 for record in grouped_magic:
-                    # print("record", record)
                     related_object_id = record.get(related_object)
                     # create something to check against
                     check_record = (related_object_id, new_location_id)
                     if check_record not in handled_related_objects:
-                        # print("adding to handle", check_record)
                         handled_related_objects.append(check_record)
                     else:
                         # construct the delete query
                         # all the `duplicate remaps` except the one skipped with the `check_record` should be picked up
                         filter_args = {related_object: related_object_id, "location": old_location_id}
-                        # print("deleting duplicate by cond ", filter_args)
                         ThroughModel.objects.filter(**filter_args).delete()
 
         # update through table only after it was cleaned up from duplicates
@@ -395,7 +381,6 @@ def save_location_remap_history(imported_locations):
     for loc_tp in remapped_locations:
         multiples[loc_tp[0]].append(loc_tp[1])
 
-    # print(multiples)
     for model, related_object, related_property in [(AppliedIndicator, "appliedindicator", "locations"),
                                                     (TravelActivity, "travelactivity", "locations"),
                                                     (Activity, "activity", "locations"),
