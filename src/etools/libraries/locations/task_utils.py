@@ -2,8 +2,10 @@ import time
 
 from carto.exceptions import CartoException
 from celery.utils.log import get_task_logger
+from collections import defaultdict
 
 from django.db import IntegrityError
+from django.db.models import Count
 
 from unicef_locations.models import Location, LocationRemapHistory
 
@@ -309,7 +311,130 @@ def create_location(pcode, carto_table, parent, parent_instance, remapped_old_pc
         return True, sites_not_added, sites_created, sites_updated, sites_remapped, results
 
 
+def update_model_locations(remapped_locations, model, related_object, related_property, multiples):
+
+    print("in update model", model, remapped_locations)
+    print("in update multiples", model, multiples)
+    random_object = model.objects.first()
+    if random_object:
+        handled_related_objects = []
+        ThroughModel = getattr(random_object, related_property).through
+        # clean up multiple remaps
+        for loc in remapped_locations:
+            print("in update model - loc in remapped", loc)
+            old_location_id = loc[1]
+            new_location_id = loc[0]
+            if len(multiples[new_location_id]) > 1:
+                # print('were getting in here yay!', multiples)
+                grouped_magic = ThroughModel.objects.filter(location__in=multiples[new_location_id]).\
+                    values(related_object).annotate(object_count=Count(related_object)).\
+                    filter(object_count__gt=1)
+
+                if model == Intervention:
+                    print("stuff(m)", related_object, multiples[new_location_id])
+                    print(grouped_magic)
+
+                print("handled objects", handled_related_objects)
+
+                for record in grouped_magic:
+                    print("record", record)
+                    related_object_id = record.get(related_object)
+                    check_record = (related_object_id, new_location_id)
+                    if check_record not in handled_related_objects:
+                        print("adding to handle", check_record)
+                        handled_related_objects.append(check_record)
+                    else:
+                        filter_args = {related_object:related_object_id, "location":old_location_id}
+                        print("deleting duplicate by cond ", filter_args)
+                        ThroughModel.objects.filter(**filter_args).delete()
+
+        # update through table only after it was cleaned up from duplicates
+        for loc in remapped_locations:
+            ThroughModel.objects.filter(location=loc[1]).update(location=loc[0])
+
+
 def save_location_remap_history(imported_locations):
+    '''
+    :param imported_locations: set of (new_location_id, remapped_location_id) tuples, where remapped_location can be None
+    :return:
+    '''
+
+    if not imported_locations:
+        return
+    remapped_locations = set([tp for tp in imported_locations if tp[1]])
+    if not remapped_locations:
+        return
+
+    multiples = defaultdict(list)
+    for loc_tp in remapped_locations:
+        multiples[loc_tp[0]].append(loc_tp[1])
+
+    print(multiples)
+    for model, related_object, related_property in [(AppliedIndicator, "appliedindicator", "locations"),
+                                            (TravelActivity, "travelactivity", "locations"),
+                                            (Activity, "activity", "locations"),
+                                            (Intervention, "intervention", "flat_locations")]:
+        update_model_locations(remapped_locations, model, related_object, related_property, multiples)
+
+    # action points
+    for loc_tp in remapped_locations:
+        ActionPoint.objects.filter(location=loc_tp[1]).update(location=loc_tp[0])
+
+    for loc_tp in remapped_locations:
+        LocationRemapHistory.objects.create(
+            old_location=Location.all_locations.get(id=loc_tp[1]),
+            new_location=Location.all_locations.get(id=loc_tp[0]),
+            comments="Remapped location id {} to id {}".format(loc_tp[1], loc_tp[0])
+        )
+
+
+def save_location_remap_history_2(imported_locations):
+    '''
+    :param imported_locations: set of (new_location_id, remapped_location_id) tuples, where remapped_location can be None
+    :return:
+    '''
+
+    if not imported_locations:
+        return
+
+    remapped_locations = [tp for tp in imported_locations if tp[1]]
+
+    # remapped_locations = {loc[1]: loc[0] for loc in imported_locations if loc[1]}
+
+    if not remapped_locations:
+        return
+
+    # Interventions
+    random_intervention = Intervention.objects.first()
+    if random_intervention:
+        InterventionLocationThrough = random_intervention.flat_locations.through
+        # loc:  {111:1, 111:2},  interv: {11:1, 11:2, 12:2} ->
+        #    {11: 111} ->
+        #    {11: 111} -> ERR, {12: 111} -> ?
+
+
+        for loc in remapped_locations:
+            # updated_locs = InterventionLocationThrough.objects.filter(location=loc[0])
+            InterventionLocationThrough.objects.filter(location=loc[1]).update(location=loc[0])
+
+    '''
+    for model in [AppliedIndicator, TravelActivity, Activity]:
+        update_model_locations(remapped_locations, model)
+    '''
+
+    # action points
+    for loc_tp in remapped_locations:
+        ActionPoint.objects.filter(location=loc_tp[1]).update(location=loc_tp[0])
+
+    # also insert a row without related content in the remap table, for the purpose of keeping history
+    for new_loc, old_loc in remapped_locations:
+        LocationRemapHistory.objects.create(
+            old_location=Location.objects.all_locations().get(pk=old_loc),
+            new_location=Location.objects.all_locations().get(pk=new_loc),
+            comments="Remapped location id {} to id {}".format(old_loc, new_loc)
+        )
+
+def save_location_remap_history_old(imported_locations):
     '''
     :param imported_locations: set of (new_location, remapped_location) tuples, where remapped_location can be None
     :return:
@@ -323,10 +448,15 @@ def save_location_remap_history(imported_locations):
     # remap related entities to the newly added locations
     # interventions
     for intervention in Intervention.objects.filter(flat_locations__in=[*remapped_locations]).distinct():
-        for remapped_location in intervention.flat_locations.filter(id__in=[*remapped_locations]):
+        print("intervention {}".format(intervention.id))
+        print ([*remapped_locations])
+        print (intervention.flat_locations)
+        for remapped_location in intervention.flat_locations(manager='all_locations').filter(id__in=[*remapped_locations]):
+            print("location {}".format(remapped_location.id))
             new_location = remapped_locations.get(remapped_location.id)
             intervention.flat_locations.remove(remapped_location)
             intervention.flat_locations.add(new_location)
+        print("\n")
 
     # intervention indicators
     for appliedindicator in AppliedIndicator.objects.filter(locations__in=[*remapped_locations]).distinct():
@@ -358,7 +488,7 @@ def save_location_remap_history(imported_locations):
     # also insert a row without related content in the remap table, for the purpose of keeping history
     for old_loc, new_loc in remapped_locations.items():
         LocationRemapHistory.objects.create(
-            old_location=Location.all_locations.get(pk=old_loc),
-            new_location=Location.all_locations.get(pk=new_loc),
+            old_location=Location.objects.all_locations().get(pk=old_loc),
+            new_location=Location.objects.all_locations().get(pk=new_loc),
             comments="Remapped location id {} to id {}".format(old_loc, new_loc)
         )
