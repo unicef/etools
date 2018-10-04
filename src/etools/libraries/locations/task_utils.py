@@ -334,7 +334,7 @@ def update_model_locations(remapped_locations, model, related_object, related_pr
         handled_related_objects = []
         ThroughModel = getattr(random_object, related_property).through
         # clean up multiple remaps
-        for loc in remapped_locations:
+        for new_location_id, old_location_id in remapped_locations:
             '''
             Clean up `multiple/duplicate remaps` from the through table.
             This step is necessary because a new location can replace multiple old locations during the remap, and the
@@ -342,8 +342,6 @@ def update_model_locations(remapped_locations, model, related_object, related_pr
             same new location.
             '''
             # print("in update model - loc in remapped", loc)
-            old_location_id = loc[1]
-            new_location_id = loc[0]
             if len(multiples[new_location_id]) > 1:
                 # print('were getting in here yay!', multiples)
 
