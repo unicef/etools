@@ -3,10 +3,10 @@ import datetime
 import json
 
 from etools.applications.EquiTrack.tests.cases import BaseTenantTestCase
+from etools.applications.partners import synchronizers
 from etools.applications.partners.models import PartnerOrganization
 from etools.applications.partners.tests.factories import PartnerFactory
 from etools.applications.users.models import Country
-from etools.applications.partners import synchronizers
 
 
 class TestPartnerSynchronizer(BaseTenantTestCase):
@@ -167,3 +167,91 @@ class TestPartnerSynchronizer(BaseTenantTestCase):
         )
         response = self.adapter._save_records([self.data])
         self.assertEqual(response, 1)
+
+
+class TestDCTSynchronizer(BaseTenantTestCase):
+    @classmethod
+    def setUpTestData(cls):
+        cls.country = Country.objects.first()
+        cls.vendor_key = '007'
+        cls.api_response = [
+            {
+                'VENDOR_NAME': None,
+                'VENDOR_CODE': cls.vendor_key,
+                'WBS_ELEMENT_EX': None,
+                'GRANT_REF': None,
+                'DONOR_NAME': None,
+                'EXPIRY_DATE': '2012-12-31T00:00:00-05:00',
+                'COMMITMENT_REF': None,
+                'DCT_AMT_USD': '0',
+                'LIQUIDATION_AMT_USD': '0',
+                'OUTSTANDING_BALANCE_USD': '0',
+                'AMT_LESS3_MONTHS_USD': '0',
+                'AMT_3TO6_MONTHS_USD': 30,
+                'AMT_6TO9_MONTHS_USD': 60,
+                'AMT_MORE9_MONTHS_USD': 90,
+            },
+            {
+                'VENDOR_NAME': None,
+                'VENDOR_CODE': cls.vendor_key,
+                'WBS_ELEMENT_EX': None,
+                'GRANT_REF': None,
+                'DONOR_NAME': None,
+                'EXPIRY_DATE': '2012-12-31T00:00:00-05:00',
+                'COMMITMENT_REF': None,
+                'DCT_AMT_USD': '0',
+                'LIQUIDATION_AMT_USD': '0',
+                'OUTSTANDING_BALANCE_USD': '0',
+                'AMT_LESS3_MONTHS_USD': '0',
+                'AMT_3TO6_MONTHS_USD': 300,
+                'AMT_6TO9_MONTHS_USD': 600,
+                'AMT_MORE9_MONTHS_USD': 900,
+            },
+            {
+                'VENDOR_NAME': None,
+                'VENDOR_CODE': '123',
+                'WBS_ELEMENT_EX': None,
+                'GRANT_REF': None,
+                'DONOR_NAME': None,
+                'EXPIRY_DATE': '2012-12-31T00:00:00-05:00',
+                'COMMITMENT_REF': '0',
+                'DCT_AMT_USD': '0',
+                'LIQUIDATION_AMT_USD': '0',
+                'OUTSTANDING_BALANCE_USD': '0',
+                'AMT_LESS3_MONTHS_USD': '0',
+                'AMT_3TO6_MONTHS_USD': 3000,
+                'AMT_6TO9_MONTHS_USD': 6000,
+                'AMT_MORE9_MONTHS_USD': 9000,
+            }
+        ]
+
+        cls.partner = PartnerFactory(
+            name="New",
+            vendor_number=cls.vendor_key
+        )
+        cls.synchronizer = synchronizers.DirectCashTransferSynchronizer(cls.country)
+
+    def test_create_dict(self):
+        dcts = self.synchronizer.create_dict(self.api_response)
+        self.assertEqual(len(dcts.keys()), 2)
+        self.assertEqual(dcts[self.vendor_key]['outstanding_dct_amount_6_to_9_months_usd'], 660)
+        self.assertEqual(dcts[self.vendor_key]['outstanding_dct_amount_more_than_9_months_usd'], 990)
+
+    def test_save(self):
+        self.assertEqual(self.partner.outstanding_dct_amount_6_to_9_months_usd, None)
+        self.assertEqual(self.partner.outstanding_dct_amount_more_than_9_months_usd, None)
+        partner_to_update = {
+            self.vendor_key: {
+                'outstanding_dct_amount_6_to_9_months_usd': 100,
+                'outstanding_dct_amount_more_than_9_months_usd': 200},
+        }
+        self.synchronizer._save(partner_to_update)
+        partner = PartnerOrganization.objects.get(vendor_number=self.vendor_key)
+        self.assertEqual(partner.outstanding_dct_amount_6_to_9_months_usd, 100)
+        self.assertEqual(partner.outstanding_dct_amount_more_than_9_months_usd, 200)
+
+    def test_save_records(self):
+        self.synchronizer._save_records(self.api_response)
+        partner = PartnerOrganization.objects.get(vendor_number=self.vendor_key)
+        self.assertEqual(partner.outstanding_dct_amount_6_to_9_months_usd, 660)
+        self.assertEqual(partner.outstanding_dct_amount_more_than_9_months_usd, 990)

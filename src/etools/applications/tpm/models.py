@@ -1,7 +1,6 @@
 import itertools
 
 from django.conf import settings
-from django.contrib.contenttypes.fields import GenericRelation
 from django.db import connection, models
 from django.utils import timezone
 from django.utils.encoding import force_text
@@ -84,7 +83,10 @@ class TPMVisit(SoftDeleteMixin, TimeStampedModel, models.Model):
     reject_comment = models.TextField(verbose_name=_('Reason for Rejection'), blank=True)
     approval_comment = models.TextField(verbose_name=_('Approval Comments'), blank=True)
 
-    report_attachments = GenericRelation(Attachment, verbose_name=_('Visit Report'), blank=True)
+    report_attachments = CodedGenericRelation(Attachment, verbose_name=_('Visit Report'),
+                                              code='visit_report_attachments', blank=True)
+    attachments = CodedGenericRelation(Attachment, verbose_name=_('Activity Attachments'),
+                                       code='visit_attachments', blank=True)
 
     visit_information = models.TextField(verbose_name=_('Visit Information'), blank=True)
 

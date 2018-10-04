@@ -32,7 +32,7 @@ def sync_user(username):
 @app.task
 def sync_all_users():
     logger.info('Azure Complete Sync Process started')
-    log = VisionSyncLog(country=Country.objects.get(schema_name="public"), handler_name='UserADSync')
+    log = VisionSyncLog.objects.create(country=Country.objects.get(schema_name="public"), handler_name='UserADSync')
     try:
         url = '{}/{}/users?$top={}'.format(
             settings.AZURE_GRAPH_API_BASE_URL,
@@ -55,7 +55,8 @@ def sync_all_users():
 @app.task
 def sync_delta_users():
     logger.info('Azure Delta Sync Process started')
-    log = VisionSyncLog(country=Country.objects.get(schema_name="public"), handler_name='UserADSyncDelta')
+    log = VisionSyncLog.objects.create(
+        country=Country.objects.get(schema_name="public"), handler_name='UserADSyncDelta')
     try:
         url = cache.get(
             AZURE_GRAPH_API_USER_CACHE_KEY,
