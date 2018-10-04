@@ -172,7 +172,8 @@ def update_sites_from_cartodb(carto_table_pk):
 
                 # crete remap history, and remap relevant etools enitites(interventions, travels, etc..)
                 # from the remapped location, which is to be archived, to the new location
-                save_location_remap_history(results)
+                if results:
+                    save_location_remap_history(results)
 
                 orphaned_old_pcodes = set(database_pcodes) - (set(new_carto_pcodes) | set(remap_old_pcodes))
                 if orphaned_old_pcodes:  # pragma: no-cover
