@@ -354,9 +354,10 @@ def update_model_locations(remapped_locations, model, related_object, related_pr
                     values(related_object).annotate(object_count=Count(related_object)).\
                     filter(object_count__gt=1)
 
-                # if model == Intervention:
+                if model == Intervention:
                     # print("stuff(m)", related_object, multiples[new_location_id])
                     # print(grouped_magic)
+                    pass
 
                 # print("handled objects", handled_related_objects)
 
@@ -371,7 +372,7 @@ def update_model_locations(remapped_locations, model, related_object, related_pr
                     else:
                         # construct the delete query
                         # all the `duplicate remaps` except the one skipped with the `check_record` should be picked up
-                        filter_args = {related_object:related_object_id, "location":old_location_id}
+                        filter_args = {related_object: related_object_id, "location": old_location_id}
                         # print("deleting duplicate by cond ", filter_args)
                         ThroughModel.objects.filter(**filter_args).delete()
 
@@ -398,9 +399,9 @@ def save_location_remap_history(imported_locations):
 
     # print(multiples)
     for model, related_object, related_property in [(AppliedIndicator, "appliedindicator", "locations"),
-                                            (TravelActivity, "travelactivity", "locations"),
-                                            (Activity, "activity", "locations"),
-                                            (Intervention, "intervention", "flat_locations")]:
+                                                    (TravelActivity, "travelactivity", "locations"),
+                                                    (Activity, "activity", "locations"),
+                                                    (Intervention, "intervention", "flat_locations")]:
         update_model_locations(remapped_locations, model, related_object, related_property, multiples)
 
     # action points
