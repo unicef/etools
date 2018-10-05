@@ -168,12 +168,14 @@ def update_sites_from_cartodb(carto_table_pk):
                             sites_updated, sites_remapped
                         )
 
-                    results += partial_results
+                    # crete remap history, and remap relevant etools enitites(interventions, travels, etc..)
+                    # from the remapped location, which is to be archived, to the new location
+                    if partial_results:
+                        save_location_remap_history(partial_results)
 
-                # crete remap history, and remap relevant etools enitites(interventions, travels, etc..)
-                # from the remapped location, which is to be archived, to the new location
-                if results:
-                    save_location_remap_history(results)
+                    # results += partial_results
+                # if results:
+                #     save_location_remap_history(results)
 
                 orphaned_old_pcodes = set(database_pcodes) - (set(new_carto_pcodes) | set(remap_old_pcodes))
                 if orphaned_old_pcodes:  # pragma: no-cover
@@ -225,6 +227,7 @@ def cleanup_obsolete_locations(self, carto_table_pk):
     remapped_pcodes += [remap_row['new_pcode'] for remap_row in remapped_pcode_pairs]
     deleteable_pcodes = set(database_pcodes) - (set(new_carto_pcodes) | set(remapped_pcodes))
 
+    revalidated_deleteable_pcodes = []
     for deleteable_pcode in deleteable_pcodes:
         try:
             deleteable_location = Location.objects.all_locations().get(p_code=deleteable_pcode)
@@ -232,9 +235,12 @@ def cleanup_obsolete_locations(self, carto_table_pk):
             logger.warning("Cannot find orphaned pcode {}.".format(deleteable_pcode))
         else:
             if deleteable_location.is_leaf_node():
-                logger.info("Deleting orphaned and unused location with pcode {}".format(deleteable_location.p_code))
-                deleteable_location.delete()
-
+                logger.info("Selecting orphaned pcode {} for deletion".format(deleteable_location.p_code))
+                revalidated_deleteable_pcodes.append(deleteable_location.id)
+                
+    if revalidated_deleteable_pcodes:
+        logger.info("Deleting selected orphaned pcodes")
+        Location.objects.all_locations().filter(id__in=revalidated_deleteable_pcodes).delete()
 
 @celery.current_app.task
 def catch_task_errors():

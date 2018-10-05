@@ -20,9 +20,9 @@ logger = get_task_logger(__name__)
 
 
 def get_cartodb_locations(sql_client, carto_table):
+
     rows = []
     cartodb_id_col = 'cartodb_id'
-
     try:
         query_row_count = sql_client.send('select count(*) from {}'.format(carto_table.table_name))
         row_count = query_row_count['rows'][0]['count']
@@ -72,18 +72,52 @@ def get_cartodb_locations(sql_client, carto_table):
 
         # do not spam Carto with requests, wait 1 second
         time.sleep(1)
-        sites = sql_client.send(paged_qry)
-        rows += sites['rows']
-        offset += limit
-
-        if 'error' in sites:
-            # it seems we can have both valid results and error messages in the same CartoDB response
-            logger.exception("CartoDB API error received: {}".format(sites['error']))
-            # When this error occurs, we receive truncated locations, probably it's better to interrupt the import
-            return False, []
+        try:
+            sites = sql_client.send(paged_qry)
+        except CartoException:  # pragma: no-cover
+            logger.exception("CartoDB API pagination failed at offset: {}".format(offset))
+            retried_row = retry_failed_query(sql_client, paged_qry, offset)
+            if retried_row:
+                rows += retried_row
+            else:
+                # can not continue if we have missing pages..
+                return False, []
+        else:
+            if 'error' in sites:
+                # it seems we can have both valid results and error messages in the same CartoDB response
+                # When this occurs, we receive truncated locations, interrupt the import due to incomplete data
+                logger.exception("CartoDB API error received: {}".format(sites['error']))
+                return False, []
+            else:
+                rows += sites['rows']
+                offset += limit
 
     return True, rows
 
+def retry_failed_query(sql_client, failed_query, offset):
+    '''
+    Retry a timed-out CartoDB query
+    :param sql_client:
+    :param failed_query:
+    :param offset:
+    :return:
+    '''
+
+    retries = 0
+    logger.warning('Retrying table page at offset {}'.format(len(offset)))
+    while retries < 10:
+        time.sleep(1)
+        try:
+            sites = sql_client.send(failed_query)
+        except:
+            pass
+        else:
+            if 'error' in sites:
+                return False
+            else:
+                return sites['rows']
+        retries += 1
+    return False
 
 def validate_remap_table(database_pcodes, new_carto_pcodes, carto_table, sql_client):  # pragma: no-cover
     remapped_pcode_pairs = []
@@ -212,21 +246,32 @@ def create_location(pcode, carto_table, parent, parent_instance, remapped_old_pc
     :return:
     """
 
+    logger.info('{}: {} ({}){}'.format(
+        'Importing location ',
+        pcode,
+        carto_table.location_type.name,
+        ", remapped pcodes: {}".format(",".join(remapped_old_pcodes)) if remapped_old_pcodes else ""
+    ))
+
     results = None
     try:
         location = None
         remapped_locations = None
         if remapped_old_pcodes:
-            # check if the remapped location exists in the database
+            # check if the remapped location exists in the database(ACTIVE locations only)
             remapped_locations = Location.objects.filter(p_code__in=list(remapped_old_pcodes))
 
             if not remapped_locations:
-                # if remapped_old_pcodes are set and passed validations, but they are not found in the
-                # list of the active locations(`Location.objects`), it means that they were already remapped.
+                # if remapped_old_pcodes are valid, but they are not found in the  list of the active locations
+                # (`Location.objects`), it means that they were already remapped.
                 # in this case update the `main` location, and ignore the remap.
-                location = Location.objects.get(p_code=pcode)
+                location = Location.objects.all_locations().get(p_code=pcode)
         else:
-            location = Location.objects.get(p_code=pcode)
+            location = Location.objects.all_locations().get(p_code=pcode)
+
+        #if pcode == 'SD10066148':
+        #    print("2", location)
+        #    exit(0)
 
     except Location.MultipleObjectsReturned:
         logger.warning("Multiple locations found for: {}, {} ({})".format(
@@ -296,6 +341,7 @@ def create_location(pcode, carto_table, parent, parent_instance, remapped_old_pc
 
         # names can be updated for existing locations with the same code
         location.name = site_name
+        # location.is_active = True
 
         if 'Point' in row['the_geom']:
             location.point = row['the_geom']
@@ -332,6 +378,8 @@ def update_model_locations(remapped_locations, model, related_object, related_pr
         handled_related_objects = []
         ThroughModel = getattr(random_object, related_property).through
         # clean up multiple remaps
+        print(remapped_locations)
+        print(multiples)
         for new_location_id, old_location_id in remapped_locations:
             '''
             Clean up `multiple/duplicate remaps` from the through table.
@@ -341,12 +389,15 @@ def update_model_locations(remapped_locations, model, related_object, related_pr
             '''
 
             if len(multiples[new_location_id]) > 1:
+                print("multiples", multiples[new_location_id])
                 # it seems Django can do the wanted grouping only if we pass the counted column in `values()`
                 # the result contains the related ref id and the nr. of duplicates, ex.:
                 # <QuerySet [{'intervention': 27, 'object_count': 2}, {'intervention': 104, 'object_count': 2}]>
                 grouped_magic = ThroughModel.objects.filter(location__in=multiples[new_location_id]).\
                     values(related_object).annotate(object_count=Count(related_object)).\
                     filter(object_count__gt=1)
+
+                print("grouped stuff", grouped_magic)
 
                 for record in grouped_magic:
                     related_object_id = record.get(related_object)
