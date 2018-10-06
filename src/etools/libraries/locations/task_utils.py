@@ -94,6 +94,7 @@ def get_cartodb_locations(sql_client, carto_table):
 
     return True, rows
 
+
 def retry_failed_query(sql_client, failed_query, offset):
     '''
     Retry a timed-out CartoDB query
@@ -109,8 +110,9 @@ def retry_failed_query(sql_client, failed_query, offset):
         time.sleep(1)
         try:
             sites = sql_client.send(failed_query)
-        except:
-            pass
+        except CartoException:
+            if retries < 9:
+                logger.warning('Retrying again table page at offset {}'.format(len(offset)))
         else:
             if 'error' in sites:
                 return False
@@ -118,6 +120,7 @@ def retry_failed_query(sql_client, failed_query, offset):
                 return sites['rows']
         retries += 1
     return False
+
 
 def validate_remap_table(database_pcodes, new_carto_pcodes, carto_table, sql_client):  # pragma: no-cover
     remapped_pcode_pairs = []
@@ -269,10 +272,6 @@ def create_location(pcode, carto_table, parent, parent_instance, remapped_old_pc
         else:
             location = Location.objects.all_locations().get(p_code=pcode)
 
-        #if pcode == 'SD10066148':
-        #    print("2", location)
-        #    exit(0)
-
     except Location.MultipleObjectsReturned:
         logger.warning("Multiple locations found for: {}, {} ({})".format(
             carto_table.location_type, site_name, pcode
@@ -378,8 +377,6 @@ def update_model_locations(remapped_locations, model, related_object, related_pr
         handled_related_objects = []
         ThroughModel = getattr(random_object, related_property).through
         # clean up multiple remaps
-        print(remapped_locations)
-        print(multiples)
         for new_location_id, old_location_id in remapped_locations:
             '''
             Clean up `multiple/duplicate remaps` from the through table.
@@ -389,15 +386,12 @@ def update_model_locations(remapped_locations, model, related_object, related_pr
             '''
 
             if len(multiples[new_location_id]) > 1:
-                print("multiples", multiples[new_location_id])
                 # it seems Django can do the wanted grouping only if we pass the counted column in `values()`
                 # the result contains the related ref id and the nr. of duplicates, ex.:
                 # <QuerySet [{'intervention': 27, 'object_count': 2}, {'intervention': 104, 'object_count': 2}]>
                 grouped_magic = ThroughModel.objects.filter(location__in=multiples[new_location_id]).\
                     values(related_object).annotate(object_count=Count(related_object)).\
                     filter(object_count__gt=1)
-
-                print("grouped stuff", grouped_magic)
 
                 for record in grouped_magic:
                     related_object_id = record.get(related_object)
