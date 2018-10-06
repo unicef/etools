@@ -234,10 +234,11 @@ def cleanup_obsolete_locations(self, carto_table_pk):
             if deleteable_location.is_leaf_node():
                 logger.info("Selecting orphaned pcode {} for deletion".format(deleteable_location.p_code))
                 revalidated_deleteable_pcodes.append(deleteable_location.id)
-                
+
     if revalidated_deleteable_pcodes:
         logger.info("Deleting selected orphaned pcodes")
         Location.objects.all_locations().filter(id__in=revalidated_deleteable_pcodes).delete()
+
 
 @celery.current_app.task
 def catch_task_errors():
