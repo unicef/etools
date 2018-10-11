@@ -112,6 +112,9 @@ def update_sites_from_cartodb(carto_table_pk):
 
         # wrap Location tree updates in a transaction, to prevent an invalid tree state due to errors
         with transaction.atomic():
+            # should write lock the locations table until the tree is rebuilt
+            Location.objects.all_locations().select_for_update().only('id')
+
             # disable tree 'generation' during single row updates, rebuild the tree after.
             # this should prevent errors happening (probably)due to invalid intermediary tree state
             with Location.objects.disable_mptt_updates():
