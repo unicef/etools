@@ -82,7 +82,8 @@ class TestAggregateHact(BaseTenantTestCase):
             status=Engagement.FINAL, date_of_draft_report_to_unicef=datetime(datetime.today().year - 1, 12, 5))
         SpotCheckFactory(
             status=Engagement.FINAL,
-            date_of_draft_report_to_unicef=datetime(datetime.today().year, 6, 3), partner__vendor_number='0000000000')
+            date_of_draft_report_to_unicef=datetime(datetime.today().year, 6, 3),
+            agreement__auditor_firm__unicef_users_allowed=True)
         SpotCheckFactory(
             status=Engagement.REPORT_SUBMITTED, date_of_draft_report_to_unicef=datetime(datetime.today().year, 2, 1))
 

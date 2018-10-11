@@ -208,8 +208,8 @@ class AggregateHact(TimeStampedModel):
         qs = SpotCheck.objects.filter(status=Engagement.FINAL, date_of_draft_report_to_unicef__year=datetime.now().year)
         return [
             ['Completed by', 'Count'],
-            ['Staff', qs.filter(partner__vendor_number='0000000000').count()],
-            ['Service Providers', qs.exclude(partner__vendor_number='0000000000').count()],
+            ['Staff', qs.filter(agreement__auditor_firm__unicef_users_allowed=True).count()],
+            ['Service Providers', qs.exclude(agreement__auditor_firm__unicef_users_allowed=False).count()],
         ]
 
     def get_assurance_activities(self):

@@ -527,8 +527,6 @@ class TestInterventionReportingRequirementCreateSerializer(BaseTenantTestCase):
         self.assertTrue(serializer.is_valid())
         serializer.create(serializer.validated_data)
 
-        print(self.intervention)
-        print(report_type)
         requirement_qs_count = ReportingRequirement.objects.filter(
             intervention=self.intervention,
             report_type=report_type,

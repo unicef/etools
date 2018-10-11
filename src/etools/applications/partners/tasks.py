@@ -5,7 +5,6 @@ from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.db import connection, transaction
 from django.db.models import F, Sum
-from django.db.models.functions import Coalesce
 
 from celery.utils.log import get_task_logger
 from tenant_schemas.utils import schema_context
@@ -247,79 +246,6 @@ def _notify_interventions_ending_soon(country_name):
             template_name="partners/partnership/ending",
             context=email_context
         )
-
-
-@app.task
-def pmp_indicator_report(writer, **kwargs):
-    base_url = 'https://etools.unicef.org'
-    countries = kwargs.get('countries', None)
-    qs = Country.objects.exclude(schema_name__in=['public', 'uat', 'frg'])
-    if countries:
-        qs = qs.filter(schema_name__in=countries.pop().split(','))
-    fieldnames = [
-        'Country',
-        'Partner Name',
-        'Partner Type',
-        'PD / SSFA ref',
-        'PD / SSFA status',
-        'PD / SSFA start date',
-        'PD / SSFA creation date',
-        'PD / SSFA end date',
-        'UNICEF US$ Cash contribution',
-        'UNICEF US$ Supply contribution',
-        'Total Budget',
-        'UNICEF Budget',
-        'Currency',
-        'Partner Contribution',
-        'Unicef Cash',
-        'In kind Amount',
-        'Total',
-        'FR numbers against PD / SSFA',
-        'FR currencies',
-        'Sum of all FR planned amount',
-        'Core value attached',
-        'Partner Link',
-        'Intervention Link',
-    ]
-
-    dict_writer = writer(fieldnames=fieldnames)
-    dict_writer.writeheader()
-
-    for country in qs:
-        connection.set_tenant(Country.objects.get(name=country.name))
-        logger.info(u'Running on %s' % country.name)
-        for partner in PartnerOrganization.objects.prefetch_related('core_values_assessments'):
-            for intervention in Intervention.objects.filter(
-                    agreement__partner=partner).select_related('planned_budget'):
-                planned_budget = getattr(intervention, 'planned_budget', None)
-                fr_currencies = intervention.frs.all().values_list('currency', flat=True).distinct()
-                has_assessment = bool(getattr(partner.current_core_value_assessment, 'assessment', False))
-                dict_writer.writerow({
-                    'Country': country,
-                    'Partner Name': str(partner),
-                    'Partner Type': partner.cso_type,
-                    'PD / SSFA ref': intervention.number.replace(',', '-'),
-                    'PD / SSFA status': intervention.get_status_display(),
-                    'PD / SSFA start date': intervention.start,
-                    'PD / SSFA creation date': intervention.created,
-                    'PD / SSFA end date': intervention.end,
-                    'UNICEF US$ Cash contribution': intervention.total_unicef_cash,
-                    'UNICEF US$ Supply contribution': intervention.total_in_kind_amount,
-                    'Total Budget': intervention.total_budget,
-                    'UNICEF Budget': intervention.total_unicef_budget,
-                    'Currency': intervention.planned_budget.currency if planned_budget else '-',
-                    'Partner Contribution': intervention.planned_budget.partner_contribution if planned_budget else '-',
-                    'Unicef Cash': intervention.planned_budget.unicef_cash if planned_budget else '-',
-                    'In kind Amount': intervention.planned_budget.in_kind_amount if planned_budget else '-',
-                    'Total': intervention.planned_budget.total if planned_budget else '-',
-                    'FR numbers against PD / SSFA': u' - '.join([fh.fr_number for fh in intervention.frs.all()]),
-                    'FR currencies': ', '.join(fr for fr in fr_currencies),
-                    'Sum of all FR planned amount': intervention.frs.aggregate(
-                        total=Coalesce(Sum('intervention_amt'), 0))['total'] if fr_currencies.count() <= 1 else '-',
-                    'Core value attached': has_assessment,
-                    'Partner Link': '{}/pmp/partners/{}/details'.format(base_url, partner.pk),
-                    'Intervention Link': '{}/pmp/interventions/{}/details'.format(base_url, intervention.pk),
-                })
 
 
 @app.task

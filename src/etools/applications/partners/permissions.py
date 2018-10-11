@@ -2,13 +2,12 @@ from django.apps import apps
 from django.utils.lru_cache import lru_cache
 from django.utils.translation import ugettext as _
 
+from etools_validator.utils import check_rigid_related
 from rest_framework import permissions
 
 from etools.applications.environment.helpers import tenant_switch_is_active
-from etools.applications.EquiTrack.utils import HashableDict
+from etools.applications.EquiTrack.utils import HashableDict, is_user_in_groups
 from etools.applications.utils.common.utils import get_all_field_names
-from etools.applications.utils.permissions.utils import is_user_in_groups
-from etools_validator.utils import check_rigid_related
 
 # READ_ONLY_API_GROUP_NAME is the name of the permissions group that provides read-only access to some list views.
 # Initially, this is only being used for PRP-related endpoints.

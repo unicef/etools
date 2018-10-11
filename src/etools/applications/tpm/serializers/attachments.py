@@ -41,3 +41,19 @@ class TPMVisitReportAttachmentsSerializer(BaseAttachmentSerializer):
 
     class Meta(BaseAttachmentSerializer.Meta):
         pass
+
+    def create(self, validated_data):
+        validated_data['code'] = 'visit_report_attachments'
+        return super().create(validated_data)
+
+
+class TPMVisitAttachmentsSerializer(BaseAttachmentSerializer):
+    file_type = FileTypeModelChoiceField(queryset=FileType.objects.filter(code='tpm'),
+                                         label=_('Document Type'))
+
+    class Meta(BaseAttachmentSerializer.Meta):
+        pass
+
+    def create(self, validated_data):
+        validated_data['code'] = 'visit_attachments'
+        return super().create(validated_data)
