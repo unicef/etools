@@ -105,7 +105,7 @@ class GisLocationsGeomListViewset(ListAPIView):
         '''
         geo_format = self.request.query_params.get('geo_format') or 'geojson'
         geom_type = self.request.query_params.get('geom_type') or None
-        status = request.query_params.get('status').lower() or None
+        loc_status = self.request.query_params.get('status').lower() if 'status' in self.request.query_params else None
 
         if geo_format not in ['wkt', 'geojson']:
             return Response(
@@ -119,7 +119,7 @@ class GisLocationsGeomListViewset(ListAPIView):
                 data={'error': 'Invalid geometry type received, `polygon` or `point` expected.'}
             )
 
-        if status not in ['active', 'archived', 'all', None]:
+        if loc_status not in ['active', 'archived', 'all', None]:
             return Response(
                 status=400,
                 data={'error': 'Invalid location status code received, `active`, `archived` or `all` expected.'}
@@ -127,9 +127,9 @@ class GisLocationsGeomListViewset(ListAPIView):
 
         country_id = request.query_params.get('country_id')
 
-        if status == 'active':
+        if loc_status == 'active':
             location_queryset = Location.objects
-        elif status == 'archived':
+        elif loc_status == 'archived':
             location_queryset = Location.objects.archived_locations()
         else:
             location_queryset = Location.objects.all_locations()
