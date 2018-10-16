@@ -31,7 +31,7 @@ def validate_locations_in_use(carto_table_pk):
         raise e
 
     database_pcodes = []
-    for row in Location.all_locations.filter(gateway=carto_table.location_type).values('p_code'):
+    for row in Location.objects.all_locations().filter(gateway=carto_table.location_type).values('p_code'):
         database_pcodes.append(row['p_code'])
 
     auth_client = LocationsCartoNoAuthClient(base_url="https://{}.carto.com/".format(carto_table.domain))
@@ -55,7 +55,7 @@ def validate_locations_in_use(carto_table_pk):
 
     remap_old_pcodes = [remap_row['old_pcode'] for remap_row in remapped_pcode_pairs]
     orphaned_pcodes = set(database_pcodes) - (set(new_carto_pcodes) | set(remap_old_pcodes))
-    orphaned_location_ids = Location.all_locations.filter(p_code__in=list(orphaned_pcodes))
+    orphaned_location_ids = Location.objects.all_locations().filter(p_code__in=list(orphaned_pcodes))
 
     # if location ids with no remap in use are found, do not continue the import
     location_ids_bnriu = get_location_ids_in_use(orphaned_location_ids)
@@ -93,7 +93,7 @@ def update_sites_from_cartodb(carto_table_pk):
         # validations
         # get the list of the existing Pcodes and previous Pcodes from the database
         database_pcodes = []
-        for row in Location.all_locations.filter(gateway=carto_table.location_type).values('p_code'):
+        for row in Location.objects.all_locations().filter(gateway=carto_table.location_type).values('p_code'):
             database_pcodes.append(row['p_code'])
 
         # get the list of the new Pcodes from the Carto data
@@ -168,10 +168,12 @@ def update_sites_from_cartodb(carto_table_pk):
                             sites_updated, sites_remapped
                         )
 
-                    # results += partial_results
+                    results += partial_results
 
-                    # crete new locations, archive old, and remap relevant etools enitites to the new location
-                    save_location_remap_history(partial_results)
+                # crete remap history, and remap relevant etools enitites(interventions, travels, etc..)
+                # from the remapped location, which is to be archived, to the new location
+                if results:
+                    save_location_remap_history(results)
 
                 orphaned_old_pcodes = set(database_pcodes) - (set(new_carto_pcodes) | set(remap_old_pcodes))
                 if orphaned_old_pcodes:  # pragma: no-cover
@@ -197,7 +199,7 @@ def cleanup_obsolete_locations(self, carto_table_pk):
         raise e
 
     database_pcodes = []
-    for row in Location.all_locations.filter(gateway=carto_table.location_type).values('p_code'):
+    for row in Location.objects.all_locations().filter(gateway=carto_table.location_type).values('p_code'):
         database_pcodes.append(row['p_code'])
 
     auth_client = LocationsCartoNoAuthClient(base_url="https://{}.carto.com/".format(carto_table.domain))
@@ -225,7 +227,7 @@ def cleanup_obsolete_locations(self, carto_table_pk):
 
     for deleteable_pcode in deleteable_pcodes:
         try:
-            deleteable_location = Location.all_locations.get(p_code=deleteable_pcode)
+            deleteable_location = Location.objects.all_locations().get(p_code=deleteable_pcode)
         except Location.DoesNotExist:
             logger.warning("Cannot find orphaned pcode {}.".format(deleteable_pcode))
         else:

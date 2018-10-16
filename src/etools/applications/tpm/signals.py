@@ -18,8 +18,9 @@ def create_user_receiver(instance, created, **kwargs):
 @receiver(post_delete, sender=TPMPartnerStaffMember)
 def delete_user_receiver(instance, **kwargs):
     user = instance.user
-    user.is_active = False
-    user.save()
+    if not user.is_unicef_user():
+        user.is_active = False
+        user.save()
 
 
 @receiver(post_save, sender=TPMActionPoint)

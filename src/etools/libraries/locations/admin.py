@@ -2,12 +2,11 @@ from celery import chain
 from django.contrib.gis import admin
 
 from unicef_locations.admin import CartoDBTableAdmin
-from unicef_locations.models import CartoDBTable
+from unicef_locations.models import CartoDBTable, LocationRemapHistory
 from etools.libraries.locations.tasks import (
     validate_locations_in_use,
     update_sites_from_cartodb,
     cleanup_obsolete_locations,
-    # catch_task_errors,
 )
 
 
@@ -36,5 +35,24 @@ class BackendCartoDBTableAdmin(CartoDBTableAdmin):
             chain(task_list).delay()
 
 
+class RemapAdmin(admin.ModelAdmin):
+    list_display = (
+        'id',
+        'old_id',
+        'new_id',
+        'old_location',
+        'new_location',
+    )
+
+    ordering = ('new_location__id',)
+
+    def old_id(self, obj):
+        return obj.old_location.id
+
+    def new_id(self, obj):
+        return obj.new_location.id
+
+
 admin.site.unregister(CartoDBTable)
 admin.site.register(CartoDBTable, BackendCartoDBTableAdmin)
+admin.site.register(LocationRemapHistory, RemapAdmin)
