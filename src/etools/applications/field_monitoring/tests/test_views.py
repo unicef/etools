@@ -22,11 +22,10 @@ class MethodsViewTestCase(FMBaseTestCaseMixin, BaseTenantTestCase):
 
 class MethodTypesViewTestCase(FMBaseTestCaseMixin, BaseTenantTestCase):
     def test_list(self):
-        method = MethodFactory(is_types_applicable=True)
-        MethodTypeFactory(method_id=method.id)
+        MethodTypeFactory()
 
         response = self.forced_auth_req(
-            'get', reverse('field_monitoring:method-types-list', args=[method.id]),
+            'get', reverse('field_monitoring:method-types-list'),
             user=self.unicef_user
         )
 

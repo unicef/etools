@@ -39,7 +39,7 @@ class MethodFactory(factory.DjangoModelFactory):
 
 
 class MethodTypeFactory(factory.DjangoModelFactory):
-    method = factory.RelatedFactory(MethodFactory, is_types_applicable=True)
+    method = factory.SubFactory(MethodFactory, is_types_applicable=True)
     name = fuzzy.FuzzyText()
 
     class Meta:
