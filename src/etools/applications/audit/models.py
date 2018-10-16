@@ -281,6 +281,7 @@ class Engagement(InheritedModelMixin, TimeStampedModel, models.Model):
 
 
 class RiskCategory(OrderedModel, models.Model):
+    """Group of questions"""
     TYPES = Choices(
         ('default', _('Default')),
         ('primary', _('Primary')),
@@ -331,8 +332,9 @@ class RiskCategory(OrderedModel, models.Model):
 
 
 class RiskBluePrint(OrderedModel, models.Model):
+    """Question"""
     weight = models.PositiveSmallIntegerField(default=1, verbose_name=_('Weight'))
-    is_key = models.BooleanField(default=False, verbose_name=_('Is Key'))
+    is_key = models.BooleanField(default=False, verbose_name=_('Is Key'))  # is key risk
     header = models.TextField(verbose_name=_('Header'))
     description = models.TextField(blank=True, verbose_name=_('Description'))
     category = models.ForeignKey(
@@ -350,6 +352,7 @@ class RiskBluePrint(OrderedModel, models.Model):
 
 
 class Risk(models.Model):
+    """Answer to question"""
     POSITIVE_VALUES = Choices(
         (1, 'low', _('Low')),
         (2, 'medium', _('Medium')),
@@ -659,6 +662,7 @@ class FinancialFinding(models.Model):
 
 
 class KeyInternalControl(models.Model):
+    """Created by UNICEF staff"""
     audit = models.ForeignKey(
         Audit, verbose_name=_('Audit'), related_name='key_internal_controls',
         on_delete=models.CASCADE,

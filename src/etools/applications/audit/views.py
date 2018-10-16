@@ -36,7 +36,6 @@ from etools.applications.audit.exports import (
     SpotCheckDetailCSVRenderer,
 )
 from etools.applications.audit.filters import DisplayStatusFilter, UniqueIDOrderingFilter
-from etools.applications.audit.metadata import AuditBaseMetadata, AuditPermissionBasedMetadata
 from etools.applications.audit.models import (
     Audit,
     Auditor,
@@ -86,6 +85,7 @@ from etools.applications.partners.models import PartnerOrganization
 from etools.applications.partners.serializers.partner_organization_v2 import MinimalPartnerOrganizationListSerializer
 from etools.applications.permissions2.conditions import ObjectStatusCondition
 from etools.applications.permissions2.drf_permissions import get_permission_for_targets, NestedPermission
+from etools.applications.permissions2.metadata import PermissionBasedMetadata, BaseMetadata
 from etools.applications.permissions2.views import PermittedFSMActionMixin, PermittedSerializerMixin
 
 
@@ -94,7 +94,7 @@ class BaseAuditViewSet(
     MultiSerializerViewSetMixin,
     PermittedSerializerMixin,
 ):
-    metadata_class = AuditBaseMetadata
+    metadata_class = BaseMetadata
     pagination_class = DynamicPageNumberPagination
     permission_classes = [IsAuthenticated, ]
 
@@ -123,7 +123,7 @@ class AuditorFirmViewSet(
     mixins.RetrieveModelMixin,
     viewsets.GenericViewSet
 ):
-    metadata_class = AuditPermissionBasedMetadata
+    metadata_class = PermissionBasedMetadata
     queryset = AuditorFirm.objects.filter(hidden=False)
     serializer_class = AuditorFirmSerializer
     serializer_action_classes = {
@@ -181,7 +181,7 @@ class PurchaseOrderViewSet(
     mixins.UpdateModelMixin,
     viewsets.GenericViewSet
 ):
-    metadata_class = AuditPermissionBasedMetadata
+    metadata_class = PermissionBasedMetadata
     queryset = PurchaseOrder.objects.all()
     serializer_class = PurchaseOrderSerializer
     permission_classes = (IsAuthenticated, )
@@ -246,7 +246,7 @@ class EngagementViewSet(
     serializer_action_classes = {
         'list': EngagementListSerializer,
     }
-    metadata_class = AuditPermissionBasedMetadata
+    metadata_class = PermissionBasedMetadata
 
     renderer_classes = [JSONRenderer, EngagementCSVRenderer]
 
@@ -470,7 +470,7 @@ class AuditorStaffMembersViewSet(
     NestedViewSetMixin,
     viewsets.GenericViewSet
 ):
-    metadata_class = AuditPermissionBasedMetadata
+    metadata_class = PermissionBasedMetadata
     queryset = AuditorStaffMember.objects.all()
     serializer_class = AuditorStaffMemberSerializer
     permission_classes = BaseAuditViewSet.permission_classes + [NestedPermission]
@@ -526,7 +526,7 @@ class EngagementActionPointViewSet(BaseAuditViewSet,
                                    mixins.UpdateModelMixin,
                                    NestedViewSetMixin,
                                    viewsets.GenericViewSet):
-    metadata_class = AuditPermissionBasedMetadata
+    metadata_class = PermissionBasedMetadata
     queryset = EngagementActionPoint.objects.all()
     serializer_class = EngagementActionPointSerializer
     permission_classes = BaseAuditViewSet.permission_classes + [NestedPermission]
@@ -554,7 +554,7 @@ class BaseAuditAttachmentsViewSet(BaseAuditViewSet,
                                   mixins.DestroyModelMixin,
                                   NestedViewSetMixin,
                                   viewsets.GenericViewSet):
-    metadata_class = AuditPermissionBasedMetadata
+    metadata_class = PermissionBasedMetadata
     queryset = Attachment.objects.all()
 
     def get_parent_filter(self):
