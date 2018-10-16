@@ -2,11 +2,9 @@
 from django.contrib.auth import get_user_model
 from django.test import SimpleTestCase
 
-
 from etools.applications.EquiTrack.tests.cases import BaseTenantTestCase
 from etools.applications.users import models
-from etools.applications.users.tests.factories import (CountryFactory, OfficeFactory,
-                                                       ProfileFactory, UserFactory,)
+from etools.applications.users.tests.factories import CountryFactory, OfficeFactory, ProfileFactory, UserFactory
 
 
 class TestWorkspaceCounter(BaseTenantTestCase):
@@ -107,6 +105,13 @@ class TestUserModel(BaseTenantTestCase):
         '''Exercise converting instances to string.'''
         user = UserFactory(first_name='Pel\xe9', last_name='Arantes do Nascimento')
         self.assertEqual(str(user), 'Pel\xe9 Arantes do Nascimento')
+
+    def test_is_unicef_user(self):
+        user = UserFactory(email='macioce@unicef.org')
+        self.assertTrue(user.is_unicef_user())
+
+        user = UserFactory(email='unicef@macioce.org')
+        self.assertFalse(user.is_unicef_user())
 
 
 class TestStrUnicode(SimpleTestCase):
