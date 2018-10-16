@@ -2306,3 +2306,4 @@ class TestPartnerOrganizationDashboardAPIView(BaseTenantTestCase):
         self.assertEquals(self.record['days_last_pv'], 200)
         self.assertTrue(self.record['alert_no_recent_pv'])
         self.assertFalse(self.record['alert_no_pv'])
+        self.assertTrue(self.record['vendor_number'])
