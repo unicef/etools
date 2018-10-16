@@ -5,6 +5,7 @@ from django.utils.translation import ugettext_lazy as _
 from django_extensions.db.fields import AutoSlugField
 
 from etools.applications.field_monitoring_shared.models import Method
+from etools.applications.utils.groups.wrappers import GroupWrapper
 
 
 class MethodType(models.Model):
@@ -18,4 +19,8 @@ class MethodType(models.Model):
 
     def clean(self):
         if not self.method.is_types_applicable:
-            raise ValidationError('Unable to add type for this Method')
+            raise ValidationError(_('Unable to add type for this Method'))
+
+
+UNICEFUser = GroupWrapper(code='unicef_user',
+                          name='UNICEF User')
