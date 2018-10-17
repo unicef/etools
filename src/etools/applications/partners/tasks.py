@@ -27,7 +27,7 @@ logger = get_task_logger(__name__)
 
 # _INTERVENTION_ENDING_SOON_DELTAS is used by intervention_notification_ending(). Notifications will be sent
 # about each interventions ending {delta} days from now.
-_INTERVENTION_ENDING_SOON_DELTAS = (15, 30)
+_INTERVENTION_ENDING_SOON_DELTAS = (15, 30, 60, 90)
 
 
 def get_intervention_context(intervention):

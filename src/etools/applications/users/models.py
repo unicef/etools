@@ -70,6 +70,9 @@ class User(AbstractBaseUser, PermissionsMixin):
         """Send an email to this user."""
         send_mail(subject, message, from_email, [self.email], **kwargs)
 
+    def is_unicef_user(self):
+        return self.email.endswith('@unicef.org')
+
 
 class Country(TenantMixin):
     """
