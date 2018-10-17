@@ -227,13 +227,20 @@ def cleanup_obsolete_locations(self, carto_table_pk):
 
     for deleteable_pcode in deleteable_pcodes:
         try:
-            deleteable_location = Location.objects.all_locations().get(p_code=deleteable_pcode)
+            deleteable_location = Location.objects.all_locations().get(
+                p_code=deleteable_pcode,
+                gateway=carto_table.location_type,
+            )
         except Location.DoesNotExist:
             logger.warning("Cannot find orphaned pcode {}.".format(deleteable_pcode))
         else:
             if deleteable_location.is_leaf_node():
-                logger.info("Deleting orphaned and unused location with pcode {}".format(deleteable_location.p_code))
-                deleteable_location.delete()
+                secondary_parent_check = Location.objects.filter(parent=deleteable_location.id)
+                if not secondary_parent_check:
+                    logger.info(
+                        "Deleting orphaned and unused location with pcode {}".format(deleteable_location.p_code)
+                    )
+                    deleteable_location.delete()
 
 
 @celery.current_app.task
