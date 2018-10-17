@@ -64,7 +64,7 @@ class PurchaseOrder(TimeStampedModel, models.Model):
         return self.order_number
 
     def natural_key(self):
-        return (self.order_number, )
+        return self.order_number,
 
 
 class PurchaseOrderItemManager(models.Manager):
@@ -85,4 +85,7 @@ class PurchaseOrderItem(models.Model):
         unique_together = ('purchase_order', 'number')
 
     def natural_key(self):
-        return (self.purchase_order, self.number)
+        return self.purchase_order, self.number
+
+    def __str__(self):
+        return '{0.purchase_order}/{0.number}'.format(self)
