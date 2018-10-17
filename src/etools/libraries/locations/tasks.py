@@ -230,7 +230,10 @@ def cleanup_obsolete_locations(self, carto_table_pk):
     revalidated_deleteable_pcodes = []
     for deleteable_pcode in deleteable_pcodes:
         try:
-            deleteable_location = Location.objects.all_locations().get(p_code=deleteable_pcode)
+            deleteable_location = Location.objects.all_locations().get(
+                p_code=deleteable_pcode,
+                gateway=carto_table.location_type,
+            )
         except Location.DoesNotExist:
             logger.warning("Cannot find orphaned pcode {}.".format(deleteable_pcode))
         else:
