@@ -36,7 +36,6 @@ class BackendCartoDBTableAdmin(CartoDBTableAdmin):
 
         if task_list:
             # Trying to force the tasks to execute in correct sequence
-            # chain(task_list).on_error(catch_task_errors.s()).delay()
             chain(task_list).delay()
 
 

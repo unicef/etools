@@ -6,8 +6,9 @@ from celery.utils.log import get_task_logger
 
 from django.utils.encoding import force_text
 from django.db import transaction
+from django.db.models import Q
 
-from unicef_locations.models import CartoDBTable, Location
+from unicef_locations.models import CartoDBTable, Location, LocationRemapHistory
 from unicef_locations.auth import LocationsCartoNoAuthClient
 
 from etools.libraries.locations.task_utils import (
@@ -178,15 +179,18 @@ def update_sites_from_cartodb(carto_table_pk):
                 orphaned_old_pcodes = set(database_pcodes) - (set(new_carto_pcodes) | set(remap_old_pcodes))
                 if orphaned_old_pcodes:  # pragma: no-cover
                     logger.warning("Archiving unused pcodes: {}".format(','.join(orphaned_old_pcodes)))
-                    Location.objects.filter(p_code__in=list(orphaned_old_pcodes)).update(is_active=False)
+                    Location.objects.filter(
+                        p_code__in=list(orphaned_old_pcodes),
+                        is_active=True,
+                    ).update(
+                        is_active=False
+                    )
 
             # rebuild location tree
             Location.objects.rebuild()
 
     logger.warning("Table name {}: {} sites created, {} sites updated, {} sites remapped, {} sites skipped".format(
         carto_table.table_name, sites_created, sites_updated, sites_remapped, sites_not_added))
-
-    # return results
 
 
 @celery.current_app.task(bind=True)
@@ -236,17 +240,11 @@ def cleanup_obsolete_locations(self, carto_table_pk):
         else:
             if deleteable_location.is_leaf_node():
                 secondary_parent_check = Location.objects.all_locations().filter(parent=deleteable_location.id)
-                if not secondary_parent_check:
+                remap_history_check = LocationRemapHistory.objects.filter(
+                    Q(old_location=deleteable_location) | Q(new_location=deleteable_location)
+                )
+                if not secondary_parent_check and not remap_history_check:
                     logger.info(
                         "Deleting orphaned and unused location with pcode {}".format(deleteable_location.p_code)
                     )
                     deleteable_location.delete()
-
-
-@celery.current_app.task
-def catch_task_errors():
-    pass
-
-
-class BnriuException(Exception):
-    pass
