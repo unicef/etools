@@ -10,9 +10,8 @@ from rest_framework.views import APIView
 from unicef_restlib.permissions import IsSuperUser
 
 from etools.applications.hact.tasks import update_aggregate_hact_values, update_hact_values
-from etools.applications.management.tasks import send_test_email
-from etools.applications.partners.tasks import pmp_indicator_report
-from etools.applications.users.tasks import user_report
+from etools.applications.management.tasks import fam_report, pmp_indicator_report, send_test_email, user_report
+from etools.libraries.azure_graph_api.tasks import sync_delta_users
 
 
 class BasicTaskAPIView(APIView, metaclass=ABCMeta):
@@ -22,9 +21,7 @@ class BasicTaskAPIView(APIView, metaclass=ABCMeta):
 
     def get(self, request, *args, **kwargs):
         try:
-            params = self.request.query_params.copy()
-            params['user_email'] = self.request.user.email
-            self.task_function.delay(**params)
+            self.task_function.delay()
         except BaseException as e:
             return Response(status=500, data=str(e))
 
@@ -57,6 +54,11 @@ class BasicReportAPIView(APIView, metaclass=ABCMeta):
         return f'{self.base_filename}_as_of_{today}'
 
 
+class SyncDeltaUsers(BasicTaskAPIView):
+    task_function = sync_delta_users
+    success_message = 'Task generated Successfully: Sync Delta Users'
+
+
 class UpdateHactValuesAPIView(BasicTaskAPIView):
     task_function = update_hact_values
     success_message = 'Task generated Successfully: Update Hact Values'
@@ -71,12 +73,27 @@ class TestSendEmailAPIView(BasicTaskAPIView):
     task_function = send_test_email
     success_message = 'Task generated Successfully: Send Test Email'
 
+    def get(self, request, *args, **kwargs):
+        try:
+            params = self.request.query_params.copy()
+            params['user_email'] = self.request.user.email
+            self.task_function.delay(**params)
+        except BaseException as e:
+            return Response(status=500, data=str(e))
+
+        return Response({'success': self.success_message})
+
 
 class UsersReportView(BasicReportAPIView):
     report_function = user_report
-    base_filename = 'users'
+    base_filename = 'users_report'
 
 
 class PMPIndicatorsReportView(BasicReportAPIView):
     report_function = pmp_indicator_report
-    base_filename = 'pmp_indicators'
+    base_filename = 'pmp_indicators_report'
+
+
+class FamReportView(BasicReportAPIView):
+    report_function = fam_report
+    base_filename = 'fam_report'

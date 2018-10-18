@@ -94,9 +94,9 @@ static3==0.7.0            # via dj-static
 tablib==0.12.1            # via django-import-export
 tenant-schemas-celery==0.1.7
 tornado==4.2.0            # via flower
-unicef-attachments==0.2.6
+unicef-attachments==0.3.0
 unicef-djangolib==0.5
-unicef-locations==1.3.1
+unicef-locations==1.4.1
 unicef_notification==0.2.0
 unicef_restlib==0.3.4
 unicef_snapshot==0.2.1

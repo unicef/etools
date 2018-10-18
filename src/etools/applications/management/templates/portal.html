@@ -1,0 +1,96 @@
+{% extends "admin/index.html" %}{% load i18n %}
+
+{% block nav-global %}{% endblock nav-global %}
+{% block branding %}
+<h1>eTools Management Dashboard</h1>
+{% endblock branding %}
+
+
+{% block extrahead %}
+{{block.super}}
+<style type="text/css">
+    #header
+    {
+        background: #04b4f7;
+        color: #fff;
+        text-shadow: none;
+        min-height: 60px;
+    }
+    #branding h1, #branding h1 a:link, #branding h1 a:visited {
+        color: white;
+    }
+
+
+
+</style>
+{% endblock extrahead %}
+
+{% block content %}
+{% if request.user.is_staff and request.user.is_superuser %}
+<div id="content-main">
+    <div class="module">
+        <table id="change-history">
+            <caption style="background-color:#4702ce"><div title="Utils">Utils</div></caption>
+            <tr><th><a href="/api/management/invalidate-cache">Invalidate Cache</a></th></tr>
+            <tr><th><a target="_blank" href="/api/management/tasks/send_test_email/">Send test Email</a></th></tr>
+        </table>
+        <br><br>
+        <table id="change-history">
+            <caption style="background-color:#f7d904"><div title="Links">Links</div></caption>
+            <tr><th><a target="_blank" href="/admin/users/country/">Go to Countries</a></th></tr>
+            <tr><th><a target="_blank" href="/admin/vision/visionsynclog/">Go to Vision Logs</a></th></tr>
+        </table>
+        <br><br>
+        <table id="change-history">
+            <caption style="background-color:#279a35"><div title="Reports">Reports</div></caption>
+            <tr><th><a href="/api/management/reports/pmp_indicator/" class="changelink">PMP Indicators</a></th></tr>
+            <tr><th><a href="/api/management/reports/users/" class="changelink">Users</a></th></tr>
+            <tr><th><a href="/api/management/reports/fam/" class="changelink">FAM</a></th></tr>
+        </table>
+        <br><br>
+        <table id="change-history">
+            <caption style="background-color:#f70469"><div title="Reports">Tasks</div></caption>
+            <tr><th><a target="_blank" href="/api/management/tasks/sync_delta_users/" class="addlink">Sync Delta Users</a></th></tr>
+            <tr><th><a target="_blank" href="/api/management/tasks/update_hact_values/" class="addlink">Update Hact Values</a></th></tr>
+            <tr><th><a target="_blank" href="/api/management/tasks/update_aggregate_hact_values/" class="addlink">Aggregate Hact for Charts</a></th></tr>
+        </table>
+
+    </div>
+</div>
+{% else %}
+    <h1>Information not allowed</h1>
+{% endif %}
+
+
+
+{% endblock content %}
+
+{% block sidebar %}
+<div id="content-related">
+    <div class="module" id="recent-actions-module">
+        <h2>
+            Statistics
+        </h2>
+        <table>
+            <tr>
+                <td>Active Users</td>
+                <td>{{active_users}}</td>
+            </tr>
+            <tr>
+                <td>Workspaces</td>
+                <td>{{countries}}</td>
+            </tr>
+            <tr>
+                <td>Last AD Sync</td>
+                <td>{{last_ad_sync}}</td>
+            </tr>
+            <tr>
+                <td>Last Vision Sync</td>
+                <td>{{last_vision_sync}}</td>
+            </tr>
+
+        </table>
+    </div>
+</div>
+
+{% endblock sidebar %}

@@ -488,6 +488,18 @@ class PartnerOrganization(TimeStampedModel):
         verbose_name=_('Cash Transfer Jan - Dec')
     )
 
+    outstanding_dct_amount_6_to_9_months_usd = models.DecimalField(
+        decimal_places=2, max_digits=20, blank=True, null=True,
+        help_text='Outstanding DCT 6/9 months',
+        verbose_name=_('Outstanding DCT 6/9 months')
+    )
+
+    outstanding_dct_amount_more_than_9_months_usd = models.DecimalField(
+        decimal_places=2, max_digits=20, blank=True, null=True,
+        help_text='Outstanding DCT more than 9 months',
+        verbose_name=_('Outstanding DCT more than 9 months')
+    )
+
     hact_values = JSONField(blank=True, null=True, default=hact_default, verbose_name='HACT')
     basis_for_risk_rating = models.CharField(
         verbose_name=_("Basis for Risk Rating"), max_length=50, default='', blank=True)
