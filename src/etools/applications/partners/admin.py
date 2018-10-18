@@ -448,6 +448,8 @@ class PartnerAdmin(ExportMixin, admin.ModelAdmin):
         'net_ct_cy',
         'reported_cy',
         'total_ct_ytd',
+        'outstanding_dct_amount_6_to_9_months_usd',
+        'outstanding_dct_amount_more_than_9_months_usd',
     )
     fieldsets = (
         (_('Partner Details'), {
@@ -481,6 +483,8 @@ class PartnerAdmin(ExportMixin, admin.ModelAdmin):
                 'net_ct_cy',
                 'reported_cy',
                 'total_ct_ytd',
+                'outstanding_dct_amount_6_to_9_months_usd',
+                'outstanding_dct_amount_more_than_9_months_usd',
             )
         })
     )

@@ -4,7 +4,6 @@ from abc import ABCMeta, abstractmethod
 
 from django.conf import settings
 from django.db import connection
-
 from django.utils.encoding import force_text
 
 import requests
@@ -97,6 +96,10 @@ class DataSynchronizer(object):
 
         return [rec for rec in records if is_valid_record(rec)]
 
+    def preload(self):
+        """hook to execute custom code before loading"""
+        pass
+
     def sync(self):
         """
         Performs the database sync
@@ -107,6 +110,7 @@ class DataSynchronizer(object):
             handler_name=self.__class__.__name__
         )
 
+        self.preload()
         loader_kwargs = self._get_kwargs()
         loader_kwargs.update({
             kwarg_name: getattr(self, kwarg_name)

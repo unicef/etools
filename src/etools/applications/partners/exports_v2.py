@@ -118,6 +118,8 @@ class PartnerOrganizationDashboardCsvRenderer(FriendlyCSVRenderer):
         'action_points',
         'total_ct_cp',
         'total_ct_ytd',
+        'outstanding_dct_amount_6_to_9_months_usd',
+        'outstanding_dct_amount_more_than_9_months_usd',
         'days_last_pv',
         'alert_no_recent_pv',
         'alert_no_pv',
@@ -133,6 +135,8 @@ class PartnerOrganizationDashboardCsvRenderer(FriendlyCSVRenderer):
         'days_last_pv': 'Days Since Last PV',
         'alert_no_recent_pv': 'Alert: No Recent PV',
         'alert_no_pv': 'Alert: No PV',
+        'outstanding_dct_amount_6_to_9_months_usd': 'Outstanding DCT Amount between 6 and 9 months',
+        'outstanding_dct_amount_more_than_9_months_usd': 'Outstanding DCT Amount more than 9 months',
     }
 
 

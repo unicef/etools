@@ -8,5 +8,3 @@ class AppConfig(BaseAppConfig):
 
     def ready(self):
         from etools.applications.audit import signals  # NOQA
-        from etools.applications.utils.permissions import signals as permissions_signals
-        permissions_signals.prepare_permission_choices(self.get_models())
