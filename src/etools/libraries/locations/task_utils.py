@@ -340,7 +340,6 @@ def create_location(pcode, carto_table, parent, parent_instance, remapped_old_pc
 
         # names can be updated for existing locations with the same code
         location.name = site_name
-        # location.is_active = True
 
         if 'Point' in row['the_geom']:
             location.point = row['the_geom']
