@@ -235,7 +235,7 @@ def cleanup_obsolete_locations(self, carto_table_pk):
             logger.warning("Cannot find orphaned pcode {}.".format(deleteable_pcode))
         else:
             if deleteable_location.is_leaf_node():
-                secondary_parent_check = Location.objects.filter(parent=deleteable_location.id)
+                secondary_parent_check = Location.objects.all_locations().filter(parent=deleteable_location.id)
                 if not secondary_parent_check:
                     logger.info(
                         "Deleting orphaned and unused location with pcode {}".format(deleteable_location.p_code)
