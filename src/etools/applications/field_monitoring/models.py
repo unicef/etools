@@ -3,6 +3,7 @@ from django.db import models
 from django.utils.translation import ugettext_lazy as _
 
 from django_extensions.db.fields import AutoSlugField
+from unicef_locations.models import Location, GatewayType
 
 from etools.applications.field_monitoring_shared.models import Method
 from etools.applications.utils.groups.wrappers import GroupWrapper
@@ -20,6 +21,28 @@ class MethodType(models.Model):
     def clean(self):
         if not self.method.is_types_applicable:
             raise ValidationError(_('Unable to add type for this Method'))
+
+
+class Site(Location):
+    # should be moved to unicef_locations later
+
+    security_detail = models.TextField(verbose_name=_('Detail on Security'), blank=True)
+
+    def save(self, *args, **kwargs):
+        if not self.gateway_id:
+            self.gateway = GatewayType.objects.get_or_create(name='Site')[0]
+        return super().save(*args, **kwargs)
+
+    @staticmethod
+    def clean_parent(parent):
+        if parent.children.exclude(gateway__name='Site').exists():
+            raise ValidationError(_('A lower administrative level exists within the Parent Administrative Location '
+                                    'that you selected. Choose the lowest administrative level available in the '
+                                    'system.'))
+
+    def clean(self):
+        super().clean()
+        type(self).clean_parent(self.parent)
 
 
 UNICEFUser = GroupWrapper(code='unicef_user',

@@ -1,9 +1,11 @@
 from django.contrib.auth.models import Group
 
 import factory
+from django.contrib.gis.geos import Point
 from factory import fuzzy
+from unicef_locations.tests.factories import LocationFactory, GatewayTypeFactory
 
-from etools.applications.field_monitoring.models import MethodType, UNICEFUser
+from etools.applications.field_monitoring.models import MethodType, UNICEFUser, Site
 from etools.applications.field_monitoring_shared.models import Method
 from etools.applications.firms.tests.factories import BaseUserFactory
 
@@ -44,3 +46,13 @@ class MethodTypeFactory(factory.DjangoModelFactory):
 
     class Meta:
         model = MethodType
+
+
+class SiteFactory(LocationFactory):
+    security_detail = fuzzy.FuzzyText()
+    parent = factory.SubFactory(LocationFactory)
+    gateway = None
+    point = Point(x=10, y=10)
+
+    class Meta:
+        model = Site
