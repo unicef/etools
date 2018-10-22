@@ -118,6 +118,7 @@ class InterventionPermissions(PMPPermissions):
             'not_in_amendment_mode': not user_added_amendment(self.instance),
             'not_ssfa': self.instance.document_type != self.instance.SSFA,
             'user_adds_amendment': user_added_amendment(self.instance),
+            'user_adds_amendment+contingency_on': user_added_amendment(self.instance) and self.instance.contingency_pd,
             'prp_mode_on': not prp_mode_off(),
             'prp_mode_on+contingency_on': not prp_mode_off() and self.instance.contingency_pd,
             'prp_mode_off': prp_mode_off(),

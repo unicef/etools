@@ -51,7 +51,7 @@ Field no,Field Name,Group,Condition,Status,Action,Allowed
 3.2.8,offices,Partnership Manager,user_adds_amendment,*,Edit,TRUE
 3.2.9,unicef_focal_points,Partnership Manager,user_adds_amendment,*,Edit,TRUE
 3.3.1,country_programme,Partnership Manager,user_adds_amendment,*,Edit,TRUE
-3.3.7,contingency_pd,Partnership Manager,user_adds_amendment,*,Edit,TRUE
+3.3.7,contingency_pd,Partnership Manager,user_adds_amendment+contingency_on,*,Edit,TRUE
 3.3.3,end,Partnership Manager,user_adds_amendment,*,Edit,TRUE
 3.3.5,sections,Partnership Manager,user_adds_amendment,*,Edit,TRUE
 3.4.1,result_links,Partnership Manager,user_adds_amendment+prp_mode_on,*,Edit,TRUE
