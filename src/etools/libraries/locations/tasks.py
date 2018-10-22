@@ -43,7 +43,8 @@ def validate_locations_in_use(carto_table_pk):
             carto_table.pcode_col,
             carto_table.table_name,
         ))
-        new_carto_pcodes = qry['rows'][0]['aggregated_pcodes']
+        new_carto_pcodes = qry['rows'][0]['aggregated_pcodes'] \
+            if len(qry['rows']) > 0 and "aggregated_pcodes" in qry['rows'][0] else []
 
         remapped_pcode_pairs = []
         if carto_table.remap_table_name:
@@ -216,7 +217,8 @@ def cleanup_obsolete_locations(self, carto_table_pk):
             carto_table.pcode_col,
             carto_table.table_name,
         ))
-        new_carto_pcodes = qry['rows'][0]['aggregated_pcodes']
+        new_carto_pcodes = qry['rows'][0]['aggregated_pcodes'] \
+            if len(qry['rows']) > 0 and "aggregated_pcodes" in qry['rows'][0] else []
 
         remapped_pcode_pairs = []
         if carto_table.remap_table_name:
