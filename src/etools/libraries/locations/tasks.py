@@ -63,7 +63,7 @@ def validate_locations_in_use(carto_table_pk):
     if location_ids_bnriu:
         msg = "Location ids in use without remap found: {}". format(','.join([str(iu) for iu in location_ids_bnriu]))
         logger.exception(msg)
-        raise Exception(msg)
+        raise NoRemapInUseException(msg)
 
     return True
 
@@ -253,3 +253,7 @@ def cleanup_obsolete_locations(self, carto_table_pk):
     if revalidated_deleteable_pcodes:
         logger.info("Deleting selected orphaned pcodes")
         Location.objects.all_locations().filter(id__in=revalidated_deleteable_pcodes).delete()
+
+
+class NoRemapInUseException(Exception):
+    pass
