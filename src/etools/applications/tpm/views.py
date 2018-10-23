@@ -536,7 +536,7 @@ class VisitReportAttachmentsViewSet(BaseTPMAttachmentsViewSet):
     ]
 
     def get_view_name(self):
-        return _('Related Documents')
+        return _('Overall Report')
 
     def get_parent_filter(self):
         parent = self.get_parent_object()
@@ -560,7 +560,7 @@ class VisitAttachmentsViewSet(BaseTPMAttachmentsViewSet):
     ]
 
     def get_view_name(self):
-        return _('Visit Attachments')
+        return _('Related Documents for Overall Visit')
 
     def get_parent_filter(self):
         parent = self.get_parent_object()
@@ -584,7 +584,7 @@ class ActivityAttachmentsViewSet(BaseTPMAttachmentsViewSet):
     ]
 
     def get_view_name(self):
-        return _('Related Documents')
+        return _('Related Documents by Task')
 
     def get_parent_filter(self):
         parent = self.get_parent_object()
