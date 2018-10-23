@@ -6,6 +6,7 @@ from django_extensions.db.fields import AutoSlugField
 from unicef_locations.models import Location, GatewayType
 
 from etools.applications.field_monitoring_shared.models import Method
+from etools.applications.reports.models import ResultType
 from etools.applications.utils.groups.wrappers import GroupWrapper
 
 
@@ -43,6 +44,27 @@ class Site(Location):
     def clean(self):
         super().clean()
         type(self).clean_parent(self.parent)
+
+
+class CPOutputConfig(models.Model):
+    cp_output = models.OneToOneField('reports.Result', related_name='fm_config',
+                                     verbose_name=_('CP Output To Be Monitored'))
+    is_monitored = models.BooleanField(default=True, verbose_name=_('Monitored At Community Level?'))
+    is_priority = models.BooleanField(verbose_name=_('Priority?'), default=False)
+    government_partners = models.ManyToManyField('partners.PartnerOrganization', blank=True,
+                                                 verbose_name=_('Contributing Government Partners'))
+
+    def __str__(self):
+        return self.cp_output.output_name
+
+    @staticmethod
+    def clean_cp_ouput(cp_otput):
+        if cp_otput.result_type.name != ResultType.OUTPUT:
+            raise ValidationError(_('Incorrect CP Output provided.'))
+
+    def clean(self):
+        super().clean()
+        type(self).clean_cp_ouput(self.cp_output)
 
 
 UNICEFUser = GroupWrapper(code='unicef_user',

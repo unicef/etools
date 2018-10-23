@@ -1,13 +1,18 @@
 from django.contrib.auth.models import Group
+from django.contrib.gis.geos import Point
 
 import factory
-from django.contrib.gis.geos import Point
 from factory import fuzzy
+
 from unicef_locations.tests.factories import LocationFactory
 
-from etools.applications.field_monitoring.models import MethodType, UNICEFUser, Site
+from etools.applications.field_monitoring.models import MethodType, UNICEFUser, Site, CPOutputConfig
 from etools.applications.field_monitoring_shared.models import Method
 from etools.applications.firms.tests.factories import BaseUserFactory
+from etools.applications.partners.models import PartnerType
+from etools.applications.partners.tests.factories import PartnerFactory, InterventionResultLinkFactory
+from etools.applications.reports.models import ResultType
+from etools.applications.reports.tests.factories import ResultFactory
 
 
 class UserFactory(BaseUserFactory):
@@ -56,3 +61,25 @@ class SiteFactory(LocationFactory):
 
     class Meta:
         model = Site
+
+
+class CPOutputConfigFactory(factory.DjangoModelFactory):
+    cp_output = factory.SubFactory(ResultFactory, result_type__name=ResultType.OUTPUT)
+    is_monitored = True
+    is_priority = True
+
+    class Meta:
+        model = CPOutputConfig
+
+    @factory.post_generation
+    def interventions(self, created, extracted, **kwargs):
+        if created:
+            [InterventionResultLinkFactory(cp_output=self.cp_output) for i in range(3)]
+
+    @factory.post_generation
+    def government_partners(self, created, extracted, **kwargs):
+        if created:
+            self.government_partners.add(*[PartnerFactory(partner_type=PartnerType.GOVERNMENT) for i in range(3)])
+
+        if extracted:
+            self.government_partners.add(*extracted)

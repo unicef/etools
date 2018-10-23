@@ -1,5 +1,7 @@
 from django.core.exceptions import ValidationError
+
 from factory import fuzzy
+
 from unicef_locations.tests.factories import LocationFactory
 
 from etools.applications.EquiTrack.tests.cases import BaseTenantTestCase

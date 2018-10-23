@@ -3,16 +3,18 @@ from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import mixins, viewsets
 from rest_framework.filters import SearchFilter
 from rest_framework.permissions import IsAuthenticated
-from unicef_locations.models import Location
 
+from unicef_locations.models import Location
 from unicef_restlib.pagination import DynamicPageNumberPagination
 from unicef_restlib.views import SafeTenantViewSetMixin, MultiSerializerViewSetMixin
 
 from etools.applications.field_monitoring.models import MethodType, Site
-from etools.applications.field_monitoring.serializers import MethodSerializer, MethodTypeSerializer, \
-    FMLocationSerializer, SiteSerializer
+from etools.applications.field_monitoring.serializers.cp_outputs import FMCPOutputSerializer
+from etools.applications.field_monitoring.serializers.methods import MethodSerializer, MethodTypeSerializer
+from etools.applications.field_monitoring.serializers.sites import FMLocationSerializer, SiteSerializer
 from etools.applications.field_monitoring_shared.models import Method
 from etools.applications.permissions2.metadata import BaseMetadata
+from etools.applications.reports.models import Result, ResultType
 
 
 class FMBaseViewSet(
@@ -68,3 +70,20 @@ class SitesViewSet(
     serializer_class = SiteSerializer
     filter_backends = (DjangoFilterBackend,)
     filter_fields = ('is_active',)
+
+
+class CPOutputConfigsViewSet(
+    FMBaseViewSet,
+    mixins.ListModelMixin,
+    mixins.UpdateModelMixin,
+    viewsets.GenericViewSet
+):
+    queryset = Result.objects.filter(result_type__name=ResultType.OUTPUT).prefetch_related(
+        'fm_config',
+        'intervention_links',
+        'intervention_links__intervention',
+        'intervention_links__intervention__agreement__partner',
+    )
+    serializer_class = FMCPOutputSerializer
+    filter_backends = (DjangoFilterBackend,)
+    filter_fields = ('fm_config__is_monitored', 'fm_config__is_priority', 'parent')
