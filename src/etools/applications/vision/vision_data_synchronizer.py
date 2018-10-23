@@ -97,6 +97,7 @@ class DataSynchronizer(object):
         return [rec for rec in records if is_valid_record(rec)]
 
     def preload(self):
+        """hook to execute custom code before loading"""
         pass
 
     def sync(self):

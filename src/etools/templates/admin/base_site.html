@@ -8,7 +8,7 @@
     <style type="text/css">
     #header
     {
-        background: #BE1A1A;
+        background: #0099ff;
         color: #fff;
         text-shadow: none;
         min-height: 60px;
@@ -129,7 +129,7 @@
         };
         var cond = /localhost|etools-dev|etools-staging/g;
         if (cond.test(window.location)) {
-            // $('#header').css({'background': '#BE1A1A'});
+            $('#header').css({'background': '#BE1A1A'});
             $('#test-text').show().text(' ' + host[window.location.hostname]);
         }
     });

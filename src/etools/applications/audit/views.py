@@ -498,8 +498,9 @@ class AuditorStaffMembersViewSet(
         # deactivate staff member & user
         instance.hidden = True
         instance.save()
-        instance.user.is_active = False
-        instance.user.save()
+        if not instance.user.is_unicef_user():
+            instance.user.is_active = False
+            instance.user.save()
 
     def get_permission_context(self):
         context = super(AuditorStaffMembersViewSet, self).get_permission_context()
