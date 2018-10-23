@@ -68,7 +68,7 @@ class PRPInterventionListAPIView(ListAPIView):
             'amendments',
             'flat_locations',
             'sections'
-        )
+        ).exclude(status=Intervention.DRAFT)
 
         query_params = self.request.query_params
         workspace = query_params.get('workspace', None)

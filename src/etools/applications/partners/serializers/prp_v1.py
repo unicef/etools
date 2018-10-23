@@ -255,12 +255,12 @@ class PRPInterventionListSerializer(serializers.ModelSerializer):
         return connection.tenant.business_area_code
 
     def get_reporting_requirements(self, obj):
-        if obj.status not in [Intervention.ACTIVE,]:
+        if obj.status not in [Intervention.ACTIVE, ]:
             return []
         return ReportingRequirementsSerializer(obj.reporting_requirements, many=True).data
 
     def get_expected_results(self, obj):
-        if obj.status not in [Intervention.ACTIVE,]:
+        if obj.status not in [Intervention.ACTIVE, ]:
             return []
         return PRPResultSerializer(obj.all_lower_results, many=True).data
 
