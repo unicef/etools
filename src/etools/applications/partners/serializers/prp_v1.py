@@ -233,14 +233,13 @@ class PRPInterventionListSerializer(serializers.ModelSerializer):
     unicef_budget_cash = serializers.DecimalField(source='total_unicef_cash', read_only=True,
                                                   max_digits=20, decimal_places=2)
     unicef_budget_currency = serializers.SerializerMethodField(read_only=True)
-    # TODO: update this after FR Validation changes, pending new Insight API changes.
 
-    expected_results = PRPResultSerializer(many=True, read_only=True, source='all_lower_results')
+    expected_results = serializers.SerializerMethodField()
     update_date = serializers.DateTimeField(source='modified')
-    reporting_requirements = ReportingRequirementsSerializer(many=True, read_only=True)
+    reporting_requirements = serializers.SerializerMethodField()
     special_reports = SpecialReportingRequirementsSerializer(source="special_reporting_requirements",
                                                              many=True, read_only=True)
-    sections = SectionSerializer(source="combined_sections", many=True, read_only=True)
+    sections = SectionSerializer(many=True, read_only=True)
     locations = PRPLocationSerializer(source="flat_locations", many=True, read_only=True)
 
     def get_unicef_budget_currency(self, obj):
@@ -255,14 +254,23 @@ class PRPInterventionListSerializer(serializers.ModelSerializer):
     def get_business_area_code(self, obj):
         return connection.tenant.business_area_code
 
-    def get_funds_received(self, obj):
-        return obj.total_frs['total_actual_amt']
+    def get_reporting_requirements(self, obj):
+        if obj.status not in [Intervention.ACTIVE,]:
+            return []
+        return ReportingRequirementsSerializer(obj.reporting_requirements, many=True).data
+
+    def get_expected_results(self, obj):
+        if obj.status not in [Intervention.ACTIVE,]:
+            return []
+        return PRPResultSerializer(obj.all_lower_results, many=True).data
 
     class Meta:
         model = Intervention
         fields = (
-            'id', 'title', 'business_area_code',
-            'offices',  # todo: convert to names, not ids
+            'id',
+            'title',
+            'business_area_code',
+            'offices',
             'number',
             'status',
             'partner_org',

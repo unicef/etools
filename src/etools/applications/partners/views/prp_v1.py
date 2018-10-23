@@ -57,15 +57,17 @@ class PRPInterventionListAPIView(ListAPIView):
             'result_links__ll_results',
             'result_links__ll_results__applied_indicators__indicator',
             'result_links__ll_results__applied_indicators__disaggregation__disaggregation_values',
-            'result_links__ll_results__applied_indicators__locations__gateway',
+            'result_links__ll_results__applied_indicators__locations',
             'special_reporting_requirements',
             'reporting_requirements',
             'frs',
             'partner_focal_points',
             'unicef_focal_points',
             'agreement__authorized_officers',
+            'agreement__partner',
             'amendments',
-            'flat_locations'
+            'flat_locations',
+            'sections'
         )
 
         query_params = self.request.query_params
