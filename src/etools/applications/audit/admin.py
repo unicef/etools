@@ -19,7 +19,7 @@ class EngagementAdmin(admin.ModelAdmin):
         'status', 'start_date', 'end_date', 'status', 'engagement_type',
     ]
     readonly_fields = ('status', )
-    search_fields = ['partner__name', 'auditor_firm__name', ]
+    search_fields = 'partner__name', 'agreement__auditor_firm__name',
 
 
 @admin.register(RiskCategory)
