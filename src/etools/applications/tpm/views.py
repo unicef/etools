@@ -11,7 +11,8 @@ from rest_framework.decorators import action
 from rest_framework.filters import OrderingFilter, SearchFilter
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
-from unicef_attachments.models import Attachment
+from unicef_attachments.models import Attachment, AttachmentLink
+from unicef_attachments.serializers import AttachmentLinkSerializer
 from unicef_attachments.views import AttachmentLinkListCreateView
 from unicef_restlib.pagination import DynamicPageNumberPagination
 from unicef_restlib.views import MultiSerializerViewSetMixin, NestedViewSetMixin, SafeTenantViewSetMixin
@@ -58,6 +59,7 @@ from etools.applications.tpm.models import PME, ThirdPartyMonitor, TPMActionPoin
 from etools.applications.tpm.serializers.attachments import (
     ActivityAttachmentsSerializer,
     ActivityReportSerializer,
+    TPMActivityAttachmentLinkSerializer,
     TPMPartnerAttachmentsSerializer,
     TPMVisitAttachmentsSerializer,
     TPMVisitReportAttachmentsSerializer,
@@ -626,11 +628,44 @@ class ActivityReportAttachmentsViewSet(BaseTPMAttachmentsViewSet):
         serializer.save(content_type=ContentType.objects.get_for_model(TPMActivity))
 
 
-class ActivityAttachmentLinksView(AttachmentLinkListCreateView):
+class ActivityAttachmentLinksView(generics.ListCreateAPIView):
     metadata_class = PermissionBasedMetadata
+    serializer_class = TPMActivityAttachmentLinkSerializer
     permission_classes = [IsAuthenticated]
 
     def set_content_object(self):
-        self.kwargs["app"] = "tpm"
-        self.kwargs["model"] = "tpmactivity"
-        super().set_content_object()
+        try:
+            self.content_type = ContentType.objects.get_by_natural_key(
+                "tpm",
+                "tpmactivity",
+            )
+        except ContentType.DoesNotExist:
+            raise NotFound()
+
+        try:
+            self.object_id = self.kwargs.get("object_pk")
+            model_cls = self.content_type.model_class()
+            self.content_object = model_cls.objects.get(
+                pk=self.object_id
+            )
+        except model_cls.DoesNotExist:
+            raise NotFound()
+
+    def get_serializer_context(self):
+        self.set_content_object()
+        context = super().get_serializer_context()
+        context["content_type"] = self.content_type
+        context["object_id"] = self.object_id
+        return context
+
+    def get_queryset(self):
+        self.set_content_object()
+        return AttachmentLink.objects.filter(
+            content_type=self.content_type,
+            object_id=self.object_id,
+        )
+
+    def list(self, request, *args, **kwargs):
+        queryset = self.get_queryset()
+        serializer = AttachmentLinkSerializer(queryset, many=True)
+        return Response(serializer.data)

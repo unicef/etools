@@ -785,8 +785,7 @@ class TestActivityAttachmentLinkView(TPMTestCaseMixin, BaseTenantTestCase):
             'post',
             reverse('tpm:activity-links', args=[self.activity.pk]),
             user=self.pme_user,
-            request_format='multipart',
-            data={'attachment': self.attachment.pk}
+            data={'attachments': [{'attachment': self.attachment.pk}]}
         )
         self.assertEqual(create_response.status_code, status.HTTP_201_CREATED)
 
