@@ -14,7 +14,6 @@ class MethodType(models.Model):
     method = models.ForeignKey(Method, verbose_name=_('Method'))
     name = models.CharField(verbose_name=_('Name'), max_length=300)
     slug = AutoSlugField(verbose_name=_('Slug'), populate_from='name')
-    is_recommended = models.BooleanField(verbose_name=_('Is Recommended'), default=False)
 
     def __str__(self):
         return self.name

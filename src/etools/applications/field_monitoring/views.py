@@ -45,7 +45,7 @@ class MethodTypesViewSet(
     queryset = MethodType.objects.all()
     serializer_class = MethodTypeSerializer
     filter_backends = (DjangoFilterBackend,)
-    filter_fields = ('method', 'is_recommended',)
+    filter_fields = ('method',)
 
 
 class LocationsViewSet(

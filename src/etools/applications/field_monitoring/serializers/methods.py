@@ -16,7 +16,7 @@ class MethodSerializer(serializers.ModelSerializer):
 class MethodTypeSerializer(serializers.ModelSerializer):
     class Meta:
         model = MethodType
-        fields = ('id', 'method', 'name', 'is_recommended')
+        fields = ('id', 'method', 'name')
 
     def validate(self, attrs):
         validated_data = super().validate(attrs)
