@@ -5,7 +5,7 @@ from unicef_locations.tests.factories import LocationFactory
 
 from etools.applications.EquiTrack.tests.cases import BaseTenantTestCase
 from etools.applications.field_monitoring.tests.base import FMBaseTestCaseMixin
-from etools.applications.field_monitoring.tests.factories import MethodFactory, MethodTypeFactory, SiteFactory
+from etools.applications.field_monitoring.tests.factories import MethodTypeFactory, SiteFactory
 
 
 class MethodsViewTestCase(FMBaseTestCaseMixin, BaseTenantTestCase):
