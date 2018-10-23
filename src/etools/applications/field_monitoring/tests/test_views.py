@@ -4,7 +4,7 @@ from rest_framework import status
 
 from etools.applications.EquiTrack.tests.cases import BaseTenantTestCase
 from etools.applications.field_monitoring.tests.base import FMBaseTestCaseMixin
-from etools.applications.field_monitoring.tests.factories import MethodFactory, MethodTypeFactory
+from etools.applications.field_monitoring.tests.factories import MethodTypeFactory
 
 
 class MethodsViewTestCase(FMBaseTestCaseMixin, BaseTenantTestCase):
