@@ -31,12 +31,13 @@ def get_requirements(env):
                 continue
             line = line[:-1]
             if line.startswith('-e git+'):
-                url = line.replace('-e ', '')
+                url = line.replace('-e git+', '')
                 groups = re.match(".*@(?P<version>.*)#egg=(?P<name>.*)", line).groupdict()
                 version = groups['version'].replace('v', '')
                 egg = line.partition('egg=')[2]
-                ret.append(f"{egg}=={version}")
-                dependency_links.add(f"{url}-{version}")
+                # ret.append(f"{egg}=={version}")
+                # dependency_links.add(f"{url}-{version}")
+                ret.append(f"{url}-{version}")
             else:
                 dep = line.partition('#')[0]
                 ret.append(dep.strip())
@@ -45,7 +46,10 @@ def get_requirements(env):
 
 install_requires = get_requirements('base')
 test_requires = get_requirements('test')
-
+# TODO: remove me
+# print(111, "setup.py:49", dependency_links)
+# print(111, "setup.py:49", install_requires)
+print(111, "setup.py:49", test_requires)
 setup(
     name=NAME,
     version=VERSION,

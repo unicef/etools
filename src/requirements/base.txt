@@ -1,4 +1,4 @@
--e git+https://github.com/unicef/djangosaml2.git@v0.16.11.2#egg=djangosaml2
+unicef-djangosaml2==0.17.2
 amqp==2.2.2               # via kombu
 asn1crypto==0.24.0        # via cryptography
 azure-common==1.1.8       # via azure-storage

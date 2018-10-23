@@ -48,4 +48,4 @@ unicef_notification==0.2.0
 unicef_restlib==0.3.4
 unicef_snapshot==0.2.1
 
--e git+https://github.com/unicef/djangosaml2.git@v0.16.11.2#egg=djangosaml2
+unicef-djangosaml2==0.17.2
