@@ -12,6 +12,7 @@ from rest_framework.filters import OrderingFilter, SearchFilter
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from unicef_attachments.models import Attachment
+from unicef_attachments.views import AttachmentLinkListCreateView
 from unicef_restlib.pagination import DynamicPageNumberPagination
 from unicef_restlib.views import MultiSerializerViewSetMixin, NestedViewSetMixin, SafeTenantViewSetMixin
 
@@ -623,3 +624,13 @@ class ActivityReportAttachmentsViewSet(BaseTPMAttachmentsViewSet):
 
     def perform_create(self, serializer):
         serializer.save(content_type=ContentType.objects.get_for_model(TPMActivity))
+
+
+class ActivityAttachmentLinksView(AttachmentLinkListCreateView):
+    metadata_class = PermissionBasedMetadata
+    permission_classes = [IsAuthenticated]
+
+    def set_content_object(self):
+        self.kwargs["app"] = "tpm"
+        self.kwargs["model"] = "tpmactivity"
+        super().set_content_object()
