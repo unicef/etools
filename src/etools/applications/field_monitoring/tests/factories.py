@@ -3,7 +3,7 @@ from django.contrib.auth.models import Group
 import factory
 from django.contrib.gis.geos import Point
 from factory import fuzzy
-from unicef_locations.tests.factories import LocationFactory, GatewayTypeFactory
+from unicef_locations.tests.factories import LocationFactory
 
 from etools.applications.field_monitoring.models import MethodType, UNICEFUser, Site
 from etools.applications.field_monitoring_shared.models import Method
