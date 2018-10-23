@@ -5,7 +5,7 @@ from rest_framework.exceptions import ValidationError
 from unicef_locations.models import Location
 from unicef_locations.serializers import LocationSerializer
 
-from etools.applications.field_monitoring.models import Site
+from etools.applications.field_monitoring.settings.models import Site
 
 
 class FMLocationSerializer(LocationSerializer):

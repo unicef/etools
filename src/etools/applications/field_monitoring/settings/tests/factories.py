@@ -6,8 +6,8 @@ from factory import fuzzy
 
 from unicef_locations.tests.factories import LocationFactory
 
-from etools.applications.field_monitoring.models import MethodType, UNICEFUser, Site, CPOutputConfig
-from etools.applications.field_monitoring_shared.models import Method
+from etools.applications.field_monitoring.settings.models import MethodType, UNICEFUser, Site, CPOutputConfig
+from etools.applications.field_monitoring.shared.models import Method
 from etools.applications.firms.tests.factories import BaseUserFactory
 from etools.applications.partners.models import PartnerType
 from etools.applications.partners.tests.factories import PartnerFactory, InterventionResultLinkFactory

@@ -8,11 +8,11 @@ from unicef_locations.models import Location
 from unicef_restlib.pagination import DynamicPageNumberPagination
 from unicef_restlib.views import SafeTenantViewSetMixin, MultiSerializerViewSetMixin
 
-from etools.applications.field_monitoring.models import MethodType, Site
-from etools.applications.field_monitoring.serializers.cp_outputs import FMCPOutputSerializer
-from etools.applications.field_monitoring.serializers.methods import MethodSerializer, MethodTypeSerializer
-from etools.applications.field_monitoring.serializers.sites import FMLocationSerializer, SiteSerializer
-from etools.applications.field_monitoring_shared.models import Method
+from etools.applications.field_monitoring.settings.models import MethodType, Site
+from etools.applications.field_monitoring.settings.serializers.cp_outputs import FMCPOutputSerializer
+from etools.applications.field_monitoring.settings.serializers.methods import MethodSerializer, MethodTypeSerializer
+from etools.applications.field_monitoring.settings.serializers.sites import FMLocationSerializer, SiteSerializer
+from etools.applications.field_monitoring.shared.models import Method
 from etools.applications.permissions2.metadata import BaseMetadata
 from etools.applications.reports.models import Result, ResultType
 

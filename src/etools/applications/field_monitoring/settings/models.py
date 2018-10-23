@@ -5,7 +5,7 @@ from django.utils.translation import ugettext_lazy as _
 from django_extensions.db.fields import AutoSlugField
 from unicef_locations.models import Location, GatewayType
 
-from etools.applications.field_monitoring_shared.models import Method
+from etools.applications.field_monitoring.shared.models import Method
 from etools.applications.reports.models import ResultType
 from etools.applications.utils.groups.wrappers import GroupWrapper
 
@@ -18,9 +18,14 @@ class MethodType(models.Model):
     def __str__(self):
         return self.name
 
-    def clean(self):
-        if not self.method.is_types_applicable:
+    @staticmethod
+    def clean_method(method):
+        if not method.is_types_applicable:
             raise ValidationError(_('Unable to add type for this Method'))
+
+    def clean(self):
+        super().clean()
+        self.clean_method(self.method)
 
 
 class Site(Location):
@@ -42,7 +47,7 @@ class Site(Location):
 
     def clean(self):
         super().clean()
-        type(self).clean_parent(self.parent)
+        self.clean_parent(self.parent)
 
 
 class CPOutputConfig(models.Model):
@@ -63,7 +68,7 @@ class CPOutputConfig(models.Model):
 
     def clean(self):
         super().clean()
-        type(self).clean_cp_ouput(self.cp_output)
+        self.clean_cp_ouput(self.cp_output)
 
 
 UNICEFUser = GroupWrapper(code='unicef_user',

@@ -193,7 +193,7 @@ SHARED_APPS = (
     'waffle',
     'etools.applications.tokens',
     'etools.applications.permissions2',
-    'etools.applications.field_monitoring_shared',
+    'etools.applications.field_monitoring.shared',
     'unicef_notification',
 )
 
@@ -214,7 +214,7 @@ TENANT_APPS = (
     'etools.applications.firms',
     'etools.applications.management',
     'etools.applications.action_points',
-    'etools.applications.field_monitoring',
+    'etools.applications.field_monitoring.settings',
     'unicef_snapshot',
     'unicef_attachments',
 )

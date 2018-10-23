@@ -5,9 +5,10 @@ from rest_framework import status
 from unicef_locations.tests.factories import LocationFactory
 
 from etools.applications.EquiTrack.tests.cases import BaseTenantTestCase
-from etools.applications.field_monitoring.models import CPOutputConfig
-from etools.applications.field_monitoring.tests.base import FMBaseTestCaseMixin
-from etools.applications.field_monitoring.tests.factories import MethodTypeFactory, SiteFactory, CPOutputConfigFactory
+from etools.applications.field_monitoring.settings.models import CPOutputConfig
+from etools.applications.field_monitoring.settings.tests.base import FMBaseTestCaseMixin
+from etools.applications.field_monitoring.settings.tests.factories import MethodTypeFactory, SiteFactory, \
+    CPOutputConfigFactory
 from etools.applications.partners.models import PartnerType
 from etools.applications.partners.tests.factories import PartnerFactory
 from etools.applications.reports.models import ResultType
@@ -19,7 +20,7 @@ class MethodsViewTestCase(FMBaseTestCaseMixin, BaseTenantTestCase):
 
     def test_fixture_list(self):
         response = self.forced_auth_req(
-            'get', reverse('field_monitoring:methods-list'),
+            'get', reverse('field_monitoring_settings:methods-list'),
             user=self.unicef_user
         )
 
@@ -32,7 +33,7 @@ class MethodTypesViewTestCase(FMBaseTestCaseMixin, BaseTenantTestCase):
         MethodTypeFactory()
 
         response = self.forced_auth_req(
-            'get', reverse('field_monitoring:method-types-list'),
+            'get', reverse('field_monitoring_settings:method-types-list'),
             user=self.unicef_user
         )
 
@@ -45,7 +46,7 @@ class MethodSitesViewTestCase(FMBaseTestCaseMixin, BaseTenantTestCase):
         SiteFactory()
 
         response = self.forced_auth_req(
-            'get', reverse('field_monitoring:sites-list'),
+            'get', reverse('field_monitoring_settings:sites-list'),
             user=self.unicef_user
         )
 
@@ -56,7 +57,7 @@ class MethodSitesViewTestCase(FMBaseTestCaseMixin, BaseTenantTestCase):
         site = SiteFactory()
 
         response = self.forced_auth_req(
-            'post', reverse('field_monitoring:sites-list'),
+            'post', reverse('field_monitoring_settings:sites-list'),
             user=self.unicef_user,
             data={
                 'name': site.name,
@@ -76,7 +77,7 @@ class MethodSitesViewTestCase(FMBaseTestCaseMixin, BaseTenantTestCase):
         site = SiteFactory.build()
 
         response = self.forced_auth_req(
-            'post', reverse('field_monitoring:sites-list'),
+            'post', reverse('field_monitoring_settings:sites-list'),
             user=self.unicef_user,
             data={
                 'name': site.name,
@@ -99,7 +100,7 @@ class CPOutputsConfigViewTestCase(FMBaseTestCaseMixin, BaseTenantTestCase):
         CPOutputConfigFactory()
 
         response = self.forced_auth_req(
-            'get', reverse('field_monitoring:cp_output-configs-list'),
+            'get', reverse('field_monitoring_settings:cp_output-configs-list'),
             user=self.unicef_user
         )
 
@@ -113,7 +114,7 @@ class CPOutputsConfigViewTestCase(FMBaseTestCaseMixin, BaseTenantTestCase):
         self.assertFalse(CPOutputConfig.objects.filter(cp_output=cp_output).exists())
 
         response = self.forced_auth_req(
-            'patch', reverse('field_monitoring:cp_output-configs-detail', args=[cp_output.id]),
+            'patch', reverse('field_monitoring_settings:cp_output-configs-detail', args=[cp_output.id]),
             user=self.unicef_user,
             data={
                 'fm_config': {
@@ -131,7 +132,7 @@ class CPOutputsConfigViewTestCase(FMBaseTestCaseMixin, BaseTenantTestCase):
 
         partners_num = cp_output_config.government_partners.count()
         response = self.forced_auth_req(
-            'patch', reverse('field_monitoring:cp_output-configs-detail', args=[cp_output_config.cp_output.id]),
+            'patch', reverse('field_monitoring_settings:cp_output-configs-detail', args=[cp_output_config.cp_output.id]),
             user=self.unicef_user,
             data={
                 'fm_config': {

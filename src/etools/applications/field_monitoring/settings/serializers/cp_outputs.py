@@ -3,7 +3,7 @@ from django.utils.translation import ugettext_lazy as _
 from rest_framework import serializers
 from unicef_restlib.fields import SeparatedReadWriteField
 
-from etools.applications.field_monitoring.models import CPOutputConfig
+from etools.applications.field_monitoring.settings.models import CPOutputConfig
 from etools.applications.partners.models import Intervention, PartnerOrganization
 from etools.applications.reports.models import Result
 
