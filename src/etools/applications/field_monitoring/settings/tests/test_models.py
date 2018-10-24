@@ -1,3 +1,4 @@
+from django.contrib.gis.geos import GEOSGeometry
 from django.core.exceptions import ValidationError
 
 from factory import fuzzy
@@ -22,25 +23,66 @@ class MethodTypeTestCase(BaseTenantTestCase):
 
 
 class SitesTestCase(BaseTenantTestCase):
-    def test_parent_not_allowed(self):
-        parent_location = LocationFactory(parent=LocationFactory())
-        site = SiteFactory.build(parent=parent_location.parent)
-        with self.assertRaises(ValidationError):
-            site.clean()
+    @classmethod
+    def setUpTestData(cls):
+        cls.boundary = GEOSGeometry(
+            """
+              {
+                "type": "MultiPolygon",
+                "coordinates": [
+                  [
+                    [
+                      [
+                        83.04496765136719,
+                        28.26492642410344
+                      ],
+                      [
+                        83.06024551391602,
+                        28.247915770531225
+                      ],
+                      [
+                        83.07638168334961,
+                        28.265455600896665
+                      ],
+                      [
+                        83.04496765136719,
+                        28.26492642410344
+                      ]
+                    ]
+                  ]
+                ]
+              }
+            """
+        )
+        cls.boundary_point = GEOSGeometry(
+            """
+              {
+                "type": "Point",
+                "coordinates": [
+                  83.06058883666992,
+                  28.258424894768147
+                ]
+              }
+            """
+        )
+        cls.non_boundary_point = GEOSGeometry(
+            """
+              {
+                "type": "Point",
+                "coordinates": [
+                  83.06084632873535,
+                  28.26976451410629
+                ]
+              }
+            """
+        )
+        cls.country = LocationFactory(gateway__admin_level=0)
+        cls.boundary_location = LocationFactory(geom=cls.boundary)
 
-    def test_parent_allowed(self):
-        location = LocationFactory()
-        site = SiteFactory.build(parent=location)
-        site.clean()
+    def test_parent_boundary(self):
+        site = SiteFactory(parent=None, point=self.boundary_point)
+        self.assertEqual(site.parent, self.boundary_location)
 
-    def test_gateway_assigned(self):
-        site = SiteFactory(gateway=None)
-        self.assertIsNotNone(site.gateway)
-
-    def test_inactive_location(self):
-        # test parent will not be broken with custom manager after deactivation
-        site = SiteFactory()
-        site.parent.is_active = False
-        site.parent.save()
-        type(site).objects.get(id=site.id)
-        self.assertIsNotNone(site.parent)
+    def test_parent_non_boundary(self):
+        site = SiteFactory(parent=None, point=self.non_boundary_point)
+        self.assertEqual(site.parent, self.country)

@@ -1,5 +1,5 @@
 from django.contrib.auth.models import Group
-from django.contrib.gis.geos import Point
+from django.contrib.gis.geos import GEOSGeometry
 
 import factory
 from factory import fuzzy
@@ -53,11 +53,12 @@ class MethodTypeFactory(factory.DjangoModelFactory):
         model = MethodType
 
 
-class SiteFactory(LocationFactory):
+class SiteFactory(factory.DjangoModelFactory):
+    name = factory.Sequence(lambda n: 'Location {}'.format(n))
+    point = GEOSGeometry("POINT(20 20)")
+    p_code = factory.Sequence(lambda n: 'PCODE{}'.format(n))
     security_detail = fuzzy.FuzzyText()
-    parent = factory.SubFactory(LocationFactory)
-    gateway = None
-    point = Point(x=10, y=10)
+    parent = factory.SubFactory(LocationFactory, gateway__admin_level=0)
 
     class Meta:
         model = Site

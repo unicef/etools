@@ -4,7 +4,6 @@ from rest_framework_nested import routers
 
 from etools.applications.field_monitoring.settings.views import (
     CPOutputConfigsViewSet,
-    LocationsViewSet,
     MethodsViewSet,
     MethodTypesViewSet,
     SitesViewSet,
@@ -13,7 +12,6 @@ from etools.applications.field_monitoring.settings.views import (
 root_api = routers.SimpleRouter()
 root_api.register(r'methods', MethodsViewSet, base_name='methods')
 root_api.register(r'methods/types', MethodTypesViewSet, base_name='method-types')
-root_api.register(r'locations', LocationsViewSet, base_name='locations')
 root_api.register(r'sites', SitesViewSet, base_name='sites')
 root_api.register(r'cp-outputs', CPOutputConfigsViewSet, base_name='cp_output-configs')
 
