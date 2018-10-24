@@ -39,7 +39,7 @@ drfpasswordless==1.2
 newrelic==2.94.0.79
 pyyaml==3.12
 psycopg2==2.7.5
-raven==6.2.1
+raven==6.9
 tenant-schemas-celery==0.1.7
 unicef-attachments==0.3.0
 unicef-djangolib==0.5
