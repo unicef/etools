@@ -152,7 +152,6 @@ class EngagementExportSerializer(serializers.ModelSerializer):
     class Meta:
         model = Engagement
         fields = (
-            'id',
             'engagement_type',
             'partner_name',
             'agreement_number',
