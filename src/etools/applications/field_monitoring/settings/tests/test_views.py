@@ -11,7 +11,7 @@ from etools.applications.field_monitoring.settings.tests.factories import Method
     CPOutputConfigFactory
 from etools.applications.partners.models import PartnerType
 from etools.applications.partners.tests.factories import PartnerFactory
-from etools.applications.reports.models import ResultType, Result
+from etools.applications.reports.models import ResultType
 from etools.applications.reports.tests.factories import ResultFactory
 
 
