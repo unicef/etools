@@ -2,6 +2,7 @@ from django.utils.translation import ugettext_lazy as _
 
 from rest_framework import serializers
 from unicef_restlib.fields import SeparatedReadWriteField
+from unicef_restlib.serializers import WritableNestedSerializerMixin
 
 from etools.applications.field_monitoring.settings.models import CPOutputConfig
 from etools.applications.partners.models import Intervention, PartnerOrganization
@@ -35,25 +36,14 @@ class CPOutputConfigSerializer(serializers.ModelSerializer):
         }
 
 
-class FMCPOutputSerializer(serializers.ModelSerializer):
+class FieldMonitoringCPOutputSerializer(WritableNestedSerializerMixin, serializers.ModelSerializer):
     fm_config = CPOutputConfigSerializer()
     name = serializers.CharField(source='*')
     interventions = serializers.SerializerMethodField(label=_('Contributing CSO Partners & PD/SSFAs'))
 
-    class Meta:
+    class Meta(WritableNestedSerializerMixin.Meta):
         model = Result
         fields = ('id', 'fm_config', 'interventions', 'name')
-
-    def update(self, instance, validated_data):
-        config_data = validated_data.pop('fm_config')
-        config = CPOutputConfig.objects.filter(cp_output=instance).first()
-        if not config:
-            config_data['cp_output'] = instance
-            instance.fm_config = self.get_fields()['fm_config'].create(config_data)
-        else:
-            instance.fm_config = self.get_fields()['fm_config'].update(config, config_data)
-
-        return super().update(instance, validated_data)
 
     def get_interventions(self, obj):
         return [InterventionSerializer(link.intervention).data for link in obj.intervention_links.all()]

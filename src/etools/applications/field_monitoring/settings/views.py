@@ -7,7 +7,7 @@ from unicef_restlib.pagination import DynamicPageNumberPagination
 from unicef_restlib.views import SafeTenantViewSetMixin, MultiSerializerViewSetMixin
 
 from etools.applications.field_monitoring.settings.models import MethodType, Site
-from etools.applications.field_monitoring.settings.serializers.cp_outputs import FMCPOutputSerializer
+from etools.applications.field_monitoring.settings.serializers.cp_outputs import FieldMonitoringCPOutputSerializer
 from etools.applications.field_monitoring.settings.serializers.methods import MethodSerializer, MethodTypeSerializer
 from etools.applications.field_monitoring.settings.serializers.sites import SiteSerializer
 from etools.applications.field_monitoring.shared.models import Method
@@ -72,6 +72,6 @@ class CPOutputConfigsViewSet(
         'intervention_links__intervention',
         'intervention_links__intervention__agreement__partner',
     )
-    serializer_class = FMCPOutputSerializer
+    serializer_class = FieldMonitoringCPOutputSerializer
     filter_backends = (DjangoFilterBackend,)
     filter_fields = ('fm_config__is_monitored', 'fm_config__is_priority', 'parent')
