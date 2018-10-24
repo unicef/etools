@@ -119,7 +119,7 @@ pysaml2==4.4.0
 python-dateutil==2.5.3
 pytz==2018.3
 pyyaml==3.12
-raven==6.2.1
+raven==6.9
 redis==2.10.6
 reportlab==3.3.0
 repoze.who==2.3
@@ -139,7 +139,7 @@ text-unidecode==1.2       # via faker
 tornado==4.2.0
 tox==3.0.0
 traitlets==4.3.2          # via ipython
-unicef-attachments==0.2.6
+unicef-attachments==0.3.0
 unicef-djangolib==0.5
 unicef-locations==1.4.1
 unicef_notification==0.2.0
