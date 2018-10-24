@@ -67,9 +67,9 @@ class TestLocationViews(BaseTenantTestCase):
     def test_remap_in_use_reassignment_success(self):
         self.mock_remap_data.return_value = (
             True,
-            [{"old_pcode": self.remapped_location.p_code, "new_pcode": self.new_location.p_code},]
-            # [self.remapped_location.p_code,],
-            # [self.new_location.p_code,],
+            [{"old_pcode": self.remapped_location.p_code, "new_pcode": self.new_location.p_code},],
+            [self.remapped_location.p_code,],
+            [self.new_location.p_code,],
          )
 
         self.mock_carto_data.return_value = True, [{
@@ -81,9 +81,9 @@ class TestLocationViews(BaseTenantTestCase):
         intervention.flat_locations.add(self.remapped_location)
         intervention.save()
 
+        self.assertFalse(intervention.flat_locations.filter(id__in=[self.new_location.id]))
         self._run_update(self.carto_table.pk)
-
-        # self.assertIsNotNone(intervention.flat_locations.filter(id__in=[self.new_location.id]))
+        self.assertIsNotNone(intervention.flat_locations.filter(id__in=[self.new_location.id]))
 
     def test_remap_in_use_cleanup(self):
         self.mock_sql.return_value = {"rows": [
