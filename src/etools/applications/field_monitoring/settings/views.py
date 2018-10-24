@@ -1,5 +1,3 @@
-from datetime import date
-
 from django_filters.rest_framework import DjangoFilterBackend
 
 from rest_framework import mixins, viewsets
@@ -9,6 +7,7 @@ from unicef_locations.cache import etag_cached
 from unicef_restlib.pagination import DynamicPageNumberPagination
 from unicef_restlib.views import SafeTenantViewSetMixin, MultiSerializerViewSetMixin
 
+from applications.field_monitoring.settings.filters import CPOutputIsActiveFilter
 from etools.applications.field_monitoring.settings.models import MethodType, Site
 from etools.applications.field_monitoring.settings.serializers.cp_outputs import FieldMonitoringCPOutputSerializer
 from etools.applications.field_monitoring.settings.serializers.methods import MethodSerializer, MethodTypeSerializer
@@ -73,12 +72,12 @@ class CPOutputConfigsViewSet(
     mixins.UpdateModelMixin,
     viewsets.GenericViewSet
 ):
-    queryset = Result.objects.filter(result_type__name=ResultType.OUTPUT, to_date__gte=date.today()).prefetch_related(
+    queryset = Result.objects.filter(result_type__name=ResultType.OUTPUT).prefetch_related(
         'fm_config',
         'intervention_links',
         'intervention_links__intervention',
         'intervention_links__intervention__agreement__partner',
     )
     serializer_class = FieldMonitoringCPOutputSerializer
-    filter_backends = (DjangoFilterBackend,)
+    filter_backends = (DjangoFilterBackend, CPOutputIsActiveFilter)
     filter_fields = ('fm_config__is_monitored', 'fm_config__is_priority', 'parent')

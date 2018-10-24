@@ -111,19 +111,41 @@ class MethodSitesViewTestCase(FMBaseTestCaseMixin, BaseTenantTestCase):
 
 
 class CPOutputsConfigViewTestCase(FMBaseTestCaseMixin, BaseTenantTestCase):
-    def test_list(self):
+    @classmethod
+    def setUpTestData(cls):
         ResultFactory(result_type__name=ResultType.OUTPUT)
         ResultFactory(result_type__name=ResultType.OUTPUT, to_date=date.today() - timedelta(days=1))  # inactual
         CPOutputConfigFactory()
 
+    def test_list(self):
         response = self.forced_auth_req(
             'get', reverse('field_monitoring_settings:cp_output-configs-list'),
             user=self.unicef_user
         )
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(len(response.data['results']), 2)
+        self.assertEqual(len(response.data['results']), 3)
         self.assertIn('interventions', response.data['results'][0])
+
+    def test_list_filter_active(self):
+        response = self.forced_auth_req(
+            'get', reverse('field_monitoring_settings:cp_output-configs-list'),
+            user=self.unicef_user,
+            data={'is_active': True}
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(response.data['results']), 2)
+
+    def test_list_filter_inactive(self):
+        response = self.forced_auth_req(
+            'get', reverse('field_monitoring_settings:cp_output-configs-list'),
+            user=self.unicef_user,
+            data={'is_active': False}
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(response.data['results']), 1)
 
     def test_create(self):
         cp_output = ResultFactory(result_type__name=ResultType.OUTPUT)
