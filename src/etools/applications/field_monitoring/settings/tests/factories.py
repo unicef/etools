@@ -3,6 +3,7 @@ from django.contrib.gis.geos import GEOSGeometry
 
 import factory
 from factory import fuzzy
+from unicef_locations.models import GatewayType
 
 from unicef_locations.tests.factories import LocationFactory
 
@@ -58,7 +59,8 @@ class SiteFactory(factory.DjangoModelFactory):
     point = GEOSGeometry("POINT(20 20)")
     p_code = factory.Sequence(lambda n: 'PCODE{}'.format(n))
     security_detail = fuzzy.FuzzyText()
-    parent = factory.SubFactory(LocationFactory, gateway__admin_level=0)
+    parent = factory.LazyAttribute(lambda o:
+                                   LocationFactory(gateway=GatewayType.objects.get_or_create(admin_level=0)[0]))
 
     class Meta:
         model = Site

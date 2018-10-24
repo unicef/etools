@@ -1,3 +1,5 @@
+from datetime import timedelta, date
+
 from django.urls import reverse
 
 from rest_framework import status
@@ -9,7 +11,7 @@ from etools.applications.field_monitoring.settings.tests.factories import Method
     CPOutputConfigFactory
 from etools.applications.partners.models import PartnerType
 from etools.applications.partners.tests.factories import PartnerFactory
-from etools.applications.reports.models import ResultType
+from etools.applications.reports.models import ResultType, Result
 from etools.applications.reports.tests.factories import ResultFactory
 
 
@@ -51,6 +53,43 @@ class MethodSitesViewTestCase(FMBaseTestCaseMixin, BaseTenantTestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(len(response.data['results']), 1)
 
+    def test_list_cached(self):
+        SiteFactory()
+
+        response = self.forced_auth_req(
+            'get', reverse('field_monitoring_settings:sites-list'),
+            user=self.unicef_user
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(response.data['results']), 1)
+        etag = response["ETag"]
+
+        response = self.forced_auth_req(
+            'get', reverse('field_monitoring_settings:sites-list'),
+            user=self.unicef_user, HTTP_IF_NONE_MATCH=etag
+        )
+        self.assertEqual(response.status_code, status.HTTP_304_NOT_MODIFIED)
+
+    def test_list_modified(self):
+        SiteFactory()
+
+        response = self.forced_auth_req(
+            'get', reverse('field_monitoring_settings:sites-list'),
+            user=self.unicef_user
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(response.data['results']), 1)
+        etag = response["ETag"]
+
+        SiteFactory()
+
+        response = self.forced_auth_req(
+            'get', reverse('field_monitoring_settings:sites-list'),
+            user=self.unicef_user, HTTP_IF_NONE_MATCH=etag
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(response.data['results']), 2)
+
     def test_create(self):
         site = SiteFactory()
 
@@ -73,7 +112,8 @@ class MethodSitesViewTestCase(FMBaseTestCaseMixin, BaseTenantTestCase):
 
 class CPOutputsConfigViewTestCase(FMBaseTestCaseMixin, BaseTenantTestCase):
     def test_list(self):
-        ResultFactory()
+        ResultFactory(result_type__name=ResultType.OUTPUT)
+        ResultFactory(result_type__name=ResultType.OUTPUT, to_date=date.today() - timedelta(days=1))  # inactual
         CPOutputConfigFactory()
 
         response = self.forced_auth_req(
@@ -82,7 +122,7 @@ class CPOutputsConfigViewTestCase(FMBaseTestCaseMixin, BaseTenantTestCase):
         )
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(len(response.data['results']), 1)
+        self.assertEqual(len(response.data['results']), 2)
         self.assertIn('interventions', response.data['results'][0])
 
     def test_create(self):

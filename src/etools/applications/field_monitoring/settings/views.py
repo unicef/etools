@@ -1,7 +1,10 @@
+from datetime import date
+
 from django_filters.rest_framework import DjangoFilterBackend
 
 from rest_framework import mixins, viewsets
 from rest_framework.permissions import IsAuthenticated
+from unicef_locations.cache import etag_cached
 
 from unicef_restlib.pagination import DynamicPageNumberPagination
 from unicef_restlib.views import SafeTenantViewSetMixin, MultiSerializerViewSetMixin
@@ -59,6 +62,10 @@ class SitesViewSet(
     filter_backends = (DjangoFilterBackend,)
     filter_fields = ('is_active',)
 
+    @etag_cached('fm-sites')
+    def list(self, request, *args, **kwargs):
+        return super().list(request, *args, **kwargs)
+
 
 class CPOutputConfigsViewSet(
     FMBaseViewSet,
@@ -66,7 +73,7 @@ class CPOutputConfigsViewSet(
     mixins.UpdateModelMixin,
     viewsets.GenericViewSet
 ):
-    queryset = Result.objects.filter(result_type__name=ResultType.OUTPUT).prefetch_related(
+    queryset = Result.objects.filter(result_type__name=ResultType.OUTPUT, to_date__gte=date.today()).prefetch_related(
         'fm_config',
         'intervention_links',
         'intervention_links__intervention',
