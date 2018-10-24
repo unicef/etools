@@ -30,7 +30,7 @@ class MethodType(models.Model):
         self.clean_method(self.method)
 
 
-class Site(models.Model):
+class LocationSite(models.Model):
     parent = models.ForeignKey(
         Location,
         verbose_name=_("Parent Location"),

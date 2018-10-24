@@ -7,7 +7,7 @@ from unicef_locations.tests.factories import LocationFactory
 
 from etools.applications.EquiTrack.tests.cases import BaseTenantTestCase
 from etools.applications.field_monitoring.settings.models import MethodType
-from etools.applications.field_monitoring.settings.tests.factories import MethodFactory, SiteFactory
+from etools.applications.field_monitoring.settings.tests.factories import MethodFactory, LocationSiteFactory
 
 
 class MethodTypeTestCase(BaseTenantTestCase):
@@ -80,9 +80,9 @@ class SitesTestCase(BaseTenantTestCase):
         cls.boundary_location = LocationFactory(geom=cls.boundary)
 
     def test_parent_boundary(self):
-        site = SiteFactory(parent=None, point=self.boundary_point)
+        site = LocationSiteFactory(parent=None, point=self.boundary_point)
         self.assertEqual(site.parent, self.boundary_location)
 
     def test_parent_non_boundary(self):
-        site = SiteFactory(parent=None, point=self.non_boundary_point)
+        site = LocationSiteFactory(parent=None, point=self.non_boundary_point)
         self.assertEqual(site.parent, self.country)

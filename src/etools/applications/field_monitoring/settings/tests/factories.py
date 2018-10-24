@@ -7,7 +7,7 @@ from unicef_locations.models import GatewayType
 
 from unicef_locations.tests.factories import LocationFactory
 
-from etools.applications.field_monitoring.settings.models import MethodType, UNICEFUser, Site, CPOutputConfig
+from etools.applications.field_monitoring.settings.models import MethodType, UNICEFUser, LocationSite, CPOutputConfig
 from etools.applications.field_monitoring.shared.models import Method
 from etools.applications.firms.tests.factories import BaseUserFactory
 from etools.applications.partners.models import PartnerType
@@ -54,7 +54,7 @@ class MethodTypeFactory(factory.DjangoModelFactory):
         model = MethodType
 
 
-class SiteFactory(factory.DjangoModelFactory):
+class LocationSiteFactory(factory.DjangoModelFactory):
     name = factory.Sequence(lambda n: 'Location {}'.format(n))
     point = GEOSGeometry("POINT(20 20)")
     p_code = factory.Sequence(lambda n: 'PCODE{}'.format(n))
@@ -63,7 +63,7 @@ class SiteFactory(factory.DjangoModelFactory):
                                    LocationFactory(gateway=GatewayType.objects.get_or_create(admin_level=0)[0]))
 
     class Meta:
-        model = Site
+        model = LocationSite
 
 
 class CPOutputConfigFactory(factory.DjangoModelFactory):

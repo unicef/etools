@@ -7,7 +7,7 @@ from rest_framework import status
 from etools.applications.EquiTrack.tests.cases import BaseTenantTestCase
 from etools.applications.field_monitoring.settings.models import CPOutputConfig
 from etools.applications.field_monitoring.settings.tests.base import FMBaseTestCaseMixin
-from etools.applications.field_monitoring.settings.tests.factories import MethodTypeFactory, SiteFactory, \
+from etools.applications.field_monitoring.settings.tests.factories import MethodTypeFactory, LocationSiteFactory, \
     CPOutputConfigFactory
 from etools.applications.partners.models import PartnerType
 from etools.applications.partners.tests.factories import PartnerFactory
@@ -43,7 +43,7 @@ class MethodTypesViewTestCase(FMBaseTestCaseMixin, BaseTenantTestCase):
 
 class MethodSitesViewTestCase(FMBaseTestCaseMixin, BaseTenantTestCase):
     def test_list(self):
-        SiteFactory()
+        LocationSiteFactory()
 
         response = self.forced_auth_req(
             'get', reverse('field_monitoring_settings:sites-list'),
@@ -54,7 +54,7 @@ class MethodSitesViewTestCase(FMBaseTestCaseMixin, BaseTenantTestCase):
         self.assertEqual(len(response.data['results']), 1)
 
     def test_list_cached(self):
-        SiteFactory()
+        LocationSiteFactory()
 
         response = self.forced_auth_req(
             'get', reverse('field_monitoring_settings:sites-list'),
@@ -71,7 +71,7 @@ class MethodSitesViewTestCase(FMBaseTestCaseMixin, BaseTenantTestCase):
         self.assertEqual(response.status_code, status.HTTP_304_NOT_MODIFIED)
 
     def test_list_modified(self):
-        SiteFactory()
+        LocationSiteFactory()
 
         response = self.forced_auth_req(
             'get', reverse('field_monitoring_settings:sites-list'),
@@ -81,7 +81,7 @@ class MethodSitesViewTestCase(FMBaseTestCaseMixin, BaseTenantTestCase):
         self.assertEqual(len(response.data['results']), 1)
         etag = response["ETag"]
 
-        SiteFactory()
+        LocationSiteFactory()
 
         response = self.forced_auth_req(
             'get', reverse('field_monitoring_settings:sites-list'),
@@ -91,7 +91,7 @@ class MethodSitesViewTestCase(FMBaseTestCaseMixin, BaseTenantTestCase):
         self.assertEqual(len(response.data['results']), 2)
 
     def test_create(self):
-        site = SiteFactory()
+        site = LocationSiteFactory()
 
         response = self.forced_auth_req(
             'post', reverse('field_monitoring_settings:sites-list'),

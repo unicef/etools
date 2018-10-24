@@ -7,11 +7,11 @@ from unicef_locations.cache import etag_cached
 from unicef_restlib.pagination import DynamicPageNumberPagination
 from unicef_restlib.views import SafeTenantViewSetMixin, MultiSerializerViewSetMixin
 
-from applications.field_monitoring.settings.filters import CPOutputIsActiveFilter
-from etools.applications.field_monitoring.settings.models import MethodType, Site
+from etools.applications.field_monitoring.settings.filters import CPOutputIsActiveFilter
+from etools.applications.field_monitoring.settings.models import MethodType, LocationSite
 from etools.applications.field_monitoring.settings.serializers.cp_outputs import FieldMonitoringCPOutputSerializer
 from etools.applications.field_monitoring.settings.serializers.methods import MethodSerializer, MethodTypeSerializer
-from etools.applications.field_monitoring.settings.serializers.sites import SiteSerializer
+from etools.applications.field_monitoring.settings.serializers.sites import LocationSiteSerializer
 from etools.applications.field_monitoring.shared.models import Method
 from etools.applications.permissions2.metadata import BaseMetadata
 from etools.applications.reports.models import Result, ResultType
@@ -48,7 +48,7 @@ class MethodTypesViewSet(
     filter_fields = ('method',)
 
 
-class SitesViewSet(
+class LocationSitesViewSet(
     FMBaseViewSet,
     mixins.CreateModelMixin,
     mixins.ListModelMixin,
@@ -56,8 +56,8 @@ class SitesViewSet(
     mixins.DestroyModelMixin,
     viewsets.GenericViewSet,
 ):
-    queryset = Site.objects.prefetch_related('parent').order_by('parent__name', 'name')
-    serializer_class = SiteSerializer
+    queryset = LocationSite.objects.prefetch_related('parent').order_by('parent__name', 'name')
+    serializer_class = LocationSiteSerializer
     filter_backends = (DjangoFilterBackend,)
     filter_fields = ('is_active',)
 
