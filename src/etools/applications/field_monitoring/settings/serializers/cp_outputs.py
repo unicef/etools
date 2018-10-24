@@ -4,19 +4,14 @@ from rest_framework import serializers
 from unicef_restlib.fields import SeparatedReadWriteField
 from unicef_restlib.serializers import WritableNestedSerializerMixin
 
+from applications.partners.serializers.partner_organization_v2 import MinimalPartnerOrganizationListSerializer
 from etools.applications.field_monitoring.settings.models import CPOutputConfig
-from etools.applications.partners.models import Intervention, PartnerOrganization
+from etools.applications.partners.models import Intervention
 from etools.applications.reports.models import Result
 
 
-class PartnerSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = PartnerOrganization
-        fields = ('id', 'name')
-
-
 class InterventionSerializer(serializers.ModelSerializer):
-    partner = PartnerSerializer(source='agreement.partner')
+    partner = MinimalPartnerOrganizationListSerializer(source='agreement.partner')
 
     class Meta:
         model = Intervention
@@ -25,7 +20,7 @@ class InterventionSerializer(serializers.ModelSerializer):
 
 class CPOutputConfigSerializer(serializers.ModelSerializer):
     government_partners = SeparatedReadWriteField(
-        read_field=PartnerSerializer(many=True, label=_('Contributing Government Partners'))
+        read_field=MinimalPartnerOrganizationListSerializer(many=True, label=_('Contributing Government Partners'))
     )
 
     class Meta:
