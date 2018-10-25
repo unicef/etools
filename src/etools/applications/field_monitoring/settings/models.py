@@ -31,7 +31,7 @@ class MethodType(models.Model):
         self.clean_method(self.method)
 
 
-class LocationSite(TimeStampedModel, models.Model):
+class LocationSite(TimeStampedModel):
     parent = models.ForeignKey(
         Location,
         verbose_name=_("Parent Location"),
@@ -71,7 +71,7 @@ class LocationSite(TimeStampedModel, models.Model):
         super().save(**kwargs)
 
 
-class CPOutputConfig(TimeStampedModel, models.Model):
+class CPOutputConfig(TimeStampedModel):
     cp_output = models.OneToOneField('reports.Result', related_name='fm_config',
                                      verbose_name=_('CP Output To Be Monitored'))
     is_monitored = models.BooleanField(default=True, verbose_name=_('Monitored At Community Level?'))
