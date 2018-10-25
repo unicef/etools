@@ -4,6 +4,7 @@ from rest_framework_nested import routers
 from unicef_restlib.routers import NestedComplexRouter
 
 from etools.applications.tpm.views import (
+    ActivityAttachmentLinksView,
     ActivityAttachmentsViewSet,
     ActivityReportAttachmentsViewSet,
     PartnerAttachmentsViewSet,
@@ -36,7 +37,6 @@ visit_attachments_api.register('activities/attachments', ActivityAttachmentsView
                                base_name='activity-attachments')
 visit_attachments_api.register('activities/report-attachments', ActivityReportAttachmentsViewSet,
                                base_name='activity-report-attachments')
-
 tpm_action_points_api = NestedComplexRouter(tpm_visits_api, r'visits', lookup='tpm_activity__tpm_visit')
 tpm_action_points_api.register(r'action-points', TPMActionPointViewSet, base_name='action-points')
 
@@ -49,4 +49,9 @@ urlpatterns = [
     url(r'^', include(tpm_action_points_api.urls)),
     url(r'^', include(visit_attachments_api.urls)),
     url(r'^', include(tpm_visits_api.urls)),
+    url(
+        r'^visits/activities/(?P<object_pk>\d+)/links',
+        view=ActivityAttachmentLinksView.as_view(),
+        name='activity-links'
+    )
 ]
