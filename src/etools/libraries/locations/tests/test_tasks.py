@@ -23,14 +23,16 @@ class TestLocationViews(BaseTenantTestCase):
         self.mock_sql = Mock()
         self.mock_remap_data = Mock()
         self.mock_carto_data = Mock()
+        self.geom = "MultiPolygon(((10 10, 10 20, 20 20, 20 15, 10 10)), ((10 10, 10 20, 20 20, 20 15, 10 10)))"
 
     def _run_validation(self, carto_table_pk):
         with patch("unicef_locations.tasks.SQLClient.send", self.mock_sql):
             return tasks.validate_locations_in_use(carto_table_pk)
 
     def _run_update(self, carto_table_pk):
-        with patch("etools.libraries.locations.task_utils.validate_remap_table", self.mock_remap_data), \
-             patch("etools.libraries.locations.task_utils.get_cartodb_locations", self.mock_carto_data):
+        # IMPORTANT mock the actual function loaded in tasks, it doesn't work by mocking the function in task_utils
+        with patch("etools.libraries.locations.tasks.validate_remap_table", self.mock_remap_data), \
+             patch("etools.libraries.locations.tasks.get_cartodb_locations", self.mock_carto_data):
                 return tasks.update_sites_from_cartodb(carto_table_pk)
 
     def _run_cleanup(self, carto_table_pk):
@@ -62,7 +64,6 @@ class TestLocationViews(BaseTenantTestCase):
         response = self._run_validation(self.carto_table.pk)
         self.assertTrue(response)
 
-    @skip("figure out why multiple mocks don't work")
     def test_remap_in_use_reassignment_success(self):
         self.mock_remap_data.return_value = (
             True,
@@ -73,7 +74,8 @@ class TestLocationViews(BaseTenantTestCase):
 
         self.mock_carto_data.return_value = True, [{
             self.carto_table.pcode_col: self.new_location.p_code,
-            "name": self.new_location.name + "_remapped"
+            "name": self.new_location.name + "_remapped",
+            "the_geom": self.geom
         }]
 
         intervention = InterventionFactory(status=Intervention.SIGNED)
@@ -85,11 +87,12 @@ class TestLocationViews(BaseTenantTestCase):
         self.assertIsNotNone(intervention.flat_locations.get(id=self.remapped_location.id))
 
         self._run_update(self.carto_table.pk)
+
         with self.assertRaises(Location.DoesNotExist):
             intervention.flat_locations.get(id=self.remapped_location.id)
-        remapped_flat_location = intervention.flat_locations.get(id=self.new_location.id)
-        self.assertIsNotNone(remapped_flat_location)
-        self.assertEqual(remapped_flat_location.name, self.new_location.name + "_remapped")
+        new_flat_location = intervention.flat_locations.get(p_code=self.new_location.p_code)
+        self.assertIsNotNone(new_flat_location)
+        self.assertEqual(new_flat_location.name, self.new_location.name + "_remapped")
 
     def test_remap_in_use_cleanup(self):
         self.mock_sql.return_value = {"rows": [
