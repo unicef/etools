@@ -264,7 +264,7 @@ def create_location(pcode, carto_table, parent, parent_instance, remapped_old_pc
             # check if the remapped location exists in the database(ACTIVE locations only)
             remapped_locations = Location.objects.filter(p_code__in=list(remapped_old_pcodes))
 
-            if not remapped_locations:
+            if not remapped_locations.exists():
                 # if remapped_old_pcodes are valid, but they are not found in the  list of the active locations
                 # (`Location.objects`), it means that they were already remapped.
                 # in this case update the `main` location, and ignore the remap.
