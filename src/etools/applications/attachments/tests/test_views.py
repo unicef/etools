@@ -104,6 +104,7 @@ class TestAttachmentListView(BaseTenantTestCase):
             "object_link",
             "filename",
             "file_type",
+            "file_type_id",
             "file_link",
             "uploaded_by",
             "created",

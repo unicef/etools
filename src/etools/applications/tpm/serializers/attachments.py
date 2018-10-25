@@ -1,8 +1,9 @@
 from django.utils.translation import ugettext as _
 
+from rest_framework import serializers
 from unicef_attachments.fields import FileTypeModelChoiceField
-from unicef_attachments.models import FileType
-from unicef_attachments.serializers import BaseAttachmentSerializer
+from unicef_attachments.models import AttachmentLink, FileType
+from unicef_attachments.serializers import AttachmentLinkSerializer, BaseAttachmentSerializer
 
 
 class TPMPartnerAttachmentsSerializer(BaseAttachmentSerializer):
@@ -57,3 +58,17 @@ class TPMVisitAttachmentsSerializer(BaseAttachmentSerializer):
     def create(self, validated_data):
         validated_data['code'] = 'visit_attachments'
         return super().create(validated_data)
+
+
+class TPMActivityAttachmentLinkSerializer(serializers.Serializer):
+    attachments = AttachmentLinkSerializer(many=True, allow_empty=False)
+
+    def create(self, validated_data):
+        links = []
+        for attachment in validated_data["attachments"]:
+            links.append(AttachmentLink.objects.create(
+                attachment=attachment["attachment"],
+                content_type=self.context["content_type"],
+                object_id=self.context["object_id"],
+            ))
+        return {"attachments": links}
