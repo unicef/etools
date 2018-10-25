@@ -39,6 +39,7 @@ class MethodsViewSet(
 class MethodTypesViewSet(
     FMBaseViewSet,
     mixins.ListModelMixin,
+    mixins.CreateModelMixin,
     mixins.RetrieveModelMixin,
     mixins.UpdateModelMixin,
     viewsets.GenericViewSet
