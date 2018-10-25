@@ -6,7 +6,6 @@ from etools.applications.audit.purchase_order import synchronizers
 from etools.applications.audit.purchase_order.models import AuditorFirm, PurchaseOrder, PurchaseOrderItem
 from etools.applications.audit.purchase_order.tasks import update_purchase_orders
 from etools.applications.EquiTrack.tests.cases import BaseTenantTestCase
-from etools.applications.funds.models import Donor, Grant
 from etools.applications.users.models import Country
 
 
@@ -65,21 +64,15 @@ class TestPSynchronizer(BaseTenantTestCase):
             number=self.data["PO_ITEM"]
         )
         auditor_qs = AuditorFirm.objects.filter(name=self.data["VENDOR_NAME"])
-        donor_qs = Donor.objects.filter(name=self.data["DONOR_NAME"])
-        grant_qs = Grant.objects.filter(name=self.data["GRANT_REF"])
         self.assertFalse(purchase_order_qs.exists())
         self.assertFalse(purchase_order_item_qs.exists())
         self.assertFalse(auditor_qs.exists())
-        self.assertFalse(donor_qs.exists())
-        self.assertFalse(grant_qs.exists())
 
         self.adapter._save_records([self.data])
 
         self.assertTrue(purchase_order_qs.exists())
         self.assertTrue(purchase_order_item_qs.exists())
         self.assertTrue(auditor_qs.exists())
-        self.assertTrue(donor_qs.exists())
-        self.assertTrue(grant_qs.exists())
 
 
 class TestUpdatePurchaseOrders(BaseTenantTestCase):
