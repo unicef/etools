@@ -193,6 +193,13 @@ class AppliedIndicatorCUSerializer(serializers.ModelSerializer):
         fields = '__all__'
 
 
+class ClusterSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = AppliedIndicator
+        fields = 'cluster_name',
+
+
 class LowerResultSimpleCUSerializer(serializers.ModelSerializer):
 
     code = serializers.CharField(read_only=True)
