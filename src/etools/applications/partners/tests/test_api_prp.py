@@ -107,10 +107,10 @@ class TestInterventionsAPI(WorkspaceRequiredAPITestMixIn, BaseTenantTestCase):
         tomorrow = (timezone.now() + datetime.timedelta(days=1)).isoformat()
         checks = [
             ({'updated_before': yesterday}, 0),
-            ({'updated_before': tomorrow}, 3),
-            ({'updated_after': yesterday}, 3),
+            ({'updated_before': tomorrow}, 1),
+            ({'updated_after': yesterday}, 1),
             ({'updated_after': tomorrow}, 0),
-            ({'updated_before': tomorrow, 'updated_after': yesterday}, 3),
+            ({'updated_before': tomorrow, 'updated_after': yesterday}, 1),
         ]
         for params, expected_results in checks:
             status_code, response = self.run_prp_v1(
