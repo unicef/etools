@@ -1,8 +1,6 @@
-
 from collections import OrderedDict
 
 from etools.applications.audit.purchase_order.models import AuditorFirm, PurchaseOrder, PurchaseOrderItem
-from etools.applications.funds.models import Donor, Grant
 from etools.applications.vision.synchronizers import ManualVisionSynchronizer
 
 
@@ -34,18 +32,8 @@ class POSynchronizer(ManualVisionSynchronizer):
             "name": "VENDOR_NAME",
             "country": "VENDOR_CTRY_NAME",
         },
-        'grant': {
-            "name": "GRANT_REF",
-            "expiry": "EXPIRY_DATE",
-            "donor": "DONOR_NAME"
-        },
-        'donor': {
-            "name": "DONOR_NAME",
-        }
     }
     MODEL_MAPPING = OrderedDict((
-        ('donor', Donor),
-        ('grant', Grant),
         ('auditor_firm', AuditorFirm),
         ('purchase_order', PurchaseOrder),
         ('order_item', PurchaseOrderItem),
