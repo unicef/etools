@@ -228,6 +228,7 @@ class InterventionAdmin(CountryUsersAdminMixin, HiddenPartnerMixin, SnapshotMode
     date_hierarchy = 'start'
     list_display = (
         'number',
+        'reference_number_year',
         'document_type',
         'status',
         'created',
