@@ -41,7 +41,7 @@ pyyaml==3.12
 psycopg2==2.7.5
 raven==6.9
 tenant-schemas-celery==0.1.7
-unicef-attachments==0.3.0
+unicef-attachments==0.4.1
 unicef-djangolib==0.5
 unicef-locations==1.4.1
 unicef_notification==0.2.0
