@@ -1,4 +1,4 @@
-from datetime import timedelta, date
+from datetime import date, timedelta
 
 from django.urls import reverse
 
@@ -6,9 +6,9 @@ from rest_framework import status
 
 from etools.applications.EquiTrack.tests.cases import BaseTenantTestCase
 from etools.applications.field_monitoring.settings.models import CPOutputConfig
-from etools.applications.field_monitoring.settings.tests.base import FMBaseTestCaseMixin
-from etools.applications.field_monitoring.settings.tests.factories import MethodTypeFactory, LocationSiteFactory, \
-    CPOutputConfigFactory
+from etools.applications.field_monitoring.settings.tests.factories import (
+    CPOutputConfigFactory, LocationSiteFactory, MethodTypeFactory,)
+from etools.applications.field_monitoring.tests.base import FMBaseTestCaseMixin
 from etools.applications.partners.models import PartnerType
 from etools.applications.partners.tests.factories import PartnerFactory
 from etools.applications.reports.models import ResultType

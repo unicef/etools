@@ -2,29 +2,17 @@ from django_filters.rest_framework import DjangoFilterBackend
 
 from rest_framework import mixins, viewsets
 from rest_framework.filters import OrderingFilter, SearchFilter
-from rest_framework.permissions import IsAuthenticated
 
 from unicef_locations.cache import etag_cached
-from unicef_restlib.pagination import DynamicPageNumberPagination
-from unicef_restlib.views import SafeTenantViewSetMixin, MultiSerializerViewSetMixin
 
 from etools.applications.field_monitoring.settings.filters import CPOutputIsActiveFilter
 from etools.applications.field_monitoring.settings.models import MethodType, LocationSite
 from etools.applications.field_monitoring.settings.serializers.cp_outputs import FieldMonitoringCPOutputSerializer
+from etools.applications.field_monitoring.settings.serializers.locations import LocationSiteSerializer
 from etools.applications.field_monitoring.settings.serializers.methods import MethodSerializer, MethodTypeSerializer
-from etools.applications.field_monitoring.settings.serializers.sites import LocationSiteSerializer
 from etools.applications.field_monitoring.shared.models import Method
-from etools.applications.permissions2.metadata import BaseMetadata
+from etools.applications.field_monitoring.views import FMBaseViewSet
 from etools.applications.reports.models import Result, ResultType
-
-
-class FMBaseViewSet(
-    SafeTenantViewSetMixin,
-    MultiSerializerViewSetMixin,
-):
-    metadata_class = BaseMetadata
-    pagination_class = DynamicPageNumberPagination
-    permission_classes = [IsAuthenticated, ]
 
 
 class MethodsViewSet(
@@ -38,11 +26,7 @@ class MethodsViewSet(
 
 class MethodTypesViewSet(
     FMBaseViewSet,
-    mixins.ListModelMixin,
-    mixins.CreateModelMixin,
-    mixins.RetrieveModelMixin,
-    mixins.UpdateModelMixin,
-    viewsets.GenericViewSet
+    viewsets.ModelViewSet
 ):
     queryset = MethodType.objects.all()
     serializer_class = MethodTypeSerializer
@@ -53,11 +37,7 @@ class MethodTypesViewSet(
 
 class LocationSitesViewSet(
     FMBaseViewSet,
-    mixins.CreateModelMixin,
-    mixins.ListModelMixin,
-    mixins.UpdateModelMixin,
-    mixins.DestroyModelMixin,
-    viewsets.GenericViewSet,
+    viewsets.ModelViewSet,
 ):
     queryset = LocationSite.objects.prefetch_related('parent').order_by('parent__name', 'name')
     serializer_class = LocationSiteSerializer
