@@ -6,8 +6,9 @@ from celery.utils.log import get_task_logger
 
 from django.utils.encoding import force_text
 from django.db import transaction
+from django.db.models import Q
 
-from unicef_locations.models import CartoDBTable, Location
+from unicef_locations.models import CartoDBTable, Location, LocationRemapHistory
 from unicef_locations.auth import LocationsCartoNoAuthClient
 
 from etools.libraries.locations.task_utils import (
@@ -22,7 +23,7 @@ from etools.libraries.locations.task_utils import (
 logger = get_task_logger(__name__)
 
 
-@celery.current_app.task()
+@celery.current_app.task
 def validate_locations_in_use(carto_table_pk):
     try:
         carto_table = CartoDBTable.objects.get(pk=carto_table_pk)
@@ -42,7 +43,8 @@ def validate_locations_in_use(carto_table_pk):
             carto_table.pcode_col,
             carto_table.table_name,
         ))
-        new_carto_pcodes = qry['rows'][0]['aggregated_pcodes']
+        new_carto_pcodes = qry['rows'][0]['aggregated_pcodes'] \
+            if len(qry['rows']) > 0 and "aggregated_pcodes" in qry['rows'][0] else []
 
         remapped_pcode_pairs = []
         if carto_table.remap_table_name:
@@ -62,7 +64,7 @@ def validate_locations_in_use(carto_table_pk):
     if location_ids_bnriu:
         msg = "Location ids in use without remap found: {}". format(','.join([str(iu) for iu in location_ids_bnriu]))
         logger.exception(msg)
-        raise Exception(msg)
+        raise NoRemapInUseException(msg)
 
     return True
 
@@ -112,6 +114,9 @@ def update_sites_from_cartodb(carto_table_pk):
 
         # wrap Location tree updates in a transaction, to prevent an invalid tree state due to errors
         with transaction.atomic():
+            # should write lock the locations table until the tree is rebuilt
+            Location.objects.all_locations().select_for_update().only('id')
+
             # disable tree 'generation' during single row updates, rebuild the tree after.
             # this should prevent errors happening (probably)due to invalid intermediary tree state
             with Location.objects.disable_mptt_updates():
@@ -168,17 +173,21 @@ def update_sites_from_cartodb(carto_table_pk):
                             sites_updated, sites_remapped
                         )
 
-                    results += partial_results
-
-                # crete remap history, and remap relevant etools enitites(interventions, travels, etc..)
-                # from the remapped location, which is to be archived, to the new location
-                if results:
-                    save_location_remap_history(results)
+                    # results += partial_results
+                    # crete remap history, and remap relevant etools enitites(interventions, travels, etc..)
+                    # from the remapped location, which is to be archived, to the new location
+                    if partial_results:
+                        save_location_remap_history(partial_results)
 
                 orphaned_old_pcodes = set(database_pcodes) - (set(new_carto_pcodes) | set(remap_old_pcodes))
                 if orphaned_old_pcodes:  # pragma: no-cover
                     logger.warning("Archiving unused pcodes: {}".format(','.join(orphaned_old_pcodes)))
-                    Location.objects.filter(p_code__in=list(orphaned_old_pcodes)).update(is_active=False)
+                    Location.objects.filter(
+                        p_code__in=list(orphaned_old_pcodes),
+                        is_active=True,
+                    ).update(
+                        is_active=False
+                    )
 
             # rebuild location tree
             Location.objects.rebuild()
@@ -186,11 +195,9 @@ def update_sites_from_cartodb(carto_table_pk):
     logger.warning("Table name {}: {} sites created, {} sites updated, {} sites remapped, {} sites skipped".format(
         carto_table.table_name, sites_created, sites_updated, sites_remapped, sites_not_added))
 
-    # return results
 
-
-@celery.current_app.task(bind=True)
-def cleanup_obsolete_locations(self, carto_table_pk):
+@celery.current_app.task
+def cleanup_obsolete_locations(carto_table_pk):
 
     try:
         carto_table = CartoDBTable.objects.get(pk=carto_table_pk)
@@ -210,7 +217,8 @@ def cleanup_obsolete_locations(self, carto_table_pk):
             carto_table.pcode_col,
             carto_table.table_name,
         ))
-        new_carto_pcodes = qry['rows'][0]['aggregated_pcodes']
+        new_carto_pcodes = qry['rows'][0]['aggregated_pcodes'] \
+            if len(qry['rows']) > 0 and "aggregated_pcodes" in qry['rows'][0] else []
 
         remapped_pcode_pairs = []
         if carto_table.remap_table_name:
@@ -223,8 +231,15 @@ def cleanup_obsolete_locations(self, carto_table_pk):
 
     remapped_pcodes = [remap_row['old_pcode'] for remap_row in remapped_pcode_pairs]
     remapped_pcodes += [remap_row['new_pcode'] for remap_row in remapped_pcode_pairs]
+    # select for deletion those pcodes which are not present in the Carto datasets in any form
     deleteable_pcodes = set(database_pcodes) - (set(new_carto_pcodes) | set(remapped_pcodes))
 
+    # Do a few safety checks before we actually delete a location, like:
+    # - ensure that the deleted locations doesn't have any children in the location tree
+    # - check if the deleted location was remapped before, do not delete if yes.
+    # if the checks pass, add the deleteable location ID to the `revalidated_deleteable_pcodes` array so they can be
+    # deleted in one go later
+    revalidated_deleteable_pcodes = []
     for deleteable_pcode in deleteable_pcodes:
         try:
             deleteable_location = Location.objects.all_locations().get(p_code=deleteable_pcode)
@@ -232,14 +247,21 @@ def cleanup_obsolete_locations(self, carto_table_pk):
             logger.warning("Cannot find orphaned pcode {}.".format(deleteable_pcode))
         else:
             if deleteable_location.is_leaf_node():
-                logger.info("Deleting orphaned and unused location with pcode {}".format(deleteable_location.p_code))
-                deleteable_location.delete()
+                secondary_parent_check = Location.objects.all_locations().filter(
+                    parent=deleteable_location.id
+                ).exists()
+                remap_history_check = LocationRemapHistory.objects.filter(
+                    Q(old_location=deleteable_location) | Q(new_location=deleteable_location)
+                ).exists()
+                if not secondary_parent_check and not remap_history_check:
+                    logger.info("Selecting orphaned pcode {} for deletion".format(deleteable_location.p_code))
+                    revalidated_deleteable_pcodes.append(deleteable_location.id)
+
+    # delete the selected locations all at once, it seems it's faster like this compared to deleting them one by one.
+    if revalidated_deleteable_pcodes:
+        logger.info("Deleting selected orphaned pcodes")
+        Location.objects.all_locations().filter(id__in=revalidated_deleteable_pcodes).delete()
 
 
-@celery.current_app.task
-def catch_task_errors():
-    pass
-
-
-class BnriuException(Exception):
+class NoRemapInUseException(Exception):
     pass
