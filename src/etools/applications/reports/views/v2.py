@@ -46,6 +46,7 @@ from etools.applications.reports.serializers.exports import (
 from etools.applications.reports.serializers.v1 import IndicatorSerializer
 from etools.applications.reports.serializers.v2 import (
     AppliedIndicatorSerializer,
+    ClusterSerializer,
     DisaggregationSerializer,
     LowerResultSerializer,
     MinimalOutputListSerializer,
@@ -386,6 +387,18 @@ class AppliedIndicatorLocationExportView(QueryStringFilterMixin, ListAPIView):
                 qs = qs.filter(expression)
 
         return qs
+
+
+class ClusterListAPIView(ListAPIView):
+    """Returns a list of Clusters"""
+    model = AppliedIndicator
+    serializer_class = ClusterSerializer
+    renderer_classes = (
+        JSONRenderer,
+        CSVRenderer,
+        CSVFlatRenderer,
+    )
+    queryset = AppliedIndicator.objects.filter(cluster_name__isnull=False).values('cluster_name').distinct()
 
 
 class SpecialReportingRequirementListCreateView(ListCreateAPIView):

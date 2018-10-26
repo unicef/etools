@@ -1,22 +1,22 @@
-
 from datetime import datetime
 
 from django.core.files.uploadedfile import SimpleUploadedFile
 from django.urls import reverse
 from django.utils import timezone
 from django.utils.translation import ugettext_lazy as _
-from factory import fuzzy
 
+from factory import fuzzy
 from rest_framework import status
+from unicef_attachments.models import AttachmentLink
 
 from etools.applications.action_points.tests.factories import ActionPointFactory
-from etools.applications.attachments.tests.factories import AttachmentFileTypeFactory, AttachmentFactory
+from etools.applications.attachments.tests.factories import AttachmentFactory, AttachmentFileTypeFactory
 from etools.applications.EquiTrack.tests.cases import BaseTenantTestCase
 from etools.applications.partners.models import PartnerType
 from etools.applications.reports.tests.factories import SectionFactory
-from etools.applications.tpm.models import TPMVisit, ThirdPartyMonitor
+from etools.applications.tpm.models import ThirdPartyMonitor, TPMVisit
 from etools.applications.tpm.tests.base import TPMTestCaseMixin
-from etools.applications.tpm.tests.factories import TPMPartnerFactory, TPMVisitFactory, UserFactory, _FUZZY_END_DATE
+from etools.applications.tpm.tests.factories import _FUZZY_END_DATE, TPMPartnerFactory, TPMVisitFactory, UserFactory
 from etools.applications.utils.common.tests.test_utils import TestExportMixin
 
 
@@ -761,3 +761,38 @@ class TestActivityReportAttachmentsView(TPMTestCaseMixin, BaseTenantTestCase):
         )
         self.assertEqual(list_response.status_code, status.HTTP_200_OK)
         self.assertEqual(len(list_response.data['results']), attachments_num + 1)
+
+
+class TestActivityAttachmentLinkView(TPMTestCaseMixin, BaseTenantTestCase):
+    @classmethod
+    def setUpTestData(cls):
+        super().setUpTestData()
+
+        cls.visit = TPMVisitFactory(
+            status='draft',
+            tpm_partner=cls.tpm_user.tpmpartners_tpmpartnerstaffmember.tpm_partner,
+            tpm_partner_focal_points=[cls.tpm_user.tpmpartners_tpmpartnerstaffmember],
+            tpm_activities__count=1
+        )
+        cls.activity = cls.visit.tpm_activities.first()
+        partner = TPMPartnerFactory()
+        cls.attachment = AttachmentFactory(content_object=partner)
+
+    def test_add(self):
+        links_qs = AttachmentLink.objects
+        self.assertEqual(links_qs.count(), 0)
+        create_response = self.forced_auth_req(
+            'post',
+            reverse('tpm:activity-links', args=[self.activity.pk]),
+            user=self.pme_user,
+            data={'attachments': [{'attachment': self.attachment.pk}]}
+        )
+        self.assertEqual(create_response.status_code, status.HTTP_201_CREATED)
+
+        list_response = self.forced_auth_req(
+            'get',
+            reverse('tpm:activity-links', args=[self.activity.pk]),
+            user=self.pme_user
+        )
+        self.assertEqual(list_response.status_code, status.HTTP_200_OK)
+        self.assertEqual(links_qs.count(), 1)
