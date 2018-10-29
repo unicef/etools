@@ -7,7 +7,7 @@ class ActionPointCSVRenderer(CSVRenderer):
     header = [
         'ref', 'cp_output', 'partner', 'office', 'section', 'category', 'assigned_to', 'due_date',
         'status', 'description', 'intervention', 'pd_ssfa', 'location', 'related_module',
-        'assigned_by', 'date_of_completion', 'related_ref', 'related_object_str', 'related_object_url'
+        'assigned_by', 'date_of_completion', 'related_ref', 'related_object_str', 'related_object_url', 'action_taken'
     ]
     labels = {
         'ref': _('Ref. #'),
@@ -29,4 +29,5 @@ class ActionPointCSVRenderer(CSVRenderer):
         'related_ref': _('Related Document No.'),
         'related_object_str': _('Task/Trip Activity Reference No.'),
         'related_object_url': _('Related Document URL'),
+        'action_taken': _('Action Taken')
     }

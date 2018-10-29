@@ -1,8 +1,8 @@
-from django.urls import reverse
-
 from mock import patch
 from rest_framework import status
 from tenant_schemas.test.client import TenantClient
+
+from django.urls import reverse
 
 from etools.applications.EquiTrack.tests.cases import BaseTenantTestCase
 from unicef_locations.tests.factories import LocationFactory
@@ -176,7 +176,26 @@ class TestGisLocationViews(BaseTenantTestCase):
             name="Test with geom",
             geom="MultiPolygon(((10 10, 10 20, 20 20, 20 15, 10 10)), ((10 10, 10 20, 20 20, 20 15, 10 10)))"
         )
+        self.inactive_location = LocationFactory(is_active=False)
         self.locations = [self.location_no_geom, self.location_with_geom]
+
+    def assertGeomListResponseFundamentals(self, response, response_len, expected_keys=None):
+        '''
+        Assert common fundamentals about the response.
+        '''
+        self.assertEquals(response.status_code, status.HTTP_200_OK)
+
+        if not expected_keys:
+            expected_keys = ["features", "type"]
+        self.assertEqual(sorted(response.data.keys()), expected_keys)
+
+        # see if the response is a valid GeoJson
+        self.assertEqual(response.data["type"], "FeatureCollection")
+        self.assertEqual(len(response.data['features']), response_len)
+
+        if len(response.data['features']) > 0:
+            for feature in response.data['features']:
+                self.assertKeysIn(['id', 'type', 'geometry', 'properties'], feature)
 
     def test_no_permission(self):
         response = self.forced_auth_req('get', reverse("management_gis:locations-gis-geom-list"), user=UserFactory())
@@ -296,11 +315,14 @@ class TestGisLocationViews(BaseTenantTestCase):
         self.assertEqual(len(response.data), 1)
         self.assertEqual(sorted(response.data[0].keys()), ["gateway_id", "id", "level", "name", "p_code", "parent_id"])
 
-    def test_intervention_locations_geom(self):
-        # test with missing country in the query string, expect error
+    def test_intervention_locations_geom_bad_request(self):
         url = reverse("management_gis:locations-gis-geom-list")
+        # test with no country in the query string, expect error
         response = self.forced_auth_req("get", url, user=self.unicef_staff)
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+
+    def test_intervention_locations_geom(self):
+        url = reverse("management_gis:locations-gis-geom-list")
 
         # test with no format filter, we should expect GeoJson in the response
         response = self.forced_auth_req(
@@ -309,20 +331,63 @@ class TestGisLocationViews(BaseTenantTestCase):
             user=self.unicef_staff,
             data={"country_id": self.country.id},
         )
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        # expect all 3(2 active + 1 inactive) locations in the response
+        self.assertGeomListResponseFundamentals(response, 3)
 
-        # see if the response is a valid GeoJson
-        self.assertEqual(len(response.data), 2)
-        self.assertEqual(sorted(response.data.keys()), ["features", "type"])
-        self.assertEqual(response.data["type"], "FeatureCollection")
-        for feature in response.data['features']:
-            self.assertKeysIn(['id', 'type', 'geometry', 'properties'], feature)
+    def test_intervention_locations_geom_status_all(self):
+        url = reverse("management_gis:locations-gis-geom-list")
 
-    def test_intervention_locations_geom_wkt(self):
+        response = self.forced_auth_req(
+            "get",
+            url,
+            user=self.unicef_staff,
+            data={"country_id": self.country.id, 'status': 'all'},
+        )
+        # expect all 3(2 active + 1 inactive) locations in the response
+        self.assertGeomListResponseFundamentals(response, 3)
+
+    def test_intervention_locations_geom_status_active(self):
+        url = reverse("management_gis:locations-gis-geom-list")
+
+        response = self.forced_auth_req(
+            "get",
+            url,
+            user=self.unicef_staff,
+            data={"country_id": self.country.id, 'status': 'active'},
+        )
+        # expect 2 active locations in the response
+        self.assertGeomListResponseFundamentals(response, 2)
+
+    def test_intervention_locations_geom_status_archived(self):
         # test with missing country in the query string, expect error
         url = reverse("management_gis:locations-gis-geom-list")
         response = self.forced_auth_req("get", url, user=self.unicef_staff)
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+
+        response = self.forced_auth_req(
+            "get",
+            url,
+            user=self.unicef_staff,
+            data={"country_id": self.country.id, 'status': 'archived'},
+        )
+        # expect 1 archived location in the response
+        self.assertGeomListResponseFundamentals(response, 1)
+
+    def test_intervention_locations_geom_geojson(self):
+        url = reverse("management_gis:locations-gis-geom-list")
+
+        # test with GEOJSON format
+        response = self.forced_auth_req(
+            "get",
+            url,
+            user=self.unicef_staff,
+            data={"country_id": self.country.id, "geo_format": "geojson", "geom_type": "polygon"},
+        )
+        # expect 1 active polygon location in the response
+        self.assertGeomListResponseFundamentals(response, 1)
+
+    def test_intervention_locations_geom_wkt(self):
+        url = reverse("management_gis:locations-gis-geom-list")
 
         # test with WKT format
         response = self.forced_auth_req(
@@ -333,7 +398,6 @@ class TestGisLocationViews(BaseTenantTestCase):
         )
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-
         # only one of the test locations has GEOM
         self.assertEqual(len(response.data), 1)
         self.assertEqual(
@@ -341,29 +405,6 @@ class TestGisLocationViews(BaseTenantTestCase):
             ["gateway_id", "geom", "id", "level", "name", "p_code", "parent_id", "point"]
         )
         self.assertEqual(response.data[0]["geom"], self.location_with_geom.geom.wkt)
-
-    def test_intervention_locations_geom_geojson(self):
-        # test with missing country, expect error
-        url = reverse("management_gis:locations-gis-geom-list")
-        response = self.forced_auth_req("get", url, user=self.unicef_staff)
-        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
-
-        # test with GEOJSON format
-        response = self.forced_auth_req(
-            "get",
-            url,
-            user=self.unicef_staff,
-            data={"country_id": self.country.id, "geo_format": "geojson", "geom_type": "polygon"},
-        )
-
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
-
-        # see if the response is a valid FeatureList/GeoJson
-        self.assertEqual(len(response.data), 2)
-        self.assertEqual(sorted(response.data.keys()), ["features", "type"])
-        self.assertEqual(response.data["type"], "FeatureCollection")
-        for feature in response.data['features']:
-            self.assertKeysIn(['id', 'type', 'geometry', 'properties'], feature)
 
     def test_intervention_locations_geom_by_pcode(self):
         url = reverse("management_gis:locations-gis-get-by-pcode", kwargs={"pcode": self.location_with_geom.p_code})

@@ -1537,7 +1537,7 @@ class InterventionManager(models.Manager):
     def maps_qs(self):
         qs = self.get_queryset().prefetch_related('flat_locations').distinct().annotate(
             results=StringConcat("result_links__cp_output__name", separator="|", distinct=True),
-            clusters=StringConcat("result_links__ll_results__applied_indicators__cluster_indicator_title",
+            clusters=StringConcat("result_links__ll_results__applied_indicators__cluster_name",
                                   separator="|", distinct=True),
         )
         return qs

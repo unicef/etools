@@ -57,7 +57,7 @@ class ActionPointViewSet(
     metadata_class = PermissionBasedMetadata
     pagination_class = DynamicPageNumberPagination
     permission_classes = [IsAuthenticated]
-    queryset = ActionPoint.objects.all().select_related()
+    queryset = ActionPoint.objects.select_related()
     serializer_class = ActionPointSerializer
     serializer_action_classes = {
         'create': ActionPointCreateSerializer,
@@ -105,7 +105,7 @@ class ActionPointViewSet(
 
     @action(detail=False, methods=['get'], url_path='export/csv', renderer_classes=(ActionPointCSVRenderer,))
     def list_csv_export(self, request, *args, **kwargs):
-        serializer = ActionPointExportSerializer(self.get_queryset(), many=True)
+        serializer = ActionPointExportSerializer(self.get_queryset().prefetch_related('comments'), many=True)
         return Response(serializer.data, headers={
             'Content-Disposition': 'attachment;filename=action_points_{}.csv'.format(timezone.now().date())
         })
