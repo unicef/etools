@@ -1,8 +1,9 @@
 from celery import chain
 from django.contrib.gis import admin
+from django.db import transaction
 
 from unicef_locations.admin import CartoDBTableAdmin
-from unicef_locations.models import CartoDBTable, LocationRemapHistory
+from unicef_locations.models import CartoDBTable, Location, LocationRemapHistory
 from etools.libraries.locations.tasks import (
     validate_locations_in_use,
     update_sites_from_cartodb,
@@ -13,6 +14,10 @@ from etools.libraries.locations.tasks import (
 class BackendCartoDBTableAdmin(CartoDBTableAdmin):
 
     def import_sites(self, request, queryset):
+        # ensure the location tree is valid before we import/update the data
+        with transaction.atomic():
+            Location.objects.rebuild()
+
         task_list = []
 
         # import locations from top to bottom
@@ -31,7 +36,6 @@ class BackendCartoDBTableAdmin(CartoDBTableAdmin):
 
         if task_list:
             # Trying to force the tasks to execute in correct sequence
-            # chain(task_list).on_error(catch_task_errors.s()).delay()
             chain(task_list).delay()
 
 
