@@ -65,13 +65,10 @@ class EngagementFilter(filters.FilterSet):
         model = Engagement
         fields = {
             'agreement': ['exact'],
-            'agreement__auditor_firm': ['exact'],
-            'partner': ['exact'],
-            'engagement_type': ['exact'],
+            'agreement__auditor_firm': ['exact', 'in'],
+            'partner': ['exact', 'in'],
+            'engagement_type': ['exact', 'in'],
             'joint_audit': ['exact'],
             'agreement__auditor_firm__unicef_users_allowed': ['exact'],
             'staff_members__user': ['exact'],
-            'agreement__auditor_firm': ['exact', 'in'],
-            'engagement_type': ['exact', 'in'],
-            'partner': ['exact', 'in'],
         }

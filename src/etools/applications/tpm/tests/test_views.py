@@ -17,7 +17,6 @@ from etools.applications.reports.tests.factories import SectionFactory
 from etools.applications.tpm.models import ThirdPartyMonitor, TPMVisit
 from etools.applications.tpm.tests.base import TPMTestCaseMixin
 from etools.applications.tpm.tests.factories import _FUZZY_END_DATE, TPMPartnerFactory, TPMVisitFactory, UserFactory
-from etools.applications.tpm.views import TPMVisitViewSet
 from etools.applications.utils.common.tests.test_utils import TestExportMixin
 
 
@@ -62,7 +61,7 @@ class TestTPMVisitViewSet(TestExportMixin, TPMTestCaseMixin, BaseTenantTestCase)
             tpm_partner=staff.tpm_partner,
             tpm_partner_focal_points=[staff]
         )
-        visit_reported = TPMVisitFactory(
+        TPMVisitFactory(
             status=TPMVisit.REPORTED,
             tpm_partner=staff.tpm_partner,
             tpm_partner_focal_points=[staff]
