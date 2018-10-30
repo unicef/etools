@@ -183,6 +183,9 @@ class AgreementValid(CompleteValidation):
         return True
 
     def state_signed_valid(self, agreement, user=None):
+        if agreement.agreement_type == agreement.SSFA and \
+                agreement.interventions.all().first().status == 'draft':
+            return False
         self.check_required_fields(agreement)
         self.check_rigid_fields(agreement, related=True)
         return True

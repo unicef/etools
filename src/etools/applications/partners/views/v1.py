@@ -28,6 +28,9 @@ class PCAPDFView(LoginRequiredMixin, PDFTemplateView):
         "ifrc_french": "partners/pca/ifrc_french_pdf.html"
     }
 
+    def get_pdf_filename(self):
+        return '{0.reference_number}-{0.partner}.pdf'.format(self.agreement)
+
     def get_context_data(self, **kwargs):
         agr_id = self.kwargs.get('agr')
         lang = self.request.GET.get('lang', 'english') or 'english'
@@ -39,18 +42,18 @@ class PCAPDFView(LoginRequiredMixin, PDFTemplateView):
             return {"error": "Cannot find document with given query parameter lang={}".format(lang)}
 
         try:
-            agreement = Agreement.objects.get(id=agr_id)
+            self.agreement = Agreement.objects.get(id=agr_id)
         except Agreement.DoesNotExist:
             return {"error": 'Agreement with specified ID does not exist'}
 
-        if not agreement.partner.vendor_number:
+        if not self.agreement.partner.vendor_number:
             return {"error": "Partner Organization has no vendor number stored, please report to an etools focal point"}
 
-        if not agreement.authorized_officers.exists():
+        if not self.agreement.authorized_officers.exists():
             return {"error": 'Partner Organization has no "Authorized Officers selected" selected'}
 
         valid_response, response = get_data_from_insight('GetPartnerDetailsInfo_json/{vendor_code}',
-                                                         {"vendor_code": agreement.partner.vendor_number})
+                                                         {"vendor_code": self.agreement.partner.vendor_number})
 
         if not valid_response:
             return {"error": response}
@@ -78,7 +81,7 @@ class PCAPDFView(LoginRequiredMixin, PDFTemplateView):
                 bank_objects.append(Bank(*[b[i[1]] for i in bank_key_values]))
 
         officers_list = []
-        for officer in agreement.authorized_officers.all():
+        for officer in self.agreement.authorized_officers.all():
             officers_list.append(
                 {'first_name': officer.first_name,
                  'last_name': officer.last_name,
@@ -92,9 +95,9 @@ class PCAPDFView(LoginRequiredMixin, PDFTemplateView):
             error=error,
             pagesize="Letter",
             title="Partnership",
-            agreement=agreement,
+            agreement=self.agreement,
             bank_details=bank_objects,
-            cp=agreement.country_programme,
+            cp=self.agreement.country_programme,
             auth_officers=officers_list,
             country=self.request.tenant.long_name,
             font_path=font_path,

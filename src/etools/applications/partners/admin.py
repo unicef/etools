@@ -267,6 +267,7 @@ class InterventionAdmin(CountryUsersAdminMixin, HiddenPartnerMixin, SnapshotMode
                     'in_amendment',
                     'document_type',
                     'number',
+                    'reference_number_year',
                     'title',
                     'status',
                     'country_programme',
@@ -286,7 +287,9 @@ class InterventionAdmin(CountryUsersAdminMixin, HiddenPartnerMixin, SnapshotMode
                  'partner_focal_points',
                  'unicef_focal_points',
                  ('start', 'end'),
-                 'population_focus'),
+                 'population_focus',
+                 'activation_letter',
+                 ),
         }),
     )
 
