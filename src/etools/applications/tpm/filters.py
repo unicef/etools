@@ -22,7 +22,7 @@ class TPMVisitFilter(filters.FilterSet):
     class Meta:
         model = TPMVisit
         fields = {
-            'tpm_partner': ['exact'],
+            'tpm_partner': ['exact', 'in'],
             'tpm_activities__section': ['exact', 'in'],
             'tpm_activities__partner': ['exact', 'in'],
             'tpm_activities__locations': ['exact'],
