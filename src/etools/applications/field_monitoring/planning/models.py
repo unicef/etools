@@ -35,11 +35,11 @@ class Task(TimeStampedModel):
     year_plan = models.ForeignKey(YearPlan, verbose_name=_('Year Plan'))
     plan_by_month = ArrayField(models.PositiveSmallIntegerField(default=0, blank=True), default=[0]*12,
                                verbose_name=_('Plan By Month'), blank=True)
-    location = models.ForeignKey(Location, verbose_name=_('Location'))
-    location_site = models.ForeignKey(LocationSite, blank=True, null=True, verbose_name=_('Site'))
-    cp_output = models.ForeignKey('reports.Result', verbose_name=_('CP Output'))
-    partner = models.ForeignKey('partners.PartnerOrganization', verbose_name=_('Partner'))
-    intervention = models.ForeignKey('partners.Intervention', verbose_name=_('PD or SSFA'))
+    location = models.ForeignKey(Location, verbose_name=_('Location'), related_name='tasks')
+    location_site = models.ForeignKey(LocationSite, blank=True, null=True, verbose_name=_('Site'), related_name='tasks')
+    cp_output = models.ForeignKey('reports.Result', verbose_name=_('CP Output'), related_name='tasks')
+    partner = models.ForeignKey('partners.PartnerOrganization', verbose_name=_('Partner'), related_name='tasks')
+    intervention = models.ForeignKey('partners.Intervention', verbose_name=_('PD or SSFA'), related_name='+')
 
     @property
     def reference_number(self):

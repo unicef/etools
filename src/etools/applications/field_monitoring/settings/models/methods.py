@@ -8,7 +8,7 @@ from etools.applications.field_monitoring.shared.models import Method
 
 
 class MethodType(models.Model):
-    method = models.ForeignKey(Method, verbose_name=_('Method'))
+    method = models.ForeignKey(Method, verbose_name=_('Method'), related_name='types')
     name = models.CharField(verbose_name=_('Name'), max_length=300)
     slug = AutoSlugField(verbose_name=_('Slug'), populate_from='name')
 
