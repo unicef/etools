@@ -54,7 +54,7 @@ from etools.applications.tpm.export.serializers import (
     TPMPartnerExportSerializer,
     TPMVisitExportSerializer,
 )
-from etools.applications.tpm.filters import ReferenceNumberOrderingFilter
+from etools.applications.tpm.filters import ReferenceNumberOrderingFilter, TPMVisitFilter
 from etools.applications.tpm.models import PME, ThirdPartyMonitor, TPMActionPoint, TPMActivity, TPMVisit, UNICEFUser
 from etools.applications.tpm.serializers.attachments import (
     ActivityAttachmentsSerializer,
@@ -322,18 +322,7 @@ class TPMVisitViewSet(
     ordering_fields = (
         'tpm_partner__name', 'status'
     )
-    filter_fields = {field: ['exact'] for field in (
-        'tpm_partner', 'tpm_activities__section', 'tpm_activities__partner', 'tpm_activities__locations',
-        'tpm_activities__cp_output', 'tpm_activities__intervention', 'tpm_activities__date', 'status',
-        'tpm_activities__unicef_focal_points', 'tpm_partner_focal_points',
-    )}
-
-    filter_fields.update({
-        'tpm_activities__partner': ['exact', 'in'],
-        'tpm_activities__cp_output': ['exact', 'in'],
-        'tpm_activities__section': ['exact', 'in'],
-        'status': ['exact', 'in'],
-    })
+    filter_class = TPMVisitFilter
 
     def get_queryset(self):
         queryset = super(TPMVisitViewSet, self).get_queryset()

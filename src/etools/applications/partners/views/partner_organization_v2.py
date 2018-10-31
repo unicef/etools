@@ -39,6 +39,7 @@ from etools.applications.partners.models import (
     PartnerPlannedVisits,
     PartnerStaffMember,
     PlannedEngagement,
+    Intervention
 )
 from etools.applications.partners.permissions import (
     ListCreateAPIMixedPermission,
@@ -260,6 +261,8 @@ class PartnerOrganizationDashboardAPIView(ExportModelMixin, QueryStringFilterMix
     def update_serializer_data(self, serializer):
         self._add_programmatic_visits(serializer)
         self._add_action_points(serializer)
+        self._add_pca_required(serializer)
+        self._add_active_pd_for_ended_pca(serializer)
 
     def _add_programmatic_visits(self, serializer):
         qs = self.base_queryset().annotate(
@@ -295,6 +298,30 @@ class PartnerOrganizationDashboardAPIView(ExportModelMixin, QueryStringFilterMix
         ap = {partner.pk: partner.action_points for partner in qs}
         for item in serializer.data:
             item['action_points'] = ap[item["id"]]
+
+    def _add_pca_required(self, serializer):
+        qs = self.base_queryset().annotate(
+            last_intervention_date=Max(
+                Case(When(agreements__interventions__document_type__in=[Intervention.PD, Intervention.SSFA],
+                          then=F('agreements__interventions__end'))),
+            ),
+            pca_required=ExpressionWrapper(Max('agreements__country_programme__to_date') - F('last_intervention_date'),
+                                           output_field=DurationField())
+        )
+        pca_required = {partner.pk: partner.pca_required for partner in qs}
+        for item in serializer.data:
+            ppp = pca_required[item["id"]]
+            item['alert_pca_required'] = True if ppp and ppp.days < 0 else False
+
+    def _add_active_pd_for_ended_pca(self, serializer):
+        today = datetime.today()
+        qs = self.base_queryset().filter(agreements__country_programme__to_date__lt=today,
+                                         agreements__country_programme__interventions__status__in=[
+                                             Intervention.ACTIVE, Intervention.SIGNED
+                                         ]
+                                         ).distinct().values_list('pk', flat=True)
+        for item in serializer.data:
+            item['alert_active_pd_for_ended_pca'] = True if item['id'] in qs else False
 
 
 class PartnerOrganizationHactAPIView(ListAPIView):
