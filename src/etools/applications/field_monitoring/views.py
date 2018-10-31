@@ -18,7 +18,7 @@ class FMBaseViewSet(
     permission_classes = [IsAuthenticated, ]
 
 
-class BaseFMAttachmentsViewSet(
+class FMBaseAttachmentsViewSet(
     FMBaseViewSet,
     NestedViewSetMixin,
     viewsets.ModelViewSet

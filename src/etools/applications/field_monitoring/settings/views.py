@@ -6,8 +6,9 @@ from rest_framework.filters import OrderingFilter, SearchFilter
 from unicef_locations.cache import etag_cached
 
 from etools.applications.field_monitoring.settings.filters import CPOutputIsActiveFilter
-from etools.applications.field_monitoring.settings.models import MethodType, LocationSite
-from etools.applications.field_monitoring.settings.serializers.cp_outputs import FieldMonitoringCPOutputSerializer
+from etools.applications.field_monitoring.settings.models import MethodType, LocationSite, CPOutputConfig
+from etools.applications.field_monitoring.settings.serializers.cp_outputs import FieldMonitoringCPOutputSerializer, \
+    CPOutputConfigSerializer
 from etools.applications.field_monitoring.settings.serializers.locations import LocationSiteSerializer
 from etools.applications.field_monitoring.settings.serializers.methods import MethodSerializer, MethodTypeSerializer
 from etools.applications.field_monitoring.shared.models import Method

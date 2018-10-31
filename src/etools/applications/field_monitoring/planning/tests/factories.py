@@ -3,7 +3,9 @@ from datetime import date
 import factory
 from factory import fuzzy
 
-from etools.applications.field_monitoring.planning.models import YearPlan
+from etools.applications.field_monitoring.planning.models import YearPlan, Task
+from etools.applications.field_monitoring.settings.tests.factories import CPOutputConfigFactory, LocationSiteFactory
+from etools.applications.tpm.tests.factories import FullInterventionFactory
 
 
 class YearPlanFactory(factory.DjangoModelFactory):
@@ -18,3 +20,20 @@ class YearPlanFactory(factory.DjangoModelFactory):
     class Meta:
         model = YearPlan
         django_get_or_create = ('year',)
+
+
+class TaskFactory(factory.DjangoModelFactory):
+    year_plan = factory.SubFactory(YearPlanFactory)
+
+    intervention = factory.SubFactory(FullInterventionFactory)
+    partner = factory.LazyAttribute(lambda o: o.intervention.agreement.partner)
+
+    cp_output_config = factory.LazyAttribute(
+        lambda o: CPOutputConfigFactory(cp_output=o.intervention.result_links.first().cp_output)
+    )
+
+    location_site = factory.SubFactory(LocationSiteFactory)
+    location = factory.LazyAttribute(lambda o: o.location_site.parent)
+
+    class Meta:
+        model = Task
