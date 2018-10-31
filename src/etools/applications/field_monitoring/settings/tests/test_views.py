@@ -159,7 +159,7 @@ class CPOutputsConfigViewTestCase(FMBaseTestCaseMixin, BaseTenantTestCase):
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertListEqual(
-            [c['fm_config']['id'] for c in response.data['results']],
+            sorted([c['fm_config']['id'] for c in response.data['results']]),
             [self.default_config.id, monitored_config.id]
         )
 

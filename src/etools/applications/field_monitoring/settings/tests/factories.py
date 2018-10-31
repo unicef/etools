@@ -48,6 +48,7 @@ class CPOutputConfigFactory(factory.DjangoModelFactory):
 
     class Meta:
         model = CPOutputConfig
+        django_get_or_create = ("cp_output", )
 
     @factory.post_generation
     def interventions(self, created, extracted, **kwargs):

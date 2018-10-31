@@ -47,6 +47,20 @@ class YearPlanViewTestCase(FMBaseTestCaseMixin, BaseTenantTestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response.data['tasks_by_month'], [3]*12)
 
+    def test_totals(self):
+        task_1 = TaskFactory()
+        TaskFactory()
+        TaskFactory(cp_output_config=task_1.cp_output_config)
+        TaskFactory(cp_output_config=task_1.cp_output_config, location_site=task_1.location_site)
+
+        response = self.forced_auth_req(
+            'get', reverse('field_monitoring_planning:year-plan-detail', args=[date.today().year]),
+            user=self.unicef_user
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data['total_planned'], {'tasks': 4, 'cp_outputs': 2, 'sites': 3})
+
 
 class TestYearPlanAttachmentsView(FMBaseTestCaseMixin, BaseTenantTestCase):
     @classmethod

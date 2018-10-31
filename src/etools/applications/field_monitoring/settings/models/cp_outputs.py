@@ -21,7 +21,9 @@ class CPOutputConfig(TimeStampedModel):
     recommended_method_types = models.ManyToManyField(MethodType, blank=True, verbose_name=_('Method(s)'))
 
     def __str__(self):
-        return self.cp_output.output_name
+        if self.cp_output.result_type.name == ResultType.OUTPUT:
+            return self.cp_output.output_name
+        return self.cp_output.result_name
 
     @staticmethod
     def clean_cp_ouput(cp_otput):

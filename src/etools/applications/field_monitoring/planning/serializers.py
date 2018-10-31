@@ -1,5 +1,5 @@
 from django.core.exceptions import ValidationError as DjangoValidationError
-from django.db.models import Sum
+from django.db.models import Sum, Count
 from django.db.models.expressions import RawSQL
 from django.utils.translation import ugettext_lazy as _
 
@@ -34,13 +34,14 @@ class YearPlanSerializer(WritableNestedSerializerMixin, SnapshotModelSerializer)
     other_aspects = CommentSerializer(many=True, required=False)
     history = HistorySerializer(many=True, label=_('History'), read_only=True)
     tasks_by_month = serializers.SerializerMethodField(label=_('Number Of Tasks By Month'))
+    total_planned = serializers.SerializerMethodField(label=_('Total Planned'))
 
     class Meta(WritableNestedSerializerMixin.Meta):
         model = YearPlan
         fields = (
             'prioritization_criteria', 'methodology_notes', 'target_visits',
             'modalities', 'partner_engagement', 'other_aspects', 'history',
-            'tasks_by_month',
+            'tasks_by_month', 'total_planned',
         )
 
     def get_tasks_by_month(self, obj):
@@ -49,6 +50,13 @@ class YearPlanSerializer(WritableNestedSerializerMixin, SnapshotModelSerializer)
             for i in range(1, 13)
         }
         return list(obj.tasks.aggregate(**aggregates).values())
+
+    def get_total_planned(self, obj):
+        return {
+            'tasks': obj.tasks.count(),
+            'cp_outputs': obj.tasks.aggregate(Count('cp_output_config', distinct=True))['cp_output_config__count'],
+            'sites': obj.tasks.aggregate(Count('location_site', distinct=True))['location_site__count'],
+        }
 
 
 class TaskListSerializer(serializers.ModelSerializer):
