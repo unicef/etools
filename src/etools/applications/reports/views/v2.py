@@ -35,7 +35,7 @@ from etools.applications.reports.models import (
     LowerResult,
     Result,
     SpecialReportingRequirement,
-)
+    ResultType)
 from etools.applications.reports.permissions import PMEPermission
 from etools.applications.reports.serializers.exports import (
     AppliedIndicatorExportFlatSerializer,
@@ -46,6 +46,7 @@ from etools.applications.reports.serializers.exports import (
 from etools.applications.reports.serializers.v1 import IndicatorSerializer
 from etools.applications.reports.serializers.v2 import (
     AppliedIndicatorSerializer,
+    ClusterSerializer,
     DisaggregationSerializer,
     LowerResultSerializer,
     MinimalOutputListSerializer,
@@ -57,6 +58,7 @@ from etools.applications.reports.serializers.v2 import (
 class OutputListAPIView(ListAPIView):
     serializer_class = OutputListSerializer
     permission_classes = (IsAdminUser,)
+    queryset = Result.objects.select_related('country_programme', 'result_type')
 
     def get_serializer_class(self):
         """
@@ -68,29 +70,35 @@ class OutputListAPIView(ListAPIView):
         return super(OutputListAPIView, self).get_serializer_class()
 
     def get_queryset(self):
-        q = Result.outputs.all()
+        q = super().get_queryset()
         query_params = self.request.query_params
         queries = []
         result_ids = []
-        if query_params:
-            if "year" in query_params.keys():
-                cp_year = query_params.get("year", None)
-                queries.append(Q(country_programme__wbs__contains='/A0/'))
-                queries.append(Q(country_programme__from_date__year__lte=cp_year))
-                queries.append(Q(country_programme__to_date__year__gte=cp_year))
-            if "result_type" in query_params.keys():
-                queries.append(Q(result_type__name=query_params.get("result_type").title()))
-            if "country_programme" in query_params.keys():
-                cp = query_params.get("country_programme", None)
-                queries.append(Q(country_programme=cp))
-            if "values" in query_params.keys():
-                result_ids = query_params.get("values", None)
-                try:
-                    result_ids = [int(x) for x in result_ids.split(",")]
-                except ValueError:
-                    raise ValidationError("ID values must be integers")
-                else:
-                    queries.append(Q(id__in=result_ids))
+
+        if "year" in query_params.keys():
+            cp_year = query_params.get("year", None)
+            queries.append(Q(country_programme__wbs__contains='/A0/'))
+            queries.append(Q(country_programme__from_date__year__lte=cp_year))
+            queries.append(Q(country_programme__to_date__year__gte=cp_year))
+
+        if "result_type" in query_params.keys():
+            queries.append(Q(result_type__name=query_params.get("result_type").title()))
+        else:
+            queries.append(Q(result_type__name=ResultType.OUTPUT))
+
+        if "country_programme" in query_params.keys():
+            cp = query_params.get("country_programme", None)
+            queries.append(Q(country_programme=cp))
+
+        if "values" in query_params.keys():
+            result_ids = query_params.get("values", None)
+            try:
+                result_ids = [int(x) for x in result_ids.split(",")]
+            except ValueError:
+                raise ValidationError("ID values must be integers")
+            else:
+                queries.append(Q(id__in=result_ids))
+
         if queries:
             expression = functools.reduce(operator.and_, queries)
             q = q.filter(expression)
@@ -377,7 +385,11 @@ class AppliedIndicatorLocationExportView(QueryStringFilterMixin, ListAPIView):
                 ('sections', 'section__in'),
             )
 
-            search_terms = ('title__icontains', 'agreement__partner__name__icontains', 'number__icontains')
+            search_terms = (
+                'lower_result__result_link__intervention__title__icontains',
+                'lower_result__result_link__intervention__agreement__partner__name__icontains',
+                'lower_result__result_link__intervention__number__icontains'
+            )
             queries.extend(self.filter_params(filters))
             queries.append(self.search_params(search_terms))
 
@@ -386,6 +398,18 @@ class AppliedIndicatorLocationExportView(QueryStringFilterMixin, ListAPIView):
                 qs = qs.filter(expression)
 
         return qs
+
+
+class ClusterListAPIView(ListAPIView):
+    """Returns a list of Clusters"""
+    model = AppliedIndicator
+    serializer_class = ClusterSerializer
+    renderer_classes = (
+        JSONRenderer,
+        CSVRenderer,
+        CSVFlatRenderer,
+    )
+    queryset = AppliedIndicator.objects.filter(cluster_name__isnull=False).values('cluster_name').distinct()
 
 
 class SpecialReportingRequirementListCreateView(ListCreateAPIView):
