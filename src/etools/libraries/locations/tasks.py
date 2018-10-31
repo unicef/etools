@@ -240,27 +240,36 @@ def cleanup_obsolete_locations(carto_table_pk):
     # if the checks pass, add the deleteable location ID to the `revalidated_deleteable_pcodes` array so they can be
     # deleted in one go later
     revalidated_deleteable_pcodes = []
-    for deleteable_pcode in deleteable_pcodes:
-        try:
-            deleteable_location = Location.objects.all_locations().get(p_code=deleteable_pcode)
-        except Location.DoesNotExist:
-            logger.warning("Cannot find orphaned pcode {}.".format(deleteable_pcode))
-        else:
-            if deleteable_location.is_leaf_node():
-                secondary_parent_check = Location.objects.all_locations().filter(
-                    parent=deleteable_location.id
-                ).exists()
-                remap_history_check = LocationRemapHistory.objects.filter(
-                    Q(old_location=deleteable_location) | Q(new_location=deleteable_location)
-                ).exists()
-                if not secondary_parent_check and not remap_history_check:
-                    logger.info("Selecting orphaned pcode {} for deletion".format(deleteable_location.p_code))
-                    revalidated_deleteable_pcodes.append(deleteable_location.id)
 
-    # delete the selected locations all at once, it seems it's faster like this compared to deleting them one by one.
-    if revalidated_deleteable_pcodes:
-        logger.info("Deleting selected orphaned pcodes")
-        Location.objects.all_locations().filter(id__in=revalidated_deleteable_pcodes).delete()
+    with transaction.atomic():
+        # prevent writing into locations until the cleanup is done
+        Location.objects.all_locations().select_for_update().only('id')
+
+        for deleteable_pcode in deleteable_pcodes:
+            try:
+                deleteable_location = Location.objects.all_locations().get(p_code=deleteable_pcode)
+            except Location.DoesNotExist:
+                logger.warning("Cannot find orphaned pcode {}.".format(deleteable_pcode))
+            else:
+                if deleteable_location.is_leaf_node():
+                    secondary_parent_check = Location.objects.all_locations().filter(
+                        parent=deleteable_location.id
+                    ).exists()
+                    remap_history_check = LocationRemapHistory.objects.filter(
+                        Q(old_location=deleteable_location) | Q(new_location=deleteable_location)
+                    ).exists()
+                    if not secondary_parent_check and not remap_history_check:
+                        logger.info("Selecting orphaned pcode {} for deletion".format(deleteable_location.p_code))
+                        revalidated_deleteable_pcodes.append(deleteable_location.id)
+
+        # delete the selected locations all at once, it seems it's faster like this compared to deleting them one by one.
+        if revalidated_deleteable_pcodes:
+            logger.info("Deleting selected orphaned pcodes")
+            Location.objects.all_locations().filter(id__in=revalidated_deleteable_pcodes).delete()
+
+        # rebuild location tree after the unneeded locations are cleaned up, because it seems deleting locations
+        # sometimes leaves the location tree in a `bugged` state
+        Location.objects.rebuild()
 
 
 class NoRemapInUseException(Exception):
