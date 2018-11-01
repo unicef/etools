@@ -98,14 +98,21 @@ class TestPartnerOrganizationDetailAPIView(BaseTenantTestCase):
             self.url,
             data={
                 "core_values_assessments": [{
-                    "assessment_file": attachment.pk
+                    "attachment": attachment.pk
                 }]
             },
             user=self.unicef_staff
         )
         data = json.loads(response.rendered_content)
+        self.assertEqual(response.status_code, 200)
         self.assertEqual(data["id"], self.partner.pk)
         self.assertEqual(data["interventions"][0]["id"], self.intervention.pk)
+        self.assertTrue(assessment_qs.exists())
+        self.assertEqual(len(data["core_values_assessments"]), 1)
+        self.assertEqual(
+            data["core_values_assessments"][0]["attachment"],
+            attachment.file.url
+        )
 
     def test_add_planned_visits(self):
         response = self.forced_auth_req(

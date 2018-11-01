@@ -8,6 +8,7 @@ from django.utils import timezone
 from rest_framework import serializers
 from rest_framework.exceptions import ValidationError
 from unicef_attachments.fields import AttachmentSingleFileField
+from unicef_attachments.serializers import AttachmentSerializerMixin
 from unicef_snapshot.serializers import SnapshotModelSerializer
 
 from etools.applications.partners.models import (
@@ -23,8 +24,8 @@ from etools.applications.partners.models import (
 from etools.applications.partners.serializers.interventions_v2 import InterventionListSerializer
 
 
-class CoreValuesAssessmentSerializer(serializers.ModelSerializer):
-    attachment = AttachmentSingleFileField(read_only=True)
+class CoreValuesAssessmentSerializer(AttachmentSerializerMixin, serializers.ModelSerializer):
+    attachment = AttachmentSingleFileField()
     # assessment = serializers.FileField(required=True)
     assessment_file = serializers.FileField(source='assessment', read_only=True)
 
