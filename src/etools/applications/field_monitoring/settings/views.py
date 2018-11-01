@@ -6,10 +6,13 @@ from rest_framework.filters import OrderingFilter, SearchFilter
 from unicef_locations.cache import etag_cached
 
 from etools.applications.field_monitoring.settings.filters import CPOutputIsActiveFilter
-from etools.applications.field_monitoring.settings.models import MethodType, LocationSite
+from etools.applications.field_monitoring.settings.models import MethodType, LocationSite, CheckListItem, \
+    CheckListCategory
 from etools.applications.field_monitoring.settings.serializers.cp_outputs import FieldMonitoringCPOutputSerializer
 from etools.applications.field_monitoring.settings.serializers.locations import LocationSiteSerializer
 from etools.applications.field_monitoring.settings.serializers.methods import MethodSerializer, MethodTypeSerializer
+from etools.applications.field_monitoring.settings.serializers.serializers import CheckListItemSerializer, \
+    CheckListCategorySerializer
 from etools.applications.field_monitoring.shared.models import Method
 from etools.applications.field_monitoring.views import FMBaseViewSet
 from etools.applications.reports.models import Result, ResultType
@@ -70,3 +73,21 @@ class CPOutputConfigsViewSet(
     filter_backends = (DjangoFilterBackend, CPOutputIsActiveFilter, OrderingFilter)
     filter_fields = ('fm_config__is_monitored', 'fm_config__is_priority', 'parent')
     ordering_fields = ('name', 'fm_config__is_monitored', 'fm_config__is_priority')
+
+
+class CheckListViewSet(
+    FMBaseViewSet,
+    viewsets.mixins.ListModelMixin,
+    viewsets.GenericViewSet
+):
+    queryset = CheckListItem.objects.all()
+    serializer_class = CheckListItemSerializer
+
+
+class CheckListCategoriesViewSet(
+    FMBaseViewSet,
+    viewsets.mixins.ListModelMixin,
+    viewsets.GenericViewSet
+):
+    queryset = CheckListCategory.objects.all()
+    serializer_class = CheckListCategorySerializer

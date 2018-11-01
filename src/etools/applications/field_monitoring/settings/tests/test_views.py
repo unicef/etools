@@ -201,3 +201,30 @@ class CPOutputsConfigViewTestCase(FMBaseTestCaseMixin, BaseTenantTestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(len(response.data['fm_config']['government_partners']), partners_num + 1)
         self.assertEqual(response.data['fm_config']['is_monitored'], True)
+
+
+class CheckListCategoriesViewTestCase(FMBaseTestCaseMixin, BaseTenantTestCase):
+    fixtures = ['field_monitoring_checklist']
+
+    def test_categories(self):
+        response = self.forced_auth_req(
+            'get', reverse('field_monitoring_settings:checklist-categories-list'),
+            user=self.unicef_user
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(response.data['results']), 6)
+
+
+class CheckListViewTestCase(FMBaseTestCaseMixin, BaseTenantTestCase):
+    fixtures = ['field_monitoring_checklist']
+
+    def test_checklist(self):
+        response = self.forced_auth_req(
+            'get', reverse('field_monitoring_settings:checklist-items-list'),
+            user=self.unicef_user,
+            data={'page_size': 'all'},
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(response.data['results']), 20)

@@ -3,6 +3,8 @@ from django.conf.urls import include, url
 from rest_framework_nested import routers
 
 from etools.applications.field_monitoring.settings.views import (
+    CheckListViewSet,
+    CheckListCategoriesViewSet,
     CPOutputConfigsViewSet,
     MethodsViewSet,
     MethodTypesViewSet,
@@ -14,6 +16,8 @@ root_api.register(r'methods', MethodsViewSet, base_name='methods')
 root_api.register(r'methods/types', MethodTypesViewSet, base_name='method-types')
 root_api.register(r'sites', LocationSitesViewSet, base_name='sites')
 root_api.register(r'cp-outputs', CPOutputConfigsViewSet, base_name='cp_output-configs')
+root_api.register(r'checklist', CheckListViewSet, base_name='checklist-items')
+root_api.register(r'checklist/categories', CheckListCategoriesViewSet, base_name='checklist-categories')
 
 app_name = 'field_monitoring_settings'
 urlpatterns = [
