@@ -289,7 +289,7 @@ class PartnerOrganizationDashboardAPIView(ExportModelMixin, QueryStringFilterMix
             item["alert_no_pv"] = pv_dates[pk]["days_last_pv"] is None
 
     def _add_action_points(self, serializer):
-        qs = self.base_queryset().annotate(
+        qs = PartnerOrganization.objects.annotate(
             action_points=models.Sum(models.Case(models.When(
                 actionpoint__travel_activity__travel_type__in=[TravelType.PROGRAMME_MONITORING, TravelType.SPOT_CHECK],
                 actionpoint__status=ActionPoint.STATUS_OPEN, then=1),
