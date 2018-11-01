@@ -12,6 +12,7 @@ from etools.applications.attachments.tests.factories import AttachmentFactory, A
 from etools.applications.EquiTrack.tests.cases import BaseTenantTestCase
 from etools.applications.EquiTrack.tests.mixins import URLAssertionMixin
 from etools.applications.partners.models import (
+    Assessment,
     CoreValuesAssessment,
     Intervention,
     PartnerOrganization,
@@ -80,7 +81,7 @@ class TestPartnerOrganizationDetailAPIView(BaseTenantTestCase):
         data = json.loads(response.rendered_content)
         self.assertEqual(self.intervention.pk, data["interventions"][0]["id"])
 
-    def test_patch_with_attachment(self):
+    def test_patch_with_core_values_assessment_attachment(self):
         attachment = AttachmentFactory(
             file="test_file.pdf",
             file_type=None,
@@ -111,6 +112,42 @@ class TestPartnerOrganizationDetailAPIView(BaseTenantTestCase):
         self.assertEqual(len(data["core_values_assessments"]), 1)
         self.assertEqual(
             data["core_values_assessments"][0]["attachment"],
+            attachment.file.url
+        )
+
+    def test_patch_with_assessment_attachment(self):
+        attachment = AttachmentFactory(
+            file="test_file.pdf",
+            file_type=None,
+            code="",
+        )
+        self.assertIsNone(attachment.file_type)
+        self.assertIsNone(attachment.content_object)
+        self.assertFalse(attachment.code)
+        assessment_qs = Assessment.objects.filter(
+            partner=self.partner
+        )
+        self.assertFalse(assessment_qs.exists())
+        response = self.forced_auth_req(
+            'patch',
+            self.url,
+            data={
+                "assessments": [{
+                    "report_attachment": attachment.pk,
+                    "completed_date": datetime.date.today(),
+                    "type": Assessment.TYPE_OTHER,
+                }]
+            },
+            user=self.unicef_staff
+        )
+        data = json.loads(response.rendered_content)
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(data["id"], self.partner.pk)
+        self.assertEqual(data["interventions"][0]["id"], self.intervention.pk)
+        self.assertTrue(assessment_qs.exists())
+        self.assertEqual(len(data["assessments"]), 1)
+        self.assertEqual(
+            data["assessments"][0]["report_attachment"],
             attachment.file.url
         )
 

@@ -995,12 +995,17 @@ class Assessment(TimeStampedModel):
         (LOW, 'Low'),
     )
 
+    TYPE_MICRO = 'Micro Assessment'
+    TYPE_SIMPLIFIED = 'Simplified Checklist'
+    TYPE_SCHEDULED = 'Scheduled Audit report'
+    TYPE_SPECIAL = 'Special Audit report'
+    TYPE_OTHER = 'Other'
     ASSESSMENT_TYPES = (
-        ('Micro Assessment', 'Micro Assessment'),
-        ('Simplified Checklist', 'Simplified Checklist'),
-        ('Scheduled Audit report', 'Scheduled Audit report'),
-        ('Special Audit report', 'Special Audit report'),
-        ('Other', 'Other'),
+        (TYPE_MICRO, 'Micro Assessment'),
+        (TYPE_SIMPLIFIED, 'Simplified Checklist'),
+        (TYPE_SCHEDULED, 'Scheduled Audit report'),
+        (TYPE_SPECIAL, 'Special Audit report'),
+        (TYPE_OTHER, 'Other'),
     )
 
     partner = models.ForeignKey(

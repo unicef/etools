@@ -146,10 +146,10 @@ class PartnerStaffMemberDetailSerializer(serializers.ModelSerializer):
         fields = "__all__"
 
 
-class AssessmentDetailSerializer(serializers.ModelSerializer):
-    report_attachment = AttachmentSingleFileField(read_only=True)
+class AssessmentDetailSerializer(AttachmentSerializerMixin, serializers.ModelSerializer):
+    report_attachment = AttachmentSingleFileField()
     report_file = serializers.FileField(source='report', read_only=True)
-    report = serializers.FileField(required=True)
+    report = serializers.FileField(required=False)
     completed_date = serializers.DateField(required=True)
 
     class Meta:
