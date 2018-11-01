@@ -79,6 +79,7 @@ def get_cartodb_locations(sql_client, carto_table):
             retried_row = retry_failed_query(sql_client, paged_qry, offset)
             if retried_row:
                 rows += retried_row
+                offset += limit
             else:
                 # can not continue if we have missing pages..
                 return False, []
@@ -108,17 +109,17 @@ def retry_failed_query(sql_client, failed_query, offset):
     logger.warning('Retrying table page at offset {}'.format(offset))
     while retries < 5:
         time.sleep(1)
+        retries += 1
         try:
             sites = sql_client.send(failed_query)
         except CartoException:
-            if retries < 4:
+            if retries < 5:
                 logger.warning('Retrying again table page at offset {}'.format(offset))
         else:
             if 'error' in sites:
                 return False
             else:
                 return sites['rows']
-        retries += 1
     return False
 
 
