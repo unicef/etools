@@ -6,12 +6,13 @@ from factory import fuzzy
 from unicef_locations.models import GatewayType
 from unicef_locations.tests.factories import LocationFactory
 
-from etools.applications.field_monitoring.settings.models import MethodType, LocationSite, CPOutputConfig
+from etools.applications.field_monitoring.settings.models import MethodType, LocationSite, CPOutputConfig, \
+    CheckListCategory, CheckListItem, PlannedCheckListItem, PlannedCheckListItemPartnerInfo
 from etools.applications.field_monitoring.shared.models import Method
 from etools.applications.partners.models import PartnerType
 from etools.applications.partners.tests.factories import PartnerFactory, InterventionResultLinkFactory
-from etools.applications.reports.models import ResultType
-from etools.applications.reports.tests.factories import ResultFactory
+from etools.applications.reports.models import ResultType, CountryProgramme
+from etools.applications.reports.tests.factories import ResultFactory, CountryProgrammeFactory
 
 
 class MethodFactory(factory.DjangoModelFactory):
@@ -51,6 +52,15 @@ class CPOutputConfigFactory(factory.DjangoModelFactory):
         django_get_or_create = ("cp_output", )
 
     @factory.post_generation
+    def cp_output_country_programme(self, *args, **kwargs):
+        country_programme = CountryProgramme.objects.first()
+        if not country_programme:
+            country_programme = CountryProgrammeFactory()
+
+        self.cp_output.country_programme = country_programme
+        self.cp_output.save()
+
+    @factory.post_generation
     def interventions(self, created, extracted, **kwargs):
         if created:
             [InterventionResultLinkFactory(cp_output=self.cp_output) for i in range(3)]
@@ -62,3 +72,53 @@ class CPOutputConfigFactory(factory.DjangoModelFactory):
 
         if extracted:
             self.government_partners.add(*extracted)
+
+
+class CheckListCategoryFactory(factory.DjangoModelFactory):
+    name = fuzzy.FuzzyText()
+
+    class Meta:
+        model = CheckListCategory
+
+
+class CheckListItemFactory(factory.DjangoModelFactory):
+    category = factory.SubFactory(CheckListCategoryFactory)
+    question_number = factory.Sequence(lambda n: str(n))
+    question_text = fuzzy.FuzzyText()
+
+    class Meta:
+        model = CheckListItem
+
+
+class PlannedCheckListItemFactory(factory.DjangoModelFactory):
+    checklist_item = factory.SubFactory(CheckListItemFactory)
+    cp_output_config = factory.SubFactory(CPOutputConfigFactory)
+
+    class Meta:
+        model = PlannedCheckListItem
+
+    methods__count = 0
+    partners_info__count = 0
+
+    @factory.post_generation
+    def methods(self, created, extracted, count, **kwargs):
+        if extracted:
+            self.methods.add(*extracted)
+        elif created:
+            self.methods.add(*[MethodFactory() for i in range(count)])
+
+    @factory.post_generation
+    def partners_info(self, created, extracted, count, **kwargs):
+        if created:
+            for i in range(count):
+                PlannedCheckListItemPartnerInfoFactory(planned_checklist_item=self)
+
+
+class PlannedCheckListItemPartnerInfoFactory(factory.DjangoModelFactory):
+    planned_checklist_item = factory.SubFactory(PlannedCheckListItemFactory)
+    partner = factory.SubFactory(PartnerFactory)
+    specific_details = fuzzy.FuzzyText()
+    standard_url = fuzzy.FuzzyText()
+
+    class Meta:
+        model = PlannedCheckListItemPartnerInfo

@@ -7,7 +7,7 @@ from rest_framework import status
 from etools.applications.EquiTrack.tests.cases import BaseTenantTestCase
 from etools.applications.field_monitoring.settings.models import CPOutputConfig
 from etools.applications.field_monitoring.settings.tests.factories import (
-    CPOutputConfigFactory, LocationSiteFactory, MethodTypeFactory,)
+    CPOutputConfigFactory, LocationSiteFactory, MethodTypeFactory, PlannedCheckListItemFactory)
 from etools.applications.field_monitoring.tests.base import FMBaseTestCaseMixin
 from etools.applications.partners.models import PartnerType
 from etools.applications.partners.tests.factories import PartnerFactory
@@ -119,7 +119,7 @@ class CPOutputsConfigViewTestCase(FMBaseTestCaseMixin, BaseTenantTestCase):
 
     def test_list(self):
         response = self.forced_auth_req(
-            'get', reverse('field_monitoring_settings:cp_output-configs-list'),
+            'get', reverse('field_monitoring_settings:cp_outputs-list'),
             user=self.unicef_user
         )
 
@@ -129,7 +129,7 @@ class CPOutputsConfigViewTestCase(FMBaseTestCaseMixin, BaseTenantTestCase):
 
     def test_list_filter_active(self):
         response = self.forced_auth_req(
-            'get', reverse('field_monitoring_settings:cp_output-configs-list'),
+            'get', reverse('field_monitoring_settings:cp_outputs-list'),
             user=self.unicef_user,
             data={'is_active': True}
         )
@@ -139,7 +139,7 @@ class CPOutputsConfigViewTestCase(FMBaseTestCaseMixin, BaseTenantTestCase):
 
     def test_list_filter_inactive(self):
         response = self.forced_auth_req(
-            'get', reverse('field_monitoring_settings:cp_output-configs-list'),
+            'get', reverse('field_monitoring_settings:cp_outputs-list'),
             user=self.unicef_user,
             data={'is_active': False}
         )
@@ -152,7 +152,7 @@ class CPOutputsConfigViewTestCase(FMBaseTestCaseMixin, BaseTenantTestCase):
         CPOutputConfigFactory(is_monitored=False)
 
         response = self.forced_auth_req(
-            'get', reverse('field_monitoring_settings:cp_output-configs-list'),
+            'get', reverse('field_monitoring_settings:cp_outputs-list'),
             user=self.unicef_user,
             data={'fm_config__is_monitored': True}
         )
@@ -169,7 +169,7 @@ class CPOutputsConfigViewTestCase(FMBaseTestCaseMixin, BaseTenantTestCase):
         self.assertFalse(CPOutputConfig.objects.filter(cp_output=cp_output).exists())
 
         response = self.forced_auth_req(
-            'patch', reverse('field_monitoring_settings:cp_output-configs-detail', args=[cp_output.id]),
+            'patch', reverse('field_monitoring_settings:cp_outputs-detail', args=[cp_output.id]),
             user=self.unicef_user,
             data={
                 'fm_config': {
@@ -187,7 +187,7 @@ class CPOutputsConfigViewTestCase(FMBaseTestCaseMixin, BaseTenantTestCase):
 
         partners_num = cp_output_config.government_partners.count()
         response = self.forced_auth_req(
-            'patch', reverse('field_monitoring_settings:cp_output-configs-detail', args=[cp_output_config.cp_output.id]),
+            'patch', reverse('field_monitoring_settings:cp_outputs-detail', args=[cp_output_config.cp_output.id]),
             user=self.unicef_user,
             data={
                 'fm_config': {
@@ -227,4 +227,83 @@ class CheckListViewTestCase(FMBaseTestCaseMixin, BaseTenantTestCase):
         )
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(len(response.data['results']), 20)
+        self.assertEqual(len(response.data), 20)
+
+
+class PlannedCheckListItemViewTestCase(FMBaseTestCaseMixin, BaseTenantTestCase):
+    def test_create(self):
+        item = PlannedCheckListItemFactory(methods__count=2, partners_info__count=1)
+        partner_info = item.partners_info.first()
+
+        self.assertIsNotNone(partner_info)
+
+        response = self.forced_auth_req(
+            'post', reverse('field_monitoring_settings:planned-checklist-items-list', args=[item.cp_output_config.pk]),
+            user=self.unicef_user,
+            data={
+                'checklist_item': item.checklist_item.id,
+                'methods': item.methods.values_list('pk', flat=True),
+                'partners_info': [{
+                    'partner': partner_info.partner.pk,
+                    'specific_details': partner_info.specific_details,
+                    'standard_url': partner_info.standard_url,
+                }]
+            }
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        self.assertListEqual(response.data['methods'], list(item.methods.values_list('pk', flat=True)))
+        self.assertEqual(len(response.data['partners_info']), 1)
+
+    def test_create_without_partner(self):
+        item = PlannedCheckListItemFactory()
+
+        response = self.forced_auth_req(
+            'post', reverse('field_monitoring_settings:planned-checklist-items-list', args=[item.cp_output_config.pk]),
+            user=self.unicef_user,
+            data={
+                'checklist_item': item.checklist_item.id,
+                'partners_info': [{
+                    'partner': None,
+                    'specific_details': 'test',
+                    'standard_url': 'test',
+                }]
+            }
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+
+    def test_update_partner_info(self):
+        item = PlannedCheckListItemFactory(partners_info__count=1)
+        partner_info_id = item.partners_info.first().id
+
+        response = self.forced_auth_req(
+            'patch', reverse('field_monitoring_settings:planned-checklist-items-detail',
+                             args=[item.cp_output_config.pk, item.pk]),
+            user=self.unicef_user,
+            data={
+                'partners_info': [{
+                    'id': partner_info_id,
+                    '_delete': True
+                }, {
+                    'partner': None,
+                    'specific_details': 'test',
+                    'standard_url': 'test',
+                }]
+            }
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(response.data['partners_info']), 1)
+        self.assertNotEqual(response.data['partners_info'][0]['id'], partner_info_id)
+
+    def test_list(self):
+        item = PlannedCheckListItemFactory(methods__count=1, partners_info__count=1)
+
+        response = self.forced_auth_req(
+            'get', reverse('field_monitoring_settings:planned-checklist-items-list', args=[item.cp_output_config.pk]),
+            user=self.unicef_user
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(response.data['results']), 1)

@@ -5,7 +5,8 @@ from unicef_restlib.fields import SeparatedReadWriteField
 from unicef_restlib.serializers import WritableNestedSerializerMixin
 
 from etools.applications.partners.serializers.partner_organization_v2 import MinimalPartnerOrganizationListSerializer
-from etools.applications.field_monitoring.settings.models import CPOutputConfig
+from etools.applications.field_monitoring.settings.models import CPOutputConfig, PlannedCheckListItem, \
+    PlannedCheckListItemPartnerInfo
 from etools.applications.partners.models import Intervention
 from etools.applications.reports.models import Result
 from etools.applications.reports.serializers.v2 import OutputListSerializer
@@ -51,3 +52,19 @@ class FieldMonitoringCPOutputSerializer(WritableNestedSerializerMixin, serialize
 
     def get_interventions(self, obj):
         return [InterventionSerializer(link.intervention).data for link in obj.intervention_links.all()]
+
+
+class PlannedCheckListItemPartnerInfoSerializer(WritableNestedSerializerMixin, serializers.ModelSerializer):
+    partner = SeparatedReadWriteField(read_field=MinimalPartnerOrganizationListSerializer())
+
+    class Meta(WritableNestedSerializerMixin.Meta):
+        model = PlannedCheckListItemPartnerInfo
+        fields = ('id', 'partner', 'specific_details', 'standard_url',)
+
+
+class PlannedCheckListItemSerializer(WritableNestedSerializerMixin, serializers.ModelSerializer):
+    partners_info = PlannedCheckListItemPartnerInfoSerializer(many=True)
+
+    class Meta(WritableNestedSerializerMixin.Meta):
+        model = PlannedCheckListItem
+        fields = ('id', 'checklist_item', 'methods', 'partners_info')

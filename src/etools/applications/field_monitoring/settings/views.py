@@ -4,15 +4,17 @@ from rest_framework import mixins, viewsets
 from rest_framework.filters import OrderingFilter, SearchFilter
 
 from unicef_locations.cache import etag_cached
+from unicef_restlib.views import NestedViewSetMixin
 
 from etools.applications.field_monitoring.settings.filters import CPOutputIsActiveFilter
 from etools.applications.field_monitoring.settings.models import MethodType, LocationSite, CheckListItem, \
-    CheckListCategory
-from etools.applications.field_monitoring.settings.serializers.cp_outputs import FieldMonitoringCPOutputSerializer
+    CheckListCategory, PlannedCheckListItem, CPOutputConfig
+from etools.applications.field_monitoring.settings.serializers.checklist import CheckListItemSerializer, \
+    CheckListCategorySerializer
+from etools.applications.field_monitoring.settings.serializers.cp_outputs import FieldMonitoringCPOutputSerializer, \
+    PlannedCheckListItemSerializer, CPOutputConfigDetailSerializer
 from etools.applications.field_monitoring.settings.serializers.locations import LocationSiteSerializer
 from etools.applications.field_monitoring.settings.serializers.methods import MethodSerializer, MethodTypeSerializer
-from etools.applications.field_monitoring.settings.serializers.serializers import CheckListItemSerializer, \
-    CheckListCategorySerializer
 from etools.applications.field_monitoring.shared.models import Method
 from etools.applications.field_monitoring.views import FMBaseViewSet
 from etools.applications.reports.models import Result, ResultType
@@ -57,7 +59,7 @@ class LocationSitesViewSet(
         return super().list(request, *args, **kwargs)
 
 
-class CPOutputConfigsViewSet(
+class CPOutputsViewSet(
     FMBaseViewSet,
     mixins.ListModelMixin,
     mixins.UpdateModelMixin,
@@ -73,6 +75,20 @@ class CPOutputConfigsViewSet(
     filter_backends = (DjangoFilterBackend, CPOutputIsActiveFilter, OrderingFilter)
     filter_fields = ('fm_config__is_monitored', 'fm_config__is_priority', 'parent')
     ordering_fields = ('name', 'fm_config__is_monitored', 'fm_config__is_priority')
+
+
+class CPOutputConfigsViewSet(
+    FMBaseViewSet,
+    mixins.ListModelMixin,
+    mixins.UpdateModelMixin,
+    mixins.RetrieveModelMixin,
+    viewsets.GenericViewSet
+):
+    queryset = CPOutputConfig.objects.all()
+    serializer_class = CPOutputConfigDetailSerializer
+    filter_backends = (DjangoFilterBackend, OrderingFilter)
+    filter_fields = ('is_monitored', 'is_priority')
+    ordering_fields = ('cp_output__name',)
 
 
 class CheckListViewSet(
@@ -91,3 +107,15 @@ class CheckListCategoriesViewSet(
 ):
     queryset = CheckListCategory.objects.all()
     serializer_class = CheckListCategorySerializer
+
+
+class PlannedCheckListItemViewSet(
+    FMBaseViewSet,
+    NestedViewSetMixin,
+    viewsets.ModelViewSet,
+):
+    queryset = PlannedCheckListItem.objects.all()
+    serializer_class = PlannedCheckListItemSerializer
+
+    def perform_create(self, serializer):
+        serializer.save(cp_output_config=self.get_parent_object())

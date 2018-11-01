@@ -85,5 +85,5 @@ class TaskViewSet(NestedViewSetMixin, FMBaseViewSet, viewsets.ModelViewSet):
     def get_view_name(self):
         return _('Plan By Task')
 
-    def perform_create(self, serializer, **kwargs):
-        serializer.save(year_plan=self.get_parent_object(), **kwargs)
+    def perform_create(self, serializer):
+        serializer.save(year_plan=self.get_parent_object())

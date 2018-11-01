@@ -40,15 +40,22 @@ class PlannedCheckListItem(OrderedModel):
     cp_output_config = models.ForeignKey(CPOutputConfig, verbose_name=_('CP Output Config'))
     methods = models.ManyToManyField(Method, blank=True, verbose_name=_('Method(s)'))
 
+    class Meta:
+        unique_together = ('cp_output_config', 'checklist_item')
+
     def __str__(self):
         return '{}: {}'.format(self.cp_output_config, self.checklist_item)
 
 
 class PlannedCheckListItemPartnerInfo(models.Model):
-    planned_checklist_item = models.ForeignKey(PlannedCheckListItem, verbose_name=_('Planned Checklist Item'))
+    planned_checklist_item = models.ForeignKey(PlannedCheckListItem, verbose_name=_('Planned Checklist Item'),
+                                               related_name='partners_info')
     partner = models.ForeignKey('partners.PartnerOrganization', blank=True, null=True, verbose_name=_('Partner'))
     specific_details = models.TextField(verbose_name=_('Specific Details To Probe'), blank=True)
     standard_url = models.CharField(max_length=1000, verbose_name=_('URL To Standard'), blank=True)
+
+    class Meta:
+        unique_together = ('planned_checklist_item', 'partner')
 
     def __str__(self):
         return '{} info for {}'.format(self.partner, self.planned_checklist_item)
