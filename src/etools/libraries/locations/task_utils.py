@@ -105,14 +105,14 @@ def retry_failed_query(sql_client, failed_query, offset):
     '''
 
     retries = 0
-    logger.warning('Retrying table page at offset {}'.format(len(offset)))
+    logger.warning('Retrying table page at offset {}'.format(offset))
     while retries < 5:
         time.sleep(1)
         try:
             sites = sql_client.send(failed_query)
         except CartoException:
             if retries < 4:
-                logger.warning('Retrying again table page at offset {}'.format(len(offset)))
+                logger.warning('Retrying again table page at offset {}'.format(offset))
         else:
             if 'error' in sites:
                 return False
