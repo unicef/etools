@@ -130,7 +130,7 @@ class LogIssuesViewSet(FMBaseViewSet, viewsets.ModelViewSet):
     queryset = LogIssue.objects.all()
     serializer_class = LogIssueSerializer
     filter_backends = (DjangoFilterBackend, LogIssueRelatedToTypeFilter, LogIssueVisitFilter, OrderingFilter)
-    filter_fields = ('cp_output', 'partner', 'location', 'location_site')
+    filter_fields = ('cp_output', 'partner', 'location', 'location_site', 'status')
     ordering_fields = ('content_type',)
 
 
