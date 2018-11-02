@@ -1,3 +1,4 @@
+from django.db import models
 from django.utils.translation import ugettext_lazy as _
 
 from rest_framework import mixins, viewsets
@@ -22,6 +23,8 @@ from etools.applications.field_monitoring.settings.serializers.locations import 
 from etools.applications.field_monitoring.settings.serializers.methods import MethodSerializer, MethodTypeSerializer
 from etools.applications.field_monitoring.shared.models import Method
 from etools.applications.field_monitoring.views import FMBaseViewSet, FMBaseAttachmentsViewSet
+from etools.applications.partners.models import PartnerOrganization
+from etools.applications.partners.serializers.partner_organization_v2 import MinimalPartnerOrganizationListSerializer
 from etools.applications.reports.models import Result, ResultType
 
 
@@ -80,6 +83,18 @@ class CPOutputsViewSet(
     filter_backends = (DjangoFilterBackend, CPOutputIsActiveFilter, OrderingFilter)
     filter_fields = ('fm_config__is_monitored', 'fm_config__is_priority', 'parent')
     ordering_fields = ('name', 'fm_config__is_monitored', 'fm_config__is_priority')
+
+
+class MonitoredPartnersViewSet(
+    FMBaseViewSet,
+    mixins.ListModelMixin,
+    viewsets.GenericViewSet
+):
+    queryset = PartnerOrganization.objects.filter(
+        models.Q(cpoutputconfig__is_monitored=True) |
+        models.Q(agreements__interventions__result_links__cp_output__fm_config__is_monitored=True)
+    )
+    serializer_class = MinimalPartnerOrganizationListSerializer
 
 
 class CPOutputConfigsViewSet(

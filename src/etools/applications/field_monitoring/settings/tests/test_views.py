@@ -411,3 +411,21 @@ class TestLogIssueAttachmentsView(FMBaseTestCaseMixin, BaseTenantTestCase):
         )
         self.assertEqual(list_response.status_code, status.HTTP_200_OK)
         self.assertEqual(len(list_response.data['results']), attachments_num + 1)
+
+
+class TestMonitoredPartnersView(FMBaseTestCaseMixin, BaseTenantTestCase):
+    def test_list(self):
+        PartnerFactory()
+        CPOutputConfigFactory(government_partners__count=2, interventions__count=2, is_monitored=False)
+        config = CPOutputConfigFactory(government_partners__count=2, interventions__count=2)
+        partners = list(config.government_partners.values_list('id', flat=True))
+        partners += list(config.cp_output.intervention_links.values_list('intervention__agreement__partner_id',
+                                                                         flat=True))
+
+        response = self.forced_auth_req(
+            'get', reverse('field_monitoring_settings:monitored-partners-list'),
+            user=self.unicef_user
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertListEqual(sorted([r['id'] for r in response.data['results']]), sorted(partners))
