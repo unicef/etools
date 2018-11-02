@@ -238,7 +238,7 @@ class TPMVisitLightSerializer(PermissionsBasedSerializerMixin, serializers.Model
 class TPMVisitSerializer(WritableNestedParentSerializerMixin,
                          UserContextSerializerMixin,
                          TPMVisitLightSerializer):
-    tpm_activities = TPMActivitySerializer(many=True, required=False, label=_('Site Visit Schedule'))
+    tpm_activities = TPMActivitySerializer(many=True, required=False, label=_('Site Visit Tasks'))
 
     report_reject_comments = TPMVisitReportRejectCommentSerializer(many=True, read_only=True)
 
