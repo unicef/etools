@@ -161,7 +161,7 @@ def denormalize_attachment(attachment):
             "partner": partner,
             "partner_type": partner_type,
             "vendor_number": vendor_number,
-            "pd_ssfa_number": pd_ssfa.pk if pd_ssfa else "",
+            "pd_ssfa": pd_ssfa.pk if pd_ssfa else "",
             "pd_ssfa_number": pd_ssfa.number if pd_ssfa else "",
             "agreement_reference_number": agreement_reference_number,
             "object_link": object_link,
