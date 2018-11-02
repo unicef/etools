@@ -7,7 +7,7 @@ from unicef_locations.models import GatewayType
 from unicef_locations.tests.factories import LocationFactory
 
 from etools.applications.field_monitoring.settings.models import MethodType, LocationSite, CPOutputConfig, \
-    CheckListCategory, CheckListItem, PlannedCheckListItem, PlannedCheckListItemPartnerInfo
+    CheckListCategory, CheckListItem, PlannedCheckListItem, PlannedCheckListItemPartnerInfo, LogIssue
 from etools.applications.field_monitoring.shared.models import Method
 from etools.applications.partners.models import PartnerType
 from etools.applications.partners.tests.factories import PartnerFactory, InterventionResultLinkFactory
@@ -122,3 +122,10 @@ class PlannedCheckListItemPartnerInfoFactory(factory.DjangoModelFactory):
 
     class Meta:
         model = PlannedCheckListItemPartnerInfo
+
+
+class LogIssueFactory(factory.DjangoModelFactory):
+    issue = fuzzy.FuzzyText()
+
+    class Meta:
+        model = LogIssue

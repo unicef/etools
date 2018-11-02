@@ -1,14 +1,18 @@
 from datetime import date, timedelta
 
+from django.core.files.uploadedfile import SimpleUploadedFile
 from django.urls import reverse
+from factory import fuzzy
 
 from rest_framework import status
+from unicef_locations.tests.factories import LocationFactory
 
 from etools.applications.EquiTrack.tests.cases import BaseTenantTestCase
-from etools.applications.field_monitoring.settings.models import CPOutputConfig
+from etools.applications.attachments.tests.factories import AttachmentFileTypeFactory
+from etools.applications.field_monitoring.settings.models import CPOutputConfig, LogIssue
 from etools.applications.field_monitoring.settings.tests.factories import (
     CPOutputConfigFactory, LocationSiteFactory, MethodTypeFactory, PlannedCheckListItemFactory, CheckListItemFactory,
-    MethodFactory)
+    MethodFactory, LogIssueFactory)
 from etools.applications.field_monitoring.tests.base import FMBaseTestCaseMixin
 from etools.applications.partners.models import PartnerType
 from etools.applications.partners.tests.factories import PartnerFactory
@@ -303,3 +307,107 @@ class PlannedCheckListItemViewTestCase(FMBaseTestCaseMixin, BaseTenantTestCase):
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(len(response.data['results']), 1)
+
+
+class LogIssueViewTestCase(FMBaseTestCaseMixin, BaseTenantTestCase):
+    @classmethod
+    def setUpTestData(cls):
+        cls.log_issue_cp_output = LogIssueFactory(cp_output=ResultFactory(result_type__name=ResultType.OUTPUT))
+        cls.log_issue_partner = LogIssueFactory(partner=PartnerFactory())
+        cls.log_issue_location = LogIssueFactory(location=LocationFactory())
+        cls.log_issue_location_site = LogIssueFactory(location_site=LocationSiteFactory())
+
+    def test_create(self):
+        response = self.forced_auth_req(
+            'post', reverse('field_monitoring_settings:log-issues-list'),
+            user=self.unicef_user,
+            data={
+                'cp_output': ResultFactory(result_type__name=ResultType.OUTPUT).id,
+                'issue': fuzzy.FuzzyText().fuzz(),
+            }
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        self.assertEqual(len(response.data['history']), 1)
+
+    def test_create_invalid(self):
+        site = LocationSiteFactory()
+
+        response = self.forced_auth_req(
+            'post', reverse('field_monitoring_settings:log-issues-list'),
+            user=self.unicef_user,
+            data={
+                'location': site.parent.id,
+                'location_site': site.id,
+                'issue': fuzzy.FuzzyText().fuzz(),
+            }
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn('non_field_errors', response.data)
+
+    def test_list(self):
+        response = self.forced_auth_req(
+            'get', reverse('field_monitoring_settings:log-issues-list'),
+            user=self.unicef_user,
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(response.data['results']), 4)
+
+    def _test_list_filter(self, list_filter, expected_items):
+        response = self.forced_auth_req(
+            'get', reverse('field_monitoring_settings:log-issues-list'),
+            user=self.unicef_user,
+            data=list_filter
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertListEqual(
+            [r['id'] for r in response.data['results']],
+            [i.id for i in expected_items]
+        )
+
+    def _test_related_to_filter(self, value, expected_items):
+        self._test_list_filter({'related_to_type': value}, expected_items)
+
+    def test_related_to_cp_output_filter(self):
+        self._test_related_to_filter('cp_output', [self.log_issue_cp_output])
+
+    def test_related_to_partner_filter(self):
+        self._test_related_to_filter('partner', [self.log_issue_partner])
+
+    def test_related_to_location_filter(self):
+        self._test_related_to_filter('location_site', [self.log_issue_location, self.log_issue_location_site])
+
+
+class TestLogIssueAttachmentsView(FMBaseTestCaseMixin, BaseTenantTestCase):
+    @classmethod
+    def setUpTestData(cls):
+        super().setUpTestData()
+
+        cls.log_issue = LogIssueFactory()
+
+    def test_add(self):
+        attachments_num = self.log_issue.attachments.count()
+        self.assertEqual(attachments_num, 0)
+
+        create_response = self.forced_auth_req(
+            'post',
+            reverse('field_monitoring_settings:log-issue-attachments-list', args=[self.log_issue.pk]),
+            user=self.unicef_user,
+            request_format='multipart',
+            data={
+                'file_type': AttachmentFileTypeFactory(code=LogIssue.ATTACHMENTS_FILE_TYPE_CODE).id,
+                'file': SimpleUploadedFile('hello_world.txt', u'hello world!'.encode('utf-8')),
+            }
+        )
+        self.assertEqual(create_response.status_code, status.HTTP_201_CREATED)
+
+        list_response = self.forced_auth_req(
+            'get',
+            reverse('field_monitoring_settings:log-issue-attachments-list', args=[self.log_issue.pk]),
+            user=self.unicef_user
+        )
+        self.assertEqual(list_response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(list_response.data['results']), attachments_num + 1)

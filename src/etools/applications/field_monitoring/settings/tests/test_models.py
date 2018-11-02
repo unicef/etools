@@ -7,7 +7,11 @@ from unicef_locations.tests.factories import LocationFactory
 
 from etools.applications.EquiTrack.tests.cases import BaseTenantTestCase
 from etools.applications.field_monitoring.settings.models import MethodType
-from etools.applications.field_monitoring.settings.tests.factories import MethodFactory, LocationSiteFactory
+from etools.applications.field_monitoring.settings.tests.factories import MethodFactory, LocationSiteFactory, \
+    LogIssueFactory
+from etools.applications.partners.tests.factories import PartnerFactory
+from etools.applications.reports.models import ResultType
+from etools.applications.reports.tests.factories import ResultFactory
 
 
 class MethodTypeTestCase(BaseTenantTestCase):
@@ -86,3 +90,33 @@ class SitesTestCase(BaseTenantTestCase):
     def test_parent_non_boundary(self):
         site = LocationSiteFactory(parent=None, point=self.non_boundary_point)
         self.assertEqual(site.parent, self.country)
+
+
+class LogIssueTestCase(BaseTenantTestCase):
+    def test_related_to_none(self):
+        log_issue = LogIssueFactory()
+
+        with self.assertRaisesMessage(ValidationError, 'Related object not provided'):
+            log_issue.clean()
+
+    def test_related_to_result(self):
+        log_issue = LogIssueFactory(cp_output=ResultFactory(result_type__name=ResultType.OUTPUT))
+        log_issue.clean()
+
+    def test_related_to_partner(self):
+        log_issue = LogIssueFactory(partner=PartnerFactory())
+        log_issue.clean()
+
+    def test_related_to_location(self):
+        log_issue = LogIssueFactory(location=LocationFactory())
+        log_issue.clean()
+
+    def test_related_to_site(self):
+        log_issue = LogIssueFactory(location_site=LocationSiteFactory())
+        log_issue.clean()
+
+    def test_related_to_both(self):
+        log_issue = LogIssueFactory(location=LocationFactory(), location_site=LocationSiteFactory())
+
+        with self.assertRaisesMessage(ValidationError, 'Maximum one related object should be provided'):
+            log_issue.clean()

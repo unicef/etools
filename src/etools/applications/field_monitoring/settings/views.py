@@ -1,22 +1,27 @@
-from django_filters.rest_framework import DjangoFilterBackend
+from django.utils.translation import ugettext_lazy as _
 
 from rest_framework import mixins, viewsets
 from rest_framework.filters import OrderingFilter, SearchFilter
 
+from django_filters.rest_framework import DjangoFilterBackend
+
 from unicef_locations.cache import etag_cached
 from unicef_restlib.views import NestedViewSetMixin
 
-from etools.applications.field_monitoring.settings.filters import CPOutputIsActiveFilter
+from etools.applications.field_monitoring.settings.filters import CPOutputIsActiveFilter, LogIssueRelatedToTypeFilter, \
+    LogIssueVisitFilter
 from etools.applications.field_monitoring.settings.models import MethodType, LocationSite, CheckListItem, \
-    CheckListCategory, PlannedCheckListItem, CPOutputConfig
+    CheckListCategory, PlannedCheckListItem, CPOutputConfig, LogIssue
 from etools.applications.field_monitoring.settings.serializers.checklist import CheckListItemSerializer, \
     CheckListCategorySerializer
 from etools.applications.field_monitoring.settings.serializers.cp_outputs import FieldMonitoringCPOutputSerializer, \
     PlannedCheckListItemSerializer, CPOutputConfigDetailSerializer
+from etools.applications.field_monitoring.settings.serializers.issues import LogIssueSerializer, \
+    LogIssueAttachmentSerializer
 from etools.applications.field_monitoring.settings.serializers.locations import LocationSiteSerializer
 from etools.applications.field_monitoring.settings.serializers.methods import MethodSerializer, MethodTypeSerializer
 from etools.applications.field_monitoring.shared.models import Method
-from etools.applications.field_monitoring.views import FMBaseViewSet
+from etools.applications.field_monitoring.views import FMBaseViewSet, FMBaseAttachmentsViewSet
 from etools.applications.reports.models import Result, ResultType
 
 
@@ -119,3 +124,19 @@ class PlannedCheckListItemViewSet(
 
     def perform_create(self, serializer):
         serializer.save(cp_output_config=self.get_parent_object())
+
+
+class LogIssuesViewSet(FMBaseViewSet, viewsets.ModelViewSet):
+    queryset = LogIssue.objects.all()
+    serializer_class = LogIssueSerializer
+    filter_backends = (DjangoFilterBackend, LogIssueRelatedToTypeFilter, LogIssueVisitFilter, OrderingFilter)
+    filter_fields = ('cp_output', 'partner', 'location', 'location_site')
+    ordering_fields = ('content_type',)
+
+
+class LogIssueAttachmentsViewSet(FMBaseAttachmentsViewSet):
+    serializer_class = LogIssueAttachmentSerializer
+    related_model = LogIssue
+
+    def get_view_name(self):
+        return _('Attachments')
