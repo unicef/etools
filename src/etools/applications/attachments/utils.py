@@ -65,7 +65,7 @@ def get_partner_type(obj):
     return ""
 
 
-def get_pd_ssfa_number(obj):
+def get_pd_ssfa(obj):
     """Only certain models will have this value available
     Intervention
     InterventionAttachment
@@ -79,14 +79,14 @@ def get_pd_ssfa_number(obj):
     from etools.applications.tpm.models import TPMActivity
 
     if isinstance(obj.content_object, Intervention):
-        return obj.content_object.number
+        return obj.content_object
     elif isinstance(obj.content_object, (
             TPMActivity,
             InterventionAmendment,
             InterventionAttachment,
     )):
         if obj.content_object.intervention:
-            return obj.content_object.intervention.number
+            return obj.content_object.intervention
     return ""
 
 
@@ -148,7 +148,7 @@ def denormalize_attachment(attachment):
     partner = get_partner(attachment)
     partner_type = get_partner_type(attachment)
     vendor_number = get_vendor_number(attachment)
-    pd_ssfa_number = get_pd_ssfa_number(attachment)
+    pd_ssfa = get_pd_ssfa(attachment)
     agreement_reference_number = get_agreement_reference_number(attachment)
     file_type = get_file_type(attachment)
     object_link = get_object_url(attachment)
@@ -161,7 +161,8 @@ def denormalize_attachment(attachment):
             "partner": partner,
             "partner_type": partner_type,
             "vendor_number": vendor_number,
-            "pd_ssfa_number": pd_ssfa_number,
+            "pd_ssfa_number": pd_ssfa.pk if pd_ssfa else "",
+            "pd_ssfa_number": pd_ssfa.number if pd_ssfa else "",
             "agreement_reference_number": agreement_reference_number,
             "object_link": object_link,
             "file_type": file_type,

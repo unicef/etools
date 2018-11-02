@@ -99,6 +99,7 @@ class TestAttachmentListView(BaseTenantTestCase):
             "partner",
             "partner_type",
             "vendor_number",
+            "pd_ssfa",
             "pd_ssfa_number",
             "agreement_reference_number",
             "object_link",
