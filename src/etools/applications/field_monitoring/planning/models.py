@@ -9,6 +9,7 @@ from model_utils.models import TimeStampedModel
 from unicef_locations.models import Location
 
 from etools.applications.field_monitoring.settings.models import LocationSite, CPOutputConfig
+from etools.applications.publics.models import SoftDeleteMixin
 
 
 class YearPlan(TimeStampedModel):
@@ -32,7 +33,7 @@ class YearPlan(TimeStampedModel):
         return 'Year Plan for {}'.format(self.year)
 
 
-class Task(TimeStampedModel):
+class Task(SoftDeleteMixin, TimeStampedModel):
     year_plan = models.ForeignKey(YearPlan, verbose_name=_('Year Plan'), related_name='tasks')
     plan_by_month = ArrayField(models.PositiveSmallIntegerField(default=0, blank=True), default=[0]*12,
                                verbose_name=_('Plan By Month'), blank=True)
