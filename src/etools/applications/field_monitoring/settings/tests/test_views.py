@@ -45,6 +45,28 @@ class MethodTypesViewTestCase(FMBaseTestCaseMixin, BaseTenantTestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(len(response.data['results']), 1)
 
+    def test_create(self):
+        response = self.forced_auth_req(
+            'post', reverse('field_monitoring_settings:method-types-list'),
+            user=self.unicef_user,
+            data={
+                'method': MethodFactory(is_types_applicable=True).id,
+                'name': fuzzy.FuzzyText().fuzz(),
+            }
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+
+    def test_destroy(self):
+        method_type = MethodTypeFactory()
+
+        response = self.forced_auth_req(
+            'delete', reverse('field_monitoring_settings:method-types-detail', args=[method_type.id]),
+            user=self.unicef_user,
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
+
 
 class MethodSitesViewTestCase(FMBaseTestCaseMixin, BaseTenantTestCase):
     def test_list(self):
@@ -113,6 +135,16 @@ class MethodSitesViewTestCase(FMBaseTestCaseMixin, BaseTenantTestCase):
 
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         self.assertIsNotNone(response.data['parent'])
+
+    def test_destroy(self):
+        instance = LocationSiteFactory()
+
+        response = self.forced_auth_req(
+            'delete', reverse('field_monitoring_settings:sites-detail', args=[instance.id]),
+            user=self.unicef_user,
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
 
 
 class CPOutputsConfigViewTestCase(FMBaseTestCaseMixin, BaseTenantTestCase):
