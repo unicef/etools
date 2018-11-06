@@ -28,6 +28,12 @@ class LocationSite(TimeStampedModel):
 
     security_detail = models.TextField(verbose_name=_('Detail on Security'), blank=True)
 
+    def __str__(self):
+        return u'{}: {}'.format(
+            self.name,
+            self.p_code if self.p_code else ''
+        )
+
     @staticmethod
     def get_parent_location(point):
         matched_locations = Location.objects.filter(geom__contains=point)

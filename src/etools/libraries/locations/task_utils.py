@@ -20,9 +20,9 @@ logger = get_task_logger(__name__)
 
 
 def get_cartodb_locations(sql_client, carto_table):
+
     rows = []
     cartodb_id_col = 'cartodb_id'
-
     try:
         query_row_count = sql_client.send('select count(*) from {}'.format(carto_table.table_name))
         row_count = query_row_count['rows'][0]['count']
@@ -72,17 +72,54 @@ def get_cartodb_locations(sql_client, carto_table):
 
         # do not spam Carto with requests, wait 1 second
         time.sleep(1)
-        sites = sql_client.send(paged_qry)
-        rows += sites['rows']
-        offset += limit
-
-        if 'error' in sites:
-            # it seems we can have both valid results and error messages in the same CartoDB response
-            logger.exception("CartoDB API error received: {}".format(sites['error']))
-            # When this error occurs, we receive truncated locations, probably it's better to interrupt the import
-            return False, []
+        try:
+            sites = sql_client.send(paged_qry)
+        except CartoException:  # pragma: no-cover
+            logger.exception("CartoDB API pagination failed at offset: {}".format(offset))
+            retried_row = retry_failed_query(sql_client, paged_qry, offset)
+            if retried_row:
+                rows += retried_row
+            else:
+                # can not continue if we have missing pages..
+                return False, []
+        else:
+            if 'error' in sites:
+                # it seems we can have both valid results and error messages in the same CartoDB response
+                # When this occurs, we receive truncated locations, interrupt the import due to incomplete data
+                logger.exception("CartoDB API error received: {}".format(sites['error']))
+                return False, []
+            else:
+                rows += sites['rows']
+                offset += limit
 
     return True, rows
+
+
+def retry_failed_query(sql_client, failed_query, offset):
+    '''
+    Retry a timed-out CartoDB query
+    :param sql_client:
+    :param failed_query:
+    :param offset:
+    :return:
+    '''
+
+    retries = 0
+    logger.warning('Retrying table page at offset {}'.format(len(offset)))
+    while retries < 5:
+        time.sleep(1)
+        try:
+            sites = sql_client.send(failed_query)
+        except CartoException:
+            if retries < 4:
+                logger.warning('Retrying again table page at offset {}'.format(len(offset)))
+        else:
+            if 'error' in sites:
+                return False
+            else:
+                return sites['rows']
+        retries += 1
+    return False
 
 
 def validate_remap_table(database_pcodes, new_carto_pcodes, carto_table, sql_client):  # pragma: no-cover
@@ -212,21 +249,28 @@ def create_location(pcode, carto_table, parent, parent_instance, remapped_old_pc
     :return:
     """
 
+    logger.info('{}: {} ({}){}'.format(
+        'Importing location ',
+        pcode,
+        carto_table.location_type.name,
+        ", remapped pcodes: {}".format(",".join(remapped_old_pcodes)) if remapped_old_pcodes else ""
+    ))
+
     results = None
     try:
         location = None
         remapped_locations = None
         if remapped_old_pcodes:
-            # check if the remapped location exists in the database
+            # check if the remapped location exists in the database(ACTIVE locations only)
             remapped_locations = Location.objects.filter(p_code__in=list(remapped_old_pcodes))
 
-            if not remapped_locations:
-                # if remapped_old_pcodes are set and passed validations, but they are not found in the
-                # list of the active locations(`Location.objects`), it means that they were already remapped.
+            if not remapped_locations.exists():
+                # if remapped_old_pcodes are valid, but they are not found in the  list of the active locations
+                # (`Location.objects`), it means that they were already remapped.
                 # in this case update the `main` location, and ignore the remap.
-                location = Location.objects.get(p_code=pcode)
+                location = Location.objects.all_locations().get(p_code=pcode)
         else:
-            location = Location.objects.get(p_code=pcode)
+            location = Location.objects.all_locations().get(p_code=pcode)
 
     except Location.MultipleObjectsReturned:
         logger.warning("Multiple locations found for: {}, {} ({})".format(

@@ -20,9 +20,6 @@ class MethodTypeSerializer(serializers.ModelSerializer):
         fields = ('id', 'method', 'name')
 
     def validate_method(self, method):
-        if not method:
-            self.fail('required')
-
         try:
             self.Meta.model.clean_method(method)
         except DjangoValidationError as ex:
