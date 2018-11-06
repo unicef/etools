@@ -1,7 +1,22 @@
 from django.contrib import admin
+from django.utils.translation import ugettext_lazy as _
+
 from ordered_model.admin import OrderedModelAdmin
 
-from etools.applications.field_monitoring.settings.models import MethodType, LocationSite, CPOutputConfig
+from etools.applications.field_monitoring.settings.models import MethodType, LocationSite, CPOutputConfig, \
+    CheckListItem, CheckListCategory, PlannedCheckListItem, PlannedCheckListItemPartnerInfo
+
+
+@admin.register(CheckListCategory)
+class CheckListCategoryAdmin(admin.ModelAdmin):
+    list_display = ('name',)
+
+
+@admin.register(CheckListItem)
+class CheckListItemAdmin(admin.ModelAdmin):
+    list_display = ('question_number', 'question_text', 'category', 'is_required')
+    list_filter = ('category', 'is_required')
+    readonly_fields = ('slug',)
 
 
 @admin.register(MethodType)
@@ -22,3 +37,19 @@ class LocationSiteAdmin(admin.ModelAdmin):
 class CPOutputConfigAdmin(admin.ModelAdmin):
     list_display = ('cp_output', 'is_monitored', 'is_priority',)
     list_filter = ('is_monitored', 'is_priority',)
+
+
+class PlannedCheckListItemPartnerInfoInlineAdmin(admin.StackedInline):
+    model = PlannedCheckListItemPartnerInfo
+
+
+@admin.register(PlannedCheckListItem)
+class PlannedCheckListItemAdmin(admin.ModelAdmin):
+    list_display = ('checklist_item', 'cp_output_config', 'methods_list')
+    search_fields = ('checklist_item__question_text',)
+    list_filter = ('cp_output_config', 'methods')
+    inlines = (PlannedCheckListItemPartnerInfoInlineAdmin,)
+
+    def methods_list(self, obj):
+        return map(str, obj.methods.all())
+    methods_list.short_description = _('Methods')
