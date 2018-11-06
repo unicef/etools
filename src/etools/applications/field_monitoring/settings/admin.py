@@ -4,7 +4,7 @@ from django.utils.translation import ugettext_lazy as _
 from ordered_model.admin import OrderedModelAdmin
 
 from etools.applications.field_monitoring.settings.models import MethodType, LocationSite, CPOutputConfig, \
-    CheckListItem, CheckListCategory, PlannedCheckListItem, PlannedCheckListItemPartnerInfo
+    CheckListItem, CheckListCategory, PlannedCheckListItem, PlannedCheckListItemPartnerInfo, LogIssue
 
 
 @admin.register(CheckListCategory)
@@ -51,5 +51,15 @@ class PlannedCheckListItemAdmin(admin.ModelAdmin):
     inlines = (PlannedCheckListItemPartnerInfoInlineAdmin,)
 
     def methods_list(self, obj):
-        return map(str, obj.methods.all())
+        return [str(m) for m in obj.methods.all()]
     methods_list.short_description = _('Methods')
+
+
+@admin.register(LogIssue)
+class LogIssueAdmin(admin.ModelAdmin):
+    list_display = ('get_related_to', 'issue', 'status')
+    list_filter = ('status',)
+
+    def get_related_to(self, obj):
+        return obj.related_to
+    get_related_to.short_description = 'Related To'
