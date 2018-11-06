@@ -38,11 +38,7 @@ class MethodsViewSet(
 
 class MethodTypesViewSet(
     FMBaseViewSet,
-    mixins.ListModelMixin,
-    mixins.CreateModelMixin,
-    mixins.RetrieveModelMixin,
-    mixins.UpdateModelMixin,
-    viewsets.GenericViewSet
+    viewsets.ModelViewSet
 ):
     queryset = MethodType.objects.all()
     serializer_class = MethodTypeSerializer
@@ -55,11 +51,7 @@ class MethodTypesViewSet(
 
 class LocationSitesViewSet(
     FMBaseViewSet,
-    mixins.CreateModelMixin,
-    mixins.ListModelMixin,
-    mixins.UpdateModelMixin,
-    mixins.DestroyModelMixin,
-    viewsets.GenericViewSet,
+    viewsets.ModelViewSet,
 ):
     queryset = LocationSite.objects.prefetch_related('parent').order_by('parent__name', 'name')
     serializer_class = LocationSiteSerializer
