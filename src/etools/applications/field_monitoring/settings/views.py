@@ -47,7 +47,9 @@ class MethodTypesViewSet(
     queryset = MethodType.objects.all()
     serializer_class = MethodTypeSerializer
     filter_backends = (DjangoFilterBackend, OrderingFilter)
-    filter_fields = ('method',)
+    filter_fields = {
+        'method': ['exact', 'in'],
+    }
     ordering_fields = ('method', 'name',)
 
 
@@ -88,5 +90,9 @@ class CPOutputConfigsViewSet(
     )
     serializer_class = FieldMonitoringCPOutputSerializer
     filter_backends = (DjangoFilterBackend, CPOutputIsActiveFilter, OrderingFilter)
-    filter_fields = ('fm_config__is_monitored', 'fm_config__is_priority', 'parent')
+    filter_fields = {
+        'fm_config__is_monitored': ['exact'],
+        'fm_config__is_priority': ['exact'],
+        'parent': ['exact', 'in'],
+    }
     ordering_fields = ('name', 'fm_config__is_monitored', 'fm_config__is_priority')
