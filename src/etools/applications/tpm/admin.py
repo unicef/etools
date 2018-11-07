@@ -10,6 +10,7 @@ from etools.applications.tpm import models
 class TPMActivityInline(admin.ModelAdmin):
     list_display = (
         '__str__',
+        'section',
     )
 
 

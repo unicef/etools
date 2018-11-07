@@ -5,6 +5,7 @@ from django.conf import settings
 from django.contrib.postgres.fields.array import ArrayField
 from django.db import connection, models
 from django.db.models.signals import post_save
+from django.db.transaction import atomic
 from django.dispatch import receiver
 from django.utils.timezone import now as timezone_now
 from django.utils.translation import ugettext, ugettext_lazy as _
@@ -65,9 +66,10 @@ class ModeOfTravel(object):
 
 
 def make_travel_reference_number():
-    numeric_part = connection.tenant.counters.get_next_value(WorkspaceCounter.TRAVEL_REFERENCE)
-    year = timezone_now().year
-    return '{}/{}'.format(year, numeric_part)
+    with atomic():
+        numeric_part = connection.tenant.counters.get_next_value(WorkspaceCounter.TRAVEL_REFERENCE)
+        year = timezone_now().year
+        return '{}/{}'.format(year, numeric_part)
 
 
 class Travel(models.Model):
