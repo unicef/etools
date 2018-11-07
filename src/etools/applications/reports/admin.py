@@ -115,6 +115,7 @@ class ResultAdmin(MPTTModelAdmin):
         'from_date',
         'to_date',
         'wbs',
+        'sector',
     )
 
     actions = (

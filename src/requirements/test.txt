@@ -22,6 +22,7 @@ defusedxml==0.5.0
 diff-match-patch==20121119
 dj-database-url==0.5
 dj-static==0.0.6
+django-adminactions==1.5
 django-appconf==1.0.2
 django-celery-beat==1.2
 django-celery-email==2.0.1

@@ -1,4 +1,4 @@
-
+from adminactions import actions
 from django.conf import settings
 from django.conf.urls import include, url
 from django.contrib import admin
@@ -14,8 +14,13 @@ from etools.applications.management.urls import urlpatterns as management_urls
 from etools.applications.partners.views.v1 import FileTypeViewSet
 from etools.applications.publics import urls as publics_patterns
 from etools.applications.publics.views import StaticDataView
-from etools.applications.reports.views.v1 import IndicatorViewSet, ResultTypeViewSet, ResultViewSet, UnitViewSet, \
-    SectionViewSet
+from etools.applications.reports.views.v1 import (
+    IndicatorViewSet,
+    ResultTypeViewSet,
+    ResultViewSet,
+    SectionViewSet,
+    UnitViewSet,
+)
 from etools.applications.t2f.urls import urlpatterns as t2f_patterns
 from etools.applications.users.views import (
     CountriesViewSet,
@@ -25,6 +30,8 @@ from etools.applications.users.views import (
     UserViewSet,
 )
 from etools.applications.utils.common.schemas import get_schema_view, get_swagger_view
+# this import is used to autodiscover the customised locations admin form(which is outside of INSTALLED_APPS)
+from etools.libraries.locations import admin as locations_admin  # noqa: ignore=F401
 from etools.libraries.locations.views import (
     CartoDBTablesView,
     LocationQuerySetView,
@@ -32,8 +39,6 @@ from etools.libraries.locations.views import (
     LocationsViewSet,
     LocationTypesViewSet,
 )
-# this import is used to autodiscover the customised locations admin form(which is outside of INSTALLED_APPS)
-from etools.libraries.locations import admin as locations_admin # noqa: ignore=F401
 
 # ******************  API docs and schemas  ******************************
 schema_view = get_swagger_view(title='eTools API')
@@ -63,6 +68,10 @@ api.register(r'reports/sectors', SectionViewSet, base_name='sectors')  # TODO re
 api.register(r'locations', LocationsViewSet, base_name='locations')
 api.register(r'locations-light', LocationsLightViewSet, base_name='locations-light')
 api.register(r'locations-types', LocationTypesViewSet, base_name='locationtypes')
+
+
+admin.autodiscover()
+actions.add_to_site(admin.site)
 
 urlpatterns = [
     # Used for admin and dashboard pages in django
@@ -122,7 +131,7 @@ urlpatterns = [
         name='workspace-inactive'),
 
     url(r'^api/jwt/get/$', IssueJWTRedirectView.as_view(), name='issue JWT'),
-
+    url(r'^adminactions/', include('adminactions.urls')),
     url('^monitoring/', include('etools.libraries.monitoring.urls')),
 ]
 

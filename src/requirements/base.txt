@@ -17,6 +17,7 @@ defusedxml==0.5.0         # via djangorestframework-xml
 diff-match-patch==20121119  # via django-import-export
 dj-database-url==0.5
 dj-static==0.0.6
+django-adminactions==1.5
 django-appconf==1.0.2     # via django-celery-email
 django-celery-beat==1.2
 django-celery-email==2.0.1
@@ -102,7 +103,7 @@ unicef-locations==1.4.2
 unicef_notification==0.2.0
 unicef_restlib==0.3.8
 unicef_snapshot==0.2.1
-unicodecsv==0.14.1        # via djangorestframework-csv, tablib, unicef-attachments, unicef-djangolib, unicef-restlib
+unicodecsv==0.14.1        # via django-adminactions, djangorestframework-csv, tablib, unicef-attachments, unicef-djangolib, unicef-restlib
 uritemplate==3.0.0        # via coreapi
 vine==1.1.4               # via amqp
 webencodings==0.5.1       # via html5lib
