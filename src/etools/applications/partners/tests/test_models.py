@@ -10,12 +10,12 @@ from django.utils import timezone
 
 from freezegun import freeze_time
 from mock import Mock, patch
+from unicef_locations.tests.factories import LocationFactory
 
 from etools.applications.audit.models import Engagement
 from etools.applications.audit.tests.factories import AuditFactory, SpecialAuditFactory, SpotCheckFactory
 from etools.applications.EquiTrack.tests.cases import BaseTenantTestCase
 from etools.applications.funds.tests.factories import FundsReservationHeaderFactory
-from unicef_locations.tests.factories import LocationFactory
 from etools.applications.partners import models
 from etools.applications.partners.tests.factories import (
     AgreementAmendmentFactory,
@@ -26,18 +26,21 @@ from etools.applications.partners.tests.factories import (
     InterventionAttachmentFactory,
     InterventionBudgetFactory,
     InterventionFactory,
+    InterventionPlannedVisitsFactory,
     InterventionReportingPeriodFactory,
     InterventionResultLinkFactory,
-    InterventionSectionLocationLinkFactory,
     PartnerFactory,
     PartnerPlannedVisitsFactory,
     PartnerStaffFactory,
     PlannedEngagementFactory,
     WorkspaceFileTypeFactory,
-    InterventionPlannedVisitsFactory
 )
-from etools.applications.reports.tests.factories import (AppliedIndicatorFactory, CountryProgrammeFactory,
-                                                         LowerResultFactory, ResultFactory, SectionFactory,)
+from etools.applications.reports.tests.factories import (
+    AppliedIndicatorFactory,
+    CountryProgrammeFactory,
+    LowerResultFactory,
+    ResultFactory,
+)
 from etools.applications.t2f.models import Travel, TravelType
 from etools.applications.t2f.tests.factories import TravelActivityFactory, TravelFactory
 from etools.applications.tpm.models import TPMVisit
@@ -738,23 +741,6 @@ class TestInterventionModel(BaseTenantTestCase):
         self.assertIsNone(self.intervention.signed_by_partner_date)
         res = self.intervention.days_from_review_to_signed
         self.assertEqual(res, "Not fully signed")
-
-    def test_section_names(self):
-        section_1 = SectionFactory(name="ABC")
-        section_2 = SectionFactory(name="CBA")
-        intervention = InterventionFactory()
-        InterventionSectionLocationLinkFactory(
-            intervention=intervention,
-            sector=section_1,
-        )
-        InterventionSectionLocationLinkFactory(
-            intervention=intervention,
-            sector=section_2,
-        )
-        self.assertEqual(intervention.sector_names, "ABC, CBA")
-
-    def test_section_names_empty(self):
-        self.assertEqual(self.intervention.sector_names, "")
 
     @skip("fr_currency property on intervention is being deprecated")
     def test_default_budget_currency(self):
