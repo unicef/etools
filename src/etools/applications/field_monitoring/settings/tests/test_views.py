@@ -64,7 +64,7 @@ class MethodTypesViewTestCase(FMBaseTestCaseMixin, BaseTenantTestCase):
         self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
 
 
-class MethodSitesViewTestCase(FMBaseTestCaseMixin, BaseTenantTestCase):
+class LocationSitesViewTestCase(FMBaseTestCaseMixin, BaseTenantTestCase):
     def test_list(self):
         LocationSiteFactory()
 
@@ -131,6 +131,19 @@ class MethodSitesViewTestCase(FMBaseTestCaseMixin, BaseTenantTestCase):
 
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         self.assertIsNotNone(response.data['parent'])
+
+    def test_point_required(self):
+        response = self.forced_auth_req(
+            'post', reverse('field_monitoring_settings:sites-list'),
+            user=self.unicef_user,
+            data={
+                'name': fuzzy.FuzzyText().fuzz(),
+                'security_detail': fuzzy.FuzzyText().fuzz(),
+            }
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn('point', response.data)
 
     def test_destroy(self):
         instance = LocationSiteFactory()

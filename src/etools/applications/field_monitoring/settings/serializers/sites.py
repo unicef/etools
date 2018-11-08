@@ -11,3 +11,6 @@ class LocationSiteSerializer(serializers.ModelSerializer):
     class Meta:
         model = LocationSite
         fields = ['id', 'name', 'p_code', 'parent', 'point', 'security_detail', 'is_active']
+        extra_kwargs = {
+            'point': {'required': True},
+        }
