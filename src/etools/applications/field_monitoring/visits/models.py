@@ -7,6 +7,7 @@ from django_fsm import FSMField, transition
 from model_utils import Choices
 from model_utils.fields import MonitorField
 from model_utils.models import TimeStampedModel
+from ordered_model.models import OrderedModel
 
 from etools.applications.field_monitoring.planning.models import Task
 from etools.applications.field_monitoring.settings.models import CheckListItem, MethodType
@@ -45,13 +46,13 @@ class Visit(SoftDeleteMixin, TimeStampedModel):
         STATUS_CHOICES.cancelled: 'date_cancelled',
     }
 
+    author = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, blank=True, null=True)
+
     tasks = models.ManyToManyField(Task, related_name='visits', through=VisitTaskLink)
-    primary_field_monitor = models.ForeignKey(settings.AUTH_USER_MODEL, related_name='fm_primary_visits',
-                                              verbose_name=_('Primary Field Monitor'), blank=True, null=True)
-    team_members = models.ManyToManyField(settings.AUTH_USER_MODEL, related_name='fm_visits',
-                                          verbose_name=_('Team Members'), blank=True, null=True)
+
     start_date = models.DateField(verbose_name=_('Start Date'))
     end_date = models.DateField(verbose_name=_('End Date'))
+
     status = FSMField(choices=STATUS_CHOICES, default=STATUS_CHOICES.draft, verbose_name=_('Status'))
 
     date_assigned = MonitorField(verbose_name=_('Date Visit Assigned'), null=True, blank=True, default=None,
@@ -84,6 +85,7 @@ class Visit(SoftDeleteMixin, TimeStampedModel):
         status, source=STATUS_CHOICES.draft, target=STATUS_CHOICES.assigned,
     )
     def assign(self):
+        # todo: generate TaskCheckListItem and VisitMethodType
         pass
 
     @transition(
@@ -99,14 +101,28 @@ class Visit(SoftDeleteMixin, TimeStampedModel):
         pass
 
 
-class TaskCheckListItem(FindingMixin, models.Model):
+class UNICEFVisit(Visit):
+    primary_field_monitor = models.ForeignKey(settings.AUTH_USER_MODEL, related_name='fm_primary_visits',
+                                              verbose_name=_('Primary Field Monitor'), blank=True, null=True)
+    team_members = models.ManyToManyField(settings.AUTH_USER_MODEL, related_name='fm_visits',
+                                          verbose_name=_('Team Members'), blank=True)
+
+
+class TaskCheckListItem(FindingMixin, OrderedModel):
     parent_slug = models.CharField(max_length=50, verbose_name=_('Parent Slug'))
     visit_task = models.ForeignKey(VisitTaskLink, verbose_name=_('Task Link'))
 
+    question_number = models.CharField(max_length=10, verbose_name=_('Question Number'))
     question_text = models.CharField(max_length=255, verbose_name=_('Question Text'))
     specific_details = models.TextField(verbose_name=_('Specific Details To Probe'), blank=True)
 
     methods = models.ManyToManyField(Method, verbose_name=_('Recommended Methods'))
+
+    class Meta:
+        ordering = ('visit_task', 'order',)
+
+    def __str__(self):
+        return '{} {}'.format(self.question_number, self.question_text)
 
     @property
     def parent(self):
