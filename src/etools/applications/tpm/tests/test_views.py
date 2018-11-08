@@ -21,11 +21,12 @@ from etools.applications.utils.common.tests.test_utils import TestExportMixin
 
 
 class TestTPMVisitViewSet(TestExportMixin, TPMTestCaseMixin, BaseTenantTestCase):
-    def _test_list_view(self, user, expected_visits):
+    def _test_list_view(self, user, expected_visits, filters=None):
         response = self.forced_auth_req(
             'get',
             reverse('tpm:visits-list'),
-            user=user
+            user=user,
+            data=filters
         )
 
         self.assertEquals(response.status_code, status.HTTP_200_OK)
@@ -52,6 +53,44 @@ class TestTPMVisitViewSet(TestExportMixin, TPMTestCaseMixin, BaseTenantTestCase)
                                 tpm_partner_focal_points=[self.tpm_user.tpmpartners_tpmpartnerstaffmember])
 
         self._test_list_view(self.tpm_user, [visit])
+
+    def test_list_view_filter_single(self):
+        staff = self.tpm_user.tpmpartners_tpmpartnerstaffmember
+        visit_assigned = TPMVisitFactory(
+            status=TPMVisit.ASSIGNED,
+            tpm_partner=staff.tpm_partner,
+            tpm_partner_focal_points=[staff]
+        )
+        TPMVisitFactory(
+            status=TPMVisit.REPORTED,
+            tpm_partner=staff.tpm_partner,
+            tpm_partner_focal_points=[staff]
+        )
+        self._test_list_view(
+            self.tpm_user,
+            [visit_assigned],
+            filters={"status": TPMVisit.ASSIGNED}
+        )
+
+    def test_list_view_filter_multiple(self):
+        staff = self.tpm_user.tpmpartners_tpmpartnerstaffmember
+        visit_assigned = TPMVisitFactory(
+            status=TPMVisit.ASSIGNED,
+            tpm_partner=staff.tpm_partner,
+            tpm_partner_focal_points=[staff]
+        )
+        visit_reported = TPMVisitFactory(
+            status=TPMVisit.REPORTED,
+            tpm_partner=staff.tpm_partner,
+            tpm_partner_focal_points=[staff]
+        )
+        self._test_list_view(
+            self.tpm_user,
+            [visit_assigned, visit_reported],
+            filters={
+                "status__in": ",".join([TPMVisit.ASSIGNED, TPMVisit.REPORTED])
+            }
+        )
 
     def test_list_view_without_tpm_organization(self):
         user = UserFactory(unicef_user=True)

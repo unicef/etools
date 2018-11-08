@@ -229,6 +229,11 @@ class AttachmentFlat(models.Model):
         blank=True,
         verbose_name=_('Vendor Number')
     )
+    pd_ssfa = models.IntegerField(
+        null=True,
+        blank=True,
+        verbose_name=_('PD SSFA ID')
+    )
     pd_ssfa_number = models.CharField(
         max_length=64,
         blank=True,

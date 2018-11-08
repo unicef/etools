@@ -57,6 +57,9 @@ class SoftDeleteMixin(models.Model):
     class Meta:
         abstract = True
 
+    def force_delete(self, using=None, keep_parents=False):
+        return super().delete(using, keep_parents)
+
     def delete(self, *args, **kwargs):
         self.deleted_at = now()
         self.save()

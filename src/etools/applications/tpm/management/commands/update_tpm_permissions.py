@@ -258,6 +258,8 @@ class Command(BaseCommand):
                              condition=self.visit_status(TPMVisit.STATUSES.assigned))
         self.add_permissions(self.third_party_focal_point, 'view', ['tpm.tpmvisit.reject_comment'],
                              condition=self.visit_status(TPMVisit.STATUSES.assigned))
+        self.add_permissions(self.unicef_user, 'view', self.visit_report,
+                             condition=self.visit_status(TPMVisit.STATUSES.assigned))
 
         # tpm rejected
         self.add_permissions([self.unicef_user, self.third_party_monitor], 'view', ['tpm.tpmvisit.reject_comment'],

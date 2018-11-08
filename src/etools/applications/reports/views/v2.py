@@ -378,7 +378,11 @@ class AppliedIndicatorLocationExportView(QueryStringFilterMixin, ListAPIView):
                 ('sections', 'section__in'),
             )
 
-            search_terms = ('title__icontains', 'agreement__partner__name__icontains', 'number__icontains')
+            search_terms = (
+                'lower_result__result_link__intervention__title__icontains',
+                'lower_result__result_link__intervention__agreement__partner__name__icontains',
+                'lower_result__result_link__intervention__number__icontains'
+            )
             queries.extend(self.filter_params(filters))
             queries.append(self.search_params(search_terms))
 
