@@ -302,6 +302,8 @@ class PartnerOrganizationDashboardSerializer(serializers.ModelSerializer):
     sections = serializers.ReadOnlyField(read_only=True)
     locations = serializers.ReadOnlyField(read_only=True)
     action_points = serializers.ReadOnlyField(read_only=True)
+    total_ct_cp = serializers.FloatField(read_only=True)
+    total_ct_ytd = serializers.FloatField(read_only=True)
 
     class Meta:
         model = PartnerOrganization

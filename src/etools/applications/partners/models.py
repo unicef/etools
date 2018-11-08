@@ -210,7 +210,7 @@ class PartnerOrganizationQuerySet(models.QuerySet):
         return self.filter(
             Q(partner_type=PartnerType.CIVIL_SOCIETY_ORGANIZATION, agreements__interventions__status__in=[
                 Intervention.ACTIVE, Intervention.SIGNED, Intervention.SUSPENDED, Intervention.ENDED]) |
-            Q(total_ct_cp__gt=0), *args, **kwargs)
+            Q(total_ct_cp__gt=0), hidden=False, *args, **kwargs)
 
     def hact_active(self, *args, **kwargs):
         return self.filter(Q(reported_cy__gt=0) | Q(total_ct_cy__gt=0), hidden=False, *args, **kwargs)
