@@ -1,10 +1,12 @@
-from django.conf.urls import url, include
+from django.conf.urls import include, url
+
 from rest_framework import routers
 
 from etools.applications.reports.views.v1 import CountryProgrammeListView, CountryProgrammeRetrieveView, SectionViewSet
 from etools.applications.reports.views.v2 import (
     AppliedIndicatorListAPIView,
     AppliedIndicatorLocationExportView,
+    ClusterListAPIView,
     DisaggregationListCreateView,
     DisaggregationRetrieveUpdateView,
     LowerResultsDeleteView,
@@ -28,6 +30,9 @@ urlpatterns = (
     url(r'^applied-indicators/intervention/$',
         view=AppliedIndicatorLocationExportView.as_view(http_method_names=['get']),
         name='intervention-applied-indicator'),
+    url(r'^clusters/$',
+        view=ClusterListAPIView.as_view(http_method_names=['get']),
+        name='cluster'),
     url(r'^lower_results/$',
         view=LowerResultsListAPIView.as_view(http_method_names=['get']),
         name='lower-results'),

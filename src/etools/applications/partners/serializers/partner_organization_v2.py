@@ -301,6 +301,8 @@ class PartnerOrganizationDashboardSerializer(serializers.ModelSerializer):
     sections = serializers.ReadOnlyField(read_only=True)
     locations = serializers.ReadOnlyField(read_only=True)
     action_points = serializers.ReadOnlyField(read_only=True)
+    total_ct_cp = serializers.FloatField(read_only=True)
+    total_ct_ytd = serializers.FloatField(read_only=True)
 
     class Meta:
         model = PartnerOrganization
@@ -314,6 +316,7 @@ class PartnerOrganizationDashboardSerializer(serializers.ModelSerializer):
             'total_ct_ytd',
             'outstanding_dct_amount_6_to_9_months_usd',
             'outstanding_dct_amount_more_than_9_months_usd',
+            'vendor_number',
         )
 
 

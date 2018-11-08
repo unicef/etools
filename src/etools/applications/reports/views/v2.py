@@ -46,6 +46,7 @@ from etools.applications.reports.serializers.exports import (
 from etools.applications.reports.serializers.v1 import IndicatorSerializer
 from etools.applications.reports.serializers.v2 import (
     AppliedIndicatorSerializer,
+    ClusterSerializer,
     DisaggregationSerializer,
     LowerResultSerializer,
     MinimalOutputListSerializer,
@@ -377,7 +378,11 @@ class AppliedIndicatorLocationExportView(QueryStringFilterMixin, ListAPIView):
                 ('sections', 'section__in'),
             )
 
-            search_terms = ('title__icontains', 'agreement__partner__name__icontains', 'number__icontains')
+            search_terms = (
+                'lower_result__result_link__intervention__title__icontains',
+                'lower_result__result_link__intervention__agreement__partner__name__icontains',
+                'lower_result__result_link__intervention__number__icontains'
+            )
             queries.extend(self.filter_params(filters))
             queries.append(self.search_params(search_terms))
 
@@ -386,6 +391,18 @@ class AppliedIndicatorLocationExportView(QueryStringFilterMixin, ListAPIView):
                 qs = qs.filter(expression)
 
         return qs
+
+
+class ClusterListAPIView(ListAPIView):
+    """Returns a list of Clusters"""
+    model = AppliedIndicator
+    serializer_class = ClusterSerializer
+    renderer_classes = (
+        JSONRenderer,
+        CSVRenderer,
+        CSVFlatRenderer,
+    )
+    queryset = AppliedIndicator.objects.filter(cluster_name__isnull=False).values('cluster_name').distinct()
 
 
 class SpecialReportingRequirementListCreateView(ListCreateAPIView):

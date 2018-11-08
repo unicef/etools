@@ -1,6 +1,6 @@
 {% extends "admin/base.html" %}
 {% load i18n static %}
-{% load userprofile_tags %}
+{% load userprofile_tags etools %}
 
 {% block extrahead %}
     <script src="{{ STATIC_URL }}js/jquery-1.10.2.min.js"></script>
@@ -8,7 +8,7 @@
     <style type="text/css">
     #header
     {
-        background: #BE1A1A;
+        background: #0099ff;
         color: #fff;
         text-shadow: none;
         min-height: 60px;
@@ -129,7 +129,7 @@
         };
         var cond = /localhost|etools-dev|etools-staging/g;
         if (cond.test(window.location)) {
-            // $('#header').css({'background': '#BE1A1A'});
+            $('#header').css({'background': '#BE1A1A'});
             $('#test-text').show().text(' ' + host[window.location.hostname]);
         }
     });
@@ -169,7 +169,8 @@
             <a href="http://www.unicef.org"><img src="{{ STATIC_URL }}img/UNICEF_logo_Cyan.png" width="113px" height="27px"></a>
         </div>
         <div class="brand msg">
-            <span>© Copyright 2015-{% now "Y" %} UNICEF. All Rights Reserved. Country: {{ request.tenant.name }}</span>
+            <p>© Copyright 2015-{% now "Y" %} UNICEF. All Rights Reserved. Country: {{ request.tenant.name }}</p>
+            <p>{% etools_version %}</p>
         </div>
     </footer>
 {% endblock footer %}

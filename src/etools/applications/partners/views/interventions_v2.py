@@ -533,7 +533,7 @@ class InterventionListMapView(QueryStringFilterMixin, ListCreateAPIView):
         ('grants', 'frs__fr_items__grant_number__in'),
         ('unicef_focal_points', 'unicef_focal_points__in'),
         ('interventions', 'pk__in'),
-        ('clusters', 'result_links__ll_results__applied_indicators__cluster_indicator_title__icontains'),
+        ('clusters', 'result_links__ll_results__applied_indicators__cluster_name__icontains'),
     )
 
     def get_queryset(self):
