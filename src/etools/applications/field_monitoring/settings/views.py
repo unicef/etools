@@ -9,8 +9,9 @@ from unicef_restlib.pagination import DynamicPageNumberPagination
 from unicef_restlib.views import SafeTenantViewSetMixin, MultiSerializerViewSetMixin
 
 from etools.applications.field_monitoring.settings.filters import CPOutputIsActiveFilter
-from etools.applications.field_monitoring.settings.models import MethodType, LocationSite
-from etools.applications.field_monitoring.settings.serializers.cp_outputs import FieldMonitoringCPOutputSerializer
+from etools.applications.field_monitoring.settings.models import MethodType, LocationSite, CPOutputConfig
+from etools.applications.field_monitoring.settings.serializers.cp_outputs import FieldMonitoringCPOutputSerializer, \
+    CPOutputConfigDetailSerializer
 from etools.applications.field_monitoring.settings.serializers.methods import MethodSerializer, MethodTypeSerializer
 from etools.applications.field_monitoring.settings.serializers.sites import LocationSiteSerializer
 from etools.applications.field_monitoring.shared.models import Method
@@ -68,7 +69,7 @@ class LocationSitesViewSet(
         return super().list(request, *args, **kwargs)
 
 
-class CPOutputConfigsViewSet(
+class CPOutputsViewSet(
     FMBaseViewSet,
     mixins.ListModelMixin,
     mixins.UpdateModelMixin,
@@ -88,3 +89,18 @@ class CPOutputConfigsViewSet(
         'parent': ['exact', 'in'],
     }
     ordering_fields = ('name', 'fm_config__is_monitored', 'fm_config__is_priority')
+
+
+class CPOutputConfigsViewSet(
+    FMBaseViewSet,
+    mixins.ListModelMixin,
+    mixins.CreateModelMixin,
+    mixins.UpdateModelMixin,
+    mixins.RetrieveModelMixin,
+    viewsets.GenericViewSet
+):
+    queryset = CPOutputConfig.objects.all()
+    serializer_class = CPOutputConfigDetailSerializer
+    filter_backends = (DjangoFilterBackend, OrderingFilter)
+    filter_fields = ('is_monitored', 'is_priority')
+    ordering_fields = ('cp_output__name',)

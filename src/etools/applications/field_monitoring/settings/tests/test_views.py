@@ -159,13 +159,13 @@ class LocationSitesViewTestCase(FMBaseTestCaseMixin, BaseTenantTestCase):
 class CPOutputsConfigViewTestCase(FMBaseTestCaseMixin, BaseTenantTestCase):
     @classmethod
     def setUpTestData(cls):
-        ResultFactory(result_type__name=ResultType.OUTPUT)
-        ResultFactory(result_type__name=ResultType.OUTPUT, to_date=date.today() - timedelta(days=1))  # inactual
-        CPOutputConfigFactory()
+        cls.active_result = ResultFactory(result_type__name=ResultType.OUTPUT)
+        cls.inactive_result = ResultFactory(result_type__name=ResultType.OUTPUT, to_date=date.today() - timedelta(days=1))  # inactual
+        cls.default_config = CPOutputConfigFactory(is_monitored=True)
 
     def test_list(self):
         response = self.forced_auth_req(
-            'get', reverse('field_monitoring_settings:cp_output-configs-list'),
+            'get', reverse('field_monitoring_settings:cp_outputs-list'),
             user=self.unicef_user
         )
 
@@ -175,7 +175,7 @@ class CPOutputsConfigViewTestCase(FMBaseTestCaseMixin, BaseTenantTestCase):
 
     def test_list_filter_active(self):
         response = self.forced_auth_req(
-            'get', reverse('field_monitoring_settings:cp_output-configs-list'),
+            'get', reverse('field_monitoring_settings:cp_outputs-list'),
             user=self.unicef_user,
             data={'is_active': True}
         )
@@ -185,7 +185,7 @@ class CPOutputsConfigViewTestCase(FMBaseTestCaseMixin, BaseTenantTestCase):
 
     def test_list_filter_inactive(self):
         response = self.forced_auth_req(
-            'get', reverse('field_monitoring_settings:cp_output-configs-list'),
+            'get', reverse('field_monitoring_settings:cp_outputs-list'),
             user=self.unicef_user,
             data={'is_active': False}
         )
@@ -193,13 +193,29 @@ class CPOutputsConfigViewTestCase(FMBaseTestCaseMixin, BaseTenantTestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(len(response.data['results']), 1)
 
+    def test_list_filter_monitored(self):
+        monitored_config = CPOutputConfigFactory(is_monitored=True)
+        CPOutputConfigFactory(is_monitored=False)
+
+        response = self.forced_auth_req(
+            'get', reverse('field_monitoring_settings:cp_outputs-list'),
+            user=self.unicef_user,
+            data={'fm_config__is_monitored': True}
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertListEqual(
+            sorted([c['fm_config']['id'] for c in response.data['results']]),
+            [self.default_config.id, monitored_config.id]
+        )
+
     def test_create(self):
         cp_output = ResultFactory(result_type__name=ResultType.OUTPUT)
 
         self.assertFalse(CPOutputConfig.objects.filter(cp_output=cp_output).exists())
 
         response = self.forced_auth_req(
-            'patch', reverse('field_monitoring_settings:cp_output-configs-detail', args=[cp_output.id]),
+            'patch', reverse('field_monitoring_settings:cp_outputs-detail', args=[cp_output.id]),
             user=self.unicef_user,
             data={
                 'fm_config': {
@@ -217,7 +233,7 @@ class CPOutputsConfigViewTestCase(FMBaseTestCaseMixin, BaseTenantTestCase):
 
         partners_num = cp_output_config.government_partners.count()
         response = self.forced_auth_req(
-            'patch', reverse('field_monitoring_settings:cp_output-configs-detail', args=[cp_output_config.cp_output.id]),
+            'patch', reverse('field_monitoring_settings:cp_outputs-detail', args=[cp_output_config.cp_output.id]),
             user=self.unicef_user,
             data={
                 'fm_config': {

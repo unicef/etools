@@ -8,6 +8,7 @@ from etools.applications.partners.serializers.partner_organization_v2 import Min
 from etools.applications.field_monitoring.settings.models import CPOutputConfig
 from etools.applications.partners.models import Intervention
 from etools.applications.reports.models import Result
+from etools.applications.reports.serializers.v2 import OutputListSerializer
 
 
 class InterventionSerializer(serializers.ModelSerializer):
@@ -25,10 +26,18 @@ class CPOutputConfigSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = CPOutputConfig
-        fields = ('cp_output', 'is_monitored', 'is_priority', 'government_partners')
+        fields = ('id', 'cp_output', 'is_monitored', 'is_priority', 'government_partners')
         extra_kwargs = {
+            'id': {'read_only': True},
             'cp_output': {'read_only': True}
         }
+
+
+class CPOutputConfigDetailSerializer(CPOutputConfigSerializer):
+    cp_output = OutputListSerializer()
+
+    class Meta(CPOutputConfigSerializer.Meta):
+        pass
 
 
 class FieldMonitoringCPOutputSerializer(WritableNestedSerializerMixin, serializers.ModelSerializer):
