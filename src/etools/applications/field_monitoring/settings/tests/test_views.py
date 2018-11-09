@@ -182,6 +182,7 @@ class CPOutputsConfigViewTestCase(FMBaseTestCaseMixin, BaseTenantTestCase):
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(len(response.data['results']), 2)
+        self.assertEqual(response.data['results'][0]['expired'], False)
 
     def test_list_filter_inactive(self):
         response = self.forced_auth_req(
@@ -192,6 +193,7 @@ class CPOutputsConfigViewTestCase(FMBaseTestCaseMixin, BaseTenantTestCase):
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(len(response.data['results']), 1)
+        self.assertEqual(response.data['results'][0]['expired'], True)
 
     def test_list_filter_monitored(self):
         monitored_config = CPOutputConfigFactory(is_monitored=True)
