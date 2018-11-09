@@ -48,7 +48,7 @@ class FieldMonitoringCPOutputSerializer(WritableNestedSerializerMixin, serialize
 
     class Meta(WritableNestedSerializerMixin.Meta):
         model = Result
-        fields = ('id', 'fm_config', 'interventions', 'name')
+        fields = ('id', 'fm_config', 'interventions', 'name', 'expired')
 
     def get_interventions(self, obj):
         return [InterventionSerializer(link.intervention).data for link in obj.intervention_links.all()]

@@ -1,12 +1,16 @@
 from django.db import models
 from django.utils.translation import ugettext_lazy as _
 
-from rest_framework import mixins, viewsets
+from rest_framework import mixins, viewsets, views
 from rest_framework.filters import OrderingFilter, SearchFilter
+from rest_framework.generics import get_object_or_404
+from rest_framework.response import Response
 
 from django_filters.rest_framework import DjangoFilterBackend
 
 from unicef_locations.cache import etag_cached
+from unicef_locations.models import Location
+from unicef_locations.serializers import LocationSerializer
 from unicef_restlib.views import NestedViewSetMixin
 
 from etools.applications.field_monitoring.settings.filters import CPOutputIsActiveFilter, LogIssueRelatedToTypeFilter, \
@@ -67,6 +71,12 @@ class LocationSitesViewSet(
     @etag_cached('fm-sites')
     def list(self, request, *args, **kwargs):
         return super().list(request, *args, **kwargs)
+
+
+class LocationsCountryView(views.APIView):
+    def get(self, request, *args, **kwargs):
+        country = get_object_or_404(Location, gateway__admin_level=0)
+        return Response(data=LocationSerializer(instance=country).data)
 
 
 class CPOutputsViewSet(

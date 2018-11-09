@@ -160,6 +160,20 @@ class LocationSitesViewTestCase(FMBaseTestCaseMixin, BaseTenantTestCase):
         self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
 
 
+class LocationsCountryViewTestCase(FMBaseTestCaseMixin, BaseTenantTestCase):
+    def test_retrieve(self):
+        country = LocationFactory(gateway__admin_level=0)
+        LocationFactory(gateway__admin_level=1)
+
+        response = self.forced_auth_req(
+            'get', reverse('field_monitoring_settings:locations-country'),
+            user=self.unicef_user
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data['id'], str(country.id))
+
+
 class CPOutputsConfigViewTestCase(FMBaseTestCaseMixin, BaseTenantTestCase):
     @classmethod
     def setUpTestData(cls):
@@ -186,6 +200,7 @@ class CPOutputsConfigViewTestCase(FMBaseTestCaseMixin, BaseTenantTestCase):
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(len(response.data['results']), 2)
+        self.assertEqual(response.data['results'][0]['expired'], False)
 
     def test_list_filter_inactive(self):
         response = self.forced_auth_req(
@@ -196,6 +211,7 @@ class CPOutputsConfigViewTestCase(FMBaseTestCaseMixin, BaseTenantTestCase):
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(len(response.data['results']), 1)
+        self.assertEqual(response.data['results'][0]['expired'], True)
 
     def test_list_filter_monitored(self):
         monitored_config = CPOutputConfigFactory(is_monitored=True)
