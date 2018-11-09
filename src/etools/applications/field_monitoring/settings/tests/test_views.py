@@ -4,6 +4,7 @@ from django.urls import reverse
 from factory import fuzzy
 
 from rest_framework import status
+from unicef_locations.tests.factories import LocationFactory
 
 from etools.applications.EquiTrack.tests.cases import BaseTenantTestCase
 from etools.applications.field_monitoring.settings.models import CPOutputConfig
@@ -154,6 +155,20 @@ class LocationSitesViewTestCase(FMBaseTestCaseMixin, BaseTenantTestCase):
         )
 
         self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
+
+
+class LocationsCountryViewTestCase(FMBaseTestCaseMixin, BaseTenantTestCase):
+    def test_retrieve(self):
+        country = LocationFactory(gateway__admin_level=0)
+        LocationFactory(gateway__admin_level=1)
+
+        response = self.forced_auth_req(
+            'get', reverse('field_monitoring_settings:locations-country'),
+            user=self.unicef_user
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data['id'], str(country.id))
 
 
 class CPOutputsConfigViewTestCase(FMBaseTestCaseMixin, BaseTenantTestCase):

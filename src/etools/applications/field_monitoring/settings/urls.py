@@ -7,7 +7,9 @@ from etools.applications.field_monitoring.settings.views import (
     MethodsViewSet,
     MethodTypesViewSet,
     LocationSitesViewSet,
-    CPOutputsViewSet)
+    CPOutputsViewSet,
+    LocationsCountryView
+)
 
 root_api = routers.SimpleRouter()
 root_api.register(r'methods', MethodsViewSet, base_name='methods')
@@ -19,5 +21,6 @@ root_api.register(r'cp-outputs', CPOutputConfigsViewSet, base_name='cp_output-co
 
 app_name = 'field_monitoring_settings'
 urlpatterns = [
+    url(r'^locations/country', LocationsCountryView.as_view(), name='locations-country'),
     url(r'^', include(root_api.urls)),
 ]
