@@ -106,6 +106,7 @@ class MonitoredPartnersViewSet(
 class CPOutputConfigsViewSet(
     FMBaseViewSet,
     mixins.ListModelMixin,
+    mixins.CreateModelMixin,
     mixins.UpdateModelMixin,
     mixins.RetrieveModelMixin,
     viewsets.GenericViewSet
