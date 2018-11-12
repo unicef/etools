@@ -14,22 +14,11 @@ from etools.applications.reports.models import (
     ReportingRequirement,
     Result,
     SpecialReportingRequirement,
-)
-
-
-class OutputListSerializer(serializers.ModelSerializer):
-    name = serializers.ReadOnlyField(source="output_name")
-    result_type = serializers.SlugRelatedField(slug_field="name", read_only=True)
-    expired = serializers.ReadOnlyField()
-    special = serializers.ReadOnlyField()
-
-    class Meta:
-        model = Result
-        fields = '__all__'
+    ResultType)
 
 
 class MinimalOutputListSerializer(serializers.ModelSerializer):
-    name = serializers.ReadOnlyField(source="output_name")
+    name = serializers.SerializerMethodField()
 
     class Meta:
         model = Result
@@ -37,6 +26,21 @@ class MinimalOutputListSerializer(serializers.ModelSerializer):
             "id",
             "name"
         )
+
+    def get_name(self, obj):
+        if obj.result_type == ResultType.OUTPUT:
+            return obj.output_name
+        else:
+            return obj.result_name
+
+
+class OutputListSerializer(MinimalOutputListSerializer):
+    result_type = serializers.SlugRelatedField(slug_field="name", read_only=True)
+    expired = serializers.ReadOnlyField()
+    special = serializers.ReadOnlyField()
+
+    class Meta(MinimalOutputListSerializer.Meta):
+        fields = '__all__'
 
 
 class IndicatorBlueprintCUSerializer(serializers.ModelSerializer):
