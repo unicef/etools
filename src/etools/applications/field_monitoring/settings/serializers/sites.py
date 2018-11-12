@@ -1,3 +1,6 @@
+import json
+
+from django.contrib.gis.db.models import Collect
 from django.utils.translation import ugettext_lazy as _
 
 from rest_framework import serializers
@@ -8,10 +11,14 @@ from etools.applications.field_monitoring.settings.models import LocationSite
 
 
 class LocationCountrySerializer(LocationLightSerializer):
+    point = serializers.SerializerMethodField()
+
     class Meta(LocationLightSerializer.Meta):
-        fields = LocationLightSerializer.Meta.fields + (
-            'geom', 'point',
-        )
+        fields = LocationLightSerializer.Meta.fields + ('point', )
+
+    def get_point(self, obj):
+        point = obj.point or self.Meta.model.objects.aggregate(boundary=Collect('point'))['boundary'].centroid
+        return json.loads(point.json)
 
 
 class LocationSiteSerializer(serializers.ModelSerializer):

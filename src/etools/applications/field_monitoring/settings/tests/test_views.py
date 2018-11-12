@@ -162,7 +162,6 @@ class LocationsCountryViewTestCase(FMBaseTestCaseMixin, BaseTenantTestCase):
         country = LocationFactory(
             gateway__admin_level=0,
             point="POINT(20 20)",
-            geom="MultiPolygon(((10 10, 10 20, 20 20, 20 15, 10 10)), ((10 10, 10 20, 20 20, 20 15, 10 10)))"
         )
         LocationFactory(gateway__admin_level=1)
 
@@ -174,7 +173,19 @@ class LocationsCountryViewTestCase(FMBaseTestCaseMixin, BaseTenantTestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response.data['id'], str(country.id))
         self.assertEqual(response.data['point']['type'], 'Point')
-        self.assertEqual(response.data['geom']['type'], 'MultiPolygon')
+
+    def test_centroid(self):
+        LocationFactory(
+            gateway__admin_level=0,
+        )
+        LocationFactory(gateway__admin_level=1, point="POINT(20 20)",)
+
+        response = self.forced_auth_req(
+            'get', reverse('field_monitoring_settings:locations-country'),
+            user=self.unicef_user
+        )
+
+        self.assertEqual(response.data['point']['type'], 'Point')
 
 
 class CPOutputsConfigViewTestCase(FMBaseTestCaseMixin, BaseTenantTestCase):
