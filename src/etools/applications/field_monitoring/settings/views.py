@@ -22,7 +22,7 @@ from etools.applications.field_monitoring.settings.serializers.checklist import 
 from etools.applications.field_monitoring.settings.serializers.cp_outputs import FieldMonitoringCPOutputSerializer, \
     PlannedCheckListItemSerializer, CPOutputConfigDetailSerializer
 from etools.applications.field_monitoring.settings.serializers.issues import LogIssueSerializer, \
-    LogIssueAttachmentSerializer
+    LogIssueAttachmentSerializer, LogIssueLightSerializer
 from etools.applications.field_monitoring.settings.serializers.locations import LocationSiteSerializer
 from etools.applications.field_monitoring.settings.serializers.methods import MethodSerializer, MethodTypeSerializer
 from etools.applications.field_monitoring.shared.models import Method
@@ -164,6 +164,9 @@ class LogIssuesViewSet(FMBaseViewSet, viewsets.ModelViewSet):
     filter_backends = (DjangoFilterBackend, LogIssueRelatedToTypeFilter, LogIssueVisitFilter, OrderingFilter)
     filter_fields = ('cp_output', 'partner', 'location', 'location_site', 'status')
     ordering_fields = ('content_type',)
+    serializer_action_classes = {
+        'list': LogIssueLightSerializer
+    }
 
 
 class LogIssueAttachmentsViewSet(FMBaseAttachmentsViewSet):

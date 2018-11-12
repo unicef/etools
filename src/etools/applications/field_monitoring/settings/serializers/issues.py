@@ -27,7 +27,7 @@ class LogIssueAttachmentSerializer(BaseAttachmentSerializer):
         pass
 
 
-class LogIssueSerializer(SnapshotModelSerializer):
+class LogIssueLightSerializer(serializers.ModelSerializer):
     related_to_type = serializers.ChoiceField(choices=LogIssue.RELATED_TO_TYPE_CHOICES, read_only=True,
                                               label=_('Issue Related To'))
 
@@ -37,15 +37,21 @@ class LogIssueSerializer(SnapshotModelSerializer):
     location_site = SeparatedReadWriteField(read_field=LocationSiteLightSerializer())
 
     attachments = LogIssueAttachmentSerializer(many=True, read_only=True)
-    history = HistorySerializer(many=True, read_only=True)
 
     class Meta:
         model = LogIssue
         fields = (
             'id', 'related_to_type',
             'cp_output', 'partner', 'location', 'location_site',
-            'issue', 'status', 'attachments', 'history'
+            'issue', 'status', 'attachments',
         )
+
+
+class LogIssueSerializer(SnapshotModelSerializer, LogIssueLightSerializer):
+    history = HistorySerializer(many=True, read_only=True)
+
+    class Meta(LogIssueLightSerializer.Meta):
+        fields = LogIssueLightSerializer.Meta.fields + ('history',)
 
     def validate(self, attrs):
         validated_data = super().validate(attrs)

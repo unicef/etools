@@ -6,13 +6,16 @@ from django.utils.translation import ugettext_lazy as _
 from django_fsm import FSMField, transition
 from model_utils import Choices
 from model_utils.fields import MonitorField
+from model_utils.managers import InheritanceManager
 from model_utils.models import TimeStampedModel
 from ordered_model.models import OrderedModel
 
 from etools.applications.field_monitoring.planning.models import Task
-from etools.applications.field_monitoring.settings.models import CheckListItem, MethodType
+from etools.applications.field_monitoring.settings.models import CheckListItem, MethodType, CPOutputConfig
 from etools.applications.field_monitoring.shared.models import Method
 from etools.applications.publics.models import SoftDeleteMixin
+from etools.applications.reports.models import Result
+from etools.applications.utils.common.models.mixins import InheritedModelMixin
 
 
 class FindingMixin(object):
@@ -31,7 +34,7 @@ class VisitTaskLink(FindingMixin, models.Model):
     task = models.ForeignKey(Task, related_name=_('visit_task_links'))
 
 
-class Visit(SoftDeleteMixin, TimeStampedModel):
+class Visit(InheritedModelMixin, SoftDeleteMixin, TimeStampedModel):
     STATUS_CHOICES = Choices(
         ('draft', _('Draft')),
         ('assigned', _('Assigned')),
@@ -46,7 +49,15 @@ class Visit(SoftDeleteMixin, TimeStampedModel):
         STATUS_CHOICES.cancelled: 'date_cancelled',
     }
 
+    # to be used by frontend to know what's the type of the visit is presented
+    visit_type = 'unknown'
+
     author = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, blank=True, null=True)
+
+    primary_field_monitor = models.ForeignKey(settings.AUTH_USER_MODEL, related_name='fm_primary_visits',
+                                              verbose_name=_('Primary Field Monitor'), blank=True, null=True)
+    team_members = models.ManyToManyField(settings.AUTH_USER_MODEL, related_name='fm_visits',
+                                          verbose_name=_('Team Members'), blank=True)
 
     tasks = models.ManyToManyField(Task, related_name='visits', through=VisitTaskLink)
 
@@ -64,6 +75,8 @@ class Visit(SoftDeleteMixin, TimeStampedModel):
 
     history = GenericRelation('unicef_snapshot.Activity', object_id_field='target_object_id',
                               content_type_field='target_content_type')
+
+    objects = InheritanceManager()
 
     @property
     def date_created(self):
@@ -102,10 +115,7 @@ class Visit(SoftDeleteMixin, TimeStampedModel):
 
 
 class UNICEFVisit(Visit):
-    primary_field_monitor = models.ForeignKey(settings.AUTH_USER_MODEL, related_name='fm_primary_visits',
-                                              verbose_name=_('Primary Field Monitor'), blank=True, null=True)
-    team_members = models.ManyToManyField(settings.AUTH_USER_MODEL, related_name='fm_visits',
-                                          verbose_name=_('Team Members'), blank=True)
+    visit_type = 'unicef'
 
 
 class TaskCheckListItem(FindingMixin, OrderedModel):
@@ -131,7 +141,8 @@ class TaskCheckListItem(FindingMixin, OrderedModel):
 
 class VisitMethodType(models.Model):
     parent_slug = models.CharField(max_length=50, verbose_name=_('Parent Slug'))
-    visit = models.ForeignKey(Visit, verbose_name=_('Visit'))
+    visit = models.ForeignKey(Visit, verbose_name=_('Visit'), related_name='method_types')
+    cp_output = models.ForeignKey(Result, verbose_name=_('CP Output'), related_name='visit_method_types')
     name = models.CharField(verbose_name=_('Name'), max_length=300)
     is_recommended = models.BooleanField(default=False, verbose_name=_('Recommended'))
 
