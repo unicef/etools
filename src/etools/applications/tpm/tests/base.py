@@ -2,7 +2,7 @@
 from django.core.management import call_command
 
 from etools.applications.tpm.tests.factories import UserFactory, TPMPartnerFactory
-from etools.applications.utils.groups.wrappers import GroupWrapper
+from etools.libraries.djangolib.models import GroupWrapper
 
 
 class TPMTestCaseMixin(object):
