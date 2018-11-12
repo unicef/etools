@@ -223,11 +223,10 @@ class PartnerOrganizationDashboardAPIView(ExportModelMixin, QueryStringFilterMix
     )
     search_terms = ('partner__name__icontains', 'vendor_number__icontains')
 
-    def base_queryset(self):
-        return PartnerOrganization.objects.active()
+    queryset = PartnerOrganization.objects.active()
 
     def get_queryset(self, format=None):
-        qs = self.base_queryset().prefetch_related(
+        qs = self.queryset.prefetch_related(
             'agreements__interventions__sections',
             'agreements__interventions__flat_locations',
         ).annotate(
@@ -265,7 +264,7 @@ class PartnerOrganizationDashboardAPIView(ExportModelMixin, QueryStringFilterMix
         self._add_active_pd_for_ended_pca(serializer)
 
     def _add_programmatic_visits(self, serializer):
-        qs = self.base_queryset().annotate(
+        qs = PartnerOrganization.objects.annotate(
             last_pv_date=Max(Case(When(
                 agreements__interventions__travel_activities__travel_type=TravelType.PROGRAMME_MONITORING,
                 agreements__interventions__travel_activities__travels__traveler=F(
@@ -289,9 +288,8 @@ class PartnerOrganizationDashboardAPIView(ExportModelMixin, QueryStringFilterMix
             item["alert_no_pv"] = pv_dates[pk]["days_last_pv"] is None
 
     def _add_action_points(self, serializer):
-        qs = self.base_queryset().annotate(
+        qs = PartnerOrganization.objects.annotate(
             action_points=models.Sum(models.Case(models.When(
-                actionpoint__travel_activity__travel_type__in=[TravelType.PROGRAMME_MONITORING, TravelType.SPOT_CHECK],
                 actionpoint__status=ActionPoint.STATUS_OPEN, then=1),
                 default=0, output_field=models.IntegerField(), distinct=True)),
         )
@@ -300,7 +298,7 @@ class PartnerOrganizationDashboardAPIView(ExportModelMixin, QueryStringFilterMix
             item['action_points'] = ap[item["id"]]
 
     def _add_pca_required(self, serializer):
-        qs = self.base_queryset().annotate(
+        qs = PartnerOrganization.objects.annotate(
             last_intervention_date=Max(
                 Case(When(agreements__interventions__document_type__in=[Intervention.PD, Intervention.SSFA],
                           then=F('agreements__interventions__end'))),
@@ -315,11 +313,10 @@ class PartnerOrganizationDashboardAPIView(ExportModelMixin, QueryStringFilterMix
 
     def _add_active_pd_for_ended_pca(self, serializer):
         today = datetime.today()
-        qs = self.base_queryset().filter(agreements__country_programme__to_date__lt=today,
-                                         agreements__country_programme__interventions__status__in=[
-                                             Intervention.ACTIVE, Intervention.SIGNED
-                                         ]
-                                         ).distinct().values_list('pk', flat=True)
+        qs = PartnerOrganization.objects.filter(agreements__country_programme__to_date__lt=today,
+                                                agreements__country_programme__interventions__status__in=[
+                                                    Intervention.ACTIVE, Intervention.SIGNED
+                                                ]).distinct().values_list('pk', flat=True)
         for item in serializer.data:
             item['alert_active_pd_for_ended_pca'] = True if item['id'] in qs else False
 
