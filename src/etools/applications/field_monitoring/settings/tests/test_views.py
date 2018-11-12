@@ -159,7 +159,11 @@ class LocationSitesViewTestCase(FMBaseTestCaseMixin, BaseTenantTestCase):
 
 class LocationsCountryViewTestCase(FMBaseTestCaseMixin, BaseTenantTestCase):
     def test_retrieve(self):
-        country = LocationFactory(gateway__admin_level=0)
+        country = LocationFactory(
+            gateway__admin_level=0,
+            point="POINT(20 20)",
+            geom="MultiPolygon(((10 10, 10 20, 20 20, 20 15, 10 10)), ((10 10, 10 20, 20 20, 20 15, 10 10)))"
+        )
         LocationFactory(gateway__admin_level=1)
 
         response = self.forced_auth_req(
@@ -169,6 +173,8 @@ class LocationsCountryViewTestCase(FMBaseTestCaseMixin, BaseTenantTestCase):
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response.data['id'], str(country.id))
+        self.assertEqual(response.data['point']['type'], 'Point')
+        self.assertEqual(response.data['geom']['type'], 'MultiPolygon')
 
 
 class CPOutputsConfigViewTestCase(FMBaseTestCaseMixin, BaseTenantTestCase):

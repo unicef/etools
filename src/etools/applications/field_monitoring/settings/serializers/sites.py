@@ -2,9 +2,16 @@ from django.utils.translation import ugettext_lazy as _
 
 from rest_framework import serializers
 
-from unicef_locations.serializers import LocationSerializer
+from unicef_locations.serializers import LocationSerializer, LocationLightSerializer
 
 from etools.applications.field_monitoring.settings.models import LocationSite
+
+
+class LocationCountrySerializer(LocationLightSerializer):
+    class Meta(LocationLightSerializer.Meta):
+        fields = LocationLightSerializer.Meta.fields + (
+            'geom', 'point',
+        )
 
 
 class LocationSiteSerializer(serializers.ModelSerializer):

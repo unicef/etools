@@ -8,7 +8,6 @@ from rest_framework.response import Response
 
 from unicef_locations.cache import etag_cached
 from unicef_locations.models import Location
-from unicef_locations.serializers import LocationSerializer
 from unicef_restlib.pagination import DynamicPageNumberPagination
 from unicef_restlib.views import SafeTenantViewSetMixin, MultiSerializerViewSetMixin
 
@@ -17,7 +16,8 @@ from etools.applications.field_monitoring.settings.models import MethodType, Loc
 from etools.applications.field_monitoring.settings.serializers.cp_outputs import FieldMonitoringCPOutputSerializer, \
     CPOutputConfigDetailSerializer
 from etools.applications.field_monitoring.settings.serializers.methods import MethodSerializer, MethodTypeSerializer
-from etools.applications.field_monitoring.settings.serializers.sites import LocationSiteSerializer
+from etools.applications.field_monitoring.settings.serializers.sites import LocationSiteSerializer, \
+    LocationCountrySerializer
 from etools.applications.field_monitoring.shared.models import Method
 from etools.applications.permissions2.metadata import BaseMetadata
 from etools.applications.reports.models import Result, ResultType
@@ -76,7 +76,7 @@ class LocationSitesViewSet(
 class LocationsCountryView(views.APIView):
     def get(self, request, *args, **kwargs):
         country = get_object_or_404(Location, gateway__admin_level=0)
-        return Response(data=LocationSerializer(instance=country).data)
+        return Response(data=LocationCountrySerializer(instance=country).data)
 
 
 class CPOutputsViewSet(
