@@ -42,7 +42,7 @@ class CPOutputConfigDetailSerializer(CPOutputConfigSerializer):
 
 class FieldMonitoringCPOutputSerializer(WritableNestedSerializerMixin, serializers.ModelSerializer):
     fm_config = CPOutputConfigSerializer()
-    name = serializers.CharField(source='*')
+    name = serializers.CharField(source='*', read_only=True)
     interventions = serializers.SerializerMethodField(label=_('Contributing CSO Partners & PD/SSFAs'))
 
     class Meta(WritableNestedSerializerMixin.Meta):
