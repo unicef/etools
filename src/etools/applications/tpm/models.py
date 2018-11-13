@@ -31,7 +31,7 @@ from etools.applications.tpm.transitions.serializers import (
     TPMVisitRejectSerializer,
 )
 from etools.applications.utils.common.urlresolvers import build_frontend_url
-from etools.applications.utils.groups.wrappers import GroupWrapper
+from etools.libraries.djangolib.models import GroupWrapper
 
 
 class TPMVisit(SoftDeleteMixin, TimeStampedModel, models.Model):

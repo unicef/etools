@@ -1688,7 +1688,7 @@ class TestInterventionAmendmentCreateAPIView(BaseTenantTestCase):
             file_type=None,
             code="",
         )
-        self.data["internal_prc_review"] = attachment.pk
+        self.data["internal_prc_review_attachment"] = attachment.pk
         self.assertIsNone(attachment.file_type)
         self.assertIsNone(attachment.content_object)
         self.assertFalse(attachment.code)
@@ -1711,6 +1711,19 @@ class TestInterventionAmendmentCreateAPIView(BaseTenantTestCase):
             attachment_updated.code,
             self.file_type_internal_prc_review.code
         )
+
+    def test_create_amendment_with_internal_prc_review_none(self):
+        self.data["internal_prc_review_attachment"] = None
+        response = self._make_request(
+            user=self.partnership_manager_user,
+            data=self.data,
+            request_format='multipart',
+        )
+
+        print(response.rendered_content)
+        self.assertEquals(response.status_code, status.HTTP_201_CREATED)
+        data = self.assertResponseFundamentals(response)
+        self.assertEquals(data['intervention'], self.intervention.pk)
 
     def test_create_amendment_when_already_in_amendment(self):
         self.intervention.in_amendment = True
