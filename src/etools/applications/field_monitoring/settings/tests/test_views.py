@@ -54,6 +54,34 @@ class MethodTypesViewTestCase(FMBaseTestCaseMixin, BaseTenantTestCase):
 
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
 
+    def test_create_not_applicable(self):
+        response = self.forced_auth_req(
+            'post', reverse('field_monitoring_settings:method-types-list'),
+            user=self.unicef_user,
+            data={
+                'method': MethodFactory(is_types_applicable=False).id,
+                'name': fuzzy.FuzzyText().fuzz(),
+            }
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn('method', response.data)
+
+    def test_update(self):
+        method_type = MethodTypeFactory()
+        new_name = fuzzy.FuzzyText().fuzz()
+
+        response = self.forced_auth_req(
+            'patch', reverse('field_monitoring_settings:method-types-detail', args=[method_type.id]),
+            user=self.unicef_user,
+            data={
+                'name': new_name,
+            }
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data['name'], new_name)
+
     def test_destroy(self):
         method_type = MethodTypeFactory()
 
