@@ -86,3 +86,12 @@ class SitesTestCase(BaseTenantTestCase):
     def test_parent_non_boundary(self):
         site = LocationSiteFactory(parent=None, point=self.non_boundary_point)
         self.assertEqual(site.parent, self.country)
+
+    def test_parent_changed(self):
+        site = LocationSiteFactory(parent=None, point=self.non_boundary_point)
+        self.assertEqual(site.parent, self.country)
+
+        site.point = self.boundary_point
+        site.save()
+
+        self.assertEqual(site.parent, self.boundary_location)

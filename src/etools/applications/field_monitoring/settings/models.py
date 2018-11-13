@@ -4,6 +4,7 @@ from django.db import models
 from django.utils.translation import ugettext_lazy as _
 
 from django_extensions.db.fields import AutoSlugField
+from model_utils import FieldTracker
 from model_utils.models import TimeStampedModel
 
 from unicef_locations.models import Location
@@ -52,6 +53,8 @@ class LocationSite(TimeStampedModel):
 
     security_detail = models.TextField(verbose_name=_('Detail on Security'), blank=True)
 
+    tracker = FieldTracker(['point'])
+
     @staticmethod
     def get_parent_location(point):
         matched_locations = Location.objects.filter(geom__contains=point)
@@ -66,8 +69,10 @@ class LocationSite(TimeStampedModel):
     def save(self, **kwargs):
         if not self.parent_id:
             self.parent = self.get_parent_location(self.point)
-            assert self.parent_id, 'Unable to find location for {}'.format(self.point)
+        elif self.tracker.has_changed('point'):
+            self.parent = self.get_parent_location(self.point)
 
+        assert self.parent_id, 'Unable to find location for {}'.format(self.point)
         super().save(**kwargs)
 
 
