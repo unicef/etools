@@ -4,6 +4,7 @@ from django.utils.translation import ugettext as _
 from rest_framework import serializers
 from rest_framework.exceptions import ValidationError
 
+from etools.applications.partners.models import Intervention
 from etools.applications.reports.models import (
     AppliedIndicator,
     Disaggregation,
@@ -149,6 +150,12 @@ class AppliedIndicatorSerializer(serializers.ModelSerializer):
     def validate(self, attrs):
         lower_result = attrs.get('lower_result', getattr(self.instance, 'lower_result', None))
         blueprint_data = attrs.get('indicator', getattr(self.instance, 'indicator', None))
+
+        # allow to change target denominator only if intervention is draft or signed
+        if attrs.get('target') and self.instance and attrs['target']['v'] != self.instance.target_display[1] \
+                and lower_result.result_link.intervention.status not in [Intervention.DRAFT, Intervention.SIGNED]:
+            raise ValidationError(_('You cannot change the Indicator Target Denominator if PD/SSFA is '
+                                    'not in status Draft or Signed'))
 
         # make sure locations are in the intervention
         locations = set(l.id for l in attrs.get('locations', []))
