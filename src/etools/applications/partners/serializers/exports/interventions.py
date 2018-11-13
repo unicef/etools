@@ -1,8 +1,6 @@
 from django.utils.translation import ugettext as _
 
 from rest_framework import serializers
-from unicef_locations.models import Location
-from unicef_locations.serializers import LocationExportFlatSerializer, LocationExportSerializer
 
 from etools.applications.EquiTrack.mixins import ExportSerializerMixin
 from etools.applications.partners.models import Intervention, InterventionAmendment, InterventionResultLink
@@ -37,54 +35,6 @@ class InterventionAmendmentExportFlatSerializer(
     class Meta:
         model = InterventionAmendment
         fields = "__all__"
-
-
-class InterventionSectionLocationLinkExportSerializer(LocationExportSerializer):
-    intervention = serializers.SerializerMethodField(
-        label=_("Reference Number")
-    )
-    sector = serializers.SerializerMethodField()
-
-    class Meta:
-        model = Location
-        fields = "__all__"
-
-    def get_intervention(self, obj):
-        return ",".join(
-            [str(x.intervention.pk)
-             for x in obj.intervention_sector_locations.all()]
-        )
-
-    def get_sector(self, obj):
-        return ",".join(
-            [str(x.sector.pk) for x in obj.intervention_sector_locations.all()]
-        )
-
-
-class InterventionSectionLocationLinkExportFlatSerializer(
-        ExportSerializerMixin,
-        LocationExportFlatSerializer
-):
-    intervention = serializers.SerializerMethodField(
-        label=_("Reference Number"),
-    )
-    sector = serializers.SerializerMethodField(label=_("Section"))
-
-    class Meta:
-        model = Location
-        fields = "__all__"
-
-    def get_intervention(self, obj):
-        return ",".join(
-            [str(x.intervention.number)
-             for x in obj.intervention_sector_locations.all()]
-        )
-
-    def get_sector(self, obj):
-        return ",".join(
-            [str(x.sector.name)
-             for x in obj.intervention_sector_locations.all()]
-        )
 
 
 class InterventionResultExportSerializer(InterventionResultSerializer):

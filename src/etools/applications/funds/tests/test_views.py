@@ -115,17 +115,17 @@ class TestFRHeaderView(BaseTenantTestCase):
         data = {'values': ','.join(['im a bad value', 'another bad value'])}
         status_code, result = self.run_request(data)
         self.assertEqual(status_code, status.HTTP_400_BAD_REQUEST)
-        self.assertEqual(result['error'],
-                         'One or more of the FRs are used by another PD/SSFA '
-                         'or could not be found in eTools.')
+        self.assertEqual(result['error'], 'The FR another bad value, im a bad value could not be found on eTools')
 
-    def test_get_fail_with_one_bad_value(self):
-        data = {'values': ','.join(['im a bad value', self.fr_1.fr_number])}
+    def test_get_fail_with_intervention_id(self):
+        other_intervention = InterventionFactory()
+        fth_value = 'im a bad value'
+        FundsReservationHeaderFactory(fr_number=fth_value, intervention=other_intervention, currency="USD")
+        data = {'values': ','.join([fth_value, self.fr_1.fr_number]), 'intervention': self.intervention.pk}
         status_code, result = self.run_request(data)
         self.assertEqual(status_code, status.HTTP_400_BAD_REQUEST)
         self.assertEqual(result['error'],
-                         'One or more of the FRs are used by another PD/SSFA '
-                         'or could not be found in eTools.')
+                         'FR #{} is already being used by PD/SSFA ref [{}]'.format(fth_value, other_intervention))
 
     def test_get_success_with_expired_fr(self):
         self.fr_1.end_date = timezone.now().date() - timedelta(days=1)
