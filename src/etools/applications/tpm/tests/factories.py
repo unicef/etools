@@ -6,12 +6,12 @@ from django.utils import timezone
 
 import factory.fuzzy
 from factory import fuzzy
+from unicef_locations.tests.factories import LocationFactory
 
 from etools.applications.action_points.tests.factories import ActionPointFactory
 from etools.applications.attachments.tests.factories import AttachmentFactory
 from etools.applications.firms.tests.factories import BaseFirmFactory, BaseStaffMemberFactory, BaseUserFactory
-from unicef_locations.tests.factories import LocationFactory
-from etools.applications.partners.models import InterventionResultLink, InterventionSectionLocationLink
+from etools.applications.partners.models import InterventionResultLink
 from etools.applications.partners.tests.factories import InterventionFactory
 from etools.applications.reports.tests.factories import ResultFactory, SectionFactory
 from etools.applications.tpm.models import TPMActivity, TPMVisit, TPMVisitReportRejectComment
@@ -51,31 +51,14 @@ class InterventionResultLinkFactory(factory.django.DjangoModelFactory):
     cp_output = factory.SubFactory(ResultFactory)
 
 
-class InterventionSectionLocationLinkFactory(factory.django.DjangoModelFactory):
-    class Meta:
-        model = InterventionSectionLocationLink
-
-    sector = factory.SubFactory(SectionFactory)
-
-    @factory.post_generation
-    def locations(self, created, extracted, **kwargs):
-        if created:
-            self.locations.add(*[LocationFactory() for i in range(3)])
-
-        if extracted:
-            self.locations.add(*extracted)
-
-
 class FullInterventionFactory(InterventionFactory):
     result_links = factory.RelatedFactory(InterventionResultLinkFactory, 'intervention')
-    sector_locations = factory.RelatedFactory(InterventionSectionLocationLinkFactory, 'intervention')
 
 
 class OfficeFactory(SimpleOfficeFactory):
     @classmethod
     def _create(cls, model_class, *args, **kwargs):
         obj = super(OfficeFactory, cls)._create(model_class, *args, **kwargs)
-
         if hasattr(connection.tenant, 'id') and connection.tenant.schema_name != 'public':
             connection.tenant.offices.add(obj)
 
@@ -127,11 +110,8 @@ class TPMActivityFactory(factory.DjangoModelFactory):
 
     @factory.post_generation
     def locations(self, create, extracted, **kwargs):
-        if create:
-            self.locations.add(*self.intervention.sector_locations.first().locations.all())
-
-        if extracted:
-            self.locations.add(*extracted)
+        location = LocationFactory()
+        self.locations.add(location)
 
     @factory.post_generation
     def attachments(self, create, extracted, count, **kwargs):
