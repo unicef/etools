@@ -1135,7 +1135,7 @@ class TestGetFilePaths(BaseTenantTestCase):
         assessment = AssessmentFactory(
             partner=partner,
         )
-        p = models.get_assesment_path(assessment, "test.pdf")
+        p = models.get_assessment_path(assessment, "test.pdf")
         self.assertTrue(
             p.endswith("/assesments/{}/test.pdf".format(assessment.pk))
         )

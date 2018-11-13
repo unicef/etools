@@ -62,9 +62,7 @@ def get_agreement_path(instance, filename):
     ])
 
 
-# 'assessment' is misspelled in this function name, but as of Nov 2017, two migrations reference it so it can't be
-# renamed until after migrations are squashed.
-def get_assesment_path(instance, filename):
+def get_assessment_path(instance, filename):
     return '/'.join([
         _get_partner_base_path(instance.partner),
         'assesments',
@@ -1077,7 +1075,7 @@ class Assessment(TimeStampedModel):
         blank=True,
         null=True,
         max_length=1024,
-        upload_to=get_assesment_path
+        upload_to=get_assessment_path
     )
     report_attachment = CodedGenericRelation(
         Attachment,
