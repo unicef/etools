@@ -18,7 +18,7 @@ from etools.applications.audit.tests.factories import (
     RiskFactory,
     UserFactory,
 )
-from etools.applications.utils.groups.wrappers import GroupWrapper
+from etools.libraries.djangolib.models import GroupWrapper
 
 
 class AuditTestCaseMixin(object):

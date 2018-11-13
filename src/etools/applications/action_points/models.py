@@ -17,7 +17,7 @@ from etools.applications.action_points.transitions.serializers.serializers impor
 from etools.applications.EquiTrack.utils import get_environment
 from etools.applications.permissions2.fsm import has_action_permission
 from etools.applications.utils.common.urlresolvers import build_frontend_url
-from etools.applications.utils.groups.wrappers import GroupWrapper
+from etools.libraries.djangolib.models import GroupWrapper
 
 
 class ActionPoint(TimeStampedModel):

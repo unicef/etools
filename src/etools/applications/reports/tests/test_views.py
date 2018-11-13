@@ -133,6 +133,11 @@ class TestOutputListAPIView(BaseTenantTestCase):
             result_type=cls.result_type,
             country_programme=cls.country_programme
         )
+
+        cls.outcome = ResultFactory(
+            result_type=ResultTypeFactory(name=ResultType.OUTCOME),
+            country_programme=cls.country_programme
+        )
         cls.url = reverse('reports:report-result-list')
 
     def test_get(self):
@@ -180,6 +185,15 @@ class TestOutputListAPIView(BaseTenantTestCase):
         self.assertCountEqual(
             [int(r["id"]) for r in response.data],
             [self.result1.pk, self.result2.pk]
+        )
+
+    def test_filter_result_type_outcome(self):
+        data = {"result_type": ResultType.OUTCOME}
+        response = self.forced_auth_req('get', self.url, data=data)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertCountEqual(
+            [int(r["id"]) for r in response.data],
+            [self.outcome.pk]
         )
 
     def test_filter_values(self):

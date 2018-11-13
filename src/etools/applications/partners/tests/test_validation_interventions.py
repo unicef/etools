@@ -416,6 +416,20 @@ class TestStateDateSignedValid(BaseTenantTestCase):
         )
         self.assertFalse(start_date_signed_valid(intervention))
 
+    def test_start_date_before_signed_date_attachment(self):
+        """Start date before max signed date is invalid"""
+        intervention = InterventionFactory(
+            signed_by_unicef_date=datetime.date(2001, 2, 1),
+            signed_by_partner_date=datetime.date(2001, 3, 1),
+            start=datetime.date(2001, 1, 1)
+        )
+        AttachmentFactory(
+            file="random.pdf",
+            code="partners_intervention_signed_pd",
+            content_object=intervention
+        )
+        self.assertFalse(start_date_signed_valid(intervention))
+
     def test_start_date_after_signed_date(self):
         """Start date after max signed date is valid"""
         intervention = InterventionFactory(
@@ -423,6 +437,20 @@ class TestStateDateSignedValid(BaseTenantTestCase):
             signed_by_partner_date=datetime.date(2001, 3, 1),
             signed_pd_document="random.pdf",
             start=datetime.date(2001, 4, 1)
+        )
+        self.assertTrue(start_date_signed_valid(intervention))
+
+    def test_start_date_after_signed_date_attachment(self):
+        """Start date after max signed date is valid"""
+        intervention = InterventionFactory(
+            signed_by_unicef_date=datetime.date(2001, 2, 1),
+            signed_by_partner_date=datetime.date(2001, 3, 1),
+            start=datetime.date(2001, 4, 1)
+        )
+        AttachmentFactory(
+            file="random.pdf",
+            code="partners_intervention_signed_pd",
+            content_object=intervention
         )
         self.assertTrue(start_date_signed_valid(intervention))
 
@@ -445,6 +473,27 @@ class TestStateDateRelatedAgreementValid(BaseTenantTestCase):
             )
             self.assertFalse(start_date_related_agreement_valid(intervention))
 
+    def test_start_date_before_agreement_start_attachment(self):
+        """Start date before agreement start date is invalid
+        If not contingency_pd, and certain document_type
+        """
+        agreement = AgreementFactory(
+            start=datetime.date(2002, 1, 1)
+        )
+        for document_type in [Intervention.PD, Intervention.SHPD]:
+            intervention = InterventionFactory(
+                agreement=agreement,
+                start=datetime.date(2001, 1, 1),
+                contingency_pd=False,
+                document_type=document_type,
+            )
+            AttachmentFactory(
+                file="random.pdf",
+                code="partners_intervention_signed_pd",
+                content_object=intervention
+            )
+            self.assertFalse(start_date_related_agreement_valid(intervention))
+
     def test_start_date_after_signed_date(self):
         """Start date after agreement start date is invalid
         If not contingency_pd, and certain document_type
@@ -456,6 +505,24 @@ class TestStateDateRelatedAgreementValid(BaseTenantTestCase):
             start=datetime.date.today() + datetime.timedelta(days=2),
             contingency_pd=False,
             document_type=Intervention.PD,
+        )
+        self.assertTrue(start_date_related_agreement_valid(intervention))
+
+    def test_start_date_after_signed_date_attachment(self):
+        """Start date after agreement start date is invalid
+        If not contingency_pd, and certain document_type
+        """
+        agreement = AgreementFactory()
+        intervention = InterventionFactory(
+            agreement=agreement,
+            start=datetime.date.today() + datetime.timedelta(days=2),
+            contingency_pd=False,
+            document_type=Intervention.PD,
+        )
+        AttachmentFactory(
+            file="random.pdf",
+            code="partners_intervention_signed_pd",
+            content_object=intervention
         )
         self.assertTrue(start_date_related_agreement_valid(intervention))
 
