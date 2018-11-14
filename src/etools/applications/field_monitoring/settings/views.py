@@ -12,7 +12,6 @@ from unicef_locations.cache import etag_cached
 from unicef_locations.models import Location
 from unicef_restlib.views import NestedViewSetMixin
 
-from etools.applications.field_monitoring.conditions import FieldMonitoringModuleCondition
 from etools.applications.field_monitoring.settings.filters import CPOutputIsActiveFilter, LogIssueRelatedToTypeFilter, \
     LogIssueVisitFilter
 from etools.applications.field_monitoring.settings.models import MethodType, LocationSite, CheckListItem, \
@@ -23,12 +22,15 @@ from etools.applications.field_monitoring.settings.serializers.cp_outputs import
     PlannedCheckListItemSerializer, CPOutputConfigDetailSerializer
 from etools.applications.field_monitoring.settings.serializers.issues import LogIssueSerializer, \
     LogIssueAttachmentSerializer
-from etools.applications.field_monitoring.settings.serializers.locations import LocationSiteSerializer
+from etools.applications.field_monitoring.settings.serializers.locations import LocationSiteSerializer, \
+    LocationCountrySerializer
 from etools.applications.field_monitoring.settings.serializers.methods import MethodSerializer, MethodTypeSerializer
 from etools.applications.field_monitoring.shared.models import Method
 from etools.applications.field_monitoring.views import FMBaseViewSet, FMBaseAttachmentsViewSet
 from etools.applications.partners.models import PartnerOrganization
 from etools.applications.partners.serializers.partner_organization_v2 import MinimalPartnerOrganizationListSerializer
+from etools.applications.permissions2.metadata import PermissionBasedMetadata
+from etools.applications.permissions2.views import PermittedSerializerMixin
 from etools.applications.reports.models import Result, ResultType
 
 

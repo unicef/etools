@@ -1,7 +1,7 @@
 from django.core.management import BaseCommand
 
 from etools.applications.field_monitoring.conditions import FieldMonitoringModuleCondition
-from etools.applications.field_monitoring.settings.models import FMUser, UNICEFUser
+from etools.applications.field_monitoring.groups import FMUser, UNICEFUser
 from etools.applications.permissions2.conditions import GroupCondition
 from etools.applications.permissions2.models import Permission
 
