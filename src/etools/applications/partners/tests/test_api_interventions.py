@@ -29,7 +29,6 @@ from etools.applications.partners.tests.factories import (
     InterventionAttachmentFactory,
     InterventionFactory,
     InterventionResultLinkFactory,
-    InterventionSectionLocationLinkFactory,
     PartnerFactory,
 )
 from etools.applications.partners.tests.test_utils import setup_intervention_test_data
@@ -67,7 +66,6 @@ class URLsTestCase(URLAssertionMixin, SimpleTestCase):
             ('intervention-results', 'results/', {}),
             ('intervention-amendments', 'amendments/', {}),
             ('intervention-amendments-del', 'amendments/1/', {'pk': 1}),
-            ('intervention-sector-locations', 'sector-locations/', {}),
             ('intervention-map', 'map/', {}),
         )
         self.assertReversal(names_and_paths, 'partners_api:', '/api/v2/interventions/')
@@ -521,11 +519,6 @@ class TestInterventionsAPI(BaseTenantTestCase):
         self.assertCountEqual(self.ALL_FIELDS, response['permissions']['edit'].keys())
         edit_permissions = response['permissions']['edit']
         required_permissions = response['permissions']['required']
-
-        # TODO: REMOVE the following 3 lines after "sector_locations" are finally removed from the Intervention model
-        # having sector_locations in the Intervention model and not having it in the permissions matrix fails this test
-        del edit_permissions["sector_locations"]
-        del required_permissions["sector_locations"]
 
         self.assertCountEqual(self.EDITABLE_FIELDS['draft'],
                               [perm for perm in edit_permissions if edit_permissions[perm]])
@@ -1720,7 +1713,6 @@ class TestInterventionAmendmentCreateAPIView(BaseTenantTestCase):
             request_format='multipart',
         )
 
-        print(response.rendered_content)
         self.assertEquals(response.status_code, status.HTTP_201_CREATED)
         data = self.assertResponseFundamentals(response)
         self.assertEquals(data['intervention'], self.intervention.pk)
@@ -1787,65 +1779,6 @@ class TestInterventionAmendmentDeleteView(BaseTenantTestCase):
             user=self.unicef_staff,
         )
         self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
-
-
-class TestInterventionSectionLocationLinkListAPIView(BaseTenantTestCase):
-    @classmethod
-    def setUpTestData(cls):
-        cls.unicef_staff = UserFactory(is_staff=True)
-        InterventionSectionLocationLinkFactory()
-        cls.intervention = InterventionFactory()
-        cls.section = SectionFactory(name="Section Name")
-        cls.link = InterventionSectionLocationLinkFactory(
-            intervention=cls.intervention,
-            sector=cls.section
-        )
-
-    def setUp(self):
-        super(TestInterventionSectionLocationLinkListAPIView, self).setUp()
-        self.url = reverse("partners_api:intervention-sector-locations")
-
-    def assertResponseFundamentals(self, response):
-        '''Assert common fundamentals about the response.'''
-        self.assertEquals(response.status_code, status.HTTP_200_OK)
-        response_json = json.loads(response.rendered_content)
-        self.assertIsInstance(response_json, list)
-        self.assertEqual(len(response_json), 1)
-        first = response_json[0]
-        self.assertIn('id', first.keys())
-        return response_json, first
-
-    def test_search_intervention_number(self):
-        response = self.forced_auth_req(
-            'get',
-            self.url,
-            user=self.unicef_staff,
-            data={"search": self.intervention.number[:-2]}
-        )
-        data, first = self.assertResponseFundamentals(response)
-        self.assertEqual(first["id"], self.link.pk)
-
-    def test_search_section_name(self):
-        response = self.forced_auth_req(
-            'get',
-            self.url,
-            user=self.unicef_staff,
-            data={"search": "Name"}
-        )
-        data, first = self.assertResponseFundamentals(response)
-        self.assertEqual(first["id"], self.link.pk)
-
-    def test_search_empty(self):
-        response = self.forced_auth_req(
-            'get',
-            self.url,
-            user=self.unicef_staff,
-            data={"search": "random"}
-        )
-        self.assertEquals(response.status_code, status.HTTP_200_OK)
-        response_json = json.loads(response.rendered_content)
-        self.assertIsInstance(response_json, list)
-        self.assertFalse(response_json)
 
 
 class TestInterventionListMapView(BaseTenantTestCase):

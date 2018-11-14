@@ -3,19 +3,19 @@ from operator import itemgetter
 
 from django.db import transaction
 from django.db.models import Q
-from django.utils.translation import ugettext as _
 from django.utils.functional import cached_property
+from django.utils.translation import ugettext as _
 
 from rest_framework import serializers
 from rest_framework.serializers import ValidationError
 from unicef_attachments.fields import AttachmentSingleFileField
 from unicef_attachments.serializers import AttachmentSerializerMixin
-from unicef_locations.serializers import LocationLightSerializer, LocationSerializer
+from unicef_locations.serializers import LocationSerializer
 from unicef_snapshot.serializers import SnapshotModelSerializer
 
 from etools.applications.EquiTrack.utils import h11
 from etools.applications.funds.models import FundsCommitmentItem, FundsReservationHeader
-from etools.applications.funds.serializers import FRsSerializer, FRHeaderSerializer
+from etools.applications.funds.serializers import FRHeaderSerializer, FRsSerializer
 from etools.applications.partners.models import (
     Intervention,
     InterventionAmendment,
@@ -24,18 +24,16 @@ from etools.applications.partners.models import (
     InterventionPlannedVisits,
     InterventionReportingPeriod,
     InterventionResultLink,
-    InterventionSectionLocationLink,
     PartnerType,
 )
 from etools.applications.partners.permissions import InterventionPermissions
 from etools.applications.reports.models import AppliedIndicator, LowerResult, ReportingRequirement
-from etools.applications.reports.serializers.v1 import SectionSerializer
 from etools.applications.reports.serializers.v2 import (
     IndicatorSerializer,
     LowerResultCUSerializer,
     LowerResultSerializer,
+    RAMIndicatorSerializer,
     ReportingRequirementSerializer,
-    RAMIndicatorSerializer
 )
 
 
@@ -262,27 +260,6 @@ class MinimalInterventionListSerializer(serializers.ModelSerializer):
         fields = (
             'id',
             'title',
-        )
-
-
-# TODO intervention sector locations cleanup
-class InterventionLocationSectionNestedSerializer(serializers.ModelSerializer):
-    locations = LocationLightSerializer(many=True)
-    sector = SectionSerializer()
-
-    class Meta:
-        model = InterventionSectionLocationLink
-        fields = (
-            'id', 'sector', 'locations'
-        )
-
-
-# TODO intervention sector locations cleanup
-class InterventionSectionLocationCUSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = InterventionSectionLocationLink
-        fields = (
-            'id', 'intervention', 'sector', 'locations'
         )
 
 

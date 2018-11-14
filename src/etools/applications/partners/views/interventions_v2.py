@@ -36,7 +36,6 @@ from etools.applications.partners.models import (
     InterventionAttachment,
     InterventionReportingPeriod,
     InterventionResultLink,
-    InterventionSectionLocationLink,
 )
 from etools.applications.partners.permissions import PartnershipManagerPermission, PartnershipManagerRepPermission
 from etools.applications.partners.serializers.exports.interventions import (
@@ -48,8 +47,6 @@ from etools.applications.partners.serializers.exports.interventions import (
     InterventionIndicatorExportSerializer,
     InterventionResultExportFlatSerializer,
     InterventionResultExportSerializer,
-    InterventionSectionLocationLinkExportFlatSerializer,
-    InterventionSectionLocationLinkExportSerializer,
 )
 from etools.applications.partners.serializers.interventions_v2 import (
     InterventionAmendmentCUSerializer,
@@ -68,9 +65,9 @@ from etools.applications.partners.serializers.interventions_v2 import (
     InterventionResultCUSerializer,
     InterventionResultLinkSimpleCUSerializer,
     InterventionResultSerializer,
-    InterventionSectionLocationCUSerializer,
     MinimalInterventionListSerializer,
-    PlannedVisitsCUSerializer)
+    PlannedVisitsCUSerializer,
+)
 from etools.applications.partners.validation.interventions import InterventionValid
 from etools.applications.reports.models import AppliedIndicator, LowerResult, ReportingRequirement
 from etools.applications.reports.serializers.v2 import AppliedIndicatorSerializer, LowerResultSimpleCUSerializer
@@ -474,55 +471,6 @@ class InterventionAmendmentDeleteView(DestroyAPIView):
             return Response(status=status.HTTP_204_NO_CONTENT)
         else:
             raise ValidationError("You do not have permissions to delete an amendment")
-
-
-class InterventionSectionLocationLinkListAPIView(ExportModelMixin, ListAPIView):
-    """
-    Returns a list of InterventionSectionLocationLinks.
-    """
-    serializer_class = InterventionSectionLocationCUSerializer
-    permission_classes = (PartnershipManagerPermission,)
-    filter_backends = (PartnerScopeFilter,)
-    renderer_classes = (
-        JSONRenderer,
-        r.CSVRenderer,
-        CSVFlatRenderer,
-    )
-
-    def get_serializer_class(self):
-        """
-        Use different serializers for methods
-        """
-        query_params = self.request.query_params
-        if "format" in query_params.keys():
-            if query_params.get("format") == 'csv':
-                return InterventionSectionLocationLinkExportSerializer
-            if query_params.get("format") == 'csv_flat':
-                return InterventionSectionLocationLinkExportFlatSerializer
-        return super(InterventionSectionLocationLinkListAPIView, self).get_serializer_class()
-
-    def get_queryset(self, format=None):
-        q = InterventionSectionLocationLink.objects.all()
-        query_params = self.request.query_params
-
-        if query_params:
-            queries = []
-            if "search" in query_params.keys():
-                queries.append(
-                    Q(intervention__number__icontains=query_params.get("search")) |
-                    Q(sector__name__icontains=query_params.get("search"))
-                )
-            if queries:
-                expression = functools.reduce(operator.and_, queries)
-                q = q.filter(expression)
-
-        if query_params.get("format") in ['csv', "csv_flat"]:
-            res = []
-            for i in q.all():
-                res = res + list(i.locations.all())
-            return res
-
-        return q
 
 
 class InterventionListMapView(QueryStringFilterMixin, ListCreateAPIView):
