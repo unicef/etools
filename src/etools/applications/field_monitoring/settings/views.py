@@ -1,3 +1,5 @@
+from datetime import date, timedelta
+
 from django_filters.rest_framework import DjangoFilterBackend
 from django.utils.translation import ugettext_lazy as _
 
@@ -109,6 +111,12 @@ class CPOutputsViewSet(
 
     def get_view_name(self):
         return _('Country Programme Outputs')
+
+    def get_queryset(self):
+        queryset = super().get_queryset()
+
+        # return by default everything, including inactive, but not older than 1 year
+        return queryset.filter(to_date__gte=date.today() - timedelta(days=365))
 
 
 class CPOutputConfigsViewSet(
