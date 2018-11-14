@@ -45,7 +45,7 @@ class MethodTypesViewTestCase(FMBaseTestCaseMixin, BaseTenantTestCase):
     def test_create(self):
         response = self.forced_auth_req(
             'post', reverse('field_monitoring_settings:method-types-list'),
-            user=self.unicef_user,
+            user=self.fm_user,
             data={
                 'method': MethodFactory(is_types_applicable=True).id,
                 'name': fuzzy.FuzzyText().fuzz(),
@@ -54,10 +54,19 @@ class MethodTypesViewTestCase(FMBaseTestCaseMixin, BaseTenantTestCase):
 
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
 
-    def test_create_not_applicable(self):
+    def test_create_unicef(self):
         response = self.forced_auth_req(
             'post', reverse('field_monitoring_settings:method-types-list'),
             user=self.unicef_user,
+            data={}
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+
+    def test_create_not_applicable(self):
+        response = self.forced_auth_req(
+            'post', reverse('field_monitoring_settings:method-types-list'),
+            user=self.fm_user,
             data={
                 'method': MethodFactory(is_types_applicable=False).id,
                 'name': fuzzy.FuzzyText().fuzz(),
@@ -73,7 +82,7 @@ class MethodTypesViewTestCase(FMBaseTestCaseMixin, BaseTenantTestCase):
 
         response = self.forced_auth_req(
             'patch', reverse('field_monitoring_settings:method-types-detail', args=[method_type.id]),
-            user=self.unicef_user,
+            user=self.fm_user,
             data={
                 'name': new_name,
             }
@@ -82,7 +91,28 @@ class MethodTypesViewTestCase(FMBaseTestCaseMixin, BaseTenantTestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response.data['name'], new_name)
 
+    def test_update_unicef(self):
+        method_type = MethodTypeFactory()
+
+        response = self.forced_auth_req(
+            'patch', reverse('field_monitoring_settings:method-types-detail', args=[method_type.id]),
+            user=self.unicef_user,
+            data={}
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+
     def test_destroy(self):
+        method_type = MethodTypeFactory()
+
+        response = self.forced_auth_req(
+            'delete', reverse('field_monitoring_settings:method-types-detail', args=[method_type.id]),
+            user=self.fm_user,
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
+
+    def test_destroy_unicef(self):
         method_type = MethodTypeFactory()
 
         response = self.forced_auth_req(
@@ -90,7 +120,7 @@ class MethodTypesViewTestCase(FMBaseTestCaseMixin, BaseTenantTestCase):
             user=self.unicef_user,
         )
 
-        self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
 
 
 class LocationSitesViewTestCase(FMBaseTestCaseMixin, BaseTenantTestCase):
@@ -147,7 +177,7 @@ class LocationSitesViewTestCase(FMBaseTestCaseMixin, BaseTenantTestCase):
 
         response = self.forced_auth_req(
             'post', reverse('field_monitoring_settings:sites-list'),
-            user=self.unicef_user,
+            user=self.fm_user,
             data={
                 'name': site.name,
                 'security_detail': site.security_detail,
@@ -161,10 +191,19 @@ class LocationSitesViewTestCase(FMBaseTestCaseMixin, BaseTenantTestCase):
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         self.assertIsNotNone(response.data['parent'])
 
-    def test_point_required(self):
+    def test_create_unicef(self):
         response = self.forced_auth_req(
             'post', reverse('field_monitoring_settings:sites-list'),
             user=self.unicef_user,
+            data={}
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+
+    def test_point_required(self):
+        response = self.forced_auth_req(
+            'post', reverse('field_monitoring_settings:sites-list'),
+            user=self.fm_user,
             data={
                 'name': fuzzy.FuzzyText().fuzz(),
                 'security_detail': fuzzy.FuzzyText().fuzz(),
@@ -179,10 +218,20 @@ class LocationSitesViewTestCase(FMBaseTestCaseMixin, BaseTenantTestCase):
 
         response = self.forced_auth_req(
             'delete', reverse('field_monitoring_settings:sites-detail', args=[instance.id]),
-            user=self.unicef_user,
+            user=self.fm_user,
         )
 
         self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
+
+    def test_destroy_unicef(self):
+        instance = LocationSiteFactory()
+
+        response = self.forced_auth_req(
+            'delete', reverse('field_monitoring_settings:sites-detail', args=[instance.id]),
+            user=self.unicef_user,
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
 
 
 class LocationsCountryViewTestCase(FMBaseTestCaseMixin, BaseTenantTestCase):
@@ -219,6 +268,7 @@ class LocationsCountryViewTestCase(FMBaseTestCaseMixin, BaseTenantTestCase):
 class CPOutputsConfigViewTestCase(FMBaseTestCaseMixin, BaseTenantTestCase):
     @classmethod
     def setUpTestData(cls):
+        super().setUpTestData()
         cls.active_result = ResultFactory(result_type__name=ResultType.OUTPUT)
         cls.inactive_result = ResultFactory(result_type__name=ResultType.OUTPUT, to_date=date.today() - timedelta(days=1))  # inactual
         cls.default_config = CPOutputConfigFactory(is_monitored=True)
@@ -278,7 +328,7 @@ class CPOutputsConfigViewTestCase(FMBaseTestCaseMixin, BaseTenantTestCase):
 
         response = self.forced_auth_req(
             'patch', reverse('field_monitoring_settings:cp_outputs-detail', args=[cp_output.id]),
-            user=self.unicef_user,
+            user=self.fm_user,
             data={
                 'fm_config': {
                     'is_monitored': True,
@@ -290,13 +340,23 @@ class CPOutputsConfigViewTestCase(FMBaseTestCaseMixin, BaseTenantTestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertTrue(CPOutputConfig.objects.filter(cp_output=cp_output).exists())
 
+    def test_create_unicef(self):
+        cp_output = ResultFactory(result_type__name=ResultType.OUTPUT)
+        response = self.forced_auth_req(
+            'patch', reverse('field_monitoring_settings:cp_outputs-detail', args=[cp_output.id]),
+            user=self.unicef_user,
+            data={'fm_config': {}}
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+
     def test_update(self):
         cp_output_config = CPOutputConfigFactory(is_monitored=False)
 
         partners_num = cp_output_config.government_partners.count()
         response = self.forced_auth_req(
             'patch', reverse('field_monitoring_settings:cp_outputs-detail', args=[cp_output_config.cp_output.id]),
-            user=self.unicef_user,
+            user=self.fm_user,
             data={
                 'fm_config': {
                     'is_monitored': True,

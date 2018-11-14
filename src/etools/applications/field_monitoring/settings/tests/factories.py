@@ -7,7 +7,8 @@ from unicef_locations.models import GatewayType
 
 from unicef_locations.tests.factories import LocationFactory
 
-from etools.applications.field_monitoring.settings.models import MethodType, UNICEFUser, LocationSite, CPOutputConfig
+from etools.applications.field_monitoring.settings.models import MethodType, UNICEFUser, LocationSite, CPOutputConfig, \
+    FMUser
 from etools.applications.field_monitoring.shared.models import Method
 from etools.applications.firms.tests.factories import BaseUserFactory
 from etools.applications.partners.models import PartnerType
@@ -23,6 +24,10 @@ class UserFactory(BaseUserFactory):
     class Params:
         unicef_user = factory.Trait(
             groups=[UNICEFUser.name],
+        )
+
+        fm_user = factory.Trait(
+            groups=[UNICEFUser.name, FMUser.name],
         )
 
     @factory.post_generation

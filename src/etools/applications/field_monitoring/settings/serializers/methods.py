@@ -6,6 +6,7 @@ from rest_framework.exceptions import ValidationError
 
 from etools.applications.field_monitoring.settings.models import MethodType
 from etools.applications.field_monitoring.shared.models import Method
+from etools.applications.permissions2.serializers import PermissionsBasedSerializerMixin
 
 
 class MethodSerializer(serializers.ModelSerializer):
@@ -14,7 +15,7 @@ class MethodSerializer(serializers.ModelSerializer):
         fields = ('id', 'name', 'is_types_applicable')
 
 
-class MethodTypeSerializer(serializers.ModelSerializer):
+class MethodTypeSerializer(PermissionsBasedSerializerMixin, serializers.ModelSerializer):
     class Meta:
         model = MethodType
         fields = ('id', 'method', 'name')

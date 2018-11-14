@@ -11,6 +11,7 @@ from unicef_locations.models import Location
 from unicef_restlib.pagination import DynamicPageNumberPagination
 from unicef_restlib.views import SafeTenantViewSetMixin, MultiSerializerViewSetMixin
 
+from etools.applications.field_monitoring.conditions import FieldMonitoringModuleCondition
 from etools.applications.field_monitoring.settings.filters import CPOutputIsActiveFilter
 from etools.applications.field_monitoring.settings.models import MethodType, LocationSite, CPOutputConfig
 from etools.applications.field_monitoring.settings.serializers.cp_outputs import FieldMonitoringCPOutputSerializer, \
@@ -19,7 +20,8 @@ from etools.applications.field_monitoring.settings.serializers.methods import Me
 from etools.applications.field_monitoring.settings.serializers.sites import LocationSiteSerializer, \
     LocationCountrySerializer
 from etools.applications.field_monitoring.shared.models import Method
-from etools.applications.permissions2.metadata import BaseMetadata
+from etools.applications.permissions2.metadata import BaseMetadata, PermissionBasedMetadata
+from etools.applications.permissions2.views import PermittedSerializerMixin
 from etools.applications.reports.models import Result, ResultType
 
 
@@ -30,6 +32,11 @@ class FMBaseViewSet(
     metadata_class = BaseMetadata
     pagination_class = DynamicPageNumberPagination
     permission_classes = [IsAuthenticated, ]
+
+    def get_permission_context(self):
+        context = super().get_permission_context()
+        context.append(FieldMonitoringModuleCondition())
+        return context
 
 
 class MethodsViewSet(
@@ -43,8 +50,10 @@ class MethodsViewSet(
 
 class MethodTypesViewSet(
     FMBaseViewSet,
+    PermittedSerializerMixin,
     viewsets.ModelViewSet
 ):
+    metadata_class = PermissionBasedMetadata
     queryset = MethodType.objects.all()
     serializer_class = MethodTypeSerializer
     filter_backends = (DjangoFilterBackend, OrderingFilter)
@@ -56,8 +65,10 @@ class MethodTypesViewSet(
 
 class LocationSitesViewSet(
     FMBaseViewSet,
+    PermittedSerializerMixin,
     viewsets.ModelViewSet,
 ):
+    metadata_class = PermissionBasedMetadata
     queryset = LocationSite.objects.prefetch_related('parent').order_by('parent__name', 'name')
     serializer_class = LocationSiteSerializer
     filter_backends = (DjangoFilterBackend, SearchFilter, OrderingFilter)
@@ -81,10 +92,12 @@ class LocationsCountryView(views.APIView):
 
 class CPOutputsViewSet(
     FMBaseViewSet,
+    PermittedSerializerMixin,
     mixins.ListModelMixin,
     mixins.UpdateModelMixin,
     viewsets.GenericViewSet
 ):
+    metadata_class = PermissionBasedMetadata
     queryset = Result.objects.filter(result_type__name=ResultType.OUTPUT).prefetch_related(
         'fm_config',
         'intervention_links',
@@ -103,12 +116,14 @@ class CPOutputsViewSet(
 
 class CPOutputConfigsViewSet(
     FMBaseViewSet,
+    PermittedSerializerMixin,
     mixins.ListModelMixin,
     mixins.CreateModelMixin,
     mixins.UpdateModelMixin,
     mixins.RetrieveModelMixin,
     viewsets.GenericViewSet
 ):
+    metadata_class = PermissionBasedMetadata
     queryset = CPOutputConfig.objects.all()
     serializer_class = CPOutputConfigDetailSerializer
     filter_backends = (DjangoFilterBackend, OrderingFilter)

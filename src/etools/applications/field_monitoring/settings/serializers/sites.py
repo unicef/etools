@@ -8,6 +8,7 @@ from rest_framework import serializers
 from unicef_locations.serializers import LocationSerializer, LocationLightSerializer
 
 from etools.applications.field_monitoring.settings.models import LocationSite
+from etools.applications.permissions2.serializers import PermissionsBasedSerializerMixin
 
 
 class LocationCountrySerializer(LocationLightSerializer):
@@ -21,7 +22,7 @@ class LocationCountrySerializer(LocationLightSerializer):
         return json.loads(point.json)
 
 
-class LocationSiteSerializer(serializers.ModelSerializer):
+class LocationSiteSerializer(PermissionsBasedSerializerMixin, serializers.ModelSerializer):
     parent = LocationSerializer(read_only=True)
     is_active = serializers.ChoiceField(choices=(
         (True, _('Active')),
