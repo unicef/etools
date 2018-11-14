@@ -45,7 +45,7 @@ class YearPlanViewSet(
         queryset = self.filter_queryset(self.get_queryset())
         lookup_url_kwarg = self.lookup_url_kwarg or self.lookup_field
 
-        if self.kwargs[lookup_url_kwarg] not in self.get_years_allowed():
+        if lookup_url_kwarg not in self.kwargs or self.kwargs[lookup_url_kwarg] not in self.get_years_allowed():
             raise Http404
 
         filter_kwargs = {self.lookup_field: self.kwargs[lookup_url_kwarg]}
