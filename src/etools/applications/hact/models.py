@@ -209,7 +209,7 @@ class AggregateHact(TimeStampedModel):
         return [
             ['Completed by', 'Count'],
             ['Staff', qs.filter(agreement__auditor_firm__unicef_users_allowed=True).count()],
-            ['Service Providers', qs.exclude(agreement__auditor_firm__unicef_users_allowed=False).count()],
+            ['Service Providers', qs.filter(agreement__auditor_firm__unicef_users_allowed=False).count()],
         ]
 
     def get_assurance_activities(self):
@@ -220,7 +220,8 @@ class AggregateHact(TimeStampedModel):
                 'min_required': sum([p.min_req_programme_visits for p in self.get_queryset()]),
             },
             'spot_checks': {
-                'completed': self._sum_json_values('hact_values__spot_checks__completed__total'),
+                'completed': SpotCheck.objects.filter(
+                    status=Engagement.FINAL, date_of_draft_report_to_unicef__year=datetime.now().year).count(),
                 'min_required': sum([p.min_req_spot_checks for p in self.get_queryset()]),
                 'follow_up': self.get_queryset().aggregate(total=Coalesce(Sum(
                     'planned_engagement__spot_check_follow_up'), 0))['total']
