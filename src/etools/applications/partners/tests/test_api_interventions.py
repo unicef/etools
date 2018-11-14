@@ -231,7 +231,6 @@ class TestInterventionsAPI(BaseTenantTestCase):
         attachment.refresh_from_db()
         return attachment
 
-
     def test_add_contingency_pd_with_attachment(self):
         data = {
             "document_type": Intervention.PD,
