@@ -10,9 +10,9 @@ from django_filters.rest_framework import DjangoFilterBackend
 
 from unicef_locations.cache import etag_cached
 from unicef_locations.models import Location
-from unicef_locations.serializers import LocationSerializer
 from unicef_restlib.views import NestedViewSetMixin
 
+from etools.applications.field_monitoring.conditions import FieldMonitoringModuleCondition
 from etools.applications.field_monitoring.settings.filters import CPOutputIsActiveFilter, LogIssueRelatedToTypeFilter, \
     LogIssueVisitFilter
 from etools.applications.field_monitoring.settings.models import MethodType, LocationSite, CheckListItem, \
@@ -43,8 +43,10 @@ class MethodsViewSet(
 
 class MethodTypesViewSet(
     FMBaseViewSet,
+    PermittedSerializerMixin,
     viewsets.ModelViewSet
 ):
+    metadata_class = PermissionBasedMetadata
     queryset = MethodType.objects.all()
     serializer_class = MethodTypeSerializer
     filter_backends = (DjangoFilterBackend, OrderingFilter)
@@ -56,8 +58,10 @@ class MethodTypesViewSet(
 
 class LocationSitesViewSet(
     FMBaseViewSet,
+    PermittedSerializerMixin,
     viewsets.ModelViewSet,
 ):
+    metadata_class = PermissionBasedMetadata
     queryset = LocationSite.objects.prefetch_related('parent').order_by('parent__name', 'name')
     serializer_class = LocationSiteSerializer
     filter_backends = (DjangoFilterBackend, SearchFilter, OrderingFilter)
@@ -76,15 +80,17 @@ class LocationSitesViewSet(
 class LocationsCountryView(views.APIView):
     def get(self, request, *args, **kwargs):
         country = get_object_or_404(Location, gateway__admin_level=0)
-        return Response(data=LocationSerializer(instance=country).data)
+        return Response(data=LocationCountrySerializer(instance=country).data)
 
 
 class CPOutputsViewSet(
     FMBaseViewSet,
+    PermittedSerializerMixin,
     mixins.ListModelMixin,
     mixins.UpdateModelMixin,
     viewsets.GenericViewSet
 ):
+    metadata_class = PermissionBasedMetadata
     queryset = Result.objects.filter(result_type__name=ResultType.OUTPUT).prefetch_related(
         'fm_config',
         'intervention_links',
@@ -115,12 +121,14 @@ class MonitoredPartnersViewSet(
 
 class CPOutputConfigsViewSet(
     FMBaseViewSet,
+    PermittedSerializerMixin,
     mixins.ListModelMixin,
     mixins.CreateModelMixin,
     mixins.UpdateModelMixin,
     mixins.RetrieveModelMixin,
     viewsets.GenericViewSet
 ):
+    metadata_class = PermissionBasedMetadata
     queryset = CPOutputConfig.objects.all()
     serializer_class = CPOutputConfigDetailSerializer
     filter_backends = (DjangoFilterBackend, OrderingFilter)

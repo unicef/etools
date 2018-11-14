@@ -6,6 +6,7 @@ from rest_framework.exceptions import ValidationError
 
 from etools.applications.field_monitoring.settings.models import MethodType
 from etools.applications.field_monitoring.shared.models import Method
+from etools.applications.permissions2.serializers import PermissionsBasedSerializerMixin
 
 
 class MethodSerializer(serializers.ModelSerializer):
@@ -14,7 +15,7 @@ class MethodSerializer(serializers.ModelSerializer):
         fields = ('id', 'name', 'is_types_applicable')
 
 
-class MethodTypeSerializer(serializers.ModelSerializer):
+class MethodTypeSerializer(PermissionsBasedSerializerMixin, serializers.ModelSerializer):
     class Meta:
         model = MethodType
         fields = ('id', 'method', 'name')
@@ -30,7 +31,8 @@ class MethodTypeSerializer(serializers.ModelSerializer):
     def validate(self, attrs):
         validated_data = super().validate(attrs)
 
-        if not validated_data['method'].is_types_applicable:
+        method = validated_data.get('method', None) or self.instance.method if self.instance else None
+        if method and not method.is_types_applicable:
             raise ValidationError({'method', _('Unable to add type for this Method')})
 
         return validated_data

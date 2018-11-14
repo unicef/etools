@@ -8,6 +8,7 @@ from etools.applications.partners.serializers.partner_organization_v2 import Min
 from etools.applications.field_monitoring.settings.models import CPOutputConfig, PlannedCheckListItem, \
     PlannedCheckListItemPartnerInfo
 from etools.applications.partners.models import Intervention
+from etools.applications.permissions2.serializers import PermissionsBasedSerializerMixin
 from etools.applications.reports.models import Result
 from etools.applications.reports.serializers.v2 import OutputListSerializer
 
@@ -20,7 +21,7 @@ class InterventionSerializer(serializers.ModelSerializer):
         fields = ('id', 'title', 'number', 'partner')
 
 
-class CPOutputConfigSerializer(serializers.ModelSerializer):
+class CPOutputConfigSerializer(PermissionsBasedSerializerMixin, serializers.ModelSerializer):
     government_partners = SeparatedReadWriteField(
         read_field=MinimalPartnerOrganizationListSerializer(many=True, label=_('Contributing Government Partners'))
     )
@@ -41,9 +42,10 @@ class CPOutputConfigDetailSerializer(CPOutputConfigSerializer):
         pass
 
 
-class FieldMonitoringCPOutputSerializer(WritableNestedSerializerMixin, serializers.ModelSerializer):
+class FieldMonitoringCPOutputSerializer(PermissionsBasedSerializerMixin, WritableNestedSerializerMixin,
+                                        serializers.ModelSerializer):
     fm_config = CPOutputConfigSerializer()
-    name = serializers.CharField(source='*')
+    name = serializers.CharField(source='*', read_only=True)
     interventions = serializers.SerializerMethodField(label=_('Contributing CSO Partners & PD/SSFAs'))
 
     class Meta(WritableNestedSerializerMixin.Meta):
