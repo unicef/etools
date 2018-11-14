@@ -18,6 +18,9 @@ class MethodTypeSerializer(serializers.ModelSerializer):
     class Meta:
         model = MethodType
         fields = ('id', 'method', 'name')
+        extra_kwargs = {
+            'name': _('Recommended Type')
+        }
 
     def validate_method(self, method):
         if not method:

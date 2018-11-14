@@ -1,4 +1,5 @@
 from django_filters.rest_framework import DjangoFilterBackend
+from django.utils.translation import ugettext_lazy as _
 
 from rest_framework import mixins, viewsets, views
 from rest_framework.filters import OrderingFilter, SearchFilter
@@ -53,6 +54,9 @@ class MethodTypesViewSet(
     }
     ordering_fields = ('method', 'name',)
 
+    def get_view_name(self):
+        return _('Recommended Data Collection Method Types')
+
 
 class LocationSitesViewSet(
     FMBaseViewSet,
@@ -67,6 +71,9 @@ class LocationSitesViewSet(
         'is_active', 'name',
     )
     search_fields = ('parent__name', 'parent__p_code', 'name', 'p_code')
+
+    def get_view_name(self):
+        return _('Site Specific Locations')
 
     @etag_cached('fm-sites')
     def list(self, request, *args, **kwargs):
@@ -99,6 +106,9 @@ class CPOutputsViewSet(
         'parent': ['exact', 'in'],
     }
     ordering_fields = ('name', 'fm_config__is_monitored', 'fm_config__is_priority')
+
+    def get_view_name(self):
+        return _('Country Programme Outputs')
 
 
 class CPOutputConfigsViewSet(
