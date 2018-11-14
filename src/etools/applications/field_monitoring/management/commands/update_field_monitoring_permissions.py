@@ -10,8 +10,7 @@ class Command(BaseCommand):
     field_monitoring_settings = [
         'field_monitoring_settings.methodtype.*',
         'field_monitoring_settings.locationsite.*',
-        # 'reports.result.fm_config',
-        'reports.result.*',
+        'reports.result.fm_config',
         'field_monitoring_settings.cpoutputconfig.*',
     ]
     field_monitoring_readable_settings = field_monitoring_settings + [
