@@ -74,7 +74,6 @@ class TPMVisitAttachmentsSerializer(BaseAttachmentSerializer):
         return super().create(validated_data)
 
 
-
 class TPMAttachmentLinkSerializer(AttachmentLinkSerializer):
     source = serializers.SerializerMethodField()
 
