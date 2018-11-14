@@ -1357,7 +1357,8 @@ class TestAPInterventionIndicatorsUpdateView(BaseTenantTestCase):
 class TestInterventionAttachmentDeleteView(BaseTenantTestCase):
     @classmethod
     def setUpTestData(cls):
-        cls.unicef_staff = UserFactory(is_staff=True)
+        cls.partnership_manager = UserFactory(is_staff=True)
+        cls.partnership_manager.groups.add(GroupFactory())
         cls.intervention = InterventionFactory()
         cls.attachment = InterventionAttachmentFactory(
             intervention=cls.intervention,
@@ -1372,7 +1373,7 @@ class TestInterventionAttachmentDeleteView(BaseTenantTestCase):
         response = self.forced_auth_req(
             'delete',
             self.url,
-            user=self.unicef_staff,
+            user=self.partnership_manager,
         )
         self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
 
@@ -1382,10 +1383,10 @@ class TestInterventionAttachmentDeleteView(BaseTenantTestCase):
         response = self.forced_auth_req(
             'delete',
             self.url,
-            user=self.unicef_staff,
+            user=self.partnership_manager,
         )
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
-        self.assertEqual(response.data, ["You do not have permissions to delete an attachment"])
+        self.assertEqual(response.data, ["Deleting an attachment can only be done in Draft status"])
 
 
 class TestInterventionResultListAPIView(BaseTenantTestCase):
@@ -1735,8 +1736,6 @@ class TestInterventionAmendmentCreateAPIView(BaseTenantTestCase):
             data=self.data,
             request_format='multipart',
         )
-
-        self.assertEquals(response.data['internal_prc_review_attachment'], {})
 
         self.assertEquals(response.status_code, status.HTTP_201_CREATED)
         data = self.assertResponseFundamentals(response)
