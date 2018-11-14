@@ -2404,6 +2404,7 @@ class InterventionAttachment(TimeStampedModel):
         blank=True,
         null=True,
     )
+    active = models.BooleanField(default=True)
 
     tracker = FieldTracker()
 

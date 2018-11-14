@@ -13,7 +13,8 @@ from etools.applications.partners.views.dashboards import InterventionPartnershi
 from etools.applications.partners.views.interventions_v2 import (
     InterventionAmendmentDeleteView,
     InterventionAmendmentListAPIView,
-    InterventionAttachmentDeleteView,
+    InterventionAttachmentListCreateView,
+    InterventionAttachmentUpdateDeleteView,
     InterventionDeleteView,
     InterventionDetailAPIView,
     InterventionIndicatorListAPIView,
@@ -170,9 +171,14 @@ urlpatterns = (
         view=InterventionDeleteView.as_view(http_method_names=['delete']),
         name='intervention-delete'),
 
+    url(r'^interventions/(?P<intervention_pk>\d+)/attachments/$',
+        view=InterventionAttachmentListCreateView.as_view(http_method_names=['get', 'post']),
+        name='intervention-attachment-list'),
+
     url(r'^interventions/attachments/(?P<pk>\d+)/$',
-        view=InterventionAttachmentDeleteView.as_view(http_method_names=['delete', ]),
-        name='intervention-attachments-del'),
+        view=InterventionAttachmentUpdateDeleteView.as_view(http_method_names=['delete', 'patch']),
+        name='intervention-attachments-update'),
+
     url(r'^interventions/indicators/$',
         view=InterventionIndicatorListAPIView.as_view(http_method_names=['get', ]),
         name='intervention-indicators'),
