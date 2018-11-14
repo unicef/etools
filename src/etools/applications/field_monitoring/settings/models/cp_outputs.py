@@ -37,7 +37,8 @@ class CPOutputConfig(TimeStampedModel):
 
 class PlannedCheckListItem(OrderedModel):
     checklist_item = models.ForeignKey(CheckListItem, verbose_name=_('Checklist Item'))
-    cp_output_config = models.ForeignKey(CPOutputConfig, verbose_name=_('CP Output Config'))
+    cp_output_config = models.ForeignKey(CPOutputConfig, verbose_name=_('CP Output Config'),
+                                         related_name='planned_checklist_items')
     methods = models.ManyToManyField(Method, blank=True, verbose_name=_('Method(s)'))
 
     class Meta:
