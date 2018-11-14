@@ -76,7 +76,7 @@ class TestYearPlanAttachmentsView(FMBaseTestCaseMixin, BaseTenantTestCase):
         create_response = self.forced_auth_req(
             'post',
             reverse('field_monitoring_planning:year-plan-attachments-list', args=[self.year_plan.pk]),
-            user=self.unicef_user,
+            user=self.fm_user,
             request_format='multipart',
             data={
                 'file_type': AttachmentFileTypeFactory(code=YearPlan.ATTACHMENTS_FILE_TYPE_CODE).id,
@@ -93,10 +93,22 @@ class TestYearPlanAttachmentsView(FMBaseTestCaseMixin, BaseTenantTestCase):
         self.assertEqual(list_response.status_code, status.HTTP_200_OK)
         self.assertEqual(len(list_response.data['results']), attachments_num + 1)
 
+    def test_add_unicef(self):
+        create_response = self.forced_auth_req(
+            'post',
+            reverse('field_monitoring_planning:year-plan-attachments-list', args=[self.year_plan.pk]),
+            user=self.unicef_user,
+            request_format='multipart',
+            data={}
+        )
+        self.assertEqual(create_response.status_code, status.HTTP_403_FORBIDDEN)
+
 
 class YearPlanTasksViewTestCase(FMBaseTestCaseMixin, BaseTenantTestCase):
     @classmethod
     def setUpTestData(cls):
+        super().setUpTestData()
+
         cls.year_plan = YearPlanFactory()
         cls.task = TaskFactory()
 
@@ -112,7 +124,7 @@ class YearPlanTasksViewTestCase(FMBaseTestCaseMixin, BaseTenantTestCase):
     def test_create(self):
         response = self.forced_auth_req(
             'post', reverse('field_monitoring_planning:year-plan-tasks-list', args=[self.year_plan.pk]),
-            user=self.unicef_user,
+            user=self.fm_user,
             data={
                 'cp_output_config': self.task.cp_output_config.id,
                 'partner': self.task.partner.id,
@@ -126,12 +138,21 @@ class YearPlanTasksViewTestCase(FMBaseTestCaseMixin, BaseTenantTestCase):
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         self.assertEqual(response.data['plan_by_month'], [1] + [0]*11)
 
+    def test_create_unicef(self):
+        response = self.forced_auth_req(
+            'post', reverse('field_monitoring_planning:year-plan-tasks-list', args=[self.year_plan.pk]),
+            user=self.unicef_user,
+            data={}
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+
     def test_update_plan(self):
         task = TaskFactory()
 
         response = self.forced_auth_req(
             'patch', reverse('field_monitoring_planning:year-plan-tasks-detail', args=[self.year_plan.pk, task.id]),
-            user=self.unicef_user,
+            user=self.fm_user,
             data={
                 'plan_by_month': [1] + [0] * 10 + [1]
             }
@@ -140,12 +161,23 @@ class YearPlanTasksViewTestCase(FMBaseTestCaseMixin, BaseTenantTestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response.data['plan_by_month'], [1] + [0]*10 + [1])
 
-    def test_update_plan_incorrect(self):
+    def test_update_plan_unicef(self):
         task = TaskFactory()
 
         response = self.forced_auth_req(
             'patch', reverse('field_monitoring_planning:year-plan-tasks-detail', args=[self.year_plan.pk, task.id]),
             user=self.unicef_user,
+            data={}
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+
+    def test_update_plan_incorrect(self):
+        task = TaskFactory()
+
+        response = self.forced_auth_req(
+            'patch', reverse('field_monitoring_planning:year-plan-tasks-detail', args=[self.year_plan.pk, task.id]),
+            user=self.fm_user,
             data={
                 'plan_by_month': [0] * 11 + [-1]
             }

@@ -63,6 +63,12 @@ class PermittedFSMActionMixin(PermissionContextMixin, FSMTransitionActionMixin):
 
 
 class PermittedSerializerMixin(PermissionContextMixin):
+    """
+    User shouldn't be able to proceed even into serializer if he don't allowed to make any changes.
+    """
+    PERMITTED_LIST_ACTIONS = ['create']
+    PERMITTED_INSTANCE_ACTIONS = ['partial_update', 'update', 'destroy']
+
     def check_serializer_permissions(self, serializer, edit=False):
         if isinstance(serializer, serializers.ListSerializer):
             serializer = serializer.child
@@ -86,17 +92,10 @@ class PermittedSerializerMixin(PermissionContextMixin):
 
         return serializer
 
-    def perform_create(self, serializer):
-        self.check_serializer_permissions(serializer, edit=True)
+    def initial(self, request, *args, **kwargs):
+        super().initial(request, *args, **kwargs)
 
-        super().perform_create(serializer)
-
-    def perform_update(self, serializer):
-        self.check_serializer_permissions(serializer, edit=True)
-
-        super().perform_update(serializer)
-
-    def perform_destroy(self, instance):
-        self.check_serializer_permissions(self.get_serializer(instance=instance), edit=True)
-
-        super().perform_destroy(instance)
+        if self.action in self.PERMITTED_LIST_ACTIONS:
+            self.check_serializer_permissions(self.get_serializer(), edit=True)
+        if self.action in self.PERMITTED_INSTANCE_ACTIONS:
+            self.check_serializer_permissions(self.get_serializer(instance=self.get_object()), edit=True)

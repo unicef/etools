@@ -12,9 +12,16 @@ class Command(BaseCommand):
         'field_monitoring_settings.locationsite.*',
         'reports.result.fm_config',
         'field_monitoring_settings.cpoutputconfig.*',
+        'field_monitoring_settings.logissue.*',
+        'field_monitoring_settings.plannedchecklistitem.*',
     ]
-    field_monitoring_readable_settings = field_monitoring_settings + [
+    field_monitoring_readonly_settings = [
         'reports.result.*',
+    ]
+    field_monitoring_readable_settings = field_monitoring_settings + field_monitoring_readonly_settings
+    field_monitoring_planning = [
+        'field_monitoring_planning.yearplan.*',
+        'field_monitoring_planning.task.*',
     ]
 
     fm_user = 'fm_user'
@@ -97,5 +104,9 @@ class Command(BaseCommand):
             )
 
     def assign_permissions(self):
-        self.add_permission(self.unicef_user, 'view', self.field_monitoring_readable_settings)
-        self.add_permission(self.fm_user, 'edit', self.field_monitoring_settings)
+        self.add_permission(self.unicef_user, 'view',
+                            self.field_monitoring_readable_settings +
+                            self.field_monitoring_planning)
+        self.add_permission(self.fm_user, 'edit',
+                            self.field_monitoring_settings +
+                            self.field_monitoring_planning)

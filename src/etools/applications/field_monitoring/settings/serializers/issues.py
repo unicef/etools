@@ -15,6 +15,7 @@ from etools.applications.action_points.serializers import HistorySerializer
 from etools.applications.field_monitoring.settings.models import LogIssue
 from etools.applications.field_monitoring.settings.serializers.locations import LocationSiteLightSerializer
 from etools.applications.partners.serializers.partner_organization_v2 import MinimalPartnerOrganizationListSerializer
+from etools.applications.permissions2.serializers import PermissionsBasedSerializerMixin
 from etools.applications.reports.serializers.v2 import OutputListSerializer
 
 
@@ -27,7 +28,7 @@ class LogIssueAttachmentSerializer(BaseAttachmentSerializer):
         pass
 
 
-class LogIssueSerializer(SnapshotModelSerializer):
+class LogIssueSerializer(PermissionsBasedSerializerMixin, SnapshotModelSerializer):
     related_to_type = serializers.ChoiceField(choices=LogIssue.RELATED_TO_TYPE_CHOICES, read_only=True,
                                               label=_('Issue Related To'))
 

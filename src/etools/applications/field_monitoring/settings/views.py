@@ -29,6 +29,7 @@ from etools.applications.field_monitoring.shared.models import Method
 from etools.applications.field_monitoring.views import FMBaseViewSet, FMBaseAttachmentsViewSet
 from etools.applications.partners.models import PartnerOrganization
 from etools.applications.partners.serializers.partner_organization_v2 import MinimalPartnerOrganizationListSerializer
+from etools.applications.permissions2.drf_permissions import get_permission_for_targets
 from etools.applications.permissions2.metadata import PermissionBasedMetadata
 from etools.applications.permissions2.views import PermittedSerializerMixin
 from etools.applications.reports.models import Result, ResultType
@@ -158,17 +159,27 @@ class CheckListCategoriesViewSet(
 
 class PlannedCheckListItemViewSet(
     FMBaseViewSet,
+    PermittedSerializerMixin,
     NestedViewSetMixin,
     viewsets.ModelViewSet,
 ):
+    metadata_class = PermissionBasedMetadata
     queryset = PlannedCheckListItem.objects.all()
     serializer_class = PlannedCheckListItemSerializer
+    permission_classes = FMBaseViewSet.permission_classes + [
+        get_permission_for_targets('field_monitoring_settings.cpoutputconfig.planned_checklist_items'),
+    ]
 
     def perform_create(self, serializer):
         serializer.save(cp_output_config=self.get_parent_object())
 
 
-class LogIssuesViewSet(FMBaseViewSet, viewsets.ModelViewSet):
+class LogIssuesViewSet(
+    FMBaseViewSet,
+    PermittedSerializerMixin,
+    viewsets.ModelViewSet
+):
+    metadata_class = PermissionBasedMetadata
     queryset = LogIssue.objects.all()
     serializer_class = LogIssueSerializer
     filter_backends = (DjangoFilterBackend, LogIssueRelatedToTypeFilter, LogIssueVisitFilter, OrderingFilter)
@@ -176,9 +187,16 @@ class LogIssuesViewSet(FMBaseViewSet, viewsets.ModelViewSet):
     ordering_fields = ('content_type',)
 
 
-class LogIssueAttachmentsViewSet(FMBaseAttachmentsViewSet):
+class LogIssueAttachmentsViewSet(
+    PermittedSerializerMixin,
+    FMBaseAttachmentsViewSet
+):
+    metadata_class = PermissionBasedMetadata
     serializer_class = LogIssueAttachmentSerializer
     related_model = LogIssue
+    permission_classes = FMBaseViewSet.permission_classes + [
+        get_permission_for_targets('field_monitoring_settings.logissue.attachments'),
+    ]
 
     def get_view_name(self):
         return _('Attachments')

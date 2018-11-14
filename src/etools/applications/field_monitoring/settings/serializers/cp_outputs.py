@@ -64,7 +64,8 @@ class PlannedCheckListItemPartnerInfoSerializer(WritableNestedSerializerMixin, s
         fields = ('id', 'partner', 'specific_details', 'standard_url',)
 
 
-class PlannedCheckListItemSerializer(WritableNestedSerializerMixin, serializers.ModelSerializer):
+class PlannedCheckListItemSerializer(PermissionsBasedSerializerMixin, WritableNestedSerializerMixin,
+                                     serializers.ModelSerializer):
     partners_info = PlannedCheckListItemPartnerInfoSerializer(many=True)
 
     class Meta(WritableNestedSerializerMixin.Meta):

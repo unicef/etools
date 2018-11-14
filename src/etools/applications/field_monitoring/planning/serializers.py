@@ -19,6 +19,7 @@ from etools.applications.field_monitoring.planning.models import YearPlan, Task
 from etools.applications.field_monitoring.settings.serializers.cp_outputs import CPOutputConfigDetailSerializer
 from etools.applications.field_monitoring.settings.serializers.locations import LocationSiteLightSerializer
 from etools.applications.partners.serializers.partner_organization_v2 import MinimalPartnerOrganizationListSerializer
+from etools.applications.permissions2.serializers import PermissionsBasedSerializerMixin
 
 
 class YearPlanAttachmentSerializer(BaseAttachmentSerializer):
@@ -30,7 +31,7 @@ class YearPlanAttachmentSerializer(BaseAttachmentSerializer):
         pass
 
 
-class YearPlanSerializer(WritableNestedSerializerMixin, SnapshotModelSerializer):
+class YearPlanSerializer(PermissionsBasedSerializerMixin, WritableNestedSerializerMixin, SnapshotModelSerializer):
     other_aspects = CommentSerializer(many=True, required=False)
     history = HistorySerializer(many=True, label=_('History'), read_only=True)
     tasks_by_month = serializers.SerializerMethodField(label=_('Number Of Tasks By Month'))
@@ -59,7 +60,7 @@ class YearPlanSerializer(WritableNestedSerializerMixin, SnapshotModelSerializer)
         }
 
 
-class TaskListSerializer(serializers.ModelSerializer):
+class TaskListSerializer(PermissionsBasedSerializerMixin, serializers.ModelSerializer):
     cp_output_config = SeparatedReadWriteField(read_field=CPOutputConfigDetailSerializer())
     partner = SeparatedReadWriteField(read_field=MinimalPartnerOrganizationListSerializer())
     location = SeparatedReadWriteField(read_field=LocationLightSerializer())

@@ -13,14 +13,19 @@ from etools.applications.field_monitoring.planning.serializers import YearPlanSe
     TaskSerializer, TaskListSerializer
 from etools.applications.field_monitoring.settings.filters import CPOutputIsActiveFilter
 from etools.applications.field_monitoring.views import FMBaseViewSet, FMBaseAttachmentsViewSet
+from etools.applications.permissions2.drf_permissions import get_permission_for_targets
+from etools.applications.permissions2.metadata import PermissionBasedMetadata
+from etools.applications.permissions2.views import PermittedSerializerMixin
 
 
 class YearPlanViewSet(
     FMBaseViewSet,
+    PermittedSerializerMixin,
     mixins.RetrieveModelMixin,
     mixins.UpdateModelMixin,
     viewsets.GenericViewSet
 ):
+    metadata_class = PermissionBasedMetadata
     queryset = YearPlan.objects.all()
     serializer_class = YearPlanSerializer
 
@@ -53,15 +58,28 @@ class YearPlanViewSet(
         return obj
 
 
-class YearPlanAttachmentsViewSet(FMBaseAttachmentsViewSet):
+class YearPlanAttachmentsViewSet(
+    PermittedSerializerMixin,
+    FMBaseAttachmentsViewSet
+):
+    metadata_class = PermissionBasedMetadata
     serializer_class = YearPlanAttachmentSerializer
     related_model = YearPlan
+    permission_classes = FMBaseViewSet.permission_classes + [
+        get_permission_for_targets('field_monitoring_planning.yearplan.attachments'),
+    ]
 
     def get_view_name(self):
         return _('Attachments')
 
 
-class TaskViewSet(NestedViewSetMixin, FMBaseViewSet, viewsets.ModelViewSet):
+class TaskViewSet(
+    PermittedSerializerMixin,
+    NestedViewSetMixin,
+    FMBaseViewSet,
+    viewsets.ModelViewSet
+):
+    metadata_class = PermissionBasedMetadata
     queryset = Task.objects.prefetch_related(
         'cp_output_config', 'cp_output_config__cp_output',
         'partner', 'intervention', 'location', 'location_site',
@@ -81,6 +99,9 @@ class TaskViewSet(NestedViewSetMixin, FMBaseViewSet, viewsets.ModelViewSet):
     serializer_action_classes = {
         'list': TaskListSerializer
     }
+    permission_classes = FMBaseViewSet.permission_classes + [
+        get_permission_for_targets('field_monitoring_planning.yearplan.tasks'),
+    ]
 
     def get_view_name(self):
         return _('Plan By Task')

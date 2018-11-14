@@ -29,6 +29,8 @@ class MethodTypeTestCase(BaseTenantTestCase):
 class SitesTestCase(BaseTenantTestCase):
     @classmethod
     def setUpTestData(cls):
+        super().setUpTestData()
+
         cls.boundary = GEOSGeometry(
             """
               {
