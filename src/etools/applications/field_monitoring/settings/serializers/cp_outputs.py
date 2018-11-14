@@ -30,7 +30,7 @@ class CPOutputConfigSerializer(serializers.ModelSerializer):
         fields = ('id', 'cp_output', 'is_monitored', 'is_priority', 'government_partners')
         extra_kwargs = {
             'id': {'read_only': True},
-            'cp_output': {'read_only': True}
+            'cp_output': {'read_only': True, 'label': _('CP Output')}
         }
 
 
