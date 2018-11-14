@@ -9,9 +9,23 @@ from unicef_attachments.serializers import AttachmentLinkSerializer, BaseAttachm
 class TPMPartnerAttachmentsSerializer(BaseAttachmentSerializer):
     file_type = FileTypeModelChoiceField(queryset=FileType.objects.filter(
         code="tpm_partner"), label=_('Document Type'))
+    source = serializers.SerializerMethodField()
 
     class Meta(BaseAttachmentSerializer.Meta):
-        pass
+        fields = [
+            'id',
+            'file_type',
+            'file',
+            'hyperlink',
+            'created',
+            'modified',
+            'uploaded_by',
+            'filename',
+            'source',
+        ]
+
+    def get_source(self, obj):
+        return "Third Party Monitoring"
 
 
 class ActivityAttachmentsSerializer(BaseAttachmentSerializer):
@@ -60,8 +74,27 @@ class TPMVisitAttachmentsSerializer(BaseAttachmentSerializer):
         return super().create(validated_data)
 
 
+
+class TPMAttachmentLinkSerializer(AttachmentLinkSerializer):
+    source = serializers.SerializerMethodField()
+
+    class Meta(AttachmentLinkSerializer.Meta):
+        fields = (
+            "id",
+            "attachment",
+            "filename",
+            "url",
+            "file_type",
+            "created",
+            "source",
+        )
+
+    def get_source(self, obj):
+        return "Third Party Monitoring"
+
+
 class TPMActivityAttachmentLinkSerializer(serializers.Serializer):
-    attachments = AttachmentLinkSerializer(many=True, allow_empty=False)
+    attachments = TPMAttachmentLinkSerializer(many=True, allow_empty=False)
 
     def create(self, validated_data):
         links = []
