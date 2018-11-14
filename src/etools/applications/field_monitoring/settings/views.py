@@ -1,3 +1,5 @@
+from datetime import date, timedelta
+
 from django.db import models
 from django.utils.translation import ugettext_lazy as _
 
@@ -58,6 +60,9 @@ class MethodTypesViewSet(
     }
     ordering_fields = ('method', 'name',)
 
+    def get_view_name(self):
+        return _('Recommended Data Collection Method Types')
+
 
 class LocationSitesViewSet(
     FMBaseViewSet,
@@ -74,6 +79,9 @@ class LocationSitesViewSet(
         'is_active', 'name',
     )
     search_fields = ('parent__name', 'parent__p_code', 'name', 'p_code')
+
+    def get_view_name(self):
+        return _('Site Specific Locations')
 
     @etag_cached('fm-sites')
     def list(self, request, *args, **kwargs):
@@ -108,6 +116,15 @@ class CPOutputsViewSet(
         'parent': ['exact', 'in'],
     }
     ordering_fields = ('name', 'fm_config__is_monitored', 'fm_config__is_priority')
+
+    def get_view_name(self):
+        return _('Country Programme Outputs')
+
+    def get_queryset(self):
+        queryset = super().get_queryset()
+
+        # return by default everything, including inactive, but not older than 1 year
+        return queryset.filter(to_date__gte=date.today() - timedelta(days=365))
 
 
 class MonitoredPartnersViewSet(

@@ -275,6 +275,7 @@ class CPOutputsConfigViewTestCase(FMBaseTestCaseMixin, BaseTenantTestCase):
 
         cls.active_result = ResultFactory(result_type__name=ResultType.OUTPUT)
         cls.inactive_result = ResultFactory(result_type__name=ResultType.OUTPUT, to_date=date.today() - timedelta(days=1))  # inactual
+        cls.too_old = ResultFactory(result_type__name=ResultType.OUTPUT, to_date=date.today() - timedelta(days=366))  # shouldn't appear in lists
         cls.default_config = CPOutputConfigFactory(is_monitored=True)
 
     def test_list(self):
