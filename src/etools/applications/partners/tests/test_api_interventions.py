@@ -61,7 +61,7 @@ class URLsTestCase(URLAssertionMixin, SimpleTestCase):
             ('intervention-list', '', {}),
             ('intervention-list-dash', 'dash/', {}),
             ('intervention-detail', '1/', {'pk': 1}),
-            ('intervention-attachments-del', 'attachments/1/', {'pk': 1}),
+            ('intervention-attachments-update', 'attachments/1/', {'pk': 1}),
             ('intervention-indicators', 'indicators/', {}),
             ('intervention-results', 'results/', {}),
             ('intervention-amendments', 'amendments/', {}),
@@ -124,6 +124,15 @@ class TestInterventionsAPI(BaseTenantTestCase):
         response = self.forced_auth_req(
             method,
             reverse('partners_api:intervention-list'),
+            user=user or self.unicef_staff,
+            data=data
+        )
+        return response.status_code, json.loads(response.rendered_content)
+
+    def run_request_attachment_create_ep(self, intervention_pk, data={}, user=None, method='post'):
+        response = self.forced_auth_req(
+            method,
+            reverse('partners_api:intervention-attachment-list', kwargs={'intervention_pk': intervention_pk}),
             user=user or self.unicef_staff,
             data=data
         )
@@ -203,7 +212,7 @@ class TestInterventionsAPI(BaseTenantTestCase):
 
         self.assertEqual(status_code, status.HTTP_201_CREATED)
 
-    def test_add_contingency_pd_with_attachment(self):
+    def add_attachment(self, intervention_id):
         attachment = AttachmentFactory(
             file="test_file.pdf",
             file_type=None,
@@ -214,18 +223,32 @@ class TestInterventionsAPI(BaseTenantTestCase):
         self.assertIsNone(attachment.content_object)
         self.assertFalse(attachment.code)
         data = {
+                "type": file_type.pk,
+                "attachment_document": attachment.pk,
+        }
+        status_code, response = self.run_request_attachment_create_ep(intervention_id, data, user=self.partnership_manager_user)
+        self.assertEqual(status_code, status.HTTP_201_CREATED)
+        attachment.refresh_from_db()
+        return attachment
+
+
+    def test_add_contingency_pd_with_attachment(self):
+        data = {
             "document_type": Intervention.PD,
             "title": "My test intervention1",
             "contingency_pd": True,
             "agreement": self.agreement.pk,
             "reference_number_year": datetime.date.today().year,
-            "attachments": [{
-                "type": file_type.pk,
-                "attachment_document": attachment.pk,
-            }]
+
         }
         status_code, response = self.run_request_list_ep(data, user=self.partnership_manager_user)
         self.assertEqual(status_code, status.HTTP_201_CREATED)
+
+        attachment = self.add_attachment(response["id"])
+
+        status_code, response = self.run_request(response["id"], user=self.partnership_manager_user)
+        self.assertEqual(status_code, status.HTTP_200_OK)
+
         attachment_updated = Attachment.objects.get(pk=attachment.pk)
         self.assertEqual(
             attachment_updated.file_type.code,
@@ -1341,7 +1364,7 @@ class TestInterventionAttachmentDeleteView(BaseTenantTestCase):
             attachment="random_attachment.pdf",
         )
         cls.url = reverse(
-            "partners_api:intervention-attachments-del",
+            "partners_api:intervention-attachments-update",
             args=[cls.attachment.pk]
         )
 
@@ -1712,6 +1735,8 @@ class TestInterventionAmendmentCreateAPIView(BaseTenantTestCase):
             data=self.data,
             request_format='multipart',
         )
+
+        self.assertEquals(response.data['internal_prc_review_attachment'], {})
 
         self.assertEquals(response.status_code, status.HTTP_201_CREATED)
         data = self.assertResponseFundamentals(response)
