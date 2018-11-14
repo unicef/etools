@@ -10,7 +10,6 @@ from django_filters.rest_framework import DjangoFilterBackend
 
 from unicef_locations.cache import etag_cached
 from unicef_locations.models import Location
-from unicef_locations.serializers import LocationSerializer
 from unicef_restlib.views import NestedViewSetMixin
 
 from etools.applications.field_monitoring.settings.filters import CPOutputIsActiveFilter, LogIssueRelatedToTypeFilter, \
@@ -23,7 +22,8 @@ from etools.applications.field_monitoring.settings.serializers.cp_outputs import
     PlannedCheckListItemSerializer, CPOutputConfigDetailSerializer
 from etools.applications.field_monitoring.settings.serializers.issues import LogIssueSerializer, \
     LogIssueAttachmentSerializer, LogIssueLightSerializer
-from etools.applications.field_monitoring.settings.serializers.locations import LocationSiteSerializer
+from etools.applications.field_monitoring.settings.serializers.locations import LocationSiteSerializer, \
+    LocationCountrySerializer
 from etools.applications.field_monitoring.settings.serializers.methods import MethodSerializer, MethodTypeSerializer
 from etools.applications.field_monitoring.shared.models import Method
 from etools.applications.field_monitoring.views import FMBaseViewSet, FMBaseAttachmentsViewSet
@@ -76,7 +76,7 @@ class LocationSitesViewSet(
 class LocationsCountryView(views.APIView):
     def get(self, request, *args, **kwargs):
         country = get_object_or_404(Location, gateway__admin_level=0)
-        return Response(data=LocationSerializer(instance=country).data)
+        return Response(data=LocationCountrySerializer(instance=country).data)
 
 
 class CPOutputsViewSet(

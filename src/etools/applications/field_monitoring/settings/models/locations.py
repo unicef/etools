@@ -1,6 +1,7 @@
 from django.contrib.gis.db.models import PointField
 from django.db import models
 from django.utils.translation import ugettext_lazy as _
+from model_utils import FieldTracker
 
 from model_utils.models import TimeStampedModel
 
@@ -28,6 +29,8 @@ class LocationSite(TimeStampedModel):
 
     security_detail = models.TextField(verbose_name=_('Detail on Security'), blank=True)
 
+    tracker = FieldTracker(['point'])
+
     def __str__(self):
         return u'{}: {}'.format(
             self.name,
@@ -49,5 +52,7 @@ class LocationSite(TimeStampedModel):
         if not self.parent_id:
             self.parent = self.get_parent_location(self.point)
             assert self.parent_id, 'Unable to find location for {}'.format(self.point)
+        elif self.tracker.has_changed('point'):
+            self.parent = self.get_parent_location(self.point)
 
         super().save(**kwargs)
