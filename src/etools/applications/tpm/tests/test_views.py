@@ -621,7 +621,7 @@ class TestTPMPartnerViewSet(TestExportMixin, TPMTestCaseMixin, BaseTenantTestCas
 
 
 class TestPartnerAttachmentsView(TPMTestCaseMixin, BaseTenantTestCase):
-    def test_list(self):
+    def test_list_pme_user(self):
         partner = TPMPartnerFactory()
         attachments_num = partner.attachments.count()
 
@@ -631,6 +631,19 @@ class TestPartnerAttachmentsView(TPMTestCaseMixin, BaseTenantTestCase):
             'get',
             reverse('tpm:partner-attachments-list', args=[partner.id]),
             user=self.pme_user
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(response.data['results']), attachments_num + 1)
+
+    def test_list_tpm_user(self):
+        attachments_num = self.tpm_partner.attachments.count()
+
+        AttachmentFactory(content_object=self.tpm_partner)
+
+        response = self.forced_auth_req(
+            'get',
+            reverse('tpm:partner-attachments-list', args=[self.tpm_partner.pk]),
+            user=self.tpm_user
         )
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(len(response.data['results']), attachments_num + 1)
