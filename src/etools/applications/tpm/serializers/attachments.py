@@ -76,6 +76,7 @@ class TPMVisitAttachmentsSerializer(BaseAttachmentSerializer):
 
 class TPMAttachmentLinkSerializer(AttachmentLinkSerializer):
     source = serializers.SerializerMethodField()
+    activity_id = serializers.IntegerField(source="object_id", read_only=True)
 
     class Meta(AttachmentLinkSerializer.Meta):
         fields = (
@@ -86,6 +87,7 @@ class TPMAttachmentLinkSerializer(AttachmentLinkSerializer):
             "file_type",
             "created",
             "source",
+            "activity_id",
         )
 
     def get_source(self, obj):
@@ -104,3 +106,10 @@ class TPMActivityAttachmentLinkSerializer(serializers.Serializer):
                 object_id=self.context["object_id"],
             ))
         return {"attachments": links}
+
+
+class TPMVisitAttachmentLinkSerializer(serializers.Serializer):
+    activity_attachments = TPMAttachmentLinkSerializer(
+        many=True,
+        read_only=True,
+    )

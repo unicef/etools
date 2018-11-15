@@ -10,7 +10,11 @@ from rest_framework import status
 from unicef_attachments.models import AttachmentLink
 
 from etools.applications.action_points.tests.factories import ActionPointFactory
-from etools.applications.attachments.tests.factories import AttachmentFactory, AttachmentFileTypeFactory
+from etools.applications.attachments.tests.factories import (
+    AttachmentFactory,
+    AttachmentLinkFactory,
+    AttachmentFileTypeFactory,
+)
 from etools.applications.EquiTrack.tests.cases import BaseTenantTestCase
 from etools.applications.partners.models import PartnerType
 from etools.applications.reports.tests.factories import SectionFactory
@@ -848,3 +852,34 @@ class TestActivityAttachmentLinkView(TPMTestCaseMixin, BaseTenantTestCase):
         )
         self.assertEqual(list_response.status_code, status.HTTP_200_OK)
         self.assertEqual(links_qs.count(), 1)
+
+
+class TestVisitAttachmentLinkView(TPMTestCaseMixin, BaseTenantTestCase):
+    @classmethod
+    def setUpTestData(cls):
+        super().setUpTestData()
+
+        cls.visit = TPMVisitFactory(
+            status='draft',
+            tpm_partner=cls.tpm_user.tpmpartners_tpmpartnerstaffmember.tpm_partner,
+            tpm_partner_focal_points=[cls.tpm_user.tpmpartners_tpmpartnerstaffmember],
+            tpm_activities__count=1
+        )
+        cls.activity = cls.visit.tpm_activities.first()
+        partner = TPMPartnerFactory()
+        cls.attachment = AttachmentFactory(content_object=partner)
+        cls.attachment_link = AttachmentLinkFactory(
+            attachment=cls.attachment,
+            content_object=cls.activity
+        )
+
+    def test_list(self):
+        response = self.forced_auth_req(
+            'get',
+            reverse('tpm:visit-links', args=[self.visit.pk]),
+            user=self.pme_user,
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        data = response.data
+        self.assertEqual(len(data), 1)
+        self.assertEqual(data[0]["id"], self.attachment_link.pk)
