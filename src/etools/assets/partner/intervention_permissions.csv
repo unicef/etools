@@ -77,6 +77,7 @@ Field no,Field Name,Group,Condition,Status,Action,Allowed
 3.9.11,signed_pd_document,UNICEF User,,Draft,Required,FALSE
 3.9.11,activation_letter_attachment,UNICEF User,contingency on,Active,Required,True
 3.9.11,termination_doc,UNICEF User,,Terminated,Required,True
+3.9.12,signed_pd_attachment,UNICEF User,,Draft,Required,FALSE
 3.9.5,partner_authorized_officer_signatory,UNICEF User,,Draft,Required,FALSE
 3.9.6,signed_by_partner_date,UNICEF User,,Draft,Required,FALSE
 3.9.7,unicef_signatory,UNICEF User,,*,Required,FALSE
