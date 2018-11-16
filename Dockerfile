@@ -1,6 +1,4 @@
-FROM python:3.6.4-jessie
-# python:3.6.4-jessie has python 2.7 and 3.6 installed, and packages
-# available to install 3.4
+FROM python:3.7.1
 
 # Install dependencies
 RUN apt-get update
@@ -15,7 +13,7 @@ RUN apt-get install -y --no-install-recommends \
     git-core
 RUN apt-get install -y --no-install-recommends \
     python3-dev \
-    python-software-properties \
+    software-properties-common \
     python-setuptools
 RUN apt-get install -y --no-install-recommends \
     postgresql-client \
@@ -25,12 +23,12 @@ RUN apt-get install -y --no-install-recommends \
     python-gdal \
     gdal-bin \
     libgdal-dev \
-    libgdal1h \
-    libgdal1-dev \
+    g++ \
     libxml2-dev \
     libxslt-dev \
     xmlsec1
 
+RUN gdal-config --version
 RUN pip install --upgrade \
     setuptools \
     pip \

@@ -8,7 +8,7 @@ responses
 isort
 ipython
 pdbpp
-tox
+tox>=3.5
 drf-api-checker>=0.3
 django-extensions
 invoke
