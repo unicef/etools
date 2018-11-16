@@ -20,6 +20,7 @@ from etools.applications.partners.models import (
     InterventionAttachment,
 )
 from etools.applications.reports.models import CountryProgramme
+from etools.applications.utils.common.urlresolvers import site_url
 from etools.applications.utils.common.utils import run_on_all_tenants
 
 logger = logging.getLogger(__name__)
@@ -388,3 +389,25 @@ def send_pca_missing_notifications():
                 template_name='partners/intervention/pca_missing',
                 context=context
             )
+
+
+def send_agreement_suspended_notification(agreement, user):
+    # send notification to user performing this action
+    pd_list = []
+    for intervention in agreement.interventions.all():
+        sections = ", ".join(
+            [str(s) for s in intervention.sections.all()]
+        )
+        url = "{}{}".format(site_url(), intervention.get_object_url())
+        pd_list.append((sections, intervention.reference_number, url))
+
+    send_notification_with_template(
+        sender=agreement,
+        recipients=user.email,  # person that initiated this update
+        template_name="partners/agreement/suspended",
+        context={
+            "vendor_number": agreement.reference_number,
+            "vendor_name": agreement.partner.name,
+            "pd_list": pd_list,  # section, pd_number, link
+        }
+    )
