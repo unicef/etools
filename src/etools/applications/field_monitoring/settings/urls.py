@@ -17,7 +17,6 @@ root_api.register(r'methods/types', MethodTypesViewSet, base_name='method-types'
 root_api.register(r'cp-outputs/configs', CPOutputConfigsViewSet, base_name='cp_output-configs')
 root_api.register(r'cp-outputs', CPOutputsViewSet, base_name='cp_outputs')
 root_api.register(r'sites', LocationSitesViewSet, base_name='sites')
-root_api.register(r'cp-outputs', CPOutputConfigsViewSet, base_name='cp_output-configs')
 
 app_name = 'field_monitoring_settings'
 urlpatterns = [
