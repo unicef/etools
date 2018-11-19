@@ -16,7 +16,7 @@ class PartnerOrganizationSerializer(MinimalPartnerOrganizationListSerializer):
     url = serializers.SerializerMethodField()
 
     class Meta(MinimalPartnerOrganizationListSerializer.Meta):
-        field = MinimalPartnerOrganizationListSerializer.Meta.fields + (
+        fields = MinimalPartnerOrganizationListSerializer.Meta.fields + (
             'url',
         )
 
