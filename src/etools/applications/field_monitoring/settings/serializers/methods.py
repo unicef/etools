@@ -33,12 +33,3 @@ class MethodTypeSerializer(PermissionsBasedSerializerMixin, serializers.ModelSer
             raise ValidationError(ex.message)
 
         return method
-
-    def validate(self, attrs):
-        validated_data = super().validate(attrs)
-
-        method = validated_data.get('method', None) or self.instance.method if self.instance else None
-        if method and not method.is_types_applicable:
-            raise ValidationError({'method', _('Unable to add type for this Method')})
-
-        return validated_data
