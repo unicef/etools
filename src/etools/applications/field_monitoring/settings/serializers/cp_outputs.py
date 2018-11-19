@@ -9,14 +9,31 @@ from etools.applications.field_monitoring.settings.models import CPOutputConfig
 from etools.applications.partners.models import Intervention
 from etools.applications.reports.models import Result
 from etools.applications.reports.serializers.v2 import OutputListSerializer
+from etools.applications.utils.common.urlresolvers import build_frontend_url
+
+
+class PartnerOrganizationSerializer(MinimalPartnerOrganizationListSerializer):
+    url = serializers.SerializerMethodField()
+
+    class Meta(MinimalPartnerOrganizationListSerializer.Meta):
+        field = MinimalPartnerOrganizationListSerializer.Meta.fields + (
+            'url',
+        )
+
+    def get_url(self, obj):
+        return build_frontend_url('pmp', 'partners', obj.id, 'details')
 
 
 class InterventionSerializer(serializers.ModelSerializer):
-    partner = MinimalPartnerOrganizationListSerializer(source='agreement.partner')
+    partner = PartnerOrganizationSerializer(source='agreement.partner')
+    url = serializers.SerializerMethodField()
 
     class Meta:
         model = Intervention
-        fields = ('id', 'title', 'number', 'partner')
+        fields = ('id', 'title', 'number', 'partner', 'url')
+
+    def get_url(self, obj):
+        return build_frontend_url('pmp', 'interventions', obj.id, 'details')
 
 
 class CPOutputConfigSerializer(serializers.ModelSerializer):
