@@ -76,6 +76,7 @@ urlpatterns = [
     url(r'^locations/', include('unicef_locations.urls')),
     url(r'^locations/cartodbtables/$', CartoDBTablesView.as_view(), name='cartodbtables'),
     url(r'^locations/autocomplete/$', LocationQuerySetView.as_view(), name='locations_autocomplete'),
+    url(r'^api/v1/field-monitoring/', include('etools.applications.field_monitoring.urls')),
 
     # GIS API urls
     url(r'^api/management/gis/', include('etools.applications.management.urls_gis')),
@@ -92,7 +93,6 @@ urlpatterns = [
     url(r'^api/tpm/', include('etools.applications.tpm.urls')),
     url(r'^api/audit/', include('etools.applications.audit.urls')),
     url(r'^api/action-points/', include('etools.applications.action_points.urls')),
-    url(r'^api/field-monitoring/', include('etools.applications.field_monitoring.urls')),
     url(r'^api/v2/reports/', include('etools.applications.reports.urls_v2')),
     url(r'^api/v2/', include('etools.applications.partners.urls_v2', namespace='partners_api')),
     url(r'^api/prp/v1/', include('etools.applications.partners.prp_urls', namespace='prp_api_v1')),
