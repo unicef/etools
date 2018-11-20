@@ -646,7 +646,7 @@ class TestMonitoredPartnersView(FMBaseTestCaseMixin, BaseTenantTestCase):
         self.assertListEqual(sorted([r['id'] for r in response.data['results']]), sorted(partners))
 
 
-class FieldMonitoringGeneralAttachmentsView(FMBaseTestCaseMixin, BaseTenantTestCase):
+class TestFieldMonitoringGeneralAttachmentsView(FMBaseTestCaseMixin, BaseTenantTestCase):
     def test_add(self):
         attachments_num = Attachment.objects.filter(code='fm_common').count()
         self.assertEqual(attachments_num, 0)
