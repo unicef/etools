@@ -8,7 +8,7 @@ from django.db.models.functions import Concat
 from model_utils import Choices
 from rest_framework import status
 from rest_framework.generics import RetrieveUpdateDestroyAPIView
-from rest_framework.permissions import IsAdminUser
+from rest_framework.permissions import IsAdminUser, IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from unicef_attachments.models import FileType as AttachmentFileType
@@ -70,7 +70,7 @@ def choices_to_json_ready(choices, sort_choices=True):
 
 
 class PMPStaticDropdownsListAPIView(APIView):
-    permission_classes = (IsAdminUser,)
+    permission_classes = (IsAuthenticated,)
 
     def get(self, request):
         """

@@ -1,23 +1,41 @@
 from datetime import date
 
-from django.conf import settings
 from django.db import connection
-from django.http import HttpResponse
-from django.views.generic import View
+from django.views.generic import TemplateView
 
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from etools.applications.partners.models import Agreement
 from etools.applications.users.models import Country, UserProfile
+from etools.applications.vision.models import VisionSyncLog
 
 
-class PortalDashView(View):
+class PortalDashView(TemplateView):
+    template_name = 'portal.html'
 
-    def get(self, request):
-        with open(settings.PACKAGE_ROOT + '/templates/frontend/management/management.html', 'r') as my_f:
-            result = my_f.read()
-        return HttpResponse(result)
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+
+        last_ad = getattr(VisionSyncLog.objects.filter(successful=True, handler_name__in=[
+            'ProgrammeSynchronizer', 'RAMSynchronizer', 'PartnerSynchronizer', 'FundReservationsSynchronizer',
+            'FundCommitmentSynchronizer']).order_by('date_processed').last(), 'date_processed', '-')
+
+        last_vision = getattr(VisionSyncLog.objects.filter(successful=True, handler_name__in=[
+            'UserADSync', 'UserADSyncDelta']).order_by('date_processed').last(), 'date_processed', '-')
+
+        context.update({
+            'active_users': UserProfile.objects.filter(user__is_staff=True, user__is_active=True).count(),
+            'countries': Country.objects.filter(vision_sync_enabled=True).count(),
+            'last_ad_sync': last_ad,
+            'last_vision_sync': last_vision,
+        })
+        return context
+
+        # def get(self, request):
+    #     with open(settings.PACKAGE_ROOT + '/templates/frontend/management/management.html', 'r') as my_f:
+    #         result = my_f.read()
+    #     return HttpResponse(result)
 
 
 class ActiveUsers(APIView):

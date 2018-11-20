@@ -189,6 +189,7 @@ class RiskRootSerializer(WritableNestedSerializerMixin, serializers.ModelSeriali
             models.Prefetch('blueprints__risks', Risk.objects.filter(engagement=instance))
         )
 
+        # {'cat_parent_pk': [cat_child_1, cat_child_2], 'cat_parent2_pk': [cat_child2_1], None: [root]}
         parent_id_children_map = dict()
         for category in categories:
             children = parent_id_children_map.get(category.parent_id, None)
@@ -201,7 +202,7 @@ class RiskRootSerializer(WritableNestedSerializerMixin, serializers.ModelSeriali
         # Root doesn't have parent
         if None not in parent_id_children_map:
             return None
-        root = parent_id_children_map[None][0]
+        root = parent_id_children_map[None][0]  # top level category
 
         # Breadth-first search
         queue = [root]

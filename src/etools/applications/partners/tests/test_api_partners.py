@@ -1,17 +1,18 @@
 import datetime
 import json
 
-from django.core.exceptions import ValidationError
 from django.test import SimpleTestCase
 from django.urls import reverse
 
 from mock import Mock, patch
 from rest_framework import status
+from rest_framework.exceptions import ErrorDetail
 
 from etools.applications.attachments.tests.factories import AttachmentFactory, AttachmentFileTypeFactory
 from etools.applications.EquiTrack.tests.cases import BaseTenantTestCase
 from etools.applications.EquiTrack.tests.mixins import URLAssertionMixin
 from etools.applications.partners.models import (
+    Assessment,
     CoreValuesAssessment,
     Intervention,
     PartnerOrganization,
@@ -80,7 +81,7 @@ class TestPartnerOrganizationDetailAPIView(BaseTenantTestCase):
         data = json.loads(response.rendered_content)
         self.assertEqual(self.intervention.pk, data["interventions"][0]["id"])
 
-    def test_patch_with_attachment(self):
+    def test_patch_with_core_values_assessment_attachment(self):
         attachment = AttachmentFactory(
             file="test_file.pdf",
             file_type=None,
@@ -98,14 +99,57 @@ class TestPartnerOrganizationDetailAPIView(BaseTenantTestCase):
             self.url,
             data={
                 "core_values_assessments": [{
-                    "assessment_file": attachment.pk
+                    "attachment": attachment.pk
                 }]
             },
             user=self.unicef_staff
         )
         data = json.loads(response.rendered_content)
+        self.assertEqual(response.status_code, 200)
         self.assertEqual(data["id"], self.partner.pk)
         self.assertEqual(data["interventions"][0]["id"], self.intervention.pk)
+        self.assertTrue(assessment_qs.exists())
+        self.assertEqual(len(data["core_values_assessments"]), 1)
+        self.assertEqual(
+            data["core_values_assessments"][0]["attachment"],
+            attachment.file.url
+        )
+
+    def test_patch_with_assessment_attachment(self):
+        attachment = AttachmentFactory(
+            file="test_file.pdf",
+            file_type=None,
+            code="",
+        )
+        self.assertIsNone(attachment.file_type)
+        self.assertIsNone(attachment.content_object)
+        self.assertFalse(attachment.code)
+        assessment_qs = Assessment.objects.filter(
+            partner=self.partner
+        )
+        self.assertFalse(assessment_qs.exists())
+        response = self.forced_auth_req(
+            'patch',
+            self.url,
+            data={
+                "assessments": [{
+                    "report_attachment": attachment.pk,
+                    "completed_date": datetime.date.today(),
+                    "type": Assessment.TYPE_OTHER,
+                }]
+            },
+            user=self.unicef_staff
+        )
+        data = json.loads(response.rendered_content)
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(data["id"], self.partner.pk)
+        self.assertEqual(data["interventions"][0]["id"], self.intervention.pk)
+        self.assertTrue(assessment_qs.exists())
+        self.assertEqual(len(data["assessments"]), 1)
+        self.assertEqual(
+            data["assessments"][0]["report_attachment"],
+            attachment.file.url
+        )
 
     def test_add_planned_visits(self):
         response = self.forced_auth_req(
@@ -309,18 +353,13 @@ class TestPartnerOrganizationDetailAPIView(BaseTenantTestCase):
             short_name="City Hunter",
         )
 
-        planned_visit = PartnerPlannedVisitsFactory(
+        PartnerPlannedVisitsFactory(
             partner=cso_partner,
             year=current_year,
             programmatic_q1=1,
             programmatic_q2=2,
             programmatic_q3=3,
             programmatic_q4=4,
-        )
-        response = self.forced_auth_req(
-            'get',
-            reverse('partners_api:partner-detail', args=[cso_partner.pk]),
-            user=self.unicef_staff,
         )
         planned_visits = [{
             "programmatic_q1": 4,
@@ -334,22 +373,15 @@ class TestPartnerOrganizationDetailAPIView(BaseTenantTestCase):
             "vendor_number": cso_partner.vendor_number,
             "planned_visits": planned_visits,
         }
-        with self.assertRaises(ValidationError):
-            response = self.forced_auth_req(
-                'patch',
-                reverse('partners_api:partner-detail', args=[cso_partner.pk]),
-                user=self.unicef_staff,
-                data=data,
-            )
-            self.assertEqual(response.status_code, status.HTTP_200_OK)
-            self.assertEqual(len(response.data["planned_visits"]), 1)
-            data = response.data["planned_visits"][0]
-            self.assertEqual(data["id"], planned_visit.pk)
-            self.assertEqual(data["year"], current_year)
-            self.assertEqual(data["programmatic_q1"], 4)
-            self.assertEqual(data["programmatic_q2"], 3)
-            self.assertEqual(data["programmatic_q3"], 2)
-            self.assertEqual(data["programmatic_q4"], 1)
+        response = self.forced_auth_req(
+            'patch',
+            reverse('partners_api:partner-detail', args=[cso_partner.pk]),
+            user=self.unicef_staff,
+            data=data,
+        )
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertEqual(response.data["planned_visits"]["partner"],
+                         ErrorDetail(string='Planned Visit can be set only for Government partners', code='invalid'))
 
 
 class TestPartnerOrganizationHactAPIView(BaseTenantTestCase):

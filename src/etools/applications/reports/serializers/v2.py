@@ -4,6 +4,7 @@ from django.utils.translation import ugettext as _
 from rest_framework import serializers
 from rest_framework.exceptions import ValidationError
 
+from etools.applications.partners.models import Intervention
 from etools.applications.reports.models import (
     AppliedIndicator,
     Disaggregation,
@@ -14,22 +15,11 @@ from etools.applications.reports.models import (
     ReportingRequirement,
     Result,
     SpecialReportingRequirement,
-)
-
-
-class OutputListSerializer(serializers.ModelSerializer):
-    name = serializers.ReadOnlyField(source="output_name")
-    result_type = serializers.SlugRelatedField(slug_field="name", read_only=True)
-    expired = serializers.ReadOnlyField()
-    special = serializers.ReadOnlyField()
-
-    class Meta:
-        model = Result
-        fields = '__all__'
+    ResultType)
 
 
 class MinimalOutputListSerializer(serializers.ModelSerializer):
-    name = serializers.ReadOnlyField(source="output_name")
+    name = serializers.SerializerMethodField()
 
     class Meta:
         model = Result
@@ -37,6 +27,21 @@ class MinimalOutputListSerializer(serializers.ModelSerializer):
             "id",
             "name"
         )
+
+    def get_name(self, obj):
+        if obj.result_type == ResultType.OUTPUT:
+            return obj.output_name
+        else:
+            return obj.result_name
+
+
+class OutputListSerializer(MinimalOutputListSerializer):
+    result_type = serializers.SlugRelatedField(slug_field="name", read_only=True)
+    expired = serializers.ReadOnlyField()
+    special = serializers.ReadOnlyField()
+
+    class Meta(MinimalOutputListSerializer.Meta):
+        fields = '__all__'
 
 
 class IndicatorBlueprintCUSerializer(serializers.ModelSerializer):
@@ -146,6 +151,12 @@ class AppliedIndicatorSerializer(serializers.ModelSerializer):
         lower_result = attrs.get('lower_result', getattr(self.instance, 'lower_result', None))
         blueprint_data = attrs.get('indicator', getattr(self.instance, 'indicator', None))
 
+        # allow to change target denominator only if intervention is draft or signed
+        if attrs.get('target') and self.instance and attrs['target']['v'] != self.instance.target_display[1] \
+                and lower_result.result_link.intervention.status not in [Intervention.DRAFT, Intervention.SIGNED]:
+            raise ValidationError(_('You cannot change the Indicator Target Denominator if PD/SSFA is '
+                                    'not in status Draft or Signed'))
+
         # make sure locations are in the intervention
         locations = set(l.id for l in attrs.get('locations', []))
         if not locations.issubset(l.id for l in lower_result.result_link.intervention.flat_locations.all()):
@@ -191,6 +202,13 @@ class AppliedIndicatorCUSerializer(serializers.ModelSerializer):
     class Meta:
         model = AppliedIndicator
         fields = '__all__'
+
+
+class ClusterSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = AppliedIndicator
+        fields = 'cluster_name',
 
 
 class LowerResultSimpleCUSerializer(serializers.ModelSerializer):
@@ -294,6 +312,17 @@ class IndicatorSerializer(serializers.ModelSerializer):
     class Meta:
         model = Indicator
         fields = "__all__"
+
+
+class RAMIndicatorSerializer(serializers.ModelSerializer):
+    indicator_name = serializers.SerializerMethodField()
+
+    def get_indicator_name(self, obj):
+        return obj.light_repr
+
+    class Meta:
+        model = Indicator
+        fields = ("indicator_name",)
 
 
 class ReportingRequirementSerializer(serializers.ModelSerializer):

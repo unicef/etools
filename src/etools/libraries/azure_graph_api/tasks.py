@@ -32,19 +32,21 @@ def sync_user(username):
 @app.task
 def sync_all_users():
     logger.info('Azure Complete Sync Process started')
-    log = VisionSyncLog(country=Country.objects.get(schema_name="public"), handler_name='UserADSync')
+    log = VisionSyncLog.objects.create(country=Country.objects.get(schema_name="public"), handler_name='UserADSync')
     try:
         url = '{}/{}/users?$top={}'.format(
             settings.AZURE_GRAPH_API_BASE_URL,
             settings.AZURE_GRAPH_API_VERSION,
             settings.AZURE_GRAPH_API_PAGE_SIZE
         )
-        azure_sync_users(url)
+        status, _ = azure_sync_users(url)
     except Exception as e:
         log.exception_message = force_text(e)
         raise VisionException(*e.args)
     else:
-        log.successful = True
+        log.total_records = status['processed'] + status['skipped']
+        log.total_processed = status['processed']
+        log.successful = status['created'] + status['updated']
     finally:
         log.save()
     logger.info('Azure Complete Sync Process finished')
@@ -53,7 +55,8 @@ def sync_all_users():
 @app.task
 def sync_delta_users():
     logger.info('Azure Delta Sync Process started')
-    log = VisionSyncLog(country=Country.objects.get(schema_name="public"), handler_name='UserADSyncDelta')
+    log = VisionSyncLog.objects.create(
+        country=Country.objects.get(schema_name="public"), handler_name='UserADSyncDelta')
     try:
         url = cache.get(
             AZURE_GRAPH_API_USER_CACHE_KEY,
@@ -63,12 +66,15 @@ def sync_delta_users():
                 settings.AZURE_GRAPH_API_PAGE_SIZE
             )
         )
-        delta_link = azure_sync_users(url)
+        status, delta_link = azure_sync_users(url)
         cache.set(AZURE_GRAPH_API_USER_CACHE_KEY, delta_link)
+
     except Exception as e:
         log.exception_message = force_text(e)
         raise VisionException(*e.args)
     else:
+        log.total_records = status['processed'] + status['skipped']
+        log.total_processed = status['processed']
         log.successful = True
     finally:
         log.save()
@@ -91,5 +97,5 @@ def retrieve_user_info(username):
     jresponse = response.json()
     if response.status_code == 200:
         logger.info('Azure: Information retrieved')
-        return handle_record(jresponse)
+        return handle_record(jresponse)[-1]
     return {}

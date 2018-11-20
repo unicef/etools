@@ -1,6 +1,6 @@
 from django.utils import timezone
-from django_filters.rest_framework import DjangoFilterBackend
 
+from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import mixins, viewsets
 from rest_framework.decorators import action
 from rest_framework.filters import OrderingFilter, SearchFilter
@@ -23,7 +23,6 @@ from etools.applications.action_points.conditions import (
 from etools.applications.action_points.export.renderers import ActionPointCSVRenderer
 from etools.applications.action_points.export.serializers import ActionPointExportSerializer
 from etools.applications.action_points.filters import ReferenceNumberOrderingFilter, RelatedModuleFilter
-from etools.applications.action_points.metadata import ActionPointMetadata
 from etools.applications.action_points.models import ActionPoint
 from etools.applications.action_points.serializers import (
     ActionPointCreateSerializer,
@@ -31,6 +30,7 @@ from etools.applications.action_points.serializers import (
     ActionPointSerializer,
 )
 from etools.applications.permissions2.conditions import ObjectStatusCondition
+from etools.applications.permissions2.metadata import PermissionBasedMetadata
 from etools.applications.permissions2.views import PermittedFSMActionMixin, PermittedSerializerMixin
 
 
@@ -54,10 +54,10 @@ class ActionPointViewSet(
     PermittedFSMActionMixin,
     viewsets.GenericViewSet
 ):
-    metadata_class = ActionPointMetadata
+    metadata_class = PermissionBasedMetadata
     pagination_class = DynamicPageNumberPagination
     permission_classes = [IsAuthenticated]
-    queryset = ActionPoint.objects.all().select_related()
+    queryset = ActionPoint.objects.select_related()
     serializer_class = ActionPointSerializer
     serializer_action_classes = {
         'create': ActionPointCreateSerializer,
@@ -105,7 +105,7 @@ class ActionPointViewSet(
 
     @action(detail=False, methods=['get'], url_path='export/csv', renderer_classes=(ActionPointCSVRenderer,))
     def list_csv_export(self, request, *args, **kwargs):
-        serializer = ActionPointExportSerializer(self.get_queryset(), many=True)
+        serializer = ActionPointExportSerializer(self.get_queryset().prefetch_related('comments'), many=True)
         return Response(serializer.data, headers={
             'Content-Disposition': 'attachment;filename=action_points_{}.csv'.format(timezone.now().date())
         })

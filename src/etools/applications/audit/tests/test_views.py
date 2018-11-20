@@ -1,4 +1,3 @@
-
 import datetime
 import random
 
@@ -316,6 +315,23 @@ class TestEngagementsListViewSet(EngagementTransitionsTestCaseMixin, BaseTenantT
             filter_params={'status': status}
         )
 
+    def test_status_filter_multiple(self):
+        engagement_audit = AuditFactory(
+            agreement__auditor_firm=self.auditor_firm,
+        )
+        engagement_special_audit = SpecialAuditFactory(
+            agreement__auditor_firm=self.auditor_firm,
+        )
+        self._test_list(
+            self.auditor,
+            [engagement_audit, engagement_special_audit],
+            filter_params={
+                'engagement_type__in': ",".join(
+                    [Engagement.TYPE_AUDIT, Engagement.TYPE_SPECIAL_AUDIT]
+                )
+            }
+        )
+
     def test_status_filter_field_visit(self):
         status = Engagement.DISPLAY_STATUSES.field_visit
         self.third_engagement = self.engagement_factory(
@@ -375,6 +391,32 @@ class TestEngagementsListViewSet(EngagementTransitionsTestCaseMixin, BaseTenantT
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(len(response.data), 1)
         self.assertNotEqual(response.data[0], {})
+
+    def test_csv_view(self):
+        AuditFactory()
+        MicroAssessmentFactory()
+        SpotCheckFactory()
+
+        response = self.forced_auth_req(
+            'get',
+            '/api/audit/engagements/csv/',
+            user=self.unicef_user,
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertIn('text/csv', response['Content-Type'])
+
+    def test_staff_spot_checks_csv_view(self):
+        engagement = StaffSpotCheckFactory()
+
+        response = self.forced_auth_req(
+            'get',
+            '/api/audit/staff-spot-checks/csv/'.format(engagement.id),
+            user=self.unicef_user,
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertIn('text/csv', response['Content-Type'])
 
 
 class BaseTestEngagementsCreateViewSet(EngagementTransitionsTestCaseMixin):
@@ -1081,9 +1123,8 @@ class TestEngagementCSVExportViewSet(EngagementTransitionsTestCaseMixin, BaseTen
     def test_csv_view(self):
         response = self.forced_auth_req(
             'get',
-            '/api/audit/micro-assessments/{}/'.format(self.engagement.id),
+            '/api/audit/micro-assessments/{}/csv/'.format(self.engagement.id),
             user=self.unicef_user,
-            data={'format': 'csv'}
         )
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)

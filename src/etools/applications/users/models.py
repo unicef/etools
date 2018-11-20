@@ -2,16 +2,12 @@ import logging
 from decimal import Decimal
 
 from django.conf import settings
-from django.contrib.auth.models import (
-    AbstractBaseUser,
-    Group,
-    UserManager,
-    PermissionsMixin,
-)
+from django.contrib.auth.models import AbstractBaseUser, Group, PermissionsMixin, UserManager
 from django.core.mail import send_mail
 from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db import connection, models
 from django.db.models.signals import post_save
+from django.utils.functional import cached_property
 from django.utils.translation import ugettext_lazy as _
 
 from tenant_schemas.models import TenantMixin
@@ -68,6 +64,13 @@ class User(AbstractBaseUser, PermissionsMixin):
     def email_user(self, subject, message, from_email=None, **kwargs):
         """Send an email to this user."""
         send_mail(subject, message, from_email, [self.email], **kwargs)
+
+    def is_unicef_user(self):
+        return self.email.endswith('@unicef.org')
+
+    @cached_property
+    def full_name(self):
+        return self.get_full_name()
 
 
 class Country(TenantMixin):

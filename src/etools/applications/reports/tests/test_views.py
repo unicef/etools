@@ -1,9 +1,8 @@
 import datetime
 from operator import itemgetter
 
-from django.urls import reverse
 from django.test import SimpleTestCase
-
+from django.urls import reverse
 
 from rest_framework import status
 from tablib.core import Dataset
@@ -134,6 +133,11 @@ class TestOutputListAPIView(BaseTenantTestCase):
             result_type=cls.result_type,
             country_programme=cls.country_programme
         )
+
+        cls.outcome = ResultFactory(
+            result_type=ResultTypeFactory(name=ResultType.OUTCOME),
+            country_programme=cls.country_programme
+        )
         cls.url = reverse('reports:report-result-list')
 
     def test_get(self):
@@ -181,6 +185,15 @@ class TestOutputListAPIView(BaseTenantTestCase):
         self.assertCountEqual(
             [int(r["id"]) for r in response.data],
             [self.result1.pk, self.result2.pk]
+        )
+
+    def test_filter_result_type_outcome(self):
+        data = {"result_type": ResultType.OUTCOME}
+        response = self.forced_auth_req('get', self.url, data=data)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertCountEqual(
+            [int(r["id"]) for r in response.data],
+            [self.outcome.pk]
         )
 
     def test_filter_values(self):
@@ -843,8 +856,8 @@ class TestAppliedIndicatorExportList(BaseTenantTestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         dataset = Dataset().load(response.content.decode('utf-8'), 'csv')
         self.assertEqual(dataset.height, 1)
-        self.assertEqual(len(dataset._get_headers()), 31)
-        self.assertEqual(len(dataset[0]), 31)
+        self.assertEqual(len(dataset._get_headers()), 32)
+        self.assertEqual(len(dataset[0]), 32)
 
     def test_csv_flat_export_api(self):
         response = self.forced_auth_req(
@@ -857,8 +870,57 @@ class TestAppliedIndicatorExportList(BaseTenantTestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         dataset = Dataset().load(response.content.decode('utf-8'), 'csv')
         self.assertEqual(dataset.height, 1)
-        self.assertEqual(len(dataset._get_headers()), 31)
-        self.assertEqual(len(dataset[0]), 31)
+        self.assertEqual(len(dataset._get_headers()), 32)
+        self.assertEqual(len(dataset[0]), 32)
+
+
+class TestClusterListAPIView(BaseTenantTestCase):
+    @classmethod
+    def setUpTestData(cls):
+        cls.unicef_staff = UserFactory(is_staff=True)
+        cls.intervention = InterventionFactory()
+        cls.result_link = InterventionResultLinkFactory()
+        cls.lower_result = LowerResultFactory(
+            name="LL Name",
+            result_link=cls.result_link,
+        )
+        cls.indicator = IndicatorBlueprintFactory()
+        AppliedIndicatorFactory(
+            context_code="CC321",
+            indicator=cls.indicator,
+            lower_result=LowerResultFactory(name="LL Name", result_link=cls.result_link),
+            cluster_name='ABC',
+        )
+        AppliedIndicatorFactory(
+            context_code="CC321",
+            indicator=cls.indicator,
+            lower_result=LowerResultFactory(name="LL Name", result_link=cls.result_link),
+            cluster_name='XYZ',
+        )
+        AppliedIndicatorFactory(
+            context_code="CC321",
+            indicator=cls.indicator,
+            lower_result=LowerResultFactory(name="LL Name", result_link=cls.result_link),
+            cluster_name='XYZ',
+        )
+        AppliedIndicatorFactory(
+            context_code="CC321",
+            indicator=cls.indicator,
+            lower_result=LowerResultFactory(name="LL Name", result_link=cls.result_link),
+        )
+        cls.url = reverse("reports:cluster")
+
+    def test_get(self):
+        response = self.forced_auth_req(
+            "get",
+            self.url,
+            user=self.unicef_staff,
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(response.data), 2)
+        clusters = [item['cluster_name'] for item in response.data]
+        clusters.sort()
+        self.assertEquals(['ABC', 'XYZ'], clusters)
 
 
 class TestSpecialReportingRequirementListCreateView(BaseTenantTestCase):

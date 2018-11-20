@@ -2,13 +2,12 @@ from django.apps import apps
 from django.utils.lru_cache import lru_cache
 from django.utils.translation import ugettext as _
 
+from etools_validator.utils import check_rigid_related
 from rest_framework import permissions
 
 from etools.applications.environment.helpers import tenant_switch_is_active
-from etools.applications.EquiTrack.utils import HashableDict
+from etools.applications.EquiTrack.utils import HashableDict, is_user_in_groups
 from etools.applications.utils.common.utils import get_all_field_names
-from etools.applications.utils.permissions.utils import is_user_in_groups
-from etools_validator.utils import check_rigid_related
 
 # READ_ONLY_API_GROUP_NAME is the name of the permissions group that provides read-only access to some list views.
 # Initially, this is only being used for PRP-related endpoints.
@@ -279,4 +278,19 @@ class ListCreateAPIMixedPermission(permissions.BasePermission):
             return request.user.is_authenticated and request.user.is_staff
         else:
             # This class shouldn't see methods other than GET and POST, but regardless the answer is 'no you may not'.
+            return False
+
+
+class ReadOnlyAPIUser(permissions.BasePermission):
+    '''Permission class for Views that only allow read and only for backend api users or superusers
+        GET users must be either (a) superusers or (b) in the Limited API group.
+    '''
+    def has_permission(self, request, view):
+        if request.method in permissions.SAFE_METHODS:
+            if request.user.is_authenticated:
+                if request.user.is_superuser or is_user_in_groups(request.user, [READ_ONLY_API_GROUP_NAME]):
+                    return True
+            return False
+        else:
+            # This class shouldn't see methods other than GET, but regardless the answer is 'no you may not'.
             return False

@@ -1,4 +1,3 @@
-
 from django.contrib.gis.geos import GEOSGeometry
 
 from rest_framework import serializers
@@ -35,6 +34,7 @@ class GisLocationWktSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Location
+        geo_field = None
         fields = (
             'id',
             'parent_id',

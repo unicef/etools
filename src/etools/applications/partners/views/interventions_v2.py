@@ -36,7 +36,6 @@ from etools.applications.partners.models import (
     InterventionAttachment,
     InterventionReportingPeriod,
     InterventionResultLink,
-    InterventionSectionLocationLink,
 )
 from etools.applications.partners.permissions import PartnershipManagerPermission, PartnershipManagerRepPermission
 from etools.applications.partners.serializers.exports.interventions import (
@@ -48,8 +47,6 @@ from etools.applications.partners.serializers.exports.interventions import (
     InterventionIndicatorExportSerializer,
     InterventionResultExportFlatSerializer,
     InterventionResultExportSerializer,
-    InterventionSectionLocationLinkExportFlatSerializer,
-    InterventionSectionLocationLinkExportSerializer,
 )
 from etools.applications.partners.serializers.interventions_v2 import (
     InterventionAmendmentCUSerializer,
@@ -61,15 +58,16 @@ from etools.applications.partners.serializers.interventions_v2 import (
     InterventionListMapSerializer,
     InterventionListSerializer,
     InterventionLocationExportSerializer,
+    InterventionRAMIndicatorsListSerializer,
     InterventionReportingPeriodSerializer,
     InterventionReportingRequirementCreateSerializer,
     InterventionReportingRequirementListSerializer,
     InterventionResultCUSerializer,
     InterventionResultLinkSimpleCUSerializer,
     InterventionResultSerializer,
-    InterventionSectionLocationCUSerializer,
     MinimalInterventionListSerializer,
-    PlannedVisitsCUSerializer)
+    PlannedVisitsCUSerializer,
+)
 from etools.applications.partners.validation.interventions import InterventionValid
 from etools.applications.reports.models import AppliedIndicator, LowerResult, ReportingRequirement
 from etools.applications.reports.serializers.v2 import AppliedIndicatorSerializer, LowerResultSimpleCUSerializer
@@ -465,55 +463,6 @@ class InterventionAmendmentDeleteView(DestroyAPIView):
             raise ValidationError("You do not have permissions to delete an amendment")
 
 
-class InterventionSectionLocationLinkListAPIView(ExportModelMixin, ListAPIView):
-    """
-    Returns a list of InterventionSectionLocationLinks.
-    """
-    serializer_class = InterventionSectionLocationCUSerializer
-    permission_classes = (PartnershipManagerPermission,)
-    filter_backends = (PartnerScopeFilter,)
-    renderer_classes = (
-        JSONRenderer,
-        r.CSVRenderer,
-        CSVFlatRenderer,
-    )
-
-    def get_serializer_class(self):
-        """
-        Use different serializers for methods
-        """
-        query_params = self.request.query_params
-        if "format" in query_params.keys():
-            if query_params.get("format") == 'csv':
-                return InterventionSectionLocationLinkExportSerializer
-            if query_params.get("format") == 'csv_flat':
-                return InterventionSectionLocationLinkExportFlatSerializer
-        return super(InterventionSectionLocationLinkListAPIView, self).get_serializer_class()
-
-    def get_queryset(self, format=None):
-        q = InterventionSectionLocationLink.objects.all()
-        query_params = self.request.query_params
-
-        if query_params:
-            queries = []
-            if "search" in query_params.keys():
-                queries.append(
-                    Q(intervention__number__icontains=query_params.get("search")) |
-                    Q(sector__name__icontains=query_params.get("search"))
-                )
-            if queries:
-                expression = functools.reduce(operator.and_, queries)
-                q = q.filter(expression)
-
-        if query_params.get("format") in ['csv', "csv_flat"]:
-            res = []
-            for i in q.all():
-                res = res + list(i.locations.all())
-            return res
-
-        return q
-
-
 class InterventionListMapView(QueryStringFilterMixin, ListCreateAPIView):
     """
     Returns a list of Interventions.
@@ -532,7 +481,7 @@ class InterventionListMapView(QueryStringFilterMixin, ListCreateAPIView):
         ('grants', 'frs__fr_items__grant_number__in'),
         ('unicef_focal_points', 'unicef_focal_points__in'),
         ('interventions', 'pk__in'),
-        ('clusters', 'result_links__ll_results__applied_indicators__cluster_indicator_title__icontains'),
+        ('clusters', 'result_links__ll_results__applied_indicators__cluster_name__icontains'),
     )
 
     def get_queryset(self):
@@ -803,3 +752,19 @@ class InterventionReportingRequirementView(APIView):
                 self.serializer_list_class(self.get_data()).data
             )
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+class InterventionRamIndicatorsView(APIView):
+
+    serializer_class = InterventionRAMIndicatorsListSerializer
+
+    def get(self, request, intervention_pk, cp_output_pk):
+
+        intervention = get_object_or_404(Intervention, pk=intervention_pk)
+
+        data = get_object_or_404(intervention.result_links.prefetch_related('cp_output__result_type', 'ram_indicators'),
+                                 cp_output__pk=cp_output_pk)
+
+        return Response(
+            self.serializer_class(data).data
+        )

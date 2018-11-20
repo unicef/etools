@@ -14,7 +14,7 @@ from django.utils.translation import ugettext, ugettext_lazy as _
 from django_fsm import FSMField, transition
 from unicef_notification.utils import send_notification
 
-from etools.applications.action_points.models import ActionPoint as NewActionPoint
+from etools.applications.action_points.models import ActionPoint
 from etools.applications.publics.models import TravelExpenseType
 from etools.applications.t2f.helpers.cost_summary_calculator import CostSummaryCalculator
 from etools.applications.t2f.helpers.invoice_maker import InvoiceMaker
@@ -485,8 +485,16 @@ class TravelActivity(models.Model):
         verbose_name_plural = _("Travel Activities")
 
     @property
+    def travel(self):
+        return self.travels.filter(traveler=self.primary_traveler).first()
+
+    @property
+    def task_number(self):
+        return list(self.travel.activities.values_list('id', flat=True)).index(self.id) + 1
+
+    @property
     def travel_status(self):
-        return self.travels.filter(traveler=self.primary_traveler).first().status
+        return self.travel.status
 
     _reference_number = None
 
@@ -665,70 +673,6 @@ class TravelAttachment(models.Model):
     file = models.FileField(upload_to=determine_file_upload_path, max_length=255, verbose_name=_('File'))
 
 
-# TODO remove when cleaning migrations
-def make_action_point_number():
-    year = timezone_now().year
-    action_points_qs = ActionPoint.objects.select_for_update().filter(created_at__year=year)
-
-    # This will lock the matching rows and prevent concurency issue
-    action_points_qs.values_list('id')
-
-    last_action_point = action_points_qs.order_by('action_point_number').last()
-    if last_action_point:
-        action_point_number = last_action_point.action_point_number
-        action_point_number = int(action_point_number.split('/')[1])
-        action_point_number += 1
-    else:
-        action_point_number = 1
-    return '{}/{:06d}'.format(year, action_point_number)
-
-
-# TODO remove me when migration to new AP has been finalized
-class ActionPoint(models.Model):
-    """
-    Represents an action point for the trip
-
-    Relates to :model:`Travel`
-    Relates to :model:`AUTH_USER_MODEL`
-    """
-
-    OPEN = 'open'
-    ONGOING = 'ongoing'
-    CANCELLED = 'cancelled'
-    COMPLETED = 'completed'
-
-    STATUS = (
-        (OPEN, 'Open'),
-        (ONGOING, 'Ongoing'),
-        (COMPLETED, 'Completed'),
-        (CANCELLED, 'Cancelled'),
-    )
-
-    travel = models.ForeignKey(
-        'Travel', related_name='action_points', verbose_name=_('Travel'),
-        on_delete=models.CASCADE,
-    )
-    action_point_number = models.CharField(max_length=11, default=make_action_point_number, unique=True,
-                                           verbose_name=_('Action Point Number'))
-    description = models.CharField(max_length=254, verbose_name=_('Description'))
-    due_date = models.DateTimeField(verbose_name=_('Due Date'))
-    person_responsible = models.ForeignKey(
-        settings.AUTH_USER_MODEL, related_name='+',
-        verbose_name=_('Responsible Person'),
-        on_delete=models.CASCADE,
-    )
-    status = models.CharField(choices=STATUS, max_length=254, default='', blank=True, verbose_name='Status')
-    completed_at = models.DateTimeField(blank=True, null=True, verbose_name=_('Completed At'))
-    actions_taken = models.TextField(blank=True, default='', verbose_name=_('Actions Taken'))
-    follow_up = models.BooleanField(default=False, verbose_name=_('Follow up'))
-    comments = models.TextField(blank=True, default='', verbose_name=_('Comments'))
-    created_at = models.DateTimeField(auto_now_add=True, verbose_name=_('Created At'))
-    assigned_by = models.ForeignKey(
-        settings.AUTH_USER_MODEL, related_name='+', verbose_name=_('Assigned By'),
-        on_delete=models.CASCADE,
-    )
-
-
 class Invoice(models.Model):
     PENDING = 'pending'
     PROCESSING = 'processing'
@@ -814,14 +758,13 @@ class T2FActionPointManager(models.Manager):
         return super().get_queryset().filter(travel_activity__isnull=False)
 
 
-# TODO remove NewActionPoint alias when T2F ActionPoint model has been removed
-class T2FActionPoint(NewActionPoint):
+class T2FActionPoint(ActionPoint):
     """
     This proxy class is for easier permissions assigning.
     """
     objects = T2FActionPointManager()
 
-    class Meta(NewActionPoint.Meta):
+    class Meta(ActionPoint.Meta):
         verbose_name = _('T2F Action Point')
         verbose_name_plural = _('T2F Action Points')
         proxy = True

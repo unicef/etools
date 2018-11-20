@@ -7,15 +7,11 @@ from django.contrib.auth.admin import UserAdmin
 from django.http.response import HttpResponseRedirect
 from django.shortcuts import get_object_or_404
 from django.urls import reverse
+
 from tenant_schemas.utils import get_public_schema_name
 
 from etools.applications.hact.tasks import update_hact_for_country, update_hact_values
-from etools.applications.users.models import (
-    Country,
-    Office,
-    UserProfile,
-    WorkspaceCounter,
-)
+from etools.applications.users.models import Country, Office, UserProfile, WorkspaceCounter
 from etools.applications.vision.tasks import sync_handler, vision_sync_task
 from etools.libraries.azure_graph_api.tasks import sync_user
 
@@ -174,6 +170,7 @@ class UserAdminPlus(UserAdmin):
         'last_name',
         'office',
         'is_staff',
+        'is_superuser',
         'is_active',
     ]
 
@@ -265,6 +262,7 @@ class CountryAdmin(admin.ModelAdmin):
             url(r'^(?P<pk>\d+)/sync_partners/$', wrap(self.sync_partners), name='users_country_partners'),
             url(r'^(?P<pk>\d+)/sync_programme/$', wrap(self.sync_programme), name='users_country_programme'),
             url(r'^(?P<pk>\d+)/sync_ram/$', wrap(self.sync_ram), name='users_country_ram'),
+            url(r'^(?P<pk>\d+)/sync_dct/$', wrap(self.sync_dct), name='users_country_dct'),
             url(r'^(?P<pk>\d+)/update_hact/$', wrap(self.update_hact), name='users_country_update_hact'),
         ]
         return custom_urls + urls
@@ -283,6 +281,9 @@ class CountryAdmin(admin.ModelAdmin):
 
     def sync_ram(self, request, pk):
         return self.execute_sync(pk, 'ram')
+
+    def sync_dct(self, request, pk):
+        return self.execute_sync(pk, 'dct')
 
     @staticmethod
     def execute_sync(country_pk, synchronizer):

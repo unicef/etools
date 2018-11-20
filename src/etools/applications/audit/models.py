@@ -36,7 +36,7 @@ from etools.applications.partners.models import PartnerOrganization, PartnerStaf
 from etools.applications.permissions2.fsm import has_action_permission
 from etools.applications.utils.common.models.mixins import InheritedModelMixin
 from etools.applications.utils.common.urlresolvers import build_frontend_url
-from etools.applications.utils.groups.wrappers import GroupWrapper
+from etools.libraries.djangolib.models import GroupWrapper
 
 
 class Engagement(InheritedModelMixin, TimeStampedModel, models.Model):
@@ -109,10 +109,10 @@ class Engagement(InheritedModelMixin, TimeStampedModel, models.Model):
     start_date = models.DateField(verbose_name=_('Period Start Date'), blank=True, null=True)
     end_date = models.DateField(verbose_name=_('Period End Date'), blank=True, null=True)
     total_value = models.DecimalField(
-        verbose_name=_('Total value of selected FACE form(s)'), blank=True, null=True, decimal_places=2, max_digits=20
+        verbose_name=_('Total value of selected FACE form(s)'), blank=True, default=0, decimal_places=2, max_digits=20
     )
     exchange_rate = models.DecimalField(
-        verbose_name=_('Exchange Rate'), blank=True, null=True, decimal_places=2, max_digits=20
+        verbose_name=_('Exchange Rate'), blank=True, default=0, decimal_places=2, max_digits=20
     )
 
     engagement_attachments = CodedGenericRelation(
@@ -141,17 +141,17 @@ class Engagement(InheritedModelMixin, TimeStampedModel, models.Model):
     date_of_cancel = models.DateField(verbose_name=_('Date Report Cancelled'), null=True, blank=True)
 
     amount_refunded = models.DecimalField(
-        verbose_name=_('Amount Refunded'), null=True, blank=True, decimal_places=2, max_digits=20
+        verbose_name=_('Amount Refunded'), blank=True, default=0, decimal_places=2, max_digits=20
     )
     additional_supporting_documentation_provided = models.DecimalField(
-        verbose_name=_('Additional Supporting Documentation Provided'), null=True, blank=True,
+        verbose_name=_('Additional Supporting Documentation Provided'), blank=True, default=0,
         decimal_places=2, max_digits=20
     )
     justification_provided_and_accepted = models.DecimalField(
-        verbose_name=_('Justification Provided and Accepted'), null=True, blank=True, decimal_places=2, max_digits=20
+        verbose_name=_('Justification Provided and Accepted'), blank=True, default=0, decimal_places=2, max_digits=20
     )
     write_off_required = models.DecimalField(
-        verbose_name=_('Impairment'), null=True, blank=True, decimal_places=2, max_digits=20
+        verbose_name=_('Impairment'), blank=True, default=0, decimal_places=2, max_digits=20
     )
     explanation_for_additional_information = models.TextField(
         verbose_name=_('Provide explanation for additional information received from the IP or add attachments'),
@@ -281,6 +281,7 @@ class Engagement(InheritedModelMixin, TimeStampedModel, models.Model):
 
 
 class RiskCategory(OrderedModel, models.Model):
+    """Group of questions"""
     TYPES = Choices(
         ('default', _('Default')),
         ('primary', _('Primary')),
@@ -331,8 +332,9 @@ class RiskCategory(OrderedModel, models.Model):
 
 
 class RiskBluePrint(OrderedModel, models.Model):
+    """Question"""
     weight = models.PositiveSmallIntegerField(default=1, verbose_name=_('Weight'))
-    is_key = models.BooleanField(default=False, verbose_name=_('Is Key'))
+    is_key = models.BooleanField(default=False, verbose_name=_('Is Key'))  # is key risk
     header = models.TextField(verbose_name=_('Header'))
     description = models.TextField(blank=True, verbose_name=_('Description'))
     category = models.ForeignKey(
@@ -350,6 +352,7 @@ class RiskBluePrint(OrderedModel, models.Model):
 
 
 class Risk(models.Model):
+    """Answer to question"""
     POSITIVE_VALUES = Choices(
         (1, 'low', _('Low')),
         (2, 'medium', _('Medium')),
@@ -388,10 +391,10 @@ class Risk(models.Model):
 
 
 class SpotCheck(Engagement):
-    total_amount_tested = models.DecimalField(verbose_name=_('Total Amount Tested'), null=True, blank=True,
+    total_amount_tested = models.DecimalField(verbose_name=_('Total Amount Tested'), blank=True, default=0,
                                               decimal_places=2, max_digits=20)
     total_amount_of_ineligible_expenditure = models.DecimalField(
-        verbose_name=_('Total Amount of Ineligible Expenditure'), null=True, blank=True,
+        verbose_name=_('Total Amount of Ineligible Expenditure'), default=0, blank=True,
         decimal_places=2, max_digits=20,
     )
 
@@ -406,11 +409,8 @@ class SpotCheck(Engagement):
 
     @property
     def pending_unsupported_amount(self):
-        try:
-            return self.total_amount_of_ineligible_expenditure - self.additional_supporting_documentation_provided \
-                - self.justification_provided_and_accepted - self.write_off_required
-        except TypeError:
-            return None
+        return self.total_amount_of_ineligible_expenditure - self.additional_supporting_documentation_provided \
+            - self.justification_provided_and_accepted - self.write_off_required
 
     def save(self, *args, **kwargs):
         self.engagement_type = Engagement.TYPES.sc
@@ -568,9 +568,9 @@ class Audit(Engagement):
         (OPTION_ADVERSE, _("Adverse opinion")),
     )
 
-    audited_expenditure = models.DecimalField(verbose_name=_('Audited Expenditure $'), null=True, blank=True,
+    audited_expenditure = models.DecimalField(verbose_name=_('Audited Expenditure $'), blank=True, default=0,
                                               decimal_places=2, max_digits=20)
-    financial_findings = models.DecimalField(verbose_name=_('Financial Findings $'), null=True, blank=True,
+    financial_findings = models.DecimalField(verbose_name=_('Financial Findings $'), blank=True, default=0,
                                              decimal_places=2, max_digits=20)
     audit_opinion = models.CharField(
         verbose_name=_('Audit Opinion'), max_length=20, choices=OPTIONS, default='', blank=True,
@@ -589,12 +589,9 @@ class Audit(Engagement):
 
     @property
     def pending_unsupported_amount(self):
-        try:
-            return self.financial_findings - self.amount_refunded \
-                - self.additional_supporting_documentation_provided \
-                - self.justification_provided_and_accepted - self.write_off_required
-        except TypeError:
-            return None
+        return self.financial_findings - self.amount_refunded \
+            - self.additional_supporting_documentation_provided \
+            - self.justification_provided_and_accepted - self.write_off_required
 
     @property
     def percent_of_audited_expenditure(self):
@@ -665,6 +662,7 @@ class FinancialFinding(models.Model):
 
 
 class KeyInternalControl(models.Model):
+    """Created by UNICEF staff"""
     audit = models.ForeignKey(
         Audit, verbose_name=_('Audit'), related_name='key_internal_controls',
         on_delete=models.CASCADE,

@@ -1,6 +1,5 @@
 import csv
 import json
-from datetime import date, datetime
 
 from django.conf import settings
 from django.contrib.auth import get_user_model
@@ -11,7 +10,6 @@ from django.utils.encoding import force_text
 
 import requests
 from celery.utils.log import get_task_logger
-from dateutil.relativedelta import relativedelta
 
 from etools.applications.users.models import Country
 from etools.applications.vision.exceptions import VisionException
@@ -118,18 +116,21 @@ class UserMapper(object):
 
     @transaction.atomic
     def create_or_update_user(self, record):
-
+        status = {'processed': 0, 'created': 0, 'updated': 0, 'skipped': 0, 'errors': 0}
+        status['processed'] = 1
         if not self.record_is_valid(record):
-            return
+            status['skipped'] = 1
+            return status
 
         key_value = record[self.KEY_ATTRIBUTE]
         logger.debug(key_value)
 
         try:
             user, created = get_user_model().objects.get_or_create(
-                email=key_value, username=key_value, is_staff=True)
+                email=key_value, username=key_value, defaults={'is_staff': True})
 
             if created:
+                status['created'] = int(created)
                 user.set_unusable_password()
                 user.groups.add(self.groups['UNICEF User'])
                 logger.info(u'Group added to user {}'.format(user))
@@ -140,11 +141,18 @@ class UserMapper(object):
                 logger.warning(u'No profile for user {}'.format(user))
                 return
 
-            self.update_user(user, record)
-            self.update_profile(profile, record)
+            user_updated = self.update_user(user, record)
+            profile_updated = self.update_profile(profile, record)
+
+            if not created and (user_updated or profile_updated):
+                status['updated'] = 1
 
         except IntegrityError as e:
             logger.exception(u'Integrity error on user retrieving: {} - exception {}'.format(key_value, e))
+            status['created'] = status['updated'] = 0
+            status['errors'] = 1
+
+        return status
 
     def record_is_valid(self, record):
         if self.KEY_ATTRIBUTE not in record:
@@ -178,6 +186,8 @@ class UserMapper(object):
             logger.debug(f'Updated User: {user}')
             user.save()
 
+        return modified
+
     def update_profile(self, profile, record):
         modified = False
         for attr, record_attr in self.PROFILE_ATTR_MAP.items():
@@ -189,6 +199,8 @@ class UserMapper(object):
         if modified:
             logger.debug(f'Updated Profile: {profile.user}')
             profile.save()
+
+        return modified
 
 
 class AzureUserMapper(UserMapper):
@@ -316,40 +328,3 @@ class UserVisionSynchronizer(object):
     @property
     def response(self):
         return self._filter_records(self._convert_records(self._load_records()))
-
-
-@app.task
-def user_report(writer, **kwargs):
-
-    start_date = kwargs.get('start_date', None)
-    if start_date:
-        start_date = datetime.strptime(start_date.pop(), '%Y-%m-%d')
-    else:
-        start_date = date.today() + relativedelta(months=-1)
-
-    countries = kwargs.get('countries', None)
-    qs = Country.objects.exclude(schema_name__in=['public', 'uat', 'frg'])
-    if countries:
-        qs = qs.filter(schema_name__in=countries.pop().split(','))
-    fieldnames = ['Country', 'Total Users', 'Unicef Users', 'Last month Users', 'Last month Unicef Users']
-    dict_writer = writer(fieldnames=fieldnames)
-    dict_writer.writeheader()
-
-    for country in qs:
-        dict_writer.writerow({
-            'Country': country,
-            'Total Users': get_user_model().objects.filter(profile__country=country).count(),
-            'Unicef Users': get_user_model().objects.filter(
-                profile__country=country,
-                email__endswith='@unicef.org'
-            ).count(),
-            'Last month Users': get_user_model().objects.filter(
-                profile__country=country,
-                last_login__gte=start_date
-            ).count(),
-            'Last month Unicef Users': get_user_model().objects.filter(
-                profile__country=country,
-                email__endswith='@unicef.org',
-                last_login__gte=start_date
-            ).count(),
-        })

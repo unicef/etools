@@ -107,7 +107,7 @@ class AppliedIndicatorFactory(factory.django.DjangoModelFactory):
     indicator = factory.SubFactory(IndicatorBlueprintFactory)
     lower_result = factory.SubFactory(LowerResultFactory)
     context_code = fuzzy.FuzzyText(length=5)
-    target = fuzzy.FuzzyInteger(0, 100)
+    target = factory.Dict({'d': fuzzy.FuzzyInteger(0, 5), 'v': fuzzy.FuzzyInteger(10, 20)})
 
 
 class SectionFactory(factory.django.DjangoModelFactory):
@@ -124,6 +124,7 @@ class ReportingRequirementFactory(factory.django.DjangoModelFactory):
     report_type = fuzzy.FuzzyChoice(models.ReportingRequirement.TYPE_CHOICES)
     end_date = fuzzy.FuzzyDate(datetime.date(2001, 1, 1))
     due_date = fuzzy.FuzzyDate(datetime.date(2001, 1, 1))
+    start_date = fuzzy.FuzzyDate(datetime.date(2001, 1, 1))
 
 
 class SpecialReportingRequirementFactory(factory.django.DjangoModelFactory):

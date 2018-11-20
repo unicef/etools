@@ -4,6 +4,7 @@ from rest_framework_nested import routers
 from unicef_restlib.routers import NestedComplexRouter
 
 from etools.applications.tpm.views import (
+    ActivityAttachmentLinksView,
     ActivityAttachmentsViewSet,
     ActivityReportAttachmentsViewSet,
     PartnerAttachmentsViewSet,
@@ -11,6 +12,7 @@ from etools.applications.tpm.views import (
     TPMPartnerViewSet,
     TPMStaffMembersViewSet,
     TPMVisitViewSet,
+    VisitAttachmentsViewSet,
     VisitReportAttachmentsViewSet,
 )
 
@@ -29,11 +31,12 @@ tpm_visits_api.register(r'visits', TPMVisitViewSet, base_name='visits')
 visit_attachments_api = NestedComplexRouter(tpm_visits_api, r'visits')
 visit_attachments_api.register('report-attachments', VisitReportAttachmentsViewSet,
                                base_name='visit-report-attachments')
+visit_attachments_api.register('attachments', VisitAttachmentsViewSet,
+                               base_name='visit-attachments')
 visit_attachments_api.register('activities/attachments', ActivityAttachmentsViewSet,
                                base_name='activity-attachments')
 visit_attachments_api.register('activities/report-attachments', ActivityReportAttachmentsViewSet,
                                base_name='activity-report-attachments')
-
 tpm_action_points_api = NestedComplexRouter(tpm_visits_api, r'visits', lookup='tpm_activity__tpm_visit')
 tpm_action_points_api.register(r'action-points', TPMActionPointViewSet, base_name='action-points')
 
@@ -46,4 +49,9 @@ urlpatterns = [
     url(r'^', include(tpm_action_points_api.urls)),
     url(r'^', include(visit_attachments_api.urls)),
     url(r'^', include(tpm_visits_api.urls)),
+    url(
+        r'^visits/activities/(?P<object_pk>\d+)/links',
+        view=ActivityAttachmentLinksView.as_view(),
+        name='activity-links'
+    )
 ]

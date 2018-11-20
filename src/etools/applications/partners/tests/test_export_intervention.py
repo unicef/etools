@@ -4,22 +4,26 @@ from django.urls import reverse
 
 from rest_framework import status
 from tablib.core import Dataset
+from unicef_locations.tests.factories import LocationFactory
 
 from etools.applications.EquiTrack.tests.cases import BaseTenantTestCase
-from unicef_locations.tests.factories import LocationFactory
 from etools.applications.partners.tests.factories import (
     AgreementFactory,
     InterventionAmendmentFactory,
     InterventionAttachmentFactory,
     InterventionBudgetFactory,
     InterventionFactory,
+    InterventionPlannedVisitsFactory,
     InterventionResultLinkFactory,
-    InterventionSectionLocationLinkFactory,
     PartnerFactory,
     PartnerStaffFactory,
-    InterventionPlannedVisitsFactory
 )
-from etools.applications.reports.tests.factories import CountryProgrammeFactory, IndicatorFactory, ResultFactory, SectionFactory
+from etools.applications.reports.tests.factories import (
+    CountryProgrammeFactory,
+    IndicatorFactory,
+    ResultFactory,
+    SectionFactory,
+)
 from etools.applications.users.tests.factories import UserFactory
 
 
@@ -246,8 +250,8 @@ class TestInterventionAmendmentModelExport(BaseInterventionModelExportTestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         dataset = Dataset().load(response.content.decode('utf-8'), 'csv')
         self.assertEqual(dataset.height, 1)
-        self.assertEqual(len(dataset._get_headers()), 10)
-        self.assertEqual(len(dataset[0]), 10)
+        self.assertEqual(len(dataset._get_headers()), 11)
+        self.assertEqual(len(dataset[0]), 11)
 
     def test_csv_flat_export_api(self):
         response = self.forced_auth_req(
@@ -260,8 +264,8 @@ class TestInterventionAmendmentModelExport(BaseInterventionModelExportTestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         dataset = Dataset().load(response.content.decode('utf-8'), 'csv')
         self.assertEqual(dataset.height, 1)
-        self.assertEqual(len(dataset._get_headers()), 10)
-        self.assertEqual(len(dataset[0]), 10)
+        self.assertEqual(len(dataset._get_headers()), 11)
+        self.assertEqual(len(dataset[0]), 11)
 
 
 class TestInterventionResultModelExport(BaseInterventionModelExportTestCase):
@@ -359,55 +363,6 @@ class TestInterventionIndicatorModelExport(BaseInterventionModelExportTestCase):
         self.assertEqual(dataset.height, 1)
         self.assertEqual(len(dataset._get_headers()), 19)
         self.assertEqual(len(dataset[0]), 19)
-
-
-class TestInterventionSectionLocationLinkModelExport(BaseInterventionModelExportTestCase):
-    def setUp(self):
-        super(TestInterventionSectionLocationLinkModelExport, self).setUp()
-        self.location = LocationFactory(
-            name="Name",
-        )
-        self.link = InterventionSectionLocationLinkFactory(
-            intervention=self.intervention,
-        )
-        self.link.locations.add(self.location)
-
-    def test_invalid_format_export_api(self):
-        response = self.forced_auth_req(
-            'get',
-            reverse('partners_api:intervention-sector-locations'),
-            user=self.unicef_staff,
-            data={"format": "unknown"},
-        )
-        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
-
-    def test_csv_export_api(self):
-        response = self.forced_auth_req(
-            'get',
-            reverse('partners_api:intervention-sector-locations'),
-            user=self.unicef_staff,
-            data={"format": "csv"},
-        )
-
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
-        dataset = Dataset().load(response.content.decode('utf-8'), 'csv')
-        self.assertEqual(dataset.height, 1)
-        self.assertEqual(len(dataset._get_headers()), 19)
-        self.assertEqual(len(dataset[0]), 19)
-
-    def test_csv_flat_export_api(self):
-        response = self.forced_auth_req(
-            'get',
-            reverse('partners_api:intervention-sector-locations'),
-            user=self.unicef_staff,
-            data={"format": "csv_flat"},
-        )
-
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
-        dataset = Dataset().load(response.content.decode('utf-8'), 'csv')
-        self.assertEqual(dataset.height, 1)
-        self.assertEqual(len(dataset._get_headers()), 18)
-        self.assertEqual(len(dataset[0]), 18)
 
 
 class TestInterventionLocationExport(BaseInterventionModelExportTestCase):

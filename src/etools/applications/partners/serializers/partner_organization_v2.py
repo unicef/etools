@@ -2,12 +2,13 @@ import datetime
 import json
 
 from django.contrib.auth import get_user_model
-from django.core.exceptions import ValidationError
 from django.db.models import Q
 from django.utils import timezone
 
 from rest_framework import serializers
+from rest_framework.exceptions import ValidationError
 from unicef_attachments.fields import AttachmentSingleFileField
+from unicef_attachments.serializers import AttachmentSerializerMixin
 from unicef_snapshot.serializers import SnapshotModelSerializer
 
 from etools.applications.partners.models import (
@@ -17,13 +18,14 @@ from etools.applications.partners.models import (
     PartnerOrganization,
     PartnerPlannedVisits,
     PartnerStaffMember,
+    PartnerType,
     PlannedEngagement,
-    PartnerType)
+)
 from etools.applications.partners.serializers.interventions_v2 import InterventionListSerializer
 
 
-class CoreValuesAssessmentSerializer(serializers.ModelSerializer):
-    attachment = AttachmentSingleFileField(read_only=True)
+class CoreValuesAssessmentSerializer(AttachmentSerializerMixin, serializers.ModelSerializer):
+    attachment = AttachmentSingleFileField()
     # assessment = serializers.FileField(required=True)
     assessment_file = serializers.FileField(source='assessment', read_only=True)
 
@@ -144,10 +146,10 @@ class PartnerStaffMemberDetailSerializer(serializers.ModelSerializer):
         fields = "__all__"
 
 
-class AssessmentDetailSerializer(serializers.ModelSerializer):
-    report_attachment = AttachmentSingleFileField(read_only=True)
+class AssessmentDetailSerializer(AttachmentSerializerMixin, serializers.ModelSerializer):
+    report_attachment = AttachmentSingleFileField()
     report_file = serializers.FileField(source='report', read_only=True)
-    report = serializers.FileField(required=True)
+    report = serializers.FileField(required=False)
     completed_date = serializers.DateField(required=True)
 
     class Meta:
@@ -294,6 +296,29 @@ class PartnerOrganizationDetailSerializer(serializers.ModelSerializer):
     class Meta:
         model = PartnerOrganization
         fields = "__all__"
+
+
+class PartnerOrganizationDashboardSerializer(serializers.ModelSerializer):
+    sections = serializers.ReadOnlyField(read_only=True)
+    locations = serializers.ReadOnlyField(read_only=True)
+    action_points = serializers.ReadOnlyField(read_only=True)
+    total_ct_cp = serializers.FloatField(read_only=True)
+    total_ct_ytd = serializers.FloatField(read_only=True)
+
+    class Meta:
+        model = PartnerOrganization
+        fields = (
+            'id',
+            'name',
+            'sections',
+            'locations',
+            'action_points',
+            'total_ct_cp',
+            'total_ct_ytd',
+            'outstanding_dct_amount_6_to_9_months_usd',
+            'outstanding_dct_amount_more_than_9_months_usd',
+            'vendor_number',
+        )
 
 
 class PartnerOrganizationCreateUpdateSerializer(SnapshotModelSerializer):

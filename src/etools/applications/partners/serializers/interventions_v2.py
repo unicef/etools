@@ -3,17 +3,19 @@ from operator import itemgetter
 
 from django.db import transaction
 from django.db.models import Q
+from django.utils.functional import cached_property
 from django.utils.translation import ugettext as _
 
 from rest_framework import serializers
 from rest_framework.serializers import ValidationError
 from unicef_attachments.fields import AttachmentSingleFileField
 from unicef_attachments.serializers import AttachmentSerializerMixin
-from unicef_locations.serializers import LocationLightSerializer, LocationSerializer
+from unicef_locations.serializers import LocationSerializer
 from unicef_snapshot.serializers import SnapshotModelSerializer
 
+from etools.applications.EquiTrack.utils import h11
 from etools.applications.funds.models import FundsCommitmentItem, FundsReservationHeader
-from etools.applications.funds.serializers import FRsSerializer
+from etools.applications.funds.serializers import FRHeaderSerializer, FRsSerializer
 from etools.applications.partners.models import (
     Intervention,
     InterventionAmendment,
@@ -22,16 +24,15 @@ from etools.applications.partners.models import (
     InterventionPlannedVisits,
     InterventionReportingPeriod,
     InterventionResultLink,
-    InterventionSectionLocationLink,
     PartnerType,
 )
 from etools.applications.partners.permissions import InterventionPermissions
 from etools.applications.reports.models import AppliedIndicator, LowerResult, ReportingRequirement
-from etools.applications.reports.serializers.v1 import SectionSerializer
 from etools.applications.reports.serializers.v2 import (
     IndicatorSerializer,
     LowerResultCUSerializer,
     LowerResultSerializer,
+    RAMIndicatorSerializer,
     ReportingRequirementSerializer,
 )
 
@@ -59,7 +60,10 @@ class InterventionAmendmentCUSerializer(AttachmentSerializerMixin, serializers.M
     signed_amendment_attachment = AttachmentSingleFileField(
         override="signed_amendment"
     )
-    internal_prc_review = AttachmentSingleFileField()
+    internal_prc_review_attachment = AttachmentSingleFileField(
+        source="internal_prc_review",
+        required=False,
+    )
 
     class Meta:
         model = InterventionAmendment
@@ -256,27 +260,6 @@ class MinimalInterventionListSerializer(serializers.ModelSerializer):
         fields = (
             'id',
             'title',
-        )
-
-
-# TODO intervention sector locations cleanup
-class InterventionLocationSectionNestedSerializer(serializers.ModelSerializer):
-    locations = LocationLightSerializer(many=True)
-    sector = SectionSerializer()
-
-    class Meta:
-        model = InterventionSectionLocationLink
-        fields = (
-            'id', 'sector', 'locations'
-        )
-
-
-# TODO intervention sector locations cleanup
-class InterventionSectionLocationCUSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = InterventionSectionLocationLink
-        fields = (
-            'id', 'intervention', 'sector', 'locations'
         )
 
 
@@ -496,11 +479,11 @@ class InterventionCreateUpdateSerializer(AttachmentSerializerMixin, SnapshotMode
     planned_budget = InterventionBudgetCUSerializer(read_only=True)
     partner = serializers.CharField(source='agreement.partner.name', read_only=True)
     prc_review_document_file = serializers.FileField(source='prc_review_document', read_only=True)
-    prc_review_attachment = AttachmentSingleFileField()
+    prc_review_attachment = AttachmentSingleFileField(required=False)
     signed_pd_document_file = serializers.FileField(source='signed_pd_document', read_only=True)
-    signed_pd_attachment = AttachmentSingleFileField()
+    signed_pd_attachment = AttachmentSingleFileField(required=False)
     activation_letter_file = serializers.FileField(source='activation_letter', read_only=True)
-    activation_letter_attachment = AttachmentSingleFileField()
+    activation_letter_attachment = AttachmentSingleFileField(required=False)
     termination_doc_file = serializers.FileField(source='termination_doc', read_only=True)
     termination_doc_attachment = AttachmentSingleFileField()
     planned_visits = PlannedVisitsNestedSerializer(many=True, read_only=True, required=False)
@@ -648,11 +631,15 @@ class InterventionListMapSerializer(serializers.ModelSerializer):
     partner_name = serializers.CharField(source='agreement.partner.name')
     partner_id = serializers.CharField(source='agreement.partner.id')
     locations = LocationSerializer(source="flat_locations", many=True)
+    offices = serializers.StringRelatedField(many=True)
+    sections = serializers.StringRelatedField(many=True)
+    unicef_focal_points = serializers.StringRelatedField(many=True)
     donors = serializers.ReadOnlyField(read_only=True)
     donor_codes = serializers.ReadOnlyField(read_only=True)
     grants = serializers.ReadOnlyField(read_only=True)
-    results = serializers.ReadOnlyField(read_only=True)
+    results = serializers.ReadOnlyField(source='cp_output_names', read_only=True)
     clusters = serializers.ReadOnlyField(read_only=True)
+    frs = FRHeaderSerializer(many=True, read_only=True)
 
     class Meta:
         model = Intervention
@@ -676,6 +663,7 @@ class InterventionListMapSerializer(serializers.ModelSerializer):
             "grants",
             "results",
             "clusters",
+            "frs",
         )
 
 
@@ -688,6 +676,19 @@ class InterventionReportingRequirementListSerializer(serializers.ModelSerializer
     class Meta:
         model = Intervention
         fields = ("reporting_requirements", )
+
+
+class InterventionRAMIndicatorsListSerializer(serializers.ModelSerializer):
+
+    ram_indicators = RAMIndicatorSerializer(
+        many=True,
+        read_only=True
+    )
+    cp_output_name = serializers.CharField(source="cp_output.output_name")
+
+    class Meta:
+        model = InterventionResultLink
+        fields = ("ram_indicators", "cp_output_name")
 
 
 class InterventionReportingRequirementCreateSerializer(serializers.ModelSerializer):
@@ -745,7 +746,8 @@ class InterventionReportingRequirementCreateSerializer(serializers.ModelSerializ
                 })
 
             if i > 0:
-                if abs((requirements[i]["start_date"] - requirements[i - 1]["end_date"]).days) > 1:
+                if (requirements[i]["start_date"] - requirements[i - 1]["end_date"]).days > 1 or \
+                        (requirements[i]["start_date"] < requirements[i - 1]["end_date"]):
                     raise serializers.ValidationError({
                         "reporting_requirements": {
                             "start_date": _(
@@ -754,7 +756,19 @@ class InterventionReportingRequirementCreateSerializer(serializers.ModelSerializ
                         }
                     })
 
-    def _merge_data(self, data):
+    def _order_data(self, data):
+        data["reporting_requirements"] = sorted(
+            data["reporting_requirements"],
+            key=itemgetter("start_date")
+        )
+        return data
+
+    def _get_hash_key_string(self, record):
+        k = str(record["start_date"]) + str(record["end_date"]) + str(record["due_date"])
+        return k.encode('utf-8')
+
+    def _tweak_data(self, validated_data):
+
         current_reqs = ReportingRequirement.objects.values(
             "id",
             "start_date",
@@ -762,41 +776,39 @@ class InterventionReportingRequirementCreateSerializer(serializers.ModelSerializ
             "due_date",
         ).filter(
             intervention=self.intervention,
-            report_type=data["report_type"],
+            report_type=validated_data["report_type"],
         )
 
         current_reqs_dict = {}
-        for r in current_reqs:
-            current_reqs_dict[r["due_date"]] = r
+        for c_r in current_reqs:
+            current_reqs_dict[h11(self._get_hash_key_string(c_r))] = c_r
 
-        report_type = data["report_type"]
-        for r in data["reporting_requirements"]:
-            # not expecting ids, so match based on due date
-            if r.get("due_date") in current_reqs_dict:
-                r["id"] = current_reqs_dict[r.get("due_date")]["id"]
-                current_reqs_dict.pop(r["due_date"])
+        current_ids_that_need_to_be_kept = []
 
-            r["intervention"] = self.intervention
+        # if records don't have id but match a record with an id, assigned the id accordingly
+        report_type = validated_data["report_type"]
+        for r in validated_data["reporting_requirements"]:
+            if not r.get('id'):
+                # try to map see if the record already exists in the existing records
+                hash_key = h11(self._get_hash_key_string(r))
+                if current_reqs_dict.get(hash_key):
+                    r['id'] = current_reqs_dict[hash_key]['id']
+                    # remove record so we can track which ones are left to be deleted later on.
+                    current_ids_that_need_to_be_kept.append(r['id'])
+                else:
+                    r["intervention"] = self.intervention
+            else:
+                current_ids_that_need_to_be_kept.append(r['id'])
+
             r["report_type"] = report_type
-            if report_type == ReportingRequirement.TYPE_HR:
-                r["end_date"] = r["due_date"]
 
-        # We need all reporting requirements in end date order
-        data["reporting_requirements"] = sorted(
-            data["reporting_requirements"],
-            key=itemgetter("end_date")
-        )
-        return data
+        return validated_data, current_ids_that_need_to_be_kept, current_reqs_dict
 
     def run_validation(self, initial_data):
         serializer = self.fields["reporting_requirements"].child
-        report_type = initial_data.get("report_type")
-
         serializer.fields["start_date"].required = True
-        if report_type == ReportingRequirement.TYPE_QPR:
-            serializer.fields["end_date"].required = True
-        elif report_type == ReportingRequirement.TYPE_HR:
-            serializer.fields["due_date"].required = True
+        serializer.fields["end_date"].required = True
+        serializer.fields["due_date"].required = True
 
         return super().run_validation(initial_data)
 
@@ -825,7 +837,19 @@ class InterventionReportingRequirementCreateSerializer(serializers.ModelSerializ
                 "reporting_requirements": _("This field cannot be empty.")
             })
 
-        self._merge_data(data)
+        self._order_data(data)
+        # Make sure that all reporting requirements that have ids are actually related to current intervention
+        for rr in data["reporting_requirements"]:
+            try:
+                rr_id = rr['id']
+                req = ReportingRequirement.objects.get(pk=rr_id)
+                assert req.intervention.id == self.intervention.id
+            except ReportingRequirement.DoesNotExist:
+                raise serializers.ValidationError("Requirement ID passed in does not exist")
+            except AssertionError:
+                raise serializers.ValidationError("Requirement ID passed in belongs to a different intervention")
+            except KeyError:
+                pass
 
         if data["report_type"] == ReportingRequirement.TYPE_QPR:
             self._validate_qpr(data["reporting_requirements"])
@@ -834,13 +858,39 @@ class InterventionReportingRequirementCreateSerializer(serializers.ModelSerializ
 
         return data
 
+    @cached_property
+    def _past_records_editable(self):
+        if self.intervention.status == Intervention.DRAFT or \
+                (self.intervention.status == Intervention.SIGNED and self.intervention.contingency_pd):
+            return True
+        return False
+
+    @transaction.atomic()
     def create(self, validated_data):
+        today = date.today()
+        validated_data, current_ids_that_need_to_be_kept, current_reqs_dict = self._tweak_data(validated_data)
+        deletable_records = ReportingRequirement.objects.exclude(pk__in=current_ids_that_need_to_be_kept). \
+            filter(intervention=self.intervention, report_type=validated_data['report_type'])
+
+        if not self._past_records_editable:
+            if deletable_records.filter(start_date__lte=today).exists():
+                raise ValidationError("You're trying to delete a record that has a start date in the past")
+
+        deletable_records.delete()
+
         for r in validated_data["reporting_requirements"]:
             if r.get("id"):
                 pk = r.pop("id")
+
+                # if this is a record that starts in the past and it's not editable and has changes (hash is different)
+                if r['start_date'] <= today and not self._past_records_editable and\
+                        not current_reqs_dict.get(h11(self._get_hash_key_string(r))):
+                    raise ValidationError("A record that starts in the passed cannot"
+                                          " be modified on a non-draft PD/SSFA")
                 ReportingRequirement.objects.filter(pk=pk).update(**r)
             else:
                 ReportingRequirement.objects.create(**r)
+
         return self.intervention
 
     def delete(self, validated_data):

@@ -31,7 +31,7 @@ class TestClient(TestCase):
 
     @responses.activate
     @patch('etools.libraries.azure_graph_api.client.get_token', return_value='t0k3n')
-    @patch("etools.libraries.azure_graph_api.client.handle_records")
+    @patch("etools.libraries.azure_graph_api.client.handle_records", return_value='status')
     def test_azure_sync_users_ok(self, handle_function, token):
         url = '{}/{}/users?$top={}'.format(
             settings.AZURE_GRAPH_API_BASE_URL,
@@ -42,7 +42,8 @@ class TestClient(TestCase):
             responses.GET, url, status=200,
             json={'@odata.deltaLink': 'delta'},
         )
-        delta = azure_sync_users(url)
+        status, delta = azure_sync_users(url)
+        self.assertEquals(status, 'status')
         self.assertEquals(delta, 'delta')
         self.assertEqual(token.call_count, 1)
         self.assertEqual(token.call_args[0], ())

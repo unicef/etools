@@ -7,7 +7,7 @@ from etools.applications.action_points.models import ActionPoint
 from etools.applications.action_points.tests.base import ActionPointsTestCaseMixin
 from etools.applications.action_points.tests.factories import ActionPointFactory, UserFactory
 from etools.applications.EquiTrack.tests.cases import BaseTenantTestCase
-from etools.applications.utils.permissions.tests.mixins import TransitionPermissionsTestCaseMixin
+from etools.applications.permissions2.tests.mixins import TransitionPermissionsTestCaseMixin
 
 
 class ActionPointTransitionTestCase(ActionPointsTestCaseMixin, BaseTenantTestCase):
@@ -104,7 +104,9 @@ class UnicefUserPermissionsForActionPointTransitionTestCase(ActionPointTransitio
 
 
 class AuthorPermissionsForActionPointTransitionTestCase(ActionPointTransitionPermissionsTestCase):
-    ALLOWED_TRANSITION = []
+    ALLOWED_TRANSITION = [
+        ('open', 'complete'),
+    ]
 
     @classmethod
     def setUpTestData(cls):
@@ -125,7 +127,9 @@ class AuthorPermissionsForActionPointTransitionTestCase(ActionPointTransitionPer
 
 
 class AssignedByPermissionsForActionPointTransitionTestCase(ActionPointTransitionPermissionsTestCase):
-    ALLOWED_TRANSITION = []
+    ALLOWED_TRANSITION = [
+        ('open', 'complete'),
+    ]
 
     @classmethod
     def setUpTestData(cls):

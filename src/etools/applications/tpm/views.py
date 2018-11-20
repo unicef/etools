@@ -1,4 +1,5 @@
 from django.contrib.contenttypes.models import ContentType
+from django.db.models import Q
 from django.http import Http404
 from django.utils import timezone
 from django.utils.translation import ugettext_lazy as _
@@ -7,10 +8,12 @@ from django_filters.rest_framework import DjangoFilterBackend
 from easy_pdf.rendering import render_to_pdf_response
 from rest_framework import generics, mixins, viewsets
 from rest_framework.decorators import action
+from rest_framework.exceptions import NotFound
 from rest_framework.filters import OrderingFilter, SearchFilter
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
-from unicef_attachments.models import Attachment
+from unicef_attachments.models import Attachment, AttachmentLink
+from unicef_attachments.serializers import AttachmentLinkSerializer
 from unicef_restlib.pagination import DynamicPageNumberPagination
 from unicef_restlib.views import MultiSerializerViewSetMixin, NestedViewSetMixin, SafeTenantViewSetMixin
 
@@ -23,6 +26,7 @@ from etools.applications.partners.models import PartnerOrganization
 from etools.applications.partners.serializers.partner_organization_v2 import MinimalPartnerOrganizationListSerializer
 from etools.applications.permissions2.conditions import ObjectStatusCondition
 from etools.applications.permissions2.drf_permissions import get_permission_for_targets, NestedPermission
+from etools.applications.permissions2.metadata import BaseMetadata, PermissionBasedMetadata
 from etools.applications.permissions2.views import PermittedFSMActionMixin, PermittedSerializerMixin
 from etools.applications.reports.models import Result, Section
 from etools.applications.reports.serializers.v1 import ResultLightSerializer, SectionSerializer
@@ -50,13 +54,14 @@ from etools.applications.tpm.export.serializers import (
     TPMPartnerExportSerializer,
     TPMVisitExportSerializer,
 )
-from etools.applications.tpm.filters import ReferenceNumberOrderingFilter
-from etools.applications.tpm.metadata import TPMBaseMetadata, TPMPermissionBasedMetadata
+from etools.applications.tpm.filters import ReferenceNumberOrderingFilter, TPMVisitFilter
 from etools.applications.tpm.models import PME, ThirdPartyMonitor, TPMActionPoint, TPMActivity, TPMVisit, UNICEFUser
 from etools.applications.tpm.serializers.attachments import (
     ActivityAttachmentsSerializer,
     ActivityReportSerializer,
+    TPMActivityAttachmentLinkSerializer,
     TPMPartnerAttachmentsSerializer,
+    TPMVisitAttachmentsSerializer,
     TPMVisitReportAttachmentsSerializer,
 )
 from etools.applications.tpm.serializers.partner import (
@@ -71,7 +76,7 @@ from etools.applications.tpm.serializers.visit import (
     TPMVisitSerializer,
 )
 from etools.applications.tpm.tpmpartners.models import TPMPartner, TPMPartnerStaffMember
-from etools.applications.vision.adapters.tpm_adapter import TPMPartnerManualSynchronizer
+from etools.applications.tpm.tpmpartners.synchronizers import TPMPartnerManualSynchronizer
 
 
 class BaseTPMViewSet(
@@ -79,7 +84,7 @@ class BaseTPMViewSet(
     MultiSerializerViewSetMixin,
     PermittedSerializerMixin,
 ):
-    metadata_class = TPMBaseMetadata
+    metadata_class = BaseMetadata
     pagination_class = DynamicPageNumberPagination
     permission_classes = [IsAuthenticated]
 
@@ -99,7 +104,7 @@ class TPMPartnerViewSet(
     PermittedFSMActionMixin,
     viewsets.GenericViewSet
 ):
-    metadata_class = TPMPermissionBasedMetadata
+    metadata_class = PermissionBasedMetadata
     queryset = TPMPartner.objects.all()
     serializer_class = TPMPartnerSerializer
     serializer_action_classes = {
@@ -201,7 +206,7 @@ class TPMStaffMembersViewSet(
     NestedViewSetMixin,
     viewsets.GenericViewSet
 ):
-    metadata_class = TPMPermissionBasedMetadata
+    metadata_class = PermissionBasedMetadata
     queryset = TPMPartnerStaffMember.objects.all()
     serializer_class = TPMPartnerStaffMemberSerializer
     permission_classes = BaseTPMViewSet.permission_classes + [NestedPermission]
@@ -299,7 +304,7 @@ class TPMVisitViewSet(
     PermittedFSMActionMixin,
     viewsets.GenericViewSet
 ):
-    metadata_class = TPMPermissionBasedMetadata
+    metadata_class = PermissionBasedMetadata
     queryset = TPMVisit.objects.all().prefetch_related(
         'tpm_partner',
         'tpm_activities__unicef_focal_points',
@@ -317,11 +322,7 @@ class TPMVisitViewSet(
     ordering_fields = (
         'tpm_partner__name', 'status'
     )
-    filter_fields = (
-        'tpm_partner', 'tpm_activities__section', 'tpm_activities__partner', 'tpm_activities__locations',
-        'tpm_activities__cp_output', 'tpm_activities__intervention', 'tpm_activities__date', 'status',
-        'tpm_activities__unicef_focal_points', 'tpm_partner_focal_points',
-    )
+    filter_class = TPMVisitFilter
 
     def get_queryset(self):
         queryset = super(TPMVisitViewSet, self).get_queryset()
@@ -335,7 +336,10 @@ class TPMVisitViewSet(
                 hasattr(self.request.user, 'tpmpartners_tpmpartnerstaffmember'):
             queryset = queryset.filter(
                 tpm_partner=self.request.user.tpmpartners_tpmpartnerstaffmember.tpm_partner
-            ).exclude(status=TPMVisit.STATUSES.draft)
+            ).exclude(
+                Q(status=TPMVisit.STATUSES.draft) |
+                Q(status=TPMVisit.STATUSES.cancelled, date_of_assigned__isnull=True)  # cancelled draft
+            )
         else:
             queryset = queryset.none()
 
@@ -457,7 +461,7 @@ class TPMActionPointViewSet(BaseTPMViewSet,
                             mixins.UpdateModelMixin,
                             NestedViewSetMixin,
                             viewsets.GenericViewSet):
-    metadata_class = TPMPermissionBasedMetadata
+    metadata_class = PermissionBasedMetadata
     queryset = TPMActionPoint.objects.all()
     serializer_class = TPMActionPointSerializer
     permission_classes = BaseTPMViewSet.permission_classes + [NestedPermission]
@@ -490,12 +494,15 @@ class BaseTPMAttachmentsViewSet(BaseTPMViewSet,
                                 mixins.DestroyModelMixin,
                                 NestedViewSetMixin,
                                 viewsets.GenericViewSet):
-    metadata_class = TPMPermissionBasedMetadata
+    metadata_class = PermissionBasedMetadata
     queryset = Attachment.objects.all()
 
 
 class PartnerAttachmentsViewSet(BaseTPMAttachmentsViewSet):
     serializer_class = TPMPartnerAttachmentsSerializer
+    permission_classes = BaseTPMViewSet.permission_classes + [
+        get_permission_for_targets('tpmpartners.tpmpartner.attachments')
+    ]
 
     def get_view_name(self):
         return _('Attachments')
@@ -521,7 +528,7 @@ class VisitReportAttachmentsViewSet(BaseTPMAttachmentsViewSet):
     ]
 
     def get_view_name(self):
-        return _('Related Documents')
+        return _('Overall Report')
 
     def get_parent_filter(self):
         parent = self.get_parent_object()
@@ -529,6 +536,31 @@ class VisitReportAttachmentsViewSet(BaseTPMAttachmentsViewSet):
             return {}
 
         return {
+            'code': 'visit_report_attachments',
+            'content_type_id': ContentType.objects.get_for_model(TPMVisit).id,
+            'object_id': parent.pk,
+        }
+
+    def perform_create(self, serializer):
+        serializer.save(content_object=self.get_parent_object())
+
+
+class VisitAttachmentsViewSet(BaseTPMAttachmentsViewSet):
+    serializer_class = TPMVisitAttachmentsSerializer
+    permission_classes = BaseTPMViewSet.permission_classes + [
+        get_permission_for_targets('tpm.tpmvisit.attachments')
+    ]
+
+    def get_view_name(self):
+        return _('Related Documents for Overall Visit')
+
+    def get_parent_filter(self):
+        parent = self.get_parent_object()
+        if not parent:
+            return {}
+
+        return {
+            'code': 'visit_attachments',
             'content_type_id': ContentType.objects.get_for_model(TPMVisit).id,
             'object_id': parent.pk,
         }
@@ -544,7 +576,7 @@ class ActivityAttachmentsViewSet(BaseTPMAttachmentsViewSet):
     ]
 
     def get_view_name(self):
-        return _('Related Documents')
+        return _('Related Documents by Task')
 
     def get_parent_filter(self):
         parent = self.get_parent_object()
@@ -583,3 +615,46 @@ class ActivityReportAttachmentsViewSet(BaseTPMAttachmentsViewSet):
 
     def perform_create(self, serializer):
         serializer.save(content_type=ContentType.objects.get_for_model(TPMActivity))
+
+
+class ActivityAttachmentLinksView(generics.ListCreateAPIView):
+    metadata_class = PermissionBasedMetadata
+    serializer_class = TPMActivityAttachmentLinkSerializer
+    permission_classes = [IsAuthenticated]
+
+    def set_content_object(self):
+        try:
+            self.content_type = ContentType.objects.get_by_natural_key(
+                "tpm",
+                "tpmactivity",
+            )
+        except ContentType.DoesNotExist:
+            raise NotFound()
+
+        try:
+            self.object_id = self.kwargs.get("object_pk")
+            model_cls = self.content_type.model_class()
+            self.content_object = model_cls.objects.get(
+                pk=self.object_id
+            )
+        except model_cls.DoesNotExist:
+            raise NotFound()
+
+    def get_serializer_context(self):
+        self.set_content_object()
+        context = super().get_serializer_context()
+        context["content_type"] = self.content_type
+        context["object_id"] = self.object_id
+        return context
+
+    def get_queryset(self):
+        self.set_content_object()
+        return AttachmentLink.objects.filter(
+            content_type=self.content_type,
+            object_id=self.object_id,
+        )
+
+    def list(self, request, *args, **kwargs):
+        queryset = self.get_queryset()
+        serializer = AttachmentLinkSerializer(queryset, many=True)
+        return Response(serializer.data)

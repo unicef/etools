@@ -1,16 +1,22 @@
 from django.core.management import BaseCommand
 from django.db.models import Q
 
-from etools.applications.action_points.conditions import ActionPointAuthorCondition, ActionPointAssigneeCondition, \
-    ActionPointAssignedByCondition
+from etools.applications.action_points.conditions import (
+    ActionPointAssignedByCondition,
+    ActionPointAssigneeCondition,
+    ActionPointAuthorCondition,
+)
 from etools.applications.action_points.models import ActionPoint
+from etools.applications.permissions2.conditions import GroupCondition, NewObjectCondition, ObjectStatusCondition
 from etools.applications.permissions2.models import Permission
-from etools.applications.permissions2.conditions import ObjectStatusCondition, \
-    NewObjectCondition, GroupCondition
 from etools.applications.permissions2.utils import get_model_target
-from etools.applications.tpm.conditions import TPMStaffMemberCondition, TPMVisitUNICEFFocalPointCondition, \
-    TPMVisitTPMFocalPointCondition, TPMModuleCondition
-from etools.applications.tpm.models import UNICEFUser, PME, ThirdPartyMonitor, TPMVisit, TPMActionPoint
+from etools.applications.tpm.conditions import (
+    TPMModuleCondition,
+    TPMStaffMemberCondition,
+    TPMVisitTPMFocalPointCondition,
+    TPMVisitUNICEFFocalPointCondition,
+)
+from etools.applications.tpm.models import PME, ThirdPartyMonitor, TPMActionPoint, TPMVisit, UNICEFUser
 
 
 class Command(BaseCommand):
@@ -218,7 +224,7 @@ class Command(BaseCommand):
         self.add_permissions(self.pme, 'edit', self.tpm_partner)
 
         # unicef users can view all, tpm can view list fields
-        self.add_permissions(self.unicef_user, 'view', self.visits_list + self.tpm_visit_details)
+        self.add_permissions(self.unicef_user, 'view', self.visits_list + self.tpm_visit_details + self.visit_report)
         self.add_permissions(self.third_party_monitor, 'view', self.visits_list)
 
         # new visit
@@ -232,6 +238,8 @@ class Command(BaseCommand):
                              condition=self.visit_status(TPMVisit.STATUSES.draft))
         self.add_permissions(self.pme, 'action', ['tpm.tpmvisit.assign', 'tpm.tpmvisit.cancel'],
                              condition=self.visit_status(TPMVisit.STATUSES.draft))
+        self.add_permissions(self.pme, 'view', ['tpm.tpmvisit.cancel_comment'],
+                             condition=self.visit_status(TPMVisit.STATUSES.draft))
 
         # visit cancelled
         self.add_permissions([self.unicef_user, self.third_party_monitor], 'view', ['tpm.tpmvisit.cancel_comment'],
@@ -240,9 +248,15 @@ class Command(BaseCommand):
         # visit assigned
         self.add_permissions(self.third_party_monitor, 'view', self.tpm_visit_details,
                              condition=self.visit_status(TPMVisit.STATUSES.assigned))
+        self.add_permissions(self.pme, 'edit', self.tpm_visit_details_editable,
+                             condition=self.visit_status(TPMVisit.STATUSES.assigned))
         self.add_permissions(self.pme, 'action', 'tpm.tpmvisit.cancel',
                              condition=self.visit_status(TPMVisit.STATUSES.assigned))
+        self.add_permissions(self.pme, 'view', ['tpm.tpmvisit.cancel_comment'],
+                             condition=self.visit_status(TPMVisit.STATUSES.assigned))
         self.add_permissions(self.third_party_focal_point, 'action', ['tpm.tpmvisit.accept', 'tpm.tpmvisit.reject'],
+                             condition=self.visit_status(TPMVisit.STATUSES.assigned))
+        self.add_permissions(self.third_party_focal_point, 'view', ['tpm.tpmvisit.reject_comment'],
                              condition=self.visit_status(TPMVisit.STATUSES.assigned))
 
         # tpm rejected
@@ -253,6 +267,8 @@ class Command(BaseCommand):
         self.add_permissions(self.third_party_monitor, 'view', self.tpm_visit_details,
                              condition=self.visit_status(TPMVisit.STATUSES.tpm_rejected))
         self.add_permissions(self.pme, 'action', ['tpm.tpmvisit.assign', 'tpm.tpmvisit.cancel'],
+                             condition=self.visit_status(TPMVisit.STATUSES.tpm_rejected))
+        self.add_permissions(self.pme, 'view', ['tpm.tpmvisit.cancel_comment'],
                              condition=self.visit_status(TPMVisit.STATUSES.tpm_rejected))
 
         # tpm accepted
@@ -265,12 +281,14 @@ class Command(BaseCommand):
 
         self.add_permissions(self.pme, 'action', 'tpm.tpmvisit.cancel',
                              condition=self.visit_status(TPMVisit.STATUSES.tpm_accepted))
+        self.add_permissions(self.pme, 'view', ['tpm.tpmvisit.cancel_comment'],
+                             condition=self.visit_status(TPMVisit.STATUSES.tpm_accepted))
 
         # tpm reported
         tpm_reported_condition = self.visit_status(TPMVisit.STATUSES.tpm_reported)
         self.add_permissions(self.third_party_monitor, 'view', self.tpm_visit_details,
                              condition=tpm_reported_condition)
-        self.add_permissions([self.unicef_user, self.third_party_monitor], 'view', self.visit_report,
+        self.add_permissions(self.third_party_monitor, 'view', self.visit_report,
                              condition=tpm_reported_condition)
 
         self.add_permissions(self.unicef_user, 'view', self.action_points_block,
@@ -288,8 +306,6 @@ class Command(BaseCommand):
         self.add_permissions([self.unicef_user, self.third_party_monitor], 'view',
                              ['tpm.tpmvisit.report_reject_comments'],
                              condition=self.visit_status(TPMVisit.STATUSES.tpm_report_rejected))
-        self.add_permissions(self.unicef_user, 'view', self.visit_report,
-                             condition=self.visit_status(TPMVisit.STATUSES.tpm_report_rejected))
 
         self.add_permissions(self.third_party_monitor, 'view', self.tpm_visit_details,
                              condition=self.visit_status(TPMVisit.STATUSES.tpm_report_rejected))
@@ -302,7 +318,7 @@ class Command(BaseCommand):
         unicef_approved_condition = self.visit_status(TPMVisit.STATUSES.unicef_approved)
         self.add_permissions(self.third_party_monitor, 'view', self.tpm_visit_details,
                              condition=unicef_approved_condition)
-        self.add_permissions([self.unicef_user, self.third_party_monitor], 'view', self.visit_report,
+        self.add_permissions(self.third_party_monitor, 'view', self.visit_report,
                              condition=unicef_approved_condition)
         self.add_permissions(self.unicef_user, 'view', self.action_points_block + [
             'tpm.tpmvisit.approval_comment'

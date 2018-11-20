@@ -17,7 +17,6 @@ from etools.applications.partners.tests.factories import (
     InterventionAttachmentFactory,
     InterventionFactory,
     InterventionResultLinkFactory,
-    InterventionSectionLocationLinkFactory,
     PartnerFactory,
 )
 from etools.applications.tpm.tests.factories import (
@@ -64,9 +63,6 @@ class TestAttachmentListView(BaseTenantTestCase):
         cls.result_link = InterventionResultLinkFactory(
             intervention=cls.intervention
         )
-        cls.section_location = InterventionSectionLocationLinkFactory(
-            intervention=cls.intervention
-        )
         cls.intervention_amendment = InterventionAmendmentFactory(
             intervention=cls.intervention
         )
@@ -99,11 +95,13 @@ class TestAttachmentListView(BaseTenantTestCase):
             "partner",
             "partner_type",
             "vendor_number",
+            "pd_ssfa",
             "pd_ssfa_number",
             "agreement_reference_number",
             "object_link",
             "filename",
             "file_type",
+            "file_type_id",
             "file_link",
             "uploaded_by",
             "created",

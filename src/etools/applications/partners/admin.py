@@ -29,7 +29,6 @@ from etools.applications.partners.models import (  # TODO intervention sector lo
     InterventionBudget,
     InterventionPlannedVisits,
     InterventionResultLink,
-    InterventionSectionLocationLink,
     PartnerOrganization,
     PartnerStaffMember,
     PlannedEngagement,
@@ -47,7 +46,7 @@ class InterventionAmendmentsAdmin(admin.ModelAdmin):
         'types',
         'signed_date'
     )
-    search_fields = ('intervention', )
+    search_fields = ('intervention__number', )
     list_filter = (
         'intervention',
         'types'
@@ -191,29 +190,6 @@ class InterventionResultsLinkAdmin(admin.ModelAdmin):
     }
 
 
-# TODO intervention sector locations cleanup
-class InterventionSectionLocationAdmin(admin.ModelAdmin):
-    model = InterventionSectionLocationLink
-    fields = (
-        'intervention',
-        'sector',
-        'locations'
-    )
-    list_display = (
-        'intervention',
-        'sector'
-    )
-    search_fields = (
-        'intervention__name',
-    )
-    list_filter = (
-        'sector',
-    )
-    filter_horizontal = [
-        'locations',
-    ]
-
-
 class PRCReviewAttachmentInline(AttachmentSingleInline):
     verbose_name_plural = "Review Document by PRC"
 
@@ -267,6 +243,7 @@ class InterventionAdmin(CountryUsersAdminMixin, HiddenPartnerMixin, SnapshotMode
                     'in_amendment',
                     'document_type',
                     'number',
+                    'reference_number_year',
                     'title',
                     'status',
                     'country_programme',
@@ -286,7 +263,9 @@ class InterventionAdmin(CountryUsersAdminMixin, HiddenPartnerMixin, SnapshotMode
                  'partner_focal_points',
                  'unicef_focal_points',
                  ('start', 'end'),
-                 'population_focus'),
+                 'population_focus',
+                 'activation_letter',
+                 ),
         }),
     )
 
@@ -309,7 +288,7 @@ class InterventionAdmin(CountryUsersAdminMixin, HiddenPartnerMixin, SnapshotMode
     section_names.short_description = "Sections"
 
     def has_module_permission(self, request):
-        return request.user.is_superuser
+        return request.user.is_superuser or request.user.groups.filter(name='Country Office Administrator').exists()
 
     def attachments_link(self, obj):
         url = "{}?intervention__id__exact={}".format(
@@ -376,7 +355,7 @@ class PartnerStaffMemberAdmin(SnapshotModelAdmin):
     ]
 
     def has_module_permission(self, request):
-        return request.user.is_superuser
+        return request.user.is_superuser or request.user.groups.filter(name='Country Office Administrator').exists()
 
 
 class HiddenPartnerFilter(admin.SimpleListFilter):
@@ -448,6 +427,8 @@ class PartnerAdmin(ExportMixin, admin.ModelAdmin):
         'net_ct_cy',
         'reported_cy',
         'total_ct_ytd',
+        'outstanding_dct_amount_6_to_9_months_usd',
+        'outstanding_dct_amount_more_than_9_months_usd',
     )
     fieldsets = (
         (_('Partner Details'), {
@@ -481,6 +462,8 @@ class PartnerAdmin(ExportMixin, admin.ModelAdmin):
                 'net_ct_cy',
                 'reported_cy',
                 'total_ct_ytd',
+                'outstanding_dct_amount_6_to_9_months_usd',
+                'outstanding_dct_amount_more_than_9_months_usd',
             )
         })
     )
@@ -508,7 +491,7 @@ class PartnerAdmin(ExportMixin, admin.ModelAdmin):
         self.message_user(request, '{} partners were shown'.format(partners))
 
     def has_module_permission(self, request):
-        return request.user.is_superuser
+        return request.user.is_superuser or request.user.groups.filter(name='Country Office Administrator').exists()
 
 
 class PlannedEngagementAdmin(admin.ModelAdmin):
@@ -549,6 +532,7 @@ class AgreementAmendmentAdmin(admin.ModelAdmin):
     verbose_name = 'Amendment'
     model = AgreementAmendment
     fields = (
+        'agreement',
         'signed_amendment',
         'signed_date',
         'number',
@@ -626,13 +610,13 @@ class AgreementAdmin(ExportMixin, HiddenPartnerMixin, CountryUsersAdminMixin, Sn
     ]
 
     def has_module_permission(self, request):
-        return request.user.is_superuser
+        return request.user.is_superuser or request.user.groups.filter(name='Country Office Administrator').exists()
 
 
 class FileTypeAdmin(admin.ModelAdmin):
 
     def has_module_permission(self, request):
-        return request.user.is_superuser
+        return request.user.is_superuser or request.user.groups.filter(name='Country Office Administrator').exists()
 
 
 admin.site.register(PartnerOrganization, PartnerAdmin)
@@ -643,15 +627,11 @@ admin.site.register(PlannedEngagement, PlannedEngagementAdmin)
 admin.site.register(Agreement, AgreementAdmin)
 admin.site.register(AgreementAmendment, AgreementAmendmentAdmin)
 
-
 admin.site.register(Intervention, InterventionAdmin)
 admin.site.register(InterventionAmendment, InterventionAmendmentsAdmin)
 admin.site.register(InterventionResultLink, InterventionResultsLinkAdmin)
 admin.site.register(InterventionBudget, InterventionBudgetAdmin)
 admin.site.register(InterventionPlannedVisits, InterventionPlannedVisitsAdmin)
 admin.site.register(InterventionAttachment, InterventionAttachmentAdmin)
-# TODO intervention sector locations cleanup
-admin.site.register(InterventionSectionLocationLink, InterventionSectionLocationAdmin)
-
 
 admin.site.register(FileType, FileTypeAdmin)
