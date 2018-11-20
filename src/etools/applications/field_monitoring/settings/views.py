@@ -9,6 +9,7 @@ from rest_framework.generics import get_object_or_404
 from rest_framework.response import Response
 
 from django_filters.rest_framework import DjangoFilterBackend
+from unicef_attachments.models import Attachment
 
 from unicef_locations.cache import etag_cached
 from unicef_locations.models import Location
@@ -18,6 +19,8 @@ from etools.applications.field_monitoring.settings.filters import CPOutputIsActi
     LogIssueVisitFilter
 from etools.applications.field_monitoring.settings.models import MethodType, LocationSite, CheckListItem, \
     CheckListCategory, PlannedCheckListItem, CPOutputConfig, LogIssue
+from etools.applications.field_monitoring.settings.serializers.attachments import \
+    FieldMonitoringGeneralAttachmentSerializer
 from etools.applications.field_monitoring.settings.serializers.checklist import CheckListItemSerializer, \
     CheckListCategorySerializer
 from etools.applications.field_monitoring.settings.serializers.cp_outputs import FieldMonitoringCPOutputSerializer, \
@@ -31,6 +34,7 @@ from etools.applications.field_monitoring.shared.models import Method
 from etools.applications.field_monitoring.views import FMBaseViewSet, FMBaseAttachmentsViewSet
 from etools.applications.partners.models import PartnerOrganization
 from etools.applications.partners.serializers.partner_organization_v2 import MinimalPartnerOrganizationListSerializer
+from etools.applications.permissions2.metadata import BaseMetadata
 from etools.applications.reports.models import Result, ResultType
 
 
@@ -197,6 +201,14 @@ class LogIssuesViewSet(FMBaseViewSet, viewsets.ModelViewSet):
 class LogIssueAttachmentsViewSet(FMBaseAttachmentsViewSet):
     serializer_class = LogIssueAttachmentSerializer
     related_model = LogIssue
+
+    def get_view_name(self):
+        return _('Attachments')
+
+
+class FieldMonitoringGeneralAttachmentsViewSet(FMBaseViewSet, viewsets.ModelViewSet):
+    queryset = Attachment.objects.all()
+    serializer_class = FieldMonitoringGeneralAttachmentSerializer
 
     def get_view_name(self):
         return _('Attachments')

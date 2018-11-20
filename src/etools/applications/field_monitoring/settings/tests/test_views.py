@@ -8,6 +8,7 @@ from rest_framework import status
 from unicef_locations.tests.factories import LocationFactory
 
 from etools.applications.EquiTrack.tests.cases import BaseTenantTestCase
+from etools.applications.attachments.models import Attachment
 from etools.applications.attachments.tests.factories import AttachmentFileTypeFactory
 from etools.applications.field_monitoring.settings.models import CPOutputConfig, LogIssue
 from etools.applications.field_monitoring.settings.tests.factories import (
@@ -552,3 +553,29 @@ class TestMonitoredPartnersView(FMBaseTestCaseMixin, BaseTenantTestCase):
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertListEqual(sorted([r['id'] for r in response.data['results']]), sorted(partners))
+
+
+class FieldMonitoringGeneralAttachmentsView(FMBaseTestCaseMixin, BaseTenantTestCase):
+    def test_add(self):
+        attachments_num = Attachment.objects.filter(code='fm_common').count()
+        self.assertEqual(attachments_num, 0)
+
+        create_response = self.forced_auth_req(
+            'post',
+            reverse('field_monitoring_settings:general-attachments-list'),
+            user=self.unicef_user,
+            request_format='multipart',
+            data={
+                'file_type': AttachmentFileTypeFactory(code='fm_common').id,
+                'file': SimpleUploadedFile('hello_world.txt', u'hello world!'.encode('utf-8')),
+            }
+        )
+        self.assertEqual(create_response.status_code, status.HTTP_201_CREATED)
+
+        list_response = self.forced_auth_req(
+            'get',
+            reverse('field_monitoring_settings:general-attachments-list'),
+            user=self.unicef_user
+        )
+        self.assertEqual(list_response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(list_response.data['results']), attachments_num + 1)

@@ -6,9 +6,6 @@ from django.utils.translation import ugettext_lazy as _
 from rest_framework import serializers
 from rest_framework.exceptions import ValidationError
 
-from unicef_attachments.fields import FileTypeModelChoiceField
-from unicef_attachments.models import FileType
-from unicef_attachments.serializers import BaseAttachmentSerializer
 from unicef_locations.serializers import LocationLightSerializer
 from unicef_restlib.fields import SeparatedReadWriteField
 from unicef_restlib.serializers import WritableNestedSerializerMixin
@@ -19,15 +16,6 @@ from etools.applications.field_monitoring.planning.models import YearPlan, Task
 from etools.applications.field_monitoring.settings.serializers.cp_outputs import CPOutputConfigDetailSerializer
 from etools.applications.field_monitoring.settings.serializers.locations import LocationSiteLightSerializer
 from etools.applications.partners.serializers.partner_organization_v2 import MinimalPartnerOrganizationListSerializer
-
-
-class YearPlanAttachmentSerializer(BaseAttachmentSerializer):
-    file_type = FileTypeModelChoiceField(
-        label=_('Document Type'), queryset=FileType.objects.filter(code=YearPlan.ATTACHMENTS_FILE_TYPE_CODE)
-    )
-
-    class Meta(BaseAttachmentSerializer.Meta):
-        pass
 
 
 class YearPlanSerializer(WritableNestedSerializerMixin, SnapshotModelSerializer):

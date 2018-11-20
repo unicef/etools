@@ -9,10 +9,10 @@ from rest_framework.filters import OrderingFilter
 from unicef_restlib.views import NestedViewSetMixin
 
 from etools.applications.field_monitoring.planning.models import YearPlan, Task
-from etools.applications.field_monitoring.planning.serializers import YearPlanSerializer, YearPlanAttachmentSerializer, \
-    TaskSerializer, TaskListSerializer
+from etools.applications.field_monitoring.planning.serializers import YearPlanSerializer, TaskSerializer, \
+    TaskListSerializer
 from etools.applications.field_monitoring.settings.filters import CPOutputIsActiveFilter
-from etools.applications.field_monitoring.views import FMBaseViewSet, FMBaseAttachmentsViewSet
+from etools.applications.field_monitoring.views import FMBaseViewSet
 
 
 class YearPlanViewSet(
@@ -51,14 +51,6 @@ class YearPlanViewSet(
         self.check_object_permissions(self.request, obj)
 
         return obj
-
-
-class YearPlanAttachmentsViewSet(FMBaseAttachmentsViewSet):
-    serializer_class = YearPlanAttachmentSerializer
-    related_model = YearPlan
-
-    def get_view_name(self):
-        return _('Attachments')
 
 
 class TaskViewSet(NestedViewSetMixin, FMBaseViewSet, viewsets.ModelViewSet):
