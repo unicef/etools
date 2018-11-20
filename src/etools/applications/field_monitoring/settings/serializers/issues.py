@@ -21,10 +21,6 @@ from etools.applications.users.serializers_v3 import MinimalUserSerializer
 
 
 class LogIssueAttachmentSerializer(BaseAttachmentSerializer):
-    file_type = FileTypeModelChoiceField(
-        label=_('Document Type'), queryset=FileType.objects.filter(code=LogIssue.ATTACHMENTS_FILE_TYPE_CODE)
-    )
-
     class Meta(BaseAttachmentSerializer.Meta):
         pass
 

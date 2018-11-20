@@ -19,7 +19,6 @@ class LogIssue(TimeStampedModel):
         ('new', 'New'),
         ('past', 'Past'),
     )
-    ATTACHMENTS_FILE_TYPE_CODE = 'log_issue'
     RELATED_TO_TYPE_CHOICES = Choices(
         ('cp_output', _('CP Output')),
         ('partner', _('CP Output')),

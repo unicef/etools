@@ -522,7 +522,6 @@ class TestLogIssueAttachmentsView(FMBaseTestCaseMixin, BaseTenantTestCase):
             user=self.unicef_user,
             request_format='multipart',
             data={
-                'file_type': AttachmentFileTypeFactory(code=LogIssue.ATTACHMENTS_FILE_TYPE_CODE).id,
                 'file': SimpleUploadedFile('hello_world.txt', u'hello world!'.encode('utf-8')),
             }
         )
