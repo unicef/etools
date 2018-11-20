@@ -1,12 +1,10 @@
 from datetime import date
 
-from django.core.files.uploadedfile import SimpleUploadedFile
 from django.urls import reverse
 
 from rest_framework import status
 
 from etools.applications.EquiTrack.tests.cases import BaseTenantTestCase
-from etools.applications.attachments.tests.factories import AttachmentFileTypeFactory
 from etools.applications.field_monitoring.planning.models import YearPlan
 from etools.applications.field_monitoring.planning.tests.factories import YearPlanFactory, TaskFactory
 from etools.applications.field_monitoring.tests.base import FMBaseTestCaseMixin
