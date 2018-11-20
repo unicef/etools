@@ -14,6 +14,7 @@ class Command(BaseCommand):
         'field_monitoring_settings.cpoutputconfig.*',
         'field_monitoring_settings.logissue.*',
         'field_monitoring_settings.plannedchecklistitem.*',
+        'field_monitoring_settings.fieldmonitoringgeneralattachment.*',
     ]
     field_monitoring_readonly_settings = [
         'reports.result.*',

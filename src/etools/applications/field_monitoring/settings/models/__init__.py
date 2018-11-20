@@ -6,3 +6,4 @@ from etools.applications.field_monitoring.settings.models.cp_outputs import CPOu
 from etools.applications.field_monitoring.settings.models.locations import LocationSite
 from etools.applications.field_monitoring.settings.models.issues import LogIssue
 from etools.applications.field_monitoring.settings.models.methods import Method, MethodType
+from etools.applications.field_monitoring.settings.models.attachments import FieldMonitoringGeneralAttachment

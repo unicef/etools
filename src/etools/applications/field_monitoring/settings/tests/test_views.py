@@ -8,9 +8,9 @@ from rest_framework import status
 from unicef_locations.tests.factories import LocationFactory
 
 from etools.applications.EquiTrack.tests.cases import BaseTenantTestCase
-from etools.applications.attachments.models import Attachment
 from etools.applications.attachments.tests.factories import AttachmentFileTypeFactory
 from etools.applications.field_monitoring.settings.models import CPOutputConfig
+from etools.applications.field_monitoring.settings.models.attachments import FieldMonitoringGeneralAttachment
 from etools.applications.field_monitoring.settings.tests.factories import (
     CPOutputConfigFactory, LocationSiteFactory, MethodTypeFactory, PlannedCheckListItemFactory, CheckListItemFactory,
     MethodFactory, LogIssueFactory)
@@ -510,14 +510,14 @@ class LogIssueViewTestCase(FMBaseTestCaseMixin, BaseTenantTestCase):
 
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         self.assertEqual(len(response.data['history']), 1)
-        self.assertEqual(response.data['author']['id'], self.unicef_user.id)
+        self.assertEqual(response.data['author']['id'], self.fm_user.id)
 
     def test_complete(self):
         log_issue = LogIssueFactory(cp_output=ResultFactory(result_type__name=ResultType.OUTPUT))
 
         response = self.forced_auth_req(
             'patch', reverse('field_monitoring_settings:log-issues-detail', args=[log_issue.pk]),
-            user=self.unicef_user,
+            user=self.fm_user,
             data={
                 'status': 'past'
             }
@@ -525,7 +525,7 @@ class LogIssueViewTestCase(FMBaseTestCaseMixin, BaseTenantTestCase):
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertIsNotNone(response.data['closed_by'])
-        self.assertEqual(response.data['closed_by']['id'], self.unicef_user.id)
+        self.assertEqual(response.data['closed_by']['id'], self.fm_user.id)
 
     def test_create_unicef(self):
         response = self.forced_auth_req(
@@ -648,13 +648,13 @@ class TestMonitoredPartnersView(FMBaseTestCaseMixin, BaseTenantTestCase):
 
 class TestFieldMonitoringGeneralAttachmentsView(FMBaseTestCaseMixin, BaseTenantTestCase):
     def test_add(self):
-        attachments_num = Attachment.objects.filter(code='fm_common').count()
+        attachments_num = FieldMonitoringGeneralAttachment.objects.filter(code='fm_common').count()
         self.assertEqual(attachments_num, 0)
 
         create_response = self.forced_auth_req(
             'post',
             reverse('field_monitoring_settings:general-attachments-list'),
-            user=self.unicef_user,
+            user=self.fm_user,
             request_format='multipart',
             data={
                 'file_type': AttachmentFileTypeFactory(code='fm_common').id,
@@ -670,3 +670,13 @@ class TestFieldMonitoringGeneralAttachmentsView(FMBaseTestCaseMixin, BaseTenantT
         )
         self.assertEqual(list_response.status_code, status.HTTP_200_OK)
         self.assertEqual(len(list_response.data['results']), attachments_num + 1)
+
+    def test_add_unicef(self):
+        create_response = self.forced_auth_req(
+            'post',
+            reverse('field_monitoring_settings:general-attachments-list'),
+            user=self.unicef_user,
+            request_format='multipart',
+            data={}
+        )
+        self.assertEqual(create_response.status_code, status.HTTP_403_FORBIDDEN)

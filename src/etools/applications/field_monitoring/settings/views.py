@@ -9,7 +9,6 @@ from rest_framework.generics import get_object_or_404
 from rest_framework.response import Response
 
 from django_filters.rest_framework import DjangoFilterBackend
-from unicef_attachments.models import Attachment
 
 from unicef_locations.cache import etag_cached
 from unicef_locations.models import Location
@@ -18,7 +17,7 @@ from unicef_restlib.views import NestedViewSetMixin
 from etools.applications.field_monitoring.settings.filters import CPOutputIsActiveFilter, LogIssueRelatedToTypeFilter, \
     LogIssueVisitFilter
 from etools.applications.field_monitoring.settings.models import MethodType, LocationSite, CheckListItem, \
-    CheckListCategory, PlannedCheckListItem, CPOutputConfig, LogIssue
+    CheckListCategory, PlannedCheckListItem, CPOutputConfig, LogIssue, FieldMonitoringGeneralAttachment
 from etools.applications.field_monitoring.settings.serializers.attachments import \
     FieldMonitoringGeneralAttachmentSerializer
 from etools.applications.field_monitoring.settings.serializers.checklist import CheckListItemSerializer, \
@@ -233,8 +232,13 @@ class LogIssueAttachmentsViewSet(
         return _('Attachments')
 
 
-class FieldMonitoringGeneralAttachmentsViewSet(FMBaseViewSet, viewsets.ModelViewSet):
-    queryset = Attachment.objects.all()
+class FieldMonitoringGeneralAttachmentsViewSet(
+    FMBaseViewSet,
+    PermittedSerializerMixin,
+    viewsets.ModelViewSet
+):
+    metadata_class = PermissionBasedMetadata
+    queryset = FieldMonitoringGeneralAttachment.objects.all()
     serializer_class = FieldMonitoringGeneralAttachmentSerializer
 
     def get_view_name(self):
