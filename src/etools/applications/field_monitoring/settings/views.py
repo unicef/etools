@@ -176,11 +176,22 @@ class PlannedCheckListItemViewSet(
 
 
 class LogIssuesViewSet(FMBaseViewSet, viewsets.ModelViewSet):
-    queryset = LogIssue.objects.all()
+    queryset = LogIssue.objects.prefetch_related(
+        'author', 'history', 'cp_output', 'partner', 'location', 'location_site',
+    )
     serializer_class = LogIssueSerializer
     filter_backends = (DjangoFilterBackend, LogIssueRelatedToTypeFilter, LogIssueVisitFilter, OrderingFilter)
     filter_fields = ('cp_output', 'partner', 'location', 'location_site', 'status')
     ordering_fields = ('content_type',)
+
+    def get_queryset(self):
+        queryset = super().get_queryset()
+
+        # not need to use prefetch in case of update as cached data will broke history
+        if self.action in ['update', 'partial_update']:
+            queryset = queryset.prefetch_related(None)
+
+        return queryset
 
 
 class LogIssueAttachmentsViewSet(FMBaseAttachmentsViewSet):

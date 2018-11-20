@@ -436,6 +436,22 @@ class LogIssueViewTestCase(FMBaseTestCaseMixin, BaseTenantTestCase):
 
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         self.assertEqual(len(response.data['history']), 1)
+        self.assertEqual(response.data['author']['id'], self.unicef_user.id)
+
+    def test_complete(self):
+        log_issue = LogIssueFactory(cp_output=ResultFactory(result_type__name=ResultType.OUTPUT))
+
+        response = self.forced_auth_req(
+            'patch', reverse('field_monitoring_settings:log-issues-detail', args=[log_issue.pk]),
+            user=self.unicef_user,
+            data={
+                'status': 'past'
+            }
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertIsNotNone(response.data['closed_by'])
+        self.assertEqual(response.data['closed_by']['id'], self.unicef_user.id)
 
     def test_create_invalid(self):
         site = LocationSiteFactory()
