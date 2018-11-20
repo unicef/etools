@@ -34,7 +34,6 @@ from etools.applications.field_monitoring.shared.models import Method
 from etools.applications.field_monitoring.views import FMBaseViewSet, FMBaseAttachmentsViewSet
 from etools.applications.partners.models import PartnerOrganization
 from etools.applications.partners.serializers.partner_organization_v2 import MinimalPartnerOrganizationListSerializer
-from etools.applications.permissions2.metadata import BaseMetadata
 from etools.applications.reports.models import Result, ResultType
 
 
