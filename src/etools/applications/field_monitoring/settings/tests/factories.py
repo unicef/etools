@@ -13,6 +13,7 @@ from etools.applications.partners.models import PartnerType
 from etools.applications.partners.tests.factories import PartnerFactory, InterventionResultLinkFactory
 from etools.applications.reports.models import ResultType, CountryProgramme
 from etools.applications.reports.tests.factories import ResultFactory, CountryProgrammeFactory
+from etools.applications.users.tests.factories import UserFactory
 
 
 class MethodFactory(factory.DjangoModelFactory):
@@ -128,6 +129,7 @@ class PlannedCheckListItemPartnerInfoFactory(factory.DjangoModelFactory):
 
 
 class LogIssueFactory(factory.DjangoModelFactory):
+    author = factory.SubFactory(UserFactory)
     issue = fuzzy.FuzzyText()
 
     class Meta:

@@ -13,8 +13,6 @@ from etools.applications.publics.models import SoftDeleteMixin
 
 
 class YearPlan(TimeStampedModel):
-    ATTACHMENTS_FILE_TYPE_CODE = 'fm_year_plan'
-
     year = models.PositiveSmallIntegerField(primary_key=True)
 
     prioritization_criteria = models.TextField(verbose_name=_('Prioritization Criteria'), blank=True)
@@ -25,7 +23,6 @@ class YearPlan(TimeStampedModel):
     partner_engagement = models.TextField(verbose_name=_('Partner Engagement'), blank=True)
     other_aspects = GenericRelation('django_comments.Comment', object_id_field='object_pk',
                                     verbose_name=_('Other Aspects of the Field Monitoring Plan'), blank=True)
-    attachments = GenericRelation('attachments.Attachment', verbose_name=_('Attachments'), blank=True)
     history = GenericRelation('unicef_snapshot.Activity', object_id_field='target_object_id',
                               content_type_field='target_content_type')
 

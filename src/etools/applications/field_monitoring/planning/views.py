@@ -9,10 +9,10 @@ from rest_framework.filters import OrderingFilter
 from unicef_restlib.views import NestedViewSetMixin
 
 from etools.applications.field_monitoring.planning.models import YearPlan, Task
-from etools.applications.field_monitoring.planning.serializers import YearPlanSerializer, YearPlanAttachmentSerializer, \
-    TaskSerializer, TaskListSerializer
+from etools.applications.field_monitoring.planning.serializers import YearPlanSerializer, TaskSerializer, \
+    TaskListSerializer
 from etools.applications.field_monitoring.settings.filters import CPOutputIsActiveFilter
-from etools.applications.field_monitoring.views import FMBaseViewSet, FMBaseAttachmentsViewSet
+from etools.applications.field_monitoring.views import FMBaseViewSet
 from etools.applications.permissions2.drf_permissions import get_permission_for_targets
 from etools.applications.permissions2.metadata import PermissionBasedMetadata
 from etools.applications.permissions2.views import PermittedSerializerMixin
@@ -63,21 +63,6 @@ class YearPlanViewSet(
         self.check_object_permissions(self.request, obj)
 
         return obj
-
-
-class YearPlanAttachmentsViewSet(
-    PermittedSerializerMixin,
-    FMBaseAttachmentsViewSet
-):
-    metadata_class = PermissionBasedMetadata
-    serializer_class = YearPlanAttachmentSerializer
-    related_model = YearPlan
-    permission_classes = FMBaseViewSet.permission_classes + [
-        get_permission_for_targets('field_monitoring_planning.yearplan.attachments'),
-    ]
-
-    def get_view_name(self):
-        return _('Attachments')
 
 
 class TaskViewSet(

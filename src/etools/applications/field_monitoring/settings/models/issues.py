@@ -1,3 +1,4 @@
+from django.conf import settings
 from django.contrib.contenttypes.fields import GenericRelation
 from django.core.exceptions import ValidationError
 from django.db import models
@@ -18,13 +19,14 @@ class LogIssue(TimeStampedModel):
         ('new', 'New'),
         ('past', 'Past'),
     )
-    ATTACHMENTS_FILE_TYPE_CODE = 'log_issue'
     RELATED_TO_TYPE_CHOICES = Choices(
         ('cp_output', _('CP Output')),
         ('partner', _('CP Output')),
         ('location_site', _('Location/Site')),
     )
 
+    author = models.ForeignKey(settings.AUTH_USER_MODEL, related_name='created_logissues',
+                               verbose_name=_('Issue Raised By'))
     cp_output = models.ForeignKey(Result, blank=True, null=True, verbose_name=_('CP Output'))
     partner = models.ForeignKey(PartnerOrganization, blank=True, null=True, verbose_name=_('Partner'))
     location = models.ForeignKey(Location, blank=True, null=True, verbose_name=_('Location'))

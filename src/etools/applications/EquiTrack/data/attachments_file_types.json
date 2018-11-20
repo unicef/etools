@@ -298,5 +298,25 @@
             "name": "overall_report",
             "code": "tpm_report_attachments"
         }
+    },
+    {
+        "model": "attachments.filetype",
+        "pk": 34,
+        "fields": {
+            "order": 0,
+            "label": "SOP",
+            "name": "sop",
+            "code": "fm_common"
+        }
+    },
+    {
+        "model": "attachments.filetype",
+        "pk": 35,
+        "fields": {
+            "order": 1,
+            "label": "Other",
+            "name": "other",
+            "code": "fm_common"
+        }
     }
 ]

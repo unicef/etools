@@ -9,6 +9,7 @@ from unicef_attachments.models import FileType
 from unicef_attachments.serializers import BaseAttachmentSerializer
 from unicef_locations.serializers import LocationLightSerializer
 from unicef_restlib.fields import SeparatedReadWriteField
+from unicef_restlib.serializers import UserContextSerializerMixin
 from unicef_snapshot.serializers import SnapshotModelSerializer
 
 from etools.applications.action_points.serializers import HistorySerializer
@@ -17,18 +18,17 @@ from etools.applications.field_monitoring.settings.serializers.locations import 
 from etools.applications.partners.serializers.partner_organization_v2 import MinimalPartnerOrganizationListSerializer
 from etools.applications.permissions2.serializers import PermissionsBasedSerializerMixin
 from etools.applications.reports.serializers.v2 import OutputListSerializer
+from etools.applications.users.serializers_v3 import MinimalUserSerializer
 
 
 class LogIssueAttachmentSerializer(BaseAttachmentSerializer):
-    file_type = FileTypeModelChoiceField(
-        label=_('Document Type'), queryset=FileType.objects.filter(code=LogIssue.ATTACHMENTS_FILE_TYPE_CODE)
-    )
-
     class Meta(BaseAttachmentSerializer.Meta):
         pass
 
 
-class LogIssueSerializer(PermissionsBasedSerializerMixin, SnapshotModelSerializer):
+class LogIssueSerializer(PermissionsBasedSerializerMixin, UserContextSerializerMixin, SnapshotModelSerializer):
+    author = MinimalUserSerializer(read_only=True)
+    closed_by = serializers.SerializerMethodField(label=_('Issue Closed By'))
     related_to_type = serializers.ChoiceField(choices=LogIssue.RELATED_TO_TYPE_CHOICES, read_only=True,
                                               label=_('Issue Related To'))
 
@@ -43,10 +43,14 @@ class LogIssueSerializer(PermissionsBasedSerializerMixin, SnapshotModelSerialize
     class Meta:
         model = LogIssue
         fields = (
-            'id', 'related_to_type',
+            'id', 'related_to_type', 'author',
             'cp_output', 'partner', 'location', 'location_site',
-            'issue', 'status', 'attachments', 'history'
+            'issue', 'status', 'attachments', 'history', 'closed_by',
         )
+
+    def create(self, validated_data):
+        validated_data['author'] = self.get_user()
+        return super().create(validated_data)
 
     def validate(self, attrs):
         validated_data = super().validate(attrs)
@@ -62,3 +66,13 @@ class LogIssueSerializer(PermissionsBasedSerializerMixin, SnapshotModelSerialize
             raise ValidationError(ex.message)
 
         return validated_data
+
+    def get_closed_by(self, obj):
+        matched_events = [
+            history for history in obj.history.all()
+            if history.change.get('status', {}).get('after') == LogIssue.STATUS_CHOICES.past
+        ]
+        if not matched_events:
+            return
+
+        return MinimalUserSerializer(matched_events[-1].by_user).data

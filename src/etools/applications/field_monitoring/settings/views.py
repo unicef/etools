@@ -9,6 +9,7 @@ from rest_framework.generics import get_object_or_404
 from rest_framework.response import Response
 
 from django_filters.rest_framework import DjangoFilterBackend
+from unicef_attachments.models import Attachment
 
 from unicef_locations.cache import etag_cached
 from unicef_locations.models import Location
@@ -18,6 +19,8 @@ from etools.applications.field_monitoring.settings.filters import CPOutputIsActi
     LogIssueVisitFilter
 from etools.applications.field_monitoring.settings.models import MethodType, LocationSite, CheckListItem, \
     CheckListCategory, PlannedCheckListItem, CPOutputConfig, LogIssue
+from etools.applications.field_monitoring.settings.serializers.attachments import \
+    FieldMonitoringGeneralAttachmentSerializer
 from etools.applications.field_monitoring.settings.serializers.checklist import CheckListItemSerializer, \
     CheckListCategorySerializer
 from etools.applications.field_monitoring.settings.serializers.cp_outputs import FieldMonitoringCPOutputSerializer, \
@@ -197,11 +200,22 @@ class LogIssuesViewSet(
     viewsets.ModelViewSet
 ):
     metadata_class = PermissionBasedMetadata
-    queryset = LogIssue.objects.all()
+    queryset = LogIssue.objects.prefetch_related(
+        'author', 'history', 'cp_output', 'partner', 'location', 'location_site',
+    )
     serializer_class = LogIssueSerializer
     filter_backends = (DjangoFilterBackend, LogIssueRelatedToTypeFilter, LogIssueVisitFilter, OrderingFilter)
     filter_fields = ('cp_output', 'partner', 'location', 'location_site', 'status')
     ordering_fields = ('content_type',)
+
+    def get_queryset(self):
+        queryset = super().get_queryset()
+
+        # not need to use prefetch in case of update as cached data will broke history
+        if self.action in ['update', 'partial_update']:
+            queryset = queryset.prefetch_related(None)
+
+        return queryset
 
 
 class LogIssueAttachmentsViewSet(
@@ -214,6 +228,14 @@ class LogIssueAttachmentsViewSet(
     permission_classes = FMBaseViewSet.permission_classes + [
         get_permission_for_targets('field_monitoring_settings.logissue.attachments'),
     ]
+
+    def get_view_name(self):
+        return _('Attachments')
+
+
+class FieldMonitoringGeneralAttachmentsViewSet(FMBaseViewSet, viewsets.ModelViewSet):
+    queryset = Attachment.objects.all()
+    serializer_class = FieldMonitoringGeneralAttachmentSerializer
 
     def get_view_name(self):
         return _('Attachments')
