@@ -2,7 +2,7 @@ from django.conf.urls import include, url
 
 from rest_framework_nested import routers
 
-from etools.applications.field_monitoring.settings.views import (
+from etools.applications.field_monitoring.fm_settings.views import (
     CPOutputConfigsViewSet,
     FMMethodsViewSet,
     FMMethodTypesViewSet,

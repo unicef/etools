@@ -14,12 +14,12 @@ from unicef_locations.models import Location
 from unicef_restlib.pagination import DynamicPageNumberPagination
 from unicef_restlib.views import SafeTenantViewSetMixin, MultiSerializerViewSetMixin
 
-from etools.applications.field_monitoring.settings.filters import CPOutputIsActiveFilter
-from etools.applications.field_monitoring.settings.models import FMMethodType, LocationSite, CPOutputConfig
-from etools.applications.field_monitoring.settings.serializers.cp_outputs import FieldMonitoringCPOutputSerializer, \
+from etools.applications.field_monitoring.fm_settings.filters import CPOutputIsActiveFilter
+from etools.applications.field_monitoring.fm_settings.models import FMMethodType, LocationSite, CPOutputConfig
+from etools.applications.field_monitoring.fm_settings.serializers.cp_outputs import FieldMonitoringCPOutputSerializer, \
     CPOutputConfigDetailSerializer
-from etools.applications.field_monitoring.settings.serializers.methods import FMMethodSerializer, FMMethodTypeSerializer
-from etools.applications.field_monitoring.settings.serializers.sites import LocationSiteSerializer, \
+from etools.applications.field_monitoring.fm_settings.serializers.methods import FMMethodSerializer, FMMethodTypeSerializer
+from etools.applications.field_monitoring.fm_settings.serializers.sites import LocationSiteSerializer, \
     LocationCountrySerializer
 from etools.applications.field_monitoring.shared.models import FMMethod
 from etools.applications.permissions2.metadata import BaseMetadata

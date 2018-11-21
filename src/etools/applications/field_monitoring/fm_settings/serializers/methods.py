@@ -4,7 +4,7 @@ from django.utils.translation import ugettext_lazy as _
 from rest_framework import serializers
 from rest_framework.exceptions import ValidationError
 
-from etools.applications.field_monitoring.settings.models import FMMethodType
+from etools.applications.field_monitoring.fm_settings.models import FMMethodType
 from etools.applications.field_monitoring.shared.models import FMMethod
 
 

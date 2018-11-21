@@ -5,7 +5,7 @@ from unicef_restlib.fields import SeparatedReadWriteField
 from unicef_restlib.serializers import WritableNestedSerializerMixin
 
 from etools.applications.partners.serializers.partner_organization_v2 import MinimalPartnerOrganizationListSerializer
-from etools.applications.field_monitoring.settings.models import CPOutputConfig
+from etools.applications.field_monitoring.fm_settings.models import CPOutputConfig
 from etools.applications.partners.models import Intervention
 from etools.applications.reports.models import Result
 from etools.applications.reports.serializers.v2 import OutputListSerializer

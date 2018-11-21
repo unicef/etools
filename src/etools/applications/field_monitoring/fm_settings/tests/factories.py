@@ -7,7 +7,7 @@ from unicef_locations.models import GatewayType
 
 from unicef_locations.tests.factories import LocationFactory
 
-from etools.applications.field_monitoring.settings.models import FMMethodType, UNICEFUser, LocationSite, CPOutputConfig
+from etools.applications.field_monitoring.fm_settings.models import FMMethodType, UNICEFUser, LocationSite, CPOutputConfig
 from etools.applications.field_monitoring.shared.models import FMMethod
 from etools.applications.firms.tests.factories import BaseUserFactory
 from etools.applications.partners.models import PartnerType

@@ -7,9 +7,9 @@ from rest_framework import status
 from unicef_locations.tests.factories import LocationFactory
 
 from etools.applications.EquiTrack.tests.cases import BaseTenantTestCase
-from etools.applications.field_monitoring.settings.models import CPOutputConfig
-from etools.applications.field_monitoring.settings.tests.base import FMBaseTestCaseMixin
-from etools.applications.field_monitoring.settings.tests.factories import MethodTypeFactory, LocationSiteFactory, \
+from etools.applications.field_monitoring.fm_settings.models import CPOutputConfig
+from etools.applications.field_monitoring.fm_settings.tests.base import FMBaseTestCaseMixin
+from etools.applications.field_monitoring.fm_settings.tests.factories import MethodTypeFactory, LocationSiteFactory, \
     CPOutputConfigFactory, MethodFactory
 from etools.applications.partners.models import PartnerType
 from etools.applications.partners.tests.factories import PartnerFactory

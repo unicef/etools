@@ -6,8 +6,8 @@ from factory import fuzzy
 from unicef_locations.tests.factories import LocationFactory
 
 from etools.applications.EquiTrack.tests.cases import BaseTenantTestCase
-from etools.applications.field_monitoring.settings.models import FMMethodType
-from etools.applications.field_monitoring.settings.tests.factories import FMMethodFactory, LocationSiteFactory
+from etools.applications.field_monitoring.fm_settings.models import FMMethodType
+from etools.applications.field_monitoring.fm_settings.tests.factories import FMMethodFactory, LocationSiteFactory
 
 
 class MethodTypeTestCase(BaseTenantTestCase):
