@@ -651,6 +651,14 @@ class AppliedIndicator(TimeStampedModel):
     is_high_frequency = models.BooleanField(default=False)
     is_active = models.BooleanField(default=True)
 
+    @cached_property
+    def target_display(self):
+        return self.target.get('d', self.target), self.target.get('v', ''),
+
+    @cached_property
+    def baseline_display(self):
+        return self.baseline.get('d', self.baseline), self.baseline.get('v', ''),
+
     class Meta:
         unique_together = (("indicator", "lower_result"),)
 

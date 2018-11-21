@@ -39,7 +39,6 @@ from etools.applications.partners.models import (
     InterventionBudget,
     InterventionPlannedVisits,
     InterventionReportingPeriod,
-    InterventionSectionLocationLink,
     PartnerOrganization,
     PartnerType,
 )
@@ -1704,7 +1703,6 @@ class TestInterventionViews(BaseTenantTestCase):
         intervention_obj = Intervention.objects.get(id=self.intervention_data["id"])
         intervention_obj.status = Intervention.DRAFT
         intervention_obj.save()
-        InterventionSectionLocationLink.objects.filter(intervention=self.intervention_data.get("id")).delete()
         self.intervention_data.update(sector_locations=[])
         self.intervention_data.update(status="active")
         response = self.forced_auth_req(

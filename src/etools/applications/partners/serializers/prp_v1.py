@@ -3,6 +3,7 @@ from django.core.exceptions import ObjectDoesNotExist
 from django.db import connection
 
 from rest_framework import serializers
+from unicef_attachments.fields import AttachmentSingleFileField
 
 from unicef_locations.models import Location
 from etools.applications.partners.models import (Intervention, InterventionAmendment,
@@ -14,7 +15,7 @@ from etools.applications.reports.serializers.v1 import SectionSerializer
 
 
 class InterventionPDFileSerializer(serializers.ModelSerializer):
-    signed_pd_document_file = serializers.FileField(source='signed_pd_document', read_only=True)
+    signed_pd_document_file = AttachmentSingleFileField(source='signed_pd_attachment', read_only=True)
 
     class Meta:
         model = Intervention
