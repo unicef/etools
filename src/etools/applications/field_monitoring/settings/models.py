@@ -88,13 +88,13 @@ class CPOutputConfig(TimeStampedModel):
         return self.cp_output.output_name
 
     @staticmethod
-    def clean_cp_ouput(cp_otput):
-        if cp_otput.result_type.name != ResultType.OUTPUT:
+    def clean_cp_output(cp_output):
+        if cp_output.result_type.name != ResultType.OUTPUT:
             raise ValidationError(_('Incorrect CP Output provided.'))
 
     def clean(self):
         super().clean()
-        self.clean_cp_ouput(self.cp_output)
+        self.clean_cp_output(self.cp_output)
 
 
 UNICEFUser = GroupWrapper(code='unicef_user',
