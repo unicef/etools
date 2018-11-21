@@ -4,19 +4,19 @@ from django.utils.translation import ugettext_lazy as _
 from rest_framework import serializers
 from rest_framework.exceptions import ValidationError
 
-from etools.applications.field_monitoring.settings.models import MethodType
-from etools.applications.field_monitoring.shared.models import Method
+from etools.applications.field_monitoring.settings.models import FMMethodType
+from etools.applications.field_monitoring.shared.models import FMMethod
 
 
-class MethodSerializer(serializers.ModelSerializer):
+class FMMethodSerializer(serializers.ModelSerializer):
     class Meta:
-        model = Method
+        model = FMMethod
         fields = ('id', 'name', 'is_types_applicable')
 
 
-class MethodTypeSerializer(serializers.ModelSerializer):
+class FMMethodTypeSerializer(serializers.ModelSerializer):
     class Meta:
-        model = MethodType
+        model = FMMethodType
         fields = ('id', 'method', 'name')
         extra_kwargs = {
             'name': {'label': _('Recommended Type')}

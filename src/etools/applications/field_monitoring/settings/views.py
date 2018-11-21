@@ -15,13 +15,13 @@ from unicef_restlib.pagination import DynamicPageNumberPagination
 from unicef_restlib.views import SafeTenantViewSetMixin, MultiSerializerViewSetMixin
 
 from etools.applications.field_monitoring.settings.filters import CPOutputIsActiveFilter
-from etools.applications.field_monitoring.settings.models import MethodType, LocationSite, CPOutputConfig
+from etools.applications.field_monitoring.settings.models import FMMethodType, LocationSite, CPOutputConfig
 from etools.applications.field_monitoring.settings.serializers.cp_outputs import FieldMonitoringCPOutputSerializer, \
     CPOutputConfigDetailSerializer
-from etools.applications.field_monitoring.settings.serializers.methods import MethodSerializer, MethodTypeSerializer
+from etools.applications.field_monitoring.settings.serializers.methods import FMMethodSerializer, FMMethodTypeSerializer
 from etools.applications.field_monitoring.settings.serializers.sites import LocationSiteSerializer, \
     LocationCountrySerializer
-from etools.applications.field_monitoring.shared.models import Method
+from etools.applications.field_monitoring.shared.models import FMMethod
 from etools.applications.permissions2.metadata import BaseMetadata
 from etools.applications.reports.models import Result, ResultType
 
@@ -35,21 +35,21 @@ class FMBaseViewSet(
     permission_classes = [IsAuthenticated, ]
 
 
-class MethodsViewSet(
+class FMMethodsViewSet(
     FMBaseViewSet,
     mixins.ListModelMixin,
     viewsets.GenericViewSet
 ):
-    queryset = Method.objects.all()
-    serializer_class = MethodSerializer
+    queryset = FMMethod.objects.all()
+    serializer_class = FMMethodSerializer
 
 
-class MethodTypesViewSet(
+class FMMethodTypesViewSet(
     FMBaseViewSet,
     viewsets.ModelViewSet
 ):
-    queryset = MethodType.objects.all()
-    serializer_class = MethodTypeSerializer
+    queryset = FMMethodType.objects.all()
+    serializer_class = FMMethodTypeSerializer
     filter_backends = (DjangoFilterBackend, OrderingFilter)
     filter_fields = {
         'method': ['exact', 'in'],

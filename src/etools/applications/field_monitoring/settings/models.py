@@ -9,13 +9,13 @@ from model_utils.models import TimeStampedModel
 
 from unicef_locations.models import Location
 
-from etools.applications.field_monitoring.shared.models import Method
+from etools.applications.field_monitoring.shared.models import FMMethod
 from etools.applications.reports.models import ResultType
 from etools.applications.utils.groups.wrappers import GroupWrapper
 
 
-class MethodType(models.Model):
-    method = models.ForeignKey(Method, verbose_name=_('Method'))
+class FMMethodType(models.Model):
+    method = models.ForeignKey(FMMethod, verbose_name=_('Method'))
     name = models.CharField(verbose_name=_('Name'), max_length=300)
     slug = AutoSlugField(verbose_name=_('Slug'), populate_from='name')
 
