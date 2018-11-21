@@ -1,24 +1,11 @@
 from django.contrib.gis.db.models import PointField
 from django.db import models
 from django.utils.translation import ugettext_lazy as _
-
-from django_extensions.db.fields import AutoSlugField
 from model_utils import FieldTracker
+
 from model_utils.models import TimeStampedModel
 
 from unicef_locations.models import Location
-
-from etools.applications.field_monitoring.shared.models import FMMethod
-from etools.libraries.djangolib.models import GroupWrapper
-
-
-class FMMethodType(models.Model):
-    method = models.ForeignKey(FMMethod, verbose_name=_('Method'))
-    name = models.CharField(verbose_name=_('Name'), max_length=300)
-    slug = AutoSlugField(verbose_name=_('Slug'), populate_from='name')
-
-    def __str__(self):
-        return self.name
 
 
 class LocationSite(TimeStampedModel):
@@ -44,6 +31,12 @@ class LocationSite(TimeStampedModel):
 
     tracker = FieldTracker(['point'])
 
+    def __str__(self):
+        return u'{}: {}'.format(
+            self.name,
+            self.p_code if self.p_code else ''
+        )
+
     @staticmethod
     def get_parent_location(point):
         matched_locations = Location.objects.filter(geom__contains=point)
@@ -58,24 +51,8 @@ class LocationSite(TimeStampedModel):
     def save(self, **kwargs):
         if not self.parent_id:
             self.parent = self.get_parent_location(self.point)
+            assert self.parent_id, 'Unable to find location for {}'.format(self.point)
         elif self.tracker.has_changed('point'):
             self.parent = self.get_parent_location(self.point)
 
-        assert self.parent_id, 'Unable to find location for {}'.format(self.point)
         super().save(**kwargs)
-
-
-class CPOutputConfig(TimeStampedModel):
-    cp_output = models.OneToOneField('reports.Result', related_name='fm_config',
-                                     verbose_name=_('CP Output To Be Monitored'))
-    is_monitored = models.BooleanField(default=True, verbose_name=_('Monitored At Community Level?'))
-    is_priority = models.BooleanField(verbose_name=_('Priority?'), default=False)
-    government_partners = models.ManyToManyField('partners.PartnerOrganization', blank=True,
-                                                 verbose_name=_('Contributing Government Partners'))
-
-    def __str__(self):
-        return self.cp_output.output_name
-
-
-UNICEFUser = GroupWrapper(code='unicef_user',
-                          name='UNICEF User')
