@@ -1,7 +1,7 @@
 import factory.django
 from factory import fuzzy
 
-from unicef_attachments.models import Attachment, FileType
+from unicef_attachments.models import Attachment, AttachmentLink, FileType
 
 
 class AttachmentFileTypeFactory(factory.django.DjangoModelFactory):
@@ -19,3 +19,10 @@ class AttachmentFactory(factory.django.DjangoModelFactory):
 
     class Meta:
         model = Attachment
+
+
+class AttachmentLinkFactory(factory.django.DjangoModelFactory):
+    attachment = factory.SubFactory(AttachmentFactory)
+
+    class Meta:
+        model = AttachmentLink
