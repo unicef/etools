@@ -12,14 +12,14 @@ from etools.applications.field_monitoring.fm_settings.tests.factories import FMM
 
 class MethodTypeTestCase(BaseTenantTestCase):
     def test_types_non_applicable(self):
-        method = MethodFactory(is_types_applicable=False)
+        method = FMMethodFactory(is_types_applicable=False)
 
         with self.assertRaises(ValidationError):
-            MethodType(method=method, name=fuzzy.FuzzyText().fuzz()).clean()
+            FMMethodType(method=method, name=fuzzy.FuzzyText().fuzz()).clean()
 
     def test_types_applicable(self):
-        method = MethodFactory(is_types_applicable=True)
-        MethodType(method=method, name=fuzzy.FuzzyText().fuzz()).clean()
+        method = FMMethodFactory(is_types_applicable=True)
+        FMMethodType(method=method, name=fuzzy.FuzzyText().fuzz()).clean()
 
 
 class SitesTestCase(BaseTenantTestCase):
