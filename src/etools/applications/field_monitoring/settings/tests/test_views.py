@@ -15,6 +15,7 @@ from etools.applications.partners.models import PartnerType
 from etools.applications.partners.tests.factories import PartnerFactory
 from etools.applications.reports.models import ResultType
 from etools.applications.reports.tests.factories import ResultFactory
+from etools.applications.utils.common.tests.test_utils import TestExportMixin
 
 
 class MethodsViewTestCase(FMBaseTestCaseMixin, BaseTenantTestCase):
@@ -93,7 +94,7 @@ class MethodTypesViewTestCase(FMBaseTestCaseMixin, BaseTenantTestCase):
         self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
 
 
-class LocationSitesViewTestCase(FMBaseTestCaseMixin, BaseTenantTestCase):
+class LocationSitesViewTestCase(TestExportMixin, FMBaseTestCaseMixin, BaseTenantTestCase):
     def test_list(self):
         LocationSiteFactory()
 
@@ -183,6 +184,17 @@ class LocationSitesViewTestCase(FMBaseTestCaseMixin, BaseTenantTestCase):
         )
 
         self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
+
+    def test_csv_export(self):
+        LocationSiteFactory()
+        site2 = LocationSiteFactory()
+        site2.parent = LocationFactory(parent=LocationFactory())
+        site2.save()
+
+        self._test_export(self.unicef_user, 'field_monitoring_settings:sites-export')
+
+    def test_csv_export_no_sites(self):
+        self._test_export(self.unicef_user, 'field_monitoring_settings:sites-export')
 
 
 class LocationsCountryViewTestCase(FMBaseTestCaseMixin, BaseTenantTestCase):
