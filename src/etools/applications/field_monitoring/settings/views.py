@@ -206,8 +206,11 @@ class LogIssueAttachmentsViewSet(FMBaseAttachmentsViewSet):
 
 
 class FieldMonitoringGeneralAttachmentsViewSet(FMBaseViewSet, viewsets.ModelViewSet):
-    queryset = Attachment.objects.all()
+    queryset = Attachment.objects.filter(code='fm_common')
     serializer_class = FieldMonitoringGeneralAttachmentSerializer
 
     def get_view_name(self):
         return _('Attachments')
+
+    def perform_create(self, serializer):
+        serializer.save(code='fm_common')
