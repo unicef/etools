@@ -22,15 +22,6 @@ class FMMethodType(models.Model):
     def __str__(self):
         return self.name
 
-    @staticmethod
-    def clean_method(method):
-        if not method.is_types_applicable:
-            raise ValidationError(_('Unable to add type for this Method'))
-
-    def clean(self):
-        super().clean()
-        self.clean_method(self.method)
-
 
 class LocationSite(TimeStampedModel):
     parent = models.ForeignKey(
@@ -86,15 +77,6 @@ class CPOutputConfig(TimeStampedModel):
 
     def __str__(self):
         return self.cp_output.output_name
-
-    @staticmethod
-    def clean_cp_output(cp_output):
-        if cp_output.result_type.name != ResultType.OUTPUT:
-            raise ValidationError(_('Incorrect CP Output provided.'))
-
-    def clean(self):
-        super().clean()
-        self.clean_cp_output(self.cp_output)
 
 
 UNICEFUser = GroupWrapper(code='unicef_user',

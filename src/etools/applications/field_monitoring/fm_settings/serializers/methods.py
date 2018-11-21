@@ -1,4 +1,3 @@
-from django.core.exceptions import ValidationError as DjangoValidationError
 from django.utils.translation import ugettext_lazy as _
 
 from rest_framework import serializers
@@ -25,10 +24,7 @@ class FMMethodTypeSerializer(serializers.ModelSerializer):
     def validate_method(self, method):
         if not method:
             self.fail('required')
-
-        try:
-            self.Meta.model.clean_method(method)
-        except DjangoValidationError as ex:
-            raise ValidationError(ex.message)
+        elif not method.is_types_applicable:
+            raise ValidationError(_('Unable to add type for this Method'))
 
         return method
