@@ -62,9 +62,7 @@ def get_agreement_path(instance, filename):
     ])
 
 
-# 'assessment' is misspelled in this function name, but as of Nov 2017, two migrations reference it so it can't be
-# renamed until after migrations are squashed.
-def get_assesment_path(instance, filename):
+def get_assessment_path(instance, filename):
     return '/'.join([
         _get_partner_base_path(instance.partner),
         'assesments',
@@ -210,7 +208,7 @@ class PartnerOrganizationQuerySet(models.QuerySet):
         return self.filter(
             Q(partner_type=PartnerType.CIVIL_SOCIETY_ORGANIZATION, agreements__interventions__status__in=[
                 Intervention.ACTIVE, Intervention.SIGNED, Intervention.SUSPENDED, Intervention.ENDED]) |
-            Q(total_ct_cp__gt=0), *args, **kwargs)
+            Q(total_ct_cp__gt=0), hidden=False, *args, **kwargs)
 
     def hact_active(self, *args, **kwargs):
         return self.filter(Q(reported_cy__gt=0) | Q(total_ct_cy__gt=0), hidden=False, *args, **kwargs)
@@ -995,12 +993,17 @@ class Assessment(TimeStampedModel):
         (LOW, 'Low'),
     )
 
+    TYPE_MICRO = 'Micro Assessment'
+    TYPE_SIMPLIFIED = 'Simplified Checklist'
+    TYPE_SCHEDULED = 'Scheduled Audit report'
+    TYPE_SPECIAL = 'Special Audit report'
+    TYPE_OTHER = 'Other'
     ASSESSMENT_TYPES = (
-        ('Micro Assessment', 'Micro Assessment'),
-        ('Simplified Checklist', 'Simplified Checklist'),
-        ('Scheduled Audit report', 'Scheduled Audit report'),
-        ('Special Audit report', 'Special Audit report'),
-        ('Other', 'Other'),
+        (TYPE_MICRO, 'Micro Assessment'),
+        (TYPE_SIMPLIFIED, 'Simplified Checklist'),
+        (TYPE_SCHEDULED, 'Scheduled Audit report'),
+        (TYPE_SPECIAL, 'Special Audit report'),
+        (TYPE_OTHER, 'Other'),
     )
 
     partner = models.ForeignKey(
@@ -1072,7 +1075,7 @@ class Assessment(TimeStampedModel):
         blank=True,
         null=True,
         max_length=1024,
-        upload_to=get_assesment_path
+        upload_to=get_assessment_path
     )
     report_attachment = CodedGenericRelation(
         Attachment,
@@ -1690,6 +1693,7 @@ class Intervention(TimeStampedModel):
         blank=True,
         null=True
     )
+    # TODO remove this when migration is stable
     signed_pd_document = models.FileField(
         verbose_name=_("Signed PD Document"),
         max_length=1024,
@@ -1855,11 +1859,6 @@ class Intervention(TimeStampedModel):
         end = max([self.signed_by_partner_date, self.signed_by_unicef_date])
         days = [start + datetime.timedelta(x + 1) for x in range((end - start).days)]
         return sum(1 for day in days if day.weekday() < 5)
-
-    @property
-    def sector_names(self):
-        return ', '.join(Section.objects.filter(intervention_locations__intervention=self).
-                         values_list('name', flat=True))
 
     @property
     def cp_output_names(self):
@@ -2432,25 +2431,6 @@ class InterventionReportingPeriod(TimeStampedModel):
         return '{} ({} - {}) due on {}'.format(
             self.intervention, self.start_date, self.end_date, self.due_date
         )
-
-
-# TODO intervention sector locations cleanup
-class InterventionSectorLocationLink(TimeStampedModel):
-    intervention = models.ForeignKey(
-        Intervention, related_name='sector_locations', verbose_name=_('Intervention'),
-        on_delete=models.CASCADE,
-    )
-    sector = models.ForeignKey(
-        Section, related_name='intervention_locations', verbose_name=_('Sector'),
-        on_delete=models.CASCADE,
-    )
-    locations = models.ManyToManyField(Location, related_name='intervention_sector_locations', blank=True,
-                                       verbose_name=_('Locations'))
-
-    tracker = FieldTracker()
-
-
-InterventionSectionLocationLink = InterventionSectorLocationLink
 
 
 class DirectCashTransfer(models.Model):
