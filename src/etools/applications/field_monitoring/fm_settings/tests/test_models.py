@@ -10,18 +10,6 @@ from etools.applications.field_monitoring.fm_settings.models import FMMethodType
 from etools.applications.field_monitoring.fm_settings.tests.factories import FMMethodFactory, LocationSiteFactory
 
 
-class MethodTypeTestCase(BaseTenantTestCase):
-    def test_types_non_applicable(self):
-        method = FMMethodFactory(is_types_applicable=False)
-
-        with self.assertRaises(ValidationError):
-            FMMethodType(method=method, name=fuzzy.FuzzyText().fuzz()).clean()
-
-    def test_types_applicable(self):
-        method = FMMethodFactory(is_types_applicable=True)
-        FMMethodType(method=method, name=fuzzy.FuzzyText().fuzz()).clean()
-
-
 class SitesTestCase(BaseTenantTestCase):
     @classmethod
     def setUpTestData(cls):

@@ -1,5 +1,4 @@
 from django.contrib.gis.db.models import PointField
-from django.core.exceptions import ValidationError
 from django.db import models
 from django.utils.translation import ugettext_lazy as _
 
@@ -10,8 +9,7 @@ from model_utils.models import TimeStampedModel
 from unicef_locations.models import Location
 
 from etools.applications.field_monitoring.shared.models import FMMethod
-from etools.applications.reports.models import ResultType
-from etools.applications.utils.groups.wrappers import GroupWrapper
+from etools.libraries.djangolib.models import GroupWrapper
 
 
 class FMMethodType(models.Model):
