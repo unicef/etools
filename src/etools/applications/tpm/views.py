@@ -326,7 +326,7 @@ class TPMVisitViewSet(
     filter_class = TPMVisitFilter
 
     def get_queryset(self):
-        queryset = super(TPMVisitViewSet, self).get_queryset()
+        queryset = super(TPMVisitViewSet, self).get_queryset().distinct()
 
         user_groups = self.request.user.groups.all()
 
