@@ -1,9 +1,11 @@
 from datetime import date, timedelta
 
+from django.utils import timezone
 from django.db import models
 from django.utils.translation import ugettext_lazy as _
 
 from rest_framework import mixins, viewsets, views
+from rest_framework.decorators import action
 from rest_framework.filters import OrderingFilter, SearchFilter
 from rest_framework.generics import get_object_or_404
 from rest_framework.response import Response
@@ -15,6 +17,8 @@ from unicef_locations.cache import etag_cached
 from unicef_locations.models import Location
 from unicef_restlib.views import NestedViewSetMixin
 
+from etools.applications.field_monitoring.settings.export.renderers import LocationSiteCSVRenderer
+from etools.applications.field_monitoring.settings.export.serializers import LocationSiteExportSerializer
 from etools.applications.field_monitoring.settings.filters import CPOutputIsActiveFilter, LogIssueRelatedToTypeFilter, \
     LogIssueVisitFilter
 from etools.applications.field_monitoring.settings.models import MethodType, LocationSite, CheckListItem, \
@@ -82,6 +86,21 @@ class LocationSitesViewSet(
     @etag_cached('fm-sites')
     def list(self, request, *args, **kwargs):
         return super().list(request, *args, **kwargs)
+
+    @action(detail=False, methods=['get'], url_path='export')
+    def export(self, request, *args, **kwargs):
+        instances = self.get_queryset().order_by('id')
+
+        if instances:
+            max_admin_level = max(len(site.parent.get_ancestors(include_self=True)) for site in instances)
+        else:
+            max_admin_level = 0
+
+        request.accepted_renderer = LocationSiteCSVRenderer(max_admin_level=max_admin_level)
+        serializer = LocationSiteExportSerializer(instances, many=True, max_admin_level=max_admin_level)
+        return Response(serializer.data, headers={
+            'Content-Disposition': 'attachment;filename=location_sites_{}.csv'.format(timezone.now().date())
+        })
 
 
 class LocationsCountryView(views.APIView):
