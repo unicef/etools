@@ -177,7 +177,7 @@ def start_end_dates_valid(i):
 
 def start_date_signed_valid(i):
     # i = intervention
-    if i.signed_by_unicef_date and i.signed_by_partner_date and i.start and i.signed_pd_document:
+    if i.signed_by_unicef_date and i.signed_by_partner_date and i.start and (i.signed_pd_document or i.signed_pd_attachment):
         if i.start < max([i.signed_by_unicef_date, i.signed_by_partner_date]):
             return False
     return True
@@ -186,7 +186,7 @@ def start_date_signed_valid(i):
 def start_date_related_agreement_valid(i):
     # i = intervention
     if i.document_type in [i.PD, i.SHPD] and not i.contingency_pd and i.start and i.agreement.start and \
-            i.signed_pd_document and i.start < i.agreement.start:
+            (i.signed_pd_document or i.signed_pd_attachment) and i.start < i.agreement.start:
         return False
     return True
 

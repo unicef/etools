@@ -6,20 +6,8 @@ from factory import fuzzy
 from unicef_locations.tests.factories import LocationFactory
 
 from etools.applications.EquiTrack.tests.cases import BaseTenantTestCase
-from etools.applications.field_monitoring.settings.models import MethodType
-from etools.applications.field_monitoring.settings.tests.factories import MethodFactory, LocationSiteFactory
-
-
-class MethodTypeTestCase(BaseTenantTestCase):
-    def test_types_non_applicable(self):
-        method = MethodFactory(is_types_applicable=False)
-
-        with self.assertRaises(ValidationError):
-            MethodType(method=method, name=fuzzy.FuzzyText().fuzz()).clean()
-
-    def test_types_applicable(self):
-        method = MethodFactory(is_types_applicable=True)
-        MethodType(method=method, name=fuzzy.FuzzyText().fuzz()).clean()
+from etools.applications.field_monitoring.fm_settings.models import FMMethodType
+from etools.applications.field_monitoring.fm_settings.tests.factories import FMMethodFactory, LocationSiteFactory
 
 
 class SitesTestCase(BaseTenantTestCase):

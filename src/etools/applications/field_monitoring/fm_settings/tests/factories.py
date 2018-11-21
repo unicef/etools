@@ -7,8 +7,8 @@ from unicef_locations.models import GatewayType
 
 from unicef_locations.tests.factories import LocationFactory
 
-from etools.applications.field_monitoring.settings.models import MethodType, UNICEFUser, LocationSite, CPOutputConfig
-from etools.applications.field_monitoring.shared.models import Method
+from etools.applications.field_monitoring.fm_settings.models import FMMethodType, UNICEFUser, LocationSite, CPOutputConfig
+from etools.applications.field_monitoring.shared.models import FMMethod
 from etools.applications.firms.tests.factories import BaseUserFactory
 from etools.applications.partners.models import PartnerType
 from etools.applications.partners.tests.factories import PartnerFactory, InterventionResultLinkFactory
@@ -39,19 +39,19 @@ class UserFactory(BaseUserFactory):
             self.groups.add(*extracted)
 
 
-class MethodFactory(factory.DjangoModelFactory):
+class FMMethodFactory(factory.DjangoModelFactory):
     name = fuzzy.FuzzyText()
 
     class Meta:
-        model = Method
+        model = FMMethod
 
 
-class MethodTypeFactory(factory.DjangoModelFactory):
-    method = factory.SubFactory(MethodFactory, is_types_applicable=True)
+class FMMethodTypeFactory(factory.DjangoModelFactory):
+    method = factory.SubFactory(FMMethodFactory, is_types_applicable=True)
     name = fuzzy.FuzzyText()
 
     class Meta:
-        model = MethodType
+        model = FMMethodType
 
 
 class LocationSiteFactory(factory.DjangoModelFactory):

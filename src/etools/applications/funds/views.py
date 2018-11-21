@@ -92,12 +92,24 @@ class FRsView(APIView):
         intervention_id = request.query_params.get("intervention", None)
 
         if not values[0]:
-            return Response(data={'error': _('Values are required')}, status=status.HTTP_400_BAD_REQUEST)
+            return self.bad_request('Values are required')
 
         qs = FundsReservationHeader.objects.filter(fr_number__in=values)
 
+        not_found = set(values) - set(qs.values_list('fr_number', flat=True))
+        if not_found:
+            nf = list(not_found)
+            nf.sort()
+            return self.bad_request('The FR {} could not be found on eTools'.format(', '.join(nf)))
+
         if intervention_id:
             qs = qs.filter((Q(intervention__id=intervention_id) | Q(intervention__isnull=True)))
+            not_found = set(values) - set(qs.values_list('fr_number', flat=True))
+            if not_found:
+                frs_not_found = FundsReservationHeader.objects.filter(fr_number__in=not_found)
+                errors = ['FR #{0} is already being used by PD/SSFA ref [{0.intervention}]'.format(
+                    fr) for fr in frs_not_found]
+                return self.bad_request(', '.join(errors))
         else:
             qs = qs.filter(intervention__isnull=True)
 
@@ -110,40 +122,31 @@ class FRsView(APIView):
             qs = self.filter_by_grants(qs, grants)
 
         if not grants and not donors and qs.count() != len(values):
-            return Response(
-                data={'error': _('One or more of the FRs are used by another PD/SSFA '
-                                 'or could not be found in eTools.')},
-                status=status.HTTP_400_BAD_REQUEST
-            )
+            return self.bad_request('One or more of the FRs are used by another PD/SSFA '
+                                    'or could not be found in eTools.')
 
         all_frs_vendor_numbers = [fr.vendor_code for fr in qs.all()]
         if len(set(all_frs_vendor_numbers)) != 1:
-            return Response(
-                data={'error': _('The FRs selected relate to various partners, please make sure to select '
-                                 'FRs that relate to the PD/SSFA Partner')},
-                status=status.HTTP_400_BAD_REQUEST
-            )
+            return self.bad_request('The FRs selected relate to various partners, please make sure to select '
+                                    'FRs that relate to the PD/SSFA Partner')
 
         if intervention_id is not None:
             try:
                 intervention = Intervention.objects.get(pk=intervention_id)
             except Intervention.DoesNotExist:
-                return Response(
-                    data={'error': _('Intervention could not be found')},
-                    status=status.HTTP_400_BAD_REQUEST
-                )
+                return self.bad_request('Intervention could not be found')
             else:
                 if intervention.agreement.partner.vendor_number != all_frs_vendor_numbers[0]:
-                    return Response(
-                        data={'error': _('The vendor number of the selected implementing partner in eTools '
-                                         'does not match the vendor number entered in the FR in VISION. '
-                                         'Please correct the vendor number to continue.')},
-                        status=status.HTTP_400_BAD_REQUEST
-                    )
+                    return self.bad_request('The vendor number of the selected implementing partner in eTools '
+                                            'does not match the vendor number entered in the FR in VISION. '
+                                            'Please correct the vendor number to continue.')
 
         serializer = FRsSerializer(qs)
 
         return Response(serializer.data)
+
+    def bad_request(self, error_message):
+        return Response(data={'error': _(error_message)}, status=status.HTTP_400_BAD_REQUEST)
 
 
 class FundsReservationHeaderListAPIView(ExportModelMixin, ListAPIView):
