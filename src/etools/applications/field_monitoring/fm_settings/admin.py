@@ -3,7 +3,7 @@ from django.utils.translation import ugettext_lazy as _
 
 from ordered_model.admin import OrderedModelAdmin
 
-from etools.applications.field_monitoring.settings.models import MethodType, LocationSite, CPOutputConfig, \
+from etools.applications.field_monitoring.fm_settings.models import FMMethodType, LocationSite, CPOutputConfig, \
     CheckListItem, CheckListCategory, PlannedCheckListItem, PlannedCheckListItemPartnerInfo, LogIssue
 
 
@@ -19,8 +19,8 @@ class CheckListItemAdmin(admin.ModelAdmin):
     readonly_fields = ('slug',)
 
 
-@admin.register(MethodType)
-class MethodTypeAdmin(OrderedModelAdmin):
+@admin.register(FMMethodType)
+class FMMethodTypeAdmin(OrderedModelAdmin):
     list_display = ('method', 'name')
     list_filter = ('method',)
     readonly_fields = ('slug',)

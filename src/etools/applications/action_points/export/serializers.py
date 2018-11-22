@@ -12,6 +12,7 @@ class ActionPointExportSerializer(serializers.Serializer):
     due_date = serializers.DateField(format='%d/%m/%Y')
     status = serializers.CharField(source='get_status_display')
     description = serializers.CharField()
+    high_priority = serializers.BooleanField()
     intervention = serializers.CharField(source='intervention.reference_number', read_only=True, allow_null=True)
     pd_ssfa = serializers.CharField(source='intervention.title', allow_null=True)
     location = serializers.CharField(source='location.__str__', allow_null=True)

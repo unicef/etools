@@ -15,43 +15,44 @@ from unicef_locations.cache import etag_cached
 from unicef_locations.models import Location
 from unicef_restlib.views import NestedViewSetMixin
 
-from etools.applications.field_monitoring.settings.filters import CPOutputIsActiveFilter, LogIssueRelatedToTypeFilter, \
+from etools.applications.field_monitoring.fm_settings.filters import CPOutputIsActiveFilter, LogIssueRelatedToTypeFilter, \
     LogIssueVisitFilter
-from etools.applications.field_monitoring.settings.models import MethodType, LocationSite, CheckListItem, \
+from etools.applications.field_monitoring.fm_settings.models import FMMethodType, LocationSite, CheckListItem, \
     CheckListCategory, PlannedCheckListItem, CPOutputConfig, LogIssue
-from etools.applications.field_monitoring.settings.serializers.attachments import \
+from etools.applications.field_monitoring.fm_settings.serializers.attachments import \
     FieldMonitoringGeneralAttachmentSerializer
-from etools.applications.field_monitoring.settings.serializers.checklist import CheckListItemSerializer, \
+from etools.applications.field_monitoring.fm_settings.serializers.checklist import CheckListItemSerializer, \
     CheckListCategorySerializer
-from etools.applications.field_monitoring.settings.serializers.cp_outputs import FieldMonitoringCPOutputSerializer, \
+from etools.applications.field_monitoring.fm_settings.serializers.cp_outputs import FieldMonitoringCPOutputSerializer, \
     PlannedCheckListItemSerializer, CPOutputConfigDetailSerializer
-from etools.applications.field_monitoring.settings.serializers.issues import LogIssueSerializer, \
+from etools.applications.field_monitoring.fm_settings.serializers.issues import LogIssueSerializer, \
     LogIssueAttachmentSerializer
-from etools.applications.field_monitoring.settings.serializers.locations import LocationSiteSerializer, \
+from etools.applications.field_monitoring.fm_settings.serializers.locations import LocationSiteSerializer, \
     LocationCountrySerializer
-from etools.applications.field_monitoring.settings.serializers.methods import MethodSerializer, MethodTypeSerializer
-from etools.applications.field_monitoring.shared.models import Method
+from etools.applications.field_monitoring.fm_settings.serializers.methods import FMMethodSerializer, \
+    FMMethodTypeSerializer
+from etools.applications.field_monitoring.shared.models import FMMethod
 from etools.applications.field_monitoring.views import FMBaseViewSet, FMBaseAttachmentsViewSet
 from etools.applications.partners.models import PartnerOrganization
 from etools.applications.partners.serializers.partner_organization_v2 import MinimalPartnerOrganizationListSerializer
 from etools.applications.reports.models import Result, ResultType
 
 
-class MethodsViewSet(
+class FMMethodsViewSet(
     FMBaseViewSet,
     mixins.ListModelMixin,
     viewsets.GenericViewSet
 ):
-    queryset = Method.objects.all()
-    serializer_class = MethodSerializer
+    queryset = FMMethod.objects.all()
+    serializer_class = FMMethodSerializer
 
 
-class MethodTypesViewSet(
+class FMMethodTypesViewSet(
     FMBaseViewSet,
     viewsets.ModelViewSet
 ):
-    queryset = MethodType.objects.all()
-    serializer_class = MethodTypeSerializer
+    queryset = FMMethodType.objects.all()
+    serializer_class = FMMethodTypeSerializer
     filter_backends = (DjangoFilterBackend, OrderingFilter)
     filter_fields = {
         'method': ['exact', 'in'],
