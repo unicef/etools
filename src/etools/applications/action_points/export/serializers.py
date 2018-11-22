@@ -22,4 +22,4 @@ class ActionPointExportSerializer(serializers.Serializer):
     related_ref = serializers.CharField(source='related_object.reference_number', read_only=True, allow_null=True)
     related_object_str = serializers.CharField()
     related_object_url = serializers.CharField()
-    action_taken = serializers.CharField(source='comments.last.comment', allow_null=True)
+    action_taken = serializers.SlugRelatedField(source='comments', many=True, read_only=True, slug_field='comment')
