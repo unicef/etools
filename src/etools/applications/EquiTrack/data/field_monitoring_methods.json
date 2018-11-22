@@ -1,6 +1,6 @@
 [
     {
-        "model": "field_monitoring_shared.method",
+        "model": "field_monitoring_shared.fmmethod",
         "pk": 1,
         "fields": {
             "name": "Key Informant",
@@ -8,7 +8,7 @@
         }
     },
     {
-        "model": "field_monitoring_shared.method",
+        "model": "field_monitoring_shared.fmmethod",
         "pk": 2,
         "fields": {
             "name": "Focus Groups",
@@ -16,7 +16,7 @@
         }
     },
     {
-        "model": "field_monitoring_shared.method",
+        "model": "field_monitoring_shared.fmmethod",
         "pk": 3,
         "fields": {
             "name": "Observation",
@@ -24,7 +24,7 @@
         }
     },
     {
-        "model": "field_monitoring_shared.method",
+        "model": "field_monitoring_shared.fmmethod",
         "pk": 4,
         "fields": {
             "name": "Measurement",

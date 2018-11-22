@@ -1,6 +1,5 @@
 from django.contrib.contenttypes.fields import GenericRelation
 from django.contrib.postgres.fields import ArrayField
-from django.core.exceptions import ValidationError
 from django.db import models, connection
 from django.utils.translation import ugettext_lazy as _
 
@@ -8,7 +7,7 @@ from model_utils.models import TimeStampedModel
 
 from unicef_locations.models import Location
 
-from etools.applications.field_monitoring.settings.models import LocationSite, CPOutputConfig
+from etools.applications.field_monitoring.fm_settings.models import LocationSite, CPOutputConfig
 from etools.applications.publics.models import SoftDeleteMixin
 
 
@@ -48,11 +47,3 @@ class Task(SoftDeleteMixin, TimeStampedModel):
             self.created.year,
             self.id,
         )
-
-    @staticmethod
-    def clean_plan_by_month(plan):
-        if not plan or len(plan) != 12 or any([month_plan < 0 for month_plan in plan]):
-            raise ValidationError('Incorrect value in Plan By Month')
-
-    def clean(self):
-        type(self).clean_plan_by_month(self.plan_by_month)

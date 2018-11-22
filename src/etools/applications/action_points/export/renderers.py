@@ -1,12 +1,12 @@
 from django.utils.translation import ugettext_lazy as _
 
-from rest_framework_csv.renderers import CSVRenderer
+from etools.applications.EquiTrack.renderers import FriendlyCSVRenderer
 
 
-class ActionPointCSVRenderer(CSVRenderer):
+class ActionPointCSVRenderer(FriendlyCSVRenderer):
     header = [
         'ref', 'cp_output', 'partner', 'office', 'section', 'category', 'assigned_to', 'due_date',
-        'status', 'description', 'intervention', 'pd_ssfa', 'location', 'related_module',
+        'status', 'high_priority', 'description', 'intervention', 'pd_ssfa', 'location', 'related_module',
         'assigned_by', 'date_of_completion', 'related_ref', 'related_object_str', 'related_object_url', 'action_taken'
     ]
     labels = {
@@ -19,6 +19,7 @@ class ActionPointCSVRenderer(CSVRenderer):
         'assigned_to': _('Assigned To'),
         'due_date': _('Due Date'),
         'status': _('Status'),
+        'high_priority': _('High Priority'),
         'description': _('Description'),
         'intervention': _('PD/SSFA Reference No.'),
         'pd_ssfa': _('PD/SSFA Title'),
@@ -29,5 +30,5 @@ class ActionPointCSVRenderer(CSVRenderer):
         'related_ref': _('Related Document No.'),
         'related_object_str': _('Task/Trip Activity Reference No.'),
         'related_object_url': _('Related Document URL'),
-        'action_taken': _('Action Taken')
+        'action_taken': _('Last Action Taken')
     }

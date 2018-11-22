@@ -1,4 +1,3 @@
-from django.core.exceptions import ValidationError as DjangoValidationError
 from django.db.models import Sum, Count
 from django.db.models.expressions import RawSQL
 from django.utils.translation import ugettext_lazy as _
@@ -13,8 +12,8 @@ from unicef_snapshot.serializers import SnapshotModelSerializer
 
 from etools.applications.action_points.serializers import CommentSerializer, HistorySerializer
 from etools.applications.field_monitoring.planning.models import YearPlan, Task
-from etools.applications.field_monitoring.settings.serializers.cp_outputs import CPOutputConfigDetailSerializer
-from etools.applications.field_monitoring.settings.serializers.locations import LocationSiteLightSerializer
+from etools.applications.field_monitoring.fm_settings.serializers.cp_outputs import CPOutputConfigDetailSerializer
+from etools.applications.field_monitoring.fm_settings.serializers.locations import LocationSiteLightSerializer
 from etools.applications.partners.serializers.partner_organization_v2 import MinimalPartnerOrganizationListSerializer
 
 
@@ -60,10 +59,8 @@ class TaskListSerializer(serializers.ModelSerializer):
         )
 
     def validate_plan_by_month(self, plan):
-        try:
-            self.Meta.model.clean_plan_by_month(plan)
-        except DjangoValidationError as ex:
-            raise ValidationError(ex.message)
+        if not plan or len(plan) != 12 or any([month_plan < 0 for month_plan in plan]):
+            raise ValidationError('Incorrect value in Plan By Month')
 
         return plan
 
