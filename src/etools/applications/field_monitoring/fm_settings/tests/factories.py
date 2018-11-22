@@ -109,7 +109,7 @@ class PlannedCheckListItemFactory(factory.DjangoModelFactory):
         if extracted:
             self.methods.add(*extracted)
         elif created:
-            self.methods.add(*[MethodFactory() for i in range(count)])
+            self.methods.add(*[FMMethodFactory() for i in range(count)])
 
     @factory.post_generation
     def partners_info(self, created, extracted, count, **kwargs):

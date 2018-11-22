@@ -1,6 +1,6 @@
 from rest_framework import serializers
 
-from etools.applications.field_monitoring.settings.models import CheckListItem, CheckListCategory
+from etools.applications.field_monitoring.fm_settings.models import CheckListItem, CheckListCategory
 
 
 class CheckListCategorySerializer(serializers.ModelSerializer):

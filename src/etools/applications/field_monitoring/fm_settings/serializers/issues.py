@@ -11,8 +11,8 @@ from unicef_restlib.serializers import UserContextSerializerMixin
 from unicef_snapshot.serializers import SnapshotModelSerializer
 
 from etools.applications.action_points.serializers import HistorySerializer
-from etools.applications.field_monitoring.settings.models import LogIssue
-from etools.applications.field_monitoring.settings.serializers.locations import LocationSiteLightSerializer
+from etools.applications.field_monitoring.fm_settings.models import LogIssue
+from etools.applications.field_monitoring.fm_settings.serializers.locations import LocationSiteLightSerializer
 from etools.applications.partners.serializers.partner_organization_v2 import MinimalPartnerOrganizationListSerializer
 from etools.applications.reports.serializers.v2 import OutputListSerializer
 from etools.applications.users.serializers_v3 import MinimalUserSerializer
@@ -52,15 +52,18 @@ class LogIssueSerializer(UserContextSerializerMixin, SnapshotModelSerializer):
     def validate(self, attrs):
         validated_data = super().validate(attrs)
 
-        try:
-            self.Meta.model.clean_related_to(
+        provided_values = [v for v in [
                 validated_data.get('cp_output', self.instance.cp_output if self.instance else None),
                 validated_data.get('partner', self.instance.partner if self.instance else None),
                 validated_data.get('location', self.instance.location if self.instance else None),
                 validated_data.get('location_site', self.instance.location_site if self.instance else None),
-            )
-        except DjangoValidationError as ex:
-            raise ValidationError(ex.message)
+        ] if v]
+
+        if not provided_values:
+            raise ValidationError(_('Related object not provided'))
+
+        if len(provided_values) != 1:
+            raise ValidationError(_('Maximum one related object should be provided'))
 
         return validated_data
 

@@ -9,7 +9,7 @@ from model_utils.models import TimeStampedModel
 
 from unicef_locations.models import Location
 
-from etools.applications.field_monitoring.settings.models import LocationSite
+from etools.applications.field_monitoring.fm_settings.models import LocationSite
 from etools.applications.partners.models import PartnerOrganization
 from etools.applications.reports.models import Result
 
@@ -44,17 +44,3 @@ class LogIssue(TimeStampedModel):
     @property
     def related_to(self):
         return self.cp_output or self.partner or self.location or self.location_site
-
-    @staticmethod
-    def clean_related_to(cp_output, partner, location, location_site):
-        values = [cp_output, partner, location, location_site]
-        provided_values = [x for x in values if x]
-
-        if not provided_values:
-            raise ValidationError(_('Related object not provided'))
-
-        if len(provided_values) != 1:
-            raise ValidationError(_('Maximum one related object should be provided'))
-
-    def clean(self):
-        type(self).clean_related_to(self.cp_output, self.partner, self.location, self.location_site)

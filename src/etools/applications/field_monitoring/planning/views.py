@@ -11,7 +11,7 @@ from unicef_restlib.views import NestedViewSetMixin
 from etools.applications.field_monitoring.planning.models import YearPlan, Task
 from etools.applications.field_monitoring.planning.serializers import YearPlanSerializer, TaskSerializer, \
     TaskListSerializer
-from etools.applications.field_monitoring.settings.filters import CPOutputIsActiveFilter
+from etools.applications.field_monitoring.fm_settings.filters import CPOutputIsActiveFilter
 from etools.applications.field_monitoring.views import FMBaseViewSet
 
 

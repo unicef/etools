@@ -83,33 +83,3 @@ class SitesTestCase(BaseTenantTestCase):
         site.save()
 
         self.assertEqual(site.parent, self.boundary_location)
-
-
-class LogIssueTestCase(BaseTenantTestCase):
-    def test_related_to_none(self):
-        log_issue = LogIssueFactory()
-
-        with self.assertRaisesMessage(ValidationError, 'Related object not provided'):
-            log_issue.clean()
-
-    def test_related_to_result(self):
-        log_issue = LogIssueFactory(cp_output=ResultFactory(result_type__name=ResultType.OUTPUT))
-        log_issue.clean()
-
-    def test_related_to_partner(self):
-        log_issue = LogIssueFactory(partner=PartnerFactory())
-        log_issue.clean()
-
-    def test_related_to_location(self):
-        log_issue = LogIssueFactory(location=LocationFactory())
-        log_issue.clean()
-
-    def test_related_to_site(self):
-        log_issue = LogIssueFactory(location_site=LocationSiteFactory())
-        log_issue.clean()
-
-    def test_related_to_both(self):
-        log_issue = LogIssueFactory(location=LocationFactory(), location_site=LocationSiteFactory())
-
-        with self.assertRaisesMessage(ValidationError, 'Maximum one related object should be provided'):
-            log_issue.clean()

@@ -4,7 +4,7 @@ from django.db import models
 
 from rest_framework.filters import BaseFilterBackend
 
-from etools.applications.field_monitoring.settings.models import LogIssue
+from etools.applications.field_monitoring.fm_settings.models import LogIssue
 
 
 class CPOutputIsActiveFilter(BaseFilterBackend):

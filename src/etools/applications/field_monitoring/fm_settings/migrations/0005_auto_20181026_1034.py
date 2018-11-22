@@ -12,8 +12,8 @@ class Migration(migrations.Migration):
     dependencies = [
         ('contenttypes', '0002_remove_content_type_name'),
         ('partners', '0027_auto_20180914_1238'),
-        ('field_monitoring_shared', '0001_initial'),
-        ('field_monitoring_settings', '0004_auto_20181025_0944'),
+        ('field_monitoring_shared', '0002_auto_20181121_1038'),
+        ('field_monitoring_settings', '0006_auto_20181121_1433'),
     ]
 
     operations = [
@@ -77,7 +77,7 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name='cpoutputconfig',
             name='recommended_method_types',
-            field=models.ManyToManyField(blank=True, to='field_monitoring_settings.MethodType', verbose_name='Method(s)'),
+            field=models.ManyToManyField(blank=True, to='field_monitoring_settings.FMMethodType', verbose_name='Method(s)'),
         ),
         migrations.AddField(
             model_name='plannedchecklistitem',
@@ -87,6 +87,6 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name='plannedchecklistitem',
             name='methods',
-            field=models.ManyToManyField(blank=True, to='field_monitoring_shared.Method', verbose_name='Method(s)'),
+            field=models.ManyToManyField(blank=True, to='field_monitoring_shared.FMMethod', verbose_name='Method(s)'),
         ),
     ]

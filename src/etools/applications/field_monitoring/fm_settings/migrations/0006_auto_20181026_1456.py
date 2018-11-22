@@ -14,8 +14,8 @@ class Migration(migrations.Migration):
 
     operations = [
         migrations.AlterField(
-            model_name='methodtype',
+            model_name='fmmethodtype',
             name='method',
-            field=models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='types', to='field_monitoring_shared.Method', verbose_name='Method'),
+            field=models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='types', to='field_monitoring_shared.FMMethod', verbose_name='Method'),
         ),
     ]

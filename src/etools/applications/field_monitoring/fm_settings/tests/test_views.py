@@ -351,7 +351,7 @@ class PlannedCheckListItemViewTestCase(FMBaseTestCaseMixin, BaseTenantTestCase):
             user=self.unicef_user,
             data={
                 'checklist_item': CheckListItemFactory().id,
-                'methods': [MethodFactory().pk, MethodFactory().pk],
+                'methods': [FMMethodFactory().pk, FMMethodFactory().pk],
                 'partners_info': [{
                     'partner': PartnerFactory().pk,
                     'specific_details': 'test',

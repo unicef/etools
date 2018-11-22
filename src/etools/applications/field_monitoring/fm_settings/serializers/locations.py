@@ -21,7 +21,7 @@ class LocationCountrySerializer(LocationLightSerializer):
         return json.loads(point.json)
 
 
-class LocationSiteSerializer(serializers.ModelSerializer):
+class LocationSiteLightSerializer(serializers.ModelSerializer):
     parent = LocationSerializer(read_only=True)
     is_active = serializers.ChoiceField(choices=(
         (True, _('Active')),
@@ -34,3 +34,10 @@ class LocationSiteSerializer(serializers.ModelSerializer):
         extra_kwargs = {
             'point': {'required': True},
         }
+
+
+class LocationSiteSerializer(LocationSiteLightSerializer):
+    parent = LocationSerializer(read_only=True)
+
+    class Meta(LocationSiteLightSerializer.Meta):
+        pass
