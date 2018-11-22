@@ -1,4 +1,3 @@
-from django.core.exceptions import ValidationError as DjangoValidationError
 from django.db.models import Sum, Count
 from django.db.models.expressions import RawSQL
 from django.utils.translation import ugettext_lazy as _
