@@ -4,7 +4,7 @@ import factory
 from factory import fuzzy
 
 from etools.applications.field_monitoring.planning.models import YearPlan, Task
-from etools.applications.field_monitoring.settings.tests.factories import CPOutputConfigFactory, LocationSiteFactory
+from etools.applications.field_monitoring.fm_settings.tests.factories import CPOutputConfigFactory, LocationSiteFactory
 from etools.applications.tpm.tests.factories import FullInterventionFactory
 
 

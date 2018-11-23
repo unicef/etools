@@ -1,4 +1,4 @@
-from etools.applications.utils.groups.wrappers import GroupWrapper
+from etools.libraries.djangolib.models import GroupWrapper
 
 
 UNICEFUser = GroupWrapper(code='unicef_user',

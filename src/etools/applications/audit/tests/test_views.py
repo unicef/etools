@@ -1,4 +1,3 @@
-
 import datetime
 import random
 
@@ -314,6 +313,23 @@ class TestEngagementsListViewSet(EngagementTransitionsTestCaseMixin, BaseTenantT
             self.auditor,
             [self.engagement, self.third_engagement],
             filter_params={'status': status}
+        )
+
+    def test_status_filter_multiple(self):
+        engagement_audit = AuditFactory(
+            agreement__auditor_firm=self.auditor_firm,
+        )
+        engagement_special_audit = SpecialAuditFactory(
+            agreement__auditor_firm=self.auditor_firm,
+        )
+        self._test_list(
+            self.auditor,
+            [engagement_audit, engagement_special_audit],
+            filter_params={
+                'engagement_type__in': ",".join(
+                    [Engagement.TYPE_AUDIT, Engagement.TYPE_SPECIAL_AUDIT]
+                )
+            }
         )
 
     def test_status_filter_field_visit(self):

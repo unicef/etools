@@ -35,7 +35,7 @@ from etools.applications.audit.exports import (
     SpecialAuditDetailCSVRenderer,
     SpotCheckDetailCSVRenderer,
 )
-from etools.applications.audit.filters import DisplayStatusFilter, UniqueIDOrderingFilter
+from etools.applications.audit.filters import DisplayStatusFilter, EngagementFilter, UniqueIDOrderingFilter
 from etools.applications.audit.models import (
     Audit,
     Auditor,
@@ -85,7 +85,7 @@ from etools.applications.partners.models import PartnerOrganization
 from etools.applications.partners.serializers.partner_organization_v2 import MinimalPartnerOrganizationListSerializer
 from etools.applications.permissions2.conditions import ObjectStatusCondition
 from etools.applications.permissions2.drf_permissions import get_permission_for_targets, NestedPermission
-from etools.applications.permissions2.metadata import PermissionBasedMetadata, BaseMetadata
+from etools.applications.permissions2.metadata import BaseMetadata, PermissionBasedMetadata
 from etools.applications.permissions2.views import PermittedFSMActionMixin, PermittedSerializerMixin
 
 
@@ -257,17 +257,7 @@ class EngagementViewSet(
     search_fields = ('partner__name', 'agreement__auditor_firm__name')
     ordering_fields = ('agreement__order_number', 'agreement__auditor_firm__name',
                        'partner__name', 'engagement_type', 'status')
-
-    filter_fields = filter_fields = {field: ['exact'] for field in (
-        'agreement', 'agreement__auditor_firm', 'partner', 'engagement_type', 'joint_audit',
-        'agreement__auditor_firm__unicef_users_allowed', 'staff_members__user'
-    )}
-
-    filter_fields.update({
-        'agreement__auditor_firm': ['exact', 'in'],
-        'engagement_type': ['exact', 'in'],
-        'partner': ['exact', 'in'],
-    })
+    filter_class = EngagementFilter
 
     ENGAGEMENT_MAPPING = {
         Engagement.TYPES.audit: {
