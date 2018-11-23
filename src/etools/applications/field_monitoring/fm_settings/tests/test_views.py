@@ -10,7 +10,7 @@ from unicef_locations.tests.factories import LocationFactory
 from etools.applications.EquiTrack.tests.cases import BaseTenantTestCase
 from etools.applications.attachments.tests.factories import AttachmentFileTypeFactory
 from etools.applications.field_monitoring.fm_settings.models import CPOutputConfig
-from etools.applications.field_monitoring.settings.models.attachments import FieldMonitoringGeneralAttachment
+from etools.applications.field_monitoring.fm_settings.models import FieldMonitoringGeneralAttachment
 from etools.applications.field_monitoring.fm_settings.tests.factories import (
     CPOutputConfigFactory, LocationSiteFactory, FMMethodTypeFactory, PlannedCheckListItemFactory, CheckListItemFactory,
     FMMethodFactory, LogIssueFactory)
