@@ -1,14 +1,14 @@
 from django.core.management import BaseCommand
 
 from etools.applications.field_monitoring.conditions import FieldMonitoringModuleCondition
-from etools.applications.field_monitoring.settings.models import FMUser, UNICEFUser
+from etools.applications.field_monitoring.groups import FMUser, UNICEFUser
 from etools.applications.permissions2.conditions import GroupCondition
 from etools.applications.permissions2.models import Permission
 
 
 class Command(BaseCommand):
     field_monitoring_settings = [
-        'field_monitoring_settings.methodtype.*',
+        'field_monitoring_settings.fmmethodtype.*',
         'field_monitoring_settings.locationsite.*',
         'reports.result.fm_config',
         'field_monitoring_settings.cpoutputconfig.*',

@@ -11,7 +11,6 @@ from rest_framework.response import Response
 from unicef_locations.cache import etag_cached
 from unicef_locations.models import Location
 
-from etools.applications.field_monitoring.conditions import FieldMonitoringModuleCondition
 from etools.applications.field_monitoring.fm_settings.filters import CPOutputIsActiveFilter
 from etools.applications.field_monitoring.fm_settings.models import FMMethodType, LocationSite, CPOutputConfig
 from etools.applications.field_monitoring.fm_settings.serializers.cp_outputs import FieldMonitoringCPOutputSerializer, \
@@ -22,7 +21,7 @@ from etools.applications.field_monitoring.fm_settings.serializers.sites import L
     LocationCountrySerializer
 from etools.applications.field_monitoring.shared.models import FMMethod
 from etools.applications.field_monitoring.views import FMBaseViewSet
-from etools.applications.permissions2.metadata import BaseMetadata, PermissionBasedMetadata
+from etools.applications.permissions2.metadata import PermissionBasedMetadata
 from etools.applications.permissions2.views import PermittedSerializerMixin
 from etools.applications.reports.models import Result, ResultType
 
