@@ -4,7 +4,7 @@ from unicef_attachments.fields import FileTypeModelChoiceField
 from unicef_attachments.models import FileType
 from unicef_attachments.serializers import BaseAttachmentSerializer
 
-from etools.applications.field_monitoring.settings.models.attachments import FieldMonitoringGeneralAttachment
+from etools.applications.field_monitoring.fm_settings.models import FieldMonitoringGeneralAttachment
 from etools.applications.permissions2.serializers import PermissionsBasedSerializerMixin
 
 
