@@ -12,6 +12,7 @@ from etools.applications.tpm.views import (
     TPMPartnerViewSet,
     TPMStaffMembersViewSet,
     TPMVisitViewSet,
+    VisitAttachmentLinksView,
     VisitAttachmentsViewSet,
     VisitReportAttachmentsViewSet,
 )
@@ -53,5 +54,10 @@ urlpatterns = [
         r'^visits/activities/(?P<object_pk>\d+)/links',
         view=ActivityAttachmentLinksView.as_view(),
         name='activity-links'
-    )
+    ),
+    url(
+        r'^visits/(?P<object_pk>\d+)/links',
+        view=VisitAttachmentLinksView.as_view(),
+        name='visit-links'
+    ),
 ]

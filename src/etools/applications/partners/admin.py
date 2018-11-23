@@ -29,7 +29,6 @@ from etools.applications.partners.models import (  # TODO intervention sector lo
     InterventionBudget,
     InterventionPlannedVisits,
     InterventionResultLink,
-    InterventionSectionLocationLink,
     PartnerOrganization,
     PartnerStaffMember,
     PlannedEngagement,
@@ -189,29 +188,6 @@ class InterventionResultsLinkAdmin(admin.ModelAdmin):
     formfield_overrides = {
         models.ManyToManyField: {'widget': SelectMultiple(attrs={'size': '5', 'style': 'width:100%'})},
     }
-
-
-# TODO intervention sector locations cleanup
-class InterventionSectionLocationAdmin(admin.ModelAdmin):
-    model = InterventionSectionLocationLink
-    fields = (
-        'intervention',
-        'sector',
-        'locations'
-    )
-    list_display = (
-        'intervention',
-        'sector'
-    )
-    search_fields = (
-        'intervention__name',
-    )
-    list_filter = (
-        'sector',
-    )
-    filter_horizontal = [
-        'locations',
-    ]
 
 
 class PRCReviewAttachmentInline(AttachmentSingleInline):
@@ -651,15 +627,11 @@ admin.site.register(PlannedEngagement, PlannedEngagementAdmin)
 admin.site.register(Agreement, AgreementAdmin)
 admin.site.register(AgreementAmendment, AgreementAmendmentAdmin)
 
-
 admin.site.register(Intervention, InterventionAdmin)
 admin.site.register(InterventionAmendment, InterventionAmendmentsAdmin)
 admin.site.register(InterventionResultLink, InterventionResultsLinkAdmin)
 admin.site.register(InterventionBudget, InterventionBudgetAdmin)
 admin.site.register(InterventionPlannedVisits, InterventionPlannedVisitsAdmin)
 admin.site.register(InterventionAttachment, InterventionAttachmentAdmin)
-# TODO intervention sector locations cleanup
-admin.site.register(InterventionSectionLocationLink, InterventionSectionLocationAdmin)
-
 
 admin.site.register(FileType, FileTypeAdmin)

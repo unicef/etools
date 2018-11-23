@@ -39,7 +39,6 @@ from etools.applications.partners.models import (
     InterventionBudget,
     InterventionPlannedVisits,
     InterventionReportingPeriod,
-    InterventionSectionLocationLink,
     PartnerOrganization,
     PartnerType,
 )
@@ -1042,6 +1041,8 @@ class TestAgreementAPIView(BaseTenantTestCase):
         cls.partnership_manager_user.profile.partner_staff_member = cls.partner_staff.id
         cls.partnership_manager_user.save()
 
+        cls.notify_path = "etools.applications.partners.utils.send_notification_with_template"
+
         today = datetime.date.today()
         cls.country_programme = CountryProgrammeFactory(
             from_date=datetime.date(today.year - 1, 1, 1),
@@ -1289,14 +1290,17 @@ class TestAgreementAPIView(BaseTenantTestCase):
             "signed_by": self.unicef_staff.id,
             "signed_by_unicef_date": datetime.date.today(),
         }
-        response = self.forced_auth_req(
-            'patch',
-            reverse('partners_api:agreement-detail', args=[agreement.pk]),
-            user=self.partnership_manager_user,
-            data=data
-        )
+        mock_send = mock.Mock()
+        with mock.patch(self.notify_path, mock_send):
+            response = self.forced_auth_req(
+                'patch',
+                reverse('partners_api:agreement-detail', args=[agreement.pk]),
+                user=self.partnership_manager_user,
+                data=data
+            )
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response.data["status"], Agreement.SIGNED)
+        mock_send.assert_not_called()
 
     def test_partner_agreements_update_suspend(self):
         '''Ensure that interventions related to an agreement are suspended when the agreement is suspended'''
@@ -1308,15 +1312,18 @@ class TestAgreementAPIView(BaseTenantTestCase):
         data = {
             "status": Agreement.SUSPENDED,
         }
-        response = self.forced_auth_req(
-            'patch',
-            reverse('partners_api:agreement-detail', args=[self.agreement.pk]),
-            user=self.partnership_manager_user,
-            data=data
-        )
+        mock_send = mock.Mock()
+        with mock.patch(self.notify_path, mock_send):
+            response = self.forced_auth_req(
+                'patch',
+                reverse('partners_api:agreement-detail', args=[self.agreement.pk]),
+                user=self.partnership_manager_user,
+                data=data
+            )
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response.data["status"], Agreement.SUSPENDED)
         self.assertEqual(Intervention.objects.get(agreement=self.agreement).status, Intervention.SUSPENDED)
+        mock_send.assert_called()
 
     def test_agreement_amendment_delete_error(self):
         response = self.forced_auth_req(
@@ -1704,7 +1711,6 @@ class TestInterventionViews(BaseTenantTestCase):
         intervention_obj = Intervention.objects.get(id=self.intervention_data["id"])
         intervention_obj.status = Intervention.DRAFT
         intervention_obj.save()
-        InterventionSectionLocationLink.objects.filter(intervention=self.intervention_data.get("id")).delete()
         self.intervention_data.update(sector_locations=[])
         self.intervention_data.update(status="active")
         response = self.forced_auth_req(

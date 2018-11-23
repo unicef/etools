@@ -28,7 +28,7 @@ class TPMVisitFilter(filters.FilterSet):
             'tpm_activities__locations': ['exact'],
             'tpm_activities__cp_output': ['exact', 'in'],
             'tpm_activities__intervention': ['exact'],
-            'tpm_activities__date': ['exact'],
+            'tpm_activities__date': ['exact', 'lte', 'gte', 'gt', 'lt'],
             'status': ['exact', 'in'],
             'tpm_activities__unicef_focal_points': ['exact'],
             'tpm_partner_focal_points': ['exact'],
