@@ -1693,6 +1693,7 @@ class Intervention(TimeStampedModel):
         blank=True,
         null=True
     )
+    # TODO remove this when migration is stable
     signed_pd_document = models.FileField(
         verbose_name=_("Signed PD Document"),
         max_length=1024,

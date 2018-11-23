@@ -12,6 +12,7 @@ class ActionPointExportSerializer(serializers.Serializer):
     due_date = serializers.DateField(format='%d/%m/%Y')
     status = serializers.CharField(source='get_status_display')
     description = serializers.CharField()
+    high_priority = serializers.BooleanField()
     intervention = serializers.CharField(source='intervention.reference_number', read_only=True, allow_null=True)
     pd_ssfa = serializers.CharField(source='intervention.title', allow_null=True)
     location = serializers.CharField(source='location.__str__', allow_null=True)
@@ -21,4 +22,4 @@ class ActionPointExportSerializer(serializers.Serializer):
     related_ref = serializers.CharField(source='related_object.reference_number', read_only=True, allow_null=True)
     related_object_str = serializers.CharField()
     related_object_url = serializers.CharField()
-    action_taken = serializers.CharField(source='comments.last.comment', allow_null=True)
+    action_taken = serializers.SlugRelatedField(source='comments', many=True, read_only=True, slug_field='comment')
