@@ -96,7 +96,7 @@ class FMMethodTypesViewTestCase(FMBaseTestCaseMixin, BaseTenantTestCase):
         self.assertEqual(response.data['name'], new_name)
 
     def test_update_unicef(self):
-        method_type = MethodTypeFactory()
+        method_type = FMMethodTypeFactory()
 
         response = self.forced_auth_req(
             'patch', reverse('field_monitoring_settings:method-types-detail', args=[method_type.id]),
@@ -117,7 +117,7 @@ class FMMethodTypesViewTestCase(FMBaseTestCaseMixin, BaseTenantTestCase):
         self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
 
     def test_destroy_unicef(self):
-        method_type = MethodTypeFactory()
+        method_type = FMMethodTypeFactory()
 
         response = self.forced_auth_req(
             'delete', reverse('field_monitoring_settings:method-types-detail', args=[method_type.id]),
