@@ -344,7 +344,9 @@ CELERY_WORKER_PREFETCH_MULTIPLIER = 1
 CELERY_EMAIL_BACKEND = get_from_secrets_or_env('EMAIL_BACKEND', 'django.core.mail.backends.smtp.EmailBackend')
 CELERY_TASK_ROUTES = {
     'etools.applications.vision.tasks.sync_handler': {'queue': 'vision_queue'},
-    'etools.applications.hact.tasks.update_hact_for_country': {'queue': 'vision_queue'}
+    'etools.applications.hact.tasks.update_hact_for_country': {'queue': 'vision_queue'},
+    'etools.libraries.azure_graph_api.tasks.sync_delta_users': {'queue': 'vision_queue'},
+    'etools.libraries.azure_graph_api.tasks.sync_all_users': {'queue': 'vision_queue'}
 }
 
 # djangorestframework: http://www.django-rest-framework.org/api-guide/settings/
