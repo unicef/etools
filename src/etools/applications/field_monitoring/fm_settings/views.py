@@ -6,59 +6,44 @@ from django.utils.translation import ugettext_lazy as _
 from rest_framework import mixins, viewsets, views
 from rest_framework.filters import OrderingFilter, SearchFilter
 from rest_framework.generics import get_object_or_404
-from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 
 from unicef_locations.cache import etag_cached
 from unicef_locations.models import Location
-from unicef_restlib.pagination import DynamicPageNumberPagination
-from unicef_restlib.views import SafeTenantViewSetMixin, MultiSerializerViewSetMixin
 
 from etools.applications.field_monitoring.conditions import FieldMonitoringModuleCondition
-from etools.applications.field_monitoring.settings.filters import CPOutputIsActiveFilter
-from etools.applications.field_monitoring.settings.models import MethodType, LocationSite, CPOutputConfig
-from etools.applications.field_monitoring.settings.serializers.cp_outputs import FieldMonitoringCPOutputSerializer, \
+from etools.applications.field_monitoring.fm_settings.filters import CPOutputIsActiveFilter
+from etools.applications.field_monitoring.fm_settings.models import FMMethodType, LocationSite, CPOutputConfig
+from etools.applications.field_monitoring.fm_settings.serializers.cp_outputs import FieldMonitoringCPOutputSerializer, \
     CPOutputConfigDetailSerializer
-from etools.applications.field_monitoring.settings.serializers.methods import MethodSerializer, MethodTypeSerializer
-from etools.applications.field_monitoring.settings.serializers.sites import LocationSiteSerializer, \
+from etools.applications.field_monitoring.fm_settings.serializers.methods import FMMethodSerializer, \
+    FMMethodTypeSerializer
+from etools.applications.field_monitoring.fm_settings.serializers.sites import LocationSiteSerializer, \
     LocationCountrySerializer
-from etools.applications.field_monitoring.shared.models import Method
+from etools.applications.field_monitoring.shared.models import FMMethod
+from etools.applications.field_monitoring.views import FMBaseViewSet
 from etools.applications.permissions2.metadata import BaseMetadata, PermissionBasedMetadata
 from etools.applications.permissions2.views import PermittedSerializerMixin
 from etools.applications.reports.models import Result, ResultType
 
 
-class FMBaseViewSet(
-    SafeTenantViewSetMixin,
-    MultiSerializerViewSetMixin,
-):
-    metadata_class = BaseMetadata
-    pagination_class = DynamicPageNumberPagination
-    permission_classes = [IsAuthenticated, ]
-
-    def get_permission_context(self):
-        context = super().get_permission_context()
-        context.append(FieldMonitoringModuleCondition())
-        return context
-
-
-class MethodsViewSet(
+class FMMethodsViewSet(
     FMBaseViewSet,
     mixins.ListModelMixin,
     viewsets.GenericViewSet
 ):
-    queryset = Method.objects.all()
-    serializer_class = MethodSerializer
+    queryset = FMMethod.objects.all()
+    serializer_class = FMMethodSerializer
 
 
-class MethodTypesViewSet(
+class FMMethodTypesViewSet(
     FMBaseViewSet,
     PermittedSerializerMixin,
     viewsets.ModelViewSet
 ):
     metadata_class = PermissionBasedMetadata
-    queryset = MethodType.objects.all()
-    serializer_class = MethodTypeSerializer
+    queryset = FMMethodType.objects.all()
+    serializer_class = FMMethodTypeSerializer
     filter_backends = (DjangoFilterBackend, OrderingFilter)
     filter_fields = {
         'method': ['exact', 'in'],

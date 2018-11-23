@@ -7,10 +7,10 @@ from rest_framework import status
 from unicef_locations.tests.factories import LocationFactory
 
 from etools.applications.EquiTrack.tests.cases import BaseTenantTestCase
-from etools.applications.field_monitoring.settings.models import CPOutputConfig
-from etools.applications.field_monitoring.settings.tests.base import FMBaseTestCaseMixin
-from etools.applications.field_monitoring.settings.tests.factories import MethodTypeFactory, LocationSiteFactory, \
-    CPOutputConfigFactory, MethodFactory
+from etools.applications.field_monitoring.fm_settings.models import CPOutputConfig
+from etools.applications.field_monitoring.fm_settings.tests.factories import FMMethodTypeFactory, LocationSiteFactory, \
+    CPOutputConfigFactory, FMMethodFactory
+from etools.applications.field_monitoring.tests.base import FMBaseTestCaseMixin
 from etools.applications.partners.models import PartnerType
 from etools.applications.partners.tests.factories import PartnerFactory
 from etools.applications.reports.models import ResultType
@@ -30,9 +30,9 @@ class MethodsViewTestCase(FMBaseTestCaseMixin, BaseTenantTestCase):
         self.assertEqual(len(response.data['results']), 4)
 
 
-class MethodTypesViewTestCase(FMBaseTestCaseMixin, BaseTenantTestCase):
+class FMMethodTypesViewTestCase(FMBaseTestCaseMixin, BaseTenantTestCase):
     def test_list(self):
-        MethodTypeFactory()
+        FMMethodTypeFactory()
 
         response = self.forced_auth_req(
             'get', reverse('field_monitoring_settings:method-types-list'),
@@ -47,7 +47,7 @@ class MethodTypesViewTestCase(FMBaseTestCaseMixin, BaseTenantTestCase):
             'post', reverse('field_monitoring_settings:method-types-list'),
             user=self.fm_user,
             data={
-                'method': MethodFactory(is_types_applicable=True).id,
+                'method': FMMethodFactory(is_types_applicable=True).id,
                 'name': fuzzy.FuzzyText().fuzz(),
             }
         )
@@ -68,7 +68,7 @@ class MethodTypesViewTestCase(FMBaseTestCaseMixin, BaseTenantTestCase):
             'post', reverse('field_monitoring_settings:method-types-list'),
             user=self.fm_user,
             data={
-                'method': MethodFactory(is_types_applicable=False).id,
+                'method': FMMethodFactory(is_types_applicable=False).id,
                 'name': fuzzy.FuzzyText().fuzz(),
             }
         )
@@ -77,7 +77,7 @@ class MethodTypesViewTestCase(FMBaseTestCaseMixin, BaseTenantTestCase):
         self.assertIn('method', response.data)
 
     def test_update(self):
-        method_type = MethodTypeFactory()
+        method_type = FMMethodTypeFactory()
         new_name = fuzzy.FuzzyText().fuzz()
 
         response = self.forced_auth_req(
@@ -103,7 +103,7 @@ class MethodTypesViewTestCase(FMBaseTestCaseMixin, BaseTenantTestCase):
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
 
     def test_destroy(self):
-        method_type = MethodTypeFactory()
+        method_type = FMMethodTypeFactory()
 
         response = self.forced_auth_req(
             'delete', reverse('field_monitoring_settings:method-types-detail', args=[method_type.id]),

@@ -39,7 +39,6 @@ from etools.applications.partners.models import (
     InterventionBudget,
     InterventionPlannedVisits,
     InterventionReportingPeriod,
-    InterventionSectionLocationLink,
     PartnerOrganization,
     PartnerType,
 )
@@ -1704,7 +1703,6 @@ class TestInterventionViews(BaseTenantTestCase):
         intervention_obj = Intervention.objects.get(id=self.intervention_data["id"])
         intervention_obj.status = Intervention.DRAFT
         intervention_obj.save()
-        InterventionSectionLocationLink.objects.filter(intervention=self.intervention_data.get("id")).delete()
         self.intervention_data.update(sector_locations=[])
         self.intervention_data.update(status="active")
         response = self.forced_auth_req(
@@ -2254,8 +2252,8 @@ class TestPartnerOrganizationDashboardAPIView(BaseTenantTestCase):
             total_ct_cy=1000.00,
             total_ct_cp=789.00,
             total_ct_ytd=123.00,
-            # outstanding_dct_amount_6_to_9_months_usd=69,
-            # outstanding_dct_amount_more_than_9_months_usd=90,
+            outstanding_dct_amount_6_to_9_months_usd=69,
+            outstanding_dct_amount_more_than_9_months_usd=90,
         )
 
         cls.unicef_staff = UserFactory(is_staff=True)
@@ -2287,10 +2285,10 @@ class TestPartnerOrganizationDashboardAPIView(BaseTenantTestCase):
         self.record = data[0]
 
     def test_queryset(self):
-        self.assertEqual(self.record['total_ct_cp'], '789.00')
-        self.assertEqual(self.record['total_ct_ytd'], '123.00')
-        # self.assertEqual(self.record['outstanding_dct_amount_6_to_9_months_usd'], '69.00')
-        # self.assertEqual(self.record['outstanding_dct_amount_more_than_9_months_usd'], '90.00')
+        self.assertEqual(self.record['total_ct_cp'], 789.0)
+        self.assertEqual(self.record['total_ct_ytd'], 123.0)
+        self.assertEqual(self.record['outstanding_dct_amount_6_to_9_months_usd'], '69.00')
+        self.assertEqual(self.record['outstanding_dct_amount_more_than_9_months_usd'], '90.00')
 
     def test_sections(self):
         self.assertEqual(self.record['sections'], '{}|{}'.format(self.sec1.name, self.sec2.name))
@@ -2299,7 +2297,7 @@ class TestPartnerOrganizationDashboardAPIView(BaseTenantTestCase):
         self.assertEqual(self.record['locations'], '{}|{}'.format(self.loc1.name, self.loc2.name))
 
     def test_action_points(self):
-        self.assertEqual(self.record['action_points'], 3)
+        self.assertEqual(self.record['action_points'], 6)
 
     def test_no_recent_programmatic_visit(self):
         self.assertEquals(self.record['last_pv_date'].date(), datetime.date.today() - datetime.timedelta(200))

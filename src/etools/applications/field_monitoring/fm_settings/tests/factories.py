@@ -1,4 +1,3 @@
-from django.contrib.auth.models import Group
 from django.contrib.gis.geos import GEOSGeometry
 
 import factory
@@ -7,56 +6,28 @@ from unicef_locations.models import GatewayType
 
 from unicef_locations.tests.factories import LocationFactory
 
-from etools.applications.field_monitoring.settings.models import MethodType, UNICEFUser, LocationSite, CPOutputConfig, \
+from etools.applications.field_monitoring.fm_settings.models import FMMethodType, LocationSite, CPOutputConfig, \
     FMUser
-from etools.applications.field_monitoring.shared.models import Method
-from etools.applications.firms.tests.factories import BaseUserFactory
+from etools.applications.field_monitoring.shared.models import FMMethod
 from etools.applications.partners.models import PartnerType
 from etools.applications.partners.tests.factories import PartnerFactory, InterventionResultLinkFactory
 from etools.applications.reports.models import ResultType
 from etools.applications.reports.tests.factories import ResultFactory
 
 
-class UserFactory(BaseUserFactory):
-    """
-    User factory with ability to quickly assign auditor portal related groups with special logic for auditor.
-    """
-    class Params:
-        unicef_user = factory.Trait(
-            groups=[UNICEFUser.name],
-        )
-
-        fm_user = factory.Trait(
-            groups=[UNICEFUser.name, FMUser.name],
-        )
-
-    @factory.post_generation
-    def groups(self, create, extracted, **kwargs):
-        if not create:
-            return
-
-        if extracted is not None:
-            extracted = extracted[:]
-            for i, group in enumerate(extracted):
-                if isinstance(group, str):
-                    extracted[i] = Group.objects.get_or_create(name=group)[0]
-
-            self.groups.add(*extracted)
-
-
-class MethodFactory(factory.DjangoModelFactory):
+class FMMethodFactory(factory.DjangoModelFactory):
     name = fuzzy.FuzzyText()
 
     class Meta:
-        model = Method
+        model = FMMethod
 
 
-class MethodTypeFactory(factory.DjangoModelFactory):
-    method = factory.SubFactory(MethodFactory, is_types_applicable=True)
+class FMMethodTypeFactory(factory.DjangoModelFactory):
+    method = factory.SubFactory(FMMethodFactory, is_types_applicable=True)
     name = fuzzy.FuzzyText()
 
     class Meta:
-        model = MethodType
+        model = FMMethodType
 
 
 class LocationSiteFactory(factory.DjangoModelFactory):

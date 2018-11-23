@@ -1,11 +1,11 @@
 from django.contrib import admin
 from ordered_model.admin import OrderedModelAdmin
 
-from etools.applications.field_monitoring.settings.models import MethodType, LocationSite, CPOutputConfig
+from etools.applications.field_monitoring.fm_settings.models import FMMethodType, LocationSite, CPOutputConfig
 
 
-@admin.register(MethodType)
-class MethodTypeAdmin(OrderedModelAdmin):
+@admin.register(FMMethodType)
+class FMMethodTypeAdmin(OrderedModelAdmin):
     list_display = ('method', 'name')
     list_filter = ('method',)
     readonly_fields = ('slug',)

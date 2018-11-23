@@ -2,7 +2,7 @@ from django.core.management import call_command
 from django.db import connection
 
 from etools.applications.field_monitoring.settings.tests.factories import UserFactory
-from etools.applications.utils.groups.wrappers import GroupWrapper
+from etools.libraries.djangolib.models import GroupWrapper
 
 
 class FMBaseTestCaseMixin(object):

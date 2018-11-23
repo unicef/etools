@@ -1,9 +1,9 @@
 from django.contrib import admin
 from ordered_model.admin import OrderedModelAdmin
 
-from etools.applications.field_monitoring.shared.models import Method
+from etools.applications.field_monitoring.shared.models import FMMethod
 
 
-@admin.register(Method)
-class MethodAdmin(OrderedModelAdmin):
+@admin.register(FMMethod)
+class FMMethodAdmin(OrderedModelAdmin):
     list_display = ('name', 'is_types_applicable')

@@ -6,6 +6,8 @@ from rest_framework.exceptions import ValidationError
 
 from etools.applications.EquiTrack.tests.cases import BaseTenantTestCase
 from unicef_locations.tests.factories import LocationFactory
+
+from etools.applications.partners.models import Intervention
 from etools.applications.partners.tests.factories import InterventionFactory, InterventionResultLinkFactory
 from etools.applications.reports.models import AppliedIndicator, IndicatorBlueprint, LowerResult
 from etools.applications.reports.serializers.v2 import (AppliedIndicatorSerializer, DisaggregationSerializer,
@@ -89,7 +91,7 @@ class TestAppliedIndicatorSerializer(BaseTenantTestCase):
     @classmethod
     def setUpTestData(cls):
         cls.section = SectionFactory()
-        cls.intervention = InterventionFactory()
+        cls.intervention = InterventionFactory(status=Intervention.ACTIVE)
         cls.result_link = InterventionResultLinkFactory(
             intervention=cls.intervention,
         )
@@ -197,6 +199,19 @@ class TestAppliedIndicatorSerializer(BaseTenantTestCase):
         indicator = serializer.create(serializer.validated_data)
         self.assertIsInstance(indicator, AppliedIndicator)
         self.assertEqual(applied_qs.count(), count + 1)
+
+    def test_validate_changed_denominator_with_status_draft(self):
+        """If cluster indicator provided, no check is happening that value"""
+        self.applied_indicator.indicator = self.indicator
+        self.applied_indicator.save()
+
+        self.data["cluster_indicator_id"] = "404"
+        self.data["target"] = {'d': 1, 'v': 2}
+        self.intervention.flat_locations.add(self.location)
+        serializer = AppliedIndicatorSerializer(data=self.data, instance=self.applied_indicator)
+        self.assertFalse(serializer.is_valid())
+        self.assertEqual(serializer.errors, {"non_field_errors": [
+            'You cannot change the Indicator Target Denominator if PD/SSFA is not in status Draft or Signed']})
 
 
 class TestLowerResultSimpleCUSerializer(BaseTenantTestCase):

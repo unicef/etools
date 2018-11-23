@@ -7,7 +7,7 @@
         ],
         "vary": [
             "Vary",
-            "Accept, Cookie"
+            "Accept, Origin, Cookie"
         ],
         "allow": [
             "Allow",
@@ -24,7 +24,7 @@
             "amendment_number": "1",
             "signed_amendment_file": "http://testserver/media/test/file_attachments/partner_organization/500/500/agreements/533/interventions/440/amendments/None/test_file.pdf",
             "signed_amendment_attachment": null,
-            "internal_prc_review": null,
+            "internal_prc_review_attachment": null,
             "created": "2018-09-13T21:39:03.324000Z",
             "modified": "2018-09-13T21:39:03.362000Z",
             "types": [

@@ -1,6 +1,6 @@
 {% extends "admin/base.html" %}
 {% load i18n static %}
-{% load userprofile_tags %}
+{% load userprofile_tags etools %}
 
 {% block extrahead %}
     <script src="{{ STATIC_URL }}js/jquery-1.10.2.min.js"></script>
@@ -169,7 +169,8 @@
             <a href="http://www.unicef.org"><img src="{{ STATIC_URL }}img/UNICEF_logo_Cyan.png" width="113px" height="27px"></a>
         </div>
         <div class="brand msg">
-            <span>© Copyright 2015-{% now "Y" %} UNICEF. All Rights Reserved. Country: {{ request.tenant.name }}</span>
+            <p>© Copyright 2015-{% now "Y" %} UNICEF. All Rights Reserved. Country: {{ request.tenant.name }}</p>
+            <p>{% etools_version %}</p>
         </div>
     </footer>
 {% endblock footer %}
