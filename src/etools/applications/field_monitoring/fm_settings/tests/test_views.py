@@ -6,7 +6,6 @@ from factory import fuzzy
 
 from rest_framework import status
 
-from unicef_attachments.models import Attachment
 from unicef_locations.tests.factories import LocationFactory
 
 from etools.applications.EquiTrack.tests.cases import BaseTenantTestCase
