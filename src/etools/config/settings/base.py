@@ -192,6 +192,7 @@ SHARED_APPS = (
     'waffle',
     'etools.applications.tokens',
     'etools.applications.permissions2',
+    'etools.applications.permissions2.simplified',
     'unicef_notification',
 )
 
