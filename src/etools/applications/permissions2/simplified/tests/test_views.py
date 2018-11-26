@@ -4,8 +4,10 @@ from django.urls import reverse, set_urlconf
 from rest_framework import status
 
 from etools.applications.EquiTrack.tests.cases import BaseTenantTestCase
-from etools.applications.permissions2.simplified.tests.models import Parent, Child
+from etools.applications.permissions2.simplified.tests.factory import ModelWithFSMFieldFactory
+from etools.applications.permissions2.simplified.tests.models import Parent, Child, ModelWithFSMField
 from etools.applications.permissions2.simplified.tests.test_utils import TestModelsTestCaseMixin
+from etools.applications.permissions2.tests.mixins import TransitionPermissionsTestCaseMixin
 from etools.applications.users.tests.factories import UserFactory
 
 
@@ -24,7 +26,7 @@ class BaseTestViewSet(TestModelsTestCaseMixin):
         super().setUpTestData()
 
         cls.bob = UserFactory(first_name='Bob')
-        cls.common_user = UserFactory()
+        cls.alice = UserFactory(first_name='Alice')
 
     def get_list_url(self):
         raise NotImplementedError
@@ -44,8 +46,8 @@ class BaseTestViewSet(TestModelsTestCaseMixin):
         else:
             self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
 
-    def test_create_common(self):
-        self._test_create(self.common_user, has_access=False)
+    def test_create_alice(self):
+        self._test_create(self.alice, has_access=False)
 
     def test_create_bob(self):
         self._test_create(self.bob)
@@ -58,8 +60,8 @@ class BaseTestViewSet(TestModelsTestCaseMixin):
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
 
-    def test_list_common(self):
-        self._test_list(self.common_user)
+    def test_list_alice(self):
+        self._test_list(self.alice)
 
     def test_list_bob(self):
         self._test_list(self.bob)
@@ -76,8 +78,8 @@ class BaseTestViewSet(TestModelsTestCaseMixin):
         else:
             self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
 
-    def test_update_common(self):
-        self._test_update(self.common_user, has_access=False)
+    def test_update_alice(self):
+        self._test_update(self.alice, has_access=False)
 
     def test_update_bob(self):
         self._test_update(self.bob)
@@ -93,8 +95,8 @@ class BaseTestViewSet(TestModelsTestCaseMixin):
         else:
             self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
 
-    def test_destroy_common(self):
-        self._test_destroy(self.common_user, has_access=False)
+    def test_destroy_alice(self):
+        self._test_destroy(self.alice, has_access=False)
 
     def test_destroy_bob(self):
         self._test_destroy(self.bob)
@@ -112,8 +114,8 @@ class BaseTestViewSet(TestModelsTestCaseMixin):
         else:
             self.assertNotIn('POST', response.data['actions'])
 
-    def test_create_metadata_common(self):
-        self._test_create_metadata(self.common_user, has_access=False)
+    def test_create_metadata_alice(self):
+        self._test_create_metadata(self.alice, has_access=False)
 
     def test_create_metadata_bob(self):
         self._test_create_metadata(self.bob)
@@ -131,8 +133,8 @@ class BaseTestViewSet(TestModelsTestCaseMixin):
         else:
             self.assertNotIn('PUT', response.data['actions'])
 
-    def test_update_metadata_common(self):
-        self._test_update_metadata(self.common_user, has_access=False)
+    def test_update_metadata_alice(self):
+        self._test_update_metadata(self.alice, has_access=False)
 
     def test_update_metadata_bob(self):
         self._test_update_metadata(self.bob)
@@ -159,7 +161,7 @@ class TestParentViewSet(BaseTestViewSet, BaseTenantTestCase):
             self.forced_auth_req(
                 'post', reverse('wrong-parents-list'),
                 data={'test_field': 'test'},
-                user=self.common_user
+                user=self.alice
             )
 
 
@@ -179,3 +181,122 @@ class TestChildViewSet(BaseTestViewSet, BaseTenantTestCase):
     @classmethod
     def get_data(cls):
         return {'test_field': 'test', 'parent': cls.parent.id}
+
+
+class TestFSMModelViewSet(TestModelsTestCaseMixin, BaseTenantTestCase):
+    @classmethod
+    def setUpClass(cls):
+        super().setUpClass()
+        set_urlconf('etools.applications.permissions2.simplified.tests.urls')
+
+    @classmethod
+    def setUpTestData(cls):
+        super().setUpTestData()
+
+        cls.bob = UserFactory(first_name='Bob')
+        cls.alice = UserFactory(first_name='Alice')
+        cls.charlie = UserFactory(first_name='Charlie')
+
+    def _test_create(self, user, has_access=True):
+        response = self.forced_auth_req(
+            'post', reverse('fsm-model-list'),
+            data={},
+            user=user
+        )
+
+        if has_access:
+            self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        else:
+            self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+
+    def test_create_alice(self):
+        self._test_create(self.alice)
+
+    def test_create_bob(self):
+        self._test_create(self.bob)
+
+    def test_create_charlie(self):
+        self._test_create(self.charlie, has_access=False)
+
+
+class FSMModelTransitionPermissionsTestCase(TestModelsTestCaseMixin, TransitionPermissionsTestCaseMixin,
+                                            BaseTenantTestCase):
+    @classmethod
+    def setUpClass(cls):
+        super().setUpClass()
+        set_urlconf('etools.applications.permissions2.simplified.tests.urls')
+
+    abstract = True
+    model = ModelWithFSMField
+    factory = ModelWithFSMFieldFactory
+
+    ALLOWED_TRANSITION = NotImplemented
+
+    user = NotImplemented
+    user_role = NotImplemented
+
+    def do_transition(self, obj, transition):
+        return self.forced_auth_req(
+            'post',
+            reverse('fsm-model-transition', args=(obj.id, transition)),
+            user=self.user,
+            data={}
+        )
+
+    def check_result(self, result, obj, transition):
+        allowed = (obj.status, transition) in self.ALLOWED_TRANSITION
+        success = result.status_code == status.HTTP_200_OK
+        forbidden = result.status_code == status.HTTP_403_FORBIDDEN
+
+        model_name = obj._meta.verbose_name
+
+        if allowed and not success:
+            return False, 'Error on {} {} {} by {}.\n{}: {}'.format(transition, obj.status, model_name, self.user_role,
+                                                                    result.status_code, result.content)
+
+        if not allowed and success:
+            return False, 'Success for not allowed transition. {} can\'t {} {} {}.'.format(self.user_role, transition,
+                                                                                           obj.status, model_name)
+
+        if not allowed and not forbidden:
+            return False, 'Error on {} {} {} by {}.\n{}: {}'.format(transition, obj.status, model_name, self.user_role,
+                                                                    result.status_code, result.content)
+
+        return True, ''
+
+
+class AlicePermissionsTestCase(FSMModelTransitionPermissionsTestCase):
+    ALLOWED_TRANSITION = [
+        ('draft', 'start'),
+    ]
+
+    @classmethod
+    def setUpTestData(cls):
+        super().setUpTestData()
+
+        cls.user = UserFactory(first_name='Alice')
+        cls.user_role = 'Alice'
+
+
+class BobPermissionsTestCase(FSMModelTransitionPermissionsTestCase):
+    ALLOWED_TRANSITION = [
+        ('started', 'finish'),
+    ]
+
+    @classmethod
+    def setUpTestData(cls):
+        super().setUpTestData()
+
+        cls.user = UserFactory(first_name='Bob')
+        cls.user_role = 'Bob'
+
+
+class CharliePermissionsTestCase(FSMModelTransitionPermissionsTestCase):
+    ALLOWED_TRANSITION = []
+
+    @classmethod
+    def setUpTestData(cls):
+        super().setUpTestData()
+
+        cls.user = UserFactory(first_name='Charlie')
+        cls.user_role = 'Charlie'

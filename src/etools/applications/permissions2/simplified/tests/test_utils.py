@@ -1,6 +1,6 @@
 from django.db import connection
 
-from etools.applications.permissions2.simplified.tests.models import Child, Parent
+from etools.applications.permissions2.simplified.tests.models import Child, Parent, ModelWithFSMField
 
 
 class TestModelsTestCaseMixin(object):
@@ -10,5 +10,6 @@ class TestModelsTestCaseMixin(object):
         with connection.schema_editor() as editor:
             editor.create_model(Parent)
             editor.create_model(Child)
+            editor.create_model(ModelWithFSMField)
 
         super().setUpTestData()

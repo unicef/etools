@@ -1,6 +1,8 @@
 from django.core.exceptions import ImproperlyConfigured
 from unicef_restlib.views import NestedViewSetMixin
 
+from etools.applications.utils.common.views import FSMTransitionActionMixin
+
 
 class BaseSimplePermittedViewSetMixin(object):
     """
@@ -88,3 +90,24 @@ class SimplePermittedViewSetMixin(SimplePermittedParentViewSetMixin, SimplePermi
     Combined class which can be used both for root & nested views.
     """
     pass
+
+
+class SimplePermittedFSMTransitionActionMixin(FSMTransitionActionMixin):
+    transition_permission_classes = {}
+
+    def get_transition_permissions(self, transition):
+        return [permission() for permission in self.transition_permission_classes.get(transition, [])]
+
+    def pre_transition(self, instance, action):
+        #  maybe this should be moved to check_transition_permission
+        if isinstance(self, BaseSimplePermittedViewSetMixin):
+            self.check_write_permissions(instance=instance)
+
+        transition_permissions = self.get_transition_permissions(action)
+        allow_action = all(permission.has_object_permission(self.request, self, instance)
+                           for permission in transition_permissions)
+
+        if not allow_action:
+            self.permission_denied(self.request)
+
+        super().pre_transition(instance, action)
