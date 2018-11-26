@@ -20,7 +20,8 @@ class LogIssue(TimeStampedModel):
     )
     RELATED_TO_TYPE_CHOICES = Choices(
         ('cp_output', _('CP Output')),
-        ('partner', _('CP Output')),
+        ('partner', _('Partner')),
+        ('location', _('Location/Site')),
         ('location_site', _('Location/Site')),
     )
 
@@ -43,3 +44,14 @@ class LogIssue(TimeStampedModel):
     @property
     def related_to(self):
         return self.cp_output or self.partner or self.location or self.location_site
+
+    @property
+    def related_to_type(self):
+        if self.cp_output:
+            return self.RELATED_TO_TYPE_CHOICES.cp_output
+        elif self.partner:
+            return self.RELATED_TO_TYPE_CHOICES.partner
+        elif self.location:
+            return self.RELATED_TO_TYPE_CHOICES.location
+        elif self.location_site:
+            return self.RELATED_TO_TYPE_CHOICES.location_site

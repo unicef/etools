@@ -10,7 +10,7 @@ from unicef_locations.tests.factories import LocationFactory
 from etools.applications.EquiTrack.tests.cases import BaseTenantTestCase
 from etools.applications.attachments.models import Attachment
 from etools.applications.attachments.tests.factories import AttachmentFileTypeFactory, AttachmentFactory
-from etools.applications.field_monitoring.fm_settings.models import CPOutputConfig
+from etools.applications.field_monitoring.fm_settings.models import CPOutputConfig, LogIssue
 from etools.applications.field_monitoring.fm_settings.tests.factories import (
     CPOutputConfigFactory, LocationSiteFactory, FMMethodTypeFactory, PlannedCheckListItemFactory, CheckListItemFactory,
     FMMethodFactory, LogIssueFactory)
@@ -478,6 +478,19 @@ class LogIssueViewTestCase(FMBaseTestCaseMixin, BaseTenantTestCase):
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(len(response.data['results']), 4)
+
+    def test_related_to_type(self):
+        response = self.forced_auth_req(
+            'get', reverse('field_monitoring_settings:log-issues-list'),
+            user=self.unicef_user,
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(response.data['results']), 4)
+        self.assertEqual(response.data['results'][0]['related_to_type'], LogIssue.RELATED_TO_TYPE_CHOICES.cp_output)
+        self.assertEqual(response.data['results'][1]['related_to_type'], LogIssue.RELATED_TO_TYPE_CHOICES.partner)
+        self.assertEqual(response.data['results'][2]['related_to_type'], LogIssue.RELATED_TO_TYPE_CHOICES.location)
+        self.assertEqual(response.data['results'][3]['related_to_type'], LogIssue.RELATED_TO_TYPE_CHOICES.location_site)
 
     def test_attachments(self):
         AttachmentFactory(code='')  # common attachment
