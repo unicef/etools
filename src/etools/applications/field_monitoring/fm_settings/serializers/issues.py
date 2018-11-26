@@ -23,7 +23,7 @@ class LogIssueAttachmentSerializer(BaseAttachmentSerializer):
 
 
 class LogIssueSerializer(UserContextSerializerMixin, SnapshotModelSerializer):
-    author = MinimalUserSerializer(read_only=True)
+    author = MinimalUserSerializer(read_only=True, label=LogIssue._meta.get_field('author').verbose_name)
     closed_by = serializers.SerializerMethodField(label=_('Issue Closed By'))
     related_to_type = serializers.ChoiceField(choices=LogIssue.RELATED_TO_TYPE_CHOICES, read_only=True,
                                               label=_('Issue Related To'))
