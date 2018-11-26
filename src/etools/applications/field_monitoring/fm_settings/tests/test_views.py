@@ -314,6 +314,7 @@ class CPOutputsConfigViewTestCase(FMBaseTestCaseMixin, BaseTenantTestCase):
     @classmethod
     def setUpTestData(cls):
         super().setUpTestData()
+
         cls.active_result = ResultFactory(result_type__name=ResultType.OUTPUT)
         cls.inactive_result = ResultFactory(result_type__name=ResultType.OUTPUT, to_date=date.today() - timedelta(days=1))  # inactual
         cls.too_old = ResultFactory(result_type__name=ResultType.OUTPUT, to_date=date.today() - timedelta(days=366))  # shouldn't appear in lists
@@ -367,7 +368,7 @@ class CPOutputsConfigViewTestCase(FMBaseTestCaseMixin, BaseTenantTestCase):
             [self.default_config.id, monitored_config.id]
         )
 
-    def test_new_config(self):
+    def test_create(self):
         cp_output = ResultFactory(result_type__name=ResultType.OUTPUT)
 
         self.assertFalse(CPOutputConfig.objects.filter(cp_output=cp_output).exists())
@@ -386,7 +387,7 @@ class CPOutputsConfigViewTestCase(FMBaseTestCaseMixin, BaseTenantTestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertTrue(CPOutputConfig.objects.filter(cp_output=cp_output).exists())
 
-    def test_new_config_unicef(self):
+    def test_create_unicef(self):
         cp_output = ResultFactory(result_type__name=ResultType.OUTPUT)
         response = self.forced_auth_req(
             'patch', reverse('field_monitoring_settings:cp_outputs-detail', args=[cp_output.id]),
@@ -449,7 +450,7 @@ class PlannedCheckListItemViewTestCase(FMBaseTestCaseMixin, BaseTenantTestCase):
         response = self.forced_auth_req(
             'post',
             reverse('field_monitoring_settings:planned-checklist-items-list', args=[CPOutputConfigFactory().pk]),
-            user=self.unicef_user,
+            user=self.fm_user,
             data={
                 'checklist_item': CheckListItemFactory().id,
                 'methods': [FMMethodFactory().pk, FMMethodFactory().pk],
@@ -465,11 +466,21 @@ class PlannedCheckListItemViewTestCase(FMBaseTestCaseMixin, BaseTenantTestCase):
         self.assertEqual(len(response.data['methods']), 2)
         self.assertEqual(len(response.data['partners_info']), 1)
 
-    def test_create_without_partner(self):
+    def test_create_unucef(self):
         response = self.forced_auth_req(
             'post',
             reverse('field_monitoring_settings:planned-checklist-items-list', args=[CPOutputConfigFactory().pk]),
             user=self.unicef_user,
+            data={}
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+
+    def test_create_without_partner(self):
+        response = self.forced_auth_req(
+            'post',
+            reverse('field_monitoring_settings:planned-checklist-items-list', args=[CPOutputConfigFactory().pk]),
+            user=self.fm_user,
             data={
                 'checklist_item': CheckListItemFactory().id,
                 'partners_info': [{
@@ -489,7 +500,7 @@ class PlannedCheckListItemViewTestCase(FMBaseTestCaseMixin, BaseTenantTestCase):
         response = self.forced_auth_req(
             'patch', reverse('field_monitoring_settings:planned-checklist-items-detail',
                              args=[item.cp_output_config.pk, item.pk]),
-            user=self.unicef_user,
+            user=self.fm_user,
             data={
                 'partners_info': [{
                     'id': partner_info_id,
@@ -521,6 +532,8 @@ class PlannedCheckListItemViewTestCase(FMBaseTestCaseMixin, BaseTenantTestCase):
 class LogIssueViewTestCase(FMBaseTestCaseMixin, BaseTenantTestCase):
     @classmethod
     def setUpTestData(cls):
+        super().setUpTestData()
+
         cls.log_issue_cp_output = LogIssueFactory(cp_output=ResultFactory(result_type__name=ResultType.OUTPUT))
         cls.log_issue_partner = LogIssueFactory(partner=PartnerFactory())
         cls.log_issue_location = LogIssueFactory(location=LocationFactory())
@@ -531,7 +544,7 @@ class LogIssueViewTestCase(FMBaseTestCaseMixin, BaseTenantTestCase):
     def test_create(self):
         response = self.forced_auth_req(
             'post', reverse('field_monitoring_settings:log-issues-list'),
-            user=self.unicef_user,
+            user=self.fm_user,
             data={
                 'cp_output': ResultFactory(result_type__name=ResultType.OUTPUT).id,
                 'issue': fuzzy.FuzzyText().fuzz(),
@@ -540,14 +553,14 @@ class LogIssueViewTestCase(FMBaseTestCaseMixin, BaseTenantTestCase):
 
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         self.assertEqual(len(response.data['history']), 1)
-        self.assertEqual(response.data['author']['id'], self.unicef_user.id)
+        self.assertEqual(response.data['author']['id'], self.fm_user.id)
 
     def test_complete(self):
         log_issue = LogIssueFactory(cp_output=ResultFactory(result_type__name=ResultType.OUTPUT))
 
         response = self.forced_auth_req(
             'patch', reverse('field_monitoring_settings:log-issues-detail', args=[log_issue.pk]),
-            user=self.unicef_user,
+            user=self.fm_user,
             data={
                 'status': 'past'
             }
@@ -555,7 +568,16 @@ class LogIssueViewTestCase(FMBaseTestCaseMixin, BaseTenantTestCase):
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertIsNotNone(response.data['closed_by'])
-        self.assertEqual(response.data['closed_by']['id'], self.unicef_user.id)
+        self.assertEqual(response.data['closed_by']['id'], self.fm_user.id)
+
+    def test_create_unicef(self):
+        response = self.forced_auth_req(
+            'post', reverse('field_monitoring_settings:log-issues-list'),
+            user=self.unicef_user,
+            data={}
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
 
     def test_create_invalid(self):
         cp_output = ResultFactory(result_type__name=ResultType.OUTPUT)
@@ -563,7 +585,7 @@ class LogIssueViewTestCase(FMBaseTestCaseMixin, BaseTenantTestCase):
 
         response = self.forced_auth_req(
             'post', reverse('field_monitoring_settings:log-issues-list'),
-            user=self.unicef_user,
+            user=self.fm_user,
             data={
                 'cp_output': cp_output.id,
                 'location': site.parent.id,
@@ -679,7 +701,7 @@ class TestLogIssueAttachmentsView(FMBaseTestCaseMixin, BaseTenantTestCase):
         create_response = self.forced_auth_req(
             'post',
             reverse('field_monitoring_settings:log-issue-attachments-list', args=[self.log_issue.pk]),
-            user=self.unicef_user,
+            user=self.fm_user,
             request_format='multipart',
             data={
                 'file': SimpleUploadedFile('hello_world.txt', u'hello world!'.encode('utf-8')),
@@ -690,10 +712,20 @@ class TestLogIssueAttachmentsView(FMBaseTestCaseMixin, BaseTenantTestCase):
         list_response = self.forced_auth_req(
             'get',
             reverse('field_monitoring_settings:log-issue-attachments-list', args=[self.log_issue.pk]),
-            user=self.unicef_user
+            user=self.fm_user
         )
         self.assertEqual(list_response.status_code, status.HTTP_200_OK)
         self.assertEqual(len(list_response.data['results']), attachments_num + 1)
+
+    def test_add_unicef(self):
+        create_response = self.forced_auth_req(
+            'post',
+            reverse('field_monitoring_settings:log-issue-attachments-list', args=[self.log_issue.pk]),
+            user=self.unicef_user,
+            request_format='multipart',
+            data={}
+        )
+        self.assertEqual(create_response.status_code, status.HTTP_403_FORBIDDEN)
 
 
 class TestMonitoredPartnersView(FMBaseTestCaseMixin, BaseTenantTestCase):
@@ -722,7 +754,7 @@ class TestFieldMonitoringGeneralAttachmentsView(FMBaseTestCaseMixin, BaseTenantT
         create_response = self.forced_auth_req(
             'post',
             reverse('field_monitoring_settings:general-attachments-list'),
-            user=self.unicef_user,
+            user=self.fm_user,
             request_format='multipart',
             data={
                 'file_type': AttachmentFileTypeFactory(code='fm_common').id,
@@ -738,3 +770,13 @@ class TestFieldMonitoringGeneralAttachmentsView(FMBaseTestCaseMixin, BaseTenantT
         )
         self.assertEqual(list_response.status_code, status.HTTP_200_OK)
         self.assertEqual(len(list_response.data['results']), attachments_num + 1)
+
+    def test_add_unicef(self):
+        create_response = self.forced_auth_req(
+            'post',
+            reverse('field_monitoring_settings:general-attachments-list'),
+            user=self.unicef_user,
+            request_format='multipart',
+            data={}
+        )
+        self.assertEqual(create_response.status_code, status.HTTP_403_FORBIDDEN)

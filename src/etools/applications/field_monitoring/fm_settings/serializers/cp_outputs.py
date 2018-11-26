@@ -72,7 +72,8 @@ class FieldMonitoringCPOutputSerializer(SafeReadOnlySerializerMixin, WritableNes
         return [InterventionSerializer(link.intervention).data for link in obj.intervention_links.all()]
 
 
-class PlannedCheckListItemPartnerInfoSerializer(WritableNestedSerializerMixin, serializers.ModelSerializer):
+class PlannedCheckListItemPartnerInfoSerializer(SafeReadOnlySerializerMixin,
+                                                WritableNestedSerializerMixin, serializers.ModelSerializer):
     partner = SeparatedReadWriteField(read_field=MinimalPartnerOrganizationListSerializer())
 
     class Meta(WritableNestedSerializerMixin.Meta):
@@ -80,7 +81,8 @@ class PlannedCheckListItemPartnerInfoSerializer(WritableNestedSerializerMixin, s
         fields = ('id', 'partner', 'specific_details', 'standard_url',)
 
 
-class PlannedCheckListItemSerializer(WritableNestedSerializerMixin, serializers.ModelSerializer):
+class PlannedCheckListItemSerializer(SafeReadOnlySerializerMixin, WritableNestedSerializerMixin,
+                                     serializers.ModelSerializer):
     partners_info = PlannedCheckListItemPartnerInfoSerializer(many=True)
 
     class Meta(WritableNestedSerializerMixin.Meta):

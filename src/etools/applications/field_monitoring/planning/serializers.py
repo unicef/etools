@@ -15,9 +15,10 @@ from etools.applications.field_monitoring.planning.models import YearPlan, Task
 from etools.applications.field_monitoring.fm_settings.serializers.cp_outputs import CPOutputConfigDetailSerializer
 from etools.applications.field_monitoring.fm_settings.serializers.locations import LocationSiteLightSerializer
 from etools.applications.partners.serializers.partner_organization_v2 import MinimalPartnerOrganizationListSerializer
+from etools.applications.permissions2.simplified.serializers import SafeReadOnlySerializerMixin
 
 
-class YearPlanSerializer(WritableNestedSerializerMixin, SnapshotModelSerializer):
+class YearPlanSerializer(WritableNestedSerializerMixin, SafeReadOnlySerializerMixin, SnapshotModelSerializer):
     other_aspects = CommentSerializer(many=True, required=False)
     history = HistorySerializer(many=True, label=_('History'), read_only=True)
     tasks_by_month = serializers.SerializerMethodField(label=_('Number Of Tasks By Month'))
@@ -65,6 +66,6 @@ class TaskListSerializer(serializers.ModelSerializer):
         return plan
 
 
-class TaskSerializer(TaskListSerializer):
+class TaskSerializer(SafeReadOnlySerializerMixin, TaskListSerializer):
     class Meta(TaskListSerializer.Meta):
         pass

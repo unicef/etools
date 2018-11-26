@@ -6,21 +6,27 @@ from django_filters.rest_framework import DjangoFilterBackend
 
 from rest_framework import mixins, viewsets
 from rest_framework.filters import OrderingFilter
-from unicef_restlib.views import NestedViewSetMixin
 
+from etools.applications.field_monitoring.metadata import PermissionBasedMetadata
+from etools.applications.field_monitoring.permissions import UserIsFieldMonitor
 from etools.applications.field_monitoring.planning.models import YearPlan, Task
 from etools.applications.field_monitoring.planning.serializers import YearPlanSerializer, TaskSerializer, \
     TaskListSerializer
 from etools.applications.field_monitoring.fm_settings.filters import CPOutputIsActiveFilter
 from etools.applications.field_monitoring.views import FMBaseViewSet
+from etools.applications.permissions2.simplified.views import SimplePermittedViewSetMixin, \
+    SimplePermittedViewSetMixin
 
 
 class YearPlanViewSet(
     FMBaseViewSet,
+    SimplePermittedViewSetMixin,
     mixins.RetrieveModelMixin,
     mixins.UpdateModelMixin,
     viewsets.GenericViewSet
 ):
+    write_permission_classes = [UserIsFieldMonitor]
+    metadata_class = PermissionBasedMetadata
     queryset = YearPlan.objects.all()
     serializer_class = YearPlanSerializer
 
@@ -53,7 +59,8 @@ class YearPlanViewSet(
         return obj
 
 
-class TaskViewSet(NestedViewSetMixin, FMBaseViewSet, viewsets.ModelViewSet):
+class TaskViewSet(SimplePermittedViewSetMixin, FMBaseViewSet, viewsets.ModelViewSet):
+    metadata_class = PermissionBasedMetadata
     queryset = Task.objects.prefetch_related(
         'cp_output_config', 'cp_output_config__cp_output',
         'partner', 'intervention', 'location', 'location_site',

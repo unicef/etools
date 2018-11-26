@@ -9,6 +9,8 @@ from etools.applications.field_monitoring.fm_settings.tests.factories import Loc
 class SitesTestCase(BaseTenantTestCase):
     @classmethod
     def setUpTestData(cls):
+        super().setUpTestData()
+
         cls.boundary = GEOSGeometry(
             """
               {

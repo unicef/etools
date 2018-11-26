@@ -38,7 +38,8 @@ from etools.applications.field_monitoring.metadata import PermissionBasedMetadat
 from etools.applications.field_monitoring.permissions import UserIsFieldMonitor
 from etools.applications.partners.models import PartnerOrganization
 from etools.applications.partners.serializers.partner_organization_v2 import MinimalPartnerOrganizationListSerializer
-from etools.applications.permissions2.simplified.views import SimplePermittedViewSetMixin
+from etools.applications.permissions2.simplified.views import SimplePermittedViewSetMixin, \
+    SimplePermittedViewSetMixin
 from etools.applications.reports.models import Result, ResultType
 
 
@@ -185,9 +186,10 @@ class CheckListCategoriesViewSet(
 
 class PlannedCheckListItemViewSet(
     FMBaseViewSet,
-    NestedViewSetMixin,
+    SimplePermittedViewSetMixin,
     viewsets.ModelViewSet,
 ):
+    metadata_class = PermissionBasedMetadata
     queryset = PlannedCheckListItem.objects.all()
     serializer_class = PlannedCheckListItemSerializer
 
@@ -195,7 +197,9 @@ class PlannedCheckListItemViewSet(
         serializer.save(cp_output_config=self.get_parent_object())
 
 
-class LogIssuesViewSet(FMBaseViewSet, viewsets.ModelViewSet):
+class LogIssuesViewSet(FMBaseViewSet, SimplePermittedViewSetMixin, viewsets.ModelViewSet):
+    write_permission_classes = [UserIsFieldMonitor]
+    metadata_class = PermissionBasedMetadata
     queryset = LogIssue.objects.prefetch_related(
         'author', 'history', 'cp_output', 'partner', 'location', 'location_site', 'attachments',
     )
@@ -217,7 +221,9 @@ class LogIssuesViewSet(FMBaseViewSet, viewsets.ModelViewSet):
         return queryset
 
 
-class LogIssueAttachmentsViewSet(FMBaseAttachmentsViewSet):
+class LogIssueAttachmentsViewSet(SimplePermittedViewSetMixin, FMBaseAttachmentsViewSet):
+    write_permission_classes = [UserIsFieldMonitor]
+    metadata_class = PermissionBasedMetadata
     serializer_class = LogIssueAttachmentSerializer
     related_model = LogIssue
 
@@ -225,7 +231,9 @@ class LogIssueAttachmentsViewSet(FMBaseAttachmentsViewSet):
         return _('Attachments')
 
 
-class FieldMonitoringGeneralAttachmentsViewSet(FMBaseViewSet, viewsets.ModelViewSet):
+class FieldMonitoringGeneralAttachmentsViewSet(FMBaseViewSet, SimplePermittedViewSetMixin, viewsets.ModelViewSet):
+    write_permission_classes = [UserIsFieldMonitor]
+    metadata_class = PermissionBasedMetadata
     queryset = Attachment.objects.filter(code='fm_common')
     serializer_class = FieldMonitoringGeneralAttachmentSerializer
 
