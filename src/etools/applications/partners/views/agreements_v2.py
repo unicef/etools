@@ -33,6 +33,7 @@ from etools.applications.partners.serializers.exports.agreements import (
     AgreementExportSerializer,
 )
 from etools.applications.partners.validation.agreements import AgreementValid
+from etools.applications.partners.utils import send_agreement_suspended_notification
 
 
 class AgreementListAPIView(QueryStringFilterMixin, ExportModelMixin, ValidatorViewMixin, ListCreateAPIView):
@@ -167,6 +168,10 @@ class AgreementDetailAPIView(ValidatorViewMixin, RetrieveUpdateDestroyAPIView):
             # If 'prefetch_related' has been applied to a queryset, we need to
             # refresh the instance from the database.
             instance = self.get_object()
+
+        # if agreement becomes suspended, send notification
+        if instance.status == instance.SUSPENDED and instance.status != old_instance.status:
+            send_agreement_suspended_notification(instance, request.user)
 
         return Response(AgreementDetailSerializer(instance, context=self.get_serializer_context()).data)
 
