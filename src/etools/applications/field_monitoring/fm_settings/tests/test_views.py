@@ -423,7 +423,9 @@ class LogIssueViewTestCase(FMBaseTestCaseMixin, BaseTenantTestCase):
         cls.log_issue_cp_output = LogIssueFactory(cp_output=ResultFactory(result_type__name=ResultType.OUTPUT))
         cls.log_issue_partner = LogIssueFactory(partner=PartnerFactory())
         cls.log_issue_location = LogIssueFactory(location=LocationFactory())
-        cls.log_issue_location_site = LogIssueFactory(location_site=LocationSiteFactory())
+
+        location_site = LocationSiteFactory()
+        cls.log_issue_location_site = LogIssueFactory(location=location_site.parent, location_site=location_site)
 
     def test_create(self):
         response = self.forced_auth_req(
@@ -455,14 +457,15 @@ class LogIssueViewTestCase(FMBaseTestCaseMixin, BaseTenantTestCase):
         self.assertEqual(response.data['closed_by']['id'], self.unicef_user.id)
 
     def test_create_invalid(self):
+        cp_output = ResultFactory(result_type__name=ResultType.OUTPUT)
         site = LocationSiteFactory()
 
         response = self.forced_auth_req(
             'post', reverse('field_monitoring_settings:log-issues-list'),
             user=self.unicef_user,
             data={
+                'cp_output': cp_output.id,
                 'location': site.parent.id,
-                'location_site': site.id,
                 'issue': fuzzy.FuzzyText().fuzz(),
             }
         )
@@ -490,7 +493,7 @@ class LogIssueViewTestCase(FMBaseTestCaseMixin, BaseTenantTestCase):
         self.assertEqual(response.data['results'][0]['related_to_type'], LogIssue.RELATED_TO_TYPE_CHOICES.cp_output)
         self.assertEqual(response.data['results'][1]['related_to_type'], LogIssue.RELATED_TO_TYPE_CHOICES.partner)
         self.assertEqual(response.data['results'][2]['related_to_type'], LogIssue.RELATED_TO_TYPE_CHOICES.location)
-        self.assertEqual(response.data['results'][3]['related_to_type'], LogIssue.RELATED_TO_TYPE_CHOICES.location_site)
+        self.assertEqual(response.data['results'][3]['related_to_type'], LogIssue.RELATED_TO_TYPE_CHOICES.location)
 
     def test_name_ordering(self):
         log_issue = LogIssueFactory(cp_output=ResultFactory(name='zzzzzz', result_type__name=ResultType.OUTPUT))
@@ -558,7 +561,7 @@ class LogIssueViewTestCase(FMBaseTestCaseMixin, BaseTenantTestCase):
         self._test_related_to_filter('partner', [self.log_issue_partner])
 
     def test_related_to_location_filter(self):
-        self._test_related_to_filter('location_site', [self.log_issue_location, self.log_issue_location_site])
+        self._test_related_to_filter('location', [self.log_issue_location, self.log_issue_location_site])
 
 
 class TestLogIssueAttachmentsView(FMBaseTestCaseMixin, BaseTenantTestCase):

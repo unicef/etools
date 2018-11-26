@@ -22,7 +22,6 @@ class LogIssue(TimeStampedModel):
         ('cp_output', _('CP Output')),
         ('partner', _('Partner')),
         ('location', _('Location/Site')),
-        ('location_site', _('Location/Site')),
     )
 
     author = models.ForeignKey(settings.AUTH_USER_MODEL, related_name='created_logissues',
@@ -43,7 +42,7 @@ class LogIssue(TimeStampedModel):
 
     @property
     def related_to(self):
-        return self.cp_output or self.partner or self.location or self.location_site
+        return self.cp_output or self.partner or self.location_site or self.location
 
     @property
     def related_to_type(self):
@@ -53,5 +52,3 @@ class LogIssue(TimeStampedModel):
             return self.RELATED_TO_TYPE_CHOICES.partner
         elif self.location:
             return self.RELATED_TO_TYPE_CHOICES.location
-        elif self.location_site:
-            return self.RELATED_TO_TYPE_CHOICES.location_site

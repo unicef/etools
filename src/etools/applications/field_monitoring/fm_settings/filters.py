@@ -32,7 +32,7 @@ class LogIssueRelatedToTypeFilter(BaseFilterBackend):
                 filters |= models.Q(cp_output__isnull=False)
             elif value == LogIssue.RELATED_TO_TYPE_CHOICES.partner:
                 filters |= models.Q(partner__isnull=False)
-            elif value == LogIssue.RELATED_TO_TYPE_CHOICES.location_site:
+            elif value == LogIssue.RELATED_TO_TYPE_CHOICES.location:
                 filters |= models.Q(models.Q(location__isnull=False) | models.Q(location_site__isnull=False))
 
         return queryset.filter(filters)

@@ -55,7 +55,6 @@ class LogIssueSerializer(UserContextSerializerMixin, SnapshotModelSerializer):
                 validated_data.get('cp_output', self.instance.cp_output if self.instance else None),
                 validated_data.get('partner', self.instance.partner if self.instance else None),
                 validated_data.get('location', self.instance.location if self.instance else None),
-                validated_data.get('location_site', self.instance.location_site if self.instance else None),
         ] if v]
 
         if not provided_values:
