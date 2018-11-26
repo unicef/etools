@@ -1,6 +1,7 @@
 from datetime import date
 
 from django.db import models
+from django.db.models import Case, When, F
 
 from rest_framework.filters import BaseFilterBackend
 
@@ -44,3 +45,18 @@ class LogIssueVisitFilter(BaseFilterBackend):
             return queryset
 
         raise NotImplementedError
+
+
+class LogIssueNameOrderingFilter(BaseFilterBackend):
+    def filter_queryset(self, request, queryset, view):
+        ordering = request.query_params.get('ordering', '')
+        if not ordering.lstrip('-') == 'name':
+            return queryset
+
+        return queryset.annotate(name=Case(
+            When(cp_output__isnull=False, then=F('cp_output__name')),
+            When(partner__isnull=False, then=F('partner__name')),
+            When(location_site__isnull=False, then=F('location_site__name')),
+            When(location__isnull=False, then=F('location__name')),
+            output_field=models.CharField()
+        )).order_by(ordering)

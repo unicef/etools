@@ -492,6 +492,27 @@ class LogIssueViewTestCase(FMBaseTestCaseMixin, BaseTenantTestCase):
         self.assertEqual(response.data['results'][2]['related_to_type'], LogIssue.RELATED_TO_TYPE_CHOICES.location)
         self.assertEqual(response.data['results'][3]['related_to_type'], LogIssue.RELATED_TO_TYPE_CHOICES.location_site)
 
+    def test_name_ordering(self):
+        log_issue = LogIssueFactory(cp_output=ResultFactory(name='zzzzzz', result_type__name=ResultType.OUTPUT))
+
+        response = self.forced_auth_req(
+            'get', reverse('field_monitoring_settings:log-issues-list'),
+            user=self.unicef_user,
+            data={'ordering': 'name'}
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertNotEqual(response.data['results'][0]['id'], log_issue.id)
+
+        response = self.forced_auth_req(
+            'get', reverse('field_monitoring_settings:log-issues-list'),
+            user=self.unicef_user,
+            data={'ordering': '-name'}
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data['results'][0]['id'], log_issue.id)
+
     def test_attachments(self):
         AttachmentFactory(code='')  # common attachment
         log_issue = LogIssueFactory(cp_output=ResultFactory(result_type__name=ResultType.OUTPUT), attachments__count=2)
