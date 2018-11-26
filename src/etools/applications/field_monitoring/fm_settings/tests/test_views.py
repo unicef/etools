@@ -8,8 +8,9 @@ from rest_framework import status
 from unicef_locations.tests.factories import LocationFactory
 
 from etools.applications.EquiTrack.tests.cases import BaseTenantTestCase
-from etools.applications.attachments.tests.factories import AttachmentFileTypeFactory
-from etools.applications.field_monitoring.fm_settings.models import CPOutputConfig
+from etools.applications.attachments.models import Attachment
+from etools.applications.attachments.tests.factories import AttachmentFileTypeFactory, AttachmentFactory
+from etools.applications.field_monitoring.fm_settings.models import CPOutputConfig, LogIssue
 from etools.applications.field_monitoring.fm_settings.models import FieldMonitoringGeneralAttachment
 from etools.applications.field_monitoring.fm_settings.tests.factories import (
     CPOutputConfigFactory, LocationSiteFactory, FMMethodTypeFactory, PlannedCheckListItemFactory, CheckListItemFactory,
@@ -496,7 +497,9 @@ class LogIssueViewTestCase(FMBaseTestCaseMixin, BaseTenantTestCase):
         cls.log_issue_cp_output = LogIssueFactory(cp_output=ResultFactory(result_type__name=ResultType.OUTPUT))
         cls.log_issue_partner = LogIssueFactory(partner=PartnerFactory())
         cls.log_issue_location = LogIssueFactory(location=LocationFactory())
-        cls.log_issue_location_site = LogIssueFactory(location_site=LocationSiteFactory())
+
+        location_site = LocationSiteFactory()
+        cls.log_issue_location_site = LogIssueFactory(location=location_site.parent, location_site=location_site)
 
     def test_create(self):
         response = self.forced_auth_req(
@@ -537,14 +540,15 @@ class LogIssueViewTestCase(FMBaseTestCaseMixin, BaseTenantTestCase):
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
 
     def test_create_invalid(self):
+        cp_output = ResultFactory(result_type__name=ResultType.OUTPUT)
         site = LocationSiteFactory()
 
         response = self.forced_auth_req(
             'post', reverse('field_monitoring_settings:log-issues-list'),
             user=self.fm_user,
             data={
+                'cp_output': cp_output.id,
                 'location': site.parent.id,
-                'location_site': site.id,
                 'issue': fuzzy.FuzzyText().fuzz(),
             }
         )
@@ -560,6 +564,62 @@ class LogIssueViewTestCase(FMBaseTestCaseMixin, BaseTenantTestCase):
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(len(response.data['results']), 4)
+
+    def test_related_to_type(self):
+        response = self.forced_auth_req(
+            'get', reverse('field_monitoring_settings:log-issues-list'),
+            user=self.unicef_user,
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(response.data['results']), 4)
+        self.assertEqual(response.data['results'][0]['related_to_type'], LogIssue.RELATED_TO_TYPE_CHOICES.cp_output)
+        self.assertEqual(response.data['results'][1]['related_to_type'], LogIssue.RELATED_TO_TYPE_CHOICES.partner)
+        self.assertEqual(response.data['results'][2]['related_to_type'], LogIssue.RELATED_TO_TYPE_CHOICES.location)
+        self.assertEqual(response.data['results'][3]['related_to_type'], LogIssue.RELATED_TO_TYPE_CHOICES.location)
+
+    def test_name_ordering(self):
+        log_issue = LogIssueFactory(cp_output=ResultFactory(name='zzzzzz', result_type__name=ResultType.OUTPUT))
+
+        response = self.forced_auth_req(
+            'get', reverse('field_monitoring_settings:log-issues-list'),
+            user=self.unicef_user,
+            data={'ordering': 'name'}
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertNotEqual(response.data['results'][0]['id'], log_issue.id)
+
+        response = self.forced_auth_req(
+            'get', reverse('field_monitoring_settings:log-issues-list'),
+            user=self.unicef_user,
+            data={'ordering': '-name'}
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data['results'][0]['id'], log_issue.id)
+
+    def test_attachments(self):
+        AttachmentFactory(code='')  # common attachment
+        log_issue = LogIssueFactory(cp_output=ResultFactory(result_type__name=ResultType.OUTPUT), attachments__count=2)
+
+        response = self.forced_auth_req(
+            'get', reverse('field_monitoring_settings:log-issues-list'),
+            user=self.unicef_user,
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(response.data['results']), 5)
+        self.assertEqual(response.data['results'][4]['id'], log_issue.id)
+        self.assertEqual(len(response.data['results'][4]['attachments']), 2)
+
+        details_response = self.forced_auth_req(
+            'get', reverse('field_monitoring_settings:log-issue-attachments-list', args=[log_issue.id]),
+            user=self.unicef_user
+        )
+
+        self.assertEqual(details_response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(details_response.data['results']), 2)
 
     def _test_list_filter(self, list_filter, expected_items):
         response = self.forced_auth_req(
@@ -584,7 +644,7 @@ class LogIssueViewTestCase(FMBaseTestCaseMixin, BaseTenantTestCase):
         self._test_related_to_filter('partner', [self.log_issue_partner])
 
     def test_related_to_location_filter(self):
-        self._test_related_to_filter('location_site', [self.log_issue_location, self.log_issue_location_site])
+        self._test_related_to_filter('location', [self.log_issue_location, self.log_issue_location_site])
 
 
 class TestLogIssueAttachmentsView(FMBaseTestCaseMixin, BaseTenantTestCase):

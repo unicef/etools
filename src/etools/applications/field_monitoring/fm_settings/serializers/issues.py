@@ -24,7 +24,7 @@ class LogIssueAttachmentSerializer(BaseAttachmentSerializer):
 
 
 class LogIssueSerializer(PermissionsBasedSerializerMixin, UserContextSerializerMixin, SnapshotModelSerializer):
-    author = MinimalUserSerializer(read_only=True)
+    author = MinimalUserSerializer(read_only=True, label=LogIssue._meta.get_field('author').verbose_name)
     closed_by = serializers.SerializerMethodField(label=_('Issue Closed By'))
     related_to_type = serializers.ChoiceField(choices=LogIssue.RELATED_TO_TYPE_CHOICES, read_only=True,
                                               label=_('Issue Related To'))
@@ -56,7 +56,6 @@ class LogIssueSerializer(PermissionsBasedSerializerMixin, UserContextSerializerM
                 validated_data.get('cp_output', self.instance.cp_output if self.instance else None),
                 validated_data.get('partner', self.instance.partner if self.instance else None),
                 validated_data.get('location', self.instance.location if self.instance else None),
-                validated_data.get('location_site', self.instance.location_site if self.instance else None),
         ] if v]
 
         if not provided_values:

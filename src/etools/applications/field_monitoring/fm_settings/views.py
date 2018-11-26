@@ -14,8 +14,9 @@ from unicef_locations.cache import etag_cached
 from unicef_locations.models import Location
 from unicef_restlib.views import NestedViewSetMixin
 
-from etools.applications.field_monitoring.fm_settings.filters import CPOutputIsActiveFilter, LogIssueRelatedToTypeFilter, \
-    LogIssueVisitFilter
+from etools.applications.field_monitoring.fm_settings.filters import CPOutputIsActiveFilter, \
+    LogIssueRelatedToTypeFilter, \
+    LogIssueVisitFilter, LogIssueNameOrderingFilter
 from etools.applications.field_monitoring.fm_settings.models import FMMethodType, LocationSite, CheckListItem, \
     CheckListCategory, PlannedCheckListItem, CPOutputConfig, LogIssue, FieldMonitoringGeneralAttachment
 from etools.applications.field_monitoring.fm_settings.serializers.attachments import \
@@ -201,10 +202,13 @@ class LogIssuesViewSet(
 ):
     metadata_class = PermissionBasedMetadata
     queryset = LogIssue.objects.prefetch_related(
-        'author', 'history', 'cp_output', 'partner', 'location', 'location_site',
+        'author', 'history', 'cp_output', 'partner', 'location', 'location_site', 'attachments',
     )
     serializer_class = LogIssueSerializer
-    filter_backends = (DjangoFilterBackend, LogIssueRelatedToTypeFilter, LogIssueVisitFilter, OrderingFilter)
+    filter_backends = (
+        DjangoFilterBackend, LogIssueNameOrderingFilter, LogIssueRelatedToTypeFilter,
+        LogIssueVisitFilter, OrderingFilter
+    )
     filter_fields = ('cp_output', 'partner', 'location', 'location_site', 'status')
     ordering_fields = ('content_type',)
 

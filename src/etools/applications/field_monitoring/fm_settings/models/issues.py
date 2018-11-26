@@ -20,8 +20,8 @@ class LogIssue(TimeStampedModel):
     )
     RELATED_TO_TYPE_CHOICES = Choices(
         ('cp_output', _('CP Output')),
-        ('partner', _('CP Output')),
-        ('location_site', _('Location/Site')),
+        ('partner', _('Partner')),
+        ('location', _('Location/Site')),
     )
 
     author = models.ForeignKey(settings.AUTH_USER_MODEL, related_name='created_logissues',
@@ -33,7 +33,7 @@ class LogIssue(TimeStampedModel):
 
     issue = models.TextField(verbose_name=_('Issue For Attention/Probing'))
     status = models.CharField(max_length=10, choices=STATUS_CHOICES, default=STATUS_CHOICES.new)
-    attachments = GenericRelation('attachments.Attachment', verbose_name=_('Attachments'), blank=True)
+    attachments = GenericRelation('unicef_attachments.Attachment', verbose_name=_('Attachments'), blank=True)
     history = GenericRelation('unicef_snapshot.Activity', object_id_field='target_object_id',
                               content_type_field='target_content_type')
 
@@ -42,4 +42,13 @@ class LogIssue(TimeStampedModel):
 
     @property
     def related_to(self):
-        return self.cp_output or self.partner or self.location or self.location_site
+        return self.cp_output or self.partner or self.location_site or self.location
+
+    @property
+    def related_to_type(self):
+        if self.cp_output:
+            return self.RELATED_TO_TYPE_CHOICES.cp_output
+        elif self.partner:
+            return self.RELATED_TO_TYPE_CHOICES.partner
+        elif self.location:
+            return self.RELATED_TO_TYPE_CHOICES.location

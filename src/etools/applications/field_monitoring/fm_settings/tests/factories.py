@@ -6,6 +6,7 @@ from factory import fuzzy
 from unicef_locations.models import GatewayType
 from unicef_locations.tests.factories import LocationFactory
 
+from etools.applications.attachments.tests.factories import AttachmentFactory
 from etools.applications.field_monitoring.fm_settings.models import FMMethodType, LocationSite, CPOutputConfig, \
     CheckListCategory, CheckListItem, PlannedCheckListItem, PlannedCheckListItemPartnerInfo, LogIssue
 from etools.applications.field_monitoring.shared.models import FMMethod
@@ -132,5 +133,15 @@ class LogIssueFactory(factory.DjangoModelFactory):
     author = factory.SubFactory(UserFactory)
     issue = fuzzy.FuzzyText()
 
+    attachments__count = 0
+
     class Meta:
         model = LogIssue
+
+    @factory.post_generation
+    def attachments(self, create, extracted, count, **kwargs):
+        if not create:
+            return
+
+        for i in range(count):
+            AttachmentFactory(content_object=self)
