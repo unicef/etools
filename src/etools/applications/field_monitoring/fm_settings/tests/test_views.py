@@ -5,10 +5,11 @@ from django.urls import reverse
 from factory import fuzzy
 
 from rest_framework import status
+
+from unicef_attachments.models import Attachment
 from unicef_locations.tests.factories import LocationFactory
 
 from etools.applications.EquiTrack.tests.cases import BaseTenantTestCase
-from etools.applications.attachments.models import Attachment
 from etools.applications.attachments.tests.factories import AttachmentFileTypeFactory, AttachmentFactory
 from etools.applications.field_monitoring.fm_settings.models import CPOutputConfig, LogIssue
 from etools.applications.field_monitoring.fm_settings.tests.factories import (
