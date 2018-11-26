@@ -181,7 +181,7 @@ class PlannedCheckListItemViewSet(
 
 class LogIssuesViewSet(FMBaseViewSet, viewsets.ModelViewSet):
     queryset = LogIssue.objects.prefetch_related(
-        'author', 'history', 'cp_output', 'partner', 'location', 'location_site',
+        'author', 'history', 'cp_output', 'partner', 'location', 'location_site', 'attachments',
     )
     serializer_class = LogIssueSerializer
     filter_backends = (DjangoFilterBackend, LogIssueRelatedToTypeFilter, LogIssueVisitFilter, OrderingFilter)

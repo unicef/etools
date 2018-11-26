@@ -33,7 +33,7 @@ class LogIssue(TimeStampedModel):
 
     issue = models.TextField(verbose_name=_('Issue For Attention/Probing'))
     status = models.CharField(max_length=10, choices=STATUS_CHOICES, default=STATUS_CHOICES.new)
-    attachments = GenericRelation('attachments.Attachment', verbose_name=_('Attachments'), blank=True)
+    attachments = GenericRelation('unicef_attachments.Attachment', verbose_name=_('Attachments'), blank=True)
     history = GenericRelation('unicef_snapshot.Activity', object_id_field='target_object_id',
                               content_type_field='target_content_type')
 
