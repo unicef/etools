@@ -16,6 +16,11 @@ class BaseTestViewSet(TestModelsTestCaseMixin):
         set_urlconf('etools.applications.permissions2.simplified.tests.urls')
 
     @classmethod
+    def tearDownClass(cls):
+        super().tearDownClass()
+        set_urlconf('')
+
+    @classmethod
     def get_data(cls):
         return {}
 
@@ -186,6 +191,11 @@ class TestFSMModelViewSet(TestModelsTestCaseMixin, BaseTenantTestCase):
     def setUpClass(cls):
         super().setUpClass()
         set_urlconf('etools.applications.permissions2.simplified.tests.urls')
+
+    @classmethod
+    def tearDownClass(cls):
+        super().tearDownClass()
+        set_urlconf('')
 
     @classmethod
     def setUpTestData(cls):

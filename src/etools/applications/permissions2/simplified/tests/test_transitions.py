@@ -17,6 +17,11 @@ class FSMModelTransitionPermissionsTestCase(TestModelsTestCaseMixin, TransitionP
         super().setUpClass()
         set_urlconf('etools.applications.permissions2.simplified.tests.urls')
 
+    @classmethod
+    def tearDownClass(cls):
+        super().tearDownClass()
+        set_urlconf('')
+
     abstract = True
     model = ModelWithFSMField
     factory = ModelWithFSMFieldFactory
@@ -106,6 +111,11 @@ class TestTransitionsMetadataTestCase(TestModelsTestCaseMixin, BaseTenantTestCas
     def setUpClass(cls):
         super().setUpClass()
         set_urlconf('etools.applications.permissions2.simplified.tests.urls')
+
+    @classmethod
+    def tearDownClass(cls):
+        super().tearDownClass()
+        set_urlconf('')
 
     def _test_allowed_actions(self, obj_status, user, actions):
         response = self.forced_auth_req(
