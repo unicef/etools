@@ -1,6 +1,8 @@
 from django.core.exceptions import ImproperlyConfigured
 from unicef_restlib.views import NestedViewSetMixin
 
+from etools.applications.utils.common.views import FSMTransitionActionMixin
+
 
 class BaseSimplePermittedViewSetMixin(object):
     """
@@ -45,7 +47,7 @@ class BaseSimplePermittedViewSetMixin(object):
         super().perform_destroy(instance)
 
 
-class SimplePermittedParentViewSetMixin(BaseSimplePermittedViewSetMixin):
+class SimplePermittedParentViewSetMixin(object):
     """
     Check if write_permissions defined in root view.
     Else there is no sense to use permitted view.
@@ -54,19 +56,19 @@ class SimplePermittedParentViewSetMixin(BaseSimplePermittedViewSetMixin):
     def check_write_permissions(self, instance=None, raise_error=True):
         write_permissions = self.get_write_permissions()
 
-        if not hasattr(self, 'parent') and not write_permissions:
+        if getattr(self, 'parent', None) is None and not write_permissions:  # root view
             raise ImproperlyConfigured('write_permissions should be defined for root view.')
 
         return super().check_write_permissions(instance=instance, raise_error=raise_error)
 
 
-class SimplePermittedChildViewSetMixin(BaseSimplePermittedViewSetMixin, NestedViewSetMixin):
+class SimplePermittedChildViewSetMixin(NestedViewSetMixin):
     """
     Check write access to parent before checking self.
     """
     def check_parent_write_permissions(self, raise_error=True):
         parent_view = self.get_parent()
-        if not isinstance(parent_view, BaseSimplePermittedViewSetMixin):
+        if parent_view is None or not isinstance(parent_view, BaseSimplePermittedViewSetMixin):
             return True
 
         return parent_view.check_write_permissions(instance=self.get_parent_object(), raise_error=raise_error)
@@ -82,8 +84,30 @@ class SimplePermittedChildViewSetMixin(BaseSimplePermittedViewSetMixin, NestedVi
         return super().check_write_permissions(instance=instance, raise_error=raise_error)
 
 
-class SimplePermittedViewSetMixin(SimplePermittedParentViewSetMixin, SimplePermittedChildViewSetMixin):
+class SimplePermittedViewSetMixin(SimplePermittedParentViewSetMixin, SimplePermittedChildViewSetMixin,
+                                  BaseSimplePermittedViewSetMixin):
     """
     Combined class which can be used both for root & nested views.
     """
     pass
+
+
+class SimplePermittedFSMTransitionActionMixin(FSMTransitionActionMixin):
+    transition_permission_classes = {}
+
+    def get_transition_permissions(self, transition):
+        return [permission() for permission in self.transition_permission_classes.get(transition, [])]
+
+    def pre_transition(self, instance, action):
+        #  maybe this should be moved to check_transition_permission
+        if isinstance(self, BaseSimplePermittedViewSetMixin):
+            self.check_write_permissions(instance=instance)
+
+        transition_permissions = self.get_transition_permissions(action)
+        allow_action = all(permission.has_object_permission(self.request, self, instance)
+                           for permission in transition_permissions)
+
+        if not allow_action:
+            self.permission_denied(self.request)
+
+        super().pre_transition(instance, action)

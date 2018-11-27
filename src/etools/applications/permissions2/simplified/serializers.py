@@ -1,4 +1,4 @@
-from rest_framework.exceptions import PermissionDenied
+from django.core.exceptions import PermissionDenied
 
 
 class SafeReadOnlySerializerMixin(object):
@@ -11,9 +11,3 @@ class SafeReadOnlySerializerMixin(object):
             raise PermissionDenied
 
         return super().is_valid(**kwargs)
-
-    def save(self, *args, **kwargs):
-        if not self._writable_fields:
-            raise PermissionDenied
-
-        return super().save(*args, **kwargs)

@@ -13,9 +13,9 @@ class BaseQ(tree.Node):
     OR = 'OR'
     default = AND
 
-    def __init__(self, *args):
+    def __init__(self, *args, connector=None):
         super().__init__(children=list(args))
-        self.connector = self.default
+        self.connector = connector or self.default
 
     def _combine(self, other, conn):
         if not isinstance(other, BaseQ):
@@ -39,7 +39,7 @@ class BaseQ(tree.Node):
         return obj
 
     def execute(self, func_name, *args, **kwargs):
-        results = (getattr(child, func_name)(*args, **kwargs) for child in self.children)
+        results = (getattr(child(), func_name)(*args, **kwargs) for child in self.children)
 
         if self.connector == self.AND:
             return all(results)
