@@ -13,7 +13,6 @@ from unicef_attachments.models import Attachment
 
 from unicef_locations.cache import etag_cached
 from unicef_locations.models import Location
-from unicef_restlib.views import NestedViewSetMixin
 
 from etools.applications.field_monitoring.fm_settings.filters import CPOutputIsActiveFilter, \
     LogIssueRelatedToTypeFilter, \
@@ -38,8 +37,7 @@ from etools.applications.field_monitoring.metadata import PermissionBasedMetadat
 from etools.applications.field_monitoring.permissions import UserIsFieldMonitor
 from etools.applications.partners.models import PartnerOrganization
 from etools.applications.partners.serializers.partner_organization_v2 import MinimalPartnerOrganizationListSerializer
-from etools.applications.permissions2.simplified.views import SimplePermittedViewSetMixin, \
-    SimplePermittedViewSetMixin
+from etools.applications.permissions2.simplified.views import SimplePermittedViewSetMixin
 from etools.applications.reports.models import Result, ResultType
 
 

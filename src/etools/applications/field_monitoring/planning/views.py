@@ -14,8 +14,7 @@ from etools.applications.field_monitoring.planning.serializers import YearPlanSe
     TaskListSerializer
 from etools.applications.field_monitoring.fm_settings.filters import CPOutputIsActiveFilter
 from etools.applications.field_monitoring.views import FMBaseViewSet
-from etools.applications.permissions2.simplified.views import SimplePermittedViewSetMixin, \
-    SimplePermittedViewSetMixin
+from etools.applications.permissions2.simplified.views import SimplePermittedViewSetMixin
 
 
 class YearPlanViewSet(
