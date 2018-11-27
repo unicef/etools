@@ -4,7 +4,7 @@ from django.urls import reverse, set_urlconf
 from rest_framework import status
 
 from etools.applications.EquiTrack.tests.cases import BaseTenantTestCase
-from etools.applications.permissions2.simplified.tests.models import Parent, Child
+from etools.applications.permissions2.simplified.tests.models import SimplifiedTestParent, SimplifiedTestChild
 from etools.applications.permissions2.simplified.tests.test_utils import TestModelsTestCaseMixin
 from etools.applications.users.tests.factories import UserFactory
 
@@ -147,7 +147,7 @@ class TestParentViewSet(BaseTestViewSet, BaseTenantTestCase):
     @classmethod
     def setUpTestData(cls):
         super().setUpTestData()
-        cls.instance = Parent.objects.create(test_field='test')
+        cls.instance = SimplifiedTestParent.objects.create(test_field='test')
 
     def get_list_url(self):
         return reverse('parents-list')
@@ -172,8 +172,8 @@ class TestChildViewSet(BaseTestViewSet, BaseTenantTestCase):
     @classmethod
     def setUpTestData(cls):
         super().setUpTestData()
-        cls.parent = Parent.objects.create(test_field='test')
-        cls.instance = Child.objects.create(test_field='test', parent=cls.parent)
+        cls.parent = SimplifiedTestParent.objects.create(test_field='test')
+        cls.instance = SimplifiedTestChild.objects.create(test_field='test', parent=cls.parent)
 
     def get_list_url(self):
         return reverse('children-list', args=(self.parent.id,))

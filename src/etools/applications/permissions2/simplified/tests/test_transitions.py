@@ -4,7 +4,7 @@ from rest_framework import status
 
 from etools.applications.EquiTrack.tests.cases import BaseTenantTestCase
 from etools.applications.permissions2.simplified.tests.factory import ModelWithFSMFieldFactory
-from etools.applications.permissions2.simplified.tests.models import ModelWithFSMField
+from etools.applications.permissions2.simplified.tests.models import SimplifiedTestModelWithFSMField
 from etools.applications.permissions2.simplified.tests.test_utils import TestModelsTestCaseMixin
 from etools.applications.permissions2.tests.mixins import TransitionPermissionsTestCaseMixin
 from etools.applications.users.tests.factories import UserFactory
@@ -23,7 +23,7 @@ class FSMModelTransitionPermissionsTestCase(TestModelsTestCaseMixin, TransitionP
         set_urlconf('')
 
     abstract = True
-    model = ModelWithFSMField
+    model = SimplifiedTestModelWithFSMField
     factory = ModelWithFSMFieldFactory
 
     ALLOWED_TRANSITION = NotImplemented

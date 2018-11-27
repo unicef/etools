@@ -3,16 +3,16 @@ from django_fsm import FSMField, transition
 from model_utils import Choices
 
 
-class Parent(models.Model):
+class SimplifiedTestParent(models.Model):
     test_field = models.CharField(max_length=10)
 
 
-class Child(models.Model):
-    parent = models.ForeignKey(Parent, related_name='children')
+class SimplifiedTestChild(models.Model):
+    parent = models.ForeignKey(SimplifiedTestParent, related_name='children')
     test_field = models.CharField(max_length=10)
 
 
-class ModelWithFSMField(models.Model):
+class SimplifiedTestModelWithFSMField(models.Model):
     STATUSES = Choices(
         ('draft', 'Draft'),
         ('started', 'Active'),
