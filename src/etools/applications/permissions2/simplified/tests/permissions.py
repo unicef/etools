@@ -1,7 +1,7 @@
-from etools.applications.permissions2.simplified.permissions import SimpleCommonPermission
+from rest_framework.permissions import BasePermission
 
 
-class UserWithName(SimpleCommonPermission):
+class UserWithName(BasePermission):
     """
     Allows access only to user with specific name.
     """
