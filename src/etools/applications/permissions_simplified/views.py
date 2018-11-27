@@ -4,7 +4,7 @@ from rest_framework.permissions import SAFE_METHODS
 
 from unicef_restlib.views import NestedViewSetMixin
 
-from etools.applications.permissions2.simplified.permissions import PermissionQ
+from etools.applications.permissions_simplified.permissions import PermissionQ
 from etools.applications.utils.common.views import FSMTransitionActionMixin
 
 

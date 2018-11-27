@@ -1,7 +1,7 @@
 from unicef_restlib.metadata import FSMTransitionActionMetadataMixin
 
 from etools.applications.permissions2.metadata import PermissionsBasedMetadataMixin, BaseMetadata
-from etools.applications.permissions2.simplified.views import SimplePermittedFSMTransitionActionMixin
+from etools.applications.permissions_simplified.views import SimplePermittedFSMTransitionActionMixin
 
 
 class SimplifiedFSMTransitionActionMetadataMixin(FSMTransitionActionMetadataMixin):

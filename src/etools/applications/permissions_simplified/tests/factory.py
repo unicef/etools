@@ -1,6 +1,6 @@
 import factory
 
-from etools.applications.permissions2.simplified.tests.models import SimplifiedTestModelWithFSMField
+from etools.applications.permissions_simplified.tests.models import SimplifiedTestModelWithFSMField
 
 
 class ModelWithFSMFieldFactory(factory.DjangoModelFactory):

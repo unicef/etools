@@ -2,7 +2,7 @@ from django.test import TestCase
 
 from rest_framework.exceptions import ValidationError
 
-from etools.applications.permissions2.simplified.tests.serializers import ParentSerializer
+from etools.applications.permissions_simplified.tests.serializers import ParentSerializer
 
 
 class TestSafeReadOnlySerializerMixin(TestCase):

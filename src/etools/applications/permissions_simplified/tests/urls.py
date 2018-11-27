@@ -2,7 +2,7 @@ from django.conf.urls import include, url
 from rest_framework import routers
 from unicef_restlib.routers import NestedComplexRouter
 
-from etools.applications.permissions2.simplified.tests.views import ParentViewSet, NotConfiguredParentViewSet, \
+from etools.applications.permissions_simplified.tests.views import ParentViewSet, NotConfiguredParentViewSet, \
     ChildViewSet, ModelWithFSMFieldViewSet
 
 root_api = routers.SimpleRouter()
