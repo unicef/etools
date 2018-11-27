@@ -4,10 +4,8 @@ from django.urls import reverse, set_urlconf
 from rest_framework import status
 
 from etools.applications.EquiTrack.tests.cases import BaseTenantTestCase
-from etools.applications.permissions2.simplified.tests.factory import ModelWithFSMFieldFactory
-from etools.applications.permissions2.simplified.tests.models import Parent, Child, ModelWithFSMField
+from etools.applications.permissions2.simplified.tests.models import Parent, Child
 from etools.applications.permissions2.simplified.tests.test_utils import TestModelsTestCaseMixin
-from etools.applications.permissions2.tests.mixins import TransitionPermissionsTestCaseMixin
 from etools.applications.users.tests.factories import UserFactory
 
 
@@ -217,86 +215,3 @@ class TestFSMModelViewSet(TestModelsTestCaseMixin, BaseTenantTestCase):
 
     def test_create_charlie(self):
         self._test_create(self.charlie, has_access=False)
-
-
-class FSMModelTransitionPermissionsTestCase(TestModelsTestCaseMixin, TransitionPermissionsTestCaseMixin,
-                                            BaseTenantTestCase):
-    @classmethod
-    def setUpClass(cls):
-        super().setUpClass()
-        set_urlconf('etools.applications.permissions2.simplified.tests.urls')
-
-    abstract = True
-    model = ModelWithFSMField
-    factory = ModelWithFSMFieldFactory
-
-    ALLOWED_TRANSITION = NotImplemented
-
-    user = NotImplemented
-    user_role = NotImplemented
-
-    def do_transition(self, obj, transition):
-        return self.forced_auth_req(
-            'post',
-            reverse('fsm-model-transition', args=(obj.id, transition)),
-            user=self.user,
-            data={}
-        )
-
-    def check_result(self, result, obj, transition):
-        allowed = (obj.status, transition) in self.ALLOWED_TRANSITION
-        success = result.status_code == status.HTTP_200_OK
-        forbidden = result.status_code == status.HTTP_403_FORBIDDEN
-
-        model_name = obj._meta.verbose_name
-
-        if allowed and not success:
-            return False, 'Error on {} {} {} by {}.\n{}: {}'.format(transition, obj.status, model_name, self.user_role,
-                                                                    result.status_code, result.content)
-
-        if not allowed and success:
-            return False, 'Success for not allowed transition. {} can\'t {} {} {}.'.format(self.user_role, transition,
-                                                                                           obj.status, model_name)
-
-        if not allowed and not forbidden:
-            return False, 'Error on {} {} {} by {}.\n{}: {}'.format(transition, obj.status, model_name, self.user_role,
-                                                                    result.status_code, result.content)
-
-        return True, ''
-
-
-class AlicePermissionsTestCase(FSMModelTransitionPermissionsTestCase):
-    ALLOWED_TRANSITION = [
-        ('draft', 'start'),
-    ]
-
-    @classmethod
-    def setUpTestData(cls):
-        super().setUpTestData()
-
-        cls.user = UserFactory(first_name='Alice')
-        cls.user_role = 'Alice'
-
-
-class BobPermissionsTestCase(FSMModelTransitionPermissionsTestCase):
-    ALLOWED_TRANSITION = [
-        ('started', 'finish'),
-    ]
-
-    @classmethod
-    def setUpTestData(cls):
-        super().setUpTestData()
-
-        cls.user = UserFactory(first_name='Bob')
-        cls.user_role = 'Bob'
-
-
-class CharliePermissionsTestCase(FSMModelTransitionPermissionsTestCase):
-    ALLOWED_TRANSITION = []
-
-    @classmethod
-    def setUpTestData(cls):
-        super().setUpTestData()
-
-        cls.user = UserFactory(first_name='Charlie')
-        cls.user_role = 'Charlie'
