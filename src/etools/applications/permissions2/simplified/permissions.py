@@ -60,14 +60,7 @@ class PermissionQ(BaseQ, BasePermission):
         return self.execute('has_object_permission', request, view, obj)
 
 
-class SimpleCommonPermission(BasePermission):
-    """This permissions is unrelated from obj, so no need to make special logic related to object."""
-
-    def has_object_permission(self, request, view, obj):
-        return self.has_permission(request, view)
-
-
-class UserInGroup(SimpleCommonPermission):
+class UserInGroup(BasePermission):
     group = None
 
     def has_permission(self, request, view):

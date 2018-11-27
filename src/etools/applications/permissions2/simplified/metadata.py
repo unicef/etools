@@ -13,7 +13,8 @@ class SimplifiedFSMTransitionActionMetadataMixin(FSMTransitionActionMetadataMixi
             action = action['code']
 
         transition_permissions = view.get_transition_permissions(action)
-        allow_action = all(permission.has_object_permission(request, view, instance)
+        allow_action = all(permission.has_permission(request, view) and
+                           permission.has_object_permission(request, view, instance)
                            for permission in transition_permissions)
 
         return allow_action
