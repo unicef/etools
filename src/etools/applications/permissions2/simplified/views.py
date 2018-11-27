@@ -1,4 +1,7 @@
 from django.core.exceptions import ImproperlyConfigured
+
+from rest_framework.permissions import SAFE_METHODS
+
 from unicef_restlib.views import NestedViewSetMixin
 
 from etools.applications.utils.common.views import FSMTransitionActionMixin
@@ -32,6 +35,16 @@ class BaseSimplePermittedViewSetMixin(object):
 
         return not read_only
 
+    def check_permissions(self, request):
+        super().check_permissions(request)
+        if request.method not in SAFE_METHODS:
+            self.check_write_permissions()
+
+    def check_object_permissions(self, request, obj):
+        super().check_object_permissions(request, obj)
+        if request.method not in SAFE_METHODS:
+            self.check_write_permissions(instance=obj)
+
     def get_serializer(self, instance=None, *args, **kwargs):
         many = kwargs.get('many')
 
@@ -39,11 +52,6 @@ class BaseSimplePermittedViewSetMixin(object):
         serializer = super().get_serializer(instance=instance, *args, **kwargs)
 
         return serializer
-
-    def perform_destroy(self, instance):
-        self.check_write_permissions(instance=instance)
-
-        super().perform_destroy(instance)
 
 
 class SimplePermittedParentViewSetMixin(object):
@@ -98,10 +106,6 @@ class SimplePermittedFSMTransitionActionMixin(FSMTransitionActionMixin):
         return [permission() for permission in self.transition_permission_classes.get(transition, [])]
 
     def pre_transition(self, instance, action):
-        #  maybe this should be moved to check_transition_permission
-        if isinstance(self, BaseSimplePermittedViewSetMixin):
-            self.check_write_permissions(instance=instance)
-
         transition_permissions = self.get_transition_permissions(action)
         allow_action = all(permission.has_permission(self.request, self) and
                            permission.has_object_permission(self.request, self, instance)
