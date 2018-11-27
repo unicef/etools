@@ -20,13 +20,12 @@ class BaseSimplePermittedViewSetMixin(object):
     def check_write_permissions(self, instance=None, raise_error=True):
         write_permissions = self.get_write_permissions()
 
-        if instance:
-            read_only = not all(permission.has_object_permission(self.request, self, instance)
-                                for permission in write_permissions)
-
-        else:
-            read_only = not all(permission.has_permission(self.request, self)
-                                for permission in write_permissions)
+        read_only = not all(permission.has_permission(self.request, self) for permission in write_permissions)
+        if instance and not read_only:
+            read_only = not all(
+                permission.has_object_permission(self.request, self, instance)
+                for permission in write_permissions
+            )
 
         if read_only and raise_error:
             self.permission_denied(self.request)
@@ -104,7 +103,8 @@ class SimplePermittedFSMTransitionActionMixin(FSMTransitionActionMixin):
             self.check_write_permissions(instance=instance)
 
         transition_permissions = self.get_transition_permissions(action)
-        allow_action = all(permission.has_object_permission(self.request, self, instance)
+        allow_action = all(permission.has_permission(self.request, self) and
+                           permission.has_object_permission(self.request, self, instance)
                            for permission in transition_permissions)
 
         if not allow_action:
