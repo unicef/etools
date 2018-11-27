@@ -17,6 +17,7 @@ class SimplifiedTestModelWithFSMField(models.Model):
         ('draft', 'Draft'),
         ('started', 'Active'),
         ('finished', 'Finished'),
+        ('cancelled', 'Cancelled'),
     )
 
     status = FSMField(max_length=30, choices=STATUSES, default=STATUSES.draft, protected=True)
@@ -27,4 +28,8 @@ class SimplifiedTestModelWithFSMField(models.Model):
 
     @transition(status, source=STATUSES.started, target=STATUSES.finished)
     def finish(self):
+        pass
+
+    @transition(status, source=[STATUSES.draft, STATUSES.started, STATUSES.finished], target=STATUSES.cancelled)
+    def cancel(self):
         pass

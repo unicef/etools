@@ -37,6 +37,6 @@ class ModelWithFSMFieldViewSet(SimplePermittedViewSetMixin, SimplePermittedFSMTr
         PermissionQ(UserIsBobPermission) | PermissionQ(UserIsAlicePermission)
     ]
     transition_permission_classes = {
-        'start': [UserIsAlicePermission],
-        'finish': [UserIsBobPermission],
+        'start': [write_permission_classes, UserIsAlicePermission],
+        'finish': [write_permission_classes, UserIsBobPermission],
     }
