@@ -1,6 +1,6 @@
 from django.test import TestCase
 
-from django.core.exceptions import PermissionDenied
+from rest_framework.exceptions import ValidationError
 
 from etools.applications.permissions2.simplified.tests.serializers import ParentSerializer
 
@@ -22,5 +22,8 @@ class TestSafeReadOnlySerializerMixin(TestCase):
         self.assertTrue(self.serializer.is_valid())
 
     def test_validate_readonly(self):
-        with self.assertRaises(PermissionDenied):
-            self.readonly_serializer.is_valid()
+        self.assertFalse(self.readonly_serializer.is_valid())
+
+    def test_validate_readonly_silent(self):
+        with self.assertRaises(ValidationError):
+            self.readonly_serializer.is_valid(raise_exception=True)
