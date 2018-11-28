@@ -27,7 +27,7 @@ from etools.applications.field_monitoring.fm_settings.serializers.checklist impo
 from etools.applications.field_monitoring.fm_settings.serializers.cp_outputs import FieldMonitoringCPOutputSerializer, \
     PlannedCheckListItemSerializer, CPOutputConfigDetailSerializer
 from etools.applications.field_monitoring.fm_settings.serializers.issues import LogIssueSerializer, \
-    LogIssueAttachmentSerializer, LogIssueLightSerializer
+    LogIssueAttachmentSerializer
 from etools.applications.field_monitoring.fm_settings.serializers.locations import LocationSiteSerializer, \
     LocationCountrySerializer
 from etools.applications.field_monitoring.fm_settings.serializers.methods import FMMethodSerializer, \
@@ -191,9 +191,6 @@ class LogIssuesViewSet(FMBaseViewSet, viewsets.ModelViewSet):
     )
     filter_fields = ('cp_output', 'partner', 'location', 'location_site', 'status')
     ordering_fields = ('content_type',)
-    serializer_action_classes = {
-        'list': LogIssueLightSerializer
-    }
 
     def get_queryset(self):
         queryset = super().get_queryset()
