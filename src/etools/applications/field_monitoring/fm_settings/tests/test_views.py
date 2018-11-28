@@ -216,7 +216,7 @@ class LocationsCountryViewTestCase(FMBaseTestCaseMixin, BaseTenantTestCase):
         self.assertEqual(response.data['point']['type'], 'Point')
 
 
-class CPOutputsConfigViewTestCase(FMBaseTestCaseMixin, BaseTenantTestCase):
+class CPOutputsViewTestCase(FMBaseTestCaseMixin, BaseTenantTestCase):
     @classmethod
     def setUpTestData(cls):
         cls.active_result = ResultFactory(result_type__name=ResultType.OUTPUT)
@@ -310,3 +310,19 @@ class CPOutputsConfigViewTestCase(FMBaseTestCaseMixin, BaseTenantTestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(len(response.data['fm_config']['government_partners']), partners_num + 1)
         self.assertEqual(response.data['fm_config']['is_monitored'], True)
+
+
+class CPOutputConfigsViewTestCase(FMBaseTestCaseMixin, BaseTenantTestCase):
+    def test_list(self):
+        CPOutputConfigFactory(is_monitored=True, government_partners__count=2, interventions__count=3)
+        CPOutputConfigFactory(is_monitored=True, government_partners__count=1, interventions__count=1)
+
+        response = self.forced_auth_req(
+            'get', reverse('field_monitoring_settings:cp_output-configs-list'),
+            user=self.unicef_user
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(response.data['results']), 2)
+        self.assertIn('interventions', response.data['results'][0]['cp_output'])
+        self.assertEqual(len(response.data['results'][0]['partners']), 5)

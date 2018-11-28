@@ -10,8 +10,8 @@ from etools.applications.field_monitoring.fm_settings.models import FMMethodType
 from etools.applications.field_monitoring.shared.models import FMMethod
 from etools.applications.partners.models import PartnerType
 from etools.applications.partners.tests.factories import PartnerFactory, InterventionResultLinkFactory
-from etools.applications.reports.models import ResultType
-from etools.applications.reports.tests.factories import ResultFactory
+from etools.applications.reports.models import ResultType, CountryProgramme
+from etools.applications.reports.tests.factories import ResultFactory, CountryProgrammeFactory
 
 
 class FMMethodFactory(factory.DjangoModelFactory):
@@ -46,18 +46,31 @@ class CPOutputConfigFactory(factory.DjangoModelFactory):
     is_monitored = True
     is_priority = True
 
+    interventions__count = 1
+    government_partners__count = 1
+
     class Meta:
         model = CPOutputConfig
+        django_get_or_create = ("cp_output", )
 
     @factory.post_generation
-    def interventions(self, created, extracted, **kwargs):
-        if created:
-            [InterventionResultLinkFactory(cp_output=self.cp_output) for i in range(3)]
+    def cp_output_country_programme(self, *args, **kwargs):
+        country_programme = CountryProgramme.objects.first()
+        if not country_programme:
+            country_programme = CountryProgrammeFactory()
+
+        self.cp_output.country_programme = country_programme
+        self.cp_output.save()
 
     @factory.post_generation
-    def government_partners(self, created, extracted, **kwargs):
+    def interventions(self, created, extracted, count, **kwargs):
         if created:
-            self.government_partners.add(*[PartnerFactory(partner_type=PartnerType.GOVERNMENT) for i in range(3)])
+            [InterventionResultLinkFactory(cp_output=self.cp_output) for i in range(count)]
+
+    @factory.post_generation
+    def government_partners(self, created, extracted, count, **kwargs):
+        if created:
+            self.government_partners.add(*[PartnerFactory(partner_type=PartnerType.GOVERNMENT) for i in range(count)])
 
         if extracted:
             self.government_partners.add(*extracted)

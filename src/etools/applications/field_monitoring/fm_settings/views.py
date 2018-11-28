@@ -116,7 +116,13 @@ class CPOutputConfigsViewSet(
     mixins.RetrieveModelMixin,
     viewsets.GenericViewSet
 ):
-    queryset = CPOutputConfig.objects.all()
+    queryset = CPOutputConfig.objects.prefetch_related(
+        'government_partners',
+        'cp_output',
+        'cp_output__intervention_links',
+        'cp_output__intervention_links__intervention__agreement__partner',
+
+    )
     serializer_class = CPOutputConfigDetailSerializer
     filter_backends = (DjangoFilterBackend, OrderingFilter)
     filter_fields = ('is_monitored', 'is_priority')
