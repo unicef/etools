@@ -3,7 +3,7 @@ from django.utils.translation import ugettext_lazy as _
 from etools.applications.EquiTrack.renderers import FriendlyCSVRenderer, ListSeperatorCSVRenderMixin
 
 
-class ActionPointCSVRenderer(FriendlyCSVRenderer, ListSeperatorCSVRenderMixin):
+class ActionPointCSVRenderer(ListSeperatorCSVRenderMixin, FriendlyCSVRenderer):
     header = [
         'ref', 'cp_output', 'partner', 'office', 'section', 'category', 'assigned_to', 'due_date',
         'status', 'high_priority', 'description', 'intervention', 'pd_ssfa', 'location', 'related_module',
@@ -30,5 +30,5 @@ class ActionPointCSVRenderer(FriendlyCSVRenderer, ListSeperatorCSVRenderMixin):
         'related_ref': _('Related Document No.'),
         'related_object_str': _('Task/Trip Activity Reference No.'),
         'related_object_url': _('Related Document URL'),
-        'action_taken': _('Last Action Taken')
+        'action_taken': _('Action Taken')
     }
