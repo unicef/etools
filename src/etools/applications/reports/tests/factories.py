@@ -108,7 +108,7 @@ class AppliedIndicatorFactory(factory.django.DjangoModelFactory):
     indicator = factory.SubFactory(IndicatorBlueprintFactory)
     lower_result = factory.SubFactory(LowerResultFactory)
     context_code = fuzzy.FuzzyText(length=5)
-    target = fuzzy.FuzzyInteger(0, 100)
+    target = factory.Dict({'d': fuzzy.FuzzyInteger(0, 5), 'v': fuzzy.FuzzyInteger(10, 20)})
 
 
 class SectionFactory(factory.django.DjangoModelFactory):

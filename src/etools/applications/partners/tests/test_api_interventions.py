@@ -29,7 +29,6 @@ from etools.applications.partners.tests.factories import (
     InterventionAttachmentFactory,
     InterventionFactory,
     InterventionResultLinkFactory,
-    InterventionSectionLocationLinkFactory,
     PartnerFactory,
 )
 from etools.applications.partners.tests.test_utils import setup_intervention_test_data
@@ -62,12 +61,11 @@ class URLsTestCase(URLAssertionMixin, SimpleTestCase):
             ('intervention-list', '', {}),
             ('intervention-list-dash', 'dash/', {}),
             ('intervention-detail', '1/', {'pk': 1}),
-            ('intervention-attachments-del', 'attachments/1/', {'pk': 1}),
+            ('intervention-attachments-update', 'attachments/1/', {'pk': 1}),
             ('intervention-indicators', 'indicators/', {}),
             ('intervention-results', 'results/', {}),
             ('intervention-amendments', 'amendments/', {}),
             ('intervention-amendments-del', 'amendments/1/', {'pk': 1}),
-            ('intervention-sector-locations', 'sector-locations/', {}),
             ('intervention-map', 'map/', {}),
         )
         self.assertReversal(names_and_paths, 'partners_api:', '/api/v2/interventions/')
@@ -126,6 +124,15 @@ class TestInterventionsAPI(BaseTenantTestCase):
         response = self.forced_auth_req(
             method,
             reverse('partners_api:intervention-list'),
+            user=user or self.unicef_staff,
+            data=data
+        )
+        return response.status_code, json.loads(response.rendered_content)
+
+    def run_request_attachment_create_ep(self, intervention_pk, data={}, user=None, method='post'):
+        response = self.forced_auth_req(
+            method,
+            reverse('partners_api:intervention-attachment-list', kwargs={'intervention_pk': intervention_pk}),
             user=user or self.unicef_staff,
             data=data
         )
@@ -205,7 +212,7 @@ class TestInterventionsAPI(BaseTenantTestCase):
 
         self.assertEqual(status_code, status.HTTP_201_CREATED)
 
-    def test_add_contingency_pd_with_attachment(self):
+    def add_attachment(self, intervention_id):
         attachment = AttachmentFactory(
             file="test_file.pdf",
             file_type=None,
@@ -216,18 +223,31 @@ class TestInterventionsAPI(BaseTenantTestCase):
         self.assertIsNone(attachment.content_object)
         self.assertFalse(attachment.code)
         data = {
+                "type": file_type.pk,
+                "attachment_document": attachment.pk,
+        }
+        status_code, response = self.run_request_attachment_create_ep(intervention_id, data, user=self.partnership_manager_user)
+        self.assertEqual(status_code, status.HTTP_201_CREATED)
+        attachment.refresh_from_db()
+        return attachment
+
+    def test_add_contingency_pd_with_attachment(self):
+        data = {
             "document_type": Intervention.PD,
             "title": "My test intervention1",
             "contingency_pd": True,
             "agreement": self.agreement.pk,
             "reference_number_year": datetime.date.today().year,
-            "attachments": [{
-                "type": file_type.pk,
-                "attachment_document": attachment.pk,
-            }]
+
         }
         status_code, response = self.run_request_list_ep(data, user=self.partnership_manager_user)
         self.assertEqual(status_code, status.HTTP_201_CREATED)
+
+        attachment = self.add_attachment(response["id"])
+
+        status_code, response = self.run_request(response["id"], user=self.partnership_manager_user)
+        self.assertEqual(status_code, status.HTTP_200_OK)
+
         attachment_updated = Attachment.objects.get(pk=attachment.pk)
         self.assertEqual(
             attachment_updated.file_type.code,
@@ -521,11 +541,6 @@ class TestInterventionsAPI(BaseTenantTestCase):
         self.assertCountEqual(self.ALL_FIELDS, response['permissions']['edit'].keys())
         edit_permissions = response['permissions']['edit']
         required_permissions = response['permissions']['required']
-
-        # TODO: REMOVE the following 3 lines after "sector_locations" are finally removed from the Intervention model
-        # having sector_locations in the Intervention model and not having it in the permissions matrix fails this test
-        del edit_permissions["sector_locations"]
-        del required_permissions["sector_locations"]
 
         self.assertCountEqual(self.EDITABLE_FIELDS['draft'],
                               [perm for perm in edit_permissions if edit_permissions[perm]])
@@ -1341,14 +1356,15 @@ class TestAPInterventionIndicatorsUpdateView(BaseTenantTestCase):
 class TestInterventionAttachmentDeleteView(BaseTenantTestCase):
     @classmethod
     def setUpTestData(cls):
-        cls.unicef_staff = UserFactory(is_staff=True)
+        cls.partnership_manager = UserFactory(is_staff=True)
+        cls.partnership_manager.groups.add(GroupFactory())
         cls.intervention = InterventionFactory()
         cls.attachment = InterventionAttachmentFactory(
             intervention=cls.intervention,
             attachment="random_attachment.pdf",
         )
         cls.url = reverse(
-            "partners_api:intervention-attachments-del",
+            "partners_api:intervention-attachments-update",
             args=[cls.attachment.pk]
         )
 
@@ -1356,7 +1372,7 @@ class TestInterventionAttachmentDeleteView(BaseTenantTestCase):
         response = self.forced_auth_req(
             'delete',
             self.url,
-            user=self.unicef_staff,
+            user=self.partnership_manager,
         )
         self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
 
@@ -1366,10 +1382,10 @@ class TestInterventionAttachmentDeleteView(BaseTenantTestCase):
         response = self.forced_auth_req(
             'delete',
             self.url,
-            user=self.unicef_staff,
+            user=self.partnership_manager,
         )
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
-        self.assertEqual(response.data, ["You do not have permissions to delete an attachment"])
+        self.assertEqual(response.data, ["Deleting an attachment can only be done in Draft status"])
 
 
 class TestInterventionResultListAPIView(BaseTenantTestCase):
@@ -1688,7 +1704,7 @@ class TestInterventionAmendmentCreateAPIView(BaseTenantTestCase):
             file_type=None,
             code="",
         )
-        self.data["internal_prc_review"] = attachment.pk
+        self.data["internal_prc_review_attachment"] = attachment.pk
         self.assertIsNone(attachment.file_type)
         self.assertIsNone(attachment.content_object)
         self.assertFalse(attachment.code)
@@ -1711,6 +1727,18 @@ class TestInterventionAmendmentCreateAPIView(BaseTenantTestCase):
             attachment_updated.code,
             self.file_type_internal_prc_review.code
         )
+
+    def test_create_amendment_with_internal_prc_review_none(self):
+        self.data["internal_prc_review_attachment"] = None
+        response = self._make_request(
+            user=self.partnership_manager_user,
+            data=self.data,
+            request_format='multipart',
+        )
+
+        self.assertEquals(response.status_code, status.HTTP_201_CREATED)
+        data = self.assertResponseFundamentals(response)
+        self.assertEquals(data['intervention'], self.intervention.pk)
 
     def test_create_amendment_when_already_in_amendment(self):
         self.intervention.in_amendment = True
@@ -1774,65 +1802,6 @@ class TestInterventionAmendmentDeleteView(BaseTenantTestCase):
             user=self.unicef_staff,
         )
         self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
-
-
-class TestInterventionSectionLocationLinkListAPIView(BaseTenantTestCase):
-    @classmethod
-    def setUpTestData(cls):
-        cls.unicef_staff = UserFactory(is_staff=True)
-        InterventionSectionLocationLinkFactory()
-        cls.intervention = InterventionFactory()
-        cls.section = SectionFactory(name="Section Name")
-        cls.link = InterventionSectionLocationLinkFactory(
-            intervention=cls.intervention,
-            sector=cls.section
-        )
-
-    def setUp(self):
-        super(TestInterventionSectionLocationLinkListAPIView, self).setUp()
-        self.url = reverse("partners_api:intervention-sector-locations")
-
-    def assertResponseFundamentals(self, response):
-        '''Assert common fundamentals about the response.'''
-        self.assertEquals(response.status_code, status.HTTP_200_OK)
-        response_json = json.loads(response.rendered_content)
-        self.assertIsInstance(response_json, list)
-        self.assertEqual(len(response_json), 1)
-        first = response_json[0]
-        self.assertIn('id', first.keys())
-        return response_json, first
-
-    def test_search_intervention_number(self):
-        response = self.forced_auth_req(
-            'get',
-            self.url,
-            user=self.unicef_staff,
-            data={"search": self.intervention.number[:-2]}
-        )
-        data, first = self.assertResponseFundamentals(response)
-        self.assertEqual(first["id"], self.link.pk)
-
-    def test_search_section_name(self):
-        response = self.forced_auth_req(
-            'get',
-            self.url,
-            user=self.unicef_staff,
-            data={"search": "Name"}
-        )
-        data, first = self.assertResponseFundamentals(response)
-        self.assertEqual(first["id"], self.link.pk)
-
-    def test_search_empty(self):
-        response = self.forced_auth_req(
-            'get',
-            self.url,
-            user=self.unicef_staff,
-            data={"search": "random"}
-        )
-        self.assertEquals(response.status_code, status.HTTP_200_OK)
-        response_json = json.loads(response.rendered_content)
-        self.assertIsInstance(response_json, list)
-        self.assertFalse(response_json)
 
 
 class TestInterventionListMapView(BaseTenantTestCase):

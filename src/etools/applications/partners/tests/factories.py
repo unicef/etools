@@ -6,7 +6,7 @@ from factory import fuzzy
 
 from etools.applications.attachments.tests.factories import AttachmentFactory
 from etools.applications.partners import models
-from etools.applications.reports.tests.factories import CountryProgrammeFactory, ResultFactory, SectionFactory
+from etools.applications.reports.tests.factories import CountryProgrammeFactory, ResultFactory
 from etools.applications.users.tests.factories import UserFactory
 
 
@@ -199,15 +199,6 @@ class InterventionResultLinkFactory(factory.django.DjangoModelFactory):
 
     intervention = factory.SubFactory(InterventionFactory)
     cp_output = factory.SubFactory(ResultFactory)
-
-
-class InterventionSectionLocationLinkFactory(factory.django.DjangoModelFactory):
-
-    class Meta:
-        model = models.InterventionSectionLocationLink
-
-    intervention = factory.SubFactory(InterventionFactory)
-    sector = factory.SubFactory(SectionFactory)
 
 
 class PlannedEngagementFactory(factory.django.DjangoModelFactory):

@@ -214,7 +214,7 @@ TENANT_APPS = (
     'etools.applications.firms',
     'etools.applications.management',
     'etools.applications.action_points',
-    'etools.applications.field_monitoring.settings',
+    'etools.applications.field_monitoring.fm_settings',
     'etools.applications.field_monitoring.planning',
     'etools.applications.field_monitoring.visits',
     'etools.applications.field_monitoring.data_collection',
@@ -348,7 +348,9 @@ CELERY_WORKER_PREFETCH_MULTIPLIER = 1
 CELERY_EMAIL_BACKEND = get_from_secrets_or_env('EMAIL_BACKEND', 'django.core.mail.backends.smtp.EmailBackend')
 CELERY_TASK_ROUTES = {
     'etools.applications.vision.tasks.sync_handler': {'queue': 'vision_queue'},
-    'etools.applications.hact.tasks.update_hact_for_country': {'queue': 'vision_queue'}
+    'etools.applications.hact.tasks.update_hact_for_country': {'queue': 'vision_queue'},
+    'etools.libraries.azure_graph_api.tasks.sync_delta_users': {'queue': 'vision_queue'},
+    'etools.libraries.azure_graph_api.tasks.sync_all_users': {'queue': 'vision_queue'}
 }
 
 # djangorestframework: http://www.django-rest-framework.org/api-guide/settings/

@@ -42,6 +42,7 @@ def sync_all_users():
         status, _ = azure_sync_users(url)
     except Exception as e:
         log.exception_message = force_text(e)
+        logger.exception(force_text(e))
         raise VisionException(*e.args)
     else:
         log.total_records = status['processed'] + status['skipped']
@@ -71,6 +72,7 @@ def sync_delta_users():
 
     except Exception as e:
         log.exception_message = force_text(e)
+        logger.exception(force_text(e))
         raise VisionException(*e.args)
     else:
         log.total_records = status['processed'] + status['skipped']

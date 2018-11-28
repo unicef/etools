@@ -3,19 +3,19 @@ from operator import itemgetter
 
 from django.db import transaction
 from django.db.models import Q
-from django.utils.translation import ugettext as _
 from django.utils.functional import cached_property
+from django.utils.translation import ugettext as _
 
 from rest_framework import serializers
 from rest_framework.serializers import ValidationError
 from unicef_attachments.fields import AttachmentSingleFileField
 from unicef_attachments.serializers import AttachmentSerializerMixin
-from unicef_locations.serializers import LocationLightSerializer, LocationSerializer
+from unicef_locations.serializers import LocationSerializer
 from unicef_snapshot.serializers import SnapshotModelSerializer
 
 from etools.applications.EquiTrack.utils import h11
 from etools.applications.funds.models import FundsCommitmentItem, FundsReservationHeader
-from etools.applications.funds.serializers import FRsSerializer, FRHeaderSerializer
+from etools.applications.funds.serializers import FRHeaderSerializer, FRsSerializer
 from etools.applications.partners.models import (
     Intervention,
     InterventionAmendment,
@@ -24,18 +24,16 @@ from etools.applications.partners.models import (
     InterventionPlannedVisits,
     InterventionReportingPeriod,
     InterventionResultLink,
-    InterventionSectionLocationLink,
     PartnerType,
 )
 from etools.applications.partners.permissions import InterventionPermissions
 from etools.applications.reports.models import AppliedIndicator, LowerResult, ReportingRequirement
-from etools.applications.reports.serializers.v1 import SectionSerializer
 from etools.applications.reports.serializers.v2 import (
     IndicatorSerializer,
     LowerResultCUSerializer,
     LowerResultSerializer,
+    RAMIndicatorSerializer,
     ReportingRequirementSerializer,
-    RAMIndicatorSerializer
 )
 
 
@@ -62,7 +60,10 @@ class InterventionAmendmentCUSerializer(AttachmentSerializerMixin, serializers.M
     signed_amendment_attachment = AttachmentSingleFileField(
         override="signed_amendment"
     )
-    internal_prc_review = AttachmentSingleFileField()
+    internal_prc_review_attachment = AttachmentSingleFileField(
+        source="internal_prc_review",
+        required=False,
+    )
 
     class Meta:
         model = InterventionAmendment
@@ -262,33 +263,18 @@ class MinimalInterventionListSerializer(serializers.ModelSerializer):
         )
 
 
-# TODO intervention sector locations cleanup
-class InterventionLocationSectionNestedSerializer(serializers.ModelSerializer):
-    locations = LocationLightSerializer(many=True)
-    sector = SectionSerializer()
-
-    class Meta:
-        model = InterventionSectionLocationLink
-        fields = (
-            'id', 'sector', 'locations'
-        )
-
-
-# TODO intervention sector locations cleanup
-class InterventionSectionLocationCUSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = InterventionSectionLocationLink
-        fields = (
-            'id', 'intervention', 'sector', 'locations'
-        )
-
-
 class InterventionAttachmentSerializer(AttachmentSerializerMixin, serializers.ModelSerializer):
     attachment_file = serializers.FileField(source="attachment", read_only=True)
     attachment_document = AttachmentSingleFileField(
         source="attachment_file",
         override="attachment",
     )
+
+    def update(self, instance, validated_data):
+        intervention = validated_data.get('intervention', instance.intervention)
+        if intervention and intervention.status in [Intervention.ENDED, Intervention.CLOSED, Intervention.TERMINATED]:
+            raise ValidationError('An attachment cannot be changed in statuses "Ended, Closed or Terminated"')
+        return super().update(instance, validated_data)
 
     class Meta:
         model = InterventionAttachment
@@ -297,6 +283,7 @@ class InterventionAttachmentSerializer(AttachmentSerializerMixin, serializers.Mo
             'intervention',
             'created',
             'type',
+            'active',
             'attachment',
             'attachment_file',
             'attachment_document',
@@ -499,11 +486,11 @@ class InterventionCreateUpdateSerializer(AttachmentSerializerMixin, SnapshotMode
     planned_budget = InterventionBudgetCUSerializer(read_only=True)
     partner = serializers.CharField(source='agreement.partner.name', read_only=True)
     prc_review_document_file = serializers.FileField(source='prc_review_document', read_only=True)
-    prc_review_attachment = AttachmentSingleFileField()
+    prc_review_attachment = AttachmentSingleFileField(required=False)
     signed_pd_document_file = serializers.FileField(source='signed_pd_document', read_only=True)
-    signed_pd_attachment = AttachmentSingleFileField()
+    signed_pd_attachment = AttachmentSingleFileField(required=False)
     activation_letter_file = serializers.FileField(source='activation_letter', read_only=True)
-    activation_letter_attachment = AttachmentSingleFileField()
+    activation_letter_attachment = AttachmentSingleFileField(required=False)
     termination_doc_file = serializers.FileField(source='termination_doc', read_only=True)
     termination_doc_attachment = AttachmentSingleFileField()
     planned_visits = PlannedVisitsNestedSerializer(many=True, read_only=True, required=False)
