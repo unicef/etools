@@ -270,6 +270,12 @@ class InterventionAttachmentSerializer(AttachmentSerializerMixin, serializers.Mo
         override="attachment",
     )
 
+    def update(self, instance, validated_data):
+        intervention = validated_data.get('intervention', instance.intervention)
+        if intervention and intervention.status in [Intervention.ENDED, Intervention.CLOSED, Intervention.TERMINATED]:
+            raise ValidationError('An attachment cannot be changed in statuses "Ended, Closed or Terminated"')
+        return super().update(instance, validated_data)
+
     class Meta:
         model = InterventionAttachment
         fields = (
@@ -277,6 +283,7 @@ class InterventionAttachmentSerializer(AttachmentSerializerMixin, serializers.Mo
             'intervention',
             'created',
             'type',
+            'active',
             'attachment',
             'attachment_file',
             'attachment_document',
