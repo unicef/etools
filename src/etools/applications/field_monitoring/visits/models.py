@@ -11,8 +11,7 @@ from model_utils.models import TimeStampedModel
 from ordered_model.models import OrderedModel
 
 from etools.applications.field_monitoring.planning.models import Task
-from etools.applications.field_monitoring.fm_settings.models import CheckListItem, FMMethodType, CPOutputConfig, \
-    PlannedCheckListItemPartnerInfo, PlannedCheckListItem
+from etools.applications.field_monitoring.fm_settings.models import CheckListItem, FMMethodType, CPOutputConfig
 from etools.applications.field_monitoring.shared.models import FMMethod
 from etools.applications.publics.models import SoftDeleteMixin
 from etools.applications.reports.models import Result
