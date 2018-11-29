@@ -11,8 +11,9 @@ from model_utils.models import TimeStampedModel
 from ordered_model.models import OrderedModel
 
 from etools.applications.field_monitoring.planning.models import Task
-from etools.applications.field_monitoring.settings.models import CheckListItem, MethodType, CPOutputConfig
-from etools.applications.field_monitoring.shared.models import Method
+from etools.applications.field_monitoring.fm_settings.models import CheckListItem, FMMethodType, CPOutputConfig, \
+    PlannedCheckListItemPartnerInfo, PlannedCheckListItem
+from etools.applications.field_monitoring.shared.models import FMMethod
 from etools.applications.publics.models import SoftDeleteMixin
 from etools.applications.reports.models import Result
 from etools.applications.utils.common.models.mixins import InheritedModelMixin
@@ -30,8 +31,8 @@ class FindingMixin(object):
 
 
 class VisitTaskLink(FindingMixin, models.Model):
-    visit = models.ForeignKey('Visit', related_name=_('visit_task_links'))
-    task = models.ForeignKey(Task, related_name=_('visit_task_links'))
+    visit = models.ForeignKey('Visit', related_name='visit_task_links')
+    task = models.ForeignKey(Task, related_name='visit_task_links')
 
 
 class Visit(InheritedModelMixin, SoftDeleteMixin, TimeStampedModel):
@@ -86,6 +87,12 @@ class Visit(InheritedModelMixin, SoftDeleteMixin, TimeStampedModel):
     def status_date(self):
         return getattr(self, self.STATUSES_DATES[self.status])
 
+    def generate_checklist(self):
+        TaskCheckListItem.generate_for_visit(self)
+
+    def generate_methods(self):
+        VisitMethodType.generate_for_visit(self)
+
     @property
     def reference_number(self):
         return '{}/{}/{}/FMT'.format(
@@ -98,8 +105,8 @@ class Visit(InheritedModelMixin, SoftDeleteMixin, TimeStampedModel):
         status, source=STATUS_CHOICES.draft, target=STATUS_CHOICES.assigned,
     )
     def assign(self):
-        # todo: generate TaskCheckListItem and VisitMethodType
-        pass
+        self.generate_checklist()
+        self.generate_methods()
 
     @transition(
         status, source=STATUS_CHOICES.assigned, target=STATUS_CHOICES.finalized,
@@ -126,7 +133,7 @@ class TaskCheckListItem(FindingMixin, OrderedModel):
     question_text = models.CharField(max_length=255, verbose_name=_('Question Text'))
     specific_details = models.TextField(verbose_name=_('Specific Details To Probe'), blank=True)
 
-    methods = models.ManyToManyField(Method, verbose_name=_('Recommended Methods'))
+    methods = models.ManyToManyField(FMMethod, verbose_name=_('Recommended Methods'))
 
     class Meta:
         ordering = ('visit_task', 'order',)
@@ -138,6 +145,31 @@ class TaskCheckListItem(FindingMixin, OrderedModel):
     def parent(self):
         return CheckListItem.objects.filter(slug=self.parent_slug).first()
 
+    @classmethod
+    def generate_for_visit(cls, visit):
+        for task_link in visit.visit_task_links.prefetch_related(
+            'visit',
+            'task__partner',
+            'task__cp_output_config__planned_checklist_items__checklist_item',
+            'task__cp_output_config__planned_checklist_items__methods',
+            'task__cp_output_config__planned_checklist_items__partners_info',
+        ):
+            for planned_checklist_item in task_link.task.cp_output_config.planned_checklist_items.all():
+                partner_info = [
+                    info for info in planned_checklist_item.partners_info.all()
+                    if info.partner is None or info.partner == task_link.task.partner
+                ]
+                partner_info = partner_info[0] if partner_info else None
+
+                item = cls.objects.create(
+                    parent_slug=planned_checklist_item.checklist_item.slug,
+                    visit_task=task_link,
+                    question_number=planned_checklist_item.checklist_item.question_number,
+                    question_text=planned_checklist_item.checklist_item.question_text,
+                    specific_details=partner_info.specific_details if partner_info else '',
+                )
+                item.methods.add(*planned_checklist_item.methods.all())
+
 
 class VisitMethodType(models.Model):
     parent_slug = models.CharField(max_length=50, verbose_name=_('Parent Slug'))
@@ -148,4 +180,19 @@ class VisitMethodType(models.Model):
 
     @property
     def parent(self):
-        return MethodType.objects.filter(slug=self.parent_slug).first()
+        return FMMethodType.objects.filter(slug=self.parent_slug).first()
+
+    @classmethod
+    def generate_for_visit(cls, visit):
+        for config in CPOutputConfig.objects.filter(tasks__visits=visit).prefetch_related(
+            'cp_output',
+            'recommended_method_types',
+        ):
+            for method in config.recommended_method_types.all():
+                cls.objects.create(
+                    parent_slug=method.slug,
+                    visit=visit,
+                    cp_output=config.cp_output,
+                    name=method.name,
+                    is_recommended=True
+                )

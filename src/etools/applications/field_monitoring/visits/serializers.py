@@ -10,7 +10,7 @@ from unicef_restlib.serializers import WritableNestedSerializerMixin
 from unicef_snapshot.serializers import SnapshotModelSerializer
 
 from etools.applications.field_monitoring.planning.serializers import TaskListSerializer
-from etools.applications.field_monitoring.settings.models import LogIssue
+from etools.applications.field_monitoring.fm_settings.models import LogIssue
 from etools.applications.field_monitoring.visits.models import Visit, UNICEFVisit, VisitMethodType
 from etools.applications.users.serializers import MinimalUserSerializer
 

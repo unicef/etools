@@ -77,7 +77,8 @@ class VisitFactory(factory.DjangoModelFactory):
     @factory.post_generation
     def tasks(self, create, extracted, count, *kwargs):
         if extracted:
-            self.tasks.add(*extracted)
+            for obj in extracted:
+                VisitTaskLink.objects.create(visit=self, task=obj)
         elif create:
             [VisitTaskLink.objects.create(visit=self, task=TaskFactory()) for i in range(count)]
 
