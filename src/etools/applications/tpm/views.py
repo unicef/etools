@@ -190,7 +190,7 @@ class TPMPartnerViewSet(
 
     @action(detail=False, methods=['get'], url_path='export', renderer_classes=(TPMPartnerCSVRenderer,))
     def export(self, request, *args, **kwargs):
-        tpm_partners = TPMPartner.objects.all().order_by('vendor_number')
+        tpm_partners = self.filter_queryset(TPMPartner.objects.all().order_by('vendor_number'))
         serializer = TPMPartnerExportSerializer(tpm_partners, many=True)
         return Response(serializer.data, headers={
             'Content-Disposition': 'attachment;filename=tpm_vendors_{}.csv'.format(timezone.now().date())
@@ -370,11 +370,11 @@ class TPMVisitViewSet(
 
     @action(detail=False, methods=['get'], url_path='export', renderer_classes=(TPMVisitCSVRenderer,))
     def visits_export(self, request, *args, **kwargs):
-        tpm_visits = self.get_queryset().prefetch_related(
+        tpm_visits = self.filter_queryset(self.get_queryset().prefetch_related(
             'tpm_activities', 'tpm_activities__section', 'tpm_activities__partner',
             'tpm_activities__intervention', 'tpm_activities__locations', 'tpm_activities__unicef_focal_points',
             'tpm_partner_focal_points'
-        ).order_by('id')
+        ).order_by('id'))
         serializer = TPMVisitExportSerializer(tpm_visits, many=True)
         return Response(serializer.data, headers={
             'Content-Disposition': 'attachment;filename=tpm_visits_{}.csv'.format(timezone.now().date())
