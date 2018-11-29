@@ -9,6 +9,7 @@ from unicef_restlib.serializers import WritableNestedSerializerMixin
 
 from unicef_snapshot.serializers import SnapshotModelSerializer
 
+from etools.applications.field_monitoring.fm_settings.serializers.methods import FMMethodTypeSerializer
 from etools.applications.field_monitoring.planning.serializers import TaskListSerializer
 from etools.applications.field_monitoring.fm_settings.models import LogIssue
 from etools.applications.field_monitoring.visits.models import Visit, UNICEFVisit, VisitMethodType
@@ -33,11 +34,12 @@ class VisitListSerializer(VisitLightSerializer):
         pass
 
 
-class VisitMethodTypeSerializer(serializers.ModelSerializer):
-    class Meta:
+class VisitMethodTypeSerializer(WritableNestedSerializerMixin, FMMethodTypeSerializer):
+    class Meta(WritableNestedSerializerMixin.Meta, FMMethodTypeSerializer.Meta):
         model = VisitMethodType
-        fields = ('id', 'name', 'is_recommended')
+        fields = FMMethodTypeSerializer.Meta.fields + ('cp_output', 'is_recommended',)
         extra_kwargs = {
+            'cp_output': {'read_only': True},
             'is_recommended': {'read_only': True}
         }
 
@@ -59,8 +61,11 @@ class VisitSerializer(WritableNestedSerializerMixin,
 
     class Meta(WritableNestedSerializerMixin.Meta, VisitListSerializer.Meta):
         fields = VisitListSerializer.Meta.fields + (
-            'method_types', 'specific_issues',
+            'methods', 'method_types', 'specific_issues',
         )
+        extra_kwargs = {
+            'methods': {'read_only': True},
+        }
 
     def get_specific_issues(self, obj):
         return LogIssue.objects.filter(

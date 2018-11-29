@@ -8,8 +8,8 @@ from etools.applications.field_monitoring.visits.models import TaskCheckListItem
 from etools.applications.field_monitoring.visits.tests.factories import VisitFactory
 
 
-class TestTaskCheckListItem(BaseTenantTestCase):
-    def test_generate_for_visit(self):
+class TestVisit(BaseTenantTestCase):
+    def test_freeze_checklist(self):
         first_item = CheckListItemFactory()
         second_item = CheckListItemFactory()
         CheckListItemFactory()  # should be unused
@@ -39,7 +39,7 @@ class TestTaskCheckListItem(BaseTenantTestCase):
         visit = VisitFactory(tasks=[task])
 
         with self.assertNumQueries(9 + 4*2):  # two visit checklist items should be created
-            TaskCheckListItem.generate_for_visit(visit)
+            visit.freeze_checklist()
 
         visit_task_checklist = TaskCheckListItem.objects.filter(visit_task__visit=visit, visit_task__task=task)\
             .order_by('id')
@@ -48,9 +48,26 @@ class TestTaskCheckListItem(BaseTenantTestCase):
         self.assertEqual(visit_task_checklist[0].specific_details, first_item_partner_info.specific_details)
         self.assertEqual(visit_task_checklist[1].specific_details, second_item_partner_info.specific_details)
 
+    def test_freeze_methods(self):
+        task = TaskFactory()
 
-class TestVisitMethodType(BaseTenantTestCase):
-    def test_generate_for_visit(self):
+        planned_first_item = PlannedCheckListItemFactory(
+            cp_output_config=task.cp_output_config, methods__count=2
+        )
+        planned_second_item = PlannedCheckListItemFactory(
+            cp_output_config=task.cp_output_config, methods__count=3
+        )
+        PlannedCheckListItemFactory(methods__count=1)  # unused
+
+        planned_second_item.methods.add(*planned_first_item.methods.all())  # no duplicates should be generated
+
+        visit = VisitFactory(tasks=[task])
+
+        visit.freeze_methods()
+
+        self.assertEqual(visit.methods.count(), 5)
+
+    def test_freeze_types(self):
         first_method_type = FMMethodTypeFactory()
         second_method_type = FMMethodTypeFactory()
         third_method_type = FMMethodTypeFactory()
@@ -63,7 +80,7 @@ class TestVisitMethodType(BaseTenantTestCase):
         unused_config = CPOutputConfigFactory()
         unused_config.recommended_method_types.add(third_method_type)
 
-        VisitMethodType.generate_for_visit(visit)
+        visit.freeze_method_types()
 
         visit_method_types = VisitMethodType.objects.filter(visit=visit)
 

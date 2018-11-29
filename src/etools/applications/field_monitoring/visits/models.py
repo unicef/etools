@@ -74,6 +74,8 @@ class Visit(InheritedModelMixin, SoftDeleteMixin, TimeStampedModel):
     date_cancelled = MonitorField(verbose_name=_('Date Visit Cancelled'), null=True, blank=True, default=None,
                                   monitor='status', when=[STATUS_CHOICES.cancelled])
 
+    methods = models.ManyToManyField(FMMethod, blank=True)
+
     history = GenericRelation('unicef_snapshot.Activity', object_id_field='target_object_id',
                               content_type_field='target_content_type')
 
@@ -87,11 +89,50 @@ class Visit(InheritedModelMixin, SoftDeleteMixin, TimeStampedModel):
     def status_date(self):
         return getattr(self, self.STATUSES_DATES[self.status])
 
-    def generate_checklist(self):
-        TaskCheckListItem.generate_for_visit(self)
+    def freeze_checklist(self):
+        for task_link in self.visit_task_links.prefetch_related(
+            'visit',
+            'task__partner',
+            'task__cp_output_config__planned_checklist_items__checklist_item',
+            'task__cp_output_config__planned_checklist_items__methods',
+            'task__cp_output_config__planned_checklist_items__partners_info',
+        ):
+            for planned_checklist_item in task_link.task.cp_output_config.planned_checklist_items.all():
+                partner_info = [
+                    info for info in planned_checklist_item.partners_info.all()
+                    if info.partner is None or info.partner == task_link.task.partner
+                ]
+                partner_info = partner_info[0] if partner_info else None
 
-    def generate_methods(self):
-        VisitMethodType.generate_for_visit(self)
+                item = TaskCheckListItem.objects.create(
+                    parent_slug=planned_checklist_item.checklist_item.slug,
+                    visit_task=task_link,
+                    question_number=planned_checklist_item.checklist_item.question_number,
+                    question_text=planned_checklist_item.checklist_item.question_text,
+                    specific_details=partner_info.specific_details if partner_info else '',
+                )
+                item.methods.add(*planned_checklist_item.methods.all())
+
+    def freeze_methods(self):
+        self.methods.add(*FMMethod.objects.filter(
+            plannedchecklistitem__cp_output_config__tasks__visits=self
+        ).order_by('id').distinct())
+
+    def freeze_method_types(self):
+        for config in CPOutputConfig.objects.filter(tasks__visits=self).prefetch_related(
+            'cp_output',
+            'recommended_method_types',
+            'recommended_method_types__method',
+        ):
+            for method_type in config.recommended_method_types.all():
+                VisitMethodType.objects.create(
+                    method=method_type.method,
+                    parent_slug=method_type.slug,
+                    visit=self,
+                    cp_output=config.cp_output,
+                    name=method_type.name,
+                    is_recommended=True
+                )
 
     @property
     def reference_number(self):
@@ -105,8 +146,9 @@ class Visit(InheritedModelMixin, SoftDeleteMixin, TimeStampedModel):
         status, source=STATUS_CHOICES.draft, target=STATUS_CHOICES.assigned,
     )
     def assign(self):
-        self.generate_checklist()
-        self.generate_methods()
+        self.freeze_checklist()
+        self.freeze_methods()
+        self.freeze_method_types()
 
     @transition(
         status, source=STATUS_CHOICES.assigned, target=STATUS_CHOICES.finalized,
@@ -145,54 +187,16 @@ class TaskCheckListItem(FindingMixin, OrderedModel):
     def parent(self):
         return CheckListItem.objects.filter(slug=self.parent_slug).first()
 
-    @classmethod
-    def generate_for_visit(cls, visit):
-        for task_link in visit.visit_task_links.prefetch_related(
-            'visit',
-            'task__partner',
-            'task__cp_output_config__planned_checklist_items__checklist_item',
-            'task__cp_output_config__planned_checklist_items__methods',
-            'task__cp_output_config__planned_checklist_items__partners_info',
-        ):
-            for planned_checklist_item in task_link.task.cp_output_config.planned_checklist_items.all():
-                partner_info = [
-                    info for info in planned_checklist_item.partners_info.all()
-                    if info.partner is None or info.partner == task_link.task.partner
-                ]
-                partner_info = partner_info[0] if partner_info else None
-
-                item = cls.objects.create(
-                    parent_slug=planned_checklist_item.checklist_item.slug,
-                    visit_task=task_link,
-                    question_number=planned_checklist_item.checklist_item.question_number,
-                    question_text=planned_checklist_item.checklist_item.question_text,
-                    specific_details=partner_info.specific_details if partner_info else '',
-                )
-                item.methods.add(*planned_checklist_item.methods.all())
-
 
 class VisitMethodType(models.Model):
+    method = models.ForeignKey(FMMethod, verbose_name=_('Method'), related_name='visit_types')
     parent_slug = models.CharField(max_length=50, verbose_name=_('Parent Slug'))
     visit = models.ForeignKey(Visit, verbose_name=_('Visit'), related_name='method_types')
-    cp_output = models.ForeignKey(Result, verbose_name=_('CP Output'), related_name='visit_method_types')
+    cp_output = models.ForeignKey(Result, verbose_name=_('CP Output'), related_name='visit_method_types',
+                                  blank=True, null=True)
     name = models.CharField(verbose_name=_('Name'), max_length=300)
     is_recommended = models.BooleanField(default=False, verbose_name=_('Recommended'))
 
     @property
     def parent(self):
         return FMMethodType.objects.filter(slug=self.parent_slug).first()
-
-    @classmethod
-    def generate_for_visit(cls, visit):
-        for config in CPOutputConfig.objects.filter(tasks__visits=visit).prefetch_related(
-            'cp_output',
-            'recommended_method_types',
-        ):
-            for method in config.recommended_method_types.all():
-                cls.objects.create(
-                    parent_slug=method.slug,
-                    visit=visit,
-                    cp_output=config.cp_output,
-                    name=method.name,
-                    is_recommended=True
-                )

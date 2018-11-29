@@ -37,8 +37,8 @@ class LocationSiteFactory(factory.DjangoModelFactory):
     point = GEOSGeometry("POINT(20 20)")
     p_code = factory.Sequence(lambda n: 'PCODE{}'.format(n))
     security_detail = fuzzy.FuzzyText()
-    parent = factory.LazyAttribute(lambda o:
-                                   LocationFactory(gateway=GatewayType.objects.get_or_create(admin_level=0)[0]))
+    parent = factory.LazyFunction(lambda:
+                                  LocationFactory(gateway=GatewayType.objects.get_or_create(admin_level=0)[0]))
 
     class Meta:
         model = LocationSite
