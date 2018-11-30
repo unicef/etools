@@ -195,7 +195,11 @@ class LogIssuesViewSet(FMBaseViewSet, viewsets.ModelViewSet):
         DjangoFilterBackend, LogIssueNameOrderingFilter, LogIssueRelatedToTypeFilter,
         LogIssueVisitFilter, OrderingFilter
     )
-    filter_fields = ('cp_output', 'partner', 'location', 'location_site', 'status')
+    filter_fields = ({
+        field: ['exact', 'in'] for field in [
+            'cp_output', 'partner', 'location', 'location_site', 'status'
+        ]
+    })
     ordering_fields = ('content_type',)
 
     def get_queryset(self):
