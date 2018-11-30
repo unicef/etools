@@ -262,7 +262,7 @@ class TestAgreementsAPI(BaseTenantTestCase):
             status_code, response = self.run_request_list_ep(
                 user=self.unicef_staff,
                 method='get',
-                data={"special_condition_pca": True}
+                data={"special_conditions_pca": True}
             )
 
         self.assertEqual(status_code, status.HTTP_200_OK)
@@ -272,7 +272,7 @@ class TestAgreementsAPI(BaseTenantTestCase):
             status_code, response = self.run_request_list_ep(
                 user=self.unicef_staff,
                 method='get',
-                data={"special_condition_pca": False}
+                data={"special_conditions_pca": False}
             )
 
         self.assertEqual(status_code, status.HTTP_200_OK)

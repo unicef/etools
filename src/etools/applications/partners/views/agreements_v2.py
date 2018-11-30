@@ -56,7 +56,7 @@ class AgreementListAPIView(QueryStringFilterMixin, ExportModelMixin, ValidatorVi
         ('partner_name', 'partner__name__in'),
         ('start', 'start__gt'),
         ('end', 'end__lte'),
-        ('special_condition_pca', 'special_conditions_pca'),
+        ('special_conditions_pca', 'special_conditions_pca'),
     )
     search_terms = ('partner__name__icontains', 'agreement_number__icontains')
 
