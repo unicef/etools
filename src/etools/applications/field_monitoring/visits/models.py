@@ -73,8 +73,6 @@ class Visit(InheritedModelMixin, SoftDeleteMixin, TimeStampedModel):
     date_cancelled = MonitorField(verbose_name=_('Date Visit Cancelled'), null=True, blank=True, default=None,
                                   monitor='status', when=[STATUS_CHOICES.cancelled])
 
-    methods = models.ManyToManyField(FMMethod, blank=True)
-
     history = GenericRelation('unicef_snapshot.Activity', object_id_field='target_object_id',
                               content_type_field='target_content_type')
 
@@ -112,26 +110,30 @@ class Visit(InheritedModelMixin, SoftDeleteMixin, TimeStampedModel):
                 )
                 item.methods.add(*planned_checklist_item.methods.all())
 
-    def freeze_methods(self):
-        self.methods.add(*FMMethod.objects.filter(
-            plannedchecklistitem__cp_output_config__tasks__visits=self
-        ).order_by('id').distinct())
-
-    def freeze_method_types(self):
+    def freeze_configs(self):
         for config in CPOutputConfig.objects.filter(tasks__visits=self).prefetch_related(
             'cp_output',
+            'government_partners',
             'recommended_method_types',
             'recommended_method_types__method',
         ):
+            visit_config = VisitCPOutputConfig.objects.create(
+                visit=self,
+                parent=config,
+                is_priority=config.is_priority,
+            )
+            visit_config.government_partners.add(*config.government_partners.all())
+
+            method_types = []
             for method_type in config.recommended_method_types.all():
-                VisitMethodType.objects.create(
+                method_types.append(VisitMethodType.objects.create(
                     method=method_type.method,
                     parent_slug=method_type.slug,
                     visit=self,
-                    cp_output=config.cp_output,
                     name=method_type.name,
                     is_recommended=True
-                )
+                ))
+            visit_config.recommended_method_types.add(*method_types)
 
     @property
     def reference_number(self):
@@ -191,11 +193,22 @@ class VisitMethodType(models.Model):
     method = models.ForeignKey(FMMethod, verbose_name=_('Method'), related_name='visit_types')
     parent_slug = models.CharField(max_length=50, verbose_name=_('Parent Slug'))
     visit = models.ForeignKey(Visit, verbose_name=_('Visit'), related_name='method_types')
-    cp_output = models.ForeignKey(Result, verbose_name=_('CP Output'), related_name='visit_method_types',
-                                  blank=True, null=True)
     name = models.CharField(verbose_name=_('Name'), max_length=300)
-    is_recommended = models.BooleanField(default=False, verbose_name=_('Recommended'))
+    is_recommended = models.BooleanField(default=False, verbose_name=_('Is Recommended'))
 
     @property
     def parent(self):
         return FMMethodType.objects.filter(slug=self.parent_slug).first()
+
+
+class VisitCPOutputConfig(models.Model):
+    visit = models.ForeignKey(Visit, verbose_name=_('Visit'), related_name='cp_output_configs')
+    parent = models.ForeignKey(CPOutputConfig, verbose_name=_('Parent'))
+    is_priority = models.BooleanField(default=False, verbose_name=_('Priority?'))
+    government_partners = models.ManyToManyField('partners.PartnerOrganization', blank=True,
+                                                 verbose_name=_('Contributing Government Partners'))
+    recommended_method_types = models.ManyToManyField(VisitMethodType, blank=True, verbose_name=_('Method(s)'),
+                                                      related_name='cp_output_configs')
+
+    def __str__(self):
+        return '{}: {}'.format(self.visit, self.parent)

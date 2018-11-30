@@ -2,13 +2,12 @@ import factory
 from django.utils import timezone
 from factory import fuzzy
 
-from etools.applications.field_monitoring.fm_settings.tests.factories import FMMethodTypeFactory, FMMethodFactory
+from etools.applications.field_monitoring.fm_settings.tests.factories import FMMethodTypeFactory, FMMethodFactory, \
+    CPOutputConfigFactory
 from etools.applications.field_monitoring.planning.tests.factories import TaskFactory
 from etools.applications.field_monitoring.tests.factories import UserFactory
 from etools.applications.field_monitoring.visits.models import Visit, UNICEFVisit, VisitTaskLink, VisitMethodType, \
-    TaskCheckListItem
-from etools.applications.reports.models import ResultType
-from etools.applications.reports.tests.factories import ResultFactory
+    TaskCheckListItem, VisitCPOutputConfig
 from etools.applications.utils.common.tests.factories import InheritedTrait
 
 
@@ -26,7 +25,6 @@ class VisitFactory(factory.DjangoModelFactory):
 
     team_members__count = 0
     tasks__count = 0
-    method_types__count = 0
 
     class Meta:
         model = Visit
@@ -87,13 +85,6 @@ class VisitFactory(factory.DjangoModelFactory):
         elif create:
             [VisitTaskLink.objects.create(visit=self, task=TaskFactory()) for i in range(count)]
 
-    @factory.post_generation
-    def method_types(self, create, extracted, count, *kwargs):
-        if extracted:
-            self.method_types.add(*extracted)
-        elif create:
-            [VisitMethodTypeFactory(visit=self, is_recommended=True) for i in range(count)]
-
 
 class UNICEFVisitFactory(VisitFactory):
     class Meta:
@@ -109,9 +100,29 @@ class VisitMethodTypeFactory(factory.DjangoModelFactory):
     method = factory.SubFactory(FMMethodFactory)
     parent_slug = factory.LazyFunction(lambda: FMMethodTypeFactory().slug)
     visit = factory.SubFactory(VisitFactory)
-    cp_output = factory.SubFactory(ResultFactory, result_type__name=ResultType.OUTPUT)
     name = factory.fuzzy.FuzzyText()
     is_recommended = False
 
     class Meta:
         model = VisitMethodType
+
+
+class VisitCPOutputConfigFactory(factory.DjangoModelFactory):
+    visit = factory.SubFactory(UNICEFVisitFactory)
+    parent = factory.SubFactory(CPOutputConfigFactory)
+    government_partners = factory.LazyAttribute(lambda obj: obj.parent.government_partners)
+
+    class Meta:
+        model = VisitCPOutputConfig
+
+    @factory.post_generation
+    def recommended_method_types(self, create, extracted, **kwargs):
+        if create:
+            for method_type in self.parent.recommended_method_types.all():
+                VisitMethodTypeFactory(
+                    method=method_type.method,
+                    parent_slug=method_type.slug,
+                    visit=self,
+                    name=method_type.name,
+                    is_recommended=True
+                )

@@ -4,7 +4,7 @@ from etools.applications.EquiTrack.tests.cases import BaseTenantTestCase
 from etools.applications.field_monitoring.fm_settings.tests.factories import CheckListItemFactory, \
     PlannedCheckListItemFactory, PlannedCheckListItemPartnerInfoFactory, FMMethodTypeFactory, CPOutputConfigFactory
 from etools.applications.field_monitoring.planning.tests.factories import TaskFactory
-from etools.applications.field_monitoring.visits.models import TaskCheckListItem, VisitMethodType
+from etools.applications.field_monitoring.visits.models import TaskCheckListItem, VisitMethodType, VisitCPOutputConfig
 from etools.applications.field_monitoring.visits.tests.factories import VisitFactory
 
 
@@ -48,26 +48,7 @@ class TestVisit(BaseTenantTestCase):
         self.assertEqual(visit_task_checklist[0].specific_details, first_item_partner_info.specific_details)
         self.assertEqual(visit_task_checklist[1].specific_details, second_item_partner_info.specific_details)
 
-    def test_freeze_methods(self):
-        task = TaskFactory()
-
-        planned_first_item = PlannedCheckListItemFactory(
-            cp_output_config=task.cp_output_config, methods__count=2
-        )
-        planned_second_item = PlannedCheckListItemFactory(
-            cp_output_config=task.cp_output_config, methods__count=3
-        )
-        PlannedCheckListItemFactory(methods__count=1)  # unused
-
-        planned_second_item.methods.add(*planned_first_item.methods.all())  # no duplicates should be generated
-
-        visit = VisitFactory(tasks=[task])
-
-        visit.freeze_methods()
-
-        self.assertEqual(visit.methods.count(), 5)
-
-    def test_freeze_types(self):
+    def test_freeze_configs(self):
         first_method_type = FMMethodTypeFactory()
         second_method_type = FMMethodTypeFactory()
         third_method_type = FMMethodTypeFactory()
@@ -80,7 +61,10 @@ class TestVisit(BaseTenantTestCase):
         unused_config = CPOutputConfigFactory()
         unused_config.recommended_method_types.add(third_method_type)
 
-        visit.freeze_method_types()
+        visit.freeze_configs()
+
+        visit_configs = VisitCPOutputConfig.objects.filter(visit=visit)
+        self.assertEqual(visit_configs.count(), 1)
 
         visit_method_types = VisitMethodType.objects.filter(visit=visit)
 
@@ -89,3 +73,8 @@ class TestVisit(BaseTenantTestCase):
             list(visit_method_types.values_list('name', flat=True).order_by('id')),
             [first_method_type.name, second_method_type.name]
         )
+        self.assertListEqual(
+            sorted(visit_method_types.values_list('id', flat=True)),
+            sorted(visit_configs.first().recommended_method_types.values_list('id', flat=True))
+        )
+        self.assertTrue(all(visit_method_types.values_list('is_recommended', flat=True)))

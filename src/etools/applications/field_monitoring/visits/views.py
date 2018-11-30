@@ -1,9 +1,11 @@
 from django.http import HttpResponseNotAllowed
 from rest_framework import mixins, viewsets
+from unicef_restlib.views import NestedViewSetMixin
 
 from etools.applications.field_monitoring.views import FMBaseViewSet
-from etools.applications.field_monitoring.visits.models import Visit, UNICEFVisit
-from etools.applications.field_monitoring.visits.serializers import VisitListSerializer, UNICEFVisitSerializer
+from etools.applications.field_monitoring.visits.models import Visit, UNICEFVisit, VisitMethodType
+from etools.applications.field_monitoring.visits.serializers import VisitListSerializer, UNICEFVisitSerializer, \
+    VisitMethodTypeSerializer
 
 
 class VisitsViewSet(
@@ -14,7 +16,7 @@ class VisitsViewSet(
 ):
     serializer_class = VisitListSerializer
     queryset = Visit.objects.prefetch_related(
-        'tasks', 'primary_field_monitor', 'team_members'
+        'tasks', 'primary_field_monitor', 'team_members',
     ).select_subclasses()
 
     def create(self, request, *args, **kwargs):
@@ -31,3 +33,15 @@ class UNICEFVisitsViewSet(
 ):
     serializer_class = UNICEFVisitSerializer
     queryset = UNICEFVisit.objects.all()
+
+
+class VisitMethodTypesViewSet(
+    FMBaseViewSet,
+    NestedViewSetMixin,
+    viewsets.ModelViewSet,
+):
+    serializer_class = VisitMethodTypeSerializer
+    queryset = VisitMethodType.objects.all()
+
+    def perform_create(self, serializer):
+        serializer.save(visit=self.get_parent_object())

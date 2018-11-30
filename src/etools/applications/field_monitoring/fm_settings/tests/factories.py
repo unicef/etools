@@ -51,6 +51,7 @@ class CPOutputConfigFactory(factory.DjangoModelFactory):
 
     interventions__count = 1
     government_partners__count = 1
+    recommended_method_types__count = 0
 
     class Meta:
         model = CPOutputConfig
@@ -77,6 +78,14 @@ class CPOutputConfigFactory(factory.DjangoModelFactory):
 
         if extracted:
             self.government_partners.add(*extracted)
+
+    @factory.post_generation
+    def recommended_method_types(self, created, extracted, count, **kwargs):
+        if created:
+            self.recommended_method_types.add(*[FMMethodTypeFactory() for i in range(count)])
+
+        if extracted:
+            self.recommended_method_types.add(*extracted)
 
 
 class CheckListCategoryFactory(factory.DjangoModelFactory):
