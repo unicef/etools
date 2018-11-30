@@ -60,11 +60,12 @@ class TaskViewSet(NestedViewSetMixin, FMBaseViewSet, viewsets.ModelViewSet):
     )
     serializer_class = TaskSerializer
     filter_backends = (DjangoFilterBackend, CPOutputIsActiveFilter, OrderingFilter)
-    filter_fields = (
-        'cp_output_config', 'cp_output_config__is_priority',
-        'partner', 'intervention',
-        'location', 'location_site'
-    )
+    filter_fields = ({
+        field: ['exact', 'in'] for field in [
+            'cp_output_config', 'partner', 'intervention', 'location', 'location_site'
+        ]
+    })
+    filter_fields['cp_output_config__is_priority'] = ['exact']
     ordering_fields = (
         'cp_output_config__cp_output__name',
         'partner__name', 'intervention__title',
