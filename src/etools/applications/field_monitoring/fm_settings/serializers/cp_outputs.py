@@ -41,7 +41,7 @@ class InterventionSerializer(serializers.ModelSerializer):
 
 class CPOutputConfigSerializer(serializers.ModelSerializer):
     government_partners = SeparatedReadWriteField(
-        read_field=MinimalPartnerOrganizationListSerializer(many=True, label=_('Contributing Government Partners'))
+        read_field=PartnerOrganizationSerializer(many=True, label=_('Contributing Government Partners'))
     )
 
     class Meta:
@@ -72,7 +72,7 @@ class CPOutputConfigDetailSerializer(CPOutputConfigSerializer):
 
     def get_partners(self, obj):
         return [
-            MinimalPartnerOrganizationListSerializer(partner).data
+            PartnerOrganizationSerializer(partner).data
             for partner in sorted(set(itertools.chain(
                 obj.government_partners.all(),
                 map(lambda l: l.intervention.agreement.partner, obj.cp_output.intervention_links.all()))
