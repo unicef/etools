@@ -148,8 +148,7 @@ class Visit(InheritedModelMixin, SoftDeleteMixin, TimeStampedModel):
     )
     def assign(self):
         self.freeze_checklist()
-        self.freeze_methods()
-        self.freeze_method_types()
+        self.freeze_configs()
 
     @transition(
         status, source=STATUS_CHOICES.assigned, target=STATUS_CHOICES.finalized,
