@@ -256,6 +256,28 @@ class TestAgreementsAPI(BaseTenantTestCase):
 
         self.assertEqual(status_code, status.HTTP_200_OK)
 
+    def test_filter_agreements_special_condition(self):
+        assert not self.agreement1.special_conditions_pca
+        with self.assertNumQueries(1):
+            status_code, response = self.run_request_list_ep(
+                user=self.unicef_staff,
+                method='get',
+                data={"special_condition_pca": True}
+            )
+
+        self.assertEqual(status_code, status.HTTP_200_OK)
+        self.assertEqual(len(response), 0)
+
+        with self.assertNumQueries(1):
+            status_code, response = self.run_request_list_ep(
+                user=self.unicef_staff,
+                method='get',
+                data={"special_condition_pca": False}
+            )
+
+        self.assertEqual(status_code, status.HTTP_200_OK)
+        self.assertEqual(len(response), 1)
+
     def test_add_new_PCA_with_amendment(self):
         attachment = AttachmentFactory(
             file="test_file.pdf",

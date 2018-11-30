@@ -199,6 +199,7 @@ class AgreementCSVRenderer(r.CSVRenderer):
         "staff_members",
         "amendments",
         "url",
+        "special_conditions_pca",
     ]
 
     labels = {
@@ -216,6 +217,7 @@ class AgreementCSVRenderer(r.CSVRenderer):
         "staff_members": 'Partner Authorized Officer',
         "amendments": 'Amendments',
         "url": "URL",
+        "special_conditions_pca": "Special Conditions PCA",
     }
 
 
