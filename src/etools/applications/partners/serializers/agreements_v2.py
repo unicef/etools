@@ -35,8 +35,8 @@ class AgreementAmendmentListSerializer(serializers.ModelSerializer):
 
 
 class AgreementListSerializer(serializers.ModelSerializer):
-
     partner_name = serializers.CharField(source='partner.name', read_only=True)
+    special_conditions_pca = serializers.SerializerMethodField()
 
     class Meta:
         model = Agreement
@@ -52,7 +52,11 @@ class AgreementListSerializer(serializers.ModelSerializer):
             "signed_by_unicef_date",
             "signed_by_partner_date",
             "status",
+            "special_conditions_pca",
         )
+
+    def get_special_conditions_pca(self, obj):
+        return "Yes" if obj.special_conditions_pca else "No"
 
 
 class AgreementDetailSerializer(serializers.ModelSerializer):
