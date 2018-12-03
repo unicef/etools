@@ -41,7 +41,7 @@ class VisitsViewTestCase(FMBaseTestCaseMixin, BaseTenantTestCase):
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
 
     def test_scope_by_methods(self):
-        visit = UNICEFVisitFactory(status=Visit.STATUS_CHOICES.assigned, tasks__count=1)
+        visit = UNICEFVisitFactory(status=Visit.STATUS_CHOICES.draft, tasks__count=1)
 
         method_type = FMMethodTypeFactory()
         task = visit.tasks.first()
@@ -53,8 +53,8 @@ class VisitsViewTestCase(FMBaseTestCaseMixin, BaseTenantTestCase):
             methods=[method_type.method, FMMethodFactory(is_types_applicable=False)]
         )
 
-        visit.freeze_checklist()
-        visit.freeze_configs()
+        visit.assign()
+        visit.save()
 
         response = self.forced_auth_req(
             'get', reverse('field_monitoring_visits:visits-unicef-detail', args=[visit.id]),
