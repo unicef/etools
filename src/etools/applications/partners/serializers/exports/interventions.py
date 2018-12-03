@@ -194,6 +194,11 @@ class InterventionExportSerializer(serializers.ModelSerializer):
         source='agreement.partner.partner_type',
         allow_null=True,
     )
+    cso_type = serializers.CharField(
+        label=_("CSO Type"),
+        source='agreement.partner.cso_type',
+        allow_null=True,
+    )
     agreement_number = serializers.CharField(
         label=_("Agreement"),
         source='agreement.agreement_number',
@@ -299,6 +304,7 @@ class InterventionExportSerializer(serializers.ModelSerializer):
             "vendor_number",
             "status",
             "partner_type",
+            "cso_type",
             "agreement_number",
             "country_programme",
             "document_type",
