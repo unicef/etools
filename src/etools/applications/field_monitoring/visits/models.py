@@ -14,7 +14,6 @@ from etools.applications.field_monitoring.planning.models import Task
 from etools.applications.field_monitoring.fm_settings.models import CheckListItem, FMMethodType, CPOutputConfig
 from etools.applications.field_monitoring.shared.models import FMMethod
 from etools.applications.publics.models import SoftDeleteMixin
-from etools.applications.reports.models import Result
 from etools.applications.utils.common.models.mixins import InheritedModelMixin
 
 

@@ -8,11 +8,11 @@ from rest_framework import status
 import factory.fuzzy
 
 from etools.applications.EquiTrack.tests.cases import BaseTenantTestCase
-from etools.applications.field_monitoring.fm_settings.tests.factories import FMMethodFactory
+from etools.applications.field_monitoring.fm_settings.tests.factories import FMMethodFactory, FMMethodTypeFactory, \
+    PlannedCheckListItemFactory
 from etools.applications.field_monitoring.tests.base import FMBaseTestCaseMixin
 from etools.applications.field_monitoring.visits.models import Visit
-from etools.applications.field_monitoring.visits.tests.factories import UNICEFVisitFactory, VisitCPOutputConfigFactory, \
-    VisitMethodTypeFactory
+from etools.applications.field_monitoring.visits.tests.factories import UNICEFVisitFactory, VisitMethodTypeFactory
 
 
 class VisitsViewTestCase(FMBaseTestCaseMixin, BaseTenantTestCase):
@@ -39,6 +39,32 @@ class VisitsViewTestCase(FMBaseTestCaseMixin, BaseTenantTestCase):
         )
 
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+
+    def test_scope_by_methods(self):
+        visit = UNICEFVisitFactory(status=Visit.STATUS_CHOICES.assigned, tasks__count=1)
+
+        method_type = FMMethodTypeFactory()
+        task = visit.tasks.first()
+        self.assertIsNotNone(task)
+
+        task.cp_output_config.recommended_method_types.add(method_type)
+        PlannedCheckListItemFactory(
+            cp_output_config=task.cp_output_config,
+            methods=[method_type.method, FMMethodFactory(is_types_applicable=False)]
+        )
+
+        visit.freeze_checklist()
+        visit.freeze_configs()
+
+        response = self.forced_auth_req(
+            'get', reverse('field_monitoring_visits:visits-unicef-detail', args=[visit.id]),
+            user=self.unicef_user
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+        scope_by_methods = response.data['scope_by_methods']
+        self.assertNotEqual(scope_by_methods, [])
 
 
 class VisitMethodTypesVIewTestCase(FMBaseTestCaseMixin, BaseTenantTestCase):

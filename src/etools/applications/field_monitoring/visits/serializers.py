@@ -1,3 +1,5 @@
+import itertools
+
 from django.db import models
 from django.utils.translation import ugettext_lazy as _
 
@@ -8,13 +10,13 @@ from unicef_restlib.fields import SeparatedReadWriteField
 
 from unicef_snapshot.serializers import SnapshotModelSerializer
 
-from etools.applications.field_monitoring.fm_settings.serializers.cp_outputs import NestedCPOutputSerializer
+from etools.applications.field_monitoring.fm_settings.serializers.cp_outputs import NestedCPOutputSerializer, \
+    PartnerOrganizationSerializer
 from etools.applications.field_monitoring.fm_settings.serializers.methods import FMMethodTypeSerializer
 from etools.applications.field_monitoring.planning.serializers import TaskListSerializer
 from etools.applications.field_monitoring.fm_settings.models import LogIssue
 from etools.applications.field_monitoring.shared.models import FMMethod
-from etools.applications.field_monitoring.visits.models import Visit, UNICEFVisit, VisitMethodType
-from etools.applications.reports.models import Result
+from etools.applications.field_monitoring.visits.models import Visit, UNICEFVisit, VisitMethodType, VisitCPOutputConfig
 from etools.applications.users.serializers import MinimalUserSerializer
 
 
@@ -54,59 +56,55 @@ class VisitMethodTypeSerializer(FMMethodTypeSerializer):
         return super().update(instance, validated_data)
 
 
-# class VisitMethodCPOutputSerializer(NestedCPOutputSerializer):
-#     def __init__(self, method_types, *args, **kwargs):
-#         self.method_types = method_types
-#         super().__init__(*args, **kwargs)
-#
-#     method_types = serializers.SerializerMethodField()
-#
-#     class Meta:
-#         model = Result
-#         fields = NestedCPOutputSerializer.Meta.fields + ('method_types',)
-#
-#     def get_method_types(self, obj):
-#         return
-#
-#
-# class VisitMethodSerializer(serializers.ModelSerializer):
-#     def __init__(self, method_types, *args, **kwargs):
-#         self.method_types = method_types
-#         super().__init__(*args, **kwargs)
-#
-#     cp_outputs = serializers.SerializerMethodField()
-#
-#     class Meta:
-#         model = FMMethod
-#         fields = ('id', 'name', 'cp_outputs')
-#
-#
-#     def get_scope_by_methods(self, obj):
-#         methods = obj.methods.all()
-#         method_types = obj.method_types.all()
-#
-#         return [
-#             VisitMethodSerializer(filter(lambda mt: mt.method == method, method_types), method, many=True).data
-#             for method in methods
-#         ]
-#
-#     def get_cp_outputs(self, obj):
-#         return [
-#             VisitMethodCPOutputSerializer(filter(lambda mt: mt.cp_output == cp_output)).data
-#             for cp_output in set(map(lambda ))
-#         ]
+class VisitCPOutputConfigSerializer(serializers.ModelSerializer):
+    cp_output = NestedCPOutputSerializer(source='parent.cp_output')
+    partners = serializers.SerializerMethodField()
+    recommended_method_types = VisitMethodTypeSerializer(many=True)
+
+    class Meta:
+        model = VisitCPOutputConfig
+        fields = ('id', 'cp_output', 'partners', 'recommended_method_types')
+
+    def get_partners(self, obj):
+        return PartnerOrganizationSerializer(
+            instance=sorted(set(itertools.chain(
+                obj.government_partners.all(),
+                map(lambda l: l.intervention.agreement.partner, obj.parent.cp_output.intervention_links.all()))
+            ), key=lambda a: a.id),
+            many=True
+        ).data
 
 
-class VisitSerializer(SnapshotModelSerializer,
-                      VisitListSerializer):
-    # method_types = VisitMethodTypeSerializer(many=True, required=False)
+class VisitMethodSerializer(serializers.ModelSerializer):
+    def __init__(self, *args, visit=None, **kwargs):
+        self.visit = visit
+        super().__init__(*args, **kwargs)
+
+    cp_output_configs = serializers.SerializerMethodField()
+
+    class Meta:
+        model = FMMethod
+        fields = ('id', 'name', 'cp_output_configs')
+
+    def get_cp_output_configs(self, obj):
+        if not obj.is_types_applicable:
+            return []
+
+        return VisitCPOutputConfigSerializer(
+            instance=self.visit.cp_output_configs.filter(
+                parent__tasks__visit_task_links__taskchecklistitem__methods=obj,
+            ),
+            many=True
+        ).data
+
+
+class VisitSerializer(SnapshotModelSerializer, VisitListSerializer):
     specific_issues = serializers.SerializerMethodField()
-    # scope_by_methods = serializers.SerializerMethodField(label=_('Scope of Site Visit By Methods'))
+    scope_by_methods = serializers.SerializerMethodField(label=_('Scope of Site Visit By Methods'))
 
     class Meta(VisitListSerializer.Meta):
         fields = VisitListSerializer.Meta.fields + (
-            'specific_issues',
-            # 'scope_by_methods', 'method_types', 'specific_issues',
+            'scope_by_methods', 'specific_issues',
         )
 
     def get_specific_issues(self, obj):
@@ -117,17 +115,12 @@ class VisitSerializer(SnapshotModelSerializer,
             models.Q(location_site__tasks__visits=obj.id)
         )
 
-    # def get_scope_by_methods(self, obj):
-    #     methods = obj.methods.all()
-    #     method_types = obj.method_types.all()
-    #
-    #     return [
-    #         VisitMethodSerializer(
-    #             [mt for mt in method_types if mt.method == method],
-    #             method, many=True
-    #         ).data
-    #         for method in methods
-    #     ]
+    def get_scope_by_methods(self, obj):
+        return VisitMethodSerializer(
+            visit=obj,
+            instance=FMMethod.objects.filter(taskchecklistitem__visit_task__visit=obj),
+            many=True
+        ).data
 
 
 class UNICEFVisitSerializer(VisitSerializer):

@@ -92,8 +92,22 @@ class UNICEFVisitFactory(VisitFactory):
 
 
 class TaskCheckListItemFactory(factory.DjangoModelFactory):
+    parent_slug = factory.fuzzy.FuzzyText()
+    question_number = factory.fuzzy.FuzzyText(length=10)
+    question_text = factory.fuzzy.FuzzyText()
+    specific_details = factory.fuzzy.FuzzyText()
+
+    methods__count = 0
+
     class Meta:
         model = TaskCheckListItem
+
+    @factory.post_generation
+    def tasks(self, create, extracted, count, *kwargs):
+        if extracted:
+            self.methods.add(*extracted)
+        elif create:
+            self.methods.add(*[FMMethodFactory(is_types_applicable=True) for i in range(count)])
 
 
 class VisitMethodTypeFactory(factory.DjangoModelFactory):
