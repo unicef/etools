@@ -402,8 +402,7 @@ def send_agreement_suspended_notification(agreement, user):
         pd_list.append((sections, intervention.reference_number, url))
 
     send_notification_with_template(
-        sender=agreement,
-        recipients=user.email,  # person that initiated this update
+        recipients=[user.email],  # person that initiated this update
         template_name="partners/agreement/suspended",
         context={
             "vendor_number": agreement.reference_number,
