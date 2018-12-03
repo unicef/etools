@@ -233,6 +233,13 @@ class PartnerOrganizationDashboardAPIView(ExportModelMixin, QueryStringFilterMix
             sections=StringConcat("agreements__interventions__sections__name", separator="|", distinct=True),
             locations=StringConcat("agreements__interventions__flat_locations__name", separator="|", distinct=True),
         )
+
+        queries = []
+        queries.extend(self.filter_params())
+        queries.append(self.search_params())
+        if queries:
+            expression = functools.reduce(operator.and_, queries)
+            qs = qs.filter(expression)
         return qs
 
     def list(self, request, format=None):
