@@ -31,7 +31,7 @@
             "signed_by_unicef_date": "2018-11-14",
             "signed_by_partner_date": "2018-11-14",
             "status": "signed",
-            "special_conditions_pca": "No"
+            "special_conditions_pca": false
         }
     ],
     "content_type": null
