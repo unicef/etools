@@ -3,7 +3,19 @@ import operator
 from datetime import datetime
 
 from django.db.models import (
-    Case, CharField, Count, DateTimeField, DurationField, ExpressionWrapper, F, Max, Min, Sum, When)
+    Case,
+    CharField,
+    Count,
+    DateTimeField,
+    DurationField,
+    ExpressionWrapper,
+    F,
+    IntegerField,
+    Max,
+    Min,
+    Sum,
+    When,
+)
 
 from rest_framework.generics import ListCreateAPIView
 from rest_framework.permissions import IsAdminUser
@@ -11,8 +23,9 @@ from rest_framework.response import Response
 from rest_framework_csv import renderers as r
 from unicef_restlib.views import QueryStringFilterMixin
 
+from etools.applications.action_points.models import ActionPoint
 from etools.applications.partners.exports_v2 import PartnershipDashCSVRenderer
-from etools.applications.partners.models import Intervention, FileType
+from etools.applications.partners.models import FileType, Intervention
 from etools.applications.partners.serializers.dashboards import InterventionDashSerializer
 from etools.applications.t2f.models import Travel, TravelType
 
@@ -119,6 +132,16 @@ class InterventionPartnershipDashView(QueryStringFilterMixin, ListCreateAPIView)
             d["days_last_pv"] = pv_dates[pk]["days_last_pv"]
         return serializer
 
+    def _add_action_points(self, serializer):
+        qs = Intervention.objects.exclude(status=Intervention.DRAFT).annotate(
+            action_points=Sum(Case(When(
+                actionpoint__status=ActionPoint.STATUS_OPEN, then=1),
+                default=0, output_field=IntegerField(), distinct=True)),
+        )
+        ap = {intervention.pk: intervention.action_points for intervention in qs}
+        for item in serializer.data:
+            item['action_points'] = ap[int(item["intervention_id"])]
+
     def list(self, request):
         """
             Checks for format query parameter
@@ -136,6 +159,7 @@ class InterventionPartnershipDashView(QueryStringFilterMixin, ListCreateAPIView)
         serializer = self.get_serializer(queryset, many=True)
         self.append_last_pv_date(serializer)
         self.append_final_partnership_review(serializer)
+        self._add_action_points(serializer)
 
         response = Response(serializer.data)
         if "format" in query_params.keys():
