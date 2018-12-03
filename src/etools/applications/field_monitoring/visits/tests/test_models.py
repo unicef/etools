@@ -63,7 +63,7 @@ class TestVisit(BaseTenantTestCase):
 
         visit.freeze_configs()
 
-        visit_configs = VisitCPOutputConfig.objects.filter(visit=visit)
+        visit_configs = VisitCPOutputConfig.objects.filter(visit_task__visit=visit)
         self.assertEqual(visit_configs.count(), 1)
 
         visit_method_types = VisitMethodType.objects.filter(visit=visit)

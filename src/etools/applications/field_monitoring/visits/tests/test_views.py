@@ -65,6 +65,8 @@ class VisitsViewTestCase(FMBaseTestCaseMixin, BaseTenantTestCase):
 
         scope_by_methods = response.data['scope_by_methods']
         self.assertNotEqual(scope_by_methods, [])
+        self.assertNotEqual(scope_by_methods[0]['cp_output_configs'], [])
+        self.assertEqual(scope_by_methods[1]['cp_output_configs'], [])
 
 
 class VisitMethodTypesVIewTestCase(FMBaseTestCaseMixin, BaseTenantTestCase):

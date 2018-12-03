@@ -91,8 +91,8 @@ class VisitMethodSerializer(serializers.ModelSerializer):
             return []
 
         return VisitCPOutputConfigSerializer(
-            instance=self.visit.cp_output_configs.filter(
-                parent__tasks__visit_task_links__taskchecklistitem__methods=obj,
+            instance=VisitCPOutputConfig.objects.filter(
+                visit_task__taskchecklistitem__methods=obj,
             ),
             many=True
         ).data

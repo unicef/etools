@@ -110,21 +110,20 @@ class Visit(InheritedModelMixin, SoftDeleteMixin, TimeStampedModel):
                 item.methods.add(*planned_checklist_item.methods.all())
 
     def freeze_configs(self):
-        for config in CPOutputConfig.objects.filter(tasks__visits=self).prefetch_related(
-            'cp_output',
-            'government_partners',
-            'recommended_method_types',
-            'recommended_method_types__method',
+        for link in self.visit_task_links.prefetch_related(
+            'task__cp_output_config__cp_output',
+            'task__cp_output_config__government_partners',
+            'task__cp_output_config__recommended_method_types__method',
         ):
             visit_config = VisitCPOutputConfig.objects.create(
-                visit=self,
-                parent=config,
-                is_priority=config.is_priority,
+                visit_task=link,
+                parent=link.task.cp_output_config,
+                is_priority=link.task.cp_output_config.is_priority,
             )
-            visit_config.government_partners.add(*config.government_partners.all())
+            visit_config.government_partners.add(*link.task.cp_output_config.government_partners.all())
 
             method_types = []
-            for method_type in config.recommended_method_types.all():
+            for method_type in link.task.cp_output_config.recommended_method_types.all():
                 method_types.append(VisitMethodType.objects.create(
                     method=method_type.method,
                     parent_slug=method_type.slug,
@@ -200,7 +199,7 @@ class VisitMethodType(models.Model):
 
 
 class VisitCPOutputConfig(models.Model):
-    visit = models.ForeignKey(Visit, verbose_name=_('Visit'), related_name='cp_output_configs')
+    visit_task = models.ForeignKey(VisitTaskLink, verbose_name=_('Visit Task'), related_name='cp_output_configs')
     parent = models.ForeignKey(CPOutputConfig, verbose_name=_('Parent'))
     is_priority = models.BooleanField(default=False, verbose_name=_('Priority?'))
     government_partners = models.ManyToManyField('partners.PartnerOrganization', blank=True,
@@ -209,4 +208,4 @@ class VisitCPOutputConfig(models.Model):
                                                       related_name='cp_output_configs')
 
     def __str__(self):
-        return '{}: {}'.format(self.visit, self.parent)
+        return '{}: {}'.format(self.visit_task, self.parent)
