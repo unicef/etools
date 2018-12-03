@@ -85,7 +85,7 @@ class GhostData(BaseTenantTestCase):
         self.assertEqual(response.status_code, 400)
         response_json = json.loads(response.rendered_content)
         self.assertEqual(response_json,
-                         {'values': ['This list may not be empty.']})
+                         {'values': ['This field is required.']})
 
         response = self.forced_auth_req('get', reverse('publics:missing_expense_types'),
                                         data={'values': [expense_type.pk]},
