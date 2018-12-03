@@ -653,11 +653,21 @@ class AppliedIndicator(TimeStampedModel):
 
     @cached_property
     def target_display(self):
-        return self.target.get('d', self.target), self.target.get('v', ''),
+        ind_type = self.indicator.display_type
+        numerator = self.target.get('v', self.target)
+        denominator = '-'
+        if ind_type == IndicatorBlueprint.RATIO:
+            denominator = self.target.get('v', '')
+        return numerator, denominator
 
     @cached_property
     def baseline_display(self):
-        return self.baseline.get('d', self.baseline), self.baseline.get('v', ''),
+        ind_type = self.indicator.display_type
+        numerator = self.baseline.get('v', self.baseline)
+        denominator = '-'
+        if ind_type == IndicatorBlueprint.RATIO:
+            denominator = self.baseline.get('d', '')
+        return numerator, denominator
 
     class Meta:
         unique_together = (("indicator", "lower_result"),)
