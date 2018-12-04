@@ -46,7 +46,7 @@ class CPOutputConfigSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = CPOutputConfig
-        fields = ('id', 'cp_output', 'is_monitored', 'is_priority', 'government_partners')
+        fields = ('id', 'cp_output', 'is_monitored', 'is_priority', 'government_partners', 'recommended_method_types')
         extra_kwargs = {
             'id': {'read_only': True},
             'cp_output': {'read_only': True, 'label': _('CP Output')}
