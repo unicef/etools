@@ -1,12 +1,13 @@
-import factory
 from django.utils import timezone
+
+import factory
 from factory import fuzzy
 
 from etools.applications.field_monitoring.fm_settings.tests.factories import FMMethodTypeFactory, FMMethodFactory, \
     CPOutputConfigFactory
 from etools.applications.field_monitoring.planning.tests.factories import TaskFactory
 from etools.applications.field_monitoring.tests.factories import UserFactory
-from etools.applications.field_monitoring.visits.models import Visit, UNICEFVisit, VisitTaskLink, VisitMethodType, \
+from etools.applications.field_monitoring.visits.models import Visit, UNICEFVisit, VisitMethodType, \
     TaskCheckListItem, VisitCPOutputConfig
 from etools.applications.utils.common.tests.factories import InheritedTrait
 
