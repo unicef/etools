@@ -163,13 +163,6 @@ def hact_default():
             'completed': 0,
         },
         'spot_checks': {
-            'planned': {
-                'q1': 0,
-                'q2': 0,
-                'q3': 0,
-                'q4': 0,
-                'total': 0,
-            },
             'completed': {
                 'q1': 0,
                 'q2': 0,
