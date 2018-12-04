@@ -25,6 +25,11 @@ class YearPlan(TimeStampedModel):
     history = GenericRelation('unicef_snapshot.Activity', object_id_field='target_object_id',
                               content_type_field='target_content_type')
 
+    class Meta:
+        verbose_name = _('Year Plan')
+        verbose_name_plural = _('Year Plans')
+        ordering = ('year',)
+
     def __str__(self):
         return 'Year Plan for {}'.format(self.year)
 
@@ -39,6 +44,11 @@ class Task(SoftDeleteMixin, TimeStampedModel):
     partner = models.ForeignKey('partners.PartnerOrganization', verbose_name=_('Partner'), related_name='tasks')
     intervention = models.ForeignKey('partners.Intervention', verbose_name=_('PD or SSFA'), related_name='+',
                                      blank=True, null=True)
+
+    class Meta:
+        verbose_name = _('Task')
+        verbose_name_plural = _('Tasks')
+        ordering = ('id',)
 
     @property
     def reference_number(self):

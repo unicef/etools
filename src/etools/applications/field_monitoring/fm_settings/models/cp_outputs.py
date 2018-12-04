@@ -36,6 +36,9 @@ class PlannedCheckListItem(OrderedModel):
     methods = models.ManyToManyField(FMMethod, blank=True, verbose_name=_('Method(s)'))
 
     class Meta:
+        verbose_name = _('Planned Checklist Item')
+        verbose_name_plural = _('Planned Checklist Items')
+        ordering = ('id',)
         unique_together = ('cp_output_config', 'checklist_item')
 
     def __str__(self):
@@ -50,6 +53,9 @@ class PlannedCheckListItemPartnerInfo(models.Model):
     standard_url = models.CharField(max_length=1000, verbose_name=_('URL To Standard'), blank=True)
 
     class Meta:
+        verbose_name = _('Planned Checklist Item Partner Info')
+        verbose_name_plural = _('Planned Checklist Items Partners Info')
+        ordering = ('id',)
         unique_together = ('planned_checklist_item', 'partner')
 
     def __str__(self):
