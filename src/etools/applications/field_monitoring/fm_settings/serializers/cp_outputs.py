@@ -7,7 +7,8 @@ from unicef_restlib.fields import SeparatedReadWriteField
 from unicef_restlib.serializers import WritableNestedSerializerMixin
 
 from etools.applications.partners.serializers.partner_organization_v2 import MinimalPartnerOrganizationListSerializer
-from etools.applications.field_monitoring.fm_settings.models import CPOutputConfig
+from etools.applications.field_monitoring.fm_settings.models import CPOutputConfig, PlannedCheckListItem, \
+    PlannedCheckListItemPartnerInfo
 from etools.applications.partners.models import Intervention
 from etools.applications.reports.models import Result
 from etools.applications.reports.serializers.v2 import OutputListSerializer
@@ -40,12 +41,12 @@ class InterventionSerializer(serializers.ModelSerializer):
 
 class CPOutputConfigSerializer(serializers.ModelSerializer):
     government_partners = SeparatedReadWriteField(
-        read_field=MinimalPartnerOrganizationListSerializer(many=True, label=_('Contributing Government Partners'))
+        read_field=PartnerOrganizationSerializer(many=True, label=_('Contributing Government Partners'))
     )
 
     class Meta:
         model = CPOutputConfig
-        fields = ('id', 'cp_output', 'is_monitored', 'is_priority', 'government_partners')
+        fields = ('id', 'cp_output', 'is_monitored', 'is_priority', 'government_partners', 'recommended_method_types')
         extra_kwargs = {
             'id': {'read_only': True},
             'cp_output': {'read_only': True, 'label': _('CP Output')}
@@ -71,7 +72,7 @@ class CPOutputConfigDetailSerializer(CPOutputConfigSerializer):
 
     def get_partners(self, obj):
         return [
-            MinimalPartnerOrganizationListSerializer(partner).data
+            PartnerOrganizationSerializer(partner).data
             for partner in sorted(set(itertools.chain(
                 obj.government_partners.all(),
                 map(lambda l: l.intervention.agreement.partner, obj.cp_output.intervention_links.all()))
@@ -90,3 +91,19 @@ class FieldMonitoringCPOutputSerializer(WritableNestedSerializerMixin, serialize
 
     def get_interventions(self, obj):
         return [InterventionSerializer(link.intervention).data for link in obj.intervention_links.all()]
+
+
+class PlannedCheckListItemPartnerInfoSerializer(WritableNestedSerializerMixin, serializers.ModelSerializer):
+    partner = SeparatedReadWriteField(read_field=MinimalPartnerOrganizationListSerializer())
+
+    class Meta(WritableNestedSerializerMixin.Meta):
+        model = PlannedCheckListItemPartnerInfo
+        fields = ('id', 'partner', 'specific_details', 'standard_url',)
+
+
+class PlannedCheckListItemSerializer(WritableNestedSerializerMixin, serializers.ModelSerializer):
+    partners_info = PlannedCheckListItemPartnerInfoSerializer(many=True)
+
+    class Meta(WritableNestedSerializerMixin.Meta):
+        model = PlannedCheckListItem
+        fields = ('id', 'checklist_item', 'methods', 'partners_info')

@@ -2,16 +2,19 @@ from django.contrib.gis.geos import GEOSGeometry
 
 import factory
 from factory import fuzzy
-from unicef_locations.models import GatewayType
 
+from unicef_locations.models import GatewayType
 from unicef_locations.tests.factories import LocationFactory
 
-from etools.applications.field_monitoring.fm_settings.models import FMMethodType, LocationSite, CPOutputConfig
+from etools.applications.attachments.tests.factories import AttachmentFactory
+from etools.applications.field_monitoring.fm_settings.models import FMMethodType, LocationSite, CPOutputConfig, \
+    CheckListCategory, CheckListItem, PlannedCheckListItem, PlannedCheckListItemPartnerInfo, LogIssue
 from etools.applications.field_monitoring.shared.models import FMMethod
 from etools.applications.partners.models import PartnerType
 from etools.applications.partners.tests.factories import PartnerFactory, InterventionResultLinkFactory
 from etools.applications.reports.models import ResultType, CountryProgramme
 from etools.applications.reports.tests.factories import ResultFactory, CountryProgrammeFactory
+from etools.applications.users.tests.factories import UserFactory
 
 
 class FMMethodFactory(factory.DjangoModelFactory):
@@ -74,3 +77,71 @@ class CPOutputConfigFactory(factory.DjangoModelFactory):
 
         if extracted:
             self.government_partners.add(*extracted)
+
+
+class CheckListCategoryFactory(factory.DjangoModelFactory):
+    name = fuzzy.FuzzyText()
+
+    class Meta:
+        model = CheckListCategory
+
+
+class CheckListItemFactory(factory.DjangoModelFactory):
+    category = factory.SubFactory(CheckListCategoryFactory)
+    question_number = factory.Sequence(lambda n: str(n))
+    question_text = fuzzy.FuzzyText()
+
+    class Meta:
+        model = CheckListItem
+
+
+class PlannedCheckListItemFactory(factory.DjangoModelFactory):
+    checklist_item = factory.SubFactory(CheckListItemFactory)
+    cp_output_config = factory.SubFactory(CPOutputConfigFactory)
+
+    class Meta:
+        model = PlannedCheckListItem
+
+    methods__count = 0
+    partners_info__count = 0
+
+    @factory.post_generation
+    def methods(self, created, extracted, count, **kwargs):
+        if extracted:
+            self.methods.add(*extracted)
+        elif created:
+            self.methods.add(*[FMMethodFactory() for i in range(count)])
+
+    @factory.post_generation
+    def partners_info(self, created, extracted, count, **kwargs):
+        if created:
+            for i in range(count):
+                PlannedCheckListItemPartnerInfoFactory(planned_checklist_item=self)
+
+
+class PlannedCheckListItemPartnerInfoFactory(factory.DjangoModelFactory):
+    planned_checklist_item = factory.SubFactory(PlannedCheckListItemFactory)
+    partner = factory.SubFactory(PartnerFactory)
+    specific_details = fuzzy.FuzzyText()
+    standard_url = fuzzy.FuzzyText()
+
+    class Meta:
+        model = PlannedCheckListItemPartnerInfo
+
+
+class LogIssueFactory(factory.DjangoModelFactory):
+    author = factory.SubFactory(UserFactory)
+    issue = fuzzy.FuzzyText()
+
+    attachments__count = 0
+
+    class Meta:
+        model = LogIssue
+
+    @factory.post_generation
+    def attachments(self, create, extracted, count, **kwargs):
+        if not create:
+            return
+
+        for i in range(count):
+            AttachmentFactory(content_object=self)
