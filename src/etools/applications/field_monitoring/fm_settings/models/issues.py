@@ -37,6 +37,11 @@ class LogIssue(TimeStampedModel):
     history = GenericRelation('unicef_snapshot.Activity', object_id_field='target_object_id',
                               content_type_field='target_content_type')
 
+    class Meta:
+        verbose_name = _('Log Issue')
+        verbose_name_plural = _('Log Issues')
+        ordering = ('id',)
+
     def __str__(self):
         return '{}: {}'.format(self.related_to, self.issue)
 
