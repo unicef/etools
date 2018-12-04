@@ -52,11 +52,13 @@ class TaskListSerializer(serializers.ModelSerializer):
     intervention = SeparatedReadWriteField(read_field=InterventionSerializer())
     location = SeparatedReadWriteField(read_field=LocationLightSerializer())
     location_site = SeparatedReadWriteField(read_field=LocationSiteLightSerializer())
+    completed_by_month = serializers.SerializerMethodField()
 
     class Meta:
         model = Task
         fields = (
-            'id', 'cp_output_config', 'partner', 'intervention', 'location', 'location_site', 'plan_by_month'
+            'id', 'cp_output_config', 'partner', 'intervention', 'location', 'location_site',
+            'plan_by_month', 'completed_by_month',
         )
 
     def validate_plan_by_month(self, plan):
@@ -64,6 +66,16 @@ class TaskListSerializer(serializers.ModelSerializer):
             raise ValidationError('Incorrect value in Plan By Month')
 
         return plan
+
+    def get_completed_by_month(self, obj):
+        if not hasattr(obj, 'completed_visits'):
+            return
+
+        completed_by_month = [0]*12
+        for visit in obj.completed_visits:
+            completed_by_month[visit.end_date.month - 1] += 1
+
+        return completed_by_month
 
 
 class TaskSerializer(TaskListSerializer):
