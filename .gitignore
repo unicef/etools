@@ -97,6 +97,7 @@ deis
 env_dev
 
 .env
+.envrc
 
 frontend/
 
