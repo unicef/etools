@@ -63,4 +63,16 @@ class Migration(migrations.Migration):
                 'abstract': False,
             },
         ),
+        migrations.AlterModelOptions(
+            name='cpoutputconfig',
+            options={'ordering': ('id',), 'verbose_name': 'CP Output Config', 'verbose_name_plural': 'CP Output Configs'},
+        ),
+        migrations.AlterModelOptions(
+            name='fmmethodtype',
+            options={'ordering': ('id',), 'verbose_name': 'FM Method Type', 'verbose_name_plural': 'FM Method Types'},
+        ),
+        migrations.AlterModelOptions(
+            name='locationsite',
+            options={'ordering': ('parent', 'id'), 'verbose_name': 'Location Site', 'verbose_name_plural': 'Location Sites'},
+        ),
     ]
