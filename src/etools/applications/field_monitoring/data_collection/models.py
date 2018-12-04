@@ -23,6 +23,11 @@ class StartedMethod(models.Model):
     author = models.ForeignKey(settings.AUTH_USER_MODEL, related_name='started_methods', verbose_name=_('Author'))
     status = FSMField(choices=STATUS_CHOICES, default=STATUS_CHOICES.started)
 
+    class Meta:
+        verbose_name = _('Started Method')
+        verbose_name_plural = _('Started Methods')
+        ordering = ('id',)
+
     def __str__(self):
         result = '{}: {}'.format(self.visit, self.method.name)
 
@@ -46,6 +51,11 @@ class TaskData(models.Model):
     started_method = models.ForeignKey(StartedMethod)
     is_probed = models.BooleanField(default=True)
 
+    class Meta:
+        verbose_name = _('Task Data')
+        verbose_name_plural = _('Tasks Data')
+        ordering = ('id',)
+
     def __str__(self):
         return 'TaskData for {}'.format(self.visit_task)
 
@@ -53,6 +63,11 @@ class TaskData(models.Model):
 class CheckListItemValue(FindingMixin, models.Model):
     task_data = models.ForeignKey(TaskData)
     checklist_item = models.ForeignKey(TaskCheckListItem)
+
+    class Meta:
+        verbose_name = _('Checklist Item Value')
+        verbose_name_plural = _('Checklists Item Values')
+        ordering = ('id',)
 
     def __str__(self):
         return 'CheckListItemValue for {}'.format(self.task_data)

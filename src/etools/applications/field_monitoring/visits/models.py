@@ -77,6 +77,11 @@ class Visit(InheritedModelMixin, SoftDeleteMixin, TimeStampedModel):
 
     objects = InheritanceManager()
 
+    class Meta:
+        verbose_name = _('Visit')
+        verbose_name_plural = _('Visits')
+        ordering = ('id',)
+
     @property
     def date_created(self):
         return self.created.date()
@@ -164,6 +169,11 @@ class Visit(InheritedModelMixin, SoftDeleteMixin, TimeStampedModel):
 class UNICEFVisit(Visit):
     visit_type = 'unicef'
 
+    class Meta:
+        verbose_name = _('UNICEF Visit')
+        verbose_name_plural = _('UNICEF Visits')
+        ordering = ('id',)
+
 
 class TaskCheckListItem(FindingMixin, OrderedModel):
     parent_slug = models.CharField(max_length=50, verbose_name=_('Parent Slug'))
@@ -176,6 +186,8 @@ class TaskCheckListItem(FindingMixin, OrderedModel):
     methods = models.ManyToManyField(FMMethod, verbose_name=_('Recommended Methods'))
 
     class Meta:
+        verbose_name = _('Task Checklist Item')
+        verbose_name_plural = _('Task Checklist Items')
         ordering = ('visit_task', 'order',)
 
     def __str__(self):
@@ -193,6 +205,11 @@ class VisitMethodType(models.Model):
     name = models.CharField(verbose_name=_('Name'), max_length=300)
     is_recommended = models.BooleanField(default=False, verbose_name=_('Is Recommended'))
 
+    class Meta:
+        verbose_name = _('Visit Method Type')
+        verbose_name_plural = _('Visit Method Types')
+        ordering = ('id',)
+
     @property
     def parent(self):
         return FMMethodType.objects.filter(slug=self.parent_slug).first()
@@ -206,6 +223,11 @@ class VisitCPOutputConfig(models.Model):
                                                  verbose_name=_('Contributing Government Partners'))
     recommended_method_types = models.ManyToManyField(VisitMethodType, blank=True, verbose_name=_('Method(s)'),
                                                       related_name='cp_output_configs')
+
+    class Meta:
+        verbose_name = _('Visit CPOutput Config')
+        verbose_name_plural = _('Visit CPOutput Configs')
+        ordering = ('id',)
 
     def __str__(self):
         return '{}: {}'.format(self.visit_task, self.parent)
