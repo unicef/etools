@@ -62,6 +62,7 @@ class TaskViewSet(NestedViewSetMixin, FMBaseViewSet, viewsets.ModelViewSet):
     filter_backends = (DjangoFilterBackend, CPOutputIsActiveFilter, OrderingFilter)
     filter_fields = ({
         field: ['exact', 'in'] for field in [
+            'cp_output_config__cp_output__parent',
             'cp_output_config', 'partner', 'intervention', 'location', 'location_site'
         ]
     })
