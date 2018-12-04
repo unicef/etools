@@ -11,5 +11,10 @@ class FMMethodType(models.Model):
     name = models.CharField(verbose_name=_('Name'), max_length=300)
     slug = AutoSlugField(verbose_name=_('Slug'), populate_from='name')
 
+    class Meta:
+        verbose_name = _('FM Method Type')
+        verbose_name_plural = _('FM Method Types')
+        ordering = ('id',)
+
     def __str__(self):
         return self.name

@@ -31,6 +31,11 @@ class LocationSite(TimeStampedModel):
 
     tracker = FieldTracker(['point'])
 
+    class Meta:
+        verbose_name = _('Location Site')
+        verbose_name_plural = _('Location Sites')
+        ordering = ('parent', 'id',)
+
     def __str__(self):
         return u'{}: {}'.format(
             self.name,
