@@ -35,7 +35,7 @@ from etools.applications.reports.models import (
     LowerResult,
     Result,
     SpecialReportingRequirement,
-    ResultType)
+    ResultType, IndicatorBlueprint)
 from etools.applications.reports.permissions import PMEPermission
 from etools.applications.reports.serializers.exports import (
     AppliedIndicatorExportFlatSerializer,
@@ -288,9 +288,11 @@ class AppliedIndicatorLocationExportView(QueryStringFilterMixin, ListAPIView):
             'ind_title': 'Indicator',
             'ind_section': 'Section',
             'ind_cluster_name': 'Cluster Name',
-            'ind_baseline_numerator': 'Baseline Nominator',
+            'ind_unit': 'Indicator Unit',
+            'ind_display_type': 'Indicator Type',
+            'ind_baseline_numerator': 'Baseline Numerator',
             'ind_baseline_denominator': 'Baseline Denominator',
-            'ind_target_numerator': 'Target Nominator',
+            'ind_target_numerator': 'Target Numerator',
             'ind_target_denominator': 'Target Denominator',
             'ind_means_of_verification': 'Means of verification',
             'ind_ram_indicators': 'RAM indicators',
@@ -326,12 +328,15 @@ class AppliedIndicatorLocationExportView(QueryStringFilterMixin, ListAPIView):
 
             if indicators.exists():
                 for indicator in indicators:
+                    is_number = indicator.indicator.unit != IndicatorBlueprint.NUMBER
                     indicator_dict = {
                         'ind_result': indicator.lower_result.result_link.cp_output,
                         'ind_lower_result': indicator.lower_result.name,
                         'ind_title': indicator.indicator.title,
                         'ind_section': indicator.section,
                         'ind_cluster_name': indicator.cluster_name,
+                        'ind_unit': indicator.indicator.unit,
+                        'ind_display_type': indicator.indicator.display_type if is_number else '-',
                         'ind_baseline_numerator': indicator.baseline_display[0],
                         'ind_baseline_denominator': indicator.baseline_display[1],
                         'ind_target_numerator': indicator.target_display[0],
