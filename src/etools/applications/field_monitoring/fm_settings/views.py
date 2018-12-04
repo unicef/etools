@@ -130,7 +130,7 @@ class MonitoredPartnersViewSet(
     queryset = PartnerOrganization.objects.filter(
         models.Q(cpoutputconfig__is_monitored=True) |
         models.Q(agreements__interventions__result_links__cp_output__fm_config__is_monitored=True)
-    )
+    ).distinct()
     serializer_class = PartnerOrganizationSerializer
 
 

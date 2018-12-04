@@ -90,15 +90,15 @@ class TaskViewSet(NestedViewSetMixin, FMBaseViewSet, viewsets.ModelViewSet):
 
 
 class PlannedPartnersViewSet(FMBaseViewSet, mixins.ListModelMixin, viewsets.GenericViewSet):
-    queryset = PartnerOrganization.objects.filter(tasks__isnull=False)
+    queryset = PartnerOrganization.objects.filter(tasks__isnull=False).distinct()
     serializer_class = PartnerOrganizationSerializer
 
 
 class PlannedLocationsViewSet(FMBaseViewSet, mixins.ListModelMixin, viewsets.GenericViewSet):
-    queryset = Location.objects.filter(tasks__isnull=False)
+    queryset = Location.objects.filter(tasks__isnull=False).distinct()
     serializer_class = LocationLightSerializer
 
 
 class PlannedLocationSitesViewSet(FMBaseViewSet, mixins.ListModelMixin, viewsets.GenericViewSet):
-    queryset = LocationSite.objects.filter(tasks__isnull=False)
+    queryset = LocationSite.objects.filter(tasks__isnull=False).distinct()
     serializer_class = LocationSiteLightSerializer
