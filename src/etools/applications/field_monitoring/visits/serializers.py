@@ -21,7 +21,7 @@ from etools.applications.users.serializers import MinimalUserSerializer
 
 
 class VisitLightSerializer(serializers.ModelSerializer):
-    tasks = SeparatedReadWriteField(read_field=TaskListSerializer(many=True))
+    tasks = SeparatedReadWriteField(read_field=TaskListSerializer(many=True), required=False)
     primary_field_monitor = SeparatedReadWriteField(read_field=MinimalUserSerializer())
     team_members = SeparatedReadWriteField(read_field=MinimalUserSerializer(read_only=True))
 

@@ -10,6 +10,7 @@ import factory.fuzzy
 from etools.applications.EquiTrack.tests.cases import BaseTenantTestCase
 from etools.applications.field_monitoring.fm_settings.tests.factories import FMMethodFactory, FMMethodTypeFactory, \
     PlannedCheckListItemFactory
+from etools.applications.field_monitoring.planning.tests.factories import TaskFactory
 from etools.applications.field_monitoring.tests.base import FMBaseTestCaseMixin
 from etools.applications.field_monitoring.visits.models import Visit
 from etools.applications.field_monitoring.visits.tests.factories import UNICEFVisitFactory, VisitMethodTypeFactory
@@ -39,6 +40,21 @@ class VisitsViewTestCase(FMBaseTestCaseMixin, BaseTenantTestCase):
         )
 
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+
+    def test_update_tasks(self):
+        visit = UNICEFVisitFactory(tasks__count=2)
+        tasks = [visit.tasks.first().id, TaskFactory().id]
+
+        response = self.forced_auth_req(
+            'patch', reverse('field_monitoring_visits:visits-unicef-detail', args=[visit.id]),
+            user=self.unicef_user,
+            data={
+                'tasks': tasks
+            }
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertListEqual(sorted(map(lambda t: t['id'], response.data['tasks'])), sorted(tasks))
 
     def test_scope_by_methods(self):
         visit = UNICEFVisitFactory(status=Visit.STATUS_CHOICES.draft, tasks__count=1)
