@@ -25,7 +25,7 @@ from etools.applications.field_monitoring.fm_settings.serializers.attachments im
 from etools.applications.field_monitoring.fm_settings.serializers.checklist import CheckListItemSerializer, \
     CheckListCategorySerializer
 from etools.applications.field_monitoring.fm_settings.serializers.cp_outputs import FieldMonitoringCPOutputSerializer, \
-    PlannedCheckListItemSerializer, CPOutputConfigDetailSerializer
+    PlannedCheckListItemSerializer, CPOutputConfigDetailSerializer, PartnerOrganizationSerializer
 from etools.applications.field_monitoring.fm_settings.serializers.issues import LogIssueSerializer, \
     LogIssueAttachmentSerializer
 from etools.applications.field_monitoring.fm_settings.serializers.locations import LocationSiteSerializer, \
@@ -35,7 +35,6 @@ from etools.applications.field_monitoring.fm_settings.serializers.methods import
 from etools.applications.field_monitoring.shared.models import FMMethod
 from etools.applications.field_monitoring.views import FMBaseViewSet, FMBaseAttachmentsViewSet
 from etools.applications.partners.models import PartnerOrganization
-from etools.applications.partners.serializers.partner_organization_v2 import MinimalPartnerOrganizationListSerializer
 from etools.applications.reports.models import Result, ResultType
 
 
@@ -132,7 +131,7 @@ class MonitoredPartnersViewSet(
         models.Q(cpoutputconfig__is_monitored=True) |
         models.Q(agreements__interventions__result_links__cp_output__fm_config__is_monitored=True)
     )
-    serializer_class = MinimalPartnerOrganizationListSerializer
+    serializer_class = PartnerOrganizationSerializer
 
 
 class CPOutputConfigsViewSet(
