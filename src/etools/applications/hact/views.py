@@ -1,10 +1,10 @@
 
 import json
 
-from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework.generics import ListAPIView, RetrieveAPIView
 from rest_framework.permissions import IsAdminUser
 from rest_framework_csv.renderers import JSONRenderer
+from unicef_restlib.views import QueryStringFilterMixin
 
 from etools.applications.hact.models import AggregateHact, HactHistory
 from etools.applications.hact.renderers import HactHistoryCSVRenderer
@@ -12,7 +12,7 @@ from etools.applications.hact.serializers import (AggregateHactSerializer,
                                                   HactHistoryExportSerializer, HactHistorySerializer,)
 
 
-class HactHistoryAPIView(ListAPIView):
+class HactHistoryAPIView(QueryStringFilterMixin, ListAPIView):
     """
     Returns HACT history.
     """
@@ -20,10 +20,10 @@ class HactHistoryAPIView(ListAPIView):
     queryset = HactHistory.objects.all()
     serializer_class = HactHistorySerializer
     renderer_classes = (JSONRenderer, HactHistoryCSVRenderer)
-
-    filter_backends = (DjangoFilterBackend,)
-    filter_fields = ('year', )
     filename = 'hact_history'
+    filters = (
+        ('year', 'year'),
+    )
 
     def get_serializer_class(self):
         query_params = self.request.query_params

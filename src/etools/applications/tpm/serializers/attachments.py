@@ -4,6 +4,7 @@ from rest_framework import serializers
 from unicef_attachments.fields import FileTypeModelChoiceField
 from unicef_attachments.models import AttachmentLink, FileType
 from unicef_attachments.serializers import AttachmentLinkSerializer, BaseAttachmentSerializer
+from etools.applications.attachments.utils import get_file_type
 
 
 class TPMPartnerAttachmentsSerializer(BaseAttachmentSerializer):
@@ -77,6 +78,7 @@ class TPMVisitAttachmentsSerializer(BaseAttachmentSerializer):
 class TPMAttachmentLinkSerializer(AttachmentLinkSerializer):
     source = serializers.SerializerMethodField()
     activity_id = serializers.IntegerField(source="object_id", read_only=True)
+    file_type = serializers.SerializerMethodField()
 
     class Meta(AttachmentLinkSerializer.Meta):
         fields = (
@@ -92,6 +94,9 @@ class TPMAttachmentLinkSerializer(AttachmentLinkSerializer):
 
     def get_source(self, obj):
         return "Third Party Monitoring"
+
+    def get_file_type(self, obj):
+        return get_file_type(obj.attachment)
 
 
 class TPMActivityAttachmentLinkSerializer(serializers.Serializer):
