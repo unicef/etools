@@ -226,6 +226,7 @@ class TestModelExport(BaseTenantTestCase):
             'Partner Authorized Officer',
             'Amendments',
             'URL',
+            'Special Conditions PCA',
         ])
 
         # we're interested in the first agreement, so it will be last in the exported list
@@ -245,6 +246,7 @@ class TestModelExport(BaseTenantTestCase):
             ', '.join([sm.get_full_name() for sm in self.agreement.authorized_officers.all()]),
             u'',
             u'https://testserver/pmp/agreements/{}/details/'.format(self.agreement.id),
+            '',
         )
         )
 

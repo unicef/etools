@@ -1242,6 +1242,19 @@ class TestAgreementAPIView(BaseTenantTestCase):
         self.assertEqual(len(response.data), 2)
         self.assertEqual(self.partner.name, response.data[0]["partner_name"])
 
+    def test_agreements_list_filter_special_conditions_pca(self):
+        agreement_qs = Agreement.objects.filter(special_conditions_pca=False)
+        params = {"special_conditions_pca": "false"}
+        response = self.forced_auth_req(
+            'get',
+            reverse('partners_api:agreement-list'),
+            user=self.unicef_staff,
+            data=params
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(response.data), agreement_qs.count())
+
     def test_agreements_list_filter_search(self):
         params = {"search": "Partner"}
         response = self.forced_auth_req(
@@ -2262,6 +2275,7 @@ class TestPartnerOrganizationDashboardAPIView(BaseTenantTestCase):
             total_ct_ytd=123.00,
             outstanding_dct_amount_6_to_9_months_usd=69,
             outstanding_dct_amount_more_than_9_months_usd=90,
+            partner_type=PartnerType.UN_AGENCY,
         )
 
         cls.unicef_staff = UserFactory(is_staff=True)
@@ -2313,3 +2327,29 @@ class TestPartnerOrganizationDashboardAPIView(BaseTenantTestCase):
         self.assertTrue(self.record['alert_no_recent_pv'])
         self.assertFalse(self.record['alert_no_pv'])
         self.assertTrue(self.record['vendor_number'])
+
+    def test_filter_partner_type(self):
+        partner_count = PartnerOrganization.objects.filter(
+            partner_type=PartnerType.UN_AGENCY
+        ).count()
+        response = self.forced_auth_req(
+            'get',
+            reverse("partners_api:partner-dashboard"),
+            data={"partner_type": PartnerType.UN_AGENCY},
+            user=self.unicef_staff
+        )
+        data = response.data
+        self.assertEqual(len(data), partner_count)
+
+    def test_filter_partner_type_none_found(self):
+        self.assertEqual(PartnerOrganization.objects.filter(
+            partner_type=PartnerType.GOVERNMENT
+        ).count(), 0)
+        response = self.forced_auth_req(
+            'get',
+            reverse("partners_api:partner-dashboard"),
+            data={"partner_type": PartnerType.GOVERNMENT},
+            user=self.unicef_staff
+        )
+        data = response.data
+        self.assertEqual(len(data), 0)

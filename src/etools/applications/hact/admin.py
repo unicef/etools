@@ -10,7 +10,7 @@ class HactHistoryAdmin(admin.ModelAdmin):
         'year',
     )
     search_fields = (
-        'partner',
+        'partner__name',
         'year'
     )
     list_display = (

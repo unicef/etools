@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 from decimal import DivisionByZero, InvalidOperation
 
 from django.contrib.auth import get_user_model
