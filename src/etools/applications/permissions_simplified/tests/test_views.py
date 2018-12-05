@@ -4,8 +4,8 @@ from django.urls import reverse, set_urlconf
 from rest_framework import status
 
 from etools.applications.EquiTrack.tests.cases import BaseTenantTestCase
-from etools.applications.permissions2.simplified.tests.models import SimplifiedTestParent, SimplifiedTestChild
-from etools.applications.permissions2.simplified.tests.test_utils import TestModelsTestCaseMixin
+from etools.applications.permissions_simplified.tests.models import SimplifiedTestParent, SimplifiedTestChild
+from etools.applications.permissions_simplified.tests.test_utils import TestModelsTestCaseMixin
 from etools.applications.users.tests.factories import UserFactory
 
 
@@ -13,7 +13,7 @@ class BaseTestViewSet(TestModelsTestCaseMixin):
     @classmethod
     def setUpClass(cls):
         super().setUpClass()
-        set_urlconf('etools.applications.permissions2.simplified.tests.urls')
+        set_urlconf('etools.applications.permissions_simplified.tests.urls')
 
     @classmethod
     def tearDownClass(cls):
@@ -190,7 +190,7 @@ class TestFSMModelViewSet(TestModelsTestCaseMixin, BaseTenantTestCase):
     @classmethod
     def setUpClass(cls):
         super().setUpClass()
-        set_urlconf('etools.applications.permissions2.simplified.tests.urls')
+        set_urlconf('etools.applications.permissions_simplified.tests.urls')
 
     @classmethod
     def tearDownClass(cls):

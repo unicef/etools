@@ -1,12 +1,12 @@
 from rest_framework.viewsets import ModelViewSet
 
-from etools.applications.permissions2.simplified.metadata import SimplePermissionBasedMetadata
-from etools.applications.permissions2.simplified.permissions import PermissionQ
-from etools.applications.permissions2.simplified.tests.models import SimplifiedTestParent, SimplifiedTestChild, SimplifiedTestModelWithFSMField
-from etools.applications.permissions2.simplified.tests.permissions import UserIsBobPermission, UserIsAlicePermission
-from etools.applications.permissions2.simplified.tests.serializers import ParentSerializer, ChildSerializer, \
+from etools.applications.permissions_simplified.metadata import SimplePermissionBasedMetadata
+from etools.applications.permissions_simplified.permissions import PermissionQ
+from etools.applications.permissions_simplified.tests.models import SimplifiedTestParent, SimplifiedTestChild, SimplifiedTestModelWithFSMField
+from etools.applications.permissions_simplified.tests.permissions import UserIsBobPermission, UserIsAlicePermission
+from etools.applications.permissions_simplified.tests.serializers import ParentSerializer, ChildSerializer, \
     ModelWithFSMFieldSerializer
-from etools.applications.permissions2.simplified.views import SimplePermittedViewSetMixin, \
+from etools.applications.permissions_simplified.views import SimplePermittedViewSetMixin, \
     SimplePermittedFSMTransitionActionMixin
 
 
@@ -37,6 +37,6 @@ class ModelWithFSMFieldViewSet(SimplePermittedViewSetMixin, SimplePermittedFSMTr
         PermissionQ(UserIsBobPermission) | PermissionQ(UserIsAlicePermission)
     ]
     transition_permission_classes = {
-        'start': [UserIsAlicePermission],
-        'finish': [UserIsBobPermission],
+        'start': [write_permission_classes, UserIsAlicePermission],
+        'finish': [write_permission_classes, UserIsBobPermission],
     }

@@ -1,6 +1,6 @@
 from django.db import connection
 
-from etools.applications.permissions2.simplified.tests.models import SimplifiedTestChild, SimplifiedTestParent, SimplifiedTestModelWithFSMField
+from etools.applications.permissions_simplified.tests.models import SimplifiedTestChild, SimplifiedTestParent, SimplifiedTestModelWithFSMField
 
 
 class TestModelsTestCaseMixin(object):

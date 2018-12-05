@@ -3,9 +3,9 @@ from django.urls import set_urlconf, reverse
 from rest_framework import status
 
 from etools.applications.EquiTrack.tests.cases import BaseTenantTestCase
-from etools.applications.permissions2.simplified.tests.factory import ModelWithFSMFieldFactory
-from etools.applications.permissions2.simplified.tests.models import SimplifiedTestModelWithFSMField
-from etools.applications.permissions2.simplified.tests.test_utils import TestModelsTestCaseMixin
+from etools.applications.permissions_simplified.tests.factory import ModelWithFSMFieldFactory
+from etools.applications.permissions_simplified.tests.models import SimplifiedTestModelWithFSMField
+from etools.applications.permissions_simplified.tests.test_utils import TestModelsTestCaseMixin
 from etools.applications.permissions2.tests.mixins import TransitionPermissionsTestCaseMixin
 from etools.applications.users.tests.factories import UserFactory
 
@@ -15,7 +15,7 @@ class FSMModelTransitionPermissionsTestCase(TestModelsTestCaseMixin, TransitionP
     @classmethod
     def setUpClass(cls):
         super().setUpClass()
-        set_urlconf('etools.applications.permissions2.simplified.tests.urls')
+        set_urlconf('etools.applications.permissions_simplified.tests.urls')
 
     @classmethod
     def tearDownClass(cls):
@@ -110,7 +110,7 @@ class TestTransitionsMetadataTestCase(TestModelsTestCaseMixin, BaseTenantTestCas
     @classmethod
     def setUpClass(cls):
         super().setUpClass()
-        set_urlconf('etools.applications.permissions2.simplified.tests.urls')
+        set_urlconf('etools.applications.permissions_simplified.tests.urls')
 
     @classmethod
     def tearDownClass(cls):

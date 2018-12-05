@@ -42,11 +42,16 @@ class BaseQ(tree.Node):
         results = (getattr(child(), func_name)(*args, **kwargs) for child in self.children)
 
         if self.connector == self.AND:
-            return all(results)
+            logic_result = all(results)
         elif self.connector == self.OR:
-            return any(results)
+            logic_result = any(results)
         else:
             raise ImproperlyConfigured('Unknown connector {}'.format(self.connector))
+
+        if self.negated:
+            return not logic_result
+
+        return logic_result
 
     def __call__(self):
         return self
