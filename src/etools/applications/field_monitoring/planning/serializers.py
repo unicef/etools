@@ -15,6 +15,7 @@ from etools.applications.field_monitoring.planning.models import YearPlan, Task
 from etools.applications.field_monitoring.fm_settings.serializers.cp_outputs import CPOutputConfigDetailSerializer, \
     PartnerOrganizationSerializer, InterventionSerializer
 from etools.applications.field_monitoring.fm_settings.serializers.locations import LocationSiteLightSerializer
+from etools.applications.publics.models import EPOCH_ZERO
 
 
 class YearPlanSerializer(WritableNestedSerializerMixin, SnapshotModelSerializer):
@@ -36,13 +37,17 @@ class YearPlanSerializer(WritableNestedSerializerMixin, SnapshotModelSerializer)
             'p_{}'.format(i): Sum(RawSQL('plan_by_month[%s]', [i]))
             for i in range(1, 13)
         }
-        return list(obj.tasks.aggregate(**aggregates).values())
+        return list(obj.tasks.filter(deleted_at=EPOCH_ZERO).aggregate(**aggregates).values())
 
     def get_total_planned(self, obj):
         return {
-            'tasks': obj.tasks.count(),
-            'cp_outputs': obj.tasks.aggregate(Count('cp_output_config', distinct=True))['cp_output_config__count'],
-            'sites': obj.tasks.aggregate(Count('location_site', distinct=True))['location_site__count'],
+            'tasks': obj.tasks.filter(deleted_at=EPOCH_ZERO).count(),
+            'cp_outputs': obj.tasks.filter(deleted_at=EPOCH_ZERO).aggregate(
+                Count('cp_output_config', distinct=True)
+            )['cp_output_config__count'],
+            'sites': obj.tasks.filter(deleted_at=EPOCH_ZERO).aggregate(
+                Count('location_site', distinct=True)
+            )['location_site__count'],
         }
 
 
