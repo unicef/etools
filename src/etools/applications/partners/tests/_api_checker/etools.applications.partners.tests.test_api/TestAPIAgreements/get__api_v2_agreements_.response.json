@@ -31,7 +31,8 @@
             "signed_by_unicef_date": "2018-12-03",
             "signed_by_partner_date": "2018-12-03",
             "status": "signed",
-            "agreement_number_status": "TST/PCA201821064 [Signed]"
+            "agreement_number_status": "TST/PCA201821064 [Signed]",
+            "special_conditions_pca": false
         }
     ],
     "content_type": null

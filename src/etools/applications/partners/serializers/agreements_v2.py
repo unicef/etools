@@ -53,6 +53,7 @@ class AgreementListSerializer(serializers.ModelSerializer):
             "signed_by_partner_date",
             "status",
             "agreement_number_status",
+            "special_conditions_pca",
         )
 
     def get_agreement_number_status(self, obj):
