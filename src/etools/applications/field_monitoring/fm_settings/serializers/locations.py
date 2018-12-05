@@ -8,7 +8,7 @@ from rest_framework import serializers
 from unicef_locations.serializers import LocationSerializer, LocationLightSerializer
 
 from etools.applications.field_monitoring.fm_settings.models import LocationSite
-from etools.applications.permissions2.simplified.serializers import SafeReadOnlySerializerMixin
+from etools.applications.permissions_simplified.serializers import SafeReadOnlySerializerMixin
 
 
 class LocationCountrySerializer(LocationLightSerializer):

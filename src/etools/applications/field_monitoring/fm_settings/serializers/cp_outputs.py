@@ -10,7 +10,7 @@ from etools.applications.partners.serializers.partner_organization_v2 import Min
 from etools.applications.field_monitoring.fm_settings.models import CPOutputConfig, PlannedCheckListItem, \
     PlannedCheckListItemPartnerInfo
 from etools.applications.partners.models import Intervention
-from etools.applications.permissions2.simplified.serializers import SafeReadOnlySerializerMixin
+from etools.applications.permissions_simplified.serializers import SafeReadOnlySerializerMixin
 from etools.applications.reports.models import Result
 from etools.applications.reports.serializers.v2 import OutputListSerializer
 from etools.applications.utils.common.urlresolvers import build_frontend_url

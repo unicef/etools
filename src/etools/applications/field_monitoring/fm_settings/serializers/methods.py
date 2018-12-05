@@ -5,7 +5,7 @@ from rest_framework.exceptions import ValidationError
 
 from etools.applications.field_monitoring.fm_settings.models import FMMethodType
 from etools.applications.field_monitoring.shared.models import FMMethod
-from etools.applications.permissions2.simplified.serializers import SafeReadOnlySerializerMixin
+from etools.applications.permissions_simplified.serializers import SafeReadOnlySerializerMixin
 
 
 class FMMethodSerializer(serializers.ModelSerializer):

@@ -36,7 +36,7 @@ from etools.applications.field_monitoring.views import FMBaseViewSet, FMBaseAtta
 from etools.applications.field_monitoring.metadata import PermissionBasedMetadata
 from etools.applications.field_monitoring.permissions import UserIsFieldMonitor
 from etools.applications.partners.models import PartnerOrganization
-from etools.applications.permissions2.simplified.views import SimplePermittedViewSetMixin
+from etools.applications.permissions_simplified.views import SimplePermittedViewSetMixin
 from etools.applications.reports.models import Result, ResultType
 
 
