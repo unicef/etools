@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 from decimal import Decimal
 
 from etools.applications.EquiTrack.tests.cases import BaseTenantTestCase

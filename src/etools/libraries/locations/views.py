@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 from django.db import connection
 from django.utils.text import slugify
 
