@@ -1,13 +1,12 @@
-from django.utils import timezone
-
 import factory
+from django.utils import timezone
 from factory import fuzzy
 
 from etools.applications.field_monitoring.fm_settings.tests.factories import FMMethodTypeFactory, FMMethodFactory, \
     CPOutputConfigFactory
 from etools.applications.field_monitoring.planning.tests.factories import TaskFactory
 from etools.applications.field_monitoring.tests.factories import UserFactory
-from etools.applications.field_monitoring.visits.models import Visit, UNICEFVisit, VisitMethodType, \
+from etools.applications.field_monitoring.visits.models import Visit, UNICEFVisit, VisitTaskLink, VisitMethodType, \
     TaskCheckListItem, VisitCPOutputConfig
 from etools.applications.utils.common.tests.factories import InheritedTrait
 
@@ -81,9 +80,10 @@ class VisitFactory(factory.DjangoModelFactory):
     @factory.post_generation
     def tasks(self, create, extracted, count, *kwargs):
         if extracted:
-            self.tasks.add(*extracted)
+            for obj in extracted:
+                VisitTaskLink.objects.create(visit=self, task=obj)
         elif create:
-            self.tasks.add(*[TaskFactory() for i in range(count)])
+            [VisitTaskLink.objects.create(visit=self, task=TaskFactory()) for i in range(count)]
 
 
 class UNICEFVisitFactory(VisitFactory):

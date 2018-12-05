@@ -13,15 +13,22 @@ from unicef_snapshot.serializers import SnapshotModelSerializer
 from etools.applications.field_monitoring.fm_settings.serializers.cp_outputs import NestedCPOutputSerializer, \
     PartnerOrganizationSerializer
 from etools.applications.field_monitoring.fm_settings.serializers.methods import FMMethodTypeSerializer
+from etools.applications.field_monitoring.planning.models import Task
 from etools.applications.field_monitoring.planning.serializers import TaskListSerializer
 from etools.applications.field_monitoring.fm_settings.models import LogIssue
 from etools.applications.field_monitoring.shared.models import FMMethod
-from etools.applications.field_monitoring.visits.models import Visit, UNICEFVisit, VisitMethodType, VisitCPOutputConfig
+from etools.applications.field_monitoring.visits.models import Visit, UNICEFVisit, VisitMethodType, VisitCPOutputConfig, \
+    VisitTaskLink
 from etools.applications.users.serializers import MinimalUserSerializer
 
 
 class VisitLightSerializer(serializers.ModelSerializer):
-    tasks = SeparatedReadWriteField(read_field=TaskListSerializer(many=True), required=False)
+    tasks = SeparatedReadWriteField(
+        read_field=TaskListSerializer(many=True),
+        write_field=serializers.PrimaryKeyRelatedField(
+            many=True, queryset=Task.objects.all(), source='tasks_prop', required=False
+        )
+    )
     primary_field_monitor = SeparatedReadWriteField(read_field=MinimalUserSerializer())
     team_members = SeparatedReadWriteField(read_field=MinimalUserSerializer(read_only=True))
 
@@ -31,6 +38,29 @@ class VisitLightSerializer(serializers.ModelSerializer):
             'id', 'reference_number', 'start_date', 'end_date', 'visit_type',
             'tasks', 'status', 'primary_field_monitor', 'team_members'
         )
+
+    # we need special logic to work with intermediary model
+    def set_tasks(self, instance, value):
+        if value is None:
+            return
+
+        value = set(value)
+        instance_tasks = set(instance.tasks.all())
+
+        VisitTaskLink.objects.filter(visit=instance, task__in=(instance_tasks - value)).delete()
+        [VisitTaskLink.objects.create(visit=instance, task=task) for task in (value - instance_tasks)]
+
+    def create(self, validated_data):
+        tasks = validated_data.pop('tasks', None)
+        instance = super().create(validated_data)
+        self.set_tasks(instance, tasks)
+        return instance
+
+    def update(self, instance, validated_data):
+        tasks = validated_data.pop('tasks', None)
+        instance = super().update(instance, validated_data)
+        self.set_tasks(instance, tasks)
+        return instance
 
 
 class VisitListSerializer(VisitLightSerializer):

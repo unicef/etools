@@ -32,9 +32,6 @@ class VisitTaskLink(FindingMixin, models.Model):
     visit = models.ForeignKey('Visit', related_name='visit_task_links')
     task = models.ForeignKey(Task, related_name='visit_task_links')
 
-    class Meta:
-        auto_created = True  # Allow django operate this intermediary model as common m2m relation
-
 
 class Visit(InheritedModelMixin, SoftDeleteMixin, TimeStampedModel):
     STATUS_CHOICES = Choices(
