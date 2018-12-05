@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 import datetime
 
 from drf_api_checker.unittest import ApiCheckerMixin as BaseApiCheckerMixin, ApiCheckerBase

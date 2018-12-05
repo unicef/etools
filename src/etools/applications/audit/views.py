@@ -376,7 +376,7 @@ class EngagementViewSet(
 
     @action(detail=False, methods=['get'], url_path='csv', renderer_classes=[EngagementCSVRenderer])
     def export_list_csv(self, request, *args, **kwargs):
-        engagements = self.get_queryset()
+        engagements = self.filter_queryset(self.get_queryset())
         serializer = EngagementExportSerializer(engagements, many=True)
 
         return Response(serializer.data, headers={
