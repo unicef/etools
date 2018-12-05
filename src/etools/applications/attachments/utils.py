@@ -29,6 +29,7 @@ def get_partner_obj(obj):
         InterventionAmendment,
         InterventionAttachment,
         PartnerOrganization,
+        CoreValuesAssessment,
     )
     from etools.applications.tpm.models import TPMActivity
 
@@ -38,7 +39,7 @@ def get_partner_obj(obj):
         return obj.content_object.agreement.partner
     elif isinstance(obj.content_object, (InterventionAmendment, InterventionAttachment)):
         return obj.content_object.intervention.agreement.partner
-    elif isinstance(obj.content_object, (Agreement, Assessment, Engagement, TPMActivity)):
+    elif isinstance(obj.content_object, (Agreement, Assessment, Engagement, TPMActivity, CoreValuesAssessment)):
         return obj.content_object.partner
     return ""
 

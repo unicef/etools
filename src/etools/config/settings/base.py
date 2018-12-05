@@ -178,6 +178,7 @@ SHARED_APPS = (
     'mptt',
     'easy_pdf',
     'ordered_model',
+    'django_extensions',
     'etools.applications.vision',
     'etools.applications.publics',
     # you must list the app where your tenant model resides in
@@ -193,6 +194,7 @@ SHARED_APPS = (
     'etools.applications.tokens',
     'etools.applications.permissions2',
     'etools.applications.permissions_simplified',
+    'etools.applications.field_monitoring.shared',
     'unicef_notification',
 )
 
@@ -213,6 +215,8 @@ TENANT_APPS = (
     'etools.applications.firms',
     'etools.applications.management',
     'etools.applications.action_points',
+    'etools.applications.field_monitoring.fm_settings',
+    'etools.applications.field_monitoring.planning',
     'unicef_snapshot',
     'unicef_attachments',
 )
