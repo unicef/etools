@@ -93,7 +93,7 @@ class Migration(migrations.Migration):
                 ('rating', models.CharField(choices=[('high', 'High'), ('significant', 'Significant'), (
                     'medium', 'Medium'), ('low', 'Low')], default='high', max_length=50, verbose_name='Rating')),
                 ('report', models.FileField(blank=True, max_length=1024, null=True,
-                                            upload_to=etools.applications.partners.models.get_assesment_path, verbose_name='Report')),
+                                            upload_to=etools.applications.partners.models.get_assessment_path, verbose_name='Report')),
                 ('current', models.BooleanField(default=False, verbose_name='Basis for risk rating')),
             ],
             options={

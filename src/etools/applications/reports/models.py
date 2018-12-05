@@ -651,6 +651,24 @@ class AppliedIndicator(TimeStampedModel):
     is_high_frequency = models.BooleanField(default=False)
     is_active = models.BooleanField(default=True)
 
+    @cached_property
+    def target_display(self):
+        ind_type = self.indicator.display_type
+        numerator = self.target.get('v', self.target)
+        denominator = '-'
+        if ind_type == IndicatorBlueprint.RATIO:
+            denominator = self.target.get('d', '')
+        return numerator, denominator
+
+    @cached_property
+    def baseline_display(self):
+        ind_type = self.indicator.display_type
+        numerator = self.baseline.get('v', self.baseline)
+        denominator = '-'
+        if ind_type == IndicatorBlueprint.RATIO:
+            denominator = self.baseline.get('d', '')
+        return numerator, denominator
+
     class Meta:
         unique_together = (("indicator", "lower_result"),)
 

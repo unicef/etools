@@ -36,7 +36,6 @@ from etools.applications.partners.models import (
     InterventionAttachment,
     InterventionReportingPeriod,
     InterventionResultLink,
-    InterventionSectionLocationLink,
 )
 from etools.applications.partners.permissions import PartnershipManagerPermission, PartnershipManagerRepPermission
 from etools.applications.partners.serializers.exports.interventions import (
@@ -48,8 +47,6 @@ from etools.applications.partners.serializers.exports.interventions import (
     InterventionIndicatorExportSerializer,
     InterventionResultExportFlatSerializer,
     InterventionResultExportSerializer,
-    InterventionSectionLocationLinkExportFlatSerializer,
-    InterventionSectionLocationLinkExportSerializer,
 )
 from etools.applications.partners.serializers.interventions_v2 import (
     InterventionAmendmentCUSerializer,
@@ -68,9 +65,9 @@ from etools.applications.partners.serializers.interventions_v2 import (
     InterventionResultCUSerializer,
     InterventionResultLinkSimpleCUSerializer,
     InterventionResultSerializer,
-    InterventionSectionLocationCUSerializer,
     MinimalInterventionListSerializer,
-    PlannedVisitsCUSerializer)
+    PlannedVisitsCUSerializer,
+)
 from etools.applications.partners.validation.interventions import InterventionValid
 from etools.applications.reports.models import AppliedIndicator, LowerResult, ReportingRequirement
 from etools.applications.reports.serializers.v2 import AppliedIndicatorSerializer, LowerResultSimpleCUSerializer
@@ -115,7 +112,6 @@ class InterventionListAPIView(QueryStringFilterMixin, ExportModelMixin, Interven
     SERIALIZER_MAP = {
         'planned_budget': InterventionBudgetCUSerializer,
         'planned_visits': PlannedVisitsCUSerializer,
-        'attachments': InterventionAttachmentSerializer,
         'result_links': InterventionResultCUSerializer
     }
 
@@ -146,7 +142,6 @@ class InterventionListAPIView(QueryStringFilterMixin, ExportModelMixin, Interven
         related_fields = [
             'planned_budget',
             'planned_visits',
-            'attachments',
             'result_links'
         ]
         nested_related_names = ['ll_results']
@@ -249,7 +244,6 @@ class InterventionDetailAPIView(ValidatorViewMixin, RetrieveUpdateDestroyAPIView
     SERIALIZER_MAP = {
         'planned_budget': InterventionBudgetCUSerializer,
         'planned_visits': PlannedVisitsCUSerializer,
-        'attachments': InterventionAttachmentSerializer,
         'result_links': InterventionResultCUSerializer
     }
 
@@ -265,7 +259,6 @@ class InterventionDetailAPIView(ValidatorViewMixin, RetrieveUpdateDestroyAPIView
     def update(self, request, *args, **kwargs):
         related_fields = ['planned_budget',
                           'planned_visits',
-                          'attachments',
                           'result_links']
         nested_related_names = ['ll_results']
         instance, old_instance, serializer = self.my_update(
@@ -288,22 +281,36 @@ class InterventionDetailAPIView(ValidatorViewMixin, RetrieveUpdateDestroyAPIView
         return Response(InterventionDetailSerializer(instance, context=self.get_serializer_context()).data)
 
 
-class InterventionAttachmentDeleteView(DestroyAPIView):
+class InterventionAttachmentListCreateView(ListCreateAPIView):
+
+    serializer_class = InterventionAttachmentSerializer
+    permission_classes = (PartnershipManagerPermission,)
+    filter_backends = (InterventionFilter,)
+    renderer_classes = (JSONRenderer,)
+    queryset = InterventionAttachment.objects.all()
+
+    def create(self, request, *args, **kwargs):
+        request.data.__setitem__("intervention", kwargs.get('intervention_pk', None))
+
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        self.perform_create(serializer)
+        headers = self.get_success_headers(serializer.data)
+        return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
+
+
+class InterventionAttachmentUpdateDeleteView(RetrieveUpdateDestroyAPIView):
+    serializer_class = InterventionAttachmentSerializer
+    queryset = InterventionAttachment.objects.all()
     permission_classes = (PartnershipManagerRepPermission,)
 
     def delete(self, request, *args, **kwargs):
-        try:
-            intervention_attachment = InterventionAttachment.objects.get(id=int(kwargs['pk']))
-        except InterventionAttachment.DoesNotExist:
-            return Response(status=status.HTTP_404_NOT_FOUND)
-        if intervention_attachment.intervention.status in [Intervention.DRAFT] or \
-            request.user in intervention_attachment.intervention.unicef_focal_points.all() or \
-            request.user.groups.filter(name__in=['Partnership Manager',
-                                                 'Senior Management Team']).exists():
-            intervention_attachment.delete()
-            return Response(status=status.HTTP_204_NO_CONTENT)
+        obj = self.get_object()
+
+        if obj.intervention.status in [Intervention.DRAFT]:
+            return super().delete(request, *args, **kwargs)
         else:
-            raise ValidationError("You do not have permissions to delete an attachment")
+            raise ValidationError("Deleting an attachment can only be done in Draft status")
 
 
 class InterventionResultListAPIView(ExportModelMixin, ListAPIView):
@@ -464,55 +471,6 @@ class InterventionAmendmentDeleteView(DestroyAPIView):
             return Response(status=status.HTTP_204_NO_CONTENT)
         else:
             raise ValidationError("You do not have permissions to delete an amendment")
-
-
-class InterventionSectionLocationLinkListAPIView(ExportModelMixin, ListAPIView):
-    """
-    Returns a list of InterventionSectionLocationLinks.
-    """
-    serializer_class = InterventionSectionLocationCUSerializer
-    permission_classes = (PartnershipManagerPermission,)
-    filter_backends = (PartnerScopeFilter,)
-    renderer_classes = (
-        JSONRenderer,
-        r.CSVRenderer,
-        CSVFlatRenderer,
-    )
-
-    def get_serializer_class(self):
-        """
-        Use different serializers for methods
-        """
-        query_params = self.request.query_params
-        if "format" in query_params.keys():
-            if query_params.get("format") == 'csv':
-                return InterventionSectionLocationLinkExportSerializer
-            if query_params.get("format") == 'csv_flat':
-                return InterventionSectionLocationLinkExportFlatSerializer
-        return super(InterventionSectionLocationLinkListAPIView, self).get_serializer_class()
-
-    def get_queryset(self, format=None):
-        q = InterventionSectionLocationLink.objects.all()
-        query_params = self.request.query_params
-
-        if query_params:
-            queries = []
-            if "search" in query_params.keys():
-                queries.append(
-                    Q(intervention__number__icontains=query_params.get("search")) |
-                    Q(sector__name__icontains=query_params.get("search"))
-                )
-            if queries:
-                expression = functools.reduce(operator.and_, queries)
-                q = q.filter(expression)
-
-        if query_params.get("format") in ['csv', "csv_flat"]:
-            res = []
-            for i in q.all():
-                res = res + list(i.locations.all())
-            return res
-
-        return q
 
 
 class InterventionListMapView(QueryStringFilterMixin, ListCreateAPIView):
