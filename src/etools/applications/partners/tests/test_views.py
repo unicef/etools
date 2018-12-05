@@ -1205,6 +1205,19 @@ class TestAgreementAPIView(BaseTenantTestCase):
         self.assertEqual(len(response.data), 2)
         self.assertEqual(self.partner.name, response.data[0]["partner_name"])
 
+    def test_agreements_list_filter_special_conditions_pca(self):
+        agreement_qs = Agreement.objects.filter(special_conditions_pca=False)
+        params = {"special_conditions_pca": "false"}
+        response = self.forced_auth_req(
+            'get',
+            reverse('partners_api:agreement-list'),
+            user=self.unicef_staff,
+            data=params
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(response.data), agreement_qs.count())
+
     def test_agreements_list_filter_search(self):
         params = {"search": "Partner"}
         response = self.forced_auth_req(
