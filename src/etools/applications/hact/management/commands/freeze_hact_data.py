@@ -7,7 +7,7 @@ from django.db import transaction
 from etools.applications.EquiTrack.encoders import EToolsEncoder
 from etools.applications.EquiTrack.util_scripts import set_country
 from etools.applications.hact.models import HactHistory
-from etools.applications.partners.models import hact_default, PartnerOrganization
+from etools.applications.partners.models import hact_default, PartnerOrganization, PlannedEngagement
 from etools.applications.users.models import Country
 
 
@@ -100,6 +100,5 @@ class Command(BaseCommand):
                 partner.hact_values = hact_default()
                 partner.save()
 
-                plan = partner.planned_engagement
-                if plan:
-                    plan.reset()
+                plan, _ = PlannedEngagement.objects.get_or_create(partner=partner)
+                plan.reset()
