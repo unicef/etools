@@ -41,6 +41,8 @@ class YearPlanViewTestCase(FMBaseTestCaseMixin, BaseTenantTestCase):
     def test_plan_by_month(self):
         TaskFactory(plan_by_month=[1]*12)
         TaskFactory(plan_by_month=[2]*12)
+        # test that task removing will not affect our data
+        TaskFactory(plan_by_month=[2]*12).delete()
 
         response = self.forced_auth_req(
             'get', reverse('field_monitoring_planning:year-plan-detail', args=[date.today().year]),
@@ -55,6 +57,8 @@ class YearPlanViewTestCase(FMBaseTestCaseMixin, BaseTenantTestCase):
         TaskFactory()
         TaskFactory(cp_output_config=task_1.cp_output_config)
         TaskFactory(cp_output_config=task_1.cp_output_config, location_site=task_1.location_site)
+        # test that task removing will not affect our data
+        TaskFactory(cp_output_config=task_1.cp_output_config, location_site=task_1.location_site).delete()
 
         response = self.forced_auth_req(
             'get', reverse('field_monitoring_planning:year-plan-detail', args=[date.today().year]),
