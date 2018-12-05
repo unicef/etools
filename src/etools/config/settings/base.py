@@ -74,13 +74,13 @@ db_config = dj_database_url.config(
 )
 
 ORIGINAL_BACKEND = 'django.contrib.gis.db.backends.postgis'
-db_config['ENGINE'] = 'tenant_schemas.postgresql_backend'
+db_config['ENGINE'] = 'django_tenants.postgresql_backend'
 db_config['CONN_MAX_AGE'] = 0
 DATABASES = {
     'default': db_config
 }
 DATABASE_ROUTERS = (
-    'tenant_schemas.routers.TenantSyncRouter',
+    'django_tenants.routers.TenantSyncRouter',
 )
 
 # DJANGO: DEBUGGING
@@ -215,7 +215,7 @@ TENANT_APPS = (
     'unicef_snapshot',
     'unicef_attachments',
 )
-INSTALLED_APPS = ('tenant_schemas',) + SHARED_APPS + TENANT_APPS
+INSTALLED_APPS = ('django_tenants',) + SHARED_APPS + TENANT_APPS
 
 # DJANGO: SECURITY
 ALLOWED_HOSTS = [
@@ -393,7 +393,8 @@ LEAFLET_CONFIG = {
 }
 
 # django-tenant-schemas: https://github.com/bernardopires/django-tenant-schemas
-TENANT_MODEL = "users.Country"  # app.Model
+TENANT_MODEL = "users.Country"
+TENANT_DOMAIN_MODEL = "EquiTrack.Domain"
 
 # don't call set search_path so much
 # https://django-tenant-schemas.readthedocs.io/en/latest/use.html#performance-considerations
@@ -585,7 +586,7 @@ REPORT_EMAILS = get_from_secrets_or_env('REPORT_EMAILS', 'etools@unicef.org').re
 
 # email auth settings
 EMAIL_AUTH_TOKEN_NAME = os.getenv('EMAIL_AUTH_TOKEN_NAME', 'url_auth_token')
-SILENCED_SYSTEM_CHECKS = ["tenant_schemas.W003"]
+SILENCED_SYSTEM_CHECKS = ["django_tenants.W003"]
 
 # GET parameter that allows override of schema
 SCHEMA_OVERRIDE_PARAM = "schema"

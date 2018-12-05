@@ -6,7 +6,7 @@ from django.conf import settings
 from django.contrib.auth import get_user_model
 
 from mock import Mock, patch
-from tenant_schemas.utils import schema_context
+from django_tenants.utils import schema_context
 
 from etools.applications.EquiTrack.tests.cases import BaseTenantTestCase, SCHEMA_NAME
 from etools.applications.users import tasks
