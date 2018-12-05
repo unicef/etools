@@ -2,10 +2,10 @@ from django.core.exceptions import ObjectDoesNotExist
 from django.core.management import call_command
 from django.urls import resolve
 from django.db import connection
+from django_tenants.test.cases import TenantTestCase
+from django_tenants.utils import get_tenant_model, get_tenant_domain_model
 
 from rest_framework.test import APIClient, APIRequestFactory, force_authenticate
-from tenant_schemas.test.cases import TenantTestCase
-from tenant_schemas.utils import get_tenant_model
 from unicef_notification.models import EmailTemplate
 
 from etools.applications.users.models import WorkspaceCounter
@@ -16,8 +16,7 @@ SCHEMA_NAME = 'test'
 
 class BaseTenantTestCase(TenantTestCase):
     """
-    Faster version of TenantTestCase.  (Based on FastTenantTestCase
-    provided by django-tenant-schemas.)
+    Faster version of TenantTestCase.  (Based on FastTenantTestCase provided by django-tenants.)
     """
     client_class = APIClient
     maxDiff = None
@@ -42,7 +41,6 @@ class BaseTenantTestCase(TenantTestCase):
                 try:
                     call_command('loaddata', *cls.fixtures, **{
                                  'verbosity': 0,
-                                 'commit': False,
                                  'database': db_name,
                                  })
                 except Exception:
@@ -61,15 +59,17 @@ class BaseTenantTestCase(TenantTestCase):
 
         TenantModel = get_tenant_model()
         try:
-            cls.tenant = TenantModel.objects.get(domain_url=TENANT_DOMAIN, schema_name=SCHEMA_NAME)
+            cls.tenant = TenantModel.objects.get(schema_name=SCHEMA_NAME)
         except TenantModel.DoesNotExist:
-            cls.tenant = TenantModel(domain_url=TENANT_DOMAIN, schema_name=SCHEMA_NAME)
+            cls.tenant = TenantModel(schema_name=SCHEMA_NAME)
             cls.tenant.save(verbosity=0)
 
         cls.tenant.business_area_code = 'ZZZ'
         # Make sure country has a short code, it affects some results
         cls.tenant.country_short_code = 'TST'
         cls.tenant.save(verbosity=0)
+
+        cls.domain = get_tenant_domain_model().objects.get_or_create(domain=TENANT_DOMAIN, tenant=cls.tenant)
 
         try:
             cls.tenant.counters
