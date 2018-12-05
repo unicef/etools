@@ -53,6 +53,9 @@ class AgreementExportSerializer(serializers.ModelSerializer):
     )
     amendments = serializers.SerializerMethodField(label=_("Amendments"))
     url = serializers.SerializerMethodField(label=_("URL"))
+    special_conditions_pca = serializers.BooleanField(
+        label=_("Special Conditions PCA"),
+    )
 
     class Meta:
         model = Agreement
@@ -71,6 +74,7 @@ class AgreementExportSerializer(serializers.ModelSerializer):
             "staff_members",
             "amendments",
             "url",
+            "special_conditions_pca",
         )
 
     def get_staff_members(self, obj):
