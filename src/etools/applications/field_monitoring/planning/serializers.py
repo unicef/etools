@@ -12,9 +12,9 @@ from unicef_snapshot.serializers import SnapshotModelSerializer
 
 from etools.applications.action_points.serializers import CommentSerializer, HistorySerializer
 from etools.applications.field_monitoring.planning.models import YearPlan, Task
-from etools.applications.field_monitoring.fm_settings.serializers.cp_outputs import CPOutputConfigDetailSerializer
+from etools.applications.field_monitoring.fm_settings.serializers.cp_outputs import CPOutputConfigDetailSerializer, \
+    PartnerOrganizationSerializer, InterventionSerializer
 from etools.applications.field_monitoring.fm_settings.serializers.locations import LocationSiteLightSerializer
-from etools.applications.partners.serializers.partner_organization_v2 import MinimalPartnerOrganizationListSerializer
 from etools.applications.permissions2.simplified.serializers import SafeReadOnlySerializerMixin
 
 
@@ -49,7 +49,8 @@ class YearPlanSerializer(WritableNestedSerializerMixin, SafeReadOnlySerializerMi
 
 class TaskListSerializer(serializers.ModelSerializer):
     cp_output_config = SeparatedReadWriteField(read_field=CPOutputConfigDetailSerializer())
-    partner = SeparatedReadWriteField(read_field=MinimalPartnerOrganizationListSerializer())
+    partner = SeparatedReadWriteField(read_field=PartnerOrganizationSerializer())
+    intervention = SeparatedReadWriteField(read_field=InterventionSerializer())
     location = SeparatedReadWriteField(read_field=LocationLightSerializer())
     location_site = SeparatedReadWriteField(read_field=LocationSiteLightSerializer())
 

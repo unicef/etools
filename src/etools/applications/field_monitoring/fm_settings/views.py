@@ -24,7 +24,7 @@ from etools.applications.field_monitoring.fm_settings.serializers.attachments im
 from etools.applications.field_monitoring.fm_settings.serializers.checklist import CheckListItemSerializer, \
     CheckListCategorySerializer
 from etools.applications.field_monitoring.fm_settings.serializers.cp_outputs import FieldMonitoringCPOutputSerializer, \
-    PlannedCheckListItemSerializer, CPOutputConfigDetailSerializer
+    PlannedCheckListItemSerializer, CPOutputConfigDetailSerializer, PartnerOrganizationSerializer
 from etools.applications.field_monitoring.fm_settings.serializers.issues import LogIssueSerializer, \
     LogIssueAttachmentSerializer
 from etools.applications.field_monitoring.fm_settings.serializers.locations import LocationSiteSerializer, \
@@ -36,7 +36,6 @@ from etools.applications.field_monitoring.views import FMBaseViewSet, FMBaseAtta
 from etools.applications.field_monitoring.metadata import PermissionBasedMetadata
 from etools.applications.field_monitoring.permissions import UserIsFieldMonitor
 from etools.applications.partners.models import PartnerOrganization
-from etools.applications.partners.serializers.partner_organization_v2 import MinimalPartnerOrganizationListSerializer
 from etools.applications.permissions2.simplified.views import SimplePermittedViewSetMixin
 from etools.applications.reports.models import Result, ResultType
 
@@ -142,8 +141,8 @@ class MonitoredPartnersViewSet(
     queryset = PartnerOrganization.objects.filter(
         models.Q(cpoutputconfig__is_monitored=True) |
         models.Q(agreements__interventions__result_links__cp_output__fm_config__is_monitored=True)
-    )
-    serializer_class = MinimalPartnerOrganizationListSerializer
+    ).distinct()
+    serializer_class = PartnerOrganizationSerializer
 
 
 class CPOutputConfigsViewSet(
@@ -157,7 +156,13 @@ class CPOutputConfigsViewSet(
 ):
     write_permission_classes = [UserIsFieldMonitor]
     metadata_class = PermissionBasedMetadata
-    queryset = CPOutputConfig.objects.all()
+    queryset = CPOutputConfig.objects.prefetch_related(
+        'government_partners',
+        'cp_output',
+        'cp_output__intervention_links',
+        'cp_output__intervention_links__intervention__agreement__partner',
+
+    )
     serializer_class = CPOutputConfigDetailSerializer
     filter_backends = (DjangoFilterBackend, OrderingFilter)
     filter_fields = ('is_monitored', 'is_priority')
@@ -206,7 +211,11 @@ class LogIssuesViewSet(FMBaseViewSet, SimplePermittedViewSetMixin, viewsets.Mode
         DjangoFilterBackend, LogIssueNameOrderingFilter, LogIssueRelatedToTypeFilter,
         LogIssueVisitFilter, OrderingFilter
     )
-    filter_fields = ('cp_output', 'partner', 'location', 'location_site', 'status')
+    filter_fields = ({
+        field: ['exact', 'in'] for field in [
+            'cp_output', 'partner', 'location', 'location_site', 'status'
+        ]
+    })
     ordering_fields = ('content_type',)
 
     def get_queryset(self):

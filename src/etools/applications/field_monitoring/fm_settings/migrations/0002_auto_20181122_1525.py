@@ -108,4 +108,24 @@ class Migration(migrations.Migration):
             name='plannedchecklistitem',
             unique_together=set([('cp_output_config', 'checklist_item')]),
         ),
+        migrations.AlterModelOptions(
+            name='checklistcategory',
+            options={'ordering': ('order',), 'verbose_name': 'Checklist Category', 'verbose_name_plural': 'Checklist Categories'},
+        ),
+        migrations.AlterModelOptions(
+            name='checklistitem',
+            options={'ordering': ('category', 'order'), 'verbose_name': 'Checklist Item', 'verbose_name_plural': 'Checklist Items'},
+        ),
+        migrations.AlterModelOptions(
+            name='logissue',
+            options={'ordering': ('id',), 'verbose_name': 'Log Issue', 'verbose_name_plural': 'Log Issues'},
+        ),
+        migrations.AlterModelOptions(
+            name='plannedchecklistitem',
+            options={'ordering': ('id',), 'verbose_name': 'Planned Checklist Item', 'verbose_name_plural': 'Planned Checklist Items'},
+        ),
+        migrations.AlterModelOptions(
+            name='plannedchecklistitempartnerinfo',
+            options={'ordering': ('id',), 'verbose_name': 'Planned Checklist Item Partner Info', 'verbose_name_plural': 'Planned Checklist Items Partners Info'},
+        ),
     ]

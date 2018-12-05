@@ -3,11 +3,14 @@ from datetime import date
 from django.urls import reverse
 
 from rest_framework import status
+from unicef_locations.tests.factories import LocationFactory
 
 from etools.applications.EquiTrack.tests.cases import BaseTenantTestCase
+from etools.applications.field_monitoring.fm_settings.tests.factories import LocationSiteFactory
 from etools.applications.field_monitoring.planning.models import YearPlan
 from etools.applications.field_monitoring.planning.tests.factories import YearPlanFactory, TaskFactory
 from etools.applications.field_monitoring.tests.base import FMBaseTestCaseMixin
+from etools.applications.partners.tests.factories import PartnerFactory
 
 
 class YearPlanViewTestCase(FMBaseTestCaseMixin, BaseTenantTestCase):
@@ -181,3 +184,51 @@ class YearPlanTasksViewTestCase(FMBaseTestCaseMixin, BaseTenantTestCase):
 
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertIn('plan_by_month', response.data)
+
+
+class TestPlannedPartnersView(FMBaseTestCaseMixin, BaseTenantTestCase):
+    def test_list(self):
+        year_plan = YearPlanFactory()
+        PartnerFactory()
+        task = TaskFactory()
+
+        response = self.forced_auth_req(
+            'get', reverse('field_monitoring_planning:planned-partners-list', args=[year_plan.pk]),
+            user=self.unicef_user
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(response.data['results']), 1)
+        self.assertEqual(response.data['results'][0]['id'], task.partner.id)
+
+
+class TestPlannedSitesView(FMBaseTestCaseMixin, BaseTenantTestCase):
+    def test_list(self):
+        year_plan = YearPlanFactory()
+        LocationSiteFactory()
+        task = TaskFactory()
+
+        response = self.forced_auth_req(
+            'get', reverse('field_monitoring_planning:planned-sites-list', args=[year_plan.pk]),
+            user=self.unicef_user
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(response.data['results']), 1)
+        self.assertEqual(response.data['results'][0]['id'], task.location_site.id)
+
+
+class TestPlannedLocationsView(FMBaseTestCaseMixin, BaseTenantTestCase):
+    def test_list(self):
+        year_plan = YearPlanFactory()
+        LocationFactory()
+        task = TaskFactory()
+
+        response = self.forced_auth_req(
+            'get', reverse('field_monitoring_planning:planned-locations-list', args=[year_plan.pk]),
+            user=self.unicef_user
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(response.data['results']), 1)
+        self.assertEqual(int(response.data['results'][0]['id']), task.location.id)

@@ -7,6 +7,12 @@ from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import mixins, viewsets
 from rest_framework.filters import OrderingFilter
 
+from unicef_locations.models import Location
+from unicef_locations.serializers import LocationLightSerializer
+
+from etools.applications.field_monitoring.fm_settings.models import LocationSite
+from etools.applications.field_monitoring.fm_settings.serializers.cp_outputs import PartnerOrganizationSerializer
+from etools.applications.field_monitoring.fm_settings.serializers.locations import LocationSiteLightSerializer
 from etools.applications.field_monitoring.metadata import PermissionBasedMetadata
 from etools.applications.field_monitoring.permissions import UserIsFieldMonitor
 from etools.applications.field_monitoring.planning.models import YearPlan, Task
@@ -15,6 +21,7 @@ from etools.applications.field_monitoring.planning.serializers import YearPlanSe
 from etools.applications.field_monitoring.fm_settings.filters import CPOutputIsActiveFilter
 from etools.applications.field_monitoring.views import FMBaseViewSet
 from etools.applications.permissions2.simplified.views import SimplePermittedViewSetMixin
+from etools.applications.partners.models import PartnerOrganization
 
 
 class YearPlanViewSet(
@@ -66,11 +73,13 @@ class TaskViewSet(SimplePermittedViewSetMixin, FMBaseViewSet, viewsets.ModelView
     )
     serializer_class = TaskSerializer
     filter_backends = (DjangoFilterBackend, CPOutputIsActiveFilter, OrderingFilter)
-    filter_fields = (
-        'cp_output_config', 'cp_output_config__is_priority',
-        'partner', 'intervention',
-        'location', 'location_site'
-    )
+    filter_fields = ({
+        field: ['exact', 'in'] for field in [
+            'cp_output_config__cp_output__parent',
+            'cp_output_config', 'partner', 'intervention', 'location', 'location_site'
+        ]
+    })
+    filter_fields['cp_output_config__is_priority'] = ['exact']
     ordering_fields = (
         'cp_output_config__cp_output__name',
         'partner__name', 'intervention__title',
@@ -85,3 +94,18 @@ class TaskViewSet(SimplePermittedViewSetMixin, FMBaseViewSet, viewsets.ModelView
 
     def perform_create(self, serializer):
         serializer.save(year_plan=self.get_parent_object())
+
+
+class PlannedPartnersViewSet(FMBaseViewSet, mixins.ListModelMixin, viewsets.GenericViewSet):
+    queryset = PartnerOrganization.objects.filter(tasks__isnull=False).distinct()
+    serializer_class = PartnerOrganizationSerializer
+
+
+class PlannedLocationsViewSet(FMBaseViewSet, mixins.ListModelMixin, viewsets.GenericViewSet):
+    queryset = Location.objects.filter(tasks__isnull=False).distinct()
+    serializer_class = LocationLightSerializer
+
+
+class PlannedLocationSitesViewSet(FMBaseViewSet, mixins.ListModelMixin, viewsets.GenericViewSet):
+    queryset = LocationSite.objects.filter(tasks__isnull=False).distinct()
+    serializer_class = LocationSiteLightSerializer

@@ -1,3 +1,5 @@
+import itertools
+
 from django.utils.translation import ugettext_lazy as _
 
 from rest_framework import serializers
@@ -40,23 +42,43 @@ class InterventionSerializer(serializers.ModelSerializer):
 
 class CPOutputConfigSerializer(serializers.ModelSerializer):
     government_partners = SeparatedReadWriteField(
-        read_field=MinimalPartnerOrganizationListSerializer(many=True, label=_('Contributing Government Partners'))
+        read_field=PartnerOrganizationSerializer(many=True, label=_('Contributing Government Partners'))
     )
 
     class Meta:
         model = CPOutputConfig
-        fields = ('id', 'cp_output', 'is_monitored', 'is_priority', 'government_partners')
+        fields = ('id', 'cp_output', 'is_monitored', 'is_priority', 'government_partners', 'recommended_method_types')
         extra_kwargs = {
             'id': {'read_only': True},
             'cp_output': {'read_only': True, 'label': _('CP Output')}
         }
 
 
+class NestedCPOutputSerializer(OutputListSerializer):
+    interventions = serializers.SerializerMethodField()
+
+    class Meta(OutputListSerializer.Meta):
+        pass
+
+    def get_interventions(self, obj):
+        return [InterventionSerializer(link.intervention).data for link in obj.intervention_links.all()]
+
+
 class CPOutputConfigDetailSerializer(SafeReadOnlySerializerMixin, CPOutputConfigSerializer):
-    cp_output = OutputListSerializer()
+    cp_output = NestedCPOutputSerializer()
+    partners = serializers.SerializerMethodField()
 
     class Meta(CPOutputConfigSerializer.Meta):
-        pass
+        fields = CPOutputConfigSerializer.Meta.fields + ('partners',)
+
+    def get_partners(self, obj):
+        return [
+            PartnerOrganizationSerializer(partner).data
+            for partner in sorted(set(itertools.chain(
+                obj.government_partners.all(),
+                map(lambda l: l.intervention.agreement.partner, obj.cp_output.intervention_links.all()))
+            ), key=lambda a: a.id)
+        ]
 
 
 class FieldMonitoringCPOutputSerializer(SafeReadOnlySerializerMixin, WritableNestedSerializerMixin, serializers.ModelSerializer):

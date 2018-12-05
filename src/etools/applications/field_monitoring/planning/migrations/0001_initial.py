@@ -65,4 +65,12 @@ class Migration(migrations.Migration):
             name='year_plan',
             field=models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='tasks', to='field_monitoring_planning.YearPlan', verbose_name='Year Plan'),
         ),
+        migrations.AlterModelOptions(
+            name='task',
+            options={'ordering': ('id',), 'verbose_name': 'Task', 'verbose_name_plural': 'Tasks'},
+        ),
+        migrations.AlterModelOptions(
+            name='yearplan',
+            options={'ordering': ('year',), 'verbose_name': 'Year Plan', 'verbose_name_plural': 'Year Plans'},
+        ),
     ]
