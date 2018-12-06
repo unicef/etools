@@ -16,11 +16,14 @@ class StartedMethod(models.Model):
         ('completed', _('Completed')),
     )
 
-    visit = models.ForeignKey(Visit, related_name='started_methods', verbose_name=_('Visit'))
-    method = models.ForeignKey(FMMethod, related_name='started_methods', verbose_name=_('Method'))
+    visit = models.ForeignKey(Visit, related_name='started_methods', verbose_name=_('Visit'),
+                              on_delete=models.CASCADE)
+    method = models.ForeignKey(FMMethod, related_name='started_methods', verbose_name=_('Method'),
+                               on_delete=models.CASCADE)
     method_type = models.ForeignKey(VisitMethodType, related_name='started_methods', verbose_name=_('Method Type'),
-                                    blank=True, null=True)
-    author = models.ForeignKey(settings.AUTH_USER_MODEL, related_name='started_methods', verbose_name=_('Author'))
+                                    blank=True, null=True, on_delete=models.CASCADE)
+    author = models.ForeignKey(settings.AUTH_USER_MODEL, related_name='started_methods', verbose_name=_('Author'),
+                               on_delete=models.CASCADE)
     status = FSMField(choices=STATUS_CHOICES, default=STATUS_CHOICES.started)
 
     class Meta:
@@ -47,8 +50,8 @@ class StartedMethod(models.Model):
 
 
 class TaskData(models.Model):
-    visit_task = models.ForeignKey(VisitTaskLink)
-    started_method = models.ForeignKey(StartedMethod)
+    visit_task = models.ForeignKey(VisitTaskLink, on_delete=models.CASCADE)
+    started_method = models.ForeignKey(StartedMethod, on_delete=models.CASCADE)
     is_probed = models.BooleanField(default=True)
 
     class Meta:
@@ -61,8 +64,8 @@ class TaskData(models.Model):
 
 
 class CheckListItemValue(FindingMixin, models.Model):
-    task_data = models.ForeignKey(TaskData)
-    checklist_item = models.ForeignKey(TaskCheckListItem)
+    task_data = models.ForeignKey(TaskData, on_delete=models.CASCADE)
+    checklist_item = models.ForeignKey(TaskCheckListItem, on_delete=models.CASCADE)
 
     class Meta:
         verbose_name = _('Checklist Item Value')

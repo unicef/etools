@@ -29,8 +29,8 @@ class FindingMixin(object):
 
 
 class VisitTaskLink(FindingMixin, models.Model):
-    visit = models.ForeignKey('Visit', related_name='visit_task_links')
-    task = models.ForeignKey(Task, related_name='visit_task_links')
+    visit = models.ForeignKey('Visit', related_name='visit_task_links', on_delete=models.CASCADE)
+    task = models.ForeignKey(Task, related_name='visit_task_links', on_delete=models.CASCADE)
 
 
 class Visit(InheritedModelMixin, SoftDeleteMixin, TimeStampedModel):
@@ -54,7 +54,8 @@ class Visit(InheritedModelMixin, SoftDeleteMixin, TimeStampedModel):
     author = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, blank=True, null=True)
 
     primary_field_monitor = models.ForeignKey(settings.AUTH_USER_MODEL, related_name='fm_primary_visits',
-                                              verbose_name=_('Primary Field Monitor'), blank=True, null=True)
+                                              verbose_name=_('Primary Field Monitor'), blank=True, null=True,
+                                              on_delete=models.CASCADE)
     team_members = models.ManyToManyField(settings.AUTH_USER_MODEL, related_name='fm_visits',
                                           verbose_name=_('Team Members'), blank=True)
 
@@ -177,7 +178,7 @@ class UNICEFVisit(Visit):
 
 class TaskCheckListItem(FindingMixin, OrderedModel):
     parent_slug = models.CharField(max_length=50, verbose_name=_('Parent Slug'))
-    visit_task = models.ForeignKey(VisitTaskLink, verbose_name=_('Task Link'))
+    visit_task = models.ForeignKey(VisitTaskLink, verbose_name=_('Task Link'), on_delete=models.CASCADE)
 
     question_number = models.CharField(max_length=10, verbose_name=_('Question Number'))
     question_text = models.CharField(max_length=255, verbose_name=_('Question Text'))
@@ -199,9 +200,9 @@ class TaskCheckListItem(FindingMixin, OrderedModel):
 
 
 class VisitMethodType(models.Model):
-    method = models.ForeignKey(FMMethod, verbose_name=_('Method'), related_name='visit_types')
+    method = models.ForeignKey(FMMethod, verbose_name=_('Method'), related_name='visit_types', on_delete=models.CASCADE)
     parent_slug = models.CharField(max_length=50, verbose_name=_('Parent Slug'))
-    visit = models.ForeignKey(Visit, verbose_name=_('Visit'), related_name='method_types')
+    visit = models.ForeignKey(Visit, verbose_name=_('Visit'), related_name='method_types', on_delete=models.CASCADE)
     name = models.CharField(verbose_name=_('Name'), max_length=300)
     is_recommended = models.BooleanField(default=False, verbose_name=_('Is Recommended'))
 
@@ -216,8 +217,9 @@ class VisitMethodType(models.Model):
 
 
 class VisitCPOutputConfig(models.Model):
-    visit_task = models.ForeignKey(VisitTaskLink, verbose_name=_('Visit Task'), related_name='cp_output_configs')
-    parent = models.ForeignKey(CPOutputConfig, verbose_name=_('Parent'))
+    visit_task = models.ForeignKey(VisitTaskLink, verbose_name=_('Visit Task'), related_name='cp_output_configs',
+                                   on_delete=models.CASCADE)
+    parent = models.ForeignKey(CPOutputConfig, verbose_name=_('Parent'), on_delete=models.CASCADE)
     is_priority = models.BooleanField(default=False, verbose_name=_('Priority?'))
     government_partners = models.ManyToManyField('partners.PartnerOrganization', blank=True,
                                                  verbose_name=_('Contributing Government Partners'))
