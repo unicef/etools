@@ -2,8 +2,13 @@
 from datetime import datetime
 
 from etools.applications.audit.models import Audit, Engagement
-from etools.applications.audit.tests.factories import (AuditFactory, MicroAssessmentFactory, RiskFactory,
-                                                       SpecialAuditFactory, SpotCheckFactory,)
+from etools.applications.audit.tests.factories import (
+    AuditFactory,
+    MicroAssessmentFactory,
+    RiskFactory,
+    SpecialAuditFactory,
+    SpotCheckFactory,
+)
 from etools.applications.EquiTrack.tests.cases import BaseTenantTestCase
 from etools.applications.hact.tests.factories import AggregateHactFactory
 from etools.applications.partners.models import PartnerOrganization, PartnerType
