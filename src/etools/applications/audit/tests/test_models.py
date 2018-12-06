@@ -43,7 +43,7 @@ class EngagementStaffMemberTestCase(BaseTenantTestCase):
     def test_signal(self):
         auditor_firm = AuditPartnerFactory()
         staff_member = auditor_firm.staff_members.first()
-        staff_member.user.profile.countries_available = []
+        staff_member.user.profile.countries_available.set([])
         engagement = EngagementFactory(staff_members=[], agreement__auditor_firm=auditor_firm)
 
         engagement.staff_members.add(staff_member)

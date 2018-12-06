@@ -129,4 +129,5 @@ class InterventionDashSerializer(serializers.ModelSerializer):
             'multi_curr_flag',
             'has_final_partnership_review',
             'link',
+            'unicef_focal_points',
         )
