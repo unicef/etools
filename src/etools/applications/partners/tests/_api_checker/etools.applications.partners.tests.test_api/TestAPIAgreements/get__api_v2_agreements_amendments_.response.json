@@ -19,21 +19,21 @@
         ],
         "content-length": [
             "Content-Length",
-            "197"
+            "194"
         ]
     },
     "data": [
         {
-            "id": 20,
-            "created": "2018-12-05T16:22:56.841686Z",
-            "modified": "2018-12-05T16:22:56.843258Z",
+            "id": 1,
+            "created": "2018-12-06T10:18:32.866967Z",
+            "modified": "2018-12-06T10:18:32.870084Z",
             "number": "tmp01",
             "signed_amendment": null,
             "types": [
                 "Change in clause"
             ],
             "signed_date": null,
-            "agreement": 598
+            "agreement": 5
         }
     ],
     "content_type": null
