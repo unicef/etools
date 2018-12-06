@@ -10,7 +10,6 @@ from django.db.models.signals import post_save
 from django.utils.functional import cached_property
 from django.utils.translation import ugettext_lazy as _
 
-from djangosaml2.signals import pre_user_save
 from tenant_schemas.models import TenantMixin
 
 logger = logging.getLogger(__name__)
