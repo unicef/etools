@@ -25,11 +25,16 @@ class LogIssue(TimeStampedModel):
     )
 
     author = models.ForeignKey(settings.AUTH_USER_MODEL, related_name='created_logissues',
-                               verbose_name=_('Issue Raised By'))
-    cp_output = models.ForeignKey(Result, blank=True, null=True, verbose_name=_('CP Output'))
-    partner = models.ForeignKey(PartnerOrganization, blank=True, null=True, verbose_name=_('Partner'))
-    location = models.ForeignKey(Location, blank=True, null=True, verbose_name=_('Location'))
-    location_site = models.ForeignKey(LocationSite, blank=True, null=True, verbose_name=_('Site'))
+                               verbose_name=_('Issue Raised By'),
+                               on_delete=models.CASCADE)
+    cp_output = models.ForeignKey(Result, blank=True, null=True, verbose_name=_('CP Output'),
+                                  on_delete=models.CASCADE)
+    partner = models.ForeignKey(PartnerOrganization, blank=True, null=True, verbose_name=_('Partner'),
+                                on_delete=models.CASCADE)
+    location = models.ForeignKey(Location, blank=True, null=True, verbose_name=_('Location'),
+                                 on_delete=models.CASCADE)
+    location_site = models.ForeignKey(LocationSite, blank=True, null=True, verbose_name=_('Site'),
+                                      on_delete=models.CASCADE)
 
     issue = models.TextField(verbose_name=_('Issue For Attention/Probing'))
     status = models.CharField(max_length=10, choices=STATUS_CHOICES, default=STATUS_CHOICES.new)
