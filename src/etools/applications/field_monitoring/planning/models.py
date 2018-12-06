@@ -35,15 +35,20 @@ class YearPlan(TimeStampedModel):
 
 
 class Task(SoftDeleteMixin, TimeStampedModel):
-    year_plan = models.ForeignKey(YearPlan, verbose_name=_('Year Plan'), related_name='tasks')
-    plan_by_month = ArrayField(models.PositiveSmallIntegerField(default=0, blank=True), default=[0]*12,
+    year_plan = models.ForeignKey(YearPlan, verbose_name=_('Year Plan'), related_name='tasks',
+                                  on_delete=models.CASCADE)
+    plan_by_month = ArrayField(models.PositiveSmallIntegerField(default=0, blank=True), default=[0] * 12,
                                verbose_name=_('Plan By Month'), blank=True)
-    location = models.ForeignKey(Location, verbose_name=_('Location'), related_name='tasks')
-    location_site = models.ForeignKey(LocationSite, blank=True, null=True, verbose_name=_('Site'), related_name='tasks')
-    cp_output_config = models.ForeignKey(CPOutputConfig, verbose_name=_('CP Output Config'), related_name='tasks')
-    partner = models.ForeignKey('partners.PartnerOrganization', verbose_name=_('Partner'), related_name='tasks')
+    location = models.ForeignKey(Location, verbose_name=_('Location'), related_name='tasks',
+                                 on_delete=models.CASCADE)
+    location_site = models.ForeignKey(LocationSite, blank=True, null=True, verbose_name=_('Site'), related_name='tasks',
+                                      on_delete=models.CASCADE)
+    cp_output_config = models.ForeignKey(CPOutputConfig, verbose_name=_('CP Output Config'), related_name='tasks',
+                                         on_delete=models.CASCADE)
+    partner = models.ForeignKey('partners.PartnerOrganization', verbose_name=_('Partner'), related_name='tasks',
+                                on_delete=models.CASCADE)
     intervention = models.ForeignKey('partners.Intervention', verbose_name=_('PD or SSFA'), related_name='+',
-                                     blank=True, null=True)
+                                     blank=True, null=True, on_delete=models.CASCADE)
 
     class Meta:
         verbose_name = _('Task')
