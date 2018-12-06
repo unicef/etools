@@ -122,7 +122,7 @@ class VisitMethodSerializer(serializers.ModelSerializer):
 
         return VisitCPOutputConfigSerializer(
             instance=VisitCPOutputConfig.objects.filter(
-                visit_task__taskchecklistitem__methods=obj,
+                visit_task__checklist_items_methods=obj,
             ),
             many=True
         ).data
@@ -148,7 +148,7 @@ class VisitSerializer(SnapshotModelSerializer, VisitListSerializer):
     def get_scope_by_methods(self, obj):
         return VisitMethodSerializer(
             visit=obj,
-            instance=FMMethod.objects.filter(taskchecklistitem__visit_task__visit=obj),
+            instance=FMMethod.objects.filter(checklist_items__visit_task__visit=obj),
             many=True
         ).data
 

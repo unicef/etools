@@ -81,9 +81,17 @@ class VisitFactory(factory.DjangoModelFactory):
     def tasks(self, create, extracted, count, *kwargs):
         if extracted:
             for obj in extracted:
-                VisitTaskLink.objects.create(visit=self, task=obj)
+                VisitTaskLinkFactory(visit=self, task=obj)
         elif create:
-            [VisitTaskLink.objects.create(visit=self, task=TaskFactory()) for i in range(count)]
+            [VisitTaskLinkFactory(visit=self, task=TaskFactory()) for i in range(count)]
+
+
+class VisitTaskLinkFactory(factory.DjangoModelFactory):
+    visit = factory.SubFactory(VisitFactory)
+    task = factory.SubFactory(TaskFactory)
+
+    class Meta:
+        model = VisitTaskLink
 
 
 class UNICEFVisitFactory(VisitFactory):
@@ -103,7 +111,7 @@ class TaskCheckListItemFactory(factory.DjangoModelFactory):
         model = TaskCheckListItem
 
     @factory.post_generation
-    def tasks(self, create, extracted, count, *kwargs):
+    def methods(self, create, extracted, count, *kwargs):
         if extracted:
             self.methods.add(*extracted)
         elif create:
@@ -122,21 +130,26 @@ class VisitMethodTypeFactory(factory.DjangoModelFactory):
 
 
 class VisitCPOutputConfigFactory(factory.DjangoModelFactory):
-    visit = factory.SubFactory(UNICEFVisitFactory)
+    visit_task = factory.SubFactory(VisitTaskLinkFactory)
     parent = factory.SubFactory(CPOutputConfigFactory)
-    government_partners = factory.LazyAttribute(lambda obj: obj.parent.government_partners)
 
     class Meta:
         model = VisitCPOutputConfig
 
     @factory.post_generation
     def recommended_method_types(self, create, extracted, **kwargs):
-        if create:
+        if extracted:
+            self.recommended_method_types.add(*extracted)
+        elif create:
             for method_type in self.parent.recommended_method_types.all():
                 VisitMethodTypeFactory(
                     method=method_type.method,
                     parent_slug=method_type.slug,
-                    visit=self,
+                    visit=self.visit_task.visit,
                     name=method_type.name,
                     is_recommended=True
                 )
+
+    @factory.post_generation
+    def government_partners(self, create, extracted, **kwargs):
+        self.government_partners.add(*self.parent.government_partners.all())

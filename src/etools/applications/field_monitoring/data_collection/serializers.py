@@ -9,7 +9,7 @@ from etools.applications.field_monitoring.fm_settings.serializers.cp_outputs imp
     InterventionSerializer
 from etools.applications.field_monitoring.fm_settings.serializers.locations import LocationSiteLightSerializer
 from etools.applications.field_monitoring.fm_settings.serializers.methods import FMMethodSerializer
-from etools.applications.field_monitoring.visits.models import Visit, TaskCheckListItem, VisitTaskLink
+from etools.applications.field_monitoring.visits.models import Visit, TaskCheckListItem, VisitTaskLink, FindingMixin
 from etools.applications.field_monitoring.visits.serializers import VisitMethodTypeSerializer
 from etools.applications.reports.serializers.v2 import MinimalOutputListSerializer
 from etools.applications.users.serializers import UserSerializer
@@ -76,12 +76,12 @@ class TaskDataCheckListSerializer(TaskCheckListSerializer):
     finding_value = SeparatedReadWriteField(
         read_field=serializers.SerializerMethodField(),
         write_field=serializers.CharField(),
-        label=CheckListItemValue._meta.get_field('finding_value').verbose_name
+        label=FindingMixin.finding_value.verbose_name
     )
     finding_description = SeparatedReadWriteField(
         read_field=serializers.SerializerMethodField(),
         write_field=serializers.CharField(),
-        label=CheckListItemValue._meta.get_field('finding_description').verbose_name
+        label=FindingMixin.finding_value.verbose_name
     )
 
     task_data = serializers.PrimaryKeyRelatedField(queryset=TaskData.objects.all(), write_only=True)

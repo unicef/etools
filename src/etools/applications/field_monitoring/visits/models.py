@@ -178,7 +178,8 @@ class UNICEFVisit(Visit):
 
 class TaskCheckListItem(FindingMixin, OrderedModel):
     parent_slug = models.CharField(max_length=50, verbose_name=_('Parent Slug'))
-    visit_task = models.ForeignKey(VisitTaskLink, verbose_name=_('Task Link'), on_delete=models.CASCADE)
+    visit_task = models.ForeignKey(VisitTaskLink, verbose_name=_('Task Link'), on_delete=models.CASCADE,
+                                   related_name='checklist_items')
 
     question_number = models.CharField(max_length=10, verbose_name=_('Question Number'))
     question_text = models.CharField(max_length=255, verbose_name=_('Question Text'))
