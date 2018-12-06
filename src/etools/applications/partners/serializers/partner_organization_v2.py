@@ -318,6 +318,7 @@ class PartnerOrganizationDashboardSerializer(serializers.ModelSerializer):
             'outstanding_dct_amount_6_to_9_months_usd',
             'outstanding_dct_amount_more_than_9_months_usd',
             'vendor_number',
+            'partner_type',
         )
 
 
