@@ -9,9 +9,9 @@ from django.db import connection, models
 from django.db.models.signals import post_save
 from django.utils.functional import cached_property
 from django.utils.translation import ugettext_lazy as _
+from django_tenants.models import TenantMixin
 
 from djangosaml2.signals import pre_user_save
-from tenant_schemas.models import TenantMixin
 
 logger = logging.getLogger(__name__)
 
@@ -173,8 +173,6 @@ class CountryOfficeManager(models.Manager):
             return super(CountryOfficeManager, self).get_queryset().filter(offices=connection.tenant)
         else:
             # this only gets called on initialization because FakeTenant does not have the model attrs
-            # see:
-            # https://github.com/bernardopires/django-tenant-schemas/blob/90f8b147adb4ea5ccc0d723f3e50bc9178857d65/tenant_schemas/postgresql_backend/base.py#L153
             return super(CountryOfficeManager, self).get_queryset()
 
 
