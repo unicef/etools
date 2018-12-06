@@ -7,9 +7,8 @@ from django.db import connection
 from django.http.response import HttpResponseRedirect
 from django.template.response import SimpleTemplateResponse
 from django.urls import reverse
-
-from tenant_schemas.middleware import TenantMiddleware
-from tenant_schemas.utils import get_public_schema_name
+from django_tenants.middleware import TenantMiddleware
+from django_tenants.utils import get_public_schema_name
 
 from etools.applications.EquiTrack.utils import set_country
 

@@ -11,7 +11,8 @@ from etools.applications.reports.models import ResultType
 
 class CPOutputConfig(TimeStampedModel):
     cp_output = models.OneToOneField('reports.Result', related_name='fm_config',
-                                     verbose_name=_('CP Output To Be Monitored'))
+                                     verbose_name=_('CP Output To Be Monitored'),
+                                     on_delete=models.CASCADE)
     is_monitored = models.BooleanField(default=True, verbose_name=_('Monitored At Community Level?'))
     is_priority = models.BooleanField(verbose_name=_('Priority?'), default=False)
     government_partners = models.ManyToManyField('partners.PartnerOrganization', blank=True,
@@ -30,9 +31,11 @@ class CPOutputConfig(TimeStampedModel):
 
 
 class PlannedCheckListItem(OrderedModel):
-    checklist_item = models.ForeignKey(CheckListItem, verbose_name=_('Checklist Item'))
+    checklist_item = models.ForeignKey(CheckListItem, verbose_name=_('Checklist Item'),
+                                       on_delete=models.CASCADE)
     cp_output_config = models.ForeignKey(CPOutputConfig, verbose_name=_('CP Output Config'),
-                                         related_name='planned_checklist_items')
+                                         related_name='planned_checklist_items',
+                                         on_delete=models.CASCADE)
     methods = models.ManyToManyField(FMMethod, blank=True, verbose_name=_('Method(s)'))
 
     class Meta:
@@ -47,8 +50,9 @@ class PlannedCheckListItem(OrderedModel):
 
 class PlannedCheckListItemPartnerInfo(models.Model):
     planned_checklist_item = models.ForeignKey(PlannedCheckListItem, verbose_name=_('Planned Checklist Item'),
-                                               related_name='partners_info')
-    partner = models.ForeignKey('partners.PartnerOrganization', blank=True, null=True, verbose_name=_('Partner'))
+                                               related_name='partners_info', on_delete=models.CASCADE)
+    partner = models.ForeignKey('partners.PartnerOrganization', blank=True, null=True, verbose_name=_('Partner'),
+                                on_delete=models.CASCADE)
     specific_details = models.TextField(verbose_name=_('Specific Details To Probe'), blank=True)
     standard_url = models.CharField(max_length=1000, verbose_name=_('URL To Standard'), blank=True)
 

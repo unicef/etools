@@ -7,7 +7,7 @@ class Parent(models.Model):
 
 
 class Child1(models.Model):
-    parent = models.ForeignKey(Parent, related_name='children1')
+    parent = models.ForeignKey(Parent, related_name='children1', on_delete=models.CASCADE)
     field1 = models.IntegerField()
     field2 = models.IntegerField(null=True)
 
