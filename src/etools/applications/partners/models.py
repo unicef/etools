@@ -1080,6 +1080,7 @@ class Assessment(TimeStampedModel):
         verbose_name=_('Basis for risk rating'),
         default=False,
     )
+    active = models.BooleanField(default=True)
 
     tracker = FieldTracker()
 

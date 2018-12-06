@@ -143,7 +143,7 @@ tox==3.0.0
 traitlets==4.3.2          # via ipython
 unicef-attachments==0.4.2
 unicef-djangolib==0.5.2
-unicef-locations==1.4.1
+unicef-locations==1.4.2
 unicef_notification==0.2.0
 unicef_restlib==0.3.7
 unicef_snapshot==0.2.1
