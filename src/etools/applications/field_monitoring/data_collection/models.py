@@ -6,8 +6,8 @@ from django_fsm import transition, FSMField
 from model_utils import Choices
 
 from etools.applications.field_monitoring.shared.models import FMMethod
-from etools.applications.field_monitoring.visits.models import Visit, VisitMethodType, VisitTaskLink, TaskCheckListItem, \
-    FindingMixin
+from etools.applications.field_monitoring.visits.models import Visit, VisitMethodType, VisitTaskLink, \
+    TaskCheckListItem, FindingMixin
 
 
 class StartedMethod(models.Model):
@@ -39,6 +39,28 @@ class StartedMethod(models.Model):
 
         return result
 
+    def generate_tasks_data(self):
+        data = []
+        visit_tasks = self.visit.visit_task_links.filter(tackchecklistitem__methods=self.method)
+        if self.method_type:
+            visit_tasks = visit_tasks.filter(cp_output_configs__recommended_method_types=self.method_type)
+
+        for visit_task in visit_tasks:
+            data.append(TaskData(
+                visit_task=visit_task,
+                started_method=self,
+                is_probed=None
+            ))
+        TaskData.objects.bulk_create(data)
+
+    def save(self, **kwargs):
+        create = not self.pk
+
+        super().save(**kwargs)
+
+        if create:
+            self.generate_tasks_data()
+
     @transition(
         status, source=STATUS_CHOICES.started, target=STATUS_CHOICES.completed,
     )
@@ -52,7 +74,7 @@ class StartedMethod(models.Model):
 class TaskData(models.Model):
     visit_task = models.ForeignKey(VisitTaskLink, on_delete=models.CASCADE)
     started_method = models.ForeignKey(StartedMethod, on_delete=models.CASCADE)
-    is_probed = models.BooleanField(default=True)
+    is_probed = models.BooleanField(default=True, null=True)
 
     class Meta:
         verbose_name = _('Task Data')
