@@ -7,7 +7,7 @@ from django.db import connection, transaction
 from django.db.models import F, Sum
 
 from celery.utils.log import get_task_logger
-from tenant_schemas.utils import schema_context
+from django_tenants.utils import schema_context
 from unicef_notification.utils import send_notification_with_template
 
 from etools.applications.EquiTrack.utils import get_environment

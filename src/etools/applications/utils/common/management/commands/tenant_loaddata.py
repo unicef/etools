@@ -3,7 +3,7 @@ from django.core.management import call_command
 from django.core.management.base import BaseCommand
 from django.db import connection, DEFAULT_DB_ALIAS
 
-from tenant_schemas.utils import get_tenant_model
+from django_tenants.utils import get_tenant_model
 
 
 class Command(BaseCommand):

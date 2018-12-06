@@ -7,7 +7,7 @@
         ],
         "vary": [
             "Vary",
-            "Accept, Cookie"
+            "Accept, Origin, Cookie"
         ],
         "allow": [
             "Allow",
@@ -16,6 +16,10 @@
         "x-frame-options": [
             "X-Frame-Options",
             "SAMEORIGIN"
+        ],
+        "content-length": [
+            "Content-Length",
+            "1491"
         ]
     },
     "data": {
@@ -29,13 +33,6 @@
                 "minimum_requirements": 0
             },
             "spot_checks": {
-                "planned": {
-                    "q1": 0,
-                    "q2": 0,
-                    "q3": 0,
-                    "q4": 0,
-                    "total": 0
-                },
                 "completed": {
                     "q1": 0,
                     "q2": 0,
@@ -78,11 +75,11 @@
             "expiring_assessment_flag": false,
             "approaching_threshold_flag": false
         },
-        "created": "2018-11-14T11:36:06.224000Z",
-        "modified": "2018-11-14T11:36:06.229000Z",
+        "created": "2018-12-05T16:22:58.948000Z",
+        "modified": "2018-12-05T16:22:58.954000Z",
         "partner_type": "Civil Society Organization",
         "cso_type": "International",
-        "name": "Partner 341",
+        "name": "Partner 8",
         "short_name": "Short name",
         "description": "",
         "shared_with": null,

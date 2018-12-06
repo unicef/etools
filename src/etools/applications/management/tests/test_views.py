@@ -1,18 +1,18 @@
-from mock import patch
-from rest_framework import status
-from tenant_schemas.test.client import TenantClient
-
 from django.urls import reverse
 
-from etools.applications.EquiTrack.tests.cases import BaseTenantTestCase
+from django_tenants.test.client import TenantClient
+from mock import patch
+from rest_framework import status
 from unicef_locations.tests.factories import LocationFactory
-from etools.applications.partners.models import Intervention
+
+from etools.applications.action_points.tests.factories import ActionPointFactory
 from etools.applications.activities.models import Activity
-from etools.applications.partners.tests.factories import InterventionFactory, AgreementFactory, PartnerFactory
+from etools.applications.EquiTrack.tests.cases import BaseTenantTestCase
+from etools.applications.partners.models import Intervention
+from etools.applications.partners.tests.factories import AgreementFactory, InterventionFactory, PartnerFactory
 from etools.applications.t2f.models import Travel, TravelType
 from etools.applications.t2f.tests.factories import TravelActivityFactory, TravelFactory
 from etools.applications.users.tests.factories import CountryFactory, GroupFactory, UserFactory
-from etools.applications.action_points.tests.factories import ActionPointFactory
 
 
 class InvalidateCacheTest(BaseTenantTestCase):

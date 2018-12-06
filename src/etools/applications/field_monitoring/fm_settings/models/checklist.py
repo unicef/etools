@@ -18,7 +18,8 @@ class CheckListCategory(OrderedModel):
 
 
 class CheckListItem(OrderedModel):
-    category = models.ForeignKey(CheckListCategory, related_name='questions', verbose_name=_('Category'))
+    category = models.ForeignKey(CheckListCategory, related_name='questions', verbose_name=_('Category'),
+                                 on_delete=models.CASCADE)
     question_number = models.CharField(max_length=10, verbose_name=_('Question Number'))
     question_text = models.CharField(max_length=255, verbose_name=_('Question Text'))
     slug = AutoSlugField(verbose_name=_('Slug'), populate_from='question_text')
