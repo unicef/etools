@@ -82,9 +82,9 @@ class AuditorStaffMemberFactory(BaseStaffMemberFactory):
     @factory.post_generation
     def user_groups(self, create, extracted, **kwargs):
         if create:
-            self.user.groups = [
+            self.user.groups.set([
                 Group.objects.get_or_create(name=Auditor.name)[0]
-            ]
+            ])
 
 
 class AuditPartnerFactory(BaseFirmFactory):

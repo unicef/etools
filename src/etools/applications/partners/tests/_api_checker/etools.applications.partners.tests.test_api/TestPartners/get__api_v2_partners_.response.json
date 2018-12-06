@@ -7,7 +7,7 @@
         ],
         "vary": [
             "Vary",
-            "Accept, Cookie"
+            "Accept, Origin, Cookie"
         ],
         "allow": [
             "Allow",
@@ -16,6 +16,10 @@
         "x-frame-options": [
             "X-Frame-Options",
             "SAMEORIGIN"
+        ],
+        "content-length": [
+            "Content-Length",
+            "962"
         ]
     },
     "data": [
@@ -30,7 +34,7 @@
             "vendor_number": "DDD",
             "deleted_flag": false,
             "blocked": false,
-            "name": "Partner 341",
+            "name": "Partner 8",
             "short_name": "Short name",
             "partner_type": "Civil Society Organization",
             "cso_type": "International",
@@ -53,11 +57,11 @@
             "city": null,
             "postal_code": null,
             "country": null,
-            "id": 340,
+            "id": 575,
             "vendor_number": null,
             "deleted_flag": false,
             "blocked": false,
-            "name": "Partner 342",
+            "name": "Partner 9",
             "short_name": "",
             "partner_type": "",
             "cso_type": null,
