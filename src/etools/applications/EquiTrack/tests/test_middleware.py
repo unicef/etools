@@ -78,10 +78,10 @@ class EToolsTenantMiddlewareTest(TestCase):
     @override_settings(PUBLIC_SCHEMA_URLCONF='foo')
     def test_public_schema_urlconf(self):
         """
-        This just tests a code path that was copied from the django-tenant-schemas middleware when we
+        This just tests a code path that was copied from the django-tenants middleware when we
         copy/pasted. eTools does not use it.
         """
-        country = CountryFactory(schema_name='public', domain_url='public.example.com')
+        country = CountryFactory(schema_name='public')
         superuser = UserFactory(is_superuser=True, profile__country=country)
         self.request.user = superuser
         EToolsTenantMiddleware().process_request(self.request)

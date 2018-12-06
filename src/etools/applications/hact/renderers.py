@@ -6,7 +6,7 @@ class HactHistoryCSVRenderer(CSVRenderer):
         # header is changed, so set labels first
         labels = self.set_labels(header)
         header = self.set_header(header)
-        return super(HactHistoryCSVRenderer, self).tablize(
+        return super().tablize(
             data,
             header=header,
             labels=labels

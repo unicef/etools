@@ -1,3 +1,4 @@
+-e git+https://github.com/tomturner/django-tenants.git@12b6a852236363c8478c944e79b1432f5c0f3c46#egg=django-tenants
 amqp==2.2.2               # via kombu
 asn1crypto==0.24.0        # via cryptography
 azure-common==1.1.8       # via azure-storage
@@ -29,17 +30,16 @@ django-import-export==1.1
 django-js-asset==1.1.0    # via django-mptt
 django-leaflet==0.24
 django-logentry-admin==1.0.4
-django-model-utils==2.6
+django-model-utils==3.1.2
 django-mptt==0.9
 django-ordered-model==1.5
 django-post-office==3.1.0  # via unicef-notification
 django-redis-cache==1.8
 django-rest-swagger==2.2
 django-storages==1.6.6
-django-tenant-schemas==1.9.0
 django-timezone-field==3.0  # via django-celery-beat
 django-waffle==0.14
-django==1.10.8
+django==2.0.9
 djangorestframework-csv==2.1.0
 djangorestframework-gis==0.13.0
 djangorestframework-jwt==1.11.0
@@ -78,7 +78,7 @@ pyrestcli==0.6.4          # via carto
 python-crontab==2.3.5     # via django-celery-beat
 python-dateutil==2.5.3    # via azure-storage, pyrestcli, python-crontab
 python3-openid==3.1.0     # via social-auth-core
-pytz==2018.3              # via babel, celery, django-timezone-field, etools-validator, flower, unicef-attachments, unicef-djangolib, unicef-restlib
+pytz==2018.3              # via babel, celery, django, django-timezone-field, etools-validator, flower, unicef-attachments, unicef-djangolib, unicef-restlib
 pyyaml==3.12
 raven==6.9
 redis==2.10.6             # via django-redis-cache
@@ -98,7 +98,7 @@ unicef-attachments==0.4.2
 unicef-djangolib==0.5.2
 unicef-locations==1.4.1
 unicef_notification==0.2.0
-unicef_restlib==0.3.4
+unicef_restlib==0.3.7
 unicef_snapshot==0.2.1
 unicodecsv==0.14.1        # via djangorestframework-csv, tablib, unicef-attachments, unicef-djangolib, unicef-restlib
 uritemplate==3.0.0        # via coreapi

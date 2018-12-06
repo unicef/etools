@@ -79,10 +79,10 @@ LOGGING = LOGGING  # noqa - just here for flake purposes. should be imported fro
 # log updates for more info in local environment
 LOGGING['disable_existing_loggers'] = False  # don't disable any existing loggers
 
-# enable tenant logging http://django-tenant-schemas.readthedocs.io/en/latest/use.html#logging
+# https://django-tenants.readthedocs.io/en/latest/use.html#logging
 LOGGING['filters'] = {
     'tenant_context': {
-        '()': 'tenant_schemas.log.TenantContextFilter'
+        '()': 'django_tenants.log.TenantContextFilter'
     }
 }
 LOGGING['formatters'] = {

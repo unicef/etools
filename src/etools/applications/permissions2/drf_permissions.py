@@ -50,7 +50,7 @@ class NestedPermission(HasTargetsPermission):
             field = getattr(model, lookup_field).field
             parent_model = field.related_model
 
-            targets.append(Permission.get_target(parent_model, field.rel.get_accessor_name()))
+            targets.append(Permission.get_target(parent_model, field.remote_field.get_accessor_name()))
 
             model = parent_model
 
