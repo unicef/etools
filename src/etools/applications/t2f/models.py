@@ -699,7 +699,7 @@ class Invoice(models.Model):
     )
     amount = models.DecimalField(max_digits=20, decimal_places=4, verbose_name=_('Amount'))
     status = models.CharField(max_length=16, choices=STATUS, verbose_name=_('Status'))
-    messages = ArrayField(models.TextField(default='', blank=True), default=[], verbose_name=_('Messages'))
+    messages = ArrayField(models.TextField(default='', blank=True), default=list, verbose_name=_('Messages'))
     vision_fi_id = models.CharField(max_length=16, default='', blank=True, verbose_name=_('Vision FI ID'))
 
     def save(self, **kwargs):
