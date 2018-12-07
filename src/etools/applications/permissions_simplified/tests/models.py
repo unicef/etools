@@ -8,7 +8,7 @@ class SimplifiedTestParent(models.Model):
 
 
 class SimplifiedTestChild(models.Model):
-    parent = models.ForeignKey(SimplifiedTestParent, related_name='children')
+    parent = models.ForeignKey(SimplifiedTestParent, related_name='children', on_delete=models.CASCADE)
     test_field = models.CharField(max_length=10)
 
 
