@@ -109,7 +109,7 @@ class PartnerOrganizationListAPIView(QueryStringFilterMixin, ExportModelMixin, L
         if "verbosity" in query_params.keys():
             if query_params.get("verbosity") == 'minimal':
                 return MinimalPartnerOrganizationListSerializer
-        return super(PartnerOrganizationListAPIView, self).get_serializer_class()
+        return super().get_serializer_class()
 
     def get_queryset(self, format=None):
         q = PartnerOrganization.objects.all()
@@ -154,7 +154,7 @@ class PartnerOrganizationListAPIView(QueryStringFilterMixin, ExportModelMixin, L
         :returns: JSON or CSV file
         """
         query_params = self.request.query_params
-        response = super(PartnerOrganizationListAPIView, self).list(request)
+        response = super().list(request)
         if "format" in query_params.keys():
             if query_params.get("format") in ['csv', 'csv_flat']:
                 response['Content-Disposition'] = "attachment;filename=partner.csv"
@@ -182,7 +182,7 @@ class PartnerOrganizationDetailAPIView(ValidatorViewMixin, RetrieveUpdateDestroy
         if self.request.method in ["PUT", "PATCH"]:
             return PartnerOrganizationCreateUpdateSerializer
         else:
-            return super(PartnerOrganizationDetailAPIView, self).get_serializer_class()
+            return super().get_serializer_class()
 
     @transaction.atomic
     def update(self, request, *args, **kwargs):
@@ -347,7 +347,7 @@ class PartnerOrganizationHactAPIView(ListAPIView):
         :returns: JSON or CSV file
         """
         query_params = self.request.query_params
-        response = super(PartnerOrganizationHactAPIView, self).list(request)
+        response = super().list(request)
         if "format" in query_params.keys():
             if query_params.get("format") == 'csv':
                 response['Content-Disposition'] = f"attachment;filename={self.filename}.csv"
@@ -393,7 +393,7 @@ class PartnerStaffMemberListAPIVIew(ExportModelMixin, ListAPIView):
                 return PartnerStaffMemberExportSerializer
             if query_params.get("format") == 'csv_flat':
                 return PartnerStaffMemberExportFlatSerializer
-        return super(PartnerStaffMemberListAPIVIew, self).get_serializer_class()
+        return super().get_serializer_class()
 
 
 class PartnerOrganizationAssessmentListCreateView(ExportModelMixin, ListCreateAPIView):
