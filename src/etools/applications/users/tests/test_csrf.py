@@ -11,7 +11,7 @@ class CSRFTest(TestCase):
     """
 
     def setUp(self):
-        super(CSRFTest, self).setUp()
+        super().setUp()
         # Ask the test client to enforce CSRF checks
         self.client = Client(enforce_csrf_checks=True)
         self.admin_login_url = reverse('admin:login')
