@@ -79,7 +79,9 @@ class TaskDataCheckListViewSet(
         started_method = self.get_parent_object()
         queryset = queryset.filter(methods=started_method.method)
         if started_method.method_type:
-            queryset = queryset.filter(visit_task__cp_output_configs__recommended_methods=started_method.method_type)
+            queryset = queryset.filter(
+                visit_task__cp_output_configs__recommended_method_types=started_method.method_type
+            )
 
         return queryset
 

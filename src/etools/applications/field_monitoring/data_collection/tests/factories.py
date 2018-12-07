@@ -30,7 +30,7 @@ class StartedMethodFactory(factory.DjangoModelFactory):
 
 
 class TaskDataFactory(factory.DjangoModelFactory):
-    visit_task = factory.SubFactory(VisitTaskLinkFactory)
+    visit_task = factory.SubFactory(VisitTaskLinkFactory, visit__status='assigned')
     started_method = factory.SubFactory(StartedMethodFactory)
     is_probed = True
 

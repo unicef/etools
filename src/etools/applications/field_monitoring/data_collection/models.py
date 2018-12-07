@@ -5,6 +5,7 @@ from django.utils.translation import ugettext_lazy as _
 from django_fsm import transition, FSMField
 from model_utils import Choices
 
+from etools.applications.field_monitoring.data_collection.transitions.conditions import StartedMethodCompletedTasksCheck
 from etools.applications.field_monitoring.shared.models import FMMethod
 from etools.applications.field_monitoring.visits.models import Visit, VisitMethodType, VisitTaskLink, \
     TaskCheckListItem, FindingMixin
@@ -61,6 +62,9 @@ class StartedMethod(models.Model):
 
     @transition(
         status, source=STATUS_CHOICES.started, target=STATUS_CHOICES.completed,
+        conditions=[
+            StartedMethodCompletedTasksCheck.as_condition(),
+        ]
     )
     def complete(self):
         """
