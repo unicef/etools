@@ -1,5 +1,3 @@
-# -*- coding: utf-8 -*-
-
 import datetime
 import decimal
 import json
@@ -165,13 +163,6 @@ def hact_default():
             'completed': 0,
         },
         'spot_checks': {
-            'planned': {
-                'q1': 0,
-                'q2': 0,
-                'q3': 0,
-                'q4': 0,
-                'total': 0,
-            },
             'completed': {
                 'q1': 0,
                 'q2': 0,
@@ -1089,6 +1080,7 @@ class Assessment(TimeStampedModel):
         verbose_name=_('Basis for risk rating'),
         default=False,
     )
+    active = models.BooleanField(default=True)
 
     tracker = FieldTracker()
 

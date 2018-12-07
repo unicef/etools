@@ -22,7 +22,7 @@ jobs:
           name: Run Tests
           command: |
             pip install tox
-            tox -re d110,report
+            tox -re d20,report
       - save_cache:
           key: deps2-{{ .Branch }}--{{ checksum "src/requirements/test.txt" }}-{{ checksum ".circleci/config.yml" }}
           paths:

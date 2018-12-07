@@ -78,7 +78,7 @@ class URLsTestCase(URLAssertionMixin, SimpleTestCase):
             ('partner-engagements', 'engagements/', {}),
             ('partner-detail', '1/', {'pk': 1}),
             ('partner-delete', 'delete/1/', {'pk': 1}),
-            ('partner-assessment-del', 'assessments/1/', {'pk': 1}),
+            ('partner-assessment-detail', 'assessments/1/', {'pk': 1}),
             ('partner-add', 'add/', {}),
             ('partner-staff-members-list', '1/staff-members/', {'partner_pk': 1}),
         )
@@ -452,43 +452,6 @@ class TestPartnerOrganizationRetrieveUpdateDeleteViews(BaseTenantTestCase):
 
         cls.cp = CountryProgrammeFactory(__sequence=10)
         cls.cp_output = ResultFactory(result_type=cls.output_res_type)
-
-    def test_api_partners_delete_asssessment_valid(self):
-        response = self.forced_auth_req(
-            'delete',
-            reverse(
-                'partners_api:partner-assessment-del',
-                args=[self.assessment1.pk]
-            ),
-            user=self.unicef_staff,
-        )
-
-        self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
-
-    def test_api_partners_delete_asssessment_error(self):
-        response = self.forced_auth_req(
-            'delete',
-            reverse(
-                'partners_api:partner-assessment-del',
-                args=[self.assessment2.pk]
-            ),
-            user=self.unicef_staff,
-        )
-
-        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
-        self.assertEqual(response.data, ["Cannot delete a completed assessment"])
-
-    def test_api_partners_delete_asssessment_not_found(self):
-        response = self.forced_auth_req(
-            'delete',
-            reverse(
-                'partners_api:partner-assessment-del',
-                args=[404]
-            ),
-            user=self.unicef_staff,
-        )
-
-        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
 
     def test_api_partners_update_with_members(self):
         self.assertFalse(Activity.objects.exists())
@@ -1241,6 +1204,19 @@ class TestAgreementAPIView(BaseTenantTestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(len(response.data), 2)
         self.assertEqual(self.partner.name, response.data[0]["partner_name"])
+
+    def test_agreements_list_filter_special_conditions_pca(self):
+        agreement_qs = Agreement.objects.filter(special_conditions_pca=False)
+        params = {"special_conditions_pca": "false"}
+        response = self.forced_auth_req(
+            'get',
+            reverse('partners_api:agreement-list'),
+            user=self.unicef_staff,
+            data=params
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(response.data), agreement_qs.count())
 
     def test_agreements_list_filter_search(self):
         params = {"search": "Partner"}
@@ -2262,6 +2238,7 @@ class TestPartnerOrganizationDashboardAPIView(BaseTenantTestCase):
             total_ct_ytd=123.00,
             outstanding_dct_amount_6_to_9_months_usd=69,
             outstanding_dct_amount_more_than_9_months_usd=90,
+            partner_type=PartnerType.UN_AGENCY,
         )
 
         cls.unicef_staff = UserFactory(is_staff=True)
@@ -2313,3 +2290,29 @@ class TestPartnerOrganizationDashboardAPIView(BaseTenantTestCase):
         self.assertTrue(self.record['alert_no_recent_pv'])
         self.assertFalse(self.record['alert_no_pv'])
         self.assertTrue(self.record['vendor_number'])
+
+    def test_filter_partner_type(self):
+        partner_count = PartnerOrganization.objects.filter(
+            partner_type=PartnerType.UN_AGENCY
+        ).count()
+        response = self.forced_auth_req(
+            'get',
+            reverse("partners_api:partner-dashboard"),
+            data={"partner_type": PartnerType.UN_AGENCY},
+            user=self.unicef_staff
+        )
+        data = response.data
+        self.assertEqual(len(data), partner_count)
+
+    def test_filter_partner_type_none_found(self):
+        self.assertEqual(PartnerOrganization.objects.filter(
+            partner_type=PartnerType.GOVERNMENT
+        ).count(), 0)
+        response = self.forced_auth_req(
+            'get',
+            reverse("partners_api:partner-dashboard"),
+            data={"partner_type": PartnerType.GOVERNMENT},
+            user=self.unicef_staff
+        )
+        data = response.data
+        self.assertEqual(len(data), 0)
