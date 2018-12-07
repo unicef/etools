@@ -16,6 +16,7 @@ from unicef_attachments.models import Attachment
 from unicef_locations.tests.factories import LocationFactory
 from unicef_snapshot.models import Activity
 
+from etools.applications.attachments.models import AttachmentFlat
 from etools.applications.attachments.tests.factories import AttachmentFactory, AttachmentFileTypeFactory
 from etools.applications.environment.helpers import tenant_switch_is_active
 from etools.applications.environment.tests.factories import TenantSwitchFactory
@@ -1704,7 +1705,11 @@ class TestInterventionAmendmentCreateAPIView(BaseTenantTestCase):
             file_type=None,
             code="",
         )
-        self.data["internal_prc_review_attachment"] = attachment.pk
+        flat_qs = AttachmentFlat.objects.filter(attachment=attachment)
+        assert flat_qs.exists()
+        flat = flat_qs.first()
+        assert not flat.partner
+        self.data["internal_prc_review"] = attachment.pk
         self.assertIsNone(attachment.file_type)
         self.assertIsNone(attachment.content_object)
         self.assertFalse(attachment.code)
@@ -1717,19 +1722,25 @@ class TestInterventionAmendmentCreateAPIView(BaseTenantTestCase):
         self.assertEquals(response.status_code, status.HTTP_201_CREATED)
         data = self.assertResponseFundamentals(response)
         self.assertEquals(data['intervention'], self.intervention.pk)
-        attachment_updated = Attachment.objects.get(pk=attachment.pk)
+        attachment.refresh_from_db()
         self.assertEqual(
-            attachment_updated.file_type.code,
+            attachment.file_type.code,
             self.file_type_internal_prc_review.code
         )
-        self.assertEqual(attachment_updated.object_id, data["id"])
+        self.assertEqual(attachment.object_id, data["id"])
         self.assertEqual(
-            attachment_updated.code,
+            attachment.code,
             self.file_type_internal_prc_review.code
         )
 
+        # check denormalization
+        flat = flat_qs.first()
+        assert flat.partner
+        assert flat.pd_ssfa
+        assert flat.pd_ssfa_number
+
     def test_create_amendment_with_internal_prc_review_none(self):
-        self.data["internal_prc_review_attachment"] = None
+        self.data["internal_prc_review"] = None
         response = self._make_request(
             user=self.partnership_manager_user,
             data=self.data,
