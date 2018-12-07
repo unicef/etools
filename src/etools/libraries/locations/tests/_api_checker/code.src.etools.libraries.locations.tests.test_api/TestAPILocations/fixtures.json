@@ -1,0 +1,46 @@
+{
+    "location": {
+        "master": {
+            "model": "locations.location",
+            "pk": 101,
+            "fields": {
+                "name": "Location 1130",
+                "gateway": 1135,
+                "latitude": null,
+                "longitude": null,
+                "p_code": "abc",
+                "parent": null,
+                "geom": null,
+                "point": "SRID=4326;POINT (20 20)",
+                "is_active": true,
+                "created": "2018-12-07T16:16:36.499Z",
+                "modified": "2018-12-07T16:16:36.505Z",
+                "lft": 1,
+                "rght": 2,
+                "tree_id": 1,
+                "level": 0
+            }
+        },
+        "deps": [
+            {
+                "model": "locations.gatewaytype",
+                "pk": 1135,
+                "fields": {
+                    "name": "GatewayType 1134",
+                    "admin_level": 1134
+                }
+            }
+        ]
+    },
+    "locationtype": {
+        "master": {
+            "model": "locations.gatewaytype",
+            "pk": 1136,
+            "fields": {
+                "name": "GatewayType 1135",
+                "admin_level": 1135
+            }
+        },
+        "deps": []
+    }
+}

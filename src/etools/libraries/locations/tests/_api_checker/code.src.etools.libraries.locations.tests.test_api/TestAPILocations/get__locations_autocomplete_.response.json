@@ -1,0 +1,38 @@
+{
+    "status_code": 200,
+    "headers": {
+        "content-type": [
+            "Content-Type",
+            "application/json"
+        ],
+        "vary": [
+            "Vary",
+            "Accept, Origin, Cookie"
+        ],
+        "allow": [
+            "Allow",
+            "GET, HEAD, OPTIONS"
+        ],
+        "x-frame-options": [
+            "X-Frame-Options",
+            "SAMEORIGIN"
+        ],
+        "content-length": [
+            "Content-Length",
+            "144"
+        ]
+    },
+    "data": [
+        {
+            "id": "101",
+            "name": "Location 1130 [GatewayType 1134 - abc]",
+            "p_code": "abc",
+            "gateway": {
+                "id": 1135,
+                "name": "GatewayType 1134",
+                "admin_level": 1134
+            }
+        }
+    ],
+    "content_type": null
+}

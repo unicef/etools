@@ -1,0 +1,48 @@
+{
+    "status_code": 200,
+    "headers": {
+        "content-type": [
+            "Content-Type",
+            "application/json"
+        ],
+        "etag": [
+            "ETag",
+            "\"998b3a27c9cb49a588984819df58229a\""
+        ],
+        "cache-control": [
+            "Cache-Control",
+            "private, must-revalidate"
+        ],
+        "vary": [
+            "Vary",
+            "Accept, Origin, Cookie"
+        ],
+        "allow": [
+            "Allow",
+            "GET, POST, HEAD, OPTIONS"
+        ],
+        "x-frame-options": [
+            "X-Frame-Options",
+            "SAMEORIGIN"
+        ],
+        "content-length": [
+            "Content-Length",
+            "196"
+        ]
+    },
+    "data": [
+        {
+            "id": "101",
+            "name": "Location 1130 [GatewayType 1134 - abc]",
+            "p_code": "abc",
+            "gateway": {
+                "id": 1135,
+                "name": "GatewayType 1134",
+                "admin_level": 1134
+            },
+            "geo_point": "SRID=4326;POINT (20 20)",
+            "parent": null
+        }
+    ],
+    "content_type": null
+}

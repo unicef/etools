@@ -1,0 +1,38 @@
+{
+    "status_code": 200,
+    "headers": {
+        "content-type": [
+            "Content-Type",
+            "application/json"
+        ],
+        "vary": [
+            "Vary",
+            "Accept, Origin, Cookie"
+        ],
+        "allow": [
+            "Allow",
+            "GET, POST, HEAD, OPTIONS"
+        ],
+        "x-frame-options": [
+            "X-Frame-Options",
+            "SAMEORIGIN"
+        ],
+        "content-length": [
+            "Content-Length",
+            "115"
+        ]
+    },
+    "data": [
+        {
+            "id": 1135,
+            "name": "GatewayType 1134",
+            "admin_level": 1134
+        },
+        {
+            "id": 1136,
+            "name": "GatewayType 1135",
+            "admin_level": 1135
+        }
+    ],
+    "content_type": null
+}
