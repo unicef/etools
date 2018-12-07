@@ -17,6 +17,7 @@ from etools.applications.attachments.tests.factories import (
 )
 from etools.applications.EquiTrack.tests.cases import BaseTenantTestCase
 from etools.applications.partners.models import PartnerType
+from etools.applications.partners.tests.factories import InterventionAttachmentFactory
 from etools.applications.reports.tests.factories import SectionFactory
 from etools.applications.tpm.models import ThirdPartyMonitor, TPMVisit
 from etools.applications.tpm.tests.base import TPMTestCaseMixin
@@ -866,8 +867,8 @@ class TestVisitAttachmentLinkView(TPMTestCaseMixin, BaseTenantTestCase):
             tpm_activities__count=1
         )
         cls.activity = cls.visit.tpm_activities.first()
-        partner = TPMPartnerFactory()
-        cls.attachment = AttachmentFactory(content_object=partner)
+        cls.intervention_attachment = InterventionAttachmentFactory()
+        cls.attachment = AttachmentFactory(content_object=cls.intervention_attachment)
         cls.attachment_link = AttachmentLinkFactory(
             attachment=cls.attachment,
             content_object=cls.activity
@@ -883,3 +884,4 @@ class TestVisitAttachmentLinkView(TPMTestCaseMixin, BaseTenantTestCase):
         data = response.data
         self.assertEqual(len(data), 1)
         self.assertEqual(data[0]["id"], self.attachment_link.pk)
+        self.assertEqual(data[0]["file_type"], self.intervention_attachment.type.name)

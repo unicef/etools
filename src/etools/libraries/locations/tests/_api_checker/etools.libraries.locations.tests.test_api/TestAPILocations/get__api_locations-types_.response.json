@@ -16,13 +16,22 @@
         "x-frame-options": [
             "X-Frame-Options",
             "SAMEORIGIN"
+        ],
+        "content-length": [
+            "Content-Length",
+            "97"
         ]
     },
     "data": [
         {
-            "id": 2511,
-            "name": "GatewayType 0",
-            "admin_level": 0
+            "id": 8,
+            "name": "GatewayType 1",
+            "admin_level": 1
+        },
+        {
+            "id": 9,
+            "name": "GatewayType 2",
+            "admin_level": 2
         }
     ],
     "content_type": null

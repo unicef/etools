@@ -1,5 +1,6 @@
 import datetime
 import json
+import mock
 
 from django.test import SimpleTestCase
 from django.urls import reverse
@@ -256,6 +257,28 @@ class TestAgreementsAPI(BaseTenantTestCase):
 
         self.assertEqual(status_code, status.HTTP_200_OK)
 
+    def test_filter_agreements_special_condition(self):
+        assert not self.agreement1.special_conditions_pca
+        with self.assertNumQueries(1):
+            status_code, response = self.run_request_list_ep(
+                user=self.unicef_staff,
+                method='get',
+                data={"special_conditions_pca": True}
+            )
+
+        self.assertEqual(status_code, status.HTTP_200_OK)
+        self.assertEqual(len(response), 0)
+
+        with self.assertNumQueries(1):
+            status_code, response = self.run_request_list_ep(
+                user=self.unicef_staff,
+                method='get',
+                data={"special_conditions_pca": False}
+            )
+
+        self.assertEqual(status_code, status.HTTP_200_OK)
+        self.assertEqual(len(response), 1)
+
     def test_add_new_PCA_with_amendment(self):
         attachment = AttachmentFactory(
             file="test_file.pdf",
@@ -441,3 +464,24 @@ class TestAgreementsAPI(BaseTenantTestCase):
         )
         agreement_updated = Agreement.objects.get(pk=agreement.pk)
         self.assertEqual(agreement_updated.attachment.last(), attachment_new)
+
+    def test_patch_agreement_suspended(self):
+        agreement = AgreementFactory(
+            partner=self.partner1,
+        )
+        assert agreement.status != Agreement.SUSPENDED
+
+        data = {
+            "status": Agreement.SUSPENDED
+        }
+        mock_send = mock.Mock()
+        send_path = "etools.applications.partners.utils.send_notification_with_template"
+        with mock.patch(send_path, mock_send):
+            status_code, response = self.run_request(
+                agreement.pk,
+                data,
+                method="patch",
+            )
+
+        self.assertEqual(status_code, status.HTTP_200_OK)
+        mock_send.assert_called()

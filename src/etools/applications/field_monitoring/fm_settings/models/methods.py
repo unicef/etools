@@ -7,7 +7,8 @@ from etools.applications.field_monitoring.shared.models import FMMethod
 
 
 class FMMethodType(models.Model):
-    method = models.ForeignKey(FMMethod, verbose_name=_('Method'), related_name='types')
+    method = models.ForeignKey(FMMethod, verbose_name=_('Method'), related_name='types',
+                               on_delete=models.CASCADE)
     name = models.CharField(verbose_name=_('Name'), max_length=300)
     slug = AutoSlugField(verbose_name=_('Slug'), populate_from='name')
 
