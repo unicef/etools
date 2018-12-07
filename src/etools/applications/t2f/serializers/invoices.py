@@ -43,6 +43,6 @@ class InvoiceSerializer(serializers.ModelSerializer):
                   'messages', 'message', 'vision_fi_id', 'ta_number', 'items')
 
     def to_representation(self, instance):
-        data = super(InvoiceSerializer, self).to_representation(instance)
+        data = super().to_representation(instance)
         data['amount'] = str(round_to_currency_precision(instance.currency, instance.amount))
         return data
