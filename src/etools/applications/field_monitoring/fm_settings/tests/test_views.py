@@ -361,13 +361,19 @@ class CheckListViewTestCase(FMBaseTestCaseMixin, BaseTenantTestCase):
 
 
 class PlannedCheckListItemViewTestCase(FMBaseTestCaseMixin, BaseTenantTestCase):
+    def setUp(self):
+        super().setUp()
+
+        self.cp_output = CPOutputConfigFactory()
+        self.checklist_item = CheckListItemFactory()
+
     def test_create(self):
         response = self.forced_auth_req(
-            'post',
-            reverse('field_monitoring_settings:planned-checklist-items-list', args=[CPOutputConfigFactory().pk]),
+            'patch',
+            reverse('field_monitoring_settings:planned-checklist-items-detail',
+                    args=[self.cp_output.pk, self.checklist_item.pk]),
             user=self.unicef_user,
             data={
-                'checklist_item': CheckListItemFactory().id,
                 'methods': [FMMethodFactory().pk, FMMethodFactory().pk],
                 'partners_info': [{
                     'partner': PartnerFactory().pk,
@@ -377,17 +383,17 @@ class PlannedCheckListItemViewTestCase(FMBaseTestCaseMixin, BaseTenantTestCase):
             }
         )
 
-        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(len(response.data['methods']), 2)
         self.assertEqual(len(response.data['partners_info']), 1)
 
     def test_create_without_partner(self):
         response = self.forced_auth_req(
-            'post',
-            reverse('field_monitoring_settings:planned-checklist-items-list', args=[CPOutputConfigFactory().pk]),
+            'patch',
+            reverse('field_monitoring_settings:planned-checklist-items-detail',
+                    args=[self.cp_output.pk, self.checklist_item.pk]),
             user=self.unicef_user,
             data={
-                'checklist_item': CheckListItemFactory().id,
                 'partners_info': [{
                     'partner': None,
                     'specific_details': 'test',
@@ -396,15 +402,17 @@ class PlannedCheckListItemViewTestCase(FMBaseTestCaseMixin, BaseTenantTestCase):
             }
         )
 
-        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
 
     def test_update_partner_info(self):
-        item = PlannedCheckListItemFactory(partners_info__count=1)
+        item = PlannedCheckListItemFactory(partners_info__count=1, checklist_item=self.checklist_item,
+                                           cp_output_config=self.cp_output)
         partner_info_id = item.partners_info.first().id
 
         response = self.forced_auth_req(
-            'patch', reverse('field_monitoring_settings:planned-checklist-items-detail',
-                             args=[item.cp_output_config.pk, item.pk]),
+            'patch',
+            reverse('field_monitoring_settings:planned-checklist-items-detail',
+                    args=[self.cp_output.pk, self.checklist_item.pk]),
             user=self.unicef_user,
             data={
                 'partners_info': [{
