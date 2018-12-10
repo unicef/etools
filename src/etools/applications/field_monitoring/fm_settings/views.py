@@ -25,7 +25,7 @@ from etools.applications.field_monitoring.fm_settings.serializers.attachments im
 from etools.applications.field_monitoring.fm_settings.serializers.checklist import CheckListItemSerializer, \
     CheckListCategorySerializer
 from etools.applications.field_monitoring.fm_settings.serializers.cp_outputs import FieldMonitoringCPOutputSerializer, \
-    PlannedCheckListItemSerializer, CPOutputConfigDetailSerializer, PartnerOrganizationSerializer
+    PlannedCheckListItemSerializer, CPOutputConfigDetailSerializer, PartnerOrganizationSerializer, ResultSerializer
 from etools.applications.field_monitoring.fm_settings.serializers.issues import LogIssueSerializer, \
     LogIssueAttachmentSerializer
 from etools.applications.field_monitoring.fm_settings.serializers.locations import LocationSiteSerializer, \
@@ -36,6 +36,7 @@ from etools.applications.field_monitoring.shared.models import FMMethod
 from etools.applications.field_monitoring.views import FMBaseViewSet, FMBaseAttachmentsViewSet
 from etools.applications.partners.models import PartnerOrganization
 from etools.applications.reports.models import Result, ResultType
+from etools.applications.reports.views.v2 import OutputListAPIView
 
 
 class FMMethodsViewSet(
@@ -249,3 +250,10 @@ class FieldMonitoringGeneralAttachmentsViewSet(FMBaseViewSet, viewsets.ModelView
 
     def perform_create(self, serializer):
         serializer.save(code='fm_common')
+
+
+class ResultsViewSet(OutputListAPIView):
+    """
+    Custom serializer to get rid of unnecessary part in name.
+    """
+    serializer_class = ResultSerializer

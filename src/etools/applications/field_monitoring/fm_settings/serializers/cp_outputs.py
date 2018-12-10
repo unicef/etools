@@ -59,10 +59,17 @@ class CPOutputConfigSerializer(serializers.ModelSerializer):
         }
 
 
-class NestedCPOutputSerializer(OutputListSerializer):
-    interventions = serializers.SerializerMethodField()
+class ResultSerializer(OutputListSerializer):
+    name = serializers.ReadOnlyField()
 
     class Meta(OutputListSerializer.Meta):
+        pass
+
+
+class NestedCPOutputSerializer(ResultSerializer):
+    interventions = serializers.SerializerMethodField()
+
+    class Meta(ResultSerializer.Meta):
         pass
 
     def get_interventions(self, obj):
@@ -88,7 +95,6 @@ class CPOutputConfigDetailSerializer(CPOutputConfigSerializer):
 
 class FieldMonitoringCPOutputSerializer(WritableNestedSerializerMixin, serializers.ModelSerializer):
     fm_config = CPOutputConfigSerializer()
-    name = serializers.CharField(source='*', read_only=True)
     interventions = serializers.SerializerMethodField(label=_('Contributing CSO Partners & PD/SSFAs'))
 
     class Meta(WritableNestedSerializerMixin.Meta):
