@@ -6,7 +6,12 @@ from rest_framework.permissions import BasePermission
 
 class BaseQ(tree.Node):
     """
-    Encapsulates permissions as objects that can then be combined logically (using `&` and `|`).
+    Base class for logic nodes.
+
+    BaseQ(first, second) - logic AND
+    BaseQ(first) & BaseQ(second) - logic AND
+    BaseQ(first) | BaseQ(second) - logic OR
+    ~BaseQ(third) - logic NOT
     """
     # Connection types
     AND = 'AND'
@@ -58,6 +63,11 @@ class BaseQ(tree.Node):
 
 
 class PermissionQ(BaseQ, BasePermission):
+    """
+    Encapsulates permissions as objects that can then be combined logically (using `&` and `|`).
+    Call corresponding method for every child if being asked for permissions.
+    """
+
     def has_permission(self, request, view):
         return self.execute('has_permission', request, view)
 
@@ -66,6 +76,9 @@ class PermissionQ(BaseQ, BasePermission):
 
 
 class UserInGroup(BasePermission):
+    """
+    Allow access if user is in specific group.
+    """
     group = None
 
     def has_permission(self, request, view):

@@ -101,6 +101,15 @@ class SimplePermittedViewSetMixin(SimplePermittedParentViewSetMixin, SimplePermi
 
 
 class SimplePermittedFSMTransitionActionMixin(FSMTransitionActionMixin):
+    """
+    Check if transition is allowed by its own list of permissions.
+    Example:
+    transition_permission_classes = {
+        'complete': [UserIsPMEPermission],
+        'cancel': [PermissionQ(UserIsPMEPermission) | PermissionQ(UserIsAuthorPermission)],
+        'start': [write_permission_classes] # lists are allowed here
+    }
+    """
     transition_permission_classes = {}
 
     def get_transition_permissions(self, transition):

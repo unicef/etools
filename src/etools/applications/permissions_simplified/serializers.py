@@ -4,6 +4,11 @@ from rest_framework.exceptions import ValidationError
 
 
 class SafeReadOnlySerializerMixin(object):
+    """
+    Fix for rest framework serializer which protect instance from being edited if serializer is read only,
+    also return empty set of writable fields in this case.
+    """
+
     @property
     def _writable_fields(self):
         return [] if self.read_only else super()._writable_fields
