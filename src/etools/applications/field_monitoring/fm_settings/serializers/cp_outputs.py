@@ -6,6 +6,7 @@ from rest_framework import serializers
 from unicef_restlib.fields import SeparatedReadWriteField
 from unicef_restlib.serializers import WritableNestedSerializerMixin
 
+from etools.applications.field_monitoring.fm_settings.serializers.methods import FMMethodTypeSerializer
 from etools.applications.partners.serializers.partner_organization_v2 import MinimalPartnerOrganizationListSerializer
 from etools.applications.field_monitoring.fm_settings.models import CPOutputConfig, PlannedCheckListItem, \
     PlannedCheckListItemPartnerInfo
@@ -41,7 +42,12 @@ class InterventionSerializer(serializers.ModelSerializer):
 
 class CPOutputConfigSerializer(serializers.ModelSerializer):
     government_partners = SeparatedReadWriteField(
-        read_field=PartnerOrganizationSerializer(many=True, label=_('Contributing Government Partners'))
+        read_field=PartnerOrganizationSerializer(many=True),
+        label=_('Contributing Government Partners')
+    )
+    recommended_method_types = SeparatedReadWriteField(
+        read_field=FMMethodTypeSerializer(many=True),
+        label=_('Method(s)')
     )
 
     class Meta:
@@ -53,10 +59,17 @@ class CPOutputConfigSerializer(serializers.ModelSerializer):
         }
 
 
-class NestedCPOutputSerializer(OutputListSerializer):
-    interventions = serializers.SerializerMethodField()
+class ResultSerializer(OutputListSerializer):
+    name = serializers.ReadOnlyField()
 
     class Meta(OutputListSerializer.Meta):
+        pass
+
+
+class NestedCPOutputSerializer(ResultSerializer):
+    interventions = serializers.SerializerMethodField()
+
+    class Meta(ResultSerializer.Meta):
         pass
 
     def get_interventions(self, obj):
@@ -82,7 +95,6 @@ class CPOutputConfigDetailSerializer(CPOutputConfigSerializer):
 
 class FieldMonitoringCPOutputSerializer(WritableNestedSerializerMixin, serializers.ModelSerializer):
     fm_config = CPOutputConfigSerializer()
-    name = serializers.CharField(source='*', read_only=True)
     interventions = serializers.SerializerMethodField(label=_('Contributing CSO Partners & PD/SSFAs'))
 
     class Meta(WritableNestedSerializerMixin.Meta):

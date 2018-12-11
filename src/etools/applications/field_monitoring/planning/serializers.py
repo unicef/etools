@@ -41,7 +41,9 @@ class YearPlanSerializer(WritableNestedSerializerMixin, SnapshotModelSerializer)
 
     def get_total_planned(self, obj):
         return {
-            'tasks': obj.tasks.filter(deleted_at=EPOCH_ZERO).count(),
+            'tasks': obj.tasks.filter(deleted_at=EPOCH_ZERO).annotate(
+                plan_by_month__total=RawSQL('SELECT SUM(t) FROM UNNEST(plan_by_month) t', [])
+                ).aggregate(Sum('plan_by_month__total'))['plan_by_month__total__sum'],
             'cp_outputs': obj.tasks.filter(deleted_at=EPOCH_ZERO).aggregate(
                 Count('cp_output_config', distinct=True)
             )['cp_output_config__count'],

@@ -25,7 +25,7 @@ from etools.applications.field_monitoring.fm_settings.serializers.attachments im
 from etools.applications.field_monitoring.fm_settings.serializers.checklist import CheckListItemSerializer, \
     CheckListCategorySerializer
 from etools.applications.field_monitoring.fm_settings.serializers.cp_outputs import FieldMonitoringCPOutputSerializer, \
-    PlannedCheckListItemSerializer, CPOutputConfigDetailSerializer, PartnerOrganizationSerializer
+    PlannedCheckListItemSerializer, CPOutputConfigDetailSerializer, PartnerOrganizationSerializer, ResultSerializer
 from etools.applications.field_monitoring.fm_settings.serializers.issues import LogIssueSerializer, \
     LogIssueAttachmentSerializer
 from etools.applications.field_monitoring.fm_settings.serializers.locations import LocationSiteSerializer, \
@@ -36,6 +36,7 @@ from etools.applications.field_monitoring.shared.models import FMMethod
 from etools.applications.field_monitoring.views import FMBaseViewSet, FMBaseAttachmentsViewSet
 from etools.applications.partners.models import PartnerOrganization
 from etools.applications.reports.models import Result, ResultType
+from etools.applications.reports.views.v2 import OutputListAPIView
 
 
 class FMMethodsViewSet(
@@ -178,11 +179,32 @@ class PlannedCheckListItemViewSet(
     NestedViewSetMixin,
     viewsets.ModelViewSet,
 ):
+    lookup_field = 'checklist_item_id'
     queryset = PlannedCheckListItem.objects.all()
     serializer_class = PlannedCheckListItemSerializer
 
-    def perform_create(self, serializer):
-        serializer.save(cp_output_config=self.get_parent_object())
+    def get_parent_filter(self):
+        return {'cp_output_config_id': self.kwargs['cp_output_config_pk']}
+
+    def get_parent_object(self):
+        return CPOutputConfig.objects.get(pk=self.kwargs['cp_output_config_pk'])
+
+    def get_object(self):
+        queryset = self.filter_queryset(self.get_queryset())
+
+        # Perform the lookup filtering.
+        lookup_url_kwarg = self.lookup_url_kwarg or self.lookup_field
+
+        assert lookup_url_kwarg in self.kwargs
+
+        filter_kwargs = {self.lookup_field: self.kwargs[lookup_url_kwarg]}
+        filter_kwargs.update(self.get_parent_filter())
+        obj, created = queryset.get_or_create(**filter_kwargs)
+
+        # May raise a permission denied
+        self.check_object_permissions(self.request, obj)
+
+        return obj
 
 
 class LogIssuesViewSet(FMBaseViewSet, viewsets.ModelViewSet):
@@ -228,3 +250,10 @@ class FieldMonitoringGeneralAttachmentsViewSet(FMBaseViewSet, viewsets.ModelView
 
     def perform_create(self, serializer):
         serializer.save(code='fm_common')
+
+
+class ResultsViewSet(OutputListAPIView):
+    """
+    Custom serializer to get rid of unnecessary part in name.
+    """
+    serializer_class = ResultSerializer
