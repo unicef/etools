@@ -53,7 +53,7 @@ class TestGetInterventionContext(BaseTenantTestCase):
     '''Exercise the tasks' helper function get_intervention_context()'''
 
     def setUp(self):
-        super(TestGetInterventionContext, self).setUp()
+        super().setUp()
         self.intervention = InterventionFactory()
         self.focal_point_user = UserFactory()
 
