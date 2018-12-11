@@ -42,7 +42,9 @@ class StartedMethodViewSet(
 class TaskDataViewSet(
     FMBaseViewSet,
     NestedViewSetMixin,
-    viewsets.ModelViewSet
+    mixins.ListModelMixin,
+    mixins.UpdateModelMixin,
+    viewsets.GenericViewSet
 ):
     serializer_class = TaskDataSerializer
     queryset = TaskData.objects.all()

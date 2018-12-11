@@ -69,3 +69,18 @@ class TaskDataViewTestCase(FMBaseTestCaseMixin, BaseTenantTestCase):
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(len(response.data['results']), 1)
+
+    def test_update_not_probed(self):
+        task_data = TaskDataFactory(visit_task__visit=self.visit, started_method=self.started_method, is_probed=True)
+
+        response = self.forced_auth_req(
+            'patch', reverse('field_monitoring_data_collection:task-data-detail',
+                             args=[self.visit.id, self.started_method.id, task_data.id]),
+            user=self.unicef_user,
+            data={
+                'is_probed': False
+            }
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data['is_probed'], False)

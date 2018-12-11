@@ -49,7 +49,7 @@ class StartedMethod(models.Model):
             TaskData.objects.create(
                 visit_task=visit_task,
                 started_method=self,
-                is_probed=None
+                is_probed=True
             )
 
     def save(self, **kwargs):
@@ -76,7 +76,7 @@ class StartedMethod(models.Model):
 class TaskData(models.Model):
     visit_task = models.ForeignKey(VisitTaskLink, on_delete=models.CASCADE, related_name='tasks_data')
     started_method = models.ForeignKey(StartedMethod, on_delete=models.CASCADE, related_name='tasks_data')
-    is_probed = models.NullBooleanField(default=True, null=True)
+    is_probed = models.BooleanField(default=True)
 
     class Meta:
         verbose_name = _('Task Data')

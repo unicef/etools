@@ -20,7 +20,7 @@ class StartedMethodTestCase(FMBaseTestCaseMixin, AssignedVisitMixin, BaseTenantT
 
     def test_create(self):
         self.assertEqual(self.started_method.tasks_data.count(), 1)
-        self.assertEqual(self.started_method.tasks_data.first().is_probed, None)
+        self.assertEqual(self.started_method.tasks_data.first().is_probed, True)
 
     def test_complete_unfilled(self):
         with self.assertRaises(ValidationError):
@@ -31,8 +31,6 @@ class StartedMethodTestCase(FMBaseTestCaseMixin, AssignedVisitMixin, BaseTenantT
         self.started_method.complete()
 
     def test_complete_filled(self):
-        self.task_data.is_probed = True
-        self.task_data.save()
         CheckListItemValueFactory(
             task_data=self.task_data,
             checklist_item=self.assigned_visit.visit_task_links.first().checklist_items.first()
