@@ -104,7 +104,7 @@ class ActionPointFactory(factory.DjangoModelFactory):
 
             status = extra.pop('status')
             extra[status] = True
-        return super(ActionPointFactory, cls).attributes(create, extra)
+        return super().attributes(create, extra)
 
     @factory.post_generation
     def comments(self, create, extracted, count, **kwargs):
