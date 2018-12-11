@@ -30,6 +30,18 @@ class YearPlan(TimeStampedModel):
         verbose_name_plural = _('Year Plans')
         ordering = ('year',)
 
+    @classmethod
+    def get_defaults(cls, year):
+        previous_year_plan = cls._default_manager.filter(year=int(year)-1).first()
+        if not previous_year_plan:
+            return {}
+
+        return {
+            field: getattr(previous_year_plan, field) for field in
+            ['prioritization_criteria', 'methodology_notes', 'target_visits', 'modalities', 'partner_engagement']
+            if getattr(previous_year_plan, field)
+        }
+
     def __str__(self):
         return 'Year Plan for {}'.format(self.year)
 

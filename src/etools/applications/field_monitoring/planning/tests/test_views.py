@@ -66,6 +66,21 @@ class YearPlanViewTestCase(FMBaseTestCaseMixin, BaseTenantTestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response.data['total_planned'], {'tasks': 3*12, 'cp_outputs': 2, 'sites': 3})
 
+    def test_next_year_data_copy(self):
+        year_plan = YearPlanFactory(year=date.today().year)
+
+        self.assertFalse(YearPlan.objects.filter(year=date.today().year + 1).exists())
+
+        response = self.forced_auth_req(
+            'get', reverse('field_monitoring_planning:year-plan-detail', args=[year_plan.year + 1]),
+            user=self.unicef_user
+        )
+
+        for field in [
+            'prioritization_criteria', 'methodology_notes', 'target_visits', 'modalities', 'partner_engagement'
+        ]:
+            self.assertEqual(getattr(year_plan, field), response.data[field])
+
 
 class YearPlanTasksViewTestCase(FMBaseTestCaseMixin, BaseTenantTestCase):
     @classmethod
