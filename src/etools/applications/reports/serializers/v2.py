@@ -131,7 +131,7 @@ class DisaggregationSerializer(serializers.ModelSerializer):
                     found_values.append(value.id)
             # delete any values that weren't specified in the update request.
             instance.disaggregation_values.exclude(id__in=found_values).delete()
-        return super(DisaggregationSerializer, self).update(instance, validated_data)
+        return super().update(instance, validated_data)
 
 
 class AppliedIndicatorSerializer(serializers.ModelSerializer):
@@ -191,10 +191,10 @@ class AppliedIndicatorSerializer(serializers.ModelSerializer):
 
         if lower_result.result_link.intervention.agreement.partner.blocked is True:
             raise ValidationError(_('The Indicators cannot be updated while the Partner is blocked in Vision'))
-        return super(AppliedIndicatorSerializer, self).validate(attrs)
+        return super().validate(attrs)
 
     def create(self, validated_data):
-        return super(AppliedIndicatorSerializer, self).create(validated_data)
+        return super().create(validated_data)
 
 
 class AppliedIndicatorCUSerializer(serializers.ModelSerializer):
@@ -222,13 +222,13 @@ class LowerResultSimpleCUSerializer(serializers.ModelSerializer):
         if new_result_link and new_result_link.intervention.agreement.partner.blocked is True:
             raise ValidationError("A PD Output cannot be updated for a partner that is blocked in Vision")
 
-        return super(LowerResultSimpleCUSerializer, self).update(instance, validated_data)
+        return super().update(instance, validated_data)
 
     def create(self, validated_data):
         result_link = validated_data.get('result_link')
         if result_link and result_link.intervention.agreement.partner.blocked is True:
             raise ValidationError("A PD Output cannot be created for a partner that is blocked in Vision")
-        return super(LowerResultSimpleCUSerializer, self).create(validated_data)
+        return super().create(validated_data)
 
     class Meta:
         model = LowerResult
@@ -294,7 +294,7 @@ class LowerResultCUSerializer(serializers.ModelSerializer):
     @transaction.atomic
     def create(self, validated_data):
         applied_indicators = self.context.pop('applied_indicators', [])
-        instance = super(LowerResultCUSerializer, self).create(validated_data)
+        instance = super().create(validated_data)
         self.update_applied_indicators(instance, applied_indicators)
         return instance
 
@@ -304,7 +304,7 @@ class LowerResultCUSerializer(serializers.ModelSerializer):
 
         self.update_applied_indicators(instance, applied_indicators)
 
-        return super(LowerResultCUSerializer, self).update(instance, validated_data)
+        return super().update(instance, validated_data)
 
 
 class IndicatorSerializer(serializers.ModelSerializer):
