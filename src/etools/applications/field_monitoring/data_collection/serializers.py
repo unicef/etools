@@ -1,7 +1,7 @@
 from rest_framework import serializers
+from unicef_attachments.serializers import BaseAttachmentSerializer
 
 from unicef_locations.serializers import LocationLightSerializer
-from unicef_restlib.fields import SeparatedReadWriteField
 from unicef_restlib.serializers import UserContextSerializerMixin, WritableNestedSerializerMixin
 
 from etools.applications.field_monitoring.data_collection.models import StartedMethod, TaskData, CheckListItemValue
@@ -9,7 +9,7 @@ from etools.applications.field_monitoring.fm_settings.serializers.cp_outputs imp
     InterventionSerializer
 from etools.applications.field_monitoring.fm_settings.serializers.locations import LocationSiteLightSerializer
 from etools.applications.field_monitoring.fm_settings.serializers.methods import FMMethodSerializer
-from etools.applications.field_monitoring.visits.models import Visit, TaskCheckListItem, VisitTaskLink, FindingMixin
+from etools.applications.field_monitoring.visits.models import Visit, TaskCheckListItem, VisitTaskLink
 from etools.applications.field_monitoring.visits.serializers import VisitMethodTypeSerializer
 from etools.applications.reports.serializers.v2 import MinimalOutputListSerializer
 from etools.applications.users.serializers import UserSerializer
@@ -54,9 +54,11 @@ class StartedMethodSerializer(UserContextSerializerMixin, serializers.ModelSeria
 
 
 class CheckListValueSerializer(WritableNestedSerializerMixin, serializers.ModelSerializer):
+    finding_attachments = BaseAttachmentSerializer(many=True, read_only=True)
+
     class Meta(WritableNestedSerializerMixin.Meta):
         model = CheckListItemValue
-        fields = ('id', 'task_data', 'finding_value', 'finding_description')
+        fields = ('id', 'task_data', 'finding_value', 'finding_description', 'finding_attachments')
 
 
 class TaskCheckListSerializer(serializers.ModelSerializer):

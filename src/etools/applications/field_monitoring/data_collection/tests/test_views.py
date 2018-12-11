@@ -1,14 +1,16 @@
+from django.core.files.uploadedfile import SimpleUploadedFile
 from django.urls import reverse
 from factory import fuzzy
 from rest_framework import status
 
 from etools.applications.EquiTrack.tests.cases import BaseTenantTestCase
+from etools.applications.attachments.tests.factories import AttachmentFactory
 from etools.applications.field_monitoring.data_collection.tests.base import AssignedVisitMixin
 from etools.applications.field_monitoring.data_collection.tests.factories import StartedMethodFactory, TaskDataFactory, \
     CheckListItemValueFactory
 from etools.applications.field_monitoring.tests.base import FMBaseTestCaseMixin
 from etools.applications.field_monitoring.visits.models import Visit, TaskCheckListItem, FindingMixin
-from etools.applications.field_monitoring.visits.tests.factories import UNICEFVisitFactory, TaskCheckListItemFactory
+from etools.applications.field_monitoring.visits.tests.factories import UNICEFVisitFactory
 
 
 class VisitDataCollectionViewTestCase(FMBaseTestCaseMixin, BaseTenantTestCase):
@@ -88,7 +90,7 @@ class TaskDataViewTestCase(FMBaseTestCaseMixin, BaseTenantTestCase):
         self.assertEqual(response.data['is_probed'], False)
 
 
-class TaskDataCheckListViewTestCase(FMBaseTestCaseMixin, AssignedVisitMixin, BaseTenantTestCase):
+class CheckListViewTestCase(FMBaseTestCaseMixin, AssignedVisitMixin, BaseTenantTestCase):
     @classmethod
     def setUpTestData(cls):
         super().setUpTestData()
@@ -102,7 +104,7 @@ class TaskDataCheckListViewTestCase(FMBaseTestCaseMixin, AssignedVisitMixin, Bas
 
     def test_list(self):
         response = self.forced_auth_req(
-            'get', reverse('field_monitoring_data_collection:tasks-data-checklist-list',
+            'get', reverse('field_monitoring_data_collection:started-method-checklist-list',
                            args=[self.assigned_visit.id, self.started_method.id]),
             user=self.unicef_user
         )
@@ -111,11 +113,28 @@ class TaskDataCheckListViewTestCase(FMBaseTestCaseMixin, AssignedVisitMixin, Bas
         self.assertEqual(len(response.data['results']), 1)
         self.assertEqual(response.data['results'][0]['checklist_values'], [])
 
+    def test_finding_attachments_provided(self):
+        checklist_item = TaskCheckListItem.objects.get(visit_task=self.task_data.visit_task)
+        value = CheckListItemValueFactory(checklist_item=checklist_item, task_data=self.task_data)
+        AttachmentFactory(content_object=value)
+
+        response = self.forced_auth_req(
+            'get', reverse('field_monitoring_data_collection:started-method-checklist-list',
+                           args=[self.assigned_visit.id, self.started_method.id]),
+            user=self.unicef_user
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(response.data['results']), 1)
+        self.assertEqual(len(response.data['results'][0]['checklist_values']), 1)
+        self.assertEqual(response.data['results'][0]['checklist_values'][0]['id'], value.id)
+        self.assertNotEqual(response.data['results'][0]['checklist_values'][0]['finding_attachments'], [])
+
     def test_set_value(self):
         checklist_item = TaskCheckListItem.objects.get(visit_task=self.task_data.visit_task)
 
         response = self.forced_auth_req(
-            'patch', reverse('field_monitoring_data_collection:tasks-data-checklist-detail',
+            'patch', reverse('field_monitoring_data_collection:started-method-checklist-detail',
                              args=[self.assigned_visit.id, self.started_method.id, checklist_item.id]),
             user=self.unicef_user,
             data={
@@ -137,7 +156,7 @@ class TaskDataCheckListViewTestCase(FMBaseTestCaseMixin, AssignedVisitMixin, Bas
         value = CheckListItemValueFactory(checklist_item=checklist_item, task_data=self.task_data)
 
         response = self.forced_auth_req(
-            'patch', reverse('field_monitoring_data_collection:tasks-data-checklist-detail',
+            'patch', reverse('field_monitoring_data_collection:started-method-checklist-detail',
                              args=[self.assigned_visit.id, self.started_method.id, checklist_item.id]),
             user=self.unicef_user,
             data={
@@ -153,3 +172,71 @@ class TaskDataCheckListViewTestCase(FMBaseTestCaseMixin, AssignedVisitMixin, Bas
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(len(response.data['checklist_values']), 1)
         self.assertEqual(response.data['checklist_values'][0]['finding_description'], 'test')
+
+
+class CheckListValueAttachmentsViewTestCase(FMBaseTestCaseMixin, BaseTenantTestCase):
+    @classmethod
+    def setUpTestData(cls):
+        super().setUpTestData()
+
+        cls.value = CheckListItemValueFactory()
+
+    def test_list(self):
+        AttachmentFactory(content_object=self.value)
+
+        response = self.forced_auth_req(
+            'get',
+            reverse(
+                'field_monitoring_data_collection:checklist-value-attachments-list',
+                args=[
+                    self.value.task_data.visit_task.visit.id,
+                    self.value.task_data.started_method.id,
+                    self.value.checklist_item.id,
+                    self.value.id
+                ]
+            ),
+            user=self.unicef_user
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(response.data['results']), 1)
+
+    def test_add(self):
+        response = self.forced_auth_req(
+            'post',
+            reverse(
+                'field_monitoring_data_collection:checklist-value-attachments-list',
+                args=[
+                    self.value.task_data.visit_task.visit.id,
+                    self.value.task_data.started_method.id,
+                    self.value.checklist_item.id,
+                    self.value.id
+                ]
+            ),
+            user=self.unicef_user,
+            request_format='multipart',
+            data={
+                'file': SimpleUploadedFile('hello_world.txt', u'hello world!'.encode('utf-8')),
+            }
+        )
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+
+    def test_destroy(self):
+        attachment = AttachmentFactory(content_object=self.value)
+
+        response = self.forced_auth_req(
+            'delete',
+            reverse(
+                'field_monitoring_data_collection:checklist-value-attachments-detail',
+                args=[
+                    self.value.task_data.visit_task.visit.id,
+                    self.value.task_data.started_method.id,
+                    self.value.checklist_item.id,
+                    self.value.id,
+                    attachment.id
+                ]
+            ),
+            user=self.unicef_user,
+            request_format='multipart',
+        )
+        self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)

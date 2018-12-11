@@ -64,7 +64,7 @@ class TasksOverallCheckListAttachmentsViewSet(FMBaseAttachmentsViewSet):
     related_model = TaskCheckListItem
 
 
-class TaskDataCheckListViewSet(
+class StartedMethodCheckListViewSet(
     FMBaseViewSet,
     NestedViewSetMixin,
     mixins.ListModelMixin,
@@ -93,36 +93,28 @@ class TaskDataCheckListViewSet(
         return filters
 
 
-# class TaskDataCheckListValueViewSet(
-#     FMBaseViewSet,
-#     NestedViewSetMixin,
-#     mixins.UpdateModelMixin,
-#     viewsets.GenericViewSet,
-# ):
-#     queryset = CheckListItemValue.objects.all()
-#     serializer_class = CheckListValueSerializer
+class CheckListValueViewSet(
+    FMBaseViewSet,
+    NestedViewSetMixin,
+    mixins.RetrieveModelMixin,
+    viewsets.GenericViewSet,
+):
+    queryset = CheckListItemValue.objects.all()
+    serializer_class = CheckListValueSerializer
+
+    def _get_parent_filters(self):
+        # we are too deep with custom parents filters, so should make it by hands
+        # while NestedViewSetMixin is not updated
+        filters = {
+            'task_data__visit_task__visit_id': self.kwargs['visit_pk'],
+            'task_data__started_method': self.kwargs['started_method_pk'],
+        }
+        return filters
 
 
-#     def _get_parent_filters(self):
-#         started_method = self.get_parent_object()
-#         filters = {
-#             'methods': started_method.method
-#         }
-#         if started_method.method_type:
-#             filters['visit_task__cp_output_configs__recommended_method_types'] = started_method.method_type
-#
-#         return filters
-#
-#     def get_serializer(self, *args, **kwargs):
-#         return super().get_serializer(started_method=self.get_parent_object(), *args, **kwargs)
-
-
-class TaskDataCheckListAttachmentsViewSet(FMBaseAttachmentsViewSet):
+class CheckListValueAttachmentsViewSet(FMBaseAttachmentsViewSet):
     serializer_class = BaseAttachmentSerializer
     related_model = CheckListItemValue
 
-    def get_parent_object(self):
-        return self.related_model.objects.filter(
-            task_data=self.kwargs['task_data_id'],
-            checklist_item=self.kwargs['checklist_item_id']
-        )
+    def _get_parent_filters(self):
+        return self.get_parent_filter()

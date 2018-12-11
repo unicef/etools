@@ -100,6 +100,7 @@ class UNICEFVisitFactory(VisitFactory):
 
 
 class TaskCheckListItemFactory(factory.DjangoModelFactory):
+    visit_task = factory.SubFactory(VisitTaskLinkFactory)
     parent_slug = factory.fuzzy.FuzzyText()
     question_number = factory.fuzzy.FuzzyText(length=10)
     question_text = factory.fuzzy.FuzzyText()

@@ -1,9 +1,8 @@
 import factory
 
 from etools.applications.field_monitoring.data_collection.models import StartedMethod, TaskData, CheckListItemValue
-from etools.applications.field_monitoring.fm_settings.tests.factories import CheckListItemFactory
 from etools.applications.field_monitoring.visits.tests.factories import VisitMethodTypeFactory, VisitFactory, \
-    VisitTaskLinkFactory
+    VisitTaskLinkFactory, TaskCheckListItemFactory
 from etools.applications.users.tests.factories import UserFactory
 
 
@@ -40,7 +39,7 @@ class TaskDataFactory(factory.DjangoModelFactory):
 
 class CheckListItemValueFactory(factory.DjangoModelFactory):
     task_data = factory.SubFactory(TaskDataFactory)
-    checklist_item = factory.SubFactory(CheckListItemFactory)
+    checklist_item = factory.SubFactory(TaskCheckListItemFactory)
 
     class Meta:
         model = CheckListItemValue
