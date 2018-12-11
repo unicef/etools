@@ -3,7 +3,7 @@ from datetime import date, timedelta
 from django.db import models
 from django.utils.translation import ugettext_lazy as _
 
-from rest_framework import mixins, viewsets, views
+from rest_framework import mixins, viewsets, views, generics
 from rest_framework.filters import OrderingFilter, SearchFilter
 from rest_framework.generics import get_object_or_404
 from rest_framework.response import Response
@@ -13,6 +13,7 @@ from unicef_attachments.models import Attachment
 
 from unicef_locations.cache import etag_cached
 from unicef_locations.models import Location
+from unicef_locations.serializers import LocationLightSerializer
 from unicef_restlib.views import NestedViewSetMixin
 
 from etools.applications.field_monitoring.fm_settings.filters import CPOutputIsActiveFilter, \
@@ -257,3 +258,12 @@ class ResultsViewSet(OutputListAPIView):
     Custom serializer to get rid of unnecessary part in name.
     """
     serializer_class = ResultSerializer
+
+
+class InterventionLocationsView(FMBaseViewSet, generics.ListAPIView):
+    queryset = Location.objects.all()
+    serializer_class = LocationLightSerializer
+
+    def get_queryset(self):
+        queryset = super().get_queryset()
+        return queryset.filter(intervention_flat_locations=self.kwargs['intervention_pk'])

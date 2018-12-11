@@ -17,7 +17,7 @@ from etools.applications.field_monitoring.fm_settings.tests.factories import (
     FMMethodFactory, LogIssueFactory)
 from etools.applications.field_monitoring.tests.base import FMBaseTestCaseMixin
 from etools.applications.partners.models import PartnerType
-from etools.applications.partners.tests.factories import PartnerFactory
+from etools.applications.partners.tests.factories import PartnerFactory, InterventionFactory
 from etools.applications.reports.models import ResultType
 from etools.applications.reports.tests.factories import ResultFactory
 
@@ -662,3 +662,18 @@ class TestFieldMonitoringGeneralAttachmentsView(FMBaseTestCaseMixin, BaseTenantT
         )
         self.assertEqual(list_response.status_code, status.HTTP_200_OK)
         self.assertEqual(len(list_response.data['results']), attachments_num + 1)
+
+
+class TestInterventionLocationsView(FMBaseTestCaseMixin, BaseTenantTestCase):
+    def test_list(self):
+        intervention = InterventionFactory()
+        intervention.flat_locations.add(*[LocationFactory() for i in range(2)])
+        LocationFactory()
+
+        response = self.forced_auth_req(
+            'get', reverse('field_monitoring_settings:intervention-locations', args=[intervention.pk]),
+            user=self.unicef_user
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(response.data['results']), 2)
