@@ -29,7 +29,7 @@ class FlaggedIssueTest(BaseTenantTestCase):
     @classmethod
     def tearDownClass(cls):
         FlaggedIssue.objects.all().delete()
-        super(FlaggedIssueTest, cls).tearDownClass()
+        super().tearDownClass()
 
     def test_get_or_new_creates_new_unsaved(self):
         partner = PartnerFactory()
