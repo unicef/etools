@@ -24,12 +24,12 @@ from etools.libraries.djangolib.models import GroupWrapper
 class AuditTestCaseMixin(object):
     @classmethod
     def setUpTestData(cls):
-        super(AuditTestCaseMixin, cls).setUpTestData()
+        super().setUpTestData()
         call_command('update_notifications')
         call_command('update_audit_permissions', verbosity=0)
 
     def setUp(self):
-        super(AuditTestCaseMixin, self).setUp()
+        super().setUp()
         EmailTemplate.objects.get_or_create(name='audit/staff_member/invite')
         EmailTemplate.objects.get_or_create(name='audit/engagement/submit_to_auditor')
         EmailTemplate.objects.get_or_create(name='audit/engagement/reported_by_auditor')
@@ -116,7 +116,7 @@ class EngagementTransitionsTestCaseMixin(AuditTestCaseMixin):
         return '{0}{1}/{2}'.format(self.engagements_url(), self.engagement.id, postfix or '')
 
     def setUp(self):
-        super(EngagementTransitionsTestCaseMixin, self).setUp()
+        super().setUp()
 
         self.engagement = self.engagement_factory(agreement__auditor_firm=self.auditor_firm)
 

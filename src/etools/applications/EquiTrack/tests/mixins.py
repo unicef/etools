@@ -83,6 +83,6 @@ class WorkspaceRequiredAPITestMixIn(object):
     def forced_auth_req(self, method, url, user=None, data=None, request_format='json', **kwargs):
         data = data or {}
         data['workspace'] = self.tenant.business_area_code
-        return super(WorkspaceRequiredAPITestMixIn, self).forced_auth_req(
+        return super().forced_auth_req(
             method, url, user=user, data=data, request_format=request_format, **kwargs
         )

@@ -86,7 +86,7 @@ class FundReservationsSynchronizer(VisionDataSynchronizer):
         self.REVERSE_MAPPING = {v: k for k, v in self.MAPPING.items()}
         self.REVERSE_HEADER_FIELDS = [self.REVERSE_MAPPING[v] for v in self.HEADER_FIELDS]
         self.REVERSE_ITEM_FIELDS = [self.REVERSE_MAPPING[v] for v in self.LINE_ITEM_FIELDS]
-        super(FundReservationsSynchronizer, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
 
     def _convert_records(self, records):
         return json.loads(records)["ROWSET"]["ROW"]
@@ -96,7 +96,7 @@ class FundReservationsSynchronizer(VisionDataSynchronizer):
             self.fr_headers[item.fr_number] = item
 
     def _filter_records(self, records):
-        records = super(FundReservationsSynchronizer, self)._filter_records(records)
+        records = super()._filter_records(records)
 
         def bad_record(record):
             # We don't care about FRs without expenditure
@@ -312,7 +312,7 @@ class FundCommitmentSynchronizer(VisionDataSynchronizer):
         self.REVERSE_MAPPING = {v: k for k, v in self.MAPPING.items()}
         self.REVERSE_HEADER_FIELDS = [self.REVERSE_MAPPING[v] for v in self.HEADER_FIELDS]
         self.REVERSE_ITEM_FIELDS = [self.REVERSE_MAPPING[v] for v in self.LINE_ITEM_FIELDS]
-        super(FundCommitmentSynchronizer, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
 
     def _convert_records(self, records):
         return json.loads(records)
@@ -323,7 +323,7 @@ class FundCommitmentSynchronizer(VisionDataSynchronizer):
 
     def _filter_records(self, records):
         records = records["ROWSET"]["ROW"]
-        records = super(FundCommitmentSynchronizer, self)._filter_records(records)
+        records = super()._filter_records(records)
 
         def bad_record(record):
             # We don't care about FCs without expenditure

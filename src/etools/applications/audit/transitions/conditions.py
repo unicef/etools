@@ -37,7 +37,7 @@ class ValidateRiskCategories(BaseTransitionCheck):
         if not fields_to_check:
             fields_to_check = self.VALIDATE_CATEGORIES_BEFORE_SUBMIT.keys()
 
-        errors = super(ValidateRiskCategories, self).get_errors(*args, **kwargs)
+        errors = super().get_errors(*args, **kwargs)
 
         for code in fields_to_check:
             questions_count = RiskBluePrint.objects.filter(category__code=code).count()
@@ -53,7 +53,7 @@ class ValidateRiskExtra(BaseTransitionCheck):
     REQUIRED_EXTRA_FIELDS = []
 
     def get_errors(self, instance, *args, **kwargs):
-        errors = super(ValidateRiskExtra, self).get_errors(*args, **kwargs)
+        errors = super().get_errors(*args, **kwargs)
 
         for code, category in self.VALIDATE_CATEGORIES.items():
             answers = instance.risks.filter(blueprint__category__code=code)
@@ -80,7 +80,7 @@ class BaseRequiredFieldsCheck(BaseTransitionCheck):
     fields = []
 
     def get_errors(self, instance, *args, **kwargs):
-        errors = super(BaseRequiredFieldsCheck, self).get_errors(*args, **kwargs)
+        errors = super().get_errors(*args, **kwargs)
 
         for field in self.fields:
             if not hasattr(instance, field):
@@ -108,7 +108,7 @@ class BaseRequiredFieldsCheck(BaseTransitionCheck):
 
 class EngagementHasReportAttachmentsCheck(BaseTransitionCheck):
     def get_errors(self, instance, *args, **kwargs):
-        errors = super(EngagementHasReportAttachmentsCheck, self).get_errors(*args, **kwargs)
+        errors = super().get_errors(*args, **kwargs)
 
         if not instance.report_attachments.filter(file_type__name='report').exists():
             errors['report_attachments'] = _('You should attach report.')
@@ -117,7 +117,7 @@ class EngagementHasReportAttachmentsCheck(BaseTransitionCheck):
 
 class SpecialAuditSubmitRelatedModelsCheck(BaseTransitionCheck):
     def get_errors(self, instance, *args, **kwargs):
-        errors = super(SpecialAuditSubmitRelatedModelsCheck, self).get_errors(instance, *args, **kwargs)
+        errors = super().get_errors(instance, *args, **kwargs)
 
         if instance.specific_procedures.filter(models.Q(finding__isnull=True) | models.Q(finding='')).exists():
             errors['specific_procedures'] = _('You should provide results of performing specific procedures.')

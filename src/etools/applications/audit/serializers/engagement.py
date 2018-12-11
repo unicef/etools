@@ -75,7 +75,7 @@ class EngagementAttachmentSerializer(BaseAttachmentSerializer):
 
     def create(self, validated_data):
         validated_data['code'] = 'audit_engagement'
-        return super(EngagementAttachmentSerializer, self).create(validated_data)
+        return super().create(validated_data)
 
 
 class ReportAttachmentSerializer(BaseAttachmentSerializer):
@@ -88,7 +88,7 @@ class ReportAttachmentSerializer(BaseAttachmentSerializer):
 
     def create(self, validated_data):
         validated_data['code'] = 'audit_report'
-        return super(ReportAttachmentSerializer, self).create(validated_data)
+        return super().create(validated_data)
 
 
 class EngagementActionPointSerializer(PermissionsBasedSerializerMixin, ActionPointBaseSerializer):
@@ -193,7 +193,7 @@ class EngagementLightSerializer(serializers.ModelSerializer):
         ]
 
     def validate(self, attrs):
-        attrs = super(EngagementLightSerializer, self).validate(attrs)
+        attrs = super().validate(attrs)
 
         po_item = attrs.get('po_item')
         agreement = attrs.get('agreement')
@@ -265,7 +265,7 @@ class EngagementSerializer(EngagementDatesValidation,
         extra_kwargs['engagement_type'] = {'label': _('Engagement Type')}
 
     def validate(self, data):
-        validated_data = super(EngagementSerializer, self).validate(data)
+        validated_data = super().validate(data)
         staff_members = validated_data.get('staff_members', [])
         validated_data.pop('related_agreement', None)
         agreement = validated_data.get('agreement', None) or self.instance.agreement if self.instance else None
@@ -284,7 +284,7 @@ class EngagementSerializer(EngagementDatesValidation,
 
 class ActivePDValidationMixin(object):
     def validate(self, data):
-        validated_data = super(ActivePDValidationMixin, self).validate(data)
+        validated_data = super().validate(data)
 
         partner = validated_data.get('partner', None)
         if not partner:
