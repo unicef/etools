@@ -46,19 +46,19 @@ class LowerTitleField(serializers.CharField):
         return value.lower()
 
     def to_internal_value(self, data):
-        value = super(LowerTitleField, self).to_internal_value(data)
+        value = super().to_internal_value(data)
         return value.title()
 
 
 class PermissionBasedModelSerializer(serializers.ModelSerializer):
     @cached_property
     def _writable_fields(self):
-        fields = super(PermissionBasedModelSerializer, self)._writable_fields
+        fields = super()._writable_fields
         return [f for f in fields if self._can_write_field(f)]
 
     @cached_property
     def _readable_fields(self):
-        fields = super(PermissionBasedModelSerializer, self)._readable_fields
+        fields = super()._readable_fields
         return [f for f in fields if self._can_read_field(f)]
 
     def _check_permission(self, permission_type, field_name):
@@ -162,7 +162,7 @@ class TravelActivitySerializer(PermissionBasedModelSerializer):
         return attrs
 
     def to_internal_value(self, data):
-        ret = super(TravelActivitySerializer, self).to_internal_value(data)
+        ret = super().to_internal_value(data)
         ret.pop('is_primary_traveler', None)
         return ret
 
@@ -176,7 +176,7 @@ class TravelAttachmentSerializer(serializers.ModelSerializer):
 
     def create(self, validated_data):
         validated_data['travel'] = self.context['travel']
-        return super(TravelAttachmentSerializer, self).create(validated_data)
+        return super().create(validated_data)
 
     def get_url(self, obj):
         return obj.file.url
@@ -211,7 +211,7 @@ class TravelDetailsSerializer(PermissionBasedModelSerializer):
     def __init__(self, *args, **kwargs):
         data = kwargs.get('data', {})
         self.transition_name = data.get('transition_name', None)
-        super(TravelDetailsSerializer, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
 
         ta_required = data.get('ta_required', False)
         if self.instance and not is_iterable(self.instance):
@@ -286,7 +286,7 @@ class TravelDetailsSerializer(PermissionBasedModelSerializer):
                     raise ValidationError(ugettext('You have an existing trip with overlapping dates. '
                                                    'Please adjust your trip accordingly.'))
 
-        return super(TravelDetailsSerializer, self).validate(attrs)
+        return super().validate(attrs)
 
     def to_internal_value(self, data):
         if self.instance:
@@ -304,10 +304,10 @@ class TravelDetailsSerializer(PermissionBasedModelSerializer):
         if data.get('itinerary', []):
             data = self.align_dates_to_itinerary(data)
 
-        return super(TravelDetailsSerializer, self).to_internal_value(data)
+        return super().to_internal_value(data)
 
     def to_representation(self, instance):
-        data = super(TravelDetailsSerializer, self).to_representation(instance)
+        data = super().to_representation(instance)
 
         for travel_activity_data in data.get('activities', []):
             if travel_activity_data['primary_traveler'] == data.get('traveler', None):
@@ -341,7 +341,7 @@ class TravelDetailsSerializer(PermissionBasedModelSerializer):
         activities = validated_data.pop('activities', [])
         action_points = validated_data.pop('action_points', [])
 
-        instance = super(TravelDetailsSerializer, self).create(validated_data)
+        instance = super().create(validated_data)
 
         # Reverse FK and M2M relations
         itineraryitems = self.create_related_models(ItineraryItem, itinerary, travel=instance)
