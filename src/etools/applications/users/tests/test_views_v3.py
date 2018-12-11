@@ -163,7 +163,7 @@ class TestUsersListAPIView(BaseTenantTestCase):
 
 class TestMyProfileAPIView(BaseTenantTestCase):
     def setUp(self):
-        super(TestMyProfileAPIView, self).setUp()
+        super().setUp()
         self.unicef_staff = UserFactory(is_staff=True)
         self.unicef_superuser = UserFactory(is_superuser=True)
         self.url = reverse("users_v3:myprofile-detail")
