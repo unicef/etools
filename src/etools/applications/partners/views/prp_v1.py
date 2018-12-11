@@ -49,7 +49,7 @@ class PRPInterventionListAPIView(ListAPIView):
     pagination_class = PRPInterventionPagination
 
     def paginate_queryset(self, queryset):
-        return super(PRPInterventionListAPIView, self).paginate_queryset(queryset)
+        return super().paginate_queryset(queryset)
 
     def get_queryset(self, format=None):
         q = Intervention.objects.prefetch_related(
@@ -105,7 +105,7 @@ class PRPPartnerListAPIView(ListAPIView):
     pagination_class = PRPPartnerPagination
 
     def paginate_queryset(self, queryset):
-        return super(PRPPartnerListAPIView, self).paginate_queryset(queryset)
+        return super().paginate_queryset(queryset)
 
     def get_queryset(self, format=None):
         q = PartnerOrganization.objects.all()

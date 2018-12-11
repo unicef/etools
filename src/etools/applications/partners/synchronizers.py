@@ -81,7 +81,7 @@ class PartnerSynchronizer(VisionDataSynchronizer):
         return json.loads(records)[u'ROWSET'][u'ROW']
 
     def _filter_records(self, records):
-        records = super(PartnerSynchronizer, self)._filter_records(records)
+        records = super()._filter_records(records)
 
         def bad_record(record):
             if not record['VENDOR_NAME']:

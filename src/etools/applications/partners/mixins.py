@@ -10,7 +10,7 @@ class HiddenPartnerMixin(object):
         if db_field.name == u'partner':
             kwargs['queryset'] = PartnerOrganization.objects.filter(hidden=False)
 
-        return super(HiddenPartnerMixin, self).formfield_for_foreignkey(
+        return super().formfield_for_foreignkey(
             db_field, request, **kwargs
         )
 
@@ -37,11 +37,11 @@ class CountryUsersAdminMixin(object):
         if db_field.rel.to is get_user_model():
             self.filter_users(kwargs)
 
-        return super(CountryUsersAdminMixin, self).formfield_for_foreignkey(db_field, request, **kwargs)
+        return super().formfield_for_foreignkey(db_field, request, **kwargs)
 
     def formfield_for_manytomany(self, db_field, request, **kwargs):
 
         if db_field.rel.to is get_user_model():
             self.filter_users(kwargs)
 
-        return super(CountryUsersAdminMixin, self).formfield_for_manytomany(db_field, request, **kwargs)
+        return super().formfield_for_manytomany(db_field, request, **kwargs)
