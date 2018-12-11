@@ -17,7 +17,7 @@ from etools.applications.publics.models import SoftDeleteMixin
 from etools.applications.utils.common.models.mixins import InheritedModelMixin
 
 
-class FindingMixin(object):
+class FindingMixin(models.Model):
     FINDING_CHOICES = Choices(
         ('y', _('As Planned')),
         ('n', _('Not As Planned')),
@@ -26,6 +26,9 @@ class FindingMixin(object):
     finding_value = models.CharField(max_length=1, blank=True, choices=FINDING_CHOICES, verbose_name=_('Finding'))
     finding_description = models.TextField(blank=True, verbose_name=_('Description'))
     finding_attachments = GenericRelation('attachments.Attachment', verbose_name=_('Attachments'), blank=True)
+
+    class Meta:
+        abstract = True
 
 
 class VisitTaskLink(FindingMixin, models.Model):

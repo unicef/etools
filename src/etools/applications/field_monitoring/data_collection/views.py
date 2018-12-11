@@ -6,7 +6,7 @@ from unicef_restlib.views import NestedViewSetMixin
 from etools.applications.field_monitoring.data_collection.models import StartedMethod, TaskData, CheckListItemValue
 from etools.applications.field_monitoring.data_collection.serializers import VisitDataCollectionSerializer, \
     StartedMethodSerializer, TaskDataSerializer, VisitTaskLinkDataCollectionSerializer, \
-    TasksOverallCheckListSerializer, TaskDataCheckListSerializer
+    TasksOverallCheckListSerializer, StartedMethodCheckListSerializer, CheckListValueSerializer
 from etools.applications.field_monitoring.views import FMBaseViewSet, FMBaseAttachmentsViewSet
 from etools.applications.field_monitoring.visits.models import Visit, VisitTaskLink, TaskCheckListItem
 
@@ -67,28 +67,54 @@ class TasksOverallCheckListAttachmentsViewSet(FMBaseAttachmentsViewSet):
 class TaskDataCheckListViewSet(
     FMBaseViewSet,
     NestedViewSetMixin,
-    viewsets.ModelViewSet,
+    mixins.ListModelMixin,
+    mixins.RetrieveModelMixin,
+    mixins.UpdateModelMixin,
+    viewsets.GenericViewSet,
 ):
     queryset = TaskCheckListItem.objects.all()
-    serializer_class = TaskDataCheckListSerializer
+    serializer_class = StartedMethodCheckListSerializer
 
-    def get_parent_filter(self):
-        return {}
-
-    def get_queryset(self):
-        queryset = super().get_queryset()
+    def _get_parent_filters(self):
+        # NestedViewSet shouldn't continue if he got value from get_parent_filter.
+        # else custom filtering on nesting with level deeper than 2 will broke queryset
+        # for example in this case we can override started_method filter by defining get_parent_filter,
+        # but filter for next parent will broke everything: started_method__visit
+        filters = {
+            'visit_task__visit_id': self.kwargs['visit_pk']
+        }
 
         started_method = self.get_parent_object()
-        queryset = queryset.filter(methods=started_method.method)
+        filters['methods'] = started_method.method
+
         if started_method.method_type:
-            queryset = queryset.filter(
-                visit_task__cp_output_configs__recommended_method_types=started_method.method_type
-            )
+            filters['visit_task__cp_output_configs__recommended_method_types'] = started_method.method_type
 
-        return queryset
+        return filters
 
-    def get_serializer(self, *args, **kwargs):
-        return super().get_serializer(self.get_parent_object(), *args, **kwargs)
+
+# class TaskDataCheckListValueViewSet(
+#     FMBaseViewSet,
+#     NestedViewSetMixin,
+#     mixins.UpdateModelMixin,
+#     viewsets.GenericViewSet,
+# ):
+#     queryset = CheckListItemValue.objects.all()
+#     serializer_class = CheckListValueSerializer
+
+
+#     def _get_parent_filters(self):
+#         started_method = self.get_parent_object()
+#         filters = {
+#             'methods': started_method.method
+#         }
+#         if started_method.method_type:
+#             filters['visit_task__cp_output_configs__recommended_method_types'] = started_method.method_type
+#
+#         return filters
+#
+#     def get_serializer(self, *args, **kwargs):
+#         return super().get_serializer(started_method=self.get_parent_object(), *args, **kwargs)
 
 
 class TaskDataCheckListAttachmentsViewSet(FMBaseAttachmentsViewSet):
