@@ -26,7 +26,7 @@ class UserSerializer(BaseUserSerializer):
         if 'email' in validated_data and instance.email != validated_data['email']:
             raise serializers.ValidationError({'email': _('You can\'t change this field')})
 
-        return super(UserSerializer, self).update(instance, validated_data)
+        return super().update(instance, validated_data)
 
 
 class AuditorStaffMemberSerializer(BaseStaffMemberSerializer):
@@ -37,7 +37,7 @@ class AuditorStaffMemberSerializer(BaseStaffMemberSerializer):
     )
 
     def validate(self, attrs):
-        validated_data = super(AuditorStaffMemberSerializer, self).validate(attrs)
+        validated_data = super().validate(attrs)
         user_pk = validated_data.pop('user_pk', None)
 
         if not self.instance:

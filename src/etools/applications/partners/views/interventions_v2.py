@@ -131,7 +131,7 @@ class InterventionListAPIView(QueryStringFilterMixin, ExportModelMixin, Interven
                     return MinimalInterventionListSerializer
         if self.request.method == "POST":
             return InterventionCreateUpdateSerializer
-        return super(InterventionListAPIView, self).get_serializer_class()
+        return super().get_serializer_class()
 
     @transaction.atomic
     def create(self, request, *args, **kwargs):
@@ -169,7 +169,7 @@ class InterventionListAPIView(QueryStringFilterMixin, ExportModelMixin, Interven
         )
 
     def get_queryset(self, format=None):
-        q = super(InterventionListAPIView, self).get_queryset()
+        q = super().get_queryset()
         query_params = self.request.query_params
 
         if query_params:
@@ -201,7 +201,7 @@ class InterventionListAPIView(QueryStringFilterMixin, ExportModelMixin, Interven
         :returns: JSON or CSV file
         """
         query_params = self.request.query_params
-        response = super(InterventionListAPIView, self).list(request)
+        response = super().list(request)
         if "format" in query_params.keys():
             if query_params.get("format") in ['csv', "csv_flat"]:
                 country = Country.objects.get(schema_name=connection.schema_name)
@@ -222,7 +222,7 @@ class InterventionListDashView(InterventionListBaseView):
     filter_backends = (PartnerScopeFilter,)
 
     def get_queryset(self):
-        q = super(InterventionListDashView, self).get_queryset()
+        q = super().get_queryset()
         # if Partnership Manager get all
         if self.request.user.groups.filter(name='Partnership Manager').exists():
             return q.all()
@@ -253,7 +253,7 @@ class InterventionDetailAPIView(ValidatorViewMixin, RetrieveUpdateDestroyAPIView
         """
         if self.request.method in ["PATCH", "PUT"]:
             return InterventionCreateUpdateSerializer
-        return super(InterventionDetailAPIView, self).get_serializer_class()
+        return super().get_serializer_class()
 
     @transaction.atomic
     def update(self, request, *args, **kwargs):
@@ -336,7 +336,7 @@ class InterventionResultListAPIView(ExportModelMixin, ListAPIView):
                 return InterventionResultExportSerializer
             if query_params.get("format") == 'csv_flat':
                 return InterventionResultExportFlatSerializer
-        return super(InterventionResultListAPIView, self).get_serializer_class()
+        return super().get_serializer_class()
 
     def get_queryset(self, format=None):
         q = InterventionResultLink.objects.all()
@@ -379,7 +379,7 @@ class InterventionIndicatorListAPIView(ExportModelMixin, ListAPIView):
                 return InterventionIndicatorExportSerializer
             if query_params.get("format") == 'csv_flat':
                 return InterventionIndicatorExportFlatSerializer
-        return super(InterventionIndicatorListAPIView, self).get_serializer_class()
+        return super().get_serializer_class()
 
     def get_queryset(self, format=None):
         q = InterventionResultLink.objects.all()
@@ -427,7 +427,7 @@ class InterventionAmendmentListAPIView(ExportModelMixin, ValidatorViewMixin, Lis
                 return InterventionAmendmentExportSerializer
             if query_params.get("format") == 'csv_flat':
                 return InterventionAmendmentExportFlatSerializer
-        return super(InterventionAmendmentListAPIView, self).get_serializer_class()
+        return super().get_serializer_class()
 
     def get_queryset(self, format=None):
         q = InterventionAmendment.objects.all()
@@ -542,7 +542,7 @@ class InterventionLowerResultUpdateView(RetrieveUpdateDestroyAPIView):
         obj = self.get_object()
         if obj.applied_indicators.exists():
             raise ValidationError(u'This PD Output has indicators related, please remove the indicators first')
-        return super(InterventionLowerResultUpdateView, self).delete(request, *args, **kwargs)
+        return super().delete(request, *args, **kwargs)
 
 
 class InterventionResultLinkListCreateView(ListCreateAPIView):
@@ -578,7 +578,7 @@ class InterventionResultLinkUpdateView(RetrieveUpdateDestroyAPIView):
         if obj.ll_results.exists():
             raise ValidationError(u'This CP Output cannot be removed from this Intervention because there are nested'
                                   u' Results, please remove all Document Results to continue')
-        return super(InterventionResultLinkUpdateView, self).delete(request, *args, **kwargs)
+        return super().delete(request, *args, **kwargs)
 
 
 class InterventionReportingPeriodListCreateView(ListCreateAPIView):
@@ -630,7 +630,7 @@ class InterventionIndicatorsUpdateView(RetrieveUpdateDestroyAPIView):
         intervention = ai.lower_result.result_link.intervention
         if not intervention.status == Intervention.DRAFT:
             raise ValidationError(u'Deleting an indicator is only possible in status Draft.')
-        return super(InterventionIndicatorsUpdateView, self).delete(request, *args, **kwargs)
+        return super().delete(request, *args, **kwargs)
 
 
 class InterventionLocation(object):

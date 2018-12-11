@@ -19,7 +19,7 @@ class ExportModelMixin(object):
         return labels
 
     def get_renderer_context(self):
-        context = super(ExportModelMixin, self).get_renderer_context()
+        context = super().get_renderer_context()
         if hasattr(self, "get_serializer_class"):
             serializer_class = self.get_serializer_class()
             serializer = serializer_class()
@@ -37,7 +37,7 @@ class ExportSerializerMixin(object):
 
     def __init__(self, *args, **kwargs):
         self.add_country()
-        super(ExportSerializerMixin, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
 
     def add_country(self):
         # Add country to list of fields exported

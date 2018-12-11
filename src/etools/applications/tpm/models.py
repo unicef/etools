@@ -459,7 +459,7 @@ class TPMActivity(Activity):
 
 class TPMActionPointManager(models.Manager):
     def get_queryset(self):
-        queryset = super(TPMActionPointManager, self).get_queryset()
+        queryset = super().get_queryset()
         return queryset.filter(tpm_activity__isnull=False)
 
 
@@ -475,7 +475,7 @@ class TPMActionPoint(ActionPoint):
         proxy = True
 
     def get_mail_context(self, user=None, include_token=False):
-        context = super(TPMActionPoint, self).get_mail_context(user=user, include_token=include_token)
+        context = super().get_mail_context(user=user, include_token=include_token)
         if self.tpm_activity:
             context['tpm_activity'] = self.tpm_activity.get_mail_context(user=user, include_token=include_token)
         return context
