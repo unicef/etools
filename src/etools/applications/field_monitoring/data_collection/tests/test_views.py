@@ -10,7 +10,7 @@ from etools.applications.field_monitoring.data_collection.tests.factories import
     CheckListItemValueFactory
 from etools.applications.field_monitoring.tests.base import FMBaseTestCaseMixin
 from etools.applications.field_monitoring.visits.models import Visit, TaskCheckListItem, FindingMixin
-from etools.applications.field_monitoring.visits.tests.factories import UNICEFVisitFactory
+from etools.applications.field_monitoring.visits.tests.factories import UNICEFVisitFactory, TaskCheckListItemFactory
 
 
 class VisitDataCollectionViewTestCase(FMBaseTestCaseMixin, BaseTenantTestCase):
@@ -233,6 +233,139 @@ class CheckListValueAttachmentsViewTestCase(FMBaseTestCaseMixin, BaseTenantTestC
                     self.value.task_data.started_method.id,
                     self.value.checklist_item.id,
                     self.value.id,
+                    attachment.id
+                ]
+            ),
+            user=self.unicef_user,
+            request_format='multipart',
+        )
+        self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
+
+
+class OverallCheckListViewTestCase(FMBaseTestCaseMixin, AssignedVisitMixin, BaseTenantTestCase):
+    @classmethod
+    def setUpTestData(cls):
+        super().setUpTestData()
+
+        cls.checklist_item = TaskCheckListItem.objects.get(visit_task__visit=cls.assigned_visit)
+
+    def test_list(self):
+        response = self.forced_auth_req(
+            'get', reverse('field_monitoring_data_collection:visit-overall-checklist-list',
+                           args=[self.assigned_visit.id]),
+            user=self.unicef_user
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(response.data['results']), 1)
+        self.assertEqual(response.data['results'][0]['checklist_values'], [])
+
+    def test_collected_values(self):
+        started_method = StartedMethodFactory(
+            visit=self.assigned_visit,
+            method=self.assigned_visit_method_type.method,
+            method_type=self.assigned_visit_method_type,
+        )
+        task_data = started_method.tasks_data.first()
+
+        checklist_item = TaskCheckListItem.objects.get(visit_task=task_data.visit_task)
+        CheckListItemValueFactory(checklist_item=checklist_item, task_data=task_data)
+
+        response = self.forced_auth_req(
+            'get', reverse('field_monitoring_data_collection:visit-overall-checklist-list',
+                           args=[self.assigned_visit.id]),
+            user=self.unicef_user
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(response.data['results']), 1)
+        self.assertNotEqual(response.data['results'][0]['checklist_values'], [])
+
+    def test_finding_attachments_provided(self):
+        AttachmentFactory(content_object=self.checklist_item)
+
+        response = self.forced_auth_req(
+            'get', reverse('field_monitoring_data_collection:visit-overall-checklist-list',
+                           args=[self.assigned_visit.id]),
+            user=self.unicef_user
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(response.data['results']), 1)
+        self.assertEqual(response.data['results'][0]['id'], self.checklist_item.id)
+        self.assertNotEqual(response.data['results'][0]['finding_attachments'], [])
+
+    def test_set_value(self):
+        data = {
+            'finding_value': fuzzy.FuzzyChoice(choices=dict(FindingMixin.FINDING_CHOICES).keys()).fuzz(),
+            'finding_description': fuzzy.FuzzyText().fuzz(),
+        }
+
+        response = self.forced_auth_req(
+            'patch', reverse('field_monitoring_data_collection:visit-overall-checklist-detail',
+                             args=[self.assigned_visit.id, self.checklist_item.id]),
+            user=self.unicef_user,
+            data=data
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data['finding_value'], data['finding_value'])
+        self.assertEqual(response.data['finding_description'], data['finding_description'])
+
+
+class OverallCheckListAttachmentsViewTestCase(FMBaseTestCaseMixin, BaseTenantTestCase):
+    @classmethod
+    def setUpTestData(cls):
+        super().setUpTestData()
+
+        cls.checklist_item = TaskCheckListItemFactory()
+
+    def test_list(self):
+        AttachmentFactory(content_object=self.checklist_item)
+
+        response = self.forced_auth_req(
+            'get',
+            reverse(
+                'field_monitoring_data_collection:visit-overall-checklist-attachments-list',
+                args=[
+                    self.checklist_item.visit_task.visit.id,
+                    self.checklist_item.id,
+                ]
+            ),
+            user=self.unicef_user
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(response.data['results']), 1)
+
+    def test_add(self):
+        response = self.forced_auth_req(
+            'post',
+            reverse(
+                'field_monitoring_data_collection:visit-overall-checklist-attachments-list',
+                args=[
+                    self.checklist_item.visit_task.visit.id,
+                    self.checklist_item.id,
+                ]
+            ),
+            user=self.unicef_user,
+            request_format='multipart',
+            data={
+                'file': SimpleUploadedFile('hello_world.txt', u'hello world!'.encode('utf-8')),
+            }
+        )
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+
+    def test_destroy(self):
+        attachment = AttachmentFactory(content_object=self.checklist_item)
+
+        response = self.forced_auth_req(
+            'delete',
+            reverse(
+                'field_monitoring_data_collection:visit-overall-checklist-attachments-detail',
+                args=[
+                    self.checklist_item.visit_task.visit.id,
+                    self.checklist_item.id,
                     attachment.id
                 ]
             ),

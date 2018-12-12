@@ -51,21 +51,25 @@ class TaskDataViewSet(
     serializer_class = TaskDataSerializer
     queryset = TaskData.objects.all()
     filter_backends = (DjangoFilterBackend,)
-    filter_fields = ('visit_task__task',)
+    filter_fields = ('visit_task__task',)  # todo: filter answered. backend? else add flag to serializer
 
 
-class TasksOverallCheckListViewSet(
+class OverallCheckListViewSet(
     FMBaseViewSet,
     NestedViewSetMixin,
     viewsets.ModelViewSet
 ):
+    parent_lookup_field = 'visit_task__visit'
     serializer_class = TasksOverallCheckListSerializer
     queryset = TaskCheckListItem.objects.all()
 
 
-class TasksOverallCheckListAttachmentsViewSet(FMBaseAttachmentsViewSet):
+class OverallCheckListAttachmentsViewSet(FMBaseAttachmentsViewSet):
     serializer_class = BaseAttachmentSerializer
     related_model = TaskCheckListItem
+
+    def _get_parent_filters(self):
+        return self.get_parent_filter()
 
 
 class StartedMethodCheckListViewSet(
