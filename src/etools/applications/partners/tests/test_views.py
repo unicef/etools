@@ -328,7 +328,7 @@ class TestPartnerOrganizationListViewForCSV(BaseTenantTestCase):
         class Wrapper(PartnerOrganizationExportSerializer):
             def __init__(self, *args, **kwargs):
                 TestPartnerOrganizationListViewForCSV.wrapper_called = True
-                super(PartnerOrganizationExportSerializer, self).__init__(*args, **kwargs)
+                super().__init__(*args, **kwargs)
 
         partner_organization_v2.PartnerOrganizationExportSerializer = Wrapper
 

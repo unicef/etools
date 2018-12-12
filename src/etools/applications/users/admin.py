@@ -46,7 +46,7 @@ class ProfileInline(admin.StackedInline):
 
     def get_fields(self, request, obj=None):
 
-        fields = super(ProfileInline, self).get_fields(request, obj=obj)
+        fields = super().get_fields(request, obj=obj)
         if not request.user.is_superuser and u'country_override' in fields:
             fields.remove(u'country_override')
         return fields
@@ -59,7 +59,7 @@ class ProfileInline(admin.StackedInline):
             else:
                 kwargs['queryset'] = request.user.profile.countries_available.all()
 
-        return super(ProfileInline, self).formfield_for_manytomany(
+        return super().formfield_for_manytomany(
             db_field, request, **kwargs
         )
 
@@ -119,7 +119,7 @@ class ProfileAdmin(admin.ModelAdmin):
         :param request:
         :return:
         """
-        queryset = super(ProfileAdmin, self).get_queryset(request)
+        queryset = super().get_queryset(request)
         if not request.user.is_superuser:
             queryset = queryset.filter(
                 user__is_staff=True,
@@ -129,7 +129,7 @@ class ProfileAdmin(admin.ModelAdmin):
 
     def get_fields(self, request, obj=None):
 
-        fields = super(ProfileAdmin, self).get_fields(request, obj=obj)
+        fields = super().get_fields(request, obj=obj)
         if not request.user.is_superuser and u'country_override' in fields:
             fields.remove(u'country_override')
         return fields
@@ -142,7 +142,7 @@ class ProfileAdmin(admin.ModelAdmin):
             else:
                 kwargs['queryset'] = request.user.profile.countries_available.all()
 
-        return super(ProfileAdmin, self).formfield_for_manytomany(
+        return super().formfield_for_manytomany(
             db_field, request, **kwargs
         )
 
@@ -174,7 +174,7 @@ class UserAdminPlus(UserAdmin):
     ]
 
     def get_urls(self):
-        urls = super(UserAdminPlus, self).get_urls()
+        urls = super().get_urls()
 
         def wrap(view):
             def wrapper(*args, **kwargs):
@@ -206,7 +206,7 @@ class UserAdminPlus(UserAdmin):
         :param request:
         :return:
         """
-        queryset = super(UserAdminPlus, self).get_queryset(request)
+        queryset = super().get_queryset(request)
         if not request.user.is_superuser:
             queryset = queryset.filter(
                 is_staff=True,
@@ -221,7 +221,7 @@ class UserAdminPlus(UserAdmin):
         :param obj:
         :return:
         """
-        fields = list(super(UserAdminPlus, self).get_readonly_fields(request, obj))
+        fields = list(super().get_readonly_fields(request, obj))
         if not request.user.is_superuser:
             fields.append(u'is_superuser')
         return fields
@@ -248,7 +248,7 @@ class CountryAdmin(admin.ModelAdmin):
     )
 
     def get_urls(self):
-        urls = super(CountryAdmin, self).get_urls()
+        urls = super().get_urls()
 
         def wrap(view):
             def wrapper(*args, **kwargs):

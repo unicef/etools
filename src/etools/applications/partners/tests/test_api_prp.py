@@ -22,7 +22,7 @@ from etools.applications.users.tests.factories import GroupFactory, UserFactory
 
 class TestInterventionsAPI(WorkspaceRequiredAPITestMixIn, BaseTenantTestCase):
     def setUp(self):
-        super(TestInterventionsAPI, self).setUp()
+        super().setUp()
         setup_intervention_test_data(self, include_results_and_indicators=True)
 
     def run_prp_v1(self, user=None, method='get', data=None):

@@ -528,7 +528,7 @@ class TestTPMStaffMembersViewSet(TestExportMixin, TPMTestCaseMixin, BaseTenantTe
 class TestTPMPartnerViewSet(TestExportMixin, TPMTestCaseMixin, BaseTenantTestCase):
     @classmethod
     def setUpTestData(cls):
-        super(TestTPMPartnerViewSet, cls).setUpTestData()
+        super().setUpTestData()
         cls.second_tpm_partner = TPMPartnerFactory()
 
     def _test_list_view(self, user, expected_firms):
@@ -720,7 +720,7 @@ class TestVisitAttachmentsView(TPMTestCaseMixin, BaseTenantTestCase):
 class TestVisitReportAttachmentsView(TPMTestCaseMixin, BaseTenantTestCase):
     @classmethod
     def setUpTestData(cls):
-        super(TestVisitReportAttachmentsView, cls).setUpTestData()
+        super().setUpTestData()
 
         cls.visit = TPMVisitFactory(status='tpm_accepted',
                                     tpm_partner=cls.tpm_user.tpmpartners_tpmpartnerstaffmember.tpm_partner,
@@ -753,7 +753,7 @@ class TestVisitReportAttachmentsView(TPMTestCaseMixin, BaseTenantTestCase):
 class TestActivityAttachmentsView(TPMTestCaseMixin, BaseTenantTestCase):
     @classmethod
     def setUpTestData(cls):
-        super(TestActivityAttachmentsView, cls).setUpTestData()
+        super().setUpTestData()
 
         cls.visit = TPMVisitFactory(status='draft',
                                     tpm_partner=cls.tpm_user.tpmpartners_tpmpartnerstaffmember.tpm_partner,
@@ -788,7 +788,7 @@ class TestActivityAttachmentsView(TPMTestCaseMixin, BaseTenantTestCase):
 class TestActivityReportAttachmentsView(TPMTestCaseMixin, BaseTenantTestCase):
     @classmethod
     def setUpTestData(cls):
-        super(TestActivityReportAttachmentsView, cls).setUpTestData()
+        super().setUpTestData()
 
         cls.visit = TPMVisitFactory(status='tpm_accepted',
                                     tpm_partner=cls.tpm_user.tpmpartners_tpmpartnerstaffmember.tpm_partner,

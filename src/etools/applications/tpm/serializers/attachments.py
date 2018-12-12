@@ -37,7 +37,7 @@ class ActivityAttachmentsSerializer(BaseAttachmentSerializer):
 
     def create(self, validated_data):
         validated_data['code'] = 'activity_attachments'
-        return super(ActivityAttachmentsSerializer, self).create(validated_data)
+        return super().create(validated_data)
 
 
 class ActivityReportSerializer(BaseAttachmentSerializer):
@@ -48,7 +48,7 @@ class ActivityReportSerializer(BaseAttachmentSerializer):
 
     def create(self, validated_data):
         validated_data['code'] = 'activity_report'
-        return super(ActivityReportSerializer, self).create(validated_data)
+        return super().create(validated_data)
 
 
 class TPMVisitReportAttachmentsSerializer(BaseAttachmentSerializer):

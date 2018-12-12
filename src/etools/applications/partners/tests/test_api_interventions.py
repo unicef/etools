@@ -931,7 +931,7 @@ class TestAPIInterventionLowerResultListView(BaseTenantTestCase):
     '''Exercise the list view for InterventionLowerResultListCreateView'''
     @classmethod
     def setUpClass(cls):
-        super(TestAPIInterventionLowerResultListView, cls).setUpClass()
+        super().setUpClass()
 
         cls.result_link = InterventionResultLinkFactory()
 
@@ -1008,7 +1008,7 @@ class TestAPIInterventionLowerResultCreateView(BaseTenantTestCase):
     '''Exercise the create view for InterventionLowerResultListCreateView'''
     @classmethod
     def setUpClass(cls):
-        super(TestAPIInterventionLowerResultCreateView, cls).setUpClass()
+        super().setUpClass()
 
         cls.result_link = InterventionResultLinkFactory()
 
@@ -1079,7 +1079,7 @@ class TestAPIInterventionIndicatorsListView(BaseTenantTestCase):
     '''Exercise the list view for InterventionIndicatorsListView (these are AppliedIndicator instances)'''
     @classmethod
     def setUpClass(cls):
-        super(TestAPIInterventionIndicatorsListView, cls).setUpClass()
+        super().setUpClass()
 
         cls.result_link = InterventionResultLinkFactory()
 
@@ -1184,7 +1184,7 @@ class TestAPInterventionIndicatorsCreateView(BaseTenantTestCase):
     '''Exercise the create view for InterventionIndicatorsListView (these are AppliedIndicator instances)'''
     @classmethod
     def setUpClass(cls):
-        super(TestAPInterventionIndicatorsCreateView, cls).setUpClass()
+        super().setUpClass()
 
         cls.result_link = InterventionResultLinkFactory()
         cls.lower_result = LowerResultFactory(result_link=cls.result_link)
@@ -1281,7 +1281,7 @@ class TestAPInterventionIndicatorsUpdateView(BaseTenantTestCase):
     '''
     @classmethod
     def setUpClass(cls):
-        super(TestAPInterventionIndicatorsUpdateView, cls).setUpClass()
+        super().setUpClass()
         cls.intervention = InterventionFactory()
         cls.result_link = InterventionResultLinkFactory(intervention=cls.intervention)
         cls.lower_result = LowerResultFactory(result_link=cls.result_link)
@@ -1562,7 +1562,7 @@ class TestInterventionAmendmentListAPIView(BaseTenantTestCase):
 
 class TestInterventionAmendmentCreateAPIView(BaseTenantTestCase):
     def setUp(self):
-        super(TestInterventionAmendmentCreateAPIView, self).setUp()
+        super().setUp()
 
         self.partnership_manager_user = UserFactory(is_staff=True)
         self.partnership_manager_user.groups.add(GroupFactory())

@@ -101,7 +101,7 @@ class AgreementCreateUpdateSerializer(AttachmentSerializerMixin, SnapshotModelSe
         fields = "__all__"
 
     def validate(self, data):
-        data = super(AgreementCreateUpdateSerializer, self).validate(data)
+        data = super().validate(data)
         agreement_type = data.get('agreement_type', None) or self.instance.agreement_type
 
         if agreement_type == Agreement.PCA:

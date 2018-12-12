@@ -100,7 +100,7 @@ class TPMActionPointSerializer(PermissionsBasedSerializerMixin, ActionPointBaseS
         validated_data.update({
             'partner_id': activity.partner_id,
         })
-        return super(TPMActionPointSerializer, self).create(validated_data)
+        return super().create(validated_data)
 
 
 class TPMActivitySerializer(PermissionsBasedSerializerMixin, WritableNestedSerializerMixin,
@@ -154,11 +154,11 @@ class TPMActivitySerializer(PermissionsBasedSerializerMixin, WritableNestedSeria
 
     def create(self, validated_data):
         self._validate_partner_intervention(validated_data)
-        return super(TPMActivitySerializer, self).create(validated_data)
+        return super().create(validated_data)
 
     def update(self, instance, validated_data):
         self._validate_partner_intervention(validated_data, instance=instance)
-        return super(TPMActivitySerializer, self).update(instance, validated_data)
+        return super().update(instance, validated_data)
 
     class Meta(WritableNestedSerializerMixin.Meta):
         model = TPMActivity
@@ -244,10 +244,10 @@ class TPMVisitSerializer(WritableNestedParentSerializerMixin,
 
     def create(self, validated_data):
         validated_data['author'] = self.get_user()
-        return super(TPMVisitSerializer, self).create(validated_data)
+        return super().create(validated_data)
 
     def validate(self, attrs):
-        validated_data = super(TPMVisitSerializer, self).validate(attrs)
+        validated_data = super().validate(attrs)
 
         tpm_partner = validated_data.get('tpm_partner', self.instance.tpm_partner if self.instance else None)
 

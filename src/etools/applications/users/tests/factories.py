@@ -27,7 +27,7 @@ class OfficeFactory(factory.django.DjangoModelFactory):
 
     @classmethod
     def _create(cls, model_class, *args, **kwargs):
-        obj = super(OfficeFactory, cls)._create(model_class, *args, **kwargs)
+        obj = super()._create(model_class, *args, **kwargs)
 
         if hasattr(connection.tenant, 'id') and connection.tenant.schema_name != 'public':
             connection.tenant.offices.add(obj)
