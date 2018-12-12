@@ -1,5 +1,7 @@
 from rest_framework import mixins, viewsets
 
+from django_filters.rest_framework import DjangoFilterBackend
+
 from unicef_attachments.serializers import BaseAttachmentSerializer
 from unicef_restlib.views import NestedViewSetMixin
 
@@ -48,6 +50,8 @@ class TaskDataViewSet(
 ):
     serializer_class = TaskDataSerializer
     queryset = TaskData.objects.all()
+    filter_backends = (DjangoFilterBackend,)
+    filter_fields = ('visit_task__task',)
 
 
 class TasksOverallCheckListViewSet(
