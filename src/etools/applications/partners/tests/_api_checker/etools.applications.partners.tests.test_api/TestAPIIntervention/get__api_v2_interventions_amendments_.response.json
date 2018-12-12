@@ -19,7 +19,7 @@
         ],
         "content-length": [
             "Content-Length",
-            "657"
+            "646"
         ]
     },
     "data": [
@@ -28,7 +28,7 @@
             "amendment_number": "1",
             "signed_amendment_file": "http://testserver/media/test/file_attachments/partner_organization/573/573/agreements/600/interventions/508/amendments/None/test_file.pdf",
             "signed_amendment_attachment": null,
-            "internal_prc_review_attachment": null,
+            "internal_prc_review": null,
             "created": "2018-12-05T16:22:57.709000Z",
             "modified": "2018-12-05T16:22:57.726000Z",
             "types": [

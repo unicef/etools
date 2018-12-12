@@ -60,10 +60,7 @@ class InterventionAmendmentCUSerializer(AttachmentSerializerMixin, serializers.M
     signed_amendment_attachment = AttachmentSingleFileField(
         override="signed_amendment"
     )
-    internal_prc_review_attachment = AttachmentSingleFileField(
-        source="internal_prc_review",
-        required=False,
-    )
+    internal_prc_review = AttachmentSingleFileField(required=False)
 
     class Meta:
         model = InterventionAmendment
