@@ -418,7 +418,7 @@ class TestPartnerOrganizationAddView(BaseTenantTestCase):
         cls.user.groups.add(GroupFactory())
 
     def setUp(self):
-        super(TestPartnerOrganizationAddView, self).setUp()
+        super().setUp()
         self.view = PartnerOrganizationAddView.as_view()
 
     def test_no_vendor_number(self):

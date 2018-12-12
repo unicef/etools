@@ -189,7 +189,7 @@ class TestHACTCalculations(BaseTenantTestCase):
 
 class TestPartnerOrganizationModel(BaseTenantTestCase):
     def setUp(self):
-        super(TestPartnerOrganizationModel, self).setUp()
+        super().setUp()
         self.partner_organization = PartnerFactory(
             name="Partner Org 1",
             total_ct_ytd=models.PartnerOrganization.CT_CP_AUDIT_TRIGGER_LEVEL + 1,
@@ -582,7 +582,7 @@ class TestPartnerOrganizationModel(BaseTenantTestCase):
 
 class TestAgreementModel(BaseTenantTestCase):
     def setUp(self):
-        super(TestAgreementModel, self).setUp()
+        super().setUp()
 
         self.partner_organization = PartnerFactory(
             name="Partner Org 1",
@@ -621,7 +621,7 @@ class TestAgreementModel(BaseTenantTestCase):
 
 class TestInterventionModel(BaseTenantTestCase):
     def setUp(self):
-        super(TestInterventionModel, self).setUp()
+        super().setUp()
         call_command('update_notifications')
         self.partner_organization = PartnerFactory(name="Partner Org 1")
         cp = CountryProgrammeFactory(

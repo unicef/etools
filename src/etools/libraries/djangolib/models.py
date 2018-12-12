@@ -46,7 +46,7 @@ class GroupWrapper(object):
         if self is other:
             return True
 
-        return super(GroupWrapper, self) == other
+        return super() == other
 
     def invalidate_cache(self):
         self._group = None

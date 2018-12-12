@@ -208,7 +208,7 @@ class ProfileEdit(FormView):
     success_url = 'complete'
 
     def get_context_data(self, **kwargs):
-        context = super(ProfileEdit, self).get_context_data(**kwargs)
+        context = super().get_context_data(**kwargs)
         context.update({
             'office_list': connection.tenant.offices.all().order_by('name'),
         })
@@ -224,11 +224,11 @@ class ProfileEdit(FormView):
         profile.job_title = form.cleaned_data['job_title']
         profile.phone_number = form.cleaned_data['phone_number']
         profile.save()
-        return super(ProfileEdit, self).form_valid(form)
+        return super().form_valid(form)
 
     def get_initial(self):
         """  Returns the initial data to use for forms on this view.  """
-        initial = super(ProfileEdit, self).get_initial()
+        initial = super().get_initial()
         try:
             profile = self.request.user.profile
             initial['office'] = profile.office
@@ -286,7 +286,7 @@ class UserViewSet(mixins.RetrieveModelMixin,
 
     def get_queryset(self):
         # we should only return workspace users.
-        queryset = super(UserViewSet, self).get_queryset()
+        queryset = super().get_queryset()
         queryset = queryset.prefetch_related('profile', 'groups', 'user_permissions')
         # Filter for Partnership Managers only
         driver_qps = self.request.query_params.get("drivers", "")
@@ -378,4 +378,4 @@ class ModuleRedirectView(RedirectView):
             if Auditor.as_group() in self.request.user.groups.all():
                 return '/ap/'
 
-        return super(ModuleRedirectView, self).get_redirect_url(*args, **kwargs)
+        return super().get_redirect_url(*args, **kwargs)

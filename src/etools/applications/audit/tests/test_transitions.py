@@ -40,7 +40,7 @@ class MATransitionsTestCaseMixin(EngagementTransitionsTestCaseMixin):
     endpoint = 'micro-assessments'
 
     def _init_filled_engagement(self):
-        super(MATransitionsTestCaseMixin, self)._init_filled_engagement()
+        super()._init_filled_engagement()
         self._fill_category('ma_questionnaire')
         self._fill_category('ma_subject_areas', extra={"comments": "some info"})
         self._fill_category('ma_global_assessment', extra={"comments": "some info"})
@@ -60,7 +60,7 @@ class AuditTransitionsTestCaseMixin(EngagementTransitionsTestCaseMixin):
         self.engagement.save()
 
     def _init_filled_engagement(self):
-        super(AuditTransitionsTestCaseMixin, self)._init_filled_engagement()
+        super()._init_filled_engagement()
         self._fill_audit_specified_fields()
         self._fill_category('audit_key_weakness')
 
@@ -78,7 +78,7 @@ class SpecialAuditTransitionsTestCaseMixin(EngagementTransitionsTestCaseMixin):
             sp.save()
 
     def _init_filled_engagement(self):
-        super(SpecialAuditTransitionsTestCaseMixin, self)._init_filled_engagement()
+        super()._init_filled_engagement()
         self._init_specific_procedure()
         self._fill_specific_procedure()
 
@@ -95,7 +95,7 @@ class SCTransitionsTestCaseMixin(EngagementTransitionsTestCaseMixin):
         self.engagement.save()
 
     def _init_filled_engagement(self):
-        super(SCTransitionsTestCaseMixin, self)._init_filled_engagement()
+        super()._init_filled_engagement()
         self._fill_sc_specified_fields()
 
 

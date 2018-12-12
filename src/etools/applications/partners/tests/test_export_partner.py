@@ -221,7 +221,7 @@ class TestPartnerStaffMemberModelExport(PartnerModelExportTestCase):
 
 class TestPartnerOrganizationAssessmentModelExport(PartnerModelExportTestCase):
     def setUp(self):
-        super(TestPartnerOrganizationAssessmentModelExport, self).setUp()
+        super().setUp()
         self.assessment = AssessmentFactory(
             partner=self.partner,
             report="fake_report.pdf"
