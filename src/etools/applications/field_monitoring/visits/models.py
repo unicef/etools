@@ -190,7 +190,7 @@ class TaskCheckListItem(FindingMixin, OrderedModel):
     question_text = models.CharField(max_length=255, verbose_name=_('Question Text'))
     specific_details = models.TextField(verbose_name=_('Specific Details To Probe'), blank=True)
 
-    methods = models.ManyToManyField(FMMethod, verbose_name=_('Recommended Methods'))
+    methods = models.ManyToManyField(FMMethod, verbose_name=_('Recommended Methods'), related_name='checklist_items')
 
     class Meta:
         verbose_name = _('Task Checklist Item')

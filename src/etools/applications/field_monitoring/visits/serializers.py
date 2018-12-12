@@ -122,7 +122,7 @@ class VisitMethodSerializer(serializers.ModelSerializer):
 
         return VisitCPOutputConfigSerializer(
             instance=VisitCPOutputConfig.objects.filter(
-                visit_task__checklist_items_methods=obj,
+                visit_task__checklist_items__methods=obj,
             ),
             many=True
         ).data

@@ -162,4 +162,9 @@ class Migration(migrations.Migration):
             name='visit_task',
             field=models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='checklist_items', to='field_monitoring_visits.VisitTaskLink', verbose_name='Task Link'),
         ),
+        migrations.AlterField(
+            model_name='taskchecklistitem',
+            name='methods',
+            field=models.ManyToManyField(related_name='checklist_items', to='field_monitoring_shared.FMMethod', verbose_name='Recommended Methods'),
+        ),
     ]
