@@ -16,7 +16,7 @@ class IndicatorAdminForm(forms.ModelForm):
         """
         Filter linked results by sector and result structure
         """
-        super(IndicatorAdminForm, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
         if self.instance.sector_id:
             results = Result.objects.filter(
                 sector=self.instance.sector

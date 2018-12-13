@@ -103,12 +103,12 @@ class PermissionsBasedSerializerMixin(object):
 
     @property
     def _writable_fields(self):
-        fields = super(PermissionsBasedSerializerMixin, self)._writable_fields
+        fields = super()._writable_fields
 
         return self._filter_fields_by_permissions(fields, Permission.PERMISSIONS.edit)
 
     @property
     def _readable_fields(self):
-        fields = super(PermissionsBasedSerializerMixin, self)._readable_fields
+        fields = super()._readable_fields
 
         return self._filter_fields_by_permissions(fields, Permission.PERMISSIONS.view)

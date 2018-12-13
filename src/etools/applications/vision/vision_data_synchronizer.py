@@ -192,4 +192,4 @@ class FileDataSynchronizer(DataSynchronizer):
         connection.set_tenant(country)
         logger.info('Country is {}'.format(country.name))
 
-        super(FileDataSynchronizer, self).__init__(country, *args, **kwargs)
+        super().__init__(country, *args, **kwargs)

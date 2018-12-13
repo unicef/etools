@@ -26,7 +26,7 @@ from etools.applications.users.tests.factories import UserFactory
 
 class InvoiceMaking(BaseTenantTestCase):
     def setUp(self):
-        super(InvoiceMaking, self).setUp()
+        super().setUp()
         self.unicef_staff = UserFactory(is_staff=True)
         self.traveler = UserFactory()
 

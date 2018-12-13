@@ -12,7 +12,7 @@ class StringConcat(Aggregate):
     template = '%(function)s(%(distinct)s%(expressions)s)'
 
     def __init__(self, expression, separator=",", distinct=False, **extra):
-        super(StringConcat, self).__init__(
+        super().__init__(
             expression,
             Value(separator),
             distinct='DISTINCT ' if distinct else '',
@@ -22,7 +22,7 @@ class StringConcat(Aggregate):
 
     def as_postgresql(self, compiler, connection):
         self.function = 'STRING_AGG'
-        return super(StringConcat, self).as_sql(compiler, connection)
+        return super().as_sql(compiler, connection)
 
 
 class JsonFieldSerializer(serializers.Field):

@@ -74,7 +74,7 @@ class CustomAzureADBBCOAuth2(AzureADB2COAuth2):
 
 class DRFBasicAuthMixin(BasicAuthentication):
     def authenticate(self, request):
-        super_return = super(DRFBasicAuthMixin, self).authenticate(request)
+        super_return = super().authenticate(request)
         if not super_return:
             return None
 
@@ -86,7 +86,7 @@ class DRFBasicAuthMixin(BasicAuthentication):
 class EtoolsTokenAuthentication(TokenAuthentication):
 
     def authenticate(self, request):
-        super_return = super(EtoolsTokenAuthentication, self).authenticate(request)
+        super_return = super().authenticate(request)
         if not super_return:
             return None
 
@@ -108,7 +108,7 @@ class EToolsTenantJWTAuthentication(JSONWebTokenAuthentication):
             return None
 
         try:
-            user, jwt_value = super(EToolsTenantJWTAuthentication, self).authenticate(request)
+            user, jwt_value = super().authenticate(request)
         except TypeError:
             raise PermissionDenied(detail='No valid authentication provided')
         except AuthenticationFailed:

@@ -61,7 +61,7 @@ class TravelListViewSet(mixins.ListModelMixin,
         return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
 
     def perform_create(self, serializer):
-        super(TravelListViewSet, self).perform_create(serializer)
+        super().perform_create(serializer)
         run_transition(serializer)
 
 
@@ -75,7 +75,7 @@ class TravelDetailsViewSet(mixins.RetrieveModelMixin,
     lookup_url_kwarg = 'travel_pk'
 
     def get_serializer_context(self):
-        context = super(TravelDetailsViewSet, self).get_serializer_context()
+        context = super().get_serializer_context()
 
         # This will prevent Swagger error because it will not populate self.kwargs with the required arguments to fetch
         # the object.
@@ -92,11 +92,11 @@ class TravelDetailsViewSet(mixins.RetrieveModelMixin,
     def partial_update(self, request, *args, **kwargs):
         if 'transition_name' in kwargs:
             request.data['transition_name'] = kwargs['transition_name']
-        return super(TravelDetailsViewSet, self).partial_update(request, *args, **kwargs)
+        return super().partial_update(request, *args, **kwargs)
 
     @atomic
     def perform_update(self, serializer):
-        super(TravelDetailsViewSet, self).perform_update(serializer)
+        super().perform_update(serializer)
         run_transition(serializer)
 
     @atomic
@@ -134,7 +134,7 @@ class TravelAttachmentViewSet(mixins.ListModelMixin,
     lookup_url_kwarg = 'attachment_pk'
 
     def get_serializer_context(self):
-        context = super(TravelAttachmentViewSet, self).get_serializer_context()
+        context = super().get_serializer_context()
         # TODO: figure out a better solution for this:
         # Hack to prevent swagger from crashing
         if 'travel_pk' not in self.kwargs:
