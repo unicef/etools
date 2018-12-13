@@ -45,7 +45,7 @@ class PartnerStaffMemberDetailAPIView(RetrieveUpdateDestroyAPIView):
     def get_serializer_class(self, format=None):
         if self.request.method in ["PUT", "PATCH"]:
             return PartnerStaffMemberCreateUpdateSerializer
-        return super(PartnerStaffMemberDetailAPIView, self).get_serializer_class()
+        return super().get_serializer_class()
 
 
 # TODO move in EquiTrack (after utils package has been merged in EquiTrack)

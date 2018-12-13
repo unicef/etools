@@ -60,17 +60,14 @@ class InterventionAmendmentCUSerializer(AttachmentSerializerMixin, serializers.M
     signed_amendment_attachment = AttachmentSingleFileField(
         override="signed_amendment"
     )
-    internal_prc_review_attachment = AttachmentSingleFileField(
-        source="internal_prc_review",
-        required=False,
-    )
+    internal_prc_review = AttachmentSingleFileField(required=False)
 
     class Meta:
         model = InterventionAmendment
         fields = "__all__"
 
     def validate(self, data):
-        data = super(InterventionAmendmentCUSerializer, self).validate(data)
+        data = super().validate(data)
 
         if 'signed_date' in data and data['signed_date'] > date.today():
             raise ValidationError("Date cannot be in the future!")
@@ -320,13 +317,13 @@ class InterventionResultLinkSimpleCUSerializer(serializers.ModelSerializer):
         if intervention and intervention.agreement.partner.blocked is True:
             raise ValidationError("An Output cannot be updated for a partner that is blocked in Vision")
 
-        return super(InterventionResultLinkSimpleCUSerializer, self).update(instance, validated_data)
+        return super().update(instance, validated_data)
 
     def create(self, validated_data):
         intervention = validated_data.get('intervention')
         if intervention and intervention.agreement.partner.blocked is True:
             raise ValidationError("An Output cannot be updated for a partner that is blocked in Vision")
-        return super(InterventionResultLinkSimpleCUSerializer, self).create(validated_data)
+        return super().create(validated_data)
 
     class Meta:
         model = InterventionResultLink
@@ -370,7 +367,7 @@ class InterventionResultCUSerializer(serializers.ModelSerializer):
     @transaction.atomic
     def create(self, validated_data):
         ll_results = self.context.pop('ll_results', [])
-        instance = super(InterventionResultCUSerializer, self).create(validated_data)
+        instance = super().create(validated_data)
         self.update_ll_results(instance, ll_results)
         return instance
 
@@ -378,7 +375,7 @@ class InterventionResultCUSerializer(serializers.ModelSerializer):
     def update(self, instance, validated_data):
         ll_results = self.context.pop('ll_results', [])
         self.update_ll_results(instance, ll_results)
-        return super(InterventionResultCUSerializer, self).update(instance, validated_data)
+        return super().update(instance, validated_data)
 
 
 class InterventionReportingPeriodSerializer(serializers.ModelSerializer):
@@ -509,7 +506,7 @@ class InterventionCreateUpdateSerializer(AttachmentSerializerMixin, SnapshotMode
         if 'frs' in data:
             if data['frs'] is None:
                 data['frs'] = []
-        return super(InterventionCreateUpdateSerializer, self).to_internal_value(data)
+        return super().to_internal_value(data)
 
     def validate_frs(self, frs):
         for fr in frs:
@@ -529,7 +526,7 @@ class InterventionCreateUpdateSerializer(AttachmentSerializerMixin, SnapshotMode
 
     @transaction.atomic
     def update(self, instance, validated_data):
-        updated = super(InterventionCreateUpdateSerializer, self).update(instance, validated_data)
+        updated = super().update(instance, validated_data)
         return updated
 
 

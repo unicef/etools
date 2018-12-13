@@ -15,7 +15,7 @@ from etools.applications.permissions2.tests.mixins import TransitionPermissionsT
 class TPMTransitionTestCase(TPMTestCaseMixin, BaseTenantTestCase):
     @classmethod
     def setUpTestData(cls):
-        super(TPMTransitionTestCase, cls).setUpTestData()
+        super().setUpTestData()
         call_command('update_tpm_permissions', verbosity=0)
         call_command('update_notifications')
 
@@ -36,7 +36,7 @@ class TPMTransitionTestCase(TPMTestCaseMixin, BaseTenantTestCase):
 class TestTPMTransitionConditions(TPMTransitionTestCase):
     @classmethod
     def setUpTestData(cls):
-        super(TestTPMTransitionConditions, cls).setUpTestData()
+        super().setUpTestData()
 
         cls.pme_user = UserFactory(pme=True)
         cls.tpm_user = UserFactory(tpm=True)
@@ -189,7 +189,7 @@ class TPMTransitionPermissionsTestCase(TransitionPermissionsTestCaseMixin, TPMTr
             opts['tpm_activities__report_attachments__file_type__name'] = 'report'
 
         opts.update(kwargs)
-        return super(TPMTransitionPermissionsTestCase, self).create_object(transition, **opts)
+        return super().create_object(transition, **opts)
 
     def do_transition(self, obj, transition):
         extra_data = {}
@@ -241,7 +241,7 @@ class PMEPermissionsForTPMTransitionTestCase(TPMTransitionPermissionsTestCase):
 
     @classmethod
     def setUpTestData(cls):
-        super(PMEPermissionsForTPMTransitionTestCase, cls).setUpTestData()
+        super().setUpTestData()
 
         cls.user = UserFactory(pme=True)
         cls.user_role = 'PME'
@@ -252,7 +252,7 @@ class FPPermissionsForTpmTransitionTestCase(TPMTransitionPermissionsTestCase):
 
     @classmethod
     def setUpTestData(cls):
-        super(FPPermissionsForTpmTransitionTestCase, cls).setUpTestData()
+        super().setUpTestData()
 
         cls.user = UserFactory(unicef_user=True)
         cls.user_role = 'UNICEF Focal Point'
@@ -263,7 +263,7 @@ class FPPermissionsForTpmTransitionTestCase(TPMTransitionPermissionsTestCase):
         }
 
         opts.update(kwargs)
-        return super(FPPermissionsForTpmTransitionTestCase, self).create_object(transition, **opts)
+        return super().create_object(transition, **opts)
 
 
 class TPMPermissionsForTPMTransitionTestCase(TPMTransitionPermissionsTestCase):
@@ -272,7 +272,7 @@ class TPMPermissionsForTPMTransitionTestCase(TPMTransitionPermissionsTestCase):
 
     @classmethod
     def setUpTestData(cls):
-        super(TPMPermissionsForTPMTransitionTestCase, cls).setUpTestData()
+        super().setUpTestData()
 
         cls.user = UserFactory(tpm=True)
         cls.user_role = 'Simple Third Party Monitor'
@@ -286,7 +286,7 @@ class TPMPermissionsForTPMTransitionTestCase(TPMTransitionPermissionsTestCase):
         }
 
         opts.update(kwargs)
-        return super(TPMPermissionsForTPMTransitionTestCase, self).create_object(transition, **opts)
+        return super().create_object(transition, **opts)
 
     def check_result(self, result, obj, transition):
         draft = obj.status == TPMVisit.STATUSES.draft
@@ -295,7 +295,7 @@ class TPMPermissionsForTPMTransitionTestCase(TPMTransitionPermissionsTestCase):
         if draft and not_found:
             return True, ''
 
-        return super(TPMPermissionsForTPMTransitionTestCase, self).check_result(result, obj, transition)
+        return super().check_result(result, obj, transition)
 
 
 class TPMFocalPointPermissionsForTPMTransitionTestCase(TPMTransitionPermissionsTestCase):
@@ -308,7 +308,7 @@ class TPMFocalPointPermissionsForTPMTransitionTestCase(TPMTransitionPermissionsT
 
     @classmethod
     def setUpTestData(cls):
-        super(TPMFocalPointPermissionsForTPMTransitionTestCase, cls).setUpTestData()
+        super().setUpTestData()
 
         cls.user = UserFactory(tpm=True)
         cls.user_role = 'Third Party Focal Point'
@@ -320,7 +320,7 @@ class TPMFocalPointPermissionsForTPMTransitionTestCase(TPMTransitionPermissionsT
         }
 
         opts.update(kwargs)
-        return super(TPMFocalPointPermissionsForTPMTransitionTestCase, self).create_object(transition, **opts)
+        return super().create_object(transition, **opts)
 
     def check_result(self, result, obj, transition):
         draft = obj.status == TPMVisit.STATUSES.draft
@@ -329,7 +329,7 @@ class TPMFocalPointPermissionsForTPMTransitionTestCase(TPMTransitionPermissionsT
         if draft and not_found:
             return True, ''
 
-        return super(TPMFocalPointPermissionsForTPMTransitionTestCase, self).check_result(result, obj, transition)
+        return super().check_result(result, obj, transition)
 
 
 class UserPermissionForTPMTransitionTestCase(TPMTransitionPermissionsTestCase):
@@ -337,7 +337,7 @@ class UserPermissionForTPMTransitionTestCase(TPMTransitionPermissionsTestCase):
 
     @classmethod
     def setUpTestData(cls):
-        super(UserPermissionForTPMTransitionTestCase, cls).setUpTestData()
+        super().setUpTestData()
 
         cls.user = UserFactory(unicef_user=True)
         cls.user_role = 'UNICEF User'

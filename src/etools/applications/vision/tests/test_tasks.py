@@ -39,7 +39,7 @@ class TestVisionSyncTask(SimpleTestCase):
     """Exercises the vision_sync_task() task which requires a lot of mocking and some monkey patching."""
 
     def setUp(self):
-        super(TestVisionSyncTask, self).setUp()
+        super().setUp()
         self.public_country = _build_country('Global')
         # Vision_sync_enabled is not set on the public country.
         self.public_country.vision_sync_enabled = False

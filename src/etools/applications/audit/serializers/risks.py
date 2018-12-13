@@ -80,7 +80,7 @@ class RiskBlueprintNestedSerializer(WritableNestedSerializerMixin, serializers.M
             except serializers.ValidationError as exc:
                 raise serializers.ValidationError({'risk': exc.detail})
 
-        return super(RiskBlueprintNestedSerializer, self).update(instance, validated_data)
+        return super().update(instance, validated_data)
 
 
 class ManyRiskBlueprintNestedSerializer(RiskBlueprintNestedSerializer):
@@ -108,7 +108,7 @@ class ManyRiskBlueprintNestedSerializer(RiskBlueprintNestedSerializer):
                 risk['engagement'] = self.root.instance
                 risk['blueprint'] = instance
 
-        return super(RiskBlueprintNestedSerializer, self).update(instance, validated_data)
+        return super().update(instance, validated_data)
 
 
 class RiskCategoryNestedSerializer(WritableNestedSerializerMixin, serializers.ModelSerializer):
@@ -170,7 +170,7 @@ class RiskRootSerializer(WritableNestedSerializerMixin, serializers.ModelSeriali
         self.code = code
         self.risk_choices = kwargs.pop('risk_choices', None)
 
-        super(RiskRootSerializer, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
 
         if self.risk_choices:
             blueprint_fields = self.fields['blueprints'].child.fields
@@ -240,7 +240,7 @@ class BaseAggregatedRiskRootSerializer(RiskRootSerializer):
 
             stack.pop()
 
-        return super(RiskRootSerializer, self).to_representation(instance)
+        return super().to_representation(instance)
 
     @staticmethod
     def calculate_risk(category):

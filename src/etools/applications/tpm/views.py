@@ -119,7 +119,7 @@ class TPMPartnerViewSet(
     )
 
     def get_queryset(self):
-        queryset = super(TPMPartnerViewSet, self).get_queryset()
+        queryset = super().get_queryset()
 
         if getattr(self, 'action', None) == 'list':
             queryset = queryset.country_partners()
@@ -137,7 +137,7 @@ class TPMPartnerViewSet(
         return queryset
 
     def get_permission_context(self):
-        context = super(TPMPartnerViewSet, self).get_permission_context()
+        context = super().get_permission_context()
 
         if ThirdPartyMonitor.as_group() in self.request.user.groups.all() and \
            hasattr(self.request.user, 'tpmpartners_tpmpartnerstaffmember'):
@@ -249,7 +249,7 @@ class ImplementingPartnerView(generics.ListAPIView):
     visits = None
 
     def get_queryset(self):
-        queryset = super(ImplementingPartnerView, self).get_queryset()
+        queryset = super().get_queryset()
 
         if self.visits is not None:
             queryset = queryset.filter(activity__in=self.visits.values_list(
@@ -269,7 +269,7 @@ class VisitsSectionView(generics.ListAPIView):
     visits = None
 
     def get_queryset(self):
-        queryset = super(VisitsSectionView, self).get_queryset()
+        queryset = super().get_queryset()
 
         if self.visits is not None:
             queryset = queryset.filter(tpm_activities__tpm_visit__in=self.visits).distinct()
@@ -288,7 +288,7 @@ class VisitsCPOutputView(generics.ListAPIView):
     visits = None
 
     def get_queryset(self):
-        queryset = super(VisitsCPOutputView, self).get_queryset()
+        queryset = super().get_queryset()
 
         if self.visits is not None:
             queryset = queryset.filter(activity__in=self.visits.values_list(
@@ -328,7 +328,7 @@ class TPMVisitViewSet(
     filter_class = TPMVisitFilter
 
     def get_queryset(self):
-        queryset = super(TPMVisitViewSet, self).get_queryset().distinct()
+        queryset = super().get_queryset().distinct()
 
         user_groups = self.request.user.groups.all()
 
@@ -353,7 +353,7 @@ class TPMVisitViewSet(
                 'pk' in self.kwargs and \
                 self.get_object().status == TPMVisit.STATUSES.draft:
             return TPMVisitDraftSerializer
-        return super(TPMVisitViewSet, self).get_serializer_class()
+        return super().get_serializer_class()
 
     @action(detail=False, methods=['get'], url_path='activities/implementing-partners')
     def implementing_partners(self, request, *args, **kwargs):
@@ -383,7 +383,7 @@ class TPMVisitViewSet(
         })
 
     def get_permission_context(self):
-        context = super(TPMVisitViewSet, self).get_permission_context()
+        context = super().get_permission_context()
 
         if ThirdPartyMonitor.as_group() in self.request.user.groups.all() and \
            hasattr(self.request.user, 'tpmpartners_tpmpartnerstaffmember'):

@@ -28,7 +28,7 @@ from etools.applications.users.tests.factories import UserFactory
 
 class TravelDetails(URLAssertionMixin, BaseTenantTestCase):
     def setUp(self):
-        super(TravelDetails, self).setUp()
+        super().setUp()
         self.traveler = UserFactory(is_staff=True)
         self.unicef_staff = UserFactory(is_staff=True)
         self.travel = TravelFactory(traveler=self.traveler,

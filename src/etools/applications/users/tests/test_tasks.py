@@ -256,7 +256,7 @@ class TestUserVisionSynchronizer(BaseTenantTestCase):
         )
 
     def setUp(self):
-        super(TestUserVisionSynchronizer, self).setUp()
+        super().setUp()
         self.record = {
             "ORG_UNIT_NAME": "UNICEF",
             "STAFF_ID": "123",

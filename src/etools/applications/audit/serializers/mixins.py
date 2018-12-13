@@ -18,7 +18,7 @@ class RiskCategoriesUpdateMixin(object):
             if isinstance(field, RiskRootSerializer) and field.source in validated_data:
                 risk_data[field.field_name] = validated_data.pop(field.source)
 
-        instance = super(RiskCategoriesUpdateMixin, self).update(instance, validated_data)
+        instance = super().update(instance, validated_data)
 
         for field_name, data in risk_data.items():
             if not data:
@@ -39,7 +39,7 @@ class EngagementDatesValidation(object):
     ]
 
     def validate(self, data):
-        validated_data = super(EngagementDatesValidation, self).validate(data)
+        validated_data = super().validate(data)
         validated_data = self._validate_dates(validated_data)
         return validated_data
 
