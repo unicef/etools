@@ -1,4 +1,3 @@
-
 import datetime
 
 from django.urls import reverse
@@ -7,8 +6,12 @@ from rest_framework import status
 from tablib.core import Dataset
 
 from etools.applications.EquiTrack.tests.cases import BaseTenantTestCase
-from etools.applications.partners.tests.factories import (AgreementAmendmentFactory, AgreementFactory,
-                                                          PartnerFactory, PartnerStaffFactory,)
+from etools.applications.partners.tests.factories import (
+    AgreementAmendmentFactory,
+    AgreementFactory,
+    PartnerFactory,
+    PartnerStaffFactory,
+)
 from etools.applications.reports.tests.factories import CountryProgrammeFactory
 from etools.applications.users.tests.factories import UserFactory
 
@@ -77,7 +80,8 @@ class TestAgreementModelExport(BaseAgreementModelExportTestCase):
             'Signed By UNICEF Date',
             'Partner Authorized Officer',
             'Amendments',
-            'URL'
+            'URL',
+            'Special Conditions PCA',
         ])
 
         exported_agreement = dataset[0]
@@ -95,7 +99,8 @@ class TestAgreementModelExport(BaseAgreementModelExportTestCase):
             '{}'.format(self.agreement.signed_by_unicef_date),
             ', '.join([sm.get_full_name() for sm in self.agreement.authorized_officers.all()]),
             u'',
-            u'https://testserver/pmp/agreements/{}/details/'.format(self.agreement.id)
+            u'https://testserver/pmp/agreements/{}/details/'.format(self.agreement.id),
+            '',
         ))
 
     def test_csv_flat_export_api(self):
@@ -125,7 +130,7 @@ class TestAgreementModelExport(BaseAgreementModelExportTestCase):
 
 class TestAgreementAmendmentModelExport(BaseAgreementModelExportTestCase):
     def setUp(self):
-        super(TestAgreementAmendmentModelExport, self).setUp()
+        super().setUp()
         self.amendment = AgreementAmendmentFactory(
             agreement=self.agreement,
             signed_amendment="fake_attachment.pdf",

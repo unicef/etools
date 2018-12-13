@@ -22,7 +22,7 @@ from etools.applications.users.tests.factories import GroupFactory, UserFactory
 
 class TestInterventionsAPI(WorkspaceRequiredAPITestMixIn, BaseTenantTestCase):
     def setUp(self):
-        super(TestInterventionsAPI, self).setUp()
+        super().setUp()
         setup_intervention_test_data(self, include_results_and_indicators=True)
 
     def run_prp_v1(self, user=None, method='get', data=None):
@@ -120,7 +120,7 @@ class TestInterventionsAPI(WorkspaceRequiredAPITestMixIn, BaseTenantTestCase):
             self.assertEqual(expected_results, len(response['results']))
 
     def test_prp_api_performance(self):
-        EXPECTED_QUERIES = 24
+        EXPECTED_QUERIES = 25
         with self.assertNumQueries(EXPECTED_QUERIES):
             self.run_prp_v1(
                 user=self.unicef_staff, method='get'

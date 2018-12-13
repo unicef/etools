@@ -20,8 +20,7 @@ def _build_country(name):
     It exists only in memory. We must be careful not to save this because creating a new Country in the database
     complicates schemas.
     """
-    country = CountryFactory.build(name='Country {}'.format(name.title()), schema_name=name,
-                                   domain_url='{}.example.com'.format(name))
+    country = CountryFactory.build(name='Country {}'.format(name.title()), schema_name=name)
     country.vision_sync_enabled = True
     # We'll want to check vision_last_synced as part of the tests, so set it to a known value.
     country.vision_last_synced = None
@@ -40,7 +39,7 @@ class TestVisionSyncTask(SimpleTestCase):
     """Exercises the vision_sync_task() task which requires a lot of mocking and some monkey patching."""
 
     def setUp(self):
-        super(TestVisionSyncTask, self).setUp()
+        super().setUp()
         self.public_country = _build_country('Global')
         # Vision_sync_enabled is not set on the public country.
         self.public_country.vision_sync_enabled = False

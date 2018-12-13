@@ -219,13 +219,13 @@ class TestInterventionModelExport(BaseInterventionModelExportTestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         dataset = Dataset().load(response.content.decode('utf-8'), 'csv')
         self.assertEqual(dataset.height, 1)
-        self.assertEqual(len(dataset._get_headers()), 65)
-        self.assertEqual(len(dataset[0]), 65)
+        self.assertEqual(len(dataset._get_headers()), 66)
+        self.assertEqual(len(dataset[0]), 66)
 
 
 class TestInterventionAmendmentModelExport(BaseInterventionModelExportTestCase):
     def setUp(self):
-        super(TestInterventionAmendmentModelExport, self).setUp()
+        super().setUp()
         self.amendment = InterventionAmendmentFactory(
             intervention=self.intervention,
         )
@@ -250,8 +250,8 @@ class TestInterventionAmendmentModelExport(BaseInterventionModelExportTestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         dataset = Dataset().load(response.content.decode('utf-8'), 'csv')
         self.assertEqual(dataset.height, 1)
-        self.assertEqual(len(dataset._get_headers()), 11)
-        self.assertEqual(len(dataset[0]), 11)
+        self.assertEqual(len(dataset._get_headers()), 10)
+        self.assertEqual(len(dataset[0]), 10)
 
     def test_csv_flat_export_api(self):
         response = self.forced_auth_req(
@@ -264,13 +264,13 @@ class TestInterventionAmendmentModelExport(BaseInterventionModelExportTestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         dataset = Dataset().load(response.content.decode('utf-8'), 'csv')
         self.assertEqual(dataset.height, 1)
-        self.assertEqual(len(dataset._get_headers()), 11)
-        self.assertEqual(len(dataset[0]), 11)
+        self.assertEqual(len(dataset._get_headers()), 10)
+        self.assertEqual(len(dataset[0]), 10)
 
 
 class TestInterventionResultModelExport(BaseInterventionModelExportTestCase):
     def setUp(self):
-        super(TestInterventionResultModelExport, self).setUp()
+        super().setUp()
         indicator = IndicatorFactory()
         self.link = InterventionResultLinkFactory(
             intervention=self.intervention,
@@ -317,7 +317,7 @@ class TestInterventionResultModelExport(BaseInterventionModelExportTestCase):
 
 class TestInterventionIndicatorModelExport(BaseInterventionModelExportTestCase):
     def setUp(self):
-        super(TestInterventionIndicatorModelExport, self).setUp()
+        super().setUp()
         self.indicator = IndicatorFactory(
             name="Name",
             code="Code"

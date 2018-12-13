@@ -109,7 +109,7 @@ class PartnerOrganizationListAPIView(QueryStringFilterMixin, ExportModelMixin, L
         if "verbosity" in query_params.keys():
             if query_params.get("verbosity") == 'minimal':
                 return MinimalPartnerOrganizationListSerializer
-        return super(PartnerOrganizationListAPIView, self).get_serializer_class()
+        return super().get_serializer_class()
 
     def get_queryset(self, format=None):
         q = PartnerOrganization.objects.all()
@@ -154,7 +154,7 @@ class PartnerOrganizationListAPIView(QueryStringFilterMixin, ExportModelMixin, L
         :returns: JSON or CSV file
         """
         query_params = self.request.query_params
-        response = super(PartnerOrganizationListAPIView, self).list(request)
+        response = super().list(request)
         if "format" in query_params.keys():
             if query_params.get("format") in ['csv', 'csv_flat']:
                 response['Content-Disposition'] = "attachment;filename=partner.csv"
@@ -182,7 +182,7 @@ class PartnerOrganizationDetailAPIView(ValidatorViewMixin, RetrieveUpdateDestroy
         if self.request.method in ["PUT", "PATCH"]:
             return PartnerOrganizationCreateUpdateSerializer
         else:
-            return super(PartnerOrganizationDetailAPIView, self).get_serializer_class()
+            return super().get_serializer_class()
 
     @transaction.atomic
     def update(self, request, *args, **kwargs):
@@ -233,6 +233,13 @@ class PartnerOrganizationDashboardAPIView(ExportModelMixin, QueryStringFilterMix
             sections=StringConcat("agreements__interventions__sections__name", separator="|", distinct=True),
             locations=StringConcat("agreements__interventions__flat_locations__name", separator="|", distinct=True),
         )
+
+        queries = []
+        queries.extend(self.filter_params())
+        queries.append(self.search_params())
+        if queries:
+            expression = functools.reduce(operator.and_, queries)
+            qs = qs.filter(expression)
         return qs
 
     def list(self, request, format=None):
@@ -340,7 +347,7 @@ class PartnerOrganizationHactAPIView(ListAPIView):
         :returns: JSON or CSV file
         """
         query_params = self.request.query_params
-        response = super(PartnerOrganizationHactAPIView, self).list(request)
+        response = super().list(request)
         if "format" in query_params.keys():
             if query_params.get("format") == 'csv':
                 response['Content-Disposition'] = f"attachment;filename={self.filename}.csv"
@@ -386,10 +393,10 @@ class PartnerStaffMemberListAPIVIew(ExportModelMixin, ListAPIView):
                 return PartnerStaffMemberExportSerializer
             if query_params.get("format") == 'csv_flat':
                 return PartnerStaffMemberExportFlatSerializer
-        return super(PartnerStaffMemberListAPIVIew, self).get_serializer_class()
+        return super().get_serializer_class()
 
 
-class PartnerOrganizationAssessmentListView(ExportModelMixin, ListAPIView):
+class PartnerOrganizationAssessmentListCreateView(ExportModelMixin, ListCreateAPIView):
     """
     Returns a list of all Partner staff members
     """
@@ -404,31 +411,26 @@ class PartnerOrganizationAssessmentListView(ExportModelMixin, ListAPIView):
     )
 
     def get_serializer_class(self, format=None):
-        """
-        Use restriceted field set for listing
-        """
+        """Use restricted field set for listing"""
         query_params = self.request.query_params
         if "format" in query_params.keys():
             if query_params.get("format") == 'csv':
                 return AssessmentExportSerializer
             if query_params.get("format") == 'csv_flat':
                 return AssessmentExportFlatSerializer
-        return super(PartnerOrganizationAssessmentListView, self).get_serializer_class()
+        return super().get_serializer_class()
 
 
-class PartnerOrganizationAssessmentDeleteView(DestroyAPIView):
+class PartnerOrganizationAssessmentUpdateDeleteView(RetrieveUpdateDestroyAPIView):
+    queryset = Assessment.objects.all()
+    serializer_class = AssessmentDetailSerializer
     permission_classes = (PartnershipManagerRepPermission,)
 
     def delete(self, request, *args, **kwargs):
-        try:
-            assessment = Assessment.objects.get(id=int(kwargs['pk']))
-        except Assessment.DoesNotExist:
-            return Response(status=status.HTTP_404_NOT_FOUND)
-        if assessment.completed_date or assessment.report:
+        instance = self.get_object()
+        if instance.completed_date or instance.report:
             raise ValidationError("Cannot delete a completed assessment")
-        else:
-            assessment.delete()
-            return Response(status=status.HTTP_204_NO_CONTENT)
+        return super().delete(request, *args, **kwargs)
 
 
 class PartnerOrganizationAddView(CreateAPIView):

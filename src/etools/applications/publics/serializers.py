@@ -36,7 +36,7 @@ class DSARegionSerializer(serializers.ModelSerializer):
         fields = ('id', 'country', 'area_name', 'area_code', 'unique_id', 'unique_name', 'label', 'long_name')
 
     def to_representation(self, instance):
-        ret = super(DSARegionSerializer, self).to_representation(instance)
+        ret = super().to_representation(instance)
 
         values_at = self.context.get('values_at', now())
         rate = instance.rates.get(effective_from_date__lte=values_at, effective_to_date__gte=values_at)
@@ -134,7 +134,7 @@ class WBSGrantFundParameterSerializer(serializers.Serializer):
     business_area = serializers.PrimaryKeyRelatedField(queryset=BusinessArea.objects.all(), required=False)
 
     def to_internal_value(self, data):
-        ret = super(WBSGrantFundParameterSerializer, self).to_internal_value(data)
+        ret = super().to_internal_value(data)
         if 'business_area' not in ret:
             default_business_area_code = self.context['request'].user.profile.country.business_area_code
             default_business_area = BusinessArea.objects.get(code=default_business_area_code)

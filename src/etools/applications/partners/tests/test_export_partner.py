@@ -221,7 +221,7 @@ class TestPartnerStaffMemberModelExport(PartnerModelExportTestCase):
 
 class TestPartnerOrganizationAssessmentModelExport(PartnerModelExportTestCase):
     def setUp(self):
-        super(TestPartnerOrganizationAssessmentModelExport, self).setUp()
+        super().setUp()
         self.assessment = AssessmentFactory(
             partner=self.partner,
             report="fake_report.pdf"
@@ -248,8 +248,8 @@ class TestPartnerOrganizationAssessmentModelExport(PartnerModelExportTestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         dataset = Dataset().load(response.content.decode('utf-8'), 'csv')
         self.assertEqual(dataset.height, 1)
-        self.assertEqual(len(dataset._get_headers()), 17)
-        self.assertEqual(len(dataset[0]), 17)
+        self.assertEqual(len(dataset._get_headers()), 18)
+        self.assertEqual(len(dataset[0]), 18)
 
     def test_csv_flat_export_api(self):
         response = self.forced_auth_req(

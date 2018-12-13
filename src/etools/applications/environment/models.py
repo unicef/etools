@@ -225,7 +225,7 @@ class TenantSwitchManager(managers.BaseManager):
     KEY_SETTING = 'ALL_SWITCHES_CACHE_KEY'
 
     def get_queryset(self):
-        return super(TenantSwitchManager, self).get_queryset().prefetch_related('countries')
+        return super().get_queryset().prefetch_related('countries')
 
 
 class TenantSwitch(BaseModel):

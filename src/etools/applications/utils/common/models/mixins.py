@@ -33,7 +33,7 @@ class ModelHavingTenantRelationsMixin(object):
 
         run_on_all_tenants(clear_relations, obj=self)
 
-        super(ModelHavingTenantRelationsMixin, self).delete(*args, **kwargs)
+        super().delete(*args, **kwargs)
 
 
 class InheritedModelMixin(object):
