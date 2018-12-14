@@ -325,7 +325,7 @@ class PartnerOrganizationDashboardAPIView(ExportModelMixin, QueryStringFilterMix
                                                     Intervention.ACTIVE, Intervention.SIGNED
                                                 ]).distinct().values_list('pk', flat=True)
         for item in serializer.data:
-            item['alert_active_pd_for_ended_pca'] = True if item['id'] in qs else False
+            item['alert_active_pd_for_ended_pca'] = False if item['id'] in qs else True
 
 
 class PartnerOrganizationHactAPIView(ListAPIView):
