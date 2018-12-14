@@ -10,7 +10,7 @@ from unicef_restlib.fields import SeparatedReadWriteField
 from unicef_restlib.serializers import WritableNestedSerializerMixin
 from unicef_snapshot.serializers import SnapshotModelSerializer
 
-from etools.applications.action_points.serializers import CommentSerializer, HistorySerializer
+from etools.applications.action_points.serializers import HistorySerializer
 from etools.applications.field_monitoring.planning.models import YearPlan, Task
 from etools.applications.field_monitoring.fm_settings.serializers.cp_outputs import CPOutputConfigDetailSerializer, \
     PartnerOrganizationSerializer, InterventionSerializer
@@ -19,7 +19,6 @@ from etools.applications.publics.models import EPOCH_ZERO
 
 
 class YearPlanSerializer(WritableNestedSerializerMixin, SnapshotModelSerializer):
-    other_aspects = CommentSerializer(many=True, required=False)
     history = HistorySerializer(many=True, label=_('History'), read_only=True)
     tasks_by_month = serializers.SerializerMethodField(label=_('Number Of Tasks By Month'))
     total_planned = serializers.SerializerMethodField(label=_('Total Planned'))
