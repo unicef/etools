@@ -127,7 +127,7 @@ class LocationSitesViewTestCase(FMBaseTestCaseMixin, BaseTenantTestCase):
         )
         self.assertEqual(response.status_code, status.HTTP_304_NOT_MODIFIED)
 
-    def test_list_modified(self):
+    def test_list_modified_create(self):
         LocationSiteFactory()
 
         response = self.forced_auth_req(
@@ -146,6 +146,28 @@ class LocationSitesViewTestCase(FMBaseTestCaseMixin, BaseTenantTestCase):
         )
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(len(response.data['results']), 2)
+
+    def test_list_modified_update(self):
+        location_site = LocationSiteFactory()
+
+        response = self.forced_auth_req(
+            'get', reverse('field_monitoring_settings:sites-list'),
+            user=self.unicef_user
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(response.data['results']), 1)
+        etag = response["ETag"]
+
+        location_site.name += '_updated'
+        location_site.save()
+
+        response = self.forced_auth_req(
+            'get', reverse('field_monitoring_settings:sites-list'),
+            user=self.unicef_user, HTTP_IF_NONE_MATCH=etag
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(response.data['results']), 1)
+        self.assertEqual(response.data['results'][0]['name'], location_site.name)
 
     def test_create(self):
         site = LocationSiteFactory()

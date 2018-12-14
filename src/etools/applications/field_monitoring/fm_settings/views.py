@@ -10,8 +10,8 @@ from rest_framework.response import Response
 
 from django_filters.rest_framework import DjangoFilterBackend
 from unicef_attachments.models import Attachment
+from unicef_djangolib.etag import etag_cached
 
-from unicef_locations.cache import etag_cached
 from unicef_locations.models import Location
 from unicef_locations.serializers import LocationLightSerializer
 from unicef_restlib.views import NestedViewSetMixin
