@@ -320,7 +320,8 @@ class PartnerOrganizationDashboardAPIView(ExportModelMixin, QueryStringFilterMix
 
     def _add_active_pd_for_ended_pca(self, serializer):
         today = datetime.today()
-        qs = PartnerOrganization.objects.filter(agreements__country_programme__to_date__lt=today,
+        qs = PartnerOrganization.objects.filter(agreements__interventions__isnull=False,
+                                                agreements__country_programme__to_date__gt=today,
                                                 agreements__country_programme__interventions__status__in=[
                                                     Intervention.ACTIVE, Intervention.SIGNED
                                                 ]).distinct().values_list('pk', flat=True)
