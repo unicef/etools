@@ -20,10 +20,11 @@ class LocationSiteExportSerializer(serializers.Serializer):
         parents_info = {}
 
         for i, parent in enumerate(parents):
+            level = i + 1
             parents_info.update({
-                'admin_{}_name'.format(i + 1): parent.name if parent else '',
-                'admin_{}_type'.format(i + 1): parent.gateway.name if parent else '',
-                'admin_{}_pcode'.format(i + 1): parent.p_code if parent else '',
+                'admin_{}_name'.format(level): parent.name if parent else '',
+                'admin_{}_type'.format(level): parent.gateway.name if parent else '',
+                'admin_{}_pcode'.format(level): parent.p_code if parent else '',
             })
 
         return parents_info
