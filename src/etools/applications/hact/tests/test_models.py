@@ -2,8 +2,13 @@
 from datetime import datetime
 
 from etools.applications.audit.models import Audit, Engagement
-from etools.applications.audit.tests.factories import (AuditFactory, MicroAssessmentFactory, RiskFactory,
-                                                       SpecialAuditFactory, SpotCheckFactory,)
+from etools.applications.audit.tests.factories import (
+    AuditFactory,
+    MicroAssessmentFactory,
+    RiskFactory,
+    SpecialAuditFactory,
+    SpotCheckFactory,
+)
 from etools.applications.EquiTrack.tests.cases import BaseTenantTestCase
 from etools.applications.hact.tests.factories import AggregateHactFactory
 from etools.applications.partners.models import PartnerOrganization, PartnerType
@@ -117,14 +122,15 @@ class TestAggregateHact(BaseTenantTestCase):
             self.assertEqual(financial_dict_item['highlighted'], highlighted)
 
         financial_findings = self.aggregate_hact.get_financial_findings()
-        self.assertEqual(len(financial_findings), 7)
+        self.assertEqual(len(financial_findings), 8)
         _check_item(financial_findings[0], 'Total Audited Expenditure', 50.0, False)
         _check_item(financial_findings[1], 'Total Financial Findings', 999.0, True)
         _check_item(financial_findings[2], 'Refunds', 400000.0, False)
         _check_item(financial_findings[3], 'Additional Supporting Documentation Received', 1000.0, False)
         _check_item(financial_findings[4], 'Justification Provided and Accepted', 20000.0, False)
         _check_item(financial_findings[5], 'Impairment', 30000.0, False)
-        _check_item(financial_findings[6], 'Outstanding(Requires Follow-up)', -430001.0, True)
+        _check_item(financial_findings[6], 'Outstanding current year (Requires Follow-up)', -430001.0, True)
+        _check_item(financial_findings[7], 'Outstanding prior year', 0.0, True)
 
     def test_get_financial_findings_numbers(self):
 

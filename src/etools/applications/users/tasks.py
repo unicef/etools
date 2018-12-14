@@ -4,14 +4,13 @@ import json
 from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.contrib.auth.models import Group
-from django.core.exceptions import ObjectDoesNotExist
 from django.db import IntegrityError, transaction
 from django.utils.encoding import force_text
 
 import requests
 from celery.utils.log import get_task_logger
 
-from etools.applications.users.models import Country
+from etools.applications.users.models import Country, UserProfile
 from etools.applications.vision.exceptions import VisionException
 from etools.applications.vision.models import VisionSyncLog
 from etools.applications.vision.vision_data_synchronizer import VISION_NO_DATA_MESSAGE
@@ -116,8 +115,7 @@ class UserMapper(object):
 
     @transaction.atomic
     def create_or_update_user(self, record):
-        status = {'processed': 0, 'created': 0, 'updated': 0, 'skipped': 0, 'errors': 0}
-        status['processed'] = 1
+        status = {'processed': 1, 'created': 0, 'updated': 0, 'skipped': 0, 'errors': 0}
         if not self.record_is_valid(record):
             status['skipped'] = 1
             return status
@@ -135,12 +133,7 @@ class UserMapper(object):
                 user.groups.add(self.groups['UNICEF User'])
                 logger.info(u'Group added to user {}'.format(user))
 
-            try:
-                profile = user.profile
-            except ObjectDoesNotExist:
-                logger.warning(u'No profile for user {}'.format(user))
-                return
-
+            profile, _ = UserProfile.objects.get_or_create(user=user)
             user_updated = self.update_user(user, record)
             profile_updated = self.update_profile(profile, record)
 

@@ -7,7 +7,7 @@
         ],
         "vary": [
             "Vary",
-            "Accept, Cookie"
+            "Accept, Origin, Cookie"
         ],
         "allow": [
             "Allow",
@@ -16,20 +16,24 @@
         "x-frame-options": [
             "X-Frame-Options",
             "SAMEORIGIN"
+        ],
+        "content-length": [
+            "Content-Length",
+            "197"
         ]
     },
     "data": [
         {
             "id": 20,
-            "created": "2018-09-13T21:39:02.040834Z",
-            "modified": "2018-09-13T21:39:02.042803Z",
+            "created": "2018-12-05T16:22:56.841686Z",
+            "modified": "2018-12-05T16:22:56.843258Z",
             "number": "tmp01",
             "signed_amendment": null,
             "types": [
                 "Change in clause"
             ],
             "signed_date": null,
-            "agreement": 531
+            "agreement": 598
         }
     ],
     "content_type": null

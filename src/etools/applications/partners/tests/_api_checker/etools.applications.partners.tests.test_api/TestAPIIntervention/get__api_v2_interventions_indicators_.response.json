@@ -7,7 +7,7 @@
         ],
         "vary": [
             "Vary",
-            "Accept, Cookie"
+            "Accept, Origin, Cookie"
         ],
         "allow": [
             "Allow",
@@ -16,11 +16,15 @@
         "x-frame-options": [
             "X-Frame-Options",
             "SAMEORIGIN"
+        ],
+        "content-length": [
+            "Content-Length",
+            "42"
         ]
     },
     "data": [
         {
-            "intervention": 441,
+            "intervention": 509,
             "ram_indicators": []
         }
     ],

@@ -9,7 +9,7 @@ from django.urls import reverse
 
 
 from rest_framework import status
-from tenant_schemas.test.client import TenantClient
+from django_tenants.test.client import TenantClient
 
 from etools.applications.EquiTrack.tests.cases import BaseTenantTestCase
 from etools.applications.publics.tests.factories import PublicsBusinessAreaFactory

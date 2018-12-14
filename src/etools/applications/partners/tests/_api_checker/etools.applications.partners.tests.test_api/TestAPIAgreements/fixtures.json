@@ -2,22 +2,22 @@
     "agreement": {
         "master": {
             "model": "partners.agreement",
-            "pk": 531,
+            "pk": 598,
             "fields": {
-                "created": "2018-09-13T21:39:02.029Z",
-                "modified": "2018-09-13T21:39:02.039Z",
-                "partner": 498,
-                "country_programme": 478,
+                "created": "2018-12-05T16:22:56.831Z",
+                "modified": "2018-12-05T16:22:56.840Z",
+                "partner": 571,
+                "country_programme": 545,
                 "agreement_type": "PCA",
-                "agreement_number": "TST/PCA2018531",
+                "agreement_number": "TST/PCA2018598",
                 "attached_agreement": "",
-                "start": "2018-09-13",
+                "start": "2018-12-05",
                 "end": "2018-12-31",
                 "reference_number_year": 2018,
                 "special_conditions_pca": false,
-                "signed_by_unicef_date": "2018-09-13",
+                "signed_by_unicef_date": "2018-12-05",
                 "signed_by": null,
-                "signed_by_partner_date": "2018-09-13",
+                "signed_by_partner_date": "2018-12-05",
                 "partner_manager": null,
                 "status": "signed",
                 "authorized_officers": []
@@ -26,10 +26,10 @@
         "deps": [
             {
                 "model": "partners.partnerorganization",
-                "pk": 498,
+                "pk": 571,
                 "fields": {
-                    "created": "2018-09-13T21:39:02.023Z",
-                    "modified": "2018-09-13T21:39:02.027Z",
+                    "created": "2018-12-05T16:22:56.827Z",
+                    "modified": "2018-12-05T16:22:56.829Z",
                     "partner_type": "",
                     "cso_type": null,
                     "name": "Partner 4",
@@ -68,13 +68,6 @@
                             "minimum_requirements": 0
                         },
                         "spot_checks": {
-                            "planned": {
-                                "q1": 0,
-                                "q2": 0,
-                                "q3": 0,
-                                "q4": 0,
-                                "total": 0
-                            },
                             "completed": {
                                 "q1": 0,
                                 "q2": 0,
@@ -108,7 +101,7 @@
             },
             {
                 "model": "reports.countryprogramme",
-                "pk": 478,
+                "pk": 545,
                 "fields": {
                     "name": "Country Programme 4",
                     "wbs": "0000/A0/04",
@@ -124,10 +117,10 @@
             "model": "partners.agreementamendment",
             "pk": 20,
             "fields": {
-                "created": "2018-09-13T21:39:02.040Z",
-                "modified": "2018-09-13T21:39:02.042Z",
+                "created": "2018-12-05T16:22:56.841Z",
+                "modified": "2018-12-05T16:22:56.843Z",
                 "number": "tmp01",
-                "agreement": 531,
+                "agreement": 598,
                 "signed_amendment": "",
                 "types": "[\"Change in clause\"]",
                 "signed_date": null
@@ -136,22 +129,22 @@
         "deps": [
             {
                 "model": "partners.agreement",
-                "pk": 531,
+                "pk": 598,
                 "fields": {
-                    "created": "2018-09-13T21:39:02.029Z",
-                    "modified": "2018-09-13T21:39:02.039Z",
-                    "partner": 498,
-                    "country_programme": 478,
+                    "created": "2018-12-05T16:22:56.831Z",
+                    "modified": "2018-12-05T16:22:56.840Z",
+                    "partner": 571,
+                    "country_programme": 545,
                     "agreement_type": "PCA",
-                    "agreement_number": "TST/PCA2018531",
+                    "agreement_number": "TST/PCA2018598",
                     "attached_agreement": "",
-                    "start": "2018-09-13",
+                    "start": "2018-12-05",
                     "end": "2018-12-31",
                     "reference_number_year": 2018,
                     "special_conditions_pca": false,
-                    "signed_by_unicef_date": "2018-09-13",
+                    "signed_by_unicef_date": "2018-12-05",
                     "signed_by": null,
-                    "signed_by_partner_date": "2018-09-13",
+                    "signed_by_partner_date": "2018-12-05",
                     "partner_manager": null,
                     "status": "signed",
                     "authorized_officers": []
@@ -159,10 +152,10 @@
             },
             {
                 "model": "partners.partnerorganization",
-                "pk": 498,
+                "pk": 571,
                 "fields": {
-                    "created": "2018-09-13T21:39:02.023Z",
-                    "modified": "2018-09-13T21:39:02.027Z",
+                    "created": "2018-12-05T16:22:56.827Z",
+                    "modified": "2018-12-05T16:22:56.829Z",
                     "partner_type": "",
                     "cso_type": null,
                     "name": "Partner 4",
@@ -201,13 +194,6 @@
                             "minimum_requirements": 0
                         },
                         "spot_checks": {
-                            "planned": {
-                                "q1": 0,
-                                "q2": 0,
-                                "q3": 0,
-                                "q4": 0,
-                                "total": 0
-                            },
                             "completed": {
                                 "q1": 0,
                                 "q2": 0,
@@ -241,7 +227,7 @@
             },
             {
                 "model": "reports.countryprogramme",
-                "pk": 478,
+                "pk": 545,
                 "fields": {
                     "name": "Country Programme 4",
                     "wbs": "0000/A0/04",

@@ -21,4 +21,8 @@ class Migration(migrations.Migration):
                 ('is_types_applicable', models.BooleanField(default=False, verbose_name='Are types allowed?')),
             ],
         ),
+        migrations.AlterModelOptions(
+            name='fmmethod',
+            options={'ordering': ('id',), 'verbose_name': 'FM Method', 'verbose_name_plural': 'FM Methods'},
+        ),
     ]

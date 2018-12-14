@@ -1,6 +1,6 @@
 from django.db import connection
 
-from etools.applications.audit.tests.factories import UserFactory
+from etools.applications.field_monitoring.tests.factories import UserFactory
 from etools.libraries.djangolib.models import GroupWrapper
 
 

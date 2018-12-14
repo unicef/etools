@@ -10,9 +10,14 @@ from rest_framework import status
 from unicef_attachments.models import AttachmentLink
 
 from etools.applications.action_points.tests.factories import ActionPointFactory
-from etools.applications.attachments.tests.factories import AttachmentFactory, AttachmentFileTypeFactory
+from etools.applications.attachments.tests.factories import (
+    AttachmentFactory,
+    AttachmentLinkFactory,
+    AttachmentFileTypeFactory,
+)
 from etools.applications.EquiTrack.tests.cases import BaseTenantTestCase
 from etools.applications.partners.models import PartnerType
+from etools.applications.partners.tests.factories import InterventionAttachmentFactory
 from etools.applications.reports.tests.factories import SectionFactory
 from etools.applications.tpm.models import ThirdPartyMonitor, TPMVisit
 from etools.applications.tpm.tests.base import TPMTestCaseMixin
@@ -621,7 +626,7 @@ class TestTPMPartnerViewSet(TestExportMixin, TPMTestCaseMixin, BaseTenantTestCas
 
 
 class TestPartnerAttachmentsView(TPMTestCaseMixin, BaseTenantTestCase):
-    def test_list(self):
+    def test_list_pme_user(self):
         partner = TPMPartnerFactory()
         attachments_num = partner.attachments.count()
 
@@ -631,6 +636,19 @@ class TestPartnerAttachmentsView(TPMTestCaseMixin, BaseTenantTestCase):
             'get',
             reverse('tpm:partner-attachments-list', args=[partner.id]),
             user=self.pme_user
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(response.data['results']), attachments_num + 1)
+
+    def test_list_tpm_user(self):
+        attachments_num = self.tpm_partner.attachments.count()
+
+        AttachmentFactory(content_object=self.tpm_partner)
+
+        response = self.forced_auth_req(
+            'get',
+            reverse('tpm:partner-attachments-list', args=[self.tpm_partner.pk]),
+            user=self.tpm_user
         )
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(len(response.data['results']), attachments_num + 1)
@@ -835,3 +853,35 @@ class TestActivityAttachmentLinkView(TPMTestCaseMixin, BaseTenantTestCase):
         )
         self.assertEqual(list_response.status_code, status.HTTP_200_OK)
         self.assertEqual(links_qs.count(), 1)
+
+
+class TestVisitAttachmentLinkView(TPMTestCaseMixin, BaseTenantTestCase):
+    @classmethod
+    def setUpTestData(cls):
+        super().setUpTestData()
+
+        cls.visit = TPMVisitFactory(
+            status='draft',
+            tpm_partner=cls.tpm_user.tpmpartners_tpmpartnerstaffmember.tpm_partner,
+            tpm_partner_focal_points=[cls.tpm_user.tpmpartners_tpmpartnerstaffmember],
+            tpm_activities__count=1
+        )
+        cls.activity = cls.visit.tpm_activities.first()
+        cls.intervention_attachment = InterventionAttachmentFactory()
+        cls.attachment = AttachmentFactory(content_object=cls.intervention_attachment)
+        cls.attachment_link = AttachmentLinkFactory(
+            attachment=cls.attachment,
+            content_object=cls.activity
+        )
+
+    def test_list(self):
+        response = self.forced_auth_req(
+            'get',
+            reverse('tpm:visit-links', args=[self.visit.pk]),
+            user=self.pme_user,
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        data = response.data
+        self.assertEqual(len(data), 1)
+        self.assertEqual(data[0]["id"], self.attachment_link.pk)
+        self.assertEqual(data[0]["file_type"], self.intervention_attachment.type.name)

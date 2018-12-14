@@ -112,7 +112,6 @@ class InterventionListAPIView(QueryStringFilterMixin, ExportModelMixin, Interven
     SERIALIZER_MAP = {
         'planned_budget': InterventionBudgetCUSerializer,
         'planned_visits': PlannedVisitsCUSerializer,
-        'attachments': InterventionAttachmentSerializer,
         'result_links': InterventionResultCUSerializer
     }
 
@@ -143,7 +142,6 @@ class InterventionListAPIView(QueryStringFilterMixin, ExportModelMixin, Interven
         related_fields = [
             'planned_budget',
             'planned_visits',
-            'attachments',
             'result_links'
         ]
         nested_related_names = ['ll_results']
@@ -246,7 +244,6 @@ class InterventionDetailAPIView(ValidatorViewMixin, RetrieveUpdateDestroyAPIView
     SERIALIZER_MAP = {
         'planned_budget': InterventionBudgetCUSerializer,
         'planned_visits': PlannedVisitsCUSerializer,
-        'attachments': InterventionAttachmentSerializer,
         'result_links': InterventionResultCUSerializer
     }
 
@@ -262,7 +259,6 @@ class InterventionDetailAPIView(ValidatorViewMixin, RetrieveUpdateDestroyAPIView
     def update(self, request, *args, **kwargs):
         related_fields = ['planned_budget',
                           'planned_visits',
-                          'attachments',
                           'result_links']
         nested_related_names = ['ll_results']
         instance, old_instance, serializer = self.my_update(
@@ -285,22 +281,36 @@ class InterventionDetailAPIView(ValidatorViewMixin, RetrieveUpdateDestroyAPIView
         return Response(InterventionDetailSerializer(instance, context=self.get_serializer_context()).data)
 
 
-class InterventionAttachmentDeleteView(DestroyAPIView):
+class InterventionAttachmentListCreateView(ListCreateAPIView):
+
+    serializer_class = InterventionAttachmentSerializer
+    permission_classes = (PartnershipManagerPermission,)
+    filter_backends = (InterventionFilter,)
+    renderer_classes = (JSONRenderer,)
+    queryset = InterventionAttachment.objects.all()
+
+    def create(self, request, *args, **kwargs):
+        request.data.__setitem__("intervention", kwargs.get('intervention_pk', None))
+
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        self.perform_create(serializer)
+        headers = self.get_success_headers(serializer.data)
+        return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
+
+
+class InterventionAttachmentUpdateDeleteView(RetrieveUpdateDestroyAPIView):
+    serializer_class = InterventionAttachmentSerializer
+    queryset = InterventionAttachment.objects.all()
     permission_classes = (PartnershipManagerRepPermission,)
 
     def delete(self, request, *args, **kwargs):
-        try:
-            intervention_attachment = InterventionAttachment.objects.get(id=int(kwargs['pk']))
-        except InterventionAttachment.DoesNotExist:
-            return Response(status=status.HTTP_404_NOT_FOUND)
-        if intervention_attachment.intervention.status in [Intervention.DRAFT] or \
-            request.user in intervention_attachment.intervention.unicef_focal_points.all() or \
-            request.user.groups.filter(name__in=['Partnership Manager',
-                                                 'Senior Management Team']).exists():
-            intervention_attachment.delete()
-            return Response(status=status.HTTP_204_NO_CONTENT)
+        obj = self.get_object()
+
+        if obj.intervention.status in [Intervention.DRAFT]:
+            return super().delete(request, *args, **kwargs)
         else:
-            raise ValidationError("You do not have permissions to delete an attachment")
+            raise ValidationError("Deleting an attachment can only be done in Draft status")
 
 
 class InterventionResultListAPIView(ExportModelMixin, ListAPIView):
@@ -436,7 +446,7 @@ class InterventionAmendmentListAPIView(ExportModelMixin, ValidatorViewMixin, Lis
         return q
 
     def create(self, request, *args, **kwargs):
-        raw_data = request.data
+        raw_data = request.data.copy()
         raw_data['intervention'] = kwargs.get('intervention_pk', None)
         serializer = self.get_serializer(data=raw_data)
         serializer.is_valid(raise_exception=True)

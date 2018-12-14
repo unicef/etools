@@ -16,18 +16,22 @@
         "x-frame-options": [
             "X-Frame-Options",
             "SAMEORIGIN"
+        ],
+        "content-length": [
+            "Content-Length",
+            "174"
         ]
     },
     "data": [
         {
-            "id": "127",
+            "id": "1",
             "domain": "Domain 0",
             "api_key": "API Key 0",
             "table_name": "table_name_0",
             "display_name": "",
             "pcode_col": "pcode",
-            "color": "#807EF2",
-            "location_type": 2765,
+            "color": "#F3BBD7",
+            "location_type": 7,
             "name_col": "name"
         }
     ],

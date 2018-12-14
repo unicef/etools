@@ -1041,6 +1041,8 @@ class TestAgreementAPIView(BaseTenantTestCase):
         cls.partnership_manager_user.profile.partner_staff_member = cls.partner_staff.id
         cls.partnership_manager_user.save()
 
+        cls.notify_path = "etools.applications.partners.utils.send_notification_with_template"
+
         today = datetime.date.today()
         cls.country_programme = CountryProgrammeFactory(
             from_date=datetime.date(today.year - 1, 1, 1),
@@ -1240,6 +1242,19 @@ class TestAgreementAPIView(BaseTenantTestCase):
         self.assertEqual(len(response.data), 2)
         self.assertEqual(self.partner.name, response.data[0]["partner_name"])
 
+    def test_agreements_list_filter_special_conditions_pca(self):
+        agreement_qs = Agreement.objects.filter(special_conditions_pca=False)
+        params = {"special_conditions_pca": "false"}
+        response = self.forced_auth_req(
+            'get',
+            reverse('partners_api:agreement-list'),
+            user=self.unicef_staff,
+            data=params
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(response.data), agreement_qs.count())
+
     def test_agreements_list_filter_search(self):
         params = {"search": "Partner"}
         response = self.forced_auth_req(
@@ -1288,14 +1303,17 @@ class TestAgreementAPIView(BaseTenantTestCase):
             "signed_by": self.unicef_staff.id,
             "signed_by_unicef_date": datetime.date.today(),
         }
-        response = self.forced_auth_req(
-            'patch',
-            reverse('partners_api:agreement-detail', args=[agreement.pk]),
-            user=self.partnership_manager_user,
-            data=data
-        )
+        mock_send = mock.Mock()
+        with mock.patch(self.notify_path, mock_send):
+            response = self.forced_auth_req(
+                'patch',
+                reverse('partners_api:agreement-detail', args=[agreement.pk]),
+                user=self.partnership_manager_user,
+                data=data
+            )
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response.data["status"], Agreement.SIGNED)
+        mock_send.assert_not_called()
 
     def test_partner_agreements_update_suspend(self):
         '''Ensure that interventions related to an agreement are suspended when the agreement is suspended'''
@@ -1307,15 +1325,18 @@ class TestAgreementAPIView(BaseTenantTestCase):
         data = {
             "status": Agreement.SUSPENDED,
         }
-        response = self.forced_auth_req(
-            'patch',
-            reverse('partners_api:agreement-detail', args=[self.agreement.pk]),
-            user=self.partnership_manager_user,
-            data=data
-        )
+        mock_send = mock.Mock()
+        with mock.patch(self.notify_path, mock_send):
+            response = self.forced_auth_req(
+                'patch',
+                reverse('partners_api:agreement-detail', args=[self.agreement.pk]),
+                user=self.partnership_manager_user,
+                data=data
+            )
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response.data["status"], Agreement.SUSPENDED)
         self.assertEqual(Intervention.objects.get(agreement=self.agreement).status, Intervention.SUSPENDED)
+        mock_send.assert_called()
 
     def test_agreement_amendment_delete_error(self):
         response = self.forced_auth_req(
@@ -2254,6 +2275,7 @@ class TestPartnerOrganizationDashboardAPIView(BaseTenantTestCase):
             total_ct_ytd=123.00,
             outstanding_dct_amount_6_to_9_months_usd=69,
             outstanding_dct_amount_more_than_9_months_usd=90,
+            partner_type=PartnerType.UN_AGENCY,
         )
 
         cls.unicef_staff = UserFactory(is_staff=True)
@@ -2305,3 +2327,29 @@ class TestPartnerOrganizationDashboardAPIView(BaseTenantTestCase):
         self.assertTrue(self.record['alert_no_recent_pv'])
         self.assertFalse(self.record['alert_no_pv'])
         self.assertTrue(self.record['vendor_number'])
+
+    def test_filter_partner_type(self):
+        partner_count = PartnerOrganization.objects.filter(
+            partner_type=PartnerType.UN_AGENCY
+        ).count()
+        response = self.forced_auth_req(
+            'get',
+            reverse("partners_api:partner-dashboard"),
+            data={"partner_type": PartnerType.UN_AGENCY},
+            user=self.unicef_staff
+        )
+        data = response.data
+        self.assertEqual(len(data), partner_count)
+
+    def test_filter_partner_type_none_found(self):
+        self.assertEqual(PartnerOrganization.objects.filter(
+            partner_type=PartnerType.GOVERNMENT
+        ).count(), 0)
+        response = self.forced_auth_req(
+            'get',
+            reverse("partners_api:partner-dashboard"),
+            data={"partner_type": PartnerType.GOVERNMENT},
+            user=self.unicef_staff
+        )
+        data = response.data
+        self.assertEqual(len(data), 0)
