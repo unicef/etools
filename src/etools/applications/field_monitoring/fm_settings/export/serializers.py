@@ -125,5 +125,3 @@ class CheckListExportSerializer(serializers.Serializer):
             for m in self.methods
             if m.is_types_applicable
         }
-
-

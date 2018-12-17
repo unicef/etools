@@ -374,7 +374,7 @@ class CheckListViewTestCase(FMBaseTestCaseMixin, BaseTenantTestCase):
 
 
 class PlannedCheckListItemViewTestCase(FMBaseTestCaseMixin, TestExportMixin, BaseTenantTestCase):
-    fixtures = ['field_monitoring_methods',]
+    fixtures = ['field_monitoring_methods', ]
 
     def test_create(self):
         response = self.forced_auth_req(
