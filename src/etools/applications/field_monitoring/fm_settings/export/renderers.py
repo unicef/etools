@@ -53,10 +53,13 @@ class LogIssueCSVRenderer(CSVRenderer):
 
 
 class CheckListCSVRenderer(CSVRenderer):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+        self.methods = FMMethod.objects.all()
+
     @property
     def labels(self):
-        methods = FMMethod.objects.all()
-
         labels = {
             'cp_output': _('CP Output'),
             'category': _('Category'),
@@ -65,10 +68,10 @@ class CheckListCSVRenderer(CSVRenderer):
             'specific_details': _('Specific Details'),
         }
 
-        for m in methods:
+        for m in self.methods:
             labels['selected_methods.{}'.format(m.name)] = m.name
 
-        for m in methods:
+        for m in self.methods:
             if not m.is_types_applicable:
                 continue
 
