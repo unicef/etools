@@ -92,7 +92,7 @@ class LocationSitesViewSet(
 
     @action(detail=False, methods=['get'], url_path='export')
     def export(self, request, *args, **kwargs):
-        instances = self.get_queryset().order_by('id')
+        instances = self.filter_queryset(self.get_queryset())
 
         if instances:
             max_admin_level = max(len(site.parent.get_ancestors(include_self=True)) for site in instances)
@@ -241,7 +241,7 @@ class LogIssuesViewSet(FMBaseViewSet, viewsets.ModelViewSet):
 
     @action(detail=False, methods=['get'], url_path='export', renderer_classes=[LogIssueCSVRenderer])
     def export(self, request, *args, **kwargs):
-        instances = self.get_queryset().order_by('id')
+        instances = self.filter_queryset(self.get_queryset())
 
         serializer = LogIssueExportSerializer(instances, many=True)
         return Response(serializer.data, headers={
