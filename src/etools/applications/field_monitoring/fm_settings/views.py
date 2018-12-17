@@ -18,9 +18,9 @@ from unicef_locations.models import Location
 from unicef_restlib.views import NestedViewSetMixin
 
 from etools.applications.field_monitoring.fm_settings.export.renderers import LocationSiteCSVRenderer, \
-    LogIssueCSVRenderer
+    LogIssueCSVRenderer, CheckListCSVRenderer
 from etools.applications.field_monitoring.fm_settings.export.serializers import LocationSiteExportSerializer, \
-    LogIssueExportSerializer
+    LogIssueExportSerializer, CheckListExportSerializer
 from etools.applications.field_monitoring.fm_settings.filters import CPOutputIsActiveFilter, \
     LogIssueRelatedToTypeFilter, \
     LogIssueVisitFilter, LogIssueNameOrderingFilter
@@ -204,6 +204,14 @@ class PlannedCheckListItemViewSet(
 
     def perform_create(self, serializer):
         serializer.save(cp_output_config=self.get_parent_object())
+
+    @action(detail=False, methods=['get'], url_path='export', renderer_classes=[CheckListCSVRenderer])
+    def export(self, request, *args, **kwargs):
+        instances = self.filter_queryset(self.get_queryset())
+        serializer = CheckListExportSerializer(instances, many=True)
+        return Response(serializer.data, headers={
+            'Content-Disposition': 'attachment;filename=checklist_{}.csv'.format(timezone.now().date())
+        })
 
 
 class LogIssuesViewSet(FMBaseViewSet, viewsets.ModelViewSet):
