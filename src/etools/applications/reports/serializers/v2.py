@@ -14,8 +14,9 @@ from etools.applications.reports.models import (
     LowerResult,
     ReportingRequirement,
     Result,
+    ResultType,
     SpecialReportingRequirement,
-    ResultType)
+)
 
 
 class MinimalOutputListSerializer(serializers.ModelSerializer):
@@ -158,23 +159,17 @@ class AppliedIndicatorSerializer(serializers.ModelSerializer):
         in_amendment = lower_result.result_link.intervention.in_amendment
         if attrs.get('target') and self.instance:
             if attrs['target']['v'] != self.instance.target_display[1] \
-               and not (
-                   status in [Intervention.DRAFT, Intervention.SIGNED]
-                   or (status == Intervention.ACTIVE and in_amendment)
-               ):
+               and not (status in [Intervention.DRAFT, Intervention.SIGNED] or
+                        (status == Intervention.ACTIVE and in_amendment)):
                 raise ValidationError(_(
                     'You cannot change the Indicator Target Denominator if PD/SSFA is '
                     'not in status Draft or Signed'
                 ))
             if attrs['target']['d'] != self.instance.target_display[1] \
                and not (
-                   status in [Intervention.DRAFT, Intervention.SIGNED]
-                   or (
-                       status == Intervention.ACTIVE and
-                       in_amendment and
-                       self.instance.indicator.display_type != IndicatorBlueprint.RATIO
-                   )
-               ):
+                   status in [Intervention.DRAFT, Intervention.SIGNED] or (
+                    status == Intervention.ACTIVE and in_amendment and
+                    self.instance.indicator.display_type != IndicatorBlueprint.RATIO)):
                 raise ValidationError(_(
                     'You cannot change the Indicator Target Denominator if PD/SSFA is '
                     'not in status Draft or Signed'

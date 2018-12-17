@@ -1,4 +1,4 @@
-from .models import Permission
+from etools.applications.permissions2.models import Permission
 
 
 def has_action_permission(action):

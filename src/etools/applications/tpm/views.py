@@ -686,12 +686,7 @@ class VisitAttachmentLinksView(BaseAttachmentLinksView):
 
     def get_queryset(self):
         self.set_content_object()
-        object_id_list = TPMActivity.objects.values_list(
-                "id",
-                flat=True
-            ).filter(
-                tpm_visit=self.object_id
-            )
+        object_id_list = TPMActivity.objects.values_list("id", flat=True).filter(tpm_visit=self.object_id)
         return AttachmentLink.objects.filter(
             content_type=self.activity_content_type,
             object_id__in=object_id_list,

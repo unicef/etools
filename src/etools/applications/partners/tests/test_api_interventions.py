@@ -224,8 +224,8 @@ class TestInterventionsAPI(BaseTenantTestCase):
         self.assertIsNone(attachment.content_object)
         self.assertFalse(attachment.code)
         data = {
-                "type": file_type.pk,
-                "attachment_document": attachment.pk,
+            "type": file_type.pk,
+            "attachment_document": attachment.pk,
         }
         status_code, response = self.run_request_attachment_create_ep(intervention_id, data, user=self.partnership_manager_user)
         self.assertEqual(status_code, status.HTTP_201_CREATED)
