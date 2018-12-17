@@ -15,11 +15,13 @@ from etools.applications.field_monitoring.fm_settings.models import CPOutputConf
 from etools.applications.field_monitoring.fm_settings.tests.factories import (
     CPOutputConfigFactory, LocationSiteFactory, FMMethodTypeFactory, PlannedCheckListItemFactory, CheckListItemFactory,
     FMMethodFactory, LogIssueFactory)
+from etools.applications.field_monitoring.shared.models import FMMethod
 from etools.applications.field_monitoring.tests.base import FMBaseTestCaseMixin
 from etools.applications.partners.models import PartnerType
 from etools.applications.partners.tests.factories import PartnerFactory
 from etools.applications.reports.models import ResultType
 from etools.applications.reports.tests.factories import ResultFactory
+from etools.applications.utils.common.tests.test_utils import TestExportMixin
 
 
 class MethodsViewTestCase(FMBaseTestCaseMixin, BaseTenantTestCase):
@@ -360,7 +362,9 @@ class CheckListViewTestCase(FMBaseTestCaseMixin, BaseTenantTestCase):
         self.assertEqual(len(response.data), 20)
 
 
-class PlannedCheckListItemViewTestCase(FMBaseTestCaseMixin, BaseTenantTestCase):
+class PlannedCheckListItemViewTestCase(FMBaseTestCaseMixin, TestExportMixin, BaseTenantTestCase):
+    fixtures = ['field_monitoring_methods',]
+
     def test_create(self):
         response = self.forced_auth_req(
             'post',
@@ -432,6 +436,16 @@ class PlannedCheckListItemViewTestCase(FMBaseTestCaseMixin, BaseTenantTestCase):
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(len(response.data['results']), 1)
+
+    def test_csv_export(self):
+        config = CPOutputConfigFactory()
+        config.recommended_method_types.add(*[FMMethodTypeFactory() for i in range(2)])
+        PlannedCheckListItemFactory(cp_output_config=config, partners_info__count=1)
+        PlannedCheckListItemFactory(cp_output_config=config, methods=FMMethod.objects.all(), partners_info__count=1)
+
+        self._test_export(
+            self.unicef_user, 'field_monitoring_settings:planned-checklist-items-export', args=[config.id]
+        )
 
 
 class LogIssueViewTestCase(FMBaseTestCaseMixin, BaseTenantTestCase):
