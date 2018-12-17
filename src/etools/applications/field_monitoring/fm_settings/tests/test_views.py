@@ -446,7 +446,7 @@ class PlannedCheckListItemViewTestCase(FMBaseTestCaseMixin, BaseTenantTestCase):
         self.assertEqual(len(response.data['results']), 1)
 
 
-class LogIssueViewTestCase(FMBaseTestCaseMixin, BaseTenantTestCase):
+class LogIssueViewTestCase(FMBaseTestCaseMixin, TestExportMixin, BaseTenantTestCase):
     @classmethod
     def setUpTestData(cls):
         cls.log_issue_cp_output = LogIssueFactory(cp_output=ResultFactory(result_type__name=ResultType.OUTPUT))
@@ -591,6 +591,13 @@ class LogIssueViewTestCase(FMBaseTestCaseMixin, BaseTenantTestCase):
 
     def test_related_to_location_filter(self):
         self._test_related_to_filter('location', [self.log_issue_location, self.log_issue_location_site])
+
+    def test_csv_export(self):
+        log_issue = LogIssueFactory(partner=PartnerFactory())
+        AttachmentFactory(content_object=log_issue,
+                          file=SimpleUploadedFile('hello_world.txt', u'hello world!'.encode('utf-8')))
+
+        self._test_export(self.unicef_user, 'field_monitoring_settings:log-issues-export')
 
 
 class TestLogIssueAttachmentsView(FMBaseTestCaseMixin, BaseTenantTestCase):

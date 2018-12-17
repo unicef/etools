@@ -1,7 +1,7 @@
 from datetime import date, timedelta
 
-from django.utils import timezone
 from django.db import models
+from django.utils import timezone
 from django.utils.translation import ugettext_lazy as _
 
 from rest_framework import mixins, viewsets, views
@@ -17,8 +17,10 @@ from unicef_locations.cache import etag_cached
 from unicef_locations.models import Location
 from unicef_restlib.views import NestedViewSetMixin
 
-from etools.applications.field_monitoring.fm_settings.export.renderers import LocationSiteCSVRenderer
-from etools.applications.field_monitoring.fm_settings.export.serializers import LocationSiteExportSerializer
+from etools.applications.field_monitoring.fm_settings.export.renderers import LocationSiteCSVRenderer, \
+    LogIssueCSVRenderer
+from etools.applications.field_monitoring.fm_settings.export.serializers import LocationSiteExportSerializer, \
+    LogIssueExportSerializer
 from etools.applications.field_monitoring.fm_settings.filters import CPOutputIsActiveFilter, \
     LogIssueRelatedToTypeFilter, \
     LogIssueVisitFilter, LogIssueNameOrderingFilter
@@ -228,6 +230,15 @@ class LogIssuesViewSet(FMBaseViewSet, viewsets.ModelViewSet):
             queryset = queryset.prefetch_related(None)
 
         return queryset
+
+    @action(detail=False, methods=['get'], url_path='export', renderer_classes=[LogIssueCSVRenderer])
+    def export(self, request, *args, **kwargs):
+        instances = self.get_queryset().order_by('id')
+
+        serializer = LogIssueExportSerializer(instances, many=True)
+        return Response(serializer.data, headers={
+            'Content-Disposition': 'attachment;filename=log_issues_{}.csv'.format(timezone.now().date())
+        })
 
 
 class LogIssueAttachmentsViewSet(FMBaseAttachmentsViewSet):
