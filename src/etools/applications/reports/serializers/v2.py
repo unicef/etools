@@ -157,28 +157,28 @@ class AppliedIndicatorSerializer(serializers.ModelSerializer):
         status = lower_result.result_link.intervention.status
         in_amendment = lower_result.result_link.intervention.in_amendment
         if attrs.get('target') and self.instance:
-           if attrs['target']['v'] != self.instance.target_display[1] \
-              and not (
-                  status in [Intervention.DRAFT, Intervention.SIGNED]
-                  or (status == Intervention.ACTIVE and in_amendment)
-              ):
-               raise ValidationError(_(
-                   'You cannot change the Indicator Target Denominator if PD/SSFA is '
-                   'not in status Draft or Signed'
-               ))
-           if attrs['target']['d'] != self.instance.target_display[1] \
-              and not (
-                  status in [Intervention.DRAFT, Intervention.SIGNED]
-                  or (
-                      status == Intervention.ACTIVE and
-                      in_amendment and
-                      self.instance.indicator.display_type != IndicatorBlueprint.RATIO
-                  )
-              ):
-               raise ValidationError(_(
-                   'You cannot change the Indicator Target Denominator if PD/SSFA is '
-                   'not in status Draft or Signed'
-               ))
+            if attrs['target']['v'] != self.instance.target_display[1] \
+               and not (
+                   status in [Intervention.DRAFT, Intervention.SIGNED]
+                   or (status == Intervention.ACTIVE and in_amendment)
+               ):
+                raise ValidationError(_(
+                    'You cannot change the Indicator Target Denominator if PD/SSFA is '
+                    'not in status Draft or Signed'
+                ))
+            if attrs['target']['d'] != self.instance.target_display[1] \
+               and not (
+                   status in [Intervention.DRAFT, Intervention.SIGNED]
+                   or (
+                       status == Intervention.ACTIVE and
+                       in_amendment and
+                       self.instance.indicator.display_type != IndicatorBlueprint.RATIO
+                   )
+               ):
+                raise ValidationError(_(
+                    'You cannot change the Indicator Target Denominator if PD/SSFA is '
+                    'not in status Draft or Signed'
+                ))
 
         # make sure locations are in the intervention
         locations = set(l.id for l in attrs.get('locations', []))
