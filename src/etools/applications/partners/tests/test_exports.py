@@ -248,7 +248,7 @@ class TestModelExport(BaseTenantTestCase):
             ', '.join([sm.get_full_name() for sm in self.agreement.authorized_officers.all()]),
             u'',
             u'https://testserver/pmp/agreements/{}/details/'.format(self.agreement.id),
-            '',
+            'No',
         )
         )
 

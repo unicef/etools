@@ -53,7 +53,7 @@ class AgreementExportSerializer(serializers.ModelSerializer):
     )
     amendments = serializers.SerializerMethodField(label=_("Amendments"))
     url = serializers.SerializerMethodField(label=_("URL"))
-    special_conditions_pca = serializers.BooleanField(
+    special_conditions_pca = serializers.SerializerMethodField(
         label=_("Special Conditions PCA"),
     )
 
@@ -93,6 +93,9 @@ class AgreementExportSerializer(serializers.ModelSerializer):
             self.context['request'].get_host(),
             obj.pk
         )
+
+    def get_special_conditions_pca(self, obj):
+        return "Yes" if obj.special_conditions_pca else "No"
 
 
 class AgreementExportFlatSerializer(ExportSerializerMixin, AgreementExportSerializer):

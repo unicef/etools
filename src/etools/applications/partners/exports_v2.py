@@ -183,7 +183,7 @@ class PartnerOrganizationSimpleHactCsvRenderer(FriendlyCSVRenderer):
     }
 
 
-class AgreementCSVRenderer(FriendlyCSVRenderer):
+class AgreementCSVRenderer(r.CSVRenderer):
     header = [
         "agreement_number",
         "status",
