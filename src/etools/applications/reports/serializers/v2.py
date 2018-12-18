@@ -151,9 +151,9 @@ class AppliedIndicatorSerializer(serializers.ModelSerializer):
         lower_result = attrs.get('lower_result', getattr(self.instance, 'lower_result', None))
         blueprint_data = attrs.get('indicator', getattr(self.instance, 'indicator', None))
 
-        # allow to change target "v" denominator only if intervention is draft or signed
+        # allowed to change target "v" denominator only if intervention is draft or signed
         # or active and in amendment mode
-        # allow to change target "d" denomiator only if intervention is draft or signed
+        # allowed to change target "d" denominator only if intervention is draft or signed
         status = lower_result.result_link.intervention.status
         in_amendment = lower_result.result_link.intervention.in_amendment
         if attrs.get('target') and self.instance \
