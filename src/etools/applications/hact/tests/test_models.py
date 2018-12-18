@@ -58,6 +58,18 @@ class TestAggregateHact(BaseTenantTestCase):
             financial_findings=999.0,
         )
 
+        AuditFactory(
+            status=Engagement.FINAL,
+            audit_opinion=Audit.OPTION_UNQUALIFIED,
+            date_of_draft_report_to_unicef=datetime(datetime.today().year - 1, 1, 3),
+            additional_supporting_documentation_provided=10.0,
+            justification_provided_and_accepted=20.0,
+            write_off_required=30.0,
+            amount_refunded=40.0,
+            audited_expenditure=50.0,
+            financial_findings=100.0,
+        )
+
     def test_cash_transfers_amounts(self):
         cash_transfers_amounts = self.aggregate_hact.cash_transfers_amounts()
         self.assertEqual(len(cash_transfers_amounts), 6)
@@ -130,7 +142,7 @@ class TestAggregateHact(BaseTenantTestCase):
         _check_item(financial_findings[4], 'Justification Provided and Accepted', 20000.0, False)
         _check_item(financial_findings[5], 'Impairment', 30000.0, False)
         _check_item(financial_findings[6], 'Outstanding current year (Requires Follow-up)', -430001.0, True)
-        _check_item(financial_findings[7], 'Outstanding prior year', 0.0, True)
+        _check_item(financial_findings[7], 'Outstanding prior year', 20.0, True)
 
     def test_get_financial_findings_numbers(self):
 
