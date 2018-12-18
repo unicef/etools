@@ -269,7 +269,7 @@ class PartnerOrganizationDashboardAPIView(ExportModelMixin, QueryStringFilterMix
         self._add_programmatic_visits(serializer)
         self._add_action_points(serializer)
         self._add_pca_required(serializer)
-        self._add_government_no_pd_no_signed_pca(serializer)
+        self._add_active_pd_for_non_signed_pca(serializer)
 
     def _add_programmatic_visits(self, serializer):
         qs = PartnerOrganization.objects.annotate(
@@ -319,7 +319,7 @@ class PartnerOrganizationDashboardAPIView(ExportModelMixin, QueryStringFilterMix
             ppp = pca_required[item["id"]]
             item['alert_pca_required'] = True if ppp and ppp.days < 0 else False
 
-    def _add_government_no_pd_no_signed_pca(self, serializer):
+    def _add_active_pd_for_non_signed_pca(self, serializer):
         # TODO add tests
         flagged_interventions = Intervention.objects.filter(
             document_type__in=[Intervention.PD, Intervention.SSFA],
