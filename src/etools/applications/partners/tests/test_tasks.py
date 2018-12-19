@@ -32,8 +32,7 @@ def _build_country(name):
     It exists only in memory. We must be careful not to save this because creating a new Country in the database
     complicates schemas.
     '''
-    country = CountryFactory.build(name=u'Country {}'.format(name.title()), schema_name=name,
-                                   domain_url=u'{}.example.com'.format(name))
+    country = CountryFactory.build(name=u'Country {}'.format(name.title()), schema_name=name)
     # Mock save() to prevent inadvertent database changes.
     country.save = mock.Mock()
 
@@ -54,7 +53,7 @@ class TestGetInterventionContext(BaseTenantTestCase):
     '''Exercise the tasks' helper function get_intervention_context()'''
 
     def setUp(self):
-        super(TestGetInterventionContext, self).setUp()
+        super().setUp()
         self.intervention = InterventionFactory()
         self.focal_point_user = UserFactory()
 

@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 from django.db import models
 from django.utils import timezone
 from django.utils.translation import ugettext as _
@@ -23,7 +22,7 @@ class Donor(TimeStampedModel):
 
 class GrantManager(models.Manager):
     def get_queryset(self):
-        return super(GrantManager, self).get_queryset().select_related('donor')
+        return super().get_queryset().select_related('donor')
 
 
 class Grant(TimeStampedModel):
@@ -264,7 +263,7 @@ class FundsReservationItem(TimeStampedModel):
     def save(self, **kwargs):
         if not self.fr_ref_number:
             self.fr_ref_number = '{}-{}'.format(self.fund_reservation.fr_number, self.line_item)
-        return super(FundsReservationItem, self).save(**kwargs)
+        return super().save(**kwargs)
 
 
 class FundsCommitmentHeader(TimeStampedModel):
@@ -404,4 +403,4 @@ class FundsCommitmentItem(TimeStampedModel):
     def save(self, **kwargs):
         if not self.fc_ref_number:
             self.fc_ref_number = '{}-{}'.format(self.fund_commitment.fc_number, self.line_item)
-        return super(FundsCommitmentItem, self).save(**kwargs)
+        return super().save(**kwargs)

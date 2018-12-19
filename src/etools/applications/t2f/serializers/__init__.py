@@ -23,7 +23,7 @@ class CostSummaryExpensesSerializer(serializers.Serializer):
     currency = serializers.PrimaryKeyRelatedField(read_only=True)
 
     def to_representation(self, instance):
-        data = super(CostSummaryExpensesSerializer, self).to_representation(instance)
+        data = super().to_representation(instance)
         if data['vendor_number'] == TravelExpenseType.USER_VENDOR_NUMBER_PLACEHOLDER:
             data['vendor_number'] = 'Traveler'
         return data

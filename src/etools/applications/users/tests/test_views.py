@@ -9,7 +9,7 @@ from django.urls import reverse
 
 
 from rest_framework import status
-from tenant_schemas.test.client import TenantClient
+from django_tenants.test.client import TenantClient
 
 from etools.applications.EquiTrack.tests.cases import BaseTenantTestCase
 from etools.applications.publics.tests.factories import PublicsBusinessAreaFactory
@@ -36,7 +36,7 @@ class TestChangeUserCountry(BaseTenantTestCase):
         cls.unicef_staff = UserFactory(is_staff=True)
 
     def setUp(self):
-        super(TestChangeUserCountry, self).setUp()
+        super().setUp()
         self.url = reverse("users:country-change")
 
     def test_post(self):
@@ -188,7 +188,7 @@ class TestUserViews(BaseTenantTestCase):
 
 class TestMyProfileAPIView(BaseTenantTestCase):
     def setUp(self):
-        super(TestMyProfileAPIView, self).setUp()
+        super().setUp()
         self.unicef_staff = UserFactory(is_staff=True)
         self.unicef_superuser = UserFactory(is_superuser=True)
         self.url = reverse("users:myprofile-detail")
@@ -300,7 +300,7 @@ class TestProfileEdit(BaseTenantTestCase):
         cls.client = TenantClient(cls.tenant)
 
     def setUp(self):
-        super(TestProfileEdit, self).setUp()
+        super().setUp()
         self.url = reverse("users:user_profile")
 
     def test_get_non_staff(self):
@@ -324,7 +324,7 @@ class TestGroupViewSet(BaseTenantTestCase):
         cls.unicef_staff = UserFactory(is_staff=True)
 
     def setUp(self):
-        super(TestGroupViewSet, self).setUp()
+        super().setUp()
         self.url = "/api/groups/"
 
     def test_get(self):
@@ -389,7 +389,7 @@ class TestUserViewSet(BaseTenantTestCase):
         cls.partnership_manager_user.groups.add(cls.group)
 
     def setUp(self):
-        super(TestUserViewSet, self).setUp()
+        super().setUp()
         self.url = "/api/users/"
 
     def test_api_users_list(self):

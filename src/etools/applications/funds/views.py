@@ -172,7 +172,7 @@ class FundsReservationHeaderListAPIView(ExportModelMixin, ListAPIView):
                 return FundsReservationHeaderExportSerializer
             if query_params.get("format") == 'csv_flat':
                 return FundsReservationHeaderExportFlatSerializer
-        return super(FundsReservationHeaderListAPIView, self).get_serializer_class()
+        return super().get_serializer_class()
 
     def get_queryset(self, format=None):
         q = FundsReservationHeader.objects.all()
@@ -216,7 +216,7 @@ class FundsReservationItemListAPIView(ExportModelMixin, ListAPIView):
                 return FundsReservationItemExportSerializer
             if query_params.get("format") == 'csv_flat':
                 return FundsReservationItemExportFlatSerializer
-        return super(FundsReservationItemListAPIView, self).get_serializer_class()
+        return super().get_serializer_class()
 
     def get_queryset(self, format=None):
         q = FundsReservationItem.objects.all()
@@ -289,7 +289,7 @@ class FundsCommitmentItemListAPIView(ExportModelMixin, ListAPIView):
         if "format" in query_params.keys():
             if query_params.get("format") == 'csv_flat':
                 return FundsCommitmentItemExportFlatSerializer
-        return super(FundsCommitmentItemListAPIView, self).get_serializer_class()
+        return super().get_serializer_class()
 
     def get_queryset(self, format=None):
         q = FundsCommitmentItem.objects.all()
@@ -331,7 +331,7 @@ class GrantListAPIView(ExportModelMixin, ListAPIView):
         if "format" in query_params.keys():
             if query_params.get("format") == 'csv_flat':
                 return GrantExportFlatSerializer
-        return super(GrantListAPIView, self).get_serializer_class()
+        return super().get_serializer_class()
 
     def get_queryset(self, format=None):
         q = Grant.objects.all()
@@ -375,7 +375,7 @@ class DonorListAPIView(ExportModelMixin, ListAPIView):
                 return DonorExportSerializer
             if query_params.get("format") == 'csv_flat':
                 return DonorExportFlatSerializer
-        return super(DonorListAPIView, self).get_serializer_class()
+        return super().get_serializer_class()
 
     def get_queryset(self, format=None):
         q = Donor.objects.all()

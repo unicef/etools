@@ -3,9 +3,9 @@ from operator import itemgetter
 
 from django.test import SimpleTestCase
 from django.urls import reverse
+from django_tenants.test.client import TenantClient
 
 from rest_framework import status
-from tenant_schemas.test.client import TenantClient
 from unicef_djangolib.fields import CURRENCY_LIST
 from unicef_locations.tests.factories import GatewayTypeFactory
 
@@ -236,7 +236,7 @@ class TestPMPDropdownsListApiView(BaseTenantTestCase):
         cls.client = TenantClient(cls.tenant)
 
     def setUp(self):
-        super(TestPMPDropdownsListApiView, self).setUp()
+        super().setUp()
         self.expected_keys = sorted((
             'signed_by_unicef_users',
             'cp_outputs',

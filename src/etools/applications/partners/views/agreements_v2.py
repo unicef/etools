@@ -56,6 +56,7 @@ class AgreementListAPIView(QueryStringFilterMixin, ExportModelMixin, ValidatorVi
         ('partner_name', 'partner__name__in'),
         ('start', 'start__gt'),
         ('end', 'end__lte'),
+        ('special_conditions_pca', 'special_conditions_pca'),
     )
     search_terms = ('partner__name__icontains', 'agreement_number__icontains')
 
@@ -77,7 +78,7 @@ class AgreementListAPIView(QueryStringFilterMixin, ExportModelMixin, ValidatorVi
             return AgreementListSerializer
         elif self.request.method == "POST":
             return AgreementCreateUpdateSerializer
-        return super(AgreementListAPIView, self).get_serializer_class()
+        return super().get_serializer_class()
 
     def get_queryset(self, format=None):
         q = Agreement.view_objects
@@ -101,7 +102,7 @@ class AgreementListAPIView(QueryStringFilterMixin, ExportModelMixin, ValidatorVi
             :returns: JSON or CSV file
         """
         query_params = self.request.query_params
-        response = super(AgreementListAPIView, self).list(request)
+        response = super().list(request)
         if "format" in query_params.keys():
             if query_params.get("format") in ['csv', 'csv_flat']:
                 response['Content-Disposition'] = "attachment;filename=agreements.csv"
@@ -151,7 +152,7 @@ class AgreementDetailAPIView(ValidatorViewMixin, RetrieveUpdateDestroyAPIView):
             return AgreementDetailSerializer
         elif self.request.method in ["PATCH"]:
             return AgreementCreateUpdateSerializer
-        return super(AgreementDetailAPIView, self).get_serializer_class()
+        return super().get_serializer_class()
 
     @transaction.atomic
     def update(self, request, *args, **kwargs):
@@ -227,7 +228,7 @@ class AgreementAmendmentListAPIView(ExportModelMixin, ListAPIView):
             :returns: JSON or CSV file
         """
         query_params = self.request.query_params
-        response = super(AgreementAmendmentListAPIView, self).list(request)
+        response = super().list(request)
         if "format" in query_params.keys():
             if query_params.get("format") in ['csv', 'csv_flat']:
                 response['Content-Disposition'] = "attachment;filename=agreement_amendments.csv"

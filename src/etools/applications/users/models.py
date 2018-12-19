@@ -9,9 +9,9 @@ from django.db import connection, models
 from django.db.models.signals import post_save
 from django.utils.functional import cached_property
 from django.utils.translation import ugettext_lazy as _
+from django_tenants.models import TenantMixin
 
 from djangosaml2.signals import pre_user_save
-from tenant_schemas.models import TenantMixin
 
 logger = logging.getLogger(__name__)
 
@@ -170,12 +170,10 @@ post_save.connect(WorkspaceCounter.create_counter_model, sender=Country)
 class CountryOfficeManager(models.Manager):
     def get_queryset(self):
         if hasattr(connection.tenant, 'id') and connection.tenant.schema_name != 'public':
-            return super(CountryOfficeManager, self).get_queryset().filter(offices=connection.tenant)
+            return super().get_queryset().filter(offices=connection.tenant)
         else:
             # this only gets called on initialization because FakeTenant does not have the model attrs
-            # see:
-            # https://github.com/bernardopires/django-tenant-schemas/blob/90f8b147adb4ea5ccc0d723f3e50bc9178857d65/tenant_schemas/postgresql_backend/base.py#L153
-            return super(CountryOfficeManager, self).get_queryset()
+            return super().get_queryset()
 
 
 class Office(models.Model):
@@ -205,7 +203,7 @@ class Office(models.Model):
 
 class UserProfileManager(models.Manager):
     def get_queryset(self):
-        return super(UserProfileManager, self).get_queryset().select_related('country')
+        return super().get_queryset().select_related('country')
 
 
 class UserProfile(models.Model):
@@ -337,7 +335,7 @@ class UserProfile(models.Model):
         if self.vendor_number == '':
             self.vendor_number = None
 
-        super(UserProfile, self).save(**kwargs)
+        super().save(**kwargs)
 
 
 post_save.connect(UserProfile.create_user_profile, sender=settings.AUTH_USER_MODEL)

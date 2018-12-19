@@ -1,4 +1,3 @@
-
 import json
 from datetime import date, datetime
 from decimal import Decimal
@@ -11,8 +10,8 @@ from django.utils.translation import ugettext_lazy as _
 
 from model_utils.models import TimeStampedModel
 
-from etools.applications.EquiTrack.encoders import EToolsEncoder
 from etools.applications.audit.models import Audit, Engagement, MicroAssessment, SpecialAudit, SpotCheck
+from etools.applications.EquiTrack.encoders import EToolsEncoder
 from etools.applications.EquiTrack.utils import get_current_year
 from etools.applications.partners.models import PartnerOrganization, PartnerType
 
@@ -270,6 +269,18 @@ class AggregateHact(TimeStampedModel):
             total=Coalesce(Sum('write_off_required'), 0))['total']
         outstanding = _ff - _ar - _asdp - _wor
 
+        outstanding_audits_y1 = Audit.objects.filter(status=Engagement.FINAL,
+                                                     date_of_draft_report_to_unicef__year=datetime.now().year - 1)
+        _ff_y1 = outstanding_audits_y1.filter(financial_findings__isnull=False).aggregate(
+            total=Coalesce(Sum('financial_findings'), 0))['total']
+        _ar_y1 = outstanding_audits_y1.filter(amount_refunded__isnull=False).aggregate(
+            total=Coalesce(Sum('amount_refunded'), 0))['total']
+        _asdp_y1 = outstanding_audits_y1.filter(additional_supporting_documentation_provided__isnull=False).aggregate(
+            total=Coalesce(Sum('additional_supporting_documentation_provided'), 0))['total']
+        _wor_y1 = outstanding_audits_y1.filter(write_off_required__isnull=False).aggregate(
+            total=Coalesce(Sum('write_off_required'), 0))['total']
+        outstanding_y1 = _ff_y1 - _ar_y1 - _asdp_y1 - _wor_y1
+
         total_financial_findings = Audit.objects.filter(
             date_of_draft_report_to_unicef__year=datetime.now().year,
             financial_findings__isnull=False,
@@ -313,8 +324,13 @@ class AggregateHact(TimeStampedModel):
                 'highlighted': False,
             },
             {
-                'name': 'Outstanding(Requires Follow-up)',
+                'name': 'Outstanding current year (Requires Follow-up)',
                 'value': outstanding,
+                'highlighted': True,
+            },
+            {
+                'name': 'Outstanding prior year',
+                'value': outstanding_y1,
                 'highlighted': True,
             }
         ]

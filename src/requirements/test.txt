@@ -1,3 +1,4 @@
+-e git+https://github.com/tomturner/django-tenants.git@12b6a852236363c8478c944e79b1432f5c0f3c46#egg=django-tenants
 -e git+https://github.com/unicef/djangosaml2.git@v0.16.11.2#egg=djangosaml2
 alabaster==0.7.11         # via sphinx
 amqp==2.2.2
@@ -37,17 +38,16 @@ django-import-export==1.1
 django-js-asset==1.1.0
 django-leaflet==0.24
 django-logentry-admin==1.0.4
-django-model-utils==2.6
+django-model-utils==3.1.2
 django-mptt==0.9
 django-ordered-model==1.5
 django-post-office==3.1.0
 django-redis-cache==1.8
 django-rest-swagger==2.2
 django-storages==1.6.6
-django-tenant-schemas==1.9.0
 django-timezone-field==3.0
 django-waffle==0.14
-django==1.10.8
+django==2.0.9
 djangorestframework-csv==2.1.0
 djangorestframework-gis==0.13.0
 djangorestframework-jwt==1.11.0
@@ -143,9 +143,9 @@ tox==3.0.0
 traitlets==4.3.2          # via ipython
 unicef-attachments==0.4.2
 unicef-djangolib==0.5.2
-unicef-locations==1.4.1
+unicef-locations==1.4.2
 unicef_notification==0.2.0
-unicef_restlib==0.3.4
+unicef_restlib==0.3.7
 unicef_snapshot==0.2.1
 unicodecsv==0.14.1
 uritemplate==3.0.0

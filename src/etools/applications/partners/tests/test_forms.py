@@ -8,7 +8,7 @@ from etools.applications.users.tests.factories import ProfileFactory, UserFactor
 
 class TestPartnersAdminForm(BaseTenantTestCase):
     def setUp(self):
-        super(TestPartnersAdminForm, self).setUp()
+        super().setUp()
         self.data = {
             "name": "Name",
             "partner_type": PartnerType.UN_AGENCY,
@@ -45,7 +45,7 @@ class TestPartnerStaffMemberForm(BaseTenantTestCase):
         cls.partner = PartnerFactory()
 
     def setUp(self):
-        super(TestPartnerStaffMemberForm, self).setUp()
+        super().setUp()
         self.data = {
             "email": "test@example.com",
             "partner": self.partner.pk,

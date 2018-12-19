@@ -45,7 +45,7 @@ class PartnerStaffMemberDetailAPIView(RetrieveUpdateDestroyAPIView):
     def get_serializer_class(self, format=None):
         if self.request.method in ["PUT", "PATCH"]:
             return PartnerStaffMemberCreateUpdateSerializer
-        return super(PartnerStaffMemberDetailAPIView, self).get_serializer_class()
+        return super().get_serializer_class()
 
 
 # TODO move in EquiTrack (after utils package has been merged in EquiTrack)
@@ -137,7 +137,7 @@ class PMPDropdownsListApiView(APIView):
         """
         signed_by_unicef = list(get_user_model().objects.filter(
             groups__name__in=['Senior Management Team'],
-            profile__country=request.tenant
+            profile__country=request.user.profile.country
         ).annotate(
             name=Concat('first_name', Value(' '), 'last_name')
         ).values('id', 'name', 'username', 'email'))

@@ -58,10 +58,10 @@ class PartnerOrganizationHactCsvRenderer(FriendlyCSVRenderer):
         'hact_values.programmatic_visits.completed.q2',
         'hact_values.programmatic_visits.completed.q3',
         'hact_values.programmatic_visits.completed.q4',
-        'hact_values.spot_checks.planned.q1',
-        'hact_values.spot_checks.planned.q2',
-        'hact_values.spot_checks.planned.q3',
-        'hact_values.spot_checks.planned.q4',
+        'planned_engagement.spot_checks_planned_q1',
+        'planned_engagement.spot_checks_planned_q2',
+        'planned_engagement.spot_checks_planned_q3',
+        'planned_engagement.spot_checks_planned_q4',
         'hact_min_requirements.spot_checks',
         'planned_engagement.spot_check_follow_up',
         'hact_values.spot_checks.completed.q1',
@@ -94,10 +94,10 @@ class PartnerOrganizationHactCsvRenderer(FriendlyCSVRenderer):
         'hact_values.programmatic_visits.completed.q2': 'Q2',
         'hact_values.programmatic_visits.completed.q3': 'Q3',
         'hact_values.programmatic_visits.completed.q4': 'Q4',
-        'hact_values.spot_checks.planned.q1': 'Spot Checks Planned Q1',
-        'hact_values.spot_checks.planned.q2': 'Q2',
-        'hact_values.spot_checks.planned.q3': 'Q3',
-        'hact_values.spot_checks.planned.q4': 'Q4',
+        'planned_engagement.spot_check_planned_q1': 'Spot Checks Planned Q1',
+        'planned_engagement.spot_check_planned_q2': 'Q2',
+        'planned_engagement.spot_check_planned_q3': 'Q3',
+        'planned_engagement.spot_check_planned_q4': 'Q4',
         'hact_min_requirements.spot_checks': 'Spot Checks M.R',
         'planned_engagement.spot_check_follow_up': 'Follow Up',
         'hact_values.spot_checks.completed.q1': 'Spot Checks Completed Q1',
@@ -199,6 +199,7 @@ class AgreementCSVRenderer(r.CSVRenderer):
         "staff_members",
         "amendments",
         "url",
+        "special_conditions_pca",
     ]
 
     labels = {
@@ -216,12 +217,13 @@ class AgreementCSVRenderer(r.CSVRenderer):
         "staff_members": 'Partner Authorized Officer',
         "amendments": 'Amendments',
         "url": "URL",
+        "special_conditions_pca": "Special Conditions PCA",
     }
 
 
 class InterventionCSVRenderer(r.CSVRenderer):
     header = [
-        "partner_name", "vendor_number", "status", "partner_type", "agreement_number", "country_programme",
+        "partner_name", "vendor_number", "status", "partner_type", "cso_type", "agreement_number", "country_programme",
         "document_type", "number", "title", "start", "end", "offices", "sectors", "locations", "contingency_pd",
         "intervention_clusters", "unicef_focal_points", "partner_focal_points", "budget_currency", "cso_contribution",
         "unicef_budget", "unicef_supply", "total_planned_budget", "fr_numbers", "fr_currency", "fr_posting_date",
@@ -236,6 +238,7 @@ class InterventionCSVRenderer(r.CSVRenderer):
         "vendor_number": "Vendor no.",
         "status": "Status",
         "partner_type": "Partner Type",
+        "cso_type": "CSO Type",
         "agreement_number": "Agreement",
         "country_programme": "Country Programme",
         "document_type": "Document Type",
