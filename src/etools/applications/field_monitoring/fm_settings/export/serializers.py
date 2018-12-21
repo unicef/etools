@@ -66,10 +66,10 @@ class LogIssueExportSerializer(serializers.Serializer):
         return str(obj.related_to.name) if obj.related_to else ''
 
     def get_attachments(self, obj):
-        return ', '.join(map(
-            lambda a: '{} - {}'.format(a.file_type, urljoin(site_url(), a.url)),
-            obj.attachments.all()
-        ))
+        return ', '.join([
+            '{} - {}'.format(a.file_type, urljoin(site_url(), a.url))
+            for a in obj.attachments.all()
+        ])
 
 
 class CheckListExportSerializer(serializers.Serializer):
@@ -90,7 +90,7 @@ class CheckListExportSerializer(serializers.Serializer):
         if len(partners_info) == 0:
             return ''
 
-        if any(map(lambda i: i.partner, partners_info)):
+        if any([i.partner for i in partners_info]):
             return _('by partner')
         return _('for all')
 
@@ -99,7 +99,7 @@ class CheckListExportSerializer(serializers.Serializer):
         if len(partners_info) == 0:
             return ''
 
-        by_partner = any(map(lambda i: i.partner, partners_info))
+        by_partner = any([i.partner for i in partners_info])
         if not by_partner:
             return partners_info[0].specific_details
 
