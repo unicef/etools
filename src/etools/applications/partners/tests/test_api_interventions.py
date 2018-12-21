@@ -1650,7 +1650,11 @@ class TestInterventionAmendmentCreateAPIView(BaseTenantTestCase):
         tomorrow = datetime.date.today() + datetime.timedelta(days=1)
         response = self._make_request(
             user=self.partnership_manager_user,
-            data={"signed_amendment": self.uploaded_file, 'signed_date': tomorrow},
+            data={
+                "signed_amendment": self.uploaded_file,
+                'signed_date': tomorrow,
+                'types': [InterventionAmendment.DATES, ]
+            },
             request_format='multipart',
         )
 
