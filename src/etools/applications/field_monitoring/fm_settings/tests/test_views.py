@@ -482,7 +482,7 @@ class PlannedCheckListItemViewTestCase(FMBaseTestCaseMixin, BaseTenantTestCase):
         self.assertEqual(len(response.data['methods']), 2)
         self.assertEqual(len(response.data['partners_info']), 1)
 
-    def test_create_unucef(self):
+    def test_create_unicef(self):
         response = self.forced_auth_req(
             'post',
             reverse('field_monitoring_settings:planned-checklist-items-list', args=[CPOutputConfigFactory().pk]),
