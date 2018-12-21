@@ -104,6 +104,7 @@ class TestAppliedIndicatorSerializer(BaseTenantTestCase):
         )
         self.applied_indicator = AppliedIndicatorFactory(
             lower_result=self.lower_result,
+            target={"d": 3, "v": 4},
         )
         self.intervention.flat_locations.add(self.location)
         self.intervention.sections.add(self.section)
