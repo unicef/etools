@@ -1,6 +1,6 @@
 from django.contrib import admin
 
-from .models import Permission
+from etools.applications.permissions2.models import Permission
 
 
 @admin.register(Permission)
