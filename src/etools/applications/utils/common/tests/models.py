@@ -15,6 +15,7 @@ class CodedGenericChild(models.Model):
 
     class Meta:
         verbose_name_plural = _('Coded Generic Children')
+        app_label = 'tests'
 
 
 class Parent(models.Model):
@@ -22,6 +23,9 @@ class Parent(models.Model):
 
     children1 = CodedGenericRelation(CodedGenericChild, code='children1')
     children2 = CodedGenericRelation(CodedGenericChild, code='children2')
+
+    class Meta:
+        app_label = 'tests'
 
 
 class Child1(models.Model):
@@ -31,3 +35,4 @@ class Child1(models.Model):
 
     class Meta:
         verbose_name_plural = _('Children1')
+        app_label = 'tests'

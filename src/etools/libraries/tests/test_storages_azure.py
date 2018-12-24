@@ -1,10 +1,10 @@
 import os
 from datetime import datetime
 from io import BytesIO
-from unittest import skipIf
-
-from django.test import TestCase, override_settings
 from urllib.parse import urlparse
+
+from django.test import override_settings, TestCase
+
 from storages.utils import setting
 
 from etools.libraries.azure_storage_backend import EToolsAzureStorage
@@ -14,13 +14,12 @@ TEST_FILECONTENT = b'a'
 TEST_FILESIZE = len('a')
 
 
-@skipIf(not os.environ.get('AZURE_ACCOUNT_NAME'),
-        reason='Skipped as not Azure connection informations available')
-@override_settings(AZURE_ACCOUNT_NAME=os.environ['AZURE_ACCOUNT_NAME'],
-                   AZURE_ACCOUNT_KEY=os.environ['AZURE_ACCOUNT_KEY'],
-                   AZURE_CONTAINER=os.environ['AZURE_CONTAINER'],
-                   AZURE_SSL=True, AZURE_AUTO_SIGN=False,
-                   AZURE_ACCESS_POLICY_PERMISSION=os.environ['AZURE_ACCESS_POLICY_PERMISSION'],
+@override_settings(AZURE_ACCOUNT_NAME=os.environ.get('AZURE_ACCOUNT_NAME', ''),
+                   AZURE_ACCOUNT_KEY=os.environ.get('AZURE_ACCOUNT_KEY', ''),
+                   AZURE_CONTAINER=os.environ.get('AZURE_CONTAINER', ''),
+                   AZURE_SSL=True,
+                   AZURE_AUTO_SIGN=False,
+                   AZURE_ACCESS_POLICY_PERMISSION=os.environ.get('AZURE_ACCESS_POLICY_PERMISSION', ''),
                    AZURE_ACCESS_POLICY_EXPIRY=3600)
 class TestAzureStorage(TestCase):
     def setUp(self):
