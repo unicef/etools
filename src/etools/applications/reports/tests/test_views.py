@@ -124,7 +124,7 @@ class TestOutputListAPIView(BaseTenantTestCase):
         cls.result2 = ResultFactory(
             country_programme=cls.country_programme
         )
-        cls.result_type = Result.OUTPUT
+        cls.type = Result.OUTPUT
 
         cls.outcome = ResultFactory(
             type=Result.OUTCOME,
