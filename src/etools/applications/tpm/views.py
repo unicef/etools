@@ -283,7 +283,7 @@ class VisitsCPOutputView(generics.ListAPIView):
     permission_classes = (IsAuthenticated,)
 
     filter_backends = (SearchFilter,)
-    search_fields = ('name', 'code', 'result_type__name')
+    search_fields = ('name', 'code', 'type')
 
     visits = None
 

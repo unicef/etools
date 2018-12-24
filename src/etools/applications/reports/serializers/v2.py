@@ -36,7 +36,6 @@ class MinimalOutputListSerializer(serializers.ModelSerializer):
 
 
 class OutputListSerializer(MinimalOutputListSerializer):
-    result_type = serializers.SlugRelatedField(slug_field="name", read_only=True)
     expired = serializers.ReadOnlyField()
     special = serializers.ReadOnlyField()
 

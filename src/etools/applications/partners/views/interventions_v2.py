@@ -772,7 +772,7 @@ class InterventionRamIndicatorsView(APIView):
 
         intervention = get_object_or_404(Intervention, pk=intervention_pk)
 
-        data = get_object_or_404(intervention.result_links.prefetch_related('cp_output__result_type', 'ram_indicators'),
+        data = get_object_or_404(intervention.result_links.prefetch_related('ram_indicators', ),
                                  cp_output__pk=cp_output_pk)
 
         return Response(
