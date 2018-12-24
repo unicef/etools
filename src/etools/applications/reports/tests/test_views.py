@@ -17,8 +17,9 @@ from etools.applications.reports.models import (
     Disaggregation,
     DisaggregationValue,
     LowerResult,
+    Result,
     SpecialReportingRequirement,
-    Result)
+)
 from etools.applications.reports.serializers.v2 import DisaggregationSerializer
 from etools.applications.reports.tests.factories import (
     AppliedIndicatorFactory,
@@ -170,7 +171,7 @@ class TestOutputListAPIView(BaseTenantTestCase):
         )
 
     def test_filter_result_type(self):
-        data = {"result_type": self.result_type}
+        data = {"type": self.result_type}
         response = self.forced_auth_req('get', self.url, data=data)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertCountEqual(
@@ -179,7 +180,7 @@ class TestOutputListAPIView(BaseTenantTestCase):
         )
 
     def test_filter_result_type_outcome(self):
-        data = {"result_type": ResultType.OUTCOME}
+        data = {"type": Result.OUTCOME}
         response = self.forced_auth_req('get', self.url, data=data)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertCountEqual(
@@ -201,7 +202,7 @@ class TestOutputListAPIView(BaseTenantTestCase):
 
     def test_filter_combined(self):
         data = {
-            "result_type": self.result_type,
+            "type": self.result_type,
             "year": datetime.date.today().year,
         }
         response = self.forced_auth_req('get', self.url, data=data)
