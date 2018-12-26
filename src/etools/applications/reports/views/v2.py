@@ -59,7 +59,7 @@ from etools.applications.reports.serializers.v2 import (
 class OutputListAPIView(ListAPIView):
     serializer_class = OutputListSerializer
     permission_classes = (IsAdminUser,)
-    queryset = Result.objects.select_related('country_programme', 'result_type')
+    queryset = Result.objects.select_related('country_programme')
 
     def get_serializer_class(self):
         """

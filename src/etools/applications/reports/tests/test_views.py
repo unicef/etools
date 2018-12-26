@@ -124,7 +124,7 @@ class TestOutputListAPIView(BaseTenantTestCase):
         cls.result2 = ResultFactory(
             country_programme=cls.country_programme
         )
-        cls.type = Result.OUTPUT
+        cls.result_type = Result.OUTPUT
 
         cls.outcome = ResultFactory(
             type=Result.OUTCOME,
@@ -171,7 +171,7 @@ class TestOutputListAPIView(BaseTenantTestCase):
         )
 
     def test_filter_result_type(self):
-        data = {"type": self.result_type}
+        data = {"result_type": self.result_type}
         response = self.forced_auth_req('get', self.url, data=data)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertCountEqual(
@@ -180,7 +180,7 @@ class TestOutputListAPIView(BaseTenantTestCase):
         )
 
     def test_filter_result_type_outcome(self):
-        data = {"type": Result.OUTCOME}
+        data = {"result_type": Result.OUTCOME}
         response = self.forced_auth_req('get', self.url, data=data)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertCountEqual(
@@ -202,7 +202,7 @@ class TestOutputListAPIView(BaseTenantTestCase):
 
     def test_filter_combined(self):
         data = {
-            "type": self.result_type,
+            "result_type": self.result_type,
             "year": datetime.date.today().year,
         }
         response = self.forced_auth_req('get', self.url, data=data)
