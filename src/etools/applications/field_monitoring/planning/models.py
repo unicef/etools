@@ -31,7 +31,7 @@ class YearPlan(TimeStampedModel):
 
     @classmethod
     def get_defaults(cls, year):
-        previous_year_plan = cls._default_manager.filter(year=int(year)-1).first()
+        previous_year_plan = cls._default_manager.filter(year=int(year) - 1).first()
         if not previous_year_plan:
             return {}
 
