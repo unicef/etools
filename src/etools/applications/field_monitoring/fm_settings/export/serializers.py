@@ -23,7 +23,7 @@ class LocationSiteExportSerializer(serializers.Serializer):
 
     def get_parents_info(self, obj):
         parents = list(obj.parent.get_ancestors(include_self=True))
-        parents = parents + [None]*(self.max_admin_level - len(parents))
+        parents = parents + [None] * (self.max_admin_level - len(parents))
         parents_info = {}
 
         for i, parent in enumerate(parents):

@@ -53,9 +53,9 @@ class LogIssueSerializer(UserContextSerializerMixin, SafeReadOnlySerializerMixin
         validated_data = super().validate(attrs)
 
         provided_values = [v for v in [
-                validated_data.get('cp_output', self.instance.cp_output if self.instance else None),
-                validated_data.get('partner', self.instance.partner if self.instance else None),
-                validated_data.get('location', self.instance.location if self.instance else None),
+            validated_data.get('cp_output', self.instance.cp_output if self.instance else None),
+            validated_data.get('partner', self.instance.partner if self.instance else None),
+            validated_data.get('location', self.instance.location if self.instance else None),
         ] if v]
 
         if not provided_values:

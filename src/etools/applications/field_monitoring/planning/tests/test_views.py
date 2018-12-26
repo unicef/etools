@@ -37,8 +37,8 @@ class YearPlanViewTestCase(FMBaseTestCaseMixin, BaseTenantTestCase):
         self._test_year(date.today().year - 1, status.HTTP_404_NOT_FOUND)
 
     def test_plan_by_month(self):
-        TaskFactory(plan_by_month=[1]*12)
-        TaskFactory(plan_by_month=[2]*12)
+        TaskFactory(plan_by_month=[1] * 12)
+        TaskFactory(plan_by_month=[2] * 12)
 
         response = self.forced_auth_req(
             'get', reverse('field_monitoring_planning:year-plan-detail', args=[date.today().year]),
@@ -46,7 +46,7 @@ class YearPlanViewTestCase(FMBaseTestCaseMixin, BaseTenantTestCase):
         )
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(response.data['tasks_by_month'], [3]*12)
+        self.assertEqual(response.data['tasks_by_month'], [3] * 12)
 
     def test_totals(self):
         task_1 = TaskFactory()
@@ -90,12 +90,12 @@ class YearPlanTasksViewTestCase(FMBaseTestCaseMixin, BaseTenantTestCase):
                 'intervention': self.task.intervention.id,
                 'location': self.task.location.id,
                 'location_site': self.task.location_site.id,
-                'plan_by_month': [1] + [0]*11
+                'plan_by_month': [1] + [0] * 11
             }
         )
 
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
-        self.assertEqual(response.data['plan_by_month'], [1] + [0]*11)
+        self.assertEqual(response.data['plan_by_month'], [1] + [0] * 11)
 
     def test_create_unicef(self):
         response = self.forced_auth_req(
@@ -158,7 +158,7 @@ class YearPlanTasksViewTestCase(FMBaseTestCaseMixin, BaseTenantTestCase):
         )
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(response.data['plan_by_month'], [1] + [0]*10 + [1])
+        self.assertEqual(response.data['plan_by_month'], [1] + [0] * 10 + [1])
 
     def test_update_plan_unicef(self):
         task = TaskFactory()
