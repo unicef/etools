@@ -1,0 +1,14 @@
+[
+    {
+        "model": "auth.group",
+        "fields": {
+            "name": "FM User"
+        }
+    },
+    {
+        "model": "auth.group",
+        "fields": {
+            "name": "UNICEF User"
+        }
+    }
+]
