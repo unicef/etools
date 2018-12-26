@@ -39,7 +39,7 @@ class UserSerializer(WritableNestedSerializerMixin, serializers.ModelSerializer)
 
     def create(self, validated_data):
         validated_data.setdefault('username', generate_username())
-        return super(UserSerializer, self).create(validated_data)
+        return super().create(validated_data)
 
 
 class BaseStaffMemberSerializer(WritableNestedSerializerMixin, serializers.ModelSerializer):

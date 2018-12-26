@@ -67,7 +67,7 @@ class OutputListAPIView(ListAPIView):
         if self.request.method == "GET":
             if self.request.query_params.get("verbosity", "") == 'minimal':
                 return MinimalOutputListSerializer
-        return super(OutputListAPIView, self).get_serializer_class()
+        return super().get_serializer_class()
 
     def get_queryset(self):
         q = super().get_queryset()
@@ -175,7 +175,7 @@ class LowerResultsListAPIView(ExportModelMixin, ListAPIView):
                 return LowerResultExportSerializer
             if query_params.get("format") == 'csv_flat':
                 return LowerResultExportFlatSerializer
-        return super(LowerResultsListAPIView, self).get_serializer_class()
+        return super().get_serializer_class()
 
     def get_queryset(self, format=None):
         q = LowerResult.objects.all()
@@ -248,7 +248,7 @@ class AppliedIndicatorListAPIView(ExportModelMixin, ListAPIView):
                 return AppliedIndicatorExportSerializer
             if query_params.get("format") == 'csv_flat':
                 return AppliedIndicatorExportFlatSerializer
-        return super(AppliedIndicatorListAPIView, self).get_serializer_class()
+        return super().get_serializer_class()
 
     def get_queryset(self, format=None):
         q = AppliedIndicator.objects.all()

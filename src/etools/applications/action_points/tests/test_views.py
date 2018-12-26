@@ -414,7 +414,7 @@ class TestRelatedOpenActionPointDetailViewMetadata(TestOpenActionPointDetailView
     ]
 
     def setUp(self):
-        super(TestRelatedOpenActionPointDetailViewMetadata, self).setUp()
+        super().setUp()
         self.action_point.engagement = MicroAssessmentFactory()
         self.action_point.save()
 

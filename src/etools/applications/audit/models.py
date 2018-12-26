@@ -327,7 +327,7 @@ class RiskCategory(OrderedModel, models.Model):
                     code=self.code_tracker.previous('code')
                 ).update(code=self.code)
 
-        super(RiskCategory, self).save(**kwargs)
+        super().save(**kwargs)
 
 
 class RiskBluePrint(OrderedModel, models.Model):
@@ -413,7 +413,7 @@ class SpotCheck(Engagement):
 
     def save(self, *args, **kwargs):
         self.engagement_type = Engagement.TYPES.sc
-        return super(SpotCheck, self).save(*args, **kwargs)
+        return super().save(*args, **kwargs)
 
     @transition(
         'status',
@@ -425,13 +425,13 @@ class SpotCheck(Engagement):
         permission=has_action_permission(action='submit')
     )
     def submit(self, *args, **kwargs):
-        return super(SpotCheck, self).submit(*args, **kwargs)
+        return super().submit(*args, **kwargs)
 
     @transition('status', source=Engagement.STATUSES.report_submitted, target=Engagement.STATUSES.final,
                 permission=has_action_permission(action='finalize'))
     def finalize(self, *args, **kwargs):
         self.partner.spot_checks(update_one=True, event_date=self.date_of_draft_report_to_unicef)
-        return super(SpotCheck, self).finalize(*args, **kwargs)
+        return super().finalize(*args, **kwargs)
 
     def get_object_url(self, **kwargs):
         return build_frontend_url('ap', 'spot-checks', self.id, 'overview', **kwargs)
@@ -515,7 +515,7 @@ class MicroAssessment(Engagement):
 
     def save(self, *args, **kwargs):
         self.engagement_type = Engagement.TYPES.ma
-        return super(MicroAssessment, self).save(*args, **kwargs)
+        return super().save(*args, **kwargs)
 
     @transition(
         'status',
@@ -529,7 +529,7 @@ class MicroAssessment(Engagement):
         permission=has_action_permission(action='submit')
     )
     def submit(self, *args, **kwargs):
-        return super(MicroAssessment, self).submit(*args, **kwargs)
+        return super().submit(*args, **kwargs)
 
     def get_object_url(self, **kwargs):
         return build_frontend_url('ap', 'micro-assessments', self.id, 'overview', **kwargs)
@@ -584,7 +584,7 @@ class Audit(Engagement):
 
     def save(self, *args, **kwargs):
         self.engagement_type = Engagement.TYPES.audit
-        return super(Audit, self).save(*args, **kwargs)
+        return super().save(*args, **kwargs)
 
     @property
     def pending_unsupported_amount(self):
@@ -609,13 +609,13 @@ class Audit(Engagement):
         permission=has_action_permission(action='submit')
     )
     def submit(self, *args, **kwargs):
-        return super(Audit, self).submit(*args, **kwargs)
+        return super().submit(*args, **kwargs)
 
     @transition('status', source=Engagement.STATUSES.report_submitted, target=Engagement.STATUSES.final,
                 permission=has_action_permission(action='finalize'))
     def finalize(self, *args, **kwargs):
         self.partner.audits_completed(update_one=True)
-        return super(Audit, self).finalize(*args, **kwargs)
+        return super().finalize(*args, **kwargs)
 
     def get_object_url(self, **kwargs):
         return build_frontend_url('ap', 'audits', self.id, 'overview', **kwargs)
@@ -688,7 +688,7 @@ class SpecialAudit(Engagement):
 
     def save(self, *args, **kwargs):
         self.engagement_type = Engagement.TYPES.sa
-        return super(SpecialAudit, self).save(*args, **kwargs)
+        return super().save(*args, **kwargs)
 
     @transition(
         'status',
@@ -701,13 +701,13 @@ class SpecialAudit(Engagement):
         permission=has_action_permission(action='submit')
     )
     def submit(self, *args, **kwargs):
-        return super(SpecialAudit, self).submit(*args, **kwargs)
+        return super().submit(*args, **kwargs)
 
     @transition('status', source=Engagement.STATUSES.report_submitted, target=Engagement.STATUSES.final,
                 permission=has_action_permission(action='finalize'))
     def finalize(self, *args, **kwargs):
         self.partner.audits_completed(update_one=True)
-        return super(SpecialAudit, self).finalize(*args, **kwargs)
+        return super().finalize(*args, **kwargs)
 
     def get_object_url(self, **kwargs):
         return build_frontend_url('ap', 'special-audits', self.id, 'overview', **kwargs)
@@ -750,7 +750,7 @@ class SpecialAuditRecommendation(models.Model):
 
 class EngagementActionPointManager(models.Manager):
     def get_queryset(self):
-        queryset = super(EngagementActionPointManager, self).get_queryset()
+        queryset = super().get_queryset()
         return queryset.filter(engagement__isnull=False)
 
 
@@ -766,7 +766,7 @@ class EngagementActionPoint(ActionPoint):
         proxy = True
 
     def get_mail_context(self, user=None, include_token=False):
-        context = super(EngagementActionPoint, self).get_mail_context(user=user, include_token=include_token)
+        context = super().get_mail_context(user=user, include_token=include_token)
         if self.engagement:
             context['engagement'] = self.engagement_subclass.get_mail_context(user=user, include_token=include_token)
         return context

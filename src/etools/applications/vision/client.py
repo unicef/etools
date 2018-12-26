@@ -1,5 +1,4 @@
 #!/usr/bin/env python
-# coding=utf-8
 
 import argparse
 import json
@@ -7,8 +6,9 @@ import logging
 import os
 from urllib.parse import urljoin
 
-import requests
 from django.conf import settings
+
+import requests
 from requests.auth import HTTPDigestAuth
 
 logger = logging.getLogger(__name__)

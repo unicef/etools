@@ -4,11 +4,11 @@ celery==4.2.1
 dj-database-url==0.5
 dj-static==0.0.6
 Django==2.0.9
-djangorestframework==3.8.2
+djangorestframework==3.9
 djangorestframework-csv==2.1.0
 djangorestframework-jwt==1.11.0
 djangorestframework-recursive==0.1.2
-djangorestframework-gis==0.13.0
+djangorestframework-gis==0.14
 djangorestframework-xml==1.3
 django-celery-beat==1.2
 django-celery-email==2.0.1
@@ -43,10 +43,13 @@ raven==6.9
 tenant-schemas-celery==0.2.1
 unicef-attachments==0.4.2
 unicef-djangolib==0.5.2
-unicef-locations==1.4.1
+unicef-locations==1.4.2
 unicef_notification==0.2.0
 unicef_restlib==0.3.7
 unicef_snapshot==0.2.1
+
+cryptography==2.4.1  # need for python 3.7
+cffi==1.11.5  # need for python 3.7
 
 -e git+https://github.com/unicef/djangosaml2.git@v0.16.11.2#egg=djangosaml2
 -e git+https://github.com/tomturner/django-tenants.git@12b6a852236363c8478c944e79b1432f5c0f3c46#egg=django-tenants

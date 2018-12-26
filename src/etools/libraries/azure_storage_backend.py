@@ -24,7 +24,7 @@ class EToolsAzureStorage(AzureStorage):
     ap_expiry = setting("AZURE_ACCESS_POLICY_EXPIRY")
 
     def __init__(self, *args, **kwargs):
-        super(EToolsAzureStorage, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
         self._connection = None
 
     def url(self, name):

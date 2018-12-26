@@ -16,6 +16,7 @@ from unicef_attachments.models import Attachment
 from unicef_locations.tests.factories import LocationFactory
 from unicef_snapshot.models import Activity
 
+from etools.applications.attachments.models import AttachmentFlat
 from etools.applications.attachments.tests.factories import AttachmentFactory, AttachmentFileTypeFactory
 from etools.applications.environment.helpers import tenant_switch_is_active
 from etools.applications.environment.tests.factories import TenantSwitchFactory
@@ -223,8 +224,8 @@ class TestInterventionsAPI(BaseTenantTestCase):
         self.assertIsNone(attachment.content_object)
         self.assertFalse(attachment.code)
         data = {
-                "type": file_type.pk,
-                "attachment_document": attachment.pk,
+            "type": file_type.pk,
+            "attachment_document": attachment.pk,
         }
         status_code, response = self.run_request_attachment_create_ep(intervention_id, data, user=self.partnership_manager_user)
         self.assertEqual(status_code, status.HTTP_201_CREATED)
@@ -930,7 +931,7 @@ class TestAPIInterventionLowerResultListView(BaseTenantTestCase):
     '''Exercise the list view for InterventionLowerResultListCreateView'''
     @classmethod
     def setUpClass(cls):
-        super(TestAPIInterventionLowerResultListView, cls).setUpClass()
+        super().setUpClass()
 
         cls.result_link = InterventionResultLinkFactory()
 
@@ -1007,7 +1008,7 @@ class TestAPIInterventionLowerResultCreateView(BaseTenantTestCase):
     '''Exercise the create view for InterventionLowerResultListCreateView'''
     @classmethod
     def setUpClass(cls):
-        super(TestAPIInterventionLowerResultCreateView, cls).setUpClass()
+        super().setUpClass()
 
         cls.result_link = InterventionResultLinkFactory()
 
@@ -1078,7 +1079,7 @@ class TestAPIInterventionIndicatorsListView(BaseTenantTestCase):
     '''Exercise the list view for InterventionIndicatorsListView (these are AppliedIndicator instances)'''
     @classmethod
     def setUpClass(cls):
-        super(TestAPIInterventionIndicatorsListView, cls).setUpClass()
+        super().setUpClass()
 
         cls.result_link = InterventionResultLinkFactory()
 
@@ -1183,7 +1184,7 @@ class TestAPInterventionIndicatorsCreateView(BaseTenantTestCase):
     '''Exercise the create view for InterventionIndicatorsListView (these are AppliedIndicator instances)'''
     @classmethod
     def setUpClass(cls):
-        super(TestAPInterventionIndicatorsCreateView, cls).setUpClass()
+        super().setUpClass()
 
         cls.result_link = InterventionResultLinkFactory()
         cls.lower_result = LowerResultFactory(result_link=cls.result_link)
@@ -1280,7 +1281,7 @@ class TestAPInterventionIndicatorsUpdateView(BaseTenantTestCase):
     '''
     @classmethod
     def setUpClass(cls):
-        super(TestAPInterventionIndicatorsUpdateView, cls).setUpClass()
+        super().setUpClass()
         cls.intervention = InterventionFactory()
         cls.result_link = InterventionResultLinkFactory(intervention=cls.intervention)
         cls.lower_result = LowerResultFactory(result_link=cls.result_link)
@@ -1561,7 +1562,7 @@ class TestInterventionAmendmentListAPIView(BaseTenantTestCase):
 
 class TestInterventionAmendmentCreateAPIView(BaseTenantTestCase):
     def setUp(self):
-        super(TestInterventionAmendmentCreateAPIView, self).setUp()
+        super().setUp()
 
         self.partnership_manager_user = UserFactory(is_staff=True)
         self.partnership_manager_user.groups.add(GroupFactory())
@@ -1649,7 +1650,11 @@ class TestInterventionAmendmentCreateAPIView(BaseTenantTestCase):
         tomorrow = datetime.date.today() + datetime.timedelta(days=1)
         response = self._make_request(
             user=self.partnership_manager_user,
-            data={"signed_amendment": self.uploaded_file, 'signed_date': tomorrow},
+            data={
+                "signed_amendment": self.uploaded_file,
+                'signed_date': tomorrow,
+                'types': [InterventionAmendment.DATES, ]
+            },
             request_format='multipart',
         )
 
@@ -1704,7 +1709,11 @@ class TestInterventionAmendmentCreateAPIView(BaseTenantTestCase):
             file_type=None,
             code="",
         )
-        self.data["internal_prc_review_attachment"] = attachment.pk
+        flat_qs = AttachmentFlat.objects.filter(attachment=attachment)
+        assert flat_qs.exists()
+        flat = flat_qs.first()
+        assert not flat.partner
+        self.data["internal_prc_review"] = attachment.pk
         self.assertIsNone(attachment.file_type)
         self.assertIsNone(attachment.content_object)
         self.assertFalse(attachment.code)
@@ -1717,19 +1726,25 @@ class TestInterventionAmendmentCreateAPIView(BaseTenantTestCase):
         self.assertEquals(response.status_code, status.HTTP_201_CREATED)
         data = self.assertResponseFundamentals(response)
         self.assertEquals(data['intervention'], self.intervention.pk)
-        attachment_updated = Attachment.objects.get(pk=attachment.pk)
+        attachment.refresh_from_db()
         self.assertEqual(
-            attachment_updated.file_type.code,
+            attachment.file_type.code,
             self.file_type_internal_prc_review.code
         )
-        self.assertEqual(attachment_updated.object_id, data["id"])
+        self.assertEqual(attachment.object_id, data["id"])
         self.assertEqual(
-            attachment_updated.code,
+            attachment.code,
             self.file_type_internal_prc_review.code
         )
 
+        # check denormalization
+        flat = flat_qs.first()
+        assert flat.partner
+        assert flat.pd_ssfa
+        assert flat.pd_ssfa_number
+
     def test_create_amendment_with_internal_prc_review_none(self):
-        self.data["internal_prc_review_attachment"] = None
+        self.data["internal_prc_review"] = None
         response = self._make_request(
             user=self.partnership_manager_user,
             data=self.data,

@@ -91,7 +91,7 @@ class PermissionMatrix(object):
 
 class FakePermissionMatrix(PermissionMatrix):
     def __init__(self, user):
-        super(FakePermissionMatrix, self).__init__(None, user)
+        super().__init__(None, user)
 
     def has_permission(self, permission_type, model_name, field_name):
         return True

@@ -58,7 +58,7 @@ class FullInterventionFactory(InterventionFactory):
 class OfficeFactory(SimpleOfficeFactory):
     @classmethod
     def _create(cls, model_class, *args, **kwargs):
-        obj = super(OfficeFactory, cls)._create(model_class, *args, **kwargs)
+        obj = super()._create(model_class, *args, **kwargs)
         if hasattr(connection.tenant, 'id') and connection.tenant.schema_name != 'public':
             connection.tenant.offices.add(obj)
 
@@ -292,7 +292,7 @@ class TPMVisitFactory(factory.DjangoModelFactory):
         if extra and 'status' in extra:
             status = extra.pop('status')
             extra[status] = True
-        return super(TPMVisitFactory, cls).attributes(create, extra)
+        return super().attributes(create, extra)
 
     @factory.post_generation
     def tpm_partner_focal_points(self, create, extracted, count, **kwargs):

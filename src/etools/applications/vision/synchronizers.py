@@ -29,7 +29,7 @@ class ManualDataLoader(VisionDataLoader):
 
     def __init__(self, country=None, endpoint=None, object_number=None):
         if not object_number:
-            super(ManualDataLoader, self).__init__(country=country, endpoint=endpoint)
+            super().__init__(country=country, endpoint=endpoint)
         else:
             if endpoint is None:
                 raise VisionException('You must set the ENDPOINT name')
@@ -146,7 +146,7 @@ class ManualVisionSynchronizer(MultiModelDataSynchronizer):
         self.object_number = object_number
 
         if not object_number:
-            super(MultiModelDataSynchronizer, self).__init__(country=country)
+            super().__init__(country=country)
         else:
             if self.ENDPOINT is None:
                 raise VisionException('You must set the ENDPOINT name')

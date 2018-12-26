@@ -78,7 +78,7 @@ class TestFundsReservationHeaderExportList(BaseTenantTestCase):
 
 class TestFundsReservationItemExportList(BaseTenantTestCase):
     def setUp(self):
-        super(TestFundsReservationItemExportList, self).setUp()
+        super().setUp()
         self.unicef_staff = UserFactory(is_staff=True)
         self.frs = FundsReservationHeaderFactory()
         self.item = FundsReservationItemFactory(
@@ -125,7 +125,7 @@ class TestFundsReservationItemExportList(BaseTenantTestCase):
 
 class TestFundsCommitmentHeaderExportList(BaseTenantTestCase):
     def setUp(self):
-        super(TestFundsCommitmentHeaderExportList, self).setUp()
+        super().setUp()
         self.unicef_staff = UserFactory(is_staff=True)
         self.header = FundsCommitmentHeaderFactory(
             vendor_code="Vendor Code",
@@ -172,7 +172,7 @@ class TestFundsCommitmentHeaderExportList(BaseTenantTestCase):
 
 class TestFundsCommitmentItemExportList(BaseTenantTestCase):
     def setUp(self):
-        super(TestFundsCommitmentItemExportList, self).setUp()
+        super().setUp()
         self.unicef_staff = UserFactory(is_staff=True)
         self.item = FundsCommitmentItemFactory()
 
@@ -216,7 +216,7 @@ class TestFundsCommitmentItemExportList(BaseTenantTestCase):
 
 class TestGrantExportList(BaseTenantTestCase):
     def setUp(self):
-        super(TestGrantExportList, self).setUp()
+        super().setUp()
         self.unicef_staff = UserFactory(is_staff=True)
         self.grant = GrantFactory()
 
@@ -276,7 +276,7 @@ class TestGrantExportList(BaseTenantTestCase):
 
 class TestDonorExportList(BaseTenantTestCase):
     def setUp(self):
-        super(TestDonorExportList, self).setUp()
+        super().setUp()
         self.unicef_staff = UserFactory(is_staff=True)
         self.donor = DonorFactory()
         self.grant = GrantFactory(

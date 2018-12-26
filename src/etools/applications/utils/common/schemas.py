@@ -17,7 +17,7 @@ class CustomSchemaGenerator(SchemaGenerator):
 
     def get_serializer_fields(self, *args):
         try:
-            return super(CustomSchemaGenerator, self).get_serializer_fields(*args)
+            return super().get_serializer_fields(*args)
         except exceptions.PermissionDenied:
             return []
 

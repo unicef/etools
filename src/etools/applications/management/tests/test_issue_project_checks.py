@@ -18,7 +18,7 @@ from etools.applications.users.tests.factories import UserFactory
 
 class TestActivePCANoSignedDocCheck(BaseTenantTestCase):
     def setUp(self):
-        super(TestActivePCANoSignedDocCheck, self).setUp()
+        super().setUp()
         UserFactory(username="etools_task_admin")
 
     @override_settings(ISSUE_CHECKS=['etools.applications.management.issues.project_checks.ActivePCANoSignedDocCheck'])
@@ -56,7 +56,7 @@ class TestActivePCANoSignedDocCheck(BaseTenantTestCase):
 
 class TestPdOutputsWrongCheck(BaseTenantTestCase):
     def setUp(self):
-        super(TestPdOutputsWrongCheck, self).setUp()
+        super().setUp()
         UserFactory(username="etools_task_admin")
 
     @override_settings(ISSUE_CHECKS=['etools.applications.management.issues.project_checks.PdOutputsWrongCheck'])
@@ -185,7 +185,7 @@ class TestPdOutputsWrongCheck(BaseTenantTestCase):
 
 class TestInterventionsAssociatedSSFACheck(BaseTenantTestCase):
     def setUp(self):
-        super(TestInterventionsAssociatedSSFACheck, self).setUp()
+        super().setUp()
         self.qs_issue = FlaggedIssue.objects.filter(
             issue_id="interventions_associated_ssfa"
         )
@@ -261,7 +261,7 @@ class TestInterventionsAssociatedSSFACheck(BaseTenantTestCase):
 
 class TestInterventionsAreValidCheck(BaseTenantTestCase):
     def setUp(self):
-        super(TestInterventionsAreValidCheck, self).setUp()
+        super().setUp()
         self.master_user = UserFactory(username="etools_task_admin")
         self.qs_issue = FlaggedIssue.objects.filter(
             issue_id="interventions_are_valid"
@@ -297,7 +297,7 @@ class TestInterventionsAreValidCheck(BaseTenantTestCase):
 
 class TestPDAmendmentsMissingFilesCheck(BaseTenantTestCase):
     def setUp(self):
-        super(TestPDAmendmentsMissingFilesCheck, self).setUp()
+        super().setUp()
         self.master_user = UserFactory(username="etools_task_admin")
         self.qs_issue = FlaggedIssue.objects.filter(
             issue_id="interventions_amendments_no_file"
@@ -326,7 +326,7 @@ class TestPDAmendmentsMissingFilesCheck(BaseTenantTestCase):
 
 class TestPCAAmendmentsMissingFilesCheck(BaseTenantTestCase):
     def setUp(self):
-        super(TestPCAAmendmentsMissingFilesCheck, self).setUp()
+        super().setUp()
         self.master_user = UserFactory(username="etools_task_admin")
         self.qs_issue = FlaggedIssue.objects.filter(
             issue_id="agreement_amendments_no_file"

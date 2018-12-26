@@ -120,7 +120,7 @@ class DSARegionsView(GhostDataMixin,
     serializer_class = DSARegionSerializer
 
     def get_serializer_context(self):
-        context = super(DSARegionsView, self).get_serializer_context()
+        context = super().get_serializer_context()
 
         parameter_serializer = DSARegionsParameterSerializer(data=self.request.GET)
         if parameter_serializer.is_valid():

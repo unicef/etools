@@ -10,4 +10,4 @@ class InheritedTrait(factory.Trait):
 
         overrides.update(kwargs)
 
-        super(InheritedTrait, self).__init__(**overrides)
+        super().__init__(**overrides)
