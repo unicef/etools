@@ -2,15 +2,15 @@
 import json
 import logging
 
-from django.urls import NoReverseMatch, reverse
 from django.db import connection
+from django.urls import NoReverseMatch, reverse
 
 from freezegun import freeze_time
 from rest_framework import status
+from unicef_locations.tests.factories import LocationFactory
 
 from etools.applications.EquiTrack.tests.cases import BaseTenantTestCase
 from etools.applications.EquiTrack.tests.mixins import URLAssertionMixin
-from unicef_locations.tests.factories import LocationFactory
 from etools.applications.publics.models import DSARegion
 from etools.applications.publics.tests.factories import PublicsCurrencyFactory, PublicsWBSFactory
 from etools.applications.reports.tests.factories import ResultFactory
