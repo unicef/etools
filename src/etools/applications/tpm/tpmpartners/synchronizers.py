@@ -47,7 +47,7 @@ class TPMPartnerSynchronizer(ManualVisionSynchronizer):
     }
 
     def _convert_records(self, records):
-        records = super(TPMPartnerSynchronizer, self)._convert_records(records)
+        records = super()._convert_records(records)
         if isinstance(records, dict):
             records = records.get('ROWSET', {}).get('ROW', [])
             if not isinstance(records, list):
@@ -55,7 +55,7 @@ class TPMPartnerSynchronizer(ManualVisionSynchronizer):
         return records
 
     def _filter_records(self, records):
-        records = super(TPMPartnerSynchronizer, self)._filter_records(records)
+        records = super()._filter_records(records)
 
         def bad_record(record):
             if not record['VENDOR_NAME']:

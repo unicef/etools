@@ -100,7 +100,7 @@ class TestAgreementModelExport(BaseAgreementModelExportTestCase):
             ', '.join([sm.get_full_name() for sm in self.agreement.authorized_officers.all()]),
             u'',
             u'https://testserver/pmp/agreements/{}/details/'.format(self.agreement.id),
-            '',
+            'No',
         ))
 
     def test_csv_flat_export_api(self):
@@ -130,7 +130,7 @@ class TestAgreementModelExport(BaseAgreementModelExportTestCase):
 
 class TestAgreementAmendmentModelExport(BaseAgreementModelExportTestCase):
     def setUp(self):
-        super(TestAgreementAmendmentModelExport, self).setUp()
+        super().setUp()
         self.amendment = AgreementAmendmentFactory(
             agreement=self.agreement,
             signed_amendment="fake_attachment.pdf",

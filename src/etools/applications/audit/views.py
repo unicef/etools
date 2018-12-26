@@ -136,7 +136,7 @@ class AuditorFirmViewSet(
     filter_fields = ('country', 'unicef_users_allowed')
 
     def get_queryset(self):
-        queryset = super(AuditorFirmViewSet, self).get_queryset()
+        queryset = super().get_queryset()
 
         user_groups = self.request.user.groups.all()
 
@@ -151,7 +151,7 @@ class AuditorFirmViewSet(
         return queryset
 
     def get_permission_context(self):
-        context = super(AuditorFirmViewSet, self).get_permission_context()
+        context = super().get_permission_context()
 
         if Auditor.as_group() in self.request.user.groups.all() and \
            hasattr(self.request.user, 'purchase_order_auditorstaffmember'):
@@ -226,7 +226,7 @@ class EngagementPartnerView(generics.ListAPIView):
     engagements = None
 
     def get_queryset(self):
-        queryset = super(EngagementPartnerView, self).get_queryset()
+        queryset = super().get_queryset()
 
         if self.engagements is not None:
             queryset = queryset.filter(engagement__in=self.engagements).distinct()
@@ -289,10 +289,10 @@ class EngagementViewSet(
             engagement_type = self.request.data.get('engagement_type', None)
             serializer_class = self.ENGAGEMENT_MAPPING.get(engagement_type, {}).get('serializer_class', None)
 
-        return serializer_class or super(EngagementViewSet, self).get_serializer_class()
+        return serializer_class or super().get_serializer_class()
 
     def get_queryset(self):
-        queryset = super(EngagementViewSet, self).get_queryset()
+        queryset = super().get_queryset()
 
         user_groups = self.request.user.groups.all()
 
@@ -314,7 +314,7 @@ class EngagementViewSet(
         return queryset
 
     def get_permission_context(self):
-        context = super(EngagementViewSet, self).get_permission_context()
+        context = super().get_permission_context()
 
         if Auditor.as_group() in self.request.user.groups.all() and \
            hasattr(self.request.user, 'purchase_order_auditorstaffmember'):
@@ -470,7 +470,7 @@ class AuditorStaffMembersViewSet(
     filter_fields = ('user__profile__country__schema_name', 'user__profile__country__name')
 
     def get_queryset(self):
-        queryset = super(AuditorStaffMembersViewSet, self).get_queryset()
+        queryset = super().get_queryset()
 
         if self.action == 'list':
             queryset = queryset.filter(hidden=False)
@@ -493,7 +493,7 @@ class AuditorStaffMembersViewSet(
             instance.user.save()
 
     def get_permission_context(self):
-        context = super(AuditorStaffMembersViewSet, self).get_permission_context()
+        context = super().get_permission_context()
 
         if Auditor.as_group() in self.request.user.groups.all():
             context += [
@@ -572,7 +572,7 @@ class EngagementAttachmentsViewSet(BaseAuditAttachmentsViewSet):
         return _('Related Documents')
 
     def get_parent_filter(self):
-        filters = super(EngagementAttachmentsViewSet, self).get_parent_filter()
+        filters = super().get_parent_filter()
         filters.update({'code': 'audit_engagement'})
         return filters
 
@@ -587,6 +587,6 @@ class ReportAttachmentsViewSet(BaseAuditAttachmentsViewSet):
         return _('Report Attachments')
 
     def get_parent_filter(self):
-        filters = super(ReportAttachmentsViewSet, self).get_parent_filter()
+        filters = super().get_parent_filter()
         filters.update({'code': 'audit_report'})
         return filters

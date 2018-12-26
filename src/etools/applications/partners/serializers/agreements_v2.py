@@ -36,6 +36,7 @@ class AgreementAmendmentListSerializer(serializers.ModelSerializer):
 
 class AgreementListSerializer(serializers.ModelSerializer):
     partner_name = serializers.CharField(source='partner.name', read_only=True)
+    agreement_number_status = serializers.SerializerMethodField()
 
     class Meta:
         model = Agreement
@@ -51,8 +52,12 @@ class AgreementListSerializer(serializers.ModelSerializer):
             "signed_by_unicef_date",
             "signed_by_partner_date",
             "status",
+            "agreement_number_status",
             "special_conditions_pca",
         )
+
+    def get_agreement_number_status(self, obj):
+        return "{} [{}]".format(obj.agreement_number, obj.status.title())
 
 
 class AgreementDetailSerializer(serializers.ModelSerializer):
@@ -96,7 +101,7 @@ class AgreementCreateUpdateSerializer(AttachmentSerializerMixin, SnapshotModelSe
         fields = "__all__"
 
     def validate(self, data):
-        data = super(AgreementCreateUpdateSerializer, self).validate(data)
+        data = super().validate(data)
         agreement_type = data.get('agreement_type', None) or self.instance.agreement_type
 
         if agreement_type == Agreement.PCA:

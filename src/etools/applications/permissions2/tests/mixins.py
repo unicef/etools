@@ -34,7 +34,7 @@ class TransitionPermissionTestCaseMetaclass(type):
     def __new__(cls, name, bases, attrs):
         abstract = attrs.get('abstract', False)
 
-        newclass = super(TransitionPermissionTestCaseMetaclass, cls).__new__(cls, name, bases, attrs)
+        newclass = super().__new__(cls, name, bases, attrs)
 
         if abstract:
             return newclass

@@ -56,13 +56,13 @@ class ActionPointBaseSerializer(UserContextSerializerMixin, SnapshotModelSeriali
             'assigned_by': self.get_user()
         })
 
-        return super(ActionPointBaseSerializer, self).create(validated_data)
+        return super().create(validated_data)
 
     def update(self, instance, validated_data):
         if 'assigned_to' in validated_data:
             validated_data['assigned_by'] = self.get_user()
 
-        return super(ActionPointBaseSerializer, self).update(instance, validated_data)
+        return super().update(instance, validated_data)
 
 
 class ActionPointListSerializer(PermissionsBasedSerializerMixin, ActionPointBaseSerializer):
@@ -146,7 +146,7 @@ class CommentSerializer(UserContextSerializerMixin, WritableNestedSerializerMixi
             'submit_date': timezone.now(),
             'site': get_current_site(),
         })
-        return super(CommentSerializer, self).create(validated_data)
+        return super().create(validated_data)
 
 
 class HistorySerializer(serializers.ModelSerializer):

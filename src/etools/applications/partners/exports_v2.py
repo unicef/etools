@@ -183,7 +183,7 @@ class PartnerOrganizationSimpleHactCsvRenderer(FriendlyCSVRenderer):
     }
 
 
-class AgreementCSVRenderer(FriendlyCSVRenderer):
+class AgreementCSVRenderer(r.CSVRenderer):
     header = [
         "agreement_number",
         "status",
@@ -223,7 +223,7 @@ class AgreementCSVRenderer(FriendlyCSVRenderer):
 
 class InterventionCSVRenderer(r.CSVRenderer):
     header = [
-        "partner_name", "vendor_number", "status", "partner_type", "agreement_number", "country_programme",
+        "partner_name", "vendor_number", "status", "partner_type", "cso_type", "agreement_number", "country_programme",
         "document_type", "number", "title", "start", "end", "offices", "sectors", "locations", "contingency_pd",
         "intervention_clusters", "unicef_focal_points", "partner_focal_points", "budget_currency", "cso_contribution",
         "unicef_budget", "unicef_supply", "total_planned_budget", "fr_numbers", "fr_currency", "fr_posting_date",
@@ -238,6 +238,7 @@ class InterventionCSVRenderer(r.CSVRenderer):
         "vendor_number": "Vendor no.",
         "status": "Status",
         "partner_type": "Partner Type",
+        "cso_type": "CSO Type",
         "agreement_number": "Agreement",
         "country_programme": "Country Programme",
         "document_type": "Document Type",

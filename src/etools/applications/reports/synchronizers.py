@@ -262,7 +262,7 @@ class ProgrammeSynchronizer(VisionDataSynchronizer):
         return [] if data == VISION_NO_DATA_MESSAGE else data
 
     def _filter_by_time_range(self, records):
-        records = super(ProgrammeSynchronizer, self)._filter_records(records)
+        records = super()._filter_records(records)
 
         today = datetime.datetime.today()
         last_year = datetime.datetime(today.year - 1, 1, 1).date()

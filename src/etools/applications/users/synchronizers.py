@@ -10,7 +10,7 @@ class CountryLongNameSync(VisionDataSynchronizer):
 
     def __init__(self, *args, **kwargs):
         self.countries_qs = Country.objects.exclude(business_area_code='0')
-        super(CountryLongNameSync, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
 
     def _convert_records(self, records):
         records = json.loads(records['GetBusinessAreaList_JSONResult'])

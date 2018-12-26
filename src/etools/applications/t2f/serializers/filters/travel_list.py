@@ -27,7 +27,7 @@ class TravelFilterBoxSerializer(serializers.Serializer):
     f_cp_output = serializers.IntegerField(source='cp_output', required=False)
 
     def to_internal_value(self, data):
-        data = super(TravelFilterBoxSerializer, self).to_internal_value(data)
+        data = super().to_internal_value(data)
 
         # Adjust month because frontend sends 0-11
         if 'month' in data:

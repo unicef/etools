@@ -105,6 +105,7 @@ class TestModelExport(BaseTenantTestCase):
             "Vendor Number",
             "Status",
             "Partner Type",
+            "CSO Type",
             "Agreement",
             "Country Programme",
             "Document Type",
@@ -153,6 +154,7 @@ class TestModelExport(BaseTenantTestCase):
             str(self.intervention.agreement.partner.vendor_number),
             self.intervention.status,
             self.intervention.agreement.partner.partner_type,
+            '',
             self.intervention.agreement.agreement_number,
             str(self.intervention.country_programme.name),
             self.intervention.document_type,
@@ -246,7 +248,7 @@ class TestModelExport(BaseTenantTestCase):
             ', '.join([sm.get_full_name() for sm in self.agreement.authorized_officers.all()]),
             u'',
             u'https://testserver/pmp/agreements/{}/details/'.format(self.agreement.id),
-            '',
+            'No',
         )
         )
 

@@ -24,7 +24,7 @@ class PermissionsBasedMetadataMixin(object):
                 self._remove_read_only(field)
 
     def get_serializer_info(self, serializer):
-        info = super(PermissionsBasedMetadataMixin, self).get_serializer_info(serializer)
+        info = super().get_serializer_info(serializer)
         method = serializer.context['request'].method
         fields = serializer._readable_fields if method == 'GET' else serializer._writable_fields
         field_names = [f.field_name for f in fields]
@@ -50,7 +50,7 @@ class PermittedFSMTransitionActionMetadataMixin(FSMTransitionActionMetadataMixin
         """
         request.user._permission_context = view._collect_permission_context()
 
-        return super(PermittedFSMTransitionActionMetadataMixin, self).determine_actions(request, view)
+        return super().determine_actions(request, view)
 
 
 class BaseMetadata(ReadOnlyFieldWithChoicesMixin, ModelChoiceFieldMixin, SeparatedReadWriteFieldMetadata,

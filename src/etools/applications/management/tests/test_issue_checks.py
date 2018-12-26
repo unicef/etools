@@ -73,7 +73,7 @@ class IssueCheckTest(BaseTenantTestCase):
     def tearDown(self):
         FlaggedIssue.objects.all().delete()
         IssueCheckConfig.objects.all().delete()
-        super(IssueCheckTest, self).tearDown()
+        super().tearDown()
 
     @override_settings(ISSUE_CHECKS=['etools.applications.management.tests.test_issue_checks.TestMissingRunCheck'])
     def test_missing_run_check(self):

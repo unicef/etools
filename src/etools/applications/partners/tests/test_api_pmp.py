@@ -236,7 +236,7 @@ class TestPMPDropdownsListApiView(BaseTenantTestCase):
         cls.client = TenantClient(cls.tenant)
 
     def setUp(self):
-        super(TestPMPDropdownsListApiView, self).setUp()
+        super().setUp()
         self.expected_keys = sorted((
             'signed_by_unicef_users',
             'cp_outputs',

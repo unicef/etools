@@ -13,7 +13,7 @@ class SortFilterSerializer(serializers.Serializer):
     sort_by = serializers.CharField(required=False)
 
     def __init__(self, *args, **kwargs):
-        super(SortFilterSerializer, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
         if self.SORT_BY_SERIALIZER:
             self._sortable_fields = tuple(self.SORT_BY_SERIALIZER.Meta.fields)
             self.fields['sort_by'].default = self._sortable_fields[0]
@@ -27,7 +27,7 @@ class SortFilterSerializer(serializers.Serializer):
         return value
 
     def to_internal_value(self, data):
-        attrs = super(SortFilterSerializer, self).to_internal_value(data)
+        attrs = super().to_internal_value(data)
         if 'sort_by' in attrs:
             sort_by = attrs['sort_by']
             source = self.SORT_BY_SERIALIZER().fields[sort_by].source
