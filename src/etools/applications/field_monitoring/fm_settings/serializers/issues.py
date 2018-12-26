@@ -13,16 +13,17 @@ from etools.applications.action_points.serializers import HistorySerializer
 from etools.applications.field_monitoring.fm_settings.models import LogIssue
 from etools.applications.field_monitoring.fm_settings.serializers.locations import LocationSiteLightSerializer
 from etools.applications.partners.serializers.partner_organization_v2 import MinimalPartnerOrganizationListSerializer
+from etools.applications.permissions_simplified.serializers import SafeReadOnlySerializerMixin
 from etools.applications.reports.serializers.v2 import OutputListSerializer
 from etools.applications.users.serializers_v3 import MinimalUserSerializer
 
 
-class LogIssueAttachmentSerializer(BaseAttachmentSerializer):
+class LogIssueAttachmentSerializer(SafeReadOnlySerializerMixin, BaseAttachmentSerializer):
     class Meta(BaseAttachmentSerializer.Meta):
         pass
 
 
-class LogIssueSerializer(UserContextSerializerMixin, SnapshotModelSerializer):
+class LogIssueSerializer(UserContextSerializerMixin, SafeReadOnlySerializerMixin, SnapshotModelSerializer):
     author = MinimalUserSerializer(read_only=True, label=LogIssue._meta.get_field('author').verbose_name)
     closed_by = serializers.SerializerMethodField(label=_('Issue Closed By'))
     related_to_type = serializers.ChoiceField(choices=LogIssue.RELATED_TO_TYPE_CHOICES, read_only=True,
