@@ -3,8 +3,8 @@ from django.utils import timezone
 
 import factory
 from factory import fuzzy
-
 from unicef_locations.tests.factories import LocationFactory
+
 from etools.applications.partners.tests.factories import InterventionFactory
 from etools.applications.publics.tests.factories import (
     PublicsAirlineCompanyFactory,
