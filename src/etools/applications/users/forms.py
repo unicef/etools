@@ -24,5 +24,5 @@ class ProfileForm(forms.ModelForm):
         exclude = ['user', ]
 
     def __init__(self, *args, **kwargs):
-        super(ProfileForm, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
         self.fields['office'].queryset = connection.tenant.offices.all()

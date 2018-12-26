@@ -14,8 +14,8 @@ class TestClient(BaseTenantTestCase):
     def setUpTestData(cls):
         cls.group = GroupFactory(name='UNICEF User')
 
-    @patch('etools.libraries.azure_graph_api.utils.handle_record', return_value=(
-            {'processed': 0, 'created': 0, 'updated': 0, 'skipped': 0, 'errors': 0}, {}))
+    @patch('etools.libraries.azure_graph_api.utils.handle_record',
+           return_value=({'processed': 0, 'created': 0, 'updated': 0, 'skipped': 0, 'errors': 0}, {}))
     def test_handle_records(self, handle_function):
         handle_records({'value': range(3)})
         self.assertEqual(handle_function.call_count, 3)

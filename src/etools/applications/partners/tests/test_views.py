@@ -78,7 +78,7 @@ class URLsTestCase(URLAssertionMixin, SimpleTestCase):
             ('partner-engagements', 'engagements/', {}),
             ('partner-detail', '1/', {'pk': 1}),
             ('partner-delete', 'delete/1/', {'pk': 1}),
-            ('partner-assessment-del', 'assessments/1/', {'pk': 1}),
+            ('partner-assessment-detail', 'assessments/1/', {'pk': 1}),
             ('partner-add', 'add/', {}),
             ('partner-staff-members-list', '1/staff-members/', {'partner_pk': 1}),
         )
@@ -328,7 +328,7 @@ class TestPartnerOrganizationListViewForCSV(BaseTenantTestCase):
         class Wrapper(PartnerOrganizationExportSerializer):
             def __init__(self, *args, **kwargs):
                 TestPartnerOrganizationListViewForCSV.wrapper_called = True
-                super(PartnerOrganizationExportSerializer, self).__init__(*args, **kwargs)
+                super().__init__(*args, **kwargs)
 
         partner_organization_v2.PartnerOrganizationExportSerializer = Wrapper
 
@@ -452,43 +452,6 @@ class TestPartnerOrganizationRetrieveUpdateDeleteViews(BaseTenantTestCase):
 
         cls.cp = CountryProgrammeFactory(__sequence=10)
         cls.cp_output = ResultFactory(result_type=cls.output_res_type)
-
-    def test_api_partners_delete_asssessment_valid(self):
-        response = self.forced_auth_req(
-            'delete',
-            reverse(
-                'partners_api:partner-assessment-del',
-                args=[self.assessment1.pk]
-            ),
-            user=self.unicef_staff,
-        )
-
-        self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
-
-    def test_api_partners_delete_asssessment_error(self):
-        response = self.forced_auth_req(
-            'delete',
-            reverse(
-                'partners_api:partner-assessment-del',
-                args=[self.assessment2.pk]
-            ),
-            user=self.unicef_staff,
-        )
-
-        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
-        self.assertEqual(response.data, ["Cannot delete a completed assessment"])
-
-    def test_api_partners_delete_asssessment_not_found(self):
-        response = self.forced_auth_req(
-            'delete',
-            reverse(
-                'partners_api:partner-assessment-del',
-                args=[404]
-            ),
-            user=self.unicef_staff,
-        )
-
-        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
 
     def test_api_partners_update_with_members(self):
         self.assertFalse(Activity.objects.exists())

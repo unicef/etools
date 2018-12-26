@@ -27,7 +27,7 @@ class MockRequest:
 
 class TestAdminCase(BaseTenantTestCase):
     def setUp(self):
-        super(TestAdminCase, self).setUp()
+        super().setUp()
         self.site = AdminSite()
         self.user = UserFactory()
         self.request = MockRequest()

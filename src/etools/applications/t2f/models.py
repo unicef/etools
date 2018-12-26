@@ -710,7 +710,7 @@ class Invoice(models.Model):
             self.reference_number = '{}/{}/{:02d}'.format(self.business_area,
                                                           self.travel.reference_number,
                                                           invoice_counter)
-        super(Invoice, self).save(**kwargs)
+        super().save(**kwargs)
 
     @property
     def posting_key(self):

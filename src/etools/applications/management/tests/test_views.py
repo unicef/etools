@@ -117,7 +117,7 @@ class LoadResultStructureTest(BaseTenantTestCase):
 
 class TestActiveUser(BaseTenantTestCase):
     def setUp(self):
-        super(TestActiveUser, self).setUp()
+        super().setUp()
         self.unicef_staff = UserFactory(is_staff=True)
 
     def test_get(self):
@@ -135,7 +135,7 @@ class TestActiveUser(BaseTenantTestCase):
 
 class TestAgreementsStatisticsView(BaseTenantTestCase):
     def setUp(self):
-        super(TestAgreementsStatisticsView, self).setUp()
+        super().setUp()
         self.unicef_staff = UserFactory(is_staff=True)
 
     def test_get(self):
@@ -160,7 +160,7 @@ class TestPortalDashView(BaseTenantTestCase):
 
 class TestGisLocationViews(BaseTenantTestCase):
     def setUp(self):
-        super(TestGisLocationViews, self).setUp()
+        super().setUp()
 
         self.unicef_staff = UserFactory(is_superuser=True)
         group = GroupFactory()

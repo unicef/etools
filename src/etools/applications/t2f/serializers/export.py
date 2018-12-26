@@ -6,7 +6,7 @@ from rest_framework import serializers
 
 class YesOrEmptyField(serializers.BooleanField):
     def to_representation(self, value):
-        value = super(YesOrEmptyField, self).to_representation(value)
+        value = super().to_representation(value)
         if value:
             return ugettext('Yes')
         return ''
@@ -14,7 +14,7 @@ class YesOrEmptyField(serializers.BooleanField):
 
 class YesOrNoField(serializers.BooleanField):
     def to_representation(self, value):
-        value = super(YesOrNoField, self).to_representation(value)
+        value = super().to_representation(value)
         if value:
             return ugettext('Yes')
         return ugettext('No')
@@ -121,7 +121,7 @@ class TravelAdminExportSerializer(serializers.Serializer):
         return getattr(obj.airlines.order_by('id').last(), 'name', None)
 
     def to_representation(self, instance):
-        data = super(TravelAdminExportSerializer, self).to_representation(instance)
+        data = super().to_representation(instance)
         if 'dsa_area' not in data or not data['dsa_area']:
             data['dsa_area'] = 'NODSA'
         return data

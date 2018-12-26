@@ -254,7 +254,7 @@ class TestEngagementsListViewSet(EngagementTransitionsTestCaseMixin, BaseTenantT
 
     @classmethod
     def setUpTestData(cls):
-        super(TestEngagementsListViewSet, cls).setUpTestData()
+        super().setUpTestData()
         cls.second_engagement = cls.engagement_factory()
 
     def _test_list(self, user, engagements=None, filter_params=None, expected_status=status.HTTP_200_OK):
@@ -423,7 +423,7 @@ class BaseTestEngagementsCreateViewSet(EngagementTransitionsTestCaseMixin):
     endpoint = 'engagements'
 
     def setUp(self):
-        super(BaseTestEngagementsCreateViewSet, self).setUp()
+        super().setUp()
         self.create_data = {
             'end_date': self.engagement.end_date,
             'start_date': self.engagement.start_date,
@@ -494,7 +494,7 @@ class SpecialAuditCreateViewSet(BaseTestEngagementsCreateViewSet, BaseTenantTest
     engagement_factory = SpecialAuditFactory
 
     def setUp(self):
-        super(SpecialAuditCreateViewSet, self).setUp()
+        super().setUp()
         self.create_data['specific_procedures'] = [
             {
                 'description': sp.description,
@@ -749,7 +749,7 @@ class TestAuditMetadataDetailViewSet(TestMetadataDetailViewSet, BaseTenantTestCa
 
 class TestAuditorFirmViewSet(AuditTestCaseMixin, BaseTenantTestCase):
     def setUp(self):
-        super(TestAuditorFirmViewSet, self).setUp()
+        super().setUp()
         self.second_auditor_firm = AuditPartnerFactory()
 
     def _test_list_view(self, user, expected_firms=None, expected_status=status.HTTP_200_OK):
@@ -1117,7 +1117,7 @@ class TestEngagementCSVExportViewSet(EngagementTransitionsTestCaseMixin, BaseTen
 
     @classmethod
     def setUpTestData(cls):
-        super(TestEngagementCSVExportViewSet, cls).setUpTestData()
+        super().setUpTestData()
         call_command('tenant_loaddata', 'audit_risks_blueprints', verbosity=0)
 
     def test_csv_view(self):

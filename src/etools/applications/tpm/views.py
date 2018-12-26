@@ -119,7 +119,7 @@ class TPMPartnerViewSet(
     )
 
     def get_queryset(self):
-        queryset = super(TPMPartnerViewSet, self).get_queryset()
+        queryset = super().get_queryset()
 
         if getattr(self, 'action', None) == 'list':
             queryset = queryset.country_partners()
@@ -137,7 +137,7 @@ class TPMPartnerViewSet(
         return queryset
 
     def get_permission_context(self):
-        context = super(TPMPartnerViewSet, self).get_permission_context()
+        context = super().get_permission_context()
 
         if ThirdPartyMonitor.as_group() in self.request.user.groups.all() and \
            hasattr(self.request.user, 'tpmpartners_tpmpartnerstaffmember'):
@@ -190,7 +190,9 @@ class TPMPartnerViewSet(
 
     @action(detail=False, methods=['get'], url_path='export', renderer_classes=(TPMPartnerCSVRenderer,))
     def export(self, request, *args, **kwargs):
-        tpm_partners = self.filter_queryset(TPMPartner.objects.all().order_by('vendor_number'))
+        tpm_partners = self.filter_queryset(
+            TPMPartner.objects.filter(countries__id__contains=request.user.profile.country.id).order_by('vendor_number')
+        )
         serializer = TPMPartnerExportSerializer(tpm_partners, many=True)
         return Response(serializer.data, headers={
             'Content-Disposition': 'attachment;filename=tpm_vendors_{}.csv'.format(timezone.now().date())
@@ -247,7 +249,7 @@ class ImplementingPartnerView(generics.ListAPIView):
     visits = None
 
     def get_queryset(self):
-        queryset = super(ImplementingPartnerView, self).get_queryset()
+        queryset = super().get_queryset()
 
         if self.visits is not None:
             queryset = queryset.filter(activity__in=self.visits.values_list(
@@ -267,7 +269,7 @@ class VisitsSectionView(generics.ListAPIView):
     visits = None
 
     def get_queryset(self):
-        queryset = super(VisitsSectionView, self).get_queryset()
+        queryset = super().get_queryset()
 
         if self.visits is not None:
             queryset = queryset.filter(tpm_activities__tpm_visit__in=self.visits).distinct()
@@ -286,7 +288,7 @@ class VisitsCPOutputView(generics.ListAPIView):
     visits = None
 
     def get_queryset(self):
-        queryset = super(VisitsCPOutputView, self).get_queryset()
+        queryset = super().get_queryset()
 
         if self.visits is not None:
             queryset = queryset.filter(activity__in=self.visits.values_list(
@@ -326,7 +328,7 @@ class TPMVisitViewSet(
     filter_class = TPMVisitFilter
 
     def get_queryset(self):
-        queryset = super(TPMVisitViewSet, self).get_queryset().distinct()
+        queryset = super().get_queryset().distinct()
 
         user_groups = self.request.user.groups.all()
 
@@ -351,7 +353,7 @@ class TPMVisitViewSet(
                 'pk' in self.kwargs and \
                 self.get_object().status == TPMVisit.STATUSES.draft:
             return TPMVisitDraftSerializer
-        return super(TPMVisitViewSet, self).get_serializer_class()
+        return super().get_serializer_class()
 
     @action(detail=False, methods=['get'], url_path='activities/implementing-partners')
     def implementing_partners(self, request, *args, **kwargs):
@@ -381,7 +383,7 @@ class TPMVisitViewSet(
         })
 
     def get_permission_context(self):
-        context = super(TPMVisitViewSet, self).get_permission_context()
+        context = super().get_permission_context()
 
         if ThirdPartyMonitor.as_group() in self.request.user.groups.all() and \
            hasattr(self.request.user, 'tpmpartners_tpmpartnerstaffmember'):
@@ -684,12 +686,7 @@ class VisitAttachmentLinksView(BaseAttachmentLinksView):
 
     def get_queryset(self):
         self.set_content_object()
-        object_id_list = TPMActivity.objects.values_list(
-                "id",
-                flat=True
-            ).filter(
-                tpm_visit=self.object_id
-            )
+        object_id_list = TPMActivity.objects.values_list("id", flat=True).filter(tpm_visit=self.object_id)
         return AttachmentLink.objects.filter(
             content_type=self.activity_content_type,
             object_id__in=object_id_list,

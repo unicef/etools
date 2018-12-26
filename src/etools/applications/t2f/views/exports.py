@@ -31,7 +31,7 @@ class ExportBaseView(generics.GenericAPIView):
     renderer_classes = (renderers.CSVRenderer,)
 
     def get_renderer_context(self):
-        context = super(ExportBaseView, self).get_renderer_context()
+        context = super().get_renderer_context()
         context['header'] = self.serializer_class.Meta.fields
         return context
 

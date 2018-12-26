@@ -97,7 +97,7 @@ class InterventionPermissions(PMPPermissions):
         for example: in this case certain field are editable only when user adds an amendment. that means that we would
         need access to the old amendments, new amendments in order to check this.
         '''
-        super(InterventionPermissions, self).__init__(**kwargs)
+        super().__init__(**kwargs)
 
         # Inbound check flag is available here:
         # inbound_check = kwargs.get('inbound_check', False)
@@ -140,7 +140,7 @@ class AgreementPermissions(PMPPermissions):
         for example: in this case certain field are editable only when user adds an amendment. that means that we would
         need access to the old amendments, new amendments in order to check this.
         '''
-        super(AgreementPermissions, self).__init__(**kwargs)
+        super().__init__(**kwargs)
         inbound_check = kwargs.get('inbound_check', False)
 
         def user_added_amendment(instance):

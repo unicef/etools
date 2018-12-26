@@ -21,7 +21,7 @@ class AdminListMixin(object):
         self.search_fields = [field.name for field in model._meta.fields if isinstance(
             not field, (OneToOneField, ForeignKey, ManyToManyField)) and field.name not in self.exclude_fields]
 
-        super(AdminListMixin, self).__init__(model, admin_site)
+        super().__init__(model, admin_site)
 
     def is_deleted(self, obj):
         """
@@ -68,14 +68,14 @@ class DSARateUploadAdmin(admin.ModelAdmin):
             self.exclude = (
                 'errors',
             )
-        return super(DSARateUploadAdmin, self).get_form(request, obj, **kwargs)
+        return super().get_form(request, obj, **kwargs)
 
     def change_view(self, *args, **kwargs):
         extra_context = {}
         extra_context['show_save_and_continue'] = False
         extra_context['show_save_and_add_another'] = False
         extra_context['show_save'] = False
-        return super(DSARateUploadAdmin, self).change_view(extra_context=extra_context, *args, **kwargs)
+        return super().change_view(extra_context=extra_context, *args, **kwargs)
 
 
 class TravelAgentAdmin(AdminListMixin, admin.ModelAdmin):
@@ -108,19 +108,19 @@ class BusinessAreaAdmin(AdminListMixin, admin.ModelAdmin):
 
 class WBSAdmin(AdminListMixin, admin.ModelAdmin):
     def save_model(self, *args, **kwargs):
-        super(WBSAdmin, self).save_model(*args, **kwargs)
+        super().save_model(*args, **kwargs)
         WBSGrantFundView.list.invalidate()
 
 
 class GrantAdmin(AdminListMixin, admin.ModelAdmin):
     def save_model(self, *args, **kwargs):
-        super(GrantAdmin, self).save_model(*args, **kwargs)
+        super().save_model(*args, **kwargs)
         WBSGrantFundView.list.invalidate()
 
 
 class FundAdmin(AdminListMixin, admin.ModelAdmin):
     def save_model(self, *args, **kwargs):
-        super(FundAdmin, self).save_model(*args, **kwargs)
+        super().save_model(*args, **kwargs)
         WBSGrantFundView.list.invalidate()
 
 

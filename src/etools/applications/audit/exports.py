@@ -13,7 +13,7 @@ class BaseCSVRenderer(CSVRenderer):
     def render(self, data, *args, **kwargs):
         if 'results' in data:
             data = data['results']
-        return super(BaseCSVRenderer, self).render(data, *args, **kwargs)
+        return super().render(data, *args, **kwargs)
 
 
 class AuditorFirmCSVRenderer(BaseCSVRenderer):

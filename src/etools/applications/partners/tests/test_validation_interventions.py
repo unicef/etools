@@ -69,7 +69,7 @@ class TestTransitionToClosed(BaseTenantTestCase):
         cls.file_parnership_file_type = FileTypeFactory(name=FileType.FINAL_PARTNERSHIP_REVIEW)
 
     def setUp(self):
-        super(TestTransitionToClosed, self).setUp()
+        super().setUp()
         self.expected = {
             'total_frs_amt': 0,
             'total_frs_amt_usd': 0,
@@ -630,7 +630,7 @@ class TestSignedDateValid(BaseTenantTestCase):
 
 class TestAmendmentsInvalid(BaseTenantTestCase):
     def setUp(self):
-        super(TestAmendmentsInvalid, self).setUp()
+        super().setUp()
         self.intervention = InterventionFactory(
             status=Intervention.DRAFT,
         )
@@ -708,7 +708,7 @@ class TestAmendmentsInvalid(BaseTenantTestCase):
 
 class TestSSFAgreementHasNoOtherIntervention(BaseTenantTestCase):
     def setUp(self):
-        super(TestSSFAgreementHasNoOtherIntervention, self).setUp()
+        super().setUp()
         self.agreement = AgreementFactory(
             agreement_type=Agreement.SSFA,
         )

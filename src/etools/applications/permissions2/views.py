@@ -59,7 +59,7 @@ class PermittedFSMActionMixin(PermissionContextMixin, FSMTransitionActionMixin):
     def check_transition_permission(self, transition, user):
         im_self = getattr(transition, 'im_self', getattr(transition, '__self__'))
         user._permission_context = self._collect_permission_context(instance=im_self)
-        return super(PermittedFSMActionMixin, self).check_transition_permission(transition, user)
+        return super().check_transition_permission(transition, user)
 
 
 class PermittedSerializerMixin(PermissionContextMixin):

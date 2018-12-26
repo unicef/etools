@@ -3,7 +3,7 @@ from rest_framework.utils import model_meta
 from rest_framework_recursive.fields import RecursiveField
 from unicef_restlib.fields import SeparatedReadWriteField
 
-from .models import Permission
+from etools.applications.permissions2.models import Permission
 
 
 class PermissionsBasedSerializerMixin(object):
@@ -103,12 +103,12 @@ class PermissionsBasedSerializerMixin(object):
 
     @property
     def _writable_fields(self):
-        fields = super(PermissionsBasedSerializerMixin, self)._writable_fields
+        fields = super()._writable_fields
 
         return self._filter_fields_by_permissions(fields, Permission.PERMISSIONS.edit)
 
     @property
     def _readable_fields(self):
-        fields = super(PermissionsBasedSerializerMixin, self)._readable_fields
+        fields = super()._readable_fields
 
         return self._filter_fields_by_permissions(fields, Permission.PERMISSIONS.view)

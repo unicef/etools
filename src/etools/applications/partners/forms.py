@@ -22,7 +22,7 @@ class PartnersAdminForm(AutoSizeTextForm):
         fields = '__all__'
 
     def clean(self):
-        cleaned_data = super(PartnersAdminForm, self).clean()
+        cleaned_data = super().clean()
 
         partner_type = cleaned_data.get(u'partner_type')
         cso_type = cleaned_data.get(u'cso_type')
@@ -46,14 +46,14 @@ class PartnerStaffMemberForm(forms.ModelForm):
     }
 
     def __init__(self, *args, **kwargs):
-        super(PartnerStaffMemberForm, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
 
     class Meta:
         model = PartnerStaffMember
         fields = '__all__'
 
     def clean(self):
-        cleaned_data = super(PartnerStaffMemberForm, self).clean()
+        cleaned_data = super().clean()
         email = cleaned_data.get('email', "")
         active = cleaned_data.get('active')
         validate_email(email)

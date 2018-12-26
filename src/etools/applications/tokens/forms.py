@@ -16,7 +16,7 @@ class EmailLoginForm(forms.Form):
     def __init__(self, *args, **kwargs):
         self.request = kwargs.pop('request', None)
         self.user_cache = None
-        super(EmailLoginForm, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
 
     def clean(self):
         if self.errors:
