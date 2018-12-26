@@ -1,8 +1,8 @@
 
 import json
 
-from django.urls import reverse
 from django.test.utils import override_settings
+from django.urls import reverse
 
 from etools.applications.EquiTrack.tests.cases import BaseTenantTestCase
 from etools.applications.users.tests.factories import UserFactory
