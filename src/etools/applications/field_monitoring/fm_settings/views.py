@@ -200,10 +200,10 @@ class PlannedCheckListItemViewSet(
     serializer_class = PlannedCheckListItemSerializer
 
     def get_parent_filter(self):
-        return {'cp_output_config_id': self.kwargs['cp_output_config_pk']}
+        return {'cp_output_config_id': self.kwargs.get('cp_output_config_pk')}
 
     def get_parent_object(self):
-        return CPOutputConfig.objects.get(pk=self.kwargs['cp_output_config_pk'])
+        return CPOutputConfig.objects.filter(pk=self.kwargs.get('cp_output_config_pk')).first()
 
     def get_object(self):
         queryset = self.filter_queryset(self.get_queryset())
