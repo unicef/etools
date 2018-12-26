@@ -105,7 +105,7 @@ class CheckListExportSerializer(serializers.Serializer):
 
         data = [
             '{info.partner.name}: {info.specific_details}'.format(info=info)
-            for info in obj.partners_info.all()
+            for info in partners_info
         ]
         return ', '.join(data)
 
