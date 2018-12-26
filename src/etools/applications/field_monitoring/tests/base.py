@@ -11,5 +11,7 @@ class FMBaseTestCaseMixin(object):
 
         self.unicef_user = UserFactory(first_name='UNICEF User', unicef_user=True,
                                        profile__countries_available=[connection.tenant])
+        self.fm_user = UserFactory(first_name='Field Monitoring User', fm_user=True,
+                                   profile__countries_available=[connection.tenant])
         self.usual_user = UserFactory(first_name='Unknown user',
                                       profile__countries_available=[connection.tenant])

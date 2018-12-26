@@ -11,6 +11,7 @@ from etools.applications.partners.serializers.partner_organization_v2 import Min
 from etools.applications.field_monitoring.fm_settings.models import CPOutputConfig, PlannedCheckListItem, \
     PlannedCheckListItemPartnerInfo
 from etools.applications.partners.models import Intervention
+from etools.applications.permissions_simplified.serializers import SafeReadOnlySerializerMixin
 from etools.applications.reports.models import Result
 from etools.applications.reports.serializers.v2 import OutputListSerializer
 from etools.applications.utils.common.urlresolvers import build_frontend_url
@@ -76,7 +77,7 @@ class NestedCPOutputSerializer(ResultSerializer):
         return [InterventionSerializer(link.intervention).data for link in obj.intervention_links.all()]
 
 
-class CPOutputConfigDetailSerializer(CPOutputConfigSerializer):
+class CPOutputConfigDetailSerializer(SafeReadOnlySerializerMixin, CPOutputConfigSerializer):
     cp_output = NestedCPOutputSerializer()
     partners = serializers.SerializerMethodField()
 
@@ -93,7 +94,7 @@ class CPOutputConfigDetailSerializer(CPOutputConfigSerializer):
         ]
 
 
-class FieldMonitoringCPOutputSerializer(WritableNestedSerializerMixin, serializers.ModelSerializer):
+class FieldMonitoringCPOutputSerializer(SafeReadOnlySerializerMixin, WritableNestedSerializerMixin, serializers.ModelSerializer):
     fm_config = CPOutputConfigSerializer()
     interventions = serializers.SerializerMethodField(label=_('Contributing CSO Partners & PD/SSFAs'))
 
@@ -105,7 +106,8 @@ class FieldMonitoringCPOutputSerializer(WritableNestedSerializerMixin, serialize
         return [InterventionSerializer(link.intervention).data for link in obj.intervention_links.all()]
 
 
-class PlannedCheckListItemPartnerInfoSerializer(WritableNestedSerializerMixin, serializers.ModelSerializer):
+class PlannedCheckListItemPartnerInfoSerializer(SafeReadOnlySerializerMixin,
+                                                WritableNestedSerializerMixin, serializers.ModelSerializer):
     partner = SeparatedReadWriteField(read_field=MinimalPartnerOrganizationListSerializer())
 
     class Meta(WritableNestedSerializerMixin.Meta):
@@ -113,7 +115,8 @@ class PlannedCheckListItemPartnerInfoSerializer(WritableNestedSerializerMixin, s
         fields = ('id', 'partner', 'specific_details', 'standard_url',)
 
 
-class PlannedCheckListItemSerializer(WritableNestedSerializerMixin, serializers.ModelSerializer):
+class PlannedCheckListItemSerializer(SafeReadOnlySerializerMixin, WritableNestedSerializerMixin,
+                                     serializers.ModelSerializer):
     partners_info = PlannedCheckListItemPartnerInfoSerializer(many=True)
 
     class Meta(WritableNestedSerializerMixin.Meta):
