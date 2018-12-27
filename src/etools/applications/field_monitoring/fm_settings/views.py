@@ -35,7 +35,7 @@ from etools.applications.field_monitoring.fm_settings.serializers.methods import
 from etools.applications.field_monitoring.shared.models import FMMethod
 from etools.applications.field_monitoring.views import FMBaseViewSet, FMBaseAttachmentsViewSet
 from etools.applications.field_monitoring.metadata import PermissionBasedMetadata
-from etools.applications.field_monitoring.permissions import UserIsFieldMonitor
+from etools.applications.field_monitoring.permissions import UserIsFieldMonitor, IsPME
 from etools.applications.partners.models import PartnerOrganization
 from etools.applications.permissions_simplified.views import SimplePermittedViewSetMixin
 from etools.applications.reports.models import Result, ResultType
@@ -75,7 +75,7 @@ class LocationSitesViewSet(
     SimplePermittedViewSetMixin,
     viewsets.ModelViewSet,
 ):
-    write_permission_classes = [UserIsFieldMonitor]
+    write_permission_classes = [IsPME]
     metadata_class = PermissionBasedMetadata
     queryset = LocationSite.objects.prefetch_related('parent').order_by('parent__name', 'name')
     serializer_class = LocationSiteSerializer
