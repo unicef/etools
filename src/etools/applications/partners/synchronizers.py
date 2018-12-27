@@ -265,17 +265,7 @@ class PartnerSynchronizer(VisionDataSynchronizer):
 
     @staticmethod
     def get_partner_rating(partner):
-
-        allowed_risk_rating = {
-            'High': PartnerOrganization.RATING_HIGH,
-            'Significant': PartnerOrganization.RATING_SIGNIFICANT,
-            'Medium': PartnerOrganization.RATING_MEDIUM,
-            'Low': PartnerOrganization.RATING_LOW,
-            'Not Required': PartnerOrganization.RATING_NOT_REQUIRED,
-        }
-
-        print(allowed_risk_rating.get(partner.get('RISK_RATING', ''), ''))
-
+        allowed_risk_rating = dict([(x[1], x[0]) for x in PartnerOrganization.RISK_RATINGS])
         return allowed_risk_rating.get(partner.get('RISK_RATING', ''), '')
 
     @staticmethod
