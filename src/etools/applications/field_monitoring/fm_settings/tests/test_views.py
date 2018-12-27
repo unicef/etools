@@ -258,6 +258,25 @@ class LocationSitesViewTestCase(FMBaseTestCaseMixin, BaseTenantTestCase):
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         self.assertIsNotNone(response.data['parent'])
 
+    def test_create_pme(self):
+        site = LocationSiteFactory()
+
+        response = self.forced_auth_req(
+            'post', reverse('field_monitoring_settings:sites-list'),
+            user=self.pme,
+            data={
+                'name': site.name,
+                'security_detail': site.security_detail,
+                'point': {
+                    "type": "Point",
+                    "coordinates": [125.6, 10.1]
+                }
+            }
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        self.assertIsNotNone(response.data['parent'])
+
     def test_create_unicef(self):
         response = self.forced_auth_req(
             'post', reverse('field_monitoring_settings:sites-list'),
@@ -286,6 +305,16 @@ class LocationSitesViewTestCase(FMBaseTestCaseMixin, BaseTenantTestCase):
         response = self.forced_auth_req(
             'delete', reverse('field_monitoring_settings:sites-detail', args=[instance.id]),
             user=self.fm_user,
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
+
+    def test_destroy_pme(self):
+        instance = LocationSiteFactory()
+
+        response = self.forced_auth_req(
+            'delete', reverse('field_monitoring_settings:sites-detail', args=[instance.id]),
+            user=self.pme,
         )
 
         self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)

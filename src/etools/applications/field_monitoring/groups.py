@@ -6,3 +6,6 @@ UNICEFUser = GroupWrapper(code='unicef_user',
 
 FMUser = GroupWrapper(code='fm_user',
                       name='FM User')
+
+PME = GroupWrapper(code='pme',
+                   name='PME')
