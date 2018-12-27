@@ -13,7 +13,7 @@ from etools.applications.field_monitoring.shared.models import FMMethod
 from etools.applications.partners.models import PartnerType
 from etools.applications.partners.tests.factories import PartnerFactory, InterventionResultLinkFactory
 from etools.applications.reports.models import ResultType, CountryProgramme
-from etools.applications.reports.tests.factories import ResultFactory, CountryProgrammeFactory
+from etools.applications.reports.tests.factories import ResultFactory, CountryProgrammeFactory, SectionFactory
 from etools.applications.users.tests.factories import UserFactory
 
 
@@ -51,6 +51,7 @@ class CPOutputConfigFactory(factory.DjangoModelFactory):
 
     interventions__count = 1
     government_partners__count = 1
+    sections__count = 0
 
     class Meta:
         model = CPOutputConfig
@@ -77,6 +78,14 @@ class CPOutputConfigFactory(factory.DjangoModelFactory):
 
         if extracted:
             self.government_partners.add(*extracted)
+
+    @factory.post_generation
+    def sections(self, created, extracted, count, **kwargs):
+        if created:
+            self.sections.add(*[SectionFactory() for i in range(count)])
+
+        if extracted:
+            self.sections.add(*extracted)
 
 
 class CheckListCategoryFactory(factory.DjangoModelFactory):

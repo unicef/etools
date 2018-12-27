@@ -5,7 +5,7 @@ from model_utils.models import TimeStampedModel
 
 from etools.applications.field_monitoring.fm_settings.models import CheckListItem, FMMethodType
 from etools.applications.field_monitoring.shared.models import FMMethod
-from etools.applications.reports.models import ResultType
+from etools.applications.reports.models import ResultType, Sector
 
 
 class CPOutputConfig(TimeStampedModel):
@@ -17,6 +17,7 @@ class CPOutputConfig(TimeStampedModel):
     government_partners = models.ManyToManyField('partners.PartnerOrganization', blank=True,
                                                  verbose_name=_('Contributing Government Partners'))
     recommended_method_types = models.ManyToManyField(FMMethodType, blank=True, verbose_name=_('Method(s)'))
+    sections = models.ManyToManyField(Sector, blank=True, verbose_name=_('Sections'))
 
     class Meta:
         verbose_name = _('CP Output Config')
