@@ -1,4 +1,3 @@
-
 import json
 from collections import defaultdict
 from datetime import datetime, timedelta
@@ -14,7 +13,7 @@ from etools.applications.publics.tests.factories import (
     PublicsTravelExpenseTypeFactory,
     PublicsWBSFactory,
 )
-from etools.applications.t2f.models import Invoice, ModeOfTravel, Travel
+from etools.applications.t2f.models import ModeOfTravel, Travel
 from etools.applications.t2f.tests.factories import TravelFactory
 from etools.applications.users.tests.factories import UserFactory
 
