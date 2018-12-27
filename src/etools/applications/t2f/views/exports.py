@@ -10,7 +10,6 @@ from unicef_restlib.views import QueryStringFilterMixin
 
 from etools.applications.t2f.filters import travel_list
 from etools.applications.t2f.models import InvoiceItem, ItineraryItem, Travel, TravelActivity
-
 from etools.applications.t2f.serializers.export import (
     FinanceExportSerializer,
     InvoiceExportSerializer,

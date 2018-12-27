@@ -6,10 +6,10 @@ from django.urls import reverse
 
 import factory
 from pytz import UTC
+from unicef_locations.tests.factories import LocationFactory
 
 from etools.applications.EquiTrack.tests.cases import BaseTenantTestCase
 from etools.applications.EquiTrack.tests.mixins import URLAssertionMixin
-from unicef_locations.tests.factories import LocationFactory
 from etools.applications.partners.models import PartnerType
 from etools.applications.partners.tests.factories import InterventionFactory, PartnerFactory
 from etools.applications.publics.models import DSARegion
