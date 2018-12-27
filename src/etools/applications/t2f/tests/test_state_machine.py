@@ -2,10 +2,8 @@
 import json
 from collections import defaultdict
 from datetime import datetime, timedelta
-from decimal import Decimal
 
 from django.core import mail
-from django.test.utils import override_settings
 from django.urls import reverse
 
 from etools.applications.EquiTrack.tests.cases import BaseTenantTestCase
@@ -38,20 +36,10 @@ class StateMachineTest(BaseTenantTestCase):
 
         # mapping == {source: [target list]}
         expected = {'*': ['planned'],
-                    'approved': ['sent_for_payment',
-                                 'cancelled',
+                    'approved': ['cancelled',
                                  'completed'],
                     'cancelled': ['submitted',
                                   'planned',
-                                  'completed'],
-                    'certification_approved': ['certification_rejected',
-                                               'certified'],
-                    'certification_rejected': ['certification_submitted'],
-                    'certification_submitted': ['certification_rejected',
-                                                'certification_approved'],
-                    'certified': ['sent_for_payment',
-                                  'certification_submitted',
-                                  'cancelled',
                                   'completed'],
                     'planned': ['submitted',
                                 'cancelled',
@@ -59,11 +47,6 @@ class StateMachineTest(BaseTenantTestCase):
                     'rejected': ['submitted',
                                  'planned',
                                  'cancelled'],
-                    'sent_for_payment': ['sent_for_payment',
-                                         'submitted',
-                                         'certified',
-                                         'certification_submitted',
-                                         'cancelled'],
                     'submitted': ['rejected',
                                   'cancelled',
                                   'approved',
@@ -128,7 +111,7 @@ class StateMachineTest(BaseTenantTestCase):
 
         response = self.forced_auth_req('post', reverse('t2f:travels:details:state_change',
                                                         kwargs={'travel_pk': travel_id,
-                                                                'transition_name': 'submit_for_approval'}),
+                                                                'transition_name': Travel.SUBMIT_FOR_APPROVAL}),
                                         data=data, user=self.traveler)
         response_json = json.loads(response.rendered_content)
 
@@ -138,40 +121,15 @@ class StateMachineTest(BaseTenantTestCase):
 
         response = self.forced_auth_req('post', reverse('t2f:travels:details:state_change',
                                                         kwargs={'travel_pk': travel_id,
-                                                                'transition_name': 'approve'}),
+                                                                'transition_name': Travel.APPROVE}),
                                         data=response_json, user=self.traveler)
         response_json = json.loads(response.rendered_content)
 
-        response = self.forced_auth_req('post', reverse('t2f:travels:details:state_change',
-                                                        kwargs={'travel_pk': travel_id,
-                                                                'transition_name': 'send_for_payment'}),
-                                        data=response_json, user=self.traveler)
-        response_json = json.loads(response.rendered_content)
+        self.assertEqual(response_json['status'], Travel.APPROVED)
 
         response = self.forced_auth_req('post', reverse('t2f:travels:details:state_change',
                                                         kwargs={'travel_pk': travel_id,
-                                                                'transition_name': 'mark_as_certified'}),
-                                        data=response_json, user=self.traveler)
-
-        response_json = json.loads(response.rendered_content)
-        self.assertEqual(response_json['non_field_errors'], ['Your TA has pending payments to be processed through '
-                                                             'VISION. Until payments are completed, you can not certify'
-                                                             ' your TA. Please check with your Finance focal point on '
-                                                             'how to proceed.'])
-
-        travel = Travel.objects.get(id=travel_id)
-        travel.invoices.all().update(status=Invoice.SUCCESS)
-
-        response = self.forced_auth_req('post', reverse('t2f:travels:details:state_change',
-                                                        kwargs={'travel_pk': travel_id,
-                                                                'transition_name': 'mark_as_certified'}),
-                                        data=data, user=self.traveler)
-        response_json = json.loads(response.rendered_content)
-        self.assertEqual(response_json['status'], Travel.CERTIFIED)
-
-        response = self.forced_auth_req('post', reverse('t2f:travels:details:state_change',
-                                                        kwargs={'travel_pk': travel_id,
-                                                                'transition_name': 'mark_as_completed'}),
+                                                                'transition_name': Travel.COMPLETE}),
                                         data=data, user=self.traveler)
         response_json = json.loads(response.rendered_content)
         self.assertEqual(response_json['non_field_errors'], ['Field report has to be filled.'])
@@ -180,7 +138,7 @@ class StateMachineTest(BaseTenantTestCase):
         travel.report_note = None   # This has to be set explicitly since serializer does not accept None
         response = self.forced_auth_req('post', reverse('t2f:travels:details:state_change',
                                                         kwargs={'travel_pk': travel_id,
-                                                                'transition_name': 'mark_as_completed'}),
+                                                                'transition_name': Travel.COMPLETE}),
                                         data=data, user=self.traveler)
         response_json = json.loads(response.rendered_content)
         self.assertEqual(response_json['non_field_errors'], ['Field report has to be filled.'])
@@ -195,8 +153,7 @@ class StateMachineTest(BaseTenantTestCase):
         response_json = json.loads(response.rendered_content)
         self.assertEqual(response_json['status'], Travel.COMPLETED)
 
-    @override_settings(DISABLE_INVOICING=True)
-    def test_state_machine_flow_invoice_disabled(self):
+    def test_state_machine_flow2(self):
         currency = PublicsCurrencyFactory()
         expense_type = PublicsTravelExpenseTypeFactory()
         business_area = PublicsBusinessAreaFactory()
@@ -265,7 +222,7 @@ class StateMachineTest(BaseTenantTestCase):
                                         data=response_json, user=self.traveler)
         response_json = json.loads(response.rendered_content)
         # Go straight to sent for payment when invoicing is disabled.
-        self.assertEqual(response_json['status'], Travel.SENT_FOR_PAYMENT)
+        self.assertEqual(response_json['status'], Travel.APPROVED)
 
         # No email has been sent regarding SENT_FOR_PAYMENT status when invoicing is disabled.
         subjects = [x.subject for x in mail.outbox]
@@ -273,16 +230,7 @@ class StateMachineTest(BaseTenantTestCase):
 
         response = self.forced_auth_req('post', reverse('t2f:travels:details:state_change',
                                                         kwargs={'travel_pk': travel_id,
-                                                                'transition_name': 'mark_as_certified'}),
-                                        data=response_json, user=self.traveler)
-
-        response_json = json.loads(response.rendered_content)
-        # No pending invoice check when invoicing is disabled.
-        self.assertEqual(response_json['status'], Travel.CERTIFIED)
-
-        response = self.forced_auth_req('post', reverse('t2f:travels:details:state_change',
-                                                        kwargs={'travel_pk': travel_id,
-                                                                'transition_name': 'mark_as_completed'}),
+                                                                'transition_name': Travel.COMPLETE}),
                                         data=data, user=self.traveler)
         response_json = json.loads(response.rendered_content)
         self.assertEqual(response_json['non_field_errors'], ['Field report has to be filled.'])
@@ -292,7 +240,7 @@ class StateMachineTest(BaseTenantTestCase):
         travel.report_note = None   # This has to be set explicitly since serializer does not accept None
         response = self.forced_auth_req('post', reverse('t2f:travels:details:state_change',
                                                         kwargs={'travel_pk': travel_id,
-                                                                'transition_name': 'mark_as_completed'}),
+                                                                'transition_name': Travel.COMPLETE}),
                                         data=data, user=self.traveler)
         response_json = json.loads(response.rendered_content)
         self.assertEqual(response_json['non_field_errors'], ['Field report has to be filled.'])
@@ -302,7 +250,7 @@ class StateMachineTest(BaseTenantTestCase):
         data['report'] = 'Something'
         response = self.forced_auth_req('post', reverse('t2f:travels:details:state_change',
                                                         kwargs={'travel_pk': travel_id,
-                                                                'transition_name': 'mark_as_completed'}),
+                                                                'transition_name': Travel.COMPLETE}),
                                         data=data, user=self.traveler)
         response_json = json.loads(response.rendered_content)
         self.assertEqual(response_json['status'], Travel.COMPLETED)
@@ -316,7 +264,7 @@ class StateMachineTest(BaseTenantTestCase):
                 'end_date': datetime.utcnow() + timedelta(hours=10),
                 'supervisor': self.unicef_staff.id}
         response = self.forced_auth_req('post', reverse('t2f:travels:list:state_change',
-                                                        kwargs={'transition_name': 'mark_as_completed'}),
+                                                        kwargs={'transition_name': Travel.COMPLETE}),
                                         data=data, user=self.unicef_staff)
         self.assertEqual(response.status_code, 201)
         response_json = json.loads(response.rendered_content)
@@ -341,21 +289,21 @@ class StateMachineTest(BaseTenantTestCase):
 
         response = self.forced_auth_req('post', reverse('t2f:travels:details:state_change',
                                                         kwargs={'travel_pk': response_json['id'],
-                                                                'transition_name': 'reject'}),
+                                                                'transition_name': Travel.REJECT}),
                                         data=response_json, user=self.unicef_staff)
         self.assertEqual(response.status_code, 200)
         response_json = json.loads(response.rendered_content)
 
         response = self.forced_auth_req('post', reverse('t2f:travels:details:state_change',
                                                         kwargs={'travel_pk': response_json['id'],
-                                                                'transition_name': 'submit_for_approval'}),
+                                                                'transition_name': Travel.SUBMIT_FOR_APPROVAL}),
                                         data=response_json, user=self.unicef_staff)
         self.assertEqual(response.status_code, 200)
         response_json = json.loads(response.rendered_content)
 
         response = self.forced_auth_req('post', reverse('t2f:travels:details:state_change',
                                                         kwargs={'travel_pk': response_json['id'],
-                                                                'transition_name': 'mark_as_completed'}),
+                                                                'transition_name': Travel.COMPLETE}),
                                         data=response_json, user=self.unicef_staff)
         self.assertEqual(response.status_code, 200)
         response_json = json.loads(response.rendered_content)
@@ -376,7 +324,7 @@ class StateMachineTest(BaseTenantTestCase):
 
         response = self.forced_auth_req('post', reverse('t2f:travels:details:state_change',
                                                         kwargs={'travel_pk': response_json['id'],
-                                                                'transition_name': 'mark_as_completed'}),
+                                                                'transition_name': Travel.COMPLETE}),
                                         data=response_json, user=self.unicef_staff)
         self.assertEqual(response.status_code, 200)
         response_json = json.loads(response.rendered_content)
@@ -389,7 +337,7 @@ class StateMachineTest(BaseTenantTestCase):
                 'report': 'something',
                 'supervisor': self.unicef_staff.id}
         response = self.forced_auth_req('post', reverse('t2f:travels:list:state_change',
-                                                        kwargs={'transition_name': 'mark_as_completed'}),
+                                                        kwargs={'transition_name': Travel.COMPLETE}),
                                         data=data, user=self.unicef_staff)
         self.assertEqual(response.status_code, 400)
         response_json = json.loads(response.rendered_content)
@@ -456,13 +404,4 @@ class StateMachineTest(BaseTenantTestCase):
                                                         kwargs={'travel_pk': travel_id,
                                                                 'transition_name': 'approve'}),
                                         data=response_json, user=self.unicef_staff)
-        response_json = json.loads(response.rendered_content)
-
-        response = self.forced_auth_req('post', reverse('t2f:travels:details:state_change',
-                                                        kwargs={'travel_pk': travel_id,
-                                                                'transition_name': 'send_for_payment'}),
-                                        data=response_json, user=self.unicef_staff)
-        response_json = json.loads(response.rendered_content)
         self.assertEqual(response.status_code, 200)
-        self.assertEqual(Decimal(response_json['cost_summary']['preserved_expenses']),
-                         Decimal('0.00'))

@@ -48,7 +48,6 @@ class OverlappingTravelsTest(BaseTenantTestCase):
         ItineraryItemFactory(travel=cls.travel)
         cls.travel.submit_for_approval()
         cls.travel.approve()
-        cls.travel.send_for_payment()
         cls.travel.save()
 
     def test_overlapping_trips(self):
@@ -97,7 +96,7 @@ class OverlappingTravelsTest(BaseTenantTestCase):
         with freeze_time(datetime(2017, 4, 14, 16, 00, tzinfo=UTC)):
             response = self.forced_auth_req('post', reverse('t2f:travels:details:state_change',
                                                             kwargs={'travel_pk': travel_id,
-                                                                    'transition_name': 'submit_for_approval'}),
+                                                                    'transition_name': Travel.SUBMIT_FOR_APPROVAL}),
                                             data=response_json, user=self.traveler)
         response_json = json.loads(response.rendered_content)
         self.assertEqual(response_json,
@@ -154,22 +153,11 @@ class OverlappingTravelsTest(BaseTenantTestCase):
         with freeze_time(datetime(2017, 4, 14, 16, 00, tzinfo=UTC)):
             response = self.forced_auth_req('post', reverse('t2f:travels:details:state_change',
                                                             kwargs={'travel_pk': response_json['id'],
-                                                                    'transition_name': 'submit_for_approval'}),
+                                                                    'transition_name': Travel.SUBMIT_FOR_APPROVAL}),
                                             data=response_json, user=self.traveler)
         # No error should appear, expected 200
         response_json = json.loads(response.rendered_content)
         self.assertEqual(response.status_code, 200, response_json)
-        response_json = json.loads(response.rendered_content)
-
-        travel = Travel.objects.get(id=response_json['id'])
-        travel.approve()
-        travel.save()
-
-        response = self.forced_auth_req('post', reverse('t2f:travels:details:state_change',
-                                                        kwargs={'travel_pk': response_json['id'],
-                                                                'transition_name': 'send_for_payment'}),
-                                        data=response_json, user=self.traveler)
-        self.assertEqual(response.status_code, 200)
 
     def test_edit_to_overlap(self):
         currency = PublicsCurrencyFactory()
@@ -215,7 +203,7 @@ class OverlappingTravelsTest(BaseTenantTestCase):
         with freeze_time(datetime(2017, 4, 14, 16, 00, tzinfo=UTC)):
             response = self.forced_auth_req('post', reverse('t2f:travels:details:state_change',
                                                             kwargs={'travel_pk': response_json['id'],
-                                                                    'transition_name': 'submit_for_approval'}),
+                                                                    'transition_name': Travel.SUBMIT_FOR_APPROVAL}),
                                             data=response_json, user=self.traveler)
         response_json = json.loads(response.rendered_content)
         self.assertEqual(response.status_code, 200, response_json)
@@ -251,7 +239,7 @@ class OverlappingTravelsTest(BaseTenantTestCase):
 
         response = self.forced_auth_req('patch', reverse('t2f:travels:details:state_change',
                                                          kwargs={'travel_pk': response_json['id'],
-                                                                 'transition_name': 'submit_for_approval'}),
+                                                                 'transition_name': Travel.SUBMIT_FOR_APPROVAL}),
                                         data=response_json, user=self.traveler)
         response_json = json.loads(response.rendered_content)
         self.assertEqual(response_json,

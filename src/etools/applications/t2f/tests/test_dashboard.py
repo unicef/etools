@@ -80,7 +80,7 @@ class TravelActivityList(BaseTenantTestCase):
 
         travel = TravelFactory(reference_number=make_travel_reference_number(),
                                traveler=traveler,
-                               status=Travel.CERTIFIED,
+                               status=Travel.APPROVED,
                                supervisor=self.unicef_staff)
         data = {'cost_assignments': [{'wbs': wbs.id,
                                       'grant': grant.id,
@@ -124,7 +124,7 @@ class TravelActivityList(BaseTenantTestCase):
         partner_spot_checks = PartnerOrganization.objects.get(id=act2.partner.id)
         response = self.forced_auth_req('post', reverse('t2f:travels:details:state_change',
                                                         kwargs={'travel_pk': travel.id,
-                                                                'transition_name': 'mark_as_completed'}),
+                                                                'transition_name': Travel.COMPLETE}),
                                         user=traveler, data=data)
 
         response_json = json.loads(response.rendered_content)

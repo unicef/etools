@@ -173,26 +173,15 @@ class PermissionMatrixSetter(object):
         qs = TravelPermission.objects.filter(user_type=UserTypes.TRAVELER)
 
         self.revoke_edit(qs.filter(model='travel', field='traveler'))
-        status_where_hide = [Travel.PLANNED,
-                             Travel.SUBMITTED,
-                             Travel.APPROVED,
-                             Travel.CANCELLED,
-                             Travel.REJECTED]
+        status_where_hide = [Travel.PLANNED, Travel.SUBMITTED, Travel.APPROVED, Travel.CANCELLED, Travel.REJECTED]
 
         q = Q(status__in=status_where_hide) & self.get_related_q(['deductions', 'expenses'])
         sub_qs = qs.filter(q)
 
-        sub_qs = qs.filter(status__in=[Travel.CERTIFICATION_SUBMITTED,
-                                       Travel.CERTIFICATION_REJECTED,
-                                       Travel.CERTIFICATION_APPROVED,
-                                       Travel.SENT_FOR_PAYMENT,
-                                       Travel.APPROVED,
-                                       Travel.COMPLETED])
+        sub_qs = qs.filter(status__in=[Travel.APPROVED, Travel.COMPLETED])
         self.revoke_edit(sub_qs)
 
-        sub_qs = qs.filter(self.get_related_q(['activities']), status__in=[Travel.SENT_FOR_PAYMENT,
-                                                                           Travel.APPROVED,
-                                                                           Travel.SUBMITTED])
+        sub_qs = qs.filter(self.get_related_q(['activities']), status__in=[Travel.APPROVED, Travel.SUBMITTED])
         self.grant_edit(sub_qs)
 
         self.grant_edit(qs.filter(self.get_related_q(['action_points', 'report'])))
@@ -204,12 +193,7 @@ class PermissionMatrixSetter(object):
         sub_qs = qs.filter(status=Travel.APPROVED).exclude(self.get_related_q(['activities']))
         self.revoke_edit(sub_qs)
 
-        sub_qs = qs.filter(status__in=[Travel.SENT_FOR_PAYMENT,
-                                       Travel.CERTIFICATION_REJECTED])
-        sub_qs = sub_qs.exclude(self.get_related_q(['activities']))
-        self.revoke_edit(sub_qs)
-
-        sub_qs = qs.filter(status__in=[Travel.COMPLETED, Travel.CERTIFICATION_APPROVED])
+        sub_qs = qs.filter(status=Travel.COMPLETED)
         self.revoke_edit(sub_qs)
         self.grant_edit(qs.filter(self.get_related_q(['action_points'])))
 
@@ -222,11 +206,7 @@ class PermissionMatrixSetter(object):
     def set_up_travel_focal_point(self):
         self.log(u'Set up permissions for travel focal point')
         fields_to_edit = ['itinerary']
-        status_where_edit = [Travel.PLANNED,
-                             Travel.SUBMITTED,
-                             Travel.CANCELLED,
-                             Travel.APPROVED,
-                             Travel.REJECTED]
+        status_where_edit = [Travel.PLANNED, Travel.SUBMITTED, Travel.CANCELLED, Travel.APPROVED, Travel.REJECTED]
         qs = TravelPermission.objects.filter(user_type=UserTypes.TRAVEL_FOCAL_POINT)
         self.revoke_edit(qs)
 
@@ -235,23 +215,14 @@ class PermissionMatrixSetter(object):
         self.log(u'{} permissions granted'.format(num_granted))
 
         sub_qs = qs.filter(model='travel', field__in=['estimated_travel_cost', 'currency'])
-        sub_qs = sub_qs.exclude(status__in=[Travel.COMPLETED,
-                                            Travel.CERTIFICATION_SUBMITTED,
-                                            Travel.CERTIFICATION_APPROVED,
-                                            Travel.CERTIFICATION_REJECTED])
+        sub_qs = sub_qs.exclude(status=Travel.COMPLETED)
         self.grant_edit(sub_qs)
         self.grant_edit(qs.filter(self.get_related_q(['action_points'])))
 
     def set_up_finance_focal_point(self):
         self.log(u'Set up permissions for finance focal point')
         fields_to_edit = ['itinerary', 'deductions', 'expenses', 'cost_assignments']
-        status_where_edit = [Travel.PLANNED,
-                             Travel.SUBMITTED,
-                             Travel.CANCELLED,
-                             Travel.APPROVED,
-                             Travel.REJECTED,
-                             Travel.CERTIFICATION_APPROVED,
-                             Travel.SENT_FOR_PAYMENT]
+        status_where_edit = [Travel.PLANNED, Travel.SUBMITTED, Travel.CANCELLED, Travel.APPROVED, Travel.REJECTED]
         qs = TravelPermission.objects.filter(user_type=UserTypes.FINANCE_FOCAL_POINT)
         self.revoke_edit(qs)
 
@@ -260,15 +231,7 @@ class PermissionMatrixSetter(object):
         self.grant_edit(sub_qs)
 
         sub_qs = qs.filter(model='travel', field__in=['estimated_travel_cost', 'currency', 'attachments']).exclude(
-            status__in=[Travel.COMPLETED,
-                        Travel.CERTIFICATION_SUBMITTED,
-                        Travel.CERTIFICATION_APPROVED,
-                        Travel.CERTIFICATION_REJECTED,
-                        Travel.CANCELLED,
-                        Travel.PLANNED,
-                        Travel.SUBMITTED,
-                        Travel.REJECTED,
-                        Travel.SENT_FOR_PAYMENT])
+            status__in=[Travel.COMPLETED, Travel.CANCELLED, Travel.PLANNED, Travel.SUBMITTED, Travel.REJECTED])
         self.grant_edit(sub_qs)
         self.grant_edit(qs.filter(self.get_related_q(['action_points'])))
 

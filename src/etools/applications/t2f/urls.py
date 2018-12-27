@@ -1,13 +1,9 @@
 from django.conf.urls import include, url
 
+from etools.applications.t2f.models import Travel
 from etools.applications.t2f.views.dashboard import ActionPointDashboardViewSet, TravelDashboardViewSet
 from etools.applications.t2f.views.exports import FinanceExport, TravelActivityExport, TravelAdminExport
-from etools.applications.t2f.views.generics import (
-    PermissionMatrixView,
-    SettingsView,
-    StaticDataView,
-    VendorNumberListView,
-)
+from etools.applications.t2f.views.generics import PermissionMatrixView, StaticDataView, VendorNumberListView
 from etools.applications.t2f.views.invoices import InvoiceViewSet
 from etools.applications.t2f.views.travel import (
     TravelActivityPerInterventionViewSet,
@@ -16,6 +12,7 @@ from etools.applications.t2f.views.travel import (
     TravelDetailsViewSet,
     TravelListViewSet,
 )
+
 app_name = 't2f'
 travel_list = TravelListViewSet.as_view({'get': 'list',
                                          'post': 'create'})
@@ -41,10 +38,7 @@ action_points_dashboard_list = ActionPointDashboardViewSet.as_view({'get': 'list
 invoices_list = InvoiceViewSet.as_view({'get': 'list'})
 invoices_details = InvoiceViewSet.as_view({'get': 'retrieve'})
 
-details_state_changes_pattern = r'^(?P<transition_name>submit_for_approval|approve|reject|cancel|plan|' \
-                                r'send_for_payment|submit_certificate|approve_certificate|reject_certificate|' \
-                                r'mark_as_certified|mark_as_completed)/$'
-
+details_state_changes_pattern = r"^(?P<transition_name>{})/$".format("|".join(Travel.TRANSACTIONS))
 
 travel_details_patterns = ((
     url(r'^$', travel_details, name='index'),
@@ -93,6 +87,4 @@ urlpatterns = ((
     url(r'^invoices/', include(invoice_patterns)),
     url(r'^vendor_numbers/$', VendorNumberListView.as_view(), name='vendor_numbers'),
 
-    # Settings view
-    url(r'^settings/$', SettingsView.as_view(), name='settings'),
 ), 't2f')
