@@ -1,4 +1,3 @@
-
 from django.utils.translation import ugettext
 
 from rest_framework import serializers
@@ -125,22 +124,3 @@ class TravelAdminExportSerializer(serializers.Serializer):
         if 'dsa_area' not in data or not data['dsa_area']:
             data['dsa_area'] = 'NODSA'
         return data
-
-
-class InvoiceExportSerializer(serializers.Serializer):
-    reference_number = serializers.CharField(source='invoice.reference_number', read_only=True)
-    ta_number = serializers.CharField(source='invoice.travel.reference_number', read_only=True)
-    vendor_number = serializers.CharField(source='invoice.vendor_number', read_only=True)
-    currency = serializers.CharField(source='invoice.currency.name', read_only=True)
-    total_amount = serializers.DecimalField(source='invoice.amount', max_digits=20, decimal_places=4, read_only=True)
-    status = serializers.CharField(source='invoice.status', read_only=True)
-    message = serializers.CharField(source='invoice.message', read_only=True)
-    vision_fi_doc = serializers.CharField(source='invoice.vision_fi_id', read_only=True)
-    wbs = serializers.CharField(source='wbs.name', read_only=True)
-    grant = serializers.CharField(source='grant.name', read_only=True)
-    fund = serializers.CharField(source='fund.name', read_only=True)
-    amount = serializers.DecimalField(max_digits=20, decimal_places=4)
-
-    class Meta:
-        fields = ('reference_number', 'ta_number', 'vendor_number', 'currency', 'total_amount', 'status', 'message',
-                  'vision_fi_doc', 'wbs', 'grant', 'fund', 'amount')

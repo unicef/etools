@@ -12,7 +12,6 @@ from etools.applications.t2f.filters import travel_list
 from etools.applications.t2f.models import InvoiceItem, ItineraryItem, Travel, TravelActivity
 from etools.applications.t2f.serializers.export import (
     FinanceExportSerializer,
-    InvoiceExportSerializer,
     TravelActivityExportSerializer,
     TravelAdminExportSerializer,
 )
@@ -114,22 +113,4 @@ class TravelAdminExport(ExportBaseView):
 
         response = Response(data=serializer.data, status=status.HTTP_200_OK)
         response['Content-Disposition'] = 'attachment; filename="TravelAdminExport.csv"'
-        return response
-
-
-class InvoiceExport(ExportBaseView):
-    serializer_class = InvoiceExportSerializer
-
-    def get(self, request):
-        travel_queryset = self.filter_queryset(self.get_queryset())
-        queryset = InvoiceItem.objects.filter(
-            invoice__travel__in=travel_queryset)
-        queryset = queryset.order_by('invoice__travel__reference_number', 'id')
-        queryset = queryset.select_related(
-            'invoice', 'invoice__travel', 'invoice__currency', 'wbs', 'grant', 'fund')
-
-        serializer = self.get_serializer(queryset, many=True)
-
-        response = Response(data=serializer.data, status=status.HTTP_200_OK)
-        response['Content-Disposition'] = 'attachment; filename="InvoiceExport.csv"'
         return response
