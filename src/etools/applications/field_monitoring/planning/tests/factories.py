@@ -5,6 +5,7 @@ from factory import fuzzy
 
 from etools.applications.field_monitoring.planning.models import YearPlan, Task
 from etools.applications.field_monitoring.fm_settings.tests.factories import CPOutputConfigFactory, LocationSiteFactory
+from etools.applications.reports.tests.factories import SectionFactory
 from etools.applications.tpm.tests.factories import FullInterventionFactory
 
 
@@ -35,5 +36,15 @@ class TaskFactory(factory.DjangoModelFactory):
     location_site = factory.SubFactory(LocationSiteFactory)
     location = factory.LazyAttribute(lambda o: o.location_site.parent)
 
+    sections__count = 0
+
     class Meta:
         model = Task
+
+    @factory.post_generation
+    def sections(self, created, extracted, count, **kwargs):
+        if created:
+            self.sections.add(*[SectionFactory() for i in range(count)])
+
+        if extracted:
+            self.sections.add(*extracted)

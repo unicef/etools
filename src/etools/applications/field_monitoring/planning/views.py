@@ -69,15 +69,16 @@ class YearPlanViewSet(
 class TaskViewSet(SimplePermittedViewSetMixin, FMBaseViewSet, viewsets.ModelViewSet):
     metadata_class = PermissionBasedMetadata
     queryset = Task.objects.prefetch_related(
-        'cp_output_config', 'cp_output_config__cp_output',
-        'partner', 'intervention', 'location', 'location_site',
+        'cp_output_config', 'cp_output_config__cp_output', 'cp_output_config__sections',
+        'partner', 'intervention', 'location', 'location_site', 'sections',
     )
     serializer_class = TaskSerializer
     filter_backends = (DjangoFilterBackend, CPOutputIsActiveFilter, OrderingFilter)
     filter_fields = ({
         field: ['exact', 'in'] for field in [
             'cp_output_config__cp_output__parent',
-            'cp_output_config', 'partner', 'intervention', 'location', 'location_site'
+            'cp_output_config', 'partner', 'intervention', 'location', 'location_site',
+            'sections',
         ]
     })
     filter_fields['cp_output_config__is_priority'] = ['exact']

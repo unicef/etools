@@ -1,3 +1,4 @@
+from copy import copy
 from datetime import date
 
 from django.urls import reverse
@@ -11,6 +12,7 @@ from etools.applications.field_monitoring.planning.models import YearPlan
 from etools.applications.field_monitoring.planning.tests.factories import YearPlanFactory, TaskFactory
 from etools.applications.field_monitoring.tests.base import FMBaseTestCaseMixin
 from etools.applications.partners.tests.factories import PartnerFactory
+from etools.applications.reports.tests.factories import SectionFactory
 
 
 class YearPlanViewTestCase(FMBaseTestCaseMixin, BaseTenantTestCase):
@@ -90,6 +92,16 @@ class YearPlanTasksViewTestCase(FMBaseTestCaseMixin, BaseTenantTestCase):
         cls.year_plan = YearPlanFactory()
         cls.task = TaskFactory()
 
+        cls.create_data = {
+            'cp_output_config': cls.task.cp_output_config.id,
+            'sections': [SectionFactory().id],
+            'partner': cls.task.partner.id,
+            'intervention': cls.task.intervention.id,
+            'location': cls.task.location.id,
+            'location_site': cls.task.location_site.id,
+            'plan_by_month': [1] + [0] * 11
+        }
+
     def test_list(self):
         response = self.forced_auth_req(
             'get', reverse('field_monitoring_planning:year-plan-tasks-list', args=[self.year_plan.pk]),
@@ -103,18 +115,24 @@ class YearPlanTasksViewTestCase(FMBaseTestCaseMixin, BaseTenantTestCase):
         response = self.forced_auth_req(
             'post', reverse('field_monitoring_planning:year-plan-tasks-list', args=[self.year_plan.pk]),
             user=self.fm_user,
-            data={
-                'cp_output_config': self.task.cp_output_config.id,
-                'partner': self.task.partner.id,
-                'intervention': self.task.intervention.id,
-                'location': self.task.location.id,
-                'location_site': self.task.location_site.id,
-                'plan_by_month': [1] + [0] * 11
-            }
+            data=self.create_data
         )
 
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         self.assertEqual(response.data['plan_by_month'], [1] + [0] * 11)
+
+    def test_sections_required(self):
+        data = copy(self.create_data)
+        data['sections'] = []
+
+        response = self.forced_auth_req(
+            'post', reverse('field_monitoring_planning:year-plan-tasks-list', args=[self.year_plan.pk]),
+            user=self.fm_user,
+            data=data
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn('sections', response.data)
 
     def test_create_unicef(self):
         response = self.forced_auth_req(

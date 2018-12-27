@@ -9,6 +9,7 @@ from unicef_locations.models import Location
 
 from etools.applications.field_monitoring.fm_settings.models import LocationSite, CPOutputConfig
 from etools.applications.publics.models import SoftDeleteMixin
+from etools.applications.reports.models import Sector
 
 
 class YearPlan(TimeStampedModel):
@@ -60,6 +61,7 @@ class Task(SoftDeleteMixin, TimeStampedModel):
                                 on_delete=models.CASCADE)
     intervention = models.ForeignKey('partners.Intervention', verbose_name=_('PD or SSFA'), related_name='+',
                                      blank=True, null=True, on_delete=models.CASCADE)
+    sections = models.ManyToManyField(Sector, verbose_name=_('Sections'))
 
     class Meta:
         verbose_name = _('Task')
