@@ -242,16 +242,16 @@ class PartnerOrganization(TimeStampedModel):
 
     RATING_HIGH = 'High'
     RATING_SIGNIFICANT = 'Significant'
-    RATING_MODERATE = 'Medium'
+    RATING_MEDIUM = 'Medium'
     RATING_LOW = 'Low'
-    RATING_NON_ASSESSED = 'Not Required'
+    RATING_NOT_REQUIRED = 'Not Required'
 
     RISK_RATINGS = (
         (RATING_HIGH, 'High'),
         (RATING_SIGNIFICANT, 'Significant'),
-        (RATING_MODERATE, 'Medium'),
+        (RATING_MEDIUM, 'Medium'),
         (RATING_LOW, 'Low'),
-        (RATING_NON_ASSESSED, 'Not Required'),
+        (RATING_NOT_REQUIRED, 'Not Required'),
     )
 
     MICRO_ASSESSMENT = 'MICRO ASSESSMENT'
@@ -558,9 +558,9 @@ class PartnerOrganization(TimeStampedModel):
     @cached_property
     def approaching_threshold_flag(self):
         total_ct_ytd = self.total_ct_ytd or 0
-        non_assessed = self.rating == PartnerOrganization.RATING_NON_ASSESSED
+        not_required = self.rating == PartnerOrganization.RATING_NOT_REQUIRED
         ct_year_overflow = total_ct_ytd > PartnerOrganization.CT_CP_AUDIT_TRIGGER_LEVEL
-        return non_assessed and ct_year_overflow
+        return not_required and ct_year_overflow
 
     @cached_property
     def flags(self):
@@ -581,14 +581,14 @@ class PartnerOrganization(TimeStampedModel):
         elif PartnerOrganization.CT_MR_AUDIT_TRIGGER_LEVEL2 < ct <= PartnerOrganization.CT_MR_AUDIT_TRIGGER_LEVEL3:
             if self.rating in [PartnerOrganization.RATING_HIGH, PartnerOrganization.RATING_SIGNIFICANT]:
                 programme_visits = 3
-            elif self.rating in [PartnerOrganization.RATING_MODERATE, ]:
+            elif self.rating in [PartnerOrganization.RATING_MEDIUM, ]:
                 programme_visits = 2
             elif self.rating in [PartnerOrganization.RATING_LOW, ]:
                 programme_visits = 1
         else:
             if self.rating in [PartnerOrganization.RATING_HIGH, PartnerOrganization.RATING_SIGNIFICANT]:
                 programme_visits = 4
-            elif self.rating in [PartnerOrganization.RATING_MODERATE, ]:
+            elif self.rating in [PartnerOrganization.RATING_MEDIUM, ]:
                 programme_visits = 3
             elif self.rating in [PartnerOrganization.RATING_LOW, ]:
                 programme_visits = 2
