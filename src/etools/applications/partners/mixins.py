@@ -34,14 +34,14 @@ class CountryUsersAdminMixin(object):
 
     def formfield_for_foreignkey(self, db_field, request, **kwargs):
 
-        if db_field.rel.to is get_user_model():
+        if db_field.remote_field.to is get_user_model():
             self.filter_users(kwargs)
 
         return super().formfield_for_foreignkey(db_field, request, **kwargs)
 
     def formfield_for_manytomany(self, db_field, request, **kwargs):
 
-        if db_field.rel.to is get_user_model():
+        if db_field.remote_field.to is get_user_model():
             self.filter_users(kwargs)
 
         return super().formfield_for_manytomany(db_field, request, **kwargs)
