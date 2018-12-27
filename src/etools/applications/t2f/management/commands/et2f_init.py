@@ -10,8 +10,18 @@ from django.db.transaction import atomic
 from _private import populate_permission_matrix
 
 from etools.applications.partners.models import PartnerOrganization
-from etools.applications.publics.models import (AirlineCompany, BusinessArea, BusinessRegion, Country,
-                                                Currency, DSARegion, Fund, Grant, TravelExpenseType, WBS,)
+from etools.applications.publics.models import (
+    AirlineCompany,
+    BusinessArea,
+    BusinessRegion,
+    Country,
+    Currency,
+    DSARegion,
+    Fund,
+    Grant,
+    TravelExpenseType,
+    WBS,
+)
 from etools.applications.users.models import Country as UserCountry, Office
 
 
