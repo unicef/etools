@@ -39,7 +39,6 @@ class TravelList(URLAssertionMixin, BaseTenantTestCase):
             ('activity_export', 'export/', {}),
             ('finance_export', 'finance-export/', {}),
             ('travel_admin_export', 'travel-admin-export/', {}),
-            ('invoice_export', 'invoice-export/', {}),
             ('activities', 'activities/1/', {'partner_organization_pk': 1}),
             ('activities-intervention', 'activities/partnership/1/', {'partnership_pk': 1}),
             ('dashboard', 'dashboard', {}),
