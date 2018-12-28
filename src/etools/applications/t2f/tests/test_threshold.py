@@ -1,4 +1,3 @@
-
 import json
 
 from django.urls import reverse
@@ -79,9 +78,9 @@ class ThresholdTest(BaseTenantTestCase):
         return travel_id, data
 
     @override_settings(DISABLE_INVOICING=False)
-    @mock.patch('etools.applications.t2f.helpers.permission_matrix.get_permission_matrix')
-    def test_threshold_with_invoicing(self, permission_matrix_getter):
-        permission_matrix_getter.return_value = {'travel': {}}
+    @mock.patch('etools.applications.t2f.helpers.permission_matrix.permissions')
+    def test_threshold_with_invoicing(self, permissions):
+        permissions.return_value = {}
 
         travel_id, data = self._prepare_test()
 
@@ -157,9 +156,9 @@ class ThresholdTest(BaseTenantTestCase):
         response_json = json.loads(response.rendered_content)
         self.assertEqual(response_json['status'], Travel.SENT_FOR_PAYMENT)
 
-    @mock.patch('etools.applications.t2f.helpers.permission_matrix.get_permission_matrix')
-    def test_multi_step_reach(self, permission_matrix_getter):
-        permission_matrix_getter.return_value = {'travel': {}}
+    @mock.patch('etools.applications.t2f.helpers.permission_matrix.permissions')
+    def test_multi_step_reach(self, permissions):
+        permissions.return_value = {}
 
         travel_id, data = self._prepare_test()
 
@@ -249,9 +248,9 @@ class ThresholdTest(BaseTenantTestCase):
         self.assertEqual(response_json['status'], Travel.CERTIFIED)
 
     @override_settings(DISABLE_INVOICING=False)
-    @mock.patch('etools.applications.t2f.helpers.permission_matrix.get_permission_matrix')
-    def test_threshold_check_on_complete(self, permission_matrix_getter):
-        permission_matrix_getter.return_value = {'travel': {}}
+    @mock.patch('etools.applications.t2f.helpers.permission_matrix.permissions')
+    def test_threshold_check_on_complete(self, permissions):
+        permissions.return_value = {}
         travel_id, data = self._prepare_test()
 
         response = self.forced_auth_req('post', reverse('t2f:travels:details:state_change',
