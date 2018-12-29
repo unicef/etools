@@ -149,7 +149,7 @@ class Travel(models.Model):
     status = FSMField(default=PLANNED, choices=CHOICES, protected=True, verbose_name=_('Status'))
     traveler = models.ForeignKey(
         settings.AUTH_USER_MODEL, null=True, blank=True, related_name='travels',
-        verbose_name=_('Travellert'),
+        verbose_name=_('Traveller'),
         on_delete=models.CASCADE,
     )
     supervisor = models.ForeignKey(
@@ -612,7 +612,7 @@ class Invoice(models.Model):
     )
     amount = models.DecimalField(max_digits=20, decimal_places=4, verbose_name=_('Amount'))
     status = models.CharField(max_length=16, choices=STATUS, verbose_name=_('Status'))
-    messages = ArrayField(models.TextField(default='', blank=True), default=[], verbose_name=_('Messages'))
+    messages = ArrayField(models.TextField(default='', blank=True), default=list, verbose_name=_('Messages'))
     vision_fi_id = models.CharField(max_length=16, default='', blank=True, verbose_name=_('Vision FI ID'))
 
     def save(self, **kwargs):
