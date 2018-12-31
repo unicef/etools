@@ -90,10 +90,6 @@ class TravelAttachmentAdmin(AdminListMixin, admin.ModelAdmin):
     pass
 
 
-class TravelPermissionAdmin(AdminListMixin, admin.ModelAdmin):
-    pass
-
-
 class InvoiceAdmin(AdminListMixin, admin.ModelAdmin):
     pass
 
