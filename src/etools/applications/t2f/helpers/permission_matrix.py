@@ -1,3 +1,4 @@
+import json
 import os
 import pprint
 from collections import defaultdict
@@ -41,12 +42,19 @@ def get_user_role_list(user, travel=None):
 def get_permission_matrix():
     permission_matrix = cache.get(PERMISSION_MATRIX_CACHE_KEY)
     if not permission_matrix:
-        path = os.path.join(os.path.dirname(t2f.__file__), "permission_matrix.yaml")
+        path = os.path.join(os.path.dirname(t2f.__file__), "permission_matrix.json")
 
         with open(path) as permission_matrix_file:
-            permission_matrix = yaml.load(permission_matrix_file.read())
+            permission_matrix = json.loads(permission_matrix_file.read())
         cache.set(PERMISSION_MATRIX_CACHE_KEY, permission_matrix)
 
+    return permission_matrix
+
+
+def get_permission_matrix_old():
+    path = os.path.join(os.path.dirname(t2f.__file__), "permission_matrix.yaml")
+    with open(path) as permission_matrix_file:
+        permission_matrix = yaml.load(permission_matrix_file.read())
     return permission_matrix
 
 
@@ -159,7 +167,7 @@ def parse_permission_matrix(readable=True):
                 )
             ))
 
-    matrix = get_permission_matrix()
+    matrix = get_permission_matrix_old()
     model_fields = defaultdict(set)
     results = {}
     for user in matrix["travel"]:
@@ -211,3 +219,12 @@ def parse_permission_matrix(readable=True):
         human_readable(data, headers)
     else:
         machine_readable(data, headers)
+
+
+def convert_matrix_to_json():
+    """Take old permission matrix in yaml format and convert to json"""
+    matrix = get_permission_matrix_old()
+    path = os.path.join(os.path.dirname(t2f.__file__), "permission_matrix.json")
+
+    with open(path, "w") as fp:
+        fp.write(json.dumps(matrix))
