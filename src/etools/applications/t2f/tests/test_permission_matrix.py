@@ -225,14 +225,10 @@ class TestPermissionMatrix(BaseTenantTestCase):
         self.assertEqual(response_json['status'], Travel.SUBMITTED)
         travel_id = response_json['id']
 
-        response = self.forced_auth_req(
-            'post',
-            reverse(
-                't2f:travels:details:state_change',
-                kwargs={'travel_pk': travel_id, 'transition_name': 'approve'}
-            ),
-            user=self.unicef_staff,
-        )
+        response = self.forced_auth_req('post', reverse('t2f:travels:details:state_change',
+                                                        kwargs={'travel_pk': travel_id,
+                                                                'transition_name': Travel.APPROVE}),
+                                        user=self.unicef_staff)
         response_json = json.loads(response.rendered_content)
         self.assertEqual(response_json['status'], Travel.APPROVED)
 

@@ -1,6 +1,6 @@
 from import_export import resources
 
-from etools.applications.partners.models import PartnerOrganization, PartnerType
+from etools.applications.partners.models import PartnerOrganization, Intervention
 
 
 class PartnerExport(resources.ModelResource):
@@ -27,13 +27,8 @@ class PartnerExport(resources.ModelResource):
         return partner_organization.agreements.count()
 
     def dehydrate_intervention_count(self, partner_organization):
-        if partner_organization.partner_type == PartnerType.GOVERNMENT:
-            return partner_organization.work_plans.count()
-        intervention_count = 0
-        # TODO: Nik revisit this... move this into a single query
-        for agr in partner_organization.agreements.all():
-            intervention_count += agr.interventions.count()
-        return intervention_count
+        return Intervention.objects.select_related("agreement__partner").\
+            filter(agreement__partner__id=partner_organization.id).count()
 
     def dehydrate_active_staff_members(self, partner_organization):
         return ', '.join([sm.get_full_name() for sm in partner_organization.staff_members.all()])

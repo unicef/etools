@@ -1,5 +1,4 @@
 import logging
-from datetime import timedelta
 from decimal import Decimal
 from functools import wraps
 
@@ -73,23 +72,11 @@ def make_travel_reference_number():
     return '{}/{}'.format(year, numeric_part)
 
 
-def approve_decorator(func):
-    @wraps(func)
-    def wrapper(self, *args, **kwargs):
-        # If invoicing is turned off, jump to sent_for_payment when someone approves the travel
-        func(self, *args, **kwargs)
-
-        if settings.DISABLE_INVOICING and self.ta_required:
-            self.send_for_payment(*args, **kwargs)
-
-    return wrapper
-
-
 def send_for_payment_threshold_decorator(func):
     @wraps(func)
     def wrapper(self, *args, **kwargs):
         # If invoicing is enabled, do the threshold check, otherwise it will result an infinite process loop
-        if not settings.DISABLE_INVOICING and self.check_threshold():
+        if self.check_threshold():
             self.submit_for_approval(*args, **kwargs)
             return
 
@@ -102,7 +89,7 @@ def mark_as_certified_or_completed_threshold_decorator(func):
     @wraps(func)
     def wrapper(self, *args, **kwargs):
         # If invoicing is enabled, do the threshold check, otherwise it will result an infinite process loop
-        if not settings.DISABLE_INVOICING and self.check_threshold():
+        if self.check_threshold():
             self.submit_certificate(*args, **kwargs)
             return
 
@@ -117,11 +104,6 @@ class Travel(models.Model):
     REJECTED = 'rejected'
     APPROVED = 'approved'
     CANCELLED = 'cancelled'
-    SENT_FOR_PAYMENT = 'sent_for_payment'
-    CERTIFICATION_SUBMITTED = 'certification_submitted'
-    CERTIFICATION_APPROVED = 'certification_approved'
-    CERTIFICATION_REJECTED = 'certification_rejected'
-    CERTIFIED = 'certified'
     COMPLETED = 'completed'
 
     CHOICES = (
@@ -131,12 +113,22 @@ class Travel(models.Model):
         (APPROVED, _('Approved')),
         (COMPLETED, _('Completed')),
         (CANCELLED, _('Cancelled')),
-        (SENT_FOR_PAYMENT, _('Sent for payment')),
-        (CERTIFICATION_SUBMITTED, _('Certification submitted')),
-        (CERTIFICATION_APPROVED, _('Certification approved')),
-        (CERTIFICATION_REJECTED, _('Certification rejected')),
-        (CERTIFIED, _('Certified')),
         (COMPLETED, _('Completed')),
+    )
+    SUBMIT_FOR_APPROVAL = 'submit_for_approval'
+    APPROVE = 'approve'
+    REJECT = 'reject'
+    CANCEL = 'cancel'
+    PLAN = 'plan'
+    COMPLETE = 'mark_as_completed'
+
+    TRANSACTIONS = (
+        SUBMIT_FOR_APPROVAL,
+        APPROVE,
+        REJECT,
+        CANCEL,
+        PLAN,
+        COMPLETE
     )
 
     created = models.DateTimeField(auto_now_add=True, db_index=True, verbose_name=_('Created'))
@@ -264,34 +256,9 @@ class Travel(models.Model):
             raise TransitionError('Cannot switch from planned to completed if TA is required')
         return True
 
-    def check_pending_invoices(self):
-        # If invoicing is turned off, don't check pending invoices
-        if settings.DISABLE_INVOICING and self.ta_required:
-            return True
-
-        if self.invoices.filter(status__in=[Invoice.PENDING, Invoice.PROCESSING]).exists():
-            raise TransitionError('Your TA has pending payments to be processed through VISION. '
-                                  'Until payments are completed, you can not certify your TA. '
-                                  'Please check with your Finance focal point on how to proceed.')
-        return True
-
     def has_supervisor(self):
         if not self.supervisor:
             raise TransitionError('Travel has no supervisor defined. Please select one.')
-        return True
-
-    def check_travel_count(self):
-        from etools.applications.t2f.helpers.misc import get_open_travels_for_check
-        travels = get_open_travels_for_check(self.traveler)
-
-        if travels.count() >= 3:
-            raise TransitionError('Maximum 3 open travels are allowed.')
-
-        end_date_limit = timezone_now() - timedelta(days=15)
-        if travels.filter(end_date__lte=end_date_limit).exclude(id=self.id).exists():
-            raise TransitionError(ugettext('Another of your trips ended more than 15 days ago, but was not completed '
-                                           'yet. Please complete that before creating a new trip.'))
-
         return True
 
     def validate_itinerary(self):
@@ -303,8 +270,8 @@ class Travel(models.Model):
 
         return True
 
-    @transition(status, source=[PLANNED, REJECTED, SENT_FOR_PAYMENT, CANCELLED], target=SUBMITTED,
-                conditions=[validate_itinerary, has_supervisor, check_pending_invoices, check_travel_count])
+    @transition(status, source=[PLANNED, REJECTED, CANCELLED], target=SUBMITTED,
+                conditions=[validate_itinerary, has_supervisor])
     def submit_for_approval(self):
         self.submitted_at = timezone_now()
         if not self.first_submission_date:
@@ -313,7 +280,6 @@ class Travel(models.Model):
                                      self.supervisor.email,
                                      'emails/submit_for_approval.html')
 
-    @approve_decorator
     @transition(status, source=[SUBMITTED], target=APPROVED)
     def approve(self):
         expenses = {'user': Decimal(0),
@@ -340,12 +306,7 @@ class Travel(models.Model):
                                      self.traveler.email,
                                      'emails/rejected.html')
 
-    @transition(status, source=[PLANNED,
-                                SUBMITTED,
-                                REJECTED,
-                                APPROVED,
-                                SENT_FOR_PAYMENT,
-                                CERTIFIED],
+    @transition(status, source=[PLANNED, SUBMITTED, REJECTED, APPROVED],
                 target=CANCELLED)
     def cancel(self):
         self.canceled_at = timezone_now()
@@ -357,56 +318,8 @@ class Travel(models.Model):
     def plan(self):
         pass
 
-    @send_for_payment_threshold_decorator
-    @transition(status, source=[APPROVED, SENT_FOR_PAYMENT, CERTIFIED], target=SENT_FOR_PAYMENT)
-    def send_for_payment(self):
-        if self.cost_summary['expenses_total']:
-            self.preserved_expenses_local = self.cost_summary['expenses_total'][0]['amount']
-        else:
-            self.preserved_expenses_local = Decimal(0)
-        self.generate_invoices()
-
-        # If invoicing is turned off, don't send a mail
-        if settings.DISABLE_INVOICING and self.ta_required:
-            return
-
-        self.send_notification_email('Travel #{} sent for payment.'.format(self.reference_number),
-                                     self.traveler.email,
-                                     'emails/sent_for_payment.html')
-
-    @transition(status, source=[SENT_FOR_PAYMENT, CERTIFICATION_REJECTED, CERTIFIED],
-                target=CERTIFICATION_SUBMITTED,
-                conditions=[check_pending_invoices])
-    def submit_certificate(self):
-        self.send_notification_email('Travel #{} certification was submitted.'.format(self.reference_number),
-                                     self.supervisor.email,
-                                     'emails/certificate_submitted.html')
-
-    @transition(status, source=[CERTIFICATION_SUBMITTED], target=CERTIFICATION_APPROVED)
-    def approve_certificate(self):
-        self.send_notification_email('Travel #{} certification was approved.'.format(self.reference_number),
-                                     self.traveler.email,
-                                     'emails/certificate_approved.html')
-
-    @transition(status, source=[CERTIFICATION_APPROVED, CERTIFICATION_SUBMITTED],
-                target=CERTIFICATION_REJECTED)
-    def reject_certificate(self):
-        self.send_notification_email('Travel #{} certification was rejected.'.format(self.reference_number),
-                                     self.traveler.email,
-                                     'emails/certificate_rejected.html')
-
     @mark_as_certified_or_completed_threshold_decorator
-    @transition(status, source=[CERTIFICATION_APPROVED, SENT_FOR_PAYMENT],
-                target=CERTIFIED,
-                conditions=[check_pending_invoices])
-    def mark_as_certified(self):
-        self.generate_invoices()
-        self.send_notification_email('Travel #{} certification was certified.'.format(self.reference_number),
-                                     self.traveler.email,
-                                     'emails/certified.html')
-
-    @mark_as_certified_or_completed_threshold_decorator
-    @transition(status, source=[CERTIFIED, SUBMITTED, APPROVED, PLANNED, CANCELLED], target=COMPLETED,
+    @transition(status, source=[SUBMITTED, APPROVED, PLANNED, CANCELLED], target=COMPLETED,
                 conditions=[check_trip_report, check_state_flow])
     def mark_as_completed(self):
         self.completed_at = timezone_now()

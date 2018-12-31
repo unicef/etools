@@ -209,7 +209,7 @@ class PartnerSynchronizer(VisionDataSynchronizer):
                 if partner_org.basis_for_risk_rating and (
                         partner_org.type_of_assessment.upper() in [PartnerOrganization.HIGH_RISK_ASSUMED,
                                                                    PartnerOrganization.LOW_RISK_ASSUMED] or (
-                        partner_org.rating == PartnerOrganization.RATING_NON_ASSESSED and
+                        partner_org.rating == PartnerOrganization.RATING_NOT_REQUIRED and
                         partner_org.type_of_assessment == PartnerOrganization.MICRO_ASSESSMENT)
                 ):
                     partner_org.basis_for_risk_rating = ''
@@ -265,15 +265,7 @@ class PartnerSynchronizer(VisionDataSynchronizer):
 
     @staticmethod
     def get_partner_rating(partner):
-
-        allowed_risk_rating = {
-            'High': PartnerOrganization.RATING_HIGH,
-            'Significant': PartnerOrganization.RATING_SIGNIFICANT,
-            'Moderate': PartnerOrganization.RATING_MODERATE,
-            'Low': PartnerOrganization.RATING_LOW,
-            'Non-Assessed': PartnerOrganization.RATING_NON_ASSESSED,
-        }
-
+        allowed_risk_rating = dict([(x[1], x[0]) for x in PartnerOrganization.RISK_RATINGS])
         return allowed_risk_rating.get(partner.get('RISK_RATING', ''), '')
 
     @staticmethod

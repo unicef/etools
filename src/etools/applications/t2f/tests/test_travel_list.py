@@ -2,15 +2,15 @@
 import json
 import logging
 
-from django.urls import NoReverseMatch, reverse
 from django.db import connection
+from django.urls import NoReverseMatch, reverse
 
 from freezegun import freeze_time
 from rest_framework import status
+from unicef_locations.tests.factories import LocationFactory
 
 from etools.applications.EquiTrack.tests.cases import BaseTenantTestCase
 from etools.applications.EquiTrack.tests.mixins import URLAssertionMixin
-from unicef_locations.tests.factories import LocationFactory
 from etools.applications.publics.models import DSARegion
 from etools.applications.publics.tests.factories import PublicsCurrencyFactory, PublicsWBSFactory
 from etools.applications.reports.tests.factories import ResultFactory
@@ -35,11 +35,10 @@ class TravelList(URLAssertionMixin, BaseTenantTestCase):
         names_and_paths = (
             ('index', '', {}),
             ('state_change', 'save_and_submit/', {'transition_name': 'save_and_submit'}),
-            ('state_change', 'mark_as_completed/', {'transition_name': 'mark_as_completed'}),
+            ('state_change', 'mark_as_completed/', {'transition_name': Travel.COMPLETE}),
             ('activity_export', 'export/', {}),
             ('finance_export', 'finance-export/', {}),
             ('travel_admin_export', 'travel-admin-export/', {}),
-            ('invoice_export', 'invoice-export/', {}),
             ('activities', 'activities/1/', {'partner_organization_pk': 1}),
             ('activities-intervention', 'activities/partnership/1/', {'partnership_pk': 1}),
             ('dashboard', 'dashboard', {}),

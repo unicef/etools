@@ -525,8 +525,6 @@ COUCHBASE_URL = get_from_secrets_or_env('COUCHBASE_URL')
 COUCHBASE_USER = get_from_secrets_or_env('COUCHBASE_USER')
 COUCHBASE_PASS = get_from_secrets_or_env('COUCHBASE_PASS')
 
-DISABLE_INVOICING = str2bool(get_from_secrets_or_env('DISABLE_INVOICING'))
-
 ENVIRONMENT = get_from_secrets_or_env('ENVIRONMENT', '')
 ETRIPS_VERSION = get_from_secrets_or_env('ETRIPS_VERSION')
 

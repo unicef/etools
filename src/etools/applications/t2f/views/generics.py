@@ -1,6 +1,4 @@
 
-from django.conf import settings
-
 from rest_framework import generics, status
 from rest_framework.response import Response
 
@@ -46,9 +44,3 @@ class PermissionMatrixView(generics.GenericAPIView):
     def get(self, request):
         permission_matrix = get_permission_matrix()
         return Response(permission_matrix, status.HTTP_200_OK)
-
-
-class SettingsView(generics.GenericAPIView):
-    def get(self, request):
-        data = {'disable_invoicing': settings.DISABLE_INVOICING}
-        return Response(data=data, status=status.HTTP_200_OK)
