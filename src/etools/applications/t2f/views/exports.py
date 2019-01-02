@@ -2,6 +2,8 @@
 import functools
 import operator
 
+from django.utils import timezone
+
 from rest_framework import generics, status
 from rest_framework.permissions import IsAdminUser
 from rest_framework.response import Response
@@ -45,8 +47,8 @@ class TravelActivityExport(QueryStringFilterMixin, ExportBaseView):
         ('f_partner', 'partner__pk__in'),
         ('f_result', 'result__pk__in'),
         ('f_travel_type', 'travel_type__in'),
-        ('f_year', 'date__year'),
-        ('f_month', 'date__month'),
+        ('f_year', ['travels__start_date__year', 'travels__end_date__year']),
+        ('f_month', ['travels__start_date__month', 'travels__end_date__month']),
         ('f_location', 'locations__pk__in'),
     )
 
@@ -80,9 +82,9 @@ class TravelActivityExport(QueryStringFilterMixin, ExportBaseView):
                 dto_list.append(self.SimpleDTO(travel, activity))
 
         serializer = self.get_serializer(dto_list, many=True)
-
         response = Response(data=serializer.data, status=status.HTTP_200_OK)
-        response['Content-Disposition'] = 'attachment; filename="TravelActivityExport.csv"'
+        response['Content-Disposition'] = 'attachment; filename=Travel_{}.csv'.format(timezone.now().date())
+
         return response
 
 
