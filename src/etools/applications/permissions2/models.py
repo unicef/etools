@@ -72,7 +72,7 @@ class Permission(models.Model):
     permission = models.CharField(max_length=10, choices=PERMISSIONS)
     permission_type = models.CharField(max_length=10, choices=TYPES, default=TYPES.allow)
     target = models.CharField(max_length=100)
-    condition = ArrayField(models.CharField(max_length=100), default=[], blank=True)
+    condition = ArrayField(models.CharField(max_length=100), default=list, blank=True)
 
     objects = PermissionQuerySet.as_manager()
 
