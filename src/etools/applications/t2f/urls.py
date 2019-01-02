@@ -4,7 +4,6 @@ from etools.applications.t2f.models import Travel
 from etools.applications.t2f.views.dashboard import ActionPointDashboardViewSet, TravelDashboardViewSet
 from etools.applications.t2f.views.exports import FinanceExport, TravelActivityExport, TravelAdminExport
 from etools.applications.t2f.views.generics import PermissionMatrixView, StaticDataView, VendorNumberListView
-from etools.applications.t2f.views.invoices import InvoiceViewSet
 from etools.applications.t2f.views.travel import (
     TravelActivityPerInterventionViewSet,
     TravelActivityViewSet,
@@ -34,9 +33,6 @@ clone_travel_for_secondary_traveler = TravelDetailsViewSet.as_view({'post': 'clo
 clone_travel_for_driver = TravelDetailsViewSet.as_view({'post': 'clone_for_driver'})
 
 action_points_dashboard_list = ActionPointDashboardViewSet.as_view({'get': 'list'})
-
-invoices_list = InvoiceViewSet.as_view({'get': 'list'})
-invoices_details = InvoiceViewSet.as_view({'get': 'retrieve'})
 
 details_state_changes_pattern = r"^(?P<transition_name>{})/$".format("|".join(Travel.TRANSACTIONS))
 
@@ -74,17 +70,11 @@ action_points_patterns = ((
     url(r'^dashboard/$', action_points_dashboard_list, name='dashboard'),
 ), 'action_points')
 
-invoice_patterns = ((
-    url(r'^$', invoices_list, name='list'),
-    url(r'^(?P<invoice_pk>[0-9]+)/$', invoices_details, name='details'),
-), 'invoices')
-
 urlpatterns = ((
     url(r'^travels/', include(travel_patterns)),
     url(r'^static_data/$', StaticDataView.as_view(), name='static_data'),
     url(r'^permission_matrix/$', PermissionMatrixView.as_view(), name='permission_matrix'),
     url(r'^action_points/', include(action_points_patterns)),
-    url(r'^invoices/', include(invoice_patterns)),
     url(r'^vendor_numbers/$', VendorNumberListView.as_view(), name='vendor_numbers'),
 
 ), 't2f')
