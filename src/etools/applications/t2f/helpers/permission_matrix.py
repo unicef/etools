@@ -67,6 +67,13 @@ class PermissionMatrix(object):
         self.user = user
         self._user_roles = get_user_role_list(user, travel)
         self._permission_dict = self.get_permission_dict()
+        self._permission_dict_old = self.get_permission_dict_old()
+        diff = {
+            k: self._permission_dict_old[k]
+            for k, _ in set(self._permission_dict_old.items()) - set(self._permission_dict.items())
+        }
+        if diff:
+            print(diff)
 
     def get_permission_dict(self):
         perms = defaultdict(bool)
@@ -78,6 +85,32 @@ class PermissionMatrix(object):
                 pass
 
         return perms
+
+    def get_permission_dict_old(self):
+        permission_matrix = get_permission_matrix()['travel']
+
+        permissions = defaultdict(bool)
+        for user_type, um in permission_matrix.items():
+            if user_type not in self._user_roles:
+                continue
+
+            for state, sm in um.items():
+                if state != self.travel.status:
+                    continue
+
+                for model, mm in sm.items():
+                    if model == 'baseDetails':
+                        model = 'travel'
+
+                    for field, fm in mm.items():
+                        if not isinstance(fm, dict):
+                            permissions[(field, 'travel', model)] |= fm
+                            continue
+
+                        for permission_type, value in fm.items():
+                            permissions[(permission_type, model, field, )] |= value
+
+        return permissions
 
     def has_permission(self, permission_type, model_name, field_name):
         return self._permission_dict.get((permission_type, model_name, field_name), True)
@@ -94,7 +127,7 @@ class FakePermissionMatrix(PermissionMatrix):
         return {}
 
 
-def parse_permission_matrix(readable=True):
+def parse_permission_matrix():
     """Extra data from permission_matrix
 
     Default expected permission is;
@@ -120,42 +153,22 @@ def parse_permission_matrix(readable=True):
       },
     }
     """
-    def human_readable(data, headers):
-        # display results in human readable format
-        for user_type in data:
-            print(user_type)
-            print("| ".join([f"{header: <24}" for header in [""] + headers]))
-            for model in data[user_type]:
-                print(model)
-                for field in data[user_type][model]:
-                    print(f"- {field}")
-                    for row in data[user_type][model][field]:
-                        row[0] = "-- {}".format(row[0])
-                        print("| ".join([f"{d: <24}" for d in row]))
-
-    def machine_readable(data, states):
+    def machine_readable(data):
         # display results in machine readable format
         # d = {"user": {"status": {"model": {"field": {"perm": "value"}}}}}
         result = {}
-        for user_type in data:
+        for user_type, states in data.items():
             result[user_type] = {}
-            for state in states:
+            for state, models in states.items():
                 result[user_type][state] = defaultdict(bool)
-            for model in data[user_type]:
-                for field, rows in data[user_type][model].items():
-                    for row in rows:
-                        permission_type = row.pop(0)
-                        if field == "all":
-                            key = (permission_type, "travel", model)
-                        else:
-                            key = (permission_type, model, field)
-                        count = 0
-                        for state in states:
-                            if key not in result[user_type][state]:
-                                result[user_type][state][key] = row[count]
+                for model, fields in models.items():
+                    for field, perm_types in fields.items():
+                        for perm_type, perm in perm_types.items():
+                            if field == "all":
+                                key = (perm_type, "travel", model)
                             else:
-                                result[user_type][state][key] |= row[count]
-                            count += 1
+                                key = (perm_type, model, field)
+                            result[user_type][state][key] |= perm
 
         pp = pprint.PrettyPrinter(indent=4)
         with open("travel_permissions.py", "w") as fp:
@@ -181,44 +194,16 @@ def parse_permission_matrix(readable=True):
                     # get a list of all fields for the model
                     model_fields[model_key].add("all" if field in ["edit", "view"] else field)
 
-                    if field == "edit":
-                        if matrix["travel"][user][status][model][field] is not False:
-                            data[status][model_key]["all"][field] = True
-                    elif field == "view":
-                        if matrix["travel"][user][status][model][field] is not True:
-                            data[status][model_key]["all"][field] = False
+                    perm_dict = matrix["travel"][user][status][model][field]
+                    if field in ["edit", "view"]:
+                        data[status][model_key]["all"][field] = perm_dict
                     else:
-                        if matrix["travel"][user][status][model][field]["edit"] is not False:
-                            data[status][model_key][field]["edit"] = True
-                        if matrix["travel"][user][status][model][field]["view"] is not True:
-                            data[status][model_key][field]["view"] = False
+                        for perm in ["edit", "view"]:
+                            perm_value = perm_dict[perm]
+                            data[status][model_key][field][perm] = perm_value
         results[user] = data
 
-    # transpose data
-    data = {}
-    headers = None
-    for user_type in results:
-        data[user_type] = {}
-        if headers is None:
-            headers = [k for k in results[user_type]]
-        for header in results[user_type]:
-            for model in results[user_type][header]:
-                data[user_type][model] = defaultdict(list)
-                for field in model_fields[model]:
-                    for perm_type in ["edit", "view"]:
-                        row = [perm_type]
-                        for h in headers:
-                            try:
-                                row.append(results[user][h][model][field][perm_type])
-                            except Exception:
-                                row.append(False if perm_type == "edit" else True)
-                        data[user_type][model][field].append(row)
-            break
-
-    if readable:
-        human_readable(data, headers)
-    else:
-        machine_readable(data, headers)
+    machine_readable(results)
 
 
 def convert_matrix_to_json():
