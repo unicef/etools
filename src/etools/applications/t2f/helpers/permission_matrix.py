@@ -67,13 +67,6 @@ class PermissionMatrix(object):
         self.user = user
         self._user_roles = get_user_role_list(user, travel)
         self._permission_dict = self.get_permission_dict()
-        self._permission_dict_old = self.get_permission_dict_old()
-        diff = {
-            k: self._permission_dict_old[k]
-            for k, _ in set(self._permission_dict_old.items()) - set(self._permission_dict.items())
-        }
-        if diff:
-            print(diff)
 
     def get_permission_dict(self):
         perms = defaultdict(bool)
@@ -85,32 +78,6 @@ class PermissionMatrix(object):
                 pass
 
         return perms
-
-    def get_permission_dict_old(self):
-        permission_matrix = get_permission_matrix()['travel']
-
-        permissions = defaultdict(bool)
-        for user_type, um in permission_matrix.items():
-            if user_type not in self._user_roles:
-                continue
-
-            for state, sm in um.items():
-                if state != self.travel.status:
-                    continue
-
-                for model, mm in sm.items():
-                    if model == 'baseDetails':
-                        model = 'travel'
-
-                    for field, fm in mm.items():
-                        if not isinstance(fm, dict):
-                            permissions[(field, 'travel', model)] |= fm
-                            continue
-
-                        for permission_type, value in fm.items():
-                            permissions[(permission_type, model, field, )] |= value
-
-        return permissions
 
     def has_permission(self, permission_type, model_name, field_name):
         return self._permission_dict.get((permission_type, model_name, field_name), True)
