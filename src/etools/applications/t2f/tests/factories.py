@@ -1,4 +1,3 @@
-
 from django.utils import timezone
 
 import factory
@@ -21,6 +20,12 @@ from etools.applications.users.tests.factories import OfficeFactory, UserFactory
 
 _FUZZY_START_DATE = timezone.datetime(timezone.now().year, 1, 1, tzinfo=timezone.now().tzinfo)
 _FUZZY_END_DATE = timezone.datetime(timezone.now().year, 12, 31, tzinfo=timezone.now().tzinfo)
+_FUZZY_NOW_DATE = timezone.datetime(
+    timezone.now().year,
+    timezone.now().month,
+    timezone.now().day,
+    tzinfo=timezone.now().tzinfo
+)
 
 
 class FuzzyTravelType(factory.fuzzy.BaseFuzzyAttribute):
@@ -59,8 +64,14 @@ class TravelActivityFactory(factory.django.DjangoModelFactory):
 class ItineraryItemFactory(factory.DjangoModelFactory):
     origin = fuzzy.FuzzyText(length=32)
     destination = fuzzy.FuzzyText(length=32)
-    departure_date = fuzzy.FuzzyDateTime(start_dt=_FUZZY_START_DATE, end_dt=timezone.now())
-    arrival_date = fuzzy.FuzzyDateTime(start_dt=timezone.now(), end_dt=_FUZZY_END_DATE)
+    departure_date = fuzzy.FuzzyDateTime(
+        start_dt=_FUZZY_START_DATE,
+        end_dt=_FUZZY_NOW_DATE,
+    )
+    arrival_date = fuzzy.FuzzyDateTime(
+        start_dt=_FUZZY_NOW_DATE,
+        end_dt=_FUZZY_END_DATE,
+    )
     dsa_region = factory.SubFactory(PublicsDSARegionFactory)
     overnight_travel = False
     mode_of_travel = models.ModeOfTravel.BOAT
@@ -119,8 +130,14 @@ class TravelFactory(factory.DjangoModelFactory):
     supervisor = factory.SubFactory(UserFactory)
     office = factory.SubFactory(OfficeFactory)
     section = factory.SubFactory(SectionFactory)
-    start_date = fuzzy.FuzzyDateTime(start_dt=_FUZZY_START_DATE, end_dt=timezone.now())
-    end_date = fuzzy.FuzzyDateTime(start_dt=timezone.now(), end_dt=_FUZZY_END_DATE)
+    start_date = fuzzy.FuzzyDateTime(
+        start_dt=_FUZZY_START_DATE,
+        end_dt=_FUZZY_NOW_DATE,
+    )
+    end_date = fuzzy.FuzzyDateTime(
+        start_dt=_FUZZY_NOW_DATE,
+        end_dt=_FUZZY_END_DATE,
+    )
     purpose = factory.Sequence(lambda n: 'Purpose #{}'.format(n))
     international_travel = False
     ta_required = True
