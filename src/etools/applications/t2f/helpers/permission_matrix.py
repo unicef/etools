@@ -9,6 +9,7 @@ import yaml
 
 from etools.applications import t2f
 from etools.applications.t2f import UserTypes
+from etools.applications.t2f.models import Travel
 from etools.applications.t2f.permissions import permissions
 
 PERMISSION_MATRIX_CACHE_KEY = 't2f_permission_matrix'
@@ -124,9 +125,12 @@ def parse_permission_matrix():
         # display results in machine readable format
         # d = {"user": {"status": {"model": {"field": {"perm": "value"}}}}}
         result = {}
+        state_choices = [x[0] for x in Travel.CHOICES]
         for user_type, states in data.items():
             result[user_type] = {}
             for state, models in states.items():
+                if state not in state_choices:
+                    continue
                 result[user_type][state] = defaultdict(bool)
                 for model, fields in models.items():
                     for field, perm_types in fields.items():
