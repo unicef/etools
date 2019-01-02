@@ -145,7 +145,7 @@ unicef-attachments==0.4.2
 unicef-djangolib==0.5.2
 unicef-locations==1.4.2
 unicef_notification==0.2.0
-unicef_restlib==0.3.7
+unicef_restlib==0.3.8
 unicef_snapshot==0.2.1
 unicodecsv==0.14.1
 uritemplate==3.0.0
