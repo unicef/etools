@@ -160,7 +160,7 @@ class Engagement(InheritedModelMixin, TimeStampedModel, models.Model):
     joint_audit = models.BooleanField(verbose_name=_('Joint Audit'), default=False, blank=True)
     shared_ip_with = ArrayField(models.CharField(
         max_length=20, choices=PartnerOrganization.AGENCY_CHOICES
-    ), blank=True, default=[], verbose_name=_('Shared Audit with'))
+    ), blank=True, default=list, verbose_name=_('Shared Audit with'))
 
     staff_members = models.ManyToManyField(AuditorStaffMember, verbose_name=_('Staff Members'))
 

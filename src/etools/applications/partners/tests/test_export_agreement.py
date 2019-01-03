@@ -100,7 +100,7 @@ class TestAgreementModelExport(BaseAgreementModelExportTestCase):
             ', '.join([sm.get_full_name() for sm in self.agreement.authorized_officers.all()]),
             u'',
             u'https://testserver/pmp/agreements/{}/details/'.format(self.agreement.id),
-            '',
+            'No',
         ))
 
     def test_csv_flat_export_api(self):

@@ -91,20 +91,21 @@ class TestAppliedIndicatorSerializer(BaseTenantTestCase):
     @classmethod
     def setUpTestData(cls):
         cls.section = SectionFactory()
-        cls.intervention = InterventionFactory(status=Intervention.ACTIVE)
-        cls.result_link = InterventionResultLinkFactory(
-            intervention=cls.intervention,
-        )
-        cls.lower_result = LowerResultFactory(
-            result_link=cls.result_link,
-        )
-        cls.applied_indicator = AppliedIndicatorFactory(
-            lower_result=cls.lower_result,
-        )
         cls.location = LocationFactory()
-        cls.indicator = IndicatorBlueprintFactory()
 
     def setUp(self):
+        self.indicator = IndicatorBlueprintFactory()
+        self.intervention = InterventionFactory(status=Intervention.ACTIVE)
+        self.result_link = InterventionResultLinkFactory(
+            intervention=self.intervention,
+        )
+        self.lower_result = LowerResultFactory(
+            result_link=self.result_link,
+        )
+        self.applied_indicator = AppliedIndicatorFactory(
+            lower_result=self.lower_result,
+            target={"d": 3, "v": 4},
+        )
         self.intervention.flat_locations.add(self.location)
         self.intervention.sections.add(self.section)
         self.data = {
@@ -200,18 +201,96 @@ class TestAppliedIndicatorSerializer(BaseTenantTestCase):
         self.assertIsInstance(indicator, AppliedIndicator)
         self.assertEqual(applied_qs.count(), count + 1)
 
-    def test_validate_changed_denominator_with_status_draft(self):
-        """If cluster indicator provided, no check is happening that value"""
+    def test_validate_changed_denominator_status_active(self):
+        """Not allowed to change denominator if draft status active and
+        not in amendment mode"""
         self.applied_indicator.indicator = self.indicator
         self.applied_indicator.save()
 
         self.data["cluster_indicator_id"] = "404"
         self.data["target"] = {'d': 1, 'v': 2}
         self.intervention.flat_locations.add(self.location)
+        self.assertEqual(self.intervention.status, Intervention.ACTIVE)
+        self.assertFalse(self.intervention.in_amendment)
         serializer = AppliedIndicatorSerializer(data=self.data, instance=self.applied_indicator)
         self.assertFalse(serializer.is_valid())
-        self.assertEqual(serializer.errors, {"non_field_errors": [
-            'You cannot change the Indicator Target Denominator if PD/SSFA is not in status Draft or Signed']})
+        self.assertEqual(
+            serializer.errors, {
+                "non_field_errors": [
+                    'You cannot change the Indicator Target Denominator if PD/SSFA is not in status Draft or Signed'
+                ]
+            }
+        )
+
+    def test_validate_changed_denominator_status_draft(self):
+        """Allowed to change denominator if in draft status"""
+        self.intervention.status = Intervention.DRAFT
+        self.intervention.save()
+        self.applied_indicator.indicator = self.indicator
+        self.applied_indicator.save()
+
+        self.data["cluster_indicator_id"] = "404"
+        self.data["target"] = {'d': 1, 'v': 2}
+        self.intervention.flat_locations.add(self.location)
+        self.assertEqual(self.intervention.status, Intervention.DRAFT)
+        serializer = AppliedIndicatorSerializer(data=self.data, instance=self.applied_indicator)
+        self.assertTrue(serializer.is_valid())
+
+    def test_validate_changed_denominator_status_signed(self):
+        """Allowed to change denominator if in signed status"""
+        self.intervention.status = Intervention.SIGNED
+        self.intervention.save()
+        self.applied_indicator.indicator = self.indicator
+        self.applied_indicator.save()
+
+        self.data["cluster_indicator_id"] = "404"
+        self.data["target"] = {'d': 1, 'v': 2}
+        self.intervention.flat_locations.add(self.location)
+        self.assertEqual(self.intervention.status, Intervention.SIGNED)
+        serializer = AppliedIndicatorSerializer(data=self.data, instance=self.applied_indicator)
+        self.assertTrue(serializer.is_valid())
+
+    def test_validate_changed_denominator_in_amendment(self):
+        """Allowed to change denominator if in amendment mode"""
+        self.intervention.in_amendment = True
+        self.intervention.save()
+        self.applied_indicator.indicator = self.indicator
+        self.applied_indicator.save()
+
+        self.data["cluster_indicator_id"] = "404"
+        self.data["target"] = {'d': 1, 'v': 2}
+        self.intervention.flat_locations.add(self.location)
+        self.assertTrue(self.intervention.in_amendment)
+        self.assertEqual(self.intervention.status, Intervention.ACTIVE)
+        serializer = AppliedIndicatorSerializer(data=self.data, instance=self.applied_indicator)
+        self.assertTrue(serializer.is_valid())
+
+    def test_validate_changed_denominator_ratio_in_amendment(self):
+        """Not allowed to change denominator if in amendment mode
+        and display_type is ratio
+        """
+        self.intervention.in_amendment = True
+        self.intervention.save()
+        self.indicator.display_type = IndicatorBlueprint.RATIO
+        self.indicator.save()
+        self.applied_indicator.indicator = self.indicator
+        self.applied_indicator.save()
+
+        self.data["cluster_indicator_id"] = "404"
+        self.data["target"] = {'d': 1, 'v': 2}
+        self.intervention.flat_locations.add(self.location)
+        self.assertTrue(self.intervention.in_amendment)
+        self.assertEqual(self.intervention.status, Intervention.ACTIVE)
+        self.assertEqual(self.applied_indicator.indicator.display_type, IndicatorBlueprint.RATIO)
+        serializer = AppliedIndicatorSerializer(data=self.data, instance=self.applied_indicator)
+        self.assertFalse(serializer.is_valid())
+        self.assertEqual(
+            serializer.errors, {
+                "non_field_errors": [
+                    'You cannot change the Indicator Target Denominator if PD/SSFA is not in status Draft or Signed'
+                ]
+            }
+        )
 
 
 class TestLowerResultSimpleCUSerializer(BaseTenantTestCase):

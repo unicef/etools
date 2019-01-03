@@ -219,7 +219,7 @@ INSTALLED_APPS = ('django_tenants',) + SHARED_APPS + TENANT_APPS
 
 # DJANGO: SECURITY
 ALLOWED_HOSTS = [
-    get_from_secrets_or_env('DJANGO_ALLOWED_HOST', '127.0.0.1'),
+    get_from_secrets_or_env('DJANGO_ALLOWED_HOST', '127.0.0.1'), '0.0.0.0',
 ]
 SECRET_KEY = r"j8%#f%3t@9)el9jh4f0ug4*mm346+wwwti#6(^@_ksf@&k^ob1"  # only used locally
 
@@ -524,8 +524,6 @@ JWT_AUTH = {
 COUCHBASE_URL = get_from_secrets_or_env('COUCHBASE_URL')
 COUCHBASE_USER = get_from_secrets_or_env('COUCHBASE_USER')
 COUCHBASE_PASS = get_from_secrets_or_env('COUCHBASE_PASS')
-
-DISABLE_INVOICING = str2bool(get_from_secrets_or_env('DISABLE_INVOICING'))
 
 ENVIRONMENT = get_from_secrets_or_env('ENVIRONMENT', '')
 ETRIPS_VERSION = get_from_secrets_or_env('ETRIPS_VERSION')
