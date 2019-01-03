@@ -55,16 +55,6 @@ def get_permission_matrix():
     return permission_matrix
 
 
-def get_permission_matrix_old():
-    path = os.path.join(
-        os.path.dirname(t2f.__file__),
-        "permission_matrix.yaml",
-    )
-    with open(path) as permission_matrix_file:
-        permission_matrix = yaml.load(permission_matrix_file.read())
-    return permission_matrix
-
-
 class PermissionMatrix(object):
     VIEW = 'view'
     EDIT = 'edit'
@@ -101,6 +91,17 @@ class FakePermissionMatrix(PermissionMatrix):
         return {}
 
 
+# TODO may remove the following code, once satisfied with above changes
+def get_permission_matrix_old():
+    path = os.path.join(
+        os.path.dirname(t2f.__file__),
+        "permission_matrix.yaml",
+    )
+    with open(path) as permission_matrix_file:
+        permission_matrix = yaml.load(permission_matrix_file.read())
+    return permission_matrix
+
+
 def parse_permission_matrix():
     """Extra data from permission_matrix
 
@@ -113,7 +114,7 @@ def parse_permission_matrix():
 
     Structure of permission_matrix is;
     Travel: {
-       "User": {
+       "User Role": {
          "Status": {
            "Model": {
              "edit": ...,
