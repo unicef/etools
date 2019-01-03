@@ -11,6 +11,8 @@ from django.utils.translation import ugettext
 
 from rest_framework import serializers
 from rest_framework.exceptions import ValidationError
+from unicef_attachments.fields import AttachmentSingleFileField
+from unicef_attachments.serializers import AttachmentSerializerMixin
 from unicef_locations.models import Location
 
 from etools.applications.action_points.models import ActionPoint
@@ -167,19 +169,22 @@ class TravelActivitySerializer(PermissionBasedModelSerializer):
         return ret
 
 
-class TravelAttachmentSerializer(serializers.ModelSerializer):
+class TravelAttachmentSerializer(AttachmentSerializerMixin, serializers.ModelSerializer):
     url = serializers.SerializerMethodField()
+    attachment = AttachmentSingleFileField()
 
     class Meta:
         model = TravelAttachment
-        fields = ('id', 'name', 'type', 'url', 'file')
+        fields = ('id', 'name', 'type', 'url', 'file', 'attachment')
 
     def create(self, validated_data):
         validated_data['travel'] = self.context['travel']
         return super().create(validated_data)
 
     def get_url(self, obj):
-        return obj.file.url
+        if obj.file:
+            return obj.file.url
+        return ""
 
 
 class TravelDetailsSerializer(PermissionBasedModelSerializer):
@@ -189,7 +194,7 @@ class TravelDetailsSerializer(PermissionBasedModelSerializer):
     cost_assignments = CostAssignmentSerializer(many=True, required=False)
     clearances = ClearancesSerializer(required=False)
     activities = TravelActivitySerializer(many=True, required=False)
-    attachments = TravelAttachmentSerializer(many=True, read_only=True)
+    attachments = TravelAttachmentSerializer(many=True, read_only=True, required=False)
     cost_summary = CostSummarySerializer(read_only=True)
     report = serializers.CharField(source='report_note', required=False, default='', allow_blank=True)
     mode_of_travel = serializers.ListField(child=LowerTitleField(), allow_null=True, required=False)

@@ -6,6 +6,7 @@ from django.urls import reverse
 import factory
 from unicef_locations.tests.factories import LocationFactory
 
+from etools.applications.attachments.tests.factories import AttachmentFactory, AttachmentFileTypeFactory
 from etools.applications.EquiTrack.tests.cases import BaseTenantTestCase
 from etools.applications.EquiTrack.tests.mixins import URLAssertionMixin
 from etools.applications.partners.models import PartnerType
@@ -25,10 +26,16 @@ from etools.applications.users.tests.factories import UserFactory
 
 
 class TravelDetails(URLAssertionMixin, BaseTenantTestCase):
+    @classmethod
+    def setUpTestData(cls):
+        cls.file_type = AttachmentFileTypeFactory(
+            code="t2f_travel_attachment"
+        )
+        cls.traveler = UserFactory(is_staff=True)
+        cls.unicef_staff = UserFactory(is_staff=True)
+
     def setUp(self):
         super().setUp()
-        self.traveler = UserFactory(is_staff=True)
-        self.unicef_staff = UserFactory(is_staff=True)
         self.travel = TravelFactory(traveler=self.traveler,
                                     supervisor=self.unicef_staff)
 
@@ -66,13 +73,13 @@ class TravelDetails(URLAssertionMixin, BaseTenantTestCase):
                           response_json,
                           exact=True)
 
-    def test_details_view_with_attachment(self):
+    def test_details_view_with_file(self):
         attachment = TravelAttachmentFactory(
             travel=self.travel,
             name=u'\u0628\u0631\u0646\u0627\u0645\u062c \u062a\u062f\u0631\u064a\u0628 \u0627\u0644\u0645\u062a\u0627\u0628\u0639\u064a\u0646.pdf',  # noqa
             file=factory.django.FileField(filename=u'travels/lebanon/24800/\u0628\u0631\u0646\u0627\u0645\u062c_\u062a\u062f\u0631\u064a\u0628_\u0627\u0644\u0645\u062a\u0627\u0628\u0639\u064a\u0646.pdf')  # noqa
         )
-        with self.assertNumQueries(23):
+        with self.assertNumQueries(24):
             response = self.forced_auth_req(
                 'get',
                 reverse('t2f:travels:details:index', args=[self.travel.pk]),
@@ -93,6 +100,26 @@ class TravelDetails(URLAssertionMixin, BaseTenantTestCase):
         self.assertEqual(len(response_json['attachments']), 1)
         self.assertEqual(response_json['attachments'][0]["id"], attachment.pk)
 
+    def test_details_view_with_attachment(self):
+        attachment = TravelAttachmentFactory(
+            travel=self.travel,
+        )
+        AttachmentFactory(
+            file="test_file.pdf",
+            file_type=self.file_type,
+            code="t2f_travel_attachment",
+            content_object=attachment,
+        )
+        with self.assertNumQueries(25):
+            response = self.forced_auth_req(
+                'get',
+                reverse('t2f:travels:details:index', args=[self.travel.pk]),
+                user=self.unicef_staff
+            )
+        response_json = json.loads(response.rendered_content)
+        self.assertEqual(len(response_json['attachments']), 1)
+        self.assertEqual(response_json['attachments'][0]["id"], attachment.pk)
+
     def test_travel_attachment(self):
         attachment = TravelAttachmentFactory(travel=self.travel)
         response = self.forced_auth_req(
@@ -103,7 +130,7 @@ class TravelDetails(URLAssertionMixin, BaseTenantTestCase):
         response_json = json.loads(response.rendered_content)
         self.assertEqual(len(response_json), 1)
         self.assertKeysIn(
-            ['id', 'name', 'type', 'url', 'file'],
+            ['id', 'name', 'type', 'url', 'file', 'attachment'],
             response_json[0],
             exact=True
         )
@@ -123,7 +150,7 @@ class TravelDetails(URLAssertionMixin, BaseTenantTestCase):
         response_json = json.loads(response.rendered_content)
         self.assertEqual(len(response_json), 1)
         self.assertKeysIn(
-            ['id', 'name', 'type', 'url', 'file'],
+            ['id', 'name', 'type', 'url', 'file', 'attachment'],
             response_json[0],
             exact=True
         )
@@ -151,7 +178,7 @@ class TravelDetails(URLAssertionMixin, BaseTenantTestCase):
                                         data=data, user=self.unicef_staff, request_format='multipart')
         response_json = json.loads(response.rendered_content)
 
-        expected_keys = ['file', 'id', 'name', 'type', 'url']
+        expected_keys = ['file', 'id', 'name', 'type', 'url', 'attachment']
         self.assertKeysIn(expected_keys, response_json)
 
         response = self.forced_auth_req('delete', reverse('t2f:travels:details:attachment_details',
@@ -159,6 +186,41 @@ class TravelDetails(URLAssertionMixin, BaseTenantTestCase):
                                                                   'attachment_pk': response_json['id']}),
                                         user=self.unicef_staff)
         self.assertEqual(response.status_code, 204)
+
+    def test_add_attachment(self):
+        travel = TravelFactory()
+        attachment = AttachmentFactory(
+            file="test_file.pdf",
+            file_type=None,
+            code="",
+        )
+        self.assertIsNone(attachment.file_type)
+        self.assertIsNone(attachment.content_object)
+        self.assertFalse(attachment.code)
+        attachment_qs = TravelAttachment.objects.filter(
+            travel=travel
+        )
+        self.assertFalse(attachment_qs.exists())
+        data = {
+            'name': 'second',
+            'type': 'something',
+            'attachment': attachment.pk,
+        }
+        response = self.forced_auth_req(
+            'post',
+            reverse(
+                't2f:travels:details:attachments',
+                kwargs={'travel_pk': travel.pk}
+            ),
+            data=data,
+            user=self.unicef_staff,
+            request_format='multipart',
+        )
+        response_json = json.loads(response.rendered_content)
+
+        expected_keys = ['file', 'id', 'name', 'type', 'url', 'attachment']
+        self.assertKeysIn(expected_keys, response_json)
+        self.assertTrue(attachment_qs.exists())
 
     def test_patch_request(self):
         currency = PublicsCurrencyFactory()
