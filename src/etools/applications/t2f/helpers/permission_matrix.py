@@ -43,7 +43,10 @@ def get_user_role_list(user, travel=None):
 def get_permission_matrix():
     permission_matrix = cache.get(PERMISSION_MATRIX_CACHE_KEY)
     if not permission_matrix:
-        path = os.path.join(os.path.dirname(t2f.__file__), "permission_matrix.json")
+        path = os.path.join(
+            os.path.dirname(t2f.__file__),
+            "permission_matrix.json",
+        )
 
         with open(path) as permission_matrix_file:
             permission_matrix = json.loads(permission_matrix_file.read())
@@ -53,7 +56,10 @@ def get_permission_matrix():
 
 
 def get_permission_matrix_old():
-    path = os.path.join(os.path.dirname(t2f.__file__), "permission_matrix.yaml")
+    path = os.path.join(
+        os.path.dirname(t2f.__file__),
+        "permission_matrix.yaml",
+    )
     with open(path) as permission_matrix_file:
         permission_matrix = yaml.load(permission_matrix_file.read())
     return permission_matrix
@@ -162,9 +168,9 @@ def parse_permission_matrix():
                 model_key = "travel" if model == "baseDetails" else model
                 data[status][model_key] = defaultdict(dict)
                 for field in matrix["travel"][user][status][model]:
-                    # get a list of all fields for the model
-                    model_fields[model_key].add("all" if field in ["edit", "view"] else field)
-
+                    model_fields[model_key].add(
+                        "all" if field in ["edit", "view"] else field
+                    )
                     perm_dict = matrix["travel"][user][status][model][field]
                     if field in ["edit", "view"]:
                         data[status][model_key]["all"][field] = perm_dict
@@ -180,7 +186,20 @@ def parse_permission_matrix():
 def convert_matrix_to_json():
     """Take old permission matrix in yaml format and convert to json"""
     matrix = get_permission_matrix_old()
-    path = os.path.join(os.path.dirname(t2f.__file__), "permission_matrix.json")
+
+    # remove obsolete states
+    results = {"action_point": matrix["action_point"], "travel": {}}
+    state_choices = [x[0] for x in Travel.CHOICES]
+    for user, states in matrix["travel"].items():
+        results["travel"][user] = {}
+        for state, models in states.items():
+            if state in state_choices:
+                results["travel"][user][state] = models
+
+    path = os.path.join(
+        os.path.dirname(t2f.__file__),
+        "permission_matrix.json",
+    )
 
     with open(path, "w") as fp:
-        fp.write(json.dumps(matrix))
+        fp.write(json.dumps(results))
