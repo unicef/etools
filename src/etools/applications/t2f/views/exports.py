@@ -2,6 +2,8 @@
 import functools
 import operator
 
+from django.utils import timezone
+
 from rest_framework import generics, status
 from rest_framework.permissions import IsAdminUser
 from rest_framework.response import Response
@@ -9,10 +11,9 @@ from rest_framework_csv import renderers
 from unicef_restlib.views import QueryStringFilterMixin
 
 from etools.applications.t2f.filters import travel_list
-from etools.applications.t2f.models import InvoiceItem, ItineraryItem, Travel, TravelActivity
+from etools.applications.t2f.models import ItineraryItem, Travel, TravelActivity
 from etools.applications.t2f.serializers.export import (
     FinanceExportSerializer,
-    InvoiceExportSerializer,
     TravelActivityExportSerializer,
     TravelAdminExportSerializer,
 )
@@ -46,8 +47,8 @@ class TravelActivityExport(QueryStringFilterMixin, ExportBaseView):
         ('f_partner', 'partner__pk__in'),
         ('f_result', 'result__pk__in'),
         ('f_travel_type', 'travel_type__in'),
-        ('f_year', 'date__year'),
-        ('f_month', 'date__month'),
+        ('f_year', ['travels__start_date__year', 'travels__end_date__year']),
+        ('f_month', ['travels__start_date__month', 'travels__end_date__month']),
         ('f_location', 'locations__pk__in'),
     )
 
@@ -81,9 +82,9 @@ class TravelActivityExport(QueryStringFilterMixin, ExportBaseView):
                 dto_list.append(self.SimpleDTO(travel, activity))
 
         serializer = self.get_serializer(dto_list, many=True)
-
         response = Response(data=serializer.data, status=status.HTTP_200_OK)
-        response['Content-Disposition'] = 'attachment; filename="TravelActivityExport.csv"'
+        response['Content-Disposition'] = 'attachment; filename=Travel_{}.csv'.format(timezone.now().date())
+
         return response
 
 
@@ -114,22 +115,4 @@ class TravelAdminExport(ExportBaseView):
 
         response = Response(data=serializer.data, status=status.HTTP_200_OK)
         response['Content-Disposition'] = 'attachment; filename="TravelAdminExport.csv"'
-        return response
-
-
-class InvoiceExport(ExportBaseView):
-    serializer_class = InvoiceExportSerializer
-
-    def get(self, request):
-        travel_queryset = self.filter_queryset(self.get_queryset())
-        queryset = InvoiceItem.objects.filter(
-            invoice__travel__in=travel_queryset)
-        queryset = queryset.order_by('invoice__travel__reference_number', 'id')
-        queryset = queryset.select_related(
-            'invoice', 'invoice__travel', 'invoice__currency', 'wbs', 'grant', 'fund')
-
-        serializer = self.get_serializer(queryset, many=True)
-
-        response = Response(data=serializer.data, status=status.HTTP_200_OK)
-        response['Content-Disposition'] = 'attachment; filename="InvoiceExport.csv"'
         return response

@@ -18,16 +18,11 @@ from etools.applications.publics.tests.factories import (
     PublicsCurrencyFactory,
     PublicsDSARateFactory,
     PublicsDSARegionFactory,
-    PublicsFundFactory,
-    PublicsGrantFactory,
-    PublicsWBSFactory,
 )
 from etools.applications.reports.tests.factories import ResultFactory, SectionFactory
-from etools.applications.t2f.models import Invoice, ModeOfTravel, TravelActivity, TravelType
+from etools.applications.t2f.models import ModeOfTravel, TravelActivity, TravelType
 from etools.applications.t2f.tests.factories import (
     ExpenseFactory,
-    InvoiceFactory,
-    InvoiceItemFactory,
     ItineraryItemFactory,
     TravelActivityFactory,
     TravelFactory,
@@ -53,9 +48,6 @@ class TravelExports(BaseTenantTestCase):
 
         export_url = reverse('t2f:travels:list:travel_admin_export')
         self.assertEqual(export_url, '/api/t2f/travels/travel-admin-export/')
-
-        export_url = reverse('t2f:travels:list:invoice_export')
-        self.assertEqual(export_url, '/api/t2f/travels/invoice-export/')
 
     def test_activity_export(self):
         tz = timezone.get_default_timezone()
@@ -518,157 +510,3 @@ class TravelExports(BaseTenantTestCase):
                           '',
                           'Car',
                           'SpiceAir'])
-
-    def test_invoice_export(self):
-        # Setting up initial data
-        wbs_1 = PublicsWBSFactory(name='2060/A0/12/1222')
-        wbs_2 = PublicsWBSFactory(name='2060/A0/12/1214')
-
-        grant_1 = PublicsGrantFactory(name='SM130147')
-        grant_2 = PublicsGrantFactory(name='SM130952')
-
-        fund_1 = PublicsFundFactory(name='BMA')
-        fund_2 = PublicsFundFactory(name='NON-GRANT')
-
-        wbs_1.grants.add(grant_1)
-        wbs_2.grants.add(grant_2)
-
-        grant_1.funds.add(fund_1)
-        grant_2.funds.add(fund_2)
-
-        usd = PublicsCurrencyFactory(name='USD', code='usd')
-
-        # Setting up test data
-        travel_1 = TravelFactory(
-            traveler=self.traveler, supervisor=self.unicef_staff)
-        travel_2 = TravelFactory(
-            traveler=self.traveler, supervisor=self.unicef_staff)
-
-        # Successful invoice
-        invoice_1 = InvoiceFactory(travel=travel_1,
-                                   currency=usd,
-                                   business_area='2060',
-                                   status=Invoice.SUCCESS,
-                                   vendor_number='100009998',
-                                   amount=Decimal('1232.12'),
-                                   vision_fi_id='FI12345',
-                                   messages=['Payment was made.'])
-
-        InvoiceItemFactory(invoice=invoice_1,
-                           wbs=wbs_1,
-                           grant=grant_1,
-                           fund=fund_1,
-                           amount=Decimal('1232.12'))
-
-        # Failed invoice
-        invoice_2 = InvoiceFactory(travel=travel_1,
-                                   currency=usd,
-                                   business_area='2060',
-                                   status=Invoice.ERROR,
-                                   vendor_number='100009998',
-                                   amount=Decimal('123'),
-                                   messages=['Payment failed. Not enough money'])
-
-        InvoiceItemFactory(invoice=invoice_2,
-                           wbs=wbs_1,
-                           grant=grant_1,
-                           fund=fund_1,
-                           amount=Decimal('123'))
-
-        # 2 item invoice
-        invoice_3 = InvoiceFactory(travel=travel_2,
-                                   currency=usd,
-                                   business_area='2060',
-                                   status=Invoice.PROCESSING,
-                                   vendor_number='12343424',
-                                   amount=Decimal('1919.11'))
-
-        InvoiceItemFactory(invoice=invoice_3,
-                           wbs=wbs_1,
-                           grant=grant_1,
-                           fund=fund_1,
-                           amount=Decimal('1000'))
-
-        InvoiceItemFactory(invoice=invoice_3,
-                           wbs=wbs_2,
-                           grant=grant_2,
-                           fund=fund_2,
-                           amount=Decimal('919.11'))
-
-        with self.assertNumQueries(1):
-            response = self.forced_auth_req('get', reverse('t2f:travels:list:invoice_export'),
-                                            user=self.unicef_staff)
-        export_csv = csv.reader(StringIO(response.content.decode('utf-8')))
-        rows = [r for r in export_csv]
-
-        self.assertEqual(len(rows), 5)
-
-        self.assertEqual(rows[0],
-                         ['reference_number',
-                          'ta_number',
-                          'vendor_number',
-                          'currency',
-                          'total_amount',
-                          'status',
-                          'message',
-                          'vision_fi_doc',
-                          'wbs',
-                          'grant',
-                          'fund',
-                          'amount'])
-
-        self.assertEqual(rows[1],
-                         ['2060/{}/1/01'.format(datetime.now().year),
-                          '{}/1'.format(datetime.now().year),
-                          '100009998',
-                          'USD',
-                          '1232.1200',
-                          'success',
-                          'Payment was made.',
-                          'FI12345',
-                          '2060/A0/12/1222',
-                          'SM130147',
-                          'BMA',
-                          '1232.1200'])
-
-        self.assertEqual(rows[2],
-                         ['2060/{}/1/02'.format(datetime.now().year),
-                          '{}/1'.format(datetime.now().year),
-                          '100009998',
-                          'USD',
-                          '123.0000',
-                          'error',
-                          'Payment failed. Not enough money',
-                          '',
-                          '2060/A0/12/1222',
-                          'SM130147',
-                          'BMA',
-                          '123.0000'])
-
-        self.assertEqual(rows[3],
-                         ['2060/{}/2/01'.format(datetime.now().year),
-                          '{}/2'.format(datetime.now().year),
-                          '12343424',
-                          'USD',
-                          '1919.1100',
-                          'processing',
-                          '',
-                          '',
-                          '2060/A0/12/1222',
-                          'SM130147',
-                          'BMA',
-                          '1000.0000'])
-
-        self.assertEqual(rows[4],
-                         ['2060/{}/2/01'.format(datetime.now().year),
-                          '{}/2'.format(datetime.now().year),
-                          '12343424',
-                          'USD',
-                          '1919.1100',
-                          'processing',
-                          '',
-                          '',
-                          '2060/A0/12/1214',
-                          'SM130952',
-                          'NON-GRANT',
-                          '919.1100'])

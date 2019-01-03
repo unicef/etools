@@ -263,7 +263,7 @@ class TravelDetailsSerializer(PermissionBasedModelSerializer):
         if 'mode_of_travel' in attrs and attrs['mode_of_travel'] is None:
             attrs['mode_of_travel'] = []
 
-        if self.transition_name in ['submit_for_approval', 'send_for_payment', 'certify']:
+        if self.transition_name == Travel.SUBMIT_FOR_APPROVAL:
             traveler = attrs.get('traveler', None)
             if not traveler and self.instance:
                 traveler = self.instance.traveler
