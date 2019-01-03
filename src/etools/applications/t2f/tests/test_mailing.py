@@ -1,6 +1,5 @@
 
 from django.core import mail
-from django.test.utils import override_settings
 
 from etools.applications.EquiTrack.tests.cases import BaseTenantTestCase
 from etools.applications.publics.tests.factories import PublicsBusinessAreaFactory
@@ -27,7 +26,6 @@ class MailingTest(BaseTenantTestCase):
         ItineraryItemFactory(travel=cls.travel)
         mail.outbox = []
 
-    @override_settings(DISABLE_INVOICING=False)
     def test_mailing(self):
         tenant_country = self.travel.traveler.profile.country
         tenant_country.business_area_code = '0'
@@ -36,15 +34,11 @@ class MailingTest(BaseTenantTestCase):
 
         self.travel.submit_for_approval()
         self.travel.approve()
-        self.travel.send_for_payment()
         self.travel.invoices.all().update(status=Invoice.SUCCESS)
-        self.travel.submit_certificate()
-        self.travel.approve_certificate()
-        self.travel.mark_as_certified()
         self.travel.report_note = 'Note'
         self.travel.mark_as_completed()
 
-        self.assertEqual(len(mail.outbox), 7)
+        self.assertEqual(len(mail.outbox), 3)
 
         for email in mail.outbox:
             self.assertIn(self.travel.reference_number, email.subject, email.subject)
