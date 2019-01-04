@@ -193,6 +193,7 @@ SHARED_APPS = (
     'waffle',
     'etools.applications.tokens',
     'etools.applications.permissions2',
+    'etools.applications.permissions_simplified',
     'etools.applications.field_monitoring.shared',
     'unicef_notification',
 )
@@ -225,7 +226,7 @@ INSTALLED_APPS = ('django_tenants',) + SHARED_APPS + TENANT_APPS
 
 # DJANGO: SECURITY
 ALLOWED_HOSTS = [
-    get_from_secrets_or_env('DJANGO_ALLOWED_HOST', '127.0.0.1'),
+    get_from_secrets_or_env('DJANGO_ALLOWED_HOST', '127.0.0.1'), '0.0.0.0',
 ]
 SECRET_KEY = r"j8%#f%3t@9)el9jh4f0ug4*mm346+wwwti#6(^@_ksf@&k^ob1"  # only used locally
 

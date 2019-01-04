@@ -11,7 +11,7 @@ from etools.applications.users.tests.factories import UserFactory
 
 class TestCheckView(BaseTenantTestCase):
     def setUp(self):
-        super(TestCheckView, self).setUp()
+        super().setUp()
         self.client = Client()
         self.url = reverse("monitoring:monitoring")
 

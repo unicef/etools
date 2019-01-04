@@ -22,7 +22,7 @@ class ValidityQuerySet(QuerySet):
     """
 
     def __init__(self, *args, **kwargs):
-        super(ValidityQuerySet, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
 
         if self.model:
             self.add_intial_q()
@@ -271,7 +271,7 @@ class DSARegion(SoftDeleteMixin, models.Model):
         if item in ['dsa_amount_usd', 'dsa_amount_60plus_usd', 'dsa_amount_local', 'dsa_amount_60plus_local',
                     'room_rate', 'finalization_date', 'effective_from_date']:
             return getattr(self.get_rate_at(), item)
-        return super(DSARegion, self).__getattr__(item)
+        return super().__getattr__(item)
 
 
 class DSARateQuerySet(QuerySet):
@@ -325,7 +325,7 @@ class DSARate(models.Model):
                                    effective_to_date=self.DEFAULT_EFFECTIVE_TILL)\
                 .update(effective_to_date=new_valid_to_date)
 
-        super(DSARate, self).save(*args, **kwargs)
+        super().save(*args, **kwargs)
 
     def __str__(self):
         return '{} ({} - {})'.format(self.region.label,
@@ -359,9 +359,9 @@ class DSARateUpload(models.Model):
     def save(self, *args, **kwargs):
         if not self.pk:
             self.status = DSARateUpload.UPLOADED
-            super(DSARateUpload, self).save(*args, **kwargs)
+            super().save(*args, **kwargs)
             # resolve circular imports with inline importing
             from etools.applications.publics.tasks import upload_dsa_rates
             upload_dsa_rates.delay(self.pk)
         else:
-            super(DSARateUpload, self).save(*args, **kwargs)
+            super().save(*args, **kwargs)

@@ -30,7 +30,7 @@ class TestDASdto(BaseTenantTestCase):
         )
 
     def setUp(self):
-        super(TestDASdto, self).setUp()
+        super().setUp()
         self.travel = TravelFactory()
         self.itinerary_item = ItineraryItemFactory(
             travel=self.travel,
@@ -165,7 +165,7 @@ class TestDSACalculator(BaseTenantTestCase):
                               dsa_amount_60plus_usd=360)
 
     def setUp(self):
-        super(TestDSACalculator, self).setUp()
+        super().setUp()
         currency = PublicsCurrencyFactory(code="USD")
         self.travel = TravelFactory(currency=currency)
 

@@ -37,7 +37,7 @@ class Quarter(models.Model):
 
 class CountryProgrammeManager(models.Manager):
     def get_queryset(self):
-        return super(CountryProgrammeManager, self).get_queryset().filter(invalid=False)
+        return super().get_queryset().filter(invalid=False)
 
     @property
     def all_active_and_future(self):
@@ -105,9 +105,9 @@ class CountryProgramme(models.Model):
                 from etools.applications.partners.models import Agreement
                 with transaction.atomic():
                     Agreement.objects.filter(agreement_type='PCA', country_programme=self).update(end=self.to_date)
-                    super(CountryProgramme, self).save(*args, **kwargs)
+                    super().save(*args, **kwargs)
                     return
-        super(CountryProgramme, self).save(*args, **kwargs)
+        super().save(*args, **kwargs)
 
 
 class ResultType(models.Model):
@@ -157,13 +157,13 @@ Section = Sector
 
 class ResultManager(models.Manager):
     def get_queryset(self):
-        return super(ResultManager, self).get_queryset().select_related(
+        return super().get_queryset().select_related(
             'country_programme', 'result_type')
 
 
 class OutputManager(models.Manager):
     def get_queryset(self):
-        return super(OutputManager, self).get_queryset().filter(result_type__name=ResultType.OUTPUT).select_related(
+        return super().get_queryset().filter(result_type__name=ResultType.OUTPUT).select_related(
             'country_programme', 'result_type')
 
 
@@ -333,7 +333,7 @@ class Result(MPTTModel):
         # TODO add a validator that makes sure that the current result wbs fits within the countryProgramme wbs
         if not self.wbs:
             self.wbs = None
-        super(Result, self).save(*args, **kwargs)
+        super().save(*args, **kwargs)
         nodes = self.get_descendants()
         for node in nodes:
             if node.hidden is not self.hidden:
@@ -379,7 +379,7 @@ class LowerResult(TimeStampedModel):
                 self.result_link.intervention.id,
                 latest_ll_id + 1
             )
-        super(LowerResult, self).save(**kwargs)
+        super().save(**kwargs)
 
         # reset certain caches
         self.result_link.intervention.clear_caches()
@@ -496,7 +496,7 @@ class IndicatorBlueprint(TimeStampedModel):
         # Prevent from saving empty strings as code because of the unique together constraint
         if self.code == '':
             self.code = None
-        super(IndicatorBlueprint, self).save(*args, **kwargs)
+        super().save(*args, **kwargs)
 
     class Meta:
         ordering = ['-id']
@@ -789,7 +789,7 @@ class Indicator(TimeStampedModel):
         # Prevent from saving empty strings as code because of the unique together constraint
         if not self.code:
             self.code = ''
-        super(Indicator, self).save(*args, **kwargs)
+        super().save(*args, **kwargs)
 
 
 class ReportingRequirement(TimeStampedModel):

@@ -21,9 +21,11 @@ from etools.applications.partners.models import (
 )
 from etools.applications.partners.tests.factories import (
     AgreementFactory,
+    AssessmentFactory,
     InterventionFactory,
     PartnerFactory,
     PartnerPlannedVisitsFactory,
+    PartnerStaffFactory,
 )
 from etools.applications.partners.views.partner_organization_v2 import PartnerOrganizationAddView
 from etools.applications.t2f.tests.factories import TravelActivityFactory
@@ -416,7 +418,7 @@ class TestPartnerOrganizationAddView(BaseTenantTestCase):
         cls.user.groups.add(GroupFactory())
 
     def setUp(self):
-        super(TestPartnerOrganizationAddView, self).setUp()
+        super().setUp()
         self.view = PartnerOrganizationAddView.as_view()
 
     def test_no_vendor_number(self):
@@ -664,4 +666,157 @@ class TestPartnerPlannedVisitsDeleteView(BaseTenantTestCase):
             reverse("partners_api:partner-planned-visits-del", args=[404]),
             user=self.unicef_staff,
         )
+        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
+
+
+class TestPartnerOrganizationAssessmentUpdateDeleteView(BaseTenantTestCase):
+    @classmethod
+    def setUpTestData(cls):
+        cls.unicef_staff = UserFactory(is_staff=True)
+        cls.partner = PartnerFactory(
+            partner_type=PartnerType.CIVIL_SOCIETY_ORGANIZATION,
+            cso_type="International",
+            hidden=False,
+            vendor_number="DDD",
+            short_name="Short name",
+        )
+        cls.partner_staff = PartnerStaffFactory(partner=cls.partner)
+        cls.partnership_manager_user = UserFactory(is_staff=True)
+        cls.partnership_manager_user.groups.add(GroupFactory())
+        cls.partnership_manager_user.profile.partner_staff_member = cls.partner_staff.id
+        cls.partnership_manager_user.save()
+
+    def setUp(self):
+        self.assessment = AssessmentFactory(
+            partner=self.partner,
+            completed_date=None,
+            report=None,
+        )
+        self.attachment = AttachmentFactory(
+            file="test_file.pdf",
+            file_type=None,
+            code="",
+        )
+
+    def test_post(self):
+        assessment_qs = Assessment.objects.filter(partner=self.partner)
+        assessment_count = assessment_qs.count()
+        response = self.forced_auth_req(
+            'post',
+            reverse('partners_api:partner-assessment'),
+            user=self.partnership_manager_user,
+            data={
+                "partner": self.partner.pk,
+                "type": Assessment.TYPE_OTHER,
+                "report_attachment": self.attachment.pk,
+                "completed_date": datetime.date.today(),
+            }
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        self.assertEqual(assessment_qs.count(), assessment_count + 1)
+        self.attachment.refresh_from_db()
+        self.assertTrue(self.attachment.file_type)
+
+    def test_patch(self):
+        self.assertTrue(self.assessment.active)
+        response = self.forced_auth_req(
+            'patch',
+            reverse(
+                'partners_api:partner-assessment-detail',
+                args=[self.assessment.pk]
+            ),
+            user=self.partnership_manager_user,
+            data={
+                "active": False
+            }
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assessment.refresh_from_db()
+        self.assertFalse(self.assessment.active)
+
+    def test_patch_permission(self):
+        response = self.forced_auth_req(
+            'patch',
+            reverse(
+                'partners_api:partner-assessment-detail',
+                args=[self.assessment.pk]
+            ),
+            user=self.unicef_staff,
+            data={
+                "active": False
+            }
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+
+    def test_delete_valid(self):
+        response = self.forced_auth_req(
+            'delete',
+            reverse(
+                'partners_api:partner-assessment-detail',
+                args=[self.assessment.pk]
+            ),
+            user=self.partnership_manager_user,
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
+
+    def test_delete_error_completed_date(self):
+        assessment = AssessmentFactory(
+            partner=self.partner,
+            report=None,
+        )
+        response = self.forced_auth_req(
+            'delete',
+            reverse(
+                'partners_api:partner-assessment-detail',
+                args=[assessment.pk]
+            ),
+            user=self.partnership_manager_user,
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertEqual(response.data, ["Cannot delete a completed assessment"])
+
+    def test_delete_error_report(self):
+        assessment = AssessmentFactory(
+            partner=self.partner,
+            completed_date=None,
+        )
+        response = self.forced_auth_req(
+            'delete',
+            reverse(
+                'partners_api:partner-assessment-detail',
+                args=[assessment.pk]
+            ),
+            user=self.partnership_manager_user,
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertEqual(response.data, ["Cannot delete a completed assessment"])
+
+    def test_delete_permission(self):
+        response = self.forced_auth_req(
+            'delete',
+            reverse(
+                'partners_api:partner-assessment-detail',
+                args=[self.assessment.pk]
+            ),
+            user=self.unicef_staff,
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+
+    def test_delete_not_found(self):
+        response = self.forced_auth_req(
+            'delete',
+            reverse(
+                'partners_api:partner-assessment-detail',
+                args=[404]
+            ),
+            user=self.partnership_manager_user,
+        )
+
         self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)

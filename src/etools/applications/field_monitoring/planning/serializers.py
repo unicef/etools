@@ -16,9 +16,10 @@ from etools.applications.field_monitoring.fm_settings.serializers.cp_outputs imp
     PartnerOrganizationSerializer, InterventionSerializer
 from etools.applications.field_monitoring.fm_settings.serializers.locations import LocationSiteLightSerializer
 from etools.applications.publics.models import EPOCH_ZERO
+from etools.applications.permissions_simplified.serializers import SafeReadOnlySerializerMixin
 
 
-class YearPlanSerializer(WritableNestedSerializerMixin, SnapshotModelSerializer):
+class YearPlanSerializer(WritableNestedSerializerMixin, SafeReadOnlySerializerMixin, SnapshotModelSerializer):
     other_aspects = CommentSerializer(many=True, required=False)
     history = HistorySerializer(many=True, label=_('History'), read_only=True)
     tasks_by_month = serializers.SerializerMethodField(label=_('Number Of Tasks By Month'))
@@ -85,6 +86,6 @@ class TaskListSerializer(serializers.ModelSerializer):
         return completed_by_month
 
 
-class TaskSerializer(TaskListSerializer):
+class TaskSerializer(SafeReadOnlySerializerMixin, TaskListSerializer):
     class Meta(TaskListSerializer.Meta):
         pass

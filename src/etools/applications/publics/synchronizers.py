@@ -27,7 +27,7 @@ class CostAssignmentSynch(VisionDataSynchronizer):
     REQUIRED_KEYS = []
 
     def __init__(self, *args, **kwargs):
-        super(CostAssignmentSynch, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
         all_grants = Grant.objects.prefetch_related('funds').all()
         all_funds = Fund.objects.all()
         self.grants = {k.name: k for k in all_grants}

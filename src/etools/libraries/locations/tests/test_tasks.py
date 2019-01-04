@@ -30,9 +30,10 @@ class TestLocationViews(BaseTenantTestCase):
 
     def _run_update(self, carto_table_pk):
         # IMPORTANT mock the actual function loaded in tasks, it doesn't work by mocking the function in task_utils
-        with patch("etools.libraries.locations.tasks.validate_remap_table", self.mock_remap_data), \
-             patch("etools.libraries.locations.tasks.get_cartodb_locations", self.mock_carto_data):
-                return tasks.update_sites_from_cartodb(carto_table_pk)
+        with patch(
+                "etools.libraries.locations.tasks.validate_remap_table", self.mock_remap_data), patch(
+                "etools.libraries.locations.tasks.get_cartodb_locations", self.mock_carto_data):
+            return tasks.update_sites_from_cartodb(carto_table_pk)
 
     def _run_cleanup(self, carto_table_pk):
         with patch("unicef_locations.tasks.SQLClient.send", self.mock_sql):
@@ -69,7 +70,7 @@ class TestLocationViews(BaseTenantTestCase):
             [{"old_pcode": self.remapped_location.p_code, "new_pcode": self.new_location.p_code}],
             [self.remapped_location.p_code],
             [self.new_location.p_code],
-         )
+        )
 
         self.mock_carto_data.return_value = True, [{
             self.carto_table.pcode_col: self.new_location.p_code,

@@ -182,7 +182,7 @@ class Attachment(TimeStampedModel, models.Model):
         return str(self.file)
 
     def clean(self):
-        super(Attachment, self).clean()
+        super().clean()
         if bool(self.file) == bool(self.hyperlink):
             raise ValidationError(_('Please provide file or hyperlink.'))
 
@@ -204,7 +204,7 @@ class Attachment(TimeStampedModel, models.Model):
     def save(self, *args, **kwargs):
         from etools.applications.attachments.utils import denormalize_attachment
 
-        super(Attachment, self).save(*args, **kwargs)
+        super().save(*args, **kwargs)
         denormalize_attachment(self)
 
 

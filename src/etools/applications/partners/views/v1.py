@@ -91,7 +91,7 @@ class PCAPDFView(LoginRequiredMixin, PDFTemplateView):
 
         font_path = settings.PACKAGE_ROOT + '/assets/fonts/'
 
-        return super(PCAPDFView, self).get_context_data(
+        return super().get_context_data(
             error=error,
             pagesize="Letter",
             title="Partnership",
@@ -118,7 +118,7 @@ class PortalLoginFailedView(TemplateView):
     template_name = "partner_loginfailed.html"
 
     def get_context_data(self, **kwargs):
-        context = super(PortalLoginFailedView, self).get_context_data(**kwargs)
+        context = super().get_context_data(**kwargs)
         context['email'] = urlsafe_base64_decode(context['email'])
         return context
 

@@ -41,7 +41,7 @@ class PartnerStaffMemberCreateSerializer(serializers.ModelSerializer):
         fields = "__all__"
 
     def validate(self, data):
-        data = super(PartnerStaffMemberCreateSerializer, self).validate(data)
+        data = super().validate(data)
         email = data.get('email', "")
         active = data.get('active', "")
         User = get_user_model()
@@ -104,7 +104,7 @@ class PartnerStaffMemberCreateUpdateSerializer(serializers.ModelSerializer):
         fields = "__all__"
 
     def validate(self, data):
-        data = super(PartnerStaffMemberCreateUpdateSerializer, self).validate(data)
+        data = super().validate(data)
         email = data.get('email', "")
         active = data.get('active', "")
         User = get_user_model()
@@ -318,6 +318,7 @@ class PartnerOrganizationDashboardSerializer(serializers.ModelSerializer):
             'outstanding_dct_amount_6_to_9_months_usd',
             'outstanding_dct_amount_more_than_9_months_usd',
             'vendor_number',
+            'partner_type',
         )
 
 
@@ -334,7 +335,7 @@ class PartnerOrganizationCreateUpdateSerializer(SnapshotModelSerializer):
         return json.loads(obj.hact_values) if isinstance(obj.hact_values, str) else obj.hact_values
 
     def validate(self, data):
-        data = super(PartnerOrganizationCreateUpdateSerializer, self).validate(data)
+        data = super().validate(data)
 
         type_of_assessment = data.get('type_of_assessment', self.instance.type_of_assessment)
         rating = data.get('rating', self.instance.rating)

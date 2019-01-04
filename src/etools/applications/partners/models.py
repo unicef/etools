@@ -523,7 +523,7 @@ class PartnerOrganization(TimeStampedModel):
             e.args = ['hact_values needs to be a valid format (dict)']
             raise e
 
-        super(PartnerOrganization, self).save(*args, **kwargs)
+        super().save(*args, **kwargs)
         if hact_is_string:
             self.hact_values = json.dumps(self.hact_values, cls=EToolsEncoder)
 
@@ -841,7 +841,7 @@ class CoreValuesAssessment(TimeStampedModel):
 class PartnerStaffMemberManager(models.Manager):
 
     def get_queryset(self):
-        return super(PartnerStaffMemberManager, self).get_queryset().select_related('partner')
+        return super().get_queryset().select_related('partner')
 
 
 class PartnerStaffMember(TimeStampedModel):
@@ -921,7 +921,7 @@ class PartnerStaffMember(TimeStampedModel):
             elif not existing_instance.active and self.active:
                 self.reactivate_signal()
 
-        return super(PartnerStaffMember, self).save(**kwargs)
+        return super().save(**kwargs)
 
 
 class PlannedEngagement(TimeStampedModel):
@@ -1080,6 +1080,7 @@ class Assessment(TimeStampedModel):
         verbose_name=_('Basis for risk rating'),
         default=False,
     )
+    active = models.BooleanField(default=True)
 
     tracker = FieldTracker()
 
@@ -1096,7 +1097,7 @@ class Assessment(TimeStampedModel):
 class AgreementManager(models.Manager):
 
     def get_queryset(self):
-        return super(AgreementManager, self).get_queryset().select_related('partner')
+        return super().get_queryset().select_related('partner')
 
 
 def activity_to_active_side_effects(i, old_instance=None, user=None):
@@ -1357,7 +1358,7 @@ class Agreement(TimeStampedModel):
 
         if not oldself:
             # to create a ref number we need an id
-            super(Agreement, self).save()
+            super().save()
             self.update_reference_number()
         else:
             # if it's draft and not SSFA or SSFA and no interventions, update ref number on every save.
@@ -1384,13 +1385,13 @@ class Agreement(TimeStampedModel):
             # set end date
             self.end = self.country_programme.to_date
 
-        return super(Agreement, self).save()
+        return super().save()
 
 
 class AgreementAmendmentManager(models.Manager):
 
     def get_queryset(self):
-        return super(AgreementAmendmentManager, self).get_queryset().select_related('agreement__partner')
+        return super().get_queryset().select_related('agreement__partner')
 
 
 class AgreementAmendment(TimeStampedModel):
@@ -1476,13 +1477,13 @@ class AgreementAmendment(TimeStampedModel):
 
         if update_agreement_number_needed:
             self.agreement.save(amendment_number=self.number)
-        return super(AgreementAmendment, self).save(**kwargs)
+        return super().save(**kwargs)
 
 
 class InterventionManager(models.Manager):
 
     def get_queryset(self):
-        return super(InterventionManager, self).get_queryset().prefetch_related(
+        return super().get_queryset().prefetch_related(
             'agreement__partner',
             'partner_focal_points',
             'unicef_focal_points',
@@ -2125,7 +2126,7 @@ class Intervention(TimeStampedModel):
             self.update_reference_number(amendment_number)
         if not oldself:
             # to create a reference number we need a pk
-            super(Intervention, self).save()
+            super().save()
             self.update_reference_number()
         elif self.status == self.DRAFT:
             self.update_reference_number()
@@ -2133,7 +2134,7 @@ class Intervention(TimeStampedModel):
         if not save_from_agreement:
             self.update_ssfa_properties()
 
-        super(Intervention, self).save()
+        super().save()
 
 
 class InterventionAmendment(TimeStampedModel):
@@ -2220,7 +2221,7 @@ class InterventionAmendment(TimeStampedModel):
             self.amendment_number = self.compute_reference_number()
             self.intervention.in_amendment = True
             self.intervention.save(amendment_number=self.amendment_number)
-        return super(InterventionAmendment, self).save(**kwargs)
+        return super().save(**kwargs)
 
     def __str__(self):
         return '{}:- {}'.format(
@@ -2321,7 +2322,7 @@ class InterventionBudget(TimeStampedModel):
         """
         self.total = self.total_unicef_contribution() + self.partner_contribution
         self.total_local = self.total_unicef_contribution_local() + self.partner_contribution_local
-        super(InterventionBudget, self).save(**kwargs)
+        super().save(**kwargs)
 
     def __str__(self):
         # self.total is None if object hasn't been saved yet
