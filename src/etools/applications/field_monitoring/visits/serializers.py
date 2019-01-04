@@ -17,7 +17,7 @@ from etools.applications.field_monitoring.planning.models import Task
 from etools.applications.field_monitoring.planning.serializers import TaskListSerializer
 from etools.applications.field_monitoring.fm_settings.models import LogIssue
 from etools.applications.field_monitoring.shared.models import FMMethod
-from etools.applications.field_monitoring.visits.models import Visit, UNICEFVisit, VisitMethodType, VisitCPOutputConfig, \
+from etools.applications.field_monitoring.visits.models import Visit, VisitMethodType, VisitCPOutputConfig, \
     VisitTaskLink
 from etools.applications.users.serializers import MinimalUserSerializer
 
@@ -151,8 +151,3 @@ class VisitSerializer(SnapshotModelSerializer, VisitListSerializer):
             instance=FMMethod.objects.filter(checklist_items__visit_task__visit=obj),
             many=True
         ).data
-
-
-class UNICEFVisitSerializer(VisitSerializer):
-    class Meta(VisitSerializer.Meta):
-        model = UNICEFVisit

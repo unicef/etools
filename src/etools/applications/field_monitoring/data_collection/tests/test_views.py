@@ -10,12 +10,12 @@ from etools.applications.field_monitoring.data_collection.tests.factories import
     CheckListItemValueFactory
 from etools.applications.field_monitoring.tests.base import FMBaseTestCaseMixin
 from etools.applications.field_monitoring.visits.models import Visit, TaskCheckListItem, FindingMixin
-from etools.applications.field_monitoring.visits.tests.factories import UNICEFVisitFactory, TaskCheckListItemFactory
+from etools.applications.field_monitoring.visits.tests.factories import VisitFactory, TaskCheckListItemFactory
 
 
 class VisitDataCollectionViewTestCase(FMBaseTestCaseMixin, BaseTenantTestCase):
     def test_details(self):
-        visit = UNICEFVisitFactory(status=Visit.STATUS_CHOICES.assigned)
+        visit = VisitFactory(status=Visit.STATUS_CHOICES.assigned)
 
         response = self.forced_auth_req(
             'get', reverse('field_monitoring_data_collection:visits-detail', args=[visit.id]),
@@ -60,7 +60,7 @@ class TaskDataViewTestCase(FMBaseTestCaseMixin, BaseTenantTestCase):
     def setUpTestData(cls):
         super().setUpTestData()
 
-        cls.visit = UNICEFVisitFactory(status=Visit.STATUS_CHOICES.assigned)
+        cls.visit = VisitFactory(status=Visit.STATUS_CHOICES.assigned)
         cls.started_method = StartedMethodFactory(visit=cls.visit)
         cls.task_data = TaskDataFactory(visit_task__visit=cls.visit, started_method=cls.started_method)
 

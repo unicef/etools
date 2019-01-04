@@ -13,13 +13,13 @@ from etools.applications.field_monitoring.fm_settings.tests.factories import FMM
 from etools.applications.field_monitoring.planning.tests.factories import TaskFactory
 from etools.applications.field_monitoring.tests.base import FMBaseTestCaseMixin
 from etools.applications.field_monitoring.visits.models import Visit
-from etools.applications.field_monitoring.visits.tests.factories import UNICEFVisitFactory, VisitMethodTypeFactory
+from etools.applications.field_monitoring.visits.tests.factories import VisitFactory, VisitMethodTypeFactory
 
 
 class VisitsViewTestCase(FMBaseTestCaseMixin, BaseTenantTestCase):
     def test_list(self):
         for status_code, status_display in Visit.STATUS_CHOICES:
-            UNICEFVisitFactory(status=status_code)
+            VisitFactory(status=status_code)
 
         response = self.forced_auth_req(
             'get', reverse('field_monitoring_visits:visits-list'),
@@ -31,7 +31,7 @@ class VisitsViewTestCase(FMBaseTestCaseMixin, BaseTenantTestCase):
 
     def test_create(self):
         response = self.forced_auth_req(
-            'post', reverse('field_monitoring_visits:visits-unicef-list'),
+            'post', reverse('field_monitoring_visits:visits-list'),
             user=self.unicef_user,
             data={
                 'start_date': timezone.now().date(),
@@ -42,11 +42,11 @@ class VisitsViewTestCase(FMBaseTestCaseMixin, BaseTenantTestCase):
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
 
     def test_update_tasks(self):
-        visit = UNICEFVisitFactory(tasks__count=2)
+        visit = VisitFactory(tasks__count=2)
         tasks = [visit.tasks.first().id, TaskFactory().id]
 
         response = self.forced_auth_req(
-            'patch', reverse('field_monitoring_visits:visits-unicef-detail', args=[visit.id]),
+            'patch', reverse('field_monitoring_visits:visits-detail', args=[visit.id]),
             user=self.unicef_user,
             data={
                 'tasks': tasks
@@ -57,7 +57,7 @@ class VisitsViewTestCase(FMBaseTestCaseMixin, BaseTenantTestCase):
         self.assertListEqual(sorted(map(lambda t: t['id'], response.data['tasks'])), sorted(tasks))
 
     def test_scope_by_methods(self):
-        visit = UNICEFVisitFactory(status=Visit.STATUS_CHOICES.draft, tasks__count=1)
+        visit = VisitFactory(status=Visit.STATUS_CHOICES.draft, tasks__count=1)
 
         method_type = FMMethodTypeFactory()
         task = visit.tasks.first()
@@ -73,7 +73,7 @@ class VisitsViewTestCase(FMBaseTestCaseMixin, BaseTenantTestCase):
         visit.save()
 
         response = self.forced_auth_req(
-            'get', reverse('field_monitoring_visits:visits-unicef-detail', args=[visit.id]),
+            'get', reverse('field_monitoring_visits:visits-detail', args=[visit.id]),
             user=self.unicef_user
         )
 
@@ -87,7 +87,7 @@ class VisitsViewTestCase(FMBaseTestCaseMixin, BaseTenantTestCase):
 
 class VisitMethodTypesVIewTestCase(FMBaseTestCaseMixin, BaseTenantTestCase):
     def test_create(self):
-        visit = UNICEFVisitFactory(status=Visit.STATUS_CHOICES.draft)
+        visit = VisitFactory(status=Visit.STATUS_CHOICES.draft)
 
         response = self.forced_auth_req(
             'post', reverse('field_monitoring_visits:visit-method-types-list', args=[visit.id]),

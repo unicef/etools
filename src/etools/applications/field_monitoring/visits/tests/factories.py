@@ -6,7 +6,7 @@ from etools.applications.field_monitoring.fm_settings.tests.factories import FMM
     CPOutputConfigFactory
 from etools.applications.field_monitoring.planning.tests.factories import TaskFactory
 from etools.applications.field_monitoring.tests.factories import UserFactory
-from etools.applications.field_monitoring.visits.models import Visit, UNICEFVisit, VisitTaskLink, VisitMethodType, \
+from etools.applications.field_monitoring.visits.models import Visit, VisitTaskLink, VisitMethodType, \
     TaskCheckListItem, VisitCPOutputConfig
 from etools.applications.utils.common.tests.factories import InheritedTrait
 
@@ -92,11 +92,6 @@ class VisitTaskLinkFactory(factory.DjangoModelFactory):
 
     class Meta:
         model = VisitTaskLink
-
-
-class UNICEFVisitFactory(VisitFactory):
-    class Meta:
-        model = UNICEFVisit
 
 
 class TaskCheckListItemFactory(factory.DjangoModelFactory):

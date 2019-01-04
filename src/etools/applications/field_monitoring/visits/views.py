@@ -1,38 +1,28 @@
-from django.http import HttpResponseNotAllowed
 from rest_framework import mixins, viewsets
 from unicef_restlib.views import NestedViewSetMixin
 
 from etools.applications.field_monitoring.views import FMBaseViewSet
-from etools.applications.field_monitoring.visits.models import Visit, UNICEFVisit, VisitMethodType
-from etools.applications.field_monitoring.visits.serializers import VisitListSerializer, UNICEFVisitSerializer, \
-    VisitMethodTypeSerializer
+from etools.applications.field_monitoring.visits.models import Visit, VisitMethodType
+from etools.applications.field_monitoring.visits.serializers import VisitListSerializer, \
+    VisitMethodTypeSerializer, VisitSerializer
 
 
 class VisitsViewSet(
     FMBaseViewSet,
     mixins.ListModelMixin,
     mixins.CreateModelMixin,
-    viewsets.GenericViewSet
-):
-    serializer_class = VisitListSerializer
-    queryset = Visit.objects.prefetch_related(
-        'tasks', 'primary_field_monitor', 'team_members',
-    ).select_subclasses()
-
-    def create(self, request, *args, **kwargs):
-        return HttpResponseNotAllowed('GET', 'OPTIONS')
-
-
-class UNICEFVisitsViewSet(
-    FMBaseViewSet,
-    mixins.CreateModelMixin,
     mixins.RetrieveModelMixin,
     mixins.UpdateModelMixin,
     mixins.DestroyModelMixin,
     viewsets.GenericViewSet
 ):
-    serializer_class = UNICEFVisitSerializer
-    queryset = UNICEFVisit.objects.all()
+    serializer_class = VisitSerializer
+    queryset = Visit.objects.prefetch_related(
+        'tasks', 'primary_field_monitor', 'team_members',
+    ).select_subclasses()
+    serializer_action_classes = {
+        'list': VisitListSerializer
+    }
 
 
 class VisitMethodTypesViewSet(

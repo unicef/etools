@@ -1,7 +1,7 @@
 from etools.applications.field_monitoring.fm_settings.tests.factories import FMMethodTypeFactory, \
     PlannedCheckListItemFactory, FMMethodFactory
 from etools.applications.field_monitoring.visits.models import Visit
-from etools.applications.field_monitoring.visits.tests.factories import UNICEFVisitFactory
+from etools.applications.field_monitoring.visits.tests.factories import VisitFactory
 
 
 class AssignedVisitMixin(object):
@@ -9,7 +9,7 @@ class AssignedVisitMixin(object):
     def setUpTestData(cls):
         super().setUpTestData()
 
-        cls.assigned_visit = UNICEFVisitFactory(status=Visit.STATUS_CHOICES.draft, tasks__count=1)
+        cls.assigned_visit = VisitFactory(status=Visit.STATUS_CHOICES.draft, tasks__count=1)
 
         cls.assigned_method_type = FMMethodTypeFactory()
         task = cls.assigned_visit.tasks.first()

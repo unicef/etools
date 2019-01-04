@@ -53,8 +53,12 @@ class Visit(InheritedModelMixin, SoftDeleteMixin, TimeStampedModel):
         STATUS_CHOICES.cancelled: 'date_cancelled',
     }
 
-    # to be used by frontend to know what's the type of the visit is presented
-    visit_type = 'unknown'
+    VISIT_TYPE_CHOICES = Choices(
+        ('staff', _('Staff')),
+        ('tpm', _('TPM')),
+    )
+
+    visit_type = models.CharField(choices=VISIT_TYPE_CHOICES, default=VISIT_TYPE_CHOICES.staff, max_length=10)
 
     author = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, blank=True, null=True)
 
@@ -170,15 +174,6 @@ class Visit(InheritedModelMixin, SoftDeleteMixin, TimeStampedModel):
     )
     def cancel(self):
         pass
-
-
-class UNICEFVisit(Visit):
-    visit_type = 'unicef'
-
-    class Meta:
-        verbose_name = _('UNICEF Visit')
-        verbose_name_plural = _('UNICEF Visits')
-        ordering = ('id',)
 
 
 class TaskCheckListItem(FindingMixin, OrderedModel):

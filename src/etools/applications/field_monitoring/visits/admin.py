@@ -1,7 +1,7 @@
 from django.contrib import admin
 from django.utils.translation import ugettext_lazy as _
 
-from etools.applications.field_monitoring.visits.models import UNICEFVisit, VisitTaskLink, TaskCheckListItem, \
+from etools.applications.field_monitoring.visits.models import Visit, VisitTaskLink, TaskCheckListItem, \
     VisitMethodType
 
 
@@ -9,9 +9,9 @@ class VisitTaskLinkInline(admin.StackedInline):
     model = VisitTaskLink
 
 
-@admin.register(UNICEFVisit)
-class UNICEFVisitAdmin(admin.ModelAdmin):
-    list_display = ('reference_number', 'start_date', 'end_date', 'status')
+@admin.register(Visit)
+class VisitAdmin(admin.ModelAdmin):
+    list_display = ('reference_number', 'visit_type', 'start_date', 'end_date', 'status')
     list_filter = ('status',)
     inlines = (VisitTaskLinkInline,)
 
