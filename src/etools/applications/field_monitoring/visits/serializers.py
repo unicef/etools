@@ -5,6 +5,7 @@ from django.utils.translation import ugettext_lazy as _
 
 from rest_framework import serializers
 from rest_framework.exceptions import ValidationError
+from unicef_locations.serializers import LocationLightSerializer
 
 from unicef_restlib.fields import SeparatedReadWriteField
 
@@ -12,6 +13,7 @@ from unicef_snapshot.serializers import SnapshotModelSerializer
 
 from etools.applications.field_monitoring.fm_settings.serializers.cp_outputs import NestedCPOutputSerializer, \
     PartnerOrganizationSerializer
+from etools.applications.field_monitoring.fm_settings.serializers.locations import LocationSiteLightSerializer
 from etools.applications.field_monitoring.fm_settings.serializers.methods import FMMethodTypeSerializer
 from etools.applications.field_monitoring.planning.models import Task
 from etools.applications.field_monitoring.planning.serializers import TaskListSerializer
@@ -23,6 +25,8 @@ from etools.applications.users.serializers import MinimalUserSerializer
 
 
 class VisitLightSerializer(serializers.ModelSerializer):
+    location = SeparatedReadWriteField(read_field=LocationLightSerializer())
+    location_site = SeparatedReadWriteField(read_field=LocationSiteLightSerializer())
     tasks = SeparatedReadWriteField(
         read_field=TaskListSerializer(many=True),
         write_field=serializers.PrimaryKeyRelatedField(
@@ -36,7 +40,8 @@ class VisitLightSerializer(serializers.ModelSerializer):
         model = Visit
         fields = (
             'id', 'reference_number', 'start_date', 'end_date', 'visit_type',
-            'tasks', 'status', 'primary_field_monitor', 'team_members'
+            'location', 'location_site',
+            'tasks', 'status', 'primary_field_monitor', 'team_members',
         )
 
     # we need special logic to work with intermediary model

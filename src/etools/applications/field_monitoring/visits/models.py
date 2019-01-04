@@ -11,9 +11,11 @@ from model_utils.models import TimeStampedModel
 from ordered_model.models import OrderedModel
 
 from unicef_attachments.models import Attachment
+from unicef_locations.models import Location
 
 from etools.applications.field_monitoring.planning.models import Task
-from etools.applications.field_monitoring.fm_settings.models import CheckListItem, FMMethodType, CPOutputConfig
+from etools.applications.field_monitoring.fm_settings.models import CheckListItem, FMMethodType, CPOutputConfig, \
+    LocationSite
 from etools.applications.field_monitoring.shared.models import FMMethod
 from etools.applications.publics.models import SoftDeleteMixin
 from etools.applications.utils.common.models.mixins import InheritedModelMixin
@@ -67,6 +69,11 @@ class Visit(InheritedModelMixin, SoftDeleteMixin, TimeStampedModel):
                                               on_delete=models.CASCADE)
     team_members = models.ManyToManyField(settings.AUTH_USER_MODEL, related_name='fm_visits',
                                           verbose_name=_('Team Members'), blank=True)
+
+    location = models.ForeignKey(Location, verbose_name=_('Location'), related_name='visits',
+                                 on_delete=models.CASCADE)
+    location_site = models.ForeignKey(LocationSite, blank=True, null=True, verbose_name=_('Site'),
+                                      related_name='visits', on_delete=models.CASCADE)
 
     tasks = models.ManyToManyField(Task, related_name='visits', through=VisitTaskLink)
 

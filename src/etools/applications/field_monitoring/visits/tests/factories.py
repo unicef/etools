@@ -3,7 +3,7 @@ from django.utils import timezone
 from factory import fuzzy
 
 from etools.applications.field_monitoring.fm_settings.tests.factories import FMMethodTypeFactory, FMMethodFactory, \
-    CPOutputConfigFactory
+    CPOutputConfigFactory, LocationSiteFactory
 from etools.applications.field_monitoring.planning.tests.factories import TaskFactory
 from etools.applications.field_monitoring.tests.factories import UserFactory
 from etools.applications.field_monitoring.visits.models import Visit, VisitTaskLink, VisitMethodType, \
@@ -22,6 +22,8 @@ class VisitFactory(factory.DjangoModelFactory):
         start_dt=timezone.now(),
         end_dt=timezone.datetime(timezone.now().year, 12, 31, tzinfo=timezone.now().tzinfo)
     )
+    location_site = factory.SubFactory(LocationSiteFactory)
+    location = factory.LazyAttribute(lambda o: o.location_site.parent)
 
     team_members__count = 0
     tasks__count = 0

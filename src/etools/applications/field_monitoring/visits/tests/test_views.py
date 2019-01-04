@@ -9,7 +9,7 @@ import factory.fuzzy
 
 from etools.applications.EquiTrack.tests.cases import BaseTenantTestCase
 from etools.applications.field_monitoring.fm_settings.tests.factories import FMMethodFactory, FMMethodTypeFactory, \
-    PlannedCheckListItemFactory
+    PlannedCheckListItemFactory, LocationSiteFactory
 from etools.applications.field_monitoring.planning.tests.factories import TaskFactory
 from etools.applications.field_monitoring.tests.base import FMBaseTestCaseMixin
 from etools.applications.field_monitoring.visits.models import Visit
@@ -29,11 +29,32 @@ class VisitsViewTestCase(FMBaseTestCaseMixin, BaseTenantTestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(len(response.data['results']), len(Visit.STATUS_CHOICES))
 
+    def test_tasks_count_ordering(self):
+        visits = reversed([VisitFactory(tasks__count=i) for i in range(3)])
+
+        response = self.forced_auth_req(
+            'get', reverse('field_monitoring_visits:visits-list'),
+            user=self.unicef_user,
+            data={
+                'ordering': '-tasks__count'
+            }
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertListEqual(
+            [v['id'] for v in response.data['results']],
+            [v.id for v in visits]
+        )
+
     def test_create(self):
+        location_site = LocationSiteFactory()
+
         response = self.forced_auth_req(
             'post', reverse('field_monitoring_visits:visits-list'),
             user=self.unicef_user,
             data={
+                'location': location_site.parent.id,
+                'location_site': location_site.id,
                 'start_date': timezone.now().date(),
                 'end_date': timezone.now().date() + timedelta(days=1),
             }
