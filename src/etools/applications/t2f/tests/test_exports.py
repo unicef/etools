@@ -1,4 +1,3 @@
-
 import csv
 import logging
 from datetime import datetime
@@ -25,6 +24,7 @@ from etools.applications.t2f.tests.factories import (
     ExpenseFactory,
     ItineraryItemFactory,
     TravelActivityFactory,
+    TravelAttachmentFactory,
     TravelFactory,
 )
 from etools.applications.users.tests.factories import OfficeFactory, UserFactory
@@ -157,8 +157,13 @@ class TravelExports(BaseTenantTestCase):
         activity_4.partner = partnership_C1.agreement.partner
         activity_4.partnership = partnership_C1
         activity_4.save()
+        TravelAttachmentFactory(
+            file="test_file.pdf",
+            travel=activity_4.travel,
+            type="HACT Programme Monitoring",
+        )
 
-        with self.assertNumQueries(7):
+        with self.assertNumQueries(11):
             response = self.forced_auth_req('get', reverse('t2f:travels:list:activity_export'),
                                             user=self.unicef_staff)
         export_csv = csv.reader(StringIO(response.content.decode('utf-8')))
@@ -166,90 +171,100 @@ class TravelExports(BaseTenantTestCase):
 
         self.assertEqual(len(rows), 5)
         # check header
-        self.assertEqual(rows[0],
-                         ['reference_number',
-                          'traveler',
-                          'office',
-                          'section',
-                          'status',
-                          'supervisor',
-                          'trip_type',
-                          'partner',
-                          'partnership',
-                          'results',
-                          'locations',
-                          'start_date',
-                          'end_date',
-                          'is_secondary_traveler',
-                          'primary_traveler_name'])
+        self.assertEqual(rows[0], [
+            'reference_number',
+            'traveler',
+            'office',
+            'section',
+            'status',
+            'supervisor',
+            'trip_type',
+            'partner',
+            'partnership',
+            'results',
+            'locations',
+            'start_date',
+            'end_date',
+            'is_secondary_traveler',
+            'primary_traveler_name',
+            'hact_visit_report',
+        ])
 
-        self.assertEqual(rows[1],
-                         ['2016/1000',
-                          'Joe Smith',
-                          'Budapest',
-                          'Health',
-                          'planned',
-                          'ImYour Supervisor',
-                          'Programmatic Visit',
-                          'Partner A',
-                          'Partnership A1',
-                          'Result A11',
-                          'Location 345, Location ABC',
-                          '08-Nov-2017',
-                          '14-Nov-2017',
-                          '',
-                          ''])
+        self.assertEqual(rows[1], [
+            '2016/1000',
+            'Joe Smith',
+            'Budapest',
+            'Health',
+            'planned',
+            'ImYour Supervisor',
+            'Programmatic Visit',
+            'Partner A',
+            'Partnership A1',
+            'Result A11',
+            'Location 345, Location ABC',
+            '08-Nov-2017',
+            '14-Nov-2017',
+            '',
+            '',
+            'No',
+        ])
 
-        self.assertEqual(rows[2],
-                         ['2016/1000',
-                          'Joe Smith',
-                          'Budapest',
-                          'Health',
-                          'planned',
-                          'ImYour Supervisor',
-                          'Programmatic Visit',
-                          'Partner A',
-                          'Partnership A2',
-                          'Result A21',
-                          'Location 111',
-                          '08-Nov-2017',
-                          '14-Nov-2017',
-                          'YES',
-                          'Lenox Lewis'])
+        self.assertEqual(rows[2], [
+            '2016/1000',
+            'Joe Smith',
+            'Budapest',
+            'Health',
+            'planned',
+            'ImYour Supervisor',
+            'Programmatic Visit',
+            'Partner A',
+            'Partnership A2',
+            'Result A21',
+            'Location 111',
+            '08-Nov-2017',
+            '14-Nov-2017',
+            'YES',
+            'Lenox Lewis',
+            'No',
+        ])
 
-        self.assertEqual(rows[3],
-                         ['2016/1000',
-                          'Joe Smith',
-                          'Budapest',
-                          'Health',
-                          'planned',
-                          'ImYour Supervisor',
-                          'Meeting',
-                          'Partner B',
-                          'Partnership B3',
-                          '',
-                          'Location ABC',
-                          '08-Nov-2017',
-                          '14-Nov-2017',
-                          '',
-                          ''])
+        self.assertEqual(rows[3], [
+            '2016/1000',
+            'Joe Smith',
+            'Budapest',
+            'Health',
+            'planned',
+            'ImYour Supervisor',
+            'Meeting',
+            'Partner B',
+            'Partnership B3',
+            '',
+            'Location ABC',
+            '08-Nov-2017',
+            '14-Nov-2017',
+            '',
+            '',
+            'No',
+        ])
 
-        self.assertEqual(rows[4],
-                         ['2016/1211',
-                          'Alice Carter',
-                          'Budapest',
-                          'Education',
-                          'planned',
-                          'ImYour Supervisor',
-                          'Spot Check',
-                          'Partner C',
-                          'Partnership C1',
-                          '',
-                          'Location 111, Location 345',
-                          '08-Nov-2017',
-                          '14-Nov-2017',
-                          '',
-                          ''])
+        self.assertEqual(rows[4], [
+            '2016/1211',
+            'Alice Carter',
+            'Budapest',
+            'Education',
+            'planned',
+            'ImYour Supervisor',
+            'Spot Check',
+            'Partner C',
+            'Partnership C1',
+            '',
+            'Location 111, Location 345',
+            '08-Nov-2017',
+            '14-Nov-2017',
+            '',
+            '',
+            'Yes',
+        ])
 
     def test_finance_export(self):
         currency_usd = PublicsCurrencyFactory(code="USD")
