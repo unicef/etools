@@ -2,6 +2,7 @@ from django import template
 
 register = template.Library()
 
+
 @register.inclusion_tag('admin/users/country/submit_line_change_country.html', takes_context=True)
 def submit_row_change_country(context):
     """
