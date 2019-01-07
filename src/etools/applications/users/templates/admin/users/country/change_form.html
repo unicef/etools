@@ -1,4 +1,12 @@
-{% extends "admin/change_form.html" %}{% load i18n %}
+{% extends "admin/change_form.html" %}
+{% load i18n admin_modify user_tags%}
+
+{% if save_on_top %}
+    {% block submit_buttons_top %}
+        {% submit_row_global_schema %}
+    {% endblock %}
+{% endif %}
+
 {% block object-tools-items %}
     {{ block.super }}
     <li><a target='_blank' href="https://devapis.unicef.org/BIService/BIWebService.svc/GetPartnerDetailsInfo_xml/{{original.business_area_code}}" style="background-color:#96c525">{% trans "API Partner" %}</a></li>
@@ -15,6 +23,8 @@
     <li><a href="{% url 'admin:users_country_fund_commitment' original.id %}" style="background-color:#0099ff">{% trans "Sync Fund Commitment" %}</a></li>
     <li><a href="{% url 'admin:users_country_dct' original.id %}" style="background-color:#0099ff">{% trans "Sync DCT" %}</a></li>
     <li><a href="{% url 'admin:users_country_update_hact' original.id %}" style="background-color:#ff3d00">{% trans "Update HACT" %}</a></li>
-
-
 {% endblock object-tools-items %}
+
+{% block submit_buttons_bottom %}
+    {% submit_row_global_schema %}
+{% endblock %}
