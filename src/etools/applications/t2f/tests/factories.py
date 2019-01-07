@@ -161,30 +161,6 @@ class TravelFactory(factory.DjangoModelFactory):
         model = models.Travel
 
 
-class InvoiceFactory(factory.DjangoModelFactory):
-    travel = factory.SubFactory(TravelFactory)
-    business_area = fuzzy.FuzzyText(length=12)
-    vendor_number = fuzzy.FuzzyText(length=12)
-    currency = factory.SubFactory(PublicsCurrencyFactory)
-    amount = fuzzy.FuzzyDecimal(0, 1000)
-    status = models.Invoice.PENDING
-    messages = []
-
-    class Meta:
-        model = models.Invoice
-
-
-class InvoiceItemFactory(factory.DjangoModelFactory):
-    invoice = factory.SubFactory(InvoiceFactory)
-    wbs = factory.SubFactory(PublicsWBSFactory)
-    grant = factory.SubFactory(PublicsGrantFactory)
-    fund = factory.SubFactory(PublicsFundFactory)
-    amount = fuzzy.FuzzyDecimal(0, 250)
-
-    class Meta:
-        model = models.InvoiceItem
-
-
 class FuzzyTravelStatus(factory.fuzzy.BaseFuzzyAttribute):
     def fuzz(self):
         return factory.fuzzy._random.choice(
