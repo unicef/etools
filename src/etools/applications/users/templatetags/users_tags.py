@@ -2,8 +2,8 @@ from django import template
 
 register = template.Library()
 
-@register.inclusion_tag('admin/users/country/submit_line_global_schema.html', takes_context=True)
-def submit_row_global_schema(context):
+@register.inclusion_tag('admin/users/country/submit_line_change_country.html', takes_context=True)
+def submit_row_change_country(context):
     """
     Displays the row of buttons for delete and save.
     """
@@ -16,7 +16,7 @@ def submit_row_global_schema(context):
         'opts': opts,
         'show_delete_link': (
             not is_popup and context['has_delete_permission'] and
-            change and context.get('show_delete', True)
+            change and context.get('show_delete', True) and is_global_schema
         ),
         'show_save_as_new': not is_popup and change and save_as,
         'show_save_and_add_another': (

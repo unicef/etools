@@ -1,9 +1,9 @@
 {% extends "admin/change_form.html" %}
-{% load i18n admin_modify user_tags%}
+{% load i18n admin_modify users_tags%}
 
 {% if save_on_top %}
     {% block submit_buttons_top %}
-        {% submit_row_global_schema %}
+        {% submit_row_change_country %}
     {% endblock %}
 {% endif %}
 
@@ -26,5 +26,5 @@
 {% endblock object-tools-items %}
 
 {% block submit_buttons_bottom %}
-    {% submit_row_global_schema %}
+    {% submit_row_change_country %}
 {% endblock %}

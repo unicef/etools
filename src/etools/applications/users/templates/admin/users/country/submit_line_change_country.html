@@ -6,7 +6,7 @@
                 {% if not is_global_schema %} disabled="disabled" title="Save is allowed only in Global schema" {% endif %}
                 value="{% trans 'Save' %}" class="default" name="_save">
     {% endif %}
-    {% if show_delete_link and original and is_global_schema %}
+    {% if show_delete_link and original %}
         {% url opts|admin_urlname:'delete' original.pk|admin_urlquote as delete_url %}
         <p class="deletelink-box">
             <a href="{% add_preserved_filters delete_url %}" class="deletelink">{% trans "Delete" %}</a>
