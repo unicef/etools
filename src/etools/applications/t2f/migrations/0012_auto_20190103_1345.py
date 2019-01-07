@@ -7,7 +7,7 @@ import etools.applications.t2f.models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('t2f', '0010_auto_20181229_0249'),
+        ('t2f', '0011_auto_20190102_1919'),
     ]
 
     operations = [
