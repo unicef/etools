@@ -71,19 +71,6 @@ def make_travel_reference_number():
     return '{}/{}'.format(year, numeric_part)
 
 
-def send_for_payment_threshold_decorator(func):
-    @wraps(func)
-    def wrapper(self, *args, **kwargs):
-        # If invoicing is enabled, do the threshold check, otherwise it will result an infinite process loop
-        if self.check_threshold():
-            self.submit_for_approval(*args, **kwargs)
-            return
-
-        func(self, *args, **kwargs)
-
-    return wrapper
-
-
 def mark_as_certified_or_completed_threshold_decorator(func):
     @wraps(func)
     def wrapper(self, *args, **kwargs):
@@ -250,11 +237,6 @@ class Travel(models.Model):
             return False
         return True
 
-    def check_completed_from_planned(self):
-        if self.ta_required:
-            raise TransitionError('Cannot switch from planned to completed if TA is required')
-        return True
-
     def has_supervisor(self):
         if not self.supervisor:
             raise TransitionError('Travel has no supervisor defined. Please select one.')
@@ -399,10 +381,6 @@ class TravelActivity(models.Model):
     @property
     def task_number(self):
         return list(self.travel.activities.values_list('id', flat=True)).index(self.id) + 1
-
-    @property
-    def travel_status(self):
-        return self.travel.status
 
     _reference_number = None
 
