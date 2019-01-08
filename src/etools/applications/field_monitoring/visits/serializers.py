@@ -34,7 +34,7 @@ class VisitLightSerializer(serializers.ModelSerializer):
         )
     )
     primary_field_monitor = SeparatedReadWriteField(read_field=MinimalUserSerializer())
-    team_members = SeparatedReadWriteField(read_field=MinimalUserSerializer(read_only=True))
+    team_members = SeparatedReadWriteField(read_field=MinimalUserSerializer(read_only=True, many=True))
 
     class Meta:
         model = Visit

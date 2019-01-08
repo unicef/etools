@@ -79,7 +79,7 @@ class TaskListSerializer(serializers.ModelSerializer):
         if not hasattr(obj, 'completed_visits'):
             return
 
-        completed_by_month = [0]*12
+        completed_by_month = [0] * 12
         for visit in obj.completed_visits:
             completed_by_month[visit.end_date.month - 1] += 1
 

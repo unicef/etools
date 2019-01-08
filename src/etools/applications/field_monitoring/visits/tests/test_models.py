@@ -38,7 +38,7 @@ class TestVisit(BaseTenantTestCase):
 
         visit = VisitFactory(tasks=[task])
 
-        with self.assertNumQueries(9 + 4*2):  # two visit checklist items should be created
+        with self.assertNumQueries(9 + 4 * 2):  # two visit checklist items should be created
             visit.freeze_checklist()
 
         visit_task_checklist = TaskCheckListItem.objects.filter(visit_task__visit=visit, visit_task__task=task)\
