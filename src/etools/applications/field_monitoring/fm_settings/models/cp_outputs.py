@@ -2,7 +2,6 @@ from django.db import models
 from django.utils.translation import ugettext_lazy as _
 
 from model_utils.models import TimeStampedModel
-from ordered_model.models import OrderedModel
 
 from etools.applications.field_monitoring.fm_settings.models import CheckListItem, FMMethodType
 from etools.applications.field_monitoring.shared.models import FMMethod
@@ -30,7 +29,7 @@ class CPOutputConfig(TimeStampedModel):
         return self.cp_output.result_name
 
 
-class PlannedCheckListItem(OrderedModel):
+class PlannedCheckListItem(models.Model):
     checklist_item = models.ForeignKey(CheckListItem, verbose_name=_('Checklist Item'),
                                        on_delete=models.CASCADE)
     cp_output_config = models.ForeignKey(CPOutputConfig, verbose_name=_('CP Output Config'),

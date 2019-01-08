@@ -3,16 +3,17 @@ from datetime import date, timedelta
 from django.db import models
 from django.utils.translation import ugettext_lazy as _
 
-from rest_framework import mixins, viewsets, views
+from rest_framework import mixins, viewsets, views, generics
 from rest_framework.filters import OrderingFilter, SearchFilter
 from rest_framework.generics import get_object_or_404
 from rest_framework.response import Response
 
 from django_filters.rest_framework import DjangoFilterBackend
 from unicef_attachments.models import Attachment
+from unicef_djangolib.etag import etag_cached
 
-from unicef_locations.cache import etag_cached
 from unicef_locations.models import Location
+from unicef_locations.serializers import LocationLightSerializer
 
 from etools.applications.field_monitoring.fm_settings.filters import CPOutputIsActiveFilter, \
     LogIssueRelatedToTypeFilter, \
@@ -34,7 +35,7 @@ from etools.applications.field_monitoring.fm_settings.serializers.methods import
 from etools.applications.field_monitoring.shared.models import FMMethod
 from etools.applications.field_monitoring.views import FMBaseViewSet, FMBaseAttachmentsViewSet
 from etools.applications.field_monitoring.metadata import PermissionBasedMetadata
-from etools.applications.field_monitoring.permissions import UserIsFieldMonitor
+from etools.applications.field_monitoring.permissions import UserIsFieldMonitor, IsPME
 from etools.applications.partners.models import PartnerOrganization
 from etools.applications.permissions_simplified.views import SimplePermittedViewSetMixin
 from etools.applications.reports.models import Result, ResultType
@@ -74,7 +75,7 @@ class LocationSitesViewSet(
     SimplePermittedViewSetMixin,
     viewsets.ModelViewSet,
 ):
-    write_permission_classes = [UserIsFieldMonitor]
+    write_permission_classes = [IsPME]
     metadata_class = PermissionBasedMetadata
     queryset = LocationSite.objects.prefetch_related('parent').order_by('parent__name', 'name')
     serializer_class = LocationSiteSerializer
@@ -199,10 +200,10 @@ class PlannedCheckListItemViewSet(
     serializer_class = PlannedCheckListItemSerializer
 
     def get_parent_filter(self):
-        return {'cp_output_config_id': self.kwargs['cp_output_config_pk']}
+        return {'cp_output_config_id': self.kwargs.get('cp_output_config_pk')}
 
     def get_parent_object(self):
-        return CPOutputConfig.objects.get(pk=self.kwargs['cp_output_config_pk'])
+        return CPOutputConfig.objects.filter(pk=self.kwargs.get('cp_output_config_pk')).first()
 
     def get_object(self):
         queryset = self.filter_queryset(self.get_queryset())
@@ -278,3 +279,12 @@ class ResultsViewSet(OutputListAPIView):
     Custom serializer to get rid of unnecessary part in name.
     """
     serializer_class = ResultSerializer
+
+
+class InterventionLocationsView(FMBaseViewSet, generics.ListAPIView):
+    queryset = Location.objects.all()
+    serializer_class = LocationLightSerializer
+
+    def get_queryset(self):
+        queryset = super().get_queryset()
+        return queryset.filter(intervention_flat_locations=self.kwargs['intervention_pk'])

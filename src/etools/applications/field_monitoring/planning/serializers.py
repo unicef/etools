@@ -10,17 +10,16 @@ from unicef_restlib.fields import SeparatedReadWriteField
 from unicef_restlib.serializers import WritableNestedSerializerMixin
 from unicef_snapshot.serializers import SnapshotModelSerializer
 
-from etools.applications.action_points.serializers import CommentSerializer, HistorySerializer
+from etools.applications.action_points.serializers import HistorySerializer
 from etools.applications.field_monitoring.planning.models import YearPlan, Task
 from etools.applications.field_monitoring.fm_settings.serializers.cp_outputs import CPOutputConfigDetailSerializer, \
     PartnerOrganizationSerializer, InterventionSerializer
 from etools.applications.field_monitoring.fm_settings.serializers.locations import LocationSiteLightSerializer
-from etools.applications.publics.models import EPOCH_ZERO
 from etools.applications.permissions_simplified.serializers import SafeReadOnlySerializerMixin
+from etools.applications.publics.models import EPOCH_ZERO
 
 
 class YearPlanSerializer(WritableNestedSerializerMixin, SafeReadOnlySerializerMixin, SnapshotModelSerializer):
-    other_aspects = CommentSerializer(many=True, required=False)
     history = HistorySerializer(many=True, label=_('History'), read_only=True)
     tasks_by_month = serializers.SerializerMethodField(label=_('Number Of Tasks By Month'))
     total_planned = serializers.SerializerMethodField(label=_('Total Planned'))
@@ -44,7 +43,7 @@ class YearPlanSerializer(WritableNestedSerializerMixin, SafeReadOnlySerializerMi
         return {
             'tasks': obj.tasks.filter(deleted_at=EPOCH_ZERO).annotate(
                 plan_by_month__total=RawSQL('SELECT SUM(t) FROM UNNEST(plan_by_month) t', [])
-                ).aggregate(Sum('plan_by_month__total'))['plan_by_month__total__sum'],
+            ).aggregate(Sum('plan_by_month__total'))['plan_by_month__total__sum'],
             'cp_outputs': obj.tasks.filter(deleted_at=EPOCH_ZERO).aggregate(
                 Count('cp_output_config', distinct=True)
             )['cp_output_config__count'],

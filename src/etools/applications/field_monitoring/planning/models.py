@@ -20,8 +20,7 @@ class YearPlan(TimeStampedModel):
                                                      blank=True, default=0)
     modalities = models.TextField(verbose_name=_('Modalities'), blank=True)
     partner_engagement = models.TextField(verbose_name=_('Partner Engagement'), blank=True)
-    other_aspects = GenericRelation('django_comments.Comment', object_id_field='object_pk',
-                                    verbose_name=_('Other Aspects of the Field Monitoring Plan'), blank=True)
+    other_aspects = models.TextField(verbose_name=_('Other Aspects of the Field Monitoring Plan'), blank=True)
     history = GenericRelation('unicef_snapshot.Activity', object_id_field='target_object_id',
                               content_type_field='target_content_type')
 
@@ -32,7 +31,7 @@ class YearPlan(TimeStampedModel):
 
     @classmethod
     def get_defaults(cls, year):
-        previous_year_plan = cls._default_manager.filter(year=int(year)-1).first()
+        previous_year_plan = cls._default_manager.filter(year=int(year) - 1).first()
         if not previous_year_plan:
             return {}
 
