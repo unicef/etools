@@ -167,9 +167,7 @@ class ActionPoint(TimeStampedModel):
 
     def get_meaningful_history(self):
         return self.history.filter(
-            models.Q(action=Activity.CREATE) |
-            models.Q(models.Q(action=Activity.UPDATE), ~models.Q(change={}))
-        )
+            models.Q(action=Activity.CREATE) | models.Q(models.Q(action=Activity.UPDATE), ~models.Q(change={})))
 
     def snapshot_additional_data(self, diff):
         key_events = []
