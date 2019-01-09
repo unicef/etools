@@ -12,7 +12,7 @@ from etools.applications.field_monitoring.fm_settings.models import CPOutputConf
 from etools.applications.field_monitoring.fm_settings.serializers.cp_outputs import MinimalCPOutputConfigListSerializer
 from etools.applications.field_monitoring.fm_settings.serializers.locations import LocationSiteLightSerializer
 from etools.applications.field_monitoring.views import FMBaseViewSet
-from etools.applications.field_monitoring.visits.filters import VisitFilter
+from etools.applications.field_monitoring.visits.filters import VisitFilter, VisitTeamMembersFilter
 from etools.applications.field_monitoring.visits.models import Visit, VisitMethodType
 from etools.applications.field_monitoring.visits.serializers import VisitListSerializer, \
     VisitMethodTypeSerializer, VisitSerializer
@@ -34,7 +34,7 @@ class VisitsViewSet(
     queryset = Visit.objects.prefetch_related(
         'tasks', 'primary_field_monitor', 'team_members',
     ).annotate(tasks__count=Count('tasks'))
-    filter_backends = (DjangoFilterBackend, ReferenceNumberOrderingFilter, OrderingFilter)
+    filter_backends = (VisitTeamMembersFilter, DjangoFilterBackend, ReferenceNumberOrderingFilter, OrderingFilter)
     filter_class = VisitFilter
     ordering_fields = (
         'start_date', 'location__name', 'location_site__name', 'status', 'tasks__count',

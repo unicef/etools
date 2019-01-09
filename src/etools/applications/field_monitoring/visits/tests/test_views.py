@@ -32,6 +32,22 @@ class VisitsViewTestCase(FMBaseTestCaseMixin, BaseTenantTestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(len(response.data['results']), len(Visit.STATUS_CHOICES))
 
+    def test_team_members_filter(self):
+        VisitFactory()
+        visit = VisitFactory(team_members__count=3)
+
+        response = self.forced_auth_req(
+            'get', reverse('field_monitoring_visits:visits-list'),
+            user=self.unicef_user,
+            data={
+                'team_members__in': ','.join(str(u.id) for u in visit.team_members.all()[:2])
+            }
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(response.data['results']), 1)
+        self.assertEqual(response.data['results'][0]['id'], visit.id)
+
     def test_tasks_count_ordering(self):
         visits = reversed([VisitFactory(tasks__count=i) for i in range(3)])
 
