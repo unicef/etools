@@ -24,18 +24,43 @@ logger = logging.getLogger(__name__)
 def social_details(backend, details, response, *args, **kwargs):
     r = social_auth.social_details(backend, details, response, *args, **kwargs)
     r['details']['idp'] = response.get('idp')
+
     if not r['details'].get('email'):
-        r['details']['email'] = response.get('email')
+        if not response.get('email'):
+            r['details']['email'] = response["signInNames.emailAddress"]
+        else:
+            r['details']['email'] = response.get('email')
+
+    email = r['details'].get('email')
+    if isinstance(email, str):
+        r['details']['email'] = email.lower()
     return r
 
 
 def get_username(strategy, details, backend, user=None, *args, **kwargs):
-    username = details.get('email')
-    if not get_user_model().objects.filter(username=username).exists():
-        return
-        # return HttpResponseRedirect("/workspace_inactive/")
     return {'username': details.get('email')}
 
+
+def create_user(strategy, details, backend, user=None, *args, **kwargs):
+    """ Overwrite social_account.user.create_user to only create new users if they're UNICEF"""
+
+    if user:
+        return {'is_new': False}
+
+    fields = dict((name, kwargs.get(name, details.get(name)))
+                  for name in backend.setting('USER_FIELDS', social_core_user.USER_FIELDS))
+    if not fields:
+        return
+
+    response = kwargs.get('response')
+    if response:
+        email = response.get('email') or response.get("signInNames.emailAddress")
+        if not email.endswith("unicef.org"):
+            return
+    return {
+        'is_new': True,
+        'user': strategy.create_user(**fields)
+    }
 
 def user_details(strategy, details, user=None, *args, **kwargs):
     # This is where we update the user

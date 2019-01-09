@@ -514,7 +514,8 @@ SCOPE = ['openid', 'email']
 IGNORE_DEFAULT_SCOPE = True
 SOCIAL_AUTH_USERNAME_IS_FULL_EMAIL = True
 SOCIAL_AUTH_PROTECTED_USER_FIELDS = ['email']
-SOCIAL_AUTH_WHITELISTED_DOMAINS = ['unicef.org', 'google.com']
+# In case we decide to whitelist:
+# SOCIAL_AUTH_WHITELISTED_DOMAINS = ['unicef.org', 'google.com', 'ravdev.com']
 LOGIN_ERROR_URL = "/workspace_inactive"
 JWT_LEEWAY = 1000
 
@@ -527,7 +528,8 @@ SOCIAL_AUTH_PIPELINE = (
     'social_core.pipeline.social_auth.social_user',
     # 'social_core.pipeline.user.get_username',
     'etools.applications.EquiTrack.auth.get_username',
-    'social_core.pipeline.user.create_user',
+    # 'social_core.pipeline.user.create_user',
+    'etools.applications.EquiTrack.auth.create_user',
     'social_core.pipeline.social_auth.associate_user',
     'social_core.pipeline.social_auth.load_extra_data',
     'social_core.pipeline.user.user_details',
