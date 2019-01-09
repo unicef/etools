@@ -244,7 +244,7 @@ class BaseAggregatedRiskRootSerializer(RiskRootSerializer):
 
     @staticmethod
     def calculate_risk(category):
-        raise NotImplemented()
+        raise NotImplementedError()
 
 
 class KeyInternalWeaknessSerializer(BaseAggregatedRiskRootSerializer):
