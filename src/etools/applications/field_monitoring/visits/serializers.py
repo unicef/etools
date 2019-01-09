@@ -17,7 +17,7 @@ from etools.applications.field_monitoring.fm_settings.serializers.locations impo
 from etools.applications.field_monitoring.fm_settings.serializers.methods import FMMethodTypeSerializer
 from etools.applications.field_monitoring.planning.models import Task
 from etools.applications.field_monitoring.planning.serializers import TaskListSerializer
-from etools.applications.field_monitoring.fm_settings.models import LogIssue
+from etools.applications.field_monitoring.fm_settings.models import LogIssue, CPOutputConfig, LocationSite
 from etools.applications.field_monitoring.shared.models import FMMethod
 from etools.applications.field_monitoring.visits.models import Visit, VisitMethodType, VisitCPOutputConfig, \
     VisitTaskLink
@@ -156,3 +156,19 @@ class VisitSerializer(SnapshotModelSerializer, VisitListSerializer):
             instance=FMMethod.objects.filter(checklist_items__visit_task__visit=obj),
             many=True
         ).data
+
+
+class VisitsTotalSerializers(serializers.ModelSerializer):
+    visits = serializers.ReadOnlyField(source='count')
+    outputs = serializers.SerializerMethodField()
+    sites = serializers.SerializerMethodField()
+
+    class Meta:
+        model = Visit
+        fields = ('visits', 'outputs', 'sites')
+
+    def get_outputs(self, obj):
+        return CPOutputConfig.objects.filter(tasks__visits__in=obj).distinct().count()
+
+    def get_sites(self, obj):
+        return LocationSite.objects.filter(visits__in=obj).distinct().count()

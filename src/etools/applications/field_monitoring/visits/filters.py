@@ -32,7 +32,7 @@ class VisitFilter(filters.FilterSet):
 
 class VisitTeamMembersFilter(BaseFilterBackend):
     """
-    Filter for filtering by flattened list instead of classic complex schema
+    Filter for using flattened list instead of classic complex schema
     team_members__in=1,2,3 instead of team_members=1&team_members=2&team_members=3
     """
     def filter_queryset(self, request, queryset, view):

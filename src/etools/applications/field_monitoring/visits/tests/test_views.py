@@ -15,7 +15,8 @@ from etools.applications.field_monitoring.fm_settings.tests.factories import FMM
 from etools.applications.field_monitoring.planning.tests.factories import TaskFactory
 from etools.applications.field_monitoring.tests.base import FMBaseTestCaseMixin
 from etools.applications.field_monitoring.visits.models import Visit
-from etools.applications.field_monitoring.visits.tests.factories import VisitFactory, VisitMethodTypeFactory
+from etools.applications.field_monitoring.visits.tests.factories import VisitFactory, VisitMethodTypeFactory, \
+    VisitTaskLinkFactory
 from etools.applications.partners.tests.factories import PartnerFactory
 
 
@@ -31,6 +32,41 @@ class VisitsViewTestCase(FMBaseTestCaseMixin, BaseTenantTestCase):
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(len(response.data['results']), len(Visit.STATUS_CHOICES))
+
+    def test_totals(self):
+        config = CPOutputConfigFactory()
+        location_site = LocationSiteFactory()
+
+        self.assertEqual(Visit.objects.count(), 0)
+
+        first_task = TaskFactory(location_site=location_site)
+        second_task = TaskFactory(location_site=location_site, cp_output_config=config)
+        third_task = TaskFactory(cp_output_config=config)
+
+        unused_task = TaskFactory(year_plan__year=timezone.now().year - 1)  # shouldn't appear as it's for prev year
+        unused_visit = VisitFactory(status=Visit.STATUS_CHOICES.finalized, tasks__count=0)
+        VisitTaskLinkFactory(visit=unused_visit, task=unused_task)
+
+        VisitFactory(status=Visit.STATUS_CHOICES.draft, tasks__count=0)
+        VisitFactory(status=Visit.STATUS_CHOICES.cancelled, tasks__count=0)
+        VisitFactory(status=Visit.STATUS_CHOICES.assigned, tasks__count=0)
+        VisitFactory(status=Visit.STATUS_CHOICES.assigned, tasks=[first_task, second_task])
+        VisitFactory(status=Visit.STATUS_CHOICES.finalized, tasks=[second_task, third_task])
+
+        response = self.forced_auth_req(
+            'get', reverse('field_monitoring_visits:visits-totals'),
+            user=self.unicef_user
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertDictEqual(
+            response.data,
+            {
+                'visits': 2,
+                'outputs': 2,
+                'sites': 2,
+            }
+        )
 
     def test_team_members_filter(self):
         VisitFactory()

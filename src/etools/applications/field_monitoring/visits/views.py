@@ -1,8 +1,11 @@
 from django.contrib.auth import get_user_model
 from django.db.models import Count
+from django.utils import timezone
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import mixins, viewsets
+from rest_framework.decorators import action
 from rest_framework.filters import OrderingFilter
+from rest_framework.response import Response
 from unicef_locations.models import Location
 from unicef_locations.serializers import LocationLightSerializer
 from unicef_restlib.views import NestedViewSetMixin
@@ -15,7 +18,7 @@ from etools.applications.field_monitoring.views import FMBaseViewSet
 from etools.applications.field_monitoring.visits.filters import VisitFilter, VisitTeamMembersFilter
 from etools.applications.field_monitoring.visits.models import Visit, VisitMethodType
 from etools.applications.field_monitoring.visits.serializers import VisitListSerializer, \
-    VisitMethodTypeSerializer, VisitSerializer
+    VisitMethodTypeSerializer, VisitSerializer, VisitsTotalSerializers
 from etools.applications.partners.models import PartnerOrganization
 from etools.applications.partners.serializers.partner_organization_v2 import MinimalPartnerOrganizationListSerializer
 from etools.applications.users.serializers import MinimalUserSerializer
@@ -42,6 +45,17 @@ class VisitsViewSet(
     serializer_action_classes = {
         'list': VisitListSerializer
     }
+
+    @action(detail=False, methods=['get'], url_path='totals')
+    def totals(self, request, *args, **kwargs):
+        return Response(
+            VisitsTotalSerializers(
+                instance=Visit.objects.filter(
+                    tasks__year_plan__year=timezone.now().year,
+                    status__in=[Visit.STATUS_CHOICES.assigned, Visit.STATUS_CHOICES.finalized],
+                ).distinct()
+            ).data
+        )
 
 
 class VisitsPartnersViewSet(
