@@ -7,16 +7,26 @@ from decimal import Decimal, InvalidOperation
 
 from django.core.exceptions import ObjectDoesNotExist
 from django.db.transaction import atomic
-
 from django.utils.encoding import force_text
 
 from celery.utils.log import get_task_logger
 from storages.backends.azure_storage import AzureStorage
 
-from etools.applications.publics.models import (BusinessArea, Country, Currency, DSARate, DSARateUpload, DSARegion,
-                                                ExchangeRate, Fund, Grant, TravelAgent, TravelExpenseType, WBS,)
+from etools.applications.publics.models import (
+    BusinessArea,
+    Country,
+    Currency,
+    DSARate,
+    DSARateUpload,
+    DSARegion,
+    ExchangeRate,
+    Fund,
+    Grant,
+    TravelAgent,
+    TravelExpenseType,
+    WBS,
+)
 from etools.config.celery import app
-
 
 logger = get_task_logger(__name__)
 

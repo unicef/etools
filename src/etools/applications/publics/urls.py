@@ -1,8 +1,15 @@
 
 from django.conf.urls import url
 
-from etools.applications.publics.views import (AirlinesView, BusinessAreasView, CurrenciesView, DSARegionsView,
-                                               ExpenseTypesView, StaticDataView, WBSGrantFundView,)
+from etools.applications.publics.views import (
+    AirlinesView,
+    BusinessAreasView,
+    CurrenciesView,
+    DSARegionsView,
+    ExpenseTypesView,
+    StaticDataView,
+    WBSGrantFundView,
+)
 
 app_name = 'publics'
 urlpatterns = (
