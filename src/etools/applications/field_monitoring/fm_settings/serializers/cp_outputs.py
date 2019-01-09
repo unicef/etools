@@ -94,7 +94,16 @@ class CPOutputConfigDetailSerializer(SafeReadOnlySerializerMixin, CPOutputConfig
         ]
 
 
-class FieldMonitoringCPOutputSerializer(SafeReadOnlySerializerMixin, WritableNestedSerializerMixin, serializers.ModelSerializer):
+class MinimalCPOutputConfigListSerializer(serializers.ModelSerializer):
+    name = serializers.ReadOnlyField(source='cp_output.name')
+
+    class Meta:
+        model = CPOutputConfig
+        fields = ('id', 'name')
+
+
+class FieldMonitoringCPOutputSerializer(SafeReadOnlySerializerMixin, WritableNestedSerializerMixin,
+                                        serializers.ModelSerializer):
     fm_config = CPOutputConfigSerializer()
     interventions = serializers.SerializerMethodField(label=_('Contributing CSO Partners & PD/SSFAs'))
 

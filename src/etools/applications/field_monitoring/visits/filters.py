@@ -1,5 +1,10 @@
 from django.db.models.functions import TruncYear
+
 from rest_framework.filters import BaseFilterBackend
+
+from django_filters import rest_framework as filters
+
+from etools.applications.field_monitoring.visits.models import Visit
 
 
 class ReferenceNumberOrderingFilter(BaseFilterBackend):
@@ -12,3 +17,15 @@ class ReferenceNumberOrderingFilter(BaseFilterBackend):
 
         return queryset.annotate(created_year=TruncYear('created'))\
             .order_by(*map(lambda param: ('' if ordering == 'reference_number' else '-') + param, ordering_params))
+
+
+class VisitFilter(filters.FilterSet):
+    class Meta:
+        model = Visit
+        fields = ({
+            field: ['exact', 'in'] for field in [
+                'location', 'location_site', 'status',
+                'tasks__cp_output_config', 'tasks__partner',
+            ]
+        })
+        fields['team_members'] = ['exact']

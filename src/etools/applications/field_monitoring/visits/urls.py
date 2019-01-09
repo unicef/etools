@@ -5,12 +5,13 @@ from unicef_restlib.routers import NestedComplexRouter
 
 from etools.applications.field_monitoring.visits.views import (
     VisitMethodTypesViewSet, VisitsCPOutputConfigsViewSet, VisitsLocationsViewSet, VisitsPartnersViewSet,
-    VisitsTeamMembersViewSet, VisitsViewSet,)
+    VisitsTeamMembersViewSet, VisitsViewSet, VisitsLocationSitesViewSet)
 
 root_api = routers.SimpleRouter()
 root_api.register(r'visits/partners', VisitsPartnersViewSet, base_name='visits-partners')
 root_api.register(r'visits/cp-outputs/configs', VisitsCPOutputConfigsViewSet, base_name='visits-cp-output-configs')
 root_api.register(r'visits/locations', VisitsLocationsViewSet, base_name='visits-locations')
+root_api.register(r'visits/locations/sites', VisitsLocationSitesViewSet, base_name='visits-location-sites')
 root_api.register(r'visits/team-members', VisitsTeamMembersViewSet, base_name='visits-team-members')
 root_api.register(r'visits', VisitsViewSet, base_name='visits')
 

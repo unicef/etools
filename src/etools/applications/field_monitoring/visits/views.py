@@ -8,14 +8,16 @@ from unicef_locations.serializers import LocationLightSerializer
 from unicef_restlib.views import NestedViewSetMixin
 
 from etools.applications.action_points.filters import ReferenceNumberOrderingFilter
-from etools.applications.field_monitoring.fm_settings.models import CPOutputConfig
-from etools.applications.field_monitoring.fm_settings.serializers.cp_outputs import PartnerOrganizationSerializer, \
-    CPOutputConfigSerializer
+from etools.applications.field_monitoring.fm_settings.models import CPOutputConfig, LocationSite
+from etools.applications.field_monitoring.fm_settings.serializers.cp_outputs import MinimalCPOutputConfigListSerializer
+from etools.applications.field_monitoring.fm_settings.serializers.locations import LocationSiteLightSerializer
 from etools.applications.field_monitoring.views import FMBaseViewSet
+from etools.applications.field_monitoring.visits.filters import VisitFilter
 from etools.applications.field_monitoring.visits.models import Visit, VisitMethodType
 from etools.applications.field_monitoring.visits.serializers import VisitListSerializer, \
     VisitMethodTypeSerializer, VisitSerializer
 from etools.applications.partners.models import PartnerOrganization
+from etools.applications.partners.serializers.partner_organization_v2 import MinimalPartnerOrganizationListSerializer
 from etools.applications.users.serializers import MinimalUserSerializer
 
 
@@ -33,12 +35,7 @@ class VisitsViewSet(
         'tasks', 'primary_field_monitor', 'team_members',
     ).annotate(tasks__count=Count('tasks'))
     filter_backends = (DjangoFilterBackend, ReferenceNumberOrderingFilter, OrderingFilter)
-    filter_fields = ({
-        field: ['exact', 'in'] for field in [
-            'team_members', 'location', 'location_site', 'status',
-            'tasks__cp_output_config', 'tasks__partner',
-        ]
-    })
+    filter_class = VisitFilter
     ordering_fields = (
         'start_date', 'location__name', 'location_site__name', 'status', 'tasks__count',
     )
@@ -52,8 +49,8 @@ class VisitsPartnersViewSet(
     mixins.ListModelMixin,
     viewsets.GenericViewSet
 ):
-    queryset = PartnerOrganization.objects.filter(tasks__visits__isnull=False)
-    serializer_class = PartnerOrganizationSerializer
+    queryset = PartnerOrganization.objects.filter(tasks__visits__isnull=False).distinct()
+    serializer_class = MinimalPartnerOrganizationListSerializer
 
 
 class VisitsCPOutputConfigsViewSet(
@@ -61,8 +58,8 @@ class VisitsCPOutputConfigsViewSet(
     mixins.ListModelMixin,
     viewsets.GenericViewSet
 ):
-    queryset = CPOutputConfig.objects.filter(tasks__visits__isnull=False)
-    serializer_class = CPOutputConfigSerializer
+    queryset = CPOutputConfig.objects.filter(tasks__visits__isnull=False).select_related('cp_output').distinct()
+    serializer_class = MinimalCPOutputConfigListSerializer
 
 
 class VisitsLocationsViewSet(
@@ -70,8 +67,17 @@ class VisitsLocationsViewSet(
     mixins.ListModelMixin,
     viewsets.GenericViewSet
 ):
-    queryset = Location.objects.filter(visits__isnull=False)
+    queryset = Location.objects.filter(visits__isnull=False).distinct()
     serializer_class = LocationLightSerializer
+
+
+class VisitsLocationSitesViewSet(
+    FMBaseViewSet,
+    mixins.ListModelMixin,
+    viewsets.GenericViewSet
+):
+    queryset = LocationSite.objects.filter(visits__isnull=False).distinct()
+    serializer_class = LocationSiteLightSerializer
 
 
 class VisitsTeamMembersViewSet(
@@ -79,7 +85,7 @@ class VisitsTeamMembersViewSet(
     mixins.ListModelMixin,
     viewsets.GenericViewSet
 ):
-    queryset = get_user_model().objects.filter(fm_visits__isnull=False)
+    queryset = get_user_model().objects.filter(fm_visits__isnull=False).distinct()
     serializer_class = MinimalUserSerializer
 
 

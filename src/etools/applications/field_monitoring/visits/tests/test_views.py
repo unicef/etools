@@ -32,6 +32,23 @@ class VisitsViewTestCase(FMBaseTestCaseMixin, BaseTenantTestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(len(response.data['results']), len(Visit.STATUS_CHOICES))
 
+    def test_tasks_count_ordering(self):
+        visits = reversed([VisitFactory(tasks__count=i) for i in range(3)])
+
+        response = self.forced_auth_req(
+            'get', reverse('field_monitoring_visits:visits-list'),
+            user=self.unicef_user,
+            data={
+                'ordering': '-tasks__count'
+            }
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertListEqual(
+            [v['id'] for v in response.data['results']],
+            [v.id for v in visits]
+        )
+
     def test_create(self):
         location_site = LocationSiteFactory()
 
@@ -177,6 +194,21 @@ class VisitLocationsViewTestCase(FMBaseTestCaseMixin, BaseTenantTestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(len(response.data['results']), 1)
         self.assertEqual(int(response.data['results'][0]['id']), visit.location.id)
+
+
+class VisitLocationSitesViewTestCase(FMBaseTestCaseMixin, BaseTenantTestCase):
+    def test_list(self):
+        LocationSiteFactory()
+        visit = VisitFactory()
+
+        response = self.forced_auth_req(
+            'get', reverse('field_monitoring_visits:visits-location-sites-list'),
+            user=self.unicef_user
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(response.data['results']), 1)
+        self.assertEqual(int(response.data['results'][0]['id']), visit.location_site.id)
 
 
 class VisitTeamMembersViewTestCase(FMBaseTestCaseMixin, BaseTenantTestCase):
