@@ -16,7 +16,7 @@ class SimpleCondition(BaseCondition):
     predicate = NotImplemented
 
     def is_satisfied(self):
-        raise NotImplemented
+        raise NotImplementedError
 
     def to_internal_value(self):
         if self.is_satisfied():
@@ -26,10 +26,10 @@ class SimpleCondition(BaseCondition):
 
 
 class TemplateCondition(BaseCondition):
-    predicate_template = NotImplemented
+    predicate_template = NotImplementedError
 
     def get_context(self):
-        raise NotImplemented
+        raise NotImplementedError
 
     def to_internal_value(self):
         return self.predicate_template.format(**self.get_context())

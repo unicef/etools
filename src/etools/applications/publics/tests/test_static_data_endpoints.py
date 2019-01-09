@@ -6,13 +6,20 @@ from django.urls import reverse
 import factory
 
 from etools.applications.EquiTrack.tests.cases import BaseTenantTestCase
-from etools.applications.publics.models import TravelExpenseType, Currency
-from etools.applications.publics.tests.factories import (PublicsAirlineCompanyFactory,
-                                                         PublicsBusinessAreaFactory, PublicsCountryFactory,
-                                                         PublicsCurrencyFactory, PublicsDSARateFactory,
-                                                         PublicsDSARegionFactory, PublicsFundFactory,
-                                                         PublicsGrantFactory, PublicsTravelExpenseTypeFactory,
-                                                         PublicsWBSFactory, TravelAgentFactory,)
+from etools.applications.publics.models import Currency, TravelExpenseType
+from etools.applications.publics.tests.factories import (
+    PublicsAirlineCompanyFactory,
+    PublicsBusinessAreaFactory,
+    PublicsCountryFactory,
+    PublicsCurrencyFactory,
+    PublicsDSARateFactory,
+    PublicsDSARegionFactory,
+    PublicsFundFactory,
+    PublicsGrantFactory,
+    PublicsTravelExpenseTypeFactory,
+    PublicsWBSFactory,
+    TravelAgentFactory,
+)
 from etools.applications.users.tests.factories import UserFactory
 
 
