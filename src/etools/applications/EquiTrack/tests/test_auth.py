@@ -66,10 +66,6 @@ class TestGetUsername(BaseTenantTestCase):
         r = auth.get_username(None, self.details, None)
         self.assertEqual(r, {"username": self.details["email"]})
 
-    def test_user_no_user(self):
-        r = auth.get_username(None, self.details, None)
-        self.assertIsNone(r)
-
 
 class TestUserDetails(BaseTenantTestCase):
     def setUp(self):
