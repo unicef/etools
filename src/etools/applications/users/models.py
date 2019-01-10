@@ -11,7 +11,6 @@ from django.utils.functional import cached_property
 from django.utils.translation import ugettext_lazy as _
 from django_tenants.models import TenantMixin
 
-from djangosaml2.signals import pre_user_save
 
 logger = logging.getLogger(__name__)
 
@@ -339,4 +338,3 @@ class UserProfile(models.Model):
 
 
 post_save.connect(UserProfile.create_user_profile, sender=settings.AUTH_USER_MODEL)
-pre_user_save.connect(UserProfile.custom_update_user)  # TODO: The sender should be set
