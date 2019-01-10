@@ -62,6 +62,7 @@ def create_user(strategy, details, backend, user=None, *args, **kwargs):
         'user': strategy.create_user(**fields)
     }
 
+
 def user_details(strategy, details, user=None, *args, **kwargs):
     # This is where we update the user
     # see what the property to map by is here
