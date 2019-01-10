@@ -520,6 +520,7 @@ SOCIAL_AUTH_PROTECTED_USER_FIELDS = ['email']
 LOGIN_ERROR_URL = "/workspace_inactive"
 JWT_LEEWAY = 1000
 
+AADB2C_REDIRECT_URI = os.getenv('AADB2C_REDIRECT_URI', 'http://localhost:8082/social/complete/azuread-b2c-oauth2/')
 SOCIAL_PASSWORD_RESET_POLICY = os.getenv('AZURE_B2C_PASS_RESET_POLICY', "B2C_1_PasswordResetPolicy")
 SOCIAL_AUTH_PIPELINE = (
     # 'social_core.pipeline.social_auth.social_details',

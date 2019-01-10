@@ -96,8 +96,7 @@ def user_details(strategy, details, user=None, *args, **kwargs):
 class CustomAzureADBBCOAuth2(AzureADB2COAuth2):
 
     def __init__(self, *args, **kwargs):
-        super(CustomAzureADBBCOAuth2, self).__init__(*args, **kwargs)
-        self.redirect_uri = settings.HOST + '/social/complete/azuread-b2c-oauth2/'
+        self.redirect_uri = settings.AADB2C_REDIRECT_URI
 
 
 class CustomSocialAuthExceptionMiddleware(SocialAuthExceptionMiddleware):
