@@ -1,11 +1,14 @@
 from datetime import date
 
 from django.http import Http404
+from django.utils import timezone
 from django.utils.translation import ugettext_lazy as _
 from django_filters.rest_framework import DjangoFilterBackend
 
 from rest_framework import mixins, viewsets
+from rest_framework.decorators import action
 from rest_framework.filters import OrderingFilter
+from rest_framework.response import Response
 
 from unicef_locations.models import Location
 from unicef_locations.serializers import LocationLightSerializer
@@ -15,6 +18,8 @@ from etools.applications.field_monitoring.fm_settings.serializers.cp_outputs imp
 from etools.applications.field_monitoring.fm_settings.serializers.locations import LocationSiteLightSerializer
 from etools.applications.field_monitoring.metadata import PermissionBasedMetadata
 from etools.applications.field_monitoring.permissions import UserIsFieldMonitor
+from etools.applications.field_monitoring.planning.export.renderers import TaskCSVRenderer
+from etools.applications.field_monitoring.planning.export.serializers import TaskExportSerializer
 from etools.applications.field_monitoring.planning.models import YearPlan, Task
 from etools.applications.field_monitoring.planning.serializers import YearPlanSerializer, TaskSerializer, \
     TaskListSerializer
@@ -94,6 +99,15 @@ class TaskViewSet(SimplePermittedViewSetMixin, FMBaseViewSet, viewsets.ModelView
 
     def perform_create(self, serializer):
         serializer.save(year_plan=self.get_parent_object())
+
+    @action(detail=False, methods=['get'], url_path='export', renderer_classes=[TaskCSVRenderer])
+    def export(self, request, *args, **kwargs):
+        instances = self.filter_queryset(self.get_queryset())
+        serializer = TaskExportSerializer(instances, many=True)
+        return Response(serializer.data, headers={
+            'Content-Disposition': 'attachment;filename=tasks_{}_{}.csv'.format(
+                self.get_parent_object().year, timezone.now().date())
+        })
 
 
 class PlannedPartnersViewSet(FMBaseViewSet, mixins.ListModelMixin, viewsets.GenericViewSet):
