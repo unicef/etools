@@ -109,7 +109,7 @@ USE_TZ = True
 # DJANGO: HTTP
 MIDDLEWARE = (
     'django.contrib.sessions.middleware.SessionMiddleware',
-    'social_django.middleware.SocialAuthExceptionMiddleware',
+    'etools.applications.EquiTrack.auth.CustomSocialAuthExceptionMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'etools.applications.tokens.middleware.TokenAuthenticationMiddleware',
     'django.middleware.common.CommonMiddleware',

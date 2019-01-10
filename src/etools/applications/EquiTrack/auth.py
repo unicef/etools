@@ -13,6 +13,7 @@ from rest_framework_jwt.utils import jwt_payload_handler
 from social_core.pipeline import social_auth
 from social_core.pipeline import user as social_core_user
 from social_core.backends.azuread_b2c import AzureADB2COAuth2
+from social_django.middleware import SocialAuthExceptionMiddleware
 
 from etools.applications.EquiTrack.utils import set_country
 from etools.applications.users.models import Country
@@ -93,9 +94,41 @@ def user_details(strategy, details, user=None, *args, **kwargs):
 
 
 class CustomAzureADBBCOAuth2(AzureADB2COAuth2):
+
     def __init__(self, *args, **kwargs):
         super(CustomAzureADBBCOAuth2, self).__init__(*args, **kwargs)
-        self.redirect_uri = 'http://localhost:8082/social/complete/azuread-b2c-oauth2/'
+        self.redirect_uri = settings.HOST + '/social/complete/azuread-b2c-oauth2/'
+
+
+class CustomSocialAuthExceptionMiddleware(SocialAuthExceptionMiddleware):
+    def get_redirect_uri(self, request, exception):
+        error = request.GET.get('error', None)
+
+        # This is what we should expect:
+        # ['AADB2C90118: The user has forgotten their password.\r\n
+        # Correlation ID: 7e8c3cf9-2fa7-47c7-8924-a1ea91137ba9\r\n
+        # Timestamp: 2018-11-13 11:37:56Z\r\n']
+        error_description = request.GET.get('error_description', None)
+
+        if error == "access_denied" and error_description is not None:
+            if 'AADB2C90118' in error_description:
+                auth_class = CustomAzureADBBCOAuth2()
+                redirect_home = auth_class.get_redirect_uri()
+                redirect_url = 'https://login.microsoftonline.com/' + \
+                               settings.TENANT_ID + \
+                               "/oauth2/v2.0/authorize?p=" + \
+                               settings.SOCIAL_PASSWORD_RESET_POLICY + \
+                               "&client_id=" + settings.KEY + \
+                               "&nonce=defaultNonce&redirect_uri=" + redirect_home + \
+                               "&scope=openid+email&response_type=code"
+                return redirect_url
+
+        # TODO: In case of password reset the state can't be verified figure out a way to log the user in after reset
+        if error is None:
+            return "/login"
+
+        strategy = getattr(request, 'social_strategy', None)
+        return strategy.setting('LOGIN_ERROR_URL')
 
 
 class DRFBasicAuthMixin(BasicAuthentication):
