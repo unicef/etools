@@ -371,7 +371,7 @@ REST_FRAMEWORK = {
         'rest_framework_xml.renderers.XMLRenderer',
         'rest_framework.renderers.MultiPartRenderer',
     ),
-    'DEFAULT_SCHEMA_CLASS': 'etools.applications.utils.common.inspectors.EToolsSchema',
+    'DEFAULT_SCHEMA_CLASS': 'etools.applications.EquiTrack.inspectors.EToolsSchema',
 }
 
 # django-cors-headers: https://github.com/ottoyiu/django-cors-headers

@@ -27,7 +27,7 @@ from etools.applications.users.views import (
     OfficeViewSet,
     UserViewSet,
 )
-from etools.applications.utils.common.schemas import get_schema_view, get_swagger_view
+from etools.applications.EquiTrack.schemas import get_schema_view, get_swagger_view
 from etools.libraries.locations.views import (
     CartoDBTablesView,
     LocationQuerySetView,
