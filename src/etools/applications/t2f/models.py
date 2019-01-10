@@ -515,29 +515,6 @@ class CostAssignment(models.Model):
                              verbose_name=_('Fund'))
 
 
-class Clearances(models.Model):
-    REQUESTED = 'requested'
-    NOT_REQUESTED = 'not_requested'
-    NOT_APPLICABLE = 'not_applicable'
-    CHOICES = (
-        (REQUESTED, 'requested'),
-        (NOT_REQUESTED, 'not_requested'),
-        (NOT_APPLICABLE, 'not_applicable'),
-    )
-
-    travel = models.OneToOneField('Travel', related_name='clearances', verbose_name=_('Travel'),
-                                  on_delete=models.CASCADE)
-    medical_clearance = models.CharField(max_length=14, choices=CHOICES, default=NOT_APPLICABLE,
-                                         verbose_name=_('Medical Clearance'))
-    security_clearance = models.CharField(max_length=14, choices=CHOICES, default=NOT_APPLICABLE,
-                                          verbose_name=_('Security Clearance'))
-    security_course = models.CharField(max_length=14, choices=CHOICES, default=NOT_APPLICABLE,
-                                       verbose_name=_('Security Course'))
-
-    class Meta:
-        verbose_name_plural = _('Clearances')
-
-
 def determine_file_upload_path(instance, filename):
     # TODO: add business area in there
     country_name = connection.schema_name or 'Uncategorized'

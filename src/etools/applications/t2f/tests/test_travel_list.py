@@ -298,9 +298,6 @@ class TravelList(URLAssertionMixin, BaseTenantTestCase):
                                       'grant': grant.id,
                                       'fund': fund.id,
                                       'share': '100'}],
-                'clearances': {'medical_clearance': 'requested',
-                               'security_clearance': 'requested',
-                               'security_course': 'requested'},
                 'ta_required': True,
                 'international_travel': False,
                 'mode_of_travel': [ModeOfTravel.BOAT],
@@ -311,10 +308,7 @@ class TravelList(URLAssertionMixin, BaseTenantTestCase):
                 'estimated_travel_cost': '123',
                 'currency': currency.id,
                 'purpose': 'Purpose',
-                'additional_note': 'Notes',
-                'medical_clearance': 'requested',
-                'security_clearance': 'requested',
-                'security_course': 'requested'}
+                'additional_note': 'Notes'}
 
         response = self.forced_auth_req('post', reverse('t2f:travels:list:index'),
                                         data=data, user=self.unicef_staff)

@@ -200,9 +200,6 @@ class TestPermissionMatrix(BaseTenantTestCase):
                                       'grant': grant.id,
                                       'fund': fund.id,
                                       'share': '100'}],
-                'clearances': {'medical_clearance': 'requested',
-                               'security_clearance': 'requested',
-                               'security_course': 'requested'},
                 'ta_required': True,
                 'international_travel': False,
                 'mode_of_travel': [ModeOfTravel.BOAT],
@@ -213,10 +210,8 @@ class TestPermissionMatrix(BaseTenantTestCase):
                 'estimated_travel_cost': '123',
                 'currency': currency.id,
                 'purpose': purpose,
-                'additional_note': 'Notes',
-                'medical_clearance': 'requested',
-                'security_clearance': 'requested',
-                'security_course': 'requested'}
+                'additional_note': 'Notes'
+                }
 
         response = self.forced_auth_req(
             'post',
