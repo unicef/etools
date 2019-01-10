@@ -395,6 +395,10 @@ class TravelActivity(models.Model):
 
     reference_number = property(get_reference_number, set_reference_number)
 
+    @property
+    def task_number(self):
+        return list(self.travel.activities.values_list('id', flat=True)).index(self.id) + 1
+
     def get_object_url(self):
         travel = self.travels.filter(traveler=self.primary_traveler).first()
         if not travel:
