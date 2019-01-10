@@ -58,7 +58,7 @@ class TravelDetails(URLAssertionMixin, BaseTenantTestCase):
         self.assertIntParamRegexes(names_and_paths, 't2f:travels:details:')
 
     def test_details_view(self):
-        with self.assertNumQueries(23):
+        with self.assertNumQueries(22):
             response = self.forced_auth_req('get', reverse('t2f:travels:details:index',
                                                            kwargs={'travel_pk': self.travel.id}),
                                             user=self.unicef_staff)
@@ -66,7 +66,7 @@ class TravelDetails(URLAssertionMixin, BaseTenantTestCase):
 
         self.assertKeysIn(['cancellation_note', 'supervisor', 'attachments', 'office', 'expenses', 'ta_required',
                            'completed_at', 'certification_note', 'misc_expenses', 'traveler', 'id', 'additional_note',
-                           'section', 'clearances', 'cost_assignments', 'start_date', 'status', 'activities',
+                           'section', 'cost_assignments', 'start_date', 'status', 'activities',
                            'rejection_note', 'end_date', 'mode_of_travel', 'international_travel',
                            'first_submission_date', 'deductions', 'purpose', 'report', 'itinerary',
                            'reference_number', 'cost_summary', 'currency', 'canceled_at', 'estimated_travel_cost'],
@@ -79,7 +79,7 @@ class TravelDetails(URLAssertionMixin, BaseTenantTestCase):
             name=u'\u0628\u0631\u0646\u0627\u0645\u062c \u062a\u062f\u0631\u064a\u0628 \u0627\u0644\u0645\u062a\u0627\u0628\u0639\u064a\u0646.pdf',  # noqa
             file=factory.django.FileField(filename=u'travels/lebanon/24800/\u0628\u0631\u0646\u0627\u0645\u062c_\u062a\u062f\u0631\u064a\u0628_\u0627\u0644\u0645\u062a\u0627\u0628\u0639\u064a\u0646.pdf')  # noqa
         )
-        with self.assertNumQueries(24):
+        with self.assertNumQueries(23):
             response = self.forced_auth_req(
                 'get',
                 reverse('t2f:travels:details:index', args=[self.travel.pk]),
@@ -90,7 +90,7 @@ class TravelDetails(URLAssertionMixin, BaseTenantTestCase):
         self.assertKeysIn(
             ['cancellation_note', 'supervisor', 'attachments', 'office', 'expenses', 'ta_required',
              'completed_at', 'certification_note', 'misc_expenses', 'traveler', 'id', 'additional_note',
-             'section', 'clearances', 'cost_assignments', 'start_date', 'status', 'activities',
+             'section', 'cost_assignments', 'start_date', 'status', 'activities',
              'rejection_note', 'end_date', 'mode_of_travel', 'international_travel', 'itinerary',
              'first_submission_date', 'deductions', 'purpose', 'report',
              'reference_number', 'cost_summary', 'currency', 'canceled_at', 'estimated_travel_cost'],
@@ -110,7 +110,7 @@ class TravelDetails(URLAssertionMixin, BaseTenantTestCase):
             code="t2f_travel_attachment",
             content_object=attachment,
         )
-        with self.assertNumQueries(25):
+        with self.assertNumQueries(24):
             response = self.forced_auth_req(
                 'get',
                 reverse('t2f:travels:details:index', args=[self.travel.pk]),
@@ -801,33 +801,6 @@ class TravelDetails(URLAssertionMixin, BaseTenantTestCase):
         response = self.forced_auth_req('post', reverse('t2f:travels:list:index'),
                                         data=data, user=self.unicef_staff)
         self.assertEqual(response.status_code, 201)
-
-    def test_missing_clearances(self):
-        data = {'itinerary': [],
-                'activities': [{'is_primary_traveler': True,
-                                'locations': []}],
-                'cost_assignments': [],
-                'expenses': [],
-                'action_points': [],
-                'ta_required': True,
-                'international_travel': False,
-                'traveler': self.traveler.id,
-                'mode_of_travel': []}
-
-        # Check only if 200
-        response = self.forced_auth_req('post', reverse('t2f:travels:list:index'),
-                                        data=data, user=self.unicef_staff)
-        self.assertEqual(response.status_code, 201)
-
-        response_json = json.loads(response.rendered_content)
-
-        travel = Travel.objects.get(id=response_json['id'])
-        travel.clearances.delete()
-
-        response = self.forced_auth_req('put', reverse('t2f:travels:details:index',
-                                                       kwargs={'travel_pk': response_json['id']}),
-                                        data=data, user=self.unicef_staff)
-        self.assertEqual(response.status_code, 200)
 
     def test_travel_activity_partnership(self):
         partnership = InterventionFactory()

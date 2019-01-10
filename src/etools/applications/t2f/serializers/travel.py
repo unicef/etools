@@ -21,7 +21,6 @@ from etools.applications.partners.models import PartnerType
 from etools.applications.publics.models import AirlineCompany, Currency
 from etools.applications.t2f.helpers.permission_matrix import PermissionMatrix
 from etools.applications.t2f.models import (
-    Clearances,
     CostAssignment,
     Deduction,
     Expense,
@@ -119,16 +118,6 @@ class CostAssignmentSerializer(PermissionBasedModelSerializer):
         fields = ('id', 'wbs', 'share', 'grant', 'fund', 'business_area', 'delegate')
 
 
-class ClearancesSerializer(PermissionBasedModelSerializer):
-    medical_clearance = serializers.CharField()
-    security_clearance = serializers.CharField()
-    security_course = serializers.CharField()
-
-    class Meta:
-        model = Clearances
-        fields = ('id', 'medical_clearance', 'security_clearance', 'security_course')
-
-
 class TravelActivitySerializer(PermissionBasedModelSerializer):
     id = serializers.IntegerField(required=False)
     locations = serializers.PrimaryKeyRelatedField(many=True, queryset=Location.objects.all(), required=False,
@@ -192,7 +181,6 @@ class TravelDetailsSerializer(PermissionBasedModelSerializer):
     expenses = ExpenseSerializer(many=True, required=False)
     deductions = DeductionSerializer(many=True, required=False)
     cost_assignments = CostAssignmentSerializer(many=True, required=False)
-    clearances = ClearancesSerializer(required=False)
     activities = TravelActivitySerializer(many=True, required=False)
     attachments = TravelAttachmentSerializer(many=True, read_only=True, required=False)
     cost_summary = CostSummarySerializer(read_only=True)
@@ -206,7 +194,7 @@ class TravelDetailsSerializer(PermissionBasedModelSerializer):
         model = Travel
         fields = ('reference_number', 'supervisor', 'office', 'end_date', 'international_travel', 'section',
                   'traveler', 'start_date', 'ta_required', 'purpose', 'id', 'itinerary', 'expenses', 'deductions',
-                  'cost_assignments', 'clearances', 'status', 'activities', 'mode_of_travel', 'estimated_travel_cost',
+                  'cost_assignments', 'status', 'activities', 'mode_of_travel', 'estimated_travel_cost',
                   'currency', 'completed_at', 'canceled_at', 'rejection_note', 'cancellation_note', 'attachments',
                   'cost_summary', 'certification_note', 'report', 'additional_note', 'misc_expenses',
                   'first_submission_date')
@@ -342,7 +330,6 @@ class TravelDetailsSerializer(PermissionBasedModelSerializer):
         expenses = validated_data.pop('expenses', [])
         deductions = validated_data.pop('deductions', [])
         cost_assignments = validated_data.pop('cost_assignments', [])
-        clearances = validated_data.pop('clearances', {})
         activities = validated_data.pop('activities', [])
         action_points = validated_data.pop('action_points', [])
 
@@ -359,10 +346,6 @@ class TravelDetailsSerializer(PermissionBasedModelSerializer):
         travel_activities = self.create_related_models(TravelActivity, activities)
         for activity in travel_activities:
             activity.travels.add(instance)
-
-        # O2O relations
-        clearances['travel'] = instance
-        Clearances.objects.create(**clearances)
 
         return instance
 

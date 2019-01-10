@@ -97,11 +97,6 @@ class CostAssignmentAdmin(AdminListMixin, admin.ModelAdmin):
     )
 
 
-@admin.register(models.Clearances)
-class ClearancesAdmin(AdminListMixin, admin.ModelAdmin):
-    pass
-
-
 @admin.register(models.TravelAttachment)
 class TravelAttachmentAdmin(AdminListMixin, admin.ModelAdmin):
     pass
