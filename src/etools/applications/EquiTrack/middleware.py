@@ -59,9 +59,8 @@ class EToolsTenantMiddleware(TenantMiddleware):
         if request.user.is_superuser and not request.user.profile.country:
             return None
 
-        if not request.user.is_superuser and \
-                (not request.user.profile.country or
-                 request.user.profile.country.business_area_code in settings.INACTIVE_BUSINESS_AREAS):
+        if not request.user.is_superuser and (
+                not request.user.profile.country or request.user.profile.country.business_area_code in settings.INACTIVE_BUSINESS_AREAS):
             return HttpResponseRedirect("/workspace_inactive/")
 
         try:

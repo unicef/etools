@@ -5,8 +5,19 @@ from django.utils.translation import ugettext
 from rest_framework import ISO_8601, serializers
 from rest_framework.exceptions import ValidationError
 
-from etools.applications.publics.models import (AirlineCompany, BusinessArea, BusinessRegion, Country, Currency,
-                                                DSARate, DSARegion, Fund, Grant, TravelExpenseType, WBS,)
+from etools.applications.publics.models import (
+    AirlineCompany,
+    BusinessArea,
+    BusinessRegion,
+    Country,
+    Currency,
+    DSARate,
+    DSARegion,
+    Fund,
+    Grant,
+    TravelExpenseType,
+    WBS,
+)
 
 
 class CountrySerializer(serializers.ModelSerializer):
