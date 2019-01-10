@@ -109,7 +109,7 @@ USE_TZ = True
 # DJANGO: HTTP
 MIDDLEWARE = (
     'django.contrib.sessions.middleware.SessionMiddleware',
-    'social_django.middleware.SocialAuthExceptionMiddleware',
+    'etools.applications.EquiTrack.auth.CustomSocialAuthExceptionMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'etools.applications.tokens.middleware.TokenAuthenticationMiddleware',
     'django.middleware.common.CommonMiddleware',
@@ -520,6 +520,7 @@ SOCIAL_AUTH_PROTECTED_USER_FIELDS = ['email']
 LOGIN_ERROR_URL = "/workspace_inactive"
 JWT_LEEWAY = 1000
 
+SOCIAL_PASSWORD_RESET_POLICY = os.getenv('AZURE_B2C_PASS_RESET_POLICY', "B2C_1_PasswordResetPolicy")
 SOCIAL_AUTH_PIPELINE = (
     # 'social_core.pipeline.social_auth.social_details',
     'etools.applications.EquiTrack.auth.social_details',
