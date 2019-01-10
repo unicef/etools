@@ -143,11 +143,11 @@ class StateMachineTest(BaseTenantTestCase):
         self.assertEqual(response_json['non_field_errors'], ['Field report has to be filled.'])
         self.assertEqual(travel.report_note, None)
 
-        data = response_json
+        # data = response_json
         data['report'] = 'Something'
         response = self.forced_auth_req('post', reverse('t2f:travels:details:state_change',
                                                         kwargs={'travel_pk': travel_id,
-                                                                'transition_name': 'mark_as_completed'}),
+                                                                'transition_name': Travel.COMPLETE}),
                                         data=data, user=self.traveler)
         response_json = json.loads(response.rendered_content)
         self.assertEqual(response_json['status'], Travel.COMPLETED)
