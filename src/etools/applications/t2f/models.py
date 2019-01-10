@@ -378,10 +378,6 @@ class TravelActivity(models.Model):
     def travel(self):
         return self.travels.filter(traveler=self.primary_traveler).first()
 
-    @property
-    def task_number(self):
-        return list(self.travel.activities.values_list('id', flat=True)).index(self.id) + 1
-
     _reference_number = None
 
     def get_reference_number(self):
