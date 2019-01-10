@@ -267,7 +267,8 @@ ROOT_URLCONF = 'etools.config.urls'
 
 # CONTRIB: AUTH
 AUTHENTICATION_BACKENDS = (
-    'social_core.backends.azured_b2c.AzureADB2COAuth2'
+    # 'social_core.backends.azuread_b2c.AzureADB2COAuth2',
+    'etools.applications.EquiTrack.auth.CustomAzureADBBCOAuth2',
     'django.contrib.auth.backends.ModelBackend',
 )
 AUTH_USER_MODEL = 'users.User'
