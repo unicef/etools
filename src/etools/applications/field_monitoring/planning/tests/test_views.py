@@ -11,6 +11,7 @@ from etools.applications.field_monitoring.planning.models import YearPlan
 from etools.applications.field_monitoring.planning.tests.factories import YearPlanFactory, TaskFactory
 from etools.applications.field_monitoring.tests.base import FMBaseTestCaseMixin
 from etools.applications.partners.tests.factories import PartnerFactory
+from etools.applications.utils.common.tests.test_utils import TestExportMixin
 
 
 class YearPlanViewTestCase(FMBaseTestCaseMixin, BaseTenantTestCase):
@@ -63,7 +64,7 @@ class YearPlanViewTestCase(FMBaseTestCaseMixin, BaseTenantTestCase):
         self.assertEqual(response.data['total_planned'], {'tasks': 4, 'cp_outputs': 2, 'sites': 3})
 
 
-class YearPlanTasksViewTestCase(FMBaseTestCaseMixin, BaseTenantTestCase):
+class YearPlanTasksViewTestCase(TestExportMixin, FMBaseTestCaseMixin, BaseTenantTestCase):
     @classmethod
     def setUpTestData(cls):
         super().setUpTestData()
@@ -79,6 +80,12 @@ class YearPlanTasksViewTestCase(FMBaseTestCaseMixin, BaseTenantTestCase):
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(len(response.data['results']), 1)
+
+    def test_csv_export(self):
+        TaskFactory(plan_by_month=[1] * 12)
+
+        self._test_export(self.unicef_user, 'field_monitoring_planning:year-plan-tasks-export',
+                          args=[self.year_plan.pk])
 
     def test_create(self):
         response = self.forced_auth_req(
