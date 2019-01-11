@@ -1,7 +1,6 @@
 import csv
 import datetime
 import json
-from decimal import Decimal
 from unittest import skip
 from urllib.parse import urlparse
 
@@ -16,7 +15,6 @@ import mock
 from model_utils import Choices
 from pytz import UTC
 from rest_framework import status
-from rest_framework.exceptions import ErrorDetail
 from rest_framework.test import APIRequestFactory
 from unicef_locations.tests.factories import LocationFactory
 from unicef_snapshot.models import Activity
@@ -31,7 +29,6 @@ from etools.applications.funds.tests.factories import FundsReservationHeaderFact
 from etools.applications.partners.models import (
     Agreement,
     AgreementAmendment,
-    Assessment,
     FileType,
     Intervention,
     InterventionAmendment,
