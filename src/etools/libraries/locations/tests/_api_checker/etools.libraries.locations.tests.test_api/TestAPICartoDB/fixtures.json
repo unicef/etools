@@ -2,19 +2,21 @@
     "locationtype": {
         "master": {
             "model": "locations.cartodbtable",
-            "pk": 1,
+            "pk": 34,
             "fields": {
+                "created": "2019-01-11T16:16:52.406Z",
+                "modified": "2019-01-11T16:16:52.407Z",
                 "domain": "Domain 0",
                 "api_key": "API Key 0",
                 "table_name": "table_name_0",
                 "display_name": "",
-                "location_type": 7,
+                "location_type": 216,
                 "name_col": "name",
                 "pcode_col": "pcode",
                 "remap_table_name": null,
                 "parent_code_col": "",
                 "parent": null,
-                "color": "#F3BBD7",
+                "color": "#3B0710",
                 "lft": 1,
                 "rght": 2,
                 "tree_id": 1,
@@ -24,8 +26,10 @@
         "deps": [
             {
                 "model": "locations.gatewaytype",
-                "pk": 7,
+                "pk": 216,
                 "fields": {
+                    "created": "2019-01-11T16:16:52.405Z",
+                    "modified": "2019-01-11T16:16:52.405Z",
                     "name": "GatewayType 0",
                     "admin_level": 0
                 }
