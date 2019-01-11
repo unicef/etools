@@ -24,6 +24,6 @@ class TestSafeReadOnlySerializerMixin(TestCase):
     def test_validate_readonly(self):
         self.assertFalse(self.readonly_serializer.is_valid())
 
-    def test_validate_readonly_silent(self):
+    def test_validate_readonly_raises_exception(self):
         with self.assertRaises(ValidationError):
             self.readonly_serializer.is_valid(raise_exception=True)
