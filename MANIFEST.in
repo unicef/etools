@@ -3,6 +3,8 @@ include MANIFEST.in
 include CONTRIBUTING.md
 include LICENSE
 include *.py
+include Pipfile
+include Pipfile.lock
 
 recursive-include docs *
 recursive-include src/etools *
