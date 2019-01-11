@@ -18,7 +18,7 @@ from etools.applications.field_monitoring.fm_settings.tests.factories import (
 from etools.applications.field_monitoring.shared.models import FMMethod
 from etools.applications.field_monitoring.tests.base import FMBaseTestCaseMixin
 from etools.applications.partners.models import PartnerType
-from etools.applications.partners.tests.factories import PartnerFactory
+from etools.applications.partners.tests.factories import PartnerFactory, InterventionFactory
 from etools.applications.reports.models import ResultType
 from etools.applications.reports.tests.factories import ResultFactory
 from etools.applications.utils.common.tests.test_utils import TestExportMixin
@@ -199,7 +199,7 @@ class LocationSitesViewTestCase(TestExportMixin, FMBaseTestCaseMixin, BaseTenant
         )
         self.assertEqual(response.status_code, status.HTTP_304_NOT_MODIFIED)
 
-    def test_list_modified(self):
+    def test_list_modified_create(self):
         LocationSiteFactory()
 
         response = self.forced_auth_req(
@@ -219,12 +219,34 @@ class LocationSitesViewTestCase(TestExportMixin, FMBaseTestCaseMixin, BaseTenant
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(len(response.data['results']), 2)
 
+    def test_list_modified_update(self):
+        location_site = LocationSiteFactory()
+
+        response = self.forced_auth_req(
+            'get', reverse('field_monitoring_settings:sites-list'),
+            user=self.unicef_user
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(response.data['results']), 1)
+        etag = response["ETag"]
+
+        location_site.name += '_updated'
+        location_site.save()
+
+        response = self.forced_auth_req(
+            'get', reverse('field_monitoring_settings:sites-list'),
+            user=self.unicef_user, HTTP_IF_NONE_MATCH=etag
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(response.data['results']), 1)
+        self.assertEqual(response.data['results'][0]['name'], location_site.name)
+
     def test_create(self):
         site = LocationSiteFactory()
 
         response = self.forced_auth_req(
             'post', reverse('field_monitoring_settings:sites-list'),
-            user=self.fm_user,
+            user=self.pme,
             data={
                 'name': site.name,
                 'security_detail': site.security_detail,
@@ -238,6 +260,15 @@ class LocationSitesViewTestCase(TestExportMixin, FMBaseTestCaseMixin, BaseTenant
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         self.assertIsNotNone(response.data['parent'])
 
+    def test_create_fm_user(self):
+        response = self.forced_auth_req(
+            'post', reverse('field_monitoring_settings:sites-list'),
+            user=self.fm_user,
+            data={}
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+
     def test_create_unicef(self):
         response = self.forced_auth_req(
             'post', reverse('field_monitoring_settings:sites-list'),
@@ -250,7 +281,7 @@ class LocationSitesViewTestCase(TestExportMixin, FMBaseTestCaseMixin, BaseTenant
     def test_point_required(self):
         response = self.forced_auth_req(
             'post', reverse('field_monitoring_settings:sites-list'),
-            user=self.fm_user,
+            user=self.pme,
             data={
                 'name': fuzzy.FuzzyText().fuzz(),
                 'security_detail': fuzzy.FuzzyText().fuzz(),
@@ -265,10 +296,20 @@ class LocationSitesViewTestCase(TestExportMixin, FMBaseTestCaseMixin, BaseTenant
 
         response = self.forced_auth_req(
             'delete', reverse('field_monitoring_settings:sites-detail', args=[instance.id]),
-            user=self.fm_user,
+            user=self.pme,
         )
 
         self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
+
+    def test_destroy_fm_user(self):
+        instance = LocationSiteFactory()
+
+        response = self.forced_auth_req(
+            'delete', reverse('field_monitoring_settings:sites-detail', args=[instance.id]),
+            user=self.fm_user,
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
 
     def test_destroy_unicef(self):
         instance = LocationSiteFactory()
@@ -477,13 +518,19 @@ class CheckListViewTestCase(FMBaseTestCaseMixin, BaseTenantTestCase):
 class PlannedCheckListItemViewTestCase(FMBaseTestCaseMixin, TestExportMixin, BaseTenantTestCase):
     fixtures = ['field_monitoring_methods', ]
 
+    def setUp(self):
+        super().setUp()
+
+        self.cp_output = CPOutputConfigFactory()
+        self.checklist_item = CheckListItemFactory()
+
     def test_create(self):
         response = self.forced_auth_req(
-            'post',
-            reverse('field_monitoring_settings:planned-checklist-items-list', args=[CPOutputConfigFactory().pk]),
+            'patch',
+            reverse('field_monitoring_settings:planned-checklist-items-detail',
+                    args=[self.cp_output.pk, self.checklist_item.pk]),
             user=self.fm_user,
             data={
-                'checklist_item': CheckListItemFactory().id,
                 'methods': [FMMethodFactory().pk, FMMethodFactory().pk],
                 'partners_info': [{
                     'partner': PartnerFactory().pk,
@@ -493,7 +540,7 @@ class PlannedCheckListItemViewTestCase(FMBaseTestCaseMixin, TestExportMixin, Bas
             }
         )
 
-        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(len(response.data['methods']), 2)
         self.assertEqual(len(response.data['partners_info']), 1)
 
@@ -509,11 +556,11 @@ class PlannedCheckListItemViewTestCase(FMBaseTestCaseMixin, TestExportMixin, Bas
 
     def test_create_without_partner(self):
         response = self.forced_auth_req(
-            'post',
-            reverse('field_monitoring_settings:planned-checklist-items-list', args=[CPOutputConfigFactory().pk]),
+            'patch',
+            reverse('field_monitoring_settings:planned-checklist-items-detail',
+                    args=[self.cp_output.pk, self.checklist_item.pk]),
             user=self.fm_user,
             data={
-                'checklist_item': CheckListItemFactory().id,
                 'partners_info': [{
                     'partner': None,
                     'specific_details': 'test',
@@ -522,15 +569,17 @@ class PlannedCheckListItemViewTestCase(FMBaseTestCaseMixin, TestExportMixin, Bas
             }
         )
 
-        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
 
     def test_update_partner_info(self):
-        item = PlannedCheckListItemFactory(partners_info__count=1)
+        item = PlannedCheckListItemFactory(partners_info__count=1, checklist_item=self.checklist_item,
+                                           cp_output_config=self.cp_output)
         partner_info_id = item.partners_info.first().id
 
         response = self.forced_auth_req(
-            'patch', reverse('field_monitoring_settings:planned-checklist-items-detail',
-                             args=[item.cp_output_config.pk, item.pk]),
+            'patch',
+            reverse('field_monitoring_settings:planned-checklist-items-detail',
+                    args=[self.cp_output.pk, self.checklist_item.pk]),
             user=self.fm_user,
             data={
                 'partners_info': [{
@@ -828,3 +877,18 @@ class TestFieldMonitoringGeneralAttachmentsView(FMBaseTestCaseMixin, BaseTenantT
             data={}
         )
         self.assertEqual(create_response.status_code, status.HTTP_403_FORBIDDEN)
+
+
+class TestInterventionLocationsView(FMBaseTestCaseMixin, BaseTenantTestCase):
+    def test_list(self):
+        intervention = InterventionFactory()
+        intervention.flat_locations.add(*[LocationFactory() for i in range(2)])
+        LocationFactory()
+
+        response = self.forced_auth_req(
+            'get', reverse('field_monitoring_settings:intervention-locations', args=[intervention.pk]),
+            user=self.unicef_user
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(response.data['results']), 2)

@@ -40,6 +40,8 @@ class YearPlanViewTestCase(FMBaseTestCaseMixin, BaseTenantTestCase):
     def test_plan_by_month(self):
         TaskFactory(plan_by_month=[1] * 12)
         TaskFactory(plan_by_month=[2] * 12)
+        # test that task removing will not affect our data
+        TaskFactory(plan_by_month=[2] * 12).delete()
 
         response = self.forced_auth_req(
             'get', reverse('field_monitoring_planning:year-plan-detail', args=[date.today().year]),
@@ -50,10 +52,12 @@ class YearPlanViewTestCase(FMBaseTestCaseMixin, BaseTenantTestCase):
         self.assertEqual(response.data['tasks_by_month'], [3] * 12)
 
     def test_totals(self):
-        task_1 = TaskFactory()
-        TaskFactory()
+        task_1 = TaskFactory(plan_by_month=[2] * 12)
+        TaskFactory(plan_by_month=[1] * 12)
         TaskFactory(cp_output_config=task_1.cp_output_config)
         TaskFactory(cp_output_config=task_1.cp_output_config, location_site=task_1.location_site)
+        # test that task removing will not affect our data
+        TaskFactory(cp_output_config=task_1.cp_output_config, location_site=task_1.location_site).delete()
 
         response = self.forced_auth_req(
             'get', reverse('field_monitoring_planning:year-plan-detail', args=[date.today().year]),
@@ -61,7 +65,22 @@ class YearPlanViewTestCase(FMBaseTestCaseMixin, BaseTenantTestCase):
         )
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(response.data['total_planned'], {'tasks': 4, 'cp_outputs': 2, 'sites': 3})
+        self.assertEqual(response.data['total_planned'], {'tasks': 3 * 12, 'cp_outputs': 2, 'sites': 3})
+
+    def test_next_year_data_copy(self):
+        year_plan = YearPlanFactory(year=date.today().year)
+
+        self.assertFalse(YearPlan.objects.filter(year=date.today().year + 1).exists())
+
+        response = self.forced_auth_req(
+            'get', reverse('field_monitoring_planning:year-plan-detail', args=[year_plan.year + 1]),
+            user=self.unicef_user
+        )
+
+        for field in [
+            'prioritization_criteria', 'methodology_notes', 'target_visits', 'modalities', 'partner_engagement'
+        ]:
+            self.assertEqual(getattr(year_plan, field), response.data[field])
 
 
 class YearPlanTasksViewTestCase(TestExportMixin, FMBaseTestCaseMixin, BaseTenantTestCase):

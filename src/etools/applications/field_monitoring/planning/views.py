@@ -62,7 +62,8 @@ class YearPlanViewSet(
 
         filter_kwargs = {self.lookup_field: self.kwargs[lookup_url_kwarg]}
 
-        obj = queryset.get_or_create(**filter_kwargs)[0]
+        defaults = YearPlan.get_defaults(self.kwargs[lookup_url_kwarg])
+        obj = queryset.get_or_create(**filter_kwargs, defaults=defaults)[0]
 
         # May raise a permission denied
         self.check_object_permissions(self.request, obj)

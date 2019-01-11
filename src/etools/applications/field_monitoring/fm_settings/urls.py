@@ -6,7 +6,8 @@ from unicef_restlib.routers import NestedComplexRouter
 from etools.applications.field_monitoring.fm_settings.views import (
     CheckListCategoriesViewSet, CheckListViewSet, CPOutputConfigsViewSet, CPOutputsViewSet, LocationSitesViewSet,
     FMMethodsViewSet, FMMethodTypesViewSet, PlannedCheckListItemViewSet, LogIssuesViewSet, LogIssueAttachmentsViewSet,
-    MonitoredPartnersViewSet, LocationsCountryView, FieldMonitoringGeneralAttachmentsViewSet)
+    MonitoredPartnersViewSet, LocationsCountryView, FieldMonitoringGeneralAttachmentsViewSet, ResultsViewSet,
+    InterventionLocationsView)
 
 root_api = routers.SimpleRouter()
 root_api.register(r'methods/types', FMMethodTypesViewSet, base_name='method-types')
@@ -28,6 +29,9 @@ log_issues_api.register(r'attachments', LogIssueAttachmentsViewSet, base_name='l
 
 app_name = 'field_monitoring_settings'
 urlpatterns = [
+    url(r'^interventions/(?P<intervention_pk>[0-9]+)/locations', InterventionLocationsView.as_view(),
+        name='intervention-locations'),
+    url(r'^results', ResultsViewSet.as_view(), name='results-list'),
     url(r'^locations/country', LocationsCountryView.as_view(), name='locations-country'),
     url(r'^', include(cp_outputs_configs_api.urls)),
     url(r'^', include(log_issues_api.urls)),
