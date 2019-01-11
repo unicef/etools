@@ -46,7 +46,7 @@ class TravelListViewSet(mixins.ListModelMixin,
                        travel_list.TravelFilterBoxFilter)
     renderer_classes = (renderers.JSONRenderer, renderers.CSVRenderer)
 
-    _transition_name_mapping = {'save_and_submit': 'submit_for_approval'}
+    _transition_name_mapping = {'save_and_submit': Travel.SUBMIT_FOR_APPROVAL}
 
     @atomic
     def create(self, request, *args, **kwargs):
@@ -154,6 +154,7 @@ class TravelActivityViewSet(QueryStringFilterMixin, mixins.ListModelMixin, views
     filters = (
         ('year', 'travels__end_date__year'),
         ('status', 'travels__status'),
+        ('travel_type', 'travel_type__in'),
     )
 
     def get_queryset(self):

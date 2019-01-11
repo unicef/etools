@@ -242,16 +242,16 @@ class PartnerOrganization(TimeStampedModel):
 
     RATING_HIGH = 'High'
     RATING_SIGNIFICANT = 'Significant'
-    RATING_MODERATE = 'Medium'
+    RATING_MEDIUM = 'Medium'
     RATING_LOW = 'Low'
-    RATING_NON_ASSESSED = 'Not Required'
+    RATING_NOT_REQUIRED = 'Not Required'
 
     RISK_RATINGS = (
         (RATING_HIGH, 'High'),
         (RATING_SIGNIFICANT, 'Significant'),
-        (RATING_MODERATE, 'Medium'),
+        (RATING_MEDIUM, 'Medium'),
         (RATING_LOW, 'Low'),
-        (RATING_NON_ASSESSED, 'Not Required'),
+        (RATING_NOT_REQUIRED, 'Not Required'),
     )
 
     MICRO_ASSESSMENT = 'MICRO ASSESSMENT'
@@ -558,9 +558,9 @@ class PartnerOrganization(TimeStampedModel):
     @cached_property
     def approaching_threshold_flag(self):
         total_ct_ytd = self.total_ct_ytd or 0
-        non_assessed = self.rating == PartnerOrganization.RATING_NON_ASSESSED
+        not_required = self.rating == PartnerOrganization.RATING_NOT_REQUIRED
         ct_year_overflow = total_ct_ytd > PartnerOrganization.CT_CP_AUDIT_TRIGGER_LEVEL
-        return non_assessed and ct_year_overflow
+        return not_required and ct_year_overflow
 
     @cached_property
     def flags(self):
@@ -581,14 +581,14 @@ class PartnerOrganization(TimeStampedModel):
         elif PartnerOrganization.CT_MR_AUDIT_TRIGGER_LEVEL2 < ct <= PartnerOrganization.CT_MR_AUDIT_TRIGGER_LEVEL3:
             if self.rating in [PartnerOrganization.RATING_HIGH, PartnerOrganization.RATING_SIGNIFICANT]:
                 programme_visits = 3
-            elif self.rating in [PartnerOrganization.RATING_MODERATE, ]:
+            elif self.rating in [PartnerOrganization.RATING_MEDIUM, ]:
                 programme_visits = 2
             elif self.rating in [PartnerOrganization.RATING_LOW, ]:
                 programme_visits = 1
         else:
             if self.rating in [PartnerOrganization.RATING_HIGH, PartnerOrganization.RATING_SIGNIFICANT]:
                 programme_visits = 4
-            elif self.rating in [PartnerOrganization.RATING_MODERATE, ]:
+            elif self.rating in [PartnerOrganization.RATING_MEDIUM, ]:
                 programme_visits = 3
             elif self.rating in [PartnerOrganization.RATING_LOW, ]:
                 programme_visits = 2
@@ -749,19 +749,6 @@ class PartnerOrganization(TimeStampedModel):
             scq += 1
             hact['spot_checks']['completed'][quarter_name] = scq
         else:
-            trip = Travel.objects.filter(
-                activities__travel_type=TravelType.SPOT_CHECK,
-                traveler=F('activities__primary_traveler'),
-                status__in=[Travel.COMPLETED],
-                end_date__year=datetime.datetime.now().year,
-                activities__partner=self,
-            )
-
-            trq1 = trip.filter(end_date__month__in=[1, 2, 3]).count()
-            trq2 = trip.filter(end_date__month__in=[4, 5, 6]).count()
-            trq3 = trip.filter(end_date__month__in=[7, 8, 9]).count()
-            trq4 = trip.filter(end_date__month__in=[10, 11, 12]).count()
-
             audit_spot_check = SpotCheck.objects.filter(
                 partner=self, status=Engagement.FINAL,
                 date_of_draft_report_to_unicef__year=datetime.datetime.now().year
@@ -772,12 +759,12 @@ class PartnerOrganization(TimeStampedModel):
             asc3 = audit_spot_check.filter(date_of_draft_report_to_unicef__month__in=[7, 8, 9]).count()
             asc4 = audit_spot_check.filter(date_of_draft_report_to_unicef__month__in=[10, 11, 12]).count()
 
-            hact['spot_checks']['completed']['q1'] = trq1 + asc1
-            hact['spot_checks']['completed']['q2'] = trq2 + asc2
-            hact['spot_checks']['completed']['q3'] = trq3 + asc3
-            hact['spot_checks']['completed']['q4'] = trq4 + asc4
+            hact['spot_checks']['completed']['q1'] = asc1
+            hact['spot_checks']['completed']['q2'] = asc2
+            hact['spot_checks']['completed']['q3'] = asc3
+            hact['spot_checks']['completed']['q4'] = asc4
 
-            sc = trip.count() + audit_spot_check.count()  # TODO 1.1.9c add spot checks from field monitoring
+            sc = audit_spot_check.count()  # TODO 1.1.9c add spot checks from field monitoring
 
         hact['spot_checks']['completed']['total'] = sc
         self.hact_values = hact

@@ -22,8 +22,9 @@ REST_FRAMEWORK['DEFAULT_AUTHENTICATION_CLASSES'] = (
     'etools.applications.EquiTrack.auth.CsrfExemptSessionAuthentication',
 ) + REST_FRAMEWORK['DEFAULT_AUTHENTICATION_CLASSES']
 
-# No SAML for local dev
 AUTHENTICATION_BACKENDS = (
+    # 'social_core.backends.azuread_b2c.AzureADB2COAuth2',
+    'etools.applications.EquiTrack.auth.CustomAzureADBBCOAuth2',
     'django.contrib.auth.backends.ModelBackend',
 )
 

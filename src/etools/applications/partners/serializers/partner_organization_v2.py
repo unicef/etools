@@ -347,7 +347,7 @@ class PartnerOrganizationCreateUpdateSerializer(SnapshotModelSerializer):
                 {'basis_for_risk_rating': 'The basis for risk rating has to be blank if Type is Low or High'})
 
         if basis_for_risk_rating and \
-                rating == PartnerOrganization.RATING_NON_ASSESSED and \
+                rating == PartnerOrganization.RATING_NOT_REQUIRED and \
                 type_of_assessment == PartnerOrganization.MICRO_ASSESSMENT:
             raise ValidationError({
                 'basis_for_risk_rating':
