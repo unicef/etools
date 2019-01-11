@@ -1,5 +1,4 @@
 import logging
-from datetime import timedelta
 from decimal import Decimal
 from functools import wraps
 
@@ -17,7 +16,6 @@ from unicef_notification.utils import send_notification
 from etools.applications.action_points.models import ActionPoint
 from etools.applications.publics.models import TravelExpenseType
 from etools.applications.t2f.helpers.cost_summary_calculator import CostSummaryCalculator
-from etools.applications.t2f.helpers.invoice_maker import InvoiceMaker
 from etools.applications.t2f.serializers.mailing import TravelMailSerializer
 from etools.applications.users.models import WorkspaceCounter
 from etools.applications.utils.common.urlresolvers import build_frontend_url
@@ -73,23 +71,11 @@ def make_travel_reference_number():
     return '{}/{}'.format(year, numeric_part)
 
 
-def approve_decorator(func):
-    @wraps(func)
-    def wrapper(self, *args, **kwargs):
-        # If invoicing is turned off, jump to sent_for_payment when someone approves the travel
-        func(self, *args, **kwargs)
-
-        if settings.DISABLE_INVOICING and self.ta_required:
-            self.send_for_payment(*args, **kwargs)
-
-    return wrapper
-
-
 def send_for_payment_threshold_decorator(func):
     @wraps(func)
     def wrapper(self, *args, **kwargs):
         # If invoicing is enabled, do the threshold check, otherwise it will result an infinite process loop
-        if not settings.DISABLE_INVOICING and self.check_threshold():
+        if self.check_threshold():
             self.submit_for_approval(*args, **kwargs)
             return
 
@@ -102,7 +88,7 @@ def mark_as_certified_or_completed_threshold_decorator(func):
     @wraps(func)
     def wrapper(self, *args, **kwargs):
         # If invoicing is enabled, do the threshold check, otherwise it will result an infinite process loop
-        if not settings.DISABLE_INVOICING and self.check_threshold():
+        if self.check_threshold():
             self.submit_certificate(*args, **kwargs)
             return
 
@@ -117,11 +103,6 @@ class Travel(models.Model):
     REJECTED = 'rejected'
     APPROVED = 'approved'
     CANCELLED = 'cancelled'
-    SENT_FOR_PAYMENT = 'sent_for_payment'
-    CERTIFICATION_SUBMITTED = 'certification_submitted'
-    CERTIFICATION_APPROVED = 'certification_approved'
-    CERTIFICATION_REJECTED = 'certification_rejected'
-    CERTIFIED = 'certified'
     COMPLETED = 'completed'
 
     CHOICES = (
@@ -131,12 +112,22 @@ class Travel(models.Model):
         (APPROVED, _('Approved')),
         (COMPLETED, _('Completed')),
         (CANCELLED, _('Cancelled')),
-        (SENT_FOR_PAYMENT, _('Sent for payment')),
-        (CERTIFICATION_SUBMITTED, _('Certification submitted')),
-        (CERTIFICATION_APPROVED, _('Certification approved')),
-        (CERTIFICATION_REJECTED, _('Certification rejected')),
-        (CERTIFIED, _('Certified')),
         (COMPLETED, _('Completed')),
+    )
+    SUBMIT_FOR_APPROVAL = 'submit_for_approval'
+    APPROVE = 'approve'
+    REJECT = 'reject'
+    CANCEL = 'cancel'
+    PLAN = 'plan'
+    COMPLETE = 'mark_as_completed'
+
+    TRANSACTIONS = (
+        SUBMIT_FOR_APPROVAL,
+        APPROVE,
+        REJECT,
+        CANCEL,
+        PLAN,
+        COMPLETE
     )
 
     created = models.DateTimeField(auto_now_add=True, db_index=True, verbose_name=_('Created'))
@@ -157,7 +148,7 @@ class Travel(models.Model):
     status = FSMField(default=PLANNED, choices=CHOICES, protected=True, verbose_name=_('Status'))
     traveler = models.ForeignKey(
         settings.AUTH_USER_MODEL, null=True, blank=True, related_name='travels',
-        verbose_name=_('Travellert'),
+        verbose_name=_('Traveller'),
         on_delete=models.CASCADE,
     )
     supervisor = models.ForeignKey(
@@ -264,34 +255,9 @@ class Travel(models.Model):
             raise TransitionError('Cannot switch from planned to completed if TA is required')
         return True
 
-    def check_pending_invoices(self):
-        # If invoicing is turned off, don't check pending invoices
-        if settings.DISABLE_INVOICING and self.ta_required:
-            return True
-
-        if self.invoices.filter(status__in=[Invoice.PENDING, Invoice.PROCESSING]).exists():
-            raise TransitionError('Your TA has pending payments to be processed through VISION. '
-                                  'Until payments are completed, you can not certify your TA. '
-                                  'Please check with your Finance focal point on how to proceed.')
-        return True
-
     def has_supervisor(self):
         if not self.supervisor:
             raise TransitionError('Travel has no supervisor defined. Please select one.')
-        return True
-
-    def check_travel_count(self):
-        from etools.applications.t2f.helpers.misc import get_open_travels_for_check
-        travels = get_open_travels_for_check(self.traveler)
-
-        if travels.count() >= 3:
-            raise TransitionError('Maximum 3 open travels are allowed.')
-
-        end_date_limit = timezone_now() - timedelta(days=15)
-        if travels.filter(end_date__lte=end_date_limit).exclude(id=self.id).exists():
-            raise TransitionError(ugettext('Another of your trips ended more than 15 days ago, but was not completed '
-                                           'yet. Please complete that before creating a new trip.'))
-
         return True
 
     def validate_itinerary(self):
@@ -303,8 +269,8 @@ class Travel(models.Model):
 
         return True
 
-    @transition(status, source=[PLANNED, REJECTED, SENT_FOR_PAYMENT, CANCELLED], target=SUBMITTED,
-                conditions=[validate_itinerary, has_supervisor, check_pending_invoices, check_travel_count])
+    @transition(status, source=[PLANNED, REJECTED, CANCELLED], target=SUBMITTED,
+                conditions=[validate_itinerary, has_supervisor])
     def submit_for_approval(self):
         self.submitted_at = timezone_now()
         if not self.first_submission_date:
@@ -313,7 +279,6 @@ class Travel(models.Model):
                                      self.supervisor.email,
                                      'emails/submit_for_approval.html')
 
-    @approve_decorator
     @transition(status, source=[SUBMITTED], target=APPROVED)
     def approve(self):
         expenses = {'user': Decimal(0),
@@ -340,12 +305,7 @@ class Travel(models.Model):
                                      self.traveler.email,
                                      'emails/rejected.html')
 
-    @transition(status, source=[PLANNED,
-                                SUBMITTED,
-                                REJECTED,
-                                APPROVED,
-                                SENT_FOR_PAYMENT,
-                                CERTIFIED],
+    @transition(status, source=[PLANNED, SUBMITTED, REJECTED, APPROVED],
                 target=CANCELLED)
     def cancel(self):
         self.canceled_at = timezone_now()
@@ -357,56 +317,8 @@ class Travel(models.Model):
     def plan(self):
         pass
 
-    @send_for_payment_threshold_decorator
-    @transition(status, source=[APPROVED, SENT_FOR_PAYMENT, CERTIFIED], target=SENT_FOR_PAYMENT)
-    def send_for_payment(self):
-        if self.cost_summary['expenses_total']:
-            self.preserved_expenses_local = self.cost_summary['expenses_total'][0]['amount']
-        else:
-            self.preserved_expenses_local = Decimal(0)
-        self.generate_invoices()
-
-        # If invoicing is turned off, don't send a mail
-        if settings.DISABLE_INVOICING and self.ta_required:
-            return
-
-        self.send_notification_email('Travel #{} sent for payment.'.format(self.reference_number),
-                                     self.traveler.email,
-                                     'emails/sent_for_payment.html')
-
-    @transition(status, source=[SENT_FOR_PAYMENT, CERTIFICATION_REJECTED, CERTIFIED],
-                target=CERTIFICATION_SUBMITTED,
-                conditions=[check_pending_invoices])
-    def submit_certificate(self):
-        self.send_notification_email('Travel #{} certification was submitted.'.format(self.reference_number),
-                                     self.supervisor.email,
-                                     'emails/certificate_submitted.html')
-
-    @transition(status, source=[CERTIFICATION_SUBMITTED], target=CERTIFICATION_APPROVED)
-    def approve_certificate(self):
-        self.send_notification_email('Travel #{} certification was approved.'.format(self.reference_number),
-                                     self.traveler.email,
-                                     'emails/certificate_approved.html')
-
-    @transition(status, source=[CERTIFICATION_APPROVED, CERTIFICATION_SUBMITTED],
-                target=CERTIFICATION_REJECTED)
-    def reject_certificate(self):
-        self.send_notification_email('Travel #{} certification was rejected.'.format(self.reference_number),
-                                     self.traveler.email,
-                                     'emails/certificate_rejected.html')
-
     @mark_as_certified_or_completed_threshold_decorator
-    @transition(status, source=[CERTIFICATION_APPROVED, SENT_FOR_PAYMENT],
-                target=CERTIFIED,
-                conditions=[check_pending_invoices])
-    def mark_as_certified(self):
-        self.generate_invoices()
-        self.send_notification_email('Travel #{} certification was certified.'.format(self.reference_number),
-                                     self.traveler.email,
-                                     'emails/certified.html')
-
-    @mark_as_certified_or_completed_threshold_decorator
-    @transition(status, source=[CERTIFIED, SUBMITTED, APPROVED, PLANNED, CANCELLED], target=COMPLETED,
+    @transition(status, source=[SUBMITTED, APPROVED, PLANNED, CANCELLED], target=COMPLETED,
                 conditions=[check_trip_report, check_state_flow])
     def mark_as_completed(self):
         self.completed_at = timezone_now()
@@ -446,10 +358,6 @@ class Travel(models.Model):
             html_content_filename=template_name,
             context={'travel': serializer.data, 'url': self.get_object_url()}
         )
-
-    def generate_invoices(self):
-        maker = InvoiceMaker(self)
-        maker.do_invoicing()
 
     def get_object_url(self):
         return build_frontend_url('t2f', 'edit-travel', self.id)
@@ -633,29 +541,6 @@ class CostAssignment(models.Model):
                              verbose_name=_('Fund'))
 
 
-class Clearances(models.Model):
-    REQUESTED = 'requested'
-    NOT_REQUESTED = 'not_requested'
-    NOT_APPLICABLE = 'not_applicable'
-    CHOICES = (
-        (REQUESTED, 'requested'),
-        (NOT_REQUESTED, 'not_requested'),
-        (NOT_APPLICABLE, 'not_applicable'),
-    )
-
-    travel = models.OneToOneField('Travel', related_name='clearances', verbose_name=_('Travel'),
-                                  on_delete=models.CASCADE)
-    medical_clearance = models.CharField(max_length=14, choices=CHOICES, default=NOT_APPLICABLE,
-                                         verbose_name=_('Medical Clearance'))
-    security_clearance = models.CharField(max_length=14, choices=CHOICES, default=NOT_APPLICABLE,
-                                          verbose_name=_('Security Clearance'))
-    security_course = models.CharField(max_length=14, choices=CHOICES, default=NOT_APPLICABLE,
-                                       verbose_name=_('Security Course'))
-
-    class Meta:
-        verbose_name_plural = _('Clearances')
-
-
 def determine_file_upload_path(instance, filename):
     # TODO: add business area in there
     country_name = connection.schema_name or 'Uncategorized'
@@ -671,86 +556,6 @@ class TravelAttachment(models.Model):
 
     name = models.CharField(max_length=255, verbose_name=_('Name'))
     file = models.FileField(upload_to=determine_file_upload_path, max_length=255, verbose_name=_('File'))
-
-
-class Invoice(models.Model):
-    PENDING = 'pending'
-    PROCESSING = 'processing'
-    SUCCESS = 'success'
-    ERROR = 'error'
-
-    STATUS = (
-        (PENDING, 'Pending'),
-        (PROCESSING, 'Processing'),
-        (SUCCESS, 'Success'),
-        (ERROR, 'Error'),
-    )
-
-    travel = models.ForeignKey(
-        'Travel', related_name='invoices', verbose_name=_('Travel'),
-        on_delete=models.CASCADE,
-    )
-    reference_number = models.CharField(max_length=32, unique=True, verbose_name=_('Reference Number'))
-    business_area = models.CharField(max_length=32, verbose_name=_('Business Area'))
-    vendor_number = models.CharField(max_length=32, verbose_name=_('Vendor Number'))
-    currency = models.ForeignKey(
-        'publics.Currency', related_name='+', verbose_name=_('Currency'),
-        on_delete=models.CASCADE,
-    )
-    amount = models.DecimalField(max_digits=20, decimal_places=4, verbose_name=_('Amount'))
-    status = models.CharField(max_length=16, choices=STATUS, verbose_name=_('Status'))
-    messages = ArrayField(models.TextField(default='', blank=True), default=[], verbose_name=_('Messages'))
-    vision_fi_id = models.CharField(max_length=16, default='', blank=True, verbose_name=_('Vision FI ID'))
-
-    def save(self, **kwargs):
-        if self.pk is None:
-            # This will lock the travel row and prevent concurrency issues
-            travel = Travel.objects.select_for_update().get(id=self.travel_id)
-            invoice_counter = travel.invoices.all().count() + 1
-            self.reference_number = '{}/{}/{:02d}'.format(self.business_area,
-                                                          self.travel.reference_number,
-                                                          invoice_counter)
-        super().save(**kwargs)
-
-    @property
-    def posting_key(self):
-        return 'credit' if self.amount >= 0 else 'debit'
-
-    @property
-    def normalized_amount(self):
-        return abs(self.amount.normalize())
-
-    @property
-    def message(self):
-        return '\n'.join(self.messages)
-
-    def __str__(self):
-        return self.reference_number
-
-    class Meta:
-        ordering = ["pk", ]
-
-
-class InvoiceItem(models.Model):
-    invoice = models.ForeignKey(
-        'Invoice', related_name='items', verbose_name=_('Invoice'),
-        on_delete=models.CASCADE,
-    )
-    wbs = models.ForeignKey('publics.WBS', related_name='+', null=True, blank=True, on_delete=models.DO_NOTHING,
-                            verbose_name=_(''))
-    grant = models.ForeignKey('publics.Grant', related_name='+', null=True, blank=True, on_delete=models.DO_NOTHING,
-                              verbose_name=_('Grant'))
-    fund = models.ForeignKey('publics.Fund', related_name='+', null=True, blank=True, on_delete=models.DO_NOTHING,
-                             verbose_name=_('Fund'))
-    amount = models.DecimalField(max_digits=20, decimal_places=10)
-
-    @property
-    def posting_key(self):
-        return 'credit' if self.amount >= 0 else 'debit'
-
-    @property
-    def normalized_amount(self):
-        return abs(self.amount.normalize())
 
 
 class T2FActionPointManager(models.Manager):

@@ -2,12 +2,25 @@
 import json
 
 from etools.applications.EquiTrack.tests.cases import BaseTenantTestCase
-from etools.applications.publics.models import (Country as PublicsCountry, Currency, ExchangeRate,
-                                                Fund, Grant, TravelAgent, TravelExpenseType, WBS,)
-from etools.applications.publics.tests.factories import (PublicsBusinessAreaFactory, PublicsCountryFactory,
-                                                         PublicsFundFactory, PublicsGrantFactory, TravelAgentFactory,)
-from etools.applications.users.models import Country
 from etools.applications.publics import synchronizers
+from etools.applications.publics.models import (
+    Country as PublicsCountry,
+    Currency,
+    ExchangeRate,
+    Fund,
+    Grant,
+    TravelAgent,
+    TravelExpenseType,
+    WBS,
+)
+from etools.applications.publics.tests.factories import (
+    PublicsBusinessAreaFactory,
+    PublicsCountryFactory,
+    PublicsFundFactory,
+    PublicsGrantFactory,
+    TravelAgentFactory,
+)
+from etools.applications.users.models import Country
 
 
 class TestCostAssignmentSynch(BaseTenantTestCase):
