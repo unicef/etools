@@ -1,4 +1,3 @@
-
 from django.contrib import admin
 
 from etools.applications.action_points.admin import ActionPointAdmin
@@ -7,8 +6,8 @@ from etools.applications.t2f import models
 from etools.applications.t2f.models import T2FActionPoint
 
 
+@admin.register(models.Travel)
 class TravelAdmin(admin.ModelAdmin):
-    model = models.Travel
     list_filter = (
         'status',
         'traveler',
@@ -28,10 +27,14 @@ class TravelAdmin(admin.ModelAdmin):
     readonly_fields = (
         'status',
     )
+    raw_id_fields = (
+        'traveler',
+        'supervisor'
+    )
 
 
+@admin.register(models.TravelActivity)
 class TravelActivityAdmin(admin.ModelAdmin):
-    model = models.TravelActivity
     list_filter = (
         'travel_type',
         'partner',
@@ -47,10 +50,13 @@ class TravelActivityAdmin(admin.ModelAdmin):
         'travel_type',
         'date'
     )
+    raw_id_fields = (
+        'primary_traveler',
+    )
 
 
+@admin.register(models.ItineraryItem)
 class ItineraryItemAdmin(admin.ModelAdmin):
-    model = models.ItineraryItem
     list_filter = (
         'travel',
         'departure_date',
@@ -70,50 +76,32 @@ class ItineraryItemAdmin(admin.ModelAdmin):
     )
 
 
+@admin.register(models.Expense)
 class ExpenseAdmin(AdminListMixin, admin.ModelAdmin):
-    pass
+    raw_id_fields = (
+        'travel',
+    )
 
 
+@admin.register(models.Deduction)
 class DeductionAdmin(AdminListMixin, admin.ModelAdmin):
-    pass
+    raw_id_fields = (
+        'travel',
+    )
 
 
+@admin.register(models.CostAssignment)
 class CostAssignmentAdmin(AdminListMixin, admin.ModelAdmin):
-    pass
+    raw_id_fields = (
+        'travel',
+    )
 
 
-class ClearancesAdmin(AdminListMixin, admin.ModelAdmin):
-    pass
-
-
+@admin.register(models.TravelAttachment)
 class TravelAttachmentAdmin(AdminListMixin, admin.ModelAdmin):
-    pass
-
-
-class TravelPermissionAdmin(AdminListMixin, admin.ModelAdmin):
-    pass
-
-
-class InvoiceAdmin(AdminListMixin, admin.ModelAdmin):
-    pass
-
-
-class InvoiceItemAdmin(AdminListMixin, admin.ModelAdmin):
     pass
 
 
 @admin.register(T2FActionPoint)
 class T2FActionPointAdmin(ActionPointAdmin):
     pass
-
-
-admin.site.register(models.TravelActivity, TravelActivityAdmin)
-admin.site.register(models.Travel, TravelAdmin)
-admin.site.register(models.ItineraryItem, ItineraryItemAdmin)
-admin.site.register(models.Expense, ExpenseAdmin)
-admin.site.register(models.Deduction, DeductionAdmin)
-admin.site.register(models.CostAssignment, CostAssignmentAdmin)
-admin.site.register(models.Clearances, ClearancesAdmin)
-admin.site.register(models.TravelAttachment, TravelAttachmentAdmin)
-admin.site.register(models.Invoice, InvoiceAdmin)
-admin.site.register(models.InvoiceItem, InvoiceItemAdmin)

@@ -1,14 +1,15 @@
-
-from django.utils.translation import ugettext
+from django.utils.translation import ugettext as _
 
 from rest_framework import serializers
+
+from etools.applications.t2f.models import TravelAttachment
 
 
 class YesOrEmptyField(serializers.BooleanField):
     def to_representation(self, value):
         value = super().to_representation(value)
         if value:
-            return ugettext('Yes')
+            return _('Yes')
         return ''
 
 
@@ -16,8 +17,8 @@ class YesOrNoField(serializers.BooleanField):
     def to_representation(self, value):
         value = super().to_representation(value)
         if value:
-            return ugettext('Yes')
-        return ugettext('No')
+            return _('Yes')
+        return _('No')
 
 
 class TravelActivityExportSerializer(serializers.Serializer):
@@ -30,16 +31,37 @@ class TravelActivityExportSerializer(serializers.Serializer):
     trip_type = serializers.CharField(source='activity.travel_type', read_only=True)
     partner = serializers.CharField(source='activity.partner.name', read_only=True)
     partnership = serializers.CharField(source='activity.partnership.title', read_only=True)
+    pd_reference = serializers.ReadOnlyField(source='activity.partnership.number', read_only=True)
     results = serializers.CharField(source='activity.result.name', read_only=True)
     locations = serializers.SerializerMethodField()
     start_date = serializers.DateTimeField(source='travel.start_date', format='%d-%b-%Y', read_only=True)
     end_date = serializers.DateTimeField(source='travel.end_date', format='%d-%b-%Y', read_only=True)
     is_secondary_traveler = serializers.SerializerMethodField()
     primary_traveler_name = serializers.SerializerMethodField()
+    hact_visit_report = serializers.SerializerMethodField(
+        label=_("HACT Programmatic visit report")
+    )
 
     class Meta:
-        fields = ('reference_number', 'traveler', 'office', 'section', 'status', 'supervisor', 'trip_type', 'partner', 'partnership',
-                  'results', 'locations', 'start_date', 'end_date', 'is_secondary_traveler', 'primary_traveler_name')
+        fields = (
+            'reference_number',
+            'traveler',
+            'office',
+            'section',
+            'status',
+            'supervisor',
+            'trip_type',
+            'partner',
+            'partnership',
+            'pd_reference',
+            'results',
+            'locations',
+            'start_date',
+            'end_date',
+            'is_secondary_traveler',
+            'primary_traveler_name',
+            'hact_visit_report',
+        )
 
     def get_locations(self, obj):
         return ', '.join([l.name for l in obj.activity.locations.all()])
@@ -56,6 +78,12 @@ class TravelActivityExportSerializer(serializers.Serializer):
 
     def _is_secondary_traveler(self, obj):
         return obj.activity.primary_traveler != obj.travel.traveler
+
+    def get_hact_visit_report(self, obj):
+        return "Yes" if TravelAttachment.objects.filter(
+            travel=obj.travel,
+            type="HACT Programme Monitoring",
+        ).exists() else "No"
 
 
 class FinanceExportSerializer(serializers.Serializer):
@@ -125,22 +153,3 @@ class TravelAdminExportSerializer(serializers.Serializer):
         if 'dsa_area' not in data or not data['dsa_area']:
             data['dsa_area'] = 'NODSA'
         return data
-
-
-class InvoiceExportSerializer(serializers.Serializer):
-    reference_number = serializers.CharField(source='invoice.reference_number', read_only=True)
-    ta_number = serializers.CharField(source='invoice.travel.reference_number', read_only=True)
-    vendor_number = serializers.CharField(source='invoice.vendor_number', read_only=True)
-    currency = serializers.CharField(source='invoice.currency.name', read_only=True)
-    total_amount = serializers.DecimalField(source='invoice.amount', max_digits=20, decimal_places=4, read_only=True)
-    status = serializers.CharField(source='invoice.status', read_only=True)
-    message = serializers.CharField(source='invoice.message', read_only=True)
-    vision_fi_doc = serializers.CharField(source='invoice.vision_fi_id', read_only=True)
-    wbs = serializers.CharField(source='wbs.name', read_only=True)
-    grant = serializers.CharField(source='grant.name', read_only=True)
-    fund = serializers.CharField(source='fund.name', read_only=True)
-    amount = serializers.DecimalField(max_digits=20, decimal_places=4)
-
-    class Meta:
-        fields = ('reference_number', 'ta_number', 'vendor_number', 'currency', 'total_amount', 'status', 'message',
-                  'vision_fi_doc', 'wbs', 'grant', 'fund', 'amount')

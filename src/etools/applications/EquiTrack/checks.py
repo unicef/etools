@@ -35,16 +35,6 @@ def check_config(app_configs, **kwargs):
             )
         )
 
-    configdir = settings.SAML_CONFIG['attribute_map_dir']
-    if not os.path.isdir(configdir):
-        errors.append(
-            Error(
-                "SAML configuration directory not found. ('attribute_map_dir')",
-                hint='check your settings.SAML_CONFIG',
-                obj=None,
-                id='etools.E003',
-            )
-        )
     # check templates
     for entry in settings.TEMPLATES:
         for path in entry['DIRS']:
@@ -55,48 +45,6 @@ def check_config(app_configs, **kwargs):
                         hint='check your settings.TEMPLATES',
                         obj=None,
                         id='etools.E004',
-                    )
-                )
-    return errors
-
-
-@register('etools', deploy=True)
-def check_config_deploy(app_configs, **kwargs):
-    from django.conf import settings
-    errors = []
-    cfg = settings.SAML_CONFIG
-
-    for i, filename in enumerate(cfg['metadata']['local']):
-        if not os.path.exists(filename):
-            errors.append(
-                Error(
-                    f"SAML configuration error.'{filename}' does not exists",
-                    hint='check your settings.SAML_CONFIG',
-                    obj=None,
-                    id=f'etools.E001{i}',
-                )
-            )
-
-    for i, filename in enumerate([cfg['key_file'], cfg['cert_file']]):
-        if not os.path.exists(filename):
-            errors.append(
-                Error(
-                    f"SAML configuration error.'{filename}' does not exists",
-                    hint='check your settings.SAML_CONFIG',
-                    obj=None,
-                    id=f'etools.E002{i}',
-                )
-            )
-
-    for i, entry in enumerate(cfg['encryption_keypairs']):
-        for k, v in entry.items():
-            if not os.path.exists(v):
-                errors.append(
-                    Error(
-                        f"Error in SAML configuration in entry [encryption_keypairs][{k}]. '{v}' does not exists  ",
-                        hint='check your settings.SAML_CONFIG',
-                        obj=None,
-                        id=f'etools.E003{i}',
                     )
                 )
     return errors

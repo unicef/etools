@@ -1,5 +1,5 @@
-
 import json
+from unittest import skip
 
 from django.contrib.auth.models import Group
 from django.urls import reverse
@@ -103,6 +103,7 @@ class TestPermissionMatrix(BaseTenantTestCase):
                                  UserTypes.TRAVEL_ADMINISTRATOR,
                                  UserTypes.REPRESENTATIVE])
 
+    @skip("no longer using get_permission_matrix")
     @mock.patch('etools.applications.t2f.helpers.permission_matrix.get_permission_matrix')
     def test_permission_aggregation(self, permission_matrix_getter):
         permission_matrix_getter.return_value = {
@@ -192,9 +193,6 @@ class TestPermissionMatrix(BaseTenantTestCase):
                                       'grant': grant.id,
                                       'fund': fund.id,
                                       'share': '100'}],
-                'clearances': {'medical_clearance': 'requested',
-                               'security_clearance': 'requested',
-                               'security_course': 'requested'},
                 'ta_required': True,
                 'international_travel': False,
                 'mode_of_travel': [ModeOfTravel.BOAT],
@@ -205,14 +203,18 @@ class TestPermissionMatrix(BaseTenantTestCase):
                 'estimated_travel_cost': '123',
                 'currency': currency.id,
                 'purpose': purpose,
-                'additional_note': 'Notes',
-                'medical_clearance': 'requested',
-                'security_clearance': 'requested',
-                'security_course': 'requested'}
+                'additional_note': 'Notes'
+                }
 
-        response = self.forced_auth_req('post', reverse('t2f:travels:list:state_change',
-                                                        kwargs={'transition_name': 'save_and_submit'}),
-                                        data=data, user=self.traveler)
+        response = self.forced_auth_req(
+            'post',
+            reverse(
+                't2f:travels:list:state_change',
+                kwargs={'transition_name': 'save_and_submit'}
+            ),
+            data=data,
+            user=self.traveler,
+        )
         response_json = json.loads(response.rendered_content)
         self.assertEqual(response_json['purpose'], purpose)
         self.assertEqual(response_json['status'], Travel.SUBMITTED)
@@ -220,14 +222,20 @@ class TestPermissionMatrix(BaseTenantTestCase):
 
         response = self.forced_auth_req('post', reverse('t2f:travels:details:state_change',
                                                         kwargs={'travel_pk': travel_id,
-                                                                'transition_name': 'approve'}),
+                                                                'transition_name': Travel.APPROVE}),
                                         user=self.unicef_staff)
         response_json = json.loads(response.rendered_content)
         self.assertEqual(response_json['status'], Travel.APPROVED)
 
         data = {'purpose': 'Some totally different purpose than before'}
-        response = self.forced_auth_req('patch', reverse('t2f:travels:details:index',
-                                                         kwargs={'travel_pk': response_json['id']}),
-                                        data=data, user=self.traveler)
+        response = self.forced_auth_req(
+            'patch',
+            reverse(
+                't2f:travels:details:index',
+                kwargs={'travel_pk': response_json['id']}
+            ),
+            data=data,
+            user=self.traveler,
+        )
         response_json = json.loads(response.rendered_content)
         self.assertEqual(response_json['purpose'], purpose)
