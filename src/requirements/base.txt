@@ -140,6 +140,7 @@ tornado==5.1.1            # via flower, ipykernel, jupyter-client, notebook, ter
 traitlets==4.3.2          # via ipykernel, ipython, ipywidgets, jupyter-client, jupyter-core, nbconvert, nbformat, notebook
 unicef-attachments==0.4.2
 unicef-djangolib==0.5.2
+unicef-locations==1.4.2
 unicef_notification==0.2.0
 unicef_restlib==0.3.8
 unicef_snapshot==0.2.1
