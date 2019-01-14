@@ -40,10 +40,12 @@ newrelic==2.94.0.79
 pyyaml==3.12
 psycopg2==2.7.5
 raven==6.9
+arcgis==1.5.2
+# numpy==1.15.4
 tenant-schemas-celery==0.2.1
 unicef-attachments==0.4.2
 unicef-djangolib==0.5.2
-unicef-locations==1.4.2
+# unicef-locations==1.4.2
 unicef_notification==0.2.0
 unicef_restlib==0.3.8
 unicef_snapshot==0.2.1

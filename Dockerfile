@@ -36,6 +36,8 @@ RUN pip install --upgrade \
     pip \
     wheel
 
+# RUN pip install --upgrade arcgis --no-deps
+
 # http://gis.stackexchange.com/a/74060
 ENV CPLUS_INCLUDE_PATH /usr/include/gdal
 ENV C_INCLUDE_PATH /usr/include/gdal
