@@ -37,6 +37,8 @@ GDAL==1.10.0
 gunicorn==19.9
 drfpasswordless==1.2
 newrelic==2.94.0.79
+social-auth-core[azuread]==1.7.0
+social-auth-app-django==2.1.0
 pyyaml==3.12
 psycopg2==2.7.5
 raven==6.9
@@ -49,8 +51,3 @@ unicef-djangolib==0.5.2
 unicef_notification==0.2.0
 unicef_restlib==0.3.8
 unicef_snapshot==0.2.1
-
-cryptography==2.4.1  # need for python 3.7
-cffi==1.11.5  # need for python 3.7
-
--e git+https://github.com/unicef/djangosaml2.git@v0.16.11.2#egg=djangosaml2

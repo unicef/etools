@@ -8,7 +8,7 @@ class CloneTravelHelper(object):
 
     def clone_for_secondary_traveler(self, new_traveler):
         fk_related = ['itinerary', 'expenses', 'deductions', 'cost_assignments']
-        o2o_related = ['clearances']
+        o2o_related = []
         new_travel = self._do_the_cloning(new_traveler, fk_related, o2o_related)
         new_travel.activities.set(self.travel.activities.all())
 
@@ -16,7 +16,7 @@ class CloneTravelHelper(object):
 
     def clone_for_driver(self, new_traveler):
         fk_related = ['itinerary']
-        o2o_related = ['clearances']
+        o2o_related = []
         new_travel = self._do_the_cloning(new_traveler, fk_related, o2o_related)
         new_travel.is_driver = True
         new_travel.save()

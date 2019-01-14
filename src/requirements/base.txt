@@ -1,24 +1,25 @@
--e git+https://github.com/unicef/djangosaml2.git@v0.16.11.2#egg=djangosaml2
-amqp==2.2.2               # via kombu
+amqp==2.4.0               # via kombu
 arcgis==1.5.2
 asn1crypto==0.24.0        # via cryptography
-azure-common==1.1.8       # via azure-storage
-azure-nspkg==2.0.0        # via azure-common, azure-storage
+azure-common==1.1.16      # via azure-storage
+azure-nspkg==3.0.2        # via azure-storage
 azure-storage==0.20.2
 babel==2.6.0              # via flower
 backcall==0.1.0           # via ipython
-billiard==3.5.0.3         # via celery
+billiard==3.5.0.5         # via celery
 bleach==3.1.0             # via nbconvert
 carto==1.3.1
 celery==4.2.1
-cffi==1.11.5
+certifi==2018.11.29       # via requests
+cffi==1.11.5              # via cryptography
+chardet==3.0.4            # via requests
 coreapi==2.3.3            # via django-rest-swagger, openapi-codec
 coreschema==0.0.4         # via coreapi
-cryptography==2.4.1
+cryptography==2.4.2       # via secretstorage, social-auth-core
 cycler==0.10.0            # via matplotlib
-decorator==4.3.0          # via ipython, pysaml2, traitlets
-defusedxml==0.5.0         # via djangorestframework-xml, nbconvert
-diff-match-patch==20121119  # via django-import-export
+decorator==4.3.0          # via ipython, traitlets
+defusedxml==0.5.0         # via djangorestframework-xml, nbconvert, odfpy, python3-openid, social-auth-core
+diff-match-patch==20181111  # via django-import-export
 dj-database-url==0.5
 dj-static==0.0.6
 django-appconf==1.0.2     # via django-celery-email
@@ -59,11 +60,11 @@ entrypoints==0.3          # via keyring, nbconvert
 et-xmlfile==1.0.1         # via openpyxl
 etools-validator==0.3.2
 flower==0.9.2
-future==0.15.2            # via pyrestcli, pysaml2
+future==0.17.1            # via pyrestcli
 gdal==1.10.0
 gunicorn==19.9
 html5lib==1.0.1           # via xhtml2pdf
-idna==2.6                 # via cryptography
+idna==2.8                 # via cryptography, requests
 ipykernel==5.1.0          # via ipywidgets, notebook
 ipython-genutils==0.2.0   # via nbformat, notebook, traitlets
 ipython==7.2.0            # via ipykernel, ipywidgets
@@ -81,7 +82,7 @@ jupyterlab-server==0.2.0  # via jupyterlab
 jupyterlab==0.35.4        # via arcgis
 keyring==17.1.1           # via arcgis
 kiwisolver==1.0.1         # via matplotlib
-kombu==4.2.1              # via celery
+kombu==4.2.2.post1        # via celery
 markupsafe==1.1.0         # via jinja2
 matplotlib==3.0.2         # via arcgis
 mistune==0.8.4            # via nbconvert
@@ -89,46 +90,46 @@ nbconvert==5.4.0          # via notebook
 nbformat==4.4.0           # via ipywidgets, nbconvert, notebook
 newrelic==2.94.0.79
 notebook==5.7.4           # via jupyterlab, jupyterlab-server, widgetsnbextension
-numpy==1.15.4             # via arcgis, matplotlib, pandas
-odfpy==1.3.6              # via tablib
+numpy==1.16.0             # via arcgis, matplotlib, pandas
+oauthlib==2.1.0           # via requests-oauthlib, social-auth-core
+odfpy==1.4.0              # via tablib
 openapi-codec==1.3.2      # via django-rest-swagger
-openpyxl==2.5.9           # via tablib
+openpyxl==2.5.12          # via tablib
 pandas==0.23.4            # via arcgis
 pandocfilters==1.4.2      # via nbconvert
 parso==0.3.1              # via jedi
-paste==2.0.3              # via pysaml2
 pexpect==4.6.0            # via ipython
 pickleshare==0.7.5        # via ipython
-pillow==5.3.0             # via reportlab, xhtml2pdf
+pillow==5.4.1             # via reportlab, xhtml2pdf
 prometheus-client==0.5.0  # via notebook
 prompt-toolkit==2.0.7     # via ipython
-psycopg2-binary==2.7.5    # via django-tenants, unicef-notification, unicef-snapshot
+psycopg2-binary==2.7.6.1  # via django-tenants, unicef-notification, unicef-snapshot
 psycopg2==2.7.5
 ptyprocess==0.6.0         # via pexpect, terminado
-pycparser==2.18           # via cffi
-pycryptodomex==3.6.6      # via pysaml2
+pycparser==2.19           # via cffi
 pygments==2.3.1           # via ipython, nbconvert
-pyjwt==1.5.3              # via djangorestframework-jwt
-pyopenssl==17.5.0         # via pysaml2
-pyparsing==2.3.0          # via matplotlib
+pyjwt==1.7.1              # via djangorestframework-jwt, social-auth-core
+pyparsing==2.3.1          # via matplotlib
 pypdf2==1.26.0            # via xhtml2pdf
-pyrestcli==0.6.4          # via carto
-pysaml2==4.4.0
+pyrestcli==0.6.7          # via carto
 pyshp==2.0.1              # via arcgis
-python-crontab==2.3.5     # via django-celery-beat
-python-dateutil==2.5.3    # via azure-storage, jupyter-client, matplotlib, pandas, pyrestcli, pysaml2, python-crontab
-pytz==2018.3              # via babel, celery, django, django-timezone-field, etools-validator, flower, pandas, pysaml2, unicef-attachments, unicef-djangolib, unicef-restlib
+python-crontab==2.3.6     # via django-celery-beat
+python-dateutil==2.7.5    # via azure-storage, jupyter-client, matplotlib, pandas, pyrestcli, python-crontab
+python3-openid==3.1.0     # via social-auth-core
+pytz==2018.9              # via babel, celery, django, django-timezone-field, etools-validator, flower, pandas, unicef-attachments, unicef-djangolib, unicef-restlib
 pyyaml==3.12
 pyzmq==17.1.2             # via jupyter-client, notebook
 raven==6.9
-redis==2.10.6             # via django-redis-cache
-reportlab==3.5.9          # via django-easy-pdf, xhtml2pdf
-repoze.who==2.3           # via pysaml2
-requests==2.11.1          # via azure-storage, carto, coreapi, pyrestcli, pysaml2
+redis==3.0.1              # via django-redis-cache
+reportlab==3.5.12         # via django-easy-pdf, xhtml2pdf
+requests-oauthlib==1.1.0  # via social-auth-core
+requests==2.21.0          # via azure-storage, carto, coreapi, pyrestcli, requests-oauthlib, social-auth-core
 secretstorage==3.1.0      # via keyring
 send2trash==1.5.0         # via notebook
 simplejson==3.16.0        # via django-rest-swagger
-six==1.11.0               # via arcgis, bleach, cryptography, cycler, djangorestframework-csv, html5lib, paste, prompt-toolkit, pyopenssl, pysaml2, python-dateutil, traitlets, unicef-attachments, unicef-djangolib, unicef-restlib, xhtml2pdf
+six==1.12.0               # via arcgis, bleach, cryptography, cycler, djangorestframework-csv, html5lib, prompt-toolkit, python-dateutil, social-auth-app-django, social-auth-core, traitlets, unicef-attachments, unicef-djangolib, unicef-restlib, xhtml2pdf
+social-auth-app-django==2.1.0
+social-auth-core[azuread]==1.7.0
 sqlparse==0.2.4           # via django-debug-toolbar
 static3==0.7.0            # via dj-static
 tablib==0.12.1            # via django-import-export
@@ -144,12 +145,11 @@ unicef_restlib==0.3.8
 unicef_snapshot==0.2.1
 unicodecsv==0.14.1        # via djangorestframework-csv, tablib, unicef-attachments, unicef-djangolib, unicef-restlib
 uritemplate==3.0.0        # via coreapi
-vine==1.1.4               # via amqp
+urllib3==1.24.1           # via requests
+vine==1.2.0               # via amqp
 wcwidth==0.1.7            # via prompt-toolkit
 webencodings==0.5.1       # via bleach, html5lib
-webob==1.8.2              # via repoze.who
 widgetsnbextension==3.4.2  # via arcgis, ipywidgets
 xhtml2pdf==0.2.3          # via django-easy-pdf
-xlrd==1.1.0               # via tablib
+xlrd==1.2.0               # via tablib
 xlwt==1.3.0               # via tablib
-zope.interface==4.5.0     # via pysaml2, repoze.who

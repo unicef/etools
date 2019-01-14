@@ -3,7 +3,6 @@ from rest_framework import generics, status
 from rest_framework.response import Response
 
 from etools.applications.action_points.models import ActionPoint
-from etools.applications.partners.models import Intervention
 from etools.applications.publics.models import TravelAgent
 from etools.applications.t2f.helpers.permission_matrix import get_permission_matrix
 from etools.applications.t2f.models import ModeOfTravel, TravelType
@@ -17,7 +16,6 @@ class StaticDataView(generics.GenericAPIView):
 
     def get(self, request):
         data = {
-            'partnerships': Intervention.objects.all(),
             'travel_types': [c[0] for c in TravelType.CHOICES],
             'travel_modes': [c[0] for c in ModeOfTravel.CHOICES],
             'action_point_statuses': [c[0] for c in ActionPoint.STATUSES],
