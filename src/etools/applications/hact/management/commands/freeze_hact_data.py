@@ -5,10 +5,10 @@ from django.core.management import BaseCommand
 from django.db import transaction
 
 from etools.applications.EquiTrack.encoders import EToolsEncoder
-from etools.applications.EquiTrack.util_scripts import set_country
 from etools.applications.hact.models import HactHistory
 from etools.applications.partners.models import hact_default, PartnerOrganization, PlannedEngagement
 from etools.applications.users.models import Country
+from etools.libraries.tenant_support.utils import set_workspace
 
 
 class Command(BaseCommand):
@@ -90,7 +90,7 @@ class Command(BaseCommand):
         self.stdout.write('Freeze HACT data for {}'.format(year))
 
         for country in countries:
-            set_country(country.name)
+            set_workspace(country.name)
             self.stdout.write('Freezing data for {}'.format(country.name))
             for partner in PartnerOrganization.objects.all():
                 if (partner.reported_cy and partner.reported_cy > 0) or (

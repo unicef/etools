@@ -3,7 +3,6 @@ import re
 
 from django.contrib.auth import get_user_model
 from django.contrib.auth.models import Group
-from django.db import connection
 
 from etools.applications.users.models import Country, UserProfile
 
@@ -17,25 +16,6 @@ def printtf(*args):
     with open(file_name, 'ab') as f:
         f.write(', '.join(args_list))
         f.write('\n')
-
-
-def set_country(name):
-    connection.set_tenant(Country.objects.get(name=name))
-    logger.info(u'Set in {} workspace'.format(name))
-
-
-def all_countries_do(function, name):
-    printtf("CALLING {} for all countries".format(name))
-    for cntry in Country.objects.order_by('name').all():
-        if cntry.name in ['Global']:
-            continue
-        function(cntry.name)
-
-
-def local_country_keep():
-    set_country('Global')
-    keeping = ['Global', 'UAT', 'Lebanon', 'Syria', 'Indonesia', 'Sudan', 'Syria Cross Border', "Pakistan"]
-    Country.objects.exclude(name__in=keeping).all().delete()
 
 
 def create_test_user(email, password):
