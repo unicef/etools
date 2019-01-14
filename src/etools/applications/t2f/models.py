@@ -11,6 +11,8 @@ from django.utils.timezone import now as timezone_now
 from django.utils.translation import ugettext, ugettext_lazy as _
 
 from django_fsm import FSMField, transition
+from unicef_attachments.models import Attachment
+from unicef_djangolib.fields import CodedGenericRelation
 from unicef_notification.utils import send_notification
 
 from etools.applications.action_points.models import ActionPoint
@@ -533,7 +535,20 @@ class TravelAttachment(models.Model):
     type = models.CharField(max_length=64, verbose_name=_('Type'))
 
     name = models.CharField(max_length=255, verbose_name=_('Name'))
-    file = models.FileField(upload_to=determine_file_upload_path, max_length=255, verbose_name=_('File'))
+    file = models.FileField(
+        upload_to=determine_file_upload_path,
+        max_length=255,
+        verbose_name=_('File'),
+        blank=True,
+        null=True,
+    )
+    attachment = CodedGenericRelation(
+        Attachment,
+        verbose_name=_('Travel File'),
+        blank=True,
+        null=True,
+        code='t2f_travel_attachment',
+    )
 
 
 class T2FActionPointManager(models.Manager):
