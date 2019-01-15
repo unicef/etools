@@ -10,12 +10,12 @@ from django.db.models.signals import post_save
 from django.utils.functional import cached_property
 from django.utils.translation import ugettext_lazy as _
 from django_tenants.models import TenantMixin
-
+from model_utils.models import TimeStampedModel
 
 logger = logging.getLogger(__name__)
 
 
-class User(AbstractBaseUser, PermissionsMixin):
+class User(TimeStampedModel, AbstractBaseUser, PermissionsMixin):
     USERNAME_FIELD = "username"
     REQUIRED_FIELDS = ['email']
 

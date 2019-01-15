@@ -172,7 +172,7 @@ tox==3.7.0
 traitlets==4.3.2
 unicef-attachments==0.4.2
 unicef-djangolib==0.5.2
-unicef-locations==1.4.2
+unicef-locations==1.5
 unicef_notification==0.2.0
 unicef_restlib==0.3.8
 unicef_snapshot==0.2.1

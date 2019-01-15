@@ -1,4 +1,5 @@
 import json
+import os
 from unittest import skip
 
 from django.contrib.auth.models import Group
@@ -14,7 +15,13 @@ from etools.applications.publics.tests.factories import (
     PublicsWBSFactory,
 )
 from etools.applications.t2f import UserTypes
-from etools.applications.t2f.helpers.permission_matrix import get_user_role_list, PermissionMatrix
+from etools.applications.t2f.helpers.permission_matrix import (
+    convert_matrix_to_json,
+    FakePermissionMatrix,
+    get_user_role_list,
+    parse_permission_matrix,
+    PermissionMatrix,
+)
 from etools.applications.t2f.models import ModeOfTravel, Travel, TravelType
 from etools.applications.t2f.tests.factories import TravelFactory
 from etools.applications.users.tests.factories import UserFactory
@@ -239,3 +246,31 @@ class TestPermissionMatrix(BaseTenantTestCase):
         )
         response_json = json.loads(response.rendered_content)
         self.assertEqual(response_json['purpose'], purpose)
+
+    def test_convert_matrix_to_json(self):
+        filename = "/tmp/matrix.json"
+        convert_matrix_to_json(filename)
+        self.assertTrue(os.path.exists(filename))
+
+    def test_parse_permission_matrix(self):
+        filename = "/tmp/permission_matrix.json"
+        parse_permission_matrix(filename)
+        self.assertTrue(os.path.exists(filename))
+
+
+class TestFakePermissionMatrix(BaseTenantTestCase):
+    @classmethod
+    def setUpTestData(cls):
+        cls.user = UserFactory(is_staff=True)
+
+    def test_init(self):
+        matrix = FakePermissionMatrix(self.user)
+        self.assertEqual(matrix.travel, None)
+
+    def test_has_permission(self):
+        matrix = FakePermissionMatrix(self.user)
+        self.assertTrue(matrix.has_permission("edit", "user", "is_superuser"))
+
+    def test_get_permission_dict(self):
+        matrix = FakePermissionMatrix(self.user)
+        self.assertEqual(matrix.get_permission_dict(), {})
