@@ -27,7 +27,7 @@ class TestAPIAgreements(ApiCheckerMixin, AssertTimeStampedMixin, BaseTenantTestC
         url = reverse("partners_api:agreement-list")
         self.assertGET(url)
 
-    def test_agreement_amendement_list(self):
+    def test_agreement_amendment_list(self):
         url = reverse("partners_api:agreement-amendment-list")
         self.assertGET(url)
 
