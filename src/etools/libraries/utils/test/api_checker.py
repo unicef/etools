@@ -19,9 +19,11 @@ class ViewSetChecker(ApiCheckerBase):
 
 class AssertTimeStampedMixin:
     def assert_modified(self, response: Response, stored: Response, path: str):
-        value = response['modified']
-        assert datetime.datetime.strptime(value, '%Y-%m-%dT%H:%M:%S.%fZ')
+        if not path:
+            value = response['modified']
+            assert datetime.datetime.strptime(value, '%Y-%m-%dT%H:%M:%S.%fZ')
 
     def assert_created(self, response: Response, stored: Response, path: str):
-        value = response['created']
-        assert datetime.datetime.strptime(value, '%Y-%m-%dT%H:%M:%S.%fZ')
+        if not path:
+            value = response['created']
+            assert datetime.datetime.strptime(value, '%Y-%m-%dT%H:%M:%S.%fZ')

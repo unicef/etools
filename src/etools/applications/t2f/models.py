@@ -11,6 +11,8 @@ from django.utils.timezone import now as timezone_now
 from django.utils.translation import ugettext, ugettext_lazy as _
 
 from django_fsm import FSMField, transition
+from unicef_attachments.models import Attachment
+from unicef_djangolib.fields import CodedGenericRelation
 from unicef_notification.utils import send_notification
 
 from etools.applications.action_points.models import ActionPoint
@@ -69,19 +71,6 @@ def make_travel_reference_number():
     numeric_part = connection.tenant.counters.get_next_value(WorkspaceCounter.TRAVEL_REFERENCE)
     year = timezone_now().year
     return '{}/{}'.format(year, numeric_part)
-
-
-def send_for_payment_threshold_decorator(func):
-    @wraps(func)
-    def wrapper(self, *args, **kwargs):
-        # If invoicing is enabled, do the threshold check, otherwise it will result an infinite process loop
-        if self.check_threshold():
-            self.submit_for_approval(*args, **kwargs)
-            return
-
-        func(self, *args, **kwargs)
-
-    return wrapper
 
 
 def mark_as_certified_or_completed_threshold_decorator(func):
@@ -250,11 +239,6 @@ class Travel(models.Model):
             return False
         return True
 
-    def check_completed_from_planned(self):
-        if self.ta_required:
-            raise TransitionError('Cannot switch from planned to completed if TA is required')
-        return True
-
     def has_supervisor(self):
         if not self.supervisor:
             raise TransitionError('Travel has no supervisor defined. Please select one.')
@@ -396,14 +380,6 @@ class TravelActivity(models.Model):
     def travel(self):
         return self.travels.filter(traveler=self.primary_traveler).first()
 
-    @property
-    def task_number(self):
-        return list(self.travel.activities.values_list('id', flat=True)).index(self.id) + 1
-
-    @property
-    def travel_status(self):
-        return self.travel.status
-
     _reference_number = None
 
     def get_reference_number(self):
@@ -420,6 +396,10 @@ class TravelActivity(models.Model):
         self._reference_number = value
 
     reference_number = property(get_reference_number, set_reference_number)
+
+    @property
+    def task_number(self):
+        return list(self.travel.activities.values_list('id', flat=True)).index(self.id) + 1
 
     def get_object_url(self):
         travel = self.travels.filter(traveler=self.primary_traveler).first()
@@ -555,7 +535,20 @@ class TravelAttachment(models.Model):
     type = models.CharField(max_length=64, verbose_name=_('Type'))
 
     name = models.CharField(max_length=255, verbose_name=_('Name'))
-    file = models.FileField(upload_to=determine_file_upload_path, max_length=255, verbose_name=_('File'))
+    file = models.FileField(
+        upload_to=determine_file_upload_path,
+        max_length=255,
+        verbose_name=_('File'),
+        blank=True,
+        null=True,
+    )
+    attachment = CodedGenericRelation(
+        Attachment,
+        verbose_name=_('Travel File'),
+        blank=True,
+        null=True,
+        code='t2f_travel_attachment',
+    )
 
 
 class T2FActionPointManager(models.Manager):

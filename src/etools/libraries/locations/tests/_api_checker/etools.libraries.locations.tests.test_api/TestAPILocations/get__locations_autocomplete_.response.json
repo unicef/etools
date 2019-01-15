@@ -7,7 +7,7 @@
         ],
         "vary": [
             "Vary",
-            "Accept, Cookie"
+            "Accept, Origin, Cookie"
         ],
         "allow": [
             "Allow",
@@ -19,7 +19,7 @@
         ],
         "content-length": [
             "Content-Length",
-            "129"
+            "212"
         ]
     },
     "data": [
@@ -28,7 +28,9 @@
             "name": "Location 0 [GatewayType 1 - abc]",
             "p_code": "abc",
             "gateway": {
-                "id": 8,
+                "id": 217,
+                "created": "2019-01-11T16:16:52.942000Z",
+                "modified": "2019-01-11T16:16:52.942000Z",
                 "name": "GatewayType 1",
                 "admin_level": 1
             }
