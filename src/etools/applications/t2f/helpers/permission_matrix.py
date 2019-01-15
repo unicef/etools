@@ -102,7 +102,7 @@ def get_permission_matrix_old():
     return permission_matrix
 
 
-def parse_permission_matrix():
+def parse_permission_matrix(filename):
     """Extra data from permission_matrix
 
     Default expected permission is;
@@ -149,7 +149,7 @@ def parse_permission_matrix():
                             result[user_type][state][key] |= perm
 
         pp = pprint.PrettyPrinter(indent=4)
-        with open("travel_permissions.py", "w") as fp:
+        with open(filename, "w") as fp:
             fp.write("permissions = {}".format(
                 pp.pformat(result).replace(
                     "defaultdict(<class 'bool'>,", ""
@@ -184,7 +184,7 @@ def parse_permission_matrix():
     machine_readable(results)
 
 
-def convert_matrix_to_json():
+def convert_matrix_to_json(filename=None):
     """Take old permission matrix in yaml format and convert to json"""
     matrix = get_permission_matrix_old()
 
@@ -197,10 +197,10 @@ def convert_matrix_to_json():
             if state in state_choices:
                 results["travel"][user][state] = models
 
-    path = os.path.join(
+    filename = filename if filename else os.path.join(
         os.path.dirname(t2f.__file__),
         "permission_matrix.json",
     )
 
-    with open(path, "w") as fp:
+    with open(filename, "w") as fp:
         fp.write(json.dumps(results))
