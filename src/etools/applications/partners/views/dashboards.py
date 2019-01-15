@@ -8,13 +8,12 @@ from django.db.models import (
     Count,
     DateTimeField,
     DurationField,
-    Exists,
     ExpressionWrapper,
     F,
-    IntegerField,
     Max,
     Min,
     OuterRef,
+    Q,
     Subquery,
     Sum,
     When,
@@ -58,6 +57,15 @@ class InterventionPartnershipDashView(QueryStringFilterMixin, ListCreateAPIView)
             type__name=FileType.FINAL_PARTNERSHIP_REVIEW,
         ).values("pk")[:1]
 
+        action_points_qs = Intervention.objects.filter(
+            pk=OuterRef("pk")
+        ).annotate(
+            total=Count(
+                "actionpoint",
+                filter=Q(actionpoint__status=ActionPoint.STATUS_OPEN),
+            )
+        ).values("total")
+
         qs = Intervention.objects.exclude(
             status=Intervention.DRAFT,
         ).prefetch_related(
@@ -77,6 +85,7 @@ class InterventionPartnershipDashView(QueryStringFilterMixin, ListCreateAPIView)
             max_fr_currency=Max("frs__currency", output_field=CharField(), distinct=True),
             multi_curr_flag=Count(Case(When(frs__multi_curr_flag=True, then=1))),
             has_final_partnership_review=Subquery(final_partnership_review_qs),
+            action_points=Subquery(action_points_qs),
         )
 
         query_params = self.request.query_params
@@ -127,16 +136,6 @@ class InterventionPartnershipDashView(QueryStringFilterMixin, ListCreateAPIView)
             d["days_last_pv"] = pv_dates[pk]["days_last_pv"]
         return serializer
 
-    def _add_action_points(self, serializer):
-        qs = Intervention.objects.exclude(status=Intervention.DRAFT).annotate(
-            action_points=Sum(Case(When(
-                actionpoint__status=ActionPoint.STATUS_OPEN, then=1),
-                default=0, output_field=IntegerField(), distinct=True)),
-        )
-        ap = {intervention.pk: intervention.action_points for intervention in qs}
-        for item in serializer.data:
-            item['action_points'] = ap[int(item["intervention_id"])]
-
     def list(self, request):
         """
             Checks for format query parameter
@@ -153,7 +152,6 @@ class InterventionPartnershipDashView(QueryStringFilterMixin, ListCreateAPIView)
 
         serializer = self.get_serializer(queryset, many=True)
         self.append_last_pv_date(serializer)
-        self._add_action_points(serializer)
 
         response = Response(serializer.data)
         if "format" in query_params.keys():

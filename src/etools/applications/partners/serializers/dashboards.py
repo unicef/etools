@@ -48,6 +48,7 @@ class InterventionDashSerializer(serializers.ModelSerializer):
                                                    read_only=True, max_digits=20, decimal_places=2)
     multi_curr_flag = serializers.BooleanField()
     has_final_partnership_review = serializers.SerializerMethodField()
+    action_points = serializers.IntegerField()
 
     link = serializers.SerializerMethodField()
 
@@ -128,6 +129,7 @@ class InterventionDashSerializer(serializers.ModelSerializer):
             'outstanding_dct_usd',
             'multi_curr_flag',
             'has_final_partnership_review',
+            'action_points',
             'link',
             'unicef_focal_points',
         )
