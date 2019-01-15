@@ -26,11 +26,6 @@ def set_country(user, request):
     connection.set_tenant(request.tenant)
 
 
-def set_workspace(name):
-    connection.set_tenant(get_tenant_model().objects.get(name=name))
-    logger.info(u'Set in {} workspace'.format(name))
-
-
 class every_country:
     """
     Loop through every available available tenant/country, then revert back to whatever was set before.
@@ -58,9 +53,3 @@ def run_on_all_tenants(function, **kwargs):
     with every_country() as c:
         for country in c:
             function(**kwargs)
-
-
-def local_country_keep():
-    set_workspace('Global')
-    keeping = ['Global', 'UAT', 'Lebanon', 'Syria', 'Indonesia', 'Sudan', 'Syria Cross Border', 'Pakistan']
-    get_tenant_model().objects.exclude(name__in=keeping).all().delete()

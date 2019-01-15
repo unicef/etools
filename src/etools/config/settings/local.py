@@ -95,5 +95,5 @@ LOGGING['handlers']['console']['filters'] = ['tenant_context']
 LOGGING['handlers']['console']['formatter'] = 'tenant_context'
 
 SHELL_PLUS_PRE_IMPORTS = (
-    ('etools.libraries.tenant_support.util_scripts', '*'),
+    ('etools.applications.EquiTrack.util_scripts', '*'),
 )

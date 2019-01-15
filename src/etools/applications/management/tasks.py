@@ -8,12 +8,12 @@ from django.db.models.functions import Coalesce
 
 from dateutil.relativedelta import relativedelta
 
+from etools.applications.EquiTrack.util_scripts import set_country
 from etools.applications.audit.models import Audit, Engagement, MicroAssessment, SpecialAudit, SpotCheck
 from etools.applications.management.issues.checks import recheck_all_open_issues, run_all_checks
 from etools.applications.partners.models import Intervention, PartnerOrganization
 from etools.applications.users.models import Country
 from etools.config.celery import app
-from etools.libraries.tenant_support.utils import set_workspace, set_country
 
 logger = logging.getLogger(__name__)
 
@@ -129,7 +129,7 @@ def pmp_indicator_report(writer, **kwargs):
     dict_writer.writeheader()
 
     for country in qs:
-        set_workspace(country.name)
+        set_country(country.name)
         logger.info(u'Running on %s' % country.name)
         for partner in PartnerOrganization.objects.prefetch_related('core_values_assessments'):
             for intervention in Intervention.objects.filter(
