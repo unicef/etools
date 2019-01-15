@@ -20,7 +20,8 @@ from unicef_djangolib.fields import CodedGenericRelation, CurrencyField
 from unicef_locations.models import Location
 
 from etools.applications.EquiTrack.encoders import EToolsEncoder
-from etools.applications.EquiTrack.utils import get_current_year, get_quarter, import_permissions
+from etools.applications.EquiTrack.permissions import import_permissions
+from etools.applications.EquiTrack.utils import get_current_year, get_quarter
 from etools.applications.funds.models import FundsReservationHeader
 from etools.applications.partners.validation import interventions as intervention_validation
 from etools.applications.partners.validation.agreements import (
