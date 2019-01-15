@@ -119,6 +119,10 @@ class PartnerStaffMemberCreateUpdateSerializer(serializers.ModelSerializer):
             raise ValidationError(
                 {'active': 'The email for the partner contact is used by another partner contact. Email has to be '
                            'unique to proceed {}'.format(email)})
+        else:
+            staff_member_qs = PartnerStaffMember.objects.filter(email=email)
+            if not self.instance and staff_member_qs.exists():
+                raise ValidationError({"email": "Email address in use already."})
 
         # make sure email addresses are not editable after creation.. user must be removed and re-added
         if self.instance:
