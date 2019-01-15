@@ -1,4 +1,3 @@
-
 import logging
 
 from django.conf import settings
@@ -16,8 +15,8 @@ logger = logging.getLogger(__name__)
 
 ANONYMOUS_ALLOWED_URL_FRAGMENTS = [
     'api',
+    'social',
     'login',
-    'saml',
     'accounts',
     'monitoring',
 ]
