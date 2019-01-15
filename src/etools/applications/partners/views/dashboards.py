@@ -8,11 +8,14 @@ from django.db.models import (
     Count,
     DateTimeField,
     DurationField,
+    Exists,
     ExpressionWrapper,
     F,
     IntegerField,
     Max,
     Min,
+    OuterRef,
+    Subquery,
     Sum,
     When,
 )
@@ -25,7 +28,7 @@ from unicef_restlib.views import QueryStringFilterMixin
 
 from etools.applications.action_points.models import ActionPoint
 from etools.applications.partners.exports_v2 import PartnershipDashCSVRenderer
-from etools.applications.partners.models import FileType, Intervention
+from etools.applications.partners.models import FileType, Intervention, InterventionAttachment
 from etools.applications.partners.serializers.dashboards import InterventionDashSerializer
 from etools.applications.t2f.models import Travel, TravelType
 
@@ -50,7 +53,16 @@ class InterventionPartnershipDashView(QueryStringFilterMixin, ListCreateAPIView)
     search_terms = ('agreement__partner__name__icontains', )
 
     def get_queryset(self):
-        qs = Intervention.objects.exclude(status=Intervention.DRAFT).prefetch_related('agreement__partner')
+        final_partnership_review_qs = InterventionAttachment.objects.filter(
+            intervention__pk=OuterRef("pk"),
+            type__name=FileType.FINAL_PARTNERSHIP_REVIEW,
+        ).values("pk")[:1]
+
+        qs = Intervention.objects.exclude(
+            status=Intervention.DRAFT,
+        ).prefetch_related(
+            'agreement__partner',
+        )
         qs = qs.annotate(
             Max("frs__end_date"),
             Min("frs__start_date"),
@@ -64,6 +76,7 @@ class InterventionPartnershipDashView(QueryStringFilterMixin, ListCreateAPIView)
             Count("frs__currency", distinct=True),
             max_fr_currency=Max("frs__currency", output_field=CharField(), distinct=True),
             multi_curr_flag=Count(Case(When(frs__multi_curr_flag=True, then=1))),
+            has_final_partnership_review=Subquery(final_partnership_review_qs),
         )
 
         query_params = self.request.query_params
@@ -77,24 +90,6 @@ class InterventionPartnershipDashView(QueryStringFilterMixin, ListCreateAPIView)
                 qs = qs.filter(expression)
 
         return qs.order_by('agreement__partner__name')
-
-    def append_final_partnership_review(self, serializer):
-        qs = Intervention.objects.exclude(
-            status=Intervention.DRAFT
-        ).annotate(
-            has_final_partnership_review=Count(Case(When(attachments__type__name=FileType.FINAL_PARTNERSHIP_REVIEW,
-                                                         then=1)))
-        )
-        fpr = {}
-        for i in qs:
-            fpr[str(i.pk)] = {
-                "has_final_partnership_review": i.has_final_partnership_review,
-            }
-        # Add last_pv_date
-        for d in serializer.data:
-            pk = d["intervention_id"]
-            d["has_final_partnership_review"] = bool(fpr[pk]["has_final_partnership_review"])
-        return serializer
 
     def append_last_pv_date(self, serializer):
         delta = ExpressionWrapper(
@@ -158,7 +153,6 @@ class InterventionPartnershipDashView(QueryStringFilterMixin, ListCreateAPIView)
 
         serializer = self.get_serializer(queryset, many=True)
         self.append_last_pv_date(serializer)
-        self.append_final_partnership_review(serializer)
         self._add_action_points(serializer)
 
         response = Response(serializer.data)

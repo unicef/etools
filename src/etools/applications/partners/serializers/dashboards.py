@@ -82,7 +82,7 @@ class InterventionDashSerializer(serializers.ModelSerializer):
         return ""  # obj.last_pv_date
 
     def get_has_final_partnership_review(self, obj):
-        return ""
+        return bool(obj.has_final_partnership_review)
 
     def get_offices_names(self, obj):
         return ",".join(o.name for o in obj.offices.all())
