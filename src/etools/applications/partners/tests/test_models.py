@@ -10,7 +10,6 @@ from django.utils import timezone
 
 from freezegun import freeze_time
 from mock import Mock, patch
-from unicef_locations.tests.factories import LocationFactory
 
 from etools.applications.audit.models import Engagement
 from etools.applications.audit.tests.factories import AuditFactory, SpecialAuditFactory, SpotCheckFactory

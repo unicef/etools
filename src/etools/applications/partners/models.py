@@ -4,7 +4,6 @@ import json
 
 from django.conf import settings
 from django.contrib.postgres.fields import ArrayField, JSONField
-from django.core.cache import cache
 from django.db import connection, models, transaction
 from django.db.models import Case, CharField, Count, F, Max, Min, Q, When
 from django.db.models.signals import post_save, pre_delete
@@ -20,7 +19,6 @@ from unicef_attachments.models import Attachment
 from unicef_djangolib.fields import CodedGenericRelation, CurrencyField
 from unicef_locations.models import Location
 
-from etools.applications.environment.helpers import tenant_switch_is_active
 from etools.applications.EquiTrack.encoders import EToolsEncoder
 from etools.applications.EquiTrack.models import DSum
 from etools.applications.EquiTrack.serializers import StringConcat
@@ -35,9 +33,6 @@ from etools.applications.reports.models import CountryProgramme, Indicator, Resu
 from etools.applications.t2f.models import Travel, TravelType
 from etools.applications.tpm.models import TPMVisit
 from etools.applications.users.models import Office
-
-INTERVENTION_LOWER_RESULTS_CACHE_KEY = "{}-{}_intervention_lower_result"
-INTERVENTION_CLUSTERS_CACHE_KEY = "{}-{}_intervention_clusters"
 
 
 def _get_partner_base_path(partner):
@@ -1892,22 +1887,13 @@ class Intervention(TimeStampedModel):
             for lower_result in link.ll_results.all()
         ]
 
-    def intervention_clusters(self, reset=False):
+    def intervention_clusters(self):
         # return intervention clusters as an array of strings
-        cache_key = INTERVENTION_CLUSTERS_CACHE_KEY.format(connection.schema_name, self.pk)
-        if reset:
-            cache.delete(cache_key)
-            return
-
-        clusters = cache.get(cache_key)
-        if clusters is None:
-            clusters = set()
-            for lower_result in self.all_lower_results:
-                for applied_indicator in lower_result.applied_indicators.all():
-                    if applied_indicator.cluster_name:
-                        clusters.add(applied_indicator.cluster_name)
-            cache.set(cache_key, clusters)
-
+        clusters = set()
+        for lower_result in self.all_lower_results:
+            for applied_indicator in lower_result.applied_indicators.all():
+                if applied_indicator.cluster_name:
+                    clusters.add(applied_indicator.cluster_name)
         return clusters
 
     @cached_property
