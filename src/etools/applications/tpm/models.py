@@ -17,7 +17,7 @@ from unicef_notification.utils import send_notification_with_template
 from etools.applications.action_points.models import ActionPoint
 from etools.applications.activities.models import Activity
 from etools.applications.EquiTrack.utils import get_environment
-from etools.applications.permissions2.fsm import has_action_permission
+from etools.libraries.fsm.views import has_action_permission
 from etools.applications.publics.models import SoftDeleteMixin
 from etools.applications.tpm.tpmpartners.models import TPMPartner, TPMPartnerStaffMember
 from etools.applications.tpm.transitions.conditions import (
