@@ -1,6 +1,8 @@
+import datetime
 import json
 
 from django.urls import reverse
+from django.utils import timezone
 
 from rest_framework import status
 
@@ -13,6 +15,8 @@ from etools.applications.partners.tests.factories import (
     InterventionAttachmentFactory,
     InterventionFactory,
 )
+from etools.applications.t2f.models import Travel, TravelType
+from etools.applications.t2f.tests.factories import TravelFactory, TravelActivityFactory
 from etools.applications.users.tests.factories import UserFactory
 
 
@@ -37,6 +41,8 @@ class TestInterventionPartnershipDashView(BaseTenantTestCase):
         self.assertEqual(data[0]["intervention_id"], str(self.intervention.pk))
         self.assertFalse(data[0]["has_final_partnership_review"])
         self.assertEqual(data[0]["action_points"], 0)
+        self.assertIsNone(data[0]["last_pv_date"])
+        self.assertIsNone(data[0]["days_last_pv"])
 
     def test_get_has_final_partnership_review(self):
         InterventionAttachmentFactory(
@@ -76,6 +82,37 @@ class TestInterventionPartnershipDashView(BaseTenantTestCase):
         self.assertEqual(len(data), 1)
         self.assertEqual(data[0]["intervention_id"], str(self.intervention.pk))
         self.assertEqual(data[0]["action_points"], 4)
+
+    def test_get_last_pv_date(self):
+        traveler = UserFactory()
+        travel = TravelFactory(traveler=traveler, status=Travel.COMPLETED)
+        travel_activity = TravelActivityFactory(
+            partnership=self.intervention,
+            primary_traveler=traveler,
+            travel_type=TravelType.PROGRAMME_MONITORING,
+            date=timezone.now() - datetime.timedelta(days=3),
+        )
+        travel.activities.add(travel_activity)
+        for i in range(4):
+            activity = TravelActivityFactory(
+                partnership=self.intervention,
+                primary_traveler=traveler,
+                travel_type=TravelType.PROGRAMME_MONITORING,
+                date=timezone.now() - datetime.timedelta(days=3 * (i + 2)),
+            )
+            travel.activities.add(activity)
+
+        response = self.forced_auth_req(
+            "get",
+            self.url,
+            user=self.unicef_staff
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        data = json.loads(response.rendered_content)
+        self.assertEqual(len(data), 1)
+        self.assertEqual(data[0]["intervention_id"], str(self.intervention.pk))
+        self.assertTrue(data[0]["last_pv_date"])
+        self.assertEqual(data[0]["days_last_pv"], 3)
 
     def test_export(self):
         response = self.forced_auth_req(

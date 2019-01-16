@@ -1,14 +1,10 @@
 import functools
 import operator
-from datetime import datetime
 
 from django.db.models import (
     Case,
     CharField,
     Count,
-    DateTimeField,
-    DurationField,
-    ExpressionWrapper,
     F,
     Max,
     Min,
@@ -29,7 +25,7 @@ from etools.applications.action_points.models import ActionPoint
 from etools.applications.partners.exports_v2 import PartnershipDashCSVRenderer
 from etools.applications.partners.models import FileType, Intervention, InterventionAttachment
 from etools.applications.partners.serializers.dashboards import InterventionDashSerializer
-from etools.applications.t2f.models import Travel, TravelType
+from etools.applications.t2f.models import Travel, TravelType, TravelActivity
 
 
 class InterventionPartnershipDashView(QueryStringFilterMixin, ListCreateAPIView):
@@ -66,6 +62,13 @@ class InterventionPartnershipDashView(QueryStringFilterMixin, ListCreateAPIView)
             )
         ).values("total")
 
+        last_pv_date_qs = TravelActivity.objects.filter(
+            partnership__pk=OuterRef("pk"),
+            travel_type=TravelType.PROGRAMME_MONITORING,
+            travels__traveler=F('primary_traveler'),
+            travels__status=Travel.COMPLETED,
+        ).values("date").order_by("-date")[:1]
+
         qs = Intervention.objects.exclude(
             status=Intervention.DRAFT,
         ).prefetch_related(
@@ -86,6 +89,7 @@ class InterventionPartnershipDashView(QueryStringFilterMixin, ListCreateAPIView)
             multi_curr_flag=Count(Case(When(frs__multi_curr_flag=True, then=1))),
             has_final_partnership_review=Subquery(final_partnership_review_qs),
             action_points=Subquery(action_points_qs),
+            last_pv_date=Subquery(last_pv_date_qs),
         )
 
         query_params = self.request.query_params
@@ -100,42 +104,6 @@ class InterventionPartnershipDashView(QueryStringFilterMixin, ListCreateAPIView)
 
         return qs.order_by('agreement__partner__name')
 
-    def append_last_pv_date(self, serializer):
-        delta = ExpressionWrapper(
-            datetime.now() - F('last_pv_date'),
-            output_field=DurationField()
-        )
-        qs = Intervention.objects.exclude(
-            status=Intervention.DRAFT
-        ).annotate(
-            last_pv_date=Max(
-                Case(
-                    When(
-                        travel_activities__travel_type=TravelType.PROGRAMME_MONITORING,
-                        travel_activities__travels__traveler=F(
-                            'travel_activities__primary_traveler'
-                        ),
-                        travel_activities__travels__status=Travel.COMPLETED,
-                        then=F('travel_activities__date')
-                    ),
-                    output_field=DateTimeField()
-                )
-            )
-        )
-        qs = qs.annotate(days_since_last_pv=delta)
-        pv_dates = {}
-        for i in qs:
-            pv_dates[str(i.pk)] = {
-                "last_pv_date": i.last_pv_date,
-                "days_last_pv": i.days_since_last_pv.days if i.days_since_last_pv else None,
-            }
-        # Add last_pv_date
-        for d in serializer.data:
-            pk = d["intervention_id"]
-            d["last_pv_date"] = pv_dates[pk]["last_pv_date"]
-            d["days_last_pv"] = pv_dates[pk]["days_last_pv"]
-        return serializer
-
     def list(self, request):
         """
             Checks for format query parameter
@@ -147,11 +115,9 @@ class InterventionPartnershipDashView(QueryStringFilterMixin, ListCreateAPIView)
         page = self.paginate_queryset(queryset)
         if page is not None:
             serializer = self.get_serializer(page, many=True)
-            self.append_last_pv_date(serializer)
             return self.get_paginated_response(serializer.data)
 
         serializer = self.get_serializer(queryset, many=True)
-        self.append_last_pv_date(serializer)
 
         response = Response(serializer.data)
         if "format" in query_params.keys():
