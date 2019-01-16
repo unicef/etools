@@ -4,7 +4,7 @@ from unicef_attachments.models import Attachment
 from unicef_attachments.utils import get_attachment_flat_model
 
 from etools.applications.attachments.utils import get_source
-from etools.applications.utils.common.utils import run_on_all_tenants
+from etools.libraries.tenant_support.utils import run_on_all_tenants
 
 
 class Command(BaseCommand):

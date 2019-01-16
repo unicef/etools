@@ -9,7 +9,7 @@ from django.urls import reverse
 from django_tenants.middleware import TenantMiddleware
 from django_tenants.utils import get_public_schema_name
 
-from etools.applications.EquiTrack.utils import set_country
+from etools.libraries.tenant_support.utils import set_country
 
 logger = logging.getLogger(__name__)
 
