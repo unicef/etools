@@ -595,10 +595,10 @@ class InterventionDetailSerializer(serializers.ModelSerializer):
         return permissions.get_permissions()
 
     def get_locations(self, obj):
-        return [l.id for l in obj.intervention_locations()]
+        return [l.id for l in obj.flat_locations.all()]
 
     def get_location_names(self, obj):
-        return ['{} [{} - {}]'.format(l.name, l.gateway.name, l.p_code) for l in obj.intervention_locations()]
+        return ['{} [{} - {}]'.format(l.name, l.gateway.name, l.p_code) for l in obj.flat_locations.all()]
 
     def get_section_names(self, obj):
         return [l.name for l in obj.flagged_sections()]

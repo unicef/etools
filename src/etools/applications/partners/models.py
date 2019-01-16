@@ -37,7 +37,6 @@ from etools.applications.tpm.models import TPMVisit
 from etools.applications.users.models import Office
 
 INTERVENTION_LOWER_RESULTS_CACHE_KEY = "{}-{}_intervention_lower_result"
-INTERVENTION_LOCATIONS_CACHE_KEY = "{}-{}_intervention_locations"
 INTERVENTION_FLAGGED_SECTIONS_CACHE_KEY = "{}-{}_intervention_flagged_sections"
 INTERVENTION_CLUSTERS_CACHE_KEY = "{}-{}_intervention_clusters"
 
@@ -1894,28 +1893,6 @@ class Intervention(TimeStampedModel):
             for lower_result in link.ll_results.all()
         ]
 
-    # TODO (Rob): Remove this and alll usage as this is no longer valid
-    def intervention_locations(self, reset=False):
-        cache_key = INTERVENTION_LOCATIONS_CACHE_KEY.format(connection.schema_name, self.pk)
-        if reset:
-            cache.delete(cache_key)
-            return
-
-        locations = cache.get(cache_key)
-        if locations is None:
-            if tenant_switch_is_active("prp_mode_off"):
-                locations = set(self.flat_locations.all())
-            else:
-                # return intervention locations as a set of Location objects
-                locations = set()
-                for lower_result in self.all_lower_results:
-                    for applied_indicator in lower_result.applied_indicators.all():
-                        for location in applied_indicator.locations.all():
-                            locations.add(location)
-            cache.set(cache_key, locations)
-
-        return locations
-
     # TODO (Rob): Remove this and all usage as this is no longer valid
     def flagged_sections(self, reset=False):
         cache_key = INTERVENTION_FLAGGED_SECTIONS_CACHE_KEY.format(connection.schema_name, self.pk)
@@ -2103,7 +2080,6 @@ class Intervention(TimeStampedModel):
                 self.agreement.save()
 
     def clear_caches(self):
-        self.intervention_locations(reset=True)
         self.flagged_sections(reset=True)
 
     @transaction.atomic
