@@ -601,10 +601,10 @@ class InterventionDetailSerializer(serializers.ModelSerializer):
         return ['{} [{} - {}]'.format(l.name, l.gateway.name, l.p_code) for l in obj.flat_locations.all()]
 
     def get_section_names(self, obj):
-        return [l.name for l in obj.flagged_sections()]
+        return [l.name for l in obj.sections.all()]
 
     def get_flagged_sections(self, obj):
-        return [l.id for l in obj.flagged_sections()]
+        return [l.id for l in obj.sections.all()]
 
     def get_cluster_names(self, obj):
         return [c for c in obj.intervention_clusters()]

@@ -37,7 +37,6 @@ from etools.applications.tpm.models import TPMVisit
 from etools.applications.users.models import Office
 
 INTERVENTION_LOWER_RESULTS_CACHE_KEY = "{}-{}_intervention_lower_result"
-INTERVENTION_FLAGGED_SECTIONS_CACHE_KEY = "{}-{}_intervention_flagged_sections"
 INTERVENTION_CLUSTERS_CACHE_KEY = "{}-{}_intervention_clusters"
 
 
@@ -1893,28 +1892,6 @@ class Intervention(TimeStampedModel):
             for lower_result in link.ll_results.all()
         ]
 
-    # TODO (Rob): Remove this and all usage as this is no longer valid
-    def flagged_sections(self, reset=False):
-        cache_key = INTERVENTION_FLAGGED_SECTIONS_CACHE_KEY.format(connection.schema_name, self.pk)
-        if reset:
-            cache.delete(cache_key)
-            return
-
-        sections = cache.get(cache_key)
-        if sections is None:
-            if tenant_switch_is_active("prp_mode_off"):
-                sections = set(self.sections.all())
-            else:
-                # return intervention locations as a set of Location objects
-                sections = set()
-                for lower_result in self.all_lower_results:
-                    for applied_indicator in lower_result.applied_indicators.all():
-                        if applied_indicator.section:
-                            sections.add(applied_indicator.section)
-            cache.set(cache_key, sections)
-
-        return sections
-
     def intervention_clusters(self, reset=False):
         # return intervention clusters as an array of strings
         cache_key = INTERVENTION_CLUSTERS_CACHE_KEY.format(connection.schema_name, self.pk)
@@ -2078,9 +2055,6 @@ class Intervention(TimeStampedModel):
 
             if save_agreement:
                 self.agreement.save()
-
-    def clear_caches(self):
-        self.flagged_sections(reset=True)
 
     @transaction.atomic
     def save(self, force_insert=False, save_from_agreement=False, **kwargs):
@@ -2246,9 +2220,6 @@ class InterventionResultLink(TimeStampedModel):
 
     def save(self, *args, **kwargs):
         super().save(*args, **kwargs)
-
-        # reset certain caches
-        self.intervention.clear_caches()
 
 
 class InterventionBudget(TimeStampedModel):
