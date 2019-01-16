@@ -1,13 +1,15 @@
-from django.utils.translation import ugettext
+from django.utils.translation import ugettext as _
 
 from rest_framework import serializers
+
+from etools.applications.t2f.models import TravelAttachment
 
 
 class YesOrEmptyField(serializers.BooleanField):
     def to_representation(self, value):
         value = super().to_representation(value)
         if value:
-            return ugettext('Yes')
+            return _('Yes')
         return ''
 
 
@@ -15,8 +17,8 @@ class YesOrNoField(serializers.BooleanField):
     def to_representation(self, value):
         value = super().to_representation(value)
         if value:
-            return ugettext('Yes')
-        return ugettext('No')
+            return _('Yes')
+        return _('No')
 
 
 class TravelActivityExportSerializer(serializers.Serializer):
@@ -29,16 +31,37 @@ class TravelActivityExportSerializer(serializers.Serializer):
     trip_type = serializers.CharField(source='activity.travel_type', read_only=True)
     partner = serializers.CharField(source='activity.partner.name', read_only=True)
     partnership = serializers.CharField(source='activity.partnership.title', read_only=True)
+    pd_reference = serializers.ReadOnlyField(source='activity.partnership.number', read_only=True)
     results = serializers.CharField(source='activity.result.name', read_only=True)
     locations = serializers.SerializerMethodField()
     start_date = serializers.DateTimeField(source='travel.start_date', format='%d-%b-%Y', read_only=True)
     end_date = serializers.DateTimeField(source='travel.end_date', format='%d-%b-%Y', read_only=True)
     is_secondary_traveler = serializers.SerializerMethodField()
     primary_traveler_name = serializers.SerializerMethodField()
+    hact_visit_report = serializers.SerializerMethodField(
+        label=_("HACT Programmatic visit report")
+    )
 
     class Meta:
-        fields = ('reference_number', 'traveler', 'office', 'section', 'status', 'supervisor', 'trip_type', 'partner', 'partnership',
-                  'results', 'locations', 'start_date', 'end_date', 'is_secondary_traveler', 'primary_traveler_name')
+        fields = (
+            'reference_number',
+            'traveler',
+            'office',
+            'section',
+            'status',
+            'supervisor',
+            'trip_type',
+            'partner',
+            'partnership',
+            'pd_reference',
+            'results',
+            'locations',
+            'start_date',
+            'end_date',
+            'is_secondary_traveler',
+            'primary_traveler_name',
+            'hact_visit_report',
+        )
 
     def get_locations(self, obj):
         return ', '.join([l.name for l in obj.activity.locations.all()])
@@ -55,6 +78,12 @@ class TravelActivityExportSerializer(serializers.Serializer):
 
     def _is_secondary_traveler(self, obj):
         return obj.activity.primary_traveler != obj.travel.traveler
+
+    def get_hact_visit_report(self, obj):
+        return "Yes" if TravelAttachment.objects.filter(
+            travel=obj.travel,
+            type="HACT Programme Monitoring",
+        ).exists() else "No"
 
 
 class FinanceExportSerializer(serializers.Serializer):

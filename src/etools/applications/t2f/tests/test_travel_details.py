@@ -6,6 +6,7 @@ from django.urls import reverse
 import factory
 from unicef_locations.tests.factories import LocationFactory
 
+from etools.applications.attachments.tests.factories import AttachmentFactory, AttachmentFileTypeFactory
 from etools.applications.EquiTrack.tests.cases import BaseTenantTestCase
 from etools.applications.EquiTrack.tests.mixins import URLAssertionMixin
 from etools.applications.partners.models import PartnerType
@@ -25,10 +26,16 @@ from etools.applications.users.tests.factories import UserFactory
 
 
 class TravelDetails(URLAssertionMixin, BaseTenantTestCase):
+    @classmethod
+    def setUpTestData(cls):
+        cls.file_type = AttachmentFileTypeFactory(
+            code="t2f_travel_attachment"
+        )
+        cls.traveler = UserFactory(is_staff=True)
+        cls.unicef_staff = UserFactory(is_staff=True)
+
     def setUp(self):
         super().setUp()
-        self.traveler = UserFactory(is_staff=True)
-        self.unicef_staff = UserFactory(is_staff=True)
         self.travel = TravelFactory(traveler=self.traveler,
                                     supervisor=self.unicef_staff)
 
@@ -51,7 +58,7 @@ class TravelDetails(URLAssertionMixin, BaseTenantTestCase):
         self.assertIntParamRegexes(names_and_paths, 't2f:travels:details:')
 
     def test_details_view(self):
-        with self.assertNumQueries(23):
+        with self.assertNumQueries(22):
             response = self.forced_auth_req('get', reverse('t2f:travels:details:index',
                                                            kwargs={'travel_pk': self.travel.id}),
                                             user=self.unicef_staff)
@@ -59,14 +66,14 @@ class TravelDetails(URLAssertionMixin, BaseTenantTestCase):
 
         self.assertKeysIn(['cancellation_note', 'supervisor', 'attachments', 'office', 'expenses', 'ta_required',
                            'completed_at', 'certification_note', 'misc_expenses', 'traveler', 'id', 'additional_note',
-                           'section', 'clearances', 'cost_assignments', 'start_date', 'status', 'activities',
+                           'section', 'cost_assignments', 'start_date', 'status', 'activities',
                            'rejection_note', 'end_date', 'mode_of_travel', 'international_travel',
                            'first_submission_date', 'deductions', 'purpose', 'report', 'itinerary',
                            'reference_number', 'cost_summary', 'currency', 'canceled_at', 'estimated_travel_cost'],
                           response_json,
                           exact=True)
 
-    def test_details_view_with_attachment(self):
+    def test_details_view_with_file(self):
         attachment = TravelAttachmentFactory(
             travel=self.travel,
             name=u'\u0628\u0631\u0646\u0627\u0645\u062c \u062a\u062f\u0631\u064a\u0628 \u0627\u0644\u0645\u062a\u0627\u0628\u0639\u064a\u0646.pdf',  # noqa
@@ -83,13 +90,33 @@ class TravelDetails(URLAssertionMixin, BaseTenantTestCase):
         self.assertKeysIn(
             ['cancellation_note', 'supervisor', 'attachments', 'office', 'expenses', 'ta_required',
              'completed_at', 'certification_note', 'misc_expenses', 'traveler', 'id', 'additional_note',
-             'section', 'clearances', 'cost_assignments', 'start_date', 'status', 'activities',
+             'section', 'cost_assignments', 'start_date', 'status', 'activities',
              'rejection_note', 'end_date', 'mode_of_travel', 'international_travel', 'itinerary',
              'first_submission_date', 'deductions', 'purpose', 'report',
              'reference_number', 'cost_summary', 'currency', 'canceled_at', 'estimated_travel_cost'],
             response_json,
             exact=True
         )
+        self.assertEqual(len(response_json['attachments']), 1)
+        self.assertEqual(response_json['attachments'][0]["id"], attachment.pk)
+
+    def test_details_view_with_attachment(self):
+        attachment = TravelAttachmentFactory(
+            travel=self.travel,
+        )
+        AttachmentFactory(
+            file="test_file.pdf",
+            file_type=self.file_type,
+            code="t2f_travel_attachment",
+            content_object=attachment,
+        )
+        with self.assertNumQueries(24):
+            response = self.forced_auth_req(
+                'get',
+                reverse('t2f:travels:details:index', args=[self.travel.pk]),
+                user=self.unicef_staff
+            )
+        response_json = json.loads(response.rendered_content)
         self.assertEqual(len(response_json['attachments']), 1)
         self.assertEqual(response_json['attachments'][0]["id"], attachment.pk)
 
@@ -103,7 +130,7 @@ class TravelDetails(URLAssertionMixin, BaseTenantTestCase):
         response_json = json.loads(response.rendered_content)
         self.assertEqual(len(response_json), 1)
         self.assertKeysIn(
-            ['id', 'name', 'type', 'url', 'file'],
+            ['id', 'name', 'type', 'url', 'file', 'attachment'],
             response_json[0],
             exact=True
         )
@@ -123,7 +150,7 @@ class TravelDetails(URLAssertionMixin, BaseTenantTestCase):
         response_json = json.loads(response.rendered_content)
         self.assertEqual(len(response_json), 1)
         self.assertKeysIn(
-            ['id', 'name', 'type', 'url', 'file'],
+            ['id', 'name', 'type', 'url', 'file', 'attachment'],
             response_json[0],
             exact=True
         )
@@ -151,7 +178,7 @@ class TravelDetails(URLAssertionMixin, BaseTenantTestCase):
                                         data=data, user=self.unicef_staff, request_format='multipart')
         response_json = json.loads(response.rendered_content)
 
-        expected_keys = ['file', 'id', 'name', 'type', 'url']
+        expected_keys = ['file', 'id', 'name', 'type', 'url', 'attachment']
         self.assertKeysIn(expected_keys, response_json)
 
         response = self.forced_auth_req('delete', reverse('t2f:travels:details:attachment_details',
@@ -159,6 +186,41 @@ class TravelDetails(URLAssertionMixin, BaseTenantTestCase):
                                                                   'attachment_pk': response_json['id']}),
                                         user=self.unicef_staff)
         self.assertEqual(response.status_code, 204)
+
+    def test_add_attachment(self):
+        travel = TravelFactory()
+        attachment = AttachmentFactory(
+            file="test_file.pdf",
+            file_type=None,
+            code="",
+        )
+        self.assertIsNone(attachment.file_type)
+        self.assertIsNone(attachment.content_object)
+        self.assertFalse(attachment.code)
+        attachment_qs = TravelAttachment.objects.filter(
+            travel=travel
+        )
+        self.assertFalse(attachment_qs.exists())
+        data = {
+            'name': 'second',
+            'type': 'something',
+            'attachment': attachment.pk,
+        }
+        response = self.forced_auth_req(
+            'post',
+            reverse(
+                't2f:travels:details:attachments',
+                kwargs={'travel_pk': travel.pk}
+            ),
+            data=data,
+            user=self.unicef_staff,
+            request_format='multipart',
+        )
+        response_json = json.loads(response.rendered_content)
+
+        expected_keys = ['file', 'id', 'name', 'type', 'url', 'attachment']
+        self.assertKeysIn(expected_keys, response_json)
+        self.assertTrue(attachment_qs.exists())
 
     def test_patch_request(self):
         currency = PublicsCurrencyFactory()
@@ -739,33 +801,6 @@ class TravelDetails(URLAssertionMixin, BaseTenantTestCase):
         response = self.forced_auth_req('post', reverse('t2f:travels:list:index'),
                                         data=data, user=self.unicef_staff)
         self.assertEqual(response.status_code, 201)
-
-    def test_missing_clearances(self):
-        data = {'itinerary': [],
-                'activities': [{'is_primary_traveler': True,
-                                'locations': []}],
-                'cost_assignments': [],
-                'expenses': [],
-                'action_points': [],
-                'ta_required': True,
-                'international_travel': False,
-                'traveler': self.traveler.id,
-                'mode_of_travel': []}
-
-        # Check only if 200
-        response = self.forced_auth_req('post', reverse('t2f:travels:list:index'),
-                                        data=data, user=self.unicef_staff)
-        self.assertEqual(response.status_code, 201)
-
-        response_json = json.loads(response.rendered_content)
-
-        travel = Travel.objects.get(id=response_json['id'])
-        travel.clearances.delete()
-
-        response = self.forced_auth_req('put', reverse('t2f:travels:details:index',
-                                                       kwargs={'travel_pk': response_json['id']}),
-                                        data=data, user=self.unicef_staff)
-        self.assertEqual(response.status_code, 200)
 
     def test_travel_activity_partnership(self):
         partnership = InterventionFactory()

@@ -18,3 +18,18 @@
 
 
 {% endblock object-tools-items %}
+
+
+{% block submit_buttons_bottom %}
+{% if request.tenant.schema_name == 'public' or request.tenant.schema_name == original.schema_name %}
+{{ block.super }}
+{% else %}
+<div class="submit-row">
+
+<h3><u>Can't update tenant outside it's own schema or the public schema. Current schema is {{request.tenant.name}}.</u></h3>
+    <input disabled="disabled" type="submit" value="Save" class="default" name="_sav">
+    <input disabled="disabled" type="submit" value="Delete" class="default" name="_del">
+</div>
+
+{% endif %}
+{% endblock %}

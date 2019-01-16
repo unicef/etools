@@ -116,15 +116,6 @@ class CostAssignmentFactory(factory.DjangoModelFactory):
         model = models.CostAssignment
 
 
-class ClearanceFactory(factory.DjangoModelFactory):
-    medical_clearance = True
-    security_clearance = True
-    security_course = True
-
-    class Meta:
-        model = models.Clearances
-
-
 class TravelFactory(factory.DjangoModelFactory):
     traveler = factory.SubFactory(UserFactory)
     supervisor = factory.SubFactory(UserFactory)
@@ -149,8 +140,6 @@ class TravelFactory(factory.DjangoModelFactory):
     expenses = factory.RelatedFactory(ExpenseFactory, 'travel')
     deductions = factory.RelatedFactory(DeductionFactory, 'travel')
     cost_assignments = factory.RelatedFactory(CostAssignmentFactory, 'travel')
-    clearances = factory.RelatedFactory(ClearanceFactory, 'travel')
-    # action_points = factory.RelatedFactory(ActionPointFactory, 'travel')
 
     @factory.post_generation
     def populate_activities(self, create, extracted, **kwargs):
@@ -159,30 +148,6 @@ class TravelFactory(factory.DjangoModelFactory):
 
     class Meta:
         model = models.Travel
-
-
-class InvoiceFactory(factory.DjangoModelFactory):
-    travel = factory.SubFactory(TravelFactory)
-    business_area = fuzzy.FuzzyText(length=12)
-    vendor_number = fuzzy.FuzzyText(length=12)
-    currency = factory.SubFactory(PublicsCurrencyFactory)
-    amount = fuzzy.FuzzyDecimal(0, 1000)
-    status = models.Invoice.PENDING
-    messages = []
-
-    class Meta:
-        model = models.Invoice
-
-
-class InvoiceItemFactory(factory.DjangoModelFactory):
-    invoice = factory.SubFactory(InvoiceFactory)
-    wbs = factory.SubFactory(PublicsWBSFactory)
-    grant = factory.SubFactory(PublicsGrantFactory)
-    fund = factory.SubFactory(PublicsFundFactory)
-    amount = fuzzy.FuzzyDecimal(0, 250)
-
-    class Meta:
-        model = models.InvoiceItem
 
 
 class FuzzyTravelStatus(factory.fuzzy.BaseFuzzyAttribute):

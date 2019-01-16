@@ -30,11 +30,7 @@ def set_country(user, request):
     country = request.GET.get(settings.SCHEMA_OVERRIDE_PARAM, None)
     if country:
         try:
-            country = Country.objects.get(
-                Q(name=country) |
-                Q(country_short_code=country) |
-                Q(schema_name=country)
-            )
+            country = Country.objects.get(Q(name=country) | Q(country_short_code=country) | Q(schema_name=country))
             if country in user.profile.countries_available.all():
                 country = country
             else:

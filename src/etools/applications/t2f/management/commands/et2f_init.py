@@ -7,8 +7,6 @@ from django.core.management.base import BaseCommand
 from django.db import connection
 from django.db.transaction import atomic
 
-from _private import populate_permission_matrix
-
 from etools.applications.partners.models import PartnerOrganization
 from etools.applications.publics.models import (
     AirlineCompany,
@@ -69,7 +67,6 @@ class Command(BaseCommand):
         self._load_countries()
 
         self._load_dsa_regions(country)
-        self._load_permission_matrix()
         self._add_wbs()
         self._add_grants()
         self._add_funds()
@@ -1010,9 +1007,6 @@ class Command(BaseCommand):
                 self.stdout.write('DSA Region created: {}'.format(name))
             else:
                 self.stdout.write('DSA Region found: {}'.format(name))
-
-    def _load_permission_matrix(self):
-        populate_permission_matrix(self)
 
     def _add_wbs(self):
         wbs_data_list = [

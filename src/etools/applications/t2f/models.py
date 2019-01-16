@@ -11,12 +11,13 @@ from django.utils.timezone import now as timezone_now
 from django.utils.translation import ugettext, ugettext_lazy as _
 
 from django_fsm import FSMField, transition
+from unicef_attachments.models import Attachment
+from unicef_djangolib.fields import CodedGenericRelation
 from unicef_notification.utils import send_notification
 
 from etools.applications.action_points.models import ActionPoint
 from etools.applications.publics.models import TravelExpenseType
 from etools.applications.t2f.helpers.cost_summary_calculator import CostSummaryCalculator
-from etools.applications.t2f.helpers.invoice_maker import InvoiceMaker
 from etools.applications.t2f.serializers.mailing import TravelMailSerializer
 from etools.applications.users.models import WorkspaceCounter
 from etools.applications.utils.common.urlresolvers import build_frontend_url
@@ -360,10 +361,6 @@ class Travel(models.Model):
             context={'travel': serializer.data, 'url': self.get_object_url()}
         )
 
-    def generate_invoices(self):
-        maker = InvoiceMaker(self)
-        maker.do_invoicing()
-
     def get_object_url(self):
         return build_frontend_url('t2f', 'edit-travel', self.id)
 
@@ -546,29 +543,6 @@ class CostAssignment(models.Model):
                              verbose_name=_('Fund'))
 
 
-class Clearances(models.Model):
-    REQUESTED = 'requested'
-    NOT_REQUESTED = 'not_requested'
-    NOT_APPLICABLE = 'not_applicable'
-    CHOICES = (
-        (REQUESTED, 'requested'),
-        (NOT_REQUESTED, 'not_requested'),
-        (NOT_APPLICABLE, 'not_applicable'),
-    )
-
-    travel = models.OneToOneField('Travel', related_name='clearances', verbose_name=_('Travel'),
-                                  on_delete=models.CASCADE)
-    medical_clearance = models.CharField(max_length=14, choices=CHOICES, default=NOT_APPLICABLE,
-                                         verbose_name=_('Medical Clearance'))
-    security_clearance = models.CharField(max_length=14, choices=CHOICES, default=NOT_APPLICABLE,
-                                          verbose_name=_('Security Clearance'))
-    security_course = models.CharField(max_length=14, choices=CHOICES, default=NOT_APPLICABLE,
-                                       verbose_name=_('Security Course'))
-
-    class Meta:
-        verbose_name_plural = _('Clearances')
-
-
 def determine_file_upload_path(instance, filename):
     # TODO: add business area in there
     country_name = connection.schema_name or 'Uncategorized'
@@ -583,87 +557,20 @@ class TravelAttachment(models.Model):
     type = models.CharField(max_length=64, verbose_name=_('Type'))
 
     name = models.CharField(max_length=255, verbose_name=_('Name'))
-    file = models.FileField(upload_to=determine_file_upload_path, max_length=255, verbose_name=_('File'))
-
-
-class Invoice(models.Model):
-    PENDING = 'pending'
-    PROCESSING = 'processing'
-    SUCCESS = 'success'
-    ERROR = 'error'
-
-    STATUS = (
-        (PENDING, 'Pending'),
-        (PROCESSING, 'Processing'),
-        (SUCCESS, 'Success'),
-        (ERROR, 'Error'),
+    file = models.FileField(
+        upload_to=determine_file_upload_path,
+        max_length=255,
+        verbose_name=_('File'),
+        blank=True,
+        null=True,
     )
-
-    travel = models.ForeignKey(
-        'Travel', related_name='invoices', verbose_name=_('Travel'),
-        on_delete=models.CASCADE,
+    attachment = CodedGenericRelation(
+        Attachment,
+        verbose_name=_('Travel File'),
+        blank=True,
+        null=True,
+        code='t2f_travel_attachment',
     )
-    reference_number = models.CharField(max_length=32, unique=True, verbose_name=_('Reference Number'))
-    business_area = models.CharField(max_length=32, verbose_name=_('Business Area'))
-    vendor_number = models.CharField(max_length=32, verbose_name=_('Vendor Number'))
-    currency = models.ForeignKey(
-        'publics.Currency', related_name='+', verbose_name=_('Currency'),
-        on_delete=models.CASCADE,
-    )
-    amount = models.DecimalField(max_digits=20, decimal_places=4, verbose_name=_('Amount'))
-    status = models.CharField(max_length=16, choices=STATUS, verbose_name=_('Status'))
-    messages = ArrayField(models.TextField(default='', blank=True), default=list, verbose_name=_('Messages'))
-    vision_fi_id = models.CharField(max_length=16, default='', blank=True, verbose_name=_('Vision FI ID'))
-
-    def save(self, **kwargs):
-        if self.pk is None:
-            # This will lock the travel row and prevent concurrency issues
-            travel = Travel.objects.select_for_update().get(id=self.travel_id)
-            invoice_counter = travel.invoices.all().count() + 1
-            self.reference_number = '{}/{}/{:02d}'.format(self.business_area,
-                                                          self.travel.reference_number,
-                                                          invoice_counter)
-        super().save(**kwargs)
-
-    @property
-    def posting_key(self):
-        return 'credit' if self.amount >= 0 else 'debit'
-
-    @property
-    def normalized_amount(self):
-        return abs(self.amount.normalize())
-
-    @property
-    def message(self):
-        return '\n'.join(self.messages)
-
-    def __str__(self):
-        return self.reference_number
-
-    class Meta:
-        ordering = ["pk", ]
-
-
-class InvoiceItem(models.Model):
-    invoice = models.ForeignKey(
-        'Invoice', related_name='items', verbose_name=_('Invoice'),
-        on_delete=models.CASCADE,
-    )
-    wbs = models.ForeignKey('publics.WBS', related_name='+', null=True, blank=True, on_delete=models.DO_NOTHING,
-                            verbose_name=_(''))
-    grant = models.ForeignKey('publics.Grant', related_name='+', null=True, blank=True, on_delete=models.DO_NOTHING,
-                              verbose_name=_('Grant'))
-    fund = models.ForeignKey('publics.Fund', related_name='+', null=True, blank=True, on_delete=models.DO_NOTHING,
-                             verbose_name=_('Fund'))
-    amount = models.DecimalField(max_digits=20, decimal_places=10)
-
-    @property
-    def posting_key(self):
-        return 'credit' if self.amount >= 0 else 'debit'
-
-    @property
-    def normalized_amount(self):
-        return abs(self.amount.normalize())
 
 
 class T2FActionPointManager(models.Manager):

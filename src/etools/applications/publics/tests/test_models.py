@@ -1,13 +1,19 @@
 
 from django.test import SimpleTestCase
 
-
-from etools.applications.publics.tests.factories import (PublicsAirlineCompanyFactory, PublicsBusinessAreaFactory,
-                                                         PublicsBusinessRegionFactory, PublicsCountryFactory,
-                                                         PublicsCurrencyFactory, PublicsDSARateFactory,
-                                                         PublicsDSARegionFactory, PublicsFundFactory,
-                                                         PublicsGrantFactory, PublicsTravelExpenseTypeFactory,
-                                                         PublicsWBSFactory,)
+from etools.applications.publics.tests.factories import (
+    PublicsAirlineCompanyFactory,
+    PublicsBusinessAreaFactory,
+    PublicsBusinessRegionFactory,
+    PublicsCountryFactory,
+    PublicsCurrencyFactory,
+    PublicsDSARateFactory,
+    PublicsDSARegionFactory,
+    PublicsFundFactory,
+    PublicsGrantFactory,
+    PublicsTravelExpenseTypeFactory,
+    PublicsWBSFactory,
+)
 
 
 class TestStrUnicode(SimpleTestCase):
