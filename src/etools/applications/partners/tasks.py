@@ -20,8 +20,8 @@ from etools.applications.partners.utils import (
 from etools.applications.partners.validation.agreements import AgreementValid
 from etools.applications.partners.validation.interventions import InterventionValid
 from etools.applications.users.models import Country
-from etools.applications.utils.common.utils import run_on_all_tenants
 from etools.config.celery import app
+from etools.libraries.tenant_support.utils import run_on_all_tenants
 
 logger = get_task_logger(__name__)
 
