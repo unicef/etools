@@ -10,7 +10,7 @@ RAVEN_CONFIG = {
     'dsn': get_from_secrets_or_env('SENTRY_DSN'),  # noqa: F405
 }
 # Override default client, in order to send extra data to Sentry
-SENTRY_CLIENT = 'etools.applications.utils.sentry.client.EToolsSentryClient'
+SENTRY_CLIENT = 'etools.config.sentry.EToolsSentryClient'
 INSTALLED_APPS += (  # noqa: F405
     'raven.contrib.django.raven_compat',
 )
