@@ -5,8 +5,8 @@ from unittest import skip
 from django.conf import settings
 from django.contrib.auth import get_user_model
 
-from mock import Mock, patch
 from django_tenants.utils import schema_context
+from mock import Mock, patch
 
 from etools.applications.EquiTrack.tests.cases import BaseTenantTestCase, SCHEMA_NAME
 from etools.applications.users import tasks
@@ -182,69 +182,6 @@ class TestUserMapper(BaseTenantTestCase):
         )
         profile = UserProfile.objects.get(user__email=email)
         self.assertEqual(profile.phone_number, phone)
-
-
-@skip("Issues with using public schema")
-class TestSyncUsers(BaseTenantTestCase):
-    @classmethod
-    def setUpTestData(cls):
-        cls.mock_log = Mock()
-
-    def test_sync(self):
-        mock_sync = Mock()
-        with patch("etools.applications.users.tasks.VisionSyncLog", self.mock_log):
-            with patch("etools.applications.users.tasks.sync_users_remote", mock_sync):
-                tasks.sync_users()
-        self.assertEqual(mock_sync.call_count, 1)
-        self.assertTrue(self.mock_log.call_count(), 1)
-        self.assertTrue(self.mock_log.save.call_count(), 1)
-
-    def test_sync_exception(self):
-        mock_sync = Mock(side_effect=Exception)
-        with patch("etools.applications.users.tasks.VisionSyncLog", self.mock_log):
-            with patch("etools.applications.users.tasks.sync_users_remote", mock_sync):
-                with self.assertRaises(VisionException):
-                    tasks.sync_users()
-        self.assertTrue(self.mock_log.call_count(), 1)
-        self.assertTrue(self.mock_log.save.call_count(), 1)
-
-
-@skip("Issues with using public schema")
-class TestMapUsers(BaseTenantTestCase):
-    @classmethod
-    def setUpTestMethod(cls):
-        cls.mock_log = Mock()
-
-    def test_map(self):
-        profile = ProfileFactory()
-        profile.staff_id = profile.user.pk
-        profile.save()
-        data = {
-            "ORG_UNIT_NAME": "UNICEF",
-            "STAFF_ID": profile.staff_id,
-            "MANAGER_ID": "",
-            "ORG_UNIT_CODE": "101",
-            "VENDOR_CODE": "202",
-            "STAFF_EMAIL": "map@example.com",
-            "STAFF_POST_NO": "123",
-        }
-        mock_request = Mock()
-        mock_request.get().json.return_value = json.dumps([data])
-        mock_request.get().status_code = 200
-        with patch("etools.applications.users.tasks.VisionSyncLog", self.mock_log):
-            with patch("etools.applications.users.tasks.requests", mock_request):
-                tasks.map_users()
-        self.assertTrue(self.mock_log.call_count(), 1)
-        self.assertTrue(self.mock_log.save.call_count(), 1)
-
-    def test_map_exception(self):
-        mock_mapper = Mock(side_effect=Exception)
-        with patch("etools.applications.users.tasks.VisionSyncLog", self.mock_log):
-            with patch("etools.applications.users.tasks.UserMapper", mock_mapper):
-                with self.assertRaises(VisionException):
-                    tasks.map_users()
-        self.assertTrue(self.mock_log.call_count(), 1)
-        self.assertTrue(self.mock_log.save.call_count(), 1)
 
 
 class TestUserVisionSynchronizer(BaseTenantTestCase):
