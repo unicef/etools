@@ -1,16 +1,10 @@
-import json
-
-from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.contrib.auth.models import Group
 from django.db import IntegrityError, transaction
 
-import requests
 from celery.utils.log import get_task_logger
 
 from etools.applications.users.models import Country, UserProfile
-from etools.applications.vision.exceptions import VisionException
-from etools.applications.vision.vision_data_synchronizer import VISION_NO_DATA_MESSAGE
 
 logger = get_task_logger(__name__)
 
@@ -181,59 +175,3 @@ class AzureUserMapper:
             profile.save()
 
         return modified
-
-
-class UserVisionSynchronizer(object):
-
-    REQUIRED_KEYS_MAP = {
-        'GetOrgChartUnitsInfo_JSON': (
-            "ORG_UNIT_NAME",  # VARCHAR2	Vendor Name
-            "STAFF_ID",  # VARCHAR2    Staff Id
-            "MANAGER_ID",  # VARCHAR2    Manager Id
-            "ORG_UNIT_CODE",  # VARCHAR2    Org Unit Code
-            "VENDOR_CODE",  # VARCHAR2    Vendor code
-            "STAFF_EMAIL"
-        )
-    }
-
-    def __init__(self, endpoint_name, parameter):
-        self.url = '{}/{}/{}'.format(
-            settings.VISION_URL,
-            endpoint_name,
-            parameter
-        )
-        self.required_keys = self.REQUIRED_KEYS_MAP[endpoint_name]
-
-    def _get_json(self, data):
-        return '{}' if data == VISION_NO_DATA_MESSAGE else data
-
-    def _filter_records(self, records):
-        def is_valid_record(record):
-            for key in self.required_keys:
-                if key not in record:
-                    return False
-                if key == "STAFF_EMAIL" and not record[key]:
-                    return False
-            return True
-
-        return [rec for rec in records if is_valid_record(rec)]
-
-    def _load_records(self):
-        logger.debug(self.url)
-        response = requests.get(
-            self.url,
-            headers={'Content-Type': 'application/json'},
-            auth=(settings.VISION_USER, settings.VISION_PASSWORD),
-            verify=False
-        )
-        if response.status_code != 200:
-            raise VisionException('Load data failed! Http code: {}'.format(response.status_code))
-
-        return self._get_json(response.json())
-
-    def _convert_records(self, records):
-        return json.loads(records)
-
-    @property
-    def response(self):
-        return self._filter_records(self._convert_records(self._load_records()))
