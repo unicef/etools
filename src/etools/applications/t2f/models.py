@@ -14,10 +14,10 @@ from unicef_attachments.models import Attachment
 from unicef_djangolib.fields import CodedGenericRelation
 from unicef_notification.utils import send_notification
 
+from etools.applications.EquiTrack.urlresolvers import build_frontend_url
 from etools.applications.action_points.models import ActionPoint
 from etools.applications.t2f.serializers.mailing import TravelMailSerializer
 from etools.applications.users.models import WorkspaceCounter
-from etools.applications.utils.common.urlresolvers import build_frontend_url
 
 log = logging.getLogger(__name__)
 

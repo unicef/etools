@@ -6,7 +6,7 @@ from django.db import migrations, models
 
 import model_utils.fields
 
-import etools.applications.EquiTrack.utils
+import etools.applications.EquiTrack.urlresolvers
 
 
 class Migration(migrations.Migration):

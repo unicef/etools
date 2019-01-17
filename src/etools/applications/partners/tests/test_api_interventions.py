@@ -44,7 +44,7 @@ from etools.applications.reports.tests.factories import (
     SectionFactory,
 )
 from etools.applications.users.tests.factories import GroupFactory, UserFactory
-from etools.applications.utils.common.utils import get_all_field_names
+from etools.libraries.djangolib.utils import get_all_field_names
 
 
 def _add_user_to_partnership_manager_group(user):
