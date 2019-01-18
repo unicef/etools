@@ -10,7 +10,6 @@ from django.utils import timezone
 
 from freezegun import freeze_time
 from mock import Mock, patch
-from unicef_locations.tests.factories import LocationFactory
 
 from etools.applications.audit.models import Engagement
 from etools.applications.audit.tests.factories import AuditFactory, SpecialAuditFactory, SpotCheckFactory
@@ -849,31 +848,6 @@ class TestInterventionModel(BaseTenantTestCase):
         self.assertCountEqual(intervention.all_lower_results, [
             lower_result_1,
             lower_result_2,
-        ])
-
-    def test_intervention_locations_empty(self):
-        self.assertFalse(self.intervention.intervention_locations())
-
-    def test_intervention_locations(self):
-        intervention = InterventionFactory()
-        link = InterventionResultLinkFactory(
-            intervention=intervention,
-        )
-        lower_result_1 = LowerResultFactory(result_link=link)
-        location_1 = LocationFactory()
-        applied_indicator_1 = AppliedIndicatorFactory(
-            lower_result=lower_result_1
-        )
-        applied_indicator_1.locations.add(location_1)
-        lower_result_2 = LowerResultFactory(result_link=link)
-        location_2 = LocationFactory()
-        applied_indicator_2 = AppliedIndicatorFactory(
-            lower_result=lower_result_2
-        )
-        applied_indicator_2.locations.add(location_2)
-        self.assertCountEqual(intervention.intervention_locations(), [
-            location_1,
-            location_2,
         ])
 
     def test_intervention_clusters_empty(self):
