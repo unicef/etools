@@ -70,7 +70,7 @@ class InterventionDashSerializer(serializers.ModelSerializer):
             return None
 
         if not (self.fr_currencies_ok(obj) and obj.max_fr_currency == obj.planned_budget.currency):
-            return u"!Error! (currencies do not match)"
+            return "!Error! (currencies do not match)"
         percent = obj.frs__actual_amt_local__sum / obj.total_unicef_cash * 100 \
             if obj.total_unicef_cash and obj.total_unicef_cash > 0 else 0
         return "%.1f" % percent

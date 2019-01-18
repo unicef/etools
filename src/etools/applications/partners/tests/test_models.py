@@ -162,7 +162,7 @@ class TestHACTCalculations(BaseTenantTestCase):
     def setUpTestData(cls):
         year = datetime.date.today().year
         cls.intervention = InterventionFactory(
-            status=u'active'
+            status='active'
         )
         current_cp = CountryProgrammeFactory(
             name='Current Country Programme',
@@ -1454,11 +1454,11 @@ class TestStrUnicodeSlow(BaseTenantTestCase):
     def test_assessment(self):
         partner = PartnerFactory(name='xyz')
         instance = AssessmentFactory(partner=partner)
-        self.assertIn(u'xyz', str(instance))
+        self.assertIn('xyz', str(instance))
 
-        partner = PartnerFactory(name=u'R\xe4dda Barnen')
+        partner = PartnerFactory(name='R\xe4dda Barnen')
         instance = AssessmentFactory(partner=partner)
-        self.assertIn(u'R\xe4dda Barnen', str(instance))
+        self.assertIn('R\xe4dda Barnen', str(instance))
 
     def test_agreement_amendment(self):
         partner = PartnerFactory(name='xyz')
@@ -1474,42 +1474,42 @@ class TestStrUnicode(SimpleTestCase):
 
     def test_workspace_file_type(self):
         instance = WorkspaceFileTypeFactory.build(name='xyz')
-        self.assertEqual(str(instance), u'xyz')
+        self.assertEqual(str(instance), 'xyz')
 
-        instance = WorkspaceFileTypeFactory.build(name=u'R\xe4dda Barnen')
-        self.assertEqual(str(instance), u'R\xe4dda Barnen')
+        instance = WorkspaceFileTypeFactory.build(name='R\xe4dda Barnen')
+        self.assertEqual(str(instance), 'R\xe4dda Barnen')
 
     def test_partner_organization(self):
         instance = PartnerFactory.build(name='xyz')
-        self.assertEqual(str(instance), u'xyz')
+        self.assertEqual(str(instance), 'xyz')
 
-        instance = PartnerFactory.build(name=u'R\xe4dda Barnen')
-        self.assertEqual(str(instance), u'R\xe4dda Barnen')
+        instance = PartnerFactory.build(name='R\xe4dda Barnen')
+        self.assertEqual(str(instance), 'R\xe4dda Barnen')
 
     def test_partner_staff_member(self):
         partner = PartnerFactory.build(name='partner')
 
         instance = PartnerStaffFactory.build(first_name='xyz', partner=partner)
-        self.assertTrue(str(instance).startswith(u'xyz'))
+        self.assertTrue(str(instance).startswith('xyz'))
 
-        instance = PartnerStaffFactory.build(first_name=u'R\xe4dda Barnen', partner=partner)
-        self.assertTrue(str(instance).startswith(u'R\xe4dda Barnen'))
+        instance = PartnerStaffFactory.build(first_name='R\xe4dda Barnen', partner=partner)
+        self.assertTrue(str(instance).startswith('R\xe4dda Barnen'))
 
     def test_agreement(self):
         partner = PartnerFactory.build(name='xyz')
         instance = AgreementFactory.build(partner=partner)
-        self.assertIn(u'xyz', str(instance))
+        self.assertIn('xyz', str(instance))
 
-        partner = PartnerFactory.build(name=u'R\xe4dda Barnen')
+        partner = PartnerFactory.build(name='R\xe4dda Barnen')
         instance = AgreementFactory.build(partner=partner)
-        self.assertIn(u'R\xe4dda Barnen', str(instance))
+        self.assertIn('R\xe4dda Barnen', str(instance))
 
     def test_intervention(self):
         instance = InterventionFactory.build(number='two')
-        self.assertEqual(u'two', str(instance))
+        self.assertEqual('two', str(instance))
 
-        instance = InterventionFactory.build(number=u'tv\xe5')
-        self.assertEqual(u'tv\xe5', str(instance))
+        instance = InterventionFactory.build(number='tv\xe5')
+        self.assertEqual('tv\xe5', str(instance))
 
     def test_intervention_amendment(self):
         instance = InterventionAmendmentFactory.build()
@@ -1520,20 +1520,20 @@ class TestStrUnicode(SimpleTestCase):
     def test_intervention_result_link(self):
         intervention = InterventionFactory.build(number='two')
         instance = InterventionResultLinkFactory.build(intervention=intervention)
-        self.assertTrue(str(instance).startswith(u'two'))
+        self.assertTrue(str(instance).startswith('two'))
 
-        intervention = InterventionFactory.build(number=u'tv\xe5')
+        intervention = InterventionFactory.build(number='tv\xe5')
         instance = InterventionResultLinkFactory.build(intervention=intervention)
-        self.assertTrue(str(instance).startswith(u'tv\xe5'))
+        self.assertTrue(str(instance).startswith('tv\xe5'))
 
     def test_intervention_budget(self):
         intervention = InterventionFactory.build(number='two')
         instance = InterventionBudgetFactory.build(intervention=intervention)
-        self.assertTrue(str(instance).startswith(u'two'))
+        self.assertTrue(str(instance).startswith('two'))
 
-        intervention = InterventionFactory.build(number=u'tv\xe5')
+        intervention = InterventionFactory.build(number='tv\xe5')
         instance = InterventionBudgetFactory.build(intervention=intervention)
-        self.assertTrue(str(instance).startswith(u'tv\xe5'))
+        self.assertTrue(str(instance).startswith('tv\xe5'))
 
     def test_file_type(self):
         instance = FileTypeFactory.build()
@@ -1544,11 +1544,11 @@ class TestStrUnicode(SimpleTestCase):
     def test_intervention_attachment(self):
         attachment = SimpleUploadedFile(name='two.txt', content='hello world!'.encode('utf-8'))
         instance = InterventionAttachmentFactory.build(attachment=attachment)
-        self.assertEqual(str(instance), u'two.txt')
+        self.assertEqual(str(instance), 'two.txt')
 
-        attachment = SimpleUploadedFile(u'tv\xe5.txt', u'hello world!'.encode('utf-8'))
+        attachment = SimpleUploadedFile('tv\xe5.txt', 'hello world!'.encode('utf-8'))
         instance = InterventionAttachmentFactory.build(attachment=attachment)
-        self.assertEqual(str(instance), u'tv\xe5.txt')
+        self.assertEqual(str(instance), 'tv\xe5.txt')
 
     def test_intervention_reporting_period(self):
         intervention = InterventionFactory.build(number='two')
@@ -1556,9 +1556,9 @@ class TestStrUnicode(SimpleTestCase):
         instance = InterventionReportingPeriodFactory.build(intervention=intervention)
         self.assertTrue(str(instance).startswith('two'))
 
-        intervention = InterventionFactory.build(number=u'tv\xe5')
+        intervention = InterventionFactory.build(number='tv\xe5')
         instance = InterventionReportingPeriodFactory.build(intervention=intervention)
-        self.assertTrue(str(instance).startswith(u'tv\xe5'))
+        self.assertTrue(str(instance).startswith('tv\xe5'))
 
 
 class TestPlannedEngagement(BaseTenantTestCase):

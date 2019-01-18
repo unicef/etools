@@ -1573,7 +1573,7 @@ class TestInterventionAmendmentCreateAPIView(BaseTenantTestCase):
             kwargs={'intervention_pk': self.intervention.id}
         )
 
-        self.uploaded_file = SimpleUploadedFile('hello_world.txt', u'hello world!'.encode('utf-8'))
+        self.uploaded_file = SimpleUploadedFile('hello_world.txt', 'hello world!'.encode('utf-8'))
         self.data = {
             "types": InterventionAmendment.DATES,
             "signed_date": datetime.date.today(),
@@ -1632,7 +1632,7 @@ class TestInterventionAmendmentCreateAPIView(BaseTenantTestCase):
         )
 
         self.assertEquals(response.status_code, status.HTTP_400_BAD_REQUEST)
-        self.assertEquals(response.data['signed_amendment'], [u'No file was submitted.'])
+        self.assertEquals(response.data['signed_amendment'], ['No file was submitted.'])
 
         response = self._make_request(
             user=self.partnership_manager_user,
@@ -1643,7 +1643,7 @@ class TestInterventionAmendmentCreateAPIView(BaseTenantTestCase):
         self.assertEquals(response.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertEquals(
             response.data['signed_amendment'],
-            [u'The submitted data was not a file. Check the encoding type on the form.']
+            ['The submitted data was not a file. Check the encoding type on the form.']
         )
 
     def test_create_amendment_invalid_date(self):
@@ -1659,7 +1659,7 @@ class TestInterventionAmendmentCreateAPIView(BaseTenantTestCase):
         )
 
         self.assertEquals(response.status_code, status.HTTP_400_BAD_REQUEST)
-        self.assertEquals(next(iter(response.data.values())), [u'Date cannot be in the future!'])
+        self.assertEquals(next(iter(response.data.values())), ['Date cannot be in the future!'])
 
     def test_create_amendment_success(self):
         response = self._make_request(
@@ -1768,7 +1768,7 @@ class TestInterventionAmendmentCreateAPIView(BaseTenantTestCase):
         self.assertEquals(response.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertEquals(
             next(iter(response.data.values())),
-            [u'Cannot add a new amendment while another amendment is in progress.']
+            ['Cannot add a new amendment while another amendment is in progress.']
         )
 
     def _make_request(self, user=None, data=None, request_format='json', **kwargs):

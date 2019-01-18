@@ -146,7 +146,7 @@ class Sector(TimeStampedModel):
         ordering = ['name']
 
     def __str__(self):
-        return u'{} {}'.format(
+        return '{} {}'.format(
             self.alternate_id if self.alternate_id else '',
             self.name
         )
@@ -290,8 +290,8 @@ class Result(MPTTModel):
 
     @cached_property
     def result_name(self):
-        return u'{} {}: {}'.format(
-            self.code if self.code else u'',
+        return '{} {}: {}'.format(
+            self.code if self.code else '',
             self.result_type.name,
             self.name
         )
@@ -300,7 +300,7 @@ class Result(MPTTModel):
     def output_name(self):
         assert self.result_type.name == ResultType.OUTPUT
 
-        return u'{}{}{}'.format(
+        return '{}{}{}'.format(
             '[Expired] ' if self.expired else '',
             'Special- ' if self.special else '',
             self.name
@@ -319,8 +319,8 @@ class Result(MPTTModel):
         return self.country_programme.special
 
     def __str__(self):
-        return u'{} {}: {}'.format(
-            self.code if self.code else u'',
+        return '{} {}: {}'.format(
+            self.code if self.code else '',
             self.result_type.name,
             self.name
         )
@@ -359,7 +359,7 @@ class LowerResult(TimeStampedModel):
     code = models.CharField(verbose_name=_("Code"), max_length=50)
 
     def __str__(self):
-        return u'{}: {}'.format(
+        return '{}: {}'.format(
             self.code,
             self.name
         )
@@ -769,17 +769,17 @@ class Indicator(TimeStampedModel):
         unique_together = (("name", "result", "sector"),)
 
     def __str__(self):
-        return u'{}{} {} {}'.format(
-            u'' if self.active else u'[Inactive] ',
+        return '{}{} {} {}'.format(
+            '' if self.active else '[Inactive] ',
             self.name,
-            u'Baseline: {}'.format(self.baseline) if self.baseline else u'',
-            u'Target: {}'.format(self.target) if self.target else u''
+            'Baseline: {}'.format(self.baseline) if self.baseline else '',
+            'Target: {}'.format(self.target) if self.target else ''
         )
 
     @property
     def light_repr(self):
-        return u'{}{}'.format(
-            u'' if self.active else u'[Inactive] ',
+        return '{}{}'.format(
+            '' if self.active else '[Inactive] ',
             self.name
         )
 

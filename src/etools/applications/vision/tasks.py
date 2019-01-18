@@ -56,7 +56,7 @@ def vision_sync_task(country_name=None, synchronizers=SYNC_HANDLERS.keys()):
         country.vision_last_synced = timezone.now()
         country.save()
 
-    text = u'Created tasks for the following countries: {} and synchronizers: {}'.format(
+    text = 'Created tasks for the following countries: {} and synchronizers: {}'.format(
         ',\n '.join([country.name for country in countries]),
         ',\n '.join([synchronizer for synchronizer in synchronizers])
     )
@@ -70,22 +70,22 @@ def sync_handler(self, country_name, handler):
     Run .sync() on one handler for one country.
     """
     # Scheduled from vision_sync_task() (above).
-    logger.info(u'Starting vision sync handler {} for country {}'.format(handler, country_name))
+    logger.info('Starting vision sync handler {} for country {}'.format(handler, country_name))
     try:
         country = Country.objects.get(name=country_name)
     except Country.DoesNotExist:
-        logger.error(u"{} sync failed, Could not find a Country with this name: {}".format(
+        logger.error("{} sync failed, Could not find a Country with this name: {}".format(
             handler, country_name
         ))
         # No point in retrying if there's no such country
     else:
         try:
             SYNC_HANDLERS[handler](country).sync()
-            logger.info(u"{} sync successfully for {}".format(handler, country.name))
+            logger.info("{} sync successfully for {}".format(handler, country.name))
 
         except VisionException:
             # Catch and log the exception so we're aware there's a problem.
-            logger.exception(u"{} sync failed, Country: {}".format(
+            logger.exception("{} sync failed, Country: {}".format(
                 handler, country_name
             ))
             # The 'autoretry_for' in the task decorator tells Celery to

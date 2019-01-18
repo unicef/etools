@@ -32,7 +32,7 @@ def _build_country(name):
     It exists only in memory. We must be careful not to save this because creating a new Country in the database
     complicates schemas.
     """
-    country = CountryFactory.build(name=u'Country {}'.format(name.title()), schema_name=name)
+    country = CountryFactory.build(name='Country {}'.format(name.title()), schema_name=name)
     # Mock save() to prevent inadvertent database changes.
     country.save = mock.Mock()
 
