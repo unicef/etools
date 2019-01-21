@@ -13,7 +13,7 @@ class StaticDataEndpointTest(BaseTenantTestCase):
         cls.unicef_staff = UserFactory(is_staff=True)
 
     def test_urls(self):
-        '''Verify URL pattern names generate the URLs we expect them to.'''
+        """Verify URL pattern names generate the URLs we expect them to."""
         self.assertEqual(reverse('t2f:static_data'), '/api/t2f/static_data/')
 
     def test_static_data_endpoint(self):

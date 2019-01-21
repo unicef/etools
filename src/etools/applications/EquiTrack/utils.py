@@ -28,7 +28,7 @@ class HashableDict(dict):
 
 
 def proccess_permissions(permission_dict):
-    '''
+    """
     :param permission_dict: the csv file read as a generator of dictionaries
      where the header contains the following keys:
 
@@ -59,7 +59,7 @@ def proccess_permissions(permission_dict):
                      'view': {'true': [{'condition': 'condition1',
                                         'group': 'PM',
                                         'status': 'Active'}]}}}
-    '''
+    """
 
     result = Vividict()
     possible_actions = ['edit', 'required', 'view']

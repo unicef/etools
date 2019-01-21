@@ -46,10 +46,10 @@ INSIGHT_PATH = "etools.applications.partners.views.partner_organization_v2.get_d
 
 
 class URLsTestCase(URLAssertionMixin, SimpleTestCase):
-    '''Simple test case to verify URL reversal'''
+    """Simple test case to verify URL reversal"""
 
     def test_urls(self):
-        '''Verify URL pattern names generate the URLs we expect them to.'''
+        """Verify URL pattern names generate the URLs we expect them to."""
         names_and_paths = (
             ('partner-assessment', 'assessments/', {}),
         )
@@ -834,7 +834,7 @@ class TestPartnerOrganizationAssessmentUpdateDeleteView(BaseTenantTestCase):
 
 
 class TestPartnerOrganizationRetrieveUpdateDeleteViews(BaseTenantTestCase):
-    '''Exercise the retrieve, update, and delete views for PartnerOrganization'''
+    """Exercise the retrieve, update, and delete views for PartnerOrganization"""
     @classmethod
     def setUpTestData(cls):
         cls.unicef_staff = UserFactory(is_staff=True)

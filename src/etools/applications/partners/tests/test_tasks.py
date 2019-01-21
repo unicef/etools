@@ -28,10 +28,10 @@ from etools.applications.users.tests.factories import CountryFactory, UserFactor
 
 
 def _build_country(name):
-    '''Given a name (e.g. 'test1'), creates a Country object via FactoryBoy. The object is not saved to the database.
+    """Given a name (e.g. 'test1'), creates a Country object via FactoryBoy. The object is not saved to the database.
     It exists only in memory. We must be careful not to save this because creating a new Country in the database
     complicates schemas.
-    '''
+    """
     country = CountryFactory.build(name=u'Country {}'.format(name.title()), schema_name=name)
     # Mock save() to prevent inadvertent database changes.
     country.save = mock.Mock()
@@ -40,17 +40,17 @@ def _build_country(name):
 
 
 def _make_decimal(n):
-    '''Return a Decimal based on the param n with a trailing .00'''
+    """Return a Decimal based on the param n with a trailing .00"""
     return Decimal('{}.00'.format(n))
 
 
 def _make_past_datetime(n_days):
-    '''Return a datetime.datetime() that refers to n_days in the past'''
+    """Return a datetime.datetime() that refers to n_days in the past"""
     return timezone.now() - datetime.timedelta(days=n_days)
 
 
 class TestGetInterventionContext(BaseTenantTestCase):
-    '''Exercise the tasks' helper function get_intervention_context()'''
+    """Exercise the tasks' helper function get_intervention_context()"""
 
     def setUp(self):
         super().setUp()
@@ -58,7 +58,7 @@ class TestGetInterventionContext(BaseTenantTestCase):
         self.focal_point_user = UserFactory()
 
     def test_simple_intervention(self):
-        '''Exercise get_intervention_context() with a very simple intervention'''
+        """Exercise get_intervention_context() with a very simple intervention"""
         result = etools.applications.partners.tasks.get_intervention_context(self.intervention)
 
         self.assertIsInstance(result, dict)
@@ -72,7 +72,7 @@ class TestGetInterventionContext(BaseTenantTestCase):
         self.assertEqual(result['unicef_focal_points'], [])
 
     def test_non_trivial_intervention(self):
-        '''Exercise get_intervention_context() with an intervention that has some interesting detail'''
+        """Exercise get_intervention_context() with an intervention that has some interesting detail"""
         self.focal_point_user = get_user_model().objects.first()
         self.intervention.unicef_focal_points.add(self.focal_point_user)
 
@@ -93,15 +93,15 @@ class TestGetInterventionContext(BaseTenantTestCase):
 
 
 class PartnersTestBaseClass(BaseTenantTestCase):
-    '''Common elements for most of the tests in this file.'''
+    """Common elements for most of the tests in this file."""
 
     def _assertCalls(self, mocked_function, all_expected_call_args):
-        '''Given a mocked function (like mock_logger.info or mock_connection.set_tentant), asserts that the mock was
+        """Given a mocked function (like mock_logger.info or mock_connection.set_tentant), asserts that the mock was
         called once for each set of call args, and with the args specified.
         all_expected_call_args should be a list of 2-tuples representing mock call_args. Each 2-tuple looks like --
             ((args), {kwargs})
         https://docs.python.org/3/library/unittest.mock.html#unittest.mock.Mock.call_args
-        '''
+        """
         self.assertEqual(mocked_function.call_count, len(all_expected_call_args))
         i = 0
         for actual_call_args, expected_call_args in zip(mocked_function.call_args_list, all_expected_call_args):
@@ -119,7 +119,7 @@ Actual:
             i += 1
 
     def _configure_mock_country(self, MockCountry):
-        '''helper to perform common configuration of the MockCountry that every task test uses.'''
+        """helper to perform common configuration of the MockCountry that every task test uses."""
         # We have to mock the Country model because we can't save instances to the database without creating
         # new schemas, so instead we mock the call we expect the task to make and return the value we want the
         # task to get.
@@ -146,13 +146,13 @@ Actual:
 @mock.patch('etools.applications.partners.tasks.logger', spec=['info', 'error'])
 @mock.patch('etools.applications.partners.tasks.connection', spec=['set_tenant'])
 class TestAgreementStatusAutomaticTransitionTask(PartnersTestBaseClass):
-    '''Exercises the agreement_status_automatic_transition() task, including the task itself and its core function
+    """Exercises the agreement_status_automatic_transition() task, including the task itself and its core function
     _make_agreement_status_automatic_transitions().
-    '''
+    """
     @mock.patch('etools.applications.partners.tasks._make_agreement_status_automatic_transitions')
     @mock.patch('etools.applications.partners.tasks.Country', spec='objects')
     def test_task(self, MockCountry, mock_make_agreement_status_automatic_transitions, mock_db_connection, mock_logger):
-        '''Verify that the task executes once for each tenant country'''
+        """Verify that the task executes once for each tenant country"""
         self._configure_mock_country(MockCountry)
 
         # I'm done mocking, it's time to call the task.
@@ -167,7 +167,7 @@ class TestAgreementStatusAutomaticTransitionTask(PartnersTestBaseClass):
                           [((country.name, ), {}) for country in self.tenant_countries])
 
     def test_make_agreement_status_automatic_transitions_no_agreements(self, mock_db_connection, mock_logger):
-        '''Exercise _make_agreement_status_automatic_transitions() for the simple case when there's no agreements.'''
+        """Exercise _make_agreement_status_automatic_transitions() for the simple case when there's no agreements."""
         # Don't need to mock anything extra, just call the function.
         etools.applications.partners.tasks._make_agreement_status_automatic_transitions(self.country_name)
 
@@ -191,7 +191,7 @@ class TestAgreementStatusAutomaticTransitionTask(PartnersTestBaseClass):
             MockAgreementValid,
             mock_db_connection,
             mock_logger):
-        '''Exercise _make_agreement_status_automatic_transitions() when all agreements are valid.'''
+        """Exercise _make_agreement_status_automatic_transitions() when all agreements are valid."""
         end_date = datetime.date.today() - datetime.timedelta(days=2)
         # Agreements sort by oldest last, so I make sure my list here is ordered in the same way as they'll be
         # pulled out of the database.
@@ -241,8 +241,8 @@ class TestAgreementStatusAutomaticTransitionTask(PartnersTestBaseClass):
             MockAgreementValid,
             mock_db_connection,
             mock_logger):
-        '''Exercise _make_agreement_status_automatic_transitions()
-        when all agreements are valid.'''
+        """Exercise _make_agreement_status_automatic_transitions()
+        when all agreements are valid."""
         end_date = datetime.date.today() - datetime.timedelta(days=2)
         # Agreements sort by oldest last, so I make sure my list here
         # is ordered in the same way as they'll be pulled out of the database.
@@ -319,7 +319,7 @@ class TestAgreementStatusAutomaticTransitionTask(PartnersTestBaseClass):
             MockAgreementValid,
             mock_db_connection,
             mock_logger):
-        '''Exercise _make_agreement_status_automatic_transitions() when some agreements are valid and some aren't.'''
+        """Exercise _make_agreement_status_automatic_transitions() when some agreements are valid and some aren't."""
         end_date = datetime.date.today() - datetime.timedelta(days=2)
         # Agreements sort by oldest last, so I make sure my list here is ordered in the same way as they'll be
         # pulled out of the database.
@@ -338,10 +338,10 @@ class TestAgreementStatusAutomaticTransitionTask(PartnersTestBaseClass):
         AgreementFactory(status=Agreement.SIGNED, end=end_date, agreement_type=Agreement.SSFA)
 
         def mock_agreement_valid_class_side_effect(*args, **kwargs):
-            '''Side effect for my mock AgreementValid() that gets called
+            """Side effect for my mock AgreementValid() that gets called
             each time my mock AgreementValid() class is instantiated.
             It gives me the opportunity to modify one of the agreements passed.
-            '''
+            """
             if args and hasattr(args[0], 'id'):
                 if args[0].id == agreements[1].id:
                     # We'll pretend the second agreement made a status
@@ -386,8 +386,8 @@ class TestAgreementStatusAutomaticTransitionTask(PartnersTestBaseClass):
             MockAgreementValid,
             mock_db_connection,
             mock_logger):
-        '''Exercise _make_agreement_status_automatic_transitions()
-        when some agreements are valid and some aren't.'''
+        """Exercise _make_agreement_status_automatic_transitions()
+        when some agreements are valid and some aren't."""
         end_date = datetime.date.today() - datetime.timedelta(days=2)
         # Agreements sort by oldest last, so I make sure my list
         # here is ordered in the same way as they'll be
@@ -423,10 +423,10 @@ class TestAgreementStatusAutomaticTransitionTask(PartnersTestBaseClass):
         )
 
         def mock_agreement_valid_class_side_effect(*args, **kwargs):
-            '''Side effect for my mock AgreementValid() that gets called
+            """Side effect for my mock AgreementValid() that gets called
             each time my mock AgreementValid() class is instantiated.
             It gives me the opportunity to modify one of the agreements passed.
-            '''
+            """
             if args and hasattr(args[0], 'id'):
                 if args[0].id == agreements[1].id:
                     # We'll pretend the second agreement made a status
@@ -482,14 +482,14 @@ class TestAgreementStatusAutomaticTransitionTask(PartnersTestBaseClass):
 @mock.patch('etools.applications.partners.tasks.logger', spec=['info', 'error'])
 @mock.patch('etools.applications.partners.tasks.connection', spec=['set_tenant'])
 class TestInterventionStatusAutomaticTransitionTask(PartnersTestBaseClass):
-    '''Exercises the agreement_status_automatic_transition() task, including the task itself and its core function
+    """Exercises the agreement_status_automatic_transition() task, including the task itself and its core function
     _make_agreement_status_automatic_transitions().
-    '''
+    """
     @mock.patch('etools.applications.partners.tasks._make_intervention_status_automatic_transitions')
     @mock.patch('etools.applications.partners.tasks.Country', spec='objects')
     def test_task(self, MockCountry, mock_make_intervention_status_automatic_transitions, mock_db_connection,
                   mock_logger):
-        '''Verify that the task executes once for each tenant country'''
+        """Verify that the task executes once for each tenant country"""
         self._configure_mock_country(MockCountry)
 
         # I'm done mocking, it's time to call the task.
@@ -504,8 +504,8 @@ class TestInterventionStatusAutomaticTransitionTask(PartnersTestBaseClass):
                           [((country.name, ), {}) for country in self.tenant_countries])
 
     def test_make_intervention_status_automatic_transitions_no_interventions(self, mock_db_connection, mock_logger):
-        '''Exercise _make_intervention_status_automatic_transitions() for the simple case when there's no
-        interventions.'''
+        """Exercise _make_intervention_status_automatic_transitions() for the simple case when there's no
+        interventions."""
         # Don't need to mock anything extra, just call the function.
         etools.applications.partners.tasks._make_intervention_status_automatic_transitions(self.country_name)
 
@@ -529,7 +529,7 @@ class TestInterventionStatusAutomaticTransitionTask(PartnersTestBaseClass):
             MockInterventionValid,
             mock_db_connection,
             mock_logger):
-        '''Exercise _make_intervention_status_automatic_transitions() when all interventions are valid'''
+        """Exercise _make_intervention_status_automatic_transitions() when all interventions are valid"""
         # Make some interventions that are active that ended yesterday. (The task looks for such interventions.)
         end_date = datetime.date.today() - datetime.timedelta(days=1)
         # Interventions sort by oldest last, so I make sure my list here is ordered in the same way as they'll be
@@ -595,9 +595,9 @@ class TestInterventionStatusAutomaticTransitionTask(PartnersTestBaseClass):
             MockInterventionValid,
             mock_db_connection,
             mock_logger):
-        '''Exercise _make_intervention_status_automatic_transitions() when only some interventions are valid, but
+        """Exercise _make_intervention_status_automatic_transitions() when only some interventions are valid, but
         not all of them.
-        '''
+        """
         # Make some interventions that are active that ended yesterday. (The task looks for such interventions.)
         end_date = datetime.date.today() - datetime.timedelta(days=1)
         # Interventions sort by oldest last, so I make sure my list here is ordered in the same way as they'll be
@@ -632,9 +632,9 @@ class TestInterventionStatusAutomaticTransitionTask(PartnersTestBaseClass):
                                           actual_amt=_make_decimal(i + 1), total_amt=_make_decimal(i))
 
         def mock_intervention_valid_class_side_effect(*args, **kwargs):
-            '''Side effect for my mock InterventionValid() that gets called each time my mock InterventionValid() class
+            """Side effect for my mock InterventionValid() that gets called each time my mock InterventionValid() class
             is instantiated. It gives me the opportunity to modify one of the agreements passed.
-            '''
+            """
             if args and hasattr(args[0], 'id'):
                 if args[0].id == interventions[1].id:
                     # We'll pretend the second intervention made a status transition
@@ -679,13 +679,13 @@ class TestInterventionStatusAutomaticTransitionTask(PartnersTestBaseClass):
 @mock.patch('etools.applications.partners.tasks.logger', spec=['info'])
 @mock.patch('etools.applications.partners.tasks.connection', spec=['set_tenant'])
 class TestNotifyOfNoFrsSignedInterventionsTask(PartnersTestBaseClass):
-    '''Exercises the intervention_notification_signed_no_frs() task, including the task itself and its core function
+    """Exercises the intervention_notification_signed_no_frs() task, including the task itself and its core function
     _notify_of_signed_interventions_with_no_frs().
-    '''
+    """
     @mock.patch('etools.applications.partners.tasks._notify_of_signed_interventions_with_no_frs')
     @mock.patch('etools.applications.partners.tasks.Country', spec='objects')
     def test_task(self, MockCountry, mock_notify_of_signed_interventions_with_no_frs, mock_db_connection, mock_logger):
-        '''Verify that the task executes once for each tenant country'''
+        """Verify that the task executes once for each tenant country"""
         self._configure_mock_country(MockCountry)
 
         # I'm done mocking, it's time to call the task.
@@ -700,7 +700,7 @@ class TestNotifyOfNoFrsSignedInterventionsTask(PartnersTestBaseClass):
                           [((country.name, ), {}) for country in self.tenant_countries])
 
     def test_notify_of_signed_interventions_no_interventions(self, mock_db_connection, mock_logger):
-        '''Exercise _notify_of_signed_interventions_with_no_frs() for the simple case when there's no interventions.'''
+        """Exercise _notify_of_signed_interventions_with_no_frs() for the simple case when there's no interventions."""
         # Don't need to mock anything extra, just call the function.
         etools.applications.partners.tasks._notify_of_signed_interventions_with_no_frs(self.country_name)
 
@@ -716,7 +716,7 @@ class TestNotifyOfNoFrsSignedInterventionsTask(PartnersTestBaseClass):
             mock_notification_model,
             mock_db_connection,
             mock_logger):
-        '''Exercise _notify_of_signed_interventions_with_no_frs() when it has some interventions to work on'''
+        """Exercise _notify_of_signed_interventions_with_no_frs() when it has some interventions to work on"""
         # Create some interventions to work with. Interventions sort by oldest last, so I make sure my list here is
         # ordered in the same way as they'll be pulled out of the database.
         start_on = datetime.date.today() + datetime.timedelta(days=5)
@@ -763,14 +763,14 @@ class TestNotifyOfNoFrsSignedInterventionsTask(PartnersTestBaseClass):
 @mock.patch('etools.applications.partners.tasks.logger', spec=['info'])
 @mock.patch('etools.applications.partners.tasks.connection', spec=['set_tenant'])
 class TestNotifyOfMismatchedEndedInterventionsTask(PartnersTestBaseClass):
-    '''Exercises the intervention_notification_ended_fr_outstanding() task, including the task itself and its core
+    """Exercises the intervention_notification_ended_fr_outstanding() task, including the task itself and its core
     function _notify_of_ended_interventions_with_mismatched_frs().
-    '''
+    """
     @mock.patch('etools.applications.partners.tasks._notify_of_ended_interventions_with_mismatched_frs')
     @mock.patch('etools.applications.partners.tasks.Country', spec='objects')
     def test_task(self, MockCountry, mock_notify_of_ended_interventions_with_mismatched_frs, mock_db_connection,
                   mock_logger):
-        '''Verify that the task executes once for each tenant country'''
+        """Verify that the task executes once for each tenant country"""
         self._configure_mock_country(MockCountry)
 
         # I'm done mocking, it's time to call the task.
@@ -785,7 +785,7 @@ class TestNotifyOfMismatchedEndedInterventionsTask(PartnersTestBaseClass):
                           [((country.name, ), {}) for country in self.tenant_countries])
 
     def test_notify_of_ended_interventions_no_interventions(self, mock_db_connection, mock_logger):
-        '''Exercise _notify_of_ended_interventions_with_mismatched_frs() for the simple case of no interventions.'''
+        """Exercise _notify_of_ended_interventions_with_mismatched_frs() for the simple case of no interventions."""
         # Don't need to mock anything extra, just call the function.
         etools.applications.partners.tasks._notify_of_ended_interventions_with_mismatched_frs(self.country_name)
 
@@ -800,7 +800,7 @@ class TestNotifyOfMismatchedEndedInterventionsTask(PartnersTestBaseClass):
             mock_notification_model,
             mock_db_connection,
             mock_logger):
-        '''Exercise _notify_of_ended_interventions_with_mismatched_frs() when it has some interventions to work on'''
+        """Exercise _notify_of_ended_interventions_with_mismatched_frs() when it has some interventions to work on"""
         # Create some interventions to work with. Interventions sort by oldest last, so I make sure my list here is
         # ordered in the same way as they'll be pulled out of the database.
         interventions = [InterventionFactory(status=Intervention.ENDED, created=_make_past_datetime(i))
@@ -855,13 +855,13 @@ class TestNotifyOfMismatchedEndedInterventionsTask(PartnersTestBaseClass):
 @mock.patch('etools.applications.partners.tasks.logger', spec=['info'])
 @mock.patch('etools.applications.partners.tasks.connection', spec=['set_tenant'])
 class TestNotifyOfInterventionsEndingSoon(PartnersTestBaseClass):
-    '''Exercises the intervention_notification_ending() task, including the task itself and its core
+    """Exercises the intervention_notification_ending() task, including the task itself and its core
     function _notify_interventions_ending_soon().
-    '''
+    """
     @mock.patch('etools.applications.partners.tasks._notify_interventions_ending_soon')
     @mock.patch('etools.applications.partners.tasks.Country', spec='objects')
     def test_task(self, MockCountry, mock_notify_interventions_ending_soon, mock_db_connection, mock_logger):
-        '''Verify that the task executes once for each tenant country'''
+        """Verify that the task executes once for each tenant country"""
         self._configure_mock_country(MockCountry)
 
         # I'm done mocking, it's time to call the task.
@@ -876,7 +876,7 @@ class TestNotifyOfInterventionsEndingSoon(PartnersTestBaseClass):
                           [((country.name, ), {}) for country in self.tenant_countries])
 
     def test_notify_interventions_ending_soon_no_interventions(self, mock_db_connection, mock_logger):
-        '''Exercise _notify_interventions_ending_soon() for the simple case of no interventions.'''
+        """Exercise _notify_interventions_ending_soon() for the simple case of no interventions."""
         # Don't need to mock anything extra, just call the function.
         etools.applications.partners.tasks._notify_interventions_ending_soon(self.country_name)
 
@@ -891,10 +891,10 @@ class TestNotifyOfInterventionsEndingSoon(PartnersTestBaseClass):
             mock_notification_model,
             mock_db_connection,
             mock_logger):
-        '''Exercise _notify_interventions_ending_soon() when there are interventions for it to work on.
+        """Exercise _notify_interventions_ending_soon() when there are interventions for it to work on.
 
         That task specifically works on interventions that will end in 15 and 30 days.
-        '''
+        """
         today = datetime.date.today()
 
         # Create some interventions to work with. Interventions sort by oldest last, so I make sure my list here is

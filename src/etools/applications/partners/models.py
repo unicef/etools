@@ -1273,10 +1273,10 @@ class Agreement(TimeStampedModel):
         self.agreement_number = self.reference_number
 
     def update_related_interventions(self, oldself, **kwargs):
-        '''
+        """
         When suspending or terminating an agreement we need to suspend or terminate all interventions related
         this should only be called in a transaction with agreement save
-        '''
+        """
 
         if oldself and oldself.status != self.status and \
                 self.status in [Agreement.SUSPENDED, Agreement.TERMINATED]:
@@ -1375,9 +1375,9 @@ class AgreementAmendmentManager(models.Manager):
 
 
 class AgreementAmendment(TimeStampedModel):
-    '''
+    """
     Represents an amendment to an agreement
-    '''
+    """
     IP_NAME = 'Change IP name'
     AUTHORIZED_OFFICER = 'Change authorized officer'
     BANKING_INFO = 'Change banking info'

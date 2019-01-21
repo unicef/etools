@@ -19,10 +19,10 @@ from etools.applications.users.tests.factories import GroupFactory, UserFactory
 
 
 class URLsTestCase(URLAssertionMixin, SimpleTestCase):
-    '''Simple test case to verify URL reversal'''
+    """Simple test case to verify URL reversal"""
 
     def test_urls(self):
-        '''Verify URL pattern names generate the URLs we expect them to.'''
+        """Verify URL pattern names generate the URLs we expect them to."""
         names_and_paths = (
             ('agreement-list', '', {}),
             ('agreement-detail', '1/', {'pk': 1}),
