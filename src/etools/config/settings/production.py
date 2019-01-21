@@ -45,21 +45,12 @@ if AZURE_ACCOUNT_NAME and AZURE_ACCOUNT_KEY and AZURE_CONTAINER:
     DEFAULT_FILE_STORAGE = 'etools.libraries.azure_storage_backend.EToolsAzureStorage'
     from storages.backends.azure_storage import AzureStorage
     storage = AzureStorage()
-    with storage.open('saml/certs/saml.key') as key, \
-            storage.open('saml/certs/sp.crt') as crt, \
-            storage.open('saml/federationmetadata.xml') as meta, \
-            storage.open('keys/jwt/key.pem') as jwt_key, \
+    with storage.open('keys/jwt/key.pem') as jwt_key, \
             storage.open('keys/jwt/certificate.pem') as jwt_cert:
 
-        with open(os.path.join(CONFIG_ROOT, 'saml/certs/saml.key'), 'wb+') as new_key, \
-                open(os.path.join(CONFIG_ROOT, 'saml/certs/sp.crt'), 'wb+') as new_crt, \
-                open(os.path.join(CONFIG_ROOT, 'keys/jwt/key.pem'), 'wb+') as new_jwt_key, \
-                open(os.path.join(CONFIG_ROOT, 'keys/jwt/certificate.pem'), 'wb+') as new_jwt_cert, \
-                open(os.path.join(CONFIG_ROOT, 'saml/federationmetadata.xml'), 'wb+') as new_meta:
+        with open(os.path.join(CONFIG_ROOT, 'keys/jwt/key.pem'), 'wb+') as new_jwt_key, \
+                open(os.path.join(CONFIG_ROOT, 'keys/jwt/certificate.pem'), 'wb+') as new_jwt_cert:
 
-            new_key.write(key.read())
-            new_crt.write(crt.read())
-            new_meta.write(meta.read())
             new_jwt_key.write(jwt_key.read())
             new_jwt_cert.write(jwt_cert.read())
 
