@@ -4,7 +4,7 @@ from django.utils.translation import ugettext_lazy as _
 
 from model_utils.models import TimeStampedModel
 
-from etools.applications.utils.common.models.mixins import ModelHavingTenantRelationsMixin
+from etools.libraries.tenant_support.models import ModelHavingTenantRelationsMixin
 
 
 class BaseFirmManager(models.Manager):
@@ -77,8 +77,7 @@ class BaseFirm(TimeStampedModel, models.Model):
         return self.vendor_number,
 
 
-class BaseStaffMember(ModelHavingTenantRelationsMixin,
-                      models.Model):
+class BaseStaffMember(ModelHavingTenantRelationsMixin, models.Model):
     user = models.OneToOneField(
         settings.AUTH_USER_MODEL,
         verbose_name=_('User'),

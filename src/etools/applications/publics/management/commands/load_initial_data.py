@@ -4,8 +4,14 @@ from django.contrib.auth.models import Group
 from django.core.management.base import BaseCommand
 from django.db.transaction import atomic
 
-from etools.applications.publics.models import (AirlineCompany, BusinessArea, BusinessRegion,
-                                                Country, Currency, TravelExpenseType,)
+from etools.applications.publics.models import (
+    AirlineCompany,
+    BusinessArea,
+    BusinessRegion,
+    Country,
+    Currency,
+    TravelExpenseType,
+)
 
 
 # DEVELOPMENT CODE -

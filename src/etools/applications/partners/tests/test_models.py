@@ -10,7 +10,6 @@ from django.utils import timezone
 
 from freezegun import freeze_time
 from mock import Mock, patch
-from unicef_locations.tests.factories import LocationFactory
 
 from etools.applications.audit.models import Engagement
 from etools.applications.audit.tests.factories import AuditFactory, SpecialAuditFactory, SpotCheckFactory
@@ -523,31 +522,17 @@ class TestPartnerOrganizationModel(BaseTenantTestCase):
         self.assertEqual(self.partner_organization.hact_values['spot_checks']['completed']['q4'], 0)
 
     def test_spot_checks_update_travel_activity(self):
-        tz = timezone.get_default_timezone()
         self.assertEqual(self.partner_organization.hact_values['spot_checks']['completed']['total'], 0)
-        traveller = UserFactory()
-        travel = TravelFactory(
-            traveler=traveller,
-            status=Travel.COMPLETED,
-            end_date=datetime.datetime(datetime.datetime.today().year, 9, 1, tzinfo=tz)
-        )
-        TravelActivityFactory(
-            travels=[travel],
-            primary_traveler=traveller,
-            travel_type=TravelType.SPOT_CHECK,
-            partner=self.partner_organization,
-        )
-
         SpotCheckFactory(
             partner=self.partner_organization,
             status=Engagement.FINAL,
             date_of_draft_report_to_unicef=datetime.datetime(datetime.datetime.today().year, 4, 1)
         )
         self.partner_organization.spot_checks()
-        self.assertEqual(self.partner_organization.hact_values['spot_checks']['completed']['total'], 2)
+        self.assertEqual(self.partner_organization.hact_values['spot_checks']['completed']['total'], 1)
         self.assertEqual(self.partner_organization.hact_values['spot_checks']['completed']['q1'], 0)
         self.assertEqual(self.partner_organization.hact_values['spot_checks']['completed']['q2'], 1)
-        self.assertEqual(self.partner_organization.hact_values['spot_checks']['completed']['q3'], 1)
+        self.assertEqual(self.partner_organization.hact_values['spot_checks']['completed']['q3'], 0)
         self.assertEqual(self.partner_organization.hact_values['spot_checks']['completed']['q4'], 0)
 
     @freeze_time("2013-12-26")
@@ -863,31 +848,6 @@ class TestInterventionModel(BaseTenantTestCase):
         self.assertCountEqual(intervention.all_lower_results, [
             lower_result_1,
             lower_result_2,
-        ])
-
-    def test_intervention_locations_empty(self):
-        self.assertFalse(self.intervention.intervention_locations())
-
-    def test_intervention_locations(self):
-        intervention = InterventionFactory()
-        link = InterventionResultLinkFactory(
-            intervention=intervention,
-        )
-        lower_result_1 = LowerResultFactory(result_link=link)
-        location_1 = LocationFactory()
-        applied_indicator_1 = AppliedIndicatorFactory(
-            lower_result=lower_result_1
-        )
-        applied_indicator_1.locations.add(location_1)
-        lower_result_2 = LowerResultFactory(result_link=link)
-        location_2 = LocationFactory()
-        applied_indicator_2 = AppliedIndicatorFactory(
-            lower_result=lower_result_2
-        )
-        applied_indicator_2.locations.add(location_2)
-        self.assertCountEqual(intervention.intervention_locations(), [
-            location_1,
-            location_2,
         ])
 
     def test_intervention_clusters_empty(self):

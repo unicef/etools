@@ -30,5 +30,5 @@ class ActionPointCSVRenderer(ListSeperatorCSVRenderMixin, FriendlyCSVRenderer):
         'related_ref': _('Related Document No.'),
         'related_object_str': _('Task/Trip Activity Reference No.'),
         'related_object_url': _('Related Document URL'),
-        'action_taken': _('Action Taken')
+        'action_taken': _('Actions Taken')
     }

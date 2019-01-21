@@ -381,9 +381,6 @@ class LowerResult(TimeStampedModel):
             )
         super().save(**kwargs)
 
-        # reset certain caches
-        self.result_link.intervention.clear_caches()
-
 
 class Unit(models.Model):
     """
@@ -538,6 +535,10 @@ class DisaggregationValue(TimeStampedModel):
         return "Disaggregation Value {} -> {}".format(self.disaggregation, self.value)
 
 
+def indicator_default_dict():
+    return {'d': 1, 'v': 0}
+
+
 class AppliedIndicator(TimeStampedModel):
     """
        Applied Indicator: a contextualized Indicator (an indicator with a target,
@@ -611,8 +612,8 @@ class AppliedIndicator(TimeStampedModel):
         blank=True,
     )
 
-    target = JSONField(default=dict([('d', 1), ('v', 0)]))
-    baseline = JSONField(default=dict([('d', 1), ('v', 0)]), null=True)
+    target = JSONField(default=indicator_default_dict)
+    baseline = JSONField(default=indicator_default_dict, null=True)
 
     assumptions = models.TextField(
         verbose_name=_("Assumptions"),
@@ -673,9 +674,6 @@ class AppliedIndicator(TimeStampedModel):
 
     def save(self, *args, **kwargs):
         super().save(*args, **kwargs)
-
-        # reset certain caches
-        self.lower_result.result_link.intervention.clear_caches()
 
 
 class Indicator(TimeStampedModel):

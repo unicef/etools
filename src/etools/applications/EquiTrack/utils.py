@@ -1,19 +1,11 @@
-"""
-Project wide base classes and utility functions for apps
-"""
 import codecs
 import csv
 import hashlib
-import json
 from datetime import datetime
 
 from django.conf import settings
 from django.contrib.sites.models import Site
 from django.core.cache import cache
-from django.db import connection
-from django.db.models import Q
-
-import requests
 
 
 def get_environment():
@@ -22,49 +14,6 @@ def get_environment():
 
 def get_current_site():
     return Site.objects.get_current()
-
-
-def set_country(user, request):
-    from etools.applications.users.models import Country
-
-    country = request.GET.get(settings.SCHEMA_OVERRIDE_PARAM, None)
-    if country:
-        try:
-            country = Country.objects.get(
-                Q(name=country) |
-                Q(country_short_code=country) |
-                Q(schema_name=country)
-            )
-            if country in user.profile.countries_available.all():
-                country = country
-            else:
-                country = None
-        except Country.DoesNotExist:
-            country = None
-
-    request.tenant = country or user.profile.country or user.profile.country_override
-    connection.set_tenant(request.tenant)
-
-
-def get_data_from_insight(endpoint, data={}):
-    url = '{}/{}'.format(
-        settings.VISION_URL,
-        endpoint
-    ).format(**data)
-
-    response = requests.get(
-        url,
-        headers={'Content-Type': 'application/json'},
-        auth=(settings.VISION_USER, settings.VISION_PASSWORD),
-        verify=False
-    )
-    if response.status_code != 200:
-        return False, 'Loading data from Vision Failed, status {}'.format(response.status_code)
-    try:
-        result = json.loads(response.json())
-    except ValueError:
-        return False, 'Loading data from Vision Failed, no valid response returned for data: {}'.format(data)
-    return True, result
 
 
 class Vividict(dict):

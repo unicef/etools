@@ -1,7 +1,10 @@
+import datetime
 
+from django.utils import timezone
 
 from etools.applications.EquiTrack.tests.cases import BaseTenantTestCase
-from etools.applications.t2f.tests.factories import InvoiceFactory, ItineraryItemFactory, TravelFactory
+from etools.applications.t2f.models import TravelType
+from etools.applications.t2f.tests.factories import ItineraryItemFactory, TravelActivityFactory, TravelFactory
 
 
 class TestStrUnicode(BaseTenantTestCase):
@@ -14,6 +17,29 @@ class TestStrUnicode(BaseTenantTestCase):
         instance = TravelFactory(reference_number=u'tv\xe5')
         self.assertEqual(str(instance), u'tv\xe5')
 
+    def test_travel_activity(self):
+        tz = timezone.get_default_timezone()
+        travel = TravelFactory()
+        activity_date_none = TravelActivityFactory(
+            travel_type=TravelType.SPOT_CHECK,
+            date=None,
+        )
+        activity_date_none.travels.add(travel)
+        self.assertEqual(
+            str(activity_date_none),
+            f"{TravelType.SPOT_CHECK} - None"
+        )
+
+        activity = TravelActivityFactory(
+            travel_type=TravelType.SPOT_CHECK,
+            date=datetime.datetime(2001, 1, 1, 12, 10, 10, 0, tzinfo=tz),
+        )
+        activity.travels.add(travel)
+        self.assertEqual(
+            str(activity),
+            f"{TravelType.SPOT_CHECK} - 2001-01-01 12:10:10+00:00",
+        )
+
     def test_itinerary_item(self):
         travel = TravelFactory()
         instance = ItineraryItemFactory(origin='here', destination='there', travel=travel)
@@ -25,9 +51,18 @@ class TestStrUnicode(BaseTenantTestCase):
         instance = ItineraryItemFactory(origin=u'Przemy\u015bl', destination=u'G\xf6teborg', travel=travel)
         self.assertTrue(str(instance).endswith(u'Przemy\u015bl - G\xf6teborg'))
 
-    def test_invoice(self):
-        instance = InvoiceFactory(business_area='xyz')
-        self.assertTrue(str(instance).startswith(u'xyz/'))
 
-        instance = InvoiceFactory(business_area=u'G\xf6teborg')
-        self.assertTrue(str(instance).startswith(u'G\xf6teborg/'))
+class TestTravelActivity(BaseTenantTestCase):
+    def get_reference_number(self):
+        travel = TravelFactory()
+        activity = TravelActivityFactory()
+        self.assertIsNone(activity.get_reference_number())
+
+        activity.travels.add(travel)
+        self.assertEqual(
+            activity.get_reference_number(),
+            travel.reference_number,
+        )
+
+        activity._reference_number = "123"
+        self.assertEqual(activity.get_reference_number(), "123")

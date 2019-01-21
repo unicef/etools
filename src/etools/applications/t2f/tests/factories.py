@@ -1,10 +1,9 @@
-
 from django.utils import timezone
 
 import factory
 from factory import fuzzy
-
 from unicef_locations.tests.factories import LocationFactory
+
 from etools.applications.partners.tests.factories import InterventionFactory
 from etools.applications.publics.tests.factories import (
     PublicsAirlineCompanyFactory,
@@ -21,6 +20,12 @@ from etools.applications.users.tests.factories import OfficeFactory, UserFactory
 
 _FUZZY_START_DATE = timezone.datetime(timezone.now().year, 1, 1, tzinfo=timezone.now().tzinfo)
 _FUZZY_END_DATE = timezone.datetime(timezone.now().year, 12, 31, tzinfo=timezone.now().tzinfo)
+_FUZZY_NOW_DATE = timezone.datetime(
+    timezone.now().year,
+    timezone.now().month,
+    timezone.now().day,
+    tzinfo=timezone.now().tzinfo
+)
 
 
 class FuzzyTravelType(factory.fuzzy.BaseFuzzyAttribute):
@@ -59,8 +64,14 @@ class TravelActivityFactory(factory.django.DjangoModelFactory):
 class ItineraryItemFactory(factory.DjangoModelFactory):
     origin = fuzzy.FuzzyText(length=32)
     destination = fuzzy.FuzzyText(length=32)
-    departure_date = fuzzy.FuzzyDateTime(start_dt=_FUZZY_START_DATE, end_dt=timezone.now())
-    arrival_date = fuzzy.FuzzyDateTime(start_dt=timezone.now(), end_dt=_FUZZY_END_DATE)
+    departure_date = fuzzy.FuzzyDateTime(
+        start_dt=_FUZZY_START_DATE,
+        end_dt=_FUZZY_NOW_DATE,
+    )
+    arrival_date = fuzzy.FuzzyDateTime(
+        start_dt=_FUZZY_NOW_DATE,
+        end_dt=_FUZZY_END_DATE,
+    )
     dsa_region = factory.SubFactory(PublicsDSARegionFactory)
     overnight_travel = False
     mode_of_travel = models.ModeOfTravel.BOAT
@@ -105,22 +116,19 @@ class CostAssignmentFactory(factory.DjangoModelFactory):
         model = models.CostAssignment
 
 
-class ClearanceFactory(factory.DjangoModelFactory):
-    medical_clearance = True
-    security_clearance = True
-    security_course = True
-
-    class Meta:
-        model = models.Clearances
-
-
 class TravelFactory(factory.DjangoModelFactory):
     traveler = factory.SubFactory(UserFactory)
     supervisor = factory.SubFactory(UserFactory)
     office = factory.SubFactory(OfficeFactory)
     section = factory.SubFactory(SectionFactory)
-    start_date = fuzzy.FuzzyDateTime(start_dt=_FUZZY_START_DATE, end_dt=timezone.now())
-    end_date = fuzzy.FuzzyDateTime(start_dt=timezone.now(), end_dt=_FUZZY_END_DATE)
+    start_date = fuzzy.FuzzyDateTime(
+        start_dt=_FUZZY_START_DATE,
+        end_dt=_FUZZY_NOW_DATE,
+    )
+    end_date = fuzzy.FuzzyDateTime(
+        start_dt=_FUZZY_NOW_DATE,
+        end_dt=_FUZZY_END_DATE,
+    )
     purpose = factory.Sequence(lambda n: 'Purpose #{}'.format(n))
     international_travel = False
     ta_required = True
@@ -132,8 +140,6 @@ class TravelFactory(factory.DjangoModelFactory):
     expenses = factory.RelatedFactory(ExpenseFactory, 'travel')
     deductions = factory.RelatedFactory(DeductionFactory, 'travel')
     cost_assignments = factory.RelatedFactory(CostAssignmentFactory, 'travel')
-    clearances = factory.RelatedFactory(ClearanceFactory, 'travel')
-    # action_points = factory.RelatedFactory(ActionPointFactory, 'travel')
 
     @factory.post_generation
     def populate_activities(self, create, extracted, **kwargs):
@@ -142,30 +148,6 @@ class TravelFactory(factory.DjangoModelFactory):
 
     class Meta:
         model = models.Travel
-
-
-class InvoiceFactory(factory.DjangoModelFactory):
-    travel = factory.SubFactory(TravelFactory)
-    business_area = fuzzy.FuzzyText(length=12)
-    vendor_number = fuzzy.FuzzyText(length=12)
-    currency = factory.SubFactory(PublicsCurrencyFactory)
-    amount = fuzzy.FuzzyDecimal(0, 1000)
-    status = models.Invoice.PENDING
-    messages = []
-
-    class Meta:
-        model = models.Invoice
-
-
-class InvoiceItemFactory(factory.DjangoModelFactory):
-    invoice = factory.SubFactory(InvoiceFactory)
-    wbs = factory.SubFactory(PublicsWBSFactory)
-    grant = factory.SubFactory(PublicsGrantFactory)
-    fund = factory.SubFactory(PublicsFundFactory)
-    amount = fuzzy.FuzzyDecimal(0, 250)
-
-    class Meta:
-        model = models.InvoiceItem
 
 
 class FuzzyTravelStatus(factory.fuzzy.BaseFuzzyAttribute):

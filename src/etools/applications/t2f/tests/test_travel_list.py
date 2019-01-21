@@ -1,16 +1,15 @@
-
 import json
 import logging
 
-from django.urls import NoReverseMatch, reverse
 from django.db import connection
+from django.urls import NoReverseMatch, reverse
 
 from freezegun import freeze_time
 from rest_framework import status
+from unicef_locations.tests.factories import LocationFactory
 
 from etools.applications.EquiTrack.tests.cases import BaseTenantTestCase
 from etools.applications.EquiTrack.tests.mixins import URLAssertionMixin
-from unicef_locations.tests.factories import LocationFactory
 from etools.applications.publics.models import DSARegion
 from etools.applications.publics.tests.factories import PublicsCurrencyFactory, PublicsWBSFactory
 from etools.applications.reports.tests.factories import ResultFactory
@@ -35,11 +34,10 @@ class TravelList(URLAssertionMixin, BaseTenantTestCase):
         names_and_paths = (
             ('index', '', {}),
             ('state_change', 'save_and_submit/', {'transition_name': 'save_and_submit'}),
-            ('state_change', 'mark_as_completed/', {'transition_name': 'mark_as_completed'}),
+            ('state_change', 'mark_as_completed/', {'transition_name': Travel.COMPLETE}),
             ('activity_export', 'export/', {}),
             ('finance_export', 'finance-export/', {}),
             ('travel_admin_export', 'travel-admin-export/', {}),
-            ('invoice_export', 'invoice-export/', {}),
             ('activities', 'activities/1/', {'partner_organization_pk': 1}),
             ('activities-intervention', 'activities/partnership/1/', {'partnership_pk': 1}),
             ('dashboard', 'dashboard', {}),
@@ -299,9 +297,6 @@ class TravelList(URLAssertionMixin, BaseTenantTestCase):
                                       'grant': grant.id,
                                       'fund': fund.id,
                                       'share': '100'}],
-                'clearances': {'medical_clearance': 'requested',
-                               'security_clearance': 'requested',
-                               'security_course': 'requested'},
                 'ta_required': True,
                 'international_travel': False,
                 'mode_of_travel': [ModeOfTravel.BOAT],
@@ -312,12 +307,87 @@ class TravelList(URLAssertionMixin, BaseTenantTestCase):
                 'estimated_travel_cost': '123',
                 'currency': currency.id,
                 'purpose': 'Purpose',
-                'additional_note': 'Notes',
-                'medical_clearance': 'requested',
-                'security_clearance': 'requested',
-                'security_course': 'requested'}
+                'additional_note': 'Notes'}
 
         response = self.forced_auth_req('post', reverse('t2f:travels:list:index'),
                                         data=data, user=self.unicef_staff)
         response_json = json.loads(response.rendered_content)
         self.assertEqual(len(response_json['itinerary']), 1)
+
+
+class TestActionPointDashboardViewSet(BaseTenantTestCase):
+    @classmethod
+    def setUpTestData(cls):
+        cls.traveler = UserFactory()
+        cls.unicef_staff = UserFactory(is_staff=True)
+        cls.travel = TravelFactory(
+            reference_number=make_travel_reference_number(),
+            traveler=cls.traveler,
+            supervisor=cls.unicef_staff,
+        )
+
+    def test_admin_required(self):
+        response = self.forced_auth_req(
+            'get',
+            reverse('t2f:action_points:dashboard'),
+            user=self.traveler,
+        )
+        self.assertEqual(response.status_code, 403)
+
+    def test_dashboard_action_point_list_view(self):
+        with self.assertNumQueries(6):
+            response = self.forced_auth_req(
+                'get',
+                reverse('t2f:action_points:dashboard'),
+                user=self.unicef_staff,
+                data={
+                    "office_id": self.travel.office.pk,
+                    "year": self.travel.start_date.year,
+                    "months": '{month:02d}'.format(
+                        month=self.travel.start_date.month,
+                    )
+                }
+            )
+
+        response_json = json.loads(response.rendered_content)
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        expected_keys = ['action_points_by_section']
+        self.assertKeysIn(expected_keys, response_json)
+        self.assertEqual(len(response_json['action_points_by_section']), 1)
+
+    def test_dashboard_action_point_list_view_no_section(self):
+        travel = TravelFactory(
+            reference_number=make_travel_reference_number(),
+            traveler=self.traveler,
+            supervisor=self.unicef_staff,
+            section=None,
+        )
+
+        with self.assertNumQueries(6):
+            response = self.forced_auth_req(
+                'get',
+                reverse(
+                    't2f:action_points:dashboard',
+
+                ),
+                user=self.unicef_staff,
+                data={
+                    "office_id": travel.office.id,
+                    "year": travel.start_date.year,
+                    "months": '{month:02d}'.format(
+                        month=travel.start_date.month,
+                    )
+                }
+            )
+
+        response_json = json.loads(response.rendered_content)
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        expected_keys = ['action_points_by_section']
+        self.assertKeysIn(expected_keys, response_json)
+        self.assertEqual(
+            response_json['action_points_by_section'][0]['section_name'],
+            'No Section selected',
+        )
+        self.assertEqual(len(response_json['action_points_by_section']), 1)

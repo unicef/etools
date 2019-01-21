@@ -22,8 +22,9 @@ REST_FRAMEWORK['DEFAULT_AUTHENTICATION_CLASSES'] = (
     'etools.applications.EquiTrack.auth.CsrfExemptSessionAuthentication',
 ) + REST_FRAMEWORK['DEFAULT_AUTHENTICATION_CLASSES']
 
-# No SAML for local dev
 AUTHENTICATION_BACKENDS = (
+    # 'social_core.backends.azuread_b2c.AzureADB2COAuth2',
+    'etools.applications.EquiTrack.auth.CustomAzureADBBCOAuth2',
     'django.contrib.auth.backends.ModelBackend',
 )
 
@@ -52,7 +53,6 @@ if 'test' in sys.argv:
         # These apps contains test models that haven't been created by migration.
         # So on the serialization stage these models do not exist.
         'etools.applications.utils.common',
-        'etools.applications.utils.writable_serializers',
         'etools.applications.permissions2',
     ]
 

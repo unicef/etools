@@ -7,11 +7,19 @@ from django.core.management.base import BaseCommand
 from django.db import connection
 from django.db.transaction import atomic
 
-from _private import populate_permission_matrix
-
 from etools.applications.partners.models import PartnerOrganization
-from etools.applications.publics.models import (AirlineCompany, BusinessArea, BusinessRegion, Country,
-                                                Currency, DSARegion, Fund, Grant, TravelExpenseType, WBS,)
+from etools.applications.publics.models import (
+    AirlineCompany,
+    BusinessArea,
+    BusinessRegion,
+    Country,
+    Currency,
+    DSARegion,
+    Fund,
+    Grant,
+    TravelExpenseType,
+    WBS,
+)
 from etools.applications.users.models import Country as UserCountry, Office
 
 
@@ -39,6 +47,8 @@ class Command(BaseCommand):
     def handle(self, *args, **options):
         username = options['username']
         password = options['password']
+        if isinstance(password, (list, tuple)):
+            password = password[0]
         user = self._get_or_create_admin_user(username, password)
         country = user.profile.country
         connection.set_tenant(country)
@@ -59,7 +69,6 @@ class Command(BaseCommand):
         self._load_countries()
 
         self._load_dsa_regions(country)
-        self._load_permission_matrix()
         self._add_wbs()
         self._add_grants()
         self._add_funds()
@@ -302,13 +311,13 @@ class Command(BaseCommand):
         #         ('Brazilian real', 'BRL'),
         #         ('South African rand', 'ZAR')]
 
-        for iso_4217 in data:
-            name = iso_4217
-            c, created = Currency.objects.get_or_create(iso_4217=iso_4217, defaults={'name': name})
+        for code in data:
+            name = code
+            c, created = Currency.objects.get_or_create(code=code, defaults={'name': name})
             if created:
-                self.stdout.write('Currency created: {} ({})'.format(name, iso_4217))
+                self.stdout.write('Currency created: {} ({})'.format(name, code))
             else:
-                self.stdout.write('Currency found: {} ({})'.format(name, iso_4217))
+                self.stdout.write('Currency found: {} ({})'.format(name, code))
 
     def _load_countries(self):
         countries = [('Afghanistan', '0060', 'Afghanistan', 'AFG', '006', 'AF', 'AFG', 'AFN', '19.11.1946', '31.12.9999', 'THE ISLAMIC STATE OF AFGHANISTAN'),
@@ -772,16 +781,23 @@ class Command(BaseCommand):
             else:
                 valid_to = None
 
-            c, created = Country.objects.get_or_create(name=name,
-                                                       long_name=long_name,
-                                                       vision_code=vision_code,
-                                                       business_area=BusinessArea.objects.filter(code=ba_code).first(),
-                                                       iso_2=iso_2,
-                                                       iso_3=iso_3,
-                                                       currency=Currency.objects.filter(
-                                                           iso_4217=currency_code).first(),
-                                                       valid_from=valid_from,
-                                                       valid_to=valid_to)
+            c, created = Country.objects.get_or_create(
+                vision_code=vision_code,
+                defaults={
+                    "name": name,
+                    "long_name": long_name,
+                    "business_area": BusinessArea.objects.filter(
+                        code=ba_code
+                    ).first(),
+                    "iso_2": iso_2,
+                    "iso_3": iso_3,
+                    "currency": Currency.objects.filter(
+                        code=currency_code
+                    ).first(),
+                    "valid_from": valid_from,
+                    "valid_to": valid_to,
+                }
+            )
             if created:
                 self.stdout.write('Country created: {}'.format(name))
             else:
@@ -813,8 +829,15 @@ class Command(BaseCommand):
         for full_name in user_full_names:
             first_name, last_name = full_name.split()
             username = full_name.replace(' ', '_').lower()
-            u, created = User.objects.get_or_create(username=username, defaults={'first_name': first_name,
-                                                                                 'last_name': last_name})
+            email = f"{username}@example.com"
+            u, created = User.objects.get_or_create(
+                username=username,
+                email=email,
+                defaults={
+                    'first_name': first_name,
+                    'last_name': last_name
+                },
+            )
             if created:
                 self.stdout.write('User created: {} ({})'.format(full_name, username))
             else:
@@ -973,26 +996,34 @@ class Command(BaseCommand):
                 self.stdout.write('Partner found: {}'.format(partner_name))
 
     def _load_dsa_regions(self, country):
-        dsa_region_data = [{'dsa_amount_usd': 300,
-                            'country': Country.objects.filter(name='Hungary').last(),
-                            'room_rate': 120,
-                            'dsa_amount_60plus_usd': 200,
-                            'dsa_amount_60plus_local': 56000,
-                            'dsa_amount_local': 84000,
-                            'finalization_date': datetime.now().date(),
-                            'eff_date': datetime.now().date(),
-                            'area_name': 'Everywhere',
-                            'area_code': country.business_area_code},
-                           {'dsa_amount_usd': 400,
-                            'country': Country.objects.filter(name='Germany').last(),
-                            'room_rate': 150,
-                            'dsa_amount_60plus_usd': 260,
-                            'dsa_amount_60plus_local': 238.68,
-                            'dsa_amount_local': 367.21,
-                            'finalization_date': datetime.now().date(),
-                            'eff_date': datetime.now().date(),
-                            'area_name': 'Everywhere',
-                            'area_code': country.business_area_code}]
+        dsa_region_data = [
+            {
+                'country': Country.objects.filter(name='Hungary').last(),
+                'area_name': 'Everywhere',
+                'area_code': country.business_area_code,
+                # 'user_defined': {
+                #     'dsa_amount_usd': 300,
+                #     'room_rate': 120,
+                #     'dsa_amount_60plus_usd': 200,
+                #     'dsa_amount_60plus_local': 56000,
+                #     'dsa_amount_local': 84000,
+                #     'finalization_date': datetime.now().date(),
+                #     'eff_date': datetime.now().date(),
+                # }
+            }, {
+                'country': Country.objects.filter(name='Germany').last(),
+                'area_name': 'Everywhere',
+                'area_code': country.business_area_code,
+                # 'user_defined': {
+                #     'dsa_amount_usd': 400,
+                #     'room_rate': 150,
+                #     'dsa_amount_60plus_usd': 260,
+                #     'dsa_amount_60plus_local': 238.68,
+                #     'dsa_amount_local': 367.21,
+                #     'finalization_date': datetime.now().date(),
+                #     'eff_date': datetime.now().date(),
+                # }
+            }]
         for data in dsa_region_data:
             name = data.pop('country')
             d, created = DSARegion.objects.get_or_create(country=name, defaults=data)
@@ -1000,9 +1031,6 @@ class Command(BaseCommand):
                 self.stdout.write('DSA Region created: {}'.format(name))
             else:
                 self.stdout.write('DSA Region found: {}'.format(name))
-
-    def _load_permission_matrix(self):
-        populate_permission_matrix(self)
 
     def _add_wbs(self):
         wbs_data_list = [
@@ -1039,7 +1067,9 @@ class Command(BaseCommand):
 
         for data in grant_data_list:
             name = data.pop('name')
+            wbs = data.pop("wbs")
             g, created = Grant.objects.get_or_create(name=name, defaults=data)
+            g.wbs.set([wbs])
             if created:
                 self.stdout.write('Grant created: {}'.format(name))
             else:
@@ -1077,7 +1107,9 @@ class Command(BaseCommand):
 
         for data in fund_data_list:
             name = data.pop('name')
+            grant = data.pop('grant')
             f, created = Fund.objects.get_or_create(name=name, defaults=data)
+            grant.funds.add(f)
             if created:
                 self.stdout.write('Fund created: {}'.format(name))
             else:
@@ -1086,11 +1118,11 @@ class Command(BaseCommand):
     def _add_expense_types(self):
         expense_type_data = [
             {'title': 'Food',
-             'code': 'food'},
+             'vendor_number': 'food'},
             {'title': 'Tickets',
-             'code': 'tickets'},
+             'vendor_number': 'tickets'},
             {'title': 'Fees',
-             'code': 'fees'}
+             'vendor_number': 'fees'}
         ]
 
         for data in expense_type_data:

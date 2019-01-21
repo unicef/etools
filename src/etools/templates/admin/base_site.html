@@ -139,7 +139,7 @@
 {% block title %}{{ title }} | eTools{% endblock %}
 {% block branding %}
 
-    <div id="site-name"><img class="logoimg" src="{{ STATIC_URL }}img/UNICEF_logo_white.png" width="100" style="padding-right: 30px" ><a href="{% url 'admin:index' %}" class="logo">e<span>Tools<span id="test-text">Testing Environment</span></span></a></div>
+    <div id="site-name"><img class="logoimg" src="{{ STATIC_URL }}img/UNICEF_logo_white.png" width="100" style="padding-right: 30px" ><a href="{% url 'admin:index' %}" class="logo">e<span>Tools <span id="test-text"></span></span></a></div>
 {% endblock %}
 {% block usertools %}
         {% if has_permission %}

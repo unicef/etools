@@ -20,8 +20,9 @@ from etools.applications.partners.models import (
     InterventionAttachment,
 )
 from etools.applications.reports.models import CountryProgramme
+from etools.applications.t2f.models import TravelAttachment
 from etools.applications.utils.common.urlresolvers import site_url
-from etools.applications.utils.common.utils import run_on_all_tenants
+from etools.libraries.tenant_support.utils import run_on_all_tenants
 
 logger = logging.getLogger(__name__)
 
@@ -295,6 +296,31 @@ def copy_intervention_attachments(**kwargs):
             )
 
 
+def copy_t2f_travel_attachments(**kwargs):
+    # Copy t2f_travel_attachment field content to
+    # attachments model
+    file_type, _ = FileType.objects.get_or_create(
+        code="t2f_travel_attachment",
+        defaults={
+            "label": "Travel Attachment",
+            "name": "t2f_travel_attachment",
+            "order": 0,
+        }
+    )
+
+    content_type = ContentType.objects.get_for_model(TravelAttachment)
+
+    for t2f_travel_attachment in TravelAttachment.objects.filter(
+            file__isnull=False,
+    ).all():
+        update_or_create_attachment(
+            file_type,
+            content_type,
+            t2f_travel_attachment.pk,
+            t2f_travel_attachment.file,
+        )
+
+
 def copy_all_attachments(**kwargs):
     copy_commands = [
         copy_attached_agreements,
@@ -304,6 +330,7 @@ def copy_all_attachments(**kwargs):
         copy_interventions,
         copy_intervention_amendments,
         copy_intervention_attachments,
+        copy_t2f_travel_attachments,
     ]
     for cmd in copy_commands:
         run_on_all_tenants(cmd, **kwargs)
