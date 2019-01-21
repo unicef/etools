@@ -34,16 +34,15 @@ RUN apt-get install -y --no-install-recommends \
 RUN pip install --upgrade \
     setuptools \
     pip \
-    wheel
+    wheel \
+    pipenv
 
 # http://gis.stackexchange.com/a/74060
 ENV CPLUS_INCLUDE_PATH /usr/include/gdal
 ENV C_INCLUDE_PATH /usr/include/gdal
-ENV REQUIREMENTS_FILE base.txt
 
-ADD src/requirements/*.txt /pip/
-ADD src/requirements/$REQUIREMENTS_FILE /pip/app_requirements.txt
-RUN pip install -f /pip -r /pip/app_requirements.txt
+ADD Pipfile.lock /
+RUN pipenv install --system --deploy --ignore-pipfile
 
 ENV PYTHONUNBUFFERED 1
 ADD src /code/
