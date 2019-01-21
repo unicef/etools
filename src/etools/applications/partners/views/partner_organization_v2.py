@@ -25,7 +25,6 @@ from etools.applications.action_points.models import ActionPoint
 from etools.applications.EquiTrack.mixins import ExportModelMixin
 from etools.applications.EquiTrack.renderers import CSVFlatRenderer
 from etools.applications.EquiTrack.serializers import StringConcat
-from etools.applications.EquiTrack.utils import get_data_from_insight
 from etools.applications.partners.exports_v2 import (
     PartnerOrganizationCSVRenderer,
     PartnerOrganizationDashboardCsvRenderer,
@@ -74,6 +73,7 @@ from etools.applications.partners.serializers.partner_organization_v2 import (
 from etools.applications.partners.synchronizers import PartnerSynchronizer
 from etools.applications.partners.views.helpers import set_tenant_or_fail
 from etools.applications.t2f.models import Travel, TravelActivity, TravelType
+from etools.applications.vision.utils import get_data_from_insight
 
 
 class PartnerOrganizationListAPIView(QueryStringFilterMixin, ExportModelMixin, ListCreateAPIView):

@@ -84,6 +84,7 @@ class ProfileAdmin(admin.ModelAdmin):
         'office',
         'job_title',
         'phone_number',
+        'country'
     )
     list_editable = (
         'office',
