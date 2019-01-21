@@ -14,6 +14,7 @@ jobs:
           PGUSER: postgres
           POSTGRES_DB: circle_test
           POSTGRES_PASSWORD: postgres
+      - image: redis
     steps:
       - checkout
       - restore_cache:

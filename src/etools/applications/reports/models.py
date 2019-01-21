@@ -381,9 +381,6 @@ class LowerResult(TimeStampedModel):
             )
         super().save(**kwargs)
 
-        # reset certain caches
-        self.result_link.intervention.clear_caches()
-
 
 class Unit(models.Model):
     """
@@ -677,9 +674,6 @@ class AppliedIndicator(TimeStampedModel):
 
     def save(self, *args, **kwargs):
         super().save(*args, **kwargs)
-
-        # reset certain caches
-        self.lower_result.result_link.intervention.clear_caches()
 
 
 class Indicator(TimeStampedModel):

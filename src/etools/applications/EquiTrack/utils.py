@@ -1,14 +1,11 @@
 import codecs
 import csv
 import hashlib
-import json
 from datetime import datetime
 
 from django.conf import settings
 from django.contrib.sites.models import Site
 from django.core.cache import cache
-
-import requests
 
 
 def get_environment():
@@ -17,27 +14,6 @@ def get_environment():
 
 def get_current_site():
     return Site.objects.get_current()
-
-
-def get_data_from_insight(endpoint, data={}):
-    url = '{}/{}'.format(
-        settings.VISION_URL,
-        endpoint
-    ).format(**data)
-
-    response = requests.get(
-        url,
-        headers={'Content-Type': 'application/json'},
-        auth=(settings.VISION_USER, settings.VISION_PASSWORD),
-        verify=False
-    )
-    if response.status_code != 200:
-        return False, 'Loading data from Vision Failed, status {}'.format(response.status_code)
-    try:
-        result = json.loads(response.json())
-    except ValueError:
-        return False, 'Loading data from Vision Failed, no valid response returned for data: {}'.format(data)
-    return True, result
 
 
 class Vividict(dict):
