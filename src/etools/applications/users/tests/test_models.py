@@ -102,7 +102,7 @@ class TestUserModel(BaseTenantTestCase):
         )
 
     def test_conversion_to_string(self):
-        '''Exercise converting instances to string.'''
+        """Exercise converting instances to string."""
         user = UserFactory(first_name='Pel\xe9', last_name='Arantes do Nascimento')
         self.assertEqual(str(user), 'Pel\xe9 Arantes do Nascimento')
 
@@ -115,7 +115,7 @@ class TestUserModel(BaseTenantTestCase):
 
 
 class TestStrUnicode(SimpleTestCase):
-    '''Ensure calling str() on model instances returns the right text.'''
+    """Ensure calling str() on model instances returns the right text."""
 
     def test_country(self):
         instance = CountryFactory.build(name='xyz')

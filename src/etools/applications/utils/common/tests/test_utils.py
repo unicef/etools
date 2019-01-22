@@ -13,18 +13,18 @@ from etools.applications.utils.common.utils import get_all_field_names
 
 
 class CommonUtilsTest(TestCase):
-    '''Tests for utils.common.utils'''
+    """Tests for utils.common.utils"""
 
     def test_get_all_field_names(self):
-        '''Exercise get_all_field_names() which is Django-provided code to replace Model._meta.get_all_field_names()'''
+        """Exercise get_all_field_names() which is Django-provided code to replace Model._meta.get_all_field_names()"""
         class Useless:
             pass
 
         class Dummy(models.Model):
-            '''Model to contain the many different types of fields I want to test.
+            """Model to contain the many different types of fields I want to test.
 
             The list of fields in the model is not exhaustive, but it covers a variety of Django field types.
-            '''
+            """
             # CHOICES should not be in the list of field names
             CHOICES = (('to be'), ('not to be'))
 

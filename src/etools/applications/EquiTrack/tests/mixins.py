@@ -2,7 +2,7 @@ from django.urls import NoReverseMatch, reverse
 
 
 def _delimit_namespace(namespace):
-    '''Add delimiter (':') to namespace if necessary'''
+    """Add delimiter (':') to namespace if necessary"""
     if namespace and not namespace.endswith(':'):
         namespace += ':'
 
@@ -10,10 +10,10 @@ def _delimit_namespace(namespace):
 
 
 class URLAssertionMixin(object):
-    '''Mixin for any class derived from unittest.TestCase. Provides some assertion helpers for testing URL patterns'''
+    """Mixin for any class derived from unittest.TestCase. Provides some assertion helpers for testing URL patterns"""
 
     def assertReversal(self, names_and_paths, namespace, url_prefix):
-        '''Assert that all URLs in names_and_paths reverse as expected.
+        """Assert that all URLs in names_and_paths reverse as expected.
 
         names_and_paths should be a list/tuple of 3-tuples of (URL pattern name, URL suffix, kwargs), e.g. --
             (('intervention-list', '', {}),
@@ -28,7 +28,7 @@ class URLAssertionMixin(object):
             reverse('partners_api:intervention-detail', {'pk': 1})
         will be compared to this --
             '/api/v2/interventions/1/'
-        '''
+        """
         namespace = _delimit_namespace(namespace)
 
         for name, url_suffix, kwargs in names_and_paths:
@@ -37,7 +37,7 @@ class URLAssertionMixin(object):
             self.assertEqual(actual_url, expected_url)
 
     def assertIntParamRegexes(self, names_and_paths, namespace):
-        '''Assert that all URLs in names_and_paths that take int keyword args reject non-int args. non-int kwargs in
+        """Assert that all URLs in names_and_paths that take int keyword args reject non-int args. non-int kwargs in
         URL patterns are ignored.
 
         See assertReversal() for an explanation of parameters.
@@ -46,7 +46,7 @@ class URLAssertionMixin(object):
         tested. For example --
         Correct:   {'pk': 1}
         Incorrect: {'pk': '1'}
-        '''
+        """
         namespace = _delimit_namespace(namespace)
 
         # First, filter out patterns that don't use kwargs.

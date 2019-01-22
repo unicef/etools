@@ -8,7 +8,7 @@ from etools.applications.t2f.tests.factories import ItineraryItemFactory, Travel
 
 
 class TestStrUnicode(BaseTenantTestCase):
-    '''Ensure calling str() on model instances returns the right text.'''
+    """Ensure calling str() on model instances returns the right text."""
 
     def test_travel(self):
         instance = TravelFactory(reference_number='two')

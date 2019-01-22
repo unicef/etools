@@ -201,9 +201,9 @@ def signed_date_valid(i):
 
 
 def document_type_pca_valid(i):
-    '''
+    """
         Checks if pd has an agreement of type PCA
-    '''
+    """
     if i.document_type in [i.PD, i.SHPD] and i.agreement.agreement_type != i.agreement.PCA:
         return False
     return True
@@ -211,10 +211,10 @@ def document_type_pca_valid(i):
 
 # validation id 2
 def ssfa_agreement_has_no_other_intervention(i):
-    '''
+    """
     checks if SSFA intervention has an SSFA agreement connected. also checks if it's
     the only intervention for that ssfa agreement
-    '''
+    """
     if i.document_type == i.SSFA:
         if not(i.agreement.agreement_type == i.agreement.SSFA):
             raise BasicValidationError(_('Agreement selected is not of type SSFA'))

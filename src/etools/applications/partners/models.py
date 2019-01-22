@@ -20,8 +20,6 @@ from unicef_djangolib.fields import CodedGenericRelation, CurrencyField
 from unicef_locations.models import Location
 
 from etools.applications.EquiTrack.encoders import EToolsEncoder
-from etools.applications.EquiTrack.models import DSum
-from etools.applications.EquiTrack.serializers import StringConcat
 from etools.applications.EquiTrack.utils import get_current_year, get_quarter, import_permissions
 from etools.applications.partners.validation import interventions as intervention_validation
 from etools.applications.partners.validation.agreements import (
@@ -33,6 +31,7 @@ from etools.applications.reports.models import CountryProgramme, Indicator, Resu
 from etools.applications.t2f.models import Travel, TravelType
 from etools.applications.tpm.models import TPMVisit
 from etools.applications.users.models import Office
+from etools.libraries.djangolib.models import DSum, StringConcat
 
 
 def _get_partner_base_path(partner):
@@ -1273,10 +1272,10 @@ class Agreement(TimeStampedModel):
         self.agreement_number = self.reference_number
 
     def update_related_interventions(self, oldself, **kwargs):
-        '''
+        """
         When suspending or terminating an agreement we need to suspend or terminate all interventions related
         this should only be called in a transaction with agreement save
-        '''
+        """
 
         if oldself and oldself.status != self.status and \
                 self.status in [Agreement.SUSPENDED, Agreement.TERMINATED]:
@@ -1375,9 +1374,9 @@ class AgreementAmendmentManager(models.Manager):
 
 
 class AgreementAmendment(TimeStampedModel):
-    '''
+    """
     Represents an amendment to an agreement
-    '''
+    """
     IP_NAME = 'Change IP name'
     AUTHORIZED_OFFICER = 'Change authorized officer'
     BANKING_INFO = 'Change banking info'
