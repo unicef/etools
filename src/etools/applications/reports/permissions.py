@@ -4,20 +4,20 @@ from etools.libraries.djangolib.utils import is_user_in_groups
 
 
 class PMEPermission(permissions.BasePermission):
-    '''Applies general and object-based permissions.
+    """Applies general and object-based permissions.
 
     - For create views --
       - user must be in 'PME' group
 
     - For update/delete views --
       - user must be 'PME' group
-    '''
+    """
     message = 'Accessing this item is not allowed.'
 
     def _has_write_permissions(self, user):
-        '''True if --
+        """True if --
               - user is 'PME' group member
-        '''
+        """
         return is_user_in_groups(user, ['PME'])
 
     def has_permission(self, request, view):

@@ -5,7 +5,7 @@ from etools.applications.vision.models import VisionSyncLog
 
 
 class TestStrUnicode(SimpleTestCase):
-    '''Ensure calling str() on model instances returns the right text.'''
+    """Ensure calling str() on model instances returns the right text."""
 
     def test_vision_sync_log(self):
         country = CountryFactory.build(name='M\xe9xico', schema_name='Mexico')

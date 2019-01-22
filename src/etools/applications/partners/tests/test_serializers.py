@@ -18,7 +18,7 @@ _ALL_AGREEMENT_TYPES = [agreement_type[0] for agreement_type in Agreement.AGREEM
 
 
 class AgreementCreateUpdateSerializerBase(BaseTenantTestCase):
-    '''Base class for testing AgreementCreateUpdateSerializer'''
+    """Base class for testing AgreementCreateUpdateSerializer"""
     @classmethod
     def setUpTestData(cls):
         cls.user = UserFactory()

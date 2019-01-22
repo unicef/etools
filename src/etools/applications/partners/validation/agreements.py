@@ -14,13 +14,13 @@ from etools_validator.validation import CompleteValidation
 
 
 def agreement_transition_to_signed_valid(agreement):
-    '''Returns True if it's valid for the agreement to transition to signed, otherwise raises a TransitionError.
+    """Returns True if it's valid for the agreement to transition to signed, otherwise raises a TransitionError.
 
     TransitionErrors are raised under 3 circumstances --
       - If the agreement is of type PCA and matches certain criteria (see code)
       - If the start date is empty or in the future
       - If the end date is empty
-    '''
+    """
     today = date.today()
     if agreement.agreement_type == agreement.PCA and \
             agreement.__class__.objects.filter(partner=agreement.partner,

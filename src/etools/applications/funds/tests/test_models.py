@@ -8,7 +8,7 @@ from etools.applications.funds.tests.factories import (DonorFactory, FundsCommit
 
 
 class TestStrUnicode(BaseTenantTestCase):
-    '''Ensure calling str() on model instances returns the right text.'''
+    """Ensure calling str() on model instances returns the right text."""
 
     def test_donor(self):
         donor = DonorFactory.build(name=u'R\xe4dda Barnen')

@@ -26,10 +26,10 @@ from etools.applications.users.tests.factories import UserFactory
 
 
 class URLsTestCase(URLAssertionMixin, SimpleTestCase):
-    '''Simple test case to verify URL reversal'''
+    """Simple test case to verify URL reversal"""
 
     def test_urls(self):
-        '''Verify URL pattern names generate the URLs we expect them to.'''
+        """Verify URL pattern names generate the URLs we expect them to."""
         names_and_paths = (
             ('dropdown-pmp-list', 'pmp/', {}),
             ('dropdown-static-list', 'static/', {}),
@@ -43,7 +43,7 @@ class URLsTestCase(URLAssertionMixin, SimpleTestCase):
 
 
 class TestPMPStaticDropdownsListApiView(BaseTenantTestCase):
-    '''exercise PmpStaticDropdownsListApiView'''
+    """exercise PmpStaticDropdownsListApiView"""
     @classmethod
     def setUpTestData(cls):
         cls.user = UserFactory(is_staff=True)
@@ -69,7 +69,7 @@ class TestPMPStaticDropdownsListApiView(BaseTenantTestCase):
                                      ))
 
     def _assertResponseFundamentals(self, response):
-        '''Assert common fundamentals about the response and return the response JSON as a dict.'''
+        """Assert common fundamentals about the response and return the response JSON as a dict."""
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         response_json = json.loads(response.rendered_content)
         self.assertIsInstance(response_json, dict)
@@ -84,9 +84,9 @@ class TestPMPStaticDropdownsListApiView(BaseTenantTestCase):
 
     @staticmethod
     def _make_value_label_list_from_choices(choices):
-        '''Given a list of 2 tuples of (value, name), returns those in a list in the same format in which I expect
+        """Given a list of 2 tuples of (value, name), returns those in a list in the same format in which I expect
         PmpStaticDropdownsListApiView to format its responses.
-        '''
+        """
         return sorted(
             [
                 {'value': value, 'label': label}
@@ -96,7 +96,7 @@ class TestPMPStaticDropdownsListApiView(BaseTenantTestCase):
         )
 
     def test_cso_types(self):
-        '''Verify the cso_types portion of the response'''
+        """Verify the cso_types portion of the response"""
         PartnerFactory(cso_type=PartnerOrganization.CSO_TYPES['International'])
         # These should be filtered out of the endpoint response (https://github.com/unicef/etools/issues/510)
         PartnerFactory(cso_type='')
@@ -109,7 +109,7 @@ class TestPMPStaticDropdownsListApiView(BaseTenantTestCase):
               'label': PartnerOrganization.CSO_TYPES['International']}])
 
     def test_partner_types(self):
-        '''Verify the partner_types portion of the response'''
+        """Verify the partner_types portion of the response"""
         response = self.forced_auth_req('get', self.url)
         d = self._assertResponseFundamentals(response)
 
@@ -117,7 +117,7 @@ class TestPMPStaticDropdownsListApiView(BaseTenantTestCase):
                               self._make_value_label_list_from_choices(PartnerType.CHOICES))
 
     def test_agency_choices(self):
-        '''Verify the agency_choices portion of the response'''
+        """Verify the agency_choices portion of the response"""
         response = self.forced_auth_req('get', self.url)
         d = self._assertResponseFundamentals(response)
         self.assertCountEqual(
@@ -125,7 +125,7 @@ class TestPMPStaticDropdownsListApiView(BaseTenantTestCase):
             self._make_value_label_list_from_choices(PartnerOrganization.AGENCY_CHOICES))
 
     def test_assessment_types(self):
-        '''Verify the assessment_types portion of the response'''
+        """Verify the assessment_types portion of the response"""
         response = self.forced_auth_req('get', self.url)
         d = self._assertResponseFundamentals(response)
 
@@ -133,7 +133,7 @@ class TestPMPStaticDropdownsListApiView(BaseTenantTestCase):
                               self._make_value_label_list_from_choices(Assessment.ASSESSMENT_TYPES))
 
     def test_agreement_types(self):
-        '''Verify the assessment_types portion of the response'''
+        """Verify the assessment_types portion of the response"""
         response = self.forced_auth_req('get', self.url)
         d = self._assertResponseFundamentals(response)
 
@@ -141,7 +141,7 @@ class TestPMPStaticDropdownsListApiView(BaseTenantTestCase):
                               self._make_value_label_list_from_choices(Agreement.AGREEMENT_TYPES))
 
     def test_agreement_status(self):
-        '''Verify the agreement_status portion of the response'''
+        """Verify the agreement_status portion of the response"""
         response = self.forced_auth_req('get', self.url)
         d = self._assertResponseFundamentals(response)
 
@@ -149,7 +149,7 @@ class TestPMPStaticDropdownsListApiView(BaseTenantTestCase):
                               self._make_value_label_list_from_choices(Agreement.STATUS_CHOICES))
 
     def test_agreement_amendment_types(self):
-        '''Verify the agreement_amendment_types portion of the response'''
+        """Verify the agreement_amendment_types portion of the response"""
         response = self.forced_auth_req('get', self.url)
         d = self._assertResponseFundamentals(response)
 
@@ -157,7 +157,7 @@ class TestPMPStaticDropdownsListApiView(BaseTenantTestCase):
                               self._make_value_label_list_from_choices(AgreementAmendment.AMENDMENT_TYPES))
 
     def test_intervention_types(self):
-        '''Verify the intervention_doc_type portion of the response'''
+        """Verify the intervention_doc_type portion of the response"""
         response = self.forced_auth_req('get', self.url)
         d = self._assertResponseFundamentals(response)
 
@@ -165,7 +165,7 @@ class TestPMPStaticDropdownsListApiView(BaseTenantTestCase):
                               self._make_value_label_list_from_choices(Intervention.INTERVENTION_TYPES))
 
     def test_intervention_status(self):
-        '''Verify the intervention_status portion of the response'''
+        """Verify the intervention_status portion of the response"""
         response = self.forced_auth_req('get', self.url)
         d = self._assertResponseFundamentals(response)
 
@@ -173,7 +173,7 @@ class TestPMPStaticDropdownsListApiView(BaseTenantTestCase):
                               self._make_value_label_list_from_choices(Intervention.INTERVENTION_STATUS))
 
     def test_intervention_amendment_types(self):
-        '''Verify the intervention_amendment_types portion of the response'''
+        """Verify the intervention_amendment_types portion of the response"""
         response = self.forced_auth_req('get', self.url)
         d = self._assertResponseFundamentals(response)
 
@@ -181,7 +181,7 @@ class TestPMPStaticDropdownsListApiView(BaseTenantTestCase):
                               self._make_value_label_list_from_choices(InterventionAmendment.AMENDMENT_TYPES))
 
     def test_location_types(self):
-        '''Verify the location_types portion of the response'''
+        """Verify the location_types portion of the response"""
         gateway_types = [GatewayTypeFactory() for i in range(3)]
 
         response = self.forced_auth_req('get', self.url)
@@ -194,7 +194,7 @@ class TestPMPStaticDropdownsListApiView(BaseTenantTestCase):
         self.assertCountEqual(d['location_types'], gateway_types)
 
     def test_currencies(self):
-        '''Verify the currencies portion of the response'''
+        """Verify the currencies portion of the response"""
         # Add some currencies
         choices = []
         for code in CURRENCY_LIST:
@@ -207,7 +207,7 @@ class TestPMPStaticDropdownsListApiView(BaseTenantTestCase):
                               self._make_value_label_list_from_choices(choices))
 
     def test_local_currency(self):
-        '''Verify the local_currency portion of the response in two parts'''
+        """Verify the local_currency portion of the response in two parts"""
         # By default the test user has no local currency set. If that changes, this test will break, so I assert
         # that first.
         self.assertIsNone(self.user.profile.country.local_currency)

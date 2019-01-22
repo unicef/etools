@@ -5,7 +5,7 @@ from etools.applications.partners.tests.factories import PartnerFactory
 
 
 class TestStrUnicode(BaseTenantTestCase):
-    '''Ensure calling str() on model instances returns the right text.'''
+    """Ensure calling str() on model instances returns the right text."""
 
     def test_flagged_issue(self):
         partner = PartnerFactory()
