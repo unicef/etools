@@ -35,6 +35,9 @@ class AggregateHact(TimeStampedModel):
     year = models.IntegerField(default=get_current_year, unique=True, verbose_name=_('Year'))
     partner_values = JSONField(null=True, blank=True, verbose_name=_('Partner Values'))
 
+    class Meta:
+        verbose_name_plural = _('Aggregate hact')
+
     def update(self):
         self.partner_values = json.dumps({
             'assurance_activities': self.get_assurance_activities(),
