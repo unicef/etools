@@ -1,7 +1,6 @@
-
 from rest_framework import permissions
 
-from etools.applications.EquiTrack.utils import is_user_in_groups
+from etools.libraries.djangolib.utils import is_user_in_groups
 
 
 class PMEPermission(permissions.BasePermission):
