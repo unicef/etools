@@ -36,7 +36,6 @@ from etools.applications.partners.models import (  # TODO intervention sector lo
 
 
 class InterventionAmendmentsAdmin(admin.ModelAdmin):
-    verbose_name = 'Amendment'
     model = InterventionAmendment
     readonly_fields = [
         'amendment_number',
@@ -129,7 +128,7 @@ class InterventionPlannedVisitsInline(admin.TabularInline):
 
 
 class AttachmentFileInline(AttachmentSingleInline):
-    verbose_name_plural = "Attachment"
+    verbose_name_plural = _("Attachment")
 
 
 class InterventionAttachmentAdmin(admin.ModelAdmin):
@@ -191,11 +190,11 @@ class InterventionResultsLinkAdmin(admin.ModelAdmin):
 
 
 class PRCReviewAttachmentInline(AttachmentSingleInline):
-    verbose_name_plural = "Review Document by PRC"
+    verbose_name_plural = _("Review Document by PRC")
 
 
 class SignedPDAttachmentInline(AttachmentSingleInline):
-    verbose_name_plural = "Signed PD Document"
+    verbose_name_plural = _("Signed PD Document")
 
 
 class InterventionAdmin(CountryUsersAdminMixin, HiddenPartnerMixin, SnapshotModelAdmin):
@@ -304,7 +303,7 @@ class InterventionAdmin(CountryUsersAdminMixin, HiddenPartnerMixin, SnapshotMode
 
 
 class AssessmentReportInline(AttachmentSingleInline):
-    verbose_name_plural = "Report"
+    verbose_name_plural = _("Report")
 
 
 class AssessmentAdmin(admin.ModelAdmin):
@@ -323,8 +322,6 @@ class AssessmentAdmin(admin.ModelAdmin):
     inlines = [
         AssessmentReportInline,
     ]
-    verbose_name = 'Assessment'
-    verbose_name_plural = 'Assessments'
 
 
 class PartnerStaffMemberAdmin(SnapshotModelAdmin):
@@ -525,11 +522,10 @@ class PlannedEngagementAdmin(admin.ModelAdmin):
 
 
 class SignedAmendmentInline(AttachmentSingleInline):
-    verbose_name_plural = "Signed Amendment"
+    verbose_name_plural = _("Signed Amendment")
 
 
 class AgreementAmendmentAdmin(admin.ModelAdmin):
-    verbose_name = 'Amendment'
     model = AgreementAmendment
     fields = (
         'agreement',
@@ -566,7 +562,7 @@ class AgreementAmendmentAdmin(admin.ModelAdmin):
 
 
 class AgreementAttachmentInline(AttachmentSingleInline):
-    verbose_name_plural = 'Attachment'
+    verbose_name_plural = _('Attachment')
 
 
 class AgreementAdmin(ExportMixin, HiddenPartnerMixin, CountryUsersAdminMixin, SnapshotModelAdmin):
