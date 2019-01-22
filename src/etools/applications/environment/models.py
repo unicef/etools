@@ -26,6 +26,9 @@ class IssueCheckConfig(models.Model):
     def __str__(self):
         return '{}: {}'.format(self.check_id, self.is_active)
 
+    class Meta:
+        verbose_name_plural = _('Issue check config')
+
 
 class TenantFlag(BaseModel):
     """
@@ -74,7 +77,7 @@ class TenantFlag(BaseModel):
     FLAG_COUNTRIES_CACHE_KEY = 'flag:%s:countries'
 
     class Meta:
-        verbose_name_plural = 'Flags'
+        verbose_name_plural = _('Flags')
 
     def __str__(self):
         return self.name
@@ -253,7 +256,7 @@ class TenantSwitch(BaseModel):
     ALL_CACHE_KEY = 'ALL_SWITCHES_CACHE_KEY'
 
     class Meta:
-        verbose_name_plural = 'Switches'
+        verbose_name_plural = _('Switches')
 
     def __str__(self):
         return self.name

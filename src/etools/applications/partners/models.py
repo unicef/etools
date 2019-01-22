@@ -1425,6 +1425,8 @@ class AgreementAmendment(TimeStampedModel):
 
     class Meta:
         ordering = ("-created",)
+        verbose_name = _('Amendment')
+        verbose_name_plural = _('Agreement amendments')
 
     def __str__(self):
         return "{} {}".format(
@@ -2161,6 +2163,10 @@ class InterventionAmendment(TimeStampedModel):
             self.signed_date
         )
 
+    class Meta:
+        verbose_name = _('Amendment')
+        verbose_name_plural = _('Intervention amendments')
+
 
 class InterventionPlannedVisits(TimeStampedModel):
     """Represents planned visits for the intervention"""
@@ -2237,6 +2243,9 @@ class InterventionBudget(TimeStampedModel):
     total_local = models.DecimalField(max_digits=20, decimal_places=2, verbose_name=_('Total Local'))
 
     tracker = FieldTracker()
+
+    class Meta:
+        verbose_name_plural = _('Intervention budget')
 
     def total_unicef_contribution(self):
         return self.unicef_cash + self.in_kind_amount

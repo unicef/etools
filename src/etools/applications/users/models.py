@@ -276,6 +276,9 @@ class UserProfile(models.Model):
             self.user.get_full_name()
         )
 
+    class Meta:
+        verbose_name_plural = _('User Profile')
+
     objects = UserProfileManager()
 
     @classmethod
