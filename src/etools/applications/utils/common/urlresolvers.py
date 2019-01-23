@@ -7,15 +7,11 @@ from django.urls import reverse
 from etools.applications.users.models import Country
 
 
-def site_url():
-    return 'https://{0}'.format(settings.HOST)
-
-
 def build_absolute_url(url):
     if not url:
         return ''
 
-    return urljoin(site_url(), url)
+    return urljoin(settings.HOST, url)
 
 
 def update_url_with_kwargs(url, **kwargs):
@@ -32,12 +28,10 @@ def update_url_with_kwargs(url, **kwargs):
 
 def build_frontend_url(*parts, user=None, **kwargs):
 
-    frontend_url = site_url()
-
     if not user or user.is_staff:
-        frontend_url += reverse('main')
+        frontend_url = '{}{}'.format(settings.HOST, reverse('main'))
     else:
-        frontend_url += reverse('social:begin', kwargs={'backend': 'azuread-b2c-oauth2'})
+        frontend_url = '{}{}'.format(settings.HOST, reverse('social:begin', kwargs={'backend': 'azuread-b2c-oauth2'}))
 
     change_country_view = update_url_with_kwargs(
         reverse('users:country-change'),
