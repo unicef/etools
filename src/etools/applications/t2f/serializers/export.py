@@ -99,31 +99,15 @@ class FinanceExportSerializer(serializers.Serializer):
     mode_of_travel = serializers.SerializerMethodField()
     international_travel = YesOrNoField()
     require_ta = YesOrNoField(source='ta_required')
-    dsa_total = serializers.DecimalField(source='cost_summary.dsa_total', max_digits=20, decimal_places=2,
-                                         read_only=True)
-    expense_total = serializers.SerializerMethodField()
-    deductions_total = serializers.DecimalField(
-        source='cost_summary.deductions_total', max_digits=20, decimal_places=2, read_only=True)
 
     class Meta:
         fields = ('reference_number', 'traveler', 'office', 'section', 'status', 'supervisor', 'start_date',
-                  'end_date', 'purpose_of_travel', 'mode_of_travel', 'international_travel', 'require_ta', 'dsa_total',
-                  'expense_total', 'deductions_total')
+                  'end_date', 'purpose_of_travel', 'mode_of_travel', 'international_travel', 'require_ta')
 
     def get_mode_of_travel(self, obj):
         if obj.mode_of_travel:
             return ', '.join(obj.mode_of_travel)
         return ''
-
-    def get_expense_total(self, obj):
-        ret = []
-        for expense in obj.cost_summary['expenses_total']:
-            if not expense['currency']:
-                continue
-
-            ret.append('{amount:.{currency.decimal_places}f} {currency.code}'.format(amount=expense['amount'],
-                                                                                     currency=expense['currency']))
-        return '+'.join(ret)
 
 
 class TravelAdminExportSerializer(serializers.Serializer):

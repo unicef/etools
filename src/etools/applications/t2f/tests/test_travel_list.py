@@ -11,7 +11,7 @@ from unicef_locations.tests.factories import LocationFactory
 from etools.applications.EquiTrack.tests.cases import BaseTenantTestCase
 from etools.applications.EquiTrack.tests.mixins import URLAssertionMixin
 from etools.applications.publics.models import DSARegion
-from etools.applications.publics.tests.factories import PublicsCurrencyFactory, PublicsWBSFactory
+from etools.applications.publics.tests.factories import PublicsCurrencyFactory
 from etools.applications.reports.tests.factories import ResultFactory
 from etools.applications.t2f.models import make_travel_reference_number, ModeOfTravel, Travel, TravelType
 from etools.applications.t2f.tests.factories import TravelActivityFactory, TravelFactory
@@ -257,9 +257,6 @@ class TravelList(URLAssertionMixin, BaseTenantTestCase):
     def test_travel_creation(self):
         dsaregion = DSARegion.objects.first()
         currency = PublicsCurrencyFactory()
-        wbs = PublicsWBSFactory()
-        grant = wbs.grants.first()
-        fund = grant.funds.first()
         location = LocationFactory()
 
         data = {'0': {},
@@ -269,18 +266,6 @@ class TravelList(URLAssertionMixin, BaseTenantTestCase):
                       'dinner': False,
                       'accomodation': False,
                       'no_dsa': False},
-                'deductions': [{'date': '2016-12-15',
-                                'breakfast': False,
-                                'lunch': False,
-                                'dinner': False,
-                                'accomodation': False,
-                                'no_dsa': False},
-                               {'date': '2016-12-16',
-                                'breakfast': False,
-                                'lunch': False,
-                                'dinner': False,
-                                'accomodation': False,
-                                'no_dsa': False}],
                 'itinerary': [{'airlines': [],
                                'overnight_travel': False,
                                'origin': 'a',
@@ -293,10 +278,6 @@ class TravelList(URLAssertionMixin, BaseTenantTestCase):
                                 'locations': [location.id],
                                 'travel_type': TravelType.ADVOCACY,
                                 'date': '2016-12-15T15:02:13+01:00'}],
-                'cost_assignments': [{'wbs': wbs.id,
-                                      'grant': grant.id,
-                                      'fund': fund.id,
-                                      'share': '100'}],
                 'ta_required': True,
                 'international_travel': False,
                 'mode_of_travel': [ModeOfTravel.BOAT],

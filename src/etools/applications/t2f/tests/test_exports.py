@@ -1,7 +1,6 @@
 import csv
 import logging
 from datetime import datetime
-from decimal import Decimal
 
 from django.urls import reverse
 from django.utils import timezone
@@ -14,14 +13,12 @@ from etools.applications.EquiTrack.tests.cases import BaseTenantTestCase
 from etools.applications.partners.tests.factories import InterventionFactory
 from etools.applications.publics.tests.factories import (
     PublicsAirlineCompanyFactory,
-    PublicsCurrencyFactory,
     PublicsDSARateFactory,
     PublicsDSARegionFactory,
 )
 from etools.applications.reports.tests.factories import ResultFactory, SectionFactory
 from etools.applications.t2f.models import ModeOfTravel, TravelActivity, TravelType
 from etools.applications.t2f.tests.factories import (
-    ExpenseFactory,
     ItineraryItemFactory,
     TravelActivityFactory,
     TravelAttachmentFactory,
@@ -270,87 +267,6 @@ class TravelExports(BaseTenantTestCase):
             '',
             'Yes',
         ])
-
-    def test_finance_export(self):
-        currency_usd = PublicsCurrencyFactory(code="USD")
-        travel = TravelFactory(traveler=self.traveler,
-                               supervisor=self.unicef_staff,
-                               start_date=datetime(2016, 11, 20, tzinfo=UTC),
-                               end_date=datetime(2016, 12, 5, tzinfo=UTC),
-                               mode_of_travel=[ModeOfTravel.PLANE, ModeOfTravel.CAR, ModeOfTravel.RAIL])
-        travel.expenses.all().delete()
-        ExpenseFactory(travel=travel, amount=Decimal(
-            '500'), currency=currency_usd)
-
-        travel_2 = TravelFactory(traveler=self.traveler,
-                                 supervisor=self.unicef_staff,
-                                 start_date=datetime(2016, 11, 20, tzinfo=UTC),
-                                 end_date=datetime(2016, 12, 5, tzinfo=UTC),
-                                 mode_of_travel=None)
-        travel_2.expenses.all().delete()
-        ExpenseFactory(travel=travel_2, amount=Decimal(
-            '200'), currency=currency_usd)
-        ExpenseFactory(travel=travel_2, amount=Decimal('100'), currency=None)
-
-        with self.assertNumQueries(27):
-            response = self.forced_auth_req('get', reverse('t2f:travels:list:finance_export'),
-                                            user=self.unicef_staff)
-        export_csv = csv.reader(StringIO(response.content.decode('utf-8')))
-        rows = [r for r in export_csv]
-
-        self.assertEqual(len(rows), 3)
-
-        # check header
-        self.assertEqual(rows[0],
-                         ['reference_number',
-                          'traveler',
-                          'office',
-                          'section',
-                          'status',
-                          'supervisor',
-                          'start_date',
-                          'end_date',
-                          'purpose_of_travel',
-                          'mode_of_travel',
-                          'international_travel',
-                          'require_ta',
-                          'dsa_total',
-                          'expense_total',
-                          'deductions_total'])
-
-        self.assertEqual(rows[1],
-                         ['{}/1'.format(datetime.now().year),
-                          'John Doe',
-                          'An Office',
-                          travel.section.name,
-                          'planned',
-                          'Jakab Gipsz',
-                          '20-Nov-2016',
-                          '05-Dec-2016',
-                          travel.purpose,
-                          'Plane, Car, Rail',
-                          'No',
-                          'Yes',
-                          '0.00',
-                          '500 USD',
-                          '0.00'])
-
-        self.assertEqual(rows[2],
-                         ['{}/2'.format(datetime.now().year),
-                          'John Doe',
-                          'An Office',
-                          travel_2.section.name,
-                          'planned',
-                          'Jakab Gipsz',
-                          '20-Nov-2016',
-                          '05-Dec-2016',
-                          travel_2.purpose,
-                          '',
-                          'No',
-                          'Yes',
-                          '0.00',
-                          '200 USD',
-                          '0.00'])
 
     def test_travel_admin_export(self):
         dsa_brd = PublicsDSARegionFactory(area_code='BRD')
