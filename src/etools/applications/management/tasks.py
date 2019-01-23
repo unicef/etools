@@ -3,12 +3,12 @@ from datetime import date, datetime
 
 from django.contrib.auth import get_user_model
 from django.core.mail import send_mail
+from django.db import connection
 from django.db.models import Sum
 from django.db.models.functions import Coalesce
 
 from dateutil.relativedelta import relativedelta
 
-from etools.applications.EquiTrack.util_scripts import set_country
 from etools.applications.audit.models import Audit, Engagement, MicroAssessment, SpecialAudit, SpotCheck
 from etools.applications.management.issues.checks import recheck_all_open_issues, run_all_checks
 from etools.applications.partners.models import Intervention, PartnerOrganization
@@ -129,7 +129,7 @@ def pmp_indicator_report(writer, **kwargs):
     dict_writer.writeheader()
 
     for country in qs:
-        set_country(country.name)
+        connection.set_tenant(Country.objects.get(name=country.name))
         logger.info(u'Running on %s' % country.name)
         for partner in PartnerOrganization.objects.prefetch_related('core_values_assessments'):
             for intervention in Intervention.objects.filter(
@@ -185,7 +185,7 @@ def fam_report(writer, **kwargs):
         qs = qs.filter(schema_name__in=countries.pop().split(','))
 
     for country in qs:
-        set_country(country.name)
+        connection.set_tenant(Country.objects.get(name=country.name))
         row_dict = {'Country': country.name}
         for model in engagements:
             for status, status_display in Engagement.STATUSES:

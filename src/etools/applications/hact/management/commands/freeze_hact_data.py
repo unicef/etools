@@ -2,10 +2,9 @@ import json
 from datetime import datetime
 
 from django.core.management import BaseCommand
-from django.db import transaction
+from django.db import connection, transaction
 
 from etools.libraries.pythonlib.encoders import CustomJSONEncoder
-from etools.applications.EquiTrack.util_scripts import set_country
 from etools.applications.hact.models import HactHistory
 from etools.applications.partners.models import hact_default, PartnerOrganization, PlannedEngagement
 from etools.applications.users.models import Country
@@ -89,7 +88,7 @@ class Command(BaseCommand):
         self.stdout.write('Freeze HACT data for {}'.format(year))
 
         for country in countries:
-            set_country(country.name)
+            connection.set_tenant(Country.objects.get(name=country.name))
             self.stdout.write('Freezing data for {}'.format(country.name))
             for partner in PartnerOrganization.objects.all():
                 if (partner.reported_cy and partner.reported_cy > 0) or (
