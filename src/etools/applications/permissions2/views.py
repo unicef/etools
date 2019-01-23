@@ -45,7 +45,7 @@ class FSMTransitionActionMixin(object):
         """
         pass
 
-    @action(detail=True, methods=['post'], url_path='(?P<action>\D+)')
+    @action(detail=True, methods=['post'], url_path=r'(?P<action>\D+)')
     def transition(self, request, *args, **kwargs):
         """
         Change status of FSM controlled object

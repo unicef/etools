@@ -1,10 +1,10 @@
 import string
 import uuid
 
+from django.urls import reverse
 from unicef_notification.utils import send_notification_with_template
 
 from etools.applications.EquiTrack.utils import get_environment
-from etools.applications.tokens.utils import get_token_auth_link
 
 
 def generate_username():
@@ -25,7 +25,7 @@ def generate_username():
 def send_invite_email(staff):
     context = {
         'environment': get_environment(),
-        'login_link': get_token_auth_link(staff.user)
+        'login_link': reverse('social:begin', kwargs={'backend': 'azuread-b2c-oauth2'})
     }
 
     send_notification_with_template(
