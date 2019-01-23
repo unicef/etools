@@ -36,7 +36,6 @@ class TravelList(URLAssertionMixin, BaseTenantTestCase):
             ('state_change', 'save_and_submit/', {'transition_name': 'save_and_submit'}),
             ('state_change', 'mark_as_completed/', {'transition_name': Travel.COMPLETE}),
             ('activity_export', 'export/', {}),
-            ('finance_export', 'finance-export/', {}),
             ('travel_admin_export', 'travel-admin-export/', {}),
             ('activities', 'activities/1/', {'partner_organization_pk': 1}),
             ('activities-intervention', 'activities/partnership/1/', {'partnership_pk': 1}),
