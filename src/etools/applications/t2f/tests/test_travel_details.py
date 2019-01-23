@@ -40,7 +40,7 @@ class TravelDetails(URLAssertionMixin, BaseTenantTestCase):
                                     supervisor=self.unicef_staff)
 
     def test_urls(self):
-        '''Verify URL pattern names generate the URLs we expect them to.'''
+        """Verify URL pattern names generate the URLs we expect them to."""
         names_and_paths = (
             ('index', '', {'travel_pk': 1}),
             ('attachments', 'attachments/', {'travel_pk': 1}),

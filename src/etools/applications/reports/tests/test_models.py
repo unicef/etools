@@ -14,7 +14,7 @@ from etools.applications.reports.tests.factories import (CountryProgrammeFactory
 
 
 class TestStrUnicode(SimpleTestCase):
-    '''Ensure calling str() on model instances returns the right text.'''
+    """Ensure calling str() on model instances returns the right text."""
 
     def test_country_programme(self):
         instance = CountryProgrammeFactory.build(name='xyz', wbs='xyz')
