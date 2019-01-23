@@ -1,12 +1,13 @@
 import itertools
 from urllib.parse import urljoin
 
+from django.conf import settings
 from django.db.models import Manager, QuerySet
 
 from rest_framework import serializers
 from unicef_restlib.fields import CommaSeparatedExportField
 
-from etools.applications.utils.common.urlresolvers import build_frontend_url, site_url
+from etools.applications.utils.common.urlresolvers import build_frontend_url
 
 
 class UsersExportField(serializers.Field):
@@ -111,7 +112,7 @@ class TPMVisitExportSerializer(serializers.Serializer):
             obj.report_attachments.all()
         )
         return ', '.join(map(
-            lambda a: '{} - {}'.format(a.file_type, urljoin(site_url(), a.url)),
+            lambda a: '{} - {}'.format(a.file_type, urljoin(settings.HOST, a.url)),
             attachments
         ))
 
