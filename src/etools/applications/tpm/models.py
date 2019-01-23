@@ -246,7 +246,7 @@ class TPMVisit(SoftDeleteMixin, TimeStampedModel, models.Model):
             self._send_email(
                 staff_member.user.email, 'tpm/visit/assign_staff_member',
                 context={'recipient': staff_member.user.get_full_name()},
-                user=staff_member.user, include_token=True
+                user=staff_member.user, include_token=False
             )
 
     @transition(
