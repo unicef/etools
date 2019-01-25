@@ -1,7 +1,14 @@
 from rest_framework import serializers
+from unicef_restlib.fields import FunctionRelatedField
+
+
+def comment_export_function(obj):
+    user = obj.user if obj.user else '-'
+    return f'{user} ({obj.submit_date.strftime("%d %b %Y")}) {obj.comment}'
 
 
 class ActionPointExportSerializer(serializers.Serializer):
+
     ref = serializers.CharField(source='reference_number', read_only=True)
     cp_output = serializers.CharField(allow_null=True)
     partner = serializers.CharField(source='partner.name', allow_null=True)
@@ -22,4 +29,5 @@ class ActionPointExportSerializer(serializers.Serializer):
     related_ref = serializers.CharField(source='related_object.reference_number', read_only=True, allow_null=True)
     related_object_str = serializers.CharField()
     related_object_url = serializers.CharField()
-    action_taken = serializers.SlugRelatedField(source='comments', many=True, read_only=True, slug_field='comment')
+    action_taken = FunctionRelatedField(source='comments', many=True, read_only=True,
+                                        callable_function=comment_export_function)

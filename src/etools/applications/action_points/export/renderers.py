@@ -4,6 +4,7 @@ from etools.applications.EquiTrack.renderers import FriendlyCSVRenderer, ListSep
 
 
 class ActionPointCSVRenderer(ListSeperatorCSVRenderMixin, FriendlyCSVRenderer):
+    separator = ';\n\n'
     header = [
         'ref', 'cp_output', 'partner', 'office', 'section', 'category', 'assigned_to', 'due_date',
         'status', 'high_priority', 'description', 'intervention', 'pd_ssfa', 'location', 'related_module',
