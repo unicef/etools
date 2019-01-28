@@ -1,35 +1,20 @@
-FROM python:3.6.4-jessie
+FROM python:3.6.4-alpine as builder
 # python:3.6.4-jessie has python 2.7 and 3.6 installed, and packages
 # available to install 3.4
 
 # Install dependencies
-RUN apt-get update
-RUN apt-get install -y --no-install-recommends \
-    build-essential \
-    libcurl4-openssl-dev \
-    libjpeg-dev \
-    vim \
-    ntp \
-    libpq-dev
-RUN apt-get install -y --no-install-recommends \
-    git-core
-RUN apt-get install -y --no-install-recommends \
-    python3-dev \
-    python-software-properties \
-    python-setuptools
-RUN apt-get install -y --no-install-recommends \
-    postgresql-client \
-    libpq-dev \
-    python-psycopg2
-RUN apt-get install -y --no-install-recommends \
-    python-gdal \
-    gdal-bin \
-    libgdal-dev \
-    libgdal1h \
-    libgdal1-dev \
+RUN apk update
+RUN apk add \
+    --update alpine-sdk
+RUN apk add \
     libxml2-dev \
     libxslt-dev \
-    xmlsec1
+    xmlsec-dev
+
+RUN apk add postgresql-dev
+RUN apk add libffi-dev
+RUN apk add jpeg-dev
+
 
 RUN pip install --upgrade \
     setuptools \
@@ -37,19 +22,58 @@ RUN pip install --upgrade \
     wheel \
     pipenv
 
+RUN echo "http://dl-3.alpinelinux.org/alpine/edge/main" >> /etc/apk/repositories
+RUN apk update
+RUN apk add --upgrade apk-tools
+RUN apk add openssl
+RUN apk add ca-certificates
+RUN apk add libressl2.7-libcrypto
+RUN apk add gdal --update-cache --repository http://dl-3.alpinelinux.org/alpine/edge/testing/
+RUN apk add gdal-dev --update-cache --repository http://dl-3.alpinelinux.org/alpine/edge/testing/
+RUN apk add py-gdal --update-cache --repository http://dl-3.alpinelinux.org/alpine/edge/testing/
+RUN apk add geos --update-cache --repository http://dl-3.alpinelinux.org/alpine/edge/testing/
+RUN apk add geos-dev --update-cache --repository http://dl-3.alpinelinux.org/alpine/edge/testing/
+RUN apk add gcc --update-cache --repository http://dl-3.alpinelinux.org/alpine/edge/testing/
+RUN apk add g++ --update-cache --repository http://dl-3.alpinelinux.org/alpine/edge/testing/
+
+#RUN apk add g++
+#RUN apk add py-setuptools
+
+
 # http://gis.stackexchange.com/a/74060
 ENV CPLUS_INCLUDE_PATH /usr/include/gdal
 ENV C_INCLUDE_PATH /usr/include/gdal
 
-ADD Pipfile.lock /
-RUN pipenv install --system --deploy --ignore-pipfile
+WORKDIR /etools/
+ADD Pipfile.lock .
+ADD Pipfile .
+ADD requirements.txt .
+#RUN pipenv lock -r > requirements.txt
+#RUN cat requirements.txt
+RUN pip wheel --wheel-dir=/tmp/etwheels -r requirements.txt
 
-ENV PYTHONUNBUFFERED 1
+FROM python:3.6.4-alpine
+
+RUN echo "http://dl-3.alpinelinux.org/alpine/edge/main" >> /etc/apk/repositories
+RUN apk update
+RUN apk add --upgrade apk-tools
+RUN apk add postgresql-client
+RUN apk add openssl
+RUN apk add ca-certificates
+RUN apk add libressl2.7-libcrypto
+RUN apk add gdal --update-cache --repository http://dl-3.alpinelinux.org/alpine/edge/testing/
+
 ADD src /code/
-ADD manage.py /code/manage.py 
+ADD manage.py /code/manage.py
+ENV PYTHONUNBUFFERED 1
 ENV PYTHONPATH /code
-
 WORKDIR /code/
+
+COPY --from=builder /tmp/etwheels /tmp/etwheels
+COPY --from=builder /etools/requirements.txt /code/requirements.txt
+RUN pip install --no-index --find-links=/tmp/etwheels -r /code/requirements.txt
+
+RUN rm -rf /tmp/etwheels
 
 ENV DJANGO_SETTINGS_MODULE etools.config.settings.production
 RUN SECRET_KEY=not-so-secret-key-just-for-collectstatic DISABLE_JWT_LOGIN=1 python manage.py collectstatic --noinput
