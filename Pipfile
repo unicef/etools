@@ -14,7 +14,7 @@ ipython = "*"
 pdbpp = "*"
 tox = "*"
 drf-api-checker = "*"
-factory_boy = "*"
+factory_boy = "==2.8"
 django-extensions = "*"
 sphinx = "*"
 
@@ -96,7 +96,7 @@ requests = "==2.11.1"
 simplejson = "==3.16.0"
 six = "==1.11.0"
 social-auth-app-django = "==2.1.0"
-social-auth-core = {extras = ["azuread"], version = "==1.7.0"}
+social-auth-core = {extras = ["azuread"],version = "==1.7.0"}
 sqlparse = "==0.2.4"
 static3 = "==0.7.0"
 tablib = "==0.12.1"
