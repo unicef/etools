@@ -20,5 +20,5 @@ fi
 # Run unittests and coverage report
 coverage erase
 time coverage run manage.py test --noinput --keepdb "$@"
-coverage report -m
+time coverage report -m
 
