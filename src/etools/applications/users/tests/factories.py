@@ -45,6 +45,7 @@ class CountryFactory(factory.django.DjangoModelFactory):
     local_currency = factory.SubFactory(PublicsCurrencyFactory)
 
 
+@factory.django.mute_signals(signals.pre_save, signals.post_save)
 class ProfileFactory(factory.django.DjangoModelFactory):
     class Meta:
         model = models.UserProfile
@@ -54,12 +55,10 @@ class ProfileFactory(factory.django.DjangoModelFactory):
     office = factory.SubFactory(OfficeFactory)
     job_title = 'Chief Tester'
     phone_number = '0123456789'
+    partner_staff_member = None
     # We pass in profile=None to prevent UserFactory from creating another profile
     # (this disables the RelatedFactory)
-    user = factory.SubFactory(
-        'etools.applications.users.tests.factories.UserFactory',
-        profile=None
-    )
+    user = factory.SubFactory('etools.applications.users.tests.factories.UserFactory', profile=None)
 
     @factory.post_generation
     def countries_available(self, create, extracted, **kwargs):

@@ -1,6 +1,7 @@
 from django.core import mail
 from django.core.management import call_command
 
+from etools.applications.action_points.models import ActionPoint
 from etools.applications.action_points.tests.factories import ActionPointFactory, UserFactory
 from etools.applications.audit.tests.factories import MicroAssessmentFactory
 from etools.applications.EquiTrack.tests.cases import BaseTenantTestCase
@@ -25,7 +26,7 @@ class ActionPointsEmailsTestCase(BaseTenantTestCase):
         self.assertEqual(len(mail.outbox), 0)
 
     def test_complete(self):
-        action_point = ActionPointFactory(status='pre_completed')
+        action_point = ActionPointFactory(status=ActionPoint.STATUS_OPEN, comments__count=1)
         mail.outbox = []
 
         action_point.complete()
@@ -34,7 +35,7 @@ class ActionPointsEmailsTestCase(BaseTenantTestCase):
 
     def test_author_complete(self):
         assigner = UserFactory(pme=True)
-        action_point = ActionPointFactory(status='pre_completed', assigned_by=assigner)
+        action_point = ActionPointFactory(status=ActionPoint.STATUS_OPEN, assigned_by=assigner, comments__count=1)
         mail.outbox = []
 
         action_point.complete(completed_by=assigner)
