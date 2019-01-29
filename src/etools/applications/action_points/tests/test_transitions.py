@@ -47,7 +47,7 @@ class TestActionPointsTransitionConditions(ActionPointTransitionTestCase):
         self.assertEquals(action_point.status, 'open')
 
     def test_complete_success(self):
-        action_point = ActionPointFactory(status='pre_completed')
+        action_point = ActionPointFactory(status=ActionPoint.STATUS_OPEN, comments__count=1)
 
         response = self._do_transition(action_point, 'complete', self.pme_user)
         self.assertEquals(response.status_code, status.HTTP_200_OK)

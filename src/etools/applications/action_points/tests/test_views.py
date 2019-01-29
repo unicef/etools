@@ -7,6 +7,7 @@ from factory import fuzzy
 from rest_framework import status
 
 from etools.applications.action_points.categories.models import Category
+from etools.applications.action_points.models import ActionPoint
 from etools.applications.action_points.tests.base import ActionPointsTestCaseMixin
 from etools.applications.action_points.tests.factories import ActionPointFactory, ActionPointCategoryFactory
 from etools.applications.EquiTrack.tests.cases import BaseTenantTestCase
@@ -216,7 +217,7 @@ class TestActionPointViewSet(TestExportMixin, ActionPointsTestCaseMixin, BaseTen
         self.assertEqual(len(response.data['history']), 1)
 
     def test_complete(self):
-        action_point = ActionPointFactory(status='pre_completed')
+        action_point = ActionPointFactory(status=ActionPoint.STATUS_OPEN, comments__count=1)
         self.assertEqual(action_point.history.count(), 0)
         response = self.forced_auth_req(
             'post',

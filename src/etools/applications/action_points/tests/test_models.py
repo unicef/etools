@@ -32,11 +32,11 @@ class TestActionPointModel(BaseTenantTestCase):
             action_point.complete()
 
     def test_complete(self):
-        action_point = ActionPointFactory(status='pre_completed')
+        action_point = ActionPointFactory(status=ActionPoint.STATUS_OPEN, comments__count=1)
         action_point.complete()
 
     def test_completion_date(self):
-        action_point = ActionPointFactory(status='pre_completed')
+        action_point = ActionPointFactory(status=ActionPoint.STATUS_OPEN, comments__count=1)
         self.assertIsNone(action_point.date_of_completion)
         action_point.complete()
         action_point.save()
@@ -51,7 +51,8 @@ class TestActionPointModel(BaseTenantTestCase):
         self.assertEqual(type(ActionPoint.objects.get(pk=action_point.pk).related_object), MicroAssessment)
 
     def test_tpm_related(self):
-        action_point = ActionPointFactory(tpm_activity=TPMVisitFactory(tpm_activities__count=1).tpm_activities.first())
+        activity = TPMVisitFactory(tpm_activities__count=1).tpm_activities.first()
+        action_point = ActionPointFactory(tpm_activity=activity)
         self.assertEqual(action_point.related_module, ActionPoint.MODULE_CHOICES.tpm)
 
     def test_t2f_related(self):
@@ -63,7 +64,7 @@ class TestActionPointModel(BaseTenantTestCase):
         self.assertEqual(action_point.related_module, ActionPoint.MODULE_CHOICES.apd)
 
     def test_additional_data(self):
-        action_point = ActionPointFactory(status='pre_completed')
+        action_point = ActionPointFactory(status=ActionPoint.STATUS_OPEN, comments__count=1)
         initial_data = create_dict_with_relations(action_point)
 
         action_point.assigned_to = UserFactory()

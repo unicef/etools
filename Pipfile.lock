@@ -1,7 +1,7 @@
 {
     "_meta": {
         "hash": {
-            "sha256": "5aafd5b2c4a08491b89fd1579636b92bafa12b60d7e03f3eeab249e6f980675f"
+            "sha256": "4709e9217caafec63730b3b2a78f5293ca12f435040b7d06fd19025d012f283d"
         },
         "pipfile-spec": 6,
         "requires": {
@@ -473,6 +473,21 @@
             ],
             "index": "pypi",
             "version": "==0.3.2"
+        },
+        "factory-boy": {
+            "hashes": [
+                "sha256:6f25cc4761ac109efd503f096e2ad99421b1159f01a29dbb917359dcd68e08ca",
+                "sha256:d552cb872b310ae78bd7429bf318e42e1e903b1a109e899a523293dfa762ea4f"
+            ],
+            "index": "pypi",
+            "version": "==2.11.1"
+        },
+        "faker": {
+            "hashes": [
+                "sha256:16342dca4d92bfc83bab6a7daf6650e0ab087605a66bc38f17523fdb01757910",
+                "sha256:d871ea315b2dcba9138b8344f2c131a76ac62d6227ca39f69b0c889fec97376c"
+            ],
+            "version": "==1.0.2"
         },
         "flower": {
             "hashes": [
@@ -953,6 +968,13 @@
             "index": "pypi",
             "version": "==0.2.1"
         },
+        "text-unidecode": {
+            "hashes": [
+                "sha256:5a1375bb2ba7968740508ae38d92e1f889a0832913cb1c447d5e2046061a396d",
+                "sha256:801e38bd550b943563660a91de8d4b6fa5df60a542be9093f7abf819f86050cc"
+            ],
+            "version": "==1.2"
+        },
         "tornado": {
             "hashes": [
                 "sha256:0662d28b1ca9f67108c7e3b77afabfb9c7e87bde174fbda78186ecedc2499a9d",
@@ -1186,10 +1208,11 @@
         },
         "factory-boy": {
             "hashes": [
-                "sha256:4b30ace5690cc286060c676140955ff9f22a8ce2ca6f2ee81b30c561b811a510"
+                "sha256:6f25cc4761ac109efd503f096e2ad99421b1159f01a29dbb917359dcd68e08ca",
+                "sha256:d552cb872b310ae78bd7429bf318e42e1e903b1a109e899a523293dfa762ea4f"
             ],
             "index": "pypi",
-            "version": "==2.8"
+            "version": "==2.11.1"
         },
         "faker": {
             "hashes": [

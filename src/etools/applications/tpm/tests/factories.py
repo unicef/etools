@@ -295,29 +295,31 @@ class TPMVisitFactory(factory.DjangoModelFactory):
         return super().attributes(create, extra)
 
     @factory.post_generation
-    def tpm_partner_focal_points(self, create, extracted, count, **kwargs):
+    def tpm_partner_focal_points(self, create, extracted, **kwargs):
         if not create:
             return
 
         if extracted is not None:
             self.tpm_partner_focal_points.add(*extracted)
         else:
+            count = kwargs.get('count', 0)
             self.tpm_partner_focal_points.add(*[TPMPartnerStaffMemberFactory(tpm_partner=self.tpm_partner)
                                                 for i in range(count)])
 
     @factory.post_generation
-    def tpm_activities(self, create, extracted, count, **kwargs):
+    def tpm_activities(self, create, extracted, **kwargs):
         if not create:
             return
 
+        count = kwargs.get('count', 0)
         for i in range(count):
             TPMActivityFactory(tpm_visit=self, **kwargs)
 
     @factory.post_generation
-    def report_reject_comments(self, create, extracted, count, **kwargs):
+    def report_reject_comments(self, create, extracted, **kwargs):
         if not create:
             return
-
+        count = kwargs.get('count', 0)
         for i in range(count):
             TPMVisitReportRejectComment(
                 tpm_visit=self,
@@ -325,9 +327,9 @@ class TPMVisitFactory(factory.DjangoModelFactory):
             )
 
     @factory.post_generation
-    def report_attachments(self, create, extracted, count, **kwargs):
+    def report_attachments(self, create, extracted, **kwargs):
         if not create:
             return
-
+        count = kwargs.get('count', 0)
         for i in range(count):
             AttachmentFactory(code='visit_report', content_object=self, **kwargs)
