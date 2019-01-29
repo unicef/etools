@@ -11,6 +11,9 @@ from etools.libraries.djangolib.utils import get_environment
 class AuditorFirm(BaseFirm):
     unicef_users_allowed = models.BooleanField(default=False, editable=False, verbose_name=_('UNICEF users allowed'),
                                                help_text=_('Allow UNICEF users to join and act as auditors.'))
+    supreme_institution_allowed = models.BooleanField(
+        default=False, editable=False, verbose_name=_('Supreme Institution allowed'),
+        help_text=_('Allow Supreme Institution users to join and act as auditors.'))
 
 
 class AuditorStaffMember(BaseStaffMember):

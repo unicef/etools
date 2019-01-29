@@ -80,6 +80,9 @@ from etools.applications.audit.serializers.engagement import (
     SpotCheckSerializer,
     StaffSpotCheckListSerializer,
     StaffSpotCheckSerializer,
+    SupremeInstitutionAuditListSerializer,
+    SupremeInstitutionAuditSerializer,
+    SupremeInstitutionSpecialAuditSerializer,
 )
 from etools.applications.audit.serializers.export import (
     AuditDetailCSVSerializer,
@@ -259,6 +262,7 @@ class EngagementViewSet(
 ):
     queryset = Engagement.objects.all()
     unicef_engagements = False
+    supreme_institution_audit = False
     serializer_class = EngagementSerializer
     serializer_action_classes = {
         'list': EngagementListSerializer,
@@ -327,7 +331,9 @@ class EngagementViewSet(
         )
 
         if self.action in ['list', 'export_list_csv']:
-            queryset = queryset.filter(agreement__auditor_firm__unicef_users_allowed=self.unicef_engagements)
+            queryset = queryset.filter(
+                agreement__auditor_firm__unicef_users_allowed=self.unicef_engagements,
+                agreement__auditor_firm__supreme_institution_allowed=self.supreme_institution_audit)
 
         return queryset
 
@@ -457,6 +463,33 @@ class StaffSpotCheckViewSet(SpotCheckViewSet):
     serializer_action_classes = {
         'list': StaffSpotCheckListSerializer
     }
+
+
+class SupremeInstitutionAuditViewSet(EngagementManagementMixin, EngagementViewSet):
+    supreme_institution_audit = True
+    serializer_class = EngagementSerializer
+    export_filename = 'supreme_institution'
+
+    serializer_action_classes = {
+        'list': SupremeInstitutionAuditListSerializer
+    }
+    ENGAGEMENT_MAPPING = {
+        Engagement.TYPES.audit: {
+            'serializer_class': SupremeInstitutionAuditSerializer,
+        },
+        Engagement.TYPES.sa: {
+            'serializer_class': SupremeInstitutionSpecialAuditSerializer,
+        }
+    }
+
+    def get_serializer_class(self):
+        serializer_class = None
+
+        if self.action == 'create':
+            engagement_type = self.request.data.get('engagement_type', None)
+            serializer_class = self.ENGAGEMENT_MAPPING.get(engagement_type, {}).get('serializer_class', None)
+
+        return serializer_class or super().get_serializer_class()
 
 
 class SpecialAuditViewSet(EngagementManagementMixin, EngagementViewSet):

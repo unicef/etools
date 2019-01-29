@@ -24,6 +24,8 @@ from etools.applications.audit.tests.factories import (
     SpecialAuditFactory,
     SpotCheckFactory,
     StaffSpotCheckFactory,
+    SupremeIstitutionAuditFactory,
+    SupremeIstitutionSpecialAuditFactory,
     UserFactory,
     AuditorUserFactory)
 from etools.applications.audit.tests.test_transitions import MATransitionsTestCaseMixin
@@ -1246,3 +1248,116 @@ class TestEngagementReportAttachmentsView(MATransitionsTestCaseMixin, BaseTenant
         )
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(len(response.data['results']), attachments_num + 1)
+
+
+class TestSupremeInstitutionAuditViewset(AuditTestCaseMixin, BaseTenantTestCase):
+    fixtures = ('audit_staff_organization',)
+
+    def test_list_options(self):
+        response = self.forced_auth_req(
+            'options',
+            reverse('audit:supreme-institution-audit-list'),
+            user=self.unicef_focal_point
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertIn('POST', response.data['actions'])
+
+    def test_create_audit(self):
+        audit = SupremeIstitutionAuditFactory()
+
+        create_data = {
+            'end_date': audit.end_date,
+            'start_date': audit.start_date,
+            'engagement_type': audit.engagement_type,
+            'partner_contacted_at': audit.partner_contacted_at,
+            'total_value': audit.total_value,
+            'partner': audit.partner_id,
+            'authorized_officers': audit.authorized_officers.values_list('id', flat=True),
+            'staff_members': audit.staff_members.values_list('id', flat=True),
+            'active_pd': audit.active_pd.values_list('id', flat=True),
+            'shared_ip_with': audit.shared_ip_with,
+        }
+
+        response = self.forced_auth_req(
+            'post',
+            reverse('audit:supreme-institution-audit-list'),
+            user=self.unicef_focal_point,
+            data=create_data
+        )
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        self.assertIsNotNone(response.data['agreement'])
+
+    def test_create_special_audit(self):
+        special_audit = SupremeIstitutionSpecialAuditFactory()
+
+        specific_procedures = [{
+            'description': sp.description,
+            'finding': sp.finding,
+        } for sp in special_audit.specific_procedures.all()]
+
+        create_data = {
+            'end_date': special_audit.end_date,
+            'start_date': special_audit.start_date,
+            'engagement_type': special_audit.engagement_type,
+            'partner_contacted_at': special_audit.partner_contacted_at,
+            'total_value': special_audit.total_value,
+            'partner': special_audit.partner_id,
+            'authorized_officers': special_audit.authorized_officers.values_list('id', flat=True),
+            'staff_members': special_audit.staff_members.values_list('id', flat=True),
+            'active_pd': special_audit.active_pd.values_list('id', flat=True),
+            'shared_ip_with': special_audit.shared_ip_with,
+            'specific_procedures': specific_procedures
+        }
+
+        response = self.forced_auth_req(
+            'post',
+            reverse('audit:supreme-institution-audit-list'),
+            user=self.unicef_focal_point,
+            data=create_data
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        self.assertIsNotNone(response.data['agreement'])
+
+    def test_list(self):
+        audit = SupremeIstitutionAuditFactory()
+        special_audit = SupremeIstitutionSpecialAuditFactory()
+
+        response = self.forced_auth_req(
+            'get',
+            reverse('audit:supreme-institution-audit-list'),
+            user=self.unicef_focal_point
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(response.data['results']), 2)
+        self.assertEqual(response.data['results'][0]['id'], audit.id)
+        self.assertEqual(response.data['results'][1]['id'], special_audit.id)
+
+        attachments_response = self.forced_auth_req(
+            'get',
+            reverse('audit:engagement-attachments-list', args=[audit.id]),
+            user=self.unicef_focal_point,
+        )
+        self.assertEqual(attachments_response.status_code, status.HTTP_200_OK)
+
+        attachments_response = self.forced_auth_req(
+            'get',
+            reverse('audit:engagement-attachments-list', args=[special_audit.id]),
+            user=self.unicef_focal_point,
+        )
+        self.assertEqual(attachments_response.status_code, status.HTTP_200_OK)
+
+    def test_engagements_list(self):
+        SupremeIstitutionAuditFactory()
+        SupremeIstitutionSpecialAuditFactory()
+
+        response = self.forced_auth_req(
+            'get',
+            reverse('audit:engagements-list'),
+            user=self.unicef_focal_point
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(response.data['results']), 0)

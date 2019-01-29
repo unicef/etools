@@ -12,6 +12,7 @@ root_api.register(r'engagements', views.EngagementViewSet, base_name='engagement
 root_api.register(r'micro-assessments', views.MicroAssessmentViewSet, base_name='micro-assessments')
 root_api.register(r'spot-checks', views.SpotCheckViewSet, base_name='spot-checks')
 root_api.register(r'staff-spot-checks', views.StaffSpotCheckViewSet, base_name='staff-spot-checks')
+root_api.register(r'supreme-institution-audits', views.SupremeInstitutionAuditViewSet, base_name='supreme-institution-audit')
 root_api.register(r'audits', views.AuditViewSet, base_name='audits')
 root_api.register(r'special-audits', views.SpecialAuditViewSet, base_name='special-audits')
 

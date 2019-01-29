@@ -521,3 +521,47 @@ class SpecialAuditSerializer(EngagementSerializer):
             'end_date': {'required': False},
             'total_value': {'required': False},
         })
+
+
+class SupremeInstitutionAuditListSerializer(EngagementListSerializer):
+    class Meta(EngagementListSerializer.Meta):
+        fields = copy(EngagementListSerializer.Meta.fields)
+        fields.remove('po_item')
+
+
+class SupremeInstitutionAuditSerializer(AuditSerializer):
+    agreement = PurchaseOrderSerializer(read_only=True, label=_('Purchase Order'))
+
+    class Meta(AuditSerializer.Meta):
+        fields = copy(AuditSerializer.Meta.fields)
+        fields.remove('po_item')
+        fields.remove('related_agreement')
+
+    def create(self, validated_data):
+        purchase_order = PurchaseOrder.objects.filter(auditor_firm__supreme_institution_allowed=True).first()
+        if not purchase_order:
+            raise serializers.ValidationError(
+                _("Supreme Institution Organization is missing. Please ask administrator to handle this.")
+            )
+        validated_data['agreement'] = purchase_order
+
+        return super().create(validated_data)
+
+
+class SupremeInstitutionSpecialAuditSerializer(SpecialAuditSerializer):
+    agreement = PurchaseOrderSerializer(read_only=True, label=_('Purchase Order'))
+
+    class Meta(SpecialAuditSerializer.Meta):
+        fields = copy(SpecialAuditSerializer.Meta.fields)
+        fields.remove('po_item')
+        fields.remove('related_agreement')
+
+    def create(self, validated_data):
+        purchase_order = PurchaseOrder.objects.filter(auditor_firm__supreme_institution_allowed=True).first()
+        if not purchase_order:
+            raise serializers.ValidationError(
+                _("Supreme Institution Organization is missing. Please ask administrator to handle this.")
+            )
+        validated_data['agreement'] = purchase_order
+
+        return super().create(validated_data)

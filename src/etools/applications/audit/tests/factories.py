@@ -127,6 +127,14 @@ class StaffSpotCheckFactory(SpotCheckFactory):
     agreement = factory.SubFactory(PurchaseOrderFactory, auditor_firm__unicef_users_allowed=True)
 
 
+class SupremeIstitutionAuditFactory(AuditFactory):
+    agreement = factory.SubFactory(PurchaseOrderFactory, auditor_firm__supreme_institution_allowed=True)
+
+
+class SupremeIstitutionSpecialAuditFactory(SpecialAuditFactory):
+    agreement = factory.SubFactory(PurchaseOrderFactory, auditor_firm__supreme_institution_allowed=True)
+
+
 class RiskCategoryFactory(factory.DjangoModelFactory):
     class Meta:
         model = RiskCategory
