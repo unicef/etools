@@ -8,8 +8,8 @@ defaults = {
     'content': strip_text("""
     Dear {{ staff_member }},
 
-    UNICEF has assingned a {{ engagement.engagement_type }} to you.
-    Please click link to gain access to the UNICEF Auditor Portal.
+    UNICEF has assigned a {{ engagement.engagement_type }} to you.
+    Please click link to login or sign up to gain access to the UNICEF Financial Assurance Module.
 
     {{ login_link }}
 
@@ -25,8 +25,10 @@ defaults = {
 
     <p>Dear {{ staff_member }},</p>
 
-    <p>UNICEF has assingned a {{ engagement.engagement_type }} to you.
-    Please click <a href="{{ login_link }}">link</a> to gain access to the UNICEF Auditor Portal.</p>
+    <p>UNICEF has assigned a {{ engagement.engagement_type }} to you.
+    Please click link to login or sign up to gain access to the UNICEF Financial Assurance Module.</p>
+
+    <a href="{{ login_link }}">link</a>
 
     <p style="text-align:right">eTools Team</p>
     {% endblock %}

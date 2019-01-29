@@ -17,7 +17,7 @@ from etools.applications.reports.tests.factories import ResultFactory, SectionFa
 from etools.applications.tpm.models import TPMActivity, TPMVisit, TPMVisitReportRejectComment
 from etools.applications.tpm.tpmpartners.models import TPMPartner, TPMPartnerStaffMember
 from etools.applications.users.tests.factories import OfficeFactory as SimpleOfficeFactory
-from etools.applications.utils.common.tests.factories import InheritedTrait
+from etools.libraries.tests.factories import InheritedTrait
 
 _FUZZY_START_DATE = timezone.now().date() - datetime.timedelta(days=5)
 _FUZZY_END_DATE = timezone.now().date() + datetime.timedelta(days=5)

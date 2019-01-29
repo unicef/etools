@@ -30,7 +30,7 @@ class TravelList(URLAssertionMixin, BaseTenantTestCase):
                                    supervisor=cls.unicef_staff)
 
     def test_urls(self):
-        '''Verify URL pattern names generate the URLs we expect them to.'''
+        """Verify URL pattern names generate the URLs we expect them to."""
         names_and_paths = (
             ('index', '', {}),
             ('state_change', 'save_and_submit/', {'transition_name': 'save_and_submit'}),
@@ -221,7 +221,7 @@ class TravelList(URLAssertionMixin, BaseTenantTestCase):
 
         data = {
             'f_travel_type': TravelType.PROGRAMME_MONITORING,
-            'f_month': t2.start_date.month - 1,  # Frontend sends 0-11
+            'f_month': t2.start_date.month,
             'f_cp_output': result.id,
         }
         response = self.forced_auth_req('get', reverse('t2f:travels:list:index'),
