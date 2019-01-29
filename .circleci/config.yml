@@ -22,7 +22,7 @@ jobs:
       - run:
           name: Run Tests
           command: |
-            pip install -q tox pipenv
+            pip install -q tox pipenv coverage
             tox -re d20,report
       - save_cache:
           key: deps2-{{ .Branch }}--{{ checksum "src/requirements/test.txt" }}-{{ checksum ".circleci/config.yml" }}
