@@ -35,6 +35,10 @@ from etools.applications.partners.models import (  # TODO intervention sector lo
 )
 
 
+class InterventionAmendmentAttachmentFileInline(AttachmentSingleInline):
+    verbose_name_plural = _("Attachment")
+
+
 class InterventionAmendmentsAdmin(admin.ModelAdmin):
     model = InterventionAmendment
     readonly_fields = [
@@ -50,6 +54,9 @@ class InterventionAmendmentsAdmin(admin.ModelAdmin):
         'intervention',
         'types'
     )
+    inlines = [
+        InterventionAmendmentAttachmentFileInline,
+    ]
 
     def has_delete_permission(self, request, obj=None):
         return False
