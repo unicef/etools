@@ -208,6 +208,11 @@ class Attachment(TimeStampedModel, models.Model):
         denormalize_attachment(self)
 
 
+class AttachmentFlatManager(models.Manager):
+    def get_queryset(self):
+        return super().get_queryset().exclude(source="Trips")
+
+
 class AttachmentFlat(models.Model):
     attachment = models.ForeignKey(
         NewAttachment,
@@ -274,6 +279,8 @@ class AttachmentFlat(models.Model):
         verbose_name=_('Uploaded by')
     )
     created = models.CharField(max_length=50, verbose_name=_('Created'))
+
+    objects = AttachmentFlatManager()
 
     def __str__(self):
         return str(self.attachment)

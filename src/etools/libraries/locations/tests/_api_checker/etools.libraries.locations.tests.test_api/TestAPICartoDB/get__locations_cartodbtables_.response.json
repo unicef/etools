@@ -7,7 +7,7 @@
         ],
         "vary": [
             "Vary",
-            "Accept, Cookie"
+            "Accept, Origin, Cookie"
         ],
         "allow": [
             "Allow",
@@ -19,19 +19,19 @@
         ],
         "content-length": [
             "Content-Length",
-            "174"
+            "177"
         ]
     },
     "data": [
         {
-            "id": "1",
+            "id": "34",
             "domain": "Domain 0",
             "api_key": "API Key 0",
             "table_name": "table_name_0",
             "display_name": "",
             "pcode_col": "pcode",
-            "color": "#F3BBD7",
-            "location_type": 7,
+            "color": "#3B0710",
+            "location_type": 216,
             "name_col": "name"
         }
     ],

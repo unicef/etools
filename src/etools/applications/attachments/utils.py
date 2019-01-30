@@ -143,6 +143,8 @@ def get_source(obj):
             return "Financial Assurance (FAM)"
         elif app_label == "tpm":
             return "Third Party Monitoring"
+        elif app_label == "t2f":
+            return "Trips"
     return ""
 
 

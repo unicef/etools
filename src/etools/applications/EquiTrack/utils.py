@@ -1,19 +1,11 @@
-"""
-Project wide base classes and utility functions for apps
-"""
 import codecs
 import csv
 import hashlib
-import json
 from datetime import datetime
 
 from django.conf import settings
 from django.contrib.sites.models import Site
 from django.core.cache import cache
-from django.db import connection
-from django.db.models import Q
-
-import requests
 
 
 def get_environment():
@@ -22,45 +14,6 @@ def get_environment():
 
 def get_current_site():
     return Site.objects.get_current()
-
-
-def set_country(user, request):
-    from etools.applications.users.models import Country
-
-    country = request.GET.get(settings.SCHEMA_OVERRIDE_PARAM, None)
-    if country:
-        try:
-            country = Country.objects.get(Q(name=country) | Q(country_short_code=country) | Q(schema_name=country))
-            if country in user.profile.countries_available.all():
-                country = country
-            else:
-                country = None
-        except Country.DoesNotExist:
-            country = None
-
-    request.tenant = country or user.profile.country or user.profile.country_override
-    connection.set_tenant(request.tenant)
-
-
-def get_data_from_insight(endpoint, data={}):
-    url = '{}/{}'.format(
-        settings.VISION_URL,
-        endpoint
-    ).format(**data)
-
-    response = requests.get(
-        url,
-        headers={'Content-Type': 'application/json'},
-        auth=(settings.VISION_USER, settings.VISION_PASSWORD),
-        verify=False
-    )
-    if response.status_code != 200:
-        return False, 'Loading data from Vision Failed, status {}'.format(response.status_code)
-    try:
-        result = json.loads(response.json())
-    except ValueError:
-        return False, 'Loading data from Vision Failed, no valid response returned for data: {}'.format(data)
-    return True, result
 
 
 class Vividict(dict):
@@ -75,7 +28,7 @@ class HashableDict(dict):
 
 
 def proccess_permissions(permission_dict):
-    '''
+    """
     :param permission_dict: the csv file read as a generator of dictionaries
      where the header contains the following keys:
 
@@ -106,7 +59,7 @@ def proccess_permissions(permission_dict):
                      'view': {'true': [{'condition': 'condition1',
                                         'group': 'PM',
                                         'status': 'Active'}]}}}
-    '''
+    """
 
     result = Vividict()
     possible_actions = ['edit', 'required', 'view']
@@ -174,13 +127,3 @@ def get_quarter(retrieve_date=None):
 
 def h11(w):
     return hashlib.md5(w).hexdigest()[:9]
-
-
-def is_user_in_groups(user, group_names):
-    """Utility function; returns True if user is in ANY of the groups in the group_names list, False if the user
-    is in none of them. Note that group_names should be a tuple or list, not a single string.
-    """
-    if isinstance(group_names, str):
-        # Anticipate common programming oversight.
-        raise ValueError('group_names parameter must be a tuple or list, not a string')
-    return user.groups.filter(name__in=group_names).exists()

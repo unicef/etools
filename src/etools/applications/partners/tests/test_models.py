@@ -10,7 +10,6 @@ from django.utils import timezone
 
 from freezegun import freeze_time
 from mock import Mock, patch
-from unicef_locations.tests.factories import LocationFactory
 
 from etools.applications.audit.models import Engagement
 from etools.applications.audit.tests.factories import AuditFactory, SpecialAuditFactory, SpotCheckFactory
@@ -49,12 +48,12 @@ from etools.applications.users.tests.factories import UserFactory
 
 
 def get_date_from_prior_year():
-    '''Return a date for which year < the current year'''
+    """Return a date for which year < the current year"""
     return datetime.date.today() - datetime.timedelta(days=700)
 
 
 class TestAgreementNumberGeneration(BaseTenantTestCase):
-    '''Test that agreements have the expected base and reference numbers for all types of agreements'''
+    """Test that agreements have the expected base and reference numbers for all types of agreements"""
     @classmethod
     def setUpTestData(cls):
         cls.date = datetime.date.today()
@@ -62,7 +61,7 @@ class TestAgreementNumberGeneration(BaseTenantTestCase):
         cls.tenant.save()
 
     def test_reference_number_pca(self):
-        '''Thoroughly exercise agreement reference numbers for PCA'''
+        """Thoroughly exercise agreement reference numbers for PCA"""
         # All of the agreements created here are PCAs, so id is the only part of the reference number that varies
         # for this test.
         reference_number_template = 'LEBA/PCA' + str(self.date.year) + '{id}'
@@ -100,7 +99,7 @@ class TestAgreementNumberGeneration(BaseTenantTestCase):
         self.assertEqual(agreement4.reference_number, reference_number_template.format(id=None))
 
     def test_reference_number_other(self):
-        '''Verify simple agreement reference # generation for all agreement types'''
+        """Verify simple agreement reference # generation for all agreement types"""
         reference_number_template = 'LEBA/{agreement_type}' + str(self.date.year) + '{id}'
         agreement_types = [agreement_type[0] for agreement_type in models.Agreement.AGREEMENT_TYPES]
         for agreement_type in agreement_types:
@@ -110,7 +109,7 @@ class TestAgreementNumberGeneration(BaseTenantTestCase):
             self.assertEqual(agreement.reference_number, expected_reference_number)
 
     def test_base_number_generation(self):
-        '''Verify correct values in the .base_number attribute'''
+        """Verify correct values in the .base_number attribute"""
         base_number_template = 'LEBA/PCA' + str(self.date.year) + '{id}'
         agreement = AgreementFactory()
 
@@ -127,7 +126,7 @@ class TestAgreementNumberGeneration(BaseTenantTestCase):
         self.assertEqual(agreement.base_number, '')
 
     def test_update_reference_number(self):
-        '''Exercise Agreement.update_reference_number()'''
+        """Exercise Agreement.update_reference_number()"""
         reference_number_template = 'LEBA/PCA' + str(self.date.year) + '{id}'
 
         agreement = AgreementFactory.build()
@@ -812,7 +811,7 @@ class TestInterventionModel(BaseTenantTestCase):
         self.assertEqual(int(self.intervention.total_unicef_budget), 20)
 
     def test_year(self):
-        '''Exercise the year property'''
+        """Exercise the year property"""
         self.assertIsNone(self.intervention.signed_by_unicef_date)
         self.assertEqual(self.intervention.year, self.intervention.created.year)
         self.intervention.signed_by_unicef_date = get_date_from_prior_year()
@@ -823,7 +822,7 @@ class TestInterventionModel(BaseTenantTestCase):
         self.assertEqual(i.year, datetime.date.today().year)
 
     def test_reference_number(self):
-        '''Exercise the reference number property'''
+        """Exercise the reference number property"""
         expected_reference_number = self.intervention.agreement.base_number + '/' + self.intervention.document_type
         expected_reference_number += str(self.intervention.created.year) + \
             str(self.intervention.id)
@@ -849,31 +848,6 @@ class TestInterventionModel(BaseTenantTestCase):
         self.assertCountEqual(intervention.all_lower_results, [
             lower_result_1,
             lower_result_2,
-        ])
-
-    def test_intervention_locations_empty(self):
-        self.assertFalse(self.intervention.intervention_locations())
-
-    def test_intervention_locations(self):
-        intervention = InterventionFactory()
-        link = InterventionResultLinkFactory(
-            intervention=intervention,
-        )
-        lower_result_1 = LowerResultFactory(result_link=link)
-        location_1 = LocationFactory()
-        applied_indicator_1 = AppliedIndicatorFactory(
-            lower_result=lower_result_1
-        )
-        applied_indicator_1.locations.add(location_1)
-        lower_result_2 = LowerResultFactory(result_link=link)
-        location_2 = LocationFactory()
-        applied_indicator_2 = AppliedIndicatorFactory(
-            lower_result=lower_result_2
-        )
-        applied_indicator_2.locations.add(location_2)
-        self.assertCountEqual(intervention.intervention_locations(), [
-            location_1,
-            location_2,
         ])
 
     def test_intervention_clusters_empty(self):
@@ -1471,11 +1445,11 @@ class TestInterventionReportingPeriod(BaseTenantTestCase):
 
 
 class TestStrUnicodeSlow(BaseTenantTestCase):
-    '''Ensure calling str() on model instances returns the right text.
+    """Ensure calling str() on model instances returns the right text.
 
     This is the same as TestStrUnicode below, except that it tests objects that need to be saved to the database
     so it's based on BaseTenantTestCase instead of TestCase.
-    '''
+    """
 
     def test_assessment(self):
         partner = PartnerFactory(name='xyz')
@@ -1496,7 +1470,7 @@ class TestStrUnicodeSlow(BaseTenantTestCase):
 
 
 class TestStrUnicode(SimpleTestCase):
-    '''Ensure calling str() on model instances returns the right text.'''
+    """Ensure calling str() on model instances returns the right text."""
 
     def test_workspace_file_type(self):
         instance = WorkspaceFileTypeFactory.build(name='xyz')

@@ -1,11 +1,12 @@
 from django.urls import reverse
 
+from unicef_locations.tests.factories import CartoDBTableFactory, GatewayTypeFactory, LocationFactory
+
 from etools.applications.EquiTrack.tests.cases import BaseTenantTestCase
-from etools.libraries.utils.test.api_checker import ViewSetChecker
-from unicef_locations.tests.factories import LocationFactory, GatewayTypeFactory, CartoDBTableFactory
+from etools.libraries.utils.test.api_checker import AssertTimeStampedMixin, ViewSetChecker
 
 
-class TestAPILocations(BaseTenantTestCase, metaclass=ViewSetChecker):
+class TestAPILocations(AssertTimeStampedMixin, BaseTenantTestCase, metaclass=ViewSetChecker):
     URLS = [
         reverse("locations-light-list"),
         reverse("locationtypes-list"),

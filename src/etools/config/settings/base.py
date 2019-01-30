@@ -227,8 +227,6 @@ ALLOWED_HOSTS = [
 ]
 SECRET_KEY = r"j8%#f%3t@9)el9jh4f0ug4*mm346+wwwti#6(^@_ksf@&k^ob1"  # only used locally
 
-# DJANGO: SERIALIZATION
-
 # DJANGO: TEMPLATES
 TEMPLATES = [
     {
@@ -280,15 +278,10 @@ AUTH_USER_MODEL = 'users.User'
 LOGIN_REDIRECT_URL = '/'
 
 HOST = get_from_secrets_or_env('DJANGO_ALLOWED_HOST', 'localhost:8000')
-LOGIN_URL = LOGOUT_REDIRECT_URL = 'http://etoolsinfo.unicef.org/'
-if HOST != 'etools.unicef.org':
-    host = HOST.split('.')[0]
-    LOGIN_URL = LOGOUT_REDIRECT_URL = f'{LOGIN_URL}?env={host}'
+LOGIN_URL = LOGOUT_REDIRECT_URL = get_from_secrets_or_env('LOGIN_URL', '/landing/')
 
 # CONTRIB: GIS (GeoDjango)
 POSTGIS_VERSION = (2, 1)
-
-# CONTRIB: MESSAGES
 
 # CONTRIB: SESSIONS
 SESSION_SERIALIZER = 'django.contrib.sessions.serializers.JSONSerializer'
@@ -447,12 +440,7 @@ JWT_AUTH = {
 
 # eTools settings ################################
 
-COUCHBASE_URL = get_from_secrets_or_env('COUCHBASE_URL')
-COUCHBASE_USER = get_from_secrets_or_env('COUCHBASE_USER')
-COUCHBASE_PASS = get_from_secrets_or_env('COUCHBASE_PASS')
-
 ENVIRONMENT = get_from_secrets_or_env('ENVIRONMENT', '')
-ETRIPS_VERSION = get_from_secrets_or_env('ETRIPS_VERSION')
 
 INACTIVE_BUSINESS_AREAS = get_from_secrets_or_env('INACTIVE_BUSINESS_AREAS', '').split(',')
 if INACTIVE_BUSINESS_AREAS == ['']:

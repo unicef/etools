@@ -9,7 +9,7 @@ isort
 ipython
 pdbpp
 tox
-drf-api-checker>=0.3
+drf-api-checker>=0.4
 django-extensions
 invoke
 pip-tools

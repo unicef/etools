@@ -311,7 +311,7 @@ class TravelDetailsSerializer(PermissionBasedModelSerializer):
         return data
 
     def align_dates_to_itinerary(self, data):
-        '''Updates travel start and end date based on itineraries'''
+        """Updates travel start and end date based on itineraries"""
         itinerary = data.get('itinerary', [])
         departures = []
         arrivals = []

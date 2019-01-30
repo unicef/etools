@@ -11,7 +11,7 @@ from etools.libraries.locations.tasks import (
 )
 
 
-class BackendCartoDBTableAdmin(CartoDBTableAdmin):
+class EtoolsCartoDBTableAdmin(CartoDBTableAdmin):
 
     def import_sites(self, request, queryset):
         # ensure the location tree is valid before we import/update the data
@@ -58,5 +58,5 @@ class RemapAdmin(admin.ModelAdmin):
 
 
 admin.site.unregister(CartoDBTable)
-admin.site.register(CartoDBTable, BackendCartoDBTableAdmin)
+admin.site.register(CartoDBTable, EtoolsCartoDBTableAdmin)
 admin.site.register(LocationRemapHistory, RemapAdmin)

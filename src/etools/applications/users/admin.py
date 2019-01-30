@@ -18,7 +18,6 @@ from etools.libraries.azure_graph_api.tasks import sync_user
 class ProfileInline(admin.StackedInline):
     model = UserProfile
     can_delete = False
-    verbose_name_plural = 'profile'
     fields = [
         'country',
         'country_override',
@@ -84,6 +83,7 @@ class ProfileAdmin(admin.ModelAdmin):
         'office',
         'job_title',
         'phone_number',
+        'country'
     )
     list_editable = (
         'office',
