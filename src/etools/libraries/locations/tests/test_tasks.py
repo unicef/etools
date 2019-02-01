@@ -3,7 +3,7 @@ from unittest.mock import Mock, patch
 from unicef_locations.models import Location
 from unicef_locations.tests.factories import CartoDBTableFactory, LocationFactory
 
-from etools.libraries.locations import tasks
+from etools.libraries.locations import tasks_cartodb
 from etools.applications.partners.models import Intervention
 from etools.applications.EquiTrack.tests.cases import BaseTenantTestCase
 from etools.applications.partners.tests.factories import InterventionFactory
@@ -25,19 +25,19 @@ class TestLocationViews(BaseTenantTestCase):
         self.geom = "MultiPolygon(((10 10, 10 20, 20 20, 20 15, 10 10)), ((10 10, 10 20, 20 20, 20 15, 10 10)))"
 
     def _run_validation(self, carto_table_pk):
-        with patch("unicef_locations.tasks.SQLClient.send", self.mock_sql):
-            return tasks.validate_locations_in_use(carto_table_pk)
+        with patch("unicef_locations.tasks_cartodb.SQLClient.send", self.mock_sql):
+            return tasks_cartodb.validate_carto_locations_in_use(carto_table_pk)
 
     def _run_update(self, carto_table_pk):
         # IMPORTANT mock the actual function loaded in tasks, it doesn't work by mocking the function in task_utils
         with patch(
-                "etools.libraries.locations.tasks.validate_remap_table", self.mock_remap_data), patch(
-                "etools.libraries.locations.tasks.get_cartodb_locations", self.mock_carto_data):
-            return tasks.update_sites_from_cartodb(carto_table_pk)
+                "etools.libraries.locations.tasks_cartodb.validate_remap_table", self.mock_remap_data), patch(
+                "etools.libraries.locations.tasks_cartodb.get_cartodb_locations", self.mock_carto_data):
+            return tasks_cartodb.update_sites_from_cartodb(carto_table_pk)
 
     def _run_cleanup(self, carto_table_pk):
-        with patch("unicef_locations.tasks.SQLClient.send", self.mock_sql):
-            return tasks.cleanup_obsolete_locations(carto_table_pk)
+        with patch("unicef_locations.tasks_cartodb.SQLClient.send", self.mock_sql):
+            return tasks_cartodb.cleanup_obsolete_locations(carto_table_pk)
 
     def _assert_response(self, response, expected_result):
         self.assertEqual(response, expected_result)
@@ -49,7 +49,7 @@ class TestLocationViews(BaseTenantTestCase):
         intervention.flat_locations.add(self.remapped_location)
         intervention.save()
 
-        with self.assertRaises(tasks.NoRemapInUseException):
+        with self.assertRaises(tasks_cartodb.NoRemapInUseException):
             self._run_validation(self.carto_table.pk)
 
     def test_remap_in_use_validation_success(self):
