@@ -7,7 +7,7 @@ from django.utils.safestring import mark_safe
 from django.utils.translation import ugettext_lazy as _
 
 from import_export.admin import ExportMixin
-from unicef_attachments.admin import AttachmentSingleInline
+from unicef_attachments.admin import AttachmentInline, AttachmentSingleInline
 from unicef_attachments.models import Attachment
 from unicef_snapshot.admin import ActivityInline, SnapshotModelAdmin
 
@@ -134,13 +134,14 @@ class InterventionPlannedVisitsInline(admin.TabularInline):
     extra = 0
 
 
-class AttachmentFileInline(AttachmentSingleInline):
+class AttachmentFileInline(AttachmentInline):
     verbose_name_plural = _("Attachment")
 
 
 class InterventionAttachmentAdmin(admin.ModelAdmin):
     model = InterventionAttachment
     list_display = (
+        'intervention',
         'attachment_file',
         'type',
     )
@@ -148,8 +149,8 @@ class InterventionAttachmentAdmin(admin.ModelAdmin):
         'intervention',
     )
     fields = (
+        'intervention',
         'type',
-        'attachment',
     )
     inlines = [
         AttachmentFileInline,
@@ -307,6 +308,21 @@ class InterventionAdmin(CountryUsersAdminMixin, HiddenPartnerMixin, SnapshotMode
         ))
 
     attachments_link.short_description = 'attachments'
+
+    def save_formset(self, request, form, formset, change):
+        instances = formset.save()
+        for instance in instances:
+            if isinstance(instance, InterventionAttachment):
+                # update attachment file data
+                content_type = ContentType.objects.get_for_model(instance)
+                Attachment.objects.update_or_create(
+                    object_id=instance.pk,
+                    content_type=content_type,
+                    defaults={
+                        "file": instance.attachment,
+                        "uploaded_by": request.user,
+                    }
+                )
 
 
 class AssessmentReportInline(AttachmentSingleInline):
