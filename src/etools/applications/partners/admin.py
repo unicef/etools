@@ -7,7 +7,7 @@ from django.utils.safestring import mark_safe
 from django.utils.translation import ugettext_lazy as _
 
 from import_export.admin import ExportMixin
-from unicef_attachments.admin import AttachmentInline, AttachmentSingleInline
+from unicef_attachments.admin import AttachmentSingleInline
 from unicef_attachments.models import Attachment
 from unicef_snapshot.admin import ActivityInline, SnapshotModelAdmin
 
@@ -134,7 +134,7 @@ class InterventionPlannedVisitsInline(admin.TabularInline):
     extra = 0
 
 
-class AttachmentFileInline(AttachmentInline):
+class AttachmentFileInline(AttachmentSingleInline):
     verbose_name_plural = _("Attachment")
 
 
