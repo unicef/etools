@@ -436,3 +436,20 @@ def send_agreement_suspended_notification(agreement, user):
             "pd_list": pd_list,  # section, pd_number, link
         }
     )
+
+
+def send_intervention_draft_notification():
+    """Send an email to PD/SHPD/SSFA's focal point(s) if in draft status"""
+    for intervention in Intervention.objects.filter(status=Intervention.DRAFT):
+        recipients = [
+            u.user.email for u in intervention.unicef_focal_points.all()
+            if u.user.email
+        ]
+        send_notification_with_template(
+            recipients=recipients,
+            template_name="partners/intervention/draft",
+            context={
+                "reference_number": intervention.reference_number,
+                "title": intervention.title,
+            }
+        )

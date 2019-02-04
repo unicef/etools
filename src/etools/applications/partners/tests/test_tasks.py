@@ -1024,3 +1024,17 @@ class TestCheckPCAMissing(BaseTenantTestCase):
         with mock.patch(send_path, mock_send):
             etools.applications.partners.tasks.check_pca_missing()
         self.assertEqual(mock_send.call_count, 1)
+
+
+class TestCheckInterventionDraftStatus(BaseTenantTestCase):
+    @classmethod
+    def setUpTestData(cls):
+        call_command("update_notifications")
+
+    def test_task(self):
+        send_path = "etools.applications.partners.utils.send_notification_with_template"
+        InterventionFactory(status=Intervention.DRAFT)
+        mock_send = mock.Mock()
+        with mock.patch(send_path, mock_send):
+            etools.applications.partners.tasks.check_intervention_draft_status()
+        self.assertEqual(mock_send.call_count, 1)

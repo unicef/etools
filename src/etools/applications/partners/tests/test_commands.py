@@ -353,3 +353,17 @@ class TestSendPCAMissingNotifications(BaseTenantTestCase):
         with patch(send_path, mock_send):
             call_command("send_pca_missing_notifications")
         self.assertEqual(mock_send.call_count, 1)
+
+
+class TestSendInterventionDraftNotifications(BaseTenantTestCase):
+    @classmethod
+    def setUpTestData(cls):
+        call_command("update_notifications")
+
+    def test_command(self):
+        send_path = "etools.applications.partners.utils.send_notification_with_template"
+        InterventionFactory(status=Intervention.DRAFT)
+        mock_send = Mock()
+        with patch(send_path, mock_send):
+            call_command("send_intervention_draft_notification")
+        self.assertEqual(mock_send.call_count, 1)
