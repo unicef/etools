@@ -7,14 +7,10 @@
         padding: 0;
         margin: 0;
     }
-    .unicefblue {
-      background-color: #42515A;
-    }
-
     .medium-tall{
         padding: 1%;
-        height: 100px;
-        background-color: #42515A;
+        height: 25px;
+        background-color: #233944;
         color: #ffffff;
     }
 
@@ -28,28 +24,26 @@
         padding-top: 3em;
     }
 
-  </style>
+</style>
 
 
- {% endblock %}
+{% endblock %}
 {% block toolbar %}
-        <div class="medium-tall">
-          <img src="{{ STATIC_URL }}images/unicefetools.svg" style="width:200px; max-width:80%;"></img>
-          <div class="bottom title">Country workspace not active</div>
-        </div>
+<div class="medium-tall">
+    <img src="{{ STATIC_URL }}images/unicefetools.svg" style="width:120px; max-width:80%;"/>
+</div>
 {% endblock toolbar %}
 
 {% block content %}
-    <div class="errorContent">
-        <h3> Hi {{ user }}, </h3>
-        <p>
-            Your workspace is curently inactive
-            <br>
-            Please contact the eTools focal point within your organization with any questions.
-
-        </p>
-        <a class="btn btn-primary btn-block btn-3d" href="https://etools-staging.unicef.org/">Go to Staging environment</a>
+<div class="errorContent">
+    <h3> Hi {{ user }}, </h3>
+    <p>
+        Your workspace is currently inactive
         <br>
-        <h3><a href="{% url "saml2_logout" %}">Log Out</a></h3>
-    </div>
+        Please contact the eTools focal point within your organization with any questions.
+    </p>
+    <a class="btn btn-primary btn-block btn-3d" href="https://etools-staging.unicef.org/">Go to Staging environment</a>
+    <br>
+    <h3><a href="{% url 'logout' %}">Log Out</a></h3>
+</div>
 {% endblock content %}
