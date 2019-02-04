@@ -2,41 +2,31 @@
 from rest_framework import mixins, viewsets
 from rest_framework.permissions import IsAdminUser
 from rest_framework.response import Response
+from unicef_restlib.views import QueryStringFilterMixin
 
 from etools.applications.action_points.models import ActionPoint
 from etools.applications.t2f.models import Travel
 
 
-class TravelDashboardViewSet(mixins.ListModelMixin,
-                             viewsets.GenericViewSet):
+class TravelDashboardViewSet(QueryStringFilterMixin, mixins.ListModelMixin, viewsets.GenericViewSet):
     queryset = Travel.objects.all()
     permission_classes = (IsAdminUser,)
 
+    filters = (
+        ('months', 'start_date__month__in'),
+        ('year', 'start_date__year'),
+        ('office_id', 'office__in'),
+    )
+
     def list(self, request, **kwargs):
         data = {}
-        months = request.query_params.get("months", None)
-        if months is not None:
-            months = map(lambda x: int(x), months.split(','))
-        year = request.query_params.get("year", None)
-        office_id = request.query_params.get("office_id", None)
-        try:
-            travels_all = Travel.objects.filter(
-                start_date__year=year,
-                start_date__month__in=months,
-            )
-        except ValueError:
-            travels_all = Travel.objects.filter(
-                start_date__year=year,
-            )
-
-        if office_id:
-            travels_all = travels_all.filter(office_id=office_id)
+        travels_all = self.get_queryset()
 
         data["planned"] = travels_all.filter(status=Travel.PLANNED).count()
         data["approved"] = travels_all.filter(status=Travel.APPROVED).count()
         data["completed"] = travels_all.filter(status=Travel.COMPLETED).count()
 
-        section_ids = Travel.objects.all().values_list('section', flat=True).distinct()
+        section_ids = Travel.objects.values_list('section', flat=True).distinct()
         travels_by_section = []
         for section_id in section_ids:
             travels = travels_all.filter(section=section_id)

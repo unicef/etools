@@ -10,5 +10,11 @@
         "fields": {
             "name": "UNICEF User"
         }
+    },
+    {
+        "model": "auth.group",
+        "fields": {
+            "name": "PME"
+        }
     }
 ]

@@ -1,60 +1,41 @@
-import csv
-import json
-
-from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.contrib.auth.models import Group
 from django.db import IntegrityError, transaction
-from django.utils.encoding import force_text
 
-import requests
 from celery.utils.log import get_task_logger
 
 from etools.applications.users.models import Country, UserProfile
-from etools.applications.vision.exceptions import VisionException
-from etools.applications.vision.models import VisionSyncLog
-from etools.applications.vision.vision_data_synchronizer import VISION_NO_DATA_MESSAGE
-from etools.config.celery import app
 
 logger = get_task_logger(__name__)
 
 
-class UserMapper(object):
+class AzureUserMapper:
 
-    KEY_ATTRIBUTE = 'internetaddress'
-
+    KEY_ATTRIBUTE = 'userPrincipalName'
     SPECIAL_FIELDS = ['country']
+
     REQUIRED_USER_FIELDS = [
         'givenName',
-        'internetaddress',
+        'userPrincipalName',
         'mail',
-        'sn'
-    ]
-    USER_FIELDS = [
-        'dn',
-        'upn',
-        'displayName',
-        'functionalTitle',
-        'gender',
-        'email',
-        'givenName',
-        'sn',
-        'unicefBusinessAreaCode',
+        'surname',
+        'userType',
+        ('companyName', ['UNICEF', ]),
     ]
 
     USER_ATTR_MAP = {
-        'dn': 'dn',
-        'username': 'mail',
-        'email': 'internetaddress',
+        'username': 'userPrincipalName',
+        'email': 'userPrincipalName',
         'first_name': 'givenName',
-        'last_name': 'sn',
+        'last_name': 'surname',
     }
 
     PROFILE_ATTR_MAP = {
-        'phone_number': 'telephoneNumber',
-        'country': 'unicefBusinessAreaCode',
-        'staff_id': 'unicefIndexNumber',
-        'post_title': 'functionalTitle'
+        'guid': 'id',
+        'phone_number': 'businessPhones',
+        'country': 'extension_f4805b4021f643d0aa596e1367d432f1_extensionAttribute1',
+        'staff_id': 'extension_f4805b4021f643d0aa596e1367d432f1_extensionAttribute2',
+        'post_title': 'jobTitle'
     }
 
     def __init__(self):
@@ -194,130 +175,3 @@ class UserMapper(object):
             profile.save()
 
         return modified
-
-
-class AzureUserMapper(UserMapper):
-    KEY_ATTRIBUTE = 'userPrincipalName'
-
-    REQUIRED_USER_FIELDS = [
-        'givenName',
-        'userPrincipalName',
-        'mail',
-        'surname',
-        'userType',
-        ('companyName', ['UNICEF', ]),
-    ]
-
-    USER_ATTR_MAP = {
-        'username': 'userPrincipalName',
-        'email': 'userPrincipalName',
-        'first_name': 'givenName',
-        'last_name': 'surname',
-    }
-
-    PROFILE_ATTR_MAP = {
-        'guid': 'id',
-        'phone_number': 'businessPhones',
-        'country': 'extension_f4805b4021f643d0aa596e1367d432f1_extensionAttribute1',
-        'staff_id': 'extension_f4805b4021f643d0aa596e1367d432f1_extensionAttribute2',
-        'post_title': 'jobTitle'
-    }
-
-
-def sync_users_remote():
-    from storages.backends.azure_storage import AzureStorage
-    storage = AzureStorage()
-    user_sync = UserMapper()
-    with storage.open('saml/etools.dat') as csvfile:
-        reader = csv.DictReader(csvfile, delimiter=bytes('|'))
-        for row in reader:
-            uni_row = {
-                str(key, 'latin-1'): str(value, 'latin-1') for key, value in row.items()}
-            user_sync.create_or_update_user(uni_row)
-
-
-@app.task
-def sync_users():
-    log = VisionSyncLog(
-        country=Country.objects.get(schema_name="public"),
-        handler_name='UserADSync'
-    )
-    try:
-        sync_users_remote()
-    except Exception as e:
-        log.exception_message = force_text(e)
-        raise VisionException(*e.args)
-    finally:
-        log.save()
-
-
-@app.task
-def map_users():
-    log = VisionSyncLog(
-        country=Country.objects.get(schema_name="public"),
-        handler_name='UserSupervisorMapper'
-    )
-    try:
-        user_sync = UserMapper()
-        user_sync.map_users()
-    except Exception as e:
-        log.exception_message = force_text(e)
-        raise VisionException(*e.args)
-    finally:
-        log.save()
-
-
-class UserVisionSynchronizer(object):
-
-    REQUIRED_KEYS_MAP = {
-        'GetOrgChartUnitsInfo_JSON': (
-            "ORG_UNIT_NAME",  # VARCHAR2	Vendor Name
-            "STAFF_ID",  # VARCHAR2    Staff Id
-            "MANAGER_ID",  # VARCHAR2    Manager Id
-            "ORG_UNIT_CODE",  # VARCHAR2    Org Unit Code
-            "VENDOR_CODE",  # VARCHAR2    Vendor code
-            "STAFF_EMAIL"
-        )
-    }
-
-    def __init__(self, endpoint_name, parameter):
-        self.url = '{}/{}/{}'.format(
-            settings.VISION_URL,
-            endpoint_name,
-            parameter
-        )
-        self.required_keys = self.REQUIRED_KEYS_MAP[endpoint_name]
-
-    def _get_json(self, data):
-        return '{}' if data == VISION_NO_DATA_MESSAGE else data
-
-    def _filter_records(self, records):
-        def is_valid_record(record):
-            for key in self.required_keys:
-                if key not in record:
-                    return False
-                if key == "STAFF_EMAIL" and not record[key]:
-                    return False
-            return True
-
-        return [rec for rec in records if is_valid_record(rec)]
-
-    def _load_records(self):
-        logger.debug(self.url)
-        response = requests.get(
-            self.url,
-            headers={'Content-Type': 'application/json'},
-            auth=(settings.VISION_USER, settings.VISION_PASSWORD),
-            verify=False
-        )
-        if response.status_code != 200:
-            raise VisionException('Load data failed! Http code: {}'.format(response.status_code))
-
-        return self._get_json(response.json())
-
-    def _convert_records(self, records):
-        return json.loads(records)
-
-    @property
-    def response(self):
-        return self._filter_records(self._convert_records(self._load_records()))

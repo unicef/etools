@@ -32,10 +32,9 @@ from etools.applications.audit.transitions.conditions import (
 from etools.applications.audit.transitions.serializers import EngagementCancelSerializer
 from etools.applications.EquiTrack.utils import get_environment
 from etools.applications.partners.models import PartnerOrganization, PartnerStaffMember
-from etools.applications.permissions2.fsm import has_action_permission
-from etools.applications.utils.common.models.mixins import InheritedModelMixin
+from etools.libraries.fsm.views import has_action_permission
 from etools.applications.utils.common.urlresolvers import build_frontend_url
-from etools.libraries.djangolib.models import GroupWrapper
+from etools.libraries.djangolib.models import GroupWrapper, InheritedModelMixin
 
 
 class Engagement(InheritedModelMixin, TimeStampedModel, models.Model):
@@ -160,7 +159,7 @@ class Engagement(InheritedModelMixin, TimeStampedModel, models.Model):
     joint_audit = models.BooleanField(verbose_name=_('Joint Audit'), default=False, blank=True)
     shared_ip_with = ArrayField(models.CharField(
         max_length=20, choices=PartnerOrganization.AGENCY_CHOICES
-    ), blank=True, default=[], verbose_name=_('Shared Audit with'))
+    ), blank=True, default=list, verbose_name=_('Shared Audit with'))
 
     staff_members = models.ManyToManyField(AuditorStaffMember, verbose_name=_('Staff Members'))
 

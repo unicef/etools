@@ -119,6 +119,10 @@ class PartnerStaffMemberCreateUpdateSerializer(serializers.ModelSerializer):
             raise ValidationError(
                 {'active': 'The email for the partner contact is used by another partner contact. Email has to be '
                            'unique to proceed {}'.format(email)})
+        else:
+            staff_member_qs = PartnerStaffMember.objects.filter(email=email)
+            if not self.instance and staff_member_qs.exists():
+                raise ValidationError({"email": "Email address in use already."})
 
         # make sure email addresses are not editable after creation.. user must be removed and re-added
         if self.instance:
@@ -347,7 +351,7 @@ class PartnerOrganizationCreateUpdateSerializer(SnapshotModelSerializer):
                 {'basis_for_risk_rating': 'The basis for risk rating has to be blank if Type is Low or High'})
 
         if basis_for_risk_rating and \
-                rating == PartnerOrganization.RATING_NON_ASSESSED and \
+                rating == PartnerOrganization.RATING_NOT_REQUIRED and \
                 type_of_assessment == PartnerOrganization.MICRO_ASSESSMENT:
             raise ValidationError({
                 'basis_for_risk_rating':

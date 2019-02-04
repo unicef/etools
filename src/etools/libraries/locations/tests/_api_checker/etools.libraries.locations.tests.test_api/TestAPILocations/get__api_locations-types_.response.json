@@ -7,7 +7,7 @@
         ],
         "vary": [
             "Vary",
-            "Accept, Cookie"
+            "Accept, Origin, Cookie"
         ],
         "allow": [
             "Allow",
@@ -19,17 +19,21 @@
         ],
         "content-length": [
             "Content-Length",
-            "97"
+            "263"
         ]
     },
     "data": [
         {
-            "id": 8,
+            "id": 217,
+            "created": "2019-01-11T16:16:52.942000Z",
+            "modified": "2019-01-11T16:16:52.942000Z",
             "name": "GatewayType 1",
             "admin_level": 1
         },
         {
-            "id": 9,
+            "id": 218,
+            "created": "2019-01-11T16:16:52.964000Z",
+            "modified": "2019-01-11T16:16:52.964000Z",
             "name": "GatewayType 2",
             "admin_level": 2
         }

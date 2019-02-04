@@ -7,7 +7,7 @@
         ],
         "etag": [
             "ETag",
-            "\"b793209cc6554c419595d8a51625aab6\""
+            "\"5580686f04214be0b62b1d6e7e1536ec\""
         ],
         "cache-control": [
             "Cache-Control",
@@ -15,7 +15,7 @@
         ],
         "vary": [
             "Vary",
-            "Accept, Cookie"
+            "Accept, Origin, Cookie"
         ],
         "allow": [
             "Allow",
@@ -27,7 +27,7 @@
         ],
         "content-length": [
             "Content-Length",
-            "129"
+            "212"
         ]
     },
     "data": [
@@ -36,7 +36,9 @@
             "name": "Location 0 [GatewayType 1 - abc]",
             "p_code": "abc",
             "gateway": {
-                "id": 8,
+                "id": 217,
+                "created": "2019-01-11T16:16:52.942511Z",
+                "modified": "2019-01-11T16:16:52.942797Z",
                 "name": "GatewayType 1",
                 "admin_level": 1
             }

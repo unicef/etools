@@ -15,11 +15,13 @@ from etools.applications.field_monitoring.fm_settings.models import CPOutputConf
 from etools.applications.field_monitoring.fm_settings.tests.factories import (
     CPOutputConfigFactory, LocationSiteFactory, FMMethodTypeFactory, PlannedCheckListItemFactory, CheckListItemFactory,
     FMMethodFactory, LogIssueFactory)
+from etools.applications.field_monitoring.shared.models import FMMethod
 from etools.applications.field_monitoring.tests.base import FMBaseTestCaseMixin
 from etools.applications.partners.models import PartnerType
 from etools.applications.partners.tests.factories import PartnerFactory, InterventionFactory
 from etools.applications.reports.models import ResultType
 from etools.applications.reports.tests.factories import ResultFactory, SectionFactory
+from etools.applications.utils.common.tests.test_utils import TestExportMixin
 
 
 class MethodsViewTestCase(FMBaseTestCaseMixin, BaseTenantTestCase):
@@ -168,7 +170,7 @@ class FMMethodTypesViewTestCase(FMBaseTestCaseMixin, BaseTenantTestCase):
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
 
 
-class LocationSitesViewTestCase(FMBaseTestCaseMixin, BaseTenantTestCase):
+class LocationSitesViewTestCase(TestExportMixin, FMBaseTestCaseMixin, BaseTenantTestCase):
     def test_list(self):
         LocationSiteFactory()
 
@@ -244,7 +246,7 @@ class LocationSitesViewTestCase(FMBaseTestCaseMixin, BaseTenantTestCase):
 
         response = self.forced_auth_req(
             'post', reverse('field_monitoring_settings:sites-list'),
-            user=self.fm_user,
+            user=self.pme,
             data={
                 'name': site.name,
                 'security_detail': site.security_detail,
@@ -258,6 +260,15 @@ class LocationSitesViewTestCase(FMBaseTestCaseMixin, BaseTenantTestCase):
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         self.assertIsNotNone(response.data['parent'])
 
+    def test_create_fm_user(self):
+        response = self.forced_auth_req(
+            'post', reverse('field_monitoring_settings:sites-list'),
+            user=self.fm_user,
+            data={}
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+
     def test_create_unicef(self):
         response = self.forced_auth_req(
             'post', reverse('field_monitoring_settings:sites-list'),
@@ -270,7 +281,7 @@ class LocationSitesViewTestCase(FMBaseTestCaseMixin, BaseTenantTestCase):
     def test_point_required(self):
         response = self.forced_auth_req(
             'post', reverse('field_monitoring_settings:sites-list'),
-            user=self.fm_user,
+            user=self.pme,
             data={
                 'name': fuzzy.FuzzyText().fuzz(),
                 'security_detail': fuzzy.FuzzyText().fuzz(),
@@ -285,10 +296,20 @@ class LocationSitesViewTestCase(FMBaseTestCaseMixin, BaseTenantTestCase):
 
         response = self.forced_auth_req(
             'delete', reverse('field_monitoring_settings:sites-detail', args=[instance.id]),
-            user=self.fm_user,
+            user=self.pme,
         )
 
         self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
+
+    def test_destroy_fm_user(self):
+        instance = LocationSiteFactory()
+
+        response = self.forced_auth_req(
+            'delete', reverse('field_monitoring_settings:sites-detail', args=[instance.id]),
+            user=self.fm_user,
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
 
     def test_destroy_unicef(self):
         instance = LocationSiteFactory()
@@ -299,6 +320,17 @@ class LocationSitesViewTestCase(FMBaseTestCaseMixin, BaseTenantTestCase):
         )
 
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+
+    def test_csv_export(self):
+        LocationSiteFactory()
+        site2 = LocationSiteFactory()
+        site2.parent = LocationFactory(parent=LocationFactory())
+        site2.save()
+
+        self._test_export(self.unicef_user, 'field_monitoring_settings:sites-export')
+
+    def test_csv_export_no_sites(self):
+        self._test_export(self.unicef_user, 'field_monitoring_settings:sites-export')
 
 
 class LocationsCountryViewTestCase(FMBaseTestCaseMixin, BaseTenantTestCase):
@@ -487,7 +519,9 @@ class CheckListViewTestCase(FMBaseTestCaseMixin, BaseTenantTestCase):
         self.assertEqual(len(response.data), 20)
 
 
-class PlannedCheckListItemViewTestCase(FMBaseTestCaseMixin, BaseTenantTestCase):
+class PlannedCheckListItemViewTestCase(FMBaseTestCaseMixin, TestExportMixin, BaseTenantTestCase):
+    fixtures = ['field_monitoring_methods', ]
+
     def setUp(self):
         super().setUp()
 
@@ -578,8 +612,18 @@ class PlannedCheckListItemViewTestCase(FMBaseTestCaseMixin, BaseTenantTestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(len(response.data['results']), 1)
 
+    def test_csv_export(self):
+        config = CPOutputConfigFactory()
+        config.recommended_method_types.add(*[FMMethodTypeFactory() for i in range(2)])
+        PlannedCheckListItemFactory(cp_output_config=config, partners_info__count=1)
+        PlannedCheckListItemFactory(cp_output_config=config, methods=FMMethod.objects.all(), partners_info__count=1)
 
-class LogIssueViewTestCase(FMBaseTestCaseMixin, BaseTenantTestCase):
+        self._test_export(
+            self.unicef_user, 'field_monitoring_settings:planned-checklist-items-export', args=[config.id]
+        )
+
+
+class LogIssueViewTestCase(FMBaseTestCaseMixin, TestExportMixin, BaseTenantTestCase):
     @classmethod
     def setUpTestData(cls):
         super().setUpTestData()
@@ -735,6 +779,13 @@ class LogIssueViewTestCase(FMBaseTestCaseMixin, BaseTenantTestCase):
 
     def test_related_to_location_filter(self):
         self._test_related_to_filter('location', [self.log_issue_location, self.log_issue_location_site])
+
+    def test_csv_export(self):
+        log_issue = LogIssueFactory(partner=PartnerFactory())
+        AttachmentFactory(content_object=log_issue,
+                          file=SimpleUploadedFile('hello_world.txt', u'hello world!'.encode('utf-8')))
+
+        self._test_export(self.unicef_user, 'field_monitoring_settings:log-issues-export')
 
 
 class TestLogIssueAttachmentsView(FMBaseTestCaseMixin, BaseTenantTestCase):

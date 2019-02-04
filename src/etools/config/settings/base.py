@@ -18,9 +18,7 @@ import os
 from os.path import abspath, basename, dirname, join, normpath
 
 import dj_database_url
-import saml2
 import yaml
-from saml2 import saml
 
 import etools
 
@@ -111,6 +109,7 @@ USE_TZ = True
 # DJANGO: HTTP
 MIDDLEWARE = (
     'django.contrib.sessions.middleware.SessionMiddleware',
+    'etools.applications.EquiTrack.auth.CustomSocialAuthExceptionMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'etools.applications.tokens.middleware.TokenAuthenticationMiddleware',
     'django.middleware.common.CommonMiddleware',
@@ -174,10 +173,10 @@ SHARED_APPS = (
     'djcelery_email',
     'leaflet',
     'corsheaders',
-    'djangosaml2',
     'mptt',
     'easy_pdf',
     'ordered_model',
+    'social_django',
     'django_extensions',
     'etools.applications.vision',
     'etools.applications.publics',
@@ -228,8 +227,6 @@ ALLOWED_HOSTS = [
 ]
 SECRET_KEY = r"j8%#f%3t@9)el9jh4f0ug4*mm346+wwwti#6(^@_ksf@&k^ob1"  # only used locally
 
-# DJANGO: SERIALIZATION
-
 # DJANGO: TEMPLATES
 TEMPLATES = [
     {
@@ -257,6 +254,9 @@ TEMPLATES = [
                 'django.template.context_processors.static',
                 'django.template.context_processors.tz',
                 'django.contrib.messages.context_processors.messages',
+                'social_django.context_processors.backends',
+                'social_django.context_processors.login_redirect',
+
             ],
         },
     },
@@ -270,22 +270,18 @@ ROOT_URLCONF = 'etools.config.urls'
 
 # CONTRIB: AUTH
 AUTHENTICATION_BACKENDS = (
+    # 'social_core.backends.azuread_b2c.AzureADB2COAuth2',
+    'etools.applications.EquiTrack.auth.CustomAzureADBBCOAuth2',
     'django.contrib.auth.backends.ModelBackend',
-    'djangosaml2.backends.Saml2Backend',
 )
 AUTH_USER_MODEL = 'users.User'
 LOGIN_REDIRECT_URL = '/'
 
 HOST = get_from_secrets_or_env('DJANGO_ALLOWED_HOST', 'localhost:8000')
-LOGIN_URL = LOGOUT_REDIRECT_URL = 'http://etoolsinfo.unicef.org/'
-if HOST != 'etools.unicef.org':
-    host = HOST.split('.')[0]
-    LOGIN_URL = LOGOUT_REDIRECT_URL = f'{LOGIN_URL}?env={host}'
+LOGIN_URL = LOGOUT_REDIRECT_URL = get_from_secrets_or_env('LOGIN_URL', '/landing/')
 
 # CONTRIB: GIS (GeoDjango)
 POSTGIS_VERSION = (2, 1)
-
-# CONTRIB: MESSAGES
 
 # CONTRIB: SESSIONS
 SESSION_SERIALIZER = 'django.contrib.sessions.serializers.JSONSerializer'
@@ -374,7 +370,7 @@ REST_FRAMEWORK = {
         'rest_framework_xml.renderers.XMLRenderer',
         'rest_framework.renderers.MultiPartRenderer',
     ),
-    'DEFAULT_SCHEMA_CLASS': 'etools.applications.utils.common.inspectors.EToolsSchema',
+    'DEFAULT_SCHEMA_CLASS': 'etools.applications.EquiTrack.inspectors.EToolsSchema',
 }
 
 # django-cors-headers: https://github.com/ottoyiu/django-cors-headers
@@ -405,89 +401,7 @@ TENANT_DOMAIN_MODEL = "EquiTrack.Domain"
 # https://django-tenant-schemas.readthedocs.io/en/latest/use.html#performance-considerations
 TENANT_LIMIT_SET_CALLS = True
 
-# django-saml2: https://github.com/robertavram/djangosaml2
-SAML_ATTRIBUTE_MAPPING = {
-    'upn': ('username',),
-    'emailAddress': ('email',),
-    'givenName': ('first_name',),
-    'surname': ('last_name',),
-}
-SAML_DJANGO_USER_MAIN_ATTRIBUTE = 'email'
-SAML_CREATE_UNKNOWN_USER = True
-SAML_CONFIG = {
-    # full path to the xmlsec1 binary programm
-    'xmlsec_binary': '/usr/bin/xmlsec1',
-
-    # your entity id, usually your subdomain plus the url to the metadata view
-    'entityid': 'https://{}/saml2/metadata/'.format(HOST),
-
-    # directory with attribute mapping
-    'attribute_map_dir': join(CONFIG_ROOT, 'saml/attribute-maps'),
-
-    # this block states what services we provide
-    'service': {
-        # we are just a lonely SP
-        'sp': {
-            'name': 'eTools',
-            'name_id_format': saml.NAMEID_FORMAT_PERSISTENT,
-            'endpoints': {
-                # url and binding to the assetion consumer service view
-                # do not change the binding or service name
-                'assertion_consumer_service': [
-                    ('https://{}/saml2/acs/'.format(HOST),
-                     saml2.BINDING_HTTP_POST),
-                ],
-                # url and binding to the single logout service view
-                # do not change the binding or service name
-                'single_logout_service': [
-                    ('https://{}/saml2/ls/'.format(HOST),
-                     saml2.BINDING_HTTP_REDIRECT),
-                    ('https://{}/saml2/ls/post'.format(HOST),
-                     saml2.BINDING_HTTP_POST),
-                ],
-
-            },
-
-            # attributes that this project needs to identify a user
-            'required_attributes': ['upn', 'emailAddress'],
-        },
-    },
-    # where the remote metadata is stored
-    'metadata': {
-        "local": [join(CONFIG_ROOT, 'saml/federationmetadata.xml')],
-    },
-
-    # set to 1 to output debugging information
-    'debug': 1,
-
-    # allow 300 seconds for time difference between adfs server and etools server
-    'accepted_time_diff': 300,  # in seconds
-
-    # certificate
-    'key_file': join(CONFIG_ROOT, 'saml/certs/saml.key'),  # private part
-    'cert_file': join(CONFIG_ROOT, 'saml/certs/sp.crt'),  # public part
-    'encryption_keypairs': [{
-        'key_file': join(CONFIG_ROOT, 'saml/certs/saml.key'),
-        'cert_file': join(CONFIG_ROOT, 'saml/certs/sp.crt'),
-    }],
-
-    # own metadata settings
-    'contact_person': [
-        {'given_name': 'James',
-         'sur_name': 'Cranwell-Ward',
-         'company': 'UNICEF',
-         'email_address': 'jcranwellward@unicef.org',
-         'contact_type': 'technical'},
-    ],
-    # you can set multilanguage information here
-    'organization': {
-        'name': [('UNICEF', 'en')],
-        'display_name': [('UNICEF', 'en')],
-        'url': [('http://www.unicef.org', 'en')],
-    },
-    'valid_for': 24,  # how long is our metadata valid
-}
-SAML_SIGNED_LOGOUT = True
+HOST = get_from_secrets_or_env('DJANGO_ALLOWED_HOST', 'localhost:8000')
 
 # django-rest-framework-jwt: http://getblimp.github.io/django-rest-framework-jwt/
 JWT_AUTH = {
@@ -526,14 +440,7 @@ JWT_AUTH = {
 
 # eTools settings ################################
 
-COUCHBASE_URL = get_from_secrets_or_env('COUCHBASE_URL')
-COUCHBASE_USER = get_from_secrets_or_env('COUCHBASE_USER')
-COUCHBASE_PASS = get_from_secrets_or_env('COUCHBASE_PASS')
-
-DISABLE_INVOICING = str2bool(get_from_secrets_or_env('DISABLE_INVOICING'))
-
 ENVIRONMENT = get_from_secrets_or_env('ENVIRONMENT', '')
-ETRIPS_VERSION = get_from_secrets_or_env('ETRIPS_VERSION')
 
 INACTIVE_BUSINESS_AREAS = get_from_secrets_or_env('INACTIVE_BUSINESS_AREAS', '').split(',')
 if INACTIVE_BUSINESS_AREAS == ['']:
@@ -586,6 +493,43 @@ PASSWORDLESS_AUTH = {
     # username is better choice as it can be only 30 symbols max and unique.
     'PASSWORDLESS_USER_EMAIL_FIELD_NAME': 'username'
 }
+
+
+KEY = os.getenv('AZURE_B2C_CLIENT_ID', None)
+SECRET = os.getenv('AZURE_B2C_CLIENT_SECRET', None)
+
+SOCIAL_AUTH_URL_NAMESPACE = 'social'
+SOCIAL_AUTH_SANITIZE_REDIRECTS = False
+SOCIAL_AUTH_POSTGRES_JSONFIELD = True
+POLICY = os.getenv('AZURE_B2C_POLICY_NAME', "b2c_1A_UNICEF_PARTNERS_signup_signin")
+
+TENANT_ID = os.getenv('AZURE_B2C_TENANT', 'unicefpartners.onmicrosoft.com')
+SCOPE = ['openid', 'email']
+IGNORE_DEFAULT_SCOPE = True
+SOCIAL_AUTH_USERNAME_IS_FULL_EMAIL = True
+SOCIAL_AUTH_PROTECTED_USER_FIELDS = ['email']
+# In case we decide to whitelist:
+# SOCIAL_AUTH_WHITELISTED_DOMAINS = ['unicef.org', 'google.com', 'ravdev.com']
+LOGIN_ERROR_URL = "/workspace_inactive"
+JWT_LEEWAY = 1000
+
+SOCIAL_PASSWORD_RESET_POLICY = os.getenv('AZURE_B2C_PASS_RESET_POLICY', "B2C_1_PasswordResetPolicy")
+SOCIAL_AUTH_PIPELINE = (
+    # 'social_core.pipeline.social_auth.social_details',
+    'etools.applications.EquiTrack.auth.social_details',
+    'social_core.pipeline.social_auth.social_uid',
+    # allows based on emails being listed in 'WHITELISTED_EMAILS' or 'WHITELISTED_DOMAINS'
+    'social_core.pipeline.social_auth.auth_allowed',
+    'social_core.pipeline.social_auth.social_user',
+    # 'social_core.pipeline.user.get_username',
+    'etools.applications.EquiTrack.auth.get_username',
+    'social_core.pipeline.social_auth.associate_by_email',
+    'etools.applications.EquiTrack.auth.create_user',
+    'social_core.pipeline.social_auth.associate_user',
+    'social_core.pipeline.social_auth.load_extra_data',
+    'social_core.pipeline.user.user_details',
+    'etools.applications.EquiTrack.auth.user_details',
+)
 
 REPORT_EMAILS = get_from_secrets_or_env('REPORT_EMAILS', 'etools@unicef.org').replace(' ', '').split(',')
 

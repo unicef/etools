@@ -1,15 +1,18 @@
-
 from django.conf import settings
 from django.conf.urls import include, url
 from django.contrib import admin
 from django.views.generic import TemplateView
 
-import djangosaml2.views
 import rest_framework_jwt.views
 from rest_framework_nested import routers
 from rest_framework_swagger.renderers import OpenAPIRenderer
 
-from etools.applications.EquiTrack.views import IssueJWTRedirectView, MainView, OutdatedBrowserView
+from etools.applications.EquiTrack.views import (
+    IssueJWTRedirectView,
+    logout_view,
+    MainView,
+    OutdatedBrowserView
+)
 from etools.applications.management.urls import urlpatterns as management_urls
 from etools.applications.partners.views.v1 import FileTypeViewSet
 from etools.applications.publics import urls as publics_patterns
@@ -24,7 +27,7 @@ from etools.applications.users.views import (
     OfficeViewSet,
     UserViewSet,
 )
-from etools.applications.utils.common.schemas import get_schema_view, get_swagger_view
+from etools.applications.EquiTrack.schemas import get_schema_view, get_swagger_view
 from etools.libraries.locations.views import (
     CartoDBTablesView,
     LocationQuerySetView,
@@ -68,6 +71,7 @@ urlpatterns = [
     # Used for admin and dashboard pages in django
     url(r'^$', ModuleRedirectView.as_view(), name='dashboard'),
     url(r'^login/$', MainView.as_view(), name='main'),
+    url(r'^logout/$', logout_view, name='logout'),
     url(r'^tokens/', include('etools.applications.tokens.urls')),
 
     url(r'^api/static_data/$', StaticDataView.as_view({'get': 'list'}), name='public_static'),
@@ -114,7 +118,6 @@ urlpatterns = [
     url(r'^admin/', admin.site.urls),
 
     # helper urls
-    url(r'^saml2/', include('djangosaml2.urls')),
     url(r'^login/token-auth/', rest_framework_jwt.views.obtain_jwt_token),
     # TODO: remove this when eTrips is deployed needed
     url(r'^api-token-auth/', rest_framework_jwt.views.obtain_jwt_token),
@@ -124,6 +127,7 @@ urlpatterns = [
 
     url(r'^api/jwt/get/$', IssueJWTRedirectView.as_view(), name='issue JWT'),
 
+    url('^social/', include('social_django.urls', namespace='social')),
     url('^monitoring/', include('etools.libraries.monitoring.urls')),
 ]
 
@@ -133,5 +137,4 @@ if settings.DEBUG:
 
     urlpatterns += [
         url(r'^__debug__/', include(debug_toolbar.urls)),
-        url(r'^test/', djangosaml2.views.echo_attributes),
     ]

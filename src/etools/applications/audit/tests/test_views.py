@@ -42,7 +42,7 @@ class BaseTestCategoryRisksViewSet(EngagementTransitionsTestCaseMixin):
         self.assertTrue(isinstance(response.data['results'], list))
 
     def _test_engagement_categories(self, category_code, field_name, allowed_user, many=False):
-        '''
+        """
         Request example:
 
         {
@@ -79,7 +79,7 @@ class BaseTestCategoryRisksViewSet(EngagementTransitionsTestCaseMixin):
                 ]
             }
         }
-        '''
+        """
         old_risk_ids = list(self.engagement.risks.values_list('id', flat=True))
 
         category_dict = {

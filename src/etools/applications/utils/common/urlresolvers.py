@@ -1,4 +1,4 @@
-from urllib.parse import urljoin
+from urllib.parse import parse_qsl, urlencode, urljoin, urlparse, urlunparse
 
 from django.conf import settings
 from django.db import connection
@@ -7,26 +7,31 @@ from django.urls import reverse
 from etools.applications.users.models import Country
 
 
-def site_url():
-    return 'https://{0}'.format(settings.HOST)
-
-
 def build_absolute_url(url):
     if not url:
         return ''
 
-    return urljoin(site_url(), url)
+    return urljoin(settings.HOST, url)
 
 
-def build_frontend_url(*parts, user=None, include_token=False, **kwargs):
-    from etools.applications.tokens.utils import update_url_with_kwargs, update_url_with_auth_token
+def update_url_with_kwargs(url, **kwargs):
+    if not url:
+        return
 
-    frontend_url = site_url()
+    url_parts = list(urlparse(url))
+    query = dict(parse_qsl(url_parts[4]))
+    query.update(kwargs)
+    url_parts[4] = urlencode(query)
+
+    return urlunparse(url_parts)
+
+
+def build_frontend_url(*parts, user=None, **kwargs):
 
     if not user or user.is_staff:
-        frontend_url += reverse('main')
+        frontend_url = '{}{}'.format(settings.HOST, reverse('main'))
     else:
-        frontend_url += reverse('tokens:login')
+        frontend_url = '{}{}'.format(settings.HOST, reverse('social:begin', kwargs={'backend': 'azuread-b2c-oauth2'}))
 
     change_country_view = update_url_with_kwargs(
         reverse('users:country-change'),
@@ -35,8 +40,5 @@ def build_frontend_url(*parts, user=None, include_token=False, **kwargs):
     )
 
     frontend_url = update_url_with_kwargs(frontend_url, next=change_country_view)
-
-    if user and include_token:
-        frontend_url = update_url_with_auth_token(frontend_url, user)
 
     return frontend_url

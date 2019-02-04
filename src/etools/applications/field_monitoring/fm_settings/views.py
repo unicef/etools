@@ -1,9 +1,11 @@
 from datetime import date, timedelta
 
 from django.db import models
+from django.utils import timezone
 from django.utils.translation import ugettext_lazy as _
 
 from rest_framework import mixins, viewsets, views, generics
+from rest_framework.decorators import action
 from rest_framework.filters import OrderingFilter, SearchFilter
 from rest_framework.generics import get_object_or_404
 from rest_framework.response import Response
@@ -15,6 +17,10 @@ from unicef_djangolib.etag import etag_cached
 from unicef_locations.models import Location
 from unicef_locations.serializers import LocationLightSerializer
 
+from etools.applications.field_monitoring.fm_settings.export.renderers import LocationSiteCSVRenderer, \
+    LogIssueCSVRenderer, CheckListCSVRenderer
+from etools.applications.field_monitoring.fm_settings.export.serializers import LocationSiteExportSerializer, \
+    LogIssueExportSerializer, CheckListExportSerializer
 from etools.applications.field_monitoring.fm_settings.filters import CPOutputIsActiveFilter, \
     LogIssueRelatedToTypeFilter, \
     LogIssueVisitFilter, LogIssueNameOrderingFilter
@@ -35,7 +41,7 @@ from etools.applications.field_monitoring.fm_settings.serializers.methods import
 from etools.applications.field_monitoring.shared.models import FMMethod
 from etools.applications.field_monitoring.views import FMBaseViewSet, FMBaseAttachmentsViewSet
 from etools.applications.field_monitoring.metadata import PermissionBasedMetadata
-from etools.applications.field_monitoring.permissions import UserIsFieldMonitor
+from etools.applications.field_monitoring.permissions import UserIsFieldMonitor, IsPME
 from etools.applications.partners.models import PartnerOrganization
 from etools.applications.permissions_simplified.views import SimplePermittedViewSetMixin
 from etools.applications.reports.models import Result, ResultType
@@ -75,7 +81,7 @@ class LocationSitesViewSet(
     SimplePermittedViewSetMixin,
     viewsets.ModelViewSet,
 ):
-    write_permission_classes = [UserIsFieldMonitor]
+    write_permission_classes = [IsPME]
     metadata_class = PermissionBasedMetadata
     queryset = LocationSite.objects.prefetch_related('parent').order_by('parent__name', 'name')
     serializer_class = LocationSiteSerializer
@@ -93,6 +99,21 @@ class LocationSitesViewSet(
     @etag_cached('fm-sites')
     def list(self, request, *args, **kwargs):
         return super().list(request, *args, **kwargs)
+
+    @action(detail=False, methods=['get'], url_path='export')
+    def export(self, request, *args, **kwargs):
+        instances = self.filter_queryset(self.get_queryset())
+
+        if instances:
+            max_admin_level = max(len(site.parent.get_ancestors(include_self=True)) for site in instances)
+        else:
+            max_admin_level = 0
+
+        request.accepted_renderer = LocationSiteCSVRenderer(max_admin_level=max_admin_level)
+        serializer = LocationSiteExportSerializer(instances, many=True, max_admin_level=max_admin_level)
+        return Response(serializer.data, headers={
+            'Content-Disposition': 'attachment;filename=location_sites_{}.csv'.format(timezone.now().date())
+        })
 
 
 class LocationsCountryView(views.APIView):
@@ -222,6 +243,14 @@ class PlannedCheckListItemViewSet(
 
         return obj
 
+    @action(detail=False, methods=['get'], url_path='export', renderer_classes=[CheckListCSVRenderer])
+    def export(self, request, *args, **kwargs):
+        instances = self.filter_queryset(self.get_queryset())
+        serializer = CheckListExportSerializer(instances, many=True)
+        return Response(serializer.data, headers={
+            'Content-Disposition': 'attachment;filename=checklist_{}.csv'.format(timezone.now().date())
+        })
+
 
 class LogIssuesViewSet(FMBaseViewSet, SimplePermittedViewSetMixin, viewsets.ModelViewSet):
     write_permission_classes = [UserIsFieldMonitor]
@@ -249,6 +278,15 @@ class LogIssuesViewSet(FMBaseViewSet, SimplePermittedViewSetMixin, viewsets.Mode
             queryset = queryset.prefetch_related(None)
 
         return queryset
+
+    @action(detail=False, methods=['get'], url_path='export', renderer_classes=[LogIssueCSVRenderer])
+    def export(self, request, *args, **kwargs):
+        instances = self.filter_queryset(self.get_queryset())
+
+        serializer = LogIssueExportSerializer(instances, many=True)
+        return Response(serializer.data, headers={
+            'Content-Disposition': 'attachment;filename=log_issues_{}.csv'.format(timezone.now().date())
+        })
 
 
 class LogIssueAttachmentsViewSet(SimplePermittedViewSetMixin, FMBaseAttachmentsViewSet):
