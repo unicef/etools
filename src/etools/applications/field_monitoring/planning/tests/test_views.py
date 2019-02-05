@@ -11,6 +11,8 @@ from etools.applications.field_monitoring.fm_settings.tests.factories import Loc
 from etools.applications.field_monitoring.planning.models import YearPlan
 from etools.applications.field_monitoring.planning.tests.factories import YearPlanFactory, TaskFactory
 from etools.applications.field_monitoring.tests.base import FMBaseTestCaseMixin
+from etools.applications.field_monitoring.visits.models import Visit
+from etools.applications.field_monitoring.visits.tests.factories import VisitFactory
 from etools.applications.partners.tests.factories import PartnerFactory
 from etools.applications.reports.tests.factories import SectionFactory
 from etools.applications.utils.common.tests.test_utils import TestExportMixin
@@ -228,6 +230,19 @@ class YearPlanTasksViewTestCase(TestExportMixin, FMBaseTestCaseMixin, BaseTenant
 
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertIn('plan_by_month', response.data)
+
+    def test_completed_by_month(self):
+        VisitFactory(tasks=[self.task], end_date=date.today().replace(month=3))
+        VisitFactory(tasks=[self.task], end_date=date.today().replace(month=3), status=Visit.STATUS_CHOICES.finalized)
+
+        response = self.forced_auth_req(
+            'get', reverse('field_monitoring_planning:year-plan-tasks-list', args=[self.year_plan.pk]),
+            user=self.unicef_user
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(response.data['results']), 1)
+        self.assertEqual(response.data['results'][0]['completed_by_month'], [0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0])
 
 
 class TestPlannedPartnersView(FMBaseTestCaseMixin, BaseTenantTestCase):

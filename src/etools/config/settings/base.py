@@ -216,6 +216,8 @@ TENANT_APPS = (
     'etools.applications.action_points',
     'etools.applications.field_monitoring.fm_settings',
     'etools.applications.field_monitoring.planning',
+    'etools.applications.field_monitoring.visits',
+    'etools.applications.field_monitoring.data_collection',
     'unicef_snapshot',
     'unicef_attachments',
 )

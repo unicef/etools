@@ -37,8 +37,8 @@ class LocationSiteFactory(factory.DjangoModelFactory):
     point = GEOSGeometry("POINT(20 20)")
     p_code = factory.Sequence(lambda n: 'PCODE{}'.format(n))
     security_detail = fuzzy.FuzzyText()
-    parent = factory.LazyAttribute(lambda o:
-                                   LocationFactory(gateway=GatewayType.objects.get_or_create(admin_level=0)[0]))
+    parent = factory.LazyFunction(lambda:
+                                  LocationFactory(gateway=GatewayType.objects.get_or_create(admin_level=0)[0]))
 
     class Meta:
         model = LocationSite
@@ -51,6 +51,7 @@ class CPOutputConfigFactory(factory.DjangoModelFactory):
 
     interventions__count = 1
     government_partners__count = 1
+    recommended_method_types__count = 0
     sections__count = 0
 
     class Meta:
@@ -78,6 +79,14 @@ class CPOutputConfigFactory(factory.DjangoModelFactory):
 
         if extracted:
             self.government_partners.add(*extracted)
+
+    @factory.post_generation
+    def recommended_method_types(self, created, extracted, count, **kwargs):
+        if created:
+            self.recommended_method_types.add(*[FMMethodTypeFactory() for i in range(count)])
+
+        if extracted:
+            self.recommended_method_types.add(*extracted)
 
     @factory.post_generation
     def sections(self, created, extracted, count, **kwargs):

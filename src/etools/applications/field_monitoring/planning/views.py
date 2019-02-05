@@ -1,5 +1,6 @@
 from datetime import date
 
+from django.db.models import Prefetch
 from django.http import Http404
 from django.utils import timezone
 from django.utils.translation import ugettext_lazy as _
@@ -25,6 +26,7 @@ from etools.applications.field_monitoring.planning.serializers import YearPlanSe
     TaskListSerializer
 from etools.applications.field_monitoring.fm_settings.filters import CPOutputIsActiveFilter
 from etools.applications.field_monitoring.views import FMBaseViewSet
+from etools.applications.field_monitoring.visits.models import Visit
 from etools.applications.permissions_simplified.views import SimplePermittedViewSetMixin
 from etools.applications.partners.models import PartnerOrganization
 
@@ -76,6 +78,11 @@ class TaskViewSet(SimplePermittedViewSetMixin, FMBaseViewSet, viewsets.ModelView
     queryset = Task.objects.prefetch_related(
         'cp_output_config', 'cp_output_config__cp_output', 'cp_output_config__sections',
         'partner', 'intervention', 'location', 'location_site', 'sections',
+        Prefetch(
+            'visits',
+            Visit.objects.filter(status=Visit.STATUS_CHOICES.finalized),
+            to_attr='completed_visits'
+        )
     )
     serializer_class = TaskSerializer
     filter_backends = (DjangoFilterBackend, CPOutputIsActiveFilter, OrderingFilter)
