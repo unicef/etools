@@ -51,7 +51,7 @@ class CPOutputConfigSerializer(serializers.ModelSerializer):
         read_field=FMMethodTypeSerializer(many=True),
         label=_('Method(s)')
     )
-    sections = SeparatedReadWriteField(read_field=SectionSerializer())
+    sections = SeparatedReadWriteField(read_field=SectionSerializer(), many=True)
 
     class Meta:
         model = CPOutputConfig

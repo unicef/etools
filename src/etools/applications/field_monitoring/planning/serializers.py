@@ -60,7 +60,7 @@ class TaskListSerializer(serializers.ModelSerializer):
     intervention = SeparatedReadWriteField(read_field=InterventionSerializer())
     location = SeparatedReadWriteField(read_field=LocationLightSerializer())
     location_site = SeparatedReadWriteField(read_field=LocationSiteLightSerializer())
-    sections = SeparatedReadWriteField(read_field=SectionSerializer())
+    sections = SeparatedReadWriteField(read_field=SectionSerializer(), many=True)
 
     class Meta:
         model = Task
