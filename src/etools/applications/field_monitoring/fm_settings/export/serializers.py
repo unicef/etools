@@ -1,10 +1,10 @@
+from django.conf import settings
 from django.utils.translation import ugettext_lazy as _
 
 from rest_framework import serializers
 
 from urllib.parse import urljoin
 
-from etools.applications.utils.common.urlresolvers import site_url
 from etools.applications.field_monitoring.shared.models import FMMethod
 
 
@@ -67,7 +67,7 @@ class LogIssueExportSerializer(serializers.Serializer):
 
     def get_attachments(self, obj):
         return ', '.join([
-            '{} - {}'.format(a.file_type, urljoin(site_url(), a.url))
+            '{} - {}'.format(a.file_type, urljoin(settings.HOST, a.url))
             for a in obj.attachments.all()
         ])
 
