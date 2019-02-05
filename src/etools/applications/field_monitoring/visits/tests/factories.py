@@ -8,7 +8,7 @@ from etools.applications.field_monitoring.planning.tests.factories import TaskFa
 from etools.applications.field_monitoring.tests.factories import UserFactory
 from etools.applications.field_monitoring.visits.models import Visit, VisitTaskLink, VisitMethodType, \
     TaskCheckListItem, VisitCPOutputConfig
-from etools.applications.utils.common.tests.factories import InheritedTrait
+from etools.libraries.tests.factories import InheritedTrait
 
 
 class VisitFactory(factory.DjangoModelFactory):
