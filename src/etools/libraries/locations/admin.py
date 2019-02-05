@@ -11,13 +11,13 @@ from unicef_locations.models import (
 )
 
 from etools.libraries.locations.tasks_cartodb import (
-    validate_locations_in_use,
+    validate_carto_locations_in_use,
     update_sites_from_cartodb,
-    cleanup_obsolete_locations,
+    cleanup_carto_obsolete_locations,
 )
 from etools.libraries.locations.tasks_arcgis import (
     validate_arcgis_locations_in_use,
-    update_arcgis_sites_from_cartodb,
+    import_arcgis_locations,
     cleanup_arcgis_obsolete_locations,
 )
 
@@ -38,13 +38,13 @@ class EtoolsCartoDBTableAdmin(CartoDBTableAdmin):
 
         for table in carto_tables:
             task_list += [
-                validate_locations_in_use.si(table),
+                validate_carto_locations_in_use.si(table),
                 update_sites_from_cartodb.si(table),
             ]
 
         # clean up locations from bottom to top, it's easier to validate parents this way
         for table in reversed(carto_tables):
-            task_list += [cleanup_obsolete_locations.si(table)]
+            task_list += [cleanup_carto_obsolete_locations.si(table)]
 
         if task_list:
             # Trying to force the tasks to execute in correct sequence

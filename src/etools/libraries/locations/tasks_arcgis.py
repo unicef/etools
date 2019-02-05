@@ -10,8 +10,63 @@ from django.contrib.gis.geos import Polygon, MultiPolygon, Point
 
 from unicef_locations.models import ArcgisDBTable, Location
 from .task_utils import create_location, validate_remap_table, duplicate_pcodes_exist
+from etools.libraries.locations.task_utils import (
+    get_location_ids_in_use,
+    save_location_remap_history,
+    validate_remap_table,
+    duplicate_pcodes_exist,
+    create_location,
+)
+
 
 logger = get_task_logger(__name__)
+
+
+@celery.current_app.task
+def validate_carto_locations_in_use(arcgis_table_pk):
+    try:
+        carto_table = ArcgisDBTable.objects.get(pk=arcgis_table_pk)
+    except ArcgisDBTable.DoesNotExist as e:
+        logger.exception('Cannot retrieve ArcgisDBTable with pk: %s', arcgis_table_pk)
+        raise e
+
+    database_pcodes = []
+    for row in Location.objects.all_locations().filter(gateway=carto_table.location_type).values('p_code'):
+        database_pcodes.append(row['p_code'])
+
+    auth_client = LocationsCartoNoAuthClient(base_url="https://{}.carto.com/".format(carto_table.domain))
+    sql_client = SQLClient(auth_client)
+
+    try:
+        qry = sql_client.send('select array_agg({}) AS aggregated_pcodes from {}'.format(
+            carto_table.pcode_col,
+            carto_table.table_name,
+        ))
+        new_carto_pcodes = qry['rows'][0]['aggregated_pcodes'] \
+            if len(qry['rows']) > 0 and "aggregated_pcodes" in qry['rows'][0] else []
+
+        remapped_pcode_pairs = []
+        if carto_table.remap_table_name:
+            remap_qry = 'select old_pcode::text, new_pcode::text from {}'.format(carto_table.remap_table_name)
+            remapped_pcode_pairs = sql_client.send(remap_qry)['rows']
+
+    except RuntimeError as e:
+        logger.exception("Cannot fetch location data from Arcgis")
+        raise e
+
+    remapped_old_pcodes = [remap_row['old_pcode'] for remap_row in remapped_pcode_pairs]
+    orphaned_pcodes = set(database_pcodes) - (set(new_carto_pcodes) | set(remapped_old_pcodes))
+    orphaned_location_ids = Location.objects.all_locations().filter(p_code__in=list(orphaned_pcodes))
+
+    # if location ids with no remap in use are found, do not continue the import
+    location_ids_bnriu = get_location_ids_in_use(orphaned_location_ids)
+    if location_ids_bnriu:
+        msg = "Location ids in use without remap found: {}". format(','.join([str(iu) for iu in location_ids_bnriu]))
+        logger.exception(msg)
+        raise NoRemapInUseException(msg)
+
+    return True
+
 
 @celery.current_app.task # noqa: ignore=C901
 def import_arcgis_locations(arcgis_table_pk):
@@ -39,7 +94,7 @@ def import_arcgis_locations(arcgis_table_pk):
 
     arcgis_pcodes = [str(row['properties'][arcgis_table.pcode_col].strip()) for row in rows]
 
-    remap_old_pcodes = []
+    remapped_old_pcodes = []
     if arcgis_table.remap_table_service_url:
         try:
             remapped_pcode_pairs = []
@@ -53,7 +108,7 @@ def import_arcgis_locations(arcgis_table_pk):
                 })
 
             # validate remap table contents
-            remap_table_valid, remap_old_pcodes, remap_new_pcodes = \
+            remap_table_valid, remapped_old_pcodes, remap_new_pcodes = \
                 validate_remap_table(remapped_pcode_pairs, database_pcodes, arcgis_pcodes)
 
             if not remap_table_valid:
@@ -63,7 +118,7 @@ def import_arcgis_locations(arcgis_table_pk):
             return results
 
     # check for  duplicate pcodes in both local and new data
-    if duplicate_pcodes_exist(database_pcodes, arcgis_pcodes, remap_old_pcodes):
+    if duplicate_pcodes_exist(database_pcodes, arcgis_pcodes, remapped_old_pcodes):
         return results
 
     with transaction.atomic():
@@ -135,7 +190,7 @@ def import_arcgis_locations(arcgis_table_pk):
 
                 results += partial_results
 
-            orphaned_old_pcodes = set(database_pcodes) - (set(arcgis_pcodes) | set(remap_old_pcodes))
+            orphaned_old_pcodes = set(database_pcodes) - (set(arcgis_pcodes) | set(remapped_old_pcodes))
             if orphaned_old_pcodes:  # pragma: no-cover
                 logger.warning("Archiving unused pcodes: {}".format(','.join(orphaned_old_pcodes)))
                 Location.objects.filter(p_code__in=list(orphaned_old_pcodes)).update(is_active=False)
@@ -146,3 +201,82 @@ def import_arcgis_locations(arcgis_table_pk):
         arcgis_table.service_name, sites_created, sites_updated, sites_remapped, sites_not_added))
 
     return results
+
+
+@celery.current_app.task
+def cleanup_arcgis_obsolete_locations(arcgis_table_pk):
+    try:
+        carto_table = CartoDBTable.objects.get(pk=carto_table_pk)
+    except CartoDBTable.DoesNotExist as e:
+        logger.exception('Cannot retrieve CartoDBTable with pk: %s', carto_table_pk)
+        raise e
+
+    database_pcodes = []
+    for row in Location.objects.all_locations().filter(gateway=carto_table.location_type).values('p_code'):
+        database_pcodes.append(row['p_code'])
+
+    auth_client = LocationsCartoNoAuthClient(base_url="https://{}.carto.com/".format(carto_table.domain))
+    sql_client = SQLClient(auth_client)
+
+    try:
+        qry = sql_client.send('select array_agg({}) AS aggregated_pcodes from {}'.format(
+            carto_table.pcode_col,
+            carto_table.table_name,
+        ))
+        new_carto_pcodes = qry['rows'][0]['aggregated_pcodes'] \
+            if len(qry['rows']) > 0 and "aggregated_pcodes" in qry['rows'][0] else []
+
+        remapped_pcode_pairs = []
+        if carto_table.remap_table_name:
+            remap_qry = 'select old_pcode::text, new_pcode::text from {}'.format(carto_table.remap_table_name)
+            remapped_pcode_pairs = sql_client.send(remap_qry)['rows']
+
+    except CartoException as e:
+        logger.exception("CartoDB exception occured during the data validation.")
+        raise e
+
+    remapped_pcodes = [remap_row['old_pcode'] for remap_row in remapped_pcode_pairs]
+    remapped_pcodes += [remap_row['new_pcode'] for remap_row in remapped_pcode_pairs]
+    # select for deletion those pcodes which are not present in the Carto datasets in any form
+    deleteable_pcodes = set(database_pcodes) - (set(new_carto_pcodes) | set(remapped_pcodes))
+
+    # Do a few safety checks before we actually delete a location, like:
+    # - ensure that the deleted locations doesn't have any children in the location tree
+    # - check if the deleted location was remapped before, do not delete if yes.
+    # if the checks pass, add the deleteable location ID to the `revalidated_deleteable_pcodes` array so they can be
+    # deleted in one go later
+    revalidated_deleteable_pcodes = []
+
+    with transaction.atomic():
+        # prevent writing into locations until the cleanup is done
+        Location.objects.all_locations().select_for_update().only('id')
+
+        for deleteable_pcode in deleteable_pcodes:
+            try:
+                deleteable_location = Location.objects.all_locations().get(p_code=deleteable_pcode)
+            except Location.DoesNotExist:
+                logger.warning("Cannot find orphaned pcode {}.".format(deleteable_pcode))
+            else:
+                if deleteable_location.is_leaf_node():
+                    secondary_parent_check = Location.objects.all_locations().filter(
+                        parent=deleteable_location.id
+                    ).exists()
+                    remap_history_check = LocationRemapHistory.objects.filter(
+                        Q(old_location=deleteable_location) | Q(new_location=deleteable_location)
+                    ).exists()
+                    if not secondary_parent_check and not remap_history_check:
+                        logger.info("Selecting orphaned pcode {} for deletion".format(deleteable_location.p_code))
+                        revalidated_deleteable_pcodes.append(deleteable_location.id)
+
+        # delete the selected locations all at once, it seems it's faster like this compared to deleting them one by one.
+        if revalidated_deleteable_pcodes:
+            logger.info("Deleting selected orphaned pcodes")
+            Location.objects.all_locations().filter(id__in=revalidated_deleteable_pcodes).delete()
+
+        # rebuild location tree after the unneeded locations are cleaned up, because it seems deleting locations
+        # sometimes leaves the location tree in a `bugged` state
+        Location.objects.rebuild()
+
+
+class NoRemapInUseException(Exception):
+    pass

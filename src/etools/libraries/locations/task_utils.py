@@ -19,162 +19,49 @@ from etools.applications.action_points.models import ActionPoint
 logger = get_task_logger(__name__)
 
 
-def get_cartodb_locations(sql_client, carto_table):
-
-    rows = []
-    cartodb_id_col = 'cartodb_id'
-    try:
-        query_row_count = sql_client.send('select count(*) from {}'.format(carto_table.table_name))
-        row_count = query_row_count['rows'][0]['count']
-
-        # do not spam Carto with requests, wait 1 second
-        time.sleep(1)
-        query_max_id = sql_client.send('select MAX({}) from {}'.format(cartodb_id_col, carto_table.table_name))
-        max_id = query_max_id['rows'][0]['max']
-    except CartoException:  # pragma: no-cover
-        logger.exception("Cannot fetch pagination prequisites from CartoDB for table {}".format(
-            carto_table.table_name
-        ))
-        return False, []
-
-    offset = 0
-    limit = 100
-
-    # failsafe in the case when cartodb id's are too much off compared to the nr. of records
-    if max_id > (5 * row_count):
-        limit = max_id + 1
-        logger.warning("The CartoDB primary key seemf off, pagination is not possible")
-
-    if carto_table.parent_code_col and carto_table.parent:
-        qry = 'select st_AsGeoJSON(the_geom) as the_geom, {}, {}, {} from {}'.format(
-            carto_table.name_col,
-            carto_table.pcode_col,
-            carto_table.parent_code_col,
-            carto_table.table_name)
-    else:
-        qry = 'select st_AsGeoJSON(the_geom) as the_geom, {}, {} from {}'.format(
-            carto_table.name_col,
-            carto_table.pcode_col,
-            carto_table.table_name)
-
-    while offset <= max_id:
-        paged_qry = qry + ' WHERE {} > {} AND {} <= {}'.format(
-            cartodb_id_col,
-            offset,
-            cartodb_id_col,
-            offset + limit
-        )
-        logger.info('Requesting rows between {} and {} for {}'.format(
-            offset,
-            offset + limit,
-            carto_table.table_name
-        ))
-
-        # do not spam Carto with requests, wait 1 second
-        time.sleep(1)
-        try:
-            sites = sql_client.send(paged_qry)
-        except CartoException:  # pragma: no-cover
-            logger.exception("CartoDB API pagination failed at offset: {}".format(offset))
-            retried_row = retry_failed_query(sql_client, paged_qry, offset)
-            if retried_row:
-                rows += retried_row
-                offset += limit
-            else:
-                # can not continue if we have missing pages..
-                return False, []
-        else:
-            if 'error' in sites:
-                # it seems we can have both valid results and error messages in the same CartoDB response
-                # When this occurs, we receive truncated locations, interrupt the import due to incomplete data
-                logger.exception("CartoDB API error received: {}".format(sites['error']))
-                return False, []
-            else:
-                rows += sites['rows']
-                offset += limit
-
-    return True, rows
-
-
-def retry_failed_query(sql_client, failed_query, offset):
-    """
-    Retry a timed-out CartoDB query
-    :param sql_client:
-    :param failed_query:
-    :param offset:
-    :return:
-    """
-
-    retries = 0
-    logger.warning('Retrying table page at offset {}'.format(offset))
-    while retries < 5:
-        time.sleep(1)
-        retries += 1
-        try:
-            sites = sql_client.send(failed_query)
-        except CartoException:
-            if retries < 5:
-                logger.warning('Retrying again table page at offset {}'.format(offset))
-        else:
-            if 'error' in sites:
-                return False
-            else:
-                return sites['rows']
-    return False
-
-
-def validate_remap_table(database_pcodes, new_carto_pcodes, carto_table, sql_client):  # pragma: no-cover
-    remapped_pcode_pairs = []
-    remap_old_pcodes = []
-    remap_new_pcodes = []
+def validate_remap_table(remapped_pcode_pairs, database_pcodes, new_pcodes, ):  # pragma: no-cover
+    remapped_old_pcodes = []
+    remapped_new_pcodes = []
     remap_table_valid = True
 
-    if carto_table.remap_table_name:
-        try:
-            remap_qry = 'select old_pcode::text, new_pcode::text from {}'.format(
-                carto_table.remap_table_name)
-            remapped_pcode_pairs = sql_client.send(remap_qry)['rows']
-        except CartoException:  # pragma: no-cover
-            logger.exception("CartoDB exception occured on the remap table query")
-            remap_table_valid = False
-        else:
-            # validate remap table
-            bad_old_pcodes = []
-            bad_new_pcodes = []
-            for remap_row in remapped_pcode_pairs:
-                if 'old_pcode' not in remap_row or 'new_pcode' not in remap_row:
-                    return False, remapped_pcode_pairs, remap_old_pcodes, remap_new_pcodes
+    # validate remap table
+    bad_old_pcodes = []
+    bad_new_pcodes = []
+    for remap_row in remapped_pcode_pairs:
+        if 'old_pcode' not in remap_row or 'new_pcode' not in remap_row:
+            return False, remapped_pcode_pairs, remapped_old_pcodes, remapped_new_pcodes
 
-                remap_old_pcodes.append(remap_row['old_pcode'])
-                remap_new_pcodes.append(remap_row['new_pcode'])
+        remapped_old_pcodes.append(remap_row['old_pcode'])
+        remapped_new_pcodes.append(remap_row['new_pcode'])
 
-                # check for non-existing remap pcodes in the database
-                if remap_row['old_pcode'] not in database_pcodes:
-                    bad_old_pcodes.append(remap_row['old_pcode'])
-                # check for non-existing remap pcodes in the Carto dataset
-                if remap_row['new_pcode'] not in new_carto_pcodes:
-                    bad_new_pcodes.append(remap_row['new_pcode'])
+        # check for non-existing remap pcodes in the database
+        if remap_row['old_pcode'] not in database_pcodes:
+            bad_old_pcodes.append(remap_row['old_pcode'])
+        # check for non-existing remap pcodes in the Carto dataset
+        if remap_row['new_pcode'] not in new_pcodes:
+            bad_new_pcodes.append(remap_row['new_pcode'])
 
-            if len(bad_old_pcodes) > 0:
-                logger.exception(
-                    "Invalid old_pcode found in the remap table: {}".format(','.join(bad_old_pcodes)))
-                remap_table_valid = False
+    if len(bad_old_pcodes) > 0:
+        logger.exception(
+            "Invalid old_pcode found in the remap table: {}".format(','.join(bad_old_pcodes)))
+        remap_table_valid = False
 
-            if len(bad_new_pcodes) > 0:
-                logger.exception(
-                    "Invalid new_pcode found in the remap table: {}".format(','.join(bad_new_pcodes)))
-                remap_table_valid = False
+    if len(bad_new_pcodes) > 0:
+        logger.exception(
+            "Invalid new_pcode found in the remap table: {}".format(','.join(bad_new_pcodes)))
+        remap_table_valid = False
 
-    return remap_table_valid, remapped_pcode_pairs, remap_old_pcodes, remap_new_pcodes
+    return remap_table_valid, remapped_old_pcodes, remapped_new_pcodes
 
 
-def duplicate_pcodes_exist(database_pcodes, new_carto_pcodes, remap_old_pcodes):  # pragma: no-cover
+def duplicate_pcodes_exist(database_pcodes, new_pcodes, remapped_old_pcodes):  # pragma: no-cover
     duplicates_found = False
     temp = {}
     duplicate_database_pcodes = []
     for database_pcode in database_pcodes:
         if database_pcode in temp:
-            duplicate_database_pcodes.append(database_pcode)
+            if database_pcode not in duplicate_database_pcodes:
+                duplicate_database_pcodes.append(database_pcode)
         temp[database_pcode] = 1
 
     if duplicate_database_pcodes:
@@ -183,27 +70,28 @@ def duplicate_pcodes_exist(database_pcodes, new_carto_pcodes, remap_old_pcodes):
         duplicates_found = True
 
     temp = {}
-    duplicate_carto_pcodes = []
-    for new_carto_pcode in new_carto_pcodes:
-        if new_carto_pcode in temp:
-            duplicate_carto_pcodes.append(new_carto_pcode)
-        temp[new_carto_pcode] = 1
+    duplicate_new_pcodes = []
+    for new_pcode in new_pcodes:
+        if new_pcode in temp:
+            if new_pcode not in duplicate_new_pcodes:
+                duplicate_new_pcodes.append(new_pcode)
+        temp[new_pcode] = 1
 
-    if duplicate_carto_pcodes:
-        logger.exception("Duplicates found in the new CartoDB pcodes: {}".
-                         format(','.join(duplicate_database_pcodes)))
+    if duplicate_new_pcodes:
+        logger.exception("Duplicates found in the new pcodes: {}".
+                         format(','.join(duplicate_new_pcodes)))
         duplicates_found = True
 
     temp = {}
-    duplicate_remap_old_pcodes = []
-    for remap_old_pcode in remap_old_pcodes:
+    duplicate_remapped_old_pcodes = []
+    for remap_old_pcode in remapped_old_pcodes:
         if remap_old_pcode in temp:
-            duplicate_remap_old_pcodes.append(remap_old_pcode)
+            duplicate_remapped_old_pcodes.append(remap_old_pcode)
         temp[remap_old_pcode] = 1
 
-    if duplicate_remap_old_pcodes:
+    if duplicate_remapped_old_pcodes:
         logger.exception("Duplicates found in the remap table `old pcode` column: {}".
-                         format(','.join(duplicate_remap_old_pcodes)))
+                         format(','.join(duplicate_remapped_old_pcodes)))
         duplicates_found = True
 
     return duplicates_found
@@ -247,7 +135,7 @@ def create_location(pcode, carto_table, parent, parent_instance, remapped_old_pc
     :param sites_created:
     :param sites_updated:
     :param sites_remapped:
-    :return:
+    :return: (status, sites_not_added, sites_created, sites_updated, sites_remapped, [(location.id, remapped.id), ...])
     """
 
     logger.info('{}: {} ({}){}'.format(
