@@ -3,7 +3,7 @@ from django.contrib.auth import get_user_model
 
 from rest_framework import serializers
 
-from etools.applications.partners.models import Intervention, InterventionResultLink, PartnerOrganization
+from etools.applications.partners.models import PartnerOrganization
 from etools.applications.reports.models import Result, Section
 from etools.applications.users.models import Office
 
@@ -34,19 +34,6 @@ class PartnerOrganizationSerializer(serializers.ModelSerializer):
         fields = ('id', 'name')
 
 
-class PartnershipSerializer(serializers.ModelSerializer):
-    name = serializers.CharField(source='title')
-    partner = serializers.PrimaryKeyRelatedField(source='agreement.partner', read_only=True)
-    results = serializers.SerializerMethodField()
-
-    class Meta:
-        model = Intervention
-        fields = ('id', 'name', 'partner', 'results')
-
-    def get_results(self, obj):
-        return InterventionResultLink.objects.filter(intervention=obj).values_list('cp_output_id', flat=True)
-
-
 class ResultSerializer(serializers.ModelSerializer):
     class Meta:
         model = Result
@@ -54,7 +41,6 @@ class ResultSerializer(serializers.ModelSerializer):
 
 
 class StaticDataSerializer(serializers.Serializer):
-    partnerships = PartnershipSerializer(many=True)
     travel_types = serializers.ListField(child=serializers.CharField())
     travel_modes = serializers.ListField(child=serializers.CharField())
     action_point_statuses = serializers.ListField(child=serializers.CharField())

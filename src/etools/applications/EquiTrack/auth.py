@@ -15,8 +15,8 @@ from social_core.pipeline import user as social_core_user
 from social_core.backends.azuread_b2c import AzureADB2COAuth2
 from social_django.middleware import SocialAuthExceptionMiddleware
 
-from etools.applications.EquiTrack.utils import set_country
 from etools.applications.users.models import Country
+from etools.libraries.tenant_support.utils import set_country
 
 jwt_decode_handler = api_settings.JWT_DECODE_HANDLER
 logger = logging.getLogger(__name__)

@@ -180,9 +180,9 @@ class TestGisLocationViews(BaseTenantTestCase):
         self.locations = [self.location_no_geom, self.location_with_geom]
 
     def assertGeomListResponseFundamentals(self, response, response_len, expected_keys=None):
-        '''
+        """
         Assert common fundamentals about the response.
-        '''
+        """
         self.assertEquals(response.status_code, status.HTTP_200_OK)
 
         if not expected_keys:

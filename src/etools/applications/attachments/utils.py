@@ -10,9 +10,12 @@ def get_file_type(obj):
     partner file type instead of attachment file type
     """
     from etools.applications.partners.models import InterventionAttachment
+    from etools.applications.t2f.models import TravelAttachment
 
     if isinstance(obj.content_object, InterventionAttachment):
         return obj.content_object.type.name
+    elif isinstance(obj.content_object, TravelAttachment):
+        return obj.content_object.type
     elif obj.file_type:
         return obj.file_type.label
     return ""
@@ -140,6 +143,8 @@ def get_source(obj):
             return "Financial Assurance (FAM)"
         elif app_label == "tpm":
             return "Third Party Monitoring"
+        elif app_label == "t2f":
+            return "Trips"
     return ""
 
 

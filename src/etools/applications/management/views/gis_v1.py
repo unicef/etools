@@ -24,10 +24,10 @@ class GisLocationsInUseViewset(ListAPIView):
     permission_classes = (IsSuperUser,)
 
     def get(self, request):
-        '''
+        """
         return the list of locations in use either in interventions or travels
          - a valid country_id is mandatory in the query string
-        '''
+        """
         country_id = request.query_params.get('country_id')
 
         if not country_id:
@@ -95,14 +95,14 @@ class GisLocationsGeomListViewset(ListAPIView):
             return GisLocationWktSerializer
 
     def get(self, request):
-        '''
+        """
         return the list of locations with geometry
             - a valid country_id is mandatory in the query string
             - Optionals:
             - the geom type of the response can be set with the 'geo_format' GET param( can be 'wkt' or 'geojson')
             - filter results by geometry type(polygon or point). By default, return both geom type in the results.
             - filter active/archived/all locations with the `status` param
-        '''
+        """
         geo_format = self.request.query_params.get('geo_format') or 'geojson'
         geom_type = self.request.query_params.get('geom_type') or None
         loc_status = self.request.query_params.get('status').lower() if 'status' in self.request.query_params else None
@@ -203,11 +203,11 @@ class GisLocationsGeomDetailsViewset(RetrieveAPIView):
             return GisLocationWktSerializer
 
     def get(self, request, id=None, pcode=None):
-        '''
+        """
         return the details of a single location, either by ID or P_CODE
          - a valid country_id is mandatory in the query string
          - the geometry format in the response can be set with the 'geo_format' querystring variable('wkt' or 'geojson')
-        '''
+        """
         geo_format = self.request.query_params.get('geo_format') or 'geojson'
         if geo_format not in ['wkt', 'geojson']:
             return Response(status=400, data={'error': 'Invalid geo format received'})

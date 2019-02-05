@@ -29,10 +29,6 @@ class TravelFilterBoxSerializer(serializers.Serializer):
     def to_internal_value(self, data):
         data = super().to_internal_value(data)
 
-        # Adjust month because frontend sends 0-11
-        if 'month' in data:
-            data['month'] += 1
-
         # Mode of travel is an array field and the lookup has to be a list
         if 'mode_of_travel__contains' in data:
             data['mode_of_travel__contains'] = [data['mode_of_travel__contains']]

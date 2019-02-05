@@ -1,7 +1,6 @@
 import csv
 import datetime
 import json
-from decimal import Decimal
 from unittest import skip
 from urllib.parse import urlparse
 
@@ -16,7 +15,6 @@ import mock
 from model_utils import Choices
 from pytz import UTC
 from rest_framework import status
-from rest_framework.exceptions import ErrorDetail
 from rest_framework.test import APIRequestFactory
 from unicef_locations.tests.factories import LocationFactory
 from unicef_snapshot.models import Activity
@@ -31,7 +29,6 @@ from etools.applications.funds.tests.factories import FundsReservationHeaderFact
 from etools.applications.partners.models import (
     Agreement,
     AgreementAmendment,
-    Assessment,
     FileType,
     Intervention,
     InterventionAmendment,
@@ -68,10 +65,10 @@ from etools.applications.users.tests.factories import GroupFactory, OfficeFactor
 
 
 class URLsTestCase(URLAssertionMixin, SimpleTestCase):
-    '''Simple test case to verify URL reversal'''
+    """Simple test case to verify URL reversal"""
 
     def test_urls(self):
-        '''Verify URL pattern names generate the URLs we expect them to.'''
+        """Verify URL pattern names generate the URLs we expect them to."""
         names_and_paths = (
             ('partner-list', '', {}),
             ('partner-hact', 'hact/', {}),
@@ -143,7 +140,7 @@ class TestChoicesToJSONReady(BaseTenantTestCase):
 
 
 class TestAPIPartnerOrganizationListView(BaseTenantTestCase):
-    '''Exercise the list view for PartnerOrganization'''
+    """Exercise the list view for PartnerOrganization"""
     @classmethod
     def setUpTestData(cls):
         cls.user = UserFactory(is_staff=True)
@@ -170,10 +167,10 @@ class TestAPIPartnerOrganizationListView(BaseTenantTestCase):
         ))
 
     def assertResponseFundamentals(self, response, expected_keys=None):
-        '''Assert common fundamentals about the response. If expected_keys is None (the default), the keys in the
+        """Assert common fundamentals about the response. If expected_keys is None (the default), the keys in the
         response dict are compared to self.normal_field_names. Otherwise, they're compared to whatever is passed in
         expected_keys.
-        '''
+        """
         if expected_keys is None:
             expected_keys = self.normal_field_names
 
@@ -188,17 +185,17 @@ class TestAPIPartnerOrganizationListView(BaseTenantTestCase):
         self.assertEqual(response_json[0]['id'], self.partner.id)
 
     def test_simple(self):
-        '''exercise simple fetch'''
+        """exercise simple fetch"""
         response = self.forced_auth_req('get', self.url)
         self.assertResponseFundamentals(response)
 
     def test_no_permission_user_forbidden(self):
-        '''Ensure a non-staff user gets the 403 smackdown'''
+        """Ensure a non-staff user gets the 403 smackdown"""
         response = self.forced_auth_req('get', self.url, user=UserFactory())
         self.assertEquals(response.status_code, status.HTTP_403_FORBIDDEN)
 
     def test_unauthenticated_user_forbidden(self):
-        '''Ensure an unauthenticated user gets the 403 smackdown'''
+        """Ensure an unauthenticated user gets the 403 smackdown"""
         factory = APIRequestFactory()
         view_info = resolve(self.url)
         request = factory.get(self.url)
@@ -206,52 +203,52 @@ class TestAPIPartnerOrganizationListView(BaseTenantTestCase):
         self.assertEquals(response.status_code, status.HTTP_403_FORBIDDEN)
 
     def test_group_permission(self):
-        '''Ensure a non-staff user in the correct group has access'''
+        """Ensure a non-staff user in the correct group has access"""
         user = UserFactory()
         user.groups.add(self.readonly_group)
         response = self.forced_auth_req('get', self.url, user=user)
         self.assertResponseFundamentals(response)
 
     def test_staff_access(self):
-        '''Ensure a staff user has access'''
+        """Ensure a staff user has access"""
         response = self.forced_auth_req('get', self.url, user=self.user)
         self.assertResponseFundamentals(response)
 
     def test_verbosity_minimal(self):
-        '''Exercise behavior when verbosity=minimal'''
+        """Exercise behavior when verbosity=minimal"""
         response = self.forced_auth_req('get', self.url, data={"verbosity": "minimal"})
         self.assertResponseFundamentals(response, sorted(("id", "name")))
 
     def test_verbosity_other(self):
-        '''Exercise behavior when verbosity != minimal. ('minimal' is the only accepted value for verbosity;
+        """Exercise behavior when verbosity != minimal. ('minimal' is the only accepted value for verbosity;
         other values are ignored.)
-        '''
+        """
         response = self.forced_auth_req('get', self.url, data={"verbosity": "banana"})
         self.assertResponseFundamentals(response)
 
     def test_filter_partner_type(self):
-        '''Ensure filtering by partner type works as expected'''
+        """Ensure filtering by partner type works as expected"""
         # Make another partner that should be excluded from the search results.
         PartnerFactory(partner_type=PartnerType.GOVERNMENT)
         response = self.forced_auth_req('get', self.url, data={"partner_type": PartnerType.UN_AGENCY})
         self.assertResponseFundamentals(response)
 
     def test_filter_cso_type(self):
-        '''Ensure filtering by CSO type works as expected'''
+        """Ensure filtering by CSO type works as expected"""
         # Make another partner that should be excluded from the search results.
         PartnerFactory(cso_type="National")
         response = self.forced_auth_req('get', self.url, data={"cso_type": "International"})
         self.assertResponseFundamentals(response)
 
     def test_filter_hidden(self):
-        '''Ensure filtering by the hidden flag works as expected'''
+        """Ensure filtering by the hidden flag works as expected"""
         # Make another partner that should be excluded from the search results.
         PartnerFactory(hidden=True)
         response = self.forced_auth_req('get', self.url, data={"hidden": False})
         self.assertResponseFundamentals(response)
 
     def test_filter_multiple(self):
-        '''Test that when supplying multiple filter terms, they're ANDed together'''
+        """Test that when supplying multiple filter terms, they're ANDed together"""
         # Make another partner that should be excluded from the search results.
         PartnerFactory(cso_type="National")
         params = {
@@ -266,21 +263,21 @@ class TestAPIPartnerOrganizationListView(BaseTenantTestCase):
         self.assertEqual(len(response_json), 0)
 
     def test_search_name(self):
-        '''Test that name search matches substrings and is case-independent'''
+        """Test that name search matches substrings and is case-independent"""
         # Make another partner that should be excluded from the search results.
         PartnerFactory(name="Somethingelse")
         response = self.forced_auth_req('get', self.url, data={"search": "PARTNER"})
         self.assertResponseFundamentals(response)
 
     def test_search_short_name(self):
-        '''Test that short name search matches substrings and is case-independent'''
+        """Test that short name search matches substrings and is case-independent"""
         # Make another partner that should be excluded from the search results.
         PartnerFactory(short_name="foo")
         response = self.forced_auth_req('get', self.url, data={"search": "SHORT"})
         self.assertResponseFundamentals(response)
 
     def test_values_positive(self):
-        '''Ensure that passing the values param w/partner ids returns only data for those partners'''
+        """Ensure that passing the values param w/partner ids returns only data for those partners"""
         # In contrast to the other tests, this test uses the two partners I create here and filters out self.partner.
         p1 = PartnerFactory()
         p2 = PartnerFactory()
@@ -303,17 +300,17 @@ class TestAPIPartnerOrganizationListView(BaseTenantTestCase):
         self.assertCountEqual(ids_in_response, (p1.id, p2.id))
 
     def test_values_negative(self):
-        '''Ensure that garbage values are handled properly'''
+        """Ensure that garbage values are handled properly"""
         response = self.forced_auth_req('get', self.url, data={"values": "banana"})
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
 
 class TestPartnerOrganizationListViewForCSV(BaseTenantTestCase):
-    '''Exercise the CSV-generating portion of the list view for PartnerOrganization.
+    """Exercise the CSV-generating portion of the list view for PartnerOrganization.
 
     This is a separate test case from TestPartnerOrganizationListView because it does some monkey patching in
     setUp() that I want to do as infrequently as necessary.
-    '''
+    """
     @classmethod
     def setUpTestData(cls):
         cls.user = UserFactory(is_staff=True)
@@ -339,9 +336,9 @@ class TestPartnerOrganizationListViewForCSV(BaseTenantTestCase):
         partner_organization_v2.PartnerOrganizationExportSerializer = PartnerOrganizationExportSerializer
 
     def test_format_csv(self):
-        '''Exercise the view-specific aspects of passing query param format=csv. This does not test the serializer
+        """Exercise the view-specific aspects of passing query param format=csv. This does not test the serializer
         function, it only tests that the expected serializer is invoked and returns something CSV-like.
-        '''
+        """
         self.assertFalse(self.wrapper_called)
         response = self.forced_auth_req('get', self.url, data={"format": "csv"})
         self.assertEqual(response.status_code, status.HTTP_200_OK)
@@ -370,14 +367,14 @@ class TestPartnerOrganizationListViewForCSV(BaseTenantTestCase):
         self.assertGreaterEqual(len([row for row in reader]), 1)
 
     def test_format_other(self):
-        '''Exercise passing an unrecognized format.'''
+        """Exercise passing an unrecognized format."""
         # This returns 404, it should probably return 400 but anything in the 4xx series gets the point across.
         response = self.forced_auth_req('get', self.url, data={"format": "banana"})
         self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
 
 
 class TestPartnerOrganizationCreateView(BaseTenantTestCase):
-    '''Exercise the create view for PartnerOrganization'''
+    """Exercise the create view for PartnerOrganization"""
     @classmethod
     def setUpTestData(cls):
         cls.user = UserFactory(is_staff=True)
@@ -391,363 +388,13 @@ class TestPartnerOrganizationCreateView(BaseTenantTestCase):
                      }
 
     def assertResponseFundamentals(self, response):
-        '''Assert common fundamentals about the response. Return the id of the new object.'''
+        """Assert common fundamentals about the response. Return the id of the new object."""
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         response_json = json.loads(response.rendered_content)
         self.assertIsInstance(response_json, dict)
         self.assertIn('id', response_json.keys())
 
         return response_json['id']
-
-
-class TestPartnerOrganizationRetrieveUpdateDeleteViews(BaseTenantTestCase):
-    '''Exercise the retrieve, update, and delete views for PartnerOrganization'''
-    @classmethod
-    def setUpTestData(cls):
-        cls.unicef_staff = UserFactory(is_staff=True)
-        cls.partner = PartnerFactory(
-            partner_type=PartnerType.CIVIL_SOCIETY_ORGANIZATION,
-            cso_type="International",
-            hidden=False,
-            vendor_number="DDD",
-            short_name="Short name",
-        )
-
-        report = "report.pdf"
-        cls.assessment1 = Assessment.objects.create(
-            partner=cls.partner,
-            type="Micro Assessment"
-        )
-        cls.assessment2 = Assessment.objects.create(
-            partner=cls.partner,
-            type="Micro Assessment",
-            report=report,
-            completed_date=datetime.date.today()
-        )
-
-        cls.partner_gov = PartnerFactory(partner_type=PartnerType.GOVERNMENT)
-
-        agreement = AgreementFactory(
-            partner=cls.partner,
-            signed_by_unicef_date=datetime.date.today())
-
-        cls.intervention = InterventionFactory(agreement=agreement)
-        cls.output_res_type = ResultTypeFactory(name=ResultType.OUTPUT)
-
-        cls.result = ResultFactory(
-            result_type=cls.output_res_type,)
-
-        cls.partnership_budget = InterventionBudget.objects.create(
-            intervention=cls.intervention,
-            unicef_cash=100,
-            unicef_cash_local=10,
-            partner_contribution=200,
-            partner_contribution_local=20,
-            in_kind_amount_local=10,
-        )
-        cls.amendment = InterventionAmendment.objects.create(
-            intervention=cls.intervention,
-            types=[InterventionAmendment.RESULTS]
-        )
-
-        cls.cp = CountryProgrammeFactory(__sequence=10)
-        cls.cp_output = ResultFactory(result_type=cls.output_res_type)
-
-    def test_api_partners_update_with_members(self):
-        self.assertFalse(Activity.objects.exists())
-        response = self.forced_auth_req(
-            'get',
-            reverse('partners_api:partner-detail', args=[self.partner.pk]),
-            user=self.unicef_staff,
-        )
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(len(response.data["staff_members"]), 1)
-        self.assertEqual(response.data["staff_members"][0]["first_name"], "Mace")
-
-        staff_members = [{
-            "title": "Some title",
-            "first_name": "John",
-            "last_name": "Doe",
-            "email": "a@a.com",
-            "active": True,
-        }]
-        data = {
-            "name": self.partner.name + ' Updated',
-            "partner_type": self.partner.partner_type,
-            "vendor_number": self.partner.vendor_number,
-            "staff_members": staff_members,
-        }
-        response = self.forced_auth_req(
-            'patch',
-            reverse('partners_api:partner-detail', args=[self.partner.pk]),
-            user=self.unicef_staff,
-            data=data,
-        )
-
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(len(response.data["staff_members"]), 2)
-
-        self.assertEqual(
-            Activity.objects.filter(action=Activity.UPDATE).count(),
-            1
-        )
-
-    def test_api_partners_update_invalid_basis_for_type_of_assessment(self):
-        data = {
-            "type_of_assessment": PartnerOrganization.HIGH_RISK_ASSUMED,
-            "basis_for_risk_rating": "NOT NULL VALUE",
-        }
-        response = self.forced_auth_req(
-            'patch',
-            reverse('partners_api:partner-detail', args=[self.partner.pk]),
-            user=self.unicef_staff,
-            data=data
-        )
-
-        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
-        error = [
-            ErrorDetail(string='The basis for risk rating has to be blank if Type is Low or High', code='invalid')]
-        self.assertEqual(response.data, {
-            "basis_for_risk_rating": error})
-
-    def test_api_partners_update_assessments_invalid(self):
-        self.assertFalse(Activity.objects.exists())
-        today = datetime.date.today()
-        assessments = [{
-            "id": self.assessment2.id,
-            "completed_date": datetime.date(today.year + 1, 1, 1),
-        }]
-        data = {
-            "assessments": assessments,
-        }
-        response = self.forced_auth_req(
-            'patch',
-            reverse('partners_api:partner-detail', args=[self.partner.pk]),
-            user=self.unicef_staff,
-            data=data,
-        )
-
-        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
-        self.assertEqual(response.data, {"assessments":
-                                         {"completed_date": ["The Date of Report cannot be in the future"]}})
-        self.assertEqual(
-            Activity.objects.filter(action=Activity.UPDATE).count(),
-            0
-        )
-
-    def test_api_partners_update_assessments_longago(self):
-        self.assertFalse(Activity.objects.exists())
-        today = datetime.date.today()
-        assessments = [{
-            "id": self.assessment2.id,
-            "completed_date": datetime.date(today.year - 3, 1, 1),
-        }]
-        data = {
-            "assessments": assessments,
-        }
-        response = self.forced_auth_req(
-            'patch',
-            reverse('partners_api:partner-detail', args=[self.partner.pk]),
-            user=self.unicef_staff,
-            data=data,
-        )
-
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(
-            Activity.objects.filter(action=Activity.UPDATE).count(),
-            1
-        )
-
-    def test_api_partners_update_assessments_today(self):
-        self.assertFalse(Activity.objects.exists())
-        completed_date = datetime.date.today()
-        assessments = [{
-            "id": self.assessment2.id,
-            "completed_date": completed_date,
-        }]
-        data = {
-            "assessments": assessments,
-        }
-        response = self.forced_auth_req(
-            'patch',
-            reverse('partners_api:partner-detail', args=[self.partner.pk]),
-            user=self.unicef_staff,
-            data=data,
-        )
-
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(
-            Activity.objects.filter(action=Activity.UPDATE).count(),
-            1
-        )
-
-    def test_api_partners_update_assessments_yesterday(self):
-        self.assertFalse(Activity.objects.exists())
-        completed_date = datetime.date.today() - datetime.timedelta(days=1)
-        assessments = [{
-            "id": self.assessment2.id,
-            "completed_date": completed_date,
-        }]
-        data = {
-            "assessments": assessments,
-        }
-        response = self.forced_auth_req(
-            'patch',
-            reverse('partners_api:partner-detail', args=[self.partner.pk]),
-            user=self.unicef_staff,
-            data=data,
-        )
-
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(
-            Activity.objects.filter(action=Activity.UPDATE).count(),
-            1
-        )
-
-    def test_api_partners_update_with_members_empty_phone(self):
-        self.assertFalse(Activity.objects.exists())
-        response = self.forced_auth_req(
-            'get',
-            reverse('partners_api:partner-detail', args=[self.partner.pk]),
-            user=self.unicef_staff,
-        )
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(len(response.data["staff_members"]), 1)
-        self.assertEqual(response.data["staff_members"][0]["first_name"], "Mace")
-
-        staff_members = [{
-            "title": "Some title",
-            "first_name": "John",
-            "last_name": "Doe",
-            "email": "a1@a.com",
-            "active": True,
-            "phone": ''
-        }]
-        data = {
-            "staff_members": staff_members,
-        }
-        response = self.forced_auth_req(
-            'patch',
-            reverse('partners_api:partner-detail', args=[self.partner.pk]),
-            user=self.unicef_staff,
-            data=data,
-        )
-
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(response.data["staff_members"][1]["phone"], '')
-        self.assertEqual(
-            Activity.objects.filter(action=Activity.UPDATE).count(),
-            1
-        )
-
-    def test_api_partners_update_assessments_tomorrow(self):
-        self.assertFalse(Activity.objects.exists())
-        completed_date = datetime.date.today() + datetime.timedelta(days=1)
-        assessments = [{
-            "id": self.assessment2.id,
-            "completed_date": completed_date,
-        }]
-        data = {
-            "assessments": assessments,
-        }
-        response = self.forced_auth_req(
-            'patch',
-            reverse('partners_api:partner-detail', args=[self.partner.pk]),
-            user=self.unicef_staff,
-            data=data,
-        )
-
-        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
-        self.assertEqual(response.data, {"assessments":
-                                         {"completed_date": ["The Date of Report cannot be in the future"]}})
-        self.assertEqual(
-            Activity.objects.filter(action=Activity.UPDATE).count(),
-            0
-        )
-
-    def test_api_partners_retrieve(self):
-        response = self.forced_auth_req(
-            'get',
-            reverse('partners_api:partner-detail', args=[self.partner.pk]),
-            user=self.unicef_staff,
-        )
-
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertIn("vendor_number", response.data.keys())
-        self.assertIn("address", response.data.keys())
-        self.assertIn("Partner", response.data["name"])
-        self.assertEqual(['audits', 'programme_visits', 'spot_checks'],
-                         sorted(response.data['hact_min_requirements'].keys()))
-        self.assertEqual(['assurance_coverage', 'audits', 'outstanding_findings', 'programmatic_visits', 'spot_checks'],
-                         sorted(response.data['hact_values'].keys()))
-        self.assertCountEqual(
-            ['completed', 'minimum_requirements'],
-            response.data['hact_values']['audits'].keys())
-        self.assertEqual(response.data['interventions'], [])
-
-    def test_api_partners_retreive_actual_fr_amounts(self):
-        self.intervention.status = Intervention.ACTIVE
-        self.intervention.save()
-        fr_header_1 = FundsReservationHeaderFactory(intervention=self.intervention)
-        fr_header_2 = FundsReservationHeaderFactory(intervention=self.intervention)
-
-        response = self.forced_auth_req(
-            'get',
-            reverse('partners_api:partner-detail', args=[self.partner.pk]),
-            user=self.unicef_staff,
-        )
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(Decimal(response.data["interventions"][0]["actual_amount"]),
-                         Decimal(fr_header_1.actual_amt_local + fr_header_2.actual_amt_local))
-
-    def test_api_partners_retrieve_staff_members(self):
-        response = self.forced_auth_req(
-            'get',
-            reverse('partners_api:partner-detail', args=[self.partner.pk]),
-            user=self.unicef_staff,
-        )
-
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertIn("staff_members", response.data.keys())
-        self.assertEqual(len(response.data["staff_members"]), 1)
-
-    def test_api_partners_update(self):
-        self.assertFalse(Activity.objects.exists())
-        data = {
-            "name": "Updated name again",
-        }
-        response = self.forced_auth_req(
-            'patch',
-            reverse('partners_api:partner-detail', args=[self.partner.pk]),
-            user=self.unicef_staff,
-            data=data,
-        )
-
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertIn("Updated", response.data["name"])
-        self.assertEqual(
-            Activity.objects.filter(action=Activity.UPDATE).count(),
-            1
-        )
-
-    def test_api_partners_update_hidden(self):
-        # make some other type to filter against
-        self.assertFalse(Activity.objects.exists())
-        data = {
-            "hidden": True
-        }
-        response = self.forced_auth_req(
-            'patch',
-            reverse('partners_api:partner-detail', args=[self.partner.pk]),
-            user=self.unicef_staff,
-            data=data
-        )
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(response.data["hidden"], False)
-        self.assertEqual(
-            Activity.objects.filter(action=Activity.UPDATE).count(),
-            1
-        )
 
 
 class TestPartnershipViews(BaseTenantTestCase):
@@ -810,7 +457,7 @@ class TestPartnershipViews(BaseTenantTestCase):
 
 
 class TestAgreementCreateAPIView(BaseTenantTestCase):
-    '''Exercise the create portion of the API.'''
+    """Exercise the create portion of the API."""
     @classmethod
     def setUpTestData(cls):
         cls.partner = PartnerFactory(partner_type=PartnerType.CIVIL_SOCIETY_ORGANIZATION)
@@ -825,7 +472,7 @@ class TestAgreementCreateAPIView(BaseTenantTestCase):
         )
 
     def test_minimal_create(self):
-        '''Test passing as few fields as possible to create'''
+        """Test passing as few fields as possible to create"""
         self.assertFalse(Activity.objects.exists())
         data = {
             "agreement_type": Agreement.MOU,
@@ -848,7 +495,7 @@ class TestAgreementCreateAPIView(BaseTenantTestCase):
         self.assertEqual(activity.by_user, self.partnership_manager_user)
 
     def test_create_simple_fail(self):
-        '''Verify that failing gives appropriate feedback'''
+        """Verify that failing gives appropriate feedback"""
         data = {
             "agreement_type": Agreement.PCA,
             "partner": self.partner.id,
@@ -872,9 +519,9 @@ class TestAgreementCreateAPIView(BaseTenantTestCase):
 
 
 class TestAgreementAPIFileAttachments(BaseTenantTestCase):
-    '''Test retrieving attachments to agreements and agreement amendments. The file-specific fields are read-only
+    """Test retrieving attachments to agreements and agreement amendments. The file-specific fields are read-only
     on the relevant serializers, so they can't be edited through the API.
-    '''
+    """
     @classmethod
     def setUpTestData(cls):
         cls.partner = PartnerFactory(partner_type=PartnerType.CIVIL_SOCIETY_ORGANIZATION)
@@ -889,7 +536,7 @@ class TestAgreementAPIFileAttachments(BaseTenantTestCase):
         )
 
     def _get_and_assert_response(self):
-        '''Helper method to get the agreement and verify some basic about the response JSON (which it returns).'''
+        """Helper method to get the agreement and verify some basic about the response JSON (which it returns)."""
         response = self.forced_auth_req(
             'get',
             reverse('partners_api:agreement-detail', kwargs={'pk': self.agreement.id}),
@@ -903,9 +550,9 @@ class TestAgreementAPIFileAttachments(BaseTenantTestCase):
         return response_json
 
     def test_retrieve_attachment(self):
-        '''Exercise getting agreement attachment and agreement amendment attachments both when they're present
+        """Exercise getting agreement attachment and agreement amendment attachments both when they're present
         and absent.
-        '''
+        """
         # The agreement starts with no attachment.
         response_json = self._get_and_assert_response()
         self.assertIsNone(response_json['attached_agreement_file'])
@@ -1090,7 +737,7 @@ class TestAgreementAPIView(BaseTenantTestCase):
         self.assertIn("Partner", response.data[0]["partner_name"])
 
     def test_null_update_generates_no_activity_stream(self):
-        '''Verify that a do-nothing update doesn't create anything in the model's activity stream'''
+        """Verify that a do-nothing update doesn't create anything in the model's activity stream"""
         data = {
             "agreement_number": self.agreement.agreement_number
         }
@@ -1245,7 +892,7 @@ class TestAgreementAPIView(BaseTenantTestCase):
         # self.assertEqual(response.data[1]["agreement_number"], self.agreement.agreement_number)
 
     def test_agreements_update_set_to_active_on_save(self):
-        '''Ensure that a draft agreement auto-transitions to signed when saved with signing info'''
+        """Ensure that a draft agreement auto-transitions to signed when saved with signing info"""
         agreement = AgreementFactory(
             agreement_type=Agreement.MOU,
             status=Agreement.DRAFT,
@@ -1279,7 +926,7 @@ class TestAgreementAPIView(BaseTenantTestCase):
         mock_send.assert_not_called()
 
     def test_partner_agreements_update_suspend(self):
-        '''Ensure that interventions related to an agreement are suspended when the agreement is suspended'''
+        """Ensure that interventions related to an agreement are suspended when the agreement is suspended"""
         # There's a limited number of statuses that the intervention can have in order to transition to suspended;
         # signed is one of them.
         self.intervention.status = Intervention.SIGNED

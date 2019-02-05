@@ -71,7 +71,7 @@ urlpatterns = [
     # Used for admin and dashboard pages in django
     url(r'^$', ModuleRedirectView.as_view(), name='dashboard'),
     url(r'^login/$', MainView.as_view(), name='main'),
-    url(r'^saml2/logout/$', logout_view, name='saml2_logout'),
+    url(r'^logout/$', logout_view, name='logout'),
     url(r'^tokens/', include('etools.applications.tokens.urls')),
 
     url(r'^api/static_data/$', StaticDataView.as_view({'get': 'list'}), name='public_static'),

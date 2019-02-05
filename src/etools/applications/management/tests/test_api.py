@@ -6,10 +6,10 @@ from etools.applications.EquiTrack.tests.mixins import URLAssertionMixin
 
 
 class UrlsTestCase(URLAssertionMixin, SimpleTestCase):
-    '''Simple test case to verify URL reversal'''
+    """Simple test case to verify URL reversal"""
 
     def test_urls(self):
-        '''Verify URL pattern names generate the URLs we expect them to.'''
+        """Verify URL pattern names generate the URLs we expect them to."""
         names_and_paths = (
             ('dashboard', '', {}),
             ('load_result_structure', 'load-results/', {}),

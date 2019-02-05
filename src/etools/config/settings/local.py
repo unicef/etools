@@ -53,7 +53,6 @@ if 'test' in sys.argv:
         # These apps contains test models that haven't been created by migration.
         # So on the serialization stage these models do not exist.
         'etools.applications.utils.common',
-        'etools.applications.utils.writable_serializers',
         'etools.applications.permissions2',
     ]
 

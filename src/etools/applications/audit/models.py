@@ -32,10 +32,9 @@ from etools.applications.audit.transitions.conditions import (
 from etools.applications.audit.transitions.serializers import EngagementCancelSerializer
 from etools.applications.EquiTrack.utils import get_environment
 from etools.applications.partners.models import PartnerOrganization, PartnerStaffMember
-from etools.applications.permissions2.fsm import has_action_permission
-from etools.applications.utils.common.models.mixins import InheritedModelMixin
+from etools.libraries.fsm.views import has_action_permission
 from etools.applications.utils.common.urlresolvers import build_frontend_url
-from etools.libraries.djangolib.models import GroupWrapper
+from etools.libraries.djangolib.models import GroupWrapper, InheritedModelMixin
 
 
 class Engagement(InheritedModelMixin, TimeStampedModel, models.Model):
