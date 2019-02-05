@@ -3,11 +3,9 @@ from mock import Mock, patch
 
 from django.conf import settings
 from django.core.management import call_command
-from django.db.models import Count, OuterRef, Subquery
 
 from etools.applications.attachments.tests.factories import AttachmentFileTypeFactory
 from etools.applications.EquiTrack.tests.cases import BaseTenantTestCase
-from etools.applications.funds.models import FundsReservationHeader
 from etools.applications.funds.tests.factories import FundsReservationHeaderFactory
 from unicef_locations.tests.factories import GatewayTypeFactory, LocationFactory
 from etools.applications.partners import utils
@@ -300,7 +298,7 @@ class TestSendInterventionPastStartNotification(BaseTenantTestCase):
         self.assertEqual(mock_send.call_count, 0)
 
     def test_send_has_no_frs(self):
-        intervention = InterventionFactory(
+        InterventionFactory(
             status=Intervention.SIGNED,
             start=datetime.date.today() - datetime.timedelta(days=2),
         )
