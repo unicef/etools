@@ -1,4 +1,6 @@
+from django.core.management import call_command
 from django.core.management.base import BaseCommand, CommandError
+
 from django_tenants.utils import get_tenant_domain_model
 
 from etools.applications.publics.models import Currency
@@ -22,5 +24,6 @@ class Command(BaseCommand):
                 local_currency=usd,
             )
             get_tenant_domain_model().objects.create(domain='{}.etools.unicef.org'.format(slug), tenant=country)
+            call_command('init-result-type', schema=slug)
         except Exception as exp:
             raise CommandError(*exp.args)
