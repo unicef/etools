@@ -18,7 +18,7 @@ from etools.applications.field_monitoring.fm_settings.models import CheckListIte
     LocationSite
 from etools.applications.field_monitoring.shared.models import FMMethod
 from etools.applications.publics.models import SoftDeleteMixin
-from etools.applications.utils.common.models.mixins import InheritedModelMixin
+from etools.libraries.djangolib.models import InheritedModelMixin
 
 
 class FindingMixin(models.Model):

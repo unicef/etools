@@ -7,7 +7,7 @@ import django.db.models.deletion
 from django.utils.timezone import utc
 import django.utils.timezone
 import django_fsm
-import etools.applications.utils.common.models.mixins
+import etools.libraries.djangolib.models
 import model_utils.fields
 
 
@@ -62,7 +62,7 @@ class Migration(migrations.Migration):
                 'verbose_name_plural': 'Visits',
                 'ordering': ('id',),
             },
-            bases=(etools.applications.utils.common.models.mixins.InheritedModelMixin, models.Model),
+            bases=(etools.libraries.djangolib.models.InheritedModelMixin, models.Model),
         ),
         migrations.CreateModel(
             name='VisitCPOutputConfig',
