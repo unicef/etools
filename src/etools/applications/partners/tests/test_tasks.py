@@ -1038,3 +1038,21 @@ class TestCheckInterventionDraftStatus(BaseTenantTestCase):
         with mock.patch(send_path, mock_send):
             etools.applications.partners.tasks.check_intervention_draft_status()
         self.assertEqual(mock_send.call_count, 1)
+
+
+class TestCheckInterventionPastStartStatus(BaseTenantTestCase):
+    @classmethod
+    def setUpTestData(cls):
+        call_command("update_notifications")
+
+    def test_task(self):
+        send_path = "etools.applications.partners.utils.send_notification_with_template"
+        intervention = InterventionFactory(
+            status=Intervention.SIGNED,
+            start=datetime.date.today() - datetime.timedelta(days=2),
+        )
+        FundsReservationHeaderFactory(intervention=intervention)
+        mock_send = mock.Mock()
+        with mock.patch(send_path, mock_send):
+            etools.applications.partners.tasks.check_intervention_past_start()
+        self.assertEqual(mock_send.call_count, 1)

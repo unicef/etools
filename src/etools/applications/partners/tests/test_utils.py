@@ -3,9 +3,11 @@ from mock import Mock, patch
 
 from django.conf import settings
 from django.core.management import call_command
+from django.db.models import Count, OuterRef, Subquery
 
 from etools.applications.attachments.tests.factories import AttachmentFileTypeFactory
 from etools.applications.EquiTrack.tests.cases import BaseTenantTestCase
+from etools.applications.funds.models import FundsReservationHeader
 from etools.applications.funds.tests.factories import FundsReservationHeaderFactory
 from unicef_locations.tests.factories import GatewayTypeFactory, LocationFactory
 from etools.applications.partners import utils
@@ -256,4 +258,53 @@ class TestSendInterventionDraftNotification(BaseTenantTestCase):
         mock_send = Mock()
         with patch(self.send_path, mock_send):
             utils.send_intervention_draft_notification()
+        self.assertEqual(mock_send.call_count, 0)
+
+
+class TestSendInterventionPastStartNotification(BaseTenantTestCase):
+    @classmethod
+    def setUpTestData(cls):
+        call_command("update_notifications")
+        cls.send_path = "etools.applications.partners.utils.send_notification_with_template"
+
+    def test_send(self):
+        intervention = InterventionFactory(
+            status=Intervention.SIGNED,
+            start=datetime.date.today() - datetime.timedelta(days=2),
+        )
+        FundsReservationHeaderFactory(intervention=intervention)
+        mock_send = Mock()
+        with patch(self.send_path, mock_send):
+            utils.send_intervention_past_start_notification()
+        self.assertEqual(mock_send.call_count, 1)
+
+    def test_send_not_signed(self):
+        intervention = InterventionFactory(
+            status=Intervention.DRAFT,
+            start=datetime.date.today() - datetime.timedelta(days=2),
+        )
+        FundsReservationHeaderFactory(intervention=intervention)
+        mock_send = Mock()
+        with patch(self.send_path, mock_send):
+            utils.send_intervention_past_start_notification()
+        self.assertEqual(mock_send.call_count, 0)
+
+    def test_send_not_past(self):
+        InterventionFactory(
+            status=Intervention.SIGNED,
+            start=datetime.date.today() + datetime.timedelta(days=2),
+        )
+        mock_send = Mock()
+        with patch(self.send_path, mock_send):
+            utils.send_intervention_past_start_notification()
+        self.assertEqual(mock_send.call_count, 0)
+
+    def test_send_has_no_frs(self):
+        intervention = InterventionFactory(
+            status=Intervention.SIGNED,
+            start=datetime.date.today() - datetime.timedelta(days=2),
+        )
+        mock_send = Mock()
+        with patch(self.send_path, mock_send):
+            utils.send_intervention_past_start_notification()
         self.assertEqual(mock_send.call_count, 0)

@@ -15,6 +15,7 @@ from etools.applications.partners.models import Agreement, Intervention, Partner
 from etools.applications.partners.utils import (
     copy_all_attachments,
     send_intervention_draft_notification,
+    send_intervention_past_start_notification,
     send_pca_missing_notifications,
     send_pca_required_notifications,
 )
@@ -295,3 +296,8 @@ def check_pca_missing():
 @app.task
 def check_intervention_draft_status():
     run_on_all_tenants(send_intervention_draft_notification)
+
+
+@app.task
+def check_intervention_past_start():
+    run_on_all_tenants(send_intervention_past_start_notification)

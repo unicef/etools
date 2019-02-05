@@ -3,13 +3,14 @@ import logging
 
 from django.conf import settings
 from django.contrib.contenttypes.models import ContentType
-from django.db.models import F, Q
+from django.db.models import Count, F, OuterRef, Q, Subquery
 from django.urls import reverse
 from django.utils.timezone import make_aware, now
 
 from unicef_attachments.models import Attachment, FileType
 from unicef_notification.utils import send_notification_with_template
 
+from etools.applications.funds.models import FundsReservationHeader
 from etools.applications.partners.models import (
     Agreement,
     AgreementAmendment,
@@ -451,5 +452,36 @@ def send_intervention_draft_notification():
             context={
                 "reference_number": intervention.reference_number,
                 "title": intervention.title,
+            }
+        )
+
+
+def send_intervention_past_start_notification():
+    """Send an email to PD/SHPD/SSFA's focal point(s) if signed
+    and start date is past with no FR added"""
+    frs_count = FundsReservationHeader.objects.filter(
+        intervention=OuterRef("pk")
+    ).annotate(count=Count("vendor_code")).values("count")
+    intervention_qs = Intervention.objects.filter(
+        status=Intervention.SIGNED,
+        start__lt=datetime.date.today(),
+    ).annotate(
+        frs_count=Subquery(frs_count)
+    ).filter(frs_count__gt=0)
+    for intervention in intervention_qs.all():
+        recipients = [
+            u.user.email for u in intervention.unicef_focal_points.all()
+            if u.user.email
+        ]
+        send_notification_with_template(
+            recipients=recipients,
+            template_name="partners/intervention/past-start",
+            context={
+                "reference_number": intervention.reference_number,
+                "title": intervention.title,
+                "url": "{}{}".format(
+                    settings.HOST,
+                    intervention.get_object_url(),
+                )
             }
         )
