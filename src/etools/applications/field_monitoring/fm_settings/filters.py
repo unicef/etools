@@ -44,7 +44,14 @@ class LogIssueVisitFilter(BaseFilterBackend):
         if filter_value is None:
             return queryset
 
-        raise NotImplementedError
+        return queryset.filter(
+            models.Q(cp_output__fm_config__tasks__visits=filter_value) |
+            models.Q(partner__tasks__visits=filter_value) |
+            models.Q(location__tasks__visits=filter_value) |
+            models.Q(location__visits=filter_value) |
+            models.Q(location_site__tasks__visits=filter_value) |
+            models.Q(location_site__visits=filter_value)
+        ).distinct()
 
 
 class LogIssueNameOrderingFilter(BaseFilterBackend):

@@ -13,6 +13,7 @@ from unicef_snapshot.serializers import SnapshotModelSerializer
 
 from etools.applications.field_monitoring.fm_settings.serializers.cp_outputs import NestedCPOutputSerializer, \
     PartnerOrganizationSerializer
+from etools.applications.field_monitoring.fm_settings.serializers.issues import LogIssueSerializer
 from etools.applications.field_monitoring.fm_settings.serializers.locations import LocationSiteLightSerializer
 from etools.applications.field_monitoring.fm_settings.serializers.methods import FMMethodTypeSerializer
 from etools.applications.field_monitoring.planning.models import Task
@@ -134,20 +135,11 @@ class VisitMethodSerializer(serializers.ModelSerializer):
 
 
 class VisitSerializer(SnapshotModelSerializer, VisitListSerializer):
-    specific_issues = serializers.SerializerMethodField()
     scope_by_methods = serializers.SerializerMethodField(label=_('Scope of Site Visit By Methods'))
 
     class Meta(VisitListSerializer.Meta):
         fields = VisitListSerializer.Meta.fields + (
-            'scope_by_methods', 'specific_issues',
-        )
-
-    def get_specific_issues(self, obj):
-        return LogIssue.objects.filter(
-            models.Q(cp_output__fm_config__tasks__visits=obj.id) |
-            models.Q(partner__tasks__visits=obj.id) |
-            models.Q(location__tasks__visits=obj.id) |
-            models.Q(location_site__tasks__visits=obj.id)
+            'scope_by_methods',
         )
 
     def get_scope_by_methods(self, obj):

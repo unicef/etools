@@ -11,7 +11,7 @@ from unicef_locations.tests.factories import LocationFactory
 from etools.applications.EquiTrack.tests.cases import BaseTenantTestCase
 from etools.applications.action_points.tests.factories import UserFactory
 from etools.applications.field_monitoring.fm_settings.tests.factories import FMMethodFactory, FMMethodTypeFactory, \
-    PlannedCheckListItemFactory, LocationSiteFactory, CPOutputConfigFactory
+    PlannedCheckListItemFactory, LocationSiteFactory, CPOutputConfigFactory, LogIssueFactory
 from etools.applications.field_monitoring.planning.tests.factories import TaskFactory
 from etools.applications.field_monitoring.tests.base import FMBaseTestCaseMixin
 from etools.applications.field_monitoring.visits.models import Visit
@@ -32,6 +32,16 @@ class VisitsViewTestCase(FMBaseTestCaseMixin, BaseTenantTestCase):
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(len(response.data['results']), len(Visit.STATUS_CHOICES))
+
+    def test_detail(self):
+        visit = VisitFactory()
+
+        response = self.forced_auth_req(
+            'get', reverse('field_monitoring_visits:visits-detail', args=[visit.id]),
+            user=self.unicef_user
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
 
     def test_totals(self):
         config = CPOutputConfigFactory()
