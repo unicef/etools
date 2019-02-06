@@ -1,10 +1,11 @@
 import json
 
+
 from etools.applications.users.models import Country
-from etools.applications.vision.vision_data_synchronizer import VisionDataSynchronizer
+from etools.applications.vision.synchronizers import VisionDataTenantSynchronizer
 
 
-class CountryLongNameSync(VisionDataSynchronizer):
+class CountryLongNameSync(VisionDataTenantSynchronizer):
     ENDPOINT = 'GetBusinessAreaList_JSON'
     GLOBAL_CALL = True
 

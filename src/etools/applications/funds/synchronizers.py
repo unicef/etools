@@ -4,6 +4,8 @@ import logging
 from decimal import Decimal
 
 from django.db.models import Sum
+from unicef_vision.synchronizers import FileDataSynchronizer
+from unicef_vision.utils import comp_decimals
 
 from etools.applications.funds.models import (
     FundsCommitmentHeader,
@@ -11,11 +13,10 @@ from etools.applications.funds.models import (
     FundsReservationHeader,
     FundsReservationItem,
 )
-from etools.applications.vision.utils import comp_decimals
-from etools.applications.vision.vision_data_synchronizer import FileDataSynchronizer, VisionDataSynchronizer
+from etools.applications.vision.synchronizers import VisionDataTenantSynchronizer
 
 
-class FundReservationsSynchronizer(VisionDataSynchronizer):
+class FundReservationsSynchronizer(VisionDataTenantSynchronizer):
 
     ENDPOINT = 'GetFundsReservationInfo_JSON'
     REQUIRED_KEYS = (
@@ -251,7 +252,7 @@ class FundReservationsSynchronizer(VisionDataSynchronizer):
         return processed
 
 
-class FundCommitmentSynchronizer(VisionDataSynchronizer):
+class FundCommitmentSynchronizer(VisionDataTenantSynchronizer):
 
     ENDPOINT = 'GetFundsCommitmentInfo_JSON'
     REQUIRED_KEYS = (
