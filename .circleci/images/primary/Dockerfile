@@ -1,34 +1,35 @@
-FROM python:3.6.4-jessie
-# python:3.6.4-jessie has python 2.7 and 3.6 installed, and packages
-# available to install 3.4
+FROM python:3.6.4-alpine
+# test-base-p3-v2
+RUN echo "http://dl-3.alpinelinux.org/alpine/edge/main" >> /etc/apk/repositories
+RUN apk update
+RUN apk add --upgrade apk-tools
 
-# Install dependencies
-RUN apt-get update
-RUN apt-get install -y --no-install-recommends \
-    build-essential \
-    libcurl4-openssl-dev \
-    libjpeg-dev \
-    vim \
-    ntp \
-    git-core
-RUN apt-get install -y --no-install-recommends \
-    python-pip \
-    postgresql-client \
-    libpq-dev \
-    python3-dev
-RUN apt-get install -y --no-install-recommends \
-    python-gdal \
-    gdal-bin \
-    libgdal-dev \
-    libgdal1h \
-    libgdal1-dev \
+RUN apk add \
+    --update alpine-sdk
+
+RUN apk add openssl \
+    ca-certificates \
+    libressl2.7-libcrypto
+RUN apk add \
     libxml2-dev \
     libxslt-dev \
-    xmlsec1
+    xmlsec-dev
+RUN apk add postgresql-dev \
+    libffi-dev\
+    jpeg-dev
 
-RUN pip install virtualenv
+RUN apk add --update-cache --repository http://dl-3.alpinelinux.org/alpine/edge/testing/ \
+    gdal \
+    gdal-dev \
+    py-gdal \
+    geos \
+    geos-dev \
+    gcc \
+    g++
 
-# http://gis.stackexchange.com/a/74060
-ENV CPLUS_INCLUDE_PATH /usr/include/gdal
-ENV C_INCLUDE_PATH /usr/include/gdal
-ENV REQUIREMENTS_FILE base.txt
+RUN pip install --upgrade \
+    setuptools \
+    pip \
+    wheel \
+    pipenv
+
