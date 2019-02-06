@@ -82,7 +82,7 @@ class TravelActivityExportSerializer(serializers.Serializer):
     def get_hact_visit_report(self, obj):
         return "Yes" if TravelAttachment.objects.filter(
             travel=obj.travel,
-            type="HACT Programme Monitoring",
+            type__istartswith="HACT Programme Monitoring",
         ).exists() else "No"
 
 
