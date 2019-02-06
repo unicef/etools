@@ -37,10 +37,10 @@ from etools.applications.users.tests.factories import GroupFactory, UserFactory
 
 
 class UrlsTestCase(URLAssertionMixin, SimpleTestCase):
-    '''Simple test case to verify URL reversal'''
+    """Simple test case to verify URL reversal"""
 
     def test_urls(self):
-        '''Verify URL pattern names generate the URLs we expect them to.'''
+        """Verify URL pattern names generate the URLs we expect them to."""
         names_and_paths = (
             ('reports:applied-indicator', 'applied-indicators/', {}),
             ('reports:country-programme-list', 'countryprogramme/', {}),

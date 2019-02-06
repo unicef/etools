@@ -11,8 +11,12 @@ from pytz import UTC
 
 from etools.applications.EquiTrack.tests.cases import BaseTenantTestCase
 from etools.applications.publics.models import DSARate
-from etools.applications.publics.tests.factories import (PublicsBusinessAreaFactory, PublicsCountryFactory,
-                                                         PublicsDSARateFactory, PublicsDSARegionFactory,)
+from etools.applications.publics.tests.factories import (
+    PublicsBusinessAreaFactory,
+    PublicsCountryFactory,
+    PublicsDSARateFactory,
+    PublicsDSARegionFactory,
+)
 from etools.applications.users.tests.factories import UserFactory
 
 

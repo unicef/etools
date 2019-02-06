@@ -1,4 +1,4 @@
-
+from django.conf import settings
 from django.contrib.auth.models import Group
 from django.contrib.contenttypes.fields import GenericForeignKey
 from django.db import models
@@ -9,23 +9,23 @@ from rest_framework import status
 
 from etools.applications.EquiTrack.tests.cases import BaseTenantTestCase
 from etools.applications.users.tests.factories import UserFactory
-from etools.applications.utils.common.urlresolvers import build_frontend_url, site_url
+from etools.applications.utils.common.urlresolvers import build_frontend_url
 from etools.applications.utils.common.utils import get_all_field_names
 
 
 class CommonUtilsTest(TestCase):
-    '''Tests for utils.common.utils'''
+    """Tests for utils.common.utils"""
 
     def test_get_all_field_names(self):
-        '''Exercise get_all_field_names() which is Django-provided code to replace Model._meta.get_all_field_names()'''
+        """Exercise get_all_field_names() which is Django-provided code to replace Model._meta.get_all_field_names()"""
         class Useless:
             pass
 
         class Dummy(models.Model):
-            '''Model to contain the many different types of fields I want to test.
+            """Model to contain the many different types of fields I want to test.
 
             The list of fields in the model is not exhaustive, but it covers a variety of Django field types.
-            '''
+            """
             # CHOICES should not be in the list of field names
             CHOICES = (('to be'), ('not to be'))
 
@@ -54,6 +54,7 @@ class CommonUtilsTest(TestCase):
 
             class Meta:
                 verbose_name_plural = _('Dummies')
+                app_label = 'tests'
 
         expected_field_names = ['field{:02}'.format(i + 1) for i in range(12)]
         expected_field_names += ['field10_id', 'field11_id']
@@ -86,18 +87,9 @@ class TestExportMixin(object):
 class TestFrontendUrl(BaseTenantTestCase):
     def test_staff_user_url(self):
         self.assertIn(
-            site_url() + reverse('main'),
+            settings.HOST + reverse('main'),
             build_frontend_url('test', user=UserFactory(is_staff=True))
         )
 
     def test_common_user_url(self):
-        self.assertIn(
-            site_url() + reverse('tokens:login'),
-            build_frontend_url('test', user=UserFactory(is_staff=False))
-        )
-
-    def test_token_url(self):
-        self.assertIn(
-            'token=',
-            build_frontend_url('test', user=UserFactory(), include_token=True)
-        )
+        self.assertIn(settings.HOST, build_frontend_url('test', user=UserFactory(is_staff=False)))

@@ -28,14 +28,14 @@ class BaseTenantTestCase(TenantTestCase):
 
     @classmethod
     def _load_fixtures(cls):
-        '''
+        """
         Load fixtures for current connection (shared/public or tenant)
 
         This works the same as the code in TestCase.setUpClass(), but is
         broken out here so we can call it twice, once for the public schema
         and once for the tenant schema.
 
-        '''
+        """
         if cls.fixtures:
             for db_name in cls._databases_names(include_mirrors=False):
                 try:

@@ -10,13 +10,12 @@ from django.db.models.signals import post_save
 from django.utils.functional import cached_property
 from django.utils.translation import ugettext_lazy as _
 from django_tenants.models import TenantMixin
-
-from djangosaml2.signals import pre_user_save
+from model_utils.models import TimeStampedModel
 
 logger = logging.getLogger(__name__)
 
 
-class User(AbstractBaseUser, PermissionsMixin):
+class User(TimeStampedModel, AbstractBaseUser, PermissionsMixin):
     USERNAME_FIELD = "username"
     REQUIRED_FIELDS = ['email']
 
@@ -277,6 +276,9 @@ class UserProfile(models.Model):
             self.user.get_full_name()
         )
 
+    class Meta:
+        verbose_name_plural = _('User Profile')
+
     objects = UserProfileManager()
 
     @classmethod
@@ -339,4 +341,3 @@ class UserProfile(models.Model):
 
 
 post_save.connect(UserProfile.create_user_profile, sender=settings.AUTH_USER_MODEL)
-pre_user_save.connect(UserProfile.custom_update_user)  # TODO: The sender should be set

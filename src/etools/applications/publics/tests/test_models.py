@@ -1,17 +1,23 @@
 
 from django.test import SimpleTestCase
 
-
-from etools.applications.publics.tests.factories import (PublicsAirlineCompanyFactory, PublicsBusinessAreaFactory,
-                                                         PublicsBusinessRegionFactory, PublicsCountryFactory,
-                                                         PublicsCurrencyFactory, PublicsDSARateFactory,
-                                                         PublicsDSARegionFactory, PublicsFundFactory,
-                                                         PublicsGrantFactory, PublicsTravelExpenseTypeFactory,
-                                                         PublicsWBSFactory,)
+from etools.applications.publics.tests.factories import (
+    PublicsAirlineCompanyFactory,
+    PublicsBusinessAreaFactory,
+    PublicsBusinessRegionFactory,
+    PublicsCountryFactory,
+    PublicsCurrencyFactory,
+    PublicsDSARateFactory,
+    PublicsDSARegionFactory,
+    PublicsFundFactory,
+    PublicsGrantFactory,
+    PublicsTravelExpenseTypeFactory,
+    PublicsWBSFactory,
+)
 
 
 class TestStrUnicode(SimpleTestCase):
-    '''Ensure calling str() on model instances returns the right text.'''
+    """Ensure calling str() on model instances returns the right text."""
 
     def test_travel_expense_type(self):
         instance = PublicsTravelExpenseTypeFactory.build(title='xyz')

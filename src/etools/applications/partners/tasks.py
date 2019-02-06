@@ -20,8 +20,8 @@ from etools.applications.partners.utils import (
 from etools.applications.partners.validation.agreements import AgreementValid
 from etools.applications.partners.validation.interventions import InterventionValid
 from etools.applications.users.models import Country
-from etools.applications.utils.common.utils import run_on_all_tenants
 from etools.config.celery import app
+from etools.libraries.tenant_support.utils import run_on_all_tenants
 
 logger = get_task_logger(__name__)
 
@@ -67,8 +67,10 @@ def _make_agreement_status_automatic_transitions(country_name):
     bad_agreements = []
 
     # SSFAs don't transition automatically unless they transition based on the intervention.
-    signed_ended_agrs = Agreement.objects.filter(status=Agreement.SIGNED, end__lt=datetime.date.today())\
-        .exclude(agreement_type=Agreement.SSFA)
+    signed_ended_agrs = Agreement.objects.filter(
+        status__in=[Agreement.DRAFT, Agreement.SIGNED],
+        end__lt=datetime.date.today()
+    ).exclude(agreement_type=Agreement.SSFA)
     processed = 0
 
     for agr in signed_ended_agrs:

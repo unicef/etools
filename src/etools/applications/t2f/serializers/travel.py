@@ -11,6 +11,8 @@ from django.utils.translation import ugettext
 
 from rest_framework import serializers
 from rest_framework.exceptions import ValidationError
+from unicef_attachments.fields import AttachmentSingleFileField
+from unicef_attachments.serializers import AttachmentSerializerMixin
 from unicef_locations.models import Location
 
 from etools.applications.action_points.models import ActionPoint
@@ -19,7 +21,6 @@ from etools.applications.partners.models import PartnerType
 from etools.applications.publics.models import AirlineCompany, Currency
 from etools.applications.t2f.helpers.permission_matrix import PermissionMatrix
 from etools.applications.t2f.models import (
-    Clearances,
     CostAssignment,
     Deduction,
     Expense,
@@ -117,16 +118,6 @@ class CostAssignmentSerializer(PermissionBasedModelSerializer):
         fields = ('id', 'wbs', 'share', 'grant', 'fund', 'business_area', 'delegate')
 
 
-class ClearancesSerializer(PermissionBasedModelSerializer):
-    medical_clearance = serializers.CharField()
-    security_clearance = serializers.CharField()
-    security_course = serializers.CharField()
-
-    class Meta:
-        model = Clearances
-        fields = ('id', 'medical_clearance', 'security_clearance', 'security_course')
-
-
 class TravelActivitySerializer(PermissionBasedModelSerializer):
     id = serializers.IntegerField(required=False)
     locations = serializers.PrimaryKeyRelatedField(many=True, queryset=Location.objects.all(), required=False,
@@ -167,19 +158,22 @@ class TravelActivitySerializer(PermissionBasedModelSerializer):
         return ret
 
 
-class TravelAttachmentSerializer(serializers.ModelSerializer):
+class TravelAttachmentSerializer(AttachmentSerializerMixin, serializers.ModelSerializer):
     url = serializers.SerializerMethodField()
+    attachment = AttachmentSingleFileField()
 
     class Meta:
         model = TravelAttachment
-        fields = ('id', 'name', 'type', 'url', 'file')
+        fields = ('id', 'name', 'type', 'url', 'file', 'attachment')
 
     def create(self, validated_data):
         validated_data['travel'] = self.context['travel']
         return super().create(validated_data)
 
     def get_url(self, obj):
-        return obj.file.url
+        if obj.file:
+            return obj.file.url
+        return ""
 
 
 class TravelDetailsSerializer(PermissionBasedModelSerializer):
@@ -187,9 +181,8 @@ class TravelDetailsSerializer(PermissionBasedModelSerializer):
     expenses = ExpenseSerializer(many=True, required=False)
     deductions = DeductionSerializer(many=True, required=False)
     cost_assignments = CostAssignmentSerializer(many=True, required=False)
-    clearances = ClearancesSerializer(required=False)
     activities = TravelActivitySerializer(many=True, required=False)
-    attachments = TravelAttachmentSerializer(many=True, read_only=True)
+    attachments = TravelAttachmentSerializer(many=True, read_only=True, required=False)
     cost_summary = CostSummarySerializer(read_only=True)
     report = serializers.CharField(source='report_note', required=False, default='', allow_blank=True)
     mode_of_travel = serializers.ListField(child=LowerTitleField(), allow_null=True, required=False)
@@ -201,7 +194,7 @@ class TravelDetailsSerializer(PermissionBasedModelSerializer):
         model = Travel
         fields = ('reference_number', 'supervisor', 'office', 'end_date', 'international_travel', 'section',
                   'traveler', 'start_date', 'ta_required', 'purpose', 'id', 'itinerary', 'expenses', 'deductions',
-                  'cost_assignments', 'clearances', 'status', 'activities', 'mode_of_travel', 'estimated_travel_cost',
+                  'cost_assignments', 'status', 'activities', 'mode_of_travel', 'estimated_travel_cost',
                   'currency', 'completed_at', 'canceled_at', 'rejection_note', 'cancellation_note', 'attachments',
                   'cost_summary', 'certification_note', 'report', 'additional_note', 'misc_expenses',
                   'first_submission_date')
@@ -263,7 +256,7 @@ class TravelDetailsSerializer(PermissionBasedModelSerializer):
         if 'mode_of_travel' in attrs and attrs['mode_of_travel'] is None:
             attrs['mode_of_travel'] = []
 
-        if self.transition_name in ['submit_for_approval', 'send_for_payment', 'certify']:
+        if self.transition_name == Travel.SUBMIT_FOR_APPROVAL:
             traveler = attrs.get('traveler', None)
             if not traveler and self.instance:
                 traveler = self.instance.traveler
@@ -318,7 +311,7 @@ class TravelDetailsSerializer(PermissionBasedModelSerializer):
         return data
 
     def align_dates_to_itinerary(self, data):
-        '''Updates travel start and end date based on itineraries'''
+        """Updates travel start and end date based on itineraries"""
         itinerary = data.get('itinerary', [])
         departures = []
         arrivals = []
@@ -337,7 +330,6 @@ class TravelDetailsSerializer(PermissionBasedModelSerializer):
         expenses = validated_data.pop('expenses', [])
         deductions = validated_data.pop('deductions', [])
         cost_assignments = validated_data.pop('cost_assignments', [])
-        clearances = validated_data.pop('clearances', {})
         activities = validated_data.pop('activities', [])
         action_points = validated_data.pop('action_points', [])
 
@@ -354,10 +346,6 @@ class TravelDetailsSerializer(PermissionBasedModelSerializer):
         travel_activities = self.create_related_models(TravelActivity, activities)
         for activity in travel_activities:
             activity.travels.add(instance)
-
-        # O2O relations
-        clearances['travel'] = instance
-        Clearances.objects.create(**clearances)
 
         return instance
 

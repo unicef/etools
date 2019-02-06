@@ -15,7 +15,7 @@ from etools.applications.action_points.categories.models import Category
 from etools.applications.action_points.transitions.conditions import ActionPointCompleteActionsTakenCheck
 from etools.applications.action_points.transitions.serializers.serializers import ActionPointCompleteSerializer
 from etools.applications.EquiTrack.utils import get_environment
-from etools.applications.permissions2.fsm import has_action_permission
+from etools.libraries.fsm.views import has_action_permission
 from etools.applications.utils.common.urlresolvers import build_frontend_url
 from etools.libraries.djangolib.models import GroupWrapper
 
@@ -167,9 +167,7 @@ class ActionPoint(TimeStampedModel):
 
     def get_meaningful_history(self):
         return self.history.filter(
-            models.Q(action=Activity.CREATE) |
-            models.Q(models.Q(action=Activity.UPDATE), ~models.Q(change={}))
-        )
+            models.Q(action=Activity.CREATE) | models.Q(models.Q(action=Activity.UPDATE), ~models.Q(change={})))
 
     def snapshot_additional_data(self, diff):
         key_events = []

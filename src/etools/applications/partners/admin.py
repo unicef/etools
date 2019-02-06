@@ -35,8 +35,11 @@ from etools.applications.partners.models import (  # TODO intervention sector lo
 )
 
 
+class InterventionAmendmentAttachmentFileInline(AttachmentSingleInline):
+    verbose_name_plural = _("Attachment")
+
+
 class InterventionAmendmentsAdmin(admin.ModelAdmin):
-    verbose_name = 'Amendment'
     model = InterventionAmendment
     readonly_fields = [
         'amendment_number',
@@ -51,6 +54,9 @@ class InterventionAmendmentsAdmin(admin.ModelAdmin):
         'intervention',
         'types'
     )
+    inlines = [
+        InterventionAmendmentAttachmentFileInline,
+    ]
 
     def has_delete_permission(self, request, obj=None):
         return False
@@ -129,12 +135,13 @@ class InterventionPlannedVisitsInline(admin.TabularInline):
 
 
 class AttachmentFileInline(AttachmentSingleInline):
-    verbose_name_plural = "Attachment"
+    verbose_name_plural = _("Attachment")
 
 
 class InterventionAttachmentAdmin(admin.ModelAdmin):
     model = InterventionAttachment
     list_display = (
+        'intervention',
         'attachment_file',
         'type',
     )
@@ -142,8 +149,8 @@ class InterventionAttachmentAdmin(admin.ModelAdmin):
         'intervention',
     )
     fields = (
+        'intervention',
         'type',
-        'attachment',
     )
     inlines = [
         AttachmentFileInline,
@@ -191,11 +198,11 @@ class InterventionResultsLinkAdmin(admin.ModelAdmin):
 
 
 class PRCReviewAttachmentInline(AttachmentSingleInline):
-    verbose_name_plural = "Review Document by PRC"
+    verbose_name_plural = _("Review Document by PRC")
 
 
 class SignedPDAttachmentInline(AttachmentSingleInline):
-    verbose_name_plural = "Signed PD Document"
+    verbose_name_plural = _("Signed PD Document")
 
 
 class InterventionAdmin(CountryUsersAdminMixin, HiddenPartnerMixin, SnapshotModelAdmin):
@@ -302,9 +309,24 @@ class InterventionAdmin(CountryUsersAdminMixin, HiddenPartnerMixin, SnapshotMode
 
     attachments_link.short_description = 'attachments'
 
+    def save_formset(self, request, form, formset, change):
+        instances = formset.save()
+        for instance in instances:
+            if isinstance(instance, InterventionAttachment):
+                # update attachment file data
+                content_type = ContentType.objects.get_for_model(instance)
+                Attachment.objects.update_or_create(
+                    object_id=instance.pk,
+                    content_type=content_type,
+                    defaults={
+                        "file": instance.attachment,
+                        "uploaded_by": request.user,
+                    }
+                )
+
 
 class AssessmentReportInline(AttachmentSingleInline):
-    verbose_name_plural = "Report"
+    verbose_name_plural = _("Report")
 
 
 class AssessmentAdmin(admin.ModelAdmin):
@@ -323,8 +345,6 @@ class AssessmentAdmin(admin.ModelAdmin):
     inlines = [
         AssessmentReportInline,
     ]
-    verbose_name = 'Assessment'
-    verbose_name_plural = 'Assessments'
 
 
 class PartnerStaffMemberAdmin(SnapshotModelAdmin):
@@ -525,11 +545,10 @@ class PlannedEngagementAdmin(admin.ModelAdmin):
 
 
 class SignedAmendmentInline(AttachmentSingleInline):
-    verbose_name_plural = "Signed Amendment"
+    verbose_name_plural = _("Signed Amendment")
 
 
 class AgreementAmendmentAdmin(admin.ModelAdmin):
-    verbose_name = 'Amendment'
     model = AgreementAmendment
     fields = (
         'agreement',
@@ -566,7 +585,7 @@ class AgreementAmendmentAdmin(admin.ModelAdmin):
 
 
 class AgreementAttachmentInline(AttachmentSingleInline):
-    verbose_name_plural = 'Attachment'
+    verbose_name_plural = _('Attachment')
 
 
 class AgreementAdmin(ExportMixin, HiddenPartnerMixin, CountryUsersAdminMixin, SnapshotModelAdmin):

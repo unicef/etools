@@ -1,7 +1,9 @@
-
 import weakref
 
 from django.contrib.auth.models import Group
+from django.db.models import Aggregate, CharField, Value
+
+from model_utils.managers import InheritanceManager
 
 
 class GroupWrapper(object):
@@ -9,8 +11,7 @@ class GroupWrapper(object):
     Wrapper for easy access to commonly used django groups and mapping shortcodes for them.
     example:
 
-    UNICEFUser = GroupWrapper(code='unicef_user',
-                              name='UNICEF User')
+    UNICEFUser = GroupWrapper(code='unicef_user', name='UNICEF User')
 
     unicef_group = UNICEFUser.as_group() # group will be automatically created if not exists
     """
@@ -55,3 +56,45 @@ class GroupWrapper(object):
     def invalidate_instances(cls):
         for instance in cls._instances:
             instance.invalidate_cache()
+
+
+class StringConcat(Aggregate):
+    """ A custom aggregation function that returns "," separated strings """
+
+    function = 'GROUP_CONCAT'
+    template = '%(function)s(%(distinct)s%(expressions)s)'
+
+    def __init__(self, expression, separator=",", distinct=False, **extra):
+        super().__init__(
+            expression,
+            Value(separator),
+            distinct='DISTINCT ' if distinct else '',
+            output_field=CharField(),
+            **extra
+        )
+
+    def as_postgresql(self, compiler, connection):
+        self.function = 'STRING_AGG'
+        return super().as_sql(compiler, connection)
+
+
+class DSum(Aggregate):
+    function = 'SUM'
+    template = '%(function)s(DISTINCT %(expressions)s)'
+    name = 'Sum'
+
+
+class InheritedModelMixin(object):
+    """
+    Mixin for easier access to subclasses. Designed to be tightly used with InheritanceManager
+    """
+
+    def get_subclass(self):
+        if not self.pk:
+            return self
+
+        manager = self._meta.model._default_manager
+        if not isinstance(manager, InheritanceManager):
+            return self
+
+        return manager.get_subclass(pk=self.pk)

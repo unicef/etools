@@ -4,7 +4,6 @@ import json
 
 from django.conf import settings
 from django.contrib.postgres.fields import ArrayField, JSONField
-from django.core.cache import cache
 from django.db import connection, models, transaction
 from django.db.models import Case, CharField, Count, F, Max, Min, Q, When
 from django.db.models.signals import post_save, pre_delete
@@ -20,10 +19,7 @@ from unicef_attachments.models import Attachment
 from unicef_djangolib.fields import CodedGenericRelation, CurrencyField
 from unicef_locations.models import Location
 
-from etools.applications.environment.helpers import tenant_switch_is_active
 from etools.applications.EquiTrack.encoders import EToolsEncoder
-from etools.applications.EquiTrack.models import DSum
-from etools.applications.EquiTrack.serializers import StringConcat
 from etools.applications.EquiTrack.utils import get_current_year, get_quarter, import_permissions
 from etools.applications.partners.validation import interventions as intervention_validation
 from etools.applications.partners.validation.agreements import (
@@ -35,11 +31,7 @@ from etools.applications.reports.models import CountryProgramme, Indicator, Resu
 from etools.applications.t2f.models import Travel, TravelType
 from etools.applications.tpm.models import TPMVisit
 from etools.applications.users.models import Office
-
-INTERVENTION_LOWER_RESULTS_CACHE_KEY = "{}_intervention_lower_result"
-INTERVENTION_LOCATIONS_CACHE_KEY = "{}_intervention_locations"
-INTERVENTION_FLAGGED_SECTIONS_CACHE_KEY = "{}_intervention_flagged_sections"
-INTERVENTION_CLUSTERS_CACHE_KEY = "{}_intervention_clusters"
+from etools.libraries.djangolib.models import DSum, StringConcat
 
 
 def _get_partner_base_path(partner):
@@ -749,19 +741,6 @@ class PartnerOrganization(TimeStampedModel):
             scq += 1
             hact['spot_checks']['completed'][quarter_name] = scq
         else:
-            trip = Travel.objects.filter(
-                activities__travel_type=TravelType.SPOT_CHECK,
-                traveler=F('activities__primary_traveler'),
-                status__in=[Travel.COMPLETED],
-                end_date__year=datetime.datetime.now().year,
-                activities__partner=self,
-            )
-
-            trq1 = trip.filter(end_date__month__in=[1, 2, 3]).count()
-            trq2 = trip.filter(end_date__month__in=[4, 5, 6]).count()
-            trq3 = trip.filter(end_date__month__in=[7, 8, 9]).count()
-            trq4 = trip.filter(end_date__month__in=[10, 11, 12]).count()
-
             audit_spot_check = SpotCheck.objects.filter(
                 partner=self, status=Engagement.FINAL,
                 date_of_draft_report_to_unicef__year=datetime.datetime.now().year
@@ -772,12 +751,12 @@ class PartnerOrganization(TimeStampedModel):
             asc3 = audit_spot_check.filter(date_of_draft_report_to_unicef__month__in=[7, 8, 9]).count()
             asc4 = audit_spot_check.filter(date_of_draft_report_to_unicef__month__in=[10, 11, 12]).count()
 
-            hact['spot_checks']['completed']['q1'] = trq1 + asc1
-            hact['spot_checks']['completed']['q2'] = trq2 + asc2
-            hact['spot_checks']['completed']['q3'] = trq3 + asc3
-            hact['spot_checks']['completed']['q4'] = trq4 + asc4
+            hact['spot_checks']['completed']['q1'] = asc1
+            hact['spot_checks']['completed']['q2'] = asc2
+            hact['spot_checks']['completed']['q3'] = asc3
+            hact['spot_checks']['completed']['q4'] = asc4
 
-            sc = trip.count() + audit_spot_check.count()  # TODO 1.1.9c add spot checks from field monitoring
+            sc = audit_spot_check.count()  # TODO 1.1.9c add spot checks from field monitoring
 
         hact['spot_checks']['completed']['total'] = sc
         self.hact_values = hact
@@ -1293,10 +1272,10 @@ class Agreement(TimeStampedModel):
         self.agreement_number = self.reference_number
 
     def update_related_interventions(self, oldself, **kwargs):
-        '''
+        """
         When suspending or terminating an agreement we need to suspend or terminate all interventions related
         this should only be called in a transaction with agreement save
-        '''
+        """
 
         if oldself and oldself.status != self.status and \
                 self.status in [Agreement.SUSPENDED, Agreement.TERMINATED]:
@@ -1395,9 +1374,9 @@ class AgreementAmendmentManager(models.Manager):
 
 
 class AgreementAmendment(TimeStampedModel):
-    '''
+    """
     Represents an amendment to an agreement
-    '''
+    """
     IP_NAME = 'Change IP name'
     AUTHORIZED_OFFICER = 'Change authorized officer'
     BANKING_INFO = 'Change banking info'
@@ -1446,6 +1425,8 @@ class AgreementAmendment(TimeStampedModel):
 
     class Meta:
         ordering = ("-created",)
+        verbose_name = _('Amendment')
+        verbose_name_plural = _('Agreement amendments')
 
     def __str__(self):
         return "{} {}".format(
@@ -1907,51 +1888,8 @@ class Intervention(TimeStampedModel):
             for lower_result in link.ll_results.all()
         ]
 
-    # TODO (Rob): Remove this and alll usage as this is no longer valid
-    def intervention_locations(self, reset=False):
-        cache_key = INTERVENTION_LOCATIONS_CACHE_KEY.format(self.pk)
-        if reset:
-            cache.delete(cache_key)
-            return
-
-        locations = cache.get(cache_key)
-        if locations is None:
-            if tenant_switch_is_active("prp_mode_off"):
-                locations = set(self.flat_locations.all())
-            else:
-                # return intervention locations as a set of Location objects
-                locations = set()
-                for lower_result in self.all_lower_results:
-                    for applied_indicator in lower_result.applied_indicators.all():
-                        for location in applied_indicator.locations.all():
-                            locations.add(location)
-            cache.set(cache_key, locations)
-
-        return locations
-
-    # TODO (Rob): Remove this and all usage as this is no longer valid
-    def flagged_sections(self, reset=False):
-        cache_key = INTERVENTION_FLAGGED_SECTIONS_CACHE_KEY.format(self.pk)
-        if reset:
-            cache.delete(cache_key)
-            return
-
-        sections = cache.get(cache_key)
-        if sections is None:
-            if tenant_switch_is_active("prp_mode_off"):
-                sections = set(self.sections.all())
-            else:
-                # return intervention locations as a set of Location objects
-                sections = set()
-                for lower_result in self.all_lower_results:
-                    for applied_indicator in lower_result.applied_indicators.all():
-                        if applied_indicator.section:
-                            sections.add(applied_indicator.section)
-            cache.set(cache_key, sections)
-
-        return sections
-
     def intervention_clusters(self):
+        # return intervention clusters as an array of strings
         clusters = set()
         for lower_result in self.all_lower_results:
             for applied_indicator in lower_result.applied_indicators.all():
@@ -2105,10 +2043,6 @@ class Intervention(TimeStampedModel):
             if save_agreement:
                 self.agreement.save()
 
-    def clear_caches(self):
-        self.intervention_locations(reset=True)
-        self.flagged_sections(reset=True)
-
     @transaction.atomic
     def save(self, force_insert=False, save_from_agreement=False, **kwargs):
         # check status auto updates
@@ -2229,6 +2163,10 @@ class InterventionAmendment(TimeStampedModel):
             self.signed_date
         )
 
+    class Meta:
+        verbose_name = _('Amendment')
+        verbose_name_plural = _('Intervention amendments')
+
 
 class InterventionPlannedVisits(TimeStampedModel):
     """Represents planned visits for the intervention"""
@@ -2274,9 +2212,6 @@ class InterventionResultLink(TimeStampedModel):
     def save(self, *args, **kwargs):
         super().save(*args, **kwargs)
 
-        # reset certain caches
-        self.intervention.clear_caches()
-
 
 class InterventionBudget(TimeStampedModel):
     """
@@ -2308,6 +2243,9 @@ class InterventionBudget(TimeStampedModel):
     total_local = models.DecimalField(max_digits=20, decimal_places=2, verbose_name=_('Total Local'))
 
     tracker = FieldTracker()
+
+    class Meta:
+        verbose_name_plural = _('Intervention budget')
 
     def total_unicef_contribution(self):
         return self.unicef_cash + self.in_kind_amount

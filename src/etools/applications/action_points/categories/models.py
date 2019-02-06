@@ -20,6 +20,8 @@ class Category(OrderedModel, TimeStampedModel):
     class Meta:
         unique_together = ("description", "module", )
         ordering = ('module', 'order')
+        verbose_name = _('Action point category')
+        verbose_name_plural = _('Action point categories')
 
     def __str__(self):
         return '{}: {}'.format(self.module, self.description)

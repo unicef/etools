@@ -1,4 +1,3 @@
-
 import logging
 
 from django.conf import settings
@@ -10,14 +9,14 @@ from django.urls import reverse
 from django_tenants.middleware import TenantMiddleware
 from django_tenants.utils import get_public_schema_name
 
-from etools.applications.EquiTrack.utils import set_country
+from etools.libraries.tenant_support.utils import set_country
 
 logger = logging.getLogger(__name__)
 
 ANONYMOUS_ALLOWED_URL_FRAGMENTS = [
     'api',
+    'social',
     'login',
-    'saml',
     'accounts',
     'monitoring',
 ]
@@ -59,9 +58,8 @@ class EToolsTenantMiddleware(TenantMiddleware):
         if request.user.is_superuser and not request.user.profile.country:
             return None
 
-        if not request.user.is_superuser and \
-                (not request.user.profile.country or
-                 request.user.profile.country.business_area_code in settings.INACTIVE_BUSINESS_AREAS):
+        if not request.user.is_superuser and (
+                not request.user.profile.country or request.user.profile.country.business_area_code in settings.INACTIVE_BUSINESS_AREAS):
             return HttpResponseRedirect("/workspace_inactive/")
 
         try:

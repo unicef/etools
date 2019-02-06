@@ -2,15 +2,15 @@ import datetime
 import json
 import os
 
-from django.urls import reverse, resolve
+from django.urls import resolve, reverse
 from django.utils import timezone
 
 from rest_framework import status
 from rest_framework.test import APIRequestFactory
+from unicef_locations.tests.factories import GatewayTypeFactory, LocationFactory
 
 from etools.applications.EquiTrack.tests.cases import BaseTenantTestCase
 from etools.applications.EquiTrack.tests.mixins import WorkspaceRequiredAPITestMixIn
-from unicef_locations.tests.factories import GatewayTypeFactory, LocationFactory
 from etools.applications.partners.models import InterventionResultLink, PartnerOrganization
 from etools.applications.partners.permissions import READ_ONLY_API_GROUP_NAME
 from etools.applications.partners.tests.factories import InterventionFactory
@@ -149,7 +149,7 @@ class TestInterventionsAPI(WorkspaceRequiredAPITestMixIn, BaseTenantTestCase):
 
 
 class TestInterventionsAPIListPermissions(BaseTenantTestCase):
-    '''Exercise permissions on the PRPIntervention list view'''
+    """Exercise permissions on the PRPIntervention list view"""
 
     @classmethod
     def setUpTestData(cls):
@@ -160,7 +160,7 @@ class TestInterventionsAPIListPermissions(BaseTenantTestCase):
         self.query_param_data = {'workspace': self.tenant.business_area_code}
 
     def test_unauthenticated_user_forbidden(self):
-        '''Ensure an unauthenticated user gets the 403 smackdown'''
+        """Ensure an unauthenticated user gets the 403 smackdown"""
         factory = APIRequestFactory()
         view_info = resolve(self.url)
         request = factory.get(self.url)
@@ -168,18 +168,18 @@ class TestInterventionsAPIListPermissions(BaseTenantTestCase):
         self.assertEquals(response.status_code, status.HTTP_403_FORBIDDEN)
 
     def test_no_permission_user_forbidden(self):
-        '''Ensure a non-staff user gets the 403 smackdown'''
+        """Ensure a non-staff user gets the 403 smackdown"""
         response = self.forced_auth_req('get', self.url, user=UserFactory())
         self.assertEquals(response.status_code, status.HTTP_403_FORBIDDEN)
 
     def test_group_member_has_access(self):
-        '''Ensure a non-staff user in the correct group has access'''
+        """Ensure a non-staff user in the correct group has access"""
         user = UserFactory()
         user.groups.add(self.readonly_group)
         response = self.forced_auth_req('get', self.url, user=user, data=self.query_param_data)
         self.assertEquals(response.status_code, status.HTTP_200_OK)
 
     def test_staff_has_access(self):
-        '''Ensure a staff user has access'''
+        """Ensure a staff user has access"""
         response = self.forced_auth_req('get', self.url, user=UserFactory(is_staff=True), data=self.query_param_data)
         self.assertEquals(response.status_code, status.HTTP_200_OK)

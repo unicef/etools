@@ -24,17 +24,9 @@ def set_country(name):
     logger.info(u'Set in {} workspace'.format(name))
 
 
-def all_countries_do(function, name):
-    printtf("CALLING {} for all countries".format(name))
-    for cntry in Country.objects.order_by('name').all():
-        if cntry.name in ['Global']:
-            continue
-        function(cntry.name)
-
-
 def local_country_keep():
     set_country('Global')
-    keeping = ['Global', 'UAT', 'Lebanon', 'Syria', 'Indonesia', 'Sudan', 'Syria Cross Border', "Pakistan"]
+    keeping = ['Global', 'UAT', 'Lebanon', 'Syria', 'Indonesia', 'Sudan', 'Syria Cross Border', 'Pakistan']
     Country.objects.exclude(name__in=keeping).all().delete()
 
 
