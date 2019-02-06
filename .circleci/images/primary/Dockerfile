@@ -31,5 +31,6 @@ RUN pip install --upgrade \
     setuptools \
     pip \
     wheel \
-    pipenv
+    pipenv \
+    tox
 

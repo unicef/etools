@@ -17,7 +17,7 @@ from etools.applications.publics.tests.factories import (
 
 
 class TestStrUnicode(SimpleTestCase):
-    '''Ensure calling str() on model instances returns the right text.'''
+    """Ensure calling str() on model instances returns the right text."""
 
     def test_travel_expense_type(self):
         instance = PublicsTravelExpenseTypeFactory.build(title='xyz')

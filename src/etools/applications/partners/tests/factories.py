@@ -44,9 +44,9 @@ class CoreValuesAssessmentFactory(factory.django.DjangoModelFactory):
 
 
 class AgreementFactory(factory.django.DjangoModelFactory):
-    '''Factory for Agreements. If the agreement type is PCA (the default), the agreement's end date is set from
+    """Factory for Agreements. If the agreement type is PCA (the default), the agreement's end date is set from
     the country_programme so any end date passed to this factory is ignored.
-    '''
+    """
     class Meta:
         model = models.Agreement
 

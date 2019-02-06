@@ -17,7 +17,7 @@ class TestEmail(BaseTenantTestCase):
         super().setUpTestData()
 
     def test_expected_email_templates_exist(self):
-        '''Ensure the email templates for this app exist and have content'''
+        """Ensure the email templates for this app exist and have content"""
         for name in ('audit/engagement/submit_to_auditor',
                      'audit/engagement/reported_by_auditor',
                      'audit/engagement/action_point_assigned', ):

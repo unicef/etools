@@ -49,7 +49,7 @@ class TestLocationViews(BaseTenantTestCase):
         self.assertEqual(len(response.data), 2)
 
     def _assert_heavy_detail_view_fundamentals(self, response):
-        '''Utility function that collects common assertions for heavy detail tests'''
+        """Utility function that collects common assertions for heavy detail tests"""
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(sorted(response.data.keys()), self.heavy_detail_expected_keys)
         self.assertIn("Location", response.data["name"])

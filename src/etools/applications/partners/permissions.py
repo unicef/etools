@@ -6,11 +6,13 @@ from etools_validator.utils import check_rigid_related
 from rest_framework import permissions
 
 from etools.applications.environment.helpers import tenant_switch_is_active
-from etools.applications.EquiTrack.utils import HashableDict, is_user_in_groups
+from etools.applications.EquiTrack.utils import HashableDict
 from etools.applications.utils.common.utils import get_all_field_names
+from etools.libraries.djangolib.utils import is_user_in_groups
 
 # READ_ONLY_API_GROUP_NAME is the name of the permissions group that provides read-only access to some list views.
 # Initially, this is only being used for PRP-related endpoints.
+
 READ_ONLY_API_GROUP_NAME = 'Read-Only API'
 
 
@@ -88,7 +90,7 @@ class InterventionPermissions(PMPPermissions):
     EXTRA_FIELDS = ['sections_present']
 
     def __init__(self, **kwargs):
-        '''
+        """
         :param kwargs: user, instance, permission_structure
         # FIXME: This documentation is out of date as the flag check has been commented out.
         if 'inbound_check' key, is sent in, that means that instance now contains all of the fields available in the
@@ -96,7 +98,7 @@ class InterventionPermissions(PMPPermissions):
         the reason for this is so that we can check the more complex permissions that can only be checked on save.
         for example: in this case certain field are editable only when user adds an amendment. that means that we would
         need access to the old amendments, new amendments in order to check this.
-        '''
+        """
         super().__init__(**kwargs)
 
         # Inbound check flag is available here:
@@ -132,14 +134,14 @@ class AgreementPermissions(PMPPermissions):
     MODEL_NAME = 'partners.Agreement'
 
     def __init__(self, **kwargs):
-        '''
+        """
         :param kwargs: user, instance, permission_structure
         if 'inbound_check' key, is sent in, that means that instance now contains all of the fields available in the
         validation: old_instance, old.instance.property_old in case of related fields.
         the reason for this is so that we can check the more complex permissions that can only be checked on save.
         for example: in this case certain field are editable only when user adds an amendment. that means that we would
         need access to the old amendments, new amendments in order to check this.
-        '''
+        """
         super().__init__(**kwargs)
         inbound_check = kwargs.get('inbound_check', False)
 
@@ -160,7 +162,7 @@ class AgreementPermissions(PMPPermissions):
 
 
 class PartnershipManagerPermission(permissions.BasePermission):
-    '''Applies general and object-based permissions.
+    """Applies general and object-based permissions.
 
     - For list views --
       - user must be staff or in 'Partnership Manager' group
@@ -175,15 +177,15 @@ class PartnershipManagerPermission(permissions.BasePermission):
     - For update/delete views --
       - user must be (in 'Partnership Manager' group) OR
                      (listed as a partner staff member on the object)
-    '''
+    """
     message = 'Accessing this item is not allowed.'
 
     def _has_access_permissions(self, user, obj):
-        '''True if --
+        """True if --
               - user is staff OR
               - user is 'Partnership Manager' group member OR
               - user is listed as a partner staff member on the object, assuming the object has a partner attribute
-        '''
+        """
         has_access = user.is_staff or is_user_in_groups(user, ['Partnership Manager'])
 
         has_access = has_access or \
@@ -259,13 +261,13 @@ class PartnershipSeniorManagerPermission(permissions.BasePermission):
 
 
 class ListCreateAPIMixedPermission(permissions.BasePermission):
-    '''Permission class for ListCreate views that want to allow read-only access to some groups and read-write
+    """Permission class for ListCreate views that want to allow read-only access to some groups and read-write
     to others.
 
     GET users must be either (a) staff or (b) in the Limited API group.
 
     POST users must be staff.
-    '''
+    """
 
     def has_permission(self, request, view):
         if request.method in permissions.SAFE_METHODS:
@@ -282,9 +284,9 @@ class ListCreateAPIMixedPermission(permissions.BasePermission):
 
 
 class ReadOnlyAPIUser(permissions.BasePermission):
-    '''Permission class for Views that only allow read and only for backend api users or superusers
+    """Permission class for Views that only allow read and only for backend api users or superusers
         GET users must be either (a) superusers or (b) in the Limited API group.
-    '''
+    """
     def has_permission(self, request, view):
         if request.method in permissions.SAFE_METHODS:
             if request.user.is_authenticated:

@@ -97,13 +97,13 @@ def get_cartodb_locations(sql_client, carto_table):
 
 
 def retry_failed_query(sql_client, failed_query, offset):
-    '''
+    """
     Retry a timed-out CartoDB query
     :param sql_client:
     :param failed_query:
     :param offset:
     :return:
-    '''
+    """
 
     retries = 0
     logger.warning('Retrying table page at offset {}'.format(offset))
@@ -378,12 +378,12 @@ def update_model_locations(remapped_locations, model, related_object, related_pr
         ThroughModel = getattr(random_object, related_property).through
         # clean up multiple remaps
         for new_location_id, old_location_id in remapped_locations:
-            '''
+            """
             Clean up `multiple/duplicate remaps` from the through table.
             This step is necessary because a new location can replace multiple old locations during the remap, and the
             through table constraints disallow duplicates appearing due to multiple old locations being replaced by the
             same new location.
-            '''
+            """
 
             if len(multiples[new_location_id]) > 1:
                 # it seems Django can do the wanted grouping only if we pass the counted column in `values()`
@@ -411,10 +411,10 @@ def update_model_locations(remapped_locations, model, related_object, related_pr
 
 
 def save_location_remap_history(imported_locations):
-    '''
+    """
     :param imported_locations: set of (new_location_id, remapped_location_id) tuples, where remapped_location can be None
     :return:
-    '''
+    """
 
     if not imported_locations:
         return
