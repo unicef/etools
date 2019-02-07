@@ -6,7 +6,7 @@ import re
 import sys
 from codecs import open
 
-from setuptools import setup, find_packages
+from setuptools import find_packages, setup
 
 ROOT = os.path.realpath(os.path.dirname(__file__))
 init = os.path.join(ROOT, 'src', 'etools', '__init__.py')
@@ -22,30 +22,6 @@ with open(init, 'rb') as f:
 
 dependency_links = set()
 
-
-def get_requirements(env):
-    ret = []
-    with open(f'src/requirements/{env}.txt') as fp:
-        for line in fp.readlines():
-            if line.startswith('#'):
-                continue
-            line = line[:-1]
-            if line.startswith('-e git+'):
-                url = line.replace('-e ', '')
-                groups = re.match(".*@(?P<version>.*)#egg=(?P<name>.*)", line).groupdict()
-                version = groups['version'].replace('v', '')
-                egg = line.partition('egg=')[2]
-                ret.append(f"{egg}=={version}")
-                dependency_links.add(f"{url}-{version}")
-            else:
-                dep = line.partition('#')[0]
-                ret.append(dep.strip())
-    return ret
-
-
-install_requires = get_requirements('base')
-test_requires = get_requirements('test')
-
 setup(
     name=NAME,
     version=VERSION,
@@ -57,13 +33,9 @@ setup(
     package_dir={'': 'src'},
     packages=find_packages('src'),
     zip_safe=False,
-    install_requires=install_requires,
     dependency_links=list(dependency_links),
     license='BSD',
     include_package_data=True,
-    extras_require={
-        'test': test_requires,
-    },
     classifiers=[
         'Framework :: Django',
         'Operating System :: POSIX :: Linux',

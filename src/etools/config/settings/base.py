@@ -142,7 +142,7 @@ LOGGING = {
         'level': 'INFO'
     },
 }
-
+GDAL_LIBRARY_PATH = '/usr/lib/libgdal.so.20'
 # DJANGO: MODELS
 FIXTURE_DIRS = (
     os.path.join(os.path.dirname(etools.__file__), 'applications', 'EquiTrack', 'data'),
