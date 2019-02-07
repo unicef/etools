@@ -11,17 +11,6 @@ from etools.applications.field_monitoring.fm_settings.models import LocationSite
 from etools.applications.permissions_simplified.serializers import SafeReadOnlySerializerMixin
 
 
-class LocationCountrySerializer(LocationLightSerializer):
-    point = serializers.SerializerMethodField()
-
-    class Meta(LocationLightSerializer.Meta):
-        fields = LocationLightSerializer.Meta.fields + ('point', )
-
-    def get_point(self, obj):
-        point = obj.point or self.Meta.model.objects.aggregate(boundary=Collect('point'))['boundary'].centroid
-        return json.loads(point.json)
-
-
 class LocationSiteLightSerializer(SafeReadOnlySerializerMixin, serializers.ModelSerializer):
     parent = LocationSerializer(read_only=True)
     is_active = serializers.ChoiceField(choices=(
@@ -42,3 +31,21 @@ class LocationSiteSerializer(LocationSiteLightSerializer):
 
     class Meta(LocationSiteLightSerializer.Meta):
         pass
+
+
+class LocationFullSerializer(LocationLightSerializer):
+    point = serializers.SerializerMethodField()
+    sites = LocationSiteLightSerializer(many=True, read_only=True)
+    geom = serializers.SerializerMethodField()
+
+    class Meta(LocationLightSerializer.Meta):
+        fields = LocationLightSerializer.Meta.fields + ('point', 'geom', 'sites')
+
+    def get_geom(self, obj):
+        return json.loads(obj.geom.json) if obj.geom else {}
+
+    def get_point(self, obj):
+        point = obj.point or self.Meta.model.objects.aggregate(boundary=Collect('point'))['boundary'].centroid
+        return json.loads(point.json)
+
+

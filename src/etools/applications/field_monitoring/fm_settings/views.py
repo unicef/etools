@@ -35,7 +35,7 @@ from etools.applications.field_monitoring.fm_settings.serializers.cp_outputs imp
 from etools.applications.field_monitoring.fm_settings.serializers.issues import LogIssueSerializer, \
     LogIssueAttachmentSerializer
 from etools.applications.field_monitoring.fm_settings.serializers.locations import LocationSiteSerializer, \
-    LocationCountrySerializer
+    LocationFullSerializer
 from etools.applications.field_monitoring.fm_settings.serializers.methods import FMMethodSerializer, \
     FMMethodTypeSerializer
 from etools.applications.field_monitoring.shared.models import FMMethod
@@ -119,7 +119,14 @@ class LocationSitesViewSet(
 class LocationsCountryView(views.APIView):
     def get(self, request, *args, **kwargs):
         country = get_object_or_404(Location, gateway__admin_level=0)
-        return Response(data=LocationCountrySerializer(instance=country).data)
+        return Response(data=LocationFullSerializer(instance=country).data)
+
+
+class FMLocationsViewSet(FMBaseViewSet, mixins.ListModelMixin, viewsets.GenericViewSet):
+    queryset = Location.objects.all()
+    serializer_class = LocationFullSerializer
+    filter_backends = (DjangoFilterBackend,)
+    filter_fields = ('level', 'parent')
 
 
 class CPOutputsViewSet(

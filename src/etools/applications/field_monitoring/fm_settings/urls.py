@@ -7,7 +7,7 @@ from etools.applications.field_monitoring.fm_settings.views import (
     CheckListCategoriesViewSet, CheckListViewSet, CPOutputConfigsViewSet, CPOutputsViewSet, LocationSitesViewSet,
     FMMethodsViewSet, FMMethodTypesViewSet, PlannedCheckListItemViewSet, LogIssuesViewSet, LogIssueAttachmentsViewSet,
     MonitoredPartnersViewSet, LocationsCountryView, FieldMonitoringGeneralAttachmentsViewSet, ResultsViewSet,
-    InterventionLocationsView)
+    InterventionLocationsView, FMLocationsViewSet)
 
 root_api = routers.SimpleRouter()
 root_api.register(r'methods/types', FMMethodTypesViewSet, base_name='method-types')
@@ -20,6 +20,7 @@ root_api.register(r'checklist/categories', CheckListCategoriesViewSet, base_name
 root_api.register(r'checklist', CheckListViewSet, base_name='checklist-items')
 root_api.register(r'log-issues', LogIssuesViewSet, base_name='log-issues')
 root_api.register(r'attachments', FieldMonitoringGeneralAttachmentsViewSet, base_name='general-attachments')
+root_api.register(r'locations', FMLocationsViewSet, base_name='locations')
 
 cp_outputs_configs_api = NestedComplexRouter(root_api, r'cp-outputs/configs', lookup='cp_output_config')
 cp_outputs_configs_api.register(r'planned-checklist', PlannedCheckListItemViewSet, base_name='planned-checklist-items')

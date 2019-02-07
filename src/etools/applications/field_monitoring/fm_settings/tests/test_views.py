@@ -1,5 +1,6 @@
 from datetime import date, timedelta
 
+from django.contrib.gis.geos import GEOSGeometry
 from django.core.files.uploadedfile import SimpleUploadedFile
 from django.urls import reverse
 from factory import fuzzy
@@ -169,6 +170,69 @@ class FMMethodTypesViewTestCase(FMBaseTestCaseMixin, BaseTenantTestCase):
         )
 
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+
+
+class LocationsViewTestCase(FMBaseTestCaseMixin, BaseTenantTestCase):
+    @classmethod
+    def setUpTestData(cls):
+        boundary = GEOSGeometry(
+            """
+              {
+                "type": "MultiPolygon",
+                "coordinates": [
+                  [
+                    [
+                      [
+                        83.04496765136719,
+                        28.26492642410344
+                      ],
+                      [
+                        83.06024551391602,
+                        28.247915770531225
+                      ],
+                      [
+                        83.07638168334961,
+                        28.265455600896665
+                      ],
+                      [
+                        83.04496765136719,
+                        28.26492642410344
+                      ]
+                    ]
+                  ]
+                ]
+              }
+            """
+        )
+
+        cls.country = LocationFactory(gateway__admin_level=0, geom=boundary)
+        cls.child_location = LocationFactory(parent=cls.country, geom=boundary)
+
+    def test_filter_root(self):
+        response = self.forced_auth_req(
+            'get', reverse('field_monitoring_settings:locations-list'),
+            user=self.unicef_user,
+            data={'level': 0}
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(response.data['results']), 1)
+        self.assertEqual(response.data['results'][0]['id'], str(self.country.id))
+
+        # check json is provided for geom and it's not empty
+        self.assertTrue(isinstance(response.data['results'][0]['geom'], dict))
+        self.assertNotEqual(response.data['results'][0]['geom'], {})
+
+    def test_filter_child(self):
+        response = self.forced_auth_req(
+            'get', reverse('field_monitoring_settings:locations-list'),
+            user=self.unicef_user,
+            data={'parent': self.country.id}
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(response.data['results']), 1)
+        self.assertEqual(response.data['results'][0]['id'], str(self.child_location.id))
 
 
 class LocationSitesViewTestCase(TestExportMixin, FMBaseTestCaseMixin, BaseTenantTestCase):
