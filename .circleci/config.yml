@@ -22,7 +22,7 @@ jobs:
       - run:
           name: Run Tests
           command: |
-            tox -re d20,report
+            tox -e d20,report
       - save_cache:
           key: deps2-{{ .Branch }}--{{ checksum "src/requirements/test.txt" }}-{{ checksum ".circleci/config.yml" }}
           paths:
