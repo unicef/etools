@@ -27,6 +27,8 @@ RUN apk add --update-cache --repository http://dl-3.alpinelinux.org/alpine/edge/
     gcc \
     g++
 
+RUN apk add bash
+
 RUN pip install --upgrade \
     setuptools \
     pip \

@@ -20,9 +20,6 @@ jobs:
       - restore_cache:
           key: deps2-{{ .Branch }}--{{ checksum "Pipfile.lock" }}-{{ checksum ".circleci/config.yml" }}
       - run:
-          name: Install Requirements
-          command: pipenv install -d --ignore-pipfile
-      - run:
           name: Run Tests
           command: |
             tox -re d20,report
