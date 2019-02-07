@@ -35,11 +35,11 @@ class LocationSiteSerializer(LocationSiteLightSerializer):
 
 class LocationFullSerializer(LocationLightSerializer):
     point = serializers.SerializerMethodField()
-    sites = LocationSiteLightSerializer(many=True, read_only=True)
     geom = serializers.SerializerMethodField()
+    is_leaf = serializers.BooleanField(source='is_leaf_node', read_only=True)
 
     class Meta(LocationLightSerializer.Meta):
-        fields = LocationLightSerializer.Meta.fields + ('point', 'geom', 'sites')
+        fields = LocationLightSerializer.Meta.fields + ('point', 'geom', 'is_leaf')
 
     def get_geom(self, obj):
         return json.loads(obj.geom.json) if obj.geom else {}

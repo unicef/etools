@@ -223,6 +223,8 @@ class LocationsViewTestCase(FMBaseTestCaseMixin, BaseTenantTestCase):
         self.assertTrue(isinstance(response.data['results'][0]['geom'], dict))
         self.assertNotEqual(response.data['results'][0]['geom'], {})
 
+        self.assertFalse(response.data['results'][0]['is_leaf'])
+
     def test_filter_child(self):
         response = self.forced_auth_req(
             'get', reverse('field_monitoring_settings:locations-list'),
@@ -233,6 +235,8 @@ class LocationsViewTestCase(FMBaseTestCaseMixin, BaseTenantTestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(len(response.data['results']), 1)
         self.assertEqual(response.data['results'][0]['id'], str(self.child_location.id))
+
+        self.assertTrue(response.data['results'][0]['is_leaf'])
 
 
 class LocationSitesViewTestCase(TestExportMixin, FMBaseTestCaseMixin, BaseTenantTestCase):
