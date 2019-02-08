@@ -105,6 +105,7 @@ class InterventionListAPIView(QueryStringFilterMixin, ExportModelMixin, Interven
         ('unicef_focal_points', 'unicef_focal_points__in'),
         ('start', 'start__gte'),
         ('end', 'end__lte'),
+        ('end_after', 'end__gte'),
         ('office', 'offices__in'),
         ('location', 'result_links__ll_results__applied_indicators__locations__name__icontains'),
     )
