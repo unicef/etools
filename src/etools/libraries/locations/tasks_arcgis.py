@@ -23,7 +23,7 @@ logger = get_task_logger(__name__)
 
 
 @celery.current_app.task
-def validate_carto_locations_in_use(arcgis_table_pk):
+def validate_arcgis_locations_in_use(arcgis_table_pk):
     try:
         carto_table = ArcgisDBTable.objects.get(pk=arcgis_table_pk)
     except ArcgisDBTable.DoesNotExist as e:
