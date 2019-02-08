@@ -190,6 +190,15 @@ class TestAppliedIndicatorSerializer(BaseTenantTestCase):
         serializer = AppliedIndicatorSerializer(data=self.data)
         self.assertTrue(serializer.is_valid())
 
+    def test_validate_value_numbers(self):
+        self.data["target"] = {"d": 123, "v": "$321"}
+        self.data["baseline"] = {"d": "wrong", "v": 321}
+        self.intervention.flat_locations.add(self.location)
+        serializer = AppliedIndicatorSerializer(data=self.data)
+        self.assertFalse(serializer.is_valid())
+        self.assertIn("target", serializer.errors)
+        self.assertIn("baseline", serializer.errors)
+
     def test_create(self):
         applied_qs = AppliedIndicator.objects.filter(
             lower_result__pk=self.lower_result.pk
