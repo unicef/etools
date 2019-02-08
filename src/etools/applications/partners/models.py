@@ -19,9 +19,7 @@ from unicef_attachments.models import Attachment
 from unicef_djangolib.fields import CodedGenericRelation, CurrencyField
 from unicef_locations.models import Location
 
-from etools.applications.EquiTrack.encoders import EToolsEncoder
 from etools.applications.EquiTrack.permissions import import_permissions
-from etools.applications.EquiTrack.utils import get_current_year, get_quarter
 from etools.applications.funds.models import FundsReservationHeader
 from etools.applications.partners.validation import interventions as intervention_validation
 from etools.applications.partners.validation.agreements import (
@@ -34,6 +32,8 @@ from etools.applications.t2f.models import Travel, TravelType
 from etools.applications.tpm.models import TPMVisit
 from etools.applications.users.models import Office
 from etools.libraries.djangolib.models import StringConcat
+from etools.libraries.pythonlib.datetime import get_current_year, get_quarter
+from etools.libraries.pythonlib.encoders import CustomJSONEncoder
 
 
 def _get_partner_base_path(partner):
@@ -519,7 +519,7 @@ class PartnerOrganization(TimeStampedModel):
 
         super().save(*args, **kwargs)
         if hact_is_string:
-            self.hact_values = json.dumps(self.hact_values, cls=EToolsEncoder)
+            self.hact_values = json.dumps(self.hact_values, cls=CustomJSONEncoder)
 
     @cached_property
     def partner_type_slug(self):
@@ -798,7 +798,7 @@ class PartnerOrganization(TimeStampedModel):
         hact['outstanding_findings'] = sum([
             audit.pending_unsupported_amount for audit in audits if audit.pending_unsupported_amount])
         hact['assurance_coverage'] = self.assurance_coverage
-        self.hact_values = json.dumps(hact, cls=EToolsEncoder)
+        self.hact_values = json.dumps(hact, cls=CustomJSONEncoder)
         self.save()
 
     def get_admin_url(self):

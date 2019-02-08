@@ -4,11 +4,11 @@ import csv
 from django.conf import settings
 from django.core.cache import cache
 
-from etools.applications.EquiTrack.utils import Vividict
+from etools.libraries.pythonlib.collections import Vividict
 
 
 def process_permissions(permission_dict):
-    '''
+    """
     :param permission_dict: the csv file read as a generator of dictionaries
      where the header contains the following keys:
 
@@ -39,7 +39,7 @@ def process_permissions(permission_dict):
                      'view': {'true': [{'condition': 'condition1',
                                         'group': 'PM',
                                         'status': 'Active'}]}}}
-    '''
+    """
 
     result = Vividict()
     possible_actions = ['edit', 'required', 'view']

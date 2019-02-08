@@ -26,7 +26,7 @@ class Migration(migrations.Migration):
                 ('modified', model_utils.fields.AutoLastModifiedField(
                     default=django.utils.timezone.now, editable=False, verbose_name='modified')),
                 ('year', models.IntegerField(
-                    default=etools.applications.EquiTrack.utils.get_current_year, unique=True, verbose_name='Year')),
+                    default=etools.libraries.pythonlib.datetime.get_current_year, unique=True, verbose_name='Year')),
                 ('partner_values', django.contrib.postgres.fields.jsonb.JSONField(
                     blank=True, null=True, verbose_name='Partner Values')),
             ],
@@ -42,7 +42,7 @@ class Migration(migrations.Migration):
                     default=django.utils.timezone.now, editable=False, verbose_name='created')),
                 ('modified', model_utils.fields.AutoLastModifiedField(
                     default=django.utils.timezone.now, editable=False, verbose_name='modified')),
-                ('year', models.IntegerField(default=etools.applications.EquiTrack.utils.get_current_year, verbose_name='Year')),
+                ('year', models.IntegerField(default=etools.libraries.pythonlib.datetime.get_current_year, verbose_name='Year')),
                 ('partner_values', django.contrib.postgres.fields.jsonb.JSONField(
                     blank=True, null=True, verbose_name='Partner Values')),
             ],
