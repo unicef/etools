@@ -158,7 +158,7 @@ class TestUsersListAPIView(BaseTenantTestCase):
             user=self.unicef_superuser
         )
         response_json = json.loads(response.rendered_content)
-        self.assertEqual(len(response_json), 2)
+        self.assertEqual(len(response_json), 1)
 
 
 class TestMyProfileAPIView(BaseTenantTestCase):
