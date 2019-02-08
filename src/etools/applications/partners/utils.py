@@ -3,14 +3,13 @@ import logging
 
 from django.conf import settings
 from django.contrib.contenttypes.models import ContentType
-from django.db.models import Count, F, OuterRef, Q, Subquery
+from django.db.models import F, Q
 from django.urls import reverse
 from django.utils.timezone import make_aware, now
 
 from unicef_attachments.models import Attachment, FileType
 from unicef_notification.utils import send_notification_with_template
 
-from etools.applications.funds.models import FundsReservationHeader
 from etools.applications.partners.models import (
     Agreement,
     AgreementAmendment,
