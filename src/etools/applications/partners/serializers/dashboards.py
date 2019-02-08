@@ -1,3 +1,5 @@
+from django.utils import timezone
+
 from rest_framework import serializers
 
 from etools.applications.partners.models import Intervention
@@ -31,7 +33,7 @@ class InterventionDashSerializer(serializers.ModelSerializer):
 
     disbursement_percent = serializers.SerializerMethodField()
     days_last_pv = serializers.SerializerMethodField()
-    last_pv_date = serializers.SerializerMethodField()
+    last_pv_date = serializers.DateTimeField()
 
     fr_currencies_are_consistent = serializers.SerializerMethodField()
     all_currencies_are_consistent = serializers.SerializerMethodField()
@@ -48,6 +50,7 @@ class InterventionDashSerializer(serializers.ModelSerializer):
                                                    read_only=True, max_digits=20, decimal_places=2)
     multi_curr_flag = serializers.BooleanField()
     has_final_partnership_review = serializers.SerializerMethodField()
+    action_points = serializers.IntegerField()
 
     link = serializers.SerializerMethodField()
 
@@ -76,13 +79,13 @@ class InterventionDashSerializer(serializers.ModelSerializer):
         return "%.1f" % percent
 
     def get_days_last_pv(self, obj):
-        return ""  # obj.days_since_last_pv.days if obj.days_since_last_pv else None
-
-    def get_last_pv_date(self, obj):
-        return ""  # obj.last_pv_date
+        if obj.last_pv_date:
+            duration = timezone.now() - obj.last_pv_date
+            return duration.days
+        return None
 
     def get_has_final_partnership_review(self, obj):
-        return ""
+        return bool(obj.has_final_partnership_review)
 
     def get_offices_names(self, obj):
         return ",".join(o.name for o in obj.offices.all())
@@ -128,6 +131,7 @@ class InterventionDashSerializer(serializers.ModelSerializer):
             'outstanding_dct_usd',
             'multi_curr_flag',
             'has_final_partnership_review',
+            'action_points',
             'link',
             'unicef_focal_points',
         )

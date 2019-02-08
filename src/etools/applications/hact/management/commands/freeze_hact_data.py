@@ -61,7 +61,6 @@ class Command(BaseCommand):
              self.get_or_empty(partner_hact, ['programmatic_visits', 'completed', 'q3'])),
             ('Programmatic Visits Completed Q4',
              self.get_or_empty(partner_hact, ['programmatic_visits', 'completed', 'q4'])),
-            ('Programmatic Visits Planned M.R', partner.hact_min_requirements.get('programme_visits')),
             ('Spot Checks Planned Q1', getattr(planned_engagement, 'spot_check_planned_q1', None)),
             ('Spot Checks Planned Q2', getattr(planned_engagement, 'spot_check_planned_q2', None)),
             ('Spot Checks Planned Q3', getattr(planned_engagement, 'spot_check_planned_q3', None)),

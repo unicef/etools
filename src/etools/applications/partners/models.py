@@ -5,7 +5,7 @@ import json
 from django.conf import settings
 from django.contrib.postgres.fields import ArrayField, JSONField
 from django.db import connection, models, transaction
-from django.db.models import Case, CharField, Count, F, Max, Min, Q, When
+from django.db.models import Case, CharField, Count, F, Max, Min, OuterRef, Q, Subquery, Sum, When
 from django.db.models.signals import post_save, pre_delete
 from django.urls import reverse
 from django.utils import timezone
@@ -21,6 +21,7 @@ from unicef_locations.models import Location
 
 from etools.applications.EquiTrack.encoders import EToolsEncoder
 from etools.applications.EquiTrack.utils import get_current_year, get_quarter, import_permissions
+from etools.applications.funds.models import FundsReservationHeader
 from etools.applications.partners.validation import interventions as intervention_validation
 from etools.applications.partners.validation.agreements import (
     agreement_transition_to_ended_valid,
@@ -31,7 +32,7 @@ from etools.applications.reports.models import CountryProgramme, Indicator, Resu
 from etools.applications.t2f.models import Travel, TravelType
 from etools.applications.tpm.models import TPMVisit
 from etools.applications.users.models import Office
-from etools.libraries.djangolib.models import DSum, StringConcat
+from etools.libraries.djangolib.models import StringConcat
 
 
 def _get_partner_base_path(partner):
@@ -1487,6 +1488,9 @@ class InterventionManager(models.Manager):
         return qs
 
     def frs_qs(self):
+        frs_query = FundsReservationHeader.objects.filter(
+            intervention=OuterRef("pk")
+        ).order_by().values("intervention")
         qs = self.get_queryset().prefetch_related(
             # 'frs__fr_items',
             # TODO: Figure out a way in which to add locations that is more performant
@@ -1497,10 +1501,18 @@ class InterventionManager(models.Manager):
             Max("frs__end_date"),
             Min("frs__start_date"),
             Count("frs__currency", distinct=True),
-            frs__outstanding_amt_local__sum=DSum("frs__outstanding_amt_local"),
-            frs__actual_amt_local__sum=DSum("frs__actual_amt_local"),
-            frs__total_amt_local__sum=DSum("frs__total_amt_local"),
-            frs__intervention_amt__sum=DSum("frs__intervention_amt"),
+            frs__outstanding_amt_local__sum=Subquery(
+                frs_query.annotate(total=Sum("outstanding_amt_local")).values("total")[:1]
+            ),
+            frs__actual_amt_local__sum=Subquery(
+                frs_query.annotate(total=Sum("actual_amt_local")).values("total")[:1]
+            ),
+            frs__total_amt_local__sum=Subquery(
+                frs_query.annotate(total=Sum("total_amt_local")).values("total")[:1]
+            ),
+            frs__intervention_amt__sum=Subquery(
+                frs_query.annotate(total=Sum("intervention_amt")).values("total")[:1]
+            ),
             location_p_codes=StringConcat("flat_locations__p_code", separator="|", distinct=True),
             donors=StringConcat("frs__fr_items__donor", separator="|", distinct=True),
             donor_codes=StringConcat("frs__fr_items__donor_code", separator="|", distinct=True),
