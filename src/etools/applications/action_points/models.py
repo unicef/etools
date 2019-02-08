@@ -191,7 +191,7 @@ class ActionPoint(TimeStampedModel):
 
         return activity.get_action_display()
 
-    def get_mail_context(self, user=None, include_token=False):
+    def get_mail_context(self, user=None):
         return {
             'person_responsible': self.assigned_to.get_full_name(),
             'assigned_by': self.assigned_by.get_full_name(),
@@ -200,7 +200,7 @@ class ActionPoint(TimeStampedModel):
             'description': self.description,
             'due_date': self.due_date.strftime('%d %b %Y') if self.due_date else '',
             'status': self.status,
-            'object_url': self.get_object_url(user=user, include_token=include_token),
+            'object_url': self.get_object_url(user=user),
         }
 
     def send_email(self, recipient, template_name, additional_context=None, cc=None):
