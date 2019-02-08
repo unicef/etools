@@ -157,7 +157,7 @@ class TravelExports(BaseTenantTestCase):
         TravelAttachmentFactory(
             file="test_file.pdf",
             travel=activity_4.travel,
-            type="HACT Programme Monitoring",
+            type="HACT Programme Monitoring Report",
         )
 
         with self.assertNumQueries(11):
