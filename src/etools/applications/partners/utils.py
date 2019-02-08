@@ -441,7 +441,10 @@ def send_agreement_suspended_notification(agreement, user):
 
 def send_intervention_draft_notification():
     """Send an email to PD/SHPD/SSFA's focal point(s) if in draft status"""
-    for intervention in Intervention.objects.filter(status=Intervention.DRAFT):
+    for intervention in Intervention.objects.filter(
+            status=Intervention.DRAFT,
+            created__lt=datetime.date.today() - datetime.timedelta(days=7),
+    ):
         recipients = [
             u.user.email for u in intervention.unicef_focal_points.all()
             if u.user.email
@@ -459,15 +462,11 @@ def send_intervention_draft_notification():
 def send_intervention_past_start_notification():
     """Send an email to PD/SHPD/SSFA's focal point(s) if signed
     and start date is past with no FR added"""
-    frs_count = FundsReservationHeader.objects.filter(
-        intervention=OuterRef("pk")
-    ).annotate(count=Count("vendor_code")).values("count")
     intervention_qs = Intervention.objects.filter(
         status=Intervention.SIGNED,
         start__lt=datetime.date.today(),
-    ).annotate(
-        frs_count=Subquery(frs_count)
-    ).filter(frs_count__gt=0)
+        frs__isnull=False,
+    )
     for intervention in intervention_qs.all():
         recipients = [
             u.user.email for u in intervention.unicef_focal_points.all()
@@ -479,9 +478,9 @@ def send_intervention_past_start_notification():
             context={
                 "reference_number": intervention.reference_number,
                 "title": intervention.title,
-                "url": "{}{}".format(
+                "url": "{}pmp/interventions/{}/details".format(
                     settings.HOST,
-                    intervention.get_object_url(),
+                    intervention.pk,
                 )
             }
         )

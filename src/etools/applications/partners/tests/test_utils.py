@@ -243,11 +243,20 @@ class TestSendInterventionDraftNotification(BaseTenantTestCase):
         cls.send_path = "etools.applications.partners.utils.send_notification_with_template"
 
     def test_send(self):
-        InterventionFactory(status=Intervention.DRAFT)
+        intervention = InterventionFactory(status=Intervention.DRAFT)
+        intervention.created = datetime.datetime(2018, 1, 1, 12, 55, 12, 12345)
+        intervention.save()
         mock_send = Mock()
         with patch(self.send_path, mock_send):
             utils.send_intervention_draft_notification()
         self.assertEqual(mock_send.call_count, 1)
+
+    def test_send_not_week_old(self):
+        InterventionFactory(status=Intervention.DRAFT)
+        mock_send = Mock()
+        with patch(self.send_path, mock_send):
+            utils.send_intervention_draft_notification()
+        self.assertEqual(mock_send.call_count, 0)
 
     def test_send_not_draft(self):
         intervention = InterventionFactory(status=Intervention.SIGNED)
