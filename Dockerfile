@@ -48,7 +48,8 @@ RUN apk add postgresql-client
 RUN apk add openssl \
     ca-certificates \
     libressl2.7-libcrypto
-RUN apk add gdal --update-cache --repository http://dl-3.alpinelinux.org/alpine/edge/testing/
+RUN apk add geos \
+    gdal --update-cache --repository http://dl-3.alpinelinux.org/alpine/edge/testing/
 
 ADD src /code/
 ADD manage.py /code/manage.py
