@@ -3,8 +3,8 @@ import re
 
 from django import forms
 
+re_allowed_chars = re.compile("^[0-9,.]+$")
 
-re_allowed_chars = re.compile("^[0-9,\.]+$")
 
 def value_numbers(data):
     """Ensure that each value in json object is a number"""
