@@ -238,11 +238,11 @@ class LocationsViewTestCase(FMBaseTestCaseMixin, BaseTenantTestCase):
 
         self.assertTrue(response.data['results'][0]['is_leaf'])
 
-    def test_get_parents(self):
-        another_child = LocationFactory(parent=self.child_location)
+    def test_get_path(self):
+        LocationFactory(parent=self.country)
 
         response = self.forced_auth_req(
-            'get', reverse('field_monitoring_settings:locations-parents', args=[another_child.id]),
+            'get', reverse('field_monitoring_settings:locations-path', args=[self.child_location.id]),
             user=self.unicef_user,
         )
 

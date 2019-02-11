@@ -129,8 +129,10 @@ class FMLocationsViewSet(FMBaseViewSet, mixins.ListModelMixin, viewsets.GenericV
     filter_fields = ('level', 'parent')
 
     @action(methods=['get'], detail=True)
-    def parents(self, request, *args, **kwargs):
-        return Response(data=self.get_serializer(instance=self.get_object().get_ancestors(), many=True).data)
+    def path(self, request, *args, **kwargs):
+        return Response(
+            data=self.get_serializer(instance=self.get_object().get_ancestors(include_self=True), many=True).data
+        )
 
 
 class CPOutputsViewSet(
