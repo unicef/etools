@@ -1033,7 +1033,9 @@ class TestCheckInterventionDraftStatus(BaseTenantTestCase):
 
     def test_task(self):
         send_path = "etools.applications.partners.utils.send_notification_with_template"
-        InterventionFactory(status=Intervention.DRAFT)
+        intervention = InterventionFactory(status=Intervention.DRAFT)
+        intervention.created = datetime.datetime(2018, 1, 1, 12, 55, 12, 12345)
+        intervention.save()
         mock_send = mock.Mock()
         with mock.patch(send_path, mock_send):
             etools.applications.partners.tasks.check_intervention_draft_status()
