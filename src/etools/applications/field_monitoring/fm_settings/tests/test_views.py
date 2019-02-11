@@ -238,6 +238,19 @@ class LocationsViewTestCase(FMBaseTestCaseMixin, BaseTenantTestCase):
 
         self.assertTrue(response.data['results'][0]['is_leaf'])
 
+    def test_get_parents(self):
+        another_child = LocationFactory(parent=self.child_location)
+
+        response = self.forced_auth_req(
+            'get', reverse('field_monitoring_settings:locations-parents', args=[another_child.id]),
+            user=self.unicef_user,
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(response.data), 2)
+        self.assertEqual(response.data[0]['id'], str(self.country.id))
+        self.assertEqual(response.data[1]['id'], str(self.child_location.id))
+
 
 class LocationSitesViewTestCase(TestExportMixin, FMBaseTestCaseMixin, BaseTenantTestCase):
     def test_list(self):
