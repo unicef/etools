@@ -1,6 +1,5 @@
 import itertools
 
-from django.db import models
 from django.utils.translation import ugettext_lazy as _
 
 from rest_framework import serializers
@@ -13,12 +12,11 @@ from unicef_snapshot.serializers import SnapshotModelSerializer
 
 from etools.applications.field_monitoring.fm_settings.serializers.cp_outputs import NestedCPOutputSerializer, \
     PartnerOrganizationSerializer
-from etools.applications.field_monitoring.fm_settings.serializers.issues import LogIssueSerializer
 from etools.applications.field_monitoring.fm_settings.serializers.locations import LocationSiteLightSerializer
 from etools.applications.field_monitoring.fm_settings.serializers.methods import FMMethodTypeSerializer
 from etools.applications.field_monitoring.planning.models import Task
 from etools.applications.field_monitoring.planning.serializers import TaskListSerializer
-from etools.applications.field_monitoring.fm_settings.models import LogIssue, CPOutputConfig, LocationSite
+from etools.applications.field_monitoring.fm_settings.models import CPOutputConfig, LocationSite
 from etools.applications.field_monitoring.shared.models import FMMethod
 from etools.applications.field_monitoring.visits.models import Visit, VisitMethodType, VisitCPOutputConfig, \
     VisitTaskLink

@@ -47,5 +47,3 @@ class LocationFullSerializer(LocationLightSerializer):
     def get_point(self, obj):
         point = obj.point or self.Meta.model.objects.aggregate(boundary=Collect('point'))['boundary'].centroid
         return json.loads(point.json)
-
-

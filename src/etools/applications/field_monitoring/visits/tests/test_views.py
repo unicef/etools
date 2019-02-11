@@ -11,7 +11,7 @@ from unicef_locations.tests.factories import LocationFactory
 from etools.applications.EquiTrack.tests.cases import BaseTenantTestCase
 from etools.applications.action_points.tests.factories import UserFactory
 from etools.applications.field_monitoring.fm_settings.tests.factories import FMMethodFactory, FMMethodTypeFactory, \
-    PlannedCheckListItemFactory, LocationSiteFactory, CPOutputConfigFactory, LogIssueFactory
+    PlannedCheckListItemFactory, LocationSiteFactory, CPOutputConfigFactory
 from etools.applications.field_monitoring.planning.tests.factories import TaskFactory
 from etools.applications.field_monitoring.tests.base import FMBaseTestCaseMixin
 from etools.applications.field_monitoring.visits.models import Visit
