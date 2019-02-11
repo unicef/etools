@@ -44,10 +44,8 @@ class MailingTest(BaseTenantTestCase):
     def test_mailing_serializer(self):
         serializer = TravelMailSerializer(self.travel, context={})
         self.assertKeysIn(['reference_number',
-                           'cost_summary',
                            'supervisor',
                            'end_date',
-                           'cost_assignments',
                            'rejection_note',
                            'currency',
                            'estimated_travel_cost',

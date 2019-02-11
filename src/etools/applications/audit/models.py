@@ -841,10 +841,10 @@ class EngagementActionPoint(ActionPoint):
         verbose_name_plural = _('Engagement Action Points')
         proxy = True
 
-    def get_mail_context(self, user=None, include_token=False):
-        context = super().get_mail_context(user=user, include_token=include_token)
+    def get_mail_context(self, user=None):
+        context = super().get_mail_context(user=user)
         if self.engagement:
-            context['engagement'] = self.engagement_subclass.get_mail_context(user=user, include_token=include_token)
+            context['engagement'] = self.engagement_subclass.get_mail_context(user=user)
         return context
 
 
