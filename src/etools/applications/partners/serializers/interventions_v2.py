@@ -13,7 +13,6 @@ from unicef_attachments.serializers import AttachmentSerializerMixin
 from unicef_locations.serializers import LocationSerializer
 from unicef_snapshot.serializers import SnapshotModelSerializer
 
-from etools.applications.EquiTrack.utils import h11
 from etools.applications.funds.models import FundsCommitmentItem, FundsReservationHeader
 from etools.applications.funds.serializers import FRHeaderSerializer, FRsSerializer
 from etools.applications.partners.models import (
@@ -35,6 +34,7 @@ from etools.applications.reports.serializers.v2 import (
     RAMIndicatorSerializer,
     ReportingRequirementSerializer,
 )
+from etools.libraries.pythonlib.hash import h11
 
 
 class InterventionBudgetCUSerializer(serializers.ModelSerializer):

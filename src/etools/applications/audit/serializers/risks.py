@@ -8,7 +8,7 @@ from unicef_restlib.fields import WriteListSerializeFriendlyRecursiveField
 from unicef_restlib.serializers import RecursiveListSerializer, WritableListSerializer, WritableNestedSerializerMixin
 
 from etools.applications.audit.models import Risk, RiskBluePrint, RiskCategory
-from etools.applications.utils.common.utils import to_choices_list
+from etools.libraries.pythonlib.collections import to_choices_list
 
 
 class BaseRiskSerializer(WritableNestedSerializerMixin, serializers.ModelSerializer):
