@@ -2088,12 +2088,12 @@ class TestInterventionReportingRequirementView(BaseTenantTestCase):
             ]}
         )
 
-    def test_validation_terminated_pd_requirements_editable_qpr(self):
+    def test_requirements_pd_terminated_and_ended_qpr(self):
         intervention = InterventionFactory(
             start=datetime.date(2001, 1, 1),
+            end=datetime.date(2002, 1, 1),
             status=Intervention.TERMINATED
         )
-        print('intervention.end', intervention.end)
         result_link = InterventionResultLinkFactory(intervention=intervention)
         lower_result = LowerResultFactory(result_link=result_link)
         AppliedIndicatorFactory(lower_result=lower_result)
@@ -2112,15 +2112,44 @@ class TestInterventionReportingRequirementView(BaseTenantTestCase):
             }
         )
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
-        print('response.data', response.data)
+        self.assertEqual(
+            response.data,
+            {"non_field_errors": [
+                "Changes not allowed when PD is terminated."
+            ]}
+        )
 
-
-    def test_validation_terminated_pd_requirements_editable_hr(self):
+    def test_requirements_pd_terminated_but_not_ended_qpr(self):
         intervention = InterventionFactory(
             start=datetime.date(2001, 1, 1),
+            end=datetime.date.today() + datetime.timedelta(days=2),
             status=Intervention.TERMINATED
         )
-        print('intervention.end', intervention.end)
+        result_link = InterventionResultLinkFactory(intervention=intervention)
+        lower_result = LowerResultFactory(result_link=result_link)
+        AppliedIndicatorFactory(lower_result=lower_result)
+
+        response = self.forced_auth_req(
+            "post",
+            self._get_url(ReportingRequirement.TYPE_QPR, intervention=intervention),
+            user=self.unicef_staff,
+            data={
+                "report_type": ReportingRequirement.TYPE_QPR,
+                "reporting_requirements": [{
+                    "start_date": datetime.date(2001, 2, 1),
+                    "end_date": datetime.date(2001, 3, 31),
+                    "due_date": datetime.date(2001, 4, 15),
+                }]
+            }
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+    def test_requirements_pd_terminated_and_ended_hr(self):
+        intervention = InterventionFactory(
+            start=datetime.date(2001, 1, 1),
+            end=datetime.date(2002, 1, 1),
+            status=Intervention.TERMINATED
+        )
         result_link = InterventionResultLinkFactory(intervention=intervention)
         lower_result = LowerResultFactory(result_link=result_link)
         AppliedIndicatorFactory(lower_result=lower_result, is_high_frequency=True)
@@ -2139,7 +2168,37 @@ class TestInterventionReportingRequirementView(BaseTenantTestCase):
             }
         )
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
-        print('response.data', response.data)
+        self.assertEqual(
+            response.data,
+            {"non_field_errors": [
+                "Changes not allowed when PD is terminated."
+            ]}
+        )
+
+    def test_requirements_pd_terminated_but_not_ended_hr(self):
+        intervention = InterventionFactory(
+            start=datetime.date(2001, 1, 1),
+            end=datetime.date.today() + datetime.timedelta(days=2),
+            status=Intervention.TERMINATED
+        )
+        result_link = InterventionResultLinkFactory(intervention=intervention)
+        lower_result = LowerResultFactory(result_link=result_link)
+        AppliedIndicatorFactory(lower_result=lower_result, is_high_frequency=True)
+
+        response = self.forced_auth_req(
+            "post",
+            self._get_url(ReportingRequirement.TYPE_HR, intervention=intervention),
+            user=self.unicef_staff,
+            data={
+                "report_type": ReportingRequirement.TYPE_HR,
+                "reporting_requirements": [{
+                    "start_date": datetime.date(2001, 2, 1),
+                    "end_date": datetime.date(2001, 3, 31),
+                    "due_date": datetime.date(2001, 4, 15),
+                }]
+            }
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
 
     def test_patch_invalid(self):
         for report_type, _ in ReportingRequirement.TYPE_CHOICES:

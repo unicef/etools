@@ -826,7 +826,7 @@ class InterventionReportingRequirementCreateSerializer(serializers.ModelSerializ
 
         if self.intervention.status != Intervention.DRAFT:
             if self.intervention.status == Intervention.TERMINATED:
-                ended = self.intervention.end < datetime.now().date() if self.intervention.end else False
+                ended = self.intervention.end < datetime.now().date() if self.intervention.end else True
                 if ended:
                     raise serializers.ValidationError(
                         _("Changes not allowed when PD is terminated.")
