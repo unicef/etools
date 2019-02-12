@@ -89,7 +89,7 @@ class PMPPermissions(object):
 class InterventionPermissions(PMPPermissions):
 
     MODEL_NAME = 'partners.Intervention'
-    EXTRA_FIELDS = ['sections_present', 'reporting_requirements']
+    EXTRA_FIELDS = ['sections_present']
 
     def __init__(self, **kwargs):
         """
@@ -128,7 +128,7 @@ class InterventionPermissions(PMPPermissions):
             'prp_server_on': prp_server_on(),
             'user_adds_amendment+prp_mode_on': user_added_amendment(self.instance) and not prp_mode_off(),
             'termination_doc_attached': self.instance.termination_doc_attachment.exists(),
-            'not_ended': self.instance.end >= datetime.datetime.now().date()
+            'not_ended': self.instance.end >= datetime.datetime.now().date() if self.instance.end else False
         }
 
 
