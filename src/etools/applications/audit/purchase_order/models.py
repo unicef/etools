@@ -4,8 +4,8 @@ from django.utils.translation import ugettext_lazy as _
 from model_utils.models import TimeStampedModel
 from unicef_notification.utils import send_notification_with_template
 
-from etools.applications.EquiTrack.utils import get_environment
 from etools.applications.firms.models import BaseFirm, BaseStaffMember
+from etools.libraries.djangolib.utils import get_environment
 
 
 class AuditorFirm(BaseFirm):

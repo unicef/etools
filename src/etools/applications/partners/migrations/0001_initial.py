@@ -9,7 +9,7 @@ import django_fsm
 import model_utils.fields
 from unicef_djangolib.fields import CurrencyField, QuarterField
 
-import etools.applications.EquiTrack.utils
+import etools.applications.EquiTrack.urlresolvers
 import etools.applications.partners.models
 
 

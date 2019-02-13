@@ -10,7 +10,6 @@ from celery.utils.log import get_task_logger
 from django_tenants.utils import schema_context
 from unicef_notification.utils import send_notification_with_template
 
-from etools.applications.EquiTrack.utils import get_environment
 from etools.applications.partners.models import Agreement, Intervention, PartnerOrganization
 from etools.applications.partners.utils import (
     copy_all_attachments,
@@ -23,6 +22,7 @@ from etools.applications.partners.validation.agreements import AgreementValid
 from etools.applications.partners.validation.interventions import InterventionValid
 from etools.applications.users.models import Country
 from etools.config.celery import app
+from etools.libraries.djangolib.utils import get_environment
 from etools.libraries.tenant_support.utils import run_on_all_tenants
 
 logger = get_task_logger(__name__)
