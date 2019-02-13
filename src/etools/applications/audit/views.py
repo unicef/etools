@@ -258,6 +258,7 @@ class EngagementViewSet(
     ordering_fields = ('agreement__order_number', 'agreement__auditor_firm__name',
                        'partner__name', 'engagement_type', 'status')
     filter_class = EngagementFilter
+    export_filename = 'engagements'
 
     ENGAGEMENT_MAPPING = {
         Engagement.TYPES.audit: {
@@ -380,7 +381,7 @@ class EngagementViewSet(
         serializer = EngagementExportSerializer(engagements, many=True)
 
         return Response(serializer.data, headers={
-            'Content-Disposition': 'attachment;filename=engagements_{}.csv'.format(timezone.now().date())
+            'Content-Disposition': 'attachment;filename={}_{}.csv'.format(self.export_filename, timezone.now().date())
         })
 
 
@@ -434,6 +435,7 @@ class SpotCheckViewSet(EngagementManagementMixin, EngagementViewSet):
 
 class StaffSpotCheckViewSet(SpotCheckViewSet):
     unicef_engagements = True
+    export_filename = 'staff_spot_checks'
     serializer_class = StaffSpotCheckSerializer
     serializer_action_classes = {
         'list': StaffSpotCheckListSerializer
