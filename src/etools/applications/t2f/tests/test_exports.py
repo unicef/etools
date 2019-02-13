@@ -40,9 +40,6 @@ class TravelExports(BaseTenantTestCase):
         export_url = reverse('t2f:travels:list:activity_export')
         self.assertEqual(export_url, '/api/t2f/travels/export/')
 
-        export_url = reverse('t2f:travels:list:finance_export')
-        self.assertEqual(export_url, '/api/t2f/travels/finance-export/')
-
         export_url = reverse('t2f:travels:list:travel_admin_export')
         self.assertEqual(export_url, '/api/t2f/travels/travel-admin-export/')
 
@@ -205,7 +202,7 @@ class TravelExports(BaseTenantTestCase):
             '14-Nov-2017',
             '',
             '',
-            'No',
+            '',
         ])
 
         self.assertEqual(rows[2], [
@@ -225,7 +222,7 @@ class TravelExports(BaseTenantTestCase):
             '14-Nov-2017',
             'YES',
             'Lenox Lewis',
-            'No',
+            '',
         ])
 
         self.assertEqual(rows[3], [
@@ -245,7 +242,7 @@ class TravelExports(BaseTenantTestCase):
             '14-Nov-2017',
             '',
             '',
-            'No',
+            '',
         ])
 
         self.assertEqual(rows[4], [
