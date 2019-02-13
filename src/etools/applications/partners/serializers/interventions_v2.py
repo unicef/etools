@@ -1,4 +1,4 @@
-from datetime import date
+from datetime import datetime, date
 from operator import itemgetter
 
 from django.db import transaction
@@ -825,10 +825,17 @@ class InterventionReportingRequirementCreateSerializer(serializers.ModelSerializ
         self.intervention = self.context["intervention"]
 
         if self.intervention.status != Intervention.DRAFT:
-            if not self.intervention.in_amendment and not self.intervention.termination_doc_attachment.exists():
-                raise serializers.ValidationError(
-                    _("Changes not allowed when PD not in amendment state.")
-                )
+            if self.intervention.status == Intervention.TERMINATED:
+                ended = self.intervention.end < datetime.now().date() if self.intervention.end else True
+                if ended:
+                    raise serializers.ValidationError(
+                        _("Changes not allowed when PD is terminated.")
+                    )
+            else:
+                if not self.intervention.in_amendment and not self.intervention.termination_doc_attachment.exists():
+                    raise serializers.ValidationError(
+                        _("Changes not allowed when PD not in amendment state.")
+                    )
 
         if not self.intervention.start:
             raise serializers.ValidationError(
