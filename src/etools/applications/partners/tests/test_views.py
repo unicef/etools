@@ -1919,8 +1919,8 @@ class TestPartnerOrganizationDashboardAPIView(BaseTenantTestCase):
     def test_queryset(self):
         self.assertEqual(self.record['total_ct_cp'], 789.0)
         self.assertEqual(self.record['total_ct_ytd'], 123.0)
-        self.assertEqual(self.record['outstanding_dct_amount_6_to_9_months_usd'], '69.00')
-        self.assertEqual(self.record['outstanding_dct_amount_more_than_9_months_usd'], '90.00')
+        self.assertEqual(self.record['outstanding_dct_amount_6_to_9_months_usd'], 69.00)
+        self.assertEqual(self.record['outstanding_dct_amount_more_than_9_months_usd'], 90.00)
 
     def test_sections(self):
         self.assertEqual(self.record['sections'], '{}|{}'.format(self.sec1.name, self.sec2.name))

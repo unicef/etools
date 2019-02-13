@@ -308,6 +308,8 @@ class PartnerOrganizationDashboardSerializer(serializers.ModelSerializer):
     action_points = serializers.ReadOnlyField(read_only=True)
     total_ct_cp = serializers.FloatField(read_only=True)
     total_ct_ytd = serializers.FloatField(read_only=True)
+    outstanding_dct_amount_6_to_9_months_usd = serializers.FloatField(read_only=True)
+    outstanding_dct_amount_more_than_9_months_usd = serializers.FloatField(read_only=True)
 
     class Meta:
         model = PartnerOrganization

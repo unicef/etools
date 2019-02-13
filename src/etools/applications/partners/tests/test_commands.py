@@ -8,6 +8,7 @@ from unicef_attachments.models import Attachment
 
 from etools.applications.attachments.tests.factories import AttachmentFactory, AttachmentFileTypeFactory
 from etools.applications.EquiTrack.tests.cases import BaseTenantTestCase
+from etools.applications.funds.tests.factories import FundsReservationHeaderFactory
 from etools.applications.partners.models import Agreement, Intervention
 from etools.applications.partners.tests.factories import (
     AgreementAmendmentFactory,
@@ -352,4 +353,38 @@ class TestSendPCAMissingNotifications(BaseTenantTestCase):
         mock_send = Mock()
         with patch(send_path, mock_send):
             call_command("send_pca_missing_notifications")
+        self.assertEqual(mock_send.call_count, 1)
+
+
+class TestSendInterventionDraftNotifications(BaseTenantTestCase):
+    @classmethod
+    def setUpTestData(cls):
+        call_command("update_notifications")
+
+    def test_command(self):
+        send_path = "etools.applications.partners.utils.send_notification_with_template"
+        intervention = InterventionFactory(status=Intervention.DRAFT)
+        intervention.created = datetime.datetime(2018, 1, 1, 12, 55, 12, 12345)
+        intervention.save()
+        mock_send = Mock()
+        with patch(send_path, mock_send):
+            call_command("send_intervention_draft_notification")
+        self.assertEqual(mock_send.call_count, 1)
+
+
+class TestCheckInterventionPastStartStatus(BaseTenantTestCase):
+    @classmethod
+    def setUpTestData(cls):
+        call_command("update_notifications")
+
+    def test_task(self):
+        send_path = "etools.applications.partners.utils.send_notification_with_template"
+        intervention = InterventionFactory(
+            status=Intervention.SIGNED,
+            start=datetime.date.today() - datetime.timedelta(days=2),
+        )
+        FundsReservationHeaderFactory(intervention=intervention)
+        mock_send = Mock()
+        with patch(send_path, mock_send):
+            call_command("send_intervention_past_start_notification")
         self.assertEqual(mock_send.call_count, 1)

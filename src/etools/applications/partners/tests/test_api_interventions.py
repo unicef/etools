@@ -23,6 +23,7 @@ from etools.applications.environment.tests.factories import TenantSwitchFactory
 from etools.applications.EquiTrack.tests.cases import BaseTenantTestCase
 from etools.applications.EquiTrack.tests.mixins import URLAssertionMixin
 from etools.applications.partners.models import Intervention, InterventionAmendment, InterventionResultLink
+from etools.applications.partners.permissions import InterventionPermissions
 from etools.applications.partners.tests.factories import (
     AgreementFactory,
     FileTypeFactory,
@@ -110,7 +111,7 @@ class TestInterventionsAPI(BaseTenantTestCase):
         'signed': [],
         'active': ['']
     }
-    ALL_FIELDS = get_all_field_names(Intervention) + ['sections_present']
+    ALL_FIELDS = get_all_field_names(Intervention) + InterventionPermissions.EXTRA_FIELDS
 
     def setUp(self):
         setup_intervention_test_data(self)
@@ -2086,6 +2087,118 @@ class TestInterventionReportingRequirementView(BaseTenantTestCase):
                 "Changes not allowed when PD not in amendment state."
             ]}
         )
+
+    def test_requirements_pd_terminated_and_ended_qpr(self):
+        intervention = InterventionFactory(
+            start=datetime.date(2001, 1, 1),
+            end=datetime.date(2002, 1, 1),
+            status=Intervention.TERMINATED
+        )
+        result_link = InterventionResultLinkFactory(intervention=intervention)
+        lower_result = LowerResultFactory(result_link=result_link)
+        AppliedIndicatorFactory(lower_result=lower_result)
+
+        response = self.forced_auth_req(
+            "post",
+            self._get_url(ReportingRequirement.TYPE_QPR, intervention=intervention),
+            user=self.unicef_staff,
+            data={
+                "report_type": ReportingRequirement.TYPE_QPR,
+                "reporting_requirements": [{
+                    "start_date": datetime.date(2001, 2, 1),
+                    "end_date": datetime.date(2001, 3, 31),
+                    "due_date": datetime.date(2001, 4, 15),
+                }]
+            }
+        )
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertEqual(
+            response.data,
+            {"non_field_errors": [
+                "Changes not allowed when PD is terminated."
+            ]}
+        )
+
+    def test_requirements_pd_terminated_but_not_ended_qpr(self):
+        intervention = InterventionFactory(
+            start=datetime.date(2001, 1, 1),
+            end=datetime.date.today() + datetime.timedelta(days=2),
+            status=Intervention.TERMINATED
+        )
+        result_link = InterventionResultLinkFactory(intervention=intervention)
+        lower_result = LowerResultFactory(result_link=result_link)
+        AppliedIndicatorFactory(lower_result=lower_result)
+
+        response = self.forced_auth_req(
+            "post",
+            self._get_url(ReportingRequirement.TYPE_QPR, intervention=intervention),
+            user=self.unicef_staff,
+            data={
+                "report_type": ReportingRequirement.TYPE_QPR,
+                "reporting_requirements": [{
+                    "start_date": datetime.date(2001, 2, 1),
+                    "end_date": datetime.date(2001, 3, 31),
+                    "due_date": datetime.date(2001, 4, 15),
+                }]
+            }
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+    def test_requirements_pd_terminated_and_ended_hr(self):
+        intervention = InterventionFactory(
+            start=datetime.date(2001, 1, 1),
+            end=datetime.date(2002, 1, 1),
+            status=Intervention.TERMINATED
+        )
+        result_link = InterventionResultLinkFactory(intervention=intervention)
+        lower_result = LowerResultFactory(result_link=result_link)
+        AppliedIndicatorFactory(lower_result=lower_result, is_high_frequency=True)
+
+        response = self.forced_auth_req(
+            "post",
+            self._get_url(ReportingRequirement.TYPE_HR, intervention=intervention),
+            user=self.unicef_staff,
+            data={
+                "report_type": ReportingRequirement.TYPE_HR,
+                "reporting_requirements": [{
+                    "start_date": datetime.date(2001, 2, 1),
+                    "end_date": datetime.date(2001, 3, 31),
+                    "due_date": datetime.date(2001, 4, 15),
+                }]
+            }
+        )
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertEqual(
+            response.data,
+            {"non_field_errors": [
+                "Changes not allowed when PD is terminated."
+            ]}
+        )
+
+    def test_requirements_pd_terminated_but_not_ended_hr(self):
+        intervention = InterventionFactory(
+            start=datetime.date(2001, 1, 1),
+            end=datetime.date.today() + datetime.timedelta(days=2),
+            status=Intervention.TERMINATED
+        )
+        result_link = InterventionResultLinkFactory(intervention=intervention)
+        lower_result = LowerResultFactory(result_link=result_link)
+        AppliedIndicatorFactory(lower_result=lower_result, is_high_frequency=True)
+
+        response = self.forced_auth_req(
+            "post",
+            self._get_url(ReportingRequirement.TYPE_HR, intervention=intervention),
+            user=self.unicef_staff,
+            data={
+                "report_type": ReportingRequirement.TYPE_HR,
+                "reporting_requirements": [{
+                    "start_date": datetime.date(2001, 2, 1),
+                    "end_date": datetime.date(2001, 3, 31),
+                    "due_date": datetime.date(2001, 4, 15),
+                }]
+            }
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
 
     def test_patch_invalid(self):
         for report_type, _ in ReportingRequirement.TYPE_CHOICES:
