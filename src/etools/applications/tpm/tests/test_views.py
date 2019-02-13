@@ -12,8 +12,8 @@ from unicef_attachments.models import AttachmentLink
 from etools.applications.action_points.tests.factories import ActionPointFactory
 from etools.applications.attachments.tests.factories import (
     AttachmentFactory,
-    AttachmentLinkFactory,
     AttachmentFileTypeFactory,
+    AttachmentLinkFactory,
 )
 from etools.applications.EquiTrack.tests.cases import BaseTenantTestCase
 from etools.applications.partners.models import PartnerType
@@ -21,9 +21,9 @@ from etools.applications.partners.tests.factories import InterventionAttachmentF
 from etools.applications.reports.tests.factories import SectionFactory
 from etools.applications.tpm.models import ThirdPartyMonitor, TPMVisit
 from etools.applications.tpm.tests.base import TPMTestCaseMixin
-from etools.applications.tpm.tests.factories import _FUZZY_END_DATE, TPMPartnerFactory, TPMVisitFactory, TPMUserFactory
+from etools.applications.tpm.tests.factories import _FUZZY_END_DATE, TPMPartnerFactory, TPMUserFactory, TPMVisitFactory
 from etools.applications.users.tests.factories import UserFactory
-from etools.applications.utils.common.tests.test_utils import TestExportMixin
+from etools.libraries.djangolib.tests.utils import TestExportMixin
 
 
 class TestTPMVisitViewSet(TestExportMixin, TPMTestCaseMixin, BaseTenantTestCase):

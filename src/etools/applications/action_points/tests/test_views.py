@@ -2,21 +2,21 @@ from datetime import date
 
 from django.core.management import call_command
 from django.urls import reverse
-from factory import fuzzy
 
+from factory import fuzzy
 from rest_framework import status
 
 from etools.applications.action_points.categories.models import Category
 from etools.applications.action_points.tests.base import ActionPointsTestCaseMixin
-from etools.applications.action_points.tests.factories import ActionPointFactory, ActionPointCategoryFactory
-from etools.applications.EquiTrack.tests.cases import BaseTenantTestCase
+from etools.applications.action_points.tests.factories import ActionPointCategoryFactory, ActionPointFactory
 from etools.applications.audit.tests.factories import MicroAssessmentFactory
+from etools.applications.EquiTrack.tests.cases import BaseTenantTestCase
 from etools.applications.partners.tests.factories import PartnerFactory
 from etools.applications.reports.tests.factories import SectionFactory
 from etools.applications.t2f.tests.factories import TravelActivityFactory, TravelFactory
 from etools.applications.tpm.tests.factories import TPMVisitFactory
-from etools.applications.users.tests.factories import UserFactory, SimpleUserFactory, PMEUserFactory
-from etools.applications.utils.common.tests.test_utils import TestExportMixin
+from etools.applications.users.tests.factories import PMEUserFactory, SimpleUserFactory, UserFactory
+from etools.libraries.djangolib.tests.utils import TestExportMixin
 
 
 class TestActionPointViewSet(TestExportMixin, ActionPointsTestCaseMixin, BaseTenantTestCase):
