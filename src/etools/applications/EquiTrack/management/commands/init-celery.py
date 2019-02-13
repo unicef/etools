@@ -11,7 +11,7 @@ class Command(BaseCommand):
     help = 'Init celery command'
 
     def handle(self, *args, **options):
-        logger.info(u'Init Celery command started')
+        logger.info('Init Celery command started')
         every_day, _ = IntervalSchedule.objects.get_or_create(every=1, period=IntervalSchedule.DAYS)
         every_two_weeks, _ = IntervalSchedule.objects.get_or_create(every=14, period=IntervalSchedule.DAYS)
         every_week, _ = IntervalSchedule.objects.get_or_create(every=7, period=IntervalSchedule.DAYS)
@@ -73,4 +73,4 @@ class Command(BaseCommand):
             'enabled': False,
             'crontab': first_day_of_the_month})
 
-        logger.info(u'Init Celery command finished')
+        logger.info('Init Celery command finished')

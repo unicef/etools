@@ -32,13 +32,13 @@ class ProfileInline(admin.StackedInline):
         'countries_available',
     )
     search_fields = (
-        u'office__name',
-        u'country__name',
-        u'user__email'
+        'office__name',
+        'country__name',
+        'user__email'
     )
     readonly_fields = (
-        u'user',
-        u'country',
+        'user',
+        'country',
     )
 
     fk_name = 'user'
@@ -46,13 +46,13 @@ class ProfileInline(admin.StackedInline):
     def get_fields(self, request, obj=None):
 
         fields = super().get_fields(request, obj=obj)
-        if not request.user.is_superuser and u'country_override' in fields:
-            fields.remove(u'country_override')
+        if not request.user.is_superuser and 'country_override' in fields:
+            fields.remove('country_override')
         return fields
 
     def formfield_for_manytomany(self, db_field, request=None, **kwargs):
 
-        if db_field.name == u'countries_available':
+        if db_field.name == 'countries_available':
             if request and request.user.is_superuser:
                 kwargs['queryset'] = Country.objects.all()
             else:
@@ -98,13 +98,13 @@ class ProfileAdmin(admin.ModelAdmin):
         'countries_available',
     )
     search_fields = (
-        u'office__name',
-        u'country__name',
-        u'user__email'
+        'office__name',
+        'country__name',
+        'user__email'
     )
     readonly_fields = (
-        u'user',
-        u'country',
+        'user',
+        'country',
     )
 
     def has_add_permission(self, request):
@@ -130,13 +130,13 @@ class ProfileAdmin(admin.ModelAdmin):
     def get_fields(self, request, obj=None):
 
         fields = super().get_fields(request, obj=obj)
-        if not request.user.is_superuser and u'country_override' in fields:
-            fields.remove(u'country_override')
+        if not request.user.is_superuser and 'country_override' in fields:
+            fields.remove('country_override')
         return fields
 
     def formfield_for_manytomany(self, db_field, request=None, **kwargs):
 
-        if db_field.name == u'countries_available':
+        if db_field.name == 'countries_available':
             if request and request.user.is_superuser:
                 kwargs['queryset'] = Country.objects.all()
             else:
@@ -223,7 +223,7 @@ class UserAdminPlus(UserAdmin):
         """
         fields = list(super().get_readonly_fields(request, obj))
         if not request.user.is_superuser:
-            fields.append(u'is_superuser')
+            fields.append('is_superuser')
         return fields
 
 

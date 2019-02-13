@@ -69,8 +69,8 @@ class TravelDetails(URLAssertionMixin, BaseTenantTestCase):
     def test_details_view_with_file(self):
         attachment = TravelAttachmentFactory(
             travel=self.travel,
-            name=u'\u0628\u0631\u0646\u0627\u0645\u062c \u062a\u062f\u0631\u064a\u0628 \u0627\u0644\u0645\u062a\u0627\u0628\u0639\u064a\u0646.pdf',  # noqa
-            file=factory.django.FileField(filename=u'travels/lebanon/24800/\u0628\u0631\u0646\u0627\u0645\u062c_\u062a\u062f\u0631\u064a\u0628_\u0627\u0644\u0645\u062a\u0627\u0628\u0639\u064a\u0646.pdf')  # noqa
+            name='\u0628\u0631\u0646\u0627\u0645\u062c \u062a\u062f\u0631\u064a\u0628 \u0627\u0644\u0645\u062a\u0627\u0628\u0639\u064a\u0646.pdf',  # noqa
+            file=factory.django.FileField(filename='travels/lebanon/24800/\u0628\u0631\u0646\u0627\u0645\u062c_\u062a\u062f\u0631\u064a\u0628_\u0627\u0644\u0645\u062a\u0627\u0628\u0639\u064a\u0646.pdf')  # noqa
         )
         with self.assertNumQueries(15):
             response = self.forced_auth_req(
@@ -132,8 +132,8 @@ class TravelDetails(URLAssertionMixin, BaseTenantTestCase):
     def test_travel_attachment_nonascii(self):
         attachment = TravelAttachmentFactory(
             travel=self.travel,
-            name=u'\u0628\u0631\u0646\u0627\u0645\u062c \u062a\u062f\u0631\u064a\u0628 \u0627\u0644\u0645\u062a\u0627\u0628\u0639\u064a\u0646.pdf',  # noqa
-            file=factory.django.FileField(filename=u'travels/lebanon/24800/\u0628\u0631\u0646\u0627\u0645\u062c_\u062a\u062f\u0631\u064a\u0628_\u0627\u0644\u0645\u062a\u0627\u0628\u0639\u064a\u0646.pdf')  # noqa
+            name='\u0628\u0631\u0646\u0627\u0645\u062c \u062a\u062f\u0631\u064a\u0628 \u0627\u0644\u0645\u062a\u0627\u0628\u0639\u064a\u0646.pdf',  # noqa
+            file=factory.django.FileField(filename='travels/lebanon/24800/\u0628\u0631\u0646\u0627\u0645\u062c_\u062a\u062f\u0631\u064a\u0628_\u0627\u0644\u0645\u062a\u0627\u0628\u0639\u064a\u0646.pdf')  # noqa
         )
         response = self.forced_auth_req(
             'get',
@@ -304,7 +304,7 @@ class TravelDetails(URLAssertionMixin, BaseTenantTestCase):
 
         self.assertEqual(response.status_code, 400)
         response_json = json.loads(response.rendered_content)
-        self.assertEqual(response_json, {u'activities': [{u'result': [u'This field is required.']}]})
+        self.assertEqual(response_json, {'activities': [{'result': ['This field is required.']}]})
 
     def test_itinerary_dates(self):
         dsaregion = DSARegion.objects.first()
@@ -522,7 +522,7 @@ class TravelDetails(URLAssertionMixin, BaseTenantTestCase):
         response = self.forced_auth_req('post', reverse('t2f:travels:list:index'),
                                         data=data, user=self.unicef_staff)
         response_json = json.loads(response.rendered_content)
-        itinerary_origin_destination_expectation = [u'Origin should match with the previous destination']
+        itinerary_origin_destination_expectation = ['Origin should match with the previous destination']
         self.assertEqual(response_json['itinerary'], itinerary_origin_destination_expectation)
 
     def test_ta_not_required(self):
