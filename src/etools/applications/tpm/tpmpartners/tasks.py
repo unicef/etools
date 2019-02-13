@@ -11,14 +11,14 @@ logger = get_task_logger(__name__)
 
 @app.task
 def update_tpm_partners(country_name=None):
-    logger.info(u'Starting update values for TPM partners')
+    logger.info('Starting update values for TPM partners')
     countries = Country.objects.filter(vision_sync_enabled=True)
     processed = []
     if country_name is not None:
         countries = countries.filter(name=country_name)
     for country in countries:
         try:
-            logger.info(u'Starting TPM partners update for country {}'.format(
+            logger.info('Starting TPM partners update for country {}'.format(
                 country.name
             ))
             for partner in TPMPartner.objects.all():
@@ -27,7 +27,7 @@ def update_tpm_partners(country_name=None):
                     object_number=partner.vendor_number
                 ).sync()
             processed.append(country.name)
-            logger.info(u"Update finished successfully for {}".format(country.name))
+            logger.info("Update finished successfully for {}".format(country.name))
         except VisionException:
-            logger.exception(u"{} sync failed".format(TPMPartnerSynchronizer.__name__))
-    logger.info(u'TPM Partners synced successfully for {}.'.format(u', '.join(processed)))
+            logger.exception("{} sync failed".format(TPMPartnerSynchronizer.__name__))
+    logger.info('TPM Partners synced successfully for {}.'.format(', '.join(processed)))

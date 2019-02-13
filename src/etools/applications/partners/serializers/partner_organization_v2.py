@@ -368,7 +368,7 @@ class PartnerOrganizationCreateUpdateSerializer(SnapshotModelSerializer):
         extra_kwargs = {
             "partner_type": {
                 "error_messages": {
-                    "null": u'Vendor number must belong to PRG2 account group'
+                    "null": 'Vendor number must belong to PRG2 account group'
                 }
             }
         }

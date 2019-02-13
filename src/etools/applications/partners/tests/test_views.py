@@ -559,7 +559,7 @@ class TestAgreementAPIFileAttachments(BaseTenantTestCase):
 
         # Now add an attachment. Note that in Python 2, the content must be str, in Python 3 the content must be
         # bytes. I think the existing code is compatible with both.
-        self.agreement.attached_agreement = SimpleUploadedFile('hello_world.txt', u'hello world!'.encode('utf-8'))
+        self.agreement.attached_agreement = SimpleUploadedFile('hello_world.txt', 'hello world!'.encode('utf-8'))
         self.agreement.save()
 
         response_json = self._get_and_assert_response()
@@ -596,7 +596,7 @@ class TestAgreementAPIFileAttachments(BaseTenantTestCase):
 
         # Now add an amendment.
         amendment = AgreementAmendmentFactory(agreement=self.agreement, signed_amendment=None)
-        amendment.signed_amendment = SimpleUploadedFile('goodbye_world.txt', u'goodbye world!'.encode('utf-8'))
+        amendment.signed_amendment = SimpleUploadedFile('goodbye_world.txt', 'goodbye world!'.encode('utf-8'))
         amendment.save()
 
         response_json = self._get_and_assert_response()
@@ -1246,7 +1246,7 @@ class TestInterventionViews(BaseTenantTestCase):
             data=data
         )
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
-        self.assertEqual(response.data['detail'], u'Accessing this item is not allowed.')
+        self.assertEqual(response.data['detail'], 'Accessing this item is not allowed.')
 
     def test_intervention_retrieve_fr_numbers(self):
         self.fr_header_1.intervention = self.intervention_obj
@@ -1398,7 +1398,7 @@ class TestInterventionViews(BaseTenantTestCase):
         )
 
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
-        self.assertIn(u'Agreement selected is not of type SSFA', response.data)
+        self.assertIn('Agreement selected is not of type SSFA', response.data)
 
     def test_intervention_validation_doctype_ssfa(self):
         self.agreement.agreement_type = Agreement.SSFA
