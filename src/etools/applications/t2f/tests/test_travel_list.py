@@ -184,7 +184,7 @@ class TravelList(URLAssertionMixin, BaseTenantTestCase):
         # to see if all works (non-500)
         possible_sort_options = response_json['data'][0].keys()
         for sort_option in possible_sort_options:
-            log.debug(u'Trying to sort by %s', sort_option)
+            log.debug('Trying to sort by %s', sort_option)
             self.forced_auth_req('get', reverse('t2f:travels:list:index'), data={'sort_by': sort_option,
                                                                                  'reverse': False},
                                  user=self.unicef_staff)

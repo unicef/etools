@@ -1,3 +1,4 @@
+import datetime
 from django.apps import apps
 from django.utils.lru_cache import lru_cache
 from django.utils.translation import ugettext as _
@@ -125,7 +126,8 @@ class InterventionPermissions(PMPPermissions):
             'prp_mode_off': prp_mode_off(),
             'prp_server_on': prp_server_on(),
             'user_adds_amendment+prp_mode_on': user_added_amendment(self.instance) and not prp_mode_off(),
-            'termination_doc_attached': self.instance.termination_doc_attachment.exists()
+            'termination_doc_attached': self.instance.termination_doc_attachment.exists(),
+            'not_ended': self.instance.end >= datetime.datetime.now().date() if self.instance.end else False
         }
 
 

@@ -1180,7 +1180,7 @@ class TestEngagementAttachmentsView(MATransitionsTestCaseMixin, BaseTenantTestCa
             request_format='multipart',
             data={
                 'file_type': AttachmentFileTypeFactory(code='audit_engagement').id,
-                'file': SimpleUploadedFile('hello_world.txt', u'hello world!'.encode('utf-8')),
+                'file': SimpleUploadedFile('hello_world.txt', 'hello world!'.encode('utf-8')),
             }
         )
         self.assertEqual(create_response.status_code, status.HTTP_201_CREATED)
@@ -1225,7 +1225,7 @@ class TestEngagementReportAttachmentsView(MATransitionsTestCaseMixin, BaseTenant
             request_format='multipart',
             data={
                 'file_type': AttachmentFileTypeFactory(code='audit_report').id,
-                'file': SimpleUploadedFile('hello_world.txt', u'hello world!'.encode('utf-8')),
+                'file': SimpleUploadedFile('hello_world.txt', 'hello world!'.encode('utf-8')),
             }
         )
         self.assertEqual(create_response.status_code, status.HTTP_201_CREATED)

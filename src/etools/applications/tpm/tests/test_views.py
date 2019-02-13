@@ -663,7 +663,7 @@ class TestPartnerAttachmentsView(TPMTestCaseMixin, BaseTenantTestCase):
             request_format='multipart',
             data={
                 'file_type': AttachmentFileTypeFactory(code='tpm_partner').id,
-                'file': SimpleUploadedFile('hello_world.txt', u'hello world!'.encode('utf-8')),
+                'file': SimpleUploadedFile('hello_world.txt', 'hello world!'.encode('utf-8')),
             }
         )
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
@@ -678,7 +678,7 @@ class TestPartnerAttachmentsView(TPMTestCaseMixin, BaseTenantTestCase):
             request_format='multipart',
             data={
                 'file_type': AttachmentFileTypeFactory(code='tpm_partner').id,
-                'file': SimpleUploadedFile('hello_world.txt', u'hello world!'.encode('utf-8')),
+                'file': SimpleUploadedFile('hello_world.txt', 'hello world!'.encode('utf-8')),
             }
         )
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
@@ -703,7 +703,7 @@ class TestVisitAttachmentsView(TPMTestCaseMixin, BaseTenantTestCase):
             request_format='multipart',
             data={
                 'file_type': AttachmentFileTypeFactory(code='tpm').id,
-                'file': SimpleUploadedFile('hello_world.txt', u'hello world!'.encode('utf-8')),
+                'file': SimpleUploadedFile('hello_world.txt', 'hello world!'.encode('utf-8')),
             }
         )
         self.assertEqual(create_response.status_code, status.HTTP_201_CREATED)
@@ -736,7 +736,7 @@ class TestVisitReportAttachmentsView(TPMTestCaseMixin, BaseTenantTestCase):
             request_format='multipart',
             data={
                 'file_type': AttachmentFileTypeFactory(code='tpm_report_attachments').id,
-                'file': SimpleUploadedFile('hello_world.txt', u'hello world!'.encode('utf-8')),
+                'file': SimpleUploadedFile('hello_world.txt', 'hello world!'.encode('utf-8')),
             }
         )
         self.assertEqual(create_response.status_code, status.HTTP_201_CREATED)
@@ -771,7 +771,7 @@ class TestActivityAttachmentsView(TPMTestCaseMixin, BaseTenantTestCase):
             data={
                 'object_id': self.activity.id,
                 'file_type': AttachmentFileTypeFactory(code='tpm').id,
-                'file': SimpleUploadedFile('hello_world.txt', u'hello world!'.encode('utf-8')),
+                'file': SimpleUploadedFile('hello_world.txt', 'hello world!'.encode('utf-8')),
             }
         )
         self.assertEqual(create_response.status_code, status.HTTP_201_CREATED)
@@ -806,7 +806,7 @@ class TestActivityReportAttachmentsView(TPMTestCaseMixin, BaseTenantTestCase):
             data={
                 'object_id': self.activity.id,
                 'file_type': AttachmentFileTypeFactory(code='tpm_report').id,
-                'file': SimpleUploadedFile('hello_world.txt', u'hello world!'.encode('utf-8')),
+                'file': SimpleUploadedFile('hello_world.txt', 'hello world!'.encode('utf-8')),
             }
         )
         self.assertEqual(create_response.status_code, status.HTTP_201_CREATED)

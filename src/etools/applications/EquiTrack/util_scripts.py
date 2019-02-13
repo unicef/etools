@@ -21,7 +21,7 @@ def printtf(*args):
 
 def set_country(name):
     connection.set_tenant(Country.objects.get(name=name))
-    logger.info(u'Set in {} workspace'.format(name))
+    logger.info('Set in {} workspace'.format(name))
 
 
 def local_country_keep():
@@ -56,4 +56,4 @@ def create_test_user(email, password):
     userp.country = country
     userp.country_override = country
     userp.save()
-    logger.info(u"user {} created".format(u.email))
+    logger.info("user {} created".format(u.email))

@@ -17,7 +17,7 @@ class Command(BaseCommand):
     @transaction.atomic
     def handle(self, *args, **options):
 
-        logger.info(u'Command started')
+        logger.info('Command started')
 
         countries = Country.objects.exclude(name__iexact='global')
         if options['schema']:
@@ -31,8 +31,8 @@ class Command(BaseCommand):
                                 ])
         for country in countries:
             connection.set_tenant(country)
-            logger.info(u'Clear table for %s' % country.name)
+            logger.info('Clear table for %s' % country.name)
             with connection.cursor() as cursor:
                 cursor.execute("DELETE FROM django_migrations WHERE app IN ({})".format(etools_apps))
 
-        logger.info(u'Command finished')
+        logger.info('Command finished')
