@@ -1,7 +1,6 @@
 {% extends "admin/change_form.html" %}{% load i18n etools %}
 {% block object-tools-items %}
     {{ block.super }}
-    {% vision_url %}
     <li><a target='_blank' href="{% vision_url %}GetPartnerDetailsInfo_xml/{{original.business_area_code}}" style="background-color:#96c525">{% trans "API Partner" %}</a></li>
     <li><a target='_blank' href="{% vision_url %}GetProgrammeStructureList_xml/{{original.business_area_code}}" style="background-color:#96c525">{% trans "API Programme" %}</a></li>
     <li><a target='_blank' href="{% vision_url %}GetRAMInfo_xml/{{original.business_area_code}}" style="background-color:#96c525">{% trans "API RAM" %}</a></li>
