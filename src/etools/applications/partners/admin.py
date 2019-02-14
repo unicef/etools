@@ -1,6 +1,4 @@
-from django import forms
 from django.contrib import admin
-from django.contrib.contenttypes.models import ContentType
 from django.db import models
 from django.forms import SelectMultiple
 from django.urls import reverse
@@ -9,7 +7,6 @@ from django.utils.translation import ugettext_lazy as _
 
 from import_export.admin import ExportMixin
 from unicef_attachments.admin import AttachmentSingleInline
-from unicef_attachments.models import Attachment
 from unicef_snapshot.admin import ActivityInline, SnapshotModelAdmin
 
 from etools.applications.partners.exports import PartnerExport
@@ -34,6 +31,7 @@ from etools.applications.partners.models import (  # TODO intervention sector lo
     PartnerStaffMember,
     PlannedEngagement,
 )
+
 
 class AttachmentSingleInline(AttachmentSingleInline):
     def get_queryset(self, request):
