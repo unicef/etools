@@ -200,9 +200,17 @@ class InterventionResultsLinkAdmin(admin.ModelAdmin):
 class PRCReviewAttachmentInline(AttachmentSingleInline):
     verbose_name_plural = _("Review Document by PRC")
 
+    def get_queryset(self, request):
+        qs = super().get_queryset(request)
+        return qs.filter(code='partners_intervention_prc_review')
+
 
 class SignedPDAttachmentInline(AttachmentSingleInline):
     verbose_name_plural = _("Signed PD Document")
+
+    def get_queryset(self, request):
+        qs = super().get_queryset(request)
+        return qs.filter(code='partners_intervention_signed_pd')
 
 
 class InterventionAdmin(CountryUsersAdminMixin, HiddenPartnerMixin, SnapshotModelAdmin):
@@ -236,6 +244,8 @@ class InterventionAdmin(CountryUsersAdminMixin, HiddenPartnerMixin, SnapshotMode
     readonly_fields = (
         'total_budget',
         'attachments_link',
+        'prc_review_document',
+        'signed_pd_document',
     )
     filter_horizontal = (
         'sections',
@@ -321,6 +331,7 @@ class InterventionAdmin(CountryUsersAdminMixin, HiddenPartnerMixin, SnapshotMode
                     defaults={
                         "file": instance.attachment,
                         "uploaded_by": request.user,
+                        "code": instance.attachment_file.core_filters["code"],
                     }
                 )
 
