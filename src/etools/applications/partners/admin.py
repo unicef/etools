@@ -1,3 +1,4 @@
+from django import forms
 from django.contrib import admin
 from django.contrib.contenttypes.models import ContentType
 from django.db import models
@@ -34,15 +35,43 @@ from etools.applications.partners.models import (  # TODO intervention sector lo
     PlannedEngagement,
 )
 
+class AttachmentSingleInline(AttachmentSingleInline):
+    def get_queryset(self, request):
+        qs = super().get_queryset(request)
+        return qs.filter(code=self.code)
 
-class InterventionAmendmentAttachmentFileInline(AttachmentSingleInline):
-    verbose_name_plural = _("Attachment")
+    def get_formset(self, request, obj=None, **kwargs):
+        formset = super().get_formset(request, obj, **kwargs)
+        formset.code = self.code
+        return formset
+
+    def has_add_permission(self, request):
+        return True
 
 
-class InterventionAmendmentsAdmin(admin.ModelAdmin):
+class AttachmentInlineAdminMixin:
+    def save_formset(self, request, form, formset, change):
+        instances = formset.save()
+        for instance in instances:
+            instance.code = formset.code
+            instance.save()
+
+
+class InterventionAmendmentSignedInline(AttachmentSingleInline):
+    verbose_name_plural = _("Signed Attachment")
+    code = 'partners_intervention_amendment_signed'
+
+
+class InterventionAmendmentPRCReviewInline(AttachmentSingleInline):
+    verbose_name_plural = _("PRC Reviewed Attachment")
+    code = 'partners_intervention_amendment_internal_prc_review'
+
+
+class InterventionAmendmentsAdmin(AttachmentInlineAdminMixin, admin.ModelAdmin):
     model = InterventionAmendment
     readonly_fields = [
         'amendment_number',
+        'signed_amendment',
     ]
     list_display = (
         'intervention',
@@ -55,7 +84,8 @@ class InterventionAmendmentsAdmin(admin.ModelAdmin):
         'types'
     )
     inlines = [
-        InterventionAmendmentAttachmentFileInline,
+        InterventionAmendmentSignedInline,
+        InterventionAmendmentPRCReviewInline,
     ]
 
     def has_delete_permission(self, request, obj=None):
@@ -136,9 +166,10 @@ class InterventionPlannedVisitsInline(admin.TabularInline):
 
 class AttachmentFileInline(AttachmentSingleInline):
     verbose_name_plural = _("Attachment")
+    code = 'partners_intervention_attachment'
 
 
-class InterventionAttachmentAdmin(admin.ModelAdmin):
+class InterventionAttachmentAdmin(AttachmentInlineAdminMixin, admin.ModelAdmin):
     model = InterventionAttachment
     list_display = (
         'intervention',
@@ -155,13 +186,6 @@ class InterventionAttachmentAdmin(admin.ModelAdmin):
     inlines = [
         AttachmentFileInline,
     ]
-
-    def attachment_file(self, obj):
-        content_type = ContentType.objects.get_for_model(obj)
-        return Attachment.objects.get(
-            object_id=obj.pk,
-            content_type=content_type
-        )
 
 
 class InterventionAttachmentsInline(admin.TabularInline):
@@ -199,21 +223,20 @@ class InterventionResultsLinkAdmin(admin.ModelAdmin):
 
 class PRCReviewAttachmentInline(AttachmentSingleInline):
     verbose_name_plural = _("Review Document by PRC")
-
-    def get_queryset(self, request):
-        qs = super().get_queryset(request)
-        return qs.filter(code='partners_intervention_prc_review')
+    code = 'partners_intervention_prc_review'
 
 
 class SignedPDAttachmentInline(AttachmentSingleInline):
     verbose_name_plural = _("Signed PD Document")
-
-    def get_queryset(self, request):
-        qs = super().get_queryset(request)
-        return qs.filter(code='partners_intervention_signed_pd')
+    code = 'partners_intervention_signed_pd'
 
 
-class InterventionAdmin(CountryUsersAdminMixin, HiddenPartnerMixin, SnapshotModelAdmin):
+class InterventionAdmin(
+        AttachmentInlineAdminMixin,
+        CountryUsersAdminMixin,
+        HiddenPartnerMixin,
+        SnapshotModelAdmin
+):
     model = Intervention
 
     date_hierarchy = 'start'
@@ -319,28 +342,13 @@ class InterventionAdmin(CountryUsersAdminMixin, HiddenPartnerMixin, SnapshotMode
 
     attachments_link.short_description = 'attachments'
 
-    def save_formset(self, request, form, formset, change):
-        instances = formset.save()
-        for instance in instances:
-            if isinstance(instance, InterventionAttachment):
-                # update attachment file data
-                content_type = ContentType.objects.get_for_model(instance)
-                Attachment.objects.update_or_create(
-                    object_id=instance.pk,
-                    content_type=content_type,
-                    defaults={
-                        "file": instance.attachment,
-                        "uploaded_by": request.user,
-                        "code": instance.attachment_file.core_filters["code"],
-                    }
-                )
-
 
 class AssessmentReportInline(AttachmentSingleInline):
     verbose_name_plural = _("Report")
+    code = 'partners_assessment_report'
 
 
-class AssessmentAdmin(admin.ModelAdmin):
+class AssessmentAdmin(AttachmentInlineAdminMixin, admin.ModelAdmin):
     model = Assessment
     fields = (
         'partner',
@@ -557,9 +565,10 @@ class PlannedEngagementAdmin(admin.ModelAdmin):
 
 class SignedAmendmentInline(AttachmentSingleInline):
     verbose_name_plural = _("Signed Amendment")
+    code = 'partners_agreement_amendment'
 
 
-class AgreementAmendmentAdmin(admin.ModelAdmin):
+class AgreementAmendmentAdmin(AttachmentInlineAdminMixin, admin.ModelAdmin):
     model = AgreementAmendment
     fields = (
         'agreement',
@@ -597,9 +606,16 @@ class AgreementAmendmentAdmin(admin.ModelAdmin):
 
 class AgreementAttachmentInline(AttachmentSingleInline):
     verbose_name_plural = _('Attachment')
+    code = 'partners_agreement'
 
 
-class AgreementAdmin(ExportMixin, HiddenPartnerMixin, CountryUsersAdminMixin, SnapshotModelAdmin):
+class AgreementAdmin(
+        AttachmentInlineAdminMixin,
+        ExportMixin,
+        HiddenPartnerMixin,
+        CountryUsersAdminMixin,
+        SnapshotModelAdmin,
+):
 
     list_filter = (
         'partner',
