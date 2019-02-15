@@ -5,9 +5,9 @@ from django.contrib.auth import get_user_model
 from rest_framework import status
 from rest_framework.exceptions import ValidationError
 from rest_framework.generics import ListAPIView, RetrieveAPIView
+from rest_framework.permissions import IsAdminUser
 from rest_framework.response import Response
 
-from etools.applications.EquiTrack.permissions import IsSuperUserOrStaff
 from etools.applications.users import views as v1, views_v2 as v2
 from etools.applications.users.serializers_v3 import (
     CountryDetailSerializer,
@@ -59,7 +59,7 @@ class UsersListAPIView(ListAPIView):
     """
     model = get_user_model()
     serializer_class = MinimalUserSerializer
-    permission_classes = (IsSuperUserOrStaff, )
+    permission_classes = (IsAdminUser, )
 
     def get_queryset(self, pk=None):
         user = self.request.user

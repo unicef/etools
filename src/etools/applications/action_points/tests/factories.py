@@ -6,13 +6,13 @@ from django.utils import timezone
 import factory.fuzzy
 from django_comments.models import Comment
 
-from etools.applications.EquiTrack.utils import get_current_site
 from etools.applications.action_points.models import ActionPoint
 from etools.applications.action_points.categories.models import Category
 from etools.applications.firms.tests.factories import BaseUserFactory
 from unicef_locations.tests.factories import LocationFactory
 from etools.applications.partners.tests.factories import InterventionFactory, ResultFactory
 from etools.applications.reports.tests.factories import SectionFactory
+from etools.libraries.djangolib.utils import get_current_site
 from etools.libraries.tests.factories import InheritedTrait
 
 

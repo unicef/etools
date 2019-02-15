@@ -5,22 +5,6 @@ from rest_framework import serializers
 from etools.applications.t2f.models import TravelAttachment
 
 
-class YesOrEmptyField(serializers.BooleanField):
-    def to_representation(self, value):
-        value = super().to_representation(value)
-        if value:
-            return _('Yes')
-        return ''
-
-
-class YesOrNoField(serializers.BooleanField):
-    def to_representation(self, value):
-        value = super().to_representation(value)
-        if value:
-            return _('Yes')
-        return _('No')
-
-
 class TravelActivityExportSerializer(serializers.Serializer):
     reference_number = serializers.CharField(source='travel.reference_number', read_only=True)
     traveler = serializers.CharField(source='travel.traveler.get_full_name', read_only=True)
@@ -83,47 +67,7 @@ class TravelActivityExportSerializer(serializers.Serializer):
         return "Yes" if TravelAttachment.objects.filter(
             travel=obj.travel,
             type__istartswith="HACT Programme Monitoring",
-        ).exists() else "No"
-
-
-class FinanceExportSerializer(serializers.Serializer):
-    reference_number = serializers.CharField()
-    traveler = serializers.CharField(source='traveler.get_full_name', read_only=True)
-    office = serializers.CharField(source='office.name', read_only=True)
-    section = serializers.CharField(source='section.name', read_only=True)
-    status = serializers.CharField()
-    supervisor = serializers.CharField(source='supervisor.get_full_name', read_only=True)
-    start_date = serializers.DateTimeField(format='%d-%b-%Y')
-    end_date = serializers.DateTimeField(format='%d-%b-%Y')
-    purpose_of_travel = serializers.CharField(source='purpose')
-    mode_of_travel = serializers.SerializerMethodField()
-    international_travel = YesOrNoField()
-    require_ta = YesOrNoField(source='ta_required')
-    dsa_total = serializers.DecimalField(source='cost_summary.dsa_total', max_digits=20, decimal_places=2,
-                                         read_only=True)
-    expense_total = serializers.SerializerMethodField()
-    deductions_total = serializers.DecimalField(
-        source='cost_summary.deductions_total', max_digits=20, decimal_places=2, read_only=True)
-
-    class Meta:
-        fields = ('reference_number', 'traveler', 'office', 'section', 'status', 'supervisor', 'start_date',
-                  'end_date', 'purpose_of_travel', 'mode_of_travel', 'international_travel', 'require_ta', 'dsa_total',
-                  'expense_total', 'deductions_total')
-
-    def get_mode_of_travel(self, obj):
-        if obj.mode_of_travel:
-            return ', '.join(obj.mode_of_travel)
-        return ''
-
-    def get_expense_total(self, obj):
-        ret = []
-        for expense in obj.cost_summary['expenses_total']:
-            if not expense['currency']:
-                continue
-
-            ret.append('{amount:.{currency.decimal_places}f} {currency.code}'.format(amount=expense['amount'],
-                                                                                     currency=expense['currency']))
-        return '+'.join(ret)
+        ).exists() else ""
 
 
 class TravelAdminExportSerializer(serializers.Serializer):
@@ -137,7 +81,7 @@ class TravelAdminExportSerializer(serializers.Serializer):
     departure_time = serializers.DateTimeField(source='departure_date', format='%d-%b-%Y %I:%M %p')
     arrival_time = serializers.DateTimeField(source='arrival_date', format='%d-%b-%Y %I:%M %p')
     dsa_area = serializers.CharField(source='dsa_region.area_code', read_only=True)
-    overnight_travel = YesOrEmptyField()
+    overnight_travel = serializers.BooleanField()
     mode_of_travel = serializers.CharField()
     airline = serializers.SerializerMethodField()
 

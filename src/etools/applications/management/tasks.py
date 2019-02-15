@@ -130,7 +130,7 @@ def pmp_indicator_report(writer, **kwargs):
 
     for country in qs:
         set_country(country.name)
-        logger.info(u'Running on %s' % country.name)
+        logger.info('Running on %s' % country.name)
         for partner in PartnerOrganization.objects.prefetch_related('core_values_assessments'):
             for intervention in Intervention.objects.filter(
                     agreement__partner=partner).select_related('planned_budget'):
@@ -155,7 +155,7 @@ def pmp_indicator_report(writer, **kwargs):
                     'Unicef Cash': intervention.planned_budget.unicef_cash if planned_budget else '-',
                     'In kind Amount': intervention.planned_budget.in_kind_amount if planned_budget else '-',
                     'Total': intervention.planned_budget.total if planned_budget else '-',
-                    'FR numbers against PD / SSFA': u' - '.join([fh.fr_number for fh in intervention.frs.all()]),
+                    'FR numbers against PD / SSFA': ' - '.join([fh.fr_number for fh in intervention.frs.all()]),
                     'FR currencies': ', '.join(fr for fr in fr_currencies),
                     'Sum of all FR planned amount': intervention.frs.aggregate(
                         total=Coalesce(Sum('intervention_amt'), 0))['total'] if fr_currencies.count() <= 1 else '-',

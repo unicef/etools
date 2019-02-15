@@ -91,6 +91,7 @@ Field no,Field Name,Group,Condition,Status,Action,Allowed
 3.13.1,reporting_requirements,Partnership Manager,prp_mode_on,Draft,Edit,TRUE
 3.13.1,reporting_requirements,Partnership Manager,prp_mode_on+contingency_on,Signed,Edit,TRUE
 3.13.1,reporting_requirements,Partnership Manager,user_adds_amendment+prp_mode_on,*,Edit,TRUE
+3.13.1,reporting_requirements,Partnership Manager,not_ended,Terminated,Edit,TRUE
 3.13.1,reporting_requirements,Partnership Manager,termination_doc_attached,Active,Edit,TRUE
 3.13.1,reporting_requirements,Partnership Manager,termination_doc_attached,Signed,Edit,TRUE
 3.13.1,reporting_requirements,UNICEF User,prp_server_on,*,View,TRUE
