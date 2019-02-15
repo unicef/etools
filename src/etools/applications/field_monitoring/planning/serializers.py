@@ -17,6 +17,7 @@ from etools.applications.field_monitoring.fm_settings.serializers.cp_outputs imp
 from etools.applications.field_monitoring.fm_settings.serializers.locations import LocationSiteLightSerializer
 from etools.applications.permissions_simplified.serializers import SafeReadOnlySerializerMixin
 from etools.applications.publics.models import EPOCH_ZERO
+from etools.applications.reports.serializers.v1 import SectionSerializer
 
 
 class YearPlanSerializer(WritableNestedSerializerMixin, SafeReadOnlySerializerMixin, SnapshotModelSerializer):
@@ -60,12 +61,13 @@ class TaskListSerializer(serializers.ModelSerializer):
     location = SeparatedReadWriteField(read_field=LocationLightSerializer())
     location_site = SeparatedReadWriteField(read_field=LocationSiteLightSerializer())
     completed_by_month = serializers.SerializerMethodField()
+    sections = SeparatedReadWriteField(read_field=SectionSerializer(many=True))
 
     class Meta:
         model = Task
         fields = (
             'id', 'cp_output_config', 'partner', 'intervention', 'location', 'location_site',
-            'plan_by_month', 'completed_by_month',
+            'plan_by_month', 'completed_by_month', 'sections',
         )
 
     def validate_plan_by_month(self, plan):

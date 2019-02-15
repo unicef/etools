@@ -13,6 +13,7 @@ from etools.applications.field_monitoring.fm_settings.models import CPOutputConf
 from etools.applications.partners.models import Intervention
 from etools.applications.permissions_simplified.serializers import SafeReadOnlySerializerMixin
 from etools.applications.reports.models import Result
+from etools.applications.reports.serializers.v1 import SectionSerializer
 from etools.applications.reports.serializers.v2 import OutputListSerializer
 from etools.applications.utils.common.urlresolvers import build_frontend_url
 
@@ -50,10 +51,14 @@ class CPOutputConfigSerializer(serializers.ModelSerializer):
         read_field=FMMethodTypeSerializer(many=True),
         label=_('Method(s)')
     )
+    sections = SeparatedReadWriteField(read_field=SectionSerializer(many=True))
 
     class Meta:
         model = CPOutputConfig
-        fields = ('id', 'cp_output', 'is_monitored', 'is_priority', 'government_partners', 'recommended_method_types')
+        fields = (
+            'id', 'cp_output', 'is_monitored', 'is_priority', 'government_partners',
+            'recommended_method_types', 'sections',
+        )
         extra_kwargs = {
             'id': {'read_only': True},
             'cp_output': {'read_only': True, 'label': _('CP Output')}

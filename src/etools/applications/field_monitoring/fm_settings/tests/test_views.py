@@ -22,7 +22,7 @@ from etools.applications.field_monitoring.visits.tests.factories import VisitFac
 from etools.applications.partners.models import PartnerType
 from etools.applications.partners.tests.factories import PartnerFactory, InterventionFactory
 from etools.applications.reports.models import ResultType
-from etools.applications.reports.tests.factories import ResultFactory
+from etools.applications.reports.tests.factories import ResultFactory, SectionFactory
 from etools.applications.utils.common.tests.test_utils import TestExportMixin
 
 
@@ -515,13 +515,17 @@ class CPOutputsViewTestCase(FMBaseTestCaseMixin, BaseTenantTestCase):
             data={
                 'fm_config': {
                     'is_monitored': True,
-                    'government_partners': [PartnerFactory(partner_type=PartnerType.GOVERNMENT).id]
+                    'government_partners': [PartnerFactory(partner_type=PartnerType.GOVERNMENT).id],
+                    'sections': [SectionFactory().id],
                 }
             }
         )
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertTrue(CPOutputConfig.objects.filter(cp_output=cp_output).exists())
+
+        fm_config = CPOutputConfig.objects.filter(cp_output=cp_output).first()
+        self.assertIsNotNone(fm_config)
+        self.assertEqual(fm_config.sections.count(), 1)
 
     def test_create_unicef(self):
         cp_output = ResultFactory(result_type__name=ResultType.OUTPUT)

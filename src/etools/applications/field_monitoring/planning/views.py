@@ -21,6 +21,7 @@ from etools.applications.field_monitoring.metadata import PermissionBasedMetadat
 from etools.applications.field_monitoring.permissions import UserIsFieldMonitor
 from etools.applications.field_monitoring.planning.export.renderers import TaskCSVRenderer
 from etools.applications.field_monitoring.planning.export.serializers import TaskExportSerializer
+from etools.applications.field_monitoring.planning.filters import TaskSectionsFilter
 from etools.applications.field_monitoring.planning.models import YearPlan, Task
 from etools.applications.field_monitoring.planning.serializers import YearPlanSerializer, TaskSerializer, \
     TaskListSerializer
@@ -76,8 +77,8 @@ class YearPlanViewSet(
 class TaskViewSet(SimplePermittedViewSetMixin, FMBaseViewSet, viewsets.ModelViewSet):
     metadata_class = PermissionBasedMetadata
     queryset = Task.objects.prefetch_related(
-        'cp_output_config', 'cp_output_config__cp_output',
-        'partner', 'intervention', 'location', 'location_site',
+        'cp_output_config', 'cp_output_config__cp_output', 'cp_output_config__sections',
+        'partner', 'intervention', 'location', 'location_site', 'sections',
         Prefetch(
             'visits',
             Visit.objects.filter(status=Visit.STATUS_CHOICES.finalized),
@@ -85,11 +86,11 @@ class TaskViewSet(SimplePermittedViewSetMixin, FMBaseViewSet, viewsets.ModelView
         )
     )
     serializer_class = TaskSerializer
-    filter_backends = (DjangoFilterBackend, CPOutputIsActiveFilter, OrderingFilter)
+    filter_backends = (TaskSectionsFilter, DjangoFilterBackend, CPOutputIsActiveFilter, OrderingFilter)
     filter_fields = ({
         field: ['exact', 'in'] for field in [
             'cp_output_config__cp_output__parent',
-            'cp_output_config', 'partner', 'intervention', 'location', 'location_site'
+            'cp_output_config', 'partner', 'intervention', 'location', 'location_site',
         ]
     })
     filter_fields['cp_output_config__is_priority'] = ['exact']
