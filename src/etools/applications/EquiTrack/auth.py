@@ -84,11 +84,12 @@ def user_details(strategy, details, user=None, *args, **kwargs):
         if not user.profile.country:
             user.profile.country = country
             user.profile.save()
-        elif not user.profile.country_override:
-            # make sure that we update the workspace based business area
-            if business_area_code != user.profile.country.business_area_code:
-                user.profile.country = country
-                user.profile.save()
+        # TODO: Hotfix. details not providing business area code
+        # elif not user.profile.country_override:
+        #     # make sure that we update the workspace based business area
+        #     if business_area_code != user.profile.country.business_area_code:
+        #         user.profile.country = country
+        #         user.profile.save()
 
     return social_core_user.user_details(strategy, details, user, *args, **kwargs)
 
