@@ -36,7 +36,6 @@ class TravelList(URLAssertionMixin, BaseTenantTestCase):
             ('state_change', 'save_and_submit/', {'transition_name': 'save_and_submit'}),
             ('state_change', 'mark_as_completed/', {'transition_name': Travel.COMPLETE}),
             ('activity_export', 'export/', {}),
-            ('finance_export', 'finance-export/', {}),
             ('travel_admin_export', 'travel-admin-export/', {}),
             ('activities', 'activities/1/', {'partner_organization_pk': 1}),
             ('activities-intervention', 'activities/partnership/1/', {'partnership_pk': 1}),
@@ -184,7 +183,7 @@ class TravelList(URLAssertionMixin, BaseTenantTestCase):
         # to see if all works (non-500)
         possible_sort_options = response_json['data'][0].keys()
         for sort_option in possible_sort_options:
-            log.debug(u'Trying to sort by %s', sort_option)
+            log.debug('Trying to sort by %s', sort_option)
             self.forced_auth_req('get', reverse('t2f:travels:list:index'), data={'sort_by': sort_option,
                                                                                  'reverse': False},
                                  user=self.unicef_staff)

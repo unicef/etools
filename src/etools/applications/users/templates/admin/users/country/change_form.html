@@ -1,12 +1,12 @@
-{% extends "admin/change_form.html" %}{% load i18n %}
+{% extends "admin/change_form.html" %}{% load i18n etools %}
 {% block object-tools-items %}
     {{ block.super }}
-    <li><a target='_blank' href="https://devapis.unicef.org/BIService/BIWebService.svc/GetPartnerDetailsInfo_xml/{{original.business_area_code}}" style="background-color:#96c525">{% trans "API Partner" %}</a></li>
-    <li><a target='_blank' href="https://devapis.unicef.org/BIService/BIWebService.svc/GetProgrammeStructureList_xml/{{original.business_area_code}}" style="background-color:#96c525">{% trans "API Programme" %}</a></li>
-    <li><a target='_blank' href="https://devapis.unicef.org/BIService/BIWebService.svc/GetRAMInfo_xml/{{original.business_area_code}}" style="background-color:#96c525">{% trans "API RAM" %}</a></li>
-    <li><a target='_blank' href="https://devapis.unicef.org/BIService/BIWebService.svc/GetFundsReservationInfo_xml/{{original.business_area_code}}" style="background-color:#96c525">{% trans "API Fund Reservation" %}</a></li>
-    <li><a target='_blank' href="https://devapis.unicef.org/BIService/BIWebService.svc/GetFundsCommitmentInfo_xml/{{original.business_area_code}}" style="background-color:#96c525">{% trans "API Fund Commitment" %}</a></li>
-    <li><a target='_blank' href="https://devapis.unicef.org/BIService/BIWebService.svc/GetDCTInfo_xml/{{original.business_area_code}}" style="background-color:#96c525">{% trans "API DCT" %}</a></li>
+    <li><a target='_blank' href="{% vision_url %}GetPartnerDetailsInfo_xml/{{original.business_area_code}}" style="background-color:#96c525">{% trans "API Partner" %}</a></li>
+    <li><a target='_blank' href="{% vision_url %}GetProgrammeStructureList_xml/{{original.business_area_code}}" style="background-color:#96c525">{% trans "API Programme" %}</a></li>
+    <li><a target='_blank' href="{% vision_url %}GetRAMInfo_xml/{{original.business_area_code}}" style="background-color:#96c525">{% trans "API RAM" %}</a></li>
+    <li><a target='_blank' href="{% vision_url %}GetFundsReservationInfo_xml/{{original.business_area_code}}" style="background-color:#96c525">{% trans "API Fund Reservation" %}</a></li>
+    <li><a target='_blank' href="{% vision_url %}GetFundsCommitmentInfo_xml/{{original.business_area_code}}" style="background-color:#96c525">{% trans "API Fund Commitment" %}</a></li>
+    <li><a target='_blank' href="{% vision_url %}GetDCTInfo_xml/{{original.business_area_code}}" style="background-color:#96c525">{% trans "API DCT" %}</a></li>
 
     <li><a href="{% url 'admin:users_country_partners' original.id %}" style="background-color:#0099ff">{% trans "Sync Partners" %}</a></li>
     <li><a href="{% url 'admin:users_country_programme' original.id %}" style="background-color:#0099ff">{% trans "Sync Programme" %}</a></li>

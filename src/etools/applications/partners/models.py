@@ -1100,7 +1100,7 @@ class Agreement(TimeStampedModel):
     MOU = 'MOU'
     SSFA = 'SSFA'
     AGREEMENT_TYPES = (
-        (PCA, u"Programme Cooperation Agreement"),
+        (PCA, "Programme Cooperation Agreement"),
         (SSFA, 'Small Scale Funding Agreement'),
         (MOU, 'Memorandum of Understanding'),
     )

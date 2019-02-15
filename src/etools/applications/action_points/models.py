@@ -11,12 +11,12 @@ from model_utils.models import TimeStampedModel
 from unicef_notification.models import Notification
 from unicef_snapshot.models import Activity
 
+from etools.applications.EquiTrack.urlresolvers import build_frontend_url
 from etools.applications.action_points.categories.models import Category
 from etools.applications.action_points.transitions.conditions import ActionPointCompleteActionsTakenCheck
 from etools.applications.action_points.transitions.serializers.serializers import ActionPointCompleteSerializer
-from etools.applications.EquiTrack.utils import get_environment
+from etools.libraries.djangolib.utils import get_environment
 from etools.libraries.fsm.views import has_action_permission
-from etools.applications.utils.common.urlresolvers import build_frontend_url
 from etools.libraries.djangolib.models import GroupWrapper
 
 

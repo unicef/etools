@@ -2,9 +2,10 @@ import string
 import uuid
 
 from django.urls import reverse
+
 from unicef_notification.utils import send_notification_with_template
 
-from etools.applications.EquiTrack.utils import get_environment
+from etools.libraries.djangolib.utils import get_environment
 
 
 def generate_username():

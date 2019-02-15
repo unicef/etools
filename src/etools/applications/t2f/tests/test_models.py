@@ -12,10 +12,10 @@ class TestStrUnicode(BaseTenantTestCase):
 
     def test_travel(self):
         instance = TravelFactory(reference_number='two')
-        self.assertEqual(str(instance), u'two')
+        self.assertEqual(str(instance), 'two')
 
-        instance = TravelFactory(reference_number=u'tv\xe5')
-        self.assertEqual(str(instance), u'tv\xe5')
+        instance = TravelFactory(reference_number='tv\xe5')
+        self.assertEqual(str(instance), 'tv\xe5')
 
     def test_travel_activity(self):
         tz = timezone.get_default_timezone()
@@ -43,13 +43,13 @@ class TestStrUnicode(BaseTenantTestCase):
     def test_itinerary_item(self):
         travel = TravelFactory()
         instance = ItineraryItemFactory(origin='here', destination='there', travel=travel)
-        self.assertTrue(str(instance).endswith(u'here - there'))
+        self.assertTrue(str(instance).endswith('here - there'))
 
-        instance = ItineraryItemFactory(origin='here', destination=u'G\xf6teborg', travel=travel)
-        self.assertTrue(str(instance).endswith(u'here - G\xf6teborg'))
+        instance = ItineraryItemFactory(origin='here', destination='G\xf6teborg', travel=travel)
+        self.assertTrue(str(instance).endswith('here - G\xf6teborg'))
 
-        instance = ItineraryItemFactory(origin=u'Przemy\u015bl', destination=u'G\xf6teborg', travel=travel)
-        self.assertTrue(str(instance).endswith(u'Przemy\u015bl - G\xf6teborg'))
+        instance = ItineraryItemFactory(origin='Przemy\u015bl', destination='G\xf6teborg', travel=travel)
+        self.assertTrue(str(instance).endswith('Przemy\u015bl - G\xf6teborg'))
 
 
 class TestTravelActivity(BaseTenantTestCase):

@@ -436,3 +436,50 @@ def send_agreement_suspended_notification(agreement, user):
             "pd_list": pd_list,  # section, pd_number, link
         }
     )
+
+
+def send_intervention_draft_notification():
+    """Send an email to PD/SHPD/SSFA's focal point(s) if in draft status"""
+    for intervention in Intervention.objects.filter(
+            status=Intervention.DRAFT,
+            created__lt=datetime.date.today() - datetime.timedelta(days=7),
+    ):
+        recipients = [
+            u.user.email for u in intervention.unicef_focal_points.all()
+            if u.user.email
+        ]
+        send_notification_with_template(
+            recipients=recipients,
+            template_name="partners/intervention/draft",
+            context={
+                "reference_number": intervention.reference_number,
+                "title": intervention.title,
+            }
+        )
+
+
+def send_intervention_past_start_notification():
+    """Send an email to PD/SHPD/SSFA's focal point(s) if signed
+    and start date is past with no FR added"""
+    intervention_qs = Intervention.objects.filter(
+        status=Intervention.SIGNED,
+        start__lt=datetime.date.today(),
+        frs__isnull=False,
+    )
+    for intervention in intervention_qs.all():
+        recipients = [
+            u.user.email for u in intervention.unicef_focal_points.all()
+            if u.user.email
+        ]
+        send_notification_with_template(
+            recipients=recipients,
+            template_name="partners/intervention/past-start",
+            context={
+                "reference_number": intervention.reference_number,
+                "title": intervention.title,
+                "url": "{}pmp/interventions/{}/details".format(
+                    settings.HOST,
+                    intervention.pk,
+                )
+            }
+        )
