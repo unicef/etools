@@ -125,7 +125,7 @@ PyPDF2 = "==1.26.0"
 PyYAML = "==3.12"
 unicef_attachments = "==0.4.2"
 unicef_notification = "==0.2.1"
-unicef_restlib = "==0.3.8"
+unicef_restlib = "==0.4"
 unicef_snapshot = "==0.2.2"
 Pillow = "==5.3.0"
 
