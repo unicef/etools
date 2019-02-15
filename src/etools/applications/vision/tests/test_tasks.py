@@ -143,7 +143,7 @@ class TestVisionSyncTask(SimpleTestCase):
         self.assertEqual(mock_logger.call_count, 1)
         # Verify that each processed country was sent in the message. For some reason, the public
         # tenant is not listed in this message even though it was synced.
-        expected_msg = u'Created tasks for the following countries: {} and synchronizers: {}'.format(
+        expected_msg = 'Created tasks for the following countries: {} and synchronizers: {}'.format(
             ',\n '.join([country.name for country in tenant_countries_used]),
             ',\n '.join([synchronizer for synchronizer in selected_synchronizers])
         )
