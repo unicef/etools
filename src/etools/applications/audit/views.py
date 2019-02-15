@@ -9,11 +9,12 @@ from django_filters.rest_framework import DjangoFilterBackend
 from easy_pdf.rendering import render_to_pdf_response
 from rest_framework import generics, mixins, viewsets
 from rest_framework.decorators import action
+from rest_framework.exceptions import NotFound
 from rest_framework.filters import OrderingFilter, SearchFilter
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.renderers import JSONRenderer
 from rest_framework.response import Response
-from unicef_attachments.models import Attachment
+from unicef_attachments.models import Attachment, AttachmentLink
 from unicef_restlib.pagination import DynamicPageNumberPagination
 from unicef_restlib.views import MultiSerializerViewSetMixin, NestedViewSetMixin, SafeTenantViewSetMixin
 
@@ -49,6 +50,14 @@ from etools.applications.audit.models import (
 )
 from etools.applications.audit.purchase_order.models import AuditorFirm, AuditorStaffMember, PurchaseOrder
 from etools.applications.audit.purchase_order.synchronizers import POSynchronizer
+from etools.applications.audit.serializers.attachments import (
+    AuditAttachmentLinkSerializer,
+    EngagementAttachmentLinkSerializer,
+    ListAttachmentLinkSerializer,
+    MicroAssessmentAttachmentLinkSerializer,
+    SpecialAuditAttachmentLinkSerializer,
+    SpotCheckAttachmentLinkSerializer,
+)
 from etools.applications.audit.serializers.auditor import (
     AuditorFirmLightSerializer,
     AuditorFirmSerializer,
@@ -592,3 +601,73 @@ class ReportAttachmentsViewSet(BaseAuditAttachmentsViewSet):
         filters = super().get_parent_filter()
         filters.update({'code': 'audit_report'})
         return filters
+
+
+class BaseAttachmentLinksView(generics.ListCreateAPIView):
+    metadata_class = PermissionBasedMetadata
+    permission_classes = [IsAuthenticated]
+
+    def get_content_type(self, model_name):
+        try:
+            return ContentType.objects.get_by_natural_key(
+                "audit",
+                model_name,
+            )
+        except ContentType.DoesNotExist:
+            raise NotFound()
+
+    def set_content_object(self):
+        self.content_type = self.get_content_type(self.content_model_name)
+
+        try:
+            self.object_id = self.kwargs.get("object_pk")
+            model_cls = self.content_type.model_class()
+            self.content_object = model_cls.objects.get(
+                pk=self.object_id
+            )
+        except model_cls.DoesNotExist:
+            raise NotFound()
+
+    def get_serializer_context(self):
+        self.set_content_object()
+        context = super().get_serializer_context()
+        context["content_type"] = self.content_type
+        context["object_id"] = self.object_id
+        return context
+
+    def get_queryset(self):
+        self.set_content_object()
+        return AttachmentLink.objects.filter(
+            content_type=self.content_type,
+            object_id=self.object_id,
+        )
+
+    def list(self, request, *args, **kwargs):
+        queryset = self.get_queryset()
+        serializer = ListAttachmentLinkSerializer(queryset, many=True)
+        return Response(serializer.data)
+
+
+class EngagementAttachmentLinksView(BaseAttachmentLinksView):
+    serializer_class = EngagementAttachmentLinkSerializer
+    content_model_name = "engagement"
+
+
+class SpotCheckAttachmentLinksView(BaseAttachmentLinksView):
+    serializer_class = SpotCheckAttachmentLinkSerializer
+    content_model_name = "spotcheck"
+
+
+class MicroAssessmentAttachmentLinksView(BaseAttachmentLinksView):
+    serializer_class = MicroAssessmentAttachmentLinkSerializer
+    content_model_name = "microassessment"
+
+
+class AuditAttachmentLinksView(BaseAttachmentLinksView):
+    serializer_class = AuditAttachmentLinkSerializer
+    content_model_name = "audit"
+
+
+class SpecialAuditAttachmentLinksView(BaseAttachmentLinksView):
+    serializer_class = SpecialAuditAttachmentLinkSerializer
+    content_model_name = "specialaudit"
