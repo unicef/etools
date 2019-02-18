@@ -81,7 +81,7 @@ class TaskViewSet(SimplePermittedViewSetMixin, FMBaseViewSet, viewsets.ModelView
         'partner', 'intervention', 'location', 'location_site', 'sections',
         Prefetch(
             'visits',
-            Visit.objects.filter(status=Visit.STATUS_CHOICES.finalized),
+            Visit.objects.filter(status=Visit.STATUS_CHOICES.completed),
             to_attr='completed_visits'
         )
     )

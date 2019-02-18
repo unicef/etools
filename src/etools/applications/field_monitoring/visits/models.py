@@ -44,14 +44,24 @@ class Visit(InheritedModelMixin, SoftDeleteMixin, TimeStampedModel):
     STATUS_CHOICES = Choices(
         ('draft', _('Draft')),
         ('assigned', _('Assigned')),
-        ('finalized', _('Finalized')),
+        ('accepted', _('Accepted')),
+        ('rejected', _('Rejected')),
+        ('ready', _('Ready')),
+        ('reported', _('Reported')),
+        ('report_rejected', _('Report Rejected')),
+        ('completed', _('Completed')),
         ('cancelled', _('Cancelled')),
     )
 
     STATUSES_DATES = {
         STATUS_CHOICES.draft: 'date_created',
         STATUS_CHOICES.assigned: 'date_assigned',
-        STATUS_CHOICES.finalized: 'date_finalized',
+        STATUS_CHOICES.accepted: 'date_accepted',
+        STATUS_CHOICES.rejected: 'date_rejected',
+        STATUS_CHOICES.ready: 'date_ready',
+        STATUS_CHOICES.reported: 'date_reported',
+        STATUS_CHOICES.report_rejected: 'date_report_rejected',
+        STATUS_CHOICES.completed: 'date_completed',
         STATUS_CHOICES.cancelled: 'date_cancelled',
     }
 
@@ -84,10 +94,27 @@ class Visit(InheritedModelMixin, SoftDeleteMixin, TimeStampedModel):
 
     date_assigned = MonitorField(verbose_name=_('Date Visit Assigned'), null=True, blank=True, default=None,
                                  monitor='status', when=[STATUS_CHOICES.assigned])
-    date_finalized = MonitorField(verbose_name=_('Date Visit Finalized'), null=True, blank=True, default=None,
-                                  monitor='status', when=[STATUS_CHOICES.finalized])
+    date_accepted = MonitorField(verbose_name=_('Date Visit Accepted'), null=True, blank=True, default=None,
+                                 monitor='status', when=[STATUS_CHOICES.accepted])
+    date_rejected = MonitorField(verbose_name=_('Date Visit Rejected'), null=True, blank=True, default=None,
+                                 monitor='status', when=[STATUS_CHOICES.rejected])
+    date_ready = MonitorField(verbose_name=_('Date Visit Marked as Ready'), null=True, blank=True, default=None,
+                              monitor='status', when=[STATUS_CHOICES.ready])
+    date_reported = MonitorField(verbose_name=_('Date Visit Reported'), null=True, blank=True, default=None,
+                                 monitor='status', when=[STATUS_CHOICES.reported])
+    date_report_rejected = MonitorField(verbose_name=_('Date Visit Report Rejected'), null=True, blank=True,
+                                        default=None, monitor='status', when=[STATUS_CHOICES.report_rejected])
+    date_completed = MonitorField(verbose_name=_('Date Visit Completed'), null=True, blank=True, default=None,
+                                  monitor='status', when=[STATUS_CHOICES.completed])
     date_cancelled = MonitorField(verbose_name=_('Date Visit Cancelled'), null=True, blank=True, default=None,
                                   monitor='status', when=[STATUS_CHOICES.cancelled])
+
+    # UNICEF cancelled visit
+    cancel_comment = models.TextField(verbose_name=_('Cancel Comment'), blank=True)
+    # Field Monitor rejected visit
+    reject_comment = models.TextField(verbose_name=_('Reason for Rejection'), blank=True)
+    # UNICEF rejected visit report
+    report_reject_comment = models.TextField(verbose_name=_('Reason for Rejection'), blank=True)
 
     history = GenericRelation('unicef_snapshot.Activity', object_id_field='target_object_id',
                               content_type_field='target_content_type')
@@ -164,23 +191,56 @@ class Visit(InheritedModelMixin, SoftDeleteMixin, TimeStampedModel):
         )
 
     @transition(
-        status, source=STATUS_CHOICES.draft, target=STATUS_CHOICES.assigned,
+        status, source=[STATUS_CHOICES.draft, STATUS_CHOICES.rejected], target=STATUS_CHOICES.assigned,
     )
     def assign(self):
         self.freeze_checklist()
         self.freeze_configs()
 
     @transition(
-        status, source=STATUS_CHOICES.assigned, target=STATUS_CHOICES.finalized,
+        status, source=STATUS_CHOICES.assigned, target=STATUS_CHOICES.accepted,
     )
-    def finalize(self):
+    def accept(self):
         pass
 
     @transition(
-        status, source=[STATUS_CHOICES.draft, STATUS_CHOICES.assigned], target=STATUS_CHOICES.cancelled,
+        status, source=STATUS_CHOICES.assigned, target=STATUS_CHOICES.rejected,
     )
-    def cancel(self):
+    def reject(self, reject_comment):
+        self.reject_comment = reject_comment
+
+    @transition(
+        status, source=STATUS_CHOICES.accepted, target=STATUS_CHOICES.ready,
+    )
+    def mark_ready(self):
         pass
+
+    @transition(
+        status, source=[STATUS_CHOICES.ready, STATUS_CHOICES.report_rejected], target=STATUS_CHOICES.reported,
+    )
+    def send_report(self):
+        pass
+
+    @transition(
+        status, source=STATUS_CHOICES.reported, target=STATUS_CHOICES.report_rejected,
+    )
+    def reject_report(self, report_reject_comment):
+        self.report_reject_comment = report_reject_comment
+
+    @transition(
+        status, source=STATUS_CHOICES.reported, target=STATUS_CHOICES.completed,
+    )
+    def complete(self):
+        pass
+
+    @transition(
+        status, source=[
+            STATUS_CHOICES.draft, STATUS_CHOICES.assigned, STATUS_CHOICES.accepted,
+            STATUS_CHOICES.rejected, STATUS_CHOICES.ready,
+        ], target=STATUS_CHOICES.cancelled,
+    )
+    def cancel(self, cancel_comment):
+        self.cancel_comment = cancel_comment
 
 
 class TaskCheckListItem(FindingMixin, OrderedModel):

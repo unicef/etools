@@ -52,7 +52,8 @@ class VisitsViewSet(
             VisitsTotalSerializers(
                 instance=Visit.objects.filter(
                     tasks__year_plan__year=timezone.now().year,
-                    status__in=[Visit.STATUS_CHOICES.assigned, Visit.STATUS_CHOICES.finalized],
+                ).exclude(
+                    status__in=[Visit.STATUS_CHOICES.draft, Visit.STATUS_CHOICES.cancelled],
                 ).distinct()
             ).data
         )

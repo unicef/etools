@@ -54,14 +54,14 @@ class VisitsViewTestCase(FMBaseTestCaseMixin, BaseTenantTestCase):
         third_task = TaskFactory(cp_output_config=config)
 
         unused_task = TaskFactory(year_plan__year=timezone.now().year - 1)  # shouldn't appear as it's for prev year
-        unused_visit = VisitFactory(status=Visit.STATUS_CHOICES.finalized, tasks__count=0)
+        unused_visit = VisitFactory(status=Visit.STATUS_CHOICES.completed, tasks__count=0)
         VisitTaskLinkFactory(visit=unused_visit, task=unused_task)
 
         VisitFactory(status=Visit.STATUS_CHOICES.draft, tasks__count=0)
         VisitFactory(status=Visit.STATUS_CHOICES.cancelled, tasks__count=0)
         VisitFactory(status=Visit.STATUS_CHOICES.assigned, tasks__count=0)
         VisitFactory(status=Visit.STATUS_CHOICES.assigned, tasks=[first_task, second_task])
-        VisitFactory(status=Visit.STATUS_CHOICES.finalized, tasks=[second_task, third_task])
+        VisitFactory(status=Visit.STATUS_CHOICES.completed, tasks=[second_task, third_task])
 
         response = self.forced_auth_req(
             'get', reverse('field_monitoring_visits:visits-totals'),

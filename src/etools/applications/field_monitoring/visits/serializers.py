@@ -39,8 +39,8 @@ class VisitLightSerializer(serializers.ModelSerializer):
         model = Visit
         fields = (
             'id', 'reference_number', 'start_date', 'end_date', 'visit_type',
-            'location', 'location_site',
-            'tasks', 'status', 'primary_field_monitor', 'team_members',
+            'location', 'location_site', 'status', 'status_date',
+            'created', 'tasks', 'primary_field_monitor', 'team_members',
         )
 
     # we need special logic to work with intermediary model
@@ -138,7 +138,11 @@ class VisitSerializer(SnapshotModelSerializer, VisitListSerializer):
     class Meta(VisitListSerializer.Meta):
         fields = VisitListSerializer.Meta.fields + (
             'scope_by_methods',
-        )
+        ) + tuple(Visit.STATUSES_DATES.values())
+        extra_kwargs = {
+            field: {'read_only': True}
+            for field in Visit.STATUSES_DATES.values()
+        }
 
     def get_scope_by_methods(self, obj):
         return VisitMethodSerializer(

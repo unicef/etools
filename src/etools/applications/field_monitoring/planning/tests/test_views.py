@@ -233,7 +233,7 @@ class YearPlanTasksViewTestCase(TestExportMixin, FMBaseTestCaseMixin, BaseTenant
 
     def test_completed_by_month(self):
         VisitFactory(tasks=[self.task], end_date=date.today().replace(month=3))
-        VisitFactory(tasks=[self.task], end_date=date.today().replace(month=3), status=Visit.STATUS_CHOICES.finalized)
+        VisitFactory(tasks=[self.task], end_date=date.today().replace(month=3), status=Visit.STATUS_CHOICES.completed)
 
         response = self.forced_auth_req(
             'get', reverse('field_monitoring_planning:year-plan-tasks-list', args=[self.year_plan.pk]),

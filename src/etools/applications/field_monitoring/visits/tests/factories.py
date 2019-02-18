@@ -48,18 +48,73 @@ class VisitFactory(factory.DjangoModelFactory):
             status=Visit.STATUS_CHOICES.assigned
         )
 
-        pre_finalized = InheritedTrait(
+        pre_accepted = InheritedTrait(
             assigned,
         )
 
-        finalized = InheritedTrait(
-            pre_finalized,
-            date_finalized=factory.LazyFunction(timezone.now),
-            status=Visit.STATUS_CHOICES.finalized
+        accepted = InheritedTrait(
+            pre_accepted,
+            date_accepted=factory.LazyFunction(timezone.now),
+            status=Visit.STATUS_CHOICES.accepted
+        )
+
+        pre_rejected = InheritedTrait(
+            assigned,
+            reject_comment=fuzzy.FuzzyText(),
+        )
+
+        rejected = InheritedTrait(
+            pre_rejected,
+            date_rejected=factory.LazyFunction(timezone.now),
+            status=Visit.STATUS_CHOICES.rejected
+        )
+
+        pre_ready = InheritedTrait(
+            accepted,
+            # todo: checklist is ready
+        )
+        
+        ready = InheritedTrait(
+            pre_ready,
+            date_ready=factory.LazyFunction(timezone.now),
+            status=Visit.STATUS_CHOICES.ready
+        )
+
+        pre_reported = InheritedTrait(
+            ready,
+            # todo: summary findings are completed
+        )
+
+        reported = InheritedTrait(
+            pre_reported,
+            date_reported=factory.LazyFunction(timezone.now),
+            status=Visit.STATUS_CHOICES.reported
+        )
+
+        pre_report_rejected = InheritedTrait(
+            reported,
+            report_reject_comment=fuzzy.FuzzyText(),
+        )
+
+        report_rejected = InheritedTrait(
+            pre_report_rejected,
+            date_report_rejected=factory.LazyFunction(timezone.now),
+            status=Visit.STATUS_CHOICES.report_rejected
+        )
+
+        pre_completed = InheritedTrait(
+            reported,
+        )
+
+        completed = InheritedTrait(
+            pre_completed,
+            date_completed=factory.LazyFunction(timezone.now),
+            status=Visit.STATUS_CHOICES.completed
         )
 
         cancelled = InheritedTrait(
             draft,
+            cancel_comment=fuzzy.FuzzyText(),
             date_cancelled=factory.LazyFunction(timezone.now),
             status=Visit.STATUS_CHOICES.cancelled
         )
