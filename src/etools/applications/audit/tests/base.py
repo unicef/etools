@@ -1,6 +1,7 @@
 import os
 import tempfile
 from datetime import timedelta
+from unittest.mock import Mock, patch
 
 from django.conf import settings
 from django.core.files import File
@@ -28,6 +29,10 @@ class AuditTestCaseMixin(object):
         call_command('update_notifications')
         call_command('update_audit_permissions', verbosity=0)
 
+        # ensure media directory exists
+        if not os.path.exists(settings.MEDIA_ROOT):
+            os.makedirs(settings.MEDIA_ROOT)
+
     def setUp(self):
         super().setUp()
         EmailTemplate.objects.get_or_create(name='audit/staff_member/invite')
@@ -51,6 +56,8 @@ class AuditTestCaseMixin(object):
 class EngagementTransitionsTestCaseMixin(AuditTestCaseMixin):
     engagement_factory = None
     endpoint = ''
+    mock_filepath = Mock(return_value="{}test.pdf".format(settings.MEDIA_ROOT))
+    filepath = "etools.applications.audit.utils.generate_file_path"
 
     def _fill_category(self, code, **kwargs):
         blueprints = RiskBluePrint.objects.filter(category__code=code)
@@ -58,7 +65,7 @@ class EngagementTransitionsTestCaseMixin(AuditTestCaseMixin):
             RiskFactory(blueprint=blueprint, engagement=self.engagement, **kwargs)
 
     def _fill_date_fields(self):
-        self.engagement.date_of_field_visit = timezone.now()
+        self.engagement.date_of_field_visit = timezone.now().date()
         self.engagement.date_of_draft_report_to_ip = self.engagement.date_of_field_visit + timedelta(days=1)
         self.engagement.date_of_comments_by_ip = self.engagement.date_of_draft_report_to_ip + timedelta(days=1)
         self.engagement.date_of_draft_report_to_unicef = self.engagement.date_of_comments_by_ip + timedelta(days=1)
@@ -100,8 +107,9 @@ class EngagementTransitionsTestCaseMixin(AuditTestCaseMixin):
 
     def _init_finalized_engagement(self):
         self._init_submitted_engagement()
-        self.engagement.finalize()
-        self.engagement.save()
+        with patch(self.filepath, self.mock_filepath):
+            self.engagement.finalize()
+            self.engagement.save()
 
     def _init_cancelled_engagement(self):
         self.engagement.cancel('cancel_comment')

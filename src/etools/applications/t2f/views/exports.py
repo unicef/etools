@@ -7,13 +7,12 @@ from django.utils import timezone
 from rest_framework import generics, status
 from rest_framework.permissions import IsAdminUser
 from rest_framework.response import Response
-from rest_framework_csv import renderers
 from unicef_restlib.views import QueryStringFilterMixin
 
+from etools.applications.EquiTrack.renderers import FriendlyCSVRenderer
 from etools.applications.t2f.filters import travel_list
 from etools.applications.t2f.models import ItineraryItem, Travel, TravelActivity
 from etools.applications.t2f.serializers.export import (
-    FinanceExportSerializer,
     TravelActivityExportSerializer,
     TravelAdminExportSerializer,
 )
@@ -28,7 +27,7 @@ class ExportBaseView(generics.GenericAPIView):
                        travel_list.ShowHiddenFilter,
                        travel_list.TravelSortFilter,
                        travel_list.TravelFilterBoxFilter)
-    renderer_classes = (renderers.CSVRenderer,)
+    renderer_classes = (FriendlyCSVRenderer,)
 
     def get_renderer_context(self):
         context = super().get_renderer_context()
@@ -85,20 +84,6 @@ class TravelActivityExport(QueryStringFilterMixin, ExportBaseView):
         response = Response(data=serializer.data, status=status.HTTP_200_OK)
         response['Content-Disposition'] = 'attachment; filename=Travel_{}.csv'.format(timezone.now().date())
 
-        return response
-
-
-class FinanceExport(ExportBaseView):
-    serializer_class = FinanceExportSerializer
-
-    def get(self, request):
-        queryset = self.filter_queryset(self.get_queryset())
-        queryset = queryset.select_related(
-            'traveler', 'office', 'section', 'supervisor')
-        serializer = self.get_serializer(queryset, many=True)
-
-        response = Response(data=serializer.data, status=status.HTTP_200_OK)
-        response['Content-Disposition'] = 'attachment; filename="FinanceExport.csv"'
         return response
 
 

@@ -10,4 +10,4 @@ class TestStrUnicode(SimpleTestCase):
     def test_vision_sync_log(self):
         country = CountryFactory.build(name='M\xe9xico', schema_name='Mexico')
         instance = VisionSyncLog(country=country)
-        self.assertTrue(str(instance).startswith(u'M\xe9xico'))
+        self.assertTrue(str(instance).startswith('M\xe9xico'))

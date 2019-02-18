@@ -4,7 +4,7 @@ from datetime import datetime
 from django.core.management import BaseCommand
 from django.db import transaction
 
-from etools.applications.EquiTrack.encoders import EToolsEncoder
+from etools.libraries.pythonlib.encoders import CustomJSONEncoder
 from etools.applications.EquiTrack.util_scripts import set_country
 from etools.applications.hact.models import HactHistory
 from etools.applications.partners.models import hact_default, PartnerOrganization, PlannedEngagement
@@ -61,7 +61,6 @@ class Command(BaseCommand):
              self.get_or_empty(partner_hact, ['programmatic_visits', 'completed', 'q3'])),
             ('Programmatic Visits Completed Q4',
              self.get_or_empty(partner_hact, ['programmatic_visits', 'completed', 'q4'])),
-            ('Programmatic Visits Planned M.R', partner.hact_min_requirements.get('programme_visits')),
             ('Spot Checks Planned Q1', getattr(planned_engagement, 'spot_check_planned_q1', None)),
             ('Spot Checks Planned Q2', getattr(planned_engagement, 'spot_check_planned_q2', None)),
             ('Spot Checks Planned Q3', getattr(planned_engagement, 'spot_check_planned_q3', None)),
@@ -76,7 +75,7 @@ class Command(BaseCommand):
             ('Audit Completed', self.get_or_empty(partner_hact, ['audits', 'completed'])),
             ('Audit Outstanding Findings', self.get_or_empty(partner_hact, ['outstanding_findings', ])),
         ]
-        hact_history.partner_values = json.dumps(partner_values, cls=EToolsEncoder)
+        hact_history.partner_values = json.dumps(partner_values, cls=CustomJSONEncoder)
         hact_history.save()
 
     @transaction.atomic

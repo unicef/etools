@@ -119,35 +119,35 @@ class TestStrUnicode(SimpleTestCase):
 
     def test_country(self):
         instance = CountryFactory.build(name='xyz')
-        self.assertEqual(str(instance), u'xyz')
+        self.assertEqual(str(instance), 'xyz')
 
-        instance = CountryFactory.build(name=u'Magyarorsz\xe1g')
-        self.assertEqual(str(instance), u'Magyarorsz\xe1g')
+        instance = CountryFactory.build(name='Magyarorsz\xe1g')
+        self.assertEqual(str(instance), 'Magyarorsz\xe1g')
 
     def test_workspace_counter(self):
         instance = models.WorkspaceCounter()
         instance.workspace = CountryFactory.build(name='xyz')
-        self.assertEqual(str(instance), u'xyz')
+        self.assertEqual(str(instance), 'xyz')
 
         instance = models.WorkspaceCounter()
-        instance.workspace = CountryFactory.build(name=u'Magyarorsz\xe1g')
-        self.assertEqual(str(instance), u'Magyarorsz\xe1g')
+        instance.workspace = CountryFactory.build(name='Magyarorsz\xe1g')
+        self.assertEqual(str(instance), 'Magyarorsz\xe1g')
 
     def test_office(self):
         instance = OfficeFactory.build(name='xyz')
-        self.assertEqual(str(instance), u'xyz')
+        self.assertEqual(str(instance), 'xyz')
 
-        instance = OfficeFactory.build(name=u'Magyarorsz\xe1g')
-        self.assertEqual(str(instance), u'Magyarorsz\xe1g')
+        instance = OfficeFactory.build(name='Magyarorsz\xe1g')
+        self.assertEqual(str(instance), 'Magyarorsz\xe1g')
 
     def test_user_profile(self):
         UserModel = get_user_model()
         user = UserModel(first_name='Sviatoslav', last_name='')
         instance = models.UserProfile()
         instance.user = user
-        self.assertEqual(str(instance), u'User profile for Sviatoslav')
+        self.assertEqual(str(instance), 'User profile for Sviatoslav')
 
-        user = UserModel(first_name=u'Sventoslav\u016d')
+        user = UserModel(first_name='Sventoslav\u016d')
         instance = models.UserProfile()
         instance.user = user
-        self.assertEqual(str(instance), u'User profile for Sventoslav\u016d')
+        self.assertEqual(str(instance), 'User profile for Sventoslav\u016d')

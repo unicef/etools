@@ -272,7 +272,7 @@ class UserProfile(models.Model):
         return self.user.last_name
 
     def __str__(self):
-        return u'User profile for {}'.format(
+        return 'User profile for {}'.format(
             self.user.get_full_name()
         )
 
