@@ -48,6 +48,7 @@ class YearPlan(TimeStampedModel):
 def _default_plan_by_month():
     return [0] * 12
 
+
 class Task(SoftDeleteMixin, TimeStampedModel):
     year_plan = models.ForeignKey(YearPlan, verbose_name=_('Year Plan'), related_name='tasks',
                                   on_delete=models.CASCADE)
