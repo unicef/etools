@@ -112,17 +112,10 @@ class VisitsViewTestCase(FMBaseTestCaseMixin, BaseTenantTestCase):
         )
 
     def test_create(self):
-        location_site = LocationSiteFactory()
-
         response = self.forced_auth_req(
             'post', reverse('field_monitoring_visits:visits-list'),
             user=self.unicef_user,
-            data={
-                'location': location_site.parent.id,
-                'location_site': location_site.id,
-                'start_date': timezone.now().date(),
-                'end_date': timezone.now().date() + timedelta(days=1),
-            }
+            data={}
         )
 
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)

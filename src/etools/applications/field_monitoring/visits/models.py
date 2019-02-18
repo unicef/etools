@@ -80,15 +80,15 @@ class Visit(InheritedModelMixin, SoftDeleteMixin, TimeStampedModel):
     team_members = models.ManyToManyField(settings.AUTH_USER_MODEL, related_name='fm_visits',
                                           verbose_name=_('Team Members'), blank=True)
 
-    location = models.ForeignKey(Location, verbose_name=_('Location'), related_name='visits',
-                                 on_delete=models.CASCADE)
+    location = models.ForeignKey(Location, blank=True, null=True, verbose_name=_('Location'),
+                                 related_name='visits', on_delete=models.CASCADE)
     location_site = models.ForeignKey(LocationSite, blank=True, null=True, verbose_name=_('Site'),
                                       related_name='visits', on_delete=models.CASCADE)
 
     tasks = models.ManyToManyField(Task, related_name='visits', through=VisitTaskLink)
 
-    start_date = models.DateField(verbose_name=_('Start Date'))
-    end_date = models.DateField(verbose_name=_('End Date'))
+    start_date = models.DateField(verbose_name=_('Start Date'), blank=True, null=True)
+    end_date = models.DateField(verbose_name=_('End Date'), blank=True, null=True)
 
     status = FSMField(choices=STATUS_CHOICES, default=STATUS_CHOICES.draft, verbose_name=_('Status'))
 
