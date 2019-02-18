@@ -103,7 +103,7 @@ class TestUsersListAPIView(BaseTenantTestCase):
         )
 
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
-        self.assertEqual(response.data, [u'Query parameter values are not integers'])
+        self.assertEqual(response.data, ['Query parameter values are not integers'])
 
     def test_api_users_list_managers(self):
         response = self.forced_auth_req(
@@ -158,7 +158,7 @@ class TestUsersListAPIView(BaseTenantTestCase):
             user=self.unicef_superuser
         )
         response_json = json.loads(response.rendered_content)
-        self.assertEqual(len(response_json), 2)
+        self.assertEqual(len(response_json), 1)
 
 
 class TestMyProfileAPIView(BaseTenantTestCase):

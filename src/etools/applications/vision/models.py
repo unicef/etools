@@ -21,4 +21,4 @@ class VisionSyncLog(models.Model):
     date_processed = models.DateTimeField(auto_now=True, verbose_name=_('Date Processed'))
 
     def __str__(self):
-        return u'{0.country} {0.date_processed}:{0.successful} {0.total_processed}'.format(self)
+        return '{0.country} {0.date_processed}:{0.successful} {0.total_processed}'.format(self)

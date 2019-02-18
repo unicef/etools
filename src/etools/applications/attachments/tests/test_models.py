@@ -15,7 +15,7 @@ class TestAttachmentFlat(BaseTenantTestCase):
     def test_str(self):
         attachment = AttachmentFactory(
             file=SimpleUploadedFile(
-                'simple_file.txt', u'R\xe4dda Barnen'.encode('utf-8')
+                'simple_file.txt', 'R\xe4dda Barnen'.encode('utf-8')
             ),
             content_object=self.simple_object
         )

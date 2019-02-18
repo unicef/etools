@@ -13,20 +13,20 @@ logger = get_task_logger(__name__)
 
 @app.task
 def update_purchase_orders(country_name=None):
-    logger.info(u'Starting update values for purchase order')
+    logger.info('Starting update values for purchase order')
     countries = Country.objects.filter(vision_sync_enabled=True)
     processed = []
     if country_name is not None:
         countries = countries.filter(name=country_name)
     for country in countries:
         try:
-            logger.info(u'Starting purchase order update for country {}'.format(
+            logger.info('Starting purchase order update for country {}'.format(
                 country.name
             ))
             POSynchronizer(country).sync()
             processed.append(country.name)
-            logger.info(u"Update finished successfully for {}".format(country.name))
+            logger.info("Update finished successfully for {}".format(country.name))
         except VisionException:
-            logger.exception(u"{} sync failed".format(POSynchronizer.__name__))
+            logger.exception("{} sync failed".format(POSynchronizer.__name__))
             # Keep going to the next country
-    logger.info(u'Purchase orders synced successfully for {}.'.format(u', '.join(processed)))
+    logger.info('Purchase orders synced successfully for {}.'.format(', '.join(processed)))
