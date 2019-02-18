@@ -135,6 +135,9 @@ class Visit(InheritedModelMixin, SoftDeleteMixin, TimeStampedModel):
         return getattr(self, self.STATUSES_DATES[self.status])
 
     def freeze_checklist(self):
+        # clean existing items in case of reassign
+        TaskCheckListItem.objects.filter(visit_task__visit=self).delete()
+
         for task_link in self.visit_task_links.prefetch_related(
             'visit',
             'task__partner',
@@ -159,6 +162,10 @@ class Visit(InheritedModelMixin, SoftDeleteMixin, TimeStampedModel):
                 item.methods.add(*planned_checklist_item.methods.all())
 
     def freeze_configs(self):
+        # clean existing items in case of reassign
+        VisitMethodType.objects.filter(visit=self).delete()
+        VisitCPOutputConfig.objects.filter(visit_task__visit=self).delete()
+
         for link in self.visit_task_links.prefetch_related(
             'task__cp_output_config__cp_output',
             'task__cp_output_config__government_partners',
