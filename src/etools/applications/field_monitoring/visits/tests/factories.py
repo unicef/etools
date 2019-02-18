@@ -73,7 +73,7 @@ class VisitFactory(factory.DjangoModelFactory):
             accepted,
             # todo: checklist is ready
         )
-        
+
         ready = InheritedTrait(
             pre_ready,
             date_ready=factory.LazyFunction(timezone.now),
