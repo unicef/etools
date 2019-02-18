@@ -55,7 +55,7 @@ class Grant(TimeStampedModel):
         ordering = ['donor']
 
     def __str__(self):
-        return u"{}: {}".format(
+        return "{}: {}".format(
             self.donor.name,
             self.name
         )
@@ -168,7 +168,7 @@ class FundsReservationHeader(TimeStampedModel):
     )
 
     def __str__(self):
-        return u'{}'.format(
+        return '{}'.format(
             self.fr_number
         )
 
@@ -252,7 +252,7 @@ class FundsReservationItem(TimeStampedModel):
     )
 
     def __str__(self):
-        return u'{}'.format(
+        return '{}'.format(
             self.fr_ref_number
         )
 
@@ -313,7 +313,7 @@ class FundsCommitmentHeader(TimeStampedModel):
     )
 
     def __str__(self):
-        return u'{}'.format(
+        return '{}'.format(
             self.fc_number
         )
 
@@ -393,7 +393,7 @@ class FundsCommitmentItem(TimeStampedModel):
     )
 
     def __str__(self):
-        return u'{}'.format(
+        return '{}'.format(
             self.fc_ref_number
         )
 

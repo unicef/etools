@@ -6,11 +6,8 @@ from django.urls import reverse
 from etools.applications.EquiTrack.tests.cases import BaseTenantTestCase
 from etools.applications.partners.models import PartnerOrganization
 from etools.applications.publics.tests.factories import (
-    PublicsBusinessAreaFactory,
     PublicsCurrencyFactory,
     PublicsDSARegionFactory,
-    PublicsTravelExpenseTypeFactory,
-    PublicsWBSFactory,
 )
 from etools.applications.t2f.models import make_travel_reference_number, ModeOfTravel, Travel, TravelType
 from etools.applications.t2f.tests.factories import TravelActivityFactory, TravelFactory
@@ -67,13 +64,8 @@ class TravelActivityList(BaseTenantTestCase):
 
     def test_completed_counts(self):
         currency = PublicsCurrencyFactory()
-        expense_type = PublicsTravelExpenseTypeFactory()
-        business_area = PublicsBusinessAreaFactory()
         dsa_region = PublicsDSARegionFactory()
 
-        wbs = PublicsWBSFactory(business_area=business_area)
-        grant = wbs.grants.first()
-        fund = grant.funds.first()
         traveler = UserFactory(is_staff=True)
         traveler.profile.vendor_number = 'usrvend'
         traveler.profile.save()
@@ -82,16 +74,7 @@ class TravelActivityList(BaseTenantTestCase):
                                traveler=traveler,
                                status=Travel.APPROVED,
                                supervisor=self.unicef_staff)
-        data = {'cost_assignments': [{'wbs': wbs.id,
-                                      'grant': grant.id,
-                                      'fund': fund.id,
-                                      'share': 100}],
-                'deductions': [{'date': '2016-11-03',
-                                'breakfast': True,
-                                'lunch': True,
-                                'dinner': False,
-                                'accomodation': True}],
-                'itinerary': [{'origin': 'Berlin',
+        data = {'itinerary': [{'origin': 'Berlin',
                                'destination': 'Budapest',
                                'departure_date': '2017-04-14T17:06:55.821490',
                                'arrival_date': '2017-04-15T17:06:55.821490',
@@ -111,11 +94,7 @@ class TravelActivityList(BaseTenantTestCase):
                 'ta_required': True,
                 'report': 'Some report',
                 'currency': currency.id,
-                'supervisor': self.unicef_staff.id,
-                'expenses': [{'amount': '120',
-                              'type': expense_type.id,
-                              'currency': currency.id,
-                              'document_currency': currency.id}]}
+                'supervisor': self.unicef_staff.id}
         act1 = TravelActivityFactory(travel_type=TravelType.PROGRAMME_MONITORING, primary_traveler=traveler)
         act2 = TravelActivityFactory(travel_type=TravelType.SPOT_CHECK, primary_traveler=traveler)
         act1.travels.add(travel)

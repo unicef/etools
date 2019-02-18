@@ -11,12 +11,12 @@ from model_utils.models import TimeStampedModel
 from unicef_notification.models import Notification
 from unicef_snapshot.models import Activity
 
+from etools.applications.EquiTrack.urlresolvers import build_frontend_url
 from etools.applications.action_points.categories.models import Category
 from etools.applications.action_points.transitions.conditions import ActionPointCompleteActionsTakenCheck
 from etools.applications.action_points.transitions.serializers.serializers import ActionPointCompleteSerializer
-from etools.applications.EquiTrack.utils import get_environment
+from etools.libraries.djangolib.utils import get_environment
 from etools.libraries.fsm.views import has_action_permission
-from etools.applications.utils.common.urlresolvers import build_frontend_url
 from etools.libraries.djangolib.models import GroupWrapper
 
 
@@ -191,7 +191,7 @@ class ActionPoint(TimeStampedModel):
 
         return activity.get_action_display()
 
-    def get_mail_context(self, user=None, include_token=False):
+    def get_mail_context(self, user=None):
         return {
             'person_responsible': self.assigned_to.get_full_name(),
             'assigned_by': self.assigned_by.get_full_name(),
@@ -200,7 +200,7 @@ class ActionPoint(TimeStampedModel):
             'description': self.description,
             'due_date': self.due_date.strftime('%d %b %Y') if self.due_date else '',
             'status': self.status,
-            'object_url': self.get_object_url(user=user, include_token=include_token),
+            'object_url': self.get_object_url(user=user),
         }
 
     def send_email(self, recipient, template_name, additional_context=None, cc=None):

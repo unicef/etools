@@ -30,7 +30,7 @@ from etools.applications.audit.serializers.risks import (
     RiskRootSerializer,
 )
 from etools.applications.partners.models import PartnerOrganization
-from etools.applications.utils.common.utils import to_choices_list
+from etools.libraries.pythonlib.collections import to_choices_list
 
 
 class AuditorPDFSerializer(serializers.ModelSerializer):

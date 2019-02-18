@@ -93,13 +93,13 @@ class TestAgreementModelExport(BaseAgreementModelExportTestCase):
             self.agreement.agreement_type,
             '{}'.format(self.agreement.start),
             '{}'.format(self.agreement.end),
-            u'',
+            '',
             '{}'.format(self.agreement.signed_by_partner_date),
             self.unicef_staff.get_full_name(),
             '{}'.format(self.agreement.signed_by_unicef_date),
             ', '.join([sm.get_full_name() for sm in self.agreement.authorized_officers.all()]),
-            u'',
-            u'https://testserver/pmp/agreements/{}/details/'.format(self.agreement.id),
+            '',
+            'https://testserver/pmp/agreements/{}/details/'.format(self.agreement.id),
             'No',
         ))
 
