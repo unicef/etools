@@ -55,7 +55,7 @@ class Migration(migrations.Migration):
                 ('name', models.CharField(max_length=254, verbose_name='Name')),
                 ('p_code', models.CharField(blank=True, default='', max_length=32, verbose_name='P Code')),
                 ('point', django.contrib.gis.db.models.fields.PointField(blank=True, null=True, srid=4326, verbose_name='Point')),
-                ('is_active', models.BooleanField(default=True, verbose_name='Active')),
+                ('is_active', models.BooleanField(blank=True, default=True, verbose_name='Active')),
                 ('security_detail', models.TextField(blank=True, verbose_name='Detail on Security')),
                 ('parent', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='sites', to='locations.Location', verbose_name='Parent Location')),
             ],
