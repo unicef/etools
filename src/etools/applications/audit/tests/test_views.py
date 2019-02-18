@@ -9,17 +9,25 @@ from factory import fuzzy
 from mock import Mock, patch
 from rest_framework import status
 
-from etools.applications.action_points.tests.factories import ActionPointFactory, ActionPointCategoryFactory
+from etools.applications.action_points.tests.factories import ActionPointCategoryFactory, ActionPointFactory
 from etools.applications.attachments.tests.factories import AttachmentFactory, AttachmentFileTypeFactory
-from etools.applications.audit.models import Engagement, Risk, Auditor
+from etools.applications.audit.models import Auditor, Engagement, Risk
 from etools.applications.audit.tests.base import AuditTestCaseMixin, EngagementTransitionsTestCaseMixin
-from etools.applications.audit.tests.factories import (AuditFactory, AuditPartnerFactory,
-                                                       EngagementFactory, MicroAssessmentFactory,
-                                                       PurchaseOrderFactory, RiskBluePrintFactory, RiskCategoryFactory,
-                                                       SpecialAuditFactory, SpotCheckFactory, UserFactory,
-                                                       StaffSpotCheckFactory)
-from etools.applications.EquiTrack.tests.cases import BaseTenantTestCase
+from etools.applications.audit.tests.factories import (
+    AuditFactory,
+    AuditPartnerFactory,
+    EngagementFactory,
+    MicroAssessmentFactory,
+    PurchaseOrderFactory,
+    RiskBluePrintFactory,
+    RiskCategoryFactory,
+    SpecialAuditFactory,
+    SpotCheckFactory,
+    StaffSpotCheckFactory,
+    UserFactory,
+)
 from etools.applications.audit.tests.test_transitions import MATransitionsTestCaseMixin
+from etools.applications.EquiTrack.tests.cases import BaseTenantTestCase
 from etools.applications.partners.models import PartnerType
 from etools.applications.reports.tests.factories import SectionFactory
 
@@ -1180,7 +1188,7 @@ class TestEngagementAttachmentsView(MATransitionsTestCaseMixin, BaseTenantTestCa
             request_format='multipart',
             data={
                 'file_type': AttachmentFileTypeFactory(code='audit_engagement').id,
-                'file': SimpleUploadedFile('hello_world.txt', u'hello world!'.encode('utf-8')),
+                'file': SimpleUploadedFile('hello_world.txt', 'hello world!'.encode('utf-8')),
             }
         )
         self.assertEqual(create_response.status_code, status.HTTP_201_CREATED)
@@ -1225,7 +1233,7 @@ class TestEngagementReportAttachmentsView(MATransitionsTestCaseMixin, BaseTenant
             request_format='multipart',
             data={
                 'file_type': AttachmentFileTypeFactory(code='audit_report').id,
-                'file': SimpleUploadedFile('hello_world.txt', u'hello world!'.encode('utf-8')),
+                'file': SimpleUploadedFile('hello_world.txt', 'hello world!'.encode('utf-8')),
             }
         )
         self.assertEqual(create_response.status_code, status.HTTP_201_CREATED)

@@ -18,65 +18,65 @@ class TestStrUnicode(SimpleTestCase):
 
     def test_country_programme(self):
         instance = CountryProgrammeFactory.build(name='xyz', wbs='xyz')
-        self.assertEqual(str(instance), u'xyz xyz')
+        self.assertEqual(str(instance), 'xyz xyz')
 
-        instance = CountryProgrammeFactory.build(name=u'\xccsland', wbs='xyz')
-        self.assertEqual(str(instance), u'\xccsland xyz')
+        instance = CountryProgrammeFactory.build(name='\xccsland', wbs='xyz')
+        self.assertEqual(str(instance), '\xccsland xyz')
 
-        instance = CountryProgrammeFactory.build(name=u'\xccsland', wbs=u'xyz')
-        self.assertEqual(str(instance), u'\xccsland xyz')
+        instance = CountryProgrammeFactory.build(name='\xccsland', wbs='xyz')
+        self.assertEqual(str(instance), '\xccsland xyz')
 
     def test_result_type(self):
         instance = ResultTypeFactory.build(name='xyz')
-        self.assertEqual(str(instance), u'xyz')
+        self.assertEqual(str(instance), 'xyz')
 
-        instance = ResultTypeFactory.build(name=u'\xccsland')
-        self.assertEqual(str(instance), u'\xccsland')
+        instance = ResultTypeFactory.build(name='\xccsland')
+        self.assertEqual(str(instance), '\xccsland')
 
     def test_section(self):
         instance = SectionFactory.build(name='xyz')
-        self.assertEqual(str(instance), u' xyz')
+        self.assertEqual(str(instance), ' xyz')
 
-        instance = SectionFactory.build(name=u'\xccsland')
-        self.assertEqual(str(instance), u' \xccsland')
+        instance = SectionFactory.build(name='\xccsland')
+        self.assertEqual(str(instance), ' \xccsland')
 
     def test_result(self):
         instance = ResultFactory.build(name='xyz')
-        self.assertTrue(str(instance).endswith(u'xyz'))
+        self.assertTrue(str(instance).endswith('xyz'))
 
-        instance = ResultFactory.build(name=u'\xccsland')
-        self.assertTrue(str(instance).endswith(u'\xccsland'))
+        instance = ResultFactory.build(name='\xccsland')
+        self.assertTrue(str(instance).endswith('\xccsland'))
 
     def test_lower_result(self):
         instance = LowerResultFactory.build(name='xyz', code='xyz')
-        self.assertEqual(str(instance), u'xyz: xyz')
+        self.assertEqual(str(instance), 'xyz: xyz')
 
-        instance = LowerResultFactory.build(name=u'\xccsland', code='xyz')
-        self.assertEqual(str(instance), u'xyz: \xccsland')
+        instance = LowerResultFactory.build(name='\xccsland', code='xyz')
+        self.assertEqual(str(instance), 'xyz: \xccsland')
 
-        instance = LowerResultFactory.build(name=u'\xccsland', code=u'xyz')
-        self.assertEqual(str(instance), u'xyz: \xccsland')
+        instance = LowerResultFactory.build(name='\xccsland', code='xyz')
+        self.assertEqual(str(instance), 'xyz: \xccsland')
 
     def test_unit(self):
         instance = UnitFactory.build(type='xyz')
-        self.assertTrue(str(instance).endswith(u'xyz'))
+        self.assertTrue(str(instance).endswith('xyz'))
 
-        instance = UnitFactory.build(type=u'\xccsland')
-        self.assertTrue(str(instance).endswith(u'\xccsland'))
+        instance = UnitFactory.build(type='\xccsland')
+        self.assertTrue(str(instance).endswith('\xccsland'))
 
     def test_indicator_blueprint(self):
         instance = IndicatorBlueprintFactory.build(title='xyz')
-        self.assertEqual(str(instance), u'xyz')
+        self.assertEqual(str(instance), 'xyz')
 
-        instance = IndicatorBlueprintFactory.build(title=u'\xccsland')
-        self.assertEqual(str(instance), u'\xccsland')
+        instance = IndicatorBlueprintFactory.build(title='\xccsland')
+        self.assertEqual(str(instance), '\xccsland')
 
     def test_indicator(self):
         instance = IndicatorFactory.build(name='xyz', active=True)
-        self.assertEqual(str(instance), u'xyz  ')
+        self.assertEqual(str(instance), 'xyz  ')
 
-        instance = IndicatorFactory.build(name=u'\xccsland', active=True)
-        self.assertEqual(str(instance), u'\xccsland  ')
+        instance = IndicatorFactory.build(name='\xccsland', active=True)
+        self.assertEqual(str(instance), '\xccsland  ')
 
 
 class TestQuarter(BaseTenantTestCase):

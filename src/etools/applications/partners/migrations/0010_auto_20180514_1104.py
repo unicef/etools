@@ -2,7 +2,7 @@
 from django.db import migrations, models
 import django.db.models.deletion
 import django.utils.timezone
-import etools.applications.EquiTrack.utils
+import etools.applications.EquiTrack.urlresolvers
 import model_utils.fields
 
 
@@ -38,7 +38,7 @@ class Migration(migrations.Migration):
                 ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
                 ('created', model_utils.fields.AutoCreatedField(default=django.utils.timezone.now, editable=False, verbose_name='created')),
                 ('modified', model_utils.fields.AutoLastModifiedField(default=django.utils.timezone.now, editable=False, verbose_name='modified')),
-                ('year', models.IntegerField(default=etools.applications.EquiTrack.utils.get_current_year, verbose_name='Year')),
+                ('year', models.IntegerField(default=etools.libraries.pythonlib.datetime.get_current_year, verbose_name='Year')),
                 ('programmatic_q1', models.IntegerField(default=0, verbose_name='Programmatic Q1')),
                 ('programmatic_q2', models.IntegerField(default=0, verbose_name='Programmatic Q2')),
                 ('programmatic_q3', models.IntegerField(default=0, verbose_name='Programmatic Q3')),
