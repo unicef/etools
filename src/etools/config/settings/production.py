@@ -23,7 +23,9 @@ ALLOWED_HOSTS = [
     'etools-dev.unicef.org',
     'etools-staging.unicef.org',
     'etools-test.unicef.org',
-    '0.0.0.0'
+    '0.0.0.0',
+    '127.0.0.1',
+    'localhost'
 ]
 SECRET_KEY = os.environ["SECRET_KEY"]  # noqa: F405
 SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
