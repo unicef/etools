@@ -1,20 +1,27 @@
 from django.urls import reverse
 from django.utils import timezone
 
-from rest_framework import status
-
 import factory.fuzzy
+from rest_framework import status
 from unicef_locations.tests.factories import LocationFactory
 
 from etools.applications.EquiTrack.tests.cases import BaseTenantTestCase
-from etools.applications.field_monitoring.fm_settings.tests.factories import FMMethodFactory, FMMethodTypeFactory, \
-    PlannedCheckListItemFactory, LocationSiteFactory, CPOutputConfigFactory
+from etools.applications.field_monitoring.fm_settings.tests.factories import (
+    CPOutputConfigFactory,
+    FMMethodFactory,
+    FMMethodTypeFactory,
+    LocationSiteFactory,
+    PlannedCheckListItemFactory,
+)
 from etools.applications.field_monitoring.planning.tests.factories import TaskFactory
 from etools.applications.field_monitoring.tests.base import FMBaseTestCaseMixin
 from etools.applications.field_monitoring.tests.factories import UserFactory
 from etools.applications.field_monitoring.visits.models import Visit
-from etools.applications.field_monitoring.visits.tests.factories import VisitFactory, VisitMethodTypeFactory, \
-    VisitTaskLinkFactory
+from etools.applications.field_monitoring.visits.tests.factories import (
+    VisitFactory,
+    VisitMethodTypeFactory,
+    VisitTaskLinkFactory,
+)
 from etools.applications.partners.tests.factories import PartnerFactory
 from etools.applications.permissions2.tests.mixins import TransitionPermissionsTestCaseMixin
 
@@ -290,22 +297,6 @@ class VisitTransitionPermissionsTestCase(TransitionPermissionsTestCaseMixin, FMB
     user = NotImplemented
     user_role = NotImplemented
 
-    # def create_object(self, transition, **kwargs):
-    #     opts = {}
-    #
-    #     if transition == 'assign':
-    #         opts['tpm_partner_focal_points__count'] = 1
-    #         opts['tpm_activities__count'] = 1
-    #         opts['tpm_activities__unicef_focal_points__count'] = 1
-    #         opts['tpm_activities__offices__count'] = 1
-    #
-    #     if transition == 'send_report':
-    #         opts['tpm_activities__report_attachments__count'] = 1
-    #         opts['tpm_activities__report_attachments__file_type__name'] = 'report'
-    #
-    #     opts.update(kwargs)
-    #     return super().create_object(transition, **opts)
-
     def do_transition(self, obj, transition):
         extra_data = {}
 
@@ -334,7 +325,7 @@ class PMEPermissionsForVisitTransitionTestCase(VisitTransitionPermissionsTestCas
         ('rejected', 'cancel'),
         ('rejected', 'assign'),
         ('accepted', 'cancel'),
-        ('ready', 'cancel'),
+        ('reported', 'reject_report'),
         ('reported', 'complete'),
     ]
 
@@ -354,7 +345,7 @@ class FMPermissionsForVisitTransitionTestCase(VisitTransitionPermissionsTestCase
         ('rejected', 'cancel'),
         ('rejected', 'assign'),
         ('accepted', 'cancel'),
-        ('ready', 'cancel'),
+        ('reported', 'reject_report'),
         ('reported', 'complete'),
     ]
 
@@ -391,7 +382,7 @@ class PrimaryFieldMonitorPermissionsForVisitTransitionTestCase(VisitTransitionPe
         return super().create_object(transition, **opts)
 
 
-class DataCollectorMPermissionsForVisitTransitionTestCase(VisitTransitionPermissionsTestCase):
+class DataCollectorPermissionsForVisitTransitionTestCase(VisitTransitionPermissionsTestCase):
     ALLOWED_TRANSITION = []
 
     @classmethod

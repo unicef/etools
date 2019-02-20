@@ -1,6 +1,7 @@
 from django.core.exceptions import ImproperlyConfigured
+from rest_framework.decorators import action
 
-from rest_framework.permissions import SAFE_METHODS
+from rest_framework.permissions import SAFE_METHODS, AllowAny
 
 from unicef_restlib.views import NestedViewSetMixin
 
@@ -131,3 +132,15 @@ class SimplePermittedFSMTransitionActionMixin(FSMTransitionActionMixin):
             self.permission_denied(self.request)
 
         super().pre_transition(instance, action)
+
+
+class SimplePermittedFSMViewSetMixin(SimplePermittedViewSetMixin, SimplePermittedFSMTransitionActionMixin):
+    """
+    When we use these two mixins together, we have implicit dependency of transition action
+    from write_permission_classes, because get_object will check object permissions; POST will be recognised as
+    unsafe method and write permissions will be checked. To fix this, we need to ignore them by overwriting
+    property specifically for this action.
+    """
+    @action(detail=True, methods=['post'], url_path=r'(?P<action>\D+)', write_permission_classes=[AllowAny])
+    def transition(self, request, *args, **kwargs):
+        return super().transition(request, *args, **kwargs)

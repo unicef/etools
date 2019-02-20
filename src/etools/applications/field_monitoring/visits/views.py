@@ -23,24 +23,23 @@ from etools.applications.field_monitoring.visits.serializers import VisitListSer
 from etools.applications.partners.models import PartnerOrganization
 from etools.applications.partners.serializers.partner_organization_v2 import MinimalPartnerOrganizationListSerializer
 from etools.applications.permissions_simplified.metadata import SimplePermissionBasedMetadata
-from etools.applications.permissions_simplified.views import SimplePermittedViewSetMixin, \
-    SimplePermittedFSMTransitionActionMixin
+from etools.applications.permissions_simplified.views import SimplePermittedFSMViewSetMixin
 from etools.applications.users.serializers import MinimalUserSerializer
 
 
 class VisitsViewSet(
     FMBaseViewSet,
-    SimplePermittedViewSetMixin,
-    SimplePermittedFSMTransitionActionMixin,
+    SimplePermittedFSMViewSetMixin,
     viewsets.ModelViewSet
 ):
     write_permission_classes = [
-        UserIsFieldMonitor & (visit_is('draft') | visit_is('rejected'))
+        UserIsFieldMonitor,
+        visit_is('draft') | visit_is('rejected'),
     ]
     transition_permission_classes = {
         'assign': [UserIsFieldMonitor],
         'accept': [UserIsPrimaryFieldMonitor],
-        'reject': [UserIsFieldMonitor],
+        'reject': [UserIsPrimaryFieldMonitor],
         'mark_ready': [UserIsPrimaryFieldMonitor],
         'send_report': [UserIsPrimaryFieldMonitor],
         'reject_report': [UserIsFieldMonitor],

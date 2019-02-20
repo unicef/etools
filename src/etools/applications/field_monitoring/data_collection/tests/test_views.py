@@ -10,7 +10,7 @@ from etools.applications.field_monitoring.data_collection.tests.factories import
     CheckListItemValueFactory
 from etools.applications.field_monitoring.tests.base import FMBaseTestCaseMixin
 from etools.applications.field_monitoring.visits.models import Visit, TaskCheckListItem, FindingMixin
-from etools.applications.field_monitoring.visits.tests.factories import VisitFactory, TaskCheckListItemFactory
+from etools.applications.field_monitoring.visits.tests.factories import VisitFactory
 
 
 class VisitDataCollectionViewTestCase(FMBaseTestCaseMixin, BaseTenantTestCase):

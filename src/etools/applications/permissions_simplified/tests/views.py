@@ -2,12 +2,12 @@ from rest_framework.viewsets import ModelViewSet
 
 from etools.applications.permissions_simplified.metadata import SimplePermissionBasedMetadata
 from etools.applications.permissions_simplified.permissions import PermissionQ
-from etools.applications.permissions_simplified.tests.models import SimplifiedTestParent, SimplifiedTestChild, SimplifiedTestModelWithFSMField
+from etools.applications.permissions_simplified.tests.models import SimplifiedTestParent, SimplifiedTestChild, \
+    SimplifiedTestModelWithFSMField
 from etools.applications.permissions_simplified.tests.permissions import UserIsBobPermission, UserIsAlicePermission
 from etools.applications.permissions_simplified.tests.serializers import ParentSerializer, ChildSerializer, \
     ModelWithFSMFieldSerializer
-from etools.applications.permissions_simplified.views import SimplePermittedViewSetMixin, \
-    SimplePermittedFSMTransitionActionMixin
+from etools.applications.permissions_simplified.views import SimplePermittedViewSetMixin, SimplePermittedFSMViewSetMixin
 
 
 class NotConfiguredParentViewSet(SimplePermittedViewSetMixin, ModelViewSet):
@@ -28,8 +28,7 @@ class ChildViewSet(SimplePermittedViewSetMixin, ModelViewSet):
     serializer_class = ChildSerializer
 
 
-class ModelWithFSMFieldViewSet(SimplePermittedViewSetMixin, SimplePermittedFSMTransitionActionMixin,
-                               ModelViewSet):
+class ModelWithFSMFieldViewSet(SimplePermittedFSMViewSetMixin, ModelViewSet):
     metadata_class = SimplePermissionBasedMetadata
     queryset = SimplifiedTestModelWithFSMField.objects.all()
     serializer_class = ModelWithFSMFieldSerializer

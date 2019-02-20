@@ -17,6 +17,8 @@ from etools.applications.field_monitoring.planning.models import Task
 from etools.applications.field_monitoring.fm_settings.models import CheckListItem, FMMethodType, CPOutputConfig, \
     LocationSite
 from etools.applications.field_monitoring.shared.models import FMMethod
+from etools.applications.field_monitoring.visits.transitions.serializers import VisitCancelSerializer, \
+    VisitRejectSerializer, VisitRejectReportSerializer
 from etools.applications.publics.models import SoftDeleteMixin
 from etools.libraries.djangolib.models import InheritedModelMixin
 
@@ -212,6 +214,7 @@ class Visit(InheritedModelMixin, SoftDeleteMixin, TimeStampedModel):
 
     @transition(
         status, source=STATUS_CHOICES.assigned, target=STATUS_CHOICES.rejected,
+        custom={'serializer': VisitRejectSerializer}
     )
     def reject(self, reject_comment):
         self.reject_comment = reject_comment
@@ -230,6 +233,7 @@ class Visit(InheritedModelMixin, SoftDeleteMixin, TimeStampedModel):
 
     @transition(
         status, source=STATUS_CHOICES.reported, target=STATUS_CHOICES.report_rejected,
+        custom={'serializer': VisitRejectReportSerializer}
     )
     def reject_report(self, report_reject_comment):
         self.report_reject_comment = report_reject_comment
@@ -245,6 +249,7 @@ class Visit(InheritedModelMixin, SoftDeleteMixin, TimeStampedModel):
             STATUS_CHOICES.draft, STATUS_CHOICES.assigned, STATUS_CHOICES.accepted,
             STATUS_CHOICES.rejected,
         ], target=STATUS_CHOICES.cancelled,
+        custom={'serializer': VisitCancelSerializer}
     )
     def cancel(self, cancel_comment):
         self.cancel_comment = cancel_comment

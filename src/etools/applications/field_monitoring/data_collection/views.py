@@ -22,8 +22,8 @@ class VisitsDataCollectionViewSet(
     viewsets.GenericViewSet
 ):
     write_permission_classes = [
-        (UserIsPrimaryFieldMonitor | UserIsDataCollector)
-        & (visit_is('accepted') | visit_is('ready') | visit_is('report_rejected'))
+        (UserIsPrimaryFieldMonitor | UserIsDataCollector) &
+        (visit_is('accepted') | visit_is('ready') | visit_is('report_rejected'))
     ]
     metadata_class = SimplePermissionBasedMetadata
     serializer_class = VisitDataCollectionSerializer
