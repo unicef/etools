@@ -31,19 +31,6 @@ RUN apk add --no-cache --virtual .build-deps-edge \
         protobuf-c-dev \
         xf86bigfontproto-dev
 
-#RUN apk add --no-cache --virtual .postgis-rundeps \
-#        json-c
-
-RUN apk add --no-cache --virtual .postgis-rundeps-edge \
-        --repository http://dl-cdn.alpinelinux.org/alpine/edge/main \
-        --repository http://dl-cdn.alpinelinux.org/alpine/edge/testing \
-        binutils \
-        gdal-dev \
-        geos-dev \
-        geos \
-        gdal \
-        proj4
-
 RUN apk add --no-cache --virtual .etools-build-deps \
         fontconfig-dev \
         freetype-dev \
@@ -77,45 +64,48 @@ RUN apk add --no-cache --virtual .etools-build-deps \
         tk-dev \
         zlib-dev
 
-#RUN apk add --no-cache --virtual .etools-run-deps \
-#        postgresql-libs
-#
-#RUN apk add --no-cache --virtual .system-run-deps \
-#        bash
+RUN apk add --no-cache --virtual .postgis-rundeps-edge \
+        --repository http://dl-cdn.alpinelinux.org/alpine/edge/main \
+        --repository http://dl-cdn.alpinelinux.org/alpine/edge/testing \
+        binutils \
+        gdal-dev \
+        geos-dev \
+        geos \
+        gdal \
+        proj4
+
+
+RUN apk add --no-cache --virtual .etools-run-deps \
+        postgresql-libs
+
+RUN apk add --no-cache --virtual .system-run-deps \
+        bash
 
 ENV PYTHONUNBUFFERED 1
-ENV DJANGO_SETTINGS_MODULE etools.config.settings.production
-ENV DATABASE_URL ""
-ENV DATABASE_CONN ""
-ENV RUN_MIGRATIONS "0"
+ENV DJANGO_SETTINGS_MODULE etools.config.settings.local
 ENV STATIC_ROOT /var/etools/static
 ENV SECRET_KEY not-so-secret-key-just-for-setup
 EXPOSE 8080
 
-ADD . /code
 WORKDIR /code
+COPY Pipfile Pipfile.lock ./
 
 RUN set -ex \
-    ls -al /code \
-    && pip install pip pipenv --upgrade \
-    && pipenv install --verbose --system --deploy --ignore-pipfile $PIPENV_ARGS \
-    && pip3 install .
+    ls -al . \
+    && pip install pip pipenv django_extensions --upgrade \
+    && pipenv install -d --verbose --system --deploy --ignore-pipfile $PIPENV_ARGS
 
-#RUN apk del .fetch-deps .build-deps .build-deps-edge .etools-build-deps \
-#    && rm -rf /var/cache/apk/* \
-#    && rm -fr /root/.cache/ \
-#    && rm -fr /code \
-#    && rm -fr /usr/include/
-RUN find /usr/local/lib/python3.6/ -name *.pyc | xargs rm -f
+RUN apk del .fetch-deps .build-deps .build-deps-edge .etools-build-deps \
+    && rm -rf /var/cache/apk/* \
+    && rm -fr /root/.cache/ \
+    && rm -fr /code \
+    && rm -fr /usr/include/ \
+    && find /usr/local/lib/python3.6/ -name *.pyc | xargs rm -f
+
 
 FROM python:3.6.8-alpine3.8
 COPY --from=0 /usr/local/lib/python3.6/ /usr/local/lib/python3.6/
 COPY --from=0 /usr/local/bin /usr/local/bin
-
-RUN adduser -S etools \
-    && mkdir -p /var/etools/run /var/etools/static \
-    && chown -R etools /var/etools/
-
 
 RUN apk add --no-cache --virtual .postgis-rundeps-edge \
         --repository http://dl-cdn.alpinelinux.org/alpine/edge/main \
@@ -134,12 +124,5 @@ RUN apk add --no-cache --virtual .etools-run-deps \
 RUN apk add --no-cache --virtual .system-run-deps \
         bash
 
-ADD docker/entrypoint.sh /usr/local/bin/docker-entrypoint.sh
 ADD docker/wait-for-it.sh /usr/local/bin/wait-for-it.sh
-
-ENTRYPOINT ["docker-entrypoint.sh"]
-WORKDIR /var/etools/
-
-USER etools
-
-CMD ["etools"]
+WORKDIR /code
