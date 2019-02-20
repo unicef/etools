@@ -171,7 +171,7 @@ class InterventionAttachmentAdmin(AttachmentInlineAdminMixin, admin.ModelAdmin):
     model = InterventionAttachment
     list_display = (
         'intervention',
-        'attachment_file',
+        'attachment',
         'type',
     )
     list_filter = (
