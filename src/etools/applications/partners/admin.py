@@ -212,7 +212,7 @@ class InterventionResultsLinkAdmin(admin.ModelAdmin):
         'cp_output',
     )
     search_fields = (
-        'intervention__name',
+        'intervention__title',
     )
     formfield_overrides = {
         models.ManyToManyField: {'widget': SelectMultiple(attrs={'size': '5', 'style': 'width:100%'})},
