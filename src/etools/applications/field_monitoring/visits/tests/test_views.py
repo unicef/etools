@@ -7,15 +7,16 @@ import factory.fuzzy
 from unicef_locations.tests.factories import LocationFactory
 
 from etools.applications.EquiTrack.tests.cases import BaseTenantTestCase
-from etools.applications.action_points.tests.factories import UserFactory
 from etools.applications.field_monitoring.fm_settings.tests.factories import FMMethodFactory, FMMethodTypeFactory, \
     PlannedCheckListItemFactory, LocationSiteFactory, CPOutputConfigFactory
 from etools.applications.field_monitoring.planning.tests.factories import TaskFactory
 from etools.applications.field_monitoring.tests.base import FMBaseTestCaseMixin
+from etools.applications.field_monitoring.tests.factories import UserFactory
 from etools.applications.field_monitoring.visits.models import Visit
 from etools.applications.field_monitoring.visits.tests.factories import VisitFactory, VisitMethodTypeFactory, \
     VisitTaskLinkFactory
 from etools.applications.partners.tests.factories import PartnerFactory
+from etools.applications.permissions2.tests.mixins import TransitionPermissionsTestCaseMixin
 
 
 class VisitsViewTestCase(FMBaseTestCaseMixin, BaseTenantTestCase):
@@ -112,7 +113,7 @@ class VisitsViewTestCase(FMBaseTestCaseMixin, BaseTenantTestCase):
     def test_create(self):
         response = self.forced_auth_req(
             'post', reverse('field_monitoring_visits:visits-list'),
-            user=self.unicef_user,
+            user=self.fm_user,
             data={}
         )
 
@@ -124,7 +125,7 @@ class VisitsViewTestCase(FMBaseTestCaseMixin, BaseTenantTestCase):
 
         response = self.forced_auth_req(
             'patch', reverse('field_monitoring_visits:visits-detail', args=[visit.id]),
-            user=self.unicef_user,
+            user=self.fm_user,
             data={
                 'tasks': tasks
             }
@@ -168,7 +169,7 @@ class VisitMethodTypesVIewTestCase(FMBaseTestCaseMixin, BaseTenantTestCase):
 
         response = self.forced_auth_req(
             'post', reverse('field_monitoring_visits:visit-method-types-list', args=[visit.id]),
-            user=self.unicef_user,
+            user=self.fm_user,
             data={
                 'method': FMMethodFactory(is_types_applicable=True).id,
                 'name': factory.fuzzy.FuzzyText().fuzz(),
@@ -277,3 +278,133 @@ class VisitTeamMembersViewTestCase(FMBaseTestCaseMixin, BaseTenantTestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(len(response.data['results']), 1)
         self.assertEqual(response.data['results'][0]['id'], visit.team_members.first().id)
+
+
+class VisitTransitionPermissionsTestCase(TransitionPermissionsTestCaseMixin, FMBaseTestCaseMixin, BaseTenantTestCase):
+    abstract = True
+    model = Visit
+    factory = VisitFactory
+
+    ALLOWED_TRANSITION = NotImplemented
+
+    user = NotImplemented
+    user_role = NotImplemented
+
+    # def create_object(self, transition, **kwargs):
+    #     opts = {}
+    #
+    #     if transition == 'assign':
+    #         opts['tpm_partner_focal_points__count'] = 1
+    #         opts['tpm_activities__count'] = 1
+    #         opts['tpm_activities__unicef_focal_points__count'] = 1
+    #         opts['tpm_activities__offices__count'] = 1
+    #
+    #     if transition == 'send_report':
+    #         opts['tpm_activities__report_attachments__count'] = 1
+    #         opts['tpm_activities__report_attachments__file_type__name'] = 'report'
+    #
+    #     opts.update(kwargs)
+    #     return super().create_object(transition, **opts)
+
+    def do_transition(self, obj, transition):
+        extra_data = {}
+
+        if transition == 'reject':
+            extra_data['reject_comment'] = 'Just because.'
+
+        if transition == 'cancel':
+            extra_data['cancel_comment'] = 'Just because.'
+
+        if transition == 'reject_report':
+            extra_data['report_reject_comment'] = 'Just because.'
+
+        return self.forced_auth_req(
+            'post',
+            reverse('field_monitoring_visits:visits-transition', args=(obj.id, transition)),
+            user=self.user,
+            data=extra_data,
+        )
+
+
+class PMEPermissionsForVisitTransitionTestCase(VisitTransitionPermissionsTestCase):
+    ALLOWED_TRANSITION = [
+        ('draft', 'cancel'),
+        ('draft', 'assign'),
+        ('assigned', 'cancel'),
+        ('rejected', 'cancel'),
+        ('rejected', 'assign'),
+        ('accepted', 'cancel'),
+        ('ready', 'cancel'),
+        ('reported', 'complete'),
+    ]
+
+    @classmethod
+    def setUpTestData(cls):
+        super().setUpTestData()
+
+        cls.user = UserFactory(pme=True)
+        cls.user_role = 'PME'
+
+
+class FMPermissionsForVisitTransitionTestCase(VisitTransitionPermissionsTestCase):
+    ALLOWED_TRANSITION = [
+        ('draft', 'cancel'),
+        ('draft', 'assign'),
+        ('assigned', 'cancel'),
+        ('rejected', 'cancel'),
+        ('rejected', 'assign'),
+        ('accepted', 'cancel'),
+        ('ready', 'cancel'),
+        ('reported', 'complete'),
+    ]
+
+    @classmethod
+    def setUpTestData(cls):
+        super().setUpTestData()
+
+        cls.user = UserFactory(fm_user=True)
+        cls.user_role = 'FM User'
+
+
+class PrimaryFieldMonitorPermissionsForVisitTransitionTestCase(VisitTransitionPermissionsTestCase):
+    ALLOWED_TRANSITION = [
+        ('assigned', 'accept'),
+        ('assigned', 'reject'),
+        ('accepted', 'mark_ready'),
+        ('ready', 'send_report'),
+        ('report_rejected', 'send_report'),
+    ]
+
+    @classmethod
+    def setUpTestData(cls):
+        super().setUpTestData()
+
+        cls.user = UserFactory(unicef_user=True)
+        cls.user_role = 'Primary Field Monitor'
+
+    def create_object(self, transition, **kwargs):
+        opts = {
+            'primary_field_monitor': self.user
+        }
+
+        opts.update(kwargs)
+        return super().create_object(transition, **opts)
+
+
+class DataCollectorMPermissionsForVisitTransitionTestCase(VisitTransitionPermissionsTestCase):
+    ALLOWED_TRANSITION = []
+
+    @classmethod
+    def setUpTestData(cls):
+        super().setUpTestData()
+
+        cls.user = UserFactory(unicef_user=True)
+        cls.user_role = 'Data Collector'
+
+    def create_object(self, transition, **kwargs):
+        opts = {
+            'team_members': [self.user]
+        }
+
+        opts.update(kwargs)
+        return super().create_object(transition, **opts)

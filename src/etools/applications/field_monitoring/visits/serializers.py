@@ -138,11 +138,17 @@ class VisitSerializer(SnapshotModelSerializer, VisitListSerializer):
     class Meta(VisitListSerializer.Meta):
         fields = VisitListSerializer.Meta.fields + (
             'scope_by_methods',
+            'cancel_comment', 'reject_comment', 'report_reject_comment',
         ) + tuple(Visit.STATUSES_DATES.values())
         extra_kwargs = {
+            'cancel_comment': {'read_only': True},
+            'reject_comment': {'read_only': True},
+            'report_reject_comment': {'read_only': True},
+        }
+        extra_kwargs.update({
             field: {'read_only': True}
             for field in Visit.STATUSES_DATES.values()
-        }
+        })
 
     def get_scope_by_methods(self, obj):
         return VisitMethodSerializer(

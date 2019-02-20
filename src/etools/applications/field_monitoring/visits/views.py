@@ -14,6 +14,7 @@ from etools.applications.action_points.filters import ReferenceNumberOrderingFil
 from etools.applications.field_monitoring.fm_settings.models import CPOutputConfig, LocationSite
 from etools.applications.field_monitoring.fm_settings.serializers.cp_outputs import MinimalCPOutputConfigListSerializer
 from etools.applications.field_monitoring.fm_settings.serializers.locations import LocationSiteLightSerializer
+from etools.applications.field_monitoring.permissions import UserIsFieldMonitor, visit_is, UserIsPrimaryFieldMonitor
 from etools.applications.field_monitoring.views import FMBaseViewSet
 from etools.applications.field_monitoring.visits.filters import VisitFilter, VisitTeamMembersFilter
 from etools.applications.field_monitoring.visits.models import Visit, VisitMethodType
@@ -21,18 +22,32 @@ from etools.applications.field_monitoring.visits.serializers import VisitListSer
     VisitMethodTypeSerializer, VisitSerializer, VisitsTotalSerializers
 from etools.applications.partners.models import PartnerOrganization
 from etools.applications.partners.serializers.partner_organization_v2 import MinimalPartnerOrganizationListSerializer
+from etools.applications.permissions_simplified.metadata import SimplePermissionBasedMetadata
+from etools.applications.permissions_simplified.views import SimplePermittedViewSetMixin, \
+    SimplePermittedFSMTransitionActionMixin
 from etools.applications.users.serializers import MinimalUserSerializer
 
 
 class VisitsViewSet(
     FMBaseViewSet,
-    mixins.ListModelMixin,
-    mixins.CreateModelMixin,
-    mixins.RetrieveModelMixin,
-    mixins.UpdateModelMixin,
-    mixins.DestroyModelMixin,
-    viewsets.GenericViewSet
+    SimplePermittedViewSetMixin,
+    SimplePermittedFSMTransitionActionMixin,
+    viewsets.ModelViewSet
 ):
+    write_permission_classes = [
+        UserIsFieldMonitor & (visit_is('draft') | visit_is('rejected'))
+    ]
+    transition_permission_classes = {
+        'assign': [UserIsFieldMonitor],
+        'accept': [UserIsPrimaryFieldMonitor],
+        'reject': [UserIsFieldMonitor],
+        'mark_ready': [UserIsPrimaryFieldMonitor],
+        'send_report': [UserIsPrimaryFieldMonitor],
+        'reject_report': [UserIsFieldMonitor],
+        'complete': [UserIsFieldMonitor],
+        'cancel': [UserIsFieldMonitor],
+    }
+    metadata_class = SimplePermissionBasedMetadata
     serializer_class = VisitSerializer
     queryset = Visit.objects.prefetch_related(
         'tasks', 'primary_field_monitor', 'team_members',

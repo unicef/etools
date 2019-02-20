@@ -3,28 +3,36 @@ from rest_framework import mixins, viewsets
 from django_filters.rest_framework import DjangoFilterBackend
 
 from unicef_attachments.serializers import BaseAttachmentSerializer
-from unicef_restlib.views import NestedViewSetMixin
 
 from etools.applications.field_monitoring.data_collection.models import StartedMethod, TaskData, CheckListItemValue
 from etools.applications.field_monitoring.data_collection.serializers import VisitDataCollectionSerializer, \
     StartedMethodSerializer, TaskDataSerializer, VisitTaskLinkDataCollectionSerializer, \
     TasksOverallCheckListSerializer, StartedMethodCheckListSerializer, CheckListValueSerializer
+from etools.applications.field_monitoring.permissions import UserIsPrimaryFieldMonitor, UserIsDataCollector, visit_is
 from etools.applications.field_monitoring.views import FMBaseViewSet, FMBaseAttachmentsViewSet
 from etools.applications.field_monitoring.visits.models import Visit, VisitTaskLink, TaskCheckListItem
+from etools.applications.permissions_simplified.metadata import SimplePermissionBasedMetadata
+from etools.applications.permissions_simplified.views import SimplePermittedViewSetMixin
 
 
 class VisitsDataCollectionViewSet(
     FMBaseViewSet,
+    SimplePermittedViewSetMixin,
     mixins.RetrieveModelMixin,
     viewsets.GenericViewSet
 ):
+    write_permission_classes = [
+        (UserIsPrimaryFieldMonitor | UserIsDataCollector)
+        & (visit_is('accepted') | visit_is('ready') | visit_is('report_rejected'))
+    ]
+    metadata_class = SimplePermissionBasedMetadata
     serializer_class = VisitDataCollectionSerializer
-    queryset = Visit.objects.all()
+    queryset = Visit.objects.prefetch_related('team_members')
 
 
 class VisitTasksDataCollectionViewSet(
     FMBaseViewSet,
-    NestedViewSetMixin,
+    SimplePermittedViewSetMixin,
     viewsets.ModelViewSet
 ):
     lookup_field = 'task_id'
@@ -34,7 +42,7 @@ class VisitTasksDataCollectionViewSet(
 
 class StartedMethodViewSet(
     FMBaseViewSet,
-    NestedViewSetMixin,
+    SimplePermittedViewSetMixin,
     viewsets.ModelViewSet
 ):
     serializer_class = StartedMethodSerializer
@@ -43,7 +51,7 @@ class StartedMethodViewSet(
 
 class TaskDataViewSet(
     FMBaseViewSet,
-    NestedViewSetMixin,
+    SimplePermittedViewSetMixin,
     mixins.ListModelMixin,
     mixins.UpdateModelMixin,
     viewsets.GenericViewSet
@@ -56,7 +64,7 @@ class TaskDataViewSet(
 
 class OverallCheckListViewSet(
     FMBaseViewSet,
-    NestedViewSetMixin,
+    SimplePermittedViewSetMixin,
     viewsets.ModelViewSet
 ):
     parent_lookup_field = 'visit_task__visit'
@@ -74,7 +82,7 @@ class OverallCheckListAttachmentsViewSet(FMBaseAttachmentsViewSet):
 
 class StartedMethodCheckListViewSet(
     FMBaseViewSet,
-    NestedViewSetMixin,
+    SimplePermittedViewSetMixin,
     mixins.ListModelMixin,
     mixins.RetrieveModelMixin,
     mixins.UpdateModelMixin,
@@ -103,7 +111,7 @@ class StartedMethodCheckListViewSet(
 
 class CheckListValueViewSet(
     FMBaseViewSet,
-    NestedViewSetMixin,
+    SimplePermittedViewSetMixin,
     mixins.RetrieveModelMixin,
     viewsets.GenericViewSet,
 ):

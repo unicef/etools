@@ -17,7 +17,6 @@ from unicef_locations.serializers import LocationLightSerializer
 from etools.applications.field_monitoring.fm_settings.models import LocationSite
 from etools.applications.field_monitoring.fm_settings.serializers.cp_outputs import PartnerOrganizationSerializer
 from etools.applications.field_monitoring.fm_settings.serializers.locations import LocationSiteLightSerializer
-from etools.applications.field_monitoring.metadata import PermissionBasedMetadata
 from etools.applications.field_monitoring.permissions import UserIsFieldMonitor
 from etools.applications.field_monitoring.planning.export.renderers import TaskCSVRenderer
 from etools.applications.field_monitoring.planning.export.serializers import TaskExportSerializer
@@ -28,6 +27,7 @@ from etools.applications.field_monitoring.planning.serializers import YearPlanSe
 from etools.applications.field_monitoring.fm_settings.filters import CPOutputIsActiveFilter
 from etools.applications.field_monitoring.views import FMBaseViewSet
 from etools.applications.field_monitoring.visits.models import Visit
+from etools.applications.permissions_simplified.metadata import SimplePermissionBasedMetadata
 from etools.applications.permissions_simplified.views import SimplePermittedViewSetMixin
 from etools.applications.partners.models import PartnerOrganization
 
@@ -40,7 +40,7 @@ class YearPlanViewSet(
     viewsets.GenericViewSet
 ):
     write_permission_classes = [UserIsFieldMonitor]
-    metadata_class = PermissionBasedMetadata
+    metadata_class = SimplePermissionBasedMetadata
     queryset = YearPlan.objects.all()
     serializer_class = YearPlanSerializer
 
@@ -75,7 +75,7 @@ class YearPlanViewSet(
 
 
 class TaskViewSet(SimplePermittedViewSetMixin, FMBaseViewSet, viewsets.ModelViewSet):
-    metadata_class = PermissionBasedMetadata
+    metadata_class = SimplePermissionBasedMetadata
     queryset = Task.objects.prefetch_related(
         'cp_output_config', 'cp_output_config__cp_output', 'cp_output_config__sections',
         'partner', 'intervention', 'location', 'location_site', 'sections',

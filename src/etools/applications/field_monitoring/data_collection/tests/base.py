@@ -9,7 +9,7 @@ class AssignedVisitMixin(object):
     def setUpTestData(cls):
         super().setUpTestData()
 
-        cls.assigned_visit = VisitFactory(status=Visit.STATUS_CHOICES.draft, tasks__count=1)
+        cls.assigned_visit = VisitFactory(status=Visit.STATUS_CHOICES.draft, tasks__count=1, team_members__count=1)
 
         cls.assigned_method_type = FMMethodTypeFactory()
         task = cls.assigned_visit.tasks.first()
@@ -25,3 +25,6 @@ class AssignedVisitMixin(object):
 
         cls.assigned_visit_method_type = task.visit_task_links.first().cp_output_configs.first()\
             .recommended_method_types.first()
+
+        cls.primary_field_monitor = cls.assigned_visit.primary_field_monitor
+        cls.data_collector = cls.assigned_visit.team_members.first()

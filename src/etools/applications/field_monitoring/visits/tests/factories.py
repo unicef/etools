@@ -12,8 +12,8 @@ from etools.libraries.tests.factories import InheritedTrait
 
 
 class VisitFactory(factory.DjangoModelFactory):
-    author = factory.SubFactory(UserFactory)
-    primary_field_monitor = factory.SubFactory(UserFactory)
+    author = factory.SubFactory(UserFactory, pme=True)
+    primary_field_monitor = factory.SubFactory(UserFactory, unicef_user=True)
     start_date = fuzzy.FuzzyDateTime(
         start_dt=timezone.datetime(timezone.now().year, 1, 1, tzinfo=timezone.now().tzinfo),
         end_dt=timezone.now()

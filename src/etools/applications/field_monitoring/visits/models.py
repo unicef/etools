@@ -243,7 +243,7 @@ class Visit(InheritedModelMixin, SoftDeleteMixin, TimeStampedModel):
     @transition(
         status, source=[
             STATUS_CHOICES.draft, STATUS_CHOICES.assigned, STATUS_CHOICES.accepted,
-            STATUS_CHOICES.rejected, STATUS_CHOICES.ready,
+            STATUS_CHOICES.rejected,
         ], target=STATUS_CHOICES.cancelled,
     )
     def cancel(self, cancel_comment):

@@ -35,7 +35,7 @@ class StartedMethodsViewTestCase(FMBaseTestCaseMixin, AssignedVisitMixin, BaseTe
 
         response = self.forced_auth_req(
             'get', reverse('field_monitoring_data_collection:started-methods-list', args=[self.assigned_visit.id]),
-            user=self.unicef_user
+            user=self.primary_field_monitor
         )
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
@@ -44,7 +44,7 @@ class StartedMethodsViewTestCase(FMBaseTestCaseMixin, AssignedVisitMixin, BaseTe
     def start_new_method(self):
         response = self.forced_auth_req(
             'post', reverse('field_monitoring_data_collection:started-methods-list', args=[self.assigned_visit.id]),
-            user=self.unicef_user,
+            user=self.primary_field_monitor,
             data={
                 'method': self.assigned_visit_method_type.method.id,
                 'method_type': self.assigned_visit_method_type.id,
@@ -60,8 +60,8 @@ class TaskDataViewTestCase(FMBaseTestCaseMixin, BaseTenantTestCase):
     def setUpTestData(cls):
         super().setUpTestData()
 
-        cls.visit = VisitFactory(status=Visit.STATUS_CHOICES.assigned)
-        cls.started_method = StartedMethodFactory(visit=cls.visit)
+        cls.visit = VisitFactory(status=Visit.STATUS_CHOICES.accepted)
+        cls.started_method = StartedMethodFactory(visit=cls.visit, author=cls.visit.primary_field_monitor)
         cls.task_data = TaskDataFactory(visit_task__visit=cls.visit, started_method=cls.started_method)
 
     def test_list(self):
@@ -80,7 +80,7 @@ class TaskDataViewTestCase(FMBaseTestCaseMixin, BaseTenantTestCase):
         response = self.forced_auth_req(
             'patch', reverse('field_monitoring_data_collection:task-data-detail',
                              args=[self.visit.id, self.started_method.id, task_data.id]),
-            user=self.unicef_user,
+            user=task_data.started_method.author,
             data={
                 'is_probed': False
             }
@@ -95,10 +95,14 @@ class CheckListViewTestCase(FMBaseTestCaseMixin, AssignedVisitMixin, BaseTenantT
     def setUpTestData(cls):
         super().setUpTestData()
 
+        cls.assigned_visit.accept()
+        cls.assigned_visit.save()
+
         cls.started_method = StartedMethodFactory(
             visit=cls.assigned_visit,
             method=cls.assigned_visit_method_type.method,
             method_type=cls.assigned_visit_method_type,
+            author=cls.primary_field_monitor
         )
         cls.task_data = cls.started_method.tasks_data.first()
 
@@ -136,7 +140,7 @@ class CheckListViewTestCase(FMBaseTestCaseMixin, AssignedVisitMixin, BaseTenantT
         response = self.forced_auth_req(
             'patch', reverse('field_monitoring_data_collection:started-method-checklist-detail',
                              args=[self.assigned_visit.id, self.started_method.id, checklist_item.id]),
-            user=self.unicef_user,
+            user=self.primary_field_monitor,
             data={
                 'checklist_values': [
                     {
@@ -158,7 +162,7 @@ class CheckListViewTestCase(FMBaseTestCaseMixin, AssignedVisitMixin, BaseTenantT
         response = self.forced_auth_req(
             'patch', reverse('field_monitoring_data_collection:started-method-checklist-detail',
                              args=[self.assigned_visit.id, self.started_method.id, checklist_item.id]),
-            user=self.unicef_user,
+            user=self.primary_field_monitor,
             data={
                 'checklist_values': [
                     {
@@ -174,12 +178,25 @@ class CheckListViewTestCase(FMBaseTestCaseMixin, AssignedVisitMixin, BaseTenantT
         self.assertEqual(response.data['checklist_values'][0]['finding_description'], 'test')
 
 
-class CheckListValueAttachmentsViewTestCase(FMBaseTestCaseMixin, BaseTenantTestCase):
+class CheckListValueAttachmentsViewTestCase(FMBaseTestCaseMixin, AssignedVisitMixin, BaseTenantTestCase):
     @classmethod
     def setUpTestData(cls):
         super().setUpTestData()
 
-        cls.value = CheckListItemValueFactory()
+        cls.assigned_visit.accept()
+        cls.assigned_visit.save()
+
+        cls.started_method = StartedMethodFactory(
+            visit=cls.assigned_visit,
+            method=cls.assigned_visit_method_type.method,
+            method_type=cls.assigned_visit_method_type,
+            author=cls.primary_field_monitor
+        )
+        cls.task_data = cls.started_method.tasks_data.all()[0]
+        cls.value = CheckListItemValueFactory(
+            task_data=cls.task_data,
+            checklist_item=cls.assigned_visit.visit_task_links.all()[0].checklist_items.all()[0]
+        )
 
     def test_list(self):
         AttachmentFactory(content_object=self.value)
@@ -213,7 +230,7 @@ class CheckListValueAttachmentsViewTestCase(FMBaseTestCaseMixin, BaseTenantTestC
                     self.value.id
                 ]
             ),
-            user=self.unicef_user,
+            user=self.primary_field_monitor,
             request_format='multipart',
             data={
                 'file': SimpleUploadedFile('hello_world.txt', u'hello world!'.encode('utf-8')),
@@ -236,7 +253,7 @@ class CheckListValueAttachmentsViewTestCase(FMBaseTestCaseMixin, BaseTenantTestC
                     attachment.id
                 ]
             ),
-            user=self.unicef_user,
+            user=self.primary_field_monitor,
             request_format='multipart',
         )
         self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
@@ -247,7 +264,10 @@ class OverallCheckListViewTestCase(FMBaseTestCaseMixin, AssignedVisitMixin, Base
     def setUpTestData(cls):
         super().setUpTestData()
 
-        cls.checklist_item = TaskCheckListItem.objects.get(visit_task__visit=cls.assigned_visit)
+        cls.assigned_visit.accept()
+        cls.assigned_visit.save()
+
+        cls.checklist_item = cls.assigned_visit.visit_task_links.all()[0].checklist_items.all()[0]
 
     def test_list(self):
         response = self.forced_auth_req(
@@ -265,8 +285,9 @@ class OverallCheckListViewTestCase(FMBaseTestCaseMixin, AssignedVisitMixin, Base
             visit=self.assigned_visit,
             method=self.assigned_visit_method_type.method,
             method_type=self.assigned_visit_method_type,
+            author=self.primary_field_monitor
         )
-        task_data = started_method.tasks_data.first()
+        task_data = started_method.tasks_data.all()[0]
 
         checklist_item = TaskCheckListItem.objects.get(visit_task=task_data.visit_task)
         CheckListItemValueFactory(checklist_item=checklist_item, task_data=task_data)
@@ -304,7 +325,7 @@ class OverallCheckListViewTestCase(FMBaseTestCaseMixin, AssignedVisitMixin, Base
         response = self.forced_auth_req(
             'patch', reverse('field_monitoring_data_collection:visit-overall-checklist-detail',
                              args=[self.assigned_visit.id, self.checklist_item.id]),
-            user=self.unicef_user,
+            user=self.primary_field_monitor,
             data=data
         )
 
@@ -313,12 +334,22 @@ class OverallCheckListViewTestCase(FMBaseTestCaseMixin, AssignedVisitMixin, Base
         self.assertEqual(response.data['finding_description'], data['finding_description'])
 
 
-class OverallCheckListAttachmentsViewTestCase(FMBaseTestCaseMixin, BaseTenantTestCase):
+class OverallCheckListAttachmentsViewTestCase(FMBaseTestCaseMixin, AssignedVisitMixin, BaseTenantTestCase):
     @classmethod
     def setUpTestData(cls):
         super().setUpTestData()
 
-        cls.checklist_item = TaskCheckListItemFactory()
+        cls.assigned_visit.accept()
+        cls.assigned_visit.save()
+
+        cls.started_method = StartedMethodFactory(
+            visit=cls.assigned_visit,
+            method=cls.assigned_visit_method_type.method,
+            method_type=cls.assigned_visit_method_type,
+            author=cls.primary_field_monitor
+        )
+        cls.task_data = cls.started_method.tasks_data.all()[0]
+        cls.checklist_item = cls.assigned_visit.visit_task_links.all()[0].checklist_items.all()[0]
 
     def test_list(self):
         AttachmentFactory(content_object=self.checklist_item)
@@ -348,7 +379,7 @@ class OverallCheckListAttachmentsViewTestCase(FMBaseTestCaseMixin, BaseTenantTes
                     self.checklist_item.id,
                 ]
             ),
-            user=self.unicef_user,
+            user=self.primary_field_monitor,
             request_format='multipart',
             data={
                 'file': SimpleUploadedFile('hello_world.txt', u'hello world!'.encode('utf-8')),
@@ -369,7 +400,7 @@ class OverallCheckListAttachmentsViewTestCase(FMBaseTestCaseMixin, BaseTenantTes
                     attachment.id
                 ]
             ),
-            user=self.unicef_user,
+            user=self.primary_field_monitor,
             request_format='multipart',
         )
         self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
