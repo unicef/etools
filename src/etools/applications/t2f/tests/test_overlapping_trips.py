@@ -15,7 +15,6 @@ from etools.applications.publics.tests.factories import (
     PublicsCurrencyFactory,
     PublicsDSARateFactory,
     PublicsDSARegionFactory,
-    PublicsTravelExpenseTypeFactory,
 )
 from etools.applications.t2f.models import make_travel_reference_number, ModeOfTravel, Travel
 from etools.applications.t2f.tests.factories import ItineraryItemFactory, TravelFactory
@@ -43,7 +42,6 @@ class OverlappingTravelsTest(BaseTenantTestCase):
                                    supervisor=cls.unicef_staff,
                                    start_date=datetime(2017, 4, 4, 12, 00, tzinfo=UTC),
                                    end_date=datetime(2017, 4, 14, 16, 00, tzinfo=UTC))
-        cls.travel.expenses.all().delete()
         ItineraryItemFactory(travel=cls.travel)
         ItineraryItemFactory(travel=cls.travel)
         cls.travel.submit_for_approval()
@@ -54,8 +52,7 @@ class OverlappingTravelsTest(BaseTenantTestCase):
         currency = PublicsCurrencyFactory()
         dsa_region = PublicsDSARegionFactory()
 
-        data = {'deductions': [],
-                'itinerary': [{'origin': 'Berlin',
+        data = {'itinerary': [{'origin': 'Berlin',
                                'destination': 'Budapest',
                                'departure_date': '2017-04-07T17:06:55.821490',
                                'arrival_date': '2017-04-08T17:06:55.821490',
@@ -72,7 +69,6 @@ class OverlappingTravelsTest(BaseTenantTestCase):
                                'mode_of_travel': ModeOfTravel.RAIL,
                                'airlines': []}],
                 'activities': [],
-                'cost_assignments': [],
                 'ta_required': True,
                 'international_travel': False,
                 'mode_of_travel': [ModeOfTravel.BOAT],
@@ -102,12 +98,10 @@ class OverlappingTravelsTest(BaseTenantTestCase):
 
     def test_almost_overlapping_trips(self):
         currency = PublicsCurrencyFactory()
-        expense_type = PublicsTravelExpenseTypeFactory()
         dsa_rate = PublicsDSARateFactory(effective_from_date=datetime(2017, 4, 10, 16, 00, tzinfo=UTC))
         dsa_region = dsa_rate.region
 
-        data = {'deductions': [],
-                'itinerary': [{'origin': 'Berlin',
+        data = {'itinerary': [{'origin': 'Berlin',
                                'destination': 'Budapest',
                                'departure_date': '2017-04-14T17:06:55.821490',
                                'arrival_date': '2017-04-15T17:06:55.821490',
@@ -124,7 +118,6 @@ class OverlappingTravelsTest(BaseTenantTestCase):
                                'mode_of_travel': ModeOfTravel.RAIL,
                                'airlines': []}],
                 'activities': [],
-                'cost_assignments': [],
                 'ta_required': True,
                 'international_travel': False,
                 'mode_of_travel': [ModeOfTravel.BOAT],
@@ -134,11 +127,7 @@ class OverlappingTravelsTest(BaseTenantTestCase):
                 'end_date': '2017-05-22T15:02:13+00:00',
                 'currency': currency.id,
                 'purpose': 'Purpose',
-                'additional_note': 'Notes',
-                'expenses': [{'amount': '120',
-                              'type': expense_type.id,
-                              'currency': currency.id,
-                              'document_currency': currency.id}]}
+                'additional_note': 'Notes'}
 
         response = self.forced_auth_req('post', reverse('t2f:travels:list:index'),
                                         data=data, user=self.traveler)
@@ -157,8 +146,7 @@ class OverlappingTravelsTest(BaseTenantTestCase):
         currency = PublicsCurrencyFactory()
         dsa_region = PublicsDSARegionFactory()
 
-        data = {'deductions': [],
-                'itinerary': [{'origin': 'Berlin',
+        data = {'itinerary': [{'origin': 'Berlin',
                                'destination': 'Budapest',
                                'departure_date': '2017-04-14T17:06:55.821490',
                                'arrival_date': '2017-04-15T17:06:55.821490',
@@ -175,7 +163,6 @@ class OverlappingTravelsTest(BaseTenantTestCase):
                                'mode_of_travel': ModeOfTravel.RAIL,
                                'airlines': []}],
                 'activities': [],
-                'cost_assignments': [],
                 'ta_required': True,
                 'international_travel': False,
                 'mode_of_travel': [ModeOfTravel.BOAT],
@@ -248,8 +235,7 @@ class OverlappingTravelsTest(BaseTenantTestCase):
         currency = PublicsCurrencyFactory()
         dsa_region = PublicsDSARegionFactory()
 
-        data = {'deductions': [],
-                'itinerary': [{'origin': 'Berlin',
+        data = {'itinerary': [{'origin': 'Berlin',
                                'destination': 'Budapest',
                                'departure_date': '2017-04-14T17:06:55.821490',
                                'arrival_date': '2017-04-15T17:06:55.821490',
@@ -266,7 +252,6 @@ class OverlappingTravelsTest(BaseTenantTestCase):
                                'mode_of_travel': ModeOfTravel.RAIL,
                                'airlines': []}],
                 'activities': [],
-                'cost_assignments': [],
                 'ta_required': True,
                 'international_travel': False,
                 'mode_of_travel': [ModeOfTravel.BOAT],

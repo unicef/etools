@@ -76,27 +76,6 @@ class ItineraryItemAdmin(admin.ModelAdmin):
     )
 
 
-@admin.register(models.Expense)
-class ExpenseAdmin(AdminListMixin, admin.ModelAdmin):
-    raw_id_fields = (
-        'travel',
-    )
-
-
-@admin.register(models.Deduction)
-class DeductionAdmin(AdminListMixin, admin.ModelAdmin):
-    raw_id_fields = (
-        'travel',
-    )
-
-
-@admin.register(models.CostAssignment)
-class CostAssignmentAdmin(AdminListMixin, admin.ModelAdmin):
-    raw_id_fields = (
-        'travel',
-    )
-
-
 @admin.register(models.TravelAttachment)
 class TravelAttachmentAdmin(AdminListMixin, admin.ModelAdmin):
     pass

@@ -24,16 +24,16 @@ class PartnersAdminForm(AutoSizeTextForm):
     def clean(self):
         cleaned_data = super().clean()
 
-        partner_type = cleaned_data.get(u'partner_type')
-        cso_type = cleaned_data.get(u'cso_type')
+        partner_type = cleaned_data.get('partner_type')
+        cso_type = cleaned_data.get('cso_type')
 
         if partner_type and partner_type == PartnerType.CIVIL_SOCIETY_ORGANIZATION and not cso_type:
             raise ValidationError(
-                _(u'You must select a type for this CSO')
+                _('You must select a type for this CSO')
             )
         if partner_type and partner_type != PartnerType.CIVIL_SOCIETY_ORGANIZATION and cso_type:
             raise ValidationError(
-                _(u'"CSO Type" does not apply to non-CSO organizations, please remove type')
+                _('"CSO Type" does not apply to non-CSO organizations, please remove type')
             )
         return cleaned_data
 

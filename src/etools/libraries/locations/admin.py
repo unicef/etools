@@ -16,6 +16,7 @@ class EtoolsCartoDBTableAdmin(CartoDBTableAdmin):
     def import_sites(self, request, queryset):
         # ensure the location tree is valid before we import/update the data
         with transaction.atomic():
+            Location.objects.all_locations().select_for_update().only('id')
             Location.objects.rebuild()
 
         task_list = []

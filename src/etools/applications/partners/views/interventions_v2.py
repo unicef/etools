@@ -105,6 +105,7 @@ class InterventionListAPIView(QueryStringFilterMixin, ExportModelMixin, Interven
         ('unicef_focal_points', 'unicef_focal_points__in'),
         ('start', 'start__gte'),
         ('end', 'end__lte'),
+        ('end_after', 'end__gte'),
         ('office', 'offices__in'),
         ('location', 'result_links__ll_results__applied_indicators__locations__name__icontains'),
     )
@@ -541,7 +542,7 @@ class InterventionLowerResultUpdateView(RetrieveUpdateDestroyAPIView):
         # make sure there are no indicators added to this LLO
         obj = self.get_object()
         if obj.applied_indicators.exists():
-            raise ValidationError(u'This PD Output has indicators related, please remove the indicators first')
+            raise ValidationError('This PD Output has indicators related, please remove the indicators first')
         return super().delete(request, *args, **kwargs)
 
 
@@ -576,8 +577,8 @@ class InterventionResultLinkUpdateView(RetrieveUpdateDestroyAPIView):
         # make sure there are no indicators added to this LLO
         obj = self.get_object()
         if obj.ll_results.exists():
-            raise ValidationError(u'This CP Output cannot be removed from this Intervention because there are nested'
-                                  u' Results, please remove all Document Results to continue')
+            raise ValidationError('This CP Output cannot be removed from this Intervention because there are nested'
+                                  ' Results, please remove all Document Results to continue')
         return super().delete(request, *args, **kwargs)
 
 
@@ -629,7 +630,7 @@ class InterventionIndicatorsUpdateView(RetrieveUpdateDestroyAPIView):
         ai = self.get_object()
         intervention = ai.lower_result.result_link.intervention
         if not intervention.status == Intervention.DRAFT:
-            raise ValidationError(u'Deleting an indicator is only possible in status Draft.')
+            raise ValidationError('Deleting an indicator is only possible in status Draft.')
         return super().delete(request, *args, **kwargs)
 
 

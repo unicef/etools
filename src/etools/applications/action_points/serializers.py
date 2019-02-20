@@ -12,13 +12,13 @@ from unicef_snapshot.serializers import SnapshotModelSerializer
 from etools.applications.action_points.categories.models import Category
 from etools.applications.action_points.categories.serializers import CategorySerializer
 from etools.applications.action_points.models import ActionPoint
-from etools.applications.EquiTrack.utils import get_current_site
 from etools.applications.partners.serializers.interventions_v2 import BaseInterventionListSerializer
 from etools.applications.partners.serializers.partner_organization_v2 import MinimalPartnerOrganizationListSerializer
 from etools.applications.permissions2.serializers import PermissionsBasedSerializerMixin
 from etools.applications.reports.serializers.v1 import ResultSerializer, SectionSerializer
 from etools.applications.users.serializers import OfficeSerializer
 from etools.applications.users.serializers_v3 import MinimalUserSerializer
+from etools.libraries.djangolib.utils import get_current_site
 
 
 class ActionPointBaseSerializer(UserContextSerializerMixin, SnapshotModelSerializer, serializers.ModelSerializer):
