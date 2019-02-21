@@ -76,11 +76,31 @@ class UserFactory(factory.django.DjangoModelFactory):
     email = factory.Sequence(lambda n: "user{}@example.com".format(n))
     password = factory.PostGenerationMethodCall('set_password', 'test')
 
+    # unicef user is set as group by default, but we can easily overwrite it by passing empty list
+    groups__data = ['UNICEF User']
+
     # We pass in 'user' to link the generated Profile to our just-generated User
     # This will call ProfileFactory(user=our_new_user), thus skipping the SubFactory.
     profile = factory.RelatedFactory(ProfileFactory, 'user')
 
     @factory.post_generation
-    def groups(self, create, extracted, **kwargs):
-        group, created = Group.objects.get_or_create(name='UNICEF User')
-        self.groups.add(group)
+    def groups(self, create, extracted, data=None, **kwargs):
+        if not create:
+            return
+
+        extracted = (extracted or []) + (data or [])
+
+        if extracted:
+            for i, group in enumerate(extracted):
+                if isinstance(group, str):
+                    extracted[i] = Group.objects.get_or_create(name=group)[0]
+
+            self.groups.add(*extracted)
+
+
+class SimpleUserFactory(UserFactory):
+    groups__data = []
+
+
+class PMEUserFactory(UserFactory):
+    groups__data = ['UNICEF User', 'PME']

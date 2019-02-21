@@ -17,7 +17,7 @@ from etools.applications.audit.tests.factories import (AuditFactory, AuditPartne
                                                        EngagementFactory, MicroAssessmentFactory,
                                                        PurchaseOrderFactory, RiskBluePrintFactory, RiskCategoryFactory,
                                                        SpecialAuditFactory, SpotCheckFactory, UserFactory,
-                                                       StaffSpotCheckFactory)
+                                                       StaffSpotCheckFactory, AuditorUserFactory)
 from etools.applications.EquiTrack.tests.cases import BaseTenantTestCase
 from etools.applications.audit.tests.test_transitions import MATransitionsTestCaseMixin
 from etools.applications.partners.models import PartnerType
@@ -289,7 +289,7 @@ class TestEngagementsListViewSet(EngagementTransitionsTestCaseMixin, BaseTenantT
         self._test_list(self.usual_user, expected_status=status.HTTP_403_FORBIDDEN)
 
     def test_list_view_without_audit_organization(self):
-        user = UserFactory(unicef_user=True)
+        user = UserFactory()
         user.groups.add(Auditor.as_group())
 
         self._test_list(user, [self.engagement, self.second_engagement])
@@ -780,7 +780,7 @@ class TestAuditorFirmViewSet(AuditTestCaseMixin, BaseTenantTestCase):
 
     def test_auditor_search_view(self):
         UserFactory()
-        auditor = UserFactory(auditor=True, email='test@example.com')
+        auditor = AuditorUserFactory(email='test@example.com')
 
         response = self.forced_auth_req(
             'get',
@@ -838,8 +838,8 @@ class TestAuditorStaffMembersViewSet(AuditTestCaseMixin, BaseTenantTestCase):
         self.assertEqual(response.data[0]['email'], user.email)
 
     def test_staff_search(self):
-        UserFactory(auditor=True, partner_firm=self.auditor_firm)
-        user = UserFactory(auditor=True, partner_firm=self.auditor_firm, email='test_unique@example.com')
+        AuditorUserFactory(partner_firm=self.auditor_firm)
+        user = AuditorUserFactory(partner_firm=self.auditor_firm, email='test_unique@example.com')
 
         response = self.forced_auth_req(
             'get',
@@ -888,7 +888,7 @@ class TestAuditorStaffMembersViewSet(AuditTestCaseMixin, BaseTenantTestCase):
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
 
     def test_assign_existing_user(self):
-        user = UserFactory(unicef_user=True)
+        user = UserFactory()
 
         response = self.forced_auth_req(
             'post',
@@ -902,7 +902,7 @@ class TestAuditorStaffMembersViewSet(AuditTestCaseMixin, BaseTenantTestCase):
         self.assertEqual(response.data['user']['email'], user.email)
 
     def test_assign_existing_auditor(self):
-        user = UserFactory(auditor=True)
+        user = AuditorUserFactory()
 
         response = self.forced_auth_req(
             'post',
@@ -917,7 +917,7 @@ class TestAuditorStaffMembersViewSet(AuditTestCaseMixin, BaseTenantTestCase):
         self.assertEqual(response.data['user'][0], 'User is already assigned to auditor firm.')
 
     def test_deactivate_auditor_flow(self):
-        user = UserFactory(auditor=True, partner_firm=self.auditor_firm, is_active=True)
+        user = AuditorUserFactory(partner_firm=self.auditor_firm, is_active=True)
 
         list_response = self.forced_auth_req(
             'get',

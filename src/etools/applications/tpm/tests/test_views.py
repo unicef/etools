@@ -21,7 +21,8 @@ from etools.applications.partners.tests.factories import InterventionAttachmentF
 from etools.applications.reports.tests.factories import SectionFactory
 from etools.applications.tpm.models import ThirdPartyMonitor, TPMVisit
 from etools.applications.tpm.tests.base import TPMTestCaseMixin
-from etools.applications.tpm.tests.factories import _FUZZY_END_DATE, TPMPartnerFactory, TPMVisitFactory, UserFactory
+from etools.applications.tpm.tests.factories import _FUZZY_END_DATE, TPMPartnerFactory, TPMVisitFactory, TPMUserFactory
+from etools.applications.users.tests.factories import UserFactory
 from etools.applications.utils.common.tests.test_utils import TestExportMixin
 
 
@@ -98,7 +99,7 @@ class TestTPMVisitViewSet(TestExportMixin, TPMTestCaseMixin, BaseTenantTestCase)
         )
 
     def test_list_view_without_tpm_organization(self):
-        user = UserFactory(unicef_user=True)
+        user = UserFactory()
         user.groups.add(ThirdPartyMonitor.as_group())
 
         self._test_list_view(user, [])
@@ -674,7 +675,7 @@ class TestPartnerAttachmentsView(TPMTestCaseMixin, BaseTenantTestCase):
         response = self.forced_auth_req(
             'post',
             reverse('tpm:partner-attachments-list', args=[partner.id]),
-            user=UserFactory(tpm=True, tpm_partner=partner),
+            user=TPMUserFactory(tpm_partner=partner),
             request_format='multipart',
             data={
                 'file_type': AttachmentFileTypeFactory(code='tpm_partner').id,
