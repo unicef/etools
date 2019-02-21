@@ -1,6 +1,5 @@
 import datetime
 
-from django.contrib.auth.models import Group
 from django.db import connection
 from django.utils import timezone
 
@@ -10,13 +9,13 @@ from unicef_locations.tests.factories import LocationFactory
 
 from etools.applications.action_points.tests.factories import ActionPointFactory
 from etools.applications.attachments.tests.factories import AttachmentFactory
-from etools.applications.firms.tests.factories import BaseFirmFactory, BaseStaffMemberFactory, BaseUserFactory
+from etools.applications.firms.tests.factories import BaseFirmFactory, BaseStaffMemberFactory
 from etools.applications.partners.models import InterventionResultLink
 from etools.applications.partners.tests.factories import InterventionFactory
 from etools.applications.reports.tests.factories import ResultFactory, SectionFactory
 from etools.applications.tpm.models import TPMActivity, TPMVisit, TPMVisitReportRejectComment
 from etools.applications.tpm.tpmpartners.models import TPMPartner, TPMPartnerStaffMember
-from etools.applications.users.tests.factories import OfficeFactory as SimpleOfficeFactory
+from etools.applications.users.tests.factories import OfficeFactory as SimpleOfficeFactory, PMEUserFactory, UserFactory
 from etools.applications.utils.common.tests.factories import StatusFactoryMetaClass
 
 _FUZZY_START_DATE = timezone.now().date() - datetime.timedelta(days=5)
@@ -82,7 +81,7 @@ class TPMActivityFactory(factory.DjangoModelFactory):
         if extracted is not None:
             self.unicef_focal_points.add(*extracted)
         else:
-            self.unicef_focal_points.add(*[UserFactory(unicef_user=True) for i in range(count)])
+            self.unicef_focal_points.add(*[UserFactory() for i in range(count)])
 
     @factory.post_generation
     def offices(self, create, extracted, count=0, **kwargs):
@@ -132,42 +131,12 @@ class TPMActivityFactory(factory.DjangoModelFactory):
             ActionPointFactory(tpm_activity=self, **kwargs)
 
 
-class UserFactory(BaseUserFactory):
-    """
-    User factory with ability to quickly assign tpm related groups with special logic for tpm partner.
-    """
-    class Params:
-        unicef_user = factory.Trait(
-            groups=['UNICEF User'],
-        )
-
-        pme = factory.Trait(
-            groups=['UNICEF User', 'PME'],
-        )
-
-        tpm = factory.Trait(
-            groups=['Third Party Monitor'],
-        )
-
-    @factory.post_generation
-    def groups(self, create, extracted, **kwargs):
-        if not create:
-            return
-
-        if extracted is not None:
-            extracted = extracted[:]
-            for i, group in enumerate(extracted):
-                if isinstance(group, str):
-                    extracted[i] = Group.objects.get_or_create(name=group)[0]
-
-            self.groups.add(*extracted)
+class TPMUserFactory(UserFactory):
+    groups__data = ['Third Party Monitor']
 
     @factory.post_generation
     def tpm_partner(self, create, extracted, **kwargs):
         if not create:
-            return
-
-        if 'Third Party Monitor' not in self.groups.values_list('name', flat=True):
             return
 
         if not extracted:
@@ -182,7 +151,7 @@ class BaseTPMVisitFactory(factory.DjangoModelFactory):
 
     status = TPMVisit.STATUSES.draft
 
-    author = factory.SubFactory(UserFactory, pme=True)
+    author = factory.SubFactory(PMEUserFactory)
 
     tpm_partner = factory.SubFactory(TPMPartnerFactory)
 
