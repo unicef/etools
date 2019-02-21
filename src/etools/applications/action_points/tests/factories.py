@@ -13,7 +13,7 @@ from etools.applications.firms.tests.factories import BaseUserFactory
 from unicef_locations.tests.factories import LocationFactory
 from etools.applications.partners.tests.factories import InterventionFactory, ResultFactory
 from etools.applications.reports.tests.factories import SectionFactory
-from etools.libraries.tests.factories import InheritedTrait
+from etools.applications.utils.common.tests.factories import StatusFactoryMetaClass
 
 
 class UserFactory(BaseUserFactory):
@@ -61,7 +61,7 @@ class ActionPointCategoryFactory(factory.DjangoModelFactory):
     description = factory.fuzzy.FuzzyText()
 
 
-class ActionPointFactory(factory.DjangoModelFactory):
+class BaseActionPointFactory(factory.DjangoModelFactory):
     class Meta:
         model = ActionPoint
 
@@ -81,35 +81,30 @@ class ActionPointFactory(factory.DjangoModelFactory):
 
     assigned_to = factory.SubFactory(UserFactory, unicef_user=True)
 
-    comments__count = 0
-
-    class Params:
-        open = factory.Trait(
-            status=ActionPoint.STATUSES.open
-        )
-
-        pre_completed = InheritedTrait(
-            open,
-            comments__count=3
-        )
-
-        completed = InheritedTrait(
-            pre_completed,
-            status=ActionPoint.STATUSES.completed
-        )
-
-    @classmethod
-    def attributes(cls, create=False, extra=None):
-        if extra and 'status' in extra:
-
-            status = extra.pop('status')
-            extra[status] = True
-        return super().attributes(create, extra)
-
     @factory.post_generation
-    def comments(self, create, extracted, count, **kwargs):
+    def comments(self, create, extracted, count=0, **kwargs):
         if not create:
             return
 
         for i in range(count):
             ActionPointCommentFactory(content_object=self, **kwargs)
+
+
+class OpenActionPointFactory(BaseActionPointFactory):
+    status = ActionPoint.STATUSES.open
+
+
+class PreCompletedActionPointFactory(OpenActionPointFactory):
+    comments__count = 3
+
+
+class CompletedActionPointFactory(PreCompletedActionPointFactory):
+    status = ActionPoint.STATUSES.completed
+
+
+class ActionPointFactory(BaseActionPointFactory, metaclass=StatusFactoryMetaClass):
+    status_factories = {
+        'open': OpenActionPointFactory,
+        'pre_completed': PreCompletedActionPointFactory,
+        'completed': CompletedActionPointFactory,
+    }
