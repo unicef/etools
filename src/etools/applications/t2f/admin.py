@@ -1,5 +1,4 @@
 from django.contrib import admin
-from django.db.transaction import atomic
 
 from etools.applications.action_points.admin import ActionPointAdmin
 from etools.applications.publics.admin import AdminListMixin
@@ -36,20 +35,6 @@ class TravelAdmin(admin.ModelAdmin):
         'supervisor'
     )
 
-    # @atomic
-    def save_model(self, request, obj, form, change):
-        print("\n\n", 'save_model', "\n\n")
-        super().save_model(self, request, obj, form, change)
-
-    # @atomic
-    def save_form(self, request, form, change):
-        print("\n\n", 'save_form', "\n\n")
-        super().save_form(self, request, form, change)
-
-    @atomic
-    def get_form(self, request, obj, **kwargs):
-        print("\n\n", 'get_form', "\n\n")
-        return super().get_form(request, obj, **kwargs)
 
 @admin.register(models.TravelActivity)
 class TravelActivityAdmin(admin.ModelAdmin):
