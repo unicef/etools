@@ -1,13 +1,17 @@
 from django.contrib import admin
+from django.db.transaction import atomic
 
 from etools.applications.action_points.admin import ActionPointAdmin
 from etools.applications.publics.admin import AdminListMixin
 from etools.applications.t2f import models
+from etools.applications.t2f.forms import TravelForm
 from etools.applications.t2f.models import T2FActionPoint
 
 
 @admin.register(models.Travel)
 class TravelAdmin(admin.ModelAdmin):
+    form = TravelForm
+
     list_filter = (
         'status',
         'traveler',
@@ -32,6 +36,20 @@ class TravelAdmin(admin.ModelAdmin):
         'supervisor'
     )
 
+    # @atomic
+    def save_model(self, request, obj, form, change):
+        print("\n\n", 'save_model', "\n\n")
+        super().save_model(self, request, obj, form, change)
+
+    # @atomic
+    def save_form(self, request, form, change):
+        print("\n\n", 'save_form', "\n\n")
+        super().save_form(self, request, form, change)
+
+    @atomic
+    def get_form(self, request, obj, **kwargs):
+        print("\n\n", 'get_form', "\n\n")
+        return super().get_form(request, obj, **kwargs)
 
 @admin.register(models.TravelActivity)
 class TravelActivityAdmin(admin.ModelAdmin):
