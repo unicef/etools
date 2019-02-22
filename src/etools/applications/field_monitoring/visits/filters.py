@@ -41,3 +41,24 @@ class VisitTeamMembersFilter(BaseFilterBackend):
             return queryset
 
         return queryset.filter(team_members__in=value.split(','))
+
+
+class UserTypeFilter(BaseFilterBackend):
+    def filter_queryset(self, request, queryset, view):
+        value = request.query_params.get('user_type')
+
+        if value == 'tpm':
+            return queryset.filter(tpmpartners_tpmpartnerstaffmember__isnull=False)
+        else:
+            return queryset.filter(is_staff=True)
+
+
+class UserTPMPartnerFilter(BaseFilterBackend):
+    def filter_queryset(self, request, queryset, view):
+        value = request.query_params.get('tpm_partner')
+        if not value:
+            return queryset
+
+        return queryset.filter(
+            tpmpartners_tpmpartnerstaffmember__tpm_partner=value
+        )
