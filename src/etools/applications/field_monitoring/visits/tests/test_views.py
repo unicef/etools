@@ -399,3 +399,21 @@ class DataCollectorPermissionsForVisitTransitionTestCase(VisitTransitionPermissi
 
         opts.update(kwargs)
         return super().create_object(transition, **opts)
+
+
+class VisitTransitionsMetaTestCase(FMBaseTestCaseMixin, BaseTenantTestCase):
+    def test_pme_assign_draft(self):
+        user = UserFactory(pme=True)
+        visit = VisitFactory(status='draft')
+
+        response = self.forced_auth_req(
+            'options',
+            reverse('field_monitoring_visits:visits-detail', args=[visit.pk]),
+            user=user
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertListEqual(
+            ['assign', 'cancel'],
+            [t['code'] for t in response.data['actions']['allowed_FSM_transitions']]
+        )
