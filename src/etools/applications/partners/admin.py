@@ -560,6 +560,9 @@ class PlannedEngagementAdmin(admin.ModelAdmin):
         'partner',
     ]
 
+    def has_add_permission(self, request):
+        return False
+
 
 class SignedAmendmentInline(AttachmentSingleInline):
     verbose_name_plural = _("Signed Amendment")
