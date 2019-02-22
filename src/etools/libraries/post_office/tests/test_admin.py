@@ -10,7 +10,7 @@ class MockRequest:
     pass
 
 
-class TestSnapshotAdmin(BaseTenantTestCase):
+class TestPOLogAdmin(BaseTenantTestCase):
 
     def test_has_add_permission(self):
         adminSite = EtoolsPostOfficeLogAdmin(Log, AdminSite())
