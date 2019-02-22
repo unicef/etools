@@ -3,7 +3,7 @@ from django.contrib import admin
 
 import etools.applications.tpm.tpmpartners.models
 from etools.applications.publics.admin import AdminListMixin
-from etools.applications.tpm import models
+from etools.applications.tpm import models, forms
 
 
 @admin.register(models.TPMActivity)
@@ -76,6 +76,9 @@ class TPMPartnerStaffMemberAdmin(admin.ModelAdmin):
 
 @admin.register(models.TPMActionPoint)
 class TPMActionPointAdmin(admin.ModelAdmin):
+    form = forms.TPMActionPointForm
+
+    readonly_fields = ['status']
     list_display = [
         'author', 'assigned_to', 'tpm_activity', 'due_date', 'status',
     ]

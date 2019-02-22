@@ -3,6 +3,7 @@ from django.db import transaction
 
 from etools.applications.t2f.models import make_travel_reference_number, Travel
 
+
 class TravelForm(forms.ModelForm):
 
     class Meta:
