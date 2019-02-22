@@ -4,7 +4,7 @@ from django.utils import timezone
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import mixins, viewsets
 from rest_framework.decorators import action
-from rest_framework.filters import OrderingFilter
+from rest_framework.filters import OrderingFilter, SearchFilter
 from rest_framework.response import Response
 from unicef_locations.models import Location
 from unicef_locations.serializers import LocationLightSerializer
@@ -15,10 +15,11 @@ from etools.applications.field_monitoring.fm_settings.models import CPOutputConf
 from etools.applications.field_monitoring.fm_settings.serializers.cp_outputs import MinimalCPOutputConfigListSerializer
 from etools.applications.field_monitoring.fm_settings.serializers.locations import LocationSiteLightSerializer
 from etools.applications.field_monitoring.views import FMBaseViewSet
-from etools.applications.field_monitoring.visits.filters import VisitFilter, VisitTeamMembersFilter
+from etools.applications.field_monitoring.visits.filters import VisitFilter, VisitTeamMembersFilter, UserTypeFilter, \
+    UserTPMPartnerFilter
 from etools.applications.field_monitoring.visits.models import Visit, VisitMethodType
 from etools.applications.field_monitoring.visits.serializers import VisitListSerializer, \
-    VisitMethodTypeSerializer, VisitSerializer, VisitsTotalSerializers
+    VisitMethodTypeSerializer, VisitSerializer, VisitsTotalSerializers, FMUserSerializer
 from etools.applications.partners.models import PartnerOrganization
 from etools.applications.partners.serializers.partner_organization_v2 import MinimalPartnerOrganizationListSerializer
 from etools.applications.users.serializers import MinimalUserSerializer
@@ -57,6 +58,21 @@ class VisitsViewSet(
                 ).distinct()
             ).data
         )
+
+
+class FMUsersViewSet(
+    FMBaseViewSet,
+    mixins.ListModelMixin,
+    viewsets.GenericViewSet
+):
+    """
+    Endpoint to be used for filtering users by their type (unicef/tpm) and partner in case of tpm
+    """
+
+    filter_backends = (SearchFilter, UserTypeFilter, UserTPMPartnerFilter)
+    search_fields = ('email',)
+    queryset = get_user_model().objects.all()  # it's safe to use .all() here, UserTypeFilter filter unicef by default
+    serializer_class = FMUserSerializer
 
 
 class VisitsPartnersViewSet(

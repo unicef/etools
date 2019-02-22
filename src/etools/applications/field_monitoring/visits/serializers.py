@@ -166,3 +166,17 @@ class VisitsTotalSerializers(serializers.ModelSerializer):
 
     def get_sites(self, obj):
         return LocationSite.objects.filter(visits__in=obj).distinct().count()
+
+
+class FMUserSerializer(MinimalUserSerializer):
+    user_type = serializers.SerializerMethodField()
+    tpm_partner = serializers.ReadOnlyField(source='tpmpartners_tpmpartnerstaffmember.tpm_partner.id', allow_null=True)
+
+    class Meta(MinimalUserSerializer.Meta):
+        fields = MinimalUserSerializer.Meta.fields + (
+            'user_type', 'tpm_partner'
+        )
+
+    def get_user_type(self, obj):
+        # we check is_staff flag instead of more complex tpmpartners_tpmpartnerstaffmember to avoid unneeded db queries
+        return 'unicef' if obj.is_staff else 'tpm'

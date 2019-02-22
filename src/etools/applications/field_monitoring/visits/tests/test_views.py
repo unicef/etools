@@ -16,6 +16,7 @@ from etools.applications.field_monitoring.visits.models import Visit
 from etools.applications.field_monitoring.visits.tests.factories import VisitFactory, VisitMethodTypeFactory, \
     VisitTaskLinkFactory
 from etools.applications.partners.tests.factories import PartnerFactory
+from etools.applications.tpm.tests.factories import UserFactory as TPMUserFactory, SimpleTPMPartnerFactory
 
 
 class VisitsViewTestCase(FMBaseTestCaseMixin, BaseTenantTestCase):
@@ -277,3 +278,52 @@ class VisitTeamMembersViewTestCase(FMBaseTestCaseMixin, BaseTenantTestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(len(response.data['results']), 1)
         self.assertEqual(response.data['results'][0]['id'], visit.team_members.first().id)
+
+
+class FMUsersViewTestCase(BaseTenantTestCase):
+    @classmethod
+    def setUpTestData(cls):
+        cls.unicef_user = UserFactory(unicef_user=True, is_staff=True)
+        cls.usual_user = UserFactory(is_staff=False)
+        cls.tpm_user = TPMUserFactory(tpm=True, tpm_partner=SimpleTPMPartnerFactory())
+        cls.another_tpm_user = TPMUserFactory(tpm=True, tpm_partner=SimpleTPMPartnerFactory())
+
+    def _test_filter(self, filter_data, expected_users):
+        response = self.forced_auth_req(
+            'get',
+            reverse('field_monitoring_visits:users-list'),
+            data=filter_data,
+            user=self.unicef_user
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(expected_users), len(response.data['results']))
+        self.assertListEqual(
+            sorted([u.id for u in expected_users]),
+            sorted([u['id'] for u in response.data['results']])
+        )
+
+        return response
+
+    def test_filter_unicef(self):
+        response = self._test_filter({'user_type': 'unicef'}, [self.unicef_user])
+        self.assertEqual(response.data['results'][0]['user_type'], 'unicef')
+
+    def test_filter_default(self):
+        response = self._test_filter({}, [self.unicef_user])
+        self.assertEqual(response.data['results'][0]['user_type'], 'unicef')
+
+    def test_filter_tpm(self):
+        response = self._test_filter({'user_type': 'tpm'}, [self.tpm_user, self.another_tpm_user])
+        self.assertEqual(response.data['results'][0]['user_type'], 'tpm')
+        self.assertEqual(response.data['results'][1]['user_type'], 'tpm')
+
+    def test_filter_tpm_partner(self):
+        tpm_partner = self.tpm_user.tpmpartners_tpmpartnerstaffmember.tpm_partner.id
+
+        response = self._test_filter(
+            {'user_type': 'tpm', 'tpm_partner': tpm_partner},
+            [self.tpm_user]
+        )
+        self.assertEqual(response.data['results'][0]['user_type'], 'tpm')
+        self.assertEqual(response.data['results'][0]['tpm_partner'], tpm_partner)
