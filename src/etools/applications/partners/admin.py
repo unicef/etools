@@ -193,6 +193,12 @@ class InterventionAttachmentsInline(admin.TabularInline):
         'attachment',
     )
     extra = 0
+    code = 'partners_intervention_attachment'
+
+    def get_formset(self, request, obj=None, **kwargs):
+        formset = super().get_formset(request, obj, **kwargs)
+        formset.code = self.code
+        return formset
 
 
 class InterventionResultsLinkAdmin(admin.ModelAdmin):
