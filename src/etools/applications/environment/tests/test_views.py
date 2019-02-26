@@ -7,7 +7,7 @@ from django.db import connection
 from rest_framework import status
 
 from etools.applications.environment.tests.factories import TenantFlagFactory, TenantSwitchFactory
-from etools.applications.EquiTrack.tests.cases import BaseTenantTestCase
+from etools.applications.core.tests.cases import BaseTenantTestCase
 from etools.applications.users.tests.factories import CountryFactory, UserFactory
 
 

@@ -5,7 +5,7 @@ from django.core.management import call_command
 from unicef_attachments.utils import get_denormalize_func
 
 from etools.applications.attachments.tests.factories import AttachmentFactory
-from etools.applications.EquiTrack.tests.cases import BaseTenantTestCase
+from etools.applications.core.tests.cases import BaseTenantTestCase
 from etools.applications.tpm.models import ThirdPartyMonitor
 from etools.applications.tpm.tests.factories import TPMPartnerFactory, TPMPartnerStaffMemberFactory, TPMVisitFactory
 

@@ -6,7 +6,7 @@ from django.core.management import call_command
 from django.utils import timezone
 
 from etools.applications.attachments.tests.factories import AttachmentFileTypeFactory
-from etools.applications.EquiTrack.tests.cases import BaseTenantTestCase
+from etools.applications.core.tests.cases import BaseTenantTestCase
 from etools.applications.funds.tests.factories import FundsReservationHeaderFactory
 from unicef_locations.tests.factories import GatewayTypeFactory, LocationFactory
 from etools.applications.partners import utils

@@ -1,6 +1,6 @@
 from mock import Mock, patch
 
-from etools.applications.EquiTrack.tests.cases import BaseTenantTestCase
+from etools.applications.core.tests.cases import BaseTenantTestCase
 from etools.applications.hact.models import AggregateHact
 from etools.applications.hact.tasks import update_aggregate_hact_values, update_hact_for_country, update_hact_values
 from etools.applications.hact.tests.factories import AggregateHactFactory

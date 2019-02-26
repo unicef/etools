@@ -19,7 +19,7 @@ from unicef_attachments.models import Attachment
 from unicef_djangolib.fields import CodedGenericRelation, CurrencyField
 from unicef_locations.models import Location
 
-from etools.applications.EquiTrack.permissions import import_permissions
+from etools.applications.core.permissions import import_permissions
 from etools.applications.funds.models import FundsReservationHeader
 from etools.applications.partners.validation import interventions as intervention_validation
 from etools.applications.partners.validation.agreements import (

@@ -1,4 +1,4 @@
-from etools.applications.EquiTrack.tests.cases import BaseTenantTestCase
+from etools.applications.core.tests.cases import BaseTenantTestCase
 from etools.applications.management.models import FlaggedIssue
 from etools.applications.management.tests.factories import FlaggedIssueFactory
 from etools.applications.partners.tests.factories import PartnerFactory

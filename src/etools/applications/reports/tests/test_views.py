@@ -7,8 +7,8 @@ from django.urls import reverse
 from rest_framework import status
 from tablib.core import Dataset
 
-from etools.applications.EquiTrack.tests.cases import BaseTenantTestCase
-from etools.applications.EquiTrack.tests.mixins import URLAssertionMixin
+from etools.applications.core.tests.cases import BaseTenantTestCase
+from etools.applications.core.tests.mixins import URLAssertionMixin
 from etools.applications.partners.models import Intervention
 from etools.applications.partners.tests.factories import InterventionFactory, InterventionResultLinkFactory
 from etools.applications.partners.tests.test_utils import setup_intervention_test_data

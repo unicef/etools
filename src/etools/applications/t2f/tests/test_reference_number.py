@@ -5,7 +5,7 @@ from django.urls import reverse
 
 from freezegun import freeze_time
 
-from etools.applications.EquiTrack.tests.cases import BaseTenantTestCase
+from etools.applications.core.tests.cases import BaseTenantTestCase
 from etools.applications.users.tests.factories import UserFactory
 
 
