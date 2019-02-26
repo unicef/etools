@@ -365,7 +365,6 @@ class InterventionAdmin(
                 )
 
 
-
 class AssessmentReportInline(AttachmentSingleInline):
     verbose_name_plural = _("Report")
     code = 'partners_assessment_report'
