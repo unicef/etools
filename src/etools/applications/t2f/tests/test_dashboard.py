@@ -2,7 +2,7 @@ import json
 
 from django.urls import reverse
 
-from etools.applications.EquiTrack.tests.cases import BaseTenantTestCase
+from etools.applications.core.tests.cases import BaseTenantTestCase
 from etools.applications.partners.models import PartnerOrganization
 from etools.applications.publics.tests.factories import (
     PublicsCurrencyFactory,

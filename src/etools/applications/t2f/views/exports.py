@@ -9,7 +9,7 @@ from rest_framework.permissions import IsAdminUser
 from rest_framework.response import Response
 from unicef_restlib.views import QueryStringFilterMixin
 
-from etools.applications.EquiTrack.renderers import FriendlyCSVRenderer
+from etools.applications.core.renderers import FriendlyCSVRenderer
 from etools.applications.t2f.filters import travel_list
 from etools.applications.t2f.models import ItineraryItem, Travel, TravelActivity
 from etools.applications.t2f.serializers.export import (

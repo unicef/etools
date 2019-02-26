@@ -1,6 +1,6 @@
 from decimal import Decimal
 
-from etools.applications.EquiTrack.tests.cases import BaseTenantTestCase
+from etools.applications.core.tests.cases import BaseTenantTestCase
 from etools.applications.funds.models import FundsCommitmentItem, FundsReservationHeader, FundsReservationItem
 from etools.applications.funds.tests.factories import (DonorFactory, FundsCommitmentHeaderFactory,
                                                        FundsCommitmentItemFactory, FundsReservationHeaderFactory,

@@ -1,6 +1,6 @@
 from django.utils.translation import ugettext_lazy as _
 
-from etools.applications.EquiTrack.renderers import FriendlyCSVRenderer, ListSeperatorCSVRenderMixin
+from etools.applications.core.renderers import FriendlyCSVRenderer, ListSeperatorCSVRenderMixin
 
 
 class ActionPointCSVRenderer(ListSeperatorCSVRenderMixin, FriendlyCSVRenderer):

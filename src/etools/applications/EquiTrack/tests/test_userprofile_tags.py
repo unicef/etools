@@ -1,5 +1,7 @@
 from mock import Mock
 
+from etools.applications.core.tests.cases import BaseTenantTestCase
+from etools.applications.partners.templatetags import userprofile_tags as tags
 from etools.applications.EquiTrack.templatetags.etools import show_country_select
 from etools.applications.EquiTrack.tests.cases import BaseTenantTestCase
 from etools.applications.users.tests.factories import ProfileFactory

@@ -3,12 +3,12 @@ from unittest.mock import Mock, patch
 from django.contrib.auth import get_user_model
 from django.test import SimpleTestCase
 
-from etools.applications.EquiTrack import auth
-from etools.applications.EquiTrack.tests.cases import BaseTenantTestCase
+from etools.applications.core import auth
+from etools.applications.core.tests.cases import BaseTenantTestCase
 from etools.applications.users.tests.factories import UserFactory
 
-SOCIAL_AUTH_PATH = "etools.applications.EquiTrack.auth.social_auth"
-SOCIAL_USER_PATH = "etools.applications.EquiTrack.auth.social_core_user"
+SOCIAL_AUTH_PATH = "etools.applications.core.auth.social_auth"
+SOCIAL_USER_PATH = "etools.applications.core.auth.social_core_user"
 
 
 class TestSocialDetails(SimpleTestCase):

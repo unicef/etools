@@ -7,7 +7,7 @@ import rest_framework_jwt.views
 from rest_framework_nested import routers
 from rest_framework_swagger.renderers import OpenAPIRenderer
 
-from etools.applications.EquiTrack.views import (
+from etools.applications.core.views import (
     IssueJWTRedirectView,
     logout_view,
     MainView,
@@ -26,7 +26,7 @@ from etools.applications.users.views import (
     OfficeViewSet,
     UserViewSet,
 )
-from etools.applications.EquiTrack.schemas import get_schema_view, get_swagger_view
+from etools.applications.core.schemas import get_schema_view, get_swagger_view
 from etools.libraries.locations.views import (
     CartoDBTablesView,
     LocationQuerySetView,

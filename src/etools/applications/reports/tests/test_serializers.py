@@ -4,7 +4,7 @@ from django.test import RequestFactory
 
 from rest_framework.exceptions import ValidationError
 
-from etools.applications.EquiTrack.tests.cases import BaseTenantTestCase
+from etools.applications.core.tests.cases import BaseTenantTestCase
 from unicef_locations.tests.factories import LocationFactory
 
 from etools.applications.partners.models import Intervention

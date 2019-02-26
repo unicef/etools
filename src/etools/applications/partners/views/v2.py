@@ -48,7 +48,7 @@ class PartnerStaffMemberDetailAPIView(RetrieveUpdateDestroyAPIView):
         return super().get_serializer_class()
 
 
-# TODO move in EquiTrack (after utils package has been merged in EquiTrack)
+# TODO move in core (after utils package has been merged in core)
 def choices_to_json_ready(choices, sort_choices=True):
     if isinstance(choices, dict):
         choice_list = [(k, v) for k, v in choices.items()]

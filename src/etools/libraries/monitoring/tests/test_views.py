@@ -4,7 +4,7 @@ from django.urls import reverse
 from mock import Mock, patch
 from rest_framework import status
 
-from etools.applications.EquiTrack.tests.cases import BaseTenantTestCase
+from etools.applications.core.tests.cases import BaseTenantTestCase
 from etools.applications.users.tests.factories import UserFactory
 
 

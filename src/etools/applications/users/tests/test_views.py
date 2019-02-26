@@ -9,7 +9,7 @@ from django.urls import reverse
 
 from rest_framework import status
 
-from etools.applications.EquiTrack.tests.cases import BaseTenantTestCase
+from etools.applications.core.tests.cases import BaseTenantTestCase
 from etools.applications.publics.tests.factories import PublicsBusinessAreaFactory
 from etools.applications.users.models import Group, UserProfile
 from etools.applications.users.tests.factories import CountryFactory, GroupFactory, OfficeFactory, UserFactory

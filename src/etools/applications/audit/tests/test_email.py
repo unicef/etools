@@ -4,7 +4,7 @@ from django.db import connection
 
 from unicef_notification.models import EmailTemplate
 
-from etools.applications.EquiTrack.tests.cases import BaseTenantTestCase
+from etools.applications.core.tests.cases import BaseTenantTestCase
 from etools.applications.audit.tests.factories import AuditFocalPointUserFactory
 from etools.applications.audit.tests.test_transitions import MATransitionsTestCaseMixin
 

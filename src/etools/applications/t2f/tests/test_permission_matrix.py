@@ -5,7 +5,7 @@ from django.urls import reverse
 
 from unicef_locations.tests.factories import LocationFactory
 
-from etools.applications.EquiTrack.tests.cases import BaseTenantTestCase
+from etools.applications.core.tests.cases import BaseTenantTestCase
 from etools.applications.publics.tests.factories import (
     PublicsCurrencyFactory,
     PublicsDSARegionFactory,
