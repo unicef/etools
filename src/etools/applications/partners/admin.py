@@ -15,6 +15,7 @@ from etools.applications.partners.exports import PartnerExport
 from etools.applications.partners.forms import (  # TODO intervention sector locations cleanup
     PartnersAdminForm,
     PartnerStaffMemberForm,
+    InterventionAttachmentForm,
 )
 from etools.applications.partners.mixins import CountryUsersAdminMixin, HiddenPartnerMixin
 from etools.applications.partners.models import (  # TODO intervention sector locations cleanup
@@ -190,6 +191,7 @@ class InterventionAttachmentAdmin(AttachmentInlineAdminMixin, admin.ModelAdmin):
 
 class InterventionAttachmentsInline(admin.TabularInline):
     model = InterventionAttachment
+    form = InterventionAttachmentForm
     fields = (
         'type',
         'attachment',
