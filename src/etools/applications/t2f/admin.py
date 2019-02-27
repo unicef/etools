@@ -5,6 +5,7 @@ from etools.applications.publics.admin import AdminListMixin
 from etools.applications.t2f import models
 from etools.applications.t2f.forms import TravelForm
 from etools.applications.t2f.models import T2FActionPoint
+from etools.applications.t2f.forms import T2FActionPointAdminForm
 
 
 @admin.register(models.Travel)
@@ -86,4 +87,4 @@ class TravelAttachmentAdmin(AdminListMixin, admin.ModelAdmin):
 
 @admin.register(T2FActionPoint)
 class T2FActionPointAdmin(ActionPointAdmin):
-    pass
+    form = T2FActionPointAdminForm

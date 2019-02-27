@@ -1,7 +1,7 @@
 from django import forms
 from django.db import transaction
 
-from etools.applications.t2f.models import make_travel_reference_number, Travel
+from etools.applications.t2f.models import make_travel_reference_number, Travel, T2FActionPoint
 
 
 class TravelForm(forms.ModelForm):
@@ -16,3 +16,12 @@ class TravelForm(forms.ModelForm):
                 return super().get_initial_for_field(field, field_name)
 
         return super().get_initial_for_field(field, field_name)
+
+
+class T2FActionPointAdminForm(forms.ModelForm):
+    model = T2FActionPoint
+    fields = "__all__"
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields["travel_activity"].required = True

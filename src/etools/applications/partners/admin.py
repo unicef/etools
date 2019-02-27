@@ -1,4 +1,5 @@
 from django.contrib import admin
+from django.contrib.contenttypes.models import ContentType
 from django.db import models
 from django.forms import SelectMultiple
 from django.urls import reverse
@@ -7,12 +8,14 @@ from django.utils.translation import ugettext_lazy as _
 
 from import_export.admin import ExportMixin
 from unicef_attachments.admin import AttachmentSingleInline
+from unicef_attachments.models import Attachment
 from unicef_snapshot.admin import ActivityInline, SnapshotModelAdmin
 
 from etools.applications.partners.exports import PartnerExport
 from etools.applications.partners.forms import (  # TODO intervention sector locations cleanup
     PartnersAdminForm,
     PartnerStaffMemberForm,
+    InterventionAttachmentForm,
 )
 from etools.applications.partners.mixins import CountryUsersAdminMixin, HiddenPartnerMixin
 from etools.applications.partners.models import (  # TODO intervention sector locations cleanup
@@ -188,11 +191,18 @@ class InterventionAttachmentAdmin(AttachmentInlineAdminMixin, admin.ModelAdmin):
 
 class InterventionAttachmentsInline(admin.TabularInline):
     model = InterventionAttachment
+    form = InterventionAttachmentForm
     fields = (
         'type',
         'attachment',
     )
     extra = 0
+    code = 'partners_intervention_attachment'
+
+    def get_formset(self, request, obj=None, **kwargs):
+        formset = super().get_formset(request, obj, **kwargs)
+        formset.code = self.code
+        return formset
 
 
 class InterventionResultsLinkAdmin(admin.ModelAdmin):
@@ -339,6 +349,22 @@ class InterventionAdmin(
         ))
 
     attachments_link.short_description = 'attachments'
+
+    def save_formset(self, request, form, formset, change):
+        instances = formset.save()
+        for instance in instances:
+            if isinstance(instance, InterventionAttachment):
+                # update attachment file data
+                content_type = ContentType.objects.get_for_model(instance)
+                Attachment.objects.update_or_create(
+                    object_id=instance.pk,
+                    content_type=content_type,
+                    defaults={
+                        "code": formset.code,
+                        "file": instance.attachment,
+                        "uploaded_by": request.user,
+                    }
+                )
 
 
 class AssessmentReportInline(AttachmentSingleInline):

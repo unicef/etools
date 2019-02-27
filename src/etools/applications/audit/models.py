@@ -675,6 +675,7 @@ class Audit(Engagement):
             AuditSerializer,
             AuditPDFSerializer,
             'audit/audit_pdf.html',
+            'audit_final_report.pdf',
         )
 
 
