@@ -3,7 +3,7 @@ from django.contrib.auth import logout
 from django.http import HttpResponseRedirect
 from django.shortcuts import redirect
 from django.urls import reverse
-from django.views.generic import RedirectView, TemplateView
+from django.views.generic import RedirectView
 
 from rest_framework.response import Response
 from rest_framework.views import APIView
@@ -19,10 +19,6 @@ class MainView(RedirectView):
             return redirect(request.GET.get('next', 'dashboard'))
 
         return super().get(request, *args, **kwargs)
-
-
-class OutdatedBrowserView(TemplateView):
-    template_name = 'outdated_browser.html'
 
 
 class IssueJWTRedirectView(APIView):
