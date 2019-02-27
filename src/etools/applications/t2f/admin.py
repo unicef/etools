@@ -3,15 +3,12 @@ from django.contrib import admin
 from etools.applications.action_points.admin import ActionPointAdmin
 from etools.applications.publics.admin import AdminListMixin
 from etools.applications.t2f import models
-from etools.applications.t2f.forms import TravelForm
 from etools.applications.t2f.models import T2FActionPoint
 from etools.applications.t2f.forms import T2FActionPointAdminForm
 
 
 @admin.register(models.Travel)
 class TravelAdmin(admin.ModelAdmin):
-    form = TravelForm
-
     list_filter = (
         'status',
         'traveler',
