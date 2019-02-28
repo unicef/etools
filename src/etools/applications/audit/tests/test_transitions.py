@@ -227,6 +227,8 @@ class TestSCTransitionsTestCase(
         with patch(self.filepath, self.mock_filepath):
             self._test_finalize(self.unicef_focal_point, status.HTTP_200_OK)
         self.assertTrue(attachment_qs.exists())
+        attachment = attachment_qs.get()
+        assert attachment.file
 
     def test_cancel_auditor(self):
         self._test_cancel(self.auditor, status.HTTP_403_FORBIDDEN)
