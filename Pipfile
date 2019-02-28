@@ -126,7 +126,7 @@ PyYAML = "==3.12"
 unicef_attachments = "==0.4.2"
 unicef_notification = "==0.2.1"
 unicef_restlib = "==0.4"
-unicef_snapshot = "==0.2.2"
+unicef_snapshot = "==0.2.3"
 Pillow = "==5.3.0"
 
 [requires]
