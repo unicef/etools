@@ -230,7 +230,6 @@ class TestSCTransitionsTestCase(
         attachment = attachment_qs.get()
         assert attachment.file
 
-
     def test_cancel_auditor(self):
         self._test_cancel(self.auditor, status.HTTP_403_FORBIDDEN)
 
