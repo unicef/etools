@@ -1,7 +1,7 @@
 name = 'partners/intervention/past-start'
 defaults = {
     'description': 'Intervention past start date.',
-    'subject': 'eTools PD/SHPD/SSFA Past Start Notification',
+    'subject': 'eTools PD/HPD/SSFA Past Start Notification',
     'content': """
     Dear Colleague,
 

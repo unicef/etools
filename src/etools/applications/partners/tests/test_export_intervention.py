@@ -7,6 +7,7 @@ from tablib.core import Dataset
 from unicef_locations.tests.factories import LocationFactory
 
 from etools.applications.EquiTrack.tests.cases import BaseTenantTestCase
+from etools.applications.partners.models import Intervention
 from etools.applications.partners.tests.factories import (
     AgreementFactory,
     InterventionAmendmentFactory,
@@ -65,7 +66,7 @@ class BaseInterventionModelExportTestCase(BaseTenantTestCase):
         AgreementFactory(signed_by_unicef_date=datetime.date.today())
         cls.intervention = InterventionFactory(
             agreement=agreement,
-            document_type='SHPD',
+            document_type=Intervention.SHPD,
             status='draft',
             start=datetime.date.today(),
             end=datetime.date.today(),
