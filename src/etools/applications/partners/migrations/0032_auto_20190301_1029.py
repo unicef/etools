@@ -5,16 +5,16 @@ from django.db import migrations, models
 
 def update_document_type(apps, schema_editor):
     Intervention = apps.get_model("partners", "intervention")
-    for intervention in Intervention.objects.filter(document_type="SHPD").all():
-        intervention.document_type = "HPD",
-        intervention.save()
+    Intervention.objects.filter(document_type="SHPD").update(
+        document_type="HPD",
+    )
 
 
 def reset_document_type(apps, schema_editor):
     Intervention = apps.get_model("partners", "intervention")
-    for intervention in Intervention.objects.filter(document_type="HPD").all():
-        intervention.document_type = "SHPD",
-        intervention.save()
+    Intervention.objects.filter(document_type="HPD").update(
+        document_type="SHPD",
+    )
 
 
 class Migration(migrations.Migration):
