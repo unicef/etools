@@ -2113,7 +2113,7 @@ class InterventionAmendment(TimeStampedModel):
         (DATES, 'Dates'),
         (RESULTS, 'Results'),
         (BUDGET, 'Budget'),
-   ]
+    ]
 
     intervention = models.ForeignKey(
         Intervention,
