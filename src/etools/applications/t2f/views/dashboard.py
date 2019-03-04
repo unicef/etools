@@ -57,7 +57,10 @@ class ActionPointDashboardViewSet(mixins.ListModelMixin, viewsets.GenericViewSet
         data = {}
         office_id = request.query_params.get("office_id", None)
         if office_id:
-            office_id = office_id.split(',')
+            try:
+                office_id = [int(id) for id in office_id.split(',')]
+            except ValueError:
+                office_id = None
         section_ids = Travel.objects.values_list('section', flat=True).distinct()
         action_points_by_section = []
         for section_id in section_ids:
