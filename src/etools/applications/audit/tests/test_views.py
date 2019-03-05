@@ -922,7 +922,7 @@ class TestAuditorStaffMembersViewSet(AuditTestCaseMixin, BaseTenantTestCase):
         )
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertIn('user', response.data)
-        self.assertEqual(response.data['user'][0], 'User is already assigned to auditor firm.')
+        self.assertIn('User is already assigned to', response.data['user'][0])
 
     def test_deactivate_auditor_flow(self):
         user = UserFactory(auditor=True, partner_firm=self.auditor_firm, is_active=True)
@@ -1026,6 +1026,7 @@ class TestAuditorStaffMembersViewSet(AuditTestCaseMixin, BaseTenantTestCase):
             },
             user=self.unicef_focal_point
         )
+
         self.assertEqual(response.status_code, status.HTTP_200_OK)
 
     def test_usual_user_update_view(self):
