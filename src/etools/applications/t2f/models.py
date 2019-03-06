@@ -1,9 +1,11 @@
+import datetime
 import logging
 from decimal import Decimal
 
 from django.conf import settings
 from django.contrib.postgres.fields.array import ArrayField
 from django.db import connection, models, transaction
+from django.db.models import Q
 from django.db.models.signals import post_save
 from django.dispatch import receiver
 from django.utils.timezone import now as timezone_now
@@ -178,6 +180,31 @@ class Travel(models.Model):
             raise TransitionError('Field report has to be filled.')
         return True
 
+    def check_trip_dates(self):
+        if self.start_date and self.end_date:
+            start_date = self.start_date.date()
+            end_date = self.end_date.date()
+            travel_q = Q(traveler=self.traveler)
+            travel_q &= ~Q(status__in=[Travel.PLANNED, Travel.CANCELLED])
+            travel_q &= Q(
+                start_date__date__range=(
+                    start_date,
+                    end_date - datetime.timedelta(days=1),
+                )
+            ) | Q(
+                end_date__date__range=(
+                    start_date + datetime.timedelta(days=1),
+                    end_date,
+                )
+            )
+            travel_q &= ~Q(pk=self.pk)
+            if Travel.objects.filter(travel_q).exists():
+                raise TransitionError(
+                    'You have an existing trip with overlapping dates. '
+                    'Please adjust your trip accordingly.'
+                )
+        return True
+
     def check_state_flow(self):
         # Complete action should be called only after certification was done.
         # Special case is the TA not required NOT international travel, where supervisor should be able to complete it
@@ -246,7 +273,7 @@ class Travel(models.Model):
         pass
 
     @transition(status, source=[SUBMITTED, APPROVED, PLANNED, CANCELLED], target=COMPLETED,
-                conditions=[check_trip_report, check_state_flow])
+                conditions=[check_trip_report, check_trip_dates, check_state_flow])
     def mark_as_completed(self):
         self.completed_at = timezone_now()
         if not self.ta_required and self.status == self.PLANNED:
