@@ -1,3 +1,4 @@
+import datetime
 import operator
 from itertools import chain
 
@@ -218,7 +219,17 @@ class TravelDetailsSerializer(PermissionBasedModelSerializer):
                 # or end date between the range of the start and end date of the current trip
                 travel_q = Q(traveler=traveler)
                 travel_q &= ~Q(status__in=[Travel.PLANNED, Travel.CANCELLED])
-                travel_q &= Q(start_date__range=(start_date, end_date)) | Q(end_date__range=(start_date, end_date))
+                travel_q &= Q(
+                    start_date__date__range=(
+                        start_date.date(),
+                        end_date.date() - datetime.timedelta(days=1),
+                    )
+                ) | Q(
+                    end_date__date__range=(
+                        start_date.date() + datetime.timedelta(days=1),
+                        end_date.date(),
+                    )
+                )
 
                 # In case of first save, no id present
                 if self.instance:
