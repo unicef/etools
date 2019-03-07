@@ -225,7 +225,6 @@ TEMPLATES = [
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
         'DIRS': [
             normpath(join(PACKAGE_ROOT, 'templates')),
-            normpath(join(PACKAGE_ROOT, 'templates', 'frontend'))
         ],
         'APP_DIRS': False,  # False because we set loaders manually below
         'OPTIONS': {
