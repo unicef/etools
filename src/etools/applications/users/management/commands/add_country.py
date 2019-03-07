@@ -25,5 +25,6 @@ class Command(BaseCommand):
             )
             get_tenant_domain_model().objects.create(domain='{}.etools.unicef.org'.format(slug), tenant=country)
             call_command('init-result-type', schema=slug)
+            call_command('init-partner-file-type', schema=slug)
         except Exception as exp:
             raise CommandError(*exp.args)
