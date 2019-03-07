@@ -117,8 +117,7 @@ class TestInterventionsAPI(BaseTenantTestCase):
         setup_intervention_test_data(self)
 
     def tearDown(self):
-        cache.delete("public-intervention-permissions")
-        cache.delete("public-agreement-permissions")
+        cache.clear()
         if hasattr(self, "ts"):
             self.ts.delete()
 
