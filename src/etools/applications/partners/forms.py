@@ -1,4 +1,3 @@
-
 import logging
 
 from django import forms
@@ -10,7 +9,12 @@ from django.utils.translation import ugettext as _
 
 from unicef_djangolib.forms import AutoSizeTextForm
 
-from etools.applications.partners.models import PartnerOrganization, PartnerStaffMember, PartnerType
+from etools.applications.partners.models import (
+    InterventionAttachment,
+    PartnerOrganization,
+    PartnerStaffMember,
+    PartnerType,
+)
 
 logger = logging.getLogger('partners.forms')
 
@@ -24,16 +28,16 @@ class PartnersAdminForm(AutoSizeTextForm):
     def clean(self):
         cleaned_data = super().clean()
 
-        partner_type = cleaned_data.get(u'partner_type')
-        cso_type = cleaned_data.get(u'cso_type')
+        partner_type = cleaned_data.get('partner_type')
+        cso_type = cleaned_data.get('cso_type')
 
         if partner_type and partner_type == PartnerType.CIVIL_SOCIETY_ORGANIZATION and not cso_type:
             raise ValidationError(
-                _(u'You must select a type for this CSO')
+                _('You must select a type for this CSO')
             )
         if partner_type and partner_type != PartnerType.CIVIL_SOCIETY_ORGANIZATION and cso_type:
             raise ValidationError(
-                _(u'"CSO Type" does not apply to non-CSO organizations, please remove type')
+                _('"CSO Type" does not apply to non-CSO organizations, please remove type')
             )
         return cleaned_data
 
@@ -85,3 +89,20 @@ class PartnerStaffMemberForm(forms.ModelForm):
                     raise ValidationError({'active': self.ERROR_MESSAGES['user_unavailable']})
 
         return cleaned_data
+
+
+class InterventionAttachmentForm(forms.ModelForm):
+    class Meta:
+        model = InterventionAttachment
+        fields = (
+            'type',
+            'attachment',
+        )
+
+    def __init__(self, *args, **kwargs):
+        instance = kwargs.get("instance", None)
+        if instance:
+            attachment = instance.attachment_file.last()
+            if attachment:
+                instance.attachment = attachment.file
+        super().__init__(*args, **kwargs)

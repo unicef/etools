@@ -1,3 +1,4 @@
+import datetime
 import operator
 from itertools import chain
 
@@ -18,19 +19,15 @@ from unicef_locations.models import Location
 from etools.applications.action_points.models import ActionPoint
 from etools.applications.action_points.serializers import ActionPointBaseSerializer
 from etools.applications.partners.models import PartnerType
-from etools.applications.publics.models import AirlineCompany, Currency
+from etools.applications.publics.models import AirlineCompany
 from etools.applications.t2f.helpers.permission_matrix import PermissionMatrix
 from etools.applications.t2f.models import (
-    CostAssignment,
-    Deduction,
-    Expense,
     ItineraryItem,
     Travel,
     TravelActivity,
     TravelAttachment,
     TravelType,
 )
-from etools.applications.t2f.serializers import CostSummarySerializer
 
 itineraryItemSortKey = operator.attrgetter('departure_date')
 
@@ -89,33 +86,6 @@ class ItineraryItemSerializer(PermissionBasedModelSerializer):
         model = ItineraryItem
         fields = ('id', 'origin', 'destination', 'departure_date', 'arrival_date', 'dsa_region', 'overnight_travel',
                   'mode_of_travel', 'airlines')
-
-
-class ExpenseSerializer(PermissionBasedModelSerializer):
-    id = serializers.IntegerField(required=False)
-    amount = serializers.DecimalField(max_digits=18, decimal_places=2, required=False)
-    document_currency = serializers.PrimaryKeyRelatedField(source='currency', queryset=Currency.objects.all())
-
-    class Meta:
-        model = Expense
-        fields = ('id', 'type', 'currency', 'document_currency', 'amount')
-
-
-class DeductionSerializer(PermissionBasedModelSerializer):
-    id = serializers.IntegerField(required=False)
-    day_of_the_week = serializers.CharField(read_only=True)
-
-    class Meta:
-        model = Deduction
-        fields = ('id', 'date', 'breakfast', 'lunch', 'dinner', 'accomodation', 'no_dsa', 'day_of_the_week')
-
-
-class CostAssignmentSerializer(PermissionBasedModelSerializer):
-    id = serializers.IntegerField(required=False)
-
-    class Meta:
-        model = CostAssignment
-        fields = ('id', 'wbs', 'share', 'grant', 'fund', 'business_area', 'delegate')
 
 
 class TravelActivitySerializer(PermissionBasedModelSerializer):
@@ -178,12 +148,8 @@ class TravelAttachmentSerializer(AttachmentSerializerMixin, serializers.ModelSer
 
 class TravelDetailsSerializer(PermissionBasedModelSerializer):
     itinerary = ItineraryItemSerializer(many=True, required=False)
-    expenses = ExpenseSerializer(many=True, required=False)
-    deductions = DeductionSerializer(many=True, required=False)
-    cost_assignments = CostAssignmentSerializer(many=True, required=False)
     activities = TravelActivitySerializer(many=True, required=False)
     attachments = TravelAttachmentSerializer(many=True, read_only=True, required=False)
-    cost_summary = CostSummarySerializer(read_only=True)
     report = serializers.CharField(source='report_note', required=False, default='', allow_blank=True)
     mode_of_travel = serializers.ListField(child=LowerTitleField(), allow_null=True, required=False)
 
@@ -193,10 +159,10 @@ class TravelDetailsSerializer(PermissionBasedModelSerializer):
     class Meta:
         model = Travel
         fields = ('reference_number', 'supervisor', 'office', 'end_date', 'international_travel', 'section',
-                  'traveler', 'start_date', 'ta_required', 'purpose', 'id', 'itinerary', 'expenses', 'deductions',
-                  'cost_assignments', 'status', 'activities', 'mode_of_travel', 'estimated_travel_cost',
+                  'traveler', 'start_date', 'ta_required', 'purpose', 'id', 'itinerary',
+                  'status', 'activities', 'mode_of_travel', 'estimated_travel_cost',
                   'currency', 'completed_at', 'canceled_at', 'rejection_note', 'cancellation_note', 'attachments',
-                  'cost_summary', 'certification_note', 'report', 'additional_note', 'misc_expenses',
+                  'certification_note', 'report', 'additional_note', 'misc_expenses',
                   'first_submission_date')
         # Review this, as a developer could be confusing why the status field is not saved during an update
         read_only_fields = ('status', 'reference_number')
@@ -209,22 +175,6 @@ class TravelDetailsSerializer(PermissionBasedModelSerializer):
         ta_required = data.get('ta_required', False)
         if self.instance and not is_iterable(self.instance):
             ta_required |= self.instance.ta_required
-
-        if not ta_required:
-            data.pop('deductions', None)
-            data.pop('expenses', None)
-            data.pop('cost_assignments', None)
-
-    # -------- Validation method --------
-    def validate_cost_assignments(self, value):
-        # If transition is None, it's a normal save (not an action) and we don't have to validate this
-        if not value or self.transition_name is None:
-            return value
-
-        share_sum = sum([ca['share'] for ca in value])
-        if share_sum != 100:
-            raise ValidationError('Shares should add up to 100%')
-        return value
 
     def validate_itinerary(self, value):
         if not value:
@@ -256,7 +206,7 @@ class TravelDetailsSerializer(PermissionBasedModelSerializer):
         if 'mode_of_travel' in attrs and attrs['mode_of_travel'] is None:
             attrs['mode_of_travel'] = []
 
-        if self.transition_name == Travel.SUBMIT_FOR_APPROVAL:
+        if self.transition_name in [Travel.SUBMIT_FOR_APPROVAL, Travel.APPROVED, Travel.COMPLETED]:
             traveler = attrs.get('traveler', None)
             if not traveler and self.instance:
                 traveler = self.instance.traveler
@@ -269,7 +219,17 @@ class TravelDetailsSerializer(PermissionBasedModelSerializer):
                 # or end date between the range of the start and end date of the current trip
                 travel_q = Q(traveler=traveler)
                 travel_q &= ~Q(status__in=[Travel.PLANNED, Travel.CANCELLED])
-                travel_q &= Q(start_date__range=(start_date, end_date)) | Q(end_date__range=(start_date, end_date))
+                travel_q &= Q(
+                    start_date__date__range=(
+                        start_date.date(),
+                        end_date.date() - datetime.timedelta(days=1),
+                    )
+                ) | Q(
+                    end_date__date__range=(
+                        start_date.date() + datetime.timedelta(days=1),
+                        end_date.date(),
+                    )
+                )
 
                 # In case of first save, no id present
                 if self.instance:
@@ -327,9 +287,6 @@ class TravelDetailsSerializer(PermissionBasedModelSerializer):
     # -------- Create and update methods --------
     def create(self, validated_data):
         itinerary = validated_data.pop('itinerary', [])
-        expenses = validated_data.pop('expenses', [])
-        deductions = validated_data.pop('deductions', [])
-        cost_assignments = validated_data.pop('cost_assignments', [])
         activities = validated_data.pop('activities', [])
         action_points = validated_data.pop('action_points', [])
 
@@ -339,9 +296,6 @@ class TravelDetailsSerializer(PermissionBasedModelSerializer):
         itineraryitems = self.create_related_models(ItineraryItem, itinerary, travel=instance)
         # ensure itineraryitems are ordered by `departure_date`
         order_itineraryitems(instance, itineraryitems)
-        self.create_related_models(Expense, expenses, travel=instance)
-        self.create_related_models(Deduction, deductions, travel=instance)
-        self.create_related_models(CostAssignment, cost_assignments, travel=instance)
         self.create_related_models(ActionPoint, action_points, travel=instance)
         travel_activities = self.create_related_models(TravelActivity, activities)
         for activity in travel_activities:

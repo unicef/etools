@@ -1179,6 +1179,53 @@ class TestPartnerOrganizationRetrieveUpdateDeleteViews(BaseTenantTestCase):
         self.assertEqual(Decimal(response.data["interventions"][0]["actual_amount"]),
                          Decimal(fr_header_1.actual_amt_local + fr_header_2.actual_amt_local))
 
+    def test_api_partners_retreive_same_fr_amounts(self):
+        self.intervention.status = Intervention.ACTIVE
+        self.intervention.save()
+        fr_header_1 = FundsReservationHeaderFactory(
+            intervention=self.intervention,
+            total_amt=Decimal("300.00"),
+            actual_amt=Decimal("250.00"),
+            outstanding_amt=Decimal("200.00"),
+            total_amt_local=Decimal("100.00"),
+            actual_amt_local=Decimal("50.00"),
+            outstanding_amt_local=Decimal("20.00"),
+            intervention_amt=Decimal("10.00"),
+        )
+        fr_header_2 = FundsReservationHeaderFactory(
+            intervention=self.intervention,
+            total_amt=Decimal("300.00"),
+            actual_amt=Decimal("250.00"),
+            outstanding_amt=Decimal("200.00"),
+            total_amt_local=Decimal("100.00"),
+            actual_amt_local=Decimal("50.00"),
+            outstanding_amt_local=Decimal("20.00"),
+            intervention_amt=Decimal("10.00"),
+        )
+
+        response = self.forced_auth_req(
+            'get',
+            reverse('partners_api:partner-detail', args=[self.partner.pk]),
+            user=self.unicef_staff,
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(
+            Decimal(response.data["interventions"][0]["actual_amount"]),
+            Decimal(fr_header_1.actual_amt_local + fr_header_2.actual_amt_local)
+        )
+        self.assertEqual(
+            Decimal(response.data["interventions"][0]["frs_total_frs_amt"]),
+            Decimal(fr_header_1.total_amt_local + fr_header_2.total_amt_local)
+        )
+        self.assertEqual(
+            Decimal(response.data["interventions"][0]["frs_total_intervention_amt"]),
+            Decimal(fr_header_1.intervention_amt + fr_header_2.intervention_amt)
+        )
+        self.assertEqual(
+            Decimal(response.data["interventions"][0]["frs_total_outstanding_amt"]),
+            Decimal(fr_header_1.outstanding_amt_local + fr_header_2.outstanding_amt_local)
+        )
+
     def test_api_partners_retrieve_staff_members(self):
         response = self.forced_auth_req(
             'get',

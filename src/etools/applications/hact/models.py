@@ -11,9 +11,9 @@ from django.utils.translation import ugettext_lazy as _
 from model_utils.models import TimeStampedModel
 
 from etools.applications.audit.models import Audit, Engagement, MicroAssessment, SpecialAudit, SpotCheck
-from etools.applications.EquiTrack.encoders import EToolsEncoder
-from etools.applications.EquiTrack.utils import get_current_year
+from etools.libraries.pythonlib.encoders import CustomJSONEncoder
 from etools.applications.partners.models import PartnerOrganization, PartnerType
+from etools.libraries.pythonlib.datetime import get_current_year
 
 
 class HactHistory(TimeStampedModel):
@@ -50,7 +50,7 @@ class AggregateHact(TimeStampedModel):
                 'cash_transfers_partner_type': self.get_cash_transfer_partner_type(),
                 'spot_checks_completed': self.get_spot_checks_completed(),
             },
-        }, cls=EToolsEncoder)
+        }, cls=CustomJSONEncoder)
         self.save()
 
     @staticmethod

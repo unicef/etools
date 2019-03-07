@@ -78,7 +78,7 @@ class PartnerSynchronizer(VisionDataSynchronizer):
     }
 
     def _convert_records(self, records):
-        return json.loads(records)[u'ROWSET'][u'ROW']
+        return json.loads(records)['ROWSET']['ROW']
 
     def _filter_records(self, records):
         records = super()._filter_records(records)
@@ -229,7 +229,7 @@ class PartnerSynchronizer(VisionDataSynchronizer):
             processed = 1
 
         except Exception:
-            logger.exception(u'Exception occurred during Partner Sync')
+            logger.exception('Exception occurred during Partner Sync')
 
         return processed
 
@@ -245,10 +245,10 @@ class PartnerSynchronizer(VisionDataSynchronizer):
     @staticmethod
     def get_cso_type(partner):
         cso_type_mapping = {
-            'INTERNATIONAL NGO': u'International',
-            'NATIONAL NGO': u'National',
-            'COMMUNITY BASED ORGANIZATION': u'Community Based Organization',
-            'ACADEMIC INSTITUTION': u'Academic Institution'
+            'INTERNATIONAL NGO': 'International',
+            'NATIONAL NGO': 'National',
+            'COMMUNITY BASED ORGANIZATION': 'Community Based Organization',
+            'ACADEMIC INSTITUTION': 'Academic Institution'
         }
         if 'CSO_TYPE' in partner and partner['CSO_TYPE'].upper() in cso_type_mapping:
             return cso_type_mapping[partner['CSO_TYPE'].upper()]
@@ -256,10 +256,10 @@ class PartnerSynchronizer(VisionDataSynchronizer):
     @staticmethod
     def get_partner_type(partner):
         type_mapping = {
-            'BILATERAL / MULTILATERAL': u'Bilateral / Multilateral',
-            'CIVIL SOCIETY ORGANIZATION': u'Civil Society Organization',
-            'GOVERNMENT': u'Government',
-            'UN AGENCY': u'UN Agency',
+            'BILATERAL / MULTILATERAL': 'Bilateral / Multilateral',
+            'CIVIL SOCIETY ORGANIZATION': 'Civil Society Organization',
+            'GOVERNMENT': 'Government',
+            'UN AGENCY': 'UN Agency',
         }
         return type_mapping.get(partner['PARTNER_TYPE_DESC'].upper(), None)
 
