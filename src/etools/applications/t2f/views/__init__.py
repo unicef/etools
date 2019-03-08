@@ -1,8 +1,6 @@
 
 from collections import OrderedDict
 
-from django.contrib.auth import get_user_model
-
 from django_fsm import TransitionNotAllowed
 from rest_framework.exceptions import ValidationError
 from rest_framework.pagination import PageNumberPagination
@@ -22,11 +20,6 @@ class T2FPagePagination(PageNumberPagination):
             ('data', data),
             ('total_count', self.page.paginator.object_list.count()),
         ]))
-
-
-def get_filtered_users(request):
-    User = get_user_model()
-    return User.objects.exclude(first_name='', last_name='')
 
 
 def run_transition(serializer):

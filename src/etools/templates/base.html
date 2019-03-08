@@ -14,7 +14,7 @@
     <meta name="description" content="">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"/>
     <!-- Favicon -->
-    <link rel="shortcut icon" href="{{ STATIC_URL }}img/favicon.ico" type="image/x-icon">
+    <link rel="shortcut icon" href="{{ STATIC_URL }}images/favicon.ico" type="image/x-icon">
     <!-- Bootstrap core CSS -->
     <link rel="stylesheet" href="{{ STATIC_URL }}plugins/bootstrap/css/bootstrap.min.css">
     <link rel="stylesheet" href="{{ STATIC_URL }}plugins/bootstrap-datepicker/css/datepicker.css">
@@ -60,7 +60,7 @@
                 <!--logo start-->
                 <div></div>
                 <div class="brand">
-                    <img class="logoimg" src="{{ STATIC_URL }}img/UNICEF_logo_white.png" width="100px" >
+                    <img class="logoimg" src="{{ STATIC_URL }}images/UNICEF_logo_white.png" width="100px" >
                     <a href="{% url 'dashboard' %}" class="logo"><span>e</span>Tools <span id="test-text"></span></a>
                 </div>
                 <!--logo end-->
@@ -107,7 +107,7 @@
                             </li>
                         {% endif %}
                         <li class="profile-photo">
-                            <img src="{{ STATIC_URL }}img/avatar.png" alt="" class="img-circle">
+                            <img src="{{ STATIC_URL }}images/avatar.png" alt="" class="img-circle">
                         </li>
                         {% if user.is_authenticated %}
                             <li class="dropdown settings">
@@ -193,7 +193,7 @@
         {% block footer %}
             <footer id="footer">
                 <div class="brand col-md-1">
-                    <a href="http://www.unicef.org"><img src="{{ STATIC_URL }}img/UNICEF_logo_Cyan.png" width="130px"></a>
+                    <a href="http://www.unicef.org"><img src="{{ STATIC_URL }}images/UNICEF_logo_Cyan.png" width="130px"></a>
                 </div>
                 <div class="col-md-11 brand msg">
                     <span>© Copyright 2015 UNICEF. All Rights Reserved. Country: {{ request.tenant.name }}</span>
