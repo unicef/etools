@@ -185,7 +185,8 @@ class AuditorFirmViewSet(
 
     @action(detail=False, methods=['get'], url_path='current_tenant')
     def current_tenant(self, request, *args, **kwargs):
-        queryset = self.get_queryset().filter(pk__in=Engagement.objects.values_list('agreement__auditor_firm'))
+        queryset = self.get_queryset().filter(
+            pk__in=Engagement.objects.values_list('agreement__auditor_firm', flat=True))
         serializer = AuditorFirmExportSerializer(queryset, many=True)
         return Response(serializer.data)
 

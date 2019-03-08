@@ -16,19 +16,7 @@ class Migration(migrations.Migration):
         ),
         migrations.RemoveField(
             model_name='costassignment',
-            name='fund',
-        ),
-        migrations.RemoveField(
-            model_name='costassignment',
-            name='grant',
-        ),
-        migrations.RemoveField(
-            model_name='costassignment',
             name='travel',
-        ),
-        migrations.RemoveField(
-            model_name='costassignment',
-            name='wbs',
         ),
         migrations.RemoveField(
             model_name='deduction',
