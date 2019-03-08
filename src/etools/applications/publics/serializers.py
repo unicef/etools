@@ -1,4 +1,3 @@
-
 from django.utils.timezone import now
 from django.utils.translation import ugettext
 
@@ -13,10 +12,7 @@ from etools.applications.publics.models import (
     Currency,
     DSARate,
     DSARegion,
-    Fund,
-    Grant,
     TravelExpenseType,
-    WBS,
 )
 
 
@@ -96,24 +92,6 @@ class AirlineSerializer(serializers.ModelSerializer):
         fields = ('id', 'name', 'code')
 
 
-class WBSSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = WBS
-        fields = ('id', 'name', 'business_area', 'grants')
-
-
-class GrantSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Grant
-        fields = ('id', 'name', 'funds')
-
-
-class FundSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Fund
-        fields = ('id', 'name')
-
-
 class ExpenseTypeSerializer(serializers.ModelSerializer):
     name = serializers.CharField(source='title')
     vendor_number = serializers.CharField()
@@ -139,18 +117,6 @@ class PublicStaticDataSerializer(serializers.Serializer):
     class Meta:
         fields = ('currencies', 'airlines', 'countries', 'business_areas', 'expense_types',
                   'travel_types', 'travel_modes')
-
-
-class WBSGrantFundParameterSerializer(serializers.Serializer):
-    business_area = serializers.PrimaryKeyRelatedField(queryset=BusinessArea.objects.all(), required=False)
-
-    def to_internal_value(self, data):
-        ret = super().to_internal_value(data)
-        if 'business_area' not in ret:
-            default_business_area_code = self.context['request'].user.profile.country.business_area_code
-            default_business_area = BusinessArea.objects.get(code=default_business_area_code)
-            ret['business_area'] = default_business_area
-        return ret
 
 
 class GhostDataPKSerializer(serializers.Serializer):
