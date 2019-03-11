@@ -1625,6 +1625,24 @@ class TestInterventionAmendmentCreateAPIView(BaseTenantTestCase):
         self.assertEquals(response.data['types'],
                           {0: [ErrorDetail(string='"invalid_choice" is not a valid choice.', code=f'{invalid_type}')]})
 
+    def test_create_amendment_other_type_no_description(self):
+        response = self._make_request(
+            user=self.partnership_manager_user,
+            data={
+                "types": [InterventionAmendment.OTHER],
+                "signed_amendment": self.uploaded_file,
+            },
+            request_format='multipart',
+        )
+
+        self.assertEquals(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertEquals(
+            response.data['non_field_errors'], [ErrorDetail(
+                string="Other description required, if type 'Other' selected.",
+                code='invalid'
+            )]
+        )
+
     def test_create_amendment_invalid_file(self):
         response = self._make_request(
             user=self.partnership_manager_user,
