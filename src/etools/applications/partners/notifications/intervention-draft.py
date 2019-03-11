@@ -1,7 +1,7 @@
 name = 'partners/intervention/draft'
 defaults = {
     'description': 'Intervention in Draft status.',
-    'subject': 'eTools PD/SHPD/SSFA Draft Notification',
+    'subject': 'eTools PD/HPD/SSFA Draft Notification',
     'content': """
     Dear Colleague,
 
