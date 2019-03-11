@@ -77,6 +77,11 @@ class InterventionAmendmentCUSerializer(AttachmentSerializerMixin, serializers.M
                 raise ValidationError("Cannot add a new amendment while another amendment is in progress.")
             if data['intervention'].agreement.partner.blocked is True:
                 raise ValidationError("Cannot add a new amendment while the partner is blocked in Vision.")
+
+        if InterventionAmendment.OTHER in data["types"]:
+            if "other_description" not in data or not data["other_description"]:
+                raise ValidationError("Other description required, if type 'Other' selected.")
+
         return data
 
 
