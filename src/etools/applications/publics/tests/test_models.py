@@ -1,4 +1,3 @@
-
 from django.test import SimpleTestCase
 
 from etools.applications.publics.tests.factories import (
@@ -9,10 +8,7 @@ from etools.applications.publics.tests.factories import (
     PublicsCurrencyFactory,
     PublicsDSARateFactory,
     PublicsDSARegionFactory,
-    PublicsFundFactory,
-    PublicsGrantFactory,
     PublicsTravelExpenseTypeFactory,
-    PublicsWBSFactory,
 )
 
 
@@ -56,30 +52,6 @@ class TestStrUnicode(SimpleTestCase):
 
         # Ost (East)
         instance = PublicsBusinessAreaFactory.build(name='\xd6st')
-        self.assertEqual(str(instance), '\xd6st')
-
-    def test_wbs(self):
-        instance = PublicsWBSFactory.build(name='xyz')
-        self.assertEqual(str(instance), 'xyz')
-
-        # Ost (East)
-        instance = PublicsWBSFactory.build(name='\xd6st')
-        self.assertEqual(str(instance), '\xd6st')
-
-    def test_fund(self):
-        instance = PublicsFundFactory.build(name='xyz')
-        self.assertEqual(str(instance), 'xyz')
-
-        # Ost (East)
-        instance = PublicsFundFactory.build(name='\xd6st')
-        self.assertEqual(str(instance), '\xd6st')
-
-    def test_grant(self):
-        instance = PublicsGrantFactory.build(name='xyz')
-        self.assertEqual(str(instance), 'xyz')
-
-        # Ost (East)
-        instance = PublicsGrantFactory.build(name='\xd6st')
         self.assertEqual(str(instance), '\xd6st')
 
     def test_country(self):

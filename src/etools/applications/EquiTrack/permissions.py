@@ -70,8 +70,8 @@ def process_permissions(permission_dict):
 
 def import_permissions(model_name):
     permission_file_map = {
-        'Intervention': settings.PACKAGE_ROOT + '/assets/partner/intervention_permissions.csv',
-        'Agreement': settings.PACKAGE_ROOT + '/assets/partner/agreement_permissions.csv'
+        'Intervention': settings.PACKAGE_ROOT + '/applications/partners/permission_matrix/intervention_permissions.csv',
+        'Agreement': settings.PACKAGE_ROOT + '/applications/partners/permission_matrix/agreement_permissions.csv'
     }
 
     def process_file():

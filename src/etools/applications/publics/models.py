@@ -163,36 +163,6 @@ class BusinessArea(SoftDeleteMixin, models.Model):
         return self.name
 
 
-class WBS(SoftDeleteMixin, models.Model):
-    business_area = models.ForeignKey(
-        'BusinessArea', null=True, verbose_name=_('Business Area'),
-        on_delete=models.CASCADE,
-    )
-    name = models.CharField(max_length=25, verbose_name=_('Name'))
-    grants = models.ManyToManyField('Grant', related_name='wbs', verbose_name=_('Grants'))
-
-    class Meta:
-        verbose_name_plural = _('WBSes')
-
-    def __str__(self):
-        return self.name
-
-
-class Grant(SoftDeleteMixin, models.Model):
-    name = models.CharField(max_length=25, verbose_name=_('Name'))
-    funds = models.ManyToManyField('Fund', related_name='grants', verbose_name=_('Funds'))
-
-    def __str__(self):
-        return self.name
-
-
-class Fund(SoftDeleteMixin, models.Model):
-    name = models.CharField(max_length=25, verbose_name=_('Name'))
-
-    def __str__(self):
-        return self.name
-
-
 class Country(SoftDeleteMixin, models.Model):
     name = models.CharField(max_length=64, verbose_name=_('Name'))
     long_name = models.CharField(max_length=128, verbose_name=_('Long Name'))
