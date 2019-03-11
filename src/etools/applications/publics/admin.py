@@ -1,10 +1,8 @@
-
 from django.contrib import admin
 from django.db.models import ForeignKey, ManyToManyField, OneToOneField
 
 from etools.applications.publics import models
 from etools.applications.publics.models import EPOCH_ZERO
-from etools.applications.publics.views import WBSGrantFundView
 
 
 class AdminListMixin(object):
@@ -106,24 +104,6 @@ class BusinessAreaAdmin(AdminListMixin, admin.ModelAdmin):
     pass
 
 
-class WBSAdmin(AdminListMixin, admin.ModelAdmin):
-    def save_model(self, *args, **kwargs):
-        super().save_model(*args, **kwargs)
-        WBSGrantFundView.list.invalidate()
-
-
-class GrantAdmin(AdminListMixin, admin.ModelAdmin):
-    def save_model(self, *args, **kwargs):
-        super().save_model(*args, **kwargs)
-        WBSGrantFundView.list.invalidate()
-
-
-class FundAdmin(AdminListMixin, admin.ModelAdmin):
-    def save_model(self, *args, **kwargs):
-        super().save_model(*args, **kwargs)
-        WBSGrantFundView.list.invalidate()
-
-
 class CountryAdmin(AdminListMixin, admin.ModelAdmin):
     pass
 
@@ -141,8 +121,5 @@ admin.site.register(models.ExchangeRate, ExchangeRateAdmin)
 admin.site.register(models.AirlineCompany, AirlineCompanyAdmin)
 admin.site.register(models.BusinessRegion, BusinessAreaAdmin)
 admin.site.register(models.BusinessArea, BusinessAreaAdmin)
-admin.site.register(models.WBS, WBSAdmin)
-admin.site.register(models.Grant, GrantAdmin)
-admin.site.register(models.Fund, FundAdmin)
 admin.site.register(models.Country, CountryAdmin)
 admin.site.register(models.DSARegion, DSARegionAdmin)

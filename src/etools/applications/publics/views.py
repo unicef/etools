@@ -1,13 +1,8 @@
-
-from collections import OrderedDict
-
 from django.db.models.query_utils import Q
-from django.utils.functional import cached_property
 
 from rest_framework import mixins, status, viewsets
 from rest_framework.permissions import IsAdminUser
 from rest_framework.response import Response
-from unicef_djangolib.etag import etag_cached
 
 from etools.applications.publics.models import (
     AirlineCompany,
@@ -15,10 +10,7 @@ from etools.applications.publics.models import (
     Country,
     Currency,
     DSARegion,
-    Fund,
-    Grant,
     TravelExpenseType,
-    WBS,
 )
 from etools.applications.publics.serializers import (
     AirlineSerializer,
@@ -28,13 +20,9 @@ from etools.applications.publics.serializers import (
     DSARegionSerializer,
     DSARegionsParameterSerializer,
     ExpenseTypeSerializer,
-    FundSerializer,
     GhostDataPKSerializer,
-    GrantSerializer,
     MultiGhostDataSerializer,
     PublicStaticDataSerializer,
-    WBSGrantFundParameterSerializer,
-    WBSSerializer,
 )
 from etools.applications.t2f.models import ModeOfTravel, TravelType
 
@@ -182,93 +170,6 @@ class ExpenseTypesView(GhostDataMixin,
         expense_types = self.get_queryset()
         serializer = self.get_serializer(expense_types, many=True)
         return Response(serializer.data, status.HTTP_200_OK)
-
-
-class WBSGrantFundView(GhostDataMixin,
-                       viewsets.GenericViewSet):
-
-    @etag_cached('wbs_grant_fund', public_cache=True)
-    def list(self, request):
-        wbs_qs = self.wbs_queryset
-        grant_qs = self.grants_queryset
-        funds_qs = self.funds_queryset
-
-        wbs = self._aggregate_values(wbs_qs.values('id', 'name', 'grants'),
-                                     ('id', 'name'),
-                                     ('grants',))
-
-        grants = self._aggregate_values(grant_qs.values('id', 'name', 'funds'),
-                                        ('id', 'name'),
-                                        ('funds',))
-
-        data = {'wbs': wbs,
-                'funds': funds_qs.values('id', 'name'),
-                'grants': grants}
-        return Response(data, status.HTTP_200_OK)
-
-    def missing(self, request):
-        context = {'allowed_categories': ['wbs', 'grants', 'funds']}
-        parameter_serializer = MultiGhostDataSerializer(data=request.GET, context=context)
-        parameter_serializer.is_valid(raise_exception=True)
-
-        category = parameter_serializer.data['category']
-
-        if category == 'wbs':
-            queryset = self.wbs_queryset
-            serializer_class = WBSSerializer
-        elif category == 'grants':
-            queryset = self.grants_queryset
-            serializer_class = GrantSerializer
-        elif category == 'funds':
-            queryset = self.funds_queryset
-            serializer_class = FundSerializer
-        else:
-            raise ValueError('Invalid category')
-
-        model = queryset.model
-
-        obj = model.admin_objects.filter(id__in=parameter_serializer.data['values'])
-        serializer = serializer_class(obj, many=True, context=self.get_serializer_context())
-        return Response(serializer.data, status.HTTP_200_OK)
-
-    @cached_property
-    def wbs_queryset(self):
-        parameter_serializer = WBSGrantFundParameterSerializer(data=self.request.GET,
-                                                               context=self.get_serializer_context())
-        parameter_serializer.is_valid(raise_exception=True)
-
-        business_area = parameter_serializer.validated_data['business_area']
-        return WBS.objects.filter(business_area=business_area).order_by('id')
-
-    @cached_property
-    def grants_queryset(self):
-        wbs_qs = self.wbs_queryset
-        return Grant.objects.filter(wbs__in=wbs_qs).order_by('id')
-
-    @cached_property
-    def funds_queryset(self):
-        grant_qs = self.grants_queryset
-        return Fund.objects.filter(grants__in=grant_qs).order_by('id').distinct()
-
-    def _aggregate_values(self, values, common_keys, keys_to_group):
-        def make_dict(data):
-            ret = OrderedDict()
-            for key in common_keys:
-                ret[key] = data[key]
-            for key in keys_to_group:
-                ret[key] = []
-            return ret
-
-        ret = {}
-        for val_dict in values:
-            if val_dict['id'] not in ret:
-                ret[val_dict['id']] = make_dict(val_dict)
-            for key in keys_to_group:
-                if val_dict[key] and val_dict[key] not in ret[val_dict['id']][key]:
-                    ret[val_dict['id']][key].append(val_dict[key])
-
-        ordered_keys = sorted(ret.keys())
-        return [ret[k] for k in ordered_keys]
 
 
 class AirlinesView(GhostDataMixin,

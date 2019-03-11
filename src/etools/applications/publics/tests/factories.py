@@ -1,4 +1,3 @@
-
 from datetime import datetime, timedelta
 
 from django.conf import settings
@@ -80,42 +79,6 @@ class TravelAgentFactory(factory.DjangoModelFactory):
 
     class Meta:
         model = models.TravelAgent
-
-
-class PublicsWBSFactory(factory.DjangoModelFactory):
-    name = fuzzy.FuzzyText(length=12)
-    business_area = factory.SubFactory(PublicsBusinessAreaFactory)
-
-    class Meta:
-        model = models.WBS
-
-    @factory.post_generation
-    def populate_grants(self, create, extracted, **kwargs):
-        if not create:
-            return
-        grant = PublicsGrantFactory()
-        self.grants.add(grant)
-
-
-class PublicsGrantFactory(factory.DjangoModelFactory):
-    name = fuzzy.FuzzyText(length=12)
-
-    class Meta:
-        model = models.Grant
-
-    @factory.post_generation
-    def populate_funds(self, create, extracted, **kwargs):
-        if not create:
-            return
-        fund = PublicsFundFactory()
-        self.funds.add(fund)
-
-
-class PublicsFundFactory(factory.DjangoModelFactory):
-    name = fuzzy.FuzzyText(length=12)
-
-    class Meta:
-        model = models.Fund
 
 
 class PublicsAirlineCompanyFactory(factory.DjangoModelFactory):
