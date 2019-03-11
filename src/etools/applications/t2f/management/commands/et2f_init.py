@@ -15,10 +15,7 @@ from etools.applications.publics.models import (
     Country,
     Currency,
     DSARegion,
-    Fund,
-    Grant,
     TravelExpenseType,
-    WBS,
 )
 from etools.applications.users.models import Country as UserCountry, Office
 
@@ -69,9 +66,6 @@ class Command(BaseCommand):
         self._load_countries()
 
         self._load_dsa_regions(country)
-        self._add_wbs()
-        self._add_grants()
-        self._add_funds()
         self._add_expense_types()
         self._add_user_groups()
 
@@ -1032,89 +1026,6 @@ class Command(BaseCommand):
             else:
                 self.stdout.write('DSA Region found: {}'.format(name))
 
-    def _add_wbs(self):
-        wbs_data_list = [
-            {'name': 'WBS #1'},
-            {'name': 'WBS #2'},
-            {'name': 'WBS #3'},
-        ]
-
-        for data in wbs_data_list:
-            name = data.pop('name')
-            r, created = WBS.objects.get_or_create(name=name)
-            if created:
-                self.stdout.write('WBS created: {}'.format(name))
-            else:
-                self.stdout.write('WBS found: {}'.format(name))
-
-    def _add_grants(self):
-        wbs_1 = WBS.objects.get(name='WBS #1')
-        wbs_2 = WBS.objects.get(name='WBS #2')
-        wbs_3 = WBS.objects.get(name='WBS #3')
-
-        grant_data_list = [
-            {'name': 'Grant #1',
-             'wbs': wbs_1},
-            {'name': 'Grant #2',
-             'wbs': wbs_1},
-            {'name': 'Grant #3',
-             'wbs': wbs_2},
-            {'name': 'Grant #4',
-             'wbs': wbs_2},
-            {'name': 'Grant #5',
-             'wbs': wbs_3}
-        ]
-
-        for data in grant_data_list:
-            name = data.pop('name')
-            wbs = data.pop("wbs")
-            g, created = Grant.objects.get_or_create(name=name, defaults=data)
-            g.wbs.set([wbs])
-            if created:
-                self.stdout.write('Grant created: {}'.format(name))
-            else:
-                self.stdout.write('Grant found: {}'.format(name))
-
-    def _add_funds(self):
-        grant_1 = Grant.objects.get(name='Grant #1')
-        grant_2 = Grant.objects.get(name='Grant #2')
-        grant_3 = Grant.objects.get(name='Grant #3')
-        grant_4 = Grant.objects.get(name='Grant #4')
-        grant_5 = Grant.objects.get(name='Grant #5')
-
-        fund_data_list = [
-            {'name': 'Fund #1',
-             'grant': grant_1},
-            {'name': 'Fund #2',
-             'grant': grant_1},
-            {'name': 'Fund #3',
-             'grant': grant_2},
-            {'name': 'Fund #4',
-             'grant': grant_3},
-            {'name': 'Fund #5',
-             'grant': grant_3},
-            {'name': 'Fund #6',
-             'grant': grant_4},
-            {'name': 'Fund #7',
-             'grant': grant_4},
-            {'name': 'Fund #8',
-             'grant': grant_5},
-            {'name': 'Fund #4',
-             'grant': grant_5},
-            {'name': 'Fund #4',
-             'grant': grant_5},
-        ]
-
-        for data in fund_data_list:
-            name = data.pop('name')
-            grant = data.pop('grant')
-            f, created = Fund.objects.get_or_create(name=name, defaults=data)
-            grant.funds.add(f)
-            if created:
-                self.stdout.write('Fund created: {}'.format(name))
-            else:
-                self.stdout.write('Fund found: {}'.format(name))
-
     def _add_expense_types(self):
         expense_type_data = [
             {'title': 'Food',
@@ -1144,5 +1055,3 @@ class Command(BaseCommand):
                 self.stdout.write('Group created: {}'.format(name))
             else:
                 self.stdout.write('Group found: {}'.format(name))
-
-# DEVELOPMENT CODE - END

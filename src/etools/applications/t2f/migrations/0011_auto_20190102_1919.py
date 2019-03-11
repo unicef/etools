@@ -20,19 +20,7 @@ class Migration(migrations.Migration):
         ),
         migrations.RemoveField(
             model_name='invoiceitem',
-            name='fund',
-        ),
-        migrations.RemoveField(
-            model_name='invoiceitem',
-            name='grant',
-        ),
-        migrations.RemoveField(
-            model_name='invoiceitem',
             name='invoice',
-        ),
-        migrations.RemoveField(
-            model_name='invoiceitem',
-            name='wbs',
         ),
         migrations.DeleteModel(
             name='Invoice',
