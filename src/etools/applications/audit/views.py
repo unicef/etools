@@ -59,6 +59,7 @@ from etools.applications.audit.serializers.attachments import (
     SpotCheckAttachmentLinkSerializer,
 )
 from etools.applications.audit.serializers.auditor import (
+    AuditorFirmExportSerializer,
     AuditorFirmLightSerializer,
     AuditorFirmSerializer,
     AuditorStaffMemberSerializer,
@@ -181,6 +182,13 @@ class AuditorFirmViewSet(
     @action(detail=False, methods=['get'], url_path='users')
     def users(self, request, *args, **kwargs):
         return AuditUsersViewSet.as_view()(request._request, *args, **kwargs)
+
+    @action(detail=False, methods=['get'], url_path='current_tenant')
+    def current_tenant(self, request, *args, **kwargs):
+        queryset = self.get_queryset().filter(
+            pk__in=Engagement.objects.values_list('agreement__auditor_firm', flat=True))
+        serializer = AuditorFirmExportSerializer(queryset, many=True)
+        return Response(serializer.data)
 
 
 class PurchaseOrderViewSet(
