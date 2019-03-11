@@ -11,7 +11,6 @@ from etools.applications.EquiTrack.views import (
     IssueJWTRedirectView,
     logout_view,
     MainView,
-    OutdatedBrowserView
 )
 from etools.applications.management.urls import urlpatterns as management_urls
 from etools.applications.partners.views.v1 import FileTypeViewSet
@@ -119,7 +118,6 @@ urlpatterns = [
     url(r'^login/token-auth/', rest_framework_jwt.views.obtain_jwt_token),
     # TODO: remove this when eTrips is deployed needed
     url(r'^api-token-auth/', rest_framework_jwt.views.obtain_jwt_token),
-    url(r'^outdated_browser', OutdatedBrowserView.as_view(), name='outdated_browser'),
     url(r'^workspace_inactive/$', TemplateView.as_view(template_name='removed_workspace.html'),
         name='workspace-inactive'),
 

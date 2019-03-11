@@ -41,7 +41,7 @@ def get_intervention_context(intervention):
         'number': str(intervention),
         'partner': intervention.agreement.partner.name,
         'start_date': str(intervention.start),
-        'url': 'https://{}/pmp/interventions/{}/details'.format(settings.HOST, intervention.id),
+        'url': '{}/pmp/interventions/{}/details'.format(settings.HOST, intervention.id),
         'unicef_focal_points': [focal_point.email for focal_point in intervention.unicef_focal_points.all()]
     }
 
