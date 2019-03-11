@@ -14,7 +14,8 @@ from etools.applications.audit.tests.factories import MicroAssessmentFactory
 from etools.applications.partners.tests.factories import PartnerFactory
 from etools.applications.reports.tests.factories import SectionFactory
 from etools.applications.t2f.tests.factories import TravelActivityFactory, TravelFactory
-from etools.applications.tpm.tests.factories import UserFactory, TPMVisitFactory
+from etools.applications.tpm.tests.factories import TPMVisitFactory
+from etools.applications.users.tests.factories import UserFactory, SimpleUserFactory, PMEUserFactory
 from etools.applications.utils.common.tests.test_utils import TestExportMixin
 
 
@@ -23,9 +24,9 @@ class TestActionPointViewSet(TestExportMixin, ActionPointsTestCaseMixin, BaseTen
     def setUpTestData(cls):
         call_command('update_action_points_permissions', verbosity=0)
 
-        cls.pme_user = UserFactory(pme=True)
-        cls.unicef_user = UserFactory(unicef_user=True)
-        cls.common_user = UserFactory()
+        cls.pme_user = PMEUserFactory()
+        cls.unicef_user = UserFactory()
+        cls.common_user = SimpleUserFactory()
         cls.create_data = {
             'description': 'do something',
             'due_date': date.today(),
@@ -174,9 +175,9 @@ class TestActionPointViewSet(TestExportMixin, ActionPointsTestCaseMixin, BaseTen
         self.assertEqual(len(response.data['results']), 2)
 
     def test_reassign(self):
-        author = UserFactory(unicef_user=True)
-        assignee = UserFactory(unicef_user=True)
-        new_assignee = UserFactory(unicef_user=True)
+        author = UserFactory()
+        assignee = UserFactory()
+        new_assignee = UserFactory()
 
         action_point = ActionPointFactory(status='open', author=author, assigned_by=author, assigned_to=assignee)
         self.assertEqual(action_point.history.count(), 0)
@@ -287,9 +288,9 @@ class TestActionPointsViewMetadata(ActionPointsTestCaseMixin):
     def setUpTestData(cls):
         call_command('update_action_points_permissions', verbosity=0)
 
-        cls.pme_user = UserFactory(pme=True)
-        cls.unicef_user = UserFactory(unicef_user=True)
-        cls.common_user = UserFactory()
+        cls.pme_user = PMEUserFactory()
+        cls.unicef_user = UserFactory()
+        cls.common_user = SimpleUserFactory()
 
 
 class TestActionPointsListViewMetadada(TestActionPointsViewMetadata, BaseTenantTestCase):
@@ -341,9 +342,9 @@ class TestActionPointsDetailViewMetadata(TestActionPointsViewMetadata):
     status = None
 
     def setUp(self):
-        self.author = UserFactory(unicef_user=True)
-        self.assignee = UserFactory(unicef_user=True)
-        self.assigned_by = UserFactory(unicef_user=True)
+        self.author = UserFactory()
+        self.assignee = UserFactory()
+        self.assigned_by = UserFactory()
         self.action_point = ActionPointFactory(status=self.status, author=self.author,
                                                assigned_by=self.assigned_by, assigned_to=self.assignee)
 
@@ -441,7 +442,7 @@ class TestClosedActionPointDetailViewMetadata(TestActionPointsDetailViewMetadata
 class TestCategoriesViewSet(BaseTenantTestCase):
     @classmethod
     def setUpTestData(cls):
-        cls.user = UserFactory(unicef_user=True)
+        cls.user = UserFactory()
 
         for module, display_value in Category.MODULE_CHOICES:
             ActionPointCategoryFactory(module=module)
