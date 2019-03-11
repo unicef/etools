@@ -1587,11 +1587,11 @@ class Intervention(TimeStampedModel):
         (TERMINATED, "Terminated"),
     )
     PD = 'PD'
-    SHPD = 'SHPD'
+    SHPD = 'HPD'
     SSFA = 'SSFA'
     INTERVENTION_TYPES = (
         (PD, 'Programme Document'),
-        (SHPD, 'Simplified Humanitarian Programme Document'),
+        (SHPD, 'Humanitarian Programme Document'),
         (SSFA, 'SSFA'),
     )
 
@@ -2095,13 +2095,25 @@ class InterventionAmendment(TimeStampedModel):
     RESULTS = 'results'
     BUDGET = 'budget'
     OTHER = 'other'
+    TYPE_ADMIN_ERROR = 'admin_error'
+    TYPE_BUDGET_LTE_20 = 'budget_lte_20'
+    TYPE_BUDGET_GT_20 = 'budget_gt_20'
+    TYPE_CHANGE = 'change'
+    TYPE_NO_COST = 'no_cost'
 
     AMENDMENT_TYPES = Choices(
+        (TYPE_ADMIN_ERROR, 'Administrative error (correction)'),
+        (TYPE_BUDGET_LTE_20, 'Budget <= 20%'),
+        (TYPE_BUDGET_GT_20, 'Budget > 20'),
+        (TYPE_CHANGE, 'Changes to planned results'),
+        (TYPE_NO_COST, 'No cost extension'),
+        (OTHER, 'Other')
+    )
+    AMENDMENT_TYPES_OLD = [
         (DATES, 'Dates'),
         (RESULTS, 'Results'),
         (BUDGET, 'Budget'),
-        (OTHER, 'Other')
-    )
+    ]
 
     intervention = models.ForeignKey(
         Intervention,
@@ -2113,7 +2125,7 @@ class InterventionAmendment(TimeStampedModel):
     types = ArrayField(models.CharField(
         max_length=50,
         verbose_name=_('Types'),
-        choices=AMENDMENT_TYPES))
+        choices=AMENDMENT_TYPES + AMENDMENT_TYPES_OLD))
 
     other_description = models.CharField(
         verbose_name=_("Description"),
