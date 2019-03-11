@@ -474,6 +474,8 @@ class TestProgrammeSynchronizer(BaseTenantTestCase):
         self.data["OUTPUT_DESCRIPTION"] = "OP_NAME"
         self.data["OUTPUT_START_DATE"] = "OP_START"
         self.data["OUTPUT_END_DATE"] = "OP_END"
+        self.data["HUMANITARIAN_MARKER_CODE"] = "HUMANITARIAN_MARKER_CODE"
+        self.data["HUMANITARIAN_MARKER_NAME"] = "HUMANITARIAN_MARKER_NAME"
         records = [self.data]
         result = self.adapter._clean_records(records)
         self.assertEqual(result, {
@@ -488,6 +490,8 @@ class TestProgrammeSynchronizer(BaseTenantTestCase):
                 "wbs": "OP_WBS",
                 "name": "OP_NAME",
                 "from_date": "OP_START",
+                'humanitarian_marker_code': 'HUMANITARIAN_MARKER_CODE',
+                'humanitarian_marker_name': 'HUMANITARIAN_MARKER_NAME',
                 "to_date": "OP_END",
             }},
             "activities": {}
@@ -544,6 +548,8 @@ class TestProgrammeSynchronizer(BaseTenantTestCase):
         self.data["OUTPUT_END_DATE"] = "/Date(2361336400000)/"
         self.data["ACTIVITY_START_DATE"] = "/Date(2361336400000)/"
         self.data["ACTIVITY_END_DATE"] = "/Date(2361336400000)/"
+        self.data["HUMANITARIAN_MARKER_CODE"] = "HUMANITARIAN_MARKER_CODE"
+        self.data["HUMANITARIAN_MARKER_NAME"] = "HUMANITARIAN_MARKER_NAME"
         records = {
             "GetProgrammeStructureList_JSONResult": json.dumps([self.data])
         }
