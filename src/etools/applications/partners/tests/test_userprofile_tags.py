@@ -1,16 +1,15 @@
-
 from mock import Mock
 
 from etools.applications.EquiTrack.tests.cases import BaseTenantTestCase
 from etools.applications.partners.templatetags import userprofile_tags as tags
-from etools.applications.users.tests.factories import CountryFactory, ProfileFactory
+from etools.applications.users.tests.factories import ProfileFactory
 
 
 class TestShowCountrySelect(BaseTenantTestCase):
     @classmethod
     def setUpTestData(cls):
-        cls.country = CountryFactory()
-        cls.profile = ProfileFactory(country=cls.country)
+        cls.profile = ProfileFactory()
+        cls.country = cls.profile.country
         cls.profile.countries_available.add(cls.country)
 
     def test_no_profile(self):

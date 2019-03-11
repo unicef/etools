@@ -3,7 +3,6 @@ from django.utils.encoding import force_text
 
 from rest_framework import serializers
 
-from etools.applications.t2f.serializers.user_data import T2FUserDataSerializer
 from etools.applications.users.models import Country, Group, Office, UserProfile
 
 
@@ -68,7 +67,6 @@ class ProfileRetrieveUpdateSerializer(serializers.ModelSerializer):
 class UserSerializer(serializers.ModelSerializer):
     profile = UserProfileSerializer(read_only=True)
     full_name = serializers.CharField(source='get_full_name')
-    t2f = T2FUserDataSerializer(source='*')
     groups = GroupSerializer(many=True)
 
     class Meta:
@@ -157,7 +155,6 @@ class UserCreationSerializer(serializers.ModelSerializer):
     groups = serializers.SerializerMethodField()
     user_permissions = serializers.SerializerMethodField()
     profile = UserProfileCreationSerializer()
-    t2f = T2FUserDataSerializer(source='*', read_only=True)
 
     def get_groups(self, user):
         return [grp.id for grp in user.groups.all()]

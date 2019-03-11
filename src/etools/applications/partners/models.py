@@ -1587,11 +1587,11 @@ class Intervention(TimeStampedModel):
         (TERMINATED, "Terminated"),
     )
     PD = 'PD'
-    SHPD = 'SHPD'
+    SHPD = 'HPD'
     SSFA = 'SSFA'
     INTERVENTION_TYPES = (
         (PD, 'Programme Document'),
-        (SHPD, 'Simplified Humanitarian Programme Document'),
+        (SHPD, 'Humanitarian Programme Document'),
         (SSFA, 'SSFA'),
     )
 

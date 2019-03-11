@@ -287,7 +287,7 @@ class InterventionValid(CompleteValidation):
                                    'the intervention surpasses today',
         'start_end_dates_valid': 'Start date must precede end date',
         'signed_date_valid': 'Signatures cannot be dated in the future',
-        'document_type_pca_valid': 'Document type PD or SHPD can only be associated with a PCA agreement.',
+        'document_type_pca_valid': 'Document type PD or HPD can only be associated with a PCA agreement.',
         'ssfa_agreement_has_no_other_intervention': 'The agreement selected has at least one '
                                                     'other SSFA Document connected',
         'start_date_signed_valid': 'The start date cannot be before the later of signature dates.',
