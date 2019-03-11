@@ -1,6 +1,5 @@
 import datetime
 
-from django.contrib.auth.models import Group
 from django.db import connection
 from django.utils import timezone
 
@@ -10,14 +9,14 @@ from unicef_locations.tests.factories import LocationFactory
 
 from etools.applications.action_points.tests.factories import ActionPointFactory
 from etools.applications.attachments.tests.factories import AttachmentFactory
-from etools.applications.firms.tests.factories import BaseFirmFactory, BaseStaffMemberFactory, BaseUserFactory
+from etools.applications.firms.tests.factories import BaseFirmFactory, BaseStaffMemberFactory
 from etools.applications.partners.models import InterventionResultLink
 from etools.applications.partners.tests.factories import InterventionFactory
 from etools.applications.reports.tests.factories import ResultFactory, SectionFactory
 from etools.applications.tpm.models import TPMActivity, TPMVisit, TPMVisitReportRejectComment
 from etools.applications.tpm.tpmpartners.models import TPMPartner, TPMPartnerStaffMember
-from etools.applications.users.tests.factories import OfficeFactory as SimpleOfficeFactory
-from etools.libraries.tests.factories import InheritedTrait
+from etools.applications.users.tests.factories import OfficeFactory as SimpleOfficeFactory, PMEUserFactory, UserFactory
+from etools.applications.utils.common.tests.factories import StatusFactoryMetaClass
 
 _FUZZY_START_DATE = timezone.now().date() - datetime.timedelta(days=5)
 _FUZZY_END_DATE = timezone.now().date() + datetime.timedelta(days=5)
@@ -74,24 +73,18 @@ class TPMActivityFactory(factory.DjangoModelFactory):
     date = fuzzy.FuzzyDate(_FUZZY_START_DATE, _FUZZY_END_DATE)
     section = factory.SubFactory(SectionFactory)
 
-    attachments__count = 0
-    report_attachments__count = 0
-    unicef_focal_points__count = 0
-    offices__count = 0
-    action_points__count = 0
-
     @factory.post_generation
-    def unicef_focal_points(self, create, extracted, count, **kwargs):
+    def unicef_focal_points(self, create, extracted, count=0, **kwargs):
         if not create:
             return
 
         if extracted is not None:
             self.unicef_focal_points.add(*extracted)
         else:
-            self.unicef_focal_points.add(*[UserFactory(unicef_user=True) for i in range(count)])
+            self.unicef_focal_points.add(*[UserFactory() for i in range(count)])
 
     @factory.post_generation
-    def offices(self, create, extracted, count, **kwargs):
+    def offices(self, create, extracted, count=0, **kwargs):
         if not create:
             return
 
@@ -114,7 +107,7 @@ class TPMActivityFactory(factory.DjangoModelFactory):
         self.locations.add(location)
 
     @factory.post_generation
-    def attachments(self, create, extracted, count, **kwargs):
+    def attachments(self, create, extracted, count=0, **kwargs):
         if not create:
             return
 
@@ -122,7 +115,7 @@ class TPMActivityFactory(factory.DjangoModelFactory):
             AttachmentFactory(code='activity_attachments', content_object=self)
 
     @factory.post_generation
-    def report_attachments(self, create, extracted, count, **kwargs):
+    def report_attachments(self, create, extracted, count=0, **kwargs):
         if not create:
             return
 
@@ -130,7 +123,7 @@ class TPMActivityFactory(factory.DjangoModelFactory):
             AttachmentFactory(code='activity_report', content_object=self, **kwargs)
 
     @factory.post_generation
-    def action_points(self, create, extracted, count, **kwargs):
+    def action_points(self, create, extracted, count=0, **kwargs):
         if not create:
             return
 
@@ -138,42 +131,12 @@ class TPMActivityFactory(factory.DjangoModelFactory):
             ActionPointFactory(tpm_activity=self, **kwargs)
 
 
-class UserFactory(BaseUserFactory):
-    """
-    User factory with ability to quickly assign tpm related groups with special logic for tpm partner.
-    """
-    class Params:
-        unicef_user = factory.Trait(
-            groups=['UNICEF User'],
-        )
-
-        pme = factory.Trait(
-            groups=['UNICEF User', 'PME'],
-        )
-
-        tpm = factory.Trait(
-            groups=['Third Party Monitor'],
-        )
-
-    @factory.post_generation
-    def groups(self, create, extracted, **kwargs):
-        if not create:
-            return
-
-        if extracted is not None:
-            extracted = extracted[:]
-            for i, group in enumerate(extracted):
-                if isinstance(group, str):
-                    extracted[i] = Group.objects.get_or_create(name=group)[0]
-
-            self.groups.add(*extracted)
+class TPMUserFactory(UserFactory):
+    groups__data = ['Third Party Monitor']
 
     @factory.post_generation
     def tpm_partner(self, create, extracted, **kwargs):
         if not create:
-            return
-
-        if 'Third Party Monitor' not in self.groups.values_list('name', flat=True):
             return
 
         if not extracted:
@@ -182,120 +145,18 @@ class UserFactory(BaseUserFactory):
         TPMPartnerStaffMemberFactory(tpm_partner=extracted, user=self)
 
 
-class TPMVisitFactory(factory.DjangoModelFactory):
+class BaseTPMVisitFactory(factory.DjangoModelFactory):
     class Meta:
         model = TPMVisit
 
     status = TPMVisit.STATUSES.draft
 
-    author = factory.SubFactory(UserFactory, pme=True)
+    author = factory.SubFactory(PMEUserFactory)
 
     tpm_partner = factory.SubFactory(TPMPartnerFactory)
 
-    tpm_partner_focal_points__count = 0
-
-    tpm_activities__count = 0
-
-    report_reject_comments__count = 0
-
-    report_attachments__count = 0
-
-    class Params:
-        draft = factory.Trait()
-
-        pre_assigned = factory.Trait(
-            tpm_partner_focal_points__count=3,
-
-            tpm_activities__count=3,
-
-            tpm_activities__attachments__count=3,
-            tpm_activities__unicef_focal_points__count=3,
-            tpm_activities__offices__count=3,
-        )
-
-        assigned = InheritedTrait(
-            pre_assigned,
-            status=TPMVisit.STATUSES.assigned,
-            date_of_assigned=factory.LazyFunction(timezone.now),
-        )
-
-        cancelled = InheritedTrait(
-            assigned,
-            status=TPMVisit.STATUSES.cancelled,
-            date_of_cancelled=factory.LazyFunction(timezone.now),
-        )
-
-        pre_tpm_accepted = InheritedTrait(
-            assigned,
-        )
-
-        tpm_accepted = InheritedTrait(
-            pre_tpm_accepted,
-
-            status=TPMVisit.STATUSES.tpm_accepted,
-            date_of_tpm_accepted=factory.LazyFunction(timezone.now),
-        )
-
-        pre_tpm_rejected = InheritedTrait(
-            assigned,
-
-            reject_comment='Just because.',
-        )
-
-        tpm_rejected = InheritedTrait(
-            pre_tpm_rejected,
-
-            status=TPMVisit.STATUSES.tpm_rejected,
-            date_of_tpm_rejected=factory.LazyFunction(timezone.now),
-        )
-
-        pre_tpm_reported = InheritedTrait(
-            tpm_accepted,
-
-            tpm_activities__report_attachments__count=1,
-            tpm_activities__report_attachments__file_type__name='report',
-        )
-
-        tpm_reported = InheritedTrait(
-            pre_tpm_reported,
-
-            status=TPMVisit.STATUSES.tpm_reported,
-            date_of_tpm_reported=factory.LazyFunction(timezone.now),
-        )
-
-        pre_tpm_report_rejected = InheritedTrait(
-            tpm_reported,
-
-            report_reject_comments__count=1,
-        )
-
-        tpm_report_rejected = InheritedTrait(
-            pre_tpm_report_rejected,
-
-            status=TPMVisit.STATUSES.tpm_report_rejected,
-            date_of_tpm_report_rejected=factory.LazyFunction(timezone.now),
-        )
-
-        pre_unicef_approved = InheritedTrait(
-            tpm_reported,
-        )
-
-        unicef_approved = InheritedTrait(
-            pre_unicef_approved,
-
-            status=TPMVisit.STATUSES.unicef_approved,
-            date_of_unicef_approved=factory.LazyFunction(timezone.now),
-        )
-
-    @classmethod
-    def attributes(cls, create=False, extra=None):
-        if extra and 'status' in extra:
-            status = extra.pop('status')
-            extra[status] = True
-        return super().attributes(create, extra)
-
     @factory.post_generation
-    def tpm_partner_focal_points(self, create, extracted, count, **kwargs):
+    def tpm_partner_focal_points(self, create, extracted, count=0, **kwargs):
         if not create:
             return
 
@@ -306,7 +167,7 @@ class TPMVisitFactory(factory.DjangoModelFactory):
                                                 for i in range(count)])
 
     @factory.post_generation
-    def tpm_activities(self, create, extracted, count, **kwargs):
+    def tpm_activities(self, create, extracted, count=0, **kwargs):
         if not create:
             return
 
@@ -314,10 +175,9 @@ class TPMVisitFactory(factory.DjangoModelFactory):
             TPMActivityFactory(tpm_visit=self, **kwargs)
 
     @factory.post_generation
-    def report_reject_comments(self, create, extracted, count, **kwargs):
+    def report_reject_comments(self, create, extracted, count=0, **kwargs):
         if not create:
             return
-
         for i in range(count):
             TPMVisitReportRejectComment(
                 tpm_visit=self,
@@ -325,9 +185,90 @@ class TPMVisitFactory(factory.DjangoModelFactory):
             )
 
     @factory.post_generation
-    def report_attachments(self, create, extracted, count, **kwargs):
+    def report_attachments(self, create, extracted, count=0, **kwargs):
         if not create:
             return
-
         for i in range(count):
             AttachmentFactory(code='visit_report', content_object=self, **kwargs)
+
+
+class PreAssignedTPMVisitFactory(BaseTPMVisitFactory):
+    tpm_partner_focal_points__count = 3
+    tpm_activities__count = 3
+    tpm_activities__attachments__count = 3
+    tpm_activities__unicef_focal_points__count = 3
+    tpm_activities__offices__count = 3
+
+
+class AssignedTPMVisitFactory(PreAssignedTPMVisitFactory):
+    status = TPMVisit.STATUSES.assigned
+    date_of_assigned = factory.LazyFunction(timezone.now)
+
+
+class CancelledTPMVisitFactory(AssignedTPMVisitFactory):
+    status = TPMVisit.STATUSES.cancelled
+    date_of_cancelled = factory.LazyFunction(timezone.now)
+
+
+class PreTPMAcceptedTPMVisitFactory(AssignedTPMVisitFactory):
+    pass
+
+
+class TPMAcceptedTPMVisitFactory(PreTPMAcceptedTPMVisitFactory):
+    status = TPMVisit.STATUSES.tpm_accepted
+    date_of_tpm_accepted = factory.LazyFunction(timezone.now)
+
+
+class PreTPMRejectedTPMVisitFactory(AssignedTPMVisitFactory):
+    reject_comment = 'Just because.'
+
+
+class TPMRejectedTPMVisitFactory(PreTPMRejectedTPMVisitFactory):
+    status = TPMVisit.STATUSES.tpm_rejected
+    date_of_tpm_rejected = factory.LazyFunction(timezone.now)
+
+
+class PreTPMReportedTPMVisitFactory(TPMAcceptedTPMVisitFactory):
+    tpm_activities__report_attachments__count = 1
+    tpm_activities__report_attachments__file_type__name = 'report'
+
+
+class TPMReportedTPMVisitFactory(PreTPMReportedTPMVisitFactory):
+    status = TPMVisit.STATUSES.tpm_reported
+    date_of_tpm_reported = factory.LazyFunction(timezone.now)
+
+
+class PreTPMReportRejectedTPMVisitFactory(TPMReportedTPMVisitFactory):
+    report_reject_comments__count = 1
+
+
+class TPMReportRejectedTPMVisitFactory(PreTPMReportRejectedTPMVisitFactory):
+    status = TPMVisit.STATUSES.tpm_report_rejected
+    date_of_tpm_report_rejected = factory.LazyFunction(timezone.now)
+
+
+class PreUnicefApprovedTPMVisitFactory(TPMReportedTPMVisitFactory):
+    pass
+
+
+class UnicefApprovedTPMVisitFactory(PreUnicefApprovedTPMVisitFactory):
+    status = TPMVisit.STATUSES.unicef_approved
+    date_of_unicef_approved = factory.LazyFunction(timezone.now)
+
+
+class TPMVisitFactory(BaseTPMVisitFactory, metaclass=StatusFactoryMetaClass):
+    status_factories = {
+        'pre_assigned': PreAssignedTPMVisitFactory,
+        'assigned': AssignedTPMVisitFactory,
+        'cancelled': CancelledTPMVisitFactory,
+        'pre_tpm_accepted': PreTPMAcceptedTPMVisitFactory,
+        'tpm_accepted': TPMAcceptedTPMVisitFactory,
+        'pre_tpm_rejected': PreTPMRejectedTPMVisitFactory,
+        'tpm_rejected': TPMRejectedTPMVisitFactory,
+        'pre_tpm_reported': PreTPMReportedTPMVisitFactory,
+        'tpm_reported': TPMReportedTPMVisitFactory,
+        'pre_tpm_report_rejected': PreTPMReportRejectedTPMVisitFactory,
+        'tpm_report_rejected': TPMReportRejectedTPMVisitFactory,
+        'pre_unicef_approved': PreUnicefApprovedTPMVisitFactory,
+        'unicef_approved': UnicefApprovedTPMVisitFactory,
+    }
