@@ -62,5 +62,5 @@ workflows:
                 - master
                 - staging
                 - develop
-                - prp-refactoring
+                - testing
                 - ci-updates
