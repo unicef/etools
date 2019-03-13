@@ -264,8 +264,11 @@ class Travel(models.Model):
                 target=CANCELLED)
     def cancel(self):
         self.canceled_at = timezone_now()
+        recipients = [self.traveler.email]
+        if self.status == Travel.APPROVED:
+            recipients.append(self.supervisor.email)
         self.send_notification_email('Travel #{} was cancelled.'.format(self.reference_number),
-                                     self.traveler.email,
+                                     recipients,
                                      'emails/cancelled.html')
 
     @transition(status, source=[CANCELLED, REJECTED], target=PLANNED)
@@ -305,8 +308,9 @@ class Travel(models.Model):
         # TODO this could be async to avoid too long api calls in case of mail server issue
         serializer = TravelMailSerializer(self, context={})
 
+        recipients = recipient if isinstance(recipient, list) else [recipient]
         send_notification(
-            recipients=[recipient],
+            recipients=recipients,
             from_address=settings.DEFAULT_FROM_EMAIL,  # TODO what should sender be?
             subject=subject,
             html_content_filename=template_name,
