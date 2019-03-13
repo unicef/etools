@@ -29,5 +29,6 @@ class Command(BaseCommand):
             call_command('init-partner-file-type', schema=slug)
             connection.set_schema(slug)
             call_command('loaddata', 'attachments_file_types')
+            call_command('loaddata', 'audit_risks_blueprints')
         except Exception as exp:
             raise CommandError(*exp.args)
