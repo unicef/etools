@@ -19,6 +19,10 @@ class TestValueNumbers(BaseTenantTestCase):
         d = json.dumps({"v": 123.00, "d": 321})
         self.assertIsNone(validators.value_numbers(d))
 
+    def test_json_none_valid(self):
+        d = json.dumps({"v": None, "d": 321})
+        self.assertIsNone(validators.value_numbers(d))
+
     def test_json_invalid(self):
         d = json.dumps({"v": "123.00", "d": "$321,00"})
         with self.assertRaises(forms.ValidationError):
