@@ -655,6 +655,10 @@ class AgreementAdmin(
         'status',
         'signed_by_unicef_date',
     )
+    search_fields = (
+        'agreement_number',
+        'partner__name',
+    )
     fieldsets = (
         (_('Agreement Details'), {
             'fields':
