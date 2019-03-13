@@ -748,10 +748,10 @@ class PartnerOrganization(TimeStampedModel):
                 date_of_draft_report_to_unicef__year=datetime.datetime.now().year
             )
 
-            asc1 = audit_spot_check.filter(date_of_draft_report_to_unicef__month__in=[1, 2, 3]).count()
-            asc2 = audit_spot_check.filter(date_of_draft_report_to_unicef__month__in=[4, 5, 6]).count()
-            asc3 = audit_spot_check.filter(date_of_draft_report_to_unicef__month__in=[7, 8, 9]).count()
-            asc4 = audit_spot_check.filter(date_of_draft_report_to_unicef__month__in=[10, 11, 12]).count()
+            asc1 = audit_spot_check.filter(date_of_draft_report_to_unicef__quarter=1).count()
+            asc2 = audit_spot_check.filter(date_of_draft_report_to_unicef__quarter=2).count()
+            asc3 = audit_spot_check.filter(date_of_draft_report_to_unicef__quarter=3).count()
+            asc4 = audit_spot_check.filter(date_of_draft_report_to_unicef__quarter=4).count()
 
             hact['spot_checks']['completed']['q1'] = asc1
             hact['spot_checks']['completed']['q2'] = asc2
