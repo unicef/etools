@@ -1,9 +1,9 @@
 import datetime
-from pytz import UTC
 from unittest.mock import Mock, patch
 
 from django.conf import settings
 from django.core.management import call_command
+from django.utils import timezone
 
 from unicef_attachments.models import Attachment
 
@@ -365,7 +365,8 @@ class TestSendInterventionDraftNotifications(BaseTenantTestCase):
     def test_command(self):
         send_path = "etools.applications.partners.utils.send_notification_with_template"
         intervention = InterventionFactory(status=Intervention.DRAFT)
-        intervention.created = datetime.datetime(2018, 1, 1, 12, 55, 12, 12345, tzinfo=UTC)
+        tz = timezone.get_default_timezone()
+        intervention.created = datetime.datetime(2018, 1, 1, 12, 55, 12, 12345, tzinfo=tz)
         intervention.save()
         mock_send = Mock()
         with patch(send_path, mock_send):

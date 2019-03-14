@@ -1,7 +1,6 @@
 import datetime
 import logging
 
-import pytz
 from django.conf import settings
 from django.contrib.contenttypes.models import ContentType
 from django.db.models import F, Q
