@@ -683,10 +683,10 @@ class PartnerOrganization(TimeStampedModel):
             )
 
             pv = pv_year.count()
-            pvq1 = pv_year.filter(end_date__month__in=[1, 2, 3]).count()
-            pvq2 = pv_year.filter(end_date__month__in=[4, 5, 6]).count()
-            pvq3 = pv_year.filter(end_date__month__in=[7, 8, 9]).count()
-            pvq4 = pv_year.filter(end_date__month__in=[10, 11, 12]).count()
+            pvq1 = pv_year.filter(end_date__quarter=1).count()
+            pvq2 = pv_year.filter(end_date__quarter=2).count()
+            pvq3 = pv_year.filter(end_date__quarter=3).count()
+            pvq4 = pv_year.filter(end_date__quarter=4).count()
 
             # TPM visit are counted one per month maximum
             tpmv = TPMVisit.objects.filter(
