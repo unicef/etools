@@ -3,7 +3,6 @@
 import datetime
 from decimal import Decimal
 from pprint import pformat
-from pytz import UTC
 from unittest import mock
 
 from django.conf import settings
@@ -1034,8 +1033,9 @@ class TestCheckInterventionDraftStatus(BaseTenantTestCase):
 
     def test_task(self):
         send_path = "etools.applications.partners.utils.send_notification_with_template"
+        tz = timezone.get_default_timezone()
         intervention = InterventionFactory(status=Intervention.DRAFT)
-        intervention.created = datetime.datetime(2018, 1, 1, 12, 55, 12, 12345, tzinfo=UTC)
+        intervention.created = datetime.datetime(2018, 1, 1, 12, 55, 12, 12345, tzinfo=tz)
         intervention.save()
         mock_send = mock.Mock()
         with mock.patch(send_path, mock_send):
