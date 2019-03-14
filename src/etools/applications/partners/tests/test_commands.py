@@ -1,4 +1,5 @@
 import datetime
+from pytz import UTC
 from unittest.mock import Mock, patch
 
 from django.conf import settings
@@ -364,7 +365,7 @@ class TestSendInterventionDraftNotifications(BaseTenantTestCase):
     def test_command(self):
         send_path = "etools.applications.partners.utils.send_notification_with_template"
         intervention = InterventionFactory(status=Intervention.DRAFT)
-        intervention.created = datetime.datetime(2018, 1, 1, 12, 55, 12, 12345)
+        intervention.created = datetime.datetime(2018, 1, 1, 12, 55, 12, 12345, tzinfo=UTC)
         intervention.save()
         mock_send = Mock()
         with patch(send_path, mock_send):
