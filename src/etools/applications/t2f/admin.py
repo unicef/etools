@@ -4,6 +4,7 @@ from etools.applications.action_points.admin import ActionPointAdmin
 from etools.applications.publics.admin import AdminListMixin
 from etools.applications.t2f import models
 from etools.applications.t2f.models import T2FActionPoint
+from etools.applications.t2f.forms import T2FActionPointAdminForm
 
 
 @admin.register(models.Travel)
@@ -76,27 +77,6 @@ class ItineraryItemAdmin(admin.ModelAdmin):
     )
 
 
-@admin.register(models.Expense)
-class ExpenseAdmin(AdminListMixin, admin.ModelAdmin):
-    raw_id_fields = (
-        'travel',
-    )
-
-
-@admin.register(models.Deduction)
-class DeductionAdmin(AdminListMixin, admin.ModelAdmin):
-    raw_id_fields = (
-        'travel',
-    )
-
-
-@admin.register(models.CostAssignment)
-class CostAssignmentAdmin(AdminListMixin, admin.ModelAdmin):
-    raw_id_fields = (
-        'travel',
-    )
-
-
 @admin.register(models.TravelAttachment)
 class TravelAttachmentAdmin(AdminListMixin, admin.ModelAdmin):
     pass
@@ -104,4 +84,4 @@ class TravelAttachmentAdmin(AdminListMixin, admin.ModelAdmin):
 
 @admin.register(T2FActionPoint)
 class T2FActionPointAdmin(ActionPointAdmin):
-    pass
+    form = T2FActionPointAdminForm

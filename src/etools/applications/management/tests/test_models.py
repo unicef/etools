@@ -14,14 +14,14 @@ class TestStrUnicode(BaseTenantTestCase):
             issue_id="321",
             message='test message'
         )
-        self.assertEqual(str(issue), u"test message")
+        self.assertEqual(str(issue), "test message")
 
         issue = FlaggedIssueFactory(
             content_object=partner,
             issue_id="321",
-            message=u"R\xe4dda Barnen"
+            message="R\xe4dda Barnen"
         )
-        self.assertEqual(str(issue), u"R\xe4dda Barnen")
+        self.assertEqual(str(issue), "R\xe4dda Barnen")
 
 
 class FlaggedIssueTest(BaseTenantTestCase):

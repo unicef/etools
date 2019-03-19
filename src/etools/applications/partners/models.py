@@ -5,7 +5,7 @@ import json
 from django.conf import settings
 from django.contrib.postgres.fields import ArrayField, JSONField
 from django.db import connection, models, transaction
-from django.db.models import Case, CharField, Count, F, Max, Min, Q, When
+from django.db.models import Case, CharField, Count, F, Max, Min, OuterRef, Q, Subquery, Sum, When
 from django.db.models.signals import post_save, pre_delete
 from django.urls import reverse
 from django.utils import timezone
@@ -19,8 +19,8 @@ from unicef_attachments.models import Attachment
 from unicef_djangolib.fields import CodedGenericRelation, CurrencyField
 from unicef_locations.models import Location
 
-from etools.applications.EquiTrack.encoders import EToolsEncoder
-from etools.applications.EquiTrack.utils import get_current_year, get_quarter, import_permissions
+from etools.applications.EquiTrack.permissions import import_permissions
+from etools.applications.funds.models import FundsReservationHeader
 from etools.applications.partners.validation import interventions as intervention_validation
 from etools.applications.partners.validation.agreements import (
     agreement_transition_to_ended_valid,
@@ -28,10 +28,12 @@ from etools.applications.partners.validation.agreements import (
     agreements_illegal_transition,
 )
 from etools.applications.reports.models import CountryProgramme, Indicator, Result, Section
-from etools.applications.t2f.models import Travel, TravelType
+from etools.applications.t2f.models import Travel, TravelType, TravelActivity
 from etools.applications.tpm.models import TPMVisit
 from etools.applications.users.models import Office
-from etools.libraries.djangolib.models import DSum, StringConcat
+from etools.libraries.djangolib.models import StringConcat
+from etools.libraries.pythonlib.datetime import get_current_year, get_quarter
+from etools.libraries.pythonlib.encoders import CustomJSONEncoder
 
 
 def _get_partner_base_path(partner):
@@ -517,7 +519,7 @@ class PartnerOrganization(TimeStampedModel):
 
         super().save(*args, **kwargs)
         if hact_is_string:
-            self.hact_values = json.dumps(self.hact_values, cls=EToolsEncoder)
+            self.hact_values = json.dumps(self.hact_values, cls=CustomJSONEncoder)
 
     @cached_property
     def partner_type_slug(self):
@@ -681,10 +683,10 @@ class PartnerOrganization(TimeStampedModel):
             )
 
             pv = pv_year.count()
-            pvq1 = pv_year.filter(end_date__month__in=[1, 2, 3]).count()
-            pvq2 = pv_year.filter(end_date__month__in=[4, 5, 6]).count()
-            pvq3 = pv_year.filter(end_date__month__in=[7, 8, 9]).count()
-            pvq4 = pv_year.filter(end_date__month__in=[10, 11, 12]).count()
+            pvq1 = pv_year.filter(end_date__quarter=1).count()
+            pvq2 = pv_year.filter(end_date__quarter=2).count()
+            pvq3 = pv_year.filter(end_date__quarter=3).count()
+            pvq4 = pv_year.filter(end_date__quarter=4).count()
 
             # TPM visit are counted one per month maximum
             tpmv = TPMVisit.objects.filter(
@@ -746,10 +748,10 @@ class PartnerOrganization(TimeStampedModel):
                 date_of_draft_report_to_unicef__year=datetime.datetime.now().year
             )
 
-            asc1 = audit_spot_check.filter(date_of_draft_report_to_unicef__month__in=[1, 2, 3]).count()
-            asc2 = audit_spot_check.filter(date_of_draft_report_to_unicef__month__in=[4, 5, 6]).count()
-            asc3 = audit_spot_check.filter(date_of_draft_report_to_unicef__month__in=[7, 8, 9]).count()
-            asc4 = audit_spot_check.filter(date_of_draft_report_to_unicef__month__in=[10, 11, 12]).count()
+            asc1 = audit_spot_check.filter(date_of_draft_report_to_unicef__quarter=1).count()
+            asc2 = audit_spot_check.filter(date_of_draft_report_to_unicef__quarter=2).count()
+            asc3 = audit_spot_check.filter(date_of_draft_report_to_unicef__quarter=3).count()
+            asc4 = audit_spot_check.filter(date_of_draft_report_to_unicef__quarter=4).count()
 
             hact['spot_checks']['completed']['q1'] = asc1
             hact['spot_checks']['completed']['q2'] = asc2
@@ -796,7 +798,7 @@ class PartnerOrganization(TimeStampedModel):
         hact['outstanding_findings'] = sum([
             audit.pending_unsupported_amount for audit in audits if audit.pending_unsupported_amount])
         hact['assurance_coverage'] = self.assurance_coverage
-        self.hact_values = json.dumps(hact, cls=EToolsEncoder)
+        self.hact_values = json.dumps(hact, cls=CustomJSONEncoder)
         self.save()
 
     def get_admin_url(self):
@@ -1098,7 +1100,7 @@ class Agreement(TimeStampedModel):
     MOU = 'MOU'
     SSFA = 'SSFA'
     AGREEMENT_TYPES = (
-        (PCA, u"Programme Cooperation Agreement"),
+        (PCA, "Programme Cooperation Agreement"),
         (SSFA, 'Small Scale Funding Agreement'),
         (MOU, 'Memorandum of Understanding'),
     )
@@ -1487,6 +1489,9 @@ class InterventionManager(models.Manager):
         return qs
 
     def frs_qs(self):
+        frs_query = FundsReservationHeader.objects.filter(
+            intervention=OuterRef("pk")
+        ).order_by().values("intervention")
         qs = self.get_queryset().prefetch_related(
             # 'frs__fr_items',
             # TODO: Figure out a way in which to add locations that is more performant
@@ -1497,10 +1502,18 @@ class InterventionManager(models.Manager):
             Max("frs__end_date"),
             Min("frs__start_date"),
             Count("frs__currency", distinct=True),
-            frs__outstanding_amt_local__sum=DSum("frs__outstanding_amt_local"),
-            frs__actual_amt_local__sum=DSum("frs__actual_amt_local"),
-            frs__total_amt_local__sum=DSum("frs__total_amt_local"),
-            frs__intervention_amt__sum=DSum("frs__intervention_amt"),
+            frs__outstanding_amt_local__sum=Subquery(
+                frs_query.annotate(total=Sum("outstanding_amt_local")).values("total")[:1]
+            ),
+            frs__actual_amt_local__sum=Subquery(
+                frs_query.annotate(total=Sum("actual_amt_local")).values("total")[:1]
+            ),
+            frs__total_amt_local__sum=Subquery(
+                frs_query.annotate(total=Sum("total_amt_local")).values("total")[:1]
+            ),
+            frs__intervention_amt__sum=Subquery(
+                frs_query.annotate(total=Sum("intervention_amt")).values("total")[:1]
+            ),
             location_p_codes=StringConcat("flat_locations__p_code", separator="|", distinct=True),
             donors=StringConcat("frs__fr_items__donor", separator="|", distinct=True),
             donor_codes=StringConcat("frs__fr_items__donor_code", separator="|", distinct=True),
@@ -1574,11 +1587,11 @@ class Intervention(TimeStampedModel):
         (TERMINATED, "Terminated"),
     )
     PD = 'PD'
-    SHPD = 'SHPD'
+    SHPD = 'HPD'
     SSFA = 'SSFA'
     INTERVENTION_TYPES = (
         (PD, 'Programme Document'),
-        (SHPD, 'Simplified Humanitarian Programme Document'),
+        (SHPD, 'Humanitarian Programme Document'),
         (SSFA, 'SSFA'),
     )
 
@@ -1834,6 +1847,16 @@ class Intervention(TimeStampedModel):
         return sum(1 for day in days if day.weekday() < 5)
 
     @property
+    def days_from_last_pv(self):
+        ta = TravelActivity.objects.filter(
+            partnership__pk=self.pk,
+            travel_type=TravelType.PROGRAMME_MONITORING,
+            travels__status=Travel.COMPLETED,
+            date__isnull=False,
+        ).order_by('date').last()
+        return (timezone.now() - ta.date).days if ta else '-'
+
+    @property
     def cp_output_names(self):
         return ', '.join(link.cp_output.name for link in self.result_links.all())
 
@@ -2082,13 +2105,25 @@ class InterventionAmendment(TimeStampedModel):
     RESULTS = 'results'
     BUDGET = 'budget'
     OTHER = 'other'
+    TYPE_ADMIN_ERROR = 'admin_error'
+    TYPE_BUDGET_LTE_20 = 'budget_lte_20'
+    TYPE_BUDGET_GT_20 = 'budget_gt_20'
+    TYPE_CHANGE = 'change'
+    TYPE_NO_COST = 'no_cost'
 
     AMENDMENT_TYPES = Choices(
+        (TYPE_ADMIN_ERROR, 'Administrative error (correction)'),
+        (TYPE_BUDGET_LTE_20, 'Budget <= 20%'),
+        (TYPE_BUDGET_GT_20, 'Budget > 20'),
+        (TYPE_CHANGE, 'Changes to planned results'),
+        (TYPE_NO_COST, 'No cost extension'),
+        (OTHER, 'Other')
+    )
+    AMENDMENT_TYPES_OLD = [
         (DATES, 'Dates'),
         (RESULTS, 'Results'),
         (BUDGET, 'Budget'),
-        (OTHER, 'Other')
-    )
+    ]
 
     intervention = models.ForeignKey(
         Intervention,
@@ -2100,7 +2135,7 @@ class InterventionAmendment(TimeStampedModel):
     types = ArrayField(models.CharField(
         max_length=50,
         verbose_name=_('Types'),
-        choices=AMENDMENT_TYPES))
+        choices=AMENDMENT_TYPES + AMENDMENT_TYPES_OLD))
 
     other_description = models.CharField(
         verbose_name=_("Description"),

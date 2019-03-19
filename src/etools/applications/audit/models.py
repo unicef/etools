@@ -30,11 +30,12 @@ from etools.applications.audit.transitions.conditions import (
     ValidateMARiskExtra,
 )
 from etools.applications.audit.transitions.serializers import EngagementCancelSerializer
-from etools.applications.EquiTrack.utils import get_environment
+from etools.applications.audit.utils import generate_final_report
+from etools.applications.EquiTrack.urlresolvers import build_frontend_url
 from etools.applications.partners.models import PartnerOrganization, PartnerStaffMember
-from etools.libraries.fsm.views import has_action_permission
-from etools.applications.utils.common.urlresolvers import build_frontend_url
 from etools.libraries.djangolib.models import GroupWrapper, InheritedModelMixin
+from etools.libraries.djangolib.utils import get_environment
+from etools.libraries.fsm.views import has_action_permission
 
 
 class Engagement(InheritedModelMixin, TimeStampedModel, models.Model):
@@ -94,7 +95,7 @@ class Engagement(InheritedModelMixin, TimeStampedModel, models.Model):
         on_delete=models.CASCADE,
     )
     po_item = models.ForeignKey(
-        PurchaseOrderItem, verbose_name=_('PO Item Number'), null=True,
+        PurchaseOrderItem, verbose_name=_('PO Item Number'), null=True, blank=True,
         on_delete=models.CASCADE,
     )
 
@@ -272,7 +273,8 @@ class Engagement(InheritedModelMixin, TimeStampedModel, models.Model):
     @transition(status, source=STATUSES.report_submitted, target=STATUSES.final,
                 permission=has_action_permission(action='finalize'))
     def finalize(self):
-        self.date_of_final_report = timezone.now()
+        self.date_of_final_report = timezone.now().date()
+        self.generate_final_report()
 
     def get_object_url(self, **kwargs):
         return build_frontend_url('ap', 'engagements', self.id, 'overview', **kwargs)
@@ -398,6 +400,13 @@ class SpotCheck(Engagement):
 
     internal_controls = models.TextField(verbose_name=_('Internal Controls'), blank=True)
 
+    final_report = CodedGenericRelation(
+        Attachment,
+        verbose_name=_('Spot Check Final Report'),
+        code='spot_check_final_report',
+        blank=True,
+    )
+
     objects = models.Manager()
 
     class Meta:
@@ -434,6 +443,18 @@ class SpotCheck(Engagement):
 
     def get_object_url(self, **kwargs):
         return build_frontend_url('ap', 'spot-checks', self.id, 'overview', **kwargs)
+
+    def generate_final_report(self):
+        from etools.applications.audit.serializers.engagement import SpotCheckSerializer
+        from etools.applications.audit.serializers.export import SpotCheckPDFSerializer
+        generate_final_report(
+            self,
+            'spot_check_final_report',
+            SpotCheckSerializer,
+            SpotCheckPDFSerializer,
+            'audit/spotcheck_pdf.html',
+            'spotcheck_final_report.pdf',
+        )
 
 
 class Finding(models.Model):
@@ -505,6 +526,13 @@ class Finding(models.Model):
 
 
 class MicroAssessment(Engagement):
+    final_report = CodedGenericRelation(
+        Attachment,
+        verbose_name=_('Micro Assessment Final Report'),
+        code='micro_assessment_final_report',
+        blank=True,
+    )
+
     objects = models.Manager()
 
     class Meta:
@@ -532,6 +560,18 @@ class MicroAssessment(Engagement):
 
     def get_object_url(self, **kwargs):
         return build_frontend_url('ap', 'micro-assessments', self.id, 'overview', **kwargs)
+
+    def generate_final_report(self):
+        from etools.applications.audit.serializers.engagement import MicroAssessmentSerializer
+        from etools.applications.audit.serializers.export import MicroAssessmentPDFSerializer
+        generate_final_report(
+            self,
+            'micro_assessment_final_report',
+            MicroAssessmentSerializer,
+            MicroAssessmentPDFSerializer,
+            'audit/microassessment_pdf.html',
+            'microassessment_final_report.pdf',
+        )
 
 
 class DetailedFindingInfo(models.Model):
@@ -572,6 +612,13 @@ class Audit(Engagement):
                                              decimal_places=2, max_digits=20)
     audit_opinion = models.CharField(
         verbose_name=_('Audit Opinion'), max_length=20, choices=OPTIONS, default='', blank=True,
+    )
+
+    final_report = CodedGenericRelation(
+        Attachment,
+        verbose_name=_('Audit Final Report'),
+        code='audit_final_report',
+        blank=True,
     )
 
     objects = models.Manager()
@@ -618,6 +665,18 @@ class Audit(Engagement):
 
     def get_object_url(self, **kwargs):
         return build_frontend_url('ap', 'audits', self.id, 'overview', **kwargs)
+
+    def generate_final_report(self):
+        from etools.applications.audit.serializers.engagement import AuditSerializer
+        from etools.applications.audit.serializers.export import AuditPDFSerializer
+        generate_final_report(
+            self,
+            'audit_final_report',
+            AuditSerializer,
+            AuditPDFSerializer,
+            'audit/audit_pdf.html',
+            'audit_final_report.pdf',
+        )
 
 
 class FinancialFinding(models.Model):
@@ -666,9 +725,9 @@ class KeyInternalControl(models.Model):
         on_delete=models.CASCADE,
     )
 
-    recommendation = models.TextField(verbose_name=_('Recommendation'), blank=True)
-    audit_observation = models.TextField(verbose_name=_('Audit Observation'), blank=True)
-    ip_response = models.TextField(verbose_name=_('IP response'), blank=True)
+    recommendation = models.TextField(verbose_name=_('Recommendation'))
+    audit_observation = models.TextField(verbose_name=_('Audit Observation'))
+    ip_response = models.TextField(verbose_name=_('IP response'))
 
     class Meta:
         ordering = ('id', )
@@ -678,6 +737,13 @@ class KeyInternalControl(models.Model):
 
 
 class SpecialAudit(Engagement):
+    final_report = CodedGenericRelation(
+        Attachment,
+        verbose_name=_('Special Audit Final Report'),
+        code='special_audit_final_report',
+        blank=True,
+    )
+
     objects = models.Manager()
 
     class Meta:
@@ -710,6 +776,18 @@ class SpecialAudit(Engagement):
 
     def get_object_url(self, **kwargs):
         return build_frontend_url('ap', 'special-audits', self.id, 'overview', **kwargs)
+
+    def generate_final_report(self):
+        from etools.applications.audit.serializers.engagement import SpecialAuditSerializer
+        from etools.applications.audit.serializers.export import SpecialAuditPDFSerializer
+        generate_final_report(
+            self,
+            'special_audit_final_report',
+            SpecialAuditSerializer,
+            SpecialAuditPDFSerializer,
+            'audit/special_audit_pdf.html',
+            'special_audit_final_report.pdf',
+        )
 
 
 class SpecificProcedure(models.Model):
@@ -764,10 +842,10 @@ class EngagementActionPoint(ActionPoint):
         verbose_name_plural = _('Engagement Action Points')
         proxy = True
 
-    def get_mail_context(self, user=None, include_token=False):
-        context = super().get_mail_context(user=user, include_token=include_token)
+    def get_mail_context(self, user=None):
+        context = super().get_mail_context(user=user)
         if self.engagement:
-            context['engagement'] = self.engagement_subclass.get_mail_context(user=user, include_token=include_token)
+            context['engagement'] = self.engagement_subclass.get_mail_context(user=user)
         return context
 
 

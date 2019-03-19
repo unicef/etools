@@ -9,11 +9,8 @@ from etools.applications.publics.tests.factories import (
     PublicsAirlineCompanyFactory,
     PublicsCurrencyFactory,
     PublicsDSARegionFactory,
-    PublicsFundFactory,
-    PublicsGrantFactory,
-    PublicsTravelExpenseTypeFactory,
-    PublicsWBSFactory,
 )
+from etools.applications.action_points.tests.factories import ActionPointFactory
 from etools.applications.reports.tests.factories import ResultFactory, SectionFactory
 from etools.applications.t2f import models
 from etools.applications.users.tests.factories import OfficeFactory, UserFactory
@@ -85,37 +82,6 @@ class ItineraryItemFactory(factory.DjangoModelFactory):
         model = models.ItineraryItem
 
 
-class ExpenseFactory(factory.DjangoModelFactory):
-    currency = factory.SubFactory(PublicsCurrencyFactory)
-    amount = fuzzy.FuzzyDecimal(1, 10000)
-    type = factory.SubFactory(PublicsTravelExpenseTypeFactory)
-
-    class Meta:
-        model = models.Expense
-
-
-class DeductionFactory(factory.DjangoModelFactory):
-    date = fuzzy.FuzzyDateTime(start_dt=_FUZZY_START_DATE, end_dt=_FUZZY_END_DATE)
-    breakfast = False
-    lunch = False
-    dinner = False
-    accomodation = False
-    no_dsa = False
-
-    class Meta:
-        model = models.Deduction
-
-
-class CostAssignmentFactory(factory.DjangoModelFactory):
-    wbs = factory.SubFactory(PublicsWBSFactory)
-    share = fuzzy.FuzzyInteger(1, 100)
-    grant = factory.SubFactory(PublicsGrantFactory)
-    fund = factory.SubFactory(PublicsFundFactory)
-
-    class Meta:
-        model = models.CostAssignment
-
-
 class TravelFactory(factory.DjangoModelFactory):
     traveler = factory.SubFactory(UserFactory)
     supervisor = factory.SubFactory(UserFactory)
@@ -137,9 +103,6 @@ class TravelFactory(factory.DjangoModelFactory):
     mode_of_travel = []
 
     itinerary = factory.RelatedFactory(ItineraryItemFactory, 'travel')
-    expenses = factory.RelatedFactory(ExpenseFactory, 'travel')
-    deductions = factory.RelatedFactory(DeductionFactory, 'travel')
-    cost_assignments = factory.RelatedFactory(CostAssignmentFactory, 'travel')
 
     @factory.post_generation
     def populate_activities(self, create, extracted, **kwargs):
@@ -165,3 +128,8 @@ class TravelAttachmentFactory(factory.DjangoModelFactory):
 
     class Meta:
         model = models.TravelAttachment
+
+
+class T2FActionPointFactory(ActionPointFactory):
+    class Meta:
+        model = models.T2FActionPoint

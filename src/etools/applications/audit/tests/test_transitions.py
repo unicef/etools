@@ -1,15 +1,26 @@
 import random
+from unittest.mock import patch
+
+from django.contrib.contenttypes.models import ContentType
 
 from factory import fuzzy
 from rest_framework import status
+from unicef_attachments.models import Attachment
 
 from etools.applications.audit.models import SpecificProcedure
 from etools.applications.audit.tests.base import EngagementTransitionsTestCaseMixin
-from etools.applications.audit.tests.factories import (AuditFactory, KeyInternalControlFactory,
-                                                       MicroAssessmentFactory, SpecialAuditFactory, SpotCheckFactory,)
-from etools.applications.audit.transitions.conditions import (AuditSubmitReportRequiredFieldsCheck,
-                                                              EngagementSubmitReportRequiredFieldsCheck,
-                                                              SPSubmitReportRequiredFieldsCheck,)
+from etools.applications.audit.tests.factories import (
+    AuditFactory,
+    KeyInternalControlFactory,
+    MicroAssessmentFactory,
+    SpecialAuditFactory,
+    SpotCheckFactory,
+)
+from etools.applications.audit.transitions.conditions import (
+    AuditSubmitReportRequiredFieldsCheck,
+    EngagementSubmitReportRequiredFieldsCheck,
+    SPSubmitReportRequiredFieldsCheck,
+)
 from etools.applications.EquiTrack.tests.cases import BaseTenantTestCase
 
 
@@ -207,7 +218,17 @@ class TestSCTransitionsTestCase(
 
     def test_finalize_focal_point(self):
         self._init_submitted_engagement()
-        self._test_finalize(self.unicef_focal_point, status.HTTP_200_OK)
+        content_type = ContentType.objects.get_for_model(self.engagement)
+        attachment_qs = Attachment.objects.filter(
+            code='spot_check_final_report',
+            content_type=content_type,
+            object_id=self.engagement.pk,
+        )
+        with patch(self.filepath, self.mock_filepath):
+            self._test_finalize(self.unicef_focal_point, status.HTTP_200_OK)
+        self.assertTrue(attachment_qs.exists())
+        attachment = attachment_qs.get()
+        assert attachment.file
 
     def test_cancel_auditor(self):
         self._test_cancel(self.auditor, status.HTTP_403_FORBIDDEN)

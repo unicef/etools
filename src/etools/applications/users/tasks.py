@@ -68,7 +68,8 @@ class AzureUserMapper:
                 if not obj.country == new_country:
                     obj.country = self._get_country(cleaned_value)
                     obj.countries_available.add(obj.country)
-                    logger.info(u"Country Updated for {}".format(obj))
+                    obj.user.groups.set([self.groups['UNICEF User']])  # reset permission when changing country
+                    logger.info("Country Updated for {}".format(obj))
                     return True
 
         return False
@@ -80,10 +81,10 @@ class AzureUserMapper:
 
         field = obj._meta.get_field(attr)
         if type(value) == list:
-            value = u'- '.join([str(val) for val in value])
+            value = '- '.join([str(val) for val in value])
         if field.get_internal_type() == "CharField" and value and len(value) > field.max_length:
             cleaned_value = value[:field.max_length]
-            logger.warn(u'The attribute "%s" was trimmed from "%s" to "%s"' % (attr, value, cleaned_value))
+            logger.warn('The attribute "%s" was trimmed from "%s" to "%s"' % (attr, value, cleaned_value))
         else:
             cleaned_value = value
         if cleaned_value == '':
@@ -112,7 +113,7 @@ class AzureUserMapper:
                 status['created'] = int(created)
                 user.set_unusable_password()
                 user.groups.add(self.groups['UNICEF User'])
-                logger.info(u'Group added to user {}'.format(user))
+                logger.info('Group added to user {}'.format(user))
 
             profile, _ = UserProfile.objects.get_or_create(user=user)
             user_updated = self.update_user(user, record)
@@ -122,7 +123,7 @@ class AzureUserMapper:
                 status['updated'] = 1
 
         except IntegrityError as e:
-            logger.exception(u'Integrity error on user retrieving: {} - exception {}'.format(key_value, e))
+            logger.exception('Integrity error on user retrieving: {} - exception {}'.format(key_value, e))
             status['created'] = status['updated'] = 0
             status['errors'] = 1
 
@@ -130,12 +131,12 @@ class AzureUserMapper:
 
     def record_is_valid(self, record):
         if self.KEY_ATTRIBUTE not in record:
-            logger.info(u"Discarding Record {} field is missing".format(self.KEY_ATTRIBUTE))
+            logger.info("Discarding Record {} field is missing".format(self.KEY_ATTRIBUTE))
             return False
         for field in self.REQUIRED_USER_FIELDS:
             if isinstance(field, str):
                 if not record.get(field, False):
-                    logger.info(u"User doesn't have the required fields {} missing".format(field))
+                    logger.info("User doesn't have the required fields {} missing".format(field))
                     return False
             elif isinstance(field, tuple):
                 allowed_values = field[1]
@@ -143,7 +144,7 @@ class AzureUserMapper:
                     allowed_values = [allowed_values, ]
 
                 if record.get(field[0], False) not in allowed_values:
-                    logger.debug(u"User is not in Unicef organization {}".format(field[1]))
+                    logger.debug("User is not in Unicef organization {}".format(field[1]))
                     return False
         return True
 

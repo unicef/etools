@@ -10,16 +10,9 @@ from etools.applications.attachments.tests.factories import AttachmentFactory, A
 from etools.applications.EquiTrack.tests.cases import BaseTenantTestCase
 from etools.applications.EquiTrack.tests.mixins import URLAssertionMixin
 from etools.applications.partners.models import PartnerType
-from etools.applications.partners.tests.factories import InterventionFactory, PartnerFactory
+from etools.applications.partners.tests.factories import PartnerFactory
 from etools.applications.publics.models import DSARegion
-from etools.applications.publics.tests.factories import (
-    PublicsAirlineCompanyFactory,
-    PublicsBusinessAreaFactory,
-    PublicsCurrencyFactory,
-    PublicsDSARegionFactory,
-    PublicsTravelExpenseTypeFactory,
-    PublicsWBSFactory,
-)
+from etools.applications.publics.tests.factories import PublicsAirlineCompanyFactory, PublicsDSARegionFactory
 from etools.applications.t2f.models import ModeOfTravel, Travel, TravelAttachment, TravelType
 from etools.applications.t2f.tests.factories import TravelAttachmentFactory, TravelFactory
 from etools.applications.users.tests.factories import UserFactory
@@ -58,28 +51,28 @@ class TravelDetails(URLAssertionMixin, BaseTenantTestCase):
         self.assertIntParamRegexes(names_and_paths, 't2f:travels:details:')
 
     def test_details_view(self):
-        with self.assertNumQueries(22):
+        with self.assertNumQueries(14):
             response = self.forced_auth_req('get', reverse('t2f:travels:details:index',
                                                            kwargs={'travel_pk': self.travel.id}),
                                             user=self.unicef_staff)
         response_json = json.loads(response.rendered_content)
 
-        self.assertKeysIn(['cancellation_note', 'supervisor', 'attachments', 'office', 'expenses', 'ta_required',
+        self.assertKeysIn(['cancellation_note', 'supervisor', 'attachments', 'office', 'ta_required',
                            'completed_at', 'certification_note', 'misc_expenses', 'traveler', 'id', 'additional_note',
-                           'section', 'cost_assignments', 'start_date', 'status', 'activities',
+                           'section', 'start_date', 'status', 'activities',
                            'rejection_note', 'end_date', 'mode_of_travel', 'international_travel',
-                           'first_submission_date', 'deductions', 'purpose', 'report', 'itinerary',
-                           'reference_number', 'cost_summary', 'currency', 'canceled_at', 'estimated_travel_cost'],
+                           'first_submission_date', 'purpose', 'report', 'itinerary',
+                           'reference_number', 'currency', 'canceled_at', 'estimated_travel_cost'],
                           response_json,
                           exact=True)
 
     def test_details_view_with_file(self):
         attachment = TravelAttachmentFactory(
             travel=self.travel,
-            name=u'\u0628\u0631\u0646\u0627\u0645\u062c \u062a\u062f\u0631\u064a\u0628 \u0627\u0644\u0645\u062a\u0627\u0628\u0639\u064a\u0646.pdf',  # noqa
-            file=factory.django.FileField(filename=u'travels/lebanon/24800/\u0628\u0631\u0646\u0627\u0645\u062c_\u062a\u062f\u0631\u064a\u0628_\u0627\u0644\u0645\u062a\u0627\u0628\u0639\u064a\u0646.pdf')  # noqa
+            name='\u0628\u0631\u0646\u0627\u0645\u062c \u062a\u062f\u0631\u064a\u0628 \u0627\u0644\u0645\u062a\u0627\u0628\u0639\u064a\u0646.pdf',  # noqa
+            file=factory.django.FileField(filename='travels/lebanon/24800/\u0628\u0631\u0646\u0627\u0645\u062c_\u062a\u062f\u0631\u064a\u0628_\u0627\u0644\u0645\u062a\u0627\u0628\u0639\u064a\u0646.pdf')  # noqa
         )
-        with self.assertNumQueries(23):
+        with self.assertNumQueries(15):
             response = self.forced_auth_req(
                 'get',
                 reverse('t2f:travels:details:index', args=[self.travel.pk]),
@@ -88,12 +81,12 @@ class TravelDetails(URLAssertionMixin, BaseTenantTestCase):
         response_json = json.loads(response.rendered_content)
 
         self.assertKeysIn(
-            ['cancellation_note', 'supervisor', 'attachments', 'office', 'expenses', 'ta_required',
+            ['cancellation_note', 'supervisor', 'attachments', 'office', 'ta_required',
              'completed_at', 'certification_note', 'misc_expenses', 'traveler', 'id', 'additional_note',
-             'section', 'cost_assignments', 'start_date', 'status', 'activities',
+             'section', 'start_date', 'status', 'activities',
              'rejection_note', 'end_date', 'mode_of_travel', 'international_travel', 'itinerary',
-             'first_submission_date', 'deductions', 'purpose', 'report',
-             'reference_number', 'cost_summary', 'currency', 'canceled_at', 'estimated_travel_cost'],
+             'first_submission_date', 'purpose', 'report',
+             'reference_number', 'currency', 'canceled_at', 'estimated_travel_cost'],
             response_json,
             exact=True
         )
@@ -110,7 +103,7 @@ class TravelDetails(URLAssertionMixin, BaseTenantTestCase):
             code="t2f_travel_attachment",
             content_object=attachment,
         )
-        with self.assertNumQueries(24):
+        with self.assertNumQueries(16):
             response = self.forced_auth_req(
                 'get',
                 reverse('t2f:travels:details:index', args=[self.travel.pk]),
@@ -139,8 +132,8 @@ class TravelDetails(URLAssertionMixin, BaseTenantTestCase):
     def test_travel_attachment_nonascii(self):
         attachment = TravelAttachmentFactory(
             travel=self.travel,
-            name=u'\u0628\u0631\u0646\u0627\u0645\u062c \u062a\u062f\u0631\u064a\u0628 \u0627\u0644\u0645\u062a\u0627\u0628\u0639\u064a\u0646.pdf',  # noqa
-            file=factory.django.FileField(filename=u'travels/lebanon/24800/\u0628\u0631\u0646\u0627\u0645\u062c_\u062a\u062f\u0631\u064a\u0628_\u0627\u0644\u0645\u062a\u0627\u0628\u0639\u064a\u0646.pdf')  # noqa
+            name='\u0628\u0631\u0646\u0627\u0645\u062c \u062a\u062f\u0631\u064a\u0628 \u0627\u0644\u0645\u062a\u0627\u0628\u0639\u064a\u0646.pdf',  # noqa
+            file=factory.django.FileField(filename='travels/lebanon/24800/\u0628\u0631\u0646\u0627\u0645\u062c_\u062a\u062f\u0631\u064a\u0628_\u0627\u0644\u0645\u062a\u0627\u0628\u0639\u064a\u0646.pdf')  # noqa
         )
         response = self.forced_auth_req(
             'get',
@@ -222,40 +215,6 @@ class TravelDetails(URLAssertionMixin, BaseTenantTestCase):
         self.assertKeysIn(expected_keys, response_json)
         self.assertTrue(attachment_qs.exists())
 
-    def test_patch_request(self):
-        currency = PublicsCurrencyFactory()
-        expense_type = PublicsTravelExpenseTypeFactory()
-
-        data = {'cost_assignments': [],
-                'deductions': [{'date': '2016-11-03',
-                                'breakfast': True,
-                                'lunch': True,
-                                'dinner': False,
-                                'accomodation': True}],
-                'traveler': self.traveler.id,
-                'ta_required': True,
-                'supervisor': self.unicef_staff.id,
-                'expenses': [{'amount': '120',
-                              'type': expense_type.id,
-                              'document_currency': currency.id}]}
-        response = self.forced_auth_req('post', reverse('t2f:travels:list:index'), data=data, user=self.unicef_staff)
-        response_json = json.loads(response.rendered_content)
-        self.assertEqual(response_json['expenses'][0]['currency'], response_json['expenses'][0]['document_currency'])
-        self.assertEqual(response_json['cost_summary']['preserved_expenses'], None)
-
-        travel_id = response_json['id']
-
-        data = {'expenses': response_json['expenses']}
-        data['expenses'].append({'amount': '200',
-                                 'type': expense_type.id,
-                                 'currency': currency.id,
-                                 'document_currency': currency.id})
-        response = self.forced_auth_req('patch', reverse('t2f:travels:details:index',
-                                                         kwargs={'travel_pk': travel_id}),
-                                        data=data, user=self.unicef_staff)
-        response_json = json.loads(response.rendered_content)
-        self.assertEqual(len(response_json['deductions']), 1)
-
     def test_duplication(self):
         data = {'traveler': self.unicef_staff.id}
         response = self.forced_auth_req('post', reverse('t2f:travels:details:clone_for_driver',
@@ -280,10 +239,7 @@ class TravelDetails(URLAssertionMixin, BaseTenantTestCase):
         airlines_2 = PublicsAirlineCompanyFactory()
         airlines_3 = PublicsAirlineCompanyFactory()
 
-        data = {'cost_assignments': [],
-                'deductions': [],
-                'expenses': [],
-                'itinerary': [{'origin': 'Budapest',
+        data = {'itinerary': [{'origin': 'Budapest',
                                'destination': 'Berlin',
                                'departure_date': '2016-11-16T12:06:55.821490',
                                'arrival_date': '2016-11-17T12:06:55.821490',
@@ -296,7 +252,6 @@ class TravelDetails(URLAssertionMixin, BaseTenantTestCase):
                 'supervisor': self.unicef_staff.id}
         response = self.forced_auth_req('post', reverse('t2f:travels:list:index'), data=data, user=self.traveler)
         response_json = json.loads(response.rendered_content)
-        self.assertEqual(response_json['cost_summary']['preserved_expenses'], None)
 
         travel_id = response_json['id']
 
@@ -308,171 +263,12 @@ class TravelDetails(URLAssertionMixin, BaseTenantTestCase):
         response_json = json.loads(response.rendered_content)
         self.assertEqual(sorted(response_json['itinerary'][0]['airlines']), sorted([airlines_1.id, airlines_3.id]))
 
-    def test_preserved_expenses(self):
-        currency = PublicsCurrencyFactory()
-        expense_type = PublicsTravelExpenseTypeFactory()
-        dsa_region = PublicsDSARegionFactory()
-
-        data = {'cost_assignments': [],
-                'deductions': [{'date': '2016-11-03',
-                                'breakfast': True,
-                                'lunch': True,
-                                'dinner': False,
-                                'accomodation': True}],
-                'itinerary': [{'origin': 'Berlin',
-                               'destination': 'Budapest',
-                               'departure_date': '2017-04-14T17:06:55.821490',
-                               'arrival_date': '2017-04-15T17:06:55.821490',
-                               'dsa_region': dsa_region.id,
-                               'overnight_travel': False,
-                               'mode_of_travel': ModeOfTravel.RAIL,
-                               'airlines': []},
-                              {'origin': 'Budapest',
-                               'destination': 'Berlin',
-                               'departure_date': '2017-05-20T12:06:55.821490',
-                               'arrival_date': '2017-05-21T12:06:55.821490',
-                               'dsa_region': dsa_region.id,
-                               'overnight_travel': False,
-                               'mode_of_travel': ModeOfTravel.RAIL,
-                               'airlines': []}],
-                'traveler': self.traveler.id,
-                'ta_required': True,
-                'supervisor': self.unicef_staff.id,
-                'expenses': [{'amount': '120',
-                              'type': expense_type.id,
-                              'currency': currency.id,
-                              'document_currency': currency.id}]}
-        response = self.forced_auth_req('post', reverse('t2f:travels:list:index'), data=data, user=self.unicef_staff)
-        response_json = json.loads(response.rendered_content)
-        self.assertEqual(response_json['cost_summary']['preserved_expenses'], None)
-
-        travel_id = response_json['id']
-
-        response = self.forced_auth_req('post', reverse('t2f:travels:details:state_change',
-                                                        kwargs={'travel_pk': travel_id,
-                                                                'transition_name': Travel.SUBMIT_FOR_APPROVAL}),
-                                        data=data, user=self.unicef_staff)
-        response_json = json.loads(response.rendered_content)
-        self.assertEqual(response_json['cost_summary']['preserved_expenses'], None)
-
-        response = self.forced_auth_req('post', reverse('t2f:travels:details:state_change',
-                                                        kwargs={'travel_pk': travel_id,
-                                                                'transition_name': Travel.APPROVE}),
-                                        data=data, user=self.unicef_staff)
-        response_json = json.loads(response.rendered_content)
-        self.assertEqual(response_json['cost_summary']['preserved_expenses'], None)
-
-    def test_detailed_expenses(self):
-        currency = PublicsCurrencyFactory()
-        user_et = PublicsTravelExpenseTypeFactory(vendor_number='user')
-        travel_agent_1_et = PublicsTravelExpenseTypeFactory(vendor_number='ta1')
-        travel_agent_2_et = PublicsTravelExpenseTypeFactory(vendor_number='ta2')
-        parking_money_et = PublicsTravelExpenseTypeFactory(vendor_number='')
-
-        data = {'cost_assignments': [],
-                'traveler': self.traveler.id,
-                'supervisor': self.unicef_staff.id,
-                'ta_required': True,
-                'expenses': [{'amount': '120',
-                              'type': user_et.id,
-                              'currency': currency.id,
-                              'document_currency': currency.id},
-                             {'amount': '80',
-                              'type': user_et.id,
-                              'currency': currency.id,
-                              'document_currency': currency.id},
-                             {'amount': '100',
-                              'type': travel_agent_1_et.id,
-                              'currency': currency.id,
-                              'document_currency': currency.id},
-                             {'amount': '500',
-                              'type': travel_agent_2_et.id,
-                              'currency': currency.id,
-                              'document_currency': currency.id},
-                             {'amount': '1000',
-                              'type': parking_money_et.id,
-                              'currency': currency.id,
-                              'document_currency': currency.id}]}
-        response = self.forced_auth_req('post', reverse('t2f:travels:list:index'), data=data, user=self.unicef_staff)
-        response_json = json.loads(response.rendered_content)
-        self.assertEqual(response_json['cost_summary']['expenses'],
-                         [{'amount': '120.00',
-                           'currency': currency.id,
-                           'label': user_et.title,
-                           'vendor_number': 'Traveler'},
-                          {'amount': '80.00',
-                           'currency': currency.id,
-                           'label': user_et.title,
-                           'vendor_number': 'Traveler'},
-                          {'amount': '100.00',
-                           'currency': currency.id,
-                           'label': travel_agent_1_et.title,
-                           'vendor_number': 'ta1'},
-                          {'amount': '500.00',
-                           'currency': currency.id,
-                           'label': travel_agent_2_et.title,
-                           'vendor_number': 'ta2'},
-                          {'amount': '1000.00',
-                           'currency': currency.id,
-                           'label': parking_money_et.title,
-                           'vendor_number': ''}])
-
-    def test_cost_assignments(self):
-        wbs = PublicsWBSFactory()
-        grant = wbs.grants.first()
-        fund = grant.funds.first()
-        business_area = PublicsBusinessAreaFactory()
-        dsa_region = PublicsDSARegionFactory()
-
-        data = {'cost_assignments': [{'wbs': wbs.id,
-                                      'fund': fund.id,
-                                      'grant': grant.id,
-                                      'share': 55}],
-                'ta_required': True}
-        response = self.forced_auth_req('post', reverse('t2f:travels:list:state_change',
-                                                        kwargs={'transition_name': 'save_and_submit'}),
-                                        data=data, user=self.traveler)
-        response_json = json.loads(response.rendered_content)
-        self.assertEqual(response_json, {'cost_assignments': ['Shares should add up to 100%']})
-
-        data = {'cost_assignments': [{'wbs': wbs.id,
-                                      'fund': fund.id,
-                                      'grant': grant.id,
-                                      'share': 100,
-                                      'business_area': business_area.id,
-                                      'delegate': False}],
-                'itinerary': [{'origin': 'Berlin',
-                               'destination': 'Budapest',
-                               'departure_date': '2017-04-14T17:06:55.821490',
-                               'arrival_date': '2017-04-15T17:06:55.821490',
-                               'dsa_region': dsa_region.id,
-                               'overnight_travel': False,
-                               'mode_of_travel': ModeOfTravel.RAIL,
-                               'airlines': []},
-                              {'origin': 'Budapest',
-                               'destination': 'Berlin',
-                               'departure_date': '2017-05-20T12:06:55.821490',
-                               'arrival_date': '2017-05-21T12:06:55.821490',
-                               'dsa_region': dsa_region.id,
-                               'overnight_travel': False,
-                               'mode_of_travel': ModeOfTravel.RAIL,
-                               'airlines': []}],
-                'ta_required': True,
-                'supervisor': self.unicef_staff.id}
-        response = self.forced_auth_req('post', reverse('t2f:travels:list:state_change',
-                                                        kwargs={'transition_name': 'save_and_submit'}),
-                                        data=data, user=self.traveler)
-        response_json = json.loads(response.rendered_content)
-        self.assertKeysIn(['wbs', 'fund', 'grant', 'share', 'business_area', 'delegate'],
-                          response_json['cost_assignments'][0])
-
     def test_activity_location(self):
         location = LocationFactory()
         location_2 = LocationFactory()
         location_3 = LocationFactory()
 
-        data = {'cost_assignments': [],
-                'activities': [{'is_primary_traveler': True,
+        data = {'activities': [{'is_primary_traveler': True,
                                 'locations': [location.id, location_2.id]}],
                 'traveler': self.traveler.id}
         response = self.forced_auth_req('post', reverse('t2f:travels:list:index'), data=data,
@@ -494,29 +290,27 @@ class TravelDetails(URLAssertionMixin, BaseTenantTestCase):
         location = LocationFactory()
         location_2 = LocationFactory()
 
-        data = {'cost_assignments': [],
-                'activities': [{
-                    'is_primary_traveler': True,
-                    'locations': [location.id, location_2.id],
-                    'partner': PartnerFactory(partner_type=PartnerType.GOVERNMENT).id,
-                    'travel_type': TravelType.PROGRAMME_MONITORING,
-                }],
-                'traveler': self.traveler.id}
+        data = {
+            'activities': [{
+                'is_primary_traveler': True,
+                'locations': [location.id, location_2.id],
+                'partner': PartnerFactory(partner_type=PartnerType.GOVERNMENT).id,
+                'travel_type': TravelType.PROGRAMME_MONITORING
+            }],
+            'traveler': self.traveler.id
+        }
         response = self.forced_auth_req('post', reverse('t2f:travels:list:index'), data=data,
                                         user=self.traveler)
 
         self.assertEqual(response.status_code, 400)
         response_json = json.loads(response.rendered_content)
-        self.assertEqual(response_json, {u'activities': [{u'result': [u'This field is required.']}]})
+        self.assertEqual(response_json, {'activities': [{'result': ['This field is required.']}]})
 
     def test_itinerary_dates(self):
         dsaregion = DSARegion.objects.first()
         airlines = PublicsAirlineCompanyFactory()
 
-        data = {'cost_assignments': [],
-                'deductions': [],
-                'expenses': [],
-                'itinerary': [{'origin': 'Budapest',
+        data = {'itinerary': [{'origin': 'Budapest',
                                'destination': 'Berlin',
                                'departure_date': '2016-11-16T12:06:55.821490',
                                'arrival_date': '2016-11-17T12:06:55.821490',
@@ -540,10 +334,7 @@ class TravelDetails(URLAssertionMixin, BaseTenantTestCase):
         self.assertEqual(response_json, {'itinerary': ['Itinerary items have to be ordered by date']})
 
     def test_itinerary_submit_fail(self):
-        data = {'cost_assignments': [],
-                'deductions': [],
-                'expenses': [],
-                'itinerary': [],
+        data = {'itinerary': [],
                 'activities': []}
         response = self.forced_auth_req('post', reverse('t2f:travels:list:index'), data=data,
                                         user=self.traveler)
@@ -560,10 +351,7 @@ class TravelDetails(URLAssertionMixin, BaseTenantTestCase):
         dsaregion = DSARegion.objects.first()
         airlines = PublicsAirlineCompanyFactory()
 
-        data = {'cost_assignments': [],
-                'deductions': [],
-                'expenses': [],
-                'itinerary': [{'origin': 'Berlin',
+        data = {'itinerary': [{'origin': 'Berlin',
                                'destination': 'Budapest',
                                'departure_date': '2016-11-15T12:06:55.821490',
                                'arrival_date': '2016-11-16T12:06:55.821490',
@@ -591,10 +379,7 @@ class TravelDetails(URLAssertionMixin, BaseTenantTestCase):
         dsaregion = DSARegion.objects.first()
         airlines = PublicsAirlineCompanyFactory()
 
-        data = {'cost_assignments': [],
-                'deductions': [],
-                'expenses': [],
-                'itinerary': [{'origin': 'Budapest',
+        data = {'itinerary': [{'origin': 'Budapest',
                                'destination': 'Berlin',
                                'departure_date': '2016-11-15T12:06:55.821490',
                                'arrival_date': '2016-11-16T12:06:55.821490',
@@ -625,10 +410,7 @@ class TravelDetails(URLAssertionMixin, BaseTenantTestCase):
         self.assertEqual(response_json, {'non_field_errors': ['All itinerary items has to have DSA region assigned']})
 
         # Non ta trip
-        data = {'cost_assignments': [],
-                'deductions': [],
-                'expenses': [],
-                'itinerary': [{'origin': 'Budapest',
+        data = {'itinerary': [{'origin': 'Budapest',
                                'destination': 'Berlin',
                                'departure_date': '2016-11-15T12:06:55.821490',
                                'arrival_date': '2016-11-16T12:06:55.821490',
@@ -659,10 +441,7 @@ class TravelDetails(URLAssertionMixin, BaseTenantTestCase):
         self.assertEqual(response.status_code, 200)
 
     def test_activity_locations(self):
-        data = {'cost_assignments': [],
-                'deductions': [],
-                'expenses': [],
-                'itinerary': [],
+        data = {'itinerary': [],
                 'activities': [{}],
                 'traveler': self.traveler.id}
         response = self.forced_auth_req('post', reverse('t2f:travels:list:index'), data=data,
@@ -690,8 +469,6 @@ class TravelDetails(URLAssertionMixin, BaseTenantTestCase):
                                'mode_of_travel': 'car'}],
                 'activities': [{'is_primary_traveler': True,
                                 'locations': []}],
-                'cost_assignments': [],
-                'expenses': [],
                 'action_points': [],
                 'ta_required': True,
                 'international_travel': False,
@@ -735,8 +512,6 @@ class TravelDetails(URLAssertionMixin, BaseTenantTestCase):
                     'locations': []
                 }
             ],
-            'cost_assignments': [],
-            'expenses': [],
             'action_points': [],
             'ta_required': True,
             'international_travel': False,
@@ -747,15 +522,13 @@ class TravelDetails(URLAssertionMixin, BaseTenantTestCase):
         response = self.forced_auth_req('post', reverse('t2f:travels:list:index'),
                                         data=data, user=self.unicef_staff)
         response_json = json.loads(response.rendered_content)
-        itinerary_origin_destination_expectation = [u'Origin should match with the previous destination']
+        itinerary_origin_destination_expectation = ['Origin should match with the previous destination']
         self.assertEqual(response_json['itinerary'], itinerary_origin_destination_expectation)
 
     def test_ta_not_required(self):
         data = {'itinerary': [],
                 'activities': [{'is_primary_traveler': True,
                                 'locations': []}],
-                'cost_assignments': [],
-                'expenses': [{}],
                 'action_points': [],
                 'ta_required': False,
                 'international_travel': False,
@@ -773,8 +546,6 @@ class TravelDetails(URLAssertionMixin, BaseTenantTestCase):
         data = {'itinerary': [],
                 'activities': [{'is_primary_traveler': False,
                                 'locations': []}],
-                'cost_assignments': [],
-                'expenses': [{}],
                 'action_points': [],
                 'ta_required': False,
                 'international_travel': False,
@@ -790,8 +561,6 @@ class TravelDetails(URLAssertionMixin, BaseTenantTestCase):
                 'activities': [{'is_primary_traveler': False,
                                 'primary_traveler': primary_traveler.id,
                                 'locations': []}],
-                'cost_assignments': [],
-                'expenses': [{}],
                 'action_points': [],
                 'ta_required': False,
                 'international_travel': False,
@@ -802,39 +571,11 @@ class TravelDetails(URLAssertionMixin, BaseTenantTestCase):
                                         data=data, user=self.unicef_staff)
         self.assertEqual(response.status_code, 201)
 
-    def test_travel_activity_partnership(self):
-        partnership = InterventionFactory()
-
-        data = {'itinerary': [],
-                'activities': [{'is_primary_traveler': True,
-                                'locations': [],
-                                'partnership': partnership.id}],
-                'cost_assignments': [],
-                'expenses': [],
-                'action_points': [],
-                'ta_required': True,
-                'international_travel': False,
-                'traveler': self.traveler.id,
-                'mode_of_travel': []}
-
-        # Check only if 200
-        response = self.forced_auth_req('post', reverse('t2f:travels:list:index'),
-                                        data=data, user=self.unicef_staff)
-        self.assertEqual(response.status_code, 201)
-
-        response_json = json.loads(response.rendered_content)
-        activity = response_json['activities'][0]
-
-        self.assertEqual(activity['partnership'], partnership.id)
-
     def test_ghost_data_existence(self):
         dsa_region = DSARegion.objects.first()
         airline = PublicsAirlineCompanyFactory()
 
-        data = {'cost_assignments': [],
-                'deductions': [],
-                'expenses': [],
-                'itinerary': [{'origin': 'Budapest',
+        data = {'itinerary': [{'origin': 'Budapest',
                                'destination': 'Berlin',
                                'departure_date': '2016-11-16T12:06:55.821490',
                                'arrival_date': '2016-11-17T12:06:55.821490',
@@ -861,10 +602,7 @@ class TravelDetails(URLAssertionMixin, BaseTenantTestCase):
         dsa_region = DSARegion.objects.first()
         airline = PublicsAirlineCompanyFactory()
 
-        data = {'cost_assignments': [],
-                'deductions': [],
-                'expenses': [],
-                'itinerary': [{'origin': 'Budapest',
+        data = {'itinerary': [{'origin': 'Budapest',
                                'destination': 'Berlin',
                                'departure_date': '2016-11-16T12:06:55.821490',
                                'arrival_date': '2016-11-17T12:06:55.821490',

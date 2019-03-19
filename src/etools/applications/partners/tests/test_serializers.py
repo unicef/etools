@@ -695,7 +695,7 @@ class TestPartnerOrganizationDetailSerializer(BaseTenantTestCase):
             'address', 'alternate_id', 'alternate_name', 'assessments', 'basis_for_risk_rating', 'blocked', 'city',
             'core_values_assessment_date', 'country', 'core_values_assessments',
             'created', 'cso_type', 'deleted_flag', 'description', 'email', 'hact_min_requirements', 'hact_values',
-            'hidden', u'id', 'interventions', 'last_assessment_date', 'modified', 'name', 'net_ct_cy', 'partner_type',
+            'hidden', 'id', 'interventions', 'last_assessment_date', 'modified', 'name', 'net_ct_cy', 'partner_type',
             'phone_number', 'planned_engagement', 'postal_code', 'rating', 'reported_cy', 'shared_with', 'short_name',
             'staff_members', 'street_address', 'total_ct_cp', 'total_ct_cy', 'total_ct_ytd', 'type_of_assessment',
             'vendor_number', 'vision_synced', 'planned_visits', 'manually_blocked', 'flags', 'partner_type_slug',
@@ -710,4 +710,4 @@ class TestPartnerOrganizationDetailSerializer(BaseTenantTestCase):
 
         self.assertEquals(len(data['staff_members']), 1)
         self.assertCountEqual(data['staff_members'][0].keys(), [
-            'active', 'created', 'email', 'first_name', u'id', 'last_name', 'modified', 'partner', 'phone', 'title'])
+            'active', 'created', 'email', 'first_name', 'id', 'last_name', 'modified', 'partner', 'phone', 'title'])

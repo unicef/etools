@@ -2,8 +2,8 @@ from django.conf.urls import include, url
 
 from etools.applications.t2f.models import Travel
 from etools.applications.t2f.views.dashboard import ActionPointDashboardViewSet, TravelDashboardViewSet
-from etools.applications.t2f.views.exports import FinanceExport, TravelActivityExport, TravelAdminExport
-from etools.applications.t2f.views.generics import PermissionMatrixView, StaticDataView, VendorNumberListView
+from etools.applications.t2f.views.exports import TravelActivityExport, TravelAdminExport
+from etools.applications.t2f.views.generics import PermissionMatrixView, StaticDataView
 from etools.applications.t2f.views.travel import (
     TravelActivityPerInterventionViewSet,
     TravelActivityViewSet,
@@ -50,7 +50,6 @@ travel_list_patterns = ((
     url(r'^$', travel_list, name='index'),
     url(r'^(?P<transition_name>save_and_submit|mark_as_completed)/$', travel_list_state_change, name='state_change'),
     url(r'^export/$', TravelActivityExport.as_view(), name='activity_export'),
-    url(r'^finance-export/$', FinanceExport.as_view(), name='finance_export'),
     url(r'^travel-admin-export/$', TravelAdminExport.as_view(), name='travel_admin_export'),
     url(r'^activities/partnership/(?P<partnership_pk>[0-9]+)/',
         TravelActivityPerInterventionViewSet.as_view({'get': 'list'}), name='activities-intervention'),
@@ -75,6 +74,4 @@ urlpatterns = ((
     url(r'^static_data/$', StaticDataView.as_view(), name='static_data'),
     url(r'^permission_matrix/$', PermissionMatrixView.as_view(), name='permission_matrix'),
     url(r'^action_points/', include(action_points_patterns)),
-    url(r'^vendor_numbers/$', VendorNumberListView.as_view(), name='vendor_numbers'),
-
 ), 't2f')

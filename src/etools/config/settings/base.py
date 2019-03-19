@@ -111,7 +111,6 @@ MIDDLEWARE = (
     'django.contrib.sessions.middleware.SessionMiddleware',
     'etools.applications.EquiTrack.auth.CustomSocialAuthExceptionMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
-    'etools.applications.tokens.middleware.TokenAuthenticationMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
@@ -142,7 +141,7 @@ LOGGING = {
         'level': 'INFO'
     },
 }
-
+GDAL_LIBRARY_PATH = '/usr/lib/libgdal.so.20'
 # DJANGO: MODELS
 FIXTURE_DIRS = (
     os.path.join(os.path.dirname(etools.__file__), 'applications', 'EquiTrack', 'data'),
@@ -187,9 +186,7 @@ SHARED_APPS = (
     'etools.applications.audit.purchase_order',
     'etools.applications.EquiTrack',
     'etools.applications.tpm.tpmpartners',
-    'etools.applications.utils.common',
     'waffle',
-    'etools.applications.tokens',
     'etools.applications.permissions2',
     'unicef_notification',
 )
@@ -544,3 +541,6 @@ UNICEF_LOCATIONS_GET_CACHE_KEY = 'etools.libraries.locations.views.cache_key'
 ATTACHMENT_FILEPATH_PREFIX_FUNC = "etools.applications.attachments.utils.get_filepath_prefix"
 ATTACHMENT_FLAT_MODEL = "etools.applications.attachments.models.AttachmentFlat"
 ATTACHMENT_DENORMALIZE_FUNC = "etools.applications.attachments.utils.denormalize_attachment"
+
+GEOS_LIBRARY_PATH = os.getenv('GEOS_LIBRARY_PATH', '/usr/lib/libgeos_c.so.1')  # default path
+GDAL_LIBRARY_PATH = os.getenv('GDAL_LIBRARY_PATH', '/usr/lib/libgdal.so.20')  # default path

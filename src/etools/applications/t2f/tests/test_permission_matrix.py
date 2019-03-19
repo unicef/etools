@@ -12,7 +12,6 @@ from etools.applications.EquiTrack.tests.cases import BaseTenantTestCase
 from etools.applications.publics.tests.factories import (
     PublicsCurrencyFactory,
     PublicsDSARegionFactory,
-    PublicsWBSFactory,
 )
 from etools.applications.t2f import UserTypes
 from etools.applications.t2f.helpers.permission_matrix import (
@@ -157,9 +156,6 @@ class TestPermissionMatrix(BaseTenantTestCase):
     def test_travel_creation(self):
         dsa_region = PublicsDSARegionFactory()
         currency = PublicsCurrencyFactory()
-        wbs = PublicsWBSFactory()
-        grant = wbs.grants.first()
-        fund = grant.funds.first()
         location = LocationFactory()
 
         purpose = 'Some purpose to check later'
@@ -196,10 +192,6 @@ class TestPermissionMatrix(BaseTenantTestCase):
                                 'locations': [location.id],
                                 'travel_type': TravelType.ADVOCACY,
                                 'date': '2016-12-15T15:02:13+01:00'}],
-                'cost_assignments': [{'wbs': wbs.id,
-                                      'grant': grant.id,
-                                      'fund': fund.id,
-                                      'share': '100'}],
                 'ta_required': True,
                 'international_travel': False,
                 'mode_of_travel': [ModeOfTravel.BOAT],

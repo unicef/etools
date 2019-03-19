@@ -1,40 +1,37 @@
-FROM python:3.6.4-jessie
-# python:3.6.4-jessie has python 2.7 and 3.6 installed, and packages
-# available to install 3.4
+FROM python:3.6.4-alpine as builder
 
-# Install dependencies
-RUN apt-get update
-RUN apt-get install -y --no-install-recommends \
-    build-essential \
-    libcurl4-openssl-dev \
-    libjpeg-dev \
-    vim \
-    ntp \
-    libpq-dev
-RUN apt-get install -y --no-install-recommends \
-    git-core
-RUN apt-get install -y --no-install-recommends \
-    python3-dev \
-    python-software-properties \
-    python-setuptools
-RUN apt-get install -y --no-install-recommends \
-    postgresql-client \
-    libpq-dev \
-    python-psycopg2
-RUN apt-get install -y --no-install-recommends \
-    python-gdal \
-    gdal-bin \
-    libgdal-dev \
-    libgdal1h \
-    libgdal1-dev \
+RUN echo "http://dl-3.alpinelinux.org/alpine/edge/main" >> /etc/apk/repositories
+RUN apk update
+RUN apk add --upgrade apk-tools
+
+RUN apk add \
+    --update alpine-sdk
+
+RUN apk add openssl \
+    ca-certificates \
+    libressl2.7-libcrypto
+RUN apk add \
     libxml2-dev \
     libxslt-dev \
-    xmlsec1
+    xmlsec-dev
+RUN apk add postgresql-dev \
+    libffi-dev \
+    jpeg-dev
+
+RUN apk add --update-cache --repository http://dl-3.alpinelinux.org/alpine/edge/testing/ \
+    gdal \
+    gdal-dev \
+    py-gdal \
+    geos \
+    geos-dev \
+    gcc \
+    g++
 
 RUN pip install --upgrade \
     setuptools \
     pip \
-    wheel
+    wheel \
+    pipenv
 
 # RUN pip install --upgrade arcgis --no-deps
 
@@ -43,16 +40,35 @@ ENV CPLUS_INCLUDE_PATH /usr/include/gdal
 ENV C_INCLUDE_PATH /usr/include/gdal
 ENV REQUIREMENTS_FILE base.txt
 
-ADD src/requirements/*.txt /pip/
-ADD src/requirements/$REQUIREMENTS_FILE /pip/app_requirements.txt
-RUN pip install -f /pip -r /pip/app_requirements.txt
+WORKDIR /etools/
+ADD Pipfile .
+ADD Pipfile.lock .
+RUN pipenv install --system  --ignore-pipfile --deploy
 
-ENV PYTHONUNBUFFERED 1
+
+FROM python:3.6.4-alpine
+
+RUN echo "http://dl-3.alpinelinux.org/alpine/edge/main" >> /etc/apk/repositories
+RUN apk update
+RUN apk add --upgrade apk-tools
+RUN apk add postgresql-client
+RUN apk add openssl \
+    ca-certificates \
+    libressl2.7-libcrypto \
+    libmagic
+RUN apk add geos \
+    gdal --update-cache --repository http://dl-3.alpinelinux.org/alpine/edge/testing/
+
 ADD src /code/
-ADD manage.py /code/manage.py 
-ENV PYTHONPATH /code
+ADD manage.py /code/manage.py
 
 WORKDIR /code/
 
+COPY --from=builder /usr/local/lib/python3.6/site-packages /usr/local/lib/python3.6/site-packages
+COPY --from=builder /usr/local/bin /usr/local/bin
+
+
+ENV PYTHONUNBUFFERED 1
+ENV PYTHONPATH /code
 ENV DJANGO_SETTINGS_MODULE etools.config.settings.production
 RUN SECRET_KEY=not-so-secret-key-just-for-collectstatic DISABLE_JWT_LOGIN=1 python manage.py collectstatic --noinput

@@ -40,3 +40,10 @@ class PurchaseOrderAdmin(admin.ModelAdmin):
     ]
     search_fields = ['order_number', 'auditor_firm__name', ]
     inlines = [PurchaseOrderItemAdmin]
+
+
+@admin.register(AuditorStaffMember)
+class AuditorStaffAdmin(admin.ModelAdmin):
+    list_display = ['user', 'auditor_firm', 'hidden']
+    list_filter = ['auditor_firm', 'hidden']
+    search_fields = ['user__username', 'user__first_name', 'user__last_name', 'auditor_firm__name', ]

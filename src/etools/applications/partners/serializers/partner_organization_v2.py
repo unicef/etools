@@ -21,7 +21,10 @@ from etools.applications.partners.models import (
     PartnerType,
     PlannedEngagement,
 )
-from etools.applications.partners.serializers.interventions_v2 import InterventionListSerializer
+from etools.applications.partners.serializers.interventions_v2 import (
+    InterventionMonitorSerializer,
+    InterventionListSerializer,
+)
 
 
 class CoreValuesAssessmentSerializer(AttachmentSerializerMixin, serializers.ModelSerializer):
@@ -211,6 +214,24 @@ class MinimalPartnerOrganizationListSerializer(serializers.ModelSerializer):
         )
 
 
+class PartnerOrganizationMonitoringListSerializer(serializers.ModelSerializer):
+    prog_visit_mr = serializers.CharField(source='min_req_programme_visits')
+    interventions = serializers.SerializerMethodField(read_only=True)
+
+    def get_interventions(self, obj):
+        related_interventions = Intervention.objects.filter(agreement__partner=obj).exclude(status='draft')
+        return InterventionMonitorSerializer(related_interventions, many=True).data
+
+    class Meta:
+        model = PartnerOrganization
+        fields = (
+            "id",
+            "name",
+            "prog_visit_mr",
+            "interventions",
+        )
+
+
 class PlannedEngagementSerializer(serializers.ModelSerializer):
 
     class Meta:
@@ -308,6 +329,8 @@ class PartnerOrganizationDashboardSerializer(serializers.ModelSerializer):
     action_points = serializers.ReadOnlyField(read_only=True)
     total_ct_cp = serializers.FloatField(read_only=True)
     total_ct_ytd = serializers.FloatField(read_only=True)
+    outstanding_dct_amount_6_to_9_months_usd = serializers.FloatField(read_only=True)
+    outstanding_dct_amount_more_than_9_months_usd = serializers.FloatField(read_only=True)
 
     class Meta:
         model = PartnerOrganization
@@ -366,7 +389,7 @@ class PartnerOrganizationCreateUpdateSerializer(SnapshotModelSerializer):
         extra_kwargs = {
             "partner_type": {
                 "error_messages": {
-                    "null": u'Vendor number must belong to PRG2 account group'
+                    "null": 'Vendor number must belong to PRG2 account group'
                 }
             }
         }

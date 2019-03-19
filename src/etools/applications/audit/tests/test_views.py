@@ -9,17 +9,25 @@ from factory import fuzzy
 from mock import Mock, patch
 from rest_framework import status
 
-from etools.applications.action_points.tests.factories import ActionPointFactory, ActionPointCategoryFactory
+from etools.applications.action_points.tests.factories import ActionPointCategoryFactory, ActionPointFactory
 from etools.applications.attachments.tests.factories import AttachmentFactory, AttachmentFileTypeFactory
-from etools.applications.audit.models import Engagement, Risk, Auditor
+from etools.applications.audit.models import Auditor, Engagement, Risk
 from etools.applications.audit.tests.base import AuditTestCaseMixin, EngagementTransitionsTestCaseMixin
-from etools.applications.audit.tests.factories import (AuditFactory, AuditPartnerFactory,
-                                                       EngagementFactory, MicroAssessmentFactory,
-                                                       PurchaseOrderFactory, RiskBluePrintFactory, RiskCategoryFactory,
-                                                       SpecialAuditFactory, SpotCheckFactory, UserFactory,
-                                                       StaffSpotCheckFactory)
-from etools.applications.EquiTrack.tests.cases import BaseTenantTestCase
+from etools.applications.audit.tests.factories import (
+    AuditFactory,
+    AuditPartnerFactory,
+    EngagementFactory,
+    MicroAssessmentFactory,
+    PurchaseOrderFactory,
+    RiskBluePrintFactory,
+    RiskCategoryFactory,
+    SpecialAuditFactory,
+    SpotCheckFactory,
+    StaffSpotCheckFactory,
+    UserFactory,
+    AuditorUserFactory)
 from etools.applications.audit.tests.test_transitions import MATransitionsTestCaseMixin
+from etools.applications.EquiTrack.tests.cases import BaseTenantTestCase
 from etools.applications.partners.models import PartnerType
 from etools.applications.reports.tests.factories import SectionFactory
 
@@ -289,7 +297,7 @@ class TestEngagementsListViewSet(EngagementTransitionsTestCaseMixin, BaseTenantT
         self._test_list(self.usual_user, expected_status=status.HTTP_403_FORBIDDEN)
 
     def test_list_view_without_audit_organization(self):
-        user = UserFactory(unicef_user=True)
+        user = UserFactory()
         user.groups.add(Auditor.as_group())
 
         self._test_list(user, [self.engagement, self.second_engagement])
@@ -780,7 +788,7 @@ class TestAuditorFirmViewSet(AuditTestCaseMixin, BaseTenantTestCase):
 
     def test_auditor_search_view(self):
         UserFactory()
-        auditor = UserFactory(auditor=True, email='test@example.com')
+        auditor = AuditorUserFactory(email='test@example.com')
 
         response = self.forced_auth_req(
             'get',
@@ -838,8 +846,8 @@ class TestAuditorStaffMembersViewSet(AuditTestCaseMixin, BaseTenantTestCase):
         self.assertEqual(response.data[0]['email'], user.email)
 
     def test_staff_search(self):
-        UserFactory(auditor=True, partner_firm=self.auditor_firm)
-        user = UserFactory(auditor=True, partner_firm=self.auditor_firm, email='test_unique@example.com')
+        AuditorUserFactory(partner_firm=self.auditor_firm)
+        user = AuditorUserFactory(partner_firm=self.auditor_firm, email='test_unique@example.com')
 
         response = self.forced_auth_req(
             'get',
@@ -888,7 +896,7 @@ class TestAuditorStaffMembersViewSet(AuditTestCaseMixin, BaseTenantTestCase):
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
 
     def test_assign_existing_user(self):
-        user = UserFactory(unicef_user=True)
+        user = UserFactory()
 
         response = self.forced_auth_req(
             'post',
@@ -902,7 +910,7 @@ class TestAuditorStaffMembersViewSet(AuditTestCaseMixin, BaseTenantTestCase):
         self.assertEqual(response.data['user']['email'], user.email)
 
     def test_assign_existing_auditor(self):
-        user = UserFactory(auditor=True)
+        user = AuditorUserFactory()
 
         response = self.forced_auth_req(
             'post',
@@ -914,10 +922,10 @@ class TestAuditorStaffMembersViewSet(AuditTestCaseMixin, BaseTenantTestCase):
         )
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertIn('user', response.data)
-        self.assertEqual(response.data['user'][0], 'User is already assigned to auditor firm.')
+        self.assertIn('User is already assigned to', response.data['user'][0])
 
     def test_deactivate_auditor_flow(self):
-        user = UserFactory(auditor=True, partner_firm=self.auditor_firm, is_active=True)
+        user = AuditorUserFactory(partner_firm=self.auditor_firm, is_active=True)
 
         list_response = self.forced_auth_req(
             'get',
@@ -1018,6 +1026,7 @@ class TestAuditorStaffMembersViewSet(AuditTestCaseMixin, BaseTenantTestCase):
             },
             user=self.unicef_focal_point
         )
+
         self.assertEqual(response.status_code, status.HTTP_200_OK)
 
     def test_usual_user_update_view(self):
@@ -1180,7 +1189,7 @@ class TestEngagementAttachmentsView(MATransitionsTestCaseMixin, BaseTenantTestCa
             request_format='multipart',
             data={
                 'file_type': AttachmentFileTypeFactory(code='audit_engagement').id,
-                'file': SimpleUploadedFile('hello_world.txt', u'hello world!'.encode('utf-8')),
+                'file': SimpleUploadedFile('hello_world.txt', 'hello world!'.encode('utf-8')),
             }
         )
         self.assertEqual(create_response.status_code, status.HTTP_201_CREATED)
@@ -1225,7 +1234,7 @@ class TestEngagementReportAttachmentsView(MATransitionsTestCaseMixin, BaseTenant
             request_format='multipart',
             data={
                 'file_type': AttachmentFileTypeFactory(code='audit_report').id,
-                'file': SimpleUploadedFile('hello_world.txt', u'hello world!'.encode('utf-8')),
+                'file': SimpleUploadedFile('hello_world.txt', 'hello world!'.encode('utf-8')),
             }
         )
         self.assertEqual(create_response.status_code, status.HTTP_201_CREATED)

@@ -32,7 +32,7 @@ def _build_country(name):
     It exists only in memory. We must be careful not to save this because creating a new Country in the database
     complicates schemas.
     """
-    country = CountryFactory.build(name=u'Country {}'.format(name.title()), schema_name=name)
+    country = CountryFactory.build(name='Country {}'.format(name.title()), schema_name=name)
     # Mock save() to prevent inadvertent database changes.
     country.save = mock.Mock()
 
@@ -68,7 +68,7 @@ class TestGetInterventionContext(BaseTenantTestCase):
         self.assertEqual(result['partner'], self.intervention.agreement.partner.name)
         self.assertEqual(result['start_date'], 'None')
         self.assertEqual(result['url'],
-                         'https://{}/pmp/interventions/{}/details'.format(settings.HOST, self.intervention.id))
+                         '{}/pmp/interventions/{}/details'.format(settings.HOST, self.intervention.id))
         self.assertEqual(result['unicef_focal_points'], [])
 
     def test_non_trivial_intervention(self):
@@ -88,7 +88,7 @@ class TestGetInterventionContext(BaseTenantTestCase):
         self.assertEqual(result['partner'], self.intervention.agreement.partner.name)
         self.assertEqual(result['start_date'], '2017-08-01')
         self.assertEqual(result['url'],
-                         'https://{}/pmp/interventions/{}/details'.format(settings.HOST, self.intervention.id))
+                         '{}/pmp/interventions/{}/details'.format(settings.HOST, self.intervention.id))
         self.assertEqual(result['unicef_focal_points'], [self.focal_point_user.email])
 
 
@@ -1023,4 +1023,39 @@ class TestCheckPCAMissing(BaseTenantTestCase):
         mock_send = mock.Mock()
         with mock.patch(send_path, mock_send):
             etools.applications.partners.tasks.check_pca_missing()
+        self.assertEqual(mock_send.call_count, 1)
+
+
+class TestCheckInterventionDraftStatus(BaseTenantTestCase):
+    @classmethod
+    def setUpTestData(cls):
+        call_command("update_notifications")
+
+    def test_task(self):
+        send_path = "etools.applications.partners.utils.send_notification_with_template"
+        tz = timezone.get_default_timezone()
+        intervention = InterventionFactory(status=Intervention.DRAFT)
+        intervention.created = datetime.datetime(2018, 1, 1, 12, 55, 12, 12345, tzinfo=tz)
+        intervention.save()
+        mock_send = mock.Mock()
+        with mock.patch(send_path, mock_send):
+            etools.applications.partners.tasks.check_intervention_draft_status()
+        self.assertEqual(mock_send.call_count, 1)
+
+
+class TestCheckInterventionPastStartStatus(BaseTenantTestCase):
+    @classmethod
+    def setUpTestData(cls):
+        call_command("update_notifications")
+
+    def test_task(self):
+        send_path = "etools.applications.partners.utils.send_notification_with_template"
+        intervention = InterventionFactory(
+            status=Intervention.SIGNED,
+            start=datetime.date.today() - datetime.timedelta(days=2),
+        )
+        FundsReservationHeaderFactory(intervention=intervention)
+        mock_send = mock.Mock()
+        with mock.patch(send_path, mock_send):
+            etools.applications.partners.tasks.check_intervention_past_start()
         self.assertEqual(mock_send.call_count, 1)

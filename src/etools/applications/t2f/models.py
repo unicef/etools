@@ -1,10 +1,11 @@
+import datetime
 import logging
 from decimal import Decimal
-from functools import wraps
 
 from django.conf import settings
 from django.contrib.postgres.fields.array import ArrayField
-from django.db import connection, models
+from django.db import connection, models, transaction
+from django.db.models import Q
 from django.db.models.signals import post_save
 from django.dispatch import receiver
 from django.utils.timezone import now as timezone_now
@@ -15,12 +16,10 @@ from unicef_attachments.models import Attachment
 from unicef_djangolib.fields import CodedGenericRelation
 from unicef_notification.utils import send_notification
 
+from etools.applications.EquiTrack.urlresolvers import build_frontend_url
 from etools.applications.action_points.models import ActionPoint
-from etools.applications.publics.models import TravelExpenseType
-from etools.applications.t2f.helpers.cost_summary_calculator import CostSummaryCalculator
 from etools.applications.t2f.serializers.mailing import TravelMailSerializer
 from etools.applications.users.models import WorkspaceCounter
-from etools.applications.utils.common.urlresolvers import build_frontend_url
 
 log = logging.getLogger(__name__)
 
@@ -68,22 +67,10 @@ class ModeOfTravel(object):
 
 
 def make_travel_reference_number():
-    numeric_part = connection.tenant.counters.get_next_value(WorkspaceCounter.TRAVEL_REFERENCE)
+    with transaction.atomic():
+        numeric_part = connection.tenant.counters.get_next_value(WorkspaceCounter.TRAVEL_REFERENCE)
     year = timezone_now().year
     return '{}/{}'.format(year, numeric_part)
-
-
-def mark_as_certified_or_completed_threshold_decorator(func):
-    @wraps(func)
-    def wrapper(self, *args, **kwargs):
-        # If invoicing is enabled, do the threshold check, otherwise it will result an infinite process loop
-        if self.check_threshold():
-            self.submit_certificate(*args, **kwargs)
-            return
-
-        func(self, *args, **kwargs)
-
-    return wrapper
 
 
 class Travel(models.Model):
@@ -187,45 +174,35 @@ class Travel(models.Model):
     def __str__(self):
         return self.reference_number
 
-    @property
-    def cost_summary(self):
-        calculator = CostSummaryCalculator(self)
-        return calculator.get_cost_summary()
-
-    def check_threshold(self):
-        expenses = {'user': Decimal(0),
-                    'travel_agent': Decimal(0)}
-
-        for expense in self.expenses.all():
-            if expense.type.vendor_number == TravelExpenseType.USER_VENDOR_NUMBER_PLACEHOLDER:
-                expenses['user'] += expense.amount
-            else:
-                expenses['travel_agent'] += expense.amount
-
-        traveler_delta = 0
-        travel_agent_delta = 0
-        if self.approved_cost_traveler:
-            traveler_delta = expenses['user'] - self.approved_cost_traveler
-            if self.currency.code != 'USD':
-                exchange_rate = self.currency.exchange_rates.all().last()
-                traveler_delta *= exchange_rate.x_rate
-
-        if self.approved_cost_travel_agencies:
-            travel_agent_delta = expenses['travel_agent'] - self.approved_cost_travel_agencies
-
-        workspace = self.traveler.profile.country
-        if workspace.threshold_tre_usd and traveler_delta > workspace.threshold_tre_usd:
-            return True
-
-        if workspace.threshold_tae_usd and travel_agent_delta > workspace.threshold_tae_usd:
-            return True
-
-        return False
-
     # Completion conditions
     def check_trip_report(self):
         if not self.report_note:
             raise TransitionError('Field report has to be filled.')
+        return True
+
+    def check_trip_dates(self):
+        if self.start_date and self.end_date:
+            start_date = self.start_date.date()
+            end_date = self.end_date.date()
+            travel_q = Q(traveler=self.traveler)
+            travel_q &= ~Q(status__in=[Travel.PLANNED, Travel.CANCELLED])
+            travel_q &= Q(
+                start_date__date__range=(
+                    start_date,
+                    end_date - datetime.timedelta(days=1),
+                )
+            ) | Q(
+                end_date__date__range=(
+                    start_date + datetime.timedelta(days=1),
+                    end_date,
+                )
+            )
+            travel_q &= ~Q(pk=self.pk)
+            if Travel.objects.filter(travel_q).exists():
+                raise TransitionError(
+                    'You have an existing trip with overlapping dates. '
+                    'Please adjust your trip accordingly.'
+                )
         return True
 
     def check_state_flow(self):
@@ -268,12 +245,6 @@ class Travel(models.Model):
         expenses = {'user': Decimal(0),
                     'travel_agent': Decimal(0)}
 
-        for expense in self.expenses.all():
-            if expense.type.vendor_number == TravelExpenseType.USER_VENDOR_NUMBER_PLACEHOLDER:
-                expenses['user'] += expense.amount
-            elif expense.type.vendor_number:
-                expenses['travel_agent'] += expense.amount
-
         self.approved_cost_traveler = expenses['user']
         self.approved_cost_travel_agencies = expenses['travel_agent']
 
@@ -293,17 +264,19 @@ class Travel(models.Model):
                 target=CANCELLED)
     def cancel(self):
         self.canceled_at = timezone_now()
+        recipients = [self.traveler.email]
+        if self.status == Travel.APPROVED:
+            recipients.append(self.supervisor.email)
         self.send_notification_email('Travel #{} was cancelled.'.format(self.reference_number),
-                                     self.traveler.email,
+                                     recipients,
                                      'emails/cancelled.html')
 
     @transition(status, source=[CANCELLED, REJECTED], target=PLANNED)
     def plan(self):
         pass
 
-    @mark_as_certified_or_completed_threshold_decorator
     @transition(status, source=[SUBMITTED, APPROVED, PLANNED, CANCELLED], target=COMPLETED,
-                conditions=[check_trip_report, check_state_flow])
+                conditions=[check_trip_report, check_trip_dates, check_state_flow])
     def mark_as_completed(self):
         self.completed_at = timezone_now()
         if not self.ta_required and self.status == self.PLANNED:
@@ -335,8 +308,9 @@ class Travel(models.Model):
         # TODO this could be async to avoid too long api calls in case of mail server issue
         serializer = TravelMailSerializer(self, context={})
 
+        recipients = recipient if isinstance(recipient, list) else [recipient]
         send_notification(
-            recipients=[recipient],
+            recipients=recipients,
             from_address=settings.DEFAULT_FROM_EMAIL,  # TODO what should sender be?
             subject=subject,
             html_content_filename=template_name,
@@ -439,86 +413,6 @@ class ItineraryItem(models.Model):
 
     def __str__(self):
         return '{} {} - {}'.format(self.travel.reference_number, self.origin, self.destination)
-
-
-class Expense(models.Model):
-    travel = models.ForeignKey(
-        'Travel', related_name='expenses', verbose_name=_('Travel'),
-        on_delete=models.CASCADE,
-    )
-    type = models.ForeignKey(
-        'publics.TravelExpenseType', related_name='+', null=True, blank=True,
-        verbose_name=_('Type'),
-        on_delete=models.CASCADE,
-    )
-    currency = models.ForeignKey(
-        'publics.Currency', related_name='+', null=True, blank=True,
-        verbose_name=_('Currency'),
-        on_delete=models.CASCADE,
-    )
-    amount = models.DecimalField(max_digits=10, decimal_places=4, null=True, blank=True, verbose_name=_('Amount'))
-
-    @property
-    def usd_amount(self):
-        if self.currency is None or self.amount is None:
-            return None
-        xchange_rate = self.currency.exchange_rates.last()
-        return self.amount * xchange_rate.x_rate
-
-
-class Deduction(models.Model):
-    travel = models.ForeignKey(
-        'Travel', related_name='deductions', verbose_name=_('Deduction'),
-        on_delete=models.CASCADE,
-    )
-    date = models.DateField(verbose_name=_('Date'))
-    breakfast = models.BooleanField(default=False, verbose_name=_('Breakfast'))
-    lunch = models.BooleanField(default=False, verbose_name=_('Lunch'))
-    dinner = models.BooleanField(default=False, verbose_name=_('Dinner'))
-    accomodation = models.BooleanField(default=False, verbose_name=_('Accomodation'))
-    no_dsa = models.BooleanField(default=False, verbose_name=_('No DSA'))
-
-    @property
-    def day_of_the_week(self):
-        return self.date.strftime('%a')
-
-    @property
-    def multiplier(self):
-        multiplier = Decimal(0)
-
-        if self.no_dsa:
-            multiplier += Decimal(1)
-        if self.breakfast:
-            multiplier += Decimal('0.05')
-        if self.lunch:
-            multiplier += Decimal('0.1')
-        if self.dinner:
-            multiplier += Decimal('0.15')
-        if self.accomodation:
-            multiplier += Decimal('0.5')
-
-        # Handle if it goes above 1
-        return min(multiplier, Decimal(1))
-
-
-class CostAssignment(models.Model):
-    travel = models.ForeignKey(
-        'Travel', related_name='cost_assignments', verbose_name=_('Travel'),
-        on_delete=models.CASCADE,
-    )
-    share = models.PositiveIntegerField(verbose_name=_('Share'))
-    delegate = models.BooleanField(default=False, verbose_name=_('Delegate'))
-    business_area = models.ForeignKey(
-        'publics.BusinessArea', related_name='+', null=True, blank=True,
-        verbose_name=_('Business Area'),
-        on_delete=models.CASCADE,
-    )
-    wbs = models.ForeignKey('publics.WBS', related_name='+', null=True, blank=True, on_delete=models.DO_NOTHING,
-                            verbose_name=_('WBS'))
-    grant = models.ForeignKey('publics.Grant', related_name='+', null=True, blank=True, on_delete=models.DO_NOTHING,
-                              verbose_name=_('Grant'))
-    fund = models.ForeignKey('publics.Fund', related_name='+', null=True, blank=True, on_delete=models.DO_NOTHING,
-                             verbose_name=_('Fund'))
 
 
 def determine_file_upload_path(instance, filename):

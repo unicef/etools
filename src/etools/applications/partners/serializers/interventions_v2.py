@@ -1,4 +1,4 @@
-from datetime import date
+from datetime import datetime, date
 from operator import itemgetter
 
 from django.db import transaction
@@ -13,7 +13,6 @@ from unicef_attachments.serializers import AttachmentSerializerMixin
 from unicef_locations.serializers import LocationSerializer
 from unicef_snapshot.serializers import SnapshotModelSerializer
 
-from etools.applications.EquiTrack.utils import h11
 from etools.applications.funds.models import FundsCommitmentItem, FundsReservationHeader
 from etools.applications.funds.serializers import FRHeaderSerializer, FRsSerializer
 from etools.applications.partners.models import (
@@ -35,6 +34,7 @@ from etools.applications.reports.serializers.v2 import (
     RAMIndicatorSerializer,
     ReportingRequirementSerializer,
 )
+from etools.libraries.pythonlib.hash import h11
 
 
 class InterventionBudgetCUSerializer(serializers.ModelSerializer):
@@ -77,6 +77,11 @@ class InterventionAmendmentCUSerializer(AttachmentSerializerMixin, serializers.M
                 raise ValidationError("Cannot add a new amendment while another amendment is in progress.")
             if data['intervention'].agreement.partner.blocked is True:
                 raise ValidationError("Cannot add a new amendment while the partner is blocked in Vision.")
+
+        if InterventionAmendment.OTHER in data["types"]:
+            if "other_description" not in data or not data["other_description"]:
+                raise ValidationError("Other description required, if type 'Other' selected.")
+
         return data
 
 
@@ -530,6 +535,26 @@ class InterventionCreateUpdateSerializer(AttachmentSerializerMixin, SnapshotMode
         return updated
 
 
+class InterventionStandardSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = Intervention
+        fields = ('pk', 'number', 'title', 'status')
+
+
+class InterventionMonitorSerializer(InterventionStandardSerializer):
+
+    pd_output_names = serializers.SerializerMethodField()
+
+    @staticmethod
+    def get_pd_output_names(obj):
+        return [ll.name for rl in obj.result_links.all() for ll in rl.ll_results.all()]
+
+    class Meta:
+        model = Intervention
+        fields = ('pk', 'number', 'title', 'status', 'pd_output_names', 'days_from_last_pv')
+
+
 class InterventionDetailSerializer(serializers.ModelSerializer):
     planned_budget = InterventionBudgetCUSerializer(read_only=True)
     partner = serializers.CharField(source='agreement.partner.name')
@@ -825,10 +850,17 @@ class InterventionReportingRequirementCreateSerializer(serializers.ModelSerializ
         self.intervention = self.context["intervention"]
 
         if self.intervention.status != Intervention.DRAFT:
-            if not self.intervention.in_amendment and not self.intervention.termination_doc_attachment.exists():
-                raise serializers.ValidationError(
-                    _("Changes not allowed when PD not in amendment state.")
-                )
+            if self.intervention.status == Intervention.TERMINATED:
+                ended = self.intervention.end < datetime.now().date() if self.intervention.end else True
+                if ended:
+                    raise serializers.ValidationError(
+                        _("Changes not allowed when PD is terminated.")
+                    )
+            else:
+                if not self.intervention.in_amendment and not self.intervention.termination_doc_attachment.exists():
+                    raise serializers.ValidationError(
+                        _("Changes not allowed when PD not in amendment state.")
+                    )
 
         if not self.intervention.start:
             raise serializers.ValidationError(

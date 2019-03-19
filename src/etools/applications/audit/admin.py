@@ -1,12 +1,23 @@
-
 from django.contrib import admin
 
 from ordered_model.admin import OrderedModelAdmin
 
 from etools.applications.action_points.admin import ActionPointAdmin
-from etools.applications.audit.models import (Audit, Engagement, FinancialFinding, Finding, MicroAssessment,
-                                              Risk, RiskBluePrint, RiskCategory, SpecialAuditRecommendation,
-                                              SpecificProcedure, SpotCheck, EngagementActionPoint)
+from etools.applications.audit.forms import EngagementActionPointAdminForm
+from etools.applications.audit.models import (
+    Audit,
+    Engagement,
+    EngagementActionPoint,
+    FinancialFinding,
+    Finding,
+    MicroAssessment,
+    Risk,
+    RiskBluePrint,
+    RiskCategory,
+    SpecialAuditRecommendation,
+    SpecificProcedure,
+    SpotCheck,
+)
 
 
 @admin.register(Engagement)
@@ -20,6 +31,7 @@ class EngagementAdmin(admin.ModelAdmin):
     ]
     readonly_fields = ('status', )
     search_fields = 'partner__name', 'agreement__auditor_firm__name',
+    filter_horizontal = ('authorized_officers', )
 
 
 @admin.register(RiskCategory)
@@ -94,4 +106,5 @@ class SpecialAuditRecommendationAdmin(admin.ModelAdmin):
 
 @admin.register(EngagementActionPoint)
 class EngagementActionPointAdmin(ActionPointAdmin):
+    form = EngagementActionPointAdminForm
     list_display = ('engagement', ) + ActionPointAdmin.list_display

@@ -1,7 +1,9 @@
 import json
 from collections import defaultdict
 from datetime import datetime, timedelta
+from unittest.mock import Mock, patch
 
+from django.conf import settings
 from django.core import mail
 from django.urls import reverse
 
@@ -10,10 +12,9 @@ from etools.applications.publics.tests.factories import (
     PublicsBusinessAreaFactory,
     PublicsCurrencyFactory,
     PublicsDSARegionFactory,
-    PublicsTravelExpenseTypeFactory,
-    PublicsWBSFactory,
 )
 from etools.applications.t2f.models import ModeOfTravel, Travel
+from etools.applications.t2f.serializers.mailing import TravelMailSerializer
 from etools.applications.t2f.tests.factories import TravelFactory
 from etools.applications.users.tests.factories import UserFactory
 
@@ -57,28 +58,14 @@ class StateMachineTest(BaseTenantTestCase):
 
     def test_state_machine_flow(self):
         currency = PublicsCurrencyFactory()
-        expense_type = PublicsTravelExpenseTypeFactory()
         business_area = PublicsBusinessAreaFactory()
         dsa_region = PublicsDSARegionFactory()
-
-        wbs = PublicsWBSFactory(business_area=business_area)
-        grant = wbs.grants.first()
-        fund = grant.funds.first()
 
         workspace = self.unicef_staff.profile.country
         workspace.business_area_code = business_area.code
         workspace.save()
 
-        data = {'cost_assignments': [{'wbs': wbs.id,
-                                      'grant': grant.id,
-                                      'fund': fund.id,
-                                      'share': 100}],
-                'deductions': [{'date': '2016-11-03',
-                                'breakfast': True,
-                                'lunch': True,
-                                'dinner': False,
-                                'accomodation': True}],
-                'itinerary': [{'origin': 'Berlin',
+        data = {'itinerary': [{'origin': 'Berlin',
                                'destination': 'Budapest',
                                'departure_date': '2017-04-14T17:06:55.821490',
                                'arrival_date': '2017-04-15T17:06:55.821490',
@@ -97,14 +84,9 @@ class StateMachineTest(BaseTenantTestCase):
                 'traveler': self.traveler.id,
                 'ta_required': True,
                 'currency': currency.id,
-                'supervisor': self.unicef_staff.id,
-                'expenses': [{'amount': '120',
-                              'type': expense_type.id,
-                              'currency': currency.id,
-                              'document_currency': currency.id}]}
+                'supervisor': self.unicef_staff.id}
         response = self.forced_auth_req('post', reverse('t2f:travels:list:index'), data=data, user=self.unicef_staff)
         response_json = json.loads(response.rendered_content)
-        self.assertEqual(response_json['cost_summary']['preserved_expenses'], None)
 
         travel_id = response_json['id']
 
@@ -154,28 +136,14 @@ class StateMachineTest(BaseTenantTestCase):
 
     def test_state_machine_flow2(self):
         currency = PublicsCurrencyFactory()
-        expense_type = PublicsTravelExpenseTypeFactory()
         business_area = PublicsBusinessAreaFactory()
         dsa_region = PublicsDSARegionFactory()
-
-        wbs = PublicsWBSFactory(business_area=business_area)
-        grant = wbs.grants.first()
-        fund = grant.funds.first()
 
         workspace = self.unicef_staff.profile.country
         workspace.business_area_code = business_area.code
         workspace.save()
 
-        data = {'cost_assignments': [{'wbs': wbs.id,
-                                      'grant': grant.id,
-                                      'fund': fund.id,
-                                      'share': 100}],
-                'deductions': [{'date': '2016-11-03',
-                                'breakfast': True,
-                                'lunch': True,
-                                'dinner': False,
-                                'accomodation': True}],
-                'itinerary': [{'origin': 'Berlin',
+        data = {'itinerary': [{'origin': 'Berlin',
                                'destination': 'Budapest',
                                'departure_date': '2017-04-14T17:06:55.821490',
                                'arrival_date': '2017-04-15T17:06:55.821490',
@@ -195,13 +163,9 @@ class StateMachineTest(BaseTenantTestCase):
                 'ta_required': True,
                 'currency': currency.id,
                 'supervisor': self.unicef_staff.id,
-                'expenses': [{'amount': '120',
-                              'type': expense_type.id,
-                              'currency': currency.id,
-                              'document_currency': currency.id}]}
+                }
         response = self.forced_auth_req('post', reverse('t2f:travels:list:index'), data=data, user=self.unicef_staff)
         response_json = json.loads(response.rendered_content)
-        self.assertEqual(response_json['cost_summary']['preserved_expenses'], None)
 
         travel_id = response_json['id']
 
@@ -349,24 +313,11 @@ class StateMachineTest(BaseTenantTestCase):
         dsa_region = PublicsDSARegionFactory()
         currency = PublicsCurrencyFactory()
 
-        wbs = PublicsWBSFactory(business_area=business_area)
-        grant = wbs.grants.first()
-        fund = grant.funds.first()
-
         workspace = self.unicef_staff.profile.country
         workspace.business_area_code = business_area.code
         workspace.save()
 
-        data = {'cost_assignments': [{'wbs': wbs.id,
-                                      'grant': grant.id,
-                                      'fund': fund.id,
-                                      'share': 100}],
-                'deductions': [{'date': '2016-11-03',
-                                'breakfast': True,
-                                'lunch': True,
-                                'dinner': False,
-                                'accomodation': True}],
-                'itinerary': [{'origin': 'Berlin',
+        data = {'itinerary': [{'origin': 'Berlin',
                                'destination': 'Budapest',
                                'departure_date': '2017-04-14T17:06:55.821490',
                                'arrival_date': '2017-04-15T17:06:55.821490',
@@ -385,11 +336,9 @@ class StateMachineTest(BaseTenantTestCase):
                 'traveler': self.traveler.id,
                 'ta_required': True,
                 'supervisor': self.unicef_staff.id,
-                'expenses': [],
                 'currency': currency.id}
         response = self.forced_auth_req('post', reverse('t2f:travels:list:index'), data=data, user=self.unicef_staff)
         response_json = json.loads(response.rendered_content)
-        self.assertEqual(response_json['cost_summary']['preserved_expenses'], None)
 
         travel_id = response_json['id']
 
@@ -404,3 +353,39 @@ class StateMachineTest(BaseTenantTestCase):
                                                                 'transition_name': 'approve'}),
                                         data=response_json, user=self.unicef_staff)
         self.assertEqual(response.status_code, 200)
+
+    def test_cancel_notification(self):
+        travel = TravelFactory(
+            traveler=self.unicef_staff,
+            supervisor=self.unicef_staff,
+            status=Travel.APPROVED,
+        )
+        self.assertEqual(travel.status, Travel.APPROVED)
+        mock_send = Mock()
+        with patch("etools.applications.t2f.models.send_notification", mock_send):
+            self.forced_auth_req(
+                'post',
+                reverse(
+                    't2f:travels:details:state_change',
+                    kwargs={
+                        'travel_pk': travel.pk,
+                        'transition_name': Travel.CANCEL,
+                    },
+                ),
+                user=self.unicef_staff,
+            )
+        mock_send.assert_called_with(
+            recipients=[
+                travel.traveler.email,
+                travel.supervisor.email,
+            ],
+            from_address=settings.DEFAULT_FROM_EMAIL,
+            subject='Travel #{} was cancelled.'.format(
+                travel.reference_number,
+            ),
+            html_content_filename='emails/cancelled.html',
+            context={
+                "travel": TravelMailSerializer(travel, context={}).data,
+                "url": travel.get_object_url(),
+            }
+        )

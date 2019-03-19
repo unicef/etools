@@ -3,6 +3,7 @@ from mock import Mock, patch
 
 from django.conf import settings
 from django.core.management import call_command
+from django.utils import timezone
 
 from etools.applications.attachments.tests.factories import AttachmentFileTypeFactory
 from etools.applications.EquiTrack.tests.cases import BaseTenantTestCase
@@ -233,4 +234,86 @@ class TestSendPCAMissingNotification(BaseTenantTestCase):
         mock_send = Mock()
         with patch(self.send_path, mock_send):
             utils.send_pca_missing_notifications()
+        self.assertEqual(mock_send.call_count, 0)
+
+
+class TestSendInterventionDraftNotification(BaseTenantTestCase):
+    @classmethod
+    def setUpTestData(cls):
+        call_command("update_notifications")
+        cls.send_path = "etools.applications.partners.utils.send_notification_with_template"
+
+    def test_send(self):
+        intervention = InterventionFactory(status=Intervention.DRAFT)
+        tz = timezone.get_default_timezone()
+        intervention.created = datetime.datetime(2018, 1, 1, 12, 55, 12, 12345, tzinfo=tz)
+        intervention.save()
+        mock_send = Mock()
+        with patch(self.send_path, mock_send):
+            utils.send_intervention_draft_notification()
+        self.assertEqual(mock_send.call_count, 1)
+
+    def test_send_not_week_old(self):
+        InterventionFactory(status=Intervention.DRAFT)
+        mock_send = Mock()
+        with patch(self.send_path, mock_send):
+            utils.send_intervention_draft_notification()
+        self.assertEqual(mock_send.call_count, 0)
+
+    def test_send_not_draft(self):
+        intervention = InterventionFactory(status=Intervention.SIGNED)
+        self.assertTrue(intervention.status != Intervention.DRAFT)
+        self.assertFalse(Intervention.objects.filter(status=Intervention.DRAFT).exists())
+        mock_send = Mock()
+        with patch(self.send_path, mock_send):
+            utils.send_intervention_draft_notification()
+        self.assertEqual(mock_send.call_count, 0)
+
+
+class TestSendInterventionPastStartNotification(BaseTenantTestCase):
+    @classmethod
+    def setUpTestData(cls):
+        call_command("update_notifications")
+        cls.send_path = "etools.applications.partners.utils.send_notification_with_template"
+
+    def test_send(self):
+        intervention = InterventionFactory(
+            status=Intervention.SIGNED,
+            start=datetime.date.today() - datetime.timedelta(days=2),
+        )
+        FundsReservationHeaderFactory(intervention=intervention)
+        mock_send = Mock()
+        with patch(self.send_path, mock_send):
+            utils.send_intervention_past_start_notification()
+        self.assertEqual(mock_send.call_count, 1)
+
+    def test_send_not_signed(self):
+        intervention = InterventionFactory(
+            status=Intervention.DRAFT,
+            start=datetime.date.today() - datetime.timedelta(days=2),
+        )
+        FundsReservationHeaderFactory(intervention=intervention)
+        mock_send = Mock()
+        with patch(self.send_path, mock_send):
+            utils.send_intervention_past_start_notification()
+        self.assertEqual(mock_send.call_count, 0)
+
+    def test_send_not_past(self):
+        InterventionFactory(
+            status=Intervention.SIGNED,
+            start=datetime.date.today() + datetime.timedelta(days=2),
+        )
+        mock_send = Mock()
+        with patch(self.send_path, mock_send):
+            utils.send_intervention_past_start_notification()
+        self.assertEqual(mock_send.call_count, 0)
+
+    def test_send_has_no_frs(self):
+        InterventionFactory(
+            status=Intervention.SIGNED,
+            start=datetime.date.today() - datetime.timedelta(days=2),
+        )
+        mock_send = Mock()
+        with patch(self.send_path, mock_send):
+            utils.send_intervention_past_start_notification()
         self.assertEqual(mock_send.call_count, 0)
