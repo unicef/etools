@@ -242,6 +242,8 @@ class ProgrammeSynchronizer(VisionDataSynchronizer):
         ("OUTPUT_DESCRIPTION", "name"),
         ("OUTPUT_START_DATE", "from_date"),
         ("OUTPUT_END_DATE", "to_date"),
+        ("HUMANITARIAN_MARKER_CODE", "humanitarian_marker_code"),
+        ("HUMANITARIAN_MARKER_NAME", "humanitarian_marker_name"),
     )
     ACTIVITY_MAP = (
         ("ACTIVITY_WBS", "wbs"),
