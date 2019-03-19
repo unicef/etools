@@ -95,7 +95,7 @@ class Engagement(InheritedModelMixin, TimeStampedModel, models.Model):
         on_delete=models.CASCADE,
     )
     po_item = models.ForeignKey(
-        PurchaseOrderItem, verbose_name=_('PO Item Number'), null=True,
+        PurchaseOrderItem, verbose_name=_('PO Item Number'), null=True, blank=True,
         on_delete=models.CASCADE,
     )
 
