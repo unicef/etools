@@ -21,7 +21,10 @@ from etools.applications.partners.models import (
     PartnerType,
     PlannedEngagement,
 )
-from etools.applications.partners.serializers.interventions_v2 import InterventionListSerializer
+from etools.applications.partners.serializers.interventions_v2 import (
+    InterventionMonitorSerializer,
+    InterventionListSerializer,
+)
 
 
 class CoreValuesAssessmentSerializer(AttachmentSerializerMixin, serializers.ModelSerializer):
@@ -208,6 +211,24 @@ class MinimalPartnerOrganizationListSerializer(serializers.ModelSerializer):
         fields = (
             "id",
             "name",
+        )
+
+
+class PartnerOrganizationMonitoringListSerializer(serializers.ModelSerializer):
+    prog_visit_mr = serializers.CharField(source='min_req_programme_visits')
+    interventions = serializers.SerializerMethodField(read_only=True)
+
+    def get_interventions(self, obj):
+        related_interventions = Intervention.objects.filter(agreement__partner=obj).exclude(status='draft')
+        return InterventionMonitorSerializer(related_interventions, many=True).data
+
+    class Meta:
+        model = PartnerOrganization
+        fields = (
+            "id",
+            "name",
+            "prog_visit_mr",
+            "interventions",
         )
 
 

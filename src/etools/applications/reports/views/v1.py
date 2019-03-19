@@ -1,11 +1,19 @@
 from rest_framework import mixins, viewsets
+from rest_framework.decorators import action
 from rest_framework.generics import ListAPIView, RetrieveAPIView
 from rest_framework.permissions import IsAdminUser
+from rest_framework.response import Response
 
 from etools.applications.reports.models import CountryProgramme, Indicator, Result, ResultType, Section, Unit
-from etools.applications.reports.serializers.v1 import (CountryProgrammeSerializer, IndicatorCreateSerializer,
-                                                        ResultSerializer, ResultTypeSerializer,
-                                                        SectionCreateSerializer, UnitSerializer,)
+from etools.applications.reports.serializers.v1 import (
+    CountryProgrammeSerializer,
+    IndicatorCreateSerializer,
+    ResultFullSerializer,
+    ResultSerializer,
+    ResultTypeSerializer,
+    SectionCreateSerializer,
+    UnitSerializer,
+)
 
 
 class ResultTypeViewSet(mixins.ListModelMixin,
@@ -35,6 +43,11 @@ class ResultViewSet(viewsets.ModelViewSet):
     queryset = Result.objects.all()
     serializer_class = ResultSerializer
     permission_classes = (IsAdminUser,)
+
+    @action(detail=True, methods=['get'], url_path='full')
+    def full(self, request, *args, **kwargs):
+        serializer = ResultFullSerializer(instance=self.get_object(), context={'request': self.request})
+        return Response(serializer.data)
 
 
 class IndicatorViewSet(viewsets.ModelViewSet):

@@ -535,6 +535,26 @@ class InterventionCreateUpdateSerializer(AttachmentSerializerMixin, SnapshotMode
         return updated
 
 
+class InterventionStandardSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = Intervention
+        fields = ('pk', 'number', 'title', 'status')
+
+
+class InterventionMonitorSerializer(InterventionStandardSerializer):
+
+    pd_output_names = serializers.SerializerMethodField()
+
+    @staticmethod
+    def get_pd_output_names(obj):
+        return [ll.name for rl in obj.result_links.all() for ll in rl.ll_results.all()]
+
+    class Meta:
+        model = Intervention
+        fields = ('pk', 'number', 'title', 'status', 'pd_output_names', 'days_from_last_pv')
+
+
 class InterventionDetailSerializer(serializers.ModelSerializer):
     planned_budget = InterventionBudgetCUSerializer(read_only=True)
     partner = serializers.CharField(source='agreement.partner.name')
