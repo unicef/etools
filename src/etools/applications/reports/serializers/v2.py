@@ -17,7 +17,7 @@ from etools.applications.reports.models import (
     ResultType,
     SpecialReportingRequirement,
 )
-from etools.applications.reports.validators import value_numbers
+from etools.applications.reports.validators import value_numbers, value_none_or_numbers
 
 
 class MinimalOutputListSerializer(serializers.ModelSerializer):
@@ -140,7 +140,7 @@ class AppliedIndicatorSerializer(serializers.ModelSerializer):
 
     indicator = IndicatorBlueprintCUSerializer(required=False, allow_null=True)
     target = serializers.JSONField(required=False, validators=[value_numbers])
-    baseline = serializers.JSONField(required=False, validators=[value_numbers])
+    baseline = serializers.JSONField(required=False, validators=[value_none_or_numbers])
 
     class Meta:
         model = AppliedIndicator
