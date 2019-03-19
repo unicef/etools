@@ -3,6 +3,7 @@ from mock import Mock, patch
 
 from django.conf import settings
 from django.core.management import call_command
+from django.utils import timezone
 
 from etools.applications.attachments.tests.factories import AttachmentFileTypeFactory
 from etools.applications.EquiTrack.tests.cases import BaseTenantTestCase
@@ -244,7 +245,8 @@ class TestSendInterventionDraftNotification(BaseTenantTestCase):
 
     def test_send(self):
         intervention = InterventionFactory(status=Intervention.DRAFT)
-        intervention.created = datetime.datetime(2018, 1, 1, 12, 55, 12, 12345)
+        tz = timezone.get_default_timezone()
+        intervention.created = datetime.datetime(2018, 1, 1, 12, 55, 12, 12345, tzinfo=tz)
         intervention.save()
         mock_send = Mock()
         with patch(self.send_path, mock_send):
