@@ -10,6 +10,7 @@ from etools.applications.publics.tests.factories import (
     PublicsCurrencyFactory,
     PublicsDSARegionFactory,
 )
+from etools.applications.action_points.tests.factories import ActionPointFactory
 from etools.applications.reports.tests.factories import ResultFactory, SectionFactory
 from etools.applications.t2f import models
 from etools.applications.users.tests.factories import OfficeFactory, UserFactory
@@ -127,3 +128,8 @@ class TravelAttachmentFactory(factory.DjangoModelFactory):
 
     class Meta:
         model = models.TravelAttachment
+
+
+class T2FActionPointFactory(ActionPointFactory):
+    class Meta:
+        model = models.T2FActionPoint

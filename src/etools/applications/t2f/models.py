@@ -4,7 +4,7 @@ from decimal import Decimal
 
 from django.conf import settings
 from django.contrib.postgres.fields.array import ArrayField
-from django.db import connection, models
+from django.db import connection, models, transaction
 from django.db.models import Q
 from django.db.models.signals import post_save
 from django.dispatch import receiver
@@ -67,7 +67,8 @@ class ModeOfTravel(object):
 
 
 def make_travel_reference_number():
-    numeric_part = connection.tenant.counters.get_next_value(WorkspaceCounter.TRAVEL_REFERENCE)
+    with transaction.atomic():
+        numeric_part = connection.tenant.counters.get_next_value(WorkspaceCounter.TRAVEL_REFERENCE)
     year = timezone_now().year
     return '{}/{}'.format(year, numeric_part)
 
