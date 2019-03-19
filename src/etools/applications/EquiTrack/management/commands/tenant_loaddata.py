@@ -1,9 +1,12 @@
+import logging
 
 from django.core.management import call_command
 from django.core.management.base import BaseCommand
 from django.db import connection, DEFAULT_DB_ALIAS
 
 from django_tenants.utils import get_tenant_model
+
+logger = logging.getLogger(__name__)
 
 
 class Command(BaseCommand):
@@ -27,4 +30,5 @@ class Command(BaseCommand):
 
         for tenant in all_tenants:
             connection.set_tenant(tenant)
+            logger.info(f'Set {tenant.schema_name}')
             call_command('loaddata', *args, **options)

@@ -174,6 +174,7 @@ class InterventionAttachmentAdmin(AttachmentInlineAdminMixin, admin.ModelAdmin):
     model = InterventionAttachment
     list_display = (
         'intervention',
+        'attachment',
         'type',
     )
     list_filter = (
@@ -221,7 +222,7 @@ class InterventionResultsLinkAdmin(admin.ModelAdmin):
         'cp_output',
     )
     search_fields = (
-        'intervention__name',
+        'intervention__title',
     )
     formfield_overrides = {
         models.ManyToManyField: {'widget': SelectMultiple(attrs={'size': '5', 'style': 'width:100%'})},
@@ -585,6 +586,9 @@ class PlannedEngagementAdmin(admin.ModelAdmin):
         'partner',
     ]
 
+    def has_add_permission(self, request):
+        return False
+
 
 class SignedAmendmentInline(AttachmentSingleInline):
     verbose_name_plural = _("Signed Amendment")
@@ -650,6 +654,10 @@ class AgreementAdmin(
         'agreement_type',
         'status',
         'signed_by_unicef_date',
+    )
+    search_fields = (
+        'agreement_number',
+        'partner__name',
     )
     fieldsets = (
         (_('Agreement Details'), {

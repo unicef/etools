@@ -1,7 +1,7 @@
 {
     "_meta": {
         "hash": {
-            "sha256": "28fb5bce84a1581a7e7217c78a677c34bc8550fca41f3f0759b349079e40289f"
+            "sha256": "8f4c41c3da4c30ef838f80388547be70179dc38d215cc44e842cf637d1f277d0"
         },
         "pipfile-spec": 6,
         "requires": {
@@ -344,10 +344,10 @@
         },
         "django-ordered-model": {
             "hashes": [
-                "sha256:a58e18387641284288a9781f7946058fb9e0d8b08c16d0a9e571550212d86160"
+                "sha256:14aeacca5a4d41de92b89432a7665b6be5ef254e72418cbeb32258348ad05352"
             ],
             "index": "pypi",
-            "version": "==1.5"
+            "version": "==3.1.1"
         },
         "django-post-office": {
             "hashes": [
@@ -987,10 +987,10 @@
         },
         "unicef-attachments": {
             "hashes": [
-                "sha256:cd76c51a5699982c3e12dfaf3d74c201a224ff33cf21370179c1540ee7db2242"
+                "sha256:6d6bd2e606caf06d2b78762ab5319e6f39d569f123e665473e23a874669b8a7f"
             ],
             "index": "pypi",
-            "version": "==0.5"
+            "version": "==0.5.1"
         },
         "unicef-djangolib": {
             "hashes": [
@@ -1220,10 +1220,10 @@
         },
         "faker": {
             "hashes": [
-                "sha256:16342dca4d92bfc83bab6a7daf6650e0ab087605a66bc38f17523fdb01757910",
-                "sha256:d871ea315b2dcba9138b8344f2c131a76ac62d6227ca39f69b0c889fec97376c"
+                "sha256:166f7ecc3cf900219707da3b775902ba71b965c8dd9a3bb6815d8c75af33f67b",
+                "sha256:646ad6a23c6ebacc02acc77259d0efc0f47f18e8f9dc0087a1ae11b4155cd42f"
             ],
-            "version": "==1.0.2"
+            "version": "==1.0.3"
         },
         "fancycompleter": {
             "hashes": [
