@@ -1,11 +1,11 @@
 #!/bin/bash -e
 
 
-if [[ "$*" == "workers" ]];then
+if [[ "$*" == "worker" ]];then
     celery worker -A etools.config.celery --loglevel=DEBUG --concurrency=4 --purge --pidfile run/celery.pid
-elif [[ "$*" == "beat" ]];then
+elif [[ "$*" == "beater" ]];then
     celery beat -A etools.config.celery --loglevel=DEBUG --pidfile run/celerybeat.pid
-elif [[ "$*" == "etools" ]];then
+elif [[ "$*" == "web" ]];then
     if [[ -n "${DATABASE_CONN}" ]];then
         wait-for-it.sh $DATABASE_CONN -t 30
         if [[ "${RUN_MIGRATIONS}" == "1" ]];then

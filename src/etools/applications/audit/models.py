@@ -675,6 +675,7 @@ class Audit(Engagement):
             AuditSerializer,
             AuditPDFSerializer,
             'audit/audit_pdf.html',
+            'audit_final_report.pdf',
         )
 
 
@@ -724,9 +725,9 @@ class KeyInternalControl(models.Model):
         on_delete=models.CASCADE,
     )
 
-    recommendation = models.TextField(verbose_name=_('Recommendation'), blank=True)
-    audit_observation = models.TextField(verbose_name=_('Audit Observation'), blank=True)
-    ip_response = models.TextField(verbose_name=_('IP response'), blank=True)
+    recommendation = models.TextField(verbose_name=_('Recommendation'))
+    audit_observation = models.TextField(verbose_name=_('Audit Observation'))
+    ip_response = models.TextField(verbose_name=_('IP response'))
 
     class Meta:
         ordering = ('id', )

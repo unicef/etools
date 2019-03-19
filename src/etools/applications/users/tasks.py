@@ -68,6 +68,7 @@ class AzureUserMapper:
                 if not obj.country == new_country:
                     obj.country = self._get_country(cleaned_value)
                     obj.countries_available.add(obj.country)
+                    obj.user.groups.set([self.groups['UNICEF User']])  # reset permission when changing country
                     logger.info("Country Updated for {}".format(obj))
                     return True
 

@@ -1,7 +1,9 @@
 import json
 from collections import defaultdict
 from datetime import datetime, timedelta
+from unittest.mock import Mock, patch
 
+from django.conf import settings
 from django.core import mail
 from django.urls import reverse
 
@@ -12,6 +14,7 @@ from etools.applications.publics.tests.factories import (
     PublicsDSARegionFactory,
 )
 from etools.applications.t2f.models import ModeOfTravel, Travel
+from etools.applications.t2f.serializers.mailing import TravelMailSerializer
 from etools.applications.t2f.tests.factories import TravelFactory
 from etools.applications.users.tests.factories import UserFactory
 
@@ -350,3 +353,39 @@ class StateMachineTest(BaseTenantTestCase):
                                                                 'transition_name': 'approve'}),
                                         data=response_json, user=self.unicef_staff)
         self.assertEqual(response.status_code, 200)
+
+    def test_cancel_notification(self):
+        travel = TravelFactory(
+            traveler=self.unicef_staff,
+            supervisor=self.unicef_staff,
+            status=Travel.APPROVED,
+        )
+        self.assertEqual(travel.status, Travel.APPROVED)
+        mock_send = Mock()
+        with patch("etools.applications.t2f.models.send_notification", mock_send):
+            self.forced_auth_req(
+                'post',
+                reverse(
+                    't2f:travels:details:state_change',
+                    kwargs={
+                        'travel_pk': travel.pk,
+                        'transition_name': Travel.CANCEL,
+                    },
+                ),
+                user=self.unicef_staff,
+            )
+        mock_send.assert_called_with(
+            recipients=[
+                travel.traveler.email,
+                travel.supervisor.email,
+            ],
+            from_address=settings.DEFAULT_FROM_EMAIL,
+            subject='Travel #{} was cancelled.'.format(
+                travel.reference_number,
+            ),
+            html_content_filename='emails/cancelled.html',
+            context={
+                "travel": TravelMailSerializer(travel, context={}).data,
+                "url": travel.get_object_url(),
+            }
+        )

@@ -3,8 +3,7 @@
 {% load userprofile_tags etools %}
 
 {% block extrahead %}
-    <script src="{{ STATIC_URL }}js/jquery-1.10.2.min.js"></script>
-    <script src="{{ STATIC_URL }}js/trips_admin.js" type="text/javascript"></script>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
     <style type="text/css">
     #header
     {
@@ -139,7 +138,7 @@
 {% block title %}{{ title }} | eTools{% endblock %}
 {% block branding %}
 
-    <div id="site-name"><img class="logoimg" src="{{ STATIC_URL }}img/UNICEF_logo_white.png" width="100" style="padding-right: 30px" ><a href="{% url 'admin:index' %}" class="logo">e<span>Tools <span id="test-text"></span></span></a></div>
+    <div id="site-name"><img class="logoimg" src="{{ STATIC_URL }}images/UNICEF_logo_white.png" width="100" style="padding-right: 30px" ><a href="{% url 'admin:index' %}" class="logo">e<span>Tools <span id="test-text"></span></span></a></div>
 {% endblock %}
 {% block usertools %}
         {% if has_permission %}
@@ -166,7 +165,7 @@
 {% block footer %}
     <footer id="footer">
         <div class="brand">
-            <a href="http://www.unicef.org"><img src="{{ STATIC_URL }}img/UNICEF_logo_Cyan.png" width="113px" height="27px"></a>
+            <a href="http://www.unicef.org"><img src="{{ STATIC_URL }}images/UNICEF_logo_Cyan.png" width="113px" height="27px"></a>
         </div>
         <div class="brand msg">
             <p>© Copyright 2015-{% now "Y" %} UNICEF. All Rights Reserved. Country: {{ request.tenant.name }}</p>

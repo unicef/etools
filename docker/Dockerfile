@@ -121,8 +121,6 @@ RUN apk add --no-cache --virtual .postgis-rundeps-edge \
         --repository http://dl-cdn.alpinelinux.org/alpine/edge/main \
         --repository http://dl-cdn.alpinelinux.org/alpine/edge/testing \
         binutils \
-        gdal-dev \
-        geos-dev \
         geos \
         gdal \
         proj4
@@ -133,6 +131,10 @@ RUN apk add --no-cache --virtual .etools-run-deps \
 
 RUN apk add --no-cache --virtual .system-run-deps \
         bash
+
+RUN  rm -rf /var/cache/apk/* \
+    && rm -fr /root/.cache/ \
+    && rm -fr /usr/include/
 
 ADD docker/entrypoint.sh /usr/local/bin/docker-entrypoint.sh
 ADD docker/wait-for-it.sh /usr/local/bin/wait-for-it.sh
