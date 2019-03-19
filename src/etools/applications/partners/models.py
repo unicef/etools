@@ -28,7 +28,7 @@ from etools.applications.partners.validation.agreements import (
     agreements_illegal_transition,
 )
 from etools.applications.reports.models import CountryProgramme, Indicator, Result, Section
-from etools.applications.t2f.models import Travel, TravelType
+from etools.applications.t2f.models import Travel, TravelType, TravelActivity
 from etools.applications.tpm.models import TPMVisit
 from etools.applications.users.models import Office
 from etools.libraries.djangolib.models import StringConcat
@@ -1845,6 +1845,16 @@ class Intervention(TimeStampedModel):
         end = max([self.signed_by_partner_date, self.signed_by_unicef_date])
         days = [start + datetime.timedelta(x + 1) for x in range((end - start).days)]
         return sum(1 for day in days if day.weekday() < 5)
+
+    @property
+    def days_from_last_pv(self):
+        ta = TravelActivity.objects.filter(
+            partnership__pk=self.pk,
+            travel_type=TravelType.PROGRAMME_MONITORING,
+            travels__status=Travel.COMPLETED,
+            date__isnull=False,
+        ).order_by('date').last()
+        return (timezone.now() - ta.date).days if ta else '-'
 
     @property
     def cp_output_names(self):

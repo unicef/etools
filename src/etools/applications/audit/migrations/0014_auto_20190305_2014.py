@@ -25,4 +25,14 @@ class Migration(migrations.Migration):
             name='recommendation',
             field=models.TextField(verbose_name='Recommendation'),
         ),
+        migrations.AlterField(
+            model_name='riskblueprint',
+            name='order',
+            field=models.PositiveIntegerField(db_index=True, editable=False, verbose_name='order'),
+        ),
+        migrations.AlterField(
+            model_name='riskcategory',
+            name='order',
+            field=models.PositiveIntegerField(db_index=True, editable=False, verbose_name='order'),
+        ),
     ]

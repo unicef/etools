@@ -225,6 +225,11 @@ class Result(MPTTModel):
         verbose_name=_("Humanitarian Tag"),
         default=False,
     )
+    humanitarian_marker_code = models.CharField(verbose_name=_("Humanitarian Marker Code"),
+                                                max_length=255, blank=True, null=True)
+    humanitarian_marker_name = models.CharField(verbose_name=_("Humanitarian Marker Name"),
+                                                max_length=255, blank=True, null=True)
+
     # This must be nullable so it can be optional without breaking
     # uniqueness
     wbs = models.CharField(
