@@ -84,6 +84,8 @@ RUN apk add --no-cache --virtual .etools-build-deps \
 #        bash
 
 ENV PYTHONUNBUFFERED 1
+ENV WORKER_CONCURRENCY 4
+ENV CELERY_LOGLEVEL "DEBUG"
 ENV DJANGO_SETTINGS_MODULE etools.config.settings.production
 ENV DATABASE_URL ""
 ENV DATABASE_CONN ""

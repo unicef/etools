@@ -2,9 +2,9 @@
 
 
 if [[ "$*" == "worker" ]];then
-    celery worker -A etools.config.celery --loglevel=DEBUG --concurrency=4 --purge --pidfile run/celery.pid
+    celery worker -A etools.config.celery --loglevel=$CELERY_LOGLEVEL --concurrency=$WORKER_CONCURRENCY --purge --pidfile run/celery.pid
 elif [[ "$*" == "beater" ]];then
-    celery beat -A etools.config.celery --loglevel=DEBUG --pidfile run/celerybeat.pid
+    celery beat -A etools.config.celery --loglevel=$CELERY_LOGLEVEL --pidfile run/celerybeat.pid
 elif [[ "$*" == "web" ]];then
     if [[ -n "${DATABASE_CONN}" ]];then
         wait-for-it.sh $DATABASE_CONN -t 30
