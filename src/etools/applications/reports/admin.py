@@ -159,8 +159,8 @@ class LowerResultAdmin(admin.ModelAdmin):
 class AppliedIndicatorAdmin(admin.ModelAdmin):
     model = AppliedIndicator
     search_fields = (
-        'indicator',
-        'lower_result',
+        'indicator__title',
+        'lower_result__name',
         'context_code',
     )
     list_filter = (

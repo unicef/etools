@@ -12,8 +12,8 @@ from unicef_attachments.models import AttachmentLink
 from etools.applications.action_points.tests.factories import ActionPointFactory
 from etools.applications.attachments.tests.factories import (
     AttachmentFactory,
-    AttachmentLinkFactory,
     AttachmentFileTypeFactory,
+    AttachmentLinkFactory,
 )
 from etools.applications.EquiTrack.tests.cases import BaseTenantTestCase
 from etools.applications.partners.models import PartnerType
@@ -21,8 +21,9 @@ from etools.applications.partners.tests.factories import InterventionAttachmentF
 from etools.applications.reports.tests.factories import SectionFactory
 from etools.applications.tpm.models import ThirdPartyMonitor, TPMVisit
 from etools.applications.tpm.tests.base import TPMTestCaseMixin
-from etools.applications.tpm.tests.factories import _FUZZY_END_DATE, TPMPartnerFactory, TPMVisitFactory, UserFactory
-from etools.applications.utils.common.tests.test_utils import TestExportMixin
+from etools.applications.tpm.tests.factories import _FUZZY_END_DATE, TPMPartnerFactory, TPMUserFactory, TPMVisitFactory
+from etools.applications.users.tests.factories import UserFactory
+from etools.libraries.djangolib.tests.utils import TestExportMixin
 
 
 class TestTPMVisitViewSet(TestExportMixin, TPMTestCaseMixin, BaseTenantTestCase):
@@ -98,7 +99,7 @@ class TestTPMVisitViewSet(TestExportMixin, TPMTestCaseMixin, BaseTenantTestCase)
         )
 
     def test_list_view_without_tpm_organization(self):
-        user = UserFactory(unicef_user=True)
+        user = UserFactory()
         user.groups.add(ThirdPartyMonitor.as_group())
 
         self._test_list_view(user, [])
@@ -674,7 +675,7 @@ class TestPartnerAttachmentsView(TPMTestCaseMixin, BaseTenantTestCase):
         response = self.forced_auth_req(
             'post',
             reverse('tpm:partner-attachments-list', args=[partner.id]),
-            user=UserFactory(tpm=True, tpm_partner=partner),
+            user=TPMUserFactory(tpm_partner=partner),
             request_format='multipart',
             data={
                 'file_type': AttachmentFileTypeFactory(code='tpm_partner').id,

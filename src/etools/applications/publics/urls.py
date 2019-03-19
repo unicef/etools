@@ -1,4 +1,3 @@
-
 from django.conf.urls import url
 
 from etools.applications.publics.views import (
@@ -8,16 +7,12 @@ from etools.applications.publics.views import (
     DSARegionsView,
     ExpenseTypesView,
     StaticDataView,
-    WBSGrantFundView,
 )
 
 app_name = 'publics'
 urlpatterns = (
     url(r'^static_data/$', StaticDataView.as_view({'get': 'list'}), name='static'),
     url(r'^static_data/missing/$', StaticDataView.as_view({'get': 'missing'}), name='missing_static'),
-
-    url(r'^wbs_grants_funds/$', WBSGrantFundView.as_view({'get': 'list'}), name='wbs_grants_funds'),
-    url(r'^wbs_grants_funds/missing/$', WBSGrantFundView.as_view({'get': 'missing'}), name='missing_wbs_grants_funds'),
 
     url(r'^currencies/$', CurrenciesView.as_view({'get': 'list'}), name='currencies'),
     url(r'^currencies/missing/$', CurrenciesView.as_view({'get': 'missing'}), name='missing_currencies'),

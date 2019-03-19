@@ -28,7 +28,7 @@ from etools.applications.partners.validation.agreements import (
     agreements_illegal_transition,
 )
 from etools.applications.reports.models import CountryProgramme, Indicator, Result, Section
-from etools.applications.t2f.models import Travel, TravelType
+from etools.applications.t2f.models import Travel, TravelType, TravelActivity
 from etools.applications.tpm.models import TPMVisit
 from etools.applications.users.models import Office
 from etools.libraries.djangolib.models import StringConcat
@@ -683,10 +683,10 @@ class PartnerOrganization(TimeStampedModel):
             )
 
             pv = pv_year.count()
-            pvq1 = pv_year.filter(end_date__month__in=[1, 2, 3]).count()
-            pvq2 = pv_year.filter(end_date__month__in=[4, 5, 6]).count()
-            pvq3 = pv_year.filter(end_date__month__in=[7, 8, 9]).count()
-            pvq4 = pv_year.filter(end_date__month__in=[10, 11, 12]).count()
+            pvq1 = pv_year.filter(end_date__quarter=1).count()
+            pvq2 = pv_year.filter(end_date__quarter=2).count()
+            pvq3 = pv_year.filter(end_date__quarter=3).count()
+            pvq4 = pv_year.filter(end_date__quarter=4).count()
 
             # TPM visit are counted one per month maximum
             tpmv = TPMVisit.objects.filter(
@@ -748,10 +748,10 @@ class PartnerOrganization(TimeStampedModel):
                 date_of_draft_report_to_unicef__year=datetime.datetime.now().year
             )
 
-            asc1 = audit_spot_check.filter(date_of_draft_report_to_unicef__month__in=[1, 2, 3]).count()
-            asc2 = audit_spot_check.filter(date_of_draft_report_to_unicef__month__in=[4, 5, 6]).count()
-            asc3 = audit_spot_check.filter(date_of_draft_report_to_unicef__month__in=[7, 8, 9]).count()
-            asc4 = audit_spot_check.filter(date_of_draft_report_to_unicef__month__in=[10, 11, 12]).count()
+            asc1 = audit_spot_check.filter(date_of_draft_report_to_unicef__quarter=1).count()
+            asc2 = audit_spot_check.filter(date_of_draft_report_to_unicef__quarter=2).count()
+            asc3 = audit_spot_check.filter(date_of_draft_report_to_unicef__quarter=3).count()
+            asc4 = audit_spot_check.filter(date_of_draft_report_to_unicef__quarter=4).count()
 
             hact['spot_checks']['completed']['q1'] = asc1
             hact['spot_checks']['completed']['q2'] = asc2
@@ -1587,11 +1587,11 @@ class Intervention(TimeStampedModel):
         (TERMINATED, "Terminated"),
     )
     PD = 'PD'
-    SHPD = 'SHPD'
+    SHPD = 'HPD'
     SSFA = 'SSFA'
     INTERVENTION_TYPES = (
         (PD, 'Programme Document'),
-        (SHPD, 'Simplified Humanitarian Programme Document'),
+        (SHPD, 'Humanitarian Programme Document'),
         (SSFA, 'SSFA'),
     )
 
@@ -1847,6 +1847,16 @@ class Intervention(TimeStampedModel):
         return sum(1 for day in days if day.weekday() < 5)
 
     @property
+    def days_from_last_pv(self):
+        ta = TravelActivity.objects.filter(
+            partnership__pk=self.pk,
+            travel_type=TravelType.PROGRAMME_MONITORING,
+            travels__status=Travel.COMPLETED,
+            date__isnull=False,
+        ).order_by('date').last()
+        return (timezone.now() - ta.date).days if ta else '-'
+
+    @property
     def cp_output_names(self):
         return ', '.join(link.cp_output.name for link in self.result_links.all())
 
@@ -2095,13 +2105,25 @@ class InterventionAmendment(TimeStampedModel):
     RESULTS = 'results'
     BUDGET = 'budget'
     OTHER = 'other'
+    TYPE_ADMIN_ERROR = 'admin_error'
+    TYPE_BUDGET_LTE_20 = 'budget_lte_20'
+    TYPE_BUDGET_GT_20 = 'budget_gt_20'
+    TYPE_CHANGE = 'change'
+    TYPE_NO_COST = 'no_cost'
 
     AMENDMENT_TYPES = Choices(
+        (TYPE_ADMIN_ERROR, 'Administrative error (correction)'),
+        (TYPE_BUDGET_LTE_20, 'Budget <= 20%'),
+        (TYPE_BUDGET_GT_20, 'Budget > 20'),
+        (TYPE_CHANGE, 'Changes to planned results'),
+        (TYPE_NO_COST, 'No cost extension'),
+        (OTHER, 'Other')
+    )
+    AMENDMENT_TYPES_OLD = [
         (DATES, 'Dates'),
         (RESULTS, 'Results'),
         (BUDGET, 'Budget'),
-        (OTHER, 'Other')
-    )
+    ]
 
     intervention = models.ForeignKey(
         Intervention,
@@ -2113,7 +2135,7 @@ class InterventionAmendment(TimeStampedModel):
     types = ArrayField(models.CharField(
         max_length=50,
         verbose_name=_('Types'),
-        choices=AMENDMENT_TYPES))
+        choices=AMENDMENT_TYPES + AMENDMENT_TYPES_OLD))
 
     other_description = models.CharField(
         verbose_name=_("Description"),

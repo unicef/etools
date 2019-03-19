@@ -5,7 +5,7 @@ from django.db import connection
 from unicef_notification.models import EmailTemplate
 
 from etools.applications.EquiTrack.tests.cases import BaseTenantTestCase
-from etools.applications.audit.tests.factories import UserFactory
+from etools.applications.audit.tests.factories import AuditFocalPointUserFactory
 from etools.applications.audit.tests.test_transitions import MATransitionsTestCaseMixin
 
 
@@ -35,8 +35,8 @@ class TestEngagement(MATransitionsTestCaseMixin, BaseTenantTestCase):
         call_command('update_notifications')
 
     def test_submit_filled_report(self):
-        UserFactory(audit_focal_point=True, profile__countries_available=[connection.tenant])
-        UserFactory(audit_focal_point=True, profile__countries_available=[])  # user doesn't belong to this country
+        AuditFocalPointUserFactory(profile__countries_available=[connection.tenant])
+        AuditFocalPointUserFactory(profile__countries_available=[])  # user doesn't belong to this country
 
         self._init_filled_engagement()
         mail.outbox = []

@@ -40,15 +40,14 @@ class AuditorStaffMemberSerializer(BaseStaffMemberSerializer):
         validated_data = super().validate(attrs)
         user_pk = validated_data.pop('user_pk', None)
 
-        if not self.instance:
-            if user_pk:
-                if hasattr(user_pk, 'purchase_order_auditorstaffmember'):
-                    raise serializers.ValidationError({'user': _('User is already assigned to auditor firm.')})
-
+        if user_pk:
+            if hasattr(user_pk, 'purchase_order_auditorstaffmember'):
+                firm = user_pk.purchase_order_auditorstaffmember.auditor_firm
+                raise serializers.ValidationError({'user': _('User is already assigned to ') + str(firm)})
+            if not self.instance:
                 validated_data['user'] = user_pk
-
-            if 'user' not in validated_data and not user_pk:
-                raise serializers.ValidationError({'user': _('This field is required.')})
+        elif 'user' not in validated_data:
+            raise serializers.ValidationError({'user': _('This field is required.')})
 
         return validated_data
 
