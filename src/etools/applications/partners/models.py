@@ -28,7 +28,7 @@ from etools.applications.partners.validation.agreements import (
     agreements_illegal_transition,
 )
 from etools.applications.reports.models import CountryProgramme, Indicator, Result, Section
-from etools.applications.t2f.models import Travel, TravelType
+from etools.applications.t2f.models import Travel, TravelType, TravelActivity
 from etools.applications.tpm.models import TPMVisit
 from etools.applications.users.models import Office
 from etools.libraries.djangolib.models import StringConcat
@@ -683,10 +683,10 @@ class PartnerOrganization(TimeStampedModel):
             )
 
             pv = pv_year.count()
-            pvq1 = pv_year.filter(end_date__month__in=[1, 2, 3]).count()
-            pvq2 = pv_year.filter(end_date__month__in=[4, 5, 6]).count()
-            pvq3 = pv_year.filter(end_date__month__in=[7, 8, 9]).count()
-            pvq4 = pv_year.filter(end_date__month__in=[10, 11, 12]).count()
+            pvq1 = pv_year.filter(end_date__quarter=1).count()
+            pvq2 = pv_year.filter(end_date__quarter=2).count()
+            pvq3 = pv_year.filter(end_date__quarter=3).count()
+            pvq4 = pv_year.filter(end_date__quarter=4).count()
 
             # TPM visit are counted one per month maximum
             tpmv = TPMVisit.objects.filter(
@@ -748,10 +748,10 @@ class PartnerOrganization(TimeStampedModel):
                 date_of_draft_report_to_unicef__year=datetime.datetime.now().year
             )
 
-            asc1 = audit_spot_check.filter(date_of_draft_report_to_unicef__month__in=[1, 2, 3]).count()
-            asc2 = audit_spot_check.filter(date_of_draft_report_to_unicef__month__in=[4, 5, 6]).count()
-            asc3 = audit_spot_check.filter(date_of_draft_report_to_unicef__month__in=[7, 8, 9]).count()
-            asc4 = audit_spot_check.filter(date_of_draft_report_to_unicef__month__in=[10, 11, 12]).count()
+            asc1 = audit_spot_check.filter(date_of_draft_report_to_unicef__quarter=1).count()
+            asc2 = audit_spot_check.filter(date_of_draft_report_to_unicef__quarter=2).count()
+            asc3 = audit_spot_check.filter(date_of_draft_report_to_unicef__quarter=3).count()
+            asc4 = audit_spot_check.filter(date_of_draft_report_to_unicef__quarter=4).count()
 
             hact['spot_checks']['completed']['q1'] = asc1
             hact['spot_checks']['completed']['q2'] = asc2
@@ -1845,6 +1845,16 @@ class Intervention(TimeStampedModel):
         end = max([self.signed_by_partner_date, self.signed_by_unicef_date])
         days = [start + datetime.timedelta(x + 1) for x in range((end - start).days)]
         return sum(1 for day in days if day.weekday() < 5)
+
+    @property
+    def days_from_last_pv(self):
+        ta = TravelActivity.objects.filter(
+            partnership__pk=self.pk,
+            travel_type=TravelType.PROGRAMME_MONITORING,
+            travels__status=Travel.COMPLETED,
+            date__isnull=False,
+        ).order_by('date').last()
+        return (timezone.now() - ta.date).days if ta else '-'
 
     @property
     def cp_output_names(self):

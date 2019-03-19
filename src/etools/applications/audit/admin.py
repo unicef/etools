@@ -31,6 +31,7 @@ class EngagementAdmin(admin.ModelAdmin):
     ]
     readonly_fields = ('status', )
     search_fields = 'partner__name', 'agreement__auditor_firm__name',
+    filter_horizontal = ('authorized_officers', )
 
 
 @admin.register(RiskCategory)
