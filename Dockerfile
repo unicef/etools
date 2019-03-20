@@ -62,7 +62,6 @@ WORKDIR /code/
 COPY --from=builder /usr/local/lib/python3.6/site-packages /usr/local/lib/python3.6/site-packages
 COPY --from=builder /usr/local/bin /usr/local/bin
 
-
 ENV PYTHONUNBUFFERED 1
 ENV PYTHONPATH /code
 ENV DJANGO_SETTINGS_MODULE etools.config.settings.production
