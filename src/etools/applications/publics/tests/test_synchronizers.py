@@ -10,10 +10,7 @@ from etools.applications.publics.models import (
     TravelAgent,
     TravelExpenseType,
 )
-from etools.applications.publics.tests.factories import (
-    PublicsCountryFactory,
-    TravelAgentFactory,
-)
+from etools.applications.publics.tests.factories import PublicsCountryFactory, TravelAgentFactory
 from etools.applications.users.models import Country
 
 
