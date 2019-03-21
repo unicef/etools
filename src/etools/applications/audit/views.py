@@ -500,7 +500,19 @@ class AuditorStaffMembersViewSet(
         self.check_serializer_permissions(serializer, edit=True)
 
         instance = serializer.save(auditor_firm=self.get_parent_object(), **kwargs)
-        instance.user.profile.country = self.request.user.profile.country
+        if not instance.user.profile.country:
+            instance.user.profile.country = self.request.user.profile.country
+        instance.user.profile.countries_available.add(self.request.user.profile.country)
+        instance.user.profile.save()
+
+    def perform_update(self, serializer):
+        self.check_serializer_permissions(serializer, edit=True)
+
+        super().perform_update(serializer)
+        instance = serializer.save(auditor_firm=self.get_parent_object())
+        if not instance.user.profile.country:
+            instance.user.profile.country = self.request.user.profile.country
+        instance.user.profile.countries_available.add(self.request.user.profile.country)
         instance.user.profile.save()
 
     def perform_destroy(self, instance):
