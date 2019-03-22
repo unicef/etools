@@ -486,7 +486,8 @@ class AuditorStaffMembersViewSet(
     filter_backends = (OrderingFilter, SearchFilter, DjangoFilterBackend, )
     ordering_fields = ('user__email', 'user__first_name', 'id', )
     search_fields = ('user__first_name', 'user__email', 'user__last_name', )
-    filter_fields = ('user__profile__country__schema_name', 'user__profile__country__name')
+    filter_fields = ('user__profile__country__schema_name', 'user__profile__country__name',
+                     'user__profile__countries_available__schema_name', 'user__profile__countries_available__name')
 
     def get_queryset(self):
         queryset = super().get_queryset()
