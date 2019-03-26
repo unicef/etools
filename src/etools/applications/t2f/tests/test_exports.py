@@ -3,7 +3,6 @@ import logging
 import datetime
 
 from django.urls import reverse
-from django.utils import timezone
 from django.utils.six import StringIO
 
 from pytz import UTC
@@ -44,7 +43,6 @@ class TravelExports(BaseTenantTestCase):
         self.assertEqual(export_url, '/api/t2f/travels/travel-admin-export/')
 
     def test_activity_export(self):
-        tz = timezone.get_default_timezone()
         office = OfficeFactory(name='Budapest')
         section_health = SectionFactory(name='Health')
         section_education = SectionFactory(name='Education')
