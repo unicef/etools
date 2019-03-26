@@ -90,7 +90,7 @@ class TestInterventionPartnershipDashView(BaseTenantTestCase):
             partnership=self.intervention,
             primary_traveler=traveler,
             travel_type=TravelType.PROGRAMME_MONITORING,
-            date=timezone.now() - datetime.timedelta(days=3),
+            date=datetime.date.today() - datetime.timedelta(days=3),
         )
         travel.activities.add(travel_activity)
         for i in range(4):
@@ -98,7 +98,7 @@ class TestInterventionPartnershipDashView(BaseTenantTestCase):
                 partnership=self.intervention,
                 primary_traveler=traveler,
                 travel_type=TravelType.PROGRAMME_MONITORING,
-                date=timezone.now() - datetime.timedelta(days=3 * (i + 2)),
+                date=datetime.date.today() - datetime.timedelta(days=3 * (i + 2)),
             )
             travel.activities.add(activity)
 
