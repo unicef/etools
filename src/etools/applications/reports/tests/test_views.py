@@ -1072,3 +1072,44 @@ class TestSpecialReportingRequirementRetrieveUpdateDestroyView(BaseTenantTestCas
         self.assertFalse(SpecialReportingRequirement.objects.filter(
             pk=requirement.pk
         ).exists())
+
+
+class TestResultFrameworkView(BaseTenantTestCase):
+    @classmethod
+    def setUpTestData(cls):
+        cls.unicef_staff = UserFactory(is_staff=True)
+        cls.intervention = InterventionFactory()
+        cls.result_link = InterventionResultLinkFactory(
+            intervention=cls.intervention,
+        )
+        cls.lower_result = LowerResultFactory(
+            result_link=cls.result_link
+        )
+        cls.indicator = IndicatorBlueprintFactory()
+        cls.applied = AppliedIndicatorFactory(
+            indicator=cls.indicator,
+            lower_result=cls.lower_result
+        )
+
+    def test_get(self):
+        response = self.forced_auth_req(
+            "get",
+            reverse(
+                "reports:interventions-results-framework",
+                args=[self.intervention.pk],
+            ),
+            user=self.unicef_staff,
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+    def test_get_docx_table(self):
+        response = self.forced_auth_req(
+            "get",
+            reverse(
+                "reports:interventions-results-framework",
+                args=[self.intervention.pk],
+            ),
+            user=self.unicef_staff,
+            data={"format": "docx_table"},
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)

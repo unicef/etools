@@ -127,6 +127,7 @@ unicef_notification = "==0.2.1"
 unicef_restlib = "==0.4"
 unicef_snapshot = "==0.2.3"
 Pillow = "==5.4.1"
+unicef-rest-export = "==0.5.3"
 
 [requires]
 python_version = "3.6.4"
