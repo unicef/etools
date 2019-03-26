@@ -140,8 +140,8 @@ class Travel(models.Model):
         'reports.Sector', null=True, blank=True, related_name='+', verbose_name=_('Section'),
         on_delete=models.CASCADE,
     )
-    start_date = models.DateTimeField(null=True, blank=True, verbose_name=_('Start Date'))
-    end_date = models.DateTimeField(null=True, blank=True, verbose_name=_('End Date'))
+    start_date = models.DateField(null=True, blank=True, verbose_name=_('Start Date'))
+    end_date = models.DateField(null=True, blank=True, verbose_name=_('End Date'))
     purpose = models.CharField(max_length=500, default='', blank=True, verbose_name=_('Purpose'))
     additional_note = models.TextField(default='', blank=True, verbose_name=_('Additional Note'))
     international_travel = models.NullBooleanField(default=False, null=True, blank=True,
