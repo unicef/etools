@@ -15,10 +15,8 @@ from etools.applications.publics.tests.factories import (
 )
 from etools.applications.t2f import UserTypes
 from etools.applications.t2f.helpers.permission_matrix import (
-    convert_matrix_to_json,
     FakePermissionMatrix,
     get_user_role_list,
-    parse_permission_matrix,
     PermissionMatrix,
 )
 from etools.applications.t2f.models import ModeOfTravel, Travel, TravelType
@@ -109,50 +107,6 @@ class TestPermissionMatrix(BaseTenantTestCase):
                                  UserTypes.TRAVEL_ADMINISTRATOR,
                                  UserTypes.REPRESENTATIVE])
 
-    @skip("no longer using get_permission_matrix")
-    @mock.patch('etools.applications.t2f.helpers.permission_matrix.get_permission_matrix')
-    def test_permission_aggregation(self, permission_matrix_getter):
-        permission_matrix_getter.return_value = {
-            'travel': {
-                UserTypes.TRAVELER: {
-                    Travel.PLANNED: {
-                        'baseDetails': {
-                            'ta_required': {
-                                'edit': True,
-                                'view': True}}}},
-                UserTypes.SUPERVISOR: {
-                    Travel.PLANNED: {
-                        'baseDetails': {
-                            'ta_required': {
-                                'edit': False,
-                                'view': True}}}}}}
-
-        travel = TravelFactory(traveler=self.traveler,
-                               supervisor=self.unicef_staff)
-
-        # Check traveler
-        permission_matrix = PermissionMatrix(travel, self.traveler)
-        permissions = permission_matrix.get_permission_dict()
-        self.assertEqual(dict(permissions),
-                         {('edit', 'travel', 'ta_required'): True,
-                          ('view', 'travel', 'ta_required'): True})
-
-        # Check supervisor
-        permission_matrix = PermissionMatrix(travel, self.unicef_staff)
-        permissions = permission_matrix.get_permission_dict()
-        self.assertEqual(dict(permissions),
-                         {('edit', 'travel', 'ta_required'): False,
-                          ('view', 'travel', 'ta_required'): True})
-
-        travel = TravelFactory(traveler=self.traveler,
-                               supervisor=self.traveler)
-        # Check both the same time (not really possible, but good to check aggregation)
-        permission_matrix = PermissionMatrix(travel, self.traveler)
-        permissions = permission_matrix.get_permission_dict()
-        self.assertEqual(dict(permissions),
-                         {('edit', 'travel', 'ta_required'): True,
-                          ('view', 'travel', 'ta_required'): True})
-
     def test_travel_creation(self):
         dsa_region = PublicsDSARegionFactory()
         currency = PublicsCurrencyFactory()
@@ -238,16 +192,6 @@ class TestPermissionMatrix(BaseTenantTestCase):
         )
         response_json = json.loads(response.rendered_content)
         self.assertEqual(response_json['purpose'], purpose)
-
-    def test_convert_matrix_to_json(self):
-        filename = "/tmp/matrix.json"
-        convert_matrix_to_json(filename)
-        self.assertTrue(os.path.exists(filename))
-
-    def test_parse_permission_matrix(self):
-        filename = "/tmp/permission_matrix.json"
-        parse_permission_matrix(filename)
-        self.assertTrue(os.path.exists(filename))
 
 
 class TestFakePermissionMatrix(BaseTenantTestCase):
