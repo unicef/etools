@@ -1,11 +1,8 @@
 import json
-import os
-from unittest import skip
 
 from django.contrib.auth.models import Group
 from django.urls import reverse
 
-import mock
 from unicef_locations.tests.factories import LocationFactory
 
 from etools.applications.EquiTrack.tests.cases import BaseTenantTestCase
@@ -17,7 +14,6 @@ from etools.applications.t2f import UserTypes
 from etools.applications.t2f.helpers.permission_matrix import (
     FakePermissionMatrix,
     get_user_role_list,
-    PermissionMatrix,
 )
 from etools.applications.t2f.models import ModeOfTravel, Travel, TravelType
 from etools.applications.t2f.tests.factories import TravelFactory
