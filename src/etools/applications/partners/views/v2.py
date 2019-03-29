@@ -11,10 +11,10 @@ from rest_framework.generics import RetrieveUpdateDestroyAPIView
 from rest_framework.permissions import IsAdminUser, IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
-from unicef_attachments.models import FileType as AttachmentFileType
 from unicef_djangolib.fields import CURRENCIES
 from unicef_locations.models import GatewayType
 
+from etools.applications.attachments.models import AttachmentFlat
 from etools.applications.funds.models import FundsReservationItem
 from etools.applications.partners.filters import PartnerScopeFilter
 from etools.applications.partners.models import (
@@ -97,10 +97,7 @@ class PMPStaticDropdownsListAPIView(APIView):
         # hardcoded to partners app attachments for now
         # once tpm and audit come online we can remove the filter
         # on attachment file types
-        attachment_types = AttachmentFileType.objects.values_list(
-            'label',
-            flat=True
-        )
+        attachment_types = AttachmentFlat.get_file_types()
         partner_file_types = FileType.objects.values_list("name", flat=True)
 
         local_currency = local_workspace.local_currency.id if local_workspace.local_currency else None
