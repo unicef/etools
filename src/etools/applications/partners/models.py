@@ -2114,7 +2114,7 @@ class InterventionAmendment(TimeStampedModel):
     AMENDMENT_TYPES = Choices(
         (TYPE_ADMIN_ERROR, 'Administrative error (correction)'),
         (TYPE_BUDGET_LTE_20, 'Budget <= 20%'),
-        (TYPE_BUDGET_GT_20, 'Budget > 20'),
+        (TYPE_BUDGET_GT_20, 'Budget > 20%'),
         (TYPE_CHANGE, 'Changes to planned results'),
         (TYPE_NO_COST, 'No cost extension'),
         (OTHER, 'Other')
