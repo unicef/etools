@@ -1,7 +1,7 @@
 import weakref
 
 from django.contrib.auth.models import Group
-from django.db.models import Aggregate, CharField, Value
+from django.db.models import Aggregate, CharField, Max, Value
 
 from model_utils.managers import InheritanceManager
 
@@ -60,7 +60,7 @@ class GroupWrapper(object):
 
 class StringConcat(Aggregate):
     """ A custom aggregation function that returns "," separated strings """
-
+    allow_distinct = True
     function = 'GROUP_CONCAT'
     template = '%(function)s(%(distinct)s%(expressions)s)'
 
@@ -76,6 +76,10 @@ class StringConcat(Aggregate):
     def as_postgresql(self, compiler, connection):
         self.function = 'STRING_AGG'
         return super().as_sql(compiler, connection)
+
+
+class MaxDistinct(Max):
+    allow_distinct = True
 
 
 class DSum(Aggregate):
