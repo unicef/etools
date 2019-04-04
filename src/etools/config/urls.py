@@ -11,7 +11,6 @@ from etools.applications.EquiTrack.views import (
     IssueJWTRedirectView,
     logout_view,
     MainView,
-    OutdatedBrowserView
 )
 from etools.applications.management.urls import urlpatterns as management_urls
 from etools.applications.partners.views.v1 import FileTypeViewSet
@@ -35,7 +34,7 @@ from etools.libraries.locations.views import (
     LocationsViewSet,
     LocationTypesViewSet,
 )
-# this import is used to autodiscover the customised locations admin form(which is outside of INSTALLED_APPS)
+# these imports are used to autodiscover admin forms located outside of INSTALLED_APPS(the libraries folder for example)
 from etools.libraries.locations import admin as locations_admin # noqa: ignore=F401
 
 # ******************  API docs and schemas  ******************************
@@ -119,7 +118,6 @@ urlpatterns = [
     url(r'^login/token-auth/', rest_framework_jwt.views.obtain_jwt_token),
     # TODO: remove this when eTrips is deployed needed
     url(r'^api-token-auth/', rest_framework_jwt.views.obtain_jwt_token),
-    url(r'^outdated_browser', OutdatedBrowserView.as_view(), name='outdated_browser'),
     url(r'^workspace_inactive/$', TemplateView.as_view(template_name='removed_workspace.html'),
         name='workspace-inactive'),
 

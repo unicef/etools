@@ -4,7 +4,7 @@ from decimal import Decimal
 
 from django.conf import settings
 from django.contrib.postgres.fields.array import ArrayField
-from django.db import connection, models
+from django.db import connection, models, transaction
 from django.db.models import Q
 from django.db.models.signals import post_save
 from django.dispatch import receiver
@@ -67,7 +67,8 @@ class ModeOfTravel(object):
 
 
 def make_travel_reference_number():
-    numeric_part = connection.tenant.counters.get_next_value(WorkspaceCounter.TRAVEL_REFERENCE)
+    with transaction.atomic():
+        numeric_part = connection.tenant.counters.get_next_value(WorkspaceCounter.TRAVEL_REFERENCE)
     year = timezone_now().year
     return '{}/{}'.format(year, numeric_part)
 
@@ -263,8 +264,11 @@ class Travel(models.Model):
                 target=CANCELLED)
     def cancel(self):
         self.canceled_at = timezone_now()
+        recipients = [self.traveler.email]
+        if self.status == Travel.APPROVED:
+            recipients.append(self.supervisor.email)
         self.send_notification_email('Travel #{} was cancelled.'.format(self.reference_number),
-                                     self.traveler.email,
+                                     recipients,
                                      'emails/cancelled.html')
 
     @transition(status, source=[CANCELLED, REJECTED], target=PLANNED)
@@ -304,8 +308,9 @@ class Travel(models.Model):
         # TODO this could be async to avoid too long api calls in case of mail server issue
         serializer = TravelMailSerializer(self, context={})
 
+        recipients = recipient if isinstance(recipient, list) else [recipient]
         send_notification(
-            recipients=[recipient],
+            recipients=recipients,
             from_address=settings.DEFAULT_FROM_EMAIL,  # TODO what should sender be?
             subject=subject,
             html_content_filename=template_name,

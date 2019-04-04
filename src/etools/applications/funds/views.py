@@ -1,6 +1,3 @@
-import functools
-import operator
-
 from django.db.models import Q
 from django.utils.translation import ugettext as _
 
@@ -9,6 +6,7 @@ from rest_framework.generics import ListAPIView
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework_csv.renderers import CSVRenderer, JSONRenderer
+from unicef_restlib.views import QueryStringFilterMixin
 
 from etools.applications.EquiTrack.mixins import ExportModelMixin
 from etools.applications.EquiTrack.renderers import CSVFlatRenderer
@@ -149,7 +147,7 @@ class FRsView(APIView):
         return Response(data={'error': _(error_message)}, status=status.HTTP_400_BAD_REQUEST)
 
 
-class FundsReservationHeaderListAPIView(ExportModelMixin, ListAPIView):
+class FundsReservationHeaderListAPIView(QueryStringFilterMixin, ExportModelMixin, ListAPIView):
     """
     Returns a list of FundsReservationHeaders.
     """
@@ -160,6 +158,11 @@ class FundsReservationHeaderListAPIView(ExportModelMixin, ListAPIView):
         JSONRenderer,
         CSVRenderer,
         CSVFlatRenderer,
+    )
+    queryset = FundsReservationHeader.objects.all()
+    search_terms = ('intervention__number__icontains', 'vendor_code__icontains', 'fr_number__icontains')
+    filters = (
+        ('partners', 'intervention__agreement__partner__pk__in'),
     )
 
     def get_serializer_class(self):
@@ -174,26 +177,8 @@ class FundsReservationHeaderListAPIView(ExportModelMixin, ListAPIView):
                 return FundsReservationHeaderExportFlatSerializer
         return super().get_serializer_class()
 
-    def get_queryset(self, format=None):
-        q = FundsReservationHeader.objects.all()
-        query_params = self.request.query_params
 
-        if query_params:
-            queries = []
-            if "search" in query_params.keys():
-                queries.append(
-                    Q(intervention__number__icontains=query_params.get("search")) |
-                    Q(vendor_code__icontains=query_params.get("search")) |
-                    Q(fr_number__icontains=query_params.get("search"))
-                )
-            if queries:
-                expression = functools.reduce(operator.and_, queries)
-                q = q.filter(expression)
-
-        return q
-
-
-class FundsReservationItemListAPIView(ExportModelMixin, ListAPIView):
+class FundsReservationItemListAPIView(QueryStringFilterMixin, ExportModelMixin, ListAPIView):
     """
     Returns a list of FundsReservationItems.
     """
@@ -205,6 +190,9 @@ class FundsReservationItemListAPIView(ExportModelMixin, ListAPIView):
         CSVRenderer,
         CSVFlatRenderer,
     )
+    queryset = FundsReservationItem.objects.all()
+    search_terms = ('fund_reservation__intervention__number__icontains', 'fund_reservation__fr_number__icontains',
+                    'fund_reservation__fr_ref_number__icontains')
 
     def get_serializer_class(self):
         """
@@ -218,26 +206,8 @@ class FundsReservationItemListAPIView(ExportModelMixin, ListAPIView):
                 return FundsReservationItemExportFlatSerializer
         return super().get_serializer_class()
 
-    def get_queryset(self, format=None):
-        q = FundsReservationItem.objects.all()
-        query_params = self.request.query_params
 
-        if query_params:
-            queries = []
-            if "search" in query_params.keys():
-                queries.append(
-                    Q(fund_reservation__intervention__number__icontains=query_params.get("search")) |
-                    Q(fund_reservation__fr_number__icontains=query_params.get("search")) |
-                    Q(fund_reservation__fr_ref_number__icontains=query_params.get("search"))
-                )
-            if queries:
-                expression = functools.reduce(operator.and_, queries)
-                q = q.filter(expression)
-
-        return q
-
-
-class FundsCommitmentHeaderListAPIView(ExportModelMixin, ListAPIView):
+class FundsCommitmentHeaderListAPIView(QueryStringFilterMixin, ExportModelMixin, ListAPIView):
     """
     Returns a list of FundsCommitmentHeaders.
     """
@@ -250,25 +220,11 @@ class FundsCommitmentHeaderListAPIView(ExportModelMixin, ListAPIView):
         CSVFlatRenderer,
     )
 
-    def get_queryset(self, format=None):
-        q = FundsCommitmentHeader.objects.all()
-        query_params = self.request.query_params
-
-        if query_params:
-            queries = []
-            if "search" in query_params.keys():
-                queries.append(
-                    Q(vendor_code__icontains=query_params.get("search")) |
-                    Q(fc_number__icontains=query_params.get("search"))
-                )
-            if queries:
-                expression = functools.reduce(operator.and_, queries)
-                q = q.filter(expression)
-
-        return q
+    queryset = FundsCommitmentHeader.objects.all()
+    search_terms = ('vendor_code__icontains', 'fc_number__icontains')
 
 
-class FundsCommitmentItemListAPIView(ExportModelMixin, ListAPIView):
+class FundsCommitmentItemListAPIView(QueryStringFilterMixin, ExportModelMixin, ListAPIView):
     """
     Returns a list of FundsCommitmentItems.
     """
@@ -280,6 +236,9 @@ class FundsCommitmentItemListAPIView(ExportModelMixin, ListAPIView):
         CSVRenderer,
         CSVFlatRenderer,
     )
+    queryset = FundsCommitmentItem.objects.all()
+    search_terms = ('fund_commitment__vendor_code__icontains', 'fund_commitment__fc_number__icontains',
+                    'fr_ref_number__icontains')
 
     def get_serializer_class(self):
         """
@@ -291,26 +250,8 @@ class FundsCommitmentItemListAPIView(ExportModelMixin, ListAPIView):
                 return FundsCommitmentItemExportFlatSerializer
         return super().get_serializer_class()
 
-    def get_queryset(self, format=None):
-        q = FundsCommitmentItem.objects.all()
-        query_params = self.request.query_params
 
-        if query_params:
-            queries = []
-            if "search" in query_params.keys():
-                queries.append(
-                    Q(fund_commitment__vendor_code__icontains=query_params.get("search")) |
-                    Q(fund_commitment__fc_number__icontains=query_params.get("search")) |
-                    Q(fr_ref_number__icontains=query_params.get("search"))
-                )
-            if queries:
-                expression = functools.reduce(operator.and_, queries)
-                q = q.filter(expression)
-
-        return q
-
-
-class GrantListAPIView(ExportModelMixin, ListAPIView):
+class GrantListAPIView(QueryStringFilterMixin, ExportModelMixin, ListAPIView):
     """
     Returns a list of Grants.
     """
@@ -322,6 +263,9 @@ class GrantListAPIView(ExportModelMixin, ListAPIView):
         CSVRenderer,
         CSVFlatRenderer,
     )
+    queryset = Grant.objects.all()
+    search_terms = ('fund_commitment__vendor_code__icontains', 'fund_commitment__fc_number__icontains',
+                    'fr_ref_number__icontains')
 
     def get_serializer_class(self):
         """
@@ -333,26 +277,8 @@ class GrantListAPIView(ExportModelMixin, ListAPIView):
                 return GrantExportFlatSerializer
         return super().get_serializer_class()
 
-    def get_queryset(self, format=None):
-        q = Grant.objects.all()
-        query_params = self.request.query_params
 
-        if query_params:
-            queries = []
-            if "search" in query_params.keys():
-                queries.append(
-                    Q(fund_commitment__vendor_code__icontains=query_params.get("search")) |
-                    Q(fund_commitment__fc_number__icontains=query_params.get("search")) |
-                    Q(fr_ref_number__icontains=query_params.get("search"))
-                )
-            if queries:
-                expression = functools.reduce(operator.and_, queries)
-                q = q.filter(expression)
-
-        return q
-
-
-class DonorListAPIView(ExportModelMixin, ListAPIView):
+class DonorListAPIView(QueryStringFilterMixin, ExportModelMixin, ListAPIView):
     """
     Returns a list of Donors.
     """
@@ -364,6 +290,8 @@ class DonorListAPIView(ExportModelMixin, ListAPIView):
         CSVRenderer,
         CSVFlatRenderer,
     )
+    queryset = Donor.objects.all()
+    search_terms = ('name__icontains', )
 
     def get_serializer_class(self):
         """
@@ -376,19 +304,3 @@ class DonorListAPIView(ExportModelMixin, ListAPIView):
             if query_params.get("format") == 'csv_flat':
                 return DonorExportFlatSerializer
         return super().get_serializer_class()
-
-    def get_queryset(self, format=None):
-        q = Donor.objects.all()
-        query_params = self.request.query_params
-
-        if query_params:
-            queries = []
-            if "search" in query_params.keys():
-                queries.append(
-                    Q(name__icontains=query_params.get("search"))
-                )
-            if queries:
-                expression = functools.reduce(operator.and_, queries)
-                q = q.filter(expression)
-
-        return q

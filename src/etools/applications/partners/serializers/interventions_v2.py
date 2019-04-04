@@ -77,6 +77,11 @@ class InterventionAmendmentCUSerializer(AttachmentSerializerMixin, serializers.M
                 raise ValidationError("Cannot add a new amendment while another amendment is in progress.")
             if data['intervention'].agreement.partner.blocked is True:
                 raise ValidationError("Cannot add a new amendment while the partner is blocked in Vision.")
+
+        if InterventionAmendment.OTHER in data["types"]:
+            if "other_description" not in data or not data["other_description"]:
+                raise ValidationError("Other description required, if type 'Other' selected.")
+
         return data
 
 
@@ -528,6 +533,26 @@ class InterventionCreateUpdateSerializer(AttachmentSerializerMixin, SnapshotMode
     def update(self, instance, validated_data):
         updated = super().update(instance, validated_data)
         return updated
+
+
+class InterventionStandardSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = Intervention
+        fields = ('pk', 'number', 'title', 'status')
+
+
+class InterventionMonitorSerializer(InterventionStandardSerializer):
+
+    pd_output_names = serializers.SerializerMethodField()
+
+    @staticmethod
+    def get_pd_output_names(obj):
+        return [ll.name for rl in obj.result_links.all() for ll in rl.ll_results.all()]
+
+    class Meta:
+        model = Intervention
+        fields = ('pk', 'number', 'title', 'status', 'pd_output_names', 'days_from_last_pv')
 
 
 class InterventionDetailSerializer(serializers.ModelSerializer):

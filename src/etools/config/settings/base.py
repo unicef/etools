@@ -186,7 +186,6 @@ SHARED_APPS = (
     'etools.applications.audit.purchase_order',
     'etools.applications.EquiTrack',
     'etools.applications.tpm.tpmpartners',
-    'etools.applications.utils.common',
     'waffle',
     'etools.applications.permissions2',
     'unicef_notification',

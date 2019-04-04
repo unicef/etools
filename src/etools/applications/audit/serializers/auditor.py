@@ -40,15 +40,14 @@ class AuditorStaffMemberSerializer(BaseStaffMemberSerializer):
         validated_data = super().validate(attrs)
         user_pk = validated_data.pop('user_pk', None)
 
-        if not self.instance:
-            if user_pk:
-                if hasattr(user_pk, 'purchase_order_auditorstaffmember'):
-                    raise serializers.ValidationError({'user': _('User is already assigned to auditor firm.')})
-
+        if user_pk:
+            if hasattr(user_pk, 'purchase_order_auditorstaffmember'):
+                firm = user_pk.purchase_order_auditorstaffmember.auditor_firm
+                raise serializers.ValidationError({'user': _('User is already assigned to ') + str(firm)})
+            if not self.instance:
                 validated_data['user'] = user_pk
-
-            if 'user' not in validated_data and not user_pk:
-                raise serializers.ValidationError({'user': _('This field is required.')})
+        elif 'user' not in validated_data:
+            raise serializers.ValidationError({'user': _('This field is required.')})
 
         return validated_data
 
@@ -113,15 +112,23 @@ class PurchaseOrderSerializer(
 
 class AuditUserSerializer(UserSerializer):
     auditor_firm = serializers.SerializerMethodField()
+    auditor_firm_description = serializers.SerializerMethodField()
     hidden = serializers.SerializerMethodField()
     staff_member_id = serializers.ReadOnlyField(source='purchase_order_auditorstaffmember.id')
 
     class Meta(UserSerializer.Meta):
-        fields = UserSerializer.Meta.fields + ['id', 'auditor_firm', 'hidden', 'staff_member_id', ]
+        fields = UserSerializer.Meta.fields + ['id', 'auditor_firm', 'auditor_firm_description', 'hidden',
+                                               'staff_member_id', ]
 
     def get_auditor_firm(self, obj):
         if hasattr(obj, 'purchase_order_auditorstaffmember'):
             return obj.purchase_order_auditorstaffmember.auditor_firm.id
+        return
+
+    def get_auditor_firm_description(self, obj):
+        if hasattr(obj, 'purchase_order_auditorstaffmember'):
+            firm = obj.purchase_order_auditorstaffmember.auditor_firm
+            return f'{firm.name} [{firm.vendor_number}]'
         return
 
     def get_hidden(self, obj):

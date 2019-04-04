@@ -95,7 +95,7 @@ class Engagement(InheritedModelMixin, TimeStampedModel, models.Model):
         on_delete=models.CASCADE,
     )
     po_item = models.ForeignKey(
-        PurchaseOrderItem, verbose_name=_('PO Item Number'), null=True,
+        PurchaseOrderItem, verbose_name=_('PO Item Number'), null=True, blank=True,
         on_delete=models.CASCADE,
     )
 
@@ -725,9 +725,9 @@ class KeyInternalControl(models.Model):
         on_delete=models.CASCADE,
     )
 
-    recommendation = models.TextField(verbose_name=_('Recommendation'), blank=True)
-    audit_observation = models.TextField(verbose_name=_('Audit Observation'), blank=True)
-    ip_response = models.TextField(verbose_name=_('IP response'), blank=True)
+    recommendation = models.TextField(verbose_name=_('Recommendation'))
+    audit_observation = models.TextField(verbose_name=_('Audit Observation'))
+    ip_response = models.TextField(verbose_name=_('IP response'))
 
     class Meta:
         ordering = ('id', )

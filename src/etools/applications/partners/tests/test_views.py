@@ -1417,7 +1417,7 @@ class TestInterventionViews(BaseTenantTestCase):
         )
 
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
-        self.assertIn('Document type PD or SHPD can only be associated with a PCA agreement.', response.data)
+        self.assertIn('Document type PD or HPD can only be associated with a PCA agreement.', response.data)
 
     def test_intervention_validation_dates(self):
         today = datetime.date.today()

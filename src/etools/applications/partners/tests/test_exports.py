@@ -6,16 +6,16 @@ from rest_framework import status
 from tablib.core import Dataset
 
 from etools.applications.EquiTrack.tests.cases import BaseTenantTestCase
-from etools.applications.partners.models import PartnerOrganization, PartnerType
+from etools.applications.partners.models import Intervention, PartnerOrganization, PartnerType
 from etools.applications.partners.tests.factories import (
     AgreementFactory,
     CountryProgrammeFactory,
     InterventionBudgetFactory,
     InterventionFactory,
+    InterventionPlannedVisitsFactory,
     PartnerFactory,
     PartnerPlannedVisitsFactory,
     PartnerStaffFactory,
-    InterventionPlannedVisitsFactory
 )
 from etools.applications.reports.models import ResultType
 from etools.applications.reports.tests.factories import ResultFactory
@@ -65,7 +65,7 @@ class TestModelExport(BaseTenantTestCase):
         AgreementFactory(signed_by_unicef_date=datetime.date.today())
         cls.intervention = InterventionFactory(
             agreement=cls.agreement,
-            document_type='SHPD',
+            document_type=Intervention.SHPD,
             status='draft',
             start=datetime.date.today(),
             end=datetime.date.today(),

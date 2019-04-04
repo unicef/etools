@@ -3,7 +3,6 @@ from django.contrib.auth import get_user_model
 
 from rest_framework import serializers
 
-from etools.applications.t2f.serializers.user_data import T2FUserDataSerializer
 from etools.applications.users.models import Country, UserProfile
 from etools.applications.users.serializers import GroupSerializer, SimpleCountrySerializer
 
@@ -81,7 +80,6 @@ class ProfileRetrieveUpdateSerializer(serializers.ModelSerializer):
     groups = GroupSerializer(source="user.groups", read_only=True, many=True)
     supervisees = serializers.PrimaryKeyRelatedField(source='user.supervisee', many=True, read_only=True)
     name = serializers.CharField(source='user.get_full_name', read_only=True)
-    t2f = T2FUserDataSerializer(source='user')
     last_login = serializers.CharField(source='user.last_login', read_only=True)
     is_superuser = serializers.CharField(source='user.is_superuser', read_only=True)
     username = serializers.CharField(source='user.username', read_only=True)
