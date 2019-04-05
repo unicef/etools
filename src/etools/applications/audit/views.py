@@ -504,6 +504,7 @@ class AuditorStaffMembersViewSet(
         if not instance.user.profile.country:
             instance.user.profile.country = self.request.user.profile.country
         instance.user.profile.countries_available.add(self.request.user.profile.country)
+        instance.user.groups.add(Auditor.as_group())
         instance.user.profile.save()
 
     def perform_update(self, serializer):
