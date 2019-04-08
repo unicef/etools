@@ -1,12 +1,20 @@
-from raven.contrib.django.raven_compat import DjangoClient
+import sentry_sdk
+from sentry_sdk import configure_scope
+from sentry_sdk.integrations.celery import CeleryIntegration
+from sentry_sdk.integrations.django import DjangoIntegration
 
+from django.conf import settings
 
-class EToolsSentryClient(DjangoClient):
+if settings.SENTRY_DSN:
+    def _before_send(event):
+        if getattr(event.request, 'tenant', None):
+            with configure_scope() as scope:
+                scope.set_extra("tenant", event.request.tenant.name)
+        return event
 
-    def get_data_from_request(self, request):
-        result = super().get_data_from_request(request)
-        if getattr(request, 'tenant', None):
-            if 'extra' not in result:
-                result['extra'] = {}
-            result['extra']['tenant'] = request.tenant.name
-        return result
+    sentry_sdk.init(
+        dsn=settings.SENTRY_DSN,
+        send_default_pii=True,
+        integrations=[DjangoIntegration(), CeleryIntegration()],
+        before_send=_before_send
+    )
