@@ -1,5 +1,5 @@
-from django.urls import reverse
 from django.test import Client
+from django.urls import reverse
 
 from mock import Mock, patch
 from rest_framework import status
