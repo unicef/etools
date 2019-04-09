@@ -2,6 +2,7 @@
 
 from django.db import migrations
 
+
 def update_internal_prc_review_file_type(apps, schema_editor):
     AttachmentFileType = apps.get_model("unicef_attachments", "filetype")
     try:

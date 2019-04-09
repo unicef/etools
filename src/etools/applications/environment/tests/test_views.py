@@ -1,13 +1,13 @@
 
 import json
 
-from django.urls import reverse
 from django.db import connection
+from django.urls import reverse
 
 from rest_framework import status
 
-from etools.applications.environment.tests.factories import TenantFlagFactory, TenantSwitchFactory
 from etools.applications.core.tests.cases import BaseTenantTestCase
+from etools.applications.environment.tests.factories import TenantFlagFactory, TenantSwitchFactory
 from etools.applications.users.tests.factories import CountryFactory, UserFactory
 
 

@@ -34,11 +34,7 @@ from etools.applications.partners.tests.factories import (
 )
 from etools.applications.partners.views.partner_organization_v2 import PartnerOrganizationAddView
 from etools.applications.reports.models import ResultType
-from etools.applications.reports.tests.factories import (
-    CountryProgrammeFactory,
-    ResultFactory,
-    ResultTypeFactory,
-)
+from etools.applications.reports.tests.factories import CountryProgrammeFactory, ResultFactory, ResultTypeFactory
 from etools.applications.t2f.tests.factories import TravelActivityFactory
 from etools.applications.users.tests.factories import GroupFactory, UserFactory
 

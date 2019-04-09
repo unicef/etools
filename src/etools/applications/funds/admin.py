@@ -1,7 +1,13 @@
 from django.contrib import admin
 
-from etools.applications.funds.models import (Donor, FundsCommitmentHeader, FundsCommitmentItem,
-                                              FundsReservationHeader, FundsReservationItem, Grant,)
+from etools.applications.funds.models import (
+    Donor,
+    FundsCommitmentHeader,
+    FundsCommitmentItem,
+    FundsReservationHeader,
+    FundsReservationItem,
+    Grant,
+)
 
 
 class GrantAdmin(admin.ModelAdmin):

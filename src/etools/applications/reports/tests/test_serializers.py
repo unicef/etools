@@ -1,20 +1,28 @@
 
-from django.urls import reverse
 from django.test import RequestFactory
+from django.urls import reverse
 
 from rest_framework.exceptions import ValidationError
-
-from etools.applications.core.tests.cases import BaseTenantTestCase
 from unicef_locations.tests.factories import LocationFactory
 
+from etools.applications.core.tests.cases import BaseTenantTestCase
 from etools.applications.partners.models import Intervention
 from etools.applications.partners.tests.factories import InterventionFactory, InterventionResultLinkFactory
 from etools.applications.reports.models import AppliedIndicator, IndicatorBlueprint, LowerResult
-from etools.applications.reports.serializers.v2 import (AppliedIndicatorSerializer, DisaggregationSerializer,
-                                                        LowerResultCUSerializer, LowerResultSimpleCUSerializer,)
-from etools.applications.reports.tests.factories import (AppliedIndicatorFactory, DisaggregationFactory,
-                                                         DisaggregationValueFactory, IndicatorBlueprintFactory,
-                                                         LowerResultFactory, SectionFactory,)
+from etools.applications.reports.serializers.v2 import (
+    AppliedIndicatorSerializer,
+    DisaggregationSerializer,
+    LowerResultCUSerializer,
+    LowerResultSimpleCUSerializer,
+)
+from etools.applications.reports.tests.factories import (
+    AppliedIndicatorFactory,
+    DisaggregationFactory,
+    DisaggregationValueFactory,
+    IndicatorBlueprintFactory,
+    LowerResultFactory,
+    SectionFactory,
+)
 
 
 class DisaggregationTest(BaseTenantTestCase):

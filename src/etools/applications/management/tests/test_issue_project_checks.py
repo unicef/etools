@@ -8,9 +8,13 @@ from etools.applications.core.tests.cases import BaseTenantTestCase
 from etools.applications.management.issues import checks
 from etools.applications.management.models import FlaggedIssue
 from etools.applications.partners.models import Agreement, Intervention, InterventionResultLink
-from etools.applications.partners.tests.factories import (AgreementAmendmentFactory, AgreementFactory,
-                                                          CountryProgrammeFactory, InterventionAmendmentFactory,
-                                                          InterventionFactory,)
+from etools.applications.partners.tests.factories import (
+    AgreementAmendmentFactory,
+    AgreementFactory,
+    CountryProgrammeFactory,
+    InterventionAmendmentFactory,
+    InterventionFactory,
+)
 from etools.applications.partners.validation.interventions import InterventionValid
 from etools.applications.reports.tests.factories import ResultFactory
 from etools.applications.users.tests.factories import UserFactory

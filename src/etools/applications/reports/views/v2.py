@@ -32,10 +32,12 @@ from etools.applications.reports.models import (
     CountryProgramme,
     Disaggregation,
     Indicator,
+    IndicatorBlueprint,
     LowerResult,
     Result,
+    ResultType,
     SpecialReportingRequirement,
-    ResultType, IndicatorBlueprint)
+)
 from etools.applications.reports.permissions import PMEPermission
 from etools.applications.reports.serializers.exports import (
     AppliedIndicatorExportFlatSerializer,

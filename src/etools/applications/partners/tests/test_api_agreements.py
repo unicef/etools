@@ -1,10 +1,10 @@
 import datetime
 import json
-import mock
 
 from django.test import SimpleTestCase
 from django.urls import reverse
 
+import mock
 from rest_framework import status
 from unicef_attachments.models import Attachment
 from unicef_snapshot.models import Activity

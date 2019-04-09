@@ -1,7 +1,6 @@
 
 from django.test import SimpleTestCase
 
-
 from etools.applications.firms.utils import generate_username
 
 

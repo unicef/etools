@@ -2,6 +2,7 @@ from __future__ import unicode_literals
 
 from django.db import migrations, models
 
+
 def populate_agreement_ref_num(apps, schema):
     import re
     from django.db import IntegrityError

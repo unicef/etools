@@ -1,7 +1,14 @@
 from django.conf.urls import url
 
-from etools.applications.users.views_v2 import (ChangeUserCountryView, CountriesViewSet, CountryView, MyProfileAPIView,
-                                                StaffUsersView, UserAuthAPIView, UsersDetailAPIView,)
+from etools.applications.users.views_v2 import (
+    ChangeUserCountryView,
+    CountriesViewSet,
+    CountryView,
+    MyProfileAPIView,
+    StaffUsersView,
+    UserAuthAPIView,
+    UsersDetailAPIView,
+)
 
 app_name = 'users'
 urlpatterns = (

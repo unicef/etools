@@ -17,7 +17,7 @@ from etools.applications.reports.models import (
     ResultType,
     SpecialReportingRequirement,
 )
-from etools.applications.reports.validators import value_numbers, value_none_or_numbers
+from etools.applications.reports.validators import value_none_or_numbers, value_numbers
 
 
 class MinimalOutputListSerializer(serializers.ModelSerializer):

@@ -6,7 +6,6 @@ from collections import namedtuple
 from django.conf import settings
 from django.core.exceptions import ImproperlyConfigured
 from django.db.models import Model
-
 from django.utils.module_loading import import_string
 
 from etools.applications.environment.models import IssueCheckConfig

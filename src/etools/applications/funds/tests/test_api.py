@@ -1,17 +1,21 @@
 # Python imports
 
-from django.urls import reverse
 from django.test import SimpleTestCase
-
+from django.urls import reverse
 
 from rest_framework import status
 from tablib.core import Dataset
 
 from etools.applications.core.tests.cases import BaseTenantTestCase
 from etools.applications.core.tests.mixins import URLAssertionMixin
-from etools.applications.funds.tests.factories import (DonorFactory, FundsCommitmentHeaderFactory,
-                                                       FundsCommitmentItemFactory, FundsReservationHeaderFactory,
-                                                       FundsReservationItemFactory, GrantFactory,)
+from etools.applications.funds.tests.factories import (
+    DonorFactory,
+    FundsCommitmentHeaderFactory,
+    FundsCommitmentItemFactory,
+    FundsReservationHeaderFactory,
+    FundsReservationItemFactory,
+    GrantFactory,
+)
 from etools.applications.users.tests.factories import UserFactory
 
 
