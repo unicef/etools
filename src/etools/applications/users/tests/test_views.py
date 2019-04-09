@@ -7,15 +7,12 @@ from django.contrib.auth import get_user_model
 from django.contrib.auth.models import Permission
 from django.urls import reverse
 
-
 from rest_framework import status
-from django_tenants.test.client import TenantClient
 
 from etools.applications.EquiTrack.tests.cases import BaseTenantTestCase
 from etools.applications.publics.tests.factories import PublicsBusinessAreaFactory
 from etools.applications.users.models import Group, UserProfile
-from etools.applications.users.tests.factories import (CountryFactory, GroupFactory,
-                                                       OfficeFactory, UserFactory,)
+from etools.applications.users.tests.factories import CountryFactory, GroupFactory, OfficeFactory, UserFactory
 
 
 class TestUserAuthAPIView(BaseTenantTestCase):
@@ -292,30 +289,6 @@ class TestUsersDetailAPIView(BaseTenantTestCase):
         )
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response.data, {})
-
-
-class TestProfileEdit(BaseTenantTestCase):
-    @classmethod
-    def setUpTestData(cls):
-        cls.client = TenantClient(cls.tenant)
-
-    def setUp(self):
-        super().setUp()
-        self.url = reverse("users:user_profile")
-
-    def test_get_non_staff(self):
-        user = UserFactory()
-        self.client.force_login(user)
-        response = self.client.get(self.url)
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertTemplateUsed(response, "users/profile.html")
-
-    def test_get_staff(self):
-        user = UserFactory(is_staff=True)
-        self.client.force_login(user)
-        response = self.client.get(self.url)
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertTemplateUsed(response, "users/profile.html")
 
 
 class TestGroupViewSet(BaseTenantTestCase):
