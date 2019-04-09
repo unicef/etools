@@ -16,6 +16,7 @@ if settings.SENTRY_DSN:
 
     sentry_sdk.init(
         dsn=settings.SENTRY_DSN,
+        # by default this is False, must be set to True so the library attaches the request data to the event
         send_default_pii=True,
         integrations=[DjangoIntegration(), CeleryIntegration()],
         before_send=_before_send,
