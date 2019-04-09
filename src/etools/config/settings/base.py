@@ -268,7 +268,7 @@ AUTHENTICATION_BACKENDS = (
 AUTH_USER_MODEL = 'users.User'
 LOGIN_REDIRECT_URL = '/'
 
-HOST = get_from_secrets_or_env('DJANGO_ALLOWED_HOST', 'localhost:8000')
+HOST = get_from_secrets_or_env('DJANGO_ALLOWED_HOST', 'http://localhost:8000/')
 LOGIN_URL = LOGOUT_REDIRECT_URL = get_from_secrets_or_env('LOGIN_URL', '/landing/')
 
 # CONTRIB: GIS (GeoDjango)
@@ -391,8 +391,6 @@ TENANT_DOMAIN_MODEL = "EquiTrack.Domain"
 # don't call set search_path so much
 # https://django-tenant-schemas.readthedocs.io/en/latest/use.html#performance-considerations
 TENANT_LIMIT_SET_CALLS = True
-
-HOST = get_from_secrets_or_env('DJANGO_ALLOWED_HOST', 'localhost:8000')
 
 # django-rest-framework-jwt: http://getblimp.github.io/django-rest-framework-jwt/
 JWT_AUTH = {
