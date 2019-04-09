@@ -100,6 +100,7 @@ class TravelActivitySerializer(PermissionBasedModelSerializer):
         required=False
     )
     action_points = ActionPointBaseSerializer(source='actionpoint_set', many=True, read_only=True, required=False)
+    date = serializers.DateTimeField(required=True)
 
     class Meta:
         model = TravelActivity
@@ -220,14 +221,14 @@ class TravelDetailsSerializer(PermissionBasedModelSerializer):
                 travel_q = Q(traveler=traveler)
                 travel_q &= ~Q(status__in=[Travel.PLANNED, Travel.CANCELLED])
                 travel_q &= Q(
-                    start_date__date__range=(
-                        start_date.date(),
-                        end_date.date() - datetime.timedelta(days=1),
+                    start_date__range=(
+                        start_date,
+                        end_date - datetime.timedelta(days=1),
                     )
                 ) | Q(
-                    end_date__date__range=(
-                        start_date.date() + datetime.timedelta(days=1),
-                        end_date.date(),
+                    end_date__range=(
+                        start_date + datetime.timedelta(days=1),
+                        end_date,
                     )
                 )
 

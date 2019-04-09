@@ -1854,7 +1854,7 @@ class Intervention(TimeStampedModel):
             travels__status=Travel.COMPLETED,
             date__isnull=False,
         ).order_by('date').last()
-        return (timezone.now() - ta.date).days if ta else '-'
+        return (datetime.date.today() - ta.date).days if ta else '-'
 
     @property
     def cp_output_names(self):
@@ -2112,12 +2112,12 @@ class InterventionAmendment(TimeStampedModel):
     TYPE_NO_COST = 'no_cost'
 
     AMENDMENT_TYPES = Choices(
-        (TYPE_ADMIN_ERROR, 'Administrative error (correction)'),
-        (TYPE_BUDGET_LTE_20, 'Budget <= 20%'),
-        (TYPE_BUDGET_GT_20, 'Budget > 20%'),
-        (TYPE_CHANGE, 'Changes to planned results'),
-        (TYPE_NO_COST, 'No cost extension'),
-        (OTHER, 'Other')
+        (TYPE_ADMIN_ERROR, 'Type 1: Administrative error (correction)'),
+        (TYPE_BUDGET_LTE_20, 'Type 2: Budget <= 20%'),
+        (TYPE_BUDGET_GT_20, 'Type 3: Budget > 20%'),
+        (TYPE_CHANGE, 'Type 4: Changes to planned results'),
+        (TYPE_NO_COST, 'Type 5: No cost extension'),
+        (OTHER, 'Type 6: Other')
     )
     AMENDMENT_TYPES_OLD = [
         (DATES, 'Dates'),
