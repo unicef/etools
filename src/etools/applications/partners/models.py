@@ -1854,7 +1854,7 @@ class Intervention(TimeStampedModel):
             travels__status=Travel.COMPLETED,
             date__isnull=False,
         ).order_by('date').last()
-        return (timezone.now() - ta.date).days if ta else '-'
+        return (datetime.date.today() - ta.date).days if ta else '-'
 
     @property
     def cp_output_names(self):
