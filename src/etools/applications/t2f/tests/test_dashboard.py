@@ -1,4 +1,3 @@
-
 import json
 
 from django.urls import reverse
@@ -76,16 +75,16 @@ class TravelActivityList(BaseTenantTestCase):
                                supervisor=self.unicef_staff)
         data = {'itinerary': [{'origin': 'Berlin',
                                'destination': 'Budapest',
-                               'departure_date': '2017-04-14T17:06:55.821490',
-                               'arrival_date': '2017-04-15T17:06:55.821490',
+                               'departure_date': '2017-04-14',
+                               'arrival_date': '2017-04-15',
                                'dsa_region': dsa_region.id,
                                'overnight_travel': False,
                                'mode_of_travel': ModeOfTravel.RAIL,
                                'airlines': []},
                               {'origin': 'Budapest',
                                'destination': 'Berlin',
-                               'departure_date': '2017-05-20T12:06:55.821490',
-                               'arrival_date': '2017-05-21T12:06:55.821490',
+                               'departure_date': '2017-05-20',
+                               'arrival_date': '2017-05-21',
                                'dsa_region': dsa_region.id,
                                'overnight_travel': False,
                                'mode_of_travel': ModeOfTravel.RAIL,
