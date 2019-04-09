@@ -140,8 +140,8 @@ class Travel(models.Model):
         'reports.Sector', null=True, blank=True, related_name='+', verbose_name=_('Section'),
         on_delete=models.CASCADE,
     )
-    start_date = models.DateTimeField(null=True, blank=True, verbose_name=_('Start Date'))
-    end_date = models.DateTimeField(null=True, blank=True, verbose_name=_('End Date'))
+    start_date = models.DateField(null=True, blank=True, verbose_name=_('Start Date'))
+    end_date = models.DateField(null=True, blank=True, verbose_name=_('End Date'))
     purpose = models.CharField(max_length=500, default='', blank=True, verbose_name=_('Purpose'))
     additional_note = models.TextField(default='', blank=True, verbose_name=_('Additional Note'))
     international_travel = models.NullBooleanField(default=False, null=True, blank=True,
@@ -182,17 +182,17 @@ class Travel(models.Model):
 
     def check_trip_dates(self):
         if self.start_date and self.end_date:
-            start_date = self.start_date.date()
-            end_date = self.end_date.date()
+            start_date = self.start_date
+            end_date = self.end_date
             travel_q = Q(traveler=self.traveler)
             travel_q &= ~Q(status__in=[Travel.PLANNED, Travel.CANCELLED])
             travel_q &= Q(
-                start_date__date__range=(
+                start_date__range=(
                     start_date,
                     end_date - datetime.timedelta(days=1),
                 )
             ) | Q(
-                end_date__date__range=(
+                end_date__range=(
                     start_date + datetime.timedelta(days=1),
                     end_date,
                 )
@@ -345,7 +345,7 @@ class TravelActivity(models.Model):
     locations = models.ManyToManyField('locations.Location', related_name='+', verbose_name=_('Locations'))
     primary_traveler = models.ForeignKey(
         settings.AUTH_USER_MODEL, verbose_name=_('Primary Traveler'), on_delete=models.CASCADE)
-    date = models.DateTimeField(null=True, blank=True, verbose_name=_('Date'))
+    date = models.DateField(null=True, blank=True, verbose_name=_('Date'))
 
     class Meta:
         verbose_name_plural = _("Travel Activities")
@@ -393,8 +393,8 @@ class ItineraryItem(models.Model):
     )
     origin = models.CharField(max_length=255, verbose_name=_('Origin'))
     destination = models.CharField(max_length=255, verbose_name=_('Destination'))
-    departure_date = models.DateTimeField(verbose_name=_('Departure Date'))
-    arrival_date = models.DateTimeField(verbose_name=_('Arrival Date'))
+    departure_date = models.DateField(verbose_name=_('Departure Date'))
+    arrival_date = models.DateField(verbose_name=_('Arrival Date'))
     dsa_region = models.ForeignKey(
         'publics.DSARegion', related_name='+', null=True, blank=True,
         verbose_name=_('DSA Region'),
