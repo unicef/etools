@@ -163,7 +163,6 @@ SHARED_APPS = (
     'rest_framework_gis',
     'rest_framework_swagger',
     'rest_framework.authtoken',
-    'drfpasswordless',
     'import_export',
     'gunicorn',
     'post_office',
@@ -178,7 +177,6 @@ SHARED_APPS = (
     'social_django',
     'etools.applications.vision',
     'etools.applications.publics',
-    # you must list the app where your tenant model resides in
     'etools.applications.users',
     'django_filters',
     'etools.applications.environment',
