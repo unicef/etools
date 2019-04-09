@@ -1,7 +1,7 @@
 from mock import Mock
 
+from etools.applications.EquiTrack.templatetags.etools import show_country_select
 from etools.applications.EquiTrack.tests.cases import BaseTenantTestCase
-from etools.applications.partners.templatetags import userprofile_tags as tags
 from etools.applications.users.tests.factories import ProfileFactory
 
 
@@ -13,10 +13,10 @@ class TestShowCountrySelect(BaseTenantTestCase):
         cls.profile.countries_available.add(cls.country)
 
     def test_no_profile(self):
-        self.assertEqual(tags.show_country_select({}, None), "")
+        self.assertEqual(show_country_select({}, None), "")
 
     def test_country_single(self):
-        res = tags.show_country_select({}, self.profile)
+        res = show_country_select({}, self.profile)
         self.assertEqual(
             res,
             '<select id="country_selection">'
@@ -28,7 +28,7 @@ class TestShowCountrySelect(BaseTenantTestCase):
 
     def test_country_opts(self):
         mock_opts = Mock(app_label="reports")
-        res = tags.show_country_select({"opts": mock_opts}, self.profile)
+        res = show_country_select({"opts": mock_opts}, self.profile)
         self.assertEqual(
             res,
             '<select id="country_selection">'
