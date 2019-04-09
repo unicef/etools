@@ -4,7 +4,6 @@ from django.urls import reverse
 
 from etools.applications.core.tests.cases import BaseTenantTestCase
 from etools.applications.publics.models import TravelExpenseType
-from etools.applications.EquiTrack.tests.cases import BaseTenantTestCase
 from etools.applications.publics.tests.factories import PublicsAirlineCompanyFactory, PublicsTravelExpenseTypeFactory
 from etools.applications.users.tests.factories import UserFactory
 from etools.libraries.djangolib.models import EPOCH_ZERO
