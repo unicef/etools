@@ -47,10 +47,6 @@ class UsersDetailAPIView(v1.UsersDetailAPIView):
     """Stub for UsersDetailAPIView"""
 
 
-class ProfileEdit(v1.ProfileEdit):
-    """Stub for ProfileEdit"""
-
-
 class GroupViewSet(v1.GroupViewSet):
     """Stub for GroupViewSet"""
 
