@@ -1,9 +1,10 @@
 from django.urls import reverse
+
 from rest_framework import status
+from unicef_locations.tests.factories import LocationFactory
 
 from etools.applications.EquiTrack.tests.cases import BaseTenantTestCase
 from etools.applications.users.tests.factories import UserFactory
-from unicef_locations.tests.factories import LocationFactory
 
 
 class TestLocationViews(BaseTenantTestCase):

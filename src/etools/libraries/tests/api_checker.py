@@ -1,6 +1,6 @@
 import datetime
 
-from drf_api_checker.unittest import ApiCheckerMixin as BaseApiCheckerMixin, ApiCheckerBase
+from drf_api_checker.unittest import ApiCheckerBase, ApiCheckerMixin as BaseApiCheckerMixin
 from rest_framework.response import Response
 
 from etools.applications.users.tests.factories import UserFactory
