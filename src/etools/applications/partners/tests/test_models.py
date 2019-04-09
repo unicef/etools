@@ -472,7 +472,6 @@ class TestPartnerOrganizationModel(BaseTenantTestCase):
         self.assertEqual(self.partner_organization.hact_values['programmatic_visits']['completed']['total'], 0)
         visit = TPMVisitFactory(
             status=TPMVisit.UNICEF_APPROVED,
-            date_of_unicef_approved=datetime.datetime(datetime.datetime.today().year, 5, 1)
         )
         visit2 = TPMVisitFactory(
             status=TPMVisit.UNICEF_APPROVED,
@@ -481,21 +480,31 @@ class TestPartnerOrganizationModel(BaseTenantTestCase):
         TPMActivityFactory(
             tpm_visit=visit,
             partner=self.partner_organization,
+            is_pv=True,
+            date=datetime.datetime(datetime.datetime.today().year, 5, 1)
         )
         TPMActivityFactory(
             tpm_visit=visit,
             partner=self.partner_organization,
+            is_pv=True,
+            date=datetime.datetime(datetime.datetime.today().year, 9, 1)
+        )
+        TPMActivityFactory(
+            tpm_visit=visit,
+            partner=self.partner_organization,
+            date=datetime.datetime(datetime.datetime.today().year, 5, 1)
         )
         TPMActivityFactory(
             tpm_visit=visit2,
             partner=self.partner_organization,
+            date=datetime.datetime(datetime.datetime.today().year, 5, 1)
         )
 
         self.partner_organization.programmatic_visits()
-        self.assertEqual(self.partner_organization.hact_values['programmatic_visits']['completed']['total'], 1)
+        self.assertEqual(self.partner_organization.hact_values['programmatic_visits']['completed']['total'], 2)
         self.assertEqual(self.partner_organization.hact_values['programmatic_visits']['completed']['q1'], 0)
         self.assertEqual(self.partner_organization.hact_values['programmatic_visits']['completed']['q2'], 1)
-        self.assertEqual(self.partner_organization.hact_values['programmatic_visits']['completed']['q3'], 0)
+        self.assertEqual(self.partner_organization.hact_values['programmatic_visits']['completed']['q3'], 1)
         self.assertEqual(self.partner_organization.hact_values['programmatic_visits']['completed']['q4'], 0)
 
     @freeze_time("2013-12-26")
