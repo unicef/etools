@@ -268,16 +268,24 @@ class TravelDetails(URLAssertionMixin, BaseTenantTestCase):
         location_2 = LocationFactory()
         location_3 = LocationFactory()
 
-        data = {'activities': [{'is_primary_traveler': True,
-                                'locations': [location.id, location_2.id]}],
-                'traveler': self.traveler.id}
+        data = {
+            'activities': [{
+                'is_primary_traveler': True,
+                'locations': [location.id, location_2.id],
+                'date': self.travel.start_date,
+            }],
+            'traveler': self.traveler.id,
+        }
         response = self.forced_auth_req('post', reverse('t2f:travels:list:index'), data=data,
                                         user=self.traveler)
         response_json = json.loads(response.rendered_content)
 
         data = response_json
-        data['activities'].append({'locations': [location_3.id],
-                                   'is_primary_traveler': True})
+        data['activities'].append({
+            'locations': [location_3.id],
+            'is_primary_traveler': True,
+            'date': self.travel.start_date,
+        })
         response = self.forced_auth_req('patch', reverse('t2f:travels:details:index',
                                                          kwargs={'travel_pk': response_json['id']}),
                                         data=data, user=self.traveler)
@@ -295,7 +303,8 @@ class TravelDetails(URLAssertionMixin, BaseTenantTestCase):
                 'is_primary_traveler': True,
                 'locations': [location.id, location_2.id],
                 'partner': PartnerFactory(partner_type=PartnerType.GOVERNMENT).id,
-                'travel_type': TravelType.PROGRAMME_MONITORING
+                'travel_type': TravelType.PROGRAMME_MONITORING,
+                'date': self.travel.start_date,
             }],
             'traveler': self.traveler.id
         }
@@ -442,7 +451,7 @@ class TravelDetails(URLAssertionMixin, BaseTenantTestCase):
 
     def test_activity_locations(self):
         data = {'itinerary': [],
-                'activities': [{}],
+                'activities': [{'date': self.travel.start_date}],
                 'traveler': self.traveler.id}
         response = self.forced_auth_req('post', reverse('t2f:travels:list:index'), data=data,
                                         user=self.unicef_staff, expected_status_code=None)
@@ -467,8 +476,11 @@ class TravelDetails(URLAssertionMixin, BaseTenantTestCase):
                                'departure_date': '2017-01-20T23:00:01.892Z',
                                'arrival_date': '2017-01-27T23:00:01.905Z',
                                'mode_of_travel': 'car'}],
-                'activities': [{'is_primary_traveler': True,
-                                'locations': []}],
+                'activities': [{
+                    'is_primary_traveler': True,
+                    'locations': [],
+                    'date': self.travel.start_date,
+                }],
                 'action_points': [],
                 'ta_required': True,
                 'international_travel': False,
@@ -509,7 +521,8 @@ class TravelDetails(URLAssertionMixin, BaseTenantTestCase):
             'activities': [
                 {
                     'is_primary_traveler': True,
-                    'locations': []
+                    'locations': [],
+                    'date': self.travel.start_date,
                 }
             ],
             'action_points': [],
@@ -525,10 +538,38 @@ class TravelDetails(URLAssertionMixin, BaseTenantTestCase):
         itinerary_origin_destination_expectation = ['Origin should match with the previous destination']
         self.assertEqual(response_json['itinerary'], itinerary_origin_destination_expectation)
 
+    def test_activity_date_required(self):
+        data = {'itinerary': [],
+                'activities': [{
+                    'is_primary_traveler': True,
+                    'locations': [],
+                }],
+                'action_points': [],
+                'ta_required': False,
+                'international_travel': False,
+                'traveler': self.traveler.id,
+                'mode_of_travel': []}
+
+        # Check only if 200
+        response = self.forced_auth_req(
+            'post',
+            reverse('t2f:travels:list:index'),
+            data=data,
+            user=self.unicef_staff,
+        )
+        self.assertEqual(response.status_code, 400)
+        response_json = json.loads(response.rendered_content)
+        self.assertEqual(response_json, {
+            'activities': [{'date': ['This field is required.']}]
+        })
+
     def test_ta_not_required(self):
         data = {'itinerary': [],
-                'activities': [{'is_primary_traveler': True,
-                                'locations': []}],
+                'activities': [{
+                    'is_primary_traveler': True,
+                    'locations': [],
+                    'date': self.travel.start_date,
+                }],
                 'action_points': [],
                 'ta_required': False,
                 'international_travel': False,
@@ -544,8 +585,11 @@ class TravelDetails(URLAssertionMixin, BaseTenantTestCase):
         primary_traveler = UserFactory()
 
         data = {'itinerary': [],
-                'activities': [{'is_primary_traveler': False,
-                                'locations': []}],
+                'activities': [{
+                    'is_primary_traveler': False,
+                    'locations': [],
+                    'date': self.travel.start_date,
+                }],
                 'action_points': [],
                 'ta_required': False,
                 'international_travel': False,
@@ -558,9 +602,12 @@ class TravelDetails(URLAssertionMixin, BaseTenantTestCase):
         self.assertEqual(response_json, {'activities': [{'primary_traveler': ['This field is required.']}]})
 
         data = {'itinerary': [],
-                'activities': [{'is_primary_traveler': False,
-                                'primary_traveler': primary_traveler.id,
-                                'locations': []}],
+                'activities': [{
+                    'is_primary_traveler': False,
+                    'primary_traveler': primary_traveler.id,
+                    'locations': [],
+                    'date': self.travel.start_date,
+                }],
                 'action_points': [],
                 'ta_required': False,
                 'international_travel': False,
