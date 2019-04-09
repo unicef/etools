@@ -3,9 +3,9 @@ from django.test import RequestFactory
 
 import mock
 
-from etools.libraries.tenant_support import utils
 from etools.applications.EquiTrack.tests.cases import BaseTenantTestCase
 from etools.applications.users.tests.factories import UserFactory
+from etools.libraries.tenant_support import utils
 
 PATH_SET_TENANT = "etools.libraries.tenant_support.utils.connection.set_tenant"
 
