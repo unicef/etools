@@ -28,8 +28,8 @@ from etools.applications.partners.validation.agreements import (
     agreements_illegal_transition,
 )
 from etools.applications.reports.models import CountryProgramme, Indicator, Result, Section
-from etools.applications.t2f.models import Travel, TravelType, TravelActivity
-from etools.applications.tpm.models import TPMVisit
+from etools.applications.t2f.models import Travel, TravelActivity, TravelType
+from etools.applications.tpm.models import TPMActivity, TPMVisit
 from etools.applications.users.models import Office
 from etools.libraries.djangolib.models import StringConcat
 from etools.libraries.pythonlib.datetime import get_current_year, get_quarter
@@ -688,32 +688,13 @@ class PartnerOrganization(TimeStampedModel):
             pvq3 = pv_year.filter(end_date__quarter=3).count()
             pvq4 = pv_year.filter(end_date__quarter=4).count()
 
-            # TPM visit are counted one per month maximum
-            tpmv = TPMVisit.objects.filter(
-                tpm_activities__partner=self, status=TPMVisit.UNICEF_APPROVED,
-                date_of_unicef_approved__year=datetime.datetime.now().year
-            ).distinct()
+            tpmv = TPMActivity.objects.filter(is_pv=True, partner=self, tpm_visit__status=TPMVisit.UNICEF_APPROVED,
+                                              date__year=datetime.datetime.now().year)
 
-            tpmv1 = sum([
-                tpmv.filter(date_of_unicef_approved__month=1).exists(),
-                tpmv.filter(date_of_unicef_approved__month=2).exists(),
-                tpmv.filter(date_of_unicef_approved__month=3).exists()
-            ])
-            tpmv2 = sum([
-                tpmv.filter(date_of_unicef_approved__month=4).exists(),
-                tpmv.filter(date_of_unicef_approved__month=5).exists(),
-                tpmv.filter(date_of_unicef_approved__month=6).exists()
-            ])
-            tpmv3 = sum([
-                tpmv.filter(date_of_unicef_approved__month=7).exists(),
-                tpmv.filter(date_of_unicef_approved__month=8).exists(),
-                tpmv.filter(date_of_unicef_approved__month=9).exists()
-            ])
-            tpmv4 = sum([
-                tpmv.filter(date_of_unicef_approved__month=10).exists(),
-                tpmv.filter(date_of_unicef_approved__month=11).exists(),
-                tpmv.filter(date_of_unicef_approved__month=12).exists()
-            ])
+            tpmv1 = tpmv.filter(date__quarter=1).count()
+            tpmv2 = tpmv.filter(date__quarter=2).count()
+            tpmv3 = tpmv.filter(date__quarter=3).count()
+            tpmv4 = tpmv.filter(date__quarter=4).count()
 
             tpm_total = tpmv1 + tpmv2 + tpmv3 + tpmv4
 
@@ -1854,7 +1835,7 @@ class Intervention(TimeStampedModel):
             travels__status=Travel.COMPLETED,
             date__isnull=False,
         ).order_by('date').last()
-        return (timezone.now() - ta.date).days if ta else '-'
+        return (datetime.date.today() - ta.date).days if ta else '-'
 
     @property
     def cp_output_names(self):
@@ -2112,12 +2093,12 @@ class InterventionAmendment(TimeStampedModel):
     TYPE_NO_COST = 'no_cost'
 
     AMENDMENT_TYPES = Choices(
-        (TYPE_ADMIN_ERROR, 'Administrative error (correction)'),
-        (TYPE_BUDGET_LTE_20, 'Budget <= 20%'),
-        (TYPE_BUDGET_GT_20, 'Budget > 20'),
-        (TYPE_CHANGE, 'Changes to planned results'),
-        (TYPE_NO_COST, 'No cost extension'),
-        (OTHER, 'Other')
+        (TYPE_ADMIN_ERROR, 'Type 1: Administrative error (correction)'),
+        (TYPE_BUDGET_LTE_20, 'Type 2: Budget <= 20%'),
+        (TYPE_BUDGET_GT_20, 'Type 3: Budget > 20%'),
+        (TYPE_CHANGE, 'Type 4: Changes to planned results'),
+        (TYPE_NO_COST, 'Type 5: No cost extension'),
+        (OTHER, 'Type 6: Other')
     )
     AMENDMENT_TYPES_OLD = [
         (DATES, 'Dates'),

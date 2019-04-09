@@ -2,7 +2,7 @@ from django.contrib import admin
 from django.db.models import ForeignKey, ManyToManyField, OneToOneField
 
 from etools.applications.publics import models
-from etools.applications.publics.models import EPOCH_ZERO
+from etools.libraries.djangolib.models import EPOCH_ZERO
 
 
 class AdminListMixin(object):
