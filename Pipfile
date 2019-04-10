@@ -21,7 +21,7 @@ sphinx = "*"
 [packages]
 azure-storage = "==0.20.2"
 carto = "==1.4"
-celery = "==4.2.1"
+celery = "==4.3"
 dj-database-url = "==0.5"
 dj-static = "==0.0.6"
 Django = "==2.1.7"
