@@ -14,12 +14,9 @@ from unicef_attachments.models import Attachment
 from unicef_djangolib.fields import CodedGenericRelation
 from unicef_notification.utils import send_notification_with_template
 
-from etools.applications.EquiTrack.urlresolvers import build_frontend_url
 from etools.applications.action_points.models import ActionPoint
 from etools.applications.activities.models import Activity
-from etools.libraries.djangolib.utils import get_environment
-from etools.libraries.fsm.views import has_action_permission
-from etools.applications.publics.models import SoftDeleteMixin
+from etools.applications.EquiTrack.urlresolvers import build_frontend_url
 from etools.applications.tpm.tpmpartners.models import TPMPartner, TPMPartnerStaffMember
 from etools.applications.tpm.transitions.conditions import (
     TPMVisitAssignRequiredFieldsCheck,
@@ -31,7 +28,9 @@ from etools.applications.tpm.transitions.serializers import (
     TPMVisitCancelSerializer,
     TPMVisitRejectSerializer,
 )
-from etools.libraries.djangolib.models import GroupWrapper
+from etools.libraries.djangolib.models import GroupWrapper, SoftDeleteMixin
+from etools.libraries.djangolib.utils import get_environment
+from etools.libraries.fsm.views import has_action_permission
 
 
 class TPMVisit(SoftDeleteMixin, TimeStampedModel, models.Model):

@@ -163,7 +163,6 @@ SHARED_APPS = (
     'rest_framework_gis',
     'rest_framework_swagger',
     'rest_framework.authtoken',
-    'drfpasswordless',
     'import_export',
     'gunicorn',
     'post_office',
@@ -178,7 +177,6 @@ SHARED_APPS = (
     'social_django',
     'etools.applications.vision',
     'etools.applications.publics',
-    # you must list the app where your tenant model resides in
     'etools.applications.users',
     'django_filters',
     'etools.applications.environment',
@@ -225,7 +223,6 @@ TEMPLATES = [
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
         'DIRS': [
             normpath(join(PACKAGE_ROOT, 'templates')),
-            normpath(join(PACKAGE_ROOT, 'templates', 'frontend'))
         ],
         'APP_DIRS': False,  # False because we set loaders manually below
         'OPTIONS': {
@@ -269,7 +266,7 @@ AUTHENTICATION_BACKENDS = (
 AUTH_USER_MODEL = 'users.User'
 LOGIN_REDIRECT_URL = '/'
 
-HOST = get_from_secrets_or_env('DJANGO_ALLOWED_HOST', 'localhost:8000')
+HOST = get_from_secrets_or_env('DJANGO_ALLOWED_HOST', 'http://localhost:8000/')
 LOGIN_URL = LOGOUT_REDIRECT_URL = get_from_secrets_or_env('LOGIN_URL', '/landing/')
 
 # CONTRIB: GIS (GeoDjango)
@@ -392,8 +389,6 @@ TENANT_DOMAIN_MODEL = "EquiTrack.Domain"
 # don't call set search_path so much
 # https://django-tenant-schemas.readthedocs.io/en/latest/use.html#performance-considerations
 TENANT_LIMIT_SET_CALLS = True
-
-HOST = get_from_secrets_or_env('DJANGO_ALLOWED_HOST', 'localhost:8000')
 
 # django-rest-framework-jwt: http://getblimp.github.io/django-rest-framework-jwt/
 JWT_AUTH = {

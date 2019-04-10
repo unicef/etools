@@ -5,6 +5,7 @@ from collections import namedtuple
 
 from django.conf import settings
 from django.contrib.auth import get_user_model
+from django.core import cache
 from django.db import connections
 from django.db.utils import OperationalError
 
@@ -42,15 +43,27 @@ def check_db():
 def check_celery():
     celery = Celery()
     celery.config_from_object(settings)
-    worker_responses = celery.control.ping(timeout=10)
-    if not worker_responses:
-        return ServiceStatus(False, 'No running Celery workers were found.')
+    conn = celery.connection()
+    if conn.connected:
+        return ServiceStatus(True, 'Celery connected')
     else:
-        msg = 'Successfully pinged {} workers'.format(len(worker_responses))
-        return ServiceStatus(True, msg)
+        return ServiceStatus(False, 'Celery unable to connect')
+
+
+def check_redis():
+    if 'redis' in settings.CACHES:
+        import redis
+        rc = cache.caches['redis']
+        redis_api = redis.StrictRedis.from_url('%s' % rc._server)
+        memory = redis_api.info()['used_memory_human']
+        result = rc.set('serverup_check_key', 'test', timeout=5)
+        return ServiceStatus(result, "Redis is up and using {} memory".format(memory))
+    else:
+        return ServiceStatus(False, "Redis is not configured on this system!")
 
 
 CHECKS = {
     'db': check_db,
     'celery': check_celery,
+    # 'redis': check_redis,
 }
