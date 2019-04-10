@@ -39,7 +39,9 @@ class HactHistoryAPIView(QueryStringFilterMixin, ListAPIView):
 
     def get_renderer_context(self):
         context = super().get_renderer_context()
-        data = self.get_queryset().first().partner_values
+        data = {}
+        if self.get_queryset().exists():
+            data = self.get_queryset().first().partner_values
         try:
             data = json.loads(data)
         except (ValueError, TypeError):

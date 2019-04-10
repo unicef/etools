@@ -1968,7 +1968,7 @@ class TestPartnerOrganizationDashboardAPIView(BaseTenantTestCase):
         self.assertEqual(self.record['action_points'], 6)
 
     def test_no_recent_programmatic_visit(self):
-        self.assertEquals(self.record['last_pv_date'].date(), datetime.date.today() - datetime.timedelta(200))
+        self.assertEquals(self.record['last_pv_date'], datetime.date.today() - datetime.timedelta(200))
         self.assertEquals(self.record['days_last_pv'], 200)
         self.assertTrue(self.record['alert_no_recent_pv'])
         self.assertFalse(self.record['alert_no_pv'])
