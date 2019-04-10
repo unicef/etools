@@ -1113,3 +1113,9 @@ class TestResultFrameworkView(BaseTenantTestCase):
             data={"format": "docx_table"},
         )
         self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(
+            response["content-disposition"],
+            "attachment; filename={}_results.docx".format(
+                self.intervention.reference_number
+            )
+        )

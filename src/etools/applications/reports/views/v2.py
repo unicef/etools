@@ -467,3 +467,17 @@ class ResultFrameworkView(ExportView):
             intervention=self.kwargs.get("pk")
         )
         return qs
+
+    def finalize_response(self, request, response, *args, **kwargs):
+        response = super().finalize_response(
+            request,
+            response,
+            *args,
+            **kwargs,
+        )
+        if response.accepted_renderer.format == "docx_table":
+            intervention = self.get_queryset().first().intervention
+            response["content-disposition"] = "attachment; filename={}_results.docx".format(
+                intervention.reference_number
+            )
+        return response
