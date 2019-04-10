@@ -4,7 +4,7 @@ from django.utils.timezone import now as django_now
 
 import mock
 
-from etools.applications.EquiTrack.tests.cases import BaseTenantTestCase
+from etools.applications.core.tests.cases import BaseTenantTestCase
 from etools.applications.users.models import Country
 from etools.applications.vision.exceptions import VisionException
 from etools.applications.vision.models import VisionSyncLog

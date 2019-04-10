@@ -2,7 +2,7 @@
 
 from django.test import SimpleTestCase
 
-from etools.applications.EquiTrack.tests.mixins import URLAssertionMixin
+from etools.applications.core.tests.mixins import URLAssertionMixin
 
 
 class UrlsTestCase(URLAssertionMixin, SimpleTestCase):

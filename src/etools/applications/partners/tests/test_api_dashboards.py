@@ -7,7 +7,7 @@ from rest_framework import status
 
 from etools.applications.action_points.models import ActionPoint
 from etools.applications.action_points.tests.factories import ActionPointFactory
-from etools.applications.EquiTrack.tests.cases import BaseTenantTestCase
+from etools.applications.core.tests.cases import BaseTenantTestCase
 from etools.applications.partners.models import FileType, Intervention
 from etools.applications.partners.tests.factories import (
     FileTypeFactory,

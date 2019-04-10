@@ -6,7 +6,7 @@ from etools.config.settings.local import *  # noqa: F403
 # To use this file:
 # 1. Copy this file to custom.py
 # 2. Add any settings that are custom for your workflow.
-# 3. set the DJANGO_SETTINGS_MODULE env var to EquiTrack.settings.custom before running manage.py
+# 3. set the DJANGO_SETTINGS_MODULE env var to core.settings.custom before running manage.py
 
 # Example: Use a Postgres server on a nondefault port
 DATABASES['default']['PORT'] = '5433'  # noqa: F405

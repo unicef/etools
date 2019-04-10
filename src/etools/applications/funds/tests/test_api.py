@@ -7,8 +7,8 @@ from django.test import SimpleTestCase
 from rest_framework import status
 from tablib.core import Dataset
 
-from etools.applications.EquiTrack.tests.cases import BaseTenantTestCase
-from etools.applications.EquiTrack.tests.mixins import URLAssertionMixin
+from etools.applications.core.tests.cases import BaseTenantTestCase
+from etools.applications.core.tests.mixins import URLAssertionMixin
 from etools.applications.funds.tests.factories import (DonorFactory, FundsCommitmentHeaderFactory,
                                                        FundsCommitmentItemFactory, FundsReservationHeaderFactory,
                                                        FundsReservationItemFactory, GrantFactory,)

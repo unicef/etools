@@ -9,7 +9,7 @@ from django.utils import timezone
 import mock
 
 import etools.applications.vision.tasks
-from etools.applications.EquiTrack.tests.cases import BaseTenantTestCase
+from etools.applications.core.tests.cases import BaseTenantTestCase
 from etools.applications.users.tests.factories import CountryFactory
 from etools.applications.vision.exceptions import VisionException
 

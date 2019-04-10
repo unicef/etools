@@ -21,7 +21,7 @@ from etools.applications.audit.transitions.conditions import (
     EngagementSubmitReportRequiredFieldsCheck,
     SPSubmitReportRequiredFieldsCheck,
 )
-from etools.applications.EquiTrack.tests.cases import BaseTenantTestCase
+from etools.applications.core.tests.cases import BaseTenantTestCase
 
 
 class EngagementCheckTransitionsTestCaseMixin(object):

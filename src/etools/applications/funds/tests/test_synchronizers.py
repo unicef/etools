@@ -3,7 +3,7 @@ import datetime
 import json
 from decimal import Decimal
 
-from etools.applications.EquiTrack.tests.cases import BaseTenantTestCase
+from etools.applications.core.tests.cases import BaseTenantTestCase
 from etools.applications.funds.models import (FundsCommitmentHeader, FundsCommitmentItem,
                                               FundsReservationHeader, FundsReservationItem,)
 from etools.applications.funds.tests.factories import (FundsCommitmentHeaderFactory, FundsCommitmentItemFactory,

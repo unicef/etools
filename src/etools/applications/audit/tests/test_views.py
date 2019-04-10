@@ -27,7 +27,7 @@ from etools.applications.audit.tests.factories import (
     UserFactory,
     AuditorUserFactory)
 from etools.applications.audit.tests.test_transitions import MATransitionsTestCaseMixin
-from etools.applications.EquiTrack.tests.cases import BaseTenantTestCase
+from etools.applications.core.tests.cases import BaseTenantTestCase
 from etools.applications.partners.models import PartnerType
 from etools.applications.reports.tests.factories import SectionFactory
 

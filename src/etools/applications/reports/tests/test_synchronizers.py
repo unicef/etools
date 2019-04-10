@@ -2,7 +2,7 @@
 import datetime
 import json
 
-from etools.applications.EquiTrack.tests.cases import BaseTenantTestCase
+from etools.applications.core.tests.cases import BaseTenantTestCase
 from etools.applications.reports.models import CountryProgramme, Indicator, Result, ResultType
 from etools.applications.reports.tests.factories import (CountryProgrammeFactory, IndicatorFactory,
                                                          ResultFactory, ResultTypeFactory,)

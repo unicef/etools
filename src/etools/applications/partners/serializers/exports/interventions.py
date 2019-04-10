@@ -2,7 +2,7 @@ from django.utils.translation import ugettext as _
 
 from rest_framework import serializers
 
-from etools.applications.EquiTrack.mixins import ExportSerializerMixin
+from etools.applications.core.mixins import ExportSerializerMixin
 from etools.applications.partners.models import Intervention, InterventionAmendment, InterventionResultLink
 from etools.applications.partners.serializers.fields import TypeArrayField
 from etools.applications.partners.serializers.interventions_v2 import (

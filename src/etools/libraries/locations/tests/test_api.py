@@ -2,7 +2,7 @@ from django.urls import reverse
 
 from unicef_locations.tests.factories import CartoDBTableFactory, GatewayTypeFactory, LocationFactory
 
-from etools.applications.EquiTrack.tests.cases import BaseTenantTestCase
+from etools.applications.core.tests.cases import BaseTenantTestCase
 from etools.libraries.tests.api_checker import AssertTimeStampedMixin, ViewSetChecker
 
 

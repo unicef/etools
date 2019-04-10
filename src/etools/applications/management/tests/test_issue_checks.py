@@ -2,7 +2,7 @@ from django.core.exceptions import ImproperlyConfigured
 from django.test import override_settings
 
 from etools.applications.environment.models import IssueCheckConfig
-from etools.applications.EquiTrack.tests.cases import BaseTenantTestCase
+from etools.applications.core.tests.cases import BaseTenantTestCase
 from etools.applications.management.issues import checks
 from etools.applications.management.issues.exceptions import IssueCheckNotFoundException, IssueFoundException
 from etools.applications.management.models import (FlaggedIssue, ISSUE_STATUS_NEW,
