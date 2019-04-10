@@ -1,13 +1,14 @@
-from celery import chain
 from django.contrib.gis import admin
 from django.db import transaction
 
+from celery import chain
 from unicef_locations.admin import CartoDBTableAdmin
 from unicef_locations.models import CartoDBTable, Location, LocationRemapHistory
+
 from etools.libraries.locations.tasks import (
-    validate_locations_in_use,
-    update_sites_from_cartodb,
     cleanup_obsolete_locations,
+    update_sites_from_cartodb,
+    validate_locations_in_use,
 )
 
 

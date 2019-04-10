@@ -1,7 +1,14 @@
 from django.conf.urls import url
+
 from rest_framework import routers
-from .views import LocationsLightViewSet, LocationsViewSet, LocationTypesViewSet, LocationQuerySetView, \
-    CartoDBTablesView
+
+from .views import (
+    CartoDBTablesView,
+    LocationQuerySetView,
+    LocationsLightViewSet,
+    LocationsViewSet,
+    LocationTypesViewSet,
+)
 
 api = routers.SimpleRouter()
 

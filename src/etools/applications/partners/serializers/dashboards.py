@@ -1,4 +1,4 @@
-from django.utils import timezone
+import datetime
 
 from rest_framework import serializers
 
@@ -33,7 +33,7 @@ class InterventionDashSerializer(serializers.ModelSerializer):
 
     disbursement_percent = serializers.SerializerMethodField()
     days_last_pv = serializers.SerializerMethodField()
-    last_pv_date = serializers.DateTimeField()
+    last_pv_date = serializers.DateField()
 
     fr_currencies_are_consistent = serializers.SerializerMethodField()
     all_currencies_are_consistent = serializers.SerializerMethodField()
@@ -80,7 +80,7 @@ class InterventionDashSerializer(serializers.ModelSerializer):
 
     def get_days_last_pv(self, obj):
         if obj.last_pv_date:
-            duration = timezone.now() - obj.last_pv_date
+            duration = datetime.date.today() - obj.last_pv_date
             return duration.days
         return None
 

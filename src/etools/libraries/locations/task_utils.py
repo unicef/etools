@@ -1,20 +1,18 @@
 import time
-
-from carto.exceptions import CartoException
-from celery.utils.log import get_task_logger
 from collections import defaultdict
 
 from django.db import IntegrityError
 from django.db.models import Count
 
+from carto.exceptions import CartoException
+from celery.utils.log import get_task_logger
 from unicef_locations.models import Location, LocationRemapHistory
 
+from etools.applications.action_points.models import ActionPoint
+from etools.applications.activities.models import Activity
 from etools.applications.partners.models import Intervention
 from etools.applications.reports.models import AppliedIndicator
 from etools.applications.t2f.models import TravelActivity
-from etools.applications.activities.models import Activity
-from etools.applications.action_points.models import ActionPoint
-
 
 logger = get_task_logger(__name__)
 

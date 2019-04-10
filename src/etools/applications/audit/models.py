@@ -86,8 +86,7 @@ class Engagement(InheritedModelMixin, TimeStampedModel, models.Model):
         DISPLAY_STATUSES.cancelled: 'date_of_cancel'
     }
 
-    status = FSMField(verbose_name=_('Status'), max_length=30, choices=STATUSES, default=STATUSES.partner_contacted,
-                      protected=True)
+    status = FSMField(verbose_name=_('Status'), max_length=30, choices=STATUSES, default=STATUSES.partner_contacted)
 
     # auditor - partner organization from agreement
     agreement = models.ForeignKey(
