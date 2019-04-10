@@ -7,7 +7,7 @@ from django.db.models import Manager, QuerySet
 from rest_framework import serializers
 from unicef_restlib.fields import CommaSeparatedExportField
 
-from etools.applications.EquiTrack.urlresolvers import build_frontend_url
+from etools.applications.core.urlresolvers import build_frontend_url
 
 
 class UsersExportField(serializers.Field):

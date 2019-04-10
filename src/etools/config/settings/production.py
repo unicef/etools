@@ -66,5 +66,5 @@ if not get_from_secrets_or_env('DISABLE_JWT_LOGIN', False):
         'JWT_LEEWAY': 60,
         'JWT_EXPIRATION_DELTA': datetime.timedelta(seconds=3000),  # noqa: F405
         'JWT_AUDIENCE': 'https://etools.unicef.org/',
-        'JWT_PAYLOAD_HANDLER': 'etools.applications.EquiTrack.auth.custom_jwt_payload_handler'
+        'JWT_PAYLOAD_HANDLER': 'etools.applications.core.auth.custom_jwt_payload_handler'
     })

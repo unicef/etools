@@ -6,7 +6,7 @@ from django.db.models import signals
 import factory
 from factory.fuzzy import FuzzyText
 
-from etools.applications.EquiTrack.tests.cases import SCHEMA_NAME
+from etools.applications.core.tests.cases import SCHEMA_NAME
 from etools.applications.users import models
 from etools.applications.publics.tests.factories import PublicsCurrencyFactory
 

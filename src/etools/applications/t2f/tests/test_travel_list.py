@@ -8,8 +8,8 @@ from freezegun import freeze_time
 from rest_framework import status
 from unicef_locations.tests.factories import LocationFactory
 
-from etools.applications.EquiTrack.tests.cases import BaseTenantTestCase
-from etools.applications.EquiTrack.tests.mixins import URLAssertionMixin
+from etools.applications.core.tests.cases import BaseTenantTestCase
+from etools.applications.core.tests.mixins import URLAssertionMixin
 from etools.applications.publics.models import DSARegion
 from etools.applications.publics.tests.factories import PublicsCurrencyFactory
 from etools.applications.reports.tests.factories import ResultFactory

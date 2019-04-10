@@ -9,7 +9,7 @@ from etools.applications.audit.tests.factories import (
     SpecialAuditFactory,
     SpotCheckFactory,
 )
-from etools.applications.EquiTrack.tests.cases import BaseTenantTestCase
+from etools.applications.core.tests.cases import BaseTenantTestCase
 from etools.applications.hact.tests.factories import AggregateHactFactory
 from etools.applications.partners.models import PartnerOrganization, PartnerType
 from etools.applications.partners.tests.factories import PartnerFactory

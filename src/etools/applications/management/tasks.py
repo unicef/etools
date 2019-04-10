@@ -8,7 +8,7 @@ from django.db.models.functions import Coalesce
 
 from dateutil.relativedelta import relativedelta
 
-from etools.applications.EquiTrack.util_scripts import set_country
+from etools.applications.core.util_scripts import set_country
 from etools.applications.audit.models import Audit, Engagement, MicroAssessment, SpecialAudit, SpotCheck
 from etools.applications.management.issues.checks import recheck_all_open_issues, run_all_checks
 from etools.applications.partners.models import Intervention, PartnerOrganization

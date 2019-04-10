@@ -18,7 +18,7 @@ from etools.applications.audit.tests.factories import (AuditFactory, AuditorStaf
                                                        PurchaseOrderFactory, PurchaseOrderItemFactory,
                                                        RiskBluePrintFactory, RiskCategoryFactory, RiskFactory,
                                                        SpecialAuditFactory, SpotCheckFactory,)
-from etools.applications.EquiTrack.tests.cases import BaseTenantTestCase
+from etools.applications.core.tests.cases import BaseTenantTestCase
 from etools.applications.firms.tests.factories import BaseUserFactory
 from etools.applications.users.models import Country
 

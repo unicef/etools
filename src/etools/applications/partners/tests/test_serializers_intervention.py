@@ -1,6 +1,6 @@
 import datetime
 
-from etools.applications.EquiTrack.tests.cases import BaseTenantTestCase
+from etools.applications.core.tests.cases import BaseTenantTestCase
 from etools.applications.partners.models import Intervention
 from etools.applications.partners.serializers.interventions_v2 import InterventionReportingRequirementCreateSerializer
 from etools.applications.partners.tests.factories import InterventionFactory, InterventionResultLinkFactory

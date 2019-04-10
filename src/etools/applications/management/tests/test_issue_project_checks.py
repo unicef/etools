@@ -4,7 +4,7 @@ from unittest import skip
 
 from django.test import override_settings
 
-from etools.applications.EquiTrack.tests.cases import BaseTenantTestCase
+from etools.applications.core.tests.cases import BaseTenantTestCase
 from etools.applications.management.issues import checks
 from etools.applications.management.models import FlaggedIssue
 from etools.applications.partners.models import Agreement, Intervention, InterventionResultLink

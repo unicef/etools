@@ -7,7 +7,7 @@ from etools.applications.attachments.tests.factories import (
     AttachmentFileTypeFactory,
 )
 from etools.applications.audit.tests.factories import EngagementFactory
-from etools.applications.EquiTrack.tests.cases import BaseTenantTestCase
+from etools.applications.core.tests.cases import BaseTenantTestCase
 from etools.applications.partners.models import PartnerType
 from etools.applications.partners.tests.factories import (
     AgreementAmendmentFactory,

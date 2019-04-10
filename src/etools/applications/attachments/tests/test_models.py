@@ -3,7 +3,7 @@ from django.core.files.uploadedfile import SimpleUploadedFile
 from unicef_attachments.utils import get_attachment_flat_model
 
 from etools.applications.attachments.tests.factories import AttachmentFactory, AttachmentFileTypeFactory
-from etools.applications.EquiTrack.tests.cases import BaseTenantTestCase
+from etools.applications.core.tests.cases import BaseTenantTestCase
 from etools.applications.t2f.tests.factories import TravelAttachmentFactory, TravelFactory
 
 

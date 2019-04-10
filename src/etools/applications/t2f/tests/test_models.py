@@ -2,7 +2,7 @@ import datetime
 
 from django.utils import timezone
 
-from etools.applications.EquiTrack.tests.cases import BaseTenantTestCase
+from etools.applications.core.tests.cases import BaseTenantTestCase
 from etools.applications.t2f.models import TravelType
 from etools.applications.t2f.tests.factories import ItineraryItemFactory, TravelActivityFactory, TravelFactory
 

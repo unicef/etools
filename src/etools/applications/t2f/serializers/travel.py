@@ -100,7 +100,7 @@ class TravelActivitySerializer(PermissionBasedModelSerializer):
         required=False
     )
     action_points = ActionPointBaseSerializer(source='actionpoint_set', many=True, read_only=True, required=False)
-    date = serializers.DateTimeField(required=True)
+    date = serializers.DateField(required=True)
 
     class Meta:
         model = TravelActivity

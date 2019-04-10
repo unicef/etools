@@ -7,7 +7,7 @@ from unicef_locations.tests.factories import LocationFactory
 
 from etools.applications.action_points.tests.factories import ActionPointFactory
 from etools.applications.activities.models import Activity
-from etools.applications.EquiTrack.tests.cases import BaseTenantTestCase
+from etools.applications.core.tests.cases import BaseTenantTestCase
 from etools.applications.partners.models import Intervention
 from etools.applications.partners.tests.factories import AgreementFactory, InterventionFactory, PartnerFactory
 from etools.applications.t2f.models import Travel, TravelType

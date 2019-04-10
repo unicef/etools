@@ -10,7 +10,7 @@ from etools.applications.action_points.categories.models import Category
 from etools.applications.action_points.tests.base import ActionPointsTestCaseMixin
 from etools.applications.action_points.tests.factories import ActionPointCategoryFactory, ActionPointFactory
 from etools.applications.audit.tests.factories import MicroAssessmentFactory
-from etools.applications.EquiTrack.tests.cases import BaseTenantTestCase
+from etools.applications.core.tests.cases import BaseTenantTestCase
 from etools.applications.partners.tests.factories import PartnerFactory
 from etools.applications.reports.tests.factories import SectionFactory
 from etools.applications.t2f.tests.factories import TravelActivityFactory, TravelFactory

@@ -31,7 +31,7 @@ from etools.applications.audit.transitions.conditions import (
 )
 from etools.applications.audit.transitions.serializers import EngagementCancelSerializer
 from etools.applications.audit.utils import generate_final_report
-from etools.applications.EquiTrack.urlresolvers import build_frontend_url
+from etools.applications.core.urlresolvers import build_frontend_url
 from etools.applications.partners.models import PartnerOrganization, PartnerStaffMember
 from etools.libraries.djangolib.models import GroupWrapper, InheritedModelMixin
 from etools.libraries.djangolib.utils import get_environment

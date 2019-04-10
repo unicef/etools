@@ -1,7 +1,7 @@
 
 import json
 
-from etools.applications.EquiTrack.tests.cases import BaseTenantTestCase
+from etools.applications.core.tests.cases import BaseTenantTestCase
 from etools.applications.publics import synchronizers
 from etools.applications.publics.models import (
     Country as PublicsCountry,
