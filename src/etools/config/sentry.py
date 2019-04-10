@@ -11,7 +11,6 @@ if hasattr(settings, 'SENTRY_DSN'):
     def before_send(event, hint):
         with configure_scope() as scope:
             scope.set_extra("tenant", connection.tenant.schema_name)
-            # event = scope.apply_to_event(event, hint)
 
         return event
 
