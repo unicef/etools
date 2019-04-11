@@ -11,6 +11,7 @@ from rest_framework.generics import RetrieveUpdateDestroyAPIView
 from rest_framework.permissions import IsAdminUser, IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
+from unicef_attachments.models import FileType as AttachmentFileType
 from unicef_djangolib.fields import CURRENCIES
 from unicef_locations.models import GatewayType
 
@@ -120,6 +121,7 @@ class PMPStaticDropdownsListAPIView(APIView):
                 'local_currency': local_currency,
                 'location_types': location_types,
                 'attachment_types': attachment_types,
+                'attachment_types_active': attachment_types_active,
                 'partner_file_types': partner_file_types,
             },
             status=status.HTTP_200_OK
