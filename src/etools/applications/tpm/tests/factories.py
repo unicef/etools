@@ -16,7 +16,7 @@ from etools.applications.reports.tests.factories import ResultFactory, SectionFa
 from etools.applications.tpm.models import TPMActivity, TPMVisit, TPMVisitReportRejectComment
 from etools.applications.tpm.tpmpartners.models import TPMPartner, TPMPartnerStaffMember
 from etools.applications.users.tests.factories import OfficeFactory as SimpleOfficeFactory, PMEUserFactory, UserFactory
-from etools.applications.utils.common.tests.factories import StatusFactoryMetaClass
+from etools.libraries.tests.factories import StatusFactoryMetaClass
 
 _FUZZY_START_DATE = timezone.now().date() - datetime.timedelta(days=5)
 _FUZZY_END_DATE = timezone.now().date() + datetime.timedelta(days=5)
