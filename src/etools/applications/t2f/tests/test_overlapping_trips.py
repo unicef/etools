@@ -8,7 +8,7 @@ import pytz
 from freezegun import freeze_time
 from pytz import UTC
 
-from etools.applications.EquiTrack.tests.cases import BaseTenantTestCase
+from etools.applications.core.tests.cases import BaseTenantTestCase
 from etools.applications.publics.tests.factories import (
     PublicsBusinessAreaFactory,
     PublicsCurrencyFactory,

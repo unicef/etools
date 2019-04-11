@@ -19,12 +19,12 @@ POST_OFFICE = {
 # change config to remove CSRF verification in localhost in order to enable testing from postman.
 REST_FRAMEWORK['DEFAULT_AUTHENTICATION_CLASSES'] = (
     # this setting fixes the bug where user can be logged in as AnonymousUser
-    'etools.applications.EquiTrack.auth.CsrfExemptSessionAuthentication',
+    'etools.applications.core.auth.CsrfExemptSessionAuthentication',
 ) + REST_FRAMEWORK['DEFAULT_AUTHENTICATION_CLASSES']
 
 AUTHENTICATION_BACKENDS = (
     # 'social_core.backends.azuread_b2c.AzureADB2COAuth2',
-    'etools.applications.EquiTrack.auth.CustomAzureADBBCOAuth2',
+    'etools.applications.core.auth.CustomAzureADBBCOAuth2',
     'django.contrib.auth.backends.ModelBackend',
 )
 
@@ -93,5 +93,5 @@ LOGGING['handlers']['console']['filters'] = ['tenant_context']
 LOGGING['handlers']['console']['formatter'] = 'tenant_context'
 
 SHELL_PLUS_PRE_IMPORTS = (
-    ('etools.applications.EquiTrack.util_scripts', '*'),
+    ('etools.applications.core.util_scripts', '*'),
 )

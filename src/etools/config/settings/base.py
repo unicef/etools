@@ -109,14 +109,14 @@ USE_TZ = True
 # DJANGO: HTTP
 MIDDLEWARE = (
     'django.contrib.sessions.middleware.SessionMiddleware',
-    'etools.applications.EquiTrack.auth.CustomSocialAuthExceptionMiddleware',
+    'etools.applications.core.auth.CustomSocialAuthExceptionMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
     'corsheaders.middleware.CorsMiddleware',
-    'etools.applications.EquiTrack.middleware.EToolsTenantMiddleware',
+    'etools.applications.core.middleware.EToolsTenantMiddleware',
     'waffle.middleware.WaffleMiddleware',  # needs request.tenant from EToolsTenantMiddleware
 )
 WSGI_APPLICATION = 'etools.config.wsgi.application'
@@ -144,7 +144,7 @@ LOGGING = {
 GDAL_LIBRARY_PATH = '/usr/lib/libgdal.so.20'
 # DJANGO: MODELS
 FIXTURE_DIRS = (
-    os.path.join(os.path.dirname(etools.__file__), 'applications', 'EquiTrack', 'data'),
+    os.path.join(os.path.dirname(etools.__file__), 'applications', 'core', 'data'),
 )
 SHARED_APPS = (
     'django.contrib.auth',
@@ -182,7 +182,7 @@ SHARED_APPS = (
     'etools.applications.environment',
     'etools.applications.action_points.categories',
     'etools.applications.audit.purchase_order',
-    'etools.applications.EquiTrack',
+    'etools.applications.core',
     'etools.applications.tpm.tpmpartners',
     'waffle',
     'etools.applications.permissions2',
@@ -260,7 +260,7 @@ ROOT_URLCONF = 'etools.config.urls'
 # CONTRIB: AUTH
 AUTHENTICATION_BACKENDS = (
     # 'social_core.backends.azuread_b2c.AzureADB2COAuth2',
-    'etools.applications.EquiTrack.auth.CustomAzureADBBCOAuth2',
+    'etools.applications.core.auth.CustomAzureADBBCOAuth2',
     'django.contrib.auth.backends.ModelBackend',
 )
 AUTH_USER_MODEL = 'users.User'
@@ -350,8 +350,8 @@ REST_FRAMEWORK = {
     ),
     'DEFAULT_AUTHENTICATION_CLASSES': (
         'rest_framework.authentication.SessionAuthentication',
-        'etools.applications.EquiTrack.auth.EToolsTenantJWTAuthentication',
-        'etools.applications.EquiTrack.auth.EtoolsTokenAuthentication',
+        'etools.applications.core.auth.EToolsTenantJWTAuthentication',
+        'etools.applications.core.auth.EtoolsTokenAuthentication',
     ),
     'TEST_REQUEST_RENDERER_CLASSES': (
         'rest_framework.renderers.JSONRenderer',
@@ -359,7 +359,7 @@ REST_FRAMEWORK = {
         'rest_framework_xml.renderers.XMLRenderer',
         'rest_framework.renderers.MultiPartRenderer',
     ),
-    'DEFAULT_SCHEMA_CLASS': 'etools.applications.EquiTrack.inspectors.EToolsSchema',
+    'DEFAULT_SCHEMA_CLASS': 'etools.applications.core.inspectors.EToolsSchema',
 }
 
 # django-cors-headers: https://github.com/ottoyiu/django-cors-headers
@@ -384,7 +384,7 @@ LEAFLET_CONFIG = {
 
 # django-tenant-schemas: https://github.com/bernardopires/django-tenant-schemas
 TENANT_MODEL = "users.Country"
-TENANT_DOMAIN_MODEL = "EquiTrack.Domain"
+TENANT_DOMAIN_MODEL = "core.Domain"
 
 # don't call set search_path so much
 # https://django-tenant-schemas.readthedocs.io/en/latest/use.html#performance-considerations
@@ -448,7 +448,7 @@ VISION_PASSWORD = get_from_secrets_or_env('VISION_PASSWORD', 'invalid_vision_pas
 ALLOW_BASIC_AUTH = get_from_secrets_or_env('ALLOW_BASIC_AUTH', False)
 if ALLOW_BASIC_AUTH:
     REST_FRAMEWORK['DEFAULT_AUTHENTICATION_CLASSES'] += (
-        'etools.applications.EquiTrack.auth.DRFBasicAuthMixin',
+        'etools.applications.core.auth.DRFBasicAuthMixin',
     )
 
 ISSUE_CHECKS = [
@@ -503,19 +503,19 @@ JWT_LEEWAY = 1000
 SOCIAL_PASSWORD_RESET_POLICY = os.getenv('AZURE_B2C_PASS_RESET_POLICY', "B2C_1_PasswordResetPolicy")
 SOCIAL_AUTH_PIPELINE = (
     # 'social_core.pipeline.social_auth.social_details',
-    'etools.applications.EquiTrack.auth.social_details',
+    'etools.applications.core.auth.social_details',
     'social_core.pipeline.social_auth.social_uid',
     # allows based on emails being listed in 'WHITELISTED_EMAILS' or 'WHITELISTED_DOMAINS'
     'social_core.pipeline.social_auth.auth_allowed',
     'social_core.pipeline.social_auth.social_user',
     # 'social_core.pipeline.user.get_username',
-    'etools.applications.EquiTrack.auth.get_username',
+    'etools.applications.core.auth.get_username',
     'social_core.pipeline.social_auth.associate_by_email',
-    'etools.applications.EquiTrack.auth.create_user',
+    'etools.applications.core.auth.create_user',
     'social_core.pipeline.social_auth.associate_user',
     'social_core.pipeline.social_auth.load_extra_data',
     'social_core.pipeline.user.user_details',
-    'etools.applications.EquiTrack.auth.user_details',
+    'etools.applications.core.auth.user_details',
 )
 
 REPORT_EMAILS = get_from_secrets_or_env('REPORT_EMAILS', 'etools@unicef.org').replace(' ', '').split(',')

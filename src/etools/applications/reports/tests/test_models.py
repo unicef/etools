@@ -4,7 +4,7 @@ import datetime
 from django.test import SimpleTestCase
 
 
-from etools.applications.EquiTrack.tests.cases import BaseTenantTestCase
+from etools.applications.core.tests.cases import BaseTenantTestCase
 from etools.applications.partners.models import Agreement
 from etools.applications.partners.tests.factories import AgreementFactory
 from etools.applications.reports.models import CountryProgramme, Indicator, IndicatorBlueprint, Quarter

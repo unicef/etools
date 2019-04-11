@@ -5,7 +5,7 @@ from unittest import mock
 from etools.applications.audit.purchase_order import synchronizers
 from etools.applications.audit.purchase_order.models import AuditorFirm, PurchaseOrder, PurchaseOrderItem
 from etools.applications.audit.purchase_order.tasks import update_purchase_orders
-from etools.applications.EquiTrack.tests.cases import BaseTenantTestCase
+from etools.applications.core.tests.cases import BaseTenantTestCase
 from etools.applications.users.models import Country
 
 

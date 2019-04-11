@@ -21,8 +21,8 @@ from rest_framework_csv import renderers as r
 from unicef_restlib.views import QueryStringFilterMixin
 from unicef_snapshot.models import Activity
 
-from etools.applications.EquiTrack.mixins import ExportModelMixin
-from etools.applications.EquiTrack.renderers import CSVFlatRenderer
+from etools.applications.core.mixins import ExportModelMixin
+from etools.applications.core.renderers import CSVFlatRenderer
 from etools.applications.partners.exports_v2 import InterventionCSVRenderer, InterventionLocationCSVRenderer
 from etools.applications.partners.filters import (
     AppliedIndicatorsFilter,

@@ -3,7 +3,7 @@ from django.test import RequestFactory
 
 import mock
 
-from etools.applications.EquiTrack.tests.cases import BaseTenantTestCase
+from etools.applications.core.tests.cases import BaseTenantTestCase
 from etools.applications.users.tests.factories import UserFactory
 from etools.libraries.tenant_support import utils
 

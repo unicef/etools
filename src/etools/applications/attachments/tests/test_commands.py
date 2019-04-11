@@ -2,7 +2,7 @@ from django.core.management import call_command
 
 from unicef_attachments.utils import get_attachment_flat_model
 from etools.applications.attachments.tests.factories import AttachmentFactory, AttachmentFileTypeFactory
-from etools.applications.EquiTrack.tests.cases import BaseTenantTestCase
+from etools.applications.core.tests.cases import BaseTenantTestCase
 from etools.applications.users.tests.factories import UserFactory
 
 

@@ -1,8 +1,8 @@
 from django.conf import settings
 from django.urls import reverse
 
-from etools.applications.EquiTrack.tests.cases import BaseTenantTestCase
-from etools.applications.EquiTrack.urlresolvers import build_frontend_url
+from etools.applications.core.tests.cases import BaseTenantTestCase
+from etools.applications.core.urlresolvers import build_frontend_url
 from etools.applications.users.tests.factories import UserFactory
 
 

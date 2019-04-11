@@ -1,6 +1,6 @@
 from django.contrib import admin
 
-from etools.applications.EquiTrack.models import Domain
+from etools.applications.core.models import Domain
 
 
 @admin.register(Domain)

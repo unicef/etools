@@ -11,7 +11,7 @@ from model_utils.models import TimeStampedModel
 from unicef_notification.models import Notification
 from unicef_snapshot.models import Activity
 
-from etools.applications.EquiTrack.urlresolvers import build_frontend_url
+from etools.applications.core.urlresolvers import build_frontend_url
 from etools.applications.action_points.categories.models import Category
 from etools.applications.action_points.transitions.conditions import ActionPointCompleteActionsTakenCheck
 from etools.applications.action_points.transitions.serializers.serializers import ActionPointCompleteSerializer

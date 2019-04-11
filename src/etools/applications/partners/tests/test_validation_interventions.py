@@ -3,7 +3,7 @@ from unittest import skip
 
 from mock import Mock, patch
 
-from etools.applications.EquiTrack.tests.cases import BaseTenantTestCase
+from etools.applications.core.tests.cases import BaseTenantTestCase
 from etools.applications.attachments.tests.factories import AttachmentFactory
 from etools.applications.funds.tests.factories import FundsReservationHeaderFactory
 from etools.applications.partners.models import (

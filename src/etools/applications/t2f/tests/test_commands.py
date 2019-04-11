@@ -2,7 +2,7 @@ from unittest.mock import Mock, patch
 
 from django.core.management import call_command
 
-from etools.applications.EquiTrack.tests.cases import BaseTenantTestCase
+from etools.applications.core.tests.cases import BaseTenantTestCase
 from etools.applications.users.models import Country
 
 COUNTRY_PATH = "etools.applications.t2f.management.commands.et2f_init.UserCountry.objects.get"

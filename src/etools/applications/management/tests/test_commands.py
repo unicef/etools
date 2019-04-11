@@ -1,7 +1,7 @@
 
 from django.core.management import call_command
 
-from etools.applications.EquiTrack.tests.cases import BaseTenantTestCase
+from etools.applications.core.tests.cases import BaseTenantTestCase
 from etools.applications.management.issues import checks
 from etools.applications.management.models import FlaggedIssue, ISSUE_STATUS_NEW, ISSUE_STATUS_RESOLVED
 from etools.applications.management.tests.factories import FlaggedIssueFactory

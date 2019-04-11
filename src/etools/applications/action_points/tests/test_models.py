@@ -8,7 +8,7 @@ from etools.applications.action_points.models import ActionPoint
 from etools.applications.action_points.tests.factories import ActionPointFactory
 from etools.applications.audit.models import MicroAssessment
 from etools.applications.audit.tests.factories import MicroAssessmentFactory
-from etools.applications.EquiTrack.tests.cases import BaseTenantTestCase
+from etools.applications.core.tests.cases import BaseTenantTestCase
 from etools.applications.t2f.tests.factories import TravelActivityFactory, TravelFactory
 from etools.applications.tpm.tests.factories import TPMVisitFactory
 from etools.applications.users.tests.factories import UserFactory

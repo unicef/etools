@@ -12,7 +12,7 @@ from etools.applications.audit.tests.factories import (
     SpotCheckFactory,
     UserFactory,
 )
-from etools.applications.EquiTrack.tests.cases import BaseTenantTestCase
+from etools.applications.core.tests.cases import BaseTenantTestCase
 
 
 class TestEngagementAttachmentsView(BaseTenantTestCase):

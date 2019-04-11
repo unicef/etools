@@ -5,7 +5,7 @@ from django.utils.translation import ugettext as _
 
 from rest_framework import status
 
-from etools.applications.EquiTrack.tests.cases import BaseTenantTestCase
+from etools.applications.core.tests.cases import BaseTenantTestCase
 from etools.applications.tpm.models import TPMVisit
 from etools.applications.tpm.tests.base import TPMTestCaseMixin
 from etools.applications.tpm.tests.factories import TPMVisitFactory, TPMUserFactory
