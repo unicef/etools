@@ -3,11 +3,15 @@ import datetime
 import json
 
 from etools.applications.core.tests.cases import BaseTenantTestCase
-from etools.applications.reports.models import CountryProgramme, Indicator, Result, ResultType
-from etools.applications.reports.tests.factories import (CountryProgrammeFactory, IndicatorFactory,
-                                                         ResultFactory, ResultTypeFactory,)
-from etools.applications.users.models import Country
 from etools.applications.reports import synchronizers
+from etools.applications.reports.models import CountryProgramme, Indicator, Result, ResultType
+from etools.applications.reports.tests.factories import (
+    CountryProgrammeFactory,
+    IndicatorFactory,
+    ResultFactory,
+    ResultTypeFactory,
+)
+from etools.applications.users.models import Country
 
 
 class TestResultStructureSynchronizer(BaseTenantTestCase):
