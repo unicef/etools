@@ -14,14 +14,6 @@ class CloneTravelHelper(object):
 
         return new_travel
 
-    def clone_for_driver(self, new_traveler):
-        fk_related = ['itinerary']
-        o2o_related = []
-        new_travel = self._do_the_cloning(new_traveler, fk_related, o2o_related)
-        new_travel.is_driver = True
-        new_travel.save()
-        return new_travel
-
     def _do_the_cloning(self, new_traveler, fk_related, o2o_related):
         new_travel = self._clone_model(self.travel)
         new_travel.traveler = new_traveler

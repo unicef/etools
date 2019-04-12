@@ -1,6 +1,6 @@
 import csv
-import logging
 import datetime
+import logging
 
 from django.urls import reverse
 from django.utils.six import StringIO

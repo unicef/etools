@@ -4,10 +4,7 @@ from django.urls import reverse
 
 from etools.applications.core.tests.cases import BaseTenantTestCase
 from etools.applications.partners.models import PartnerOrganization
-from etools.applications.publics.tests.factories import (
-    PublicsCurrencyFactory,
-    PublicsDSARegionFactory,
-)
+from etools.applications.publics.tests.factories import PublicsCurrencyFactory, PublicsDSARegionFactory
 from etools.applications.t2f.models import make_travel_reference_number, ModeOfTravel, Travel, TravelType
 from etools.applications.t2f.tests.factories import TravelActivityFactory, TravelFactory
 from etools.applications.users.tests.factories import UserFactory
