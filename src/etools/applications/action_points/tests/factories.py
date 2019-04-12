@@ -4,11 +4,10 @@ from django.utils import timezone
 
 import factory.fuzzy
 from django_comments.models import Comment
-
-from etools.applications.action_points.models import ActionPoint
-from etools.applications.action_points.categories.models import Category
 from unicef_locations.tests.factories import LocationFactory
 
+from etools.applications.action_points.categories.models import Category
+from etools.applications.action_points.models import ActionPoint
 from etools.applications.partners.tests.factories import InterventionFactory, ResultFactory
 from etools.applications.reports.tests.factories import SectionFactory
 from etools.applications.users.tests.factories import UserFactory
