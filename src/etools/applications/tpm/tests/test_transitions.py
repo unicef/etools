@@ -6,10 +6,10 @@ from django.utils.translation import ugettext as _
 from rest_framework import status
 
 from etools.applications.core.tests.cases import BaseTenantTestCase
+from etools.applications.permissions2.tests.mixins import TransitionPermissionsTestCaseMixin
 from etools.applications.tpm.models import TPMVisit
 from etools.applications.tpm.tests.base import TPMTestCaseMixin
-from etools.applications.tpm.tests.factories import TPMVisitFactory, TPMUserFactory
-from etools.applications.permissions2.tests.mixins import TransitionPermissionsTestCaseMixin
+from etools.applications.tpm.tests.factories import TPMUserFactory, TPMVisitFactory
 from etools.applications.users.tests.factories import PMEUserFactory, UserFactory
 
 
