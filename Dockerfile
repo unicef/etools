@@ -49,7 +49,7 @@ RUN apk add openssl \
     ca-certificates \
     libressl2.7-libcrypto \
     libmagic \
-    libxslt-dev
+    libxslt
 
 RUN apk add geos \
     gdal --update-cache --repository http://dl-3.alpinelinux.org/alpine/edge/testing/
