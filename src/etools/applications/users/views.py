@@ -26,21 +26,10 @@ from etools.applications.users.serializers import (
     SimpleProfileSerializer,
     SimpleUserSerializer,
     UserCreationSerializer,
-    UserSerializer,
 )
 from etools.libraries.azure_graph_api.tasks import retrieve_user_info
 
 logger = logging.getLogger(__name__)
-
-
-class UserAuthAPIView(RetrieveAPIView):
-    # TODO: Consider removing now use JWT
-    model = get_user_model()
-    serializer_class = UserSerializer
-
-    def get_object(self, queryset=None, **kwargs):
-        user = self.request.user
-        return user
 
 
 class ADUserAPIView(DetailView):
