@@ -16,20 +16,6 @@ from etools.applications.users.models import Country
 cache = get_cache()
 
 
-class IssueCheckConfig(models.Model):
-    """
-    Used to enable/disable issue checks at runtime.
-    """
-    check_id = models.CharField(max_length=100, unique=True, db_index=True, verbose_name=_('Check id'))
-    is_active = models.BooleanField(default=False, verbose_name=_('Is Active'))
-
-    def __str__(self):
-        return '{}: {}'.format(self.check_id, self.is_active)
-
-    class Meta:
-        verbose_name_plural = _('Issue check config')
-
-
 class TenantFlag(BaseModel):
     """
     Associate one or more countries with a Flag.
