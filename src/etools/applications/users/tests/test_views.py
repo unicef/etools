@@ -1,4 +1,3 @@
-
 import json
 from operator import itemgetter
 from unittest import skip
@@ -13,18 +12,6 @@ from etools.applications.core.tests.cases import BaseTenantTestCase
 from etools.applications.publics.tests.factories import PublicsBusinessAreaFactory
 from etools.applications.users.models import Group, UserProfile
 from etools.applications.users.tests.factories import CountryFactory, GroupFactory, OfficeFactory, UserFactory
-
-
-class TestUserAuthAPIView(BaseTenantTestCase):
-    def test_get(self):
-        self.user = UserFactory()
-        response = self.forced_auth_req(
-            "get",
-            reverse("users:user-api-profile"),
-            user=self.user
-        )
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(response.data["id"], self.user.pk)
 
 
 class TestChangeUserCountry(BaseTenantTestCase):

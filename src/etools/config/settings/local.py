@@ -63,7 +63,6 @@ elif 'runserver' in sys.argv or 'shell_plus' in sys.argv:
     # django-debug-toolbar: https://django-debug-toolbar.readthedocs.io/en/stable/configuration.html
     INSTALLED_APPS += (  # noqa
         'debug_toolbar',
-        'django_extensions',
     )
     INTERNAL_IPS = ('127.0.0.1',)
     MIDDLEWARE += (  # noqa
