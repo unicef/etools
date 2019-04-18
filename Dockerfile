@@ -48,7 +48,9 @@ RUN apk add postgresql-client
 RUN apk add openssl \
     ca-certificates \
     libressl2.7-libcrypto \
-    libmagic
+    libmagic \
+    libxslt
+
 RUN apk add geos \
     gdal --update-cache --repository http://dl-3.alpinelinux.org/alpine/edge/testing/
 
