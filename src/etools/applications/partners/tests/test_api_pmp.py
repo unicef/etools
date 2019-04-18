@@ -64,6 +64,7 @@ class TestPMPStaticDropdownsListApiView(BaseTenantTestCase):
                                      'local_currency',
                                      'location_types',
                                      'attachment_types',
+                                     'attachment_types_active',
                                      'partner_file_types',
                                      'partner_risk_rating',
                                      ))

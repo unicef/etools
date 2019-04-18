@@ -26,6 +26,7 @@ class TPMVisitFilter(filters.FilterSet):
             'tpm_activities__section': ['exact', 'in'],
             'tpm_activities__partner': ['exact', 'in'],
             'tpm_activities__locations': ['exact'],
+            'tpm_activities__offices': ['exact'],
             'tpm_activities__cp_output': ['exact', 'in'],
             'tpm_activities__intervention': ['exact'],
             'tpm_activities__date': ['exact', 'lte', 'gte', 'gt', 'lt'],

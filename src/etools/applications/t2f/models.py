@@ -16,8 +16,8 @@ from unicef_attachments.models import Attachment
 from unicef_djangolib.fields import CodedGenericRelation
 from unicef_notification.utils import send_notification
 
-from etools.applications.core.urlresolvers import build_frontend_url
 from etools.applications.action_points.models import ActionPoint
+from etools.applications.core.urlresolvers import build_frontend_url
 from etools.applications.t2f.serializers.mailing import TravelMailSerializer
 from etools.applications.users.models import WorkspaceCounter
 
@@ -137,7 +137,7 @@ class Travel(models.Model):
         on_delete=models.CASCADE,
     )
     section = models.ForeignKey(
-        'reports.Sector', null=True, blank=True, related_name='+', verbose_name=_('Section'),
+        'reports.Section', null=True, blank=True, related_name='+', verbose_name=_('Section'),
         on_delete=models.CASCADE,
     )
     start_date = models.DateField(null=True, blank=True, verbose_name=_('Start Date'))

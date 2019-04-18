@@ -157,7 +157,7 @@ SHARED_APPS = (
     'django.contrib.postgres',
     'django.contrib.admin',
     'django.contrib.humanize',
-
+    'django_extensions',
     'storages',
     'rest_framework',
     'rest_framework_gis',

@@ -389,8 +389,8 @@ class TestInterventionLocationExport(BaseInterventionModelExportTestCase):
         self.intervention.flat_locations.add(LocationFactory(name='Location 0'), LocationFactory(name='Location 1'))
 
         # Some sections
-        sec = SectionFactory(name='Sector 0')
-        sec1 = SectionFactory(name='Sector 1')
+        sec = SectionFactory(name='Section 0')
+        sec1 = SectionFactory(name='Section 1')
         self.intervention.sections.add(sec, sec1)
 
         # Some focal points
@@ -409,8 +409,8 @@ class TestInterventionLocationExport(BaseInterventionModelExportTestCase):
         self.intervention2 = InterventionFactory(
             agreement=AgreementFactory(partner=PartnerFactory(name='Partner 2', vendor_number='123')))
         # Sections
-        sec2 = SectionFactory(name='Sector 2')
-        sec3 = SectionFactory(name='Sector 3')
+        sec2 = SectionFactory(name='Section 2')
+        sec3 = SectionFactory(name='Section 3')
         self.intervention2.sections.add(sec2, sec3)
         # Results
         InterventionResultLinkFactory(
@@ -453,12 +453,12 @@ class TestInterventionLocationExport(BaseInterventionModelExportTestCase):
         agreement_number_3 = self.intervention3.agreement.agreement_number
         self.assertEqual(
             f'Partner,Vendor Number,PD Ref Number,Agreement,Status,Location,Section,CP output,Start Date,End Date,Name of UNICEF Focal Point,Hyperlink\r\n'
-            f'{partner_name},{partner_vendor_code},{self.intervention.number},{agreement_number_1},draft,Location 0,Sector 0,"Result A, Result B",2013-01-06,2013-03-20,"Jack Bennie, Phil Silver",https://testserver/pmp/interventions/{self.intervention.id}/details/\r\n'
-            f'{partner_name},{partner_vendor_code},{self.intervention.number},{agreement_number_1},draft,Location 1,Sector 0,"Result A, Result B",2013-01-06,2013-03-20,"Jack Bennie, Phil Silver",https://testserver/pmp/interventions/{self.intervention.id}/details/\r\n'
-            f'{partner_name},{partner_vendor_code},{self.intervention.number},{agreement_number_1},draft,Location 0,Sector 1,"Result A, Result B",2013-01-06,2013-03-20,"Jack Bennie, Phil Silver",https://testserver/pmp/interventions/{self.intervention.id}/details/\r\n'
-            f'{partner_name},{partner_vendor_code},{self.intervention.number},{agreement_number_1},draft,Location 1,Sector 1,"Result A, Result B",2013-01-06,2013-03-20,"Jack Bennie, Phil Silver",https://testserver/pmp/interventions/{self.intervention.id}/details/\r\n'
-            f'Partner 2,123,{self.intervention2.number},{agreement_number_2},draft,,Sector 2,"Result C, Result D",,,,https://testserver/pmp/interventions/{self.intervention2.id}/details/\r\n'
-            f'Partner 2,123,{self.intervention2.number},{agreement_number_2},draft,,Sector 3,"Result C, Result D",,,,https://testserver/pmp/interventions/{self.intervention2.id}/details/\r\n'
+            f'{partner_name},{partner_vendor_code},{self.intervention.number},{agreement_number_1},draft,Location 0,Section 0,"Result A, Result B",2013-01-06,2013-03-20,"Jack Bennie, Phil Silver",https://testserver/pmp/interventions/{self.intervention.id}/details/\r\n'
+            f'{partner_name},{partner_vendor_code},{self.intervention.number},{agreement_number_1},draft,Location 1,Section 0,"Result A, Result B",2013-01-06,2013-03-20,"Jack Bennie, Phil Silver",https://testserver/pmp/interventions/{self.intervention.id}/details/\r\n'
+            f'{partner_name},{partner_vendor_code},{self.intervention.number},{agreement_number_1},draft,Location 0,Section 1,"Result A, Result B",2013-01-06,2013-03-20,"Jack Bennie, Phil Silver",https://testserver/pmp/interventions/{self.intervention.id}/details/\r\n'
+            f'{partner_name},{partner_vendor_code},{self.intervention.number},{agreement_number_1},draft,Location 1,Section 1,"Result A, Result B",2013-01-06,2013-03-20,"Jack Bennie, Phil Silver",https://testserver/pmp/interventions/{self.intervention.id}/details/\r\n'
+            f'Partner 2,123,{self.intervention2.number},{agreement_number_2},draft,,Section 2,"Result C, Result D",,,,https://testserver/pmp/interventions/{self.intervention2.id}/details/\r\n'
+            f'Partner 2,123,{self.intervention2.number},{agreement_number_2},draft,,Section 3,"Result C, Result D",,,,https://testserver/pmp/interventions/{self.intervention2.id}/details/\r\n'
             f'Partner 3,456,{self.intervention3.number},{agreement_number_3},draft,Location 2,,Result Fred,,,,https://testserver/pmp/interventions/{self.intervention3.id}/details/\r\n',
             result,
         )

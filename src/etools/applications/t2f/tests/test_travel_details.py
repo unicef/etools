@@ -38,7 +38,6 @@ class TravelDetails(URLAssertionMixin, BaseTenantTestCase):
             ('index', '', {'travel_pk': 1}),
             ('attachments', 'attachments/', {'travel_pk': 1}),
             ('attachment_details', 'attachments/1/', {'travel_pk': 1, 'attachment_pk': 1}),
-            ('clone_for_driver', 'add_driver/', {'travel_pk': 1}),
             ('clone_for_secondary_traveler', 'duplicate_travel/', {'travel_pk': 1}),
         )
         self.assertReversal(names_and_paths, 't2f:travels:details:', '/api/t2f/travels/1/')
@@ -216,16 +215,6 @@ class TravelDetails(URLAssertionMixin, BaseTenantTestCase):
         self.assertTrue(attachment_qs.exists())
 
     def test_duplication(self):
-        data = {'traveler': self.unicef_staff.id}
-        response = self.forced_auth_req('post', reverse('t2f:travels:details:clone_for_driver',
-                                                        kwargs={'travel_pk': self.travel.id}),
-                                        data=data, user=self.unicef_staff)
-        response_json = json.loads(response.rendered_content)
-        self.assertIn('id', response_json)
-
-        cloned_travel = Travel.objects.get(id=response_json['id'])
-        self.assertNotEqual(cloned_travel.reference_number, self.travel.reference_number)
-
         data = {'traveler': self.unicef_staff.id}
         response = self.forced_auth_req('post', reverse('t2f:travels:details:clone_for_secondary_traveler',
                                                         kwargs={'travel_pk': self.travel.id}),

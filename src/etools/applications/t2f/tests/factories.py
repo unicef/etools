@@ -1,15 +1,16 @@
 import datetime
+
 import factory
 from factory import fuzzy
 from unicef_locations.tests.factories import LocationFactory
 
+from etools.applications.action_points.tests.factories import ActionPointFactory
 from etools.applications.partners.tests.factories import InterventionFactory
 from etools.applications.publics.tests.factories import (
     PublicsAirlineCompanyFactory,
     PublicsCurrencyFactory,
     PublicsDSARegionFactory,
 )
-from etools.applications.action_points.tests.factories import ActionPointFactory
 from etools.applications.reports.tests.factories import ResultFactory, SectionFactory
 from etools.applications.t2f import models
 from etools.applications.users.tests.factories import OfficeFactory, UserFactory
