@@ -106,17 +106,17 @@ class Migration(migrations.Migration):
             field=models.CharField(blank=True, max_length=10, null=True, verbose_name='VISION ID'),
         ),
         migrations.AlterField(
-            model_name='sector',
+            model_name='section',
             name='alternate_name',
             field=models.CharField(default='', max_length=255, null=True, verbose_name='Alternate Name'),
         ),
         migrations.AlterField(
-            model_name='sector',
+            model_name='section',
             name='color',
             field=models.CharField(blank=True, max_length=7, null=True, verbose_name='Color'),
         ),
         migrations.AlterField(
-            model_name='sector',
+            model_name='section',
             name='description',
             field=models.CharField(blank=True, max_length=256, null=True, verbose_name='Description'),
         ),

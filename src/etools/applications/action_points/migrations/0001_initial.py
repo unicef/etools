@@ -60,7 +60,7 @@ class Migration(migrations.Migration):
                 ('partner', models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.CASCADE,
                                               to='partners.PartnerOrganization', verbose_name='Partner')),
                 ('section', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE,
-                                              to='reports.Sector', verbose_name='Section')),
+                                              to='reports.Section', verbose_name='Section')),
                 ('tpm_activity', models.ForeignKey(blank=True, null=True,
                                                    on_delete=django.db.models.deletion.CASCADE, to='tpm.TPMActivity', verbose_name='TPM Activity')),
                 ('travel_activity', models.ForeignKey(blank=True, null=True,
