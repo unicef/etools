@@ -9,16 +9,25 @@ from django.core.management import call_command
 from django.db import connection
 from django.test import SimpleTestCase
 
-
 from etools.applications.audit.models import Auditor, Engagement, RiskCategory
 from etools.applications.audit.purchase_order.models import AuditorStaffMember, PurchaseOrder, PurchaseOrderItem
-from etools.applications.audit.tests.factories import (AuditFactory, AuditorStaffMemberFactory, AuditPartnerFactory,
-                                                       DetailedFindingInfoFactory,
-                                                       EngagementFactory, FindingFactory, MicroAssessmentFactory,
-                                                       PurchaseOrderFactory, PurchaseOrderItemFactory,
-                                                       RiskBluePrintFactory, RiskCategoryFactory, RiskFactory,
-                                                       SpecialAuditFactory, SpotCheckFactory,)
-from etools.applications.EquiTrack.tests.cases import BaseTenantTestCase
+from etools.applications.audit.tests.factories import (
+    AuditFactory,
+    AuditorStaffMemberFactory,
+    AuditPartnerFactory,
+    DetailedFindingInfoFactory,
+    EngagementFactory,
+    FindingFactory,
+    MicroAssessmentFactory,
+    PurchaseOrderFactory,
+    PurchaseOrderItemFactory,
+    RiskBluePrintFactory,
+    RiskCategoryFactory,
+    RiskFactory,
+    SpecialAuditFactory,
+    SpotCheckFactory,
+)
+from etools.applications.core.tests.cases import BaseTenantTestCase
 from etools.applications.firms.tests.factories import BaseUserFactory
 from etools.applications.users.models import Country
 

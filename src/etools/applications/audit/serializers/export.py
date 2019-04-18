@@ -20,10 +20,7 @@ from etools.applications.audit.models import (
 )
 from etools.applications.audit.purchase_order.models import AuditorFirm, AuditorStaffMember, PurchaseOrder
 from etools.applications.audit.serializers.auditor import PurchaseOrderItemSerializer
-from etools.applications.audit.serializers.engagement import (
-    DetailedFindingInfoSerializer,
-    KeyInternalControlSerializer,
-)
+from etools.applications.audit.serializers.engagement import DetailedFindingInfoSerializer, KeyInternalControlSerializer
 from etools.applications.audit.serializers.risks import (
     AggregatedRiskRootSerializer,
     KeyInternalWeaknessSerializer,

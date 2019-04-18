@@ -9,8 +9,8 @@ from rest_framework import status
 from unicef_djangolib.fields import CURRENCY_LIST
 from unicef_locations.tests.factories import GatewayTypeFactory
 
-from etools.applications.EquiTrack.tests.cases import BaseTenantTestCase
-from etools.applications.EquiTrack.tests.mixins import URLAssertionMixin
+from etools.applications.core.tests.cases import BaseTenantTestCase
+from etools.applications.core.tests.mixins import URLAssertionMixin
 from etools.applications.partners.models import (
     Agreement,
     AgreementAmendment,
@@ -64,6 +64,7 @@ class TestPMPStaticDropdownsListApiView(BaseTenantTestCase):
                                      'local_currency',
                                      'location_types',
                                      'attachment_types',
+                                     'attachment_types_active',
                                      'partner_file_types',
                                      'partner_risk_rating',
                                      ))

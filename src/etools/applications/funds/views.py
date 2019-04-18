@@ -8,8 +8,8 @@ from rest_framework.views import APIView
 from rest_framework_csv.renderers import CSVRenderer, JSONRenderer
 from unicef_restlib.views import QueryStringFilterMixin
 
-from etools.applications.EquiTrack.mixins import ExportModelMixin
-from etools.applications.EquiTrack.renderers import CSVFlatRenderer
+from etools.applications.core.mixins import ExportModelMixin
+from etools.applications.core.renderers import CSVFlatRenderer
 from etools.applications.funds.models import (
     Donor,
     FundsCommitmentHeader,

@@ -3,8 +3,9 @@ from django.utils.translation import ugettext as _
 
 from rest_framework import serializers
 from rest_framework.exceptions import ValidationError
+from unicef_rest_export.serializers import ExportSerializer
 
-from etools.applications.partners.models import Intervention
+from etools.applications.partners.models import Intervention, InterventionResultLink
 from etools.applications.reports.models import (
     AppliedIndicator,
     Disaggregation,
@@ -17,7 +18,7 @@ from etools.applications.reports.models import (
     ResultType,
     SpecialReportingRequirement,
 )
-from etools.applications.reports.validators import value_numbers, value_none_or_numbers
+from etools.applications.reports.validators import value_none_or_numbers, value_numbers
 
 
 class MinimalOutputListSerializer(serializers.ModelSerializer):
@@ -356,3 +357,71 @@ class SpecialReportingRequirementSerializer(serializers.ModelSerializer):
     class Meta:
         model = SpecialReportingRequirement
         fields = "__all__"
+
+
+class ResultFrameworkSerializer(serializers.ModelSerializer):
+    result = serializers.SerializerMethodField(label=_("Result"))
+    indicators = serializers.SerializerMethodField()
+    target = serializers.SerializerMethodField()
+    baseline = serializers.SerializerMethodField()
+    means_of_verification = serializers.SerializerMethodField()
+    locations = serializers.SerializerMethodField()
+
+    class Meta:
+        model = InterventionResultLink
+        fields = (
+            "result",
+            "indicators",
+            "target",
+            "baseline",
+            "means_of_verification",
+            "locations",
+        )
+
+    def get_result(self, obj):
+        return obj.cp_output
+
+    def _applied_indicators(self, obj):
+        indicators = []
+        for l in obj.ll_results.all():
+            indicators += l.applied_indicators.all()
+        return indicators
+
+    def _ram_indicators(self, obj):
+        return obj.ram_indicators.all()
+
+    def get_indicators(self, obj):
+        return "\n".join([
+            i.name for i in self._ram_indicators(obj)
+            if i.name
+        ])
+
+    def get_target(self, obj):
+        return "\n".join([
+            x.target for x in self._ram_indicators(obj)
+            if x.target
+        ])
+
+    def get_baseline(self, obj):
+        return "\n".join([
+            x.baseline for x in self._ram_indicators(obj)
+            if x.baseline
+        ])
+
+    def get_means_of_verification(self, obj):
+        return "\n".join(
+            [
+                x.means_of_verification for x in self._applied_indicators(obj)
+                if x.means_of_verification
+            ]
+        )
+
+    def get_locations(self, obj):
+        locations = []
+        for x in self._applied_indicators(obj):
+            locations += [l.name for l in x.locations.all()]
+        return "\n".join(set(locations))
+
+
+class ResultFrameworkExportSerializer(ExportSerializer):
+    pass

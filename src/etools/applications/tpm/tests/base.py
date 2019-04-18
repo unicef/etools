@@ -1,7 +1,7 @@
 from django.core.management import call_command
 
 from etools.applications.tpm.tests.factories import TPMPartnerFactory, TPMUserFactory
-from etools.applications.users.tests.factories import UserFactory, PMEUserFactory
+from etools.applications.users.tests.factories import PMEUserFactory, UserFactory
 from etools.libraries.djangolib.models import GroupWrapper
 
 

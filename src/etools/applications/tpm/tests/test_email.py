@@ -1,7 +1,7 @@
 from django.core import mail
 from django.core.management import call_command
 
-from etools.applications.EquiTrack.tests.cases import BaseTenantTestCase
+from etools.applications.core.tests.cases import BaseTenantTestCase
 from etools.applications.tpm.tests.factories import TPMVisitFactory
 from etools.applications.users.tests.factories import PMEUserFactory
 

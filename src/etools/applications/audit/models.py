@@ -31,7 +31,7 @@ from etools.applications.audit.transitions.conditions import (
 )
 from etools.applications.audit.transitions.serializers import EngagementCancelSerializer
 from etools.applications.audit.utils import generate_final_report
-from etools.applications.EquiTrack.urlresolvers import build_frontend_url
+from etools.applications.core.urlresolvers import build_frontend_url
 from etools.applications.partners.models import PartnerOrganization, PartnerStaffMember
 from etools.libraries.djangolib.models import GroupWrapper, InheritedModelMixin
 from etools.libraries.djangolib.utils import get_environment
@@ -86,8 +86,7 @@ class Engagement(InheritedModelMixin, TimeStampedModel, models.Model):
         DISPLAY_STATUSES.cancelled: 'date_of_cancel'
     }
 
-    status = FSMField(verbose_name=_('Status'), max_length=30, choices=STATUSES, default=STATUSES.partner_contacted,
-                      protected=True)
+    status = FSMField(verbose_name=_('Status'), max_length=30, choices=STATUSES, default=STATUSES.partner_contacted)
 
     # auditor - partner organization from agreement
     agreement = models.ForeignKey(

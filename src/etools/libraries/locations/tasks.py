@@ -1,23 +1,21 @@
-import celery
+from django.db import transaction
+from django.db.models import Q
+from django.utils.encoding import force_text
 
+import celery
 from carto.exceptions import CartoException
 from carto.sql import SQLClient
 from celery.utils.log import get_task_logger
-
-from django.utils.encoding import force_text
-from django.db import transaction
-from django.db.models import Q
-
-from unicef_locations.models import CartoDBTable, Location, LocationRemapHistory
 from unicef_locations.auth import LocationsCartoNoAuthClient
+from unicef_locations.models import CartoDBTable, Location, LocationRemapHistory
 
 from etools.libraries.locations.task_utils import (
-    get_location_ids_in_use,
+    create_location,
+    duplicate_pcodes_exist,
     get_cartodb_locations,
+    get_location_ids_in_use,
     save_location_remap_history,
     validate_remap_table,
-    duplicate_pcodes_exist,
-    create_location,
 )
 
 logger = get_task_logger(__name__)

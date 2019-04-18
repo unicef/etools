@@ -1,7 +1,11 @@
 from django.contrib import admin
 
-from etools.applications.audit.purchase_order.models import (AuditorFirm, AuditorStaffMember,
-                                                             PurchaseOrder, PurchaseOrderItem,)
+from etools.applications.audit.purchase_order.models import (
+    AuditorFirm,
+    AuditorStaffMember,
+    PurchaseOrder,
+    PurchaseOrderItem,
+)
 
 
 class AuditorStaffMemberInlineAdmin(admin.StackedInline):

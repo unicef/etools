@@ -7,7 +7,7 @@ from django.db.models import Manager, QuerySet
 from rest_framework import serializers
 from unicef_restlib.fields import CommaSeparatedExportField
 
-from etools.applications.EquiTrack.urlresolvers import build_frontend_url
+from etools.applications.core.urlresolvers import build_frontend_url
 
 
 class UsersExportField(serializers.Field):
@@ -98,6 +98,7 @@ class TPMVisitExportSerializer(serializers.Serializer):
     report_link = serializers.SerializerMethodField()
     attachments = serializers.SerializerMethodField()
     additional_information = CommaSeparatedExportField(source='tpm_activities.additional_information', allow_null=True)
+    visit_information = serializers.CharField()
     link = serializers.CharField(source='get_object_url')
 
     def get_report_link(self, obj):

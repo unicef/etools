@@ -7,6 +7,7 @@ from django.contrib.auth.admin import UserAdmin
 from django.http.response import HttpResponseRedirect
 from django.shortcuts import get_object_or_404
 from django.urls import reverse
+
 from django_tenants.utils import get_public_schema_name
 
 from etools.applications.hact.tasks import update_hact_for_country, update_hact_values
@@ -171,6 +172,7 @@ class UserAdminPlus(UserAdmin):
         'is_staff',
         'is_superuser',
         'is_active',
+        'country',
     ]
 
     def get_urls(self):
@@ -190,6 +192,11 @@ class UserAdminPlus(UserAdmin):
         user = get_object_or_404(get_user_model(), pk=pk)
         sync_user.delay(user.username)
         return HttpResponseRedirect(reverse('admin:users_user_change', args=[user.pk]))
+
+    def country(self, obj):
+        return obj.profile.country
+
+    country.admin_order_field = 'profile__country'
 
     def office(self, obj):
         return obj.profile.office

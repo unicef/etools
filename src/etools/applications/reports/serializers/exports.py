@@ -2,7 +2,7 @@ import json
 
 from rest_framework import serializers
 
-from etools.applications.EquiTrack.mixins import ExportSerializerMixin
+from etools.applications.core.mixins import ExportSerializerMixin
 from etools.applications.reports.models import AppliedIndicator, Indicator, LowerResult
 
 

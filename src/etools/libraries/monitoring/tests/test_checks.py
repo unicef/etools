@@ -5,7 +5,7 @@ from django.test import SimpleTestCase
 
 from mock import Mock, patch
 
-from etools.applications.EquiTrack.tests.cases import BaseTenantTestCase
+from etools.applications.core.tests.cases import BaseTenantTestCase
 from etools.applications.users.tests.factories import UserFactory
 from etools.libraries.monitoring.service_checks import check_celery, check_db
 
@@ -39,25 +39,27 @@ class TestCheckDB(BaseTenantTestCase):
 
 class TestCheckCelery(SimpleTestCase):
     def test_valid(self):
-        mock_ping = Mock()
-        mock_ping.control.ping.return_value = [1, 2]
-        mock_celery = Mock(return_value=mock_ping)
-        with patch("etools.libraries.monitoring.service_checks.Celery", mock_celery):
+
+        mock_celery = Mock()
+        mock_celery.connection.return_value = Mock(connected=True)
+
+        with patch("etools.libraries.monitoring.service_checks.Celery", Mock(return_value=mock_celery)):
             check = check_celery()
         self.assertTrue(check.success)
         self.assertEqual(
             check.message,
-            "Successfully pinged 2 workers"
+            "Celery connected"
         )
 
     def test_invalid(self):
-        mock_ping = Mock()
-        mock_ping.control.ping.return_value = []
-        mock_celery = Mock(return_value=mock_ping)
-        with patch("etools.libraries.monitoring.service_checks.Celery", mock_celery):
+
+        mock_celery = Mock()
+        mock_celery.connection.return_value = Mock(connected=False)
+
+        with patch("etools.libraries.monitoring.service_checks.Celery", Mock(return_value=mock_celery)):
             check = check_celery()
         self.assertFalse(check.success)
         self.assertEqual(
             check.message,
-            "No running Celery workers were found."
+            "Celery unable to connect"
         )
