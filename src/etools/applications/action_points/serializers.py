@@ -207,15 +207,23 @@ class ActionPointListExportSerializer(ExportSerializer):
         return headers
 
     def transform_cp_output(self, data):
-        return ",".join(["231" for x in data])
+        if data is None:
+            return data
+        return data.get("result_name", "")
 
     def transform_location(self, data):
+        if data is None:
+            return data
         return data.get("name", "")
 
     def transform_office(self, data):
+        if data is None:
+            return data
         return data.get("name", "")
 
     def transform_section(self, data):
+        if data is None:
+            return data
         return data.get("name", "")
 
     def transform_author(self, data):
@@ -237,12 +245,18 @@ class ActionPointListExportSerializer(ExportSerializer):
         )
 
     def transform_partner(self, data):
+        if data is None:
+            return data
         return data.get("name", "")
 
     def transform_intervention(self, data):
+        if data is None:
+            return data
         return data.get("number", "")
 
     def transform_category(self, data):
+        if data is None:
+            return data
         return data.get("module", "")
 
     def transform_dataset(self, dataset):
