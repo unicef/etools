@@ -4,6 +4,7 @@ from django.utils.translation import ugettext_lazy as _
 from django_comments.models import Comment
 from rest_framework import serializers
 from unicef_locations.serializers import LocationLightSerializer
+from unicef_rest_export.serializers import ExportSerializer
 from unicef_restlib.fields import SeparatedReadWriteField
 from unicef_restlib.serializers import UserContextSerializerMixin, WritableNestedSerializerMixin
 from unicef_snapshot.models import Activity
@@ -180,3 +181,85 @@ class ActionPointSerializer(WritableNestedSerializerMixin, ActionPointListSerial
         if value and value.module != self.instance.related_module:
             raise serializers.ValidationError(_('Category doesn\'t belong to selected module.'))
         return value
+
+
+class ActionPointListExportSerializer(ExportSerializer):
+    engagement = serializers.SerializerMethodField()
+    tpm_activity = serializers.SerializerMethodField()
+    travel_activity = serializers.SerializerMethodField()
+
+    class Meta(ActionPointListSerializer.Meta):
+        pass
+
+    def get_engagement(self, obj):
+        return obj.engagement
+
+    def get_tpm_activity(self, obj):
+        return obj.tpm_activity
+
+    def get_travel_activity(self, obj):
+        return obj.travel_activity
+
+    def get_headers(self, data):
+        headers = []
+        for field in data[0].keys():
+            headers.append(str(self.get_header_label(field)))
+        return headers
+
+    def transform_cp_output(self, data):
+        return ",".join(["231" for x in data])
+
+    def transform_location(self, data):
+        return data.get("name", "")
+
+    def transform_office(self, data):
+        return data.get("name", "")
+
+    def transform_section(self, data):
+        return data.get("name", "")
+
+    def transform_author(self, data):
+        return "{} {}".format(
+            data.get("first_name", ""),
+            data.get("last_name", "")
+        )
+
+    def transform_assigned_by(self, data):
+        return "{} {}".format(
+            data.get("first_name", ""),
+            data.get("last_name", "")
+        )
+
+    def transform_assigned_to(self, data):
+        return "{} {}".format(
+            data.get("first_name", ""),
+            data.get("last_name", "")
+        )
+
+    def transform_partner(self, data):
+        return data.get("name", "")
+
+    def transform_intervention(self, data):
+        return data.get("number", "")
+
+    def transform_category(self, data):
+        return data.get("module", "")
+
+    def transform_dataset(self, dataset):
+        transform_fields = [
+            'category',
+            'assigned_to',
+            'author',
+            'assigned_by',
+            'section',
+            'office',
+            'cp_output',
+            'partner',
+            'intervention',
+            'location',
+        ]
+        from tablib.compat import unicode
+        for field in transform_fields:
+            func = getattr(self, "transform_{}".format(field))
+            dataset.add_formatter(str(self.get_header_label(field)), func)
+        return dataset

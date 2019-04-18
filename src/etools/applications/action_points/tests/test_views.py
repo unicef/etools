@@ -277,10 +277,51 @@ class TestActionPointViewSet(TestExportMixin, ActionPointsTestCaseMixin, BaseTen
 
         self._test_export(self.pme_user, 'action-points:action-points-list-csv-export')
 
+    def test_list_xlsx(self):
+        ActionPointFactory(status='open', comments__count=1)
+        ActionPointFactory(
+            status='open',
+            comments__count=1,
+            engagement=MicroAssessmentFactory(),
+        )
+        ActionPointFactory(
+            status='open',
+            comments__count=1,
+            tpm_activity=TPMVisitFactory(
+                tpm_activities__count=1
+            ).tpm_activities.first(),
+        )
+        traveler = UserFactory()
+        ActionPointFactory(
+            status='open',
+            travel_activity=TravelActivityFactory(
+                primary_traveler=traveler,
+                travels=[TravelFactory(traveler=traveler)]
+            )
+        )
+
+        self._test_export(
+            self.pme_user,
+            'action-points:action-points-list-xlsx-export',
+        )
+
     def test_single_csv(self):
         action_point = ActionPointFactory(status='open', comments__count=1, engagement=MicroAssessmentFactory())
 
         self._test_export(self.pme_user, 'action-points:action-points-single-csv-export', args=[action_point.id])
+
+    def test_single_xlsx(self):
+        action_point = ActionPointFactory(
+            status='open',
+            comments__count=1,
+            engagement=MicroAssessmentFactory(),
+        )
+
+        self._test_export(
+            self.pme_user,
+            'action-points:action-points-single-xlsx-export',
+            args=[action_point.id],
+        )
 
 
 class TestActionPointsViewMetadata(ActionPointsTestCaseMixin):
