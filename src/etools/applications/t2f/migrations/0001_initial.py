@@ -177,7 +177,7 @@ class Migration(migrations.Migration):
                 ('office', models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.CASCADE,
                                              related_name='+', to='users.Office', verbose_name='Office')),
                 ('sector', models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.CASCADE,
-                                             related_name='+', to='reports.Sector', verbose_name='Section')),
+                                             related_name='+', to='reports.Section', verbose_name='Section')),
                 ('supervisor', models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.CASCADE,
                                                  related_name='+', to=settings.AUTH_USER_MODEL, verbose_name='Supervisor')),
                 ('traveler', models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.CASCADE,

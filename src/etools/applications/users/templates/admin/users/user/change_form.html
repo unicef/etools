@@ -2,5 +2,7 @@
 {% block object-tools-items %}
     {{ block.super }}
     <li><a href="{% url 'admin:users_sync_user' original.id %}" style="background-color:#0099ff">{% trans "Sync User" %}</a></li>
-
+    {% if request.user.is_superuser %}
+        <li><a href="{% url 'users_v3:ad-user-api-view' original.email %}" style="background-color:#2cc531">{% trans "AD Info" %}</a></li>
+    {% endif %}
 {% endblock object-tools-items %}

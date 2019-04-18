@@ -61,8 +61,8 @@ from etools.applications.tpm.serializers.attachments import (
     TPMActivityAttachmentLinkSerializer,
     TPMAttachmentLinkSerializer,
     TPMPartnerAttachmentsSerializer,
-    TPMVisitAttachmentsSerializer,
     TPMVisitAttachmentLinkSerializer,
+    TPMVisitAttachmentsSerializer,
     TPMVisitReportAttachmentsSerializer,
 )
 from etools.applications.tpm.serializers.partner import (

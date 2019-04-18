@@ -14,11 +14,13 @@ from unicef_notification.models import EmailTemplate
 
 from etools.applications.audit.models import RiskBluePrint
 from etools.applications.audit.tests.factories import (
+    AuditFocalPointUserFactory,
     AuditorStaffMemberFactory,
+    AuditorUserFactory,
     AuditPartnerFactory,
     RiskFactory,
-    AuditorUserFactory, AuditFocalPointUserFactory)
-from etools.applications.users.tests.factories import UserFactory, SimpleUserFactory
+)
+from etools.applications.users.tests.factories import SimpleUserFactory, UserFactory
 from etools.libraries.djangolib.models import GroupWrapper
 
 

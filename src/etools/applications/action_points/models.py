@@ -11,13 +11,13 @@ from model_utils.models import TimeStampedModel
 from unicef_notification.models import Notification
 from unicef_snapshot.models import Activity
 
-from etools.applications.core.urlresolvers import build_frontend_url
 from etools.applications.action_points.categories.models import Category
 from etools.applications.action_points.transitions.conditions import ActionPointCompleteActionsTakenCheck
 from etools.applications.action_points.transitions.serializers.serializers import ActionPointCompleteSerializer
+from etools.applications.core.urlresolvers import build_frontend_url
+from etools.libraries.djangolib.models import GroupWrapper
 from etools.libraries.djangolib.utils import get_environment
 from etools.libraries.fsm.views import has_action_permission
-from etools.libraries.djangolib.models import GroupWrapper
 
 
 class ActionPoint(TimeStampedModel):
@@ -60,7 +60,7 @@ class ActionPoint(TimeStampedModel):
     due_date = models.DateField(verbose_name=_('Due Date'), blank=True, null=True)
     high_priority = models.BooleanField(default=False, verbose_name=_('High Priority'))
 
-    section = models.ForeignKey('reports.Sector', verbose_name=_('Section'), blank=True, null=True,
+    section = models.ForeignKey('reports.Section', verbose_name=_('Section'), blank=True, null=True,
                                 on_delete=models.CASCADE,
                                 )
     office = models.ForeignKey('users.Office', verbose_name=_('Office'), blank=True, null=True,

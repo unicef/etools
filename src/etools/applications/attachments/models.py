@@ -284,3 +284,10 @@ class AttachmentFlat(models.Model):
 
     def __str__(self):
         return str(self.attachment)
+
+    @classmethod
+    def get_file_types(cls):
+        return cls.objects.exclude(file_type="").values_list(
+            "file_type",
+            flat=True
+        ).distinct("file_type").order_by("file_type")
