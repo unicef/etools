@@ -2,6 +2,7 @@
 
 import django.contrib.postgres.fields.jsonb
 from django.db import migrations
+
 import etools.applications.reports.models
 
 

@@ -4,22 +4,12 @@ from django.db import connection
 from django.test import TestCase
 from django.test.utils import override_settings
 
-
 from mock import Mock
 
 from etools.applications.environment.apps import EnvironmentConfig
 from etools.applications.environment.helpers import tenant_flag_is_active, tenant_switch_is_active
-from etools.applications.environment.tests.factories import (IssueCheckConfigFactory,
-                                                             TenantFlagFactory, TenantSwitchFactory,)
+from etools.applications.environment.tests.factories import TenantFlagFactory, TenantSwitchFactory
 from etools.applications.users.tests.factories import CountryFactory, GroupFactory, UserFactory
-
-
-class IssueCheckConfigTest(TestCase):
-
-    def test_str_method(self):
-        issue_check_config = IssueCheckConfigFactory()
-        expected = '{}: {}'.format(issue_check_config.check_id, issue_check_config.is_active)
-        self.assertEqual(str(issue_check_config), expected)
 
 
 class EnvironmentConfigTest(TestCase):

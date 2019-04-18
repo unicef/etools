@@ -11,8 +11,8 @@ from etools.applications.action_points.models import ActionPoint
 from etools.applications.partners.tests.factories import InterventionFactory, ResultFactory
 from etools.applications.reports.tests.factories import SectionFactory
 from etools.applications.users.tests.factories import UserFactory
-from etools.applications.utils.common.tests.factories import StatusFactoryMetaClass
 from etools.libraries.djangolib.utils import get_current_site
+from etools.libraries.tests.factories import StatusFactoryMetaClass
 
 
 class ActionPointCommentFactory(factory.DjangoModelFactory):

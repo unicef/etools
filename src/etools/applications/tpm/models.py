@@ -388,7 +388,7 @@ class TPMActivity(Activity):
                                      verbose_name=_('Office(s) of UNICEF Focal Point(s)'))
 
     section = models.ForeignKey(
-        'reports.Sector', related_name='tpm_activities', verbose_name=_('Section'),
+        'reports.Section', related_name='tpm_activities', verbose_name=_('Section'),
         on_delete=models.CASCADE,
     )
 

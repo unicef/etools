@@ -60,7 +60,7 @@ class ActionPoint(TimeStampedModel):
     due_date = models.DateField(verbose_name=_('Due Date'), blank=True, null=True)
     high_priority = models.BooleanField(default=False, verbose_name=_('High Priority'))
 
-    section = models.ForeignKey('reports.Sector', verbose_name=_('Section'), blank=True, null=True,
+    section = models.ForeignKey('reports.Section', verbose_name=_('Section'), blank=True, null=True,
                                 on_delete=models.CASCADE,
                                 )
     office = models.ForeignKey('users.Office', verbose_name=_('Office'), blank=True, null=True,

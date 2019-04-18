@@ -9,10 +9,6 @@ from etools.applications.users.serializers import CountrySerializer
 logger = logging.getLogger(__name__)
 
 
-class UserAuthAPIView(v1.UserAuthAPIView):
-    """Stub for UserAuthAPIView"""
-
-
 class ChangeUserCountryView(v1.ChangeUserCountryView):
     """Stub for ChangeUserCountryView"""
 
