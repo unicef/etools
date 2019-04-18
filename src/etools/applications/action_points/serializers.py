@@ -258,7 +258,6 @@ class ActionPointListExportSerializer(ExportSerializer):
             'intervention',
             'location',
         ]
-        from tablib.compat import unicode
         for field in transform_fields:
             func = getattr(self, "transform_{}".format(field))
             dataset.add_formatter(str(self.get_header_label(field)), func)
