@@ -12,10 +12,7 @@ from unicef_restlib.views import QueryStringFilterMixin
 from etools.applications.core.renderers import FriendlyCSVRenderer
 from etools.applications.t2f.filters import travel_list
 from etools.applications.t2f.models import ItineraryItem, Travel, TravelActivity
-from etools.applications.t2f.serializers.export import (
-    TravelActivityExportSerializer,
-    TravelAdminExportSerializer,
-)
+from etools.applications.t2f.serializers.export import TravelActivityExportSerializer, TravelAdminExportSerializer
 from etools.applications.t2f.views import T2FPagePagination
 
 
