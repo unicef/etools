@@ -5,6 +5,8 @@ from rest_framework.response import Response
 from unicef_locations.models import Location
 from unicef_restlib.permissions import IsSuperUser
 
+from etools.applications.action_points.models import ActionPoint
+from etools.applications.activities.models import Activity
 from etools.applications.management.serializers import (
     GisLocationGeojsonSerializer,
     GisLocationListSerializer,
@@ -14,8 +16,6 @@ from etools.applications.partners.models import Intervention
 from etools.applications.reports.models import AppliedIndicator
 from etools.applications.t2f.models import TravelActivity
 from etools.applications.users.models import Country
-from etools.applications.activities.models import Activity
-from etools.applications.action_points.models import ActionPoint
 
 
 class GisLocationsInUseViewset(ListAPIView):

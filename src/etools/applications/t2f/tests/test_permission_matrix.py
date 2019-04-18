@@ -6,15 +6,9 @@ from django.urls import reverse
 from unicef_locations.tests.factories import LocationFactory
 
 from etools.applications.core.tests.cases import BaseTenantTestCase
-from etools.applications.publics.tests.factories import (
-    PublicsCurrencyFactory,
-    PublicsDSARegionFactory,
-)
+from etools.applications.publics.tests.factories import PublicsCurrencyFactory, PublicsDSARegionFactory
 from etools.applications.t2f import UserTypes
-from etools.applications.t2f.helpers.permission_matrix import (
-    FakePermissionMatrix,
-    get_user_role_list,
-)
+from etools.applications.t2f.helpers.permission_matrix import FakePermissionMatrix, get_user_role_list
 from etools.applications.t2f.models import ModeOfTravel, Travel, TravelType
 from etools.applications.t2f.tests.factories import TravelFactory
 from etools.applications.users.tests.factories import UserFactory

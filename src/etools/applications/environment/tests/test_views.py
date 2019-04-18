@@ -1,8 +1,8 @@
 
 import json
 
-from django.urls import reverse
 from django.db import connection
+from django.urls import reverse
 
 from rest_framework import status
 

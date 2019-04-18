@@ -32,11 +32,6 @@ class PortalDashView(TemplateView):
         })
         return context
 
-        # def get(self, request):
-    #     with open(settings.PACKAGE_ROOT + '/templates/frontend/management/management.html', 'r') as my_f:
-    #         result = my_f.read()
-    #     return HttpResponse(result)
-
 
 class ActiveUsers(APIView):
     """

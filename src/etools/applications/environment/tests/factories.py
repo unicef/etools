@@ -5,13 +5,6 @@ from factory import fuzzy
 from etools.applications.environment import models
 
 
-class IssueCheckConfigFactory(factory.django.DjangoModelFactory):
-    class Meta:
-        model = models.IssueCheckConfig
-
-    check_id = fuzzy.FuzzyText()
-
-
 class TenantFlagFactory(factory.django.DjangoModelFactory):
     class Meta:
         model = models.TenantFlag
