@@ -30,7 +30,7 @@ class EngagementAdmin(admin.ModelAdmin):
         'status', 'start_date', 'end_date', 'status', 'engagement_type',
     ]
     search_fields = 'partner__name', 'agreement__auditor_firm__name',
-    filter_horizontal = ('authorized_officers', )
+    filter_horizontal = ('authorized_officers', 'active_pd', 'staff_members')
 
 
 @admin.register(RiskCategory)

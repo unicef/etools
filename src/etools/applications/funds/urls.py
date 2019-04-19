@@ -1,9 +1,15 @@
 
 from django.conf.urls import url
 
-from etools.applications.funds.views import (DonorListAPIView, FRsView, FundsCommitmentHeaderListAPIView,
-                                             FundsCommitmentItemListAPIView, FundsReservationHeaderListAPIView,
-                                             FundsReservationItemListAPIView, GrantListAPIView,)
+from etools.applications.funds.views import (
+    DonorListAPIView,
+    FRsView,
+    FundsCommitmentHeaderListAPIView,
+    FundsCommitmentItemListAPIView,
+    FundsReservationHeaderListAPIView,
+    FundsReservationItemListAPIView,
+    GrantListAPIView,
+)
 
 app_name = 'funds'
 urlpatterns = (
