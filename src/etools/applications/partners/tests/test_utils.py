@@ -1,32 +1,19 @@
 import datetime
-from mock import Mock, patch
 
 from django.conf import settings
 from django.core.management import call_command
 from django.utils import timezone
 
+from mock import Mock, patch
+from unicef_locations.tests.factories import GatewayTypeFactory, LocationFactory
+
 from etools.applications.attachments.tests.factories import AttachmentFileTypeFactory
 from etools.applications.core.tests.cases import BaseTenantTestCase
 from etools.applications.funds.tests.factories import FundsReservationHeaderFactory
-from unicef_locations.tests.factories import GatewayTypeFactory, LocationFactory
 from etools.applications.partners import utils
-from etools.applications.partners.models import (
-    Agreement,
-    Intervention,
-    InterventionBudget,
-    InterventionResultLink,
-)
-from etools.applications.partners.tests.factories import (
-    AgreementFactory,
-    InterventionFactory,
-    PartnerFactory,
-)
-from etools.applications.reports.models import (
-    AppliedIndicator,
-    IndicatorBlueprint,
-    LowerResult,
-    ResultType,
-)
+from etools.applications.partners.models import Agreement, Intervention, InterventionBudget, InterventionResultLink
+from etools.applications.partners.tests.factories import AgreementFactory, InterventionFactory, PartnerFactory
+from etools.applications.reports.models import AppliedIndicator, IndicatorBlueprint, LowerResult, ResultType
 from etools.applications.reports.tests.factories import CountryProgrammeFactory, ResultFactory
 from etools.applications.users.tests.factories import GroupFactory, UserFactory
 

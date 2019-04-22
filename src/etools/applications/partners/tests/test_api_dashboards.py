@@ -15,7 +15,7 @@ from etools.applications.partners.tests.factories import (
     InterventionFactory,
 )
 from etools.applications.t2f.models import Travel, TravelType
-from etools.applications.t2f.tests.factories import TravelFactory, TravelActivityFactory
+from etools.applications.t2f.tests.factories import TravelActivityFactory, TravelFactory
 from etools.applications.users.tests.factories import UserFactory
 
 

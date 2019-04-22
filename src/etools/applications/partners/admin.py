@@ -13,9 +13,9 @@ from unicef_snapshot.admin import ActivityInline, SnapshotModelAdmin
 
 from etools.applications.partners.exports import PartnerExport
 from etools.applications.partners.forms import (  # TODO intervention sector locations cleanup
+    InterventionAttachmentForm,
     PartnersAdminForm,
     PartnerStaffMemberForm,
-    InterventionAttachmentForm,
 )
 from etools.applications.partners.mixins import CountryUsersAdminMixin, HiddenPartnerMixin
 from etools.applications.partners.models import (  # TODO intervention sector locations cleanup

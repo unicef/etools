@@ -1,6 +1,6 @@
 from import_export import resources
 
-from etools.applications.partners.models import PartnerOrganization, Intervention
+from etools.applications.partners.models import Intervention, PartnerOrganization
 
 
 class PartnerExport(resources.ModelResource):
