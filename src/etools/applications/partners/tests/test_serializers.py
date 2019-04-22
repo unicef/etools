@@ -1,16 +1,21 @@
 # Python imports
 import datetime
-
 from unittest import skip
+
 from rest_framework import serializers
 
 from etools.applications.core.tests.cases import BaseTenantTestCase
 from etools.applications.partners.models import Agreement, PartnerType
 from etools.applications.partners.serializers.agreements_v2 import AgreementCreateUpdateSerializer
 from etools.applications.partners.serializers.partner_organization_v2 import PartnerOrganizationDetailSerializer
-from etools.applications.partners.tests.factories import (AgreementAmendmentFactory, AgreementFactory,
-                                                          InterventionFactory, PartnerFactory, PartnerStaffFactory,
-                                                          PlannedEngagementFactory,)
+from etools.applications.partners.tests.factories import (
+    AgreementAmendmentFactory,
+    AgreementFactory,
+    InterventionFactory,
+    PartnerFactory,
+    PartnerStaffFactory,
+    PlannedEngagementFactory,
+)
 from etools.applications.reports.tests.factories import CountryProgrammeFactory
 from etools.applications.users.tests.factories import UserFactory
 

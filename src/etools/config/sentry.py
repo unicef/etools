@@ -1,11 +1,10 @@
-import sentry_sdk
+from django.conf import settings
+from django.db import connection
 
+import sentry_sdk
 from sentry_sdk import configure_scope
 from sentry_sdk.integrations.celery import CeleryIntegration
 from sentry_sdk.integrations.django import DjangoIntegration
-
-from django.db import connection
-from django.conf import settings
 
 if hasattr(settings, 'SENTRY_DSN'):
     def before_send(event, hint):

@@ -3,17 +3,19 @@ import operator
 
 from django.db.models import Q
 
-from rest_framework.generics import ListAPIView, get_object_or_404
+from rest_framework.generics import get_object_or_404, ListAPIView
+from rest_framework.pagination import LimitOffsetPagination
 from rest_framework.response import Response
 from rest_framework.views import APIView
-from rest_framework.pagination import LimitOffsetPagination
-
 
 from etools.applications.partners.filters import PartnerScopeFilter
 from etools.applications.partners.models import Intervention, PartnerOrganization
 from etools.applications.partners.permissions import ListCreateAPIMixedPermission, ReadOnlyAPIUser
-from etools.applications.partners.serializers.prp_v1 import PRPInterventionListSerializer, \
-    PRPPartnerOrganizationListSerializer, InterventionPDFileSerializer
+from etools.applications.partners.serializers.prp_v1 import (
+    InterventionPDFileSerializer,
+    PRPInterventionListSerializer,
+    PRPPartnerOrganizationListSerializer,
+)
 from etools.applications.partners.views.helpers import set_tenant_or_fail
 
 

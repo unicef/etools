@@ -32,8 +32,8 @@ from etools.applications.partners.serializers.exports.agreements import (
     AgreementExportFlatSerializer,
     AgreementExportSerializer,
 )
-from etools.applications.partners.validation.agreements import AgreementValid
 from etools.applications.partners.utils import send_agreement_suspended_notification
+from etools.applications.partners.validation.agreements import AgreementValid
 
 
 class AgreementListAPIView(QueryStringFilterMixin, ExportModelMixin, ValidatorViewMixin, ListCreateAPIView):

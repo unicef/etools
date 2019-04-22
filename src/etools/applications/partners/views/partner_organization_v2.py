@@ -72,8 +72,8 @@ from etools.applications.partners.serializers.partner_organization_v2 import (
 from etools.applications.partners.synchronizers import PartnerSynchronizer
 from etools.applications.partners.views.helpers import set_tenant_or_fail
 from etools.applications.t2f.models import Travel, TravelActivity, TravelType
-from etools.libraries.djangolib.models import StringConcat
 from etools.applications.vision.utils import get_data_from_insight
+from etools.libraries.djangolib.models import StringConcat
 
 
 class PartnerOrganizationListAPIView(QueryStringFilterMixin, ExportModelMixin, ListCreateAPIView):

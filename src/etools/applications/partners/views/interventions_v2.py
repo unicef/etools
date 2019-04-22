@@ -650,7 +650,7 @@ class InterventionLocation(object):
         )
 
 
-class InterventionLocationListAPIView(ListAPIView):
+class InterventionLocationListAPIView(QueryStringFilterMixin, ListAPIView):
     """
     API to export a list of intervention locations.
 
@@ -666,6 +666,20 @@ class InterventionLocationListAPIView(ListAPIView):
     renderer_classes = (
         JSONRenderer,
         InterventionLocationCSVRenderer,
+    )
+
+    filters = (
+        ('sections', 'sections__in'),
+        ('country_programmes', 'country_programme__in'),
+        ('status', 'status__in'),
+        ('partners', 'agreement__partner__in'),
+        ('offices', 'offices__in'),
+        ('results', 'result_links__cp_output__in'),
+        ('donors', 'frs__fr_items__donor__in'),
+        ('grants', 'frs__fr_items__grant_number__in'),
+        ('unicef_focal_points', 'unicef_focal_points__in'),
+        ('interventions', 'pk__in'),
+        ('clusters', 'result_links__ll_results__applied_indicators__cluster_name__icontains'),
     )
 
     def list(self, request, *args, **kwargs):
