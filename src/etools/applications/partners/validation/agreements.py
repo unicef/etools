@@ -3,14 +3,11 @@ from datetime import date
 
 from django.utils.translation import ugettext as _
 
-from etools.applications.partners.permissions import AgreementPermissions
-from etools_validator.exceptions import (
-    BasicValidationError,
-    StateValidationError,
-    TransitionError,
-)
-from etools_validator.utils import check_rigid_fields, check_required_fields
+from etools_validator.exceptions import BasicValidationError, StateValidationError, TransitionError
+from etools_validator.utils import check_required_fields, check_rigid_fields
 from etools_validator.validation import CompleteValidation
+
+from etools.applications.partners.permissions import AgreementPermissions
 
 
 def agreement_transition_to_signed_valid(agreement):

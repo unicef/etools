@@ -3,8 +3,8 @@ from unittest import skip
 
 from django.conf import settings
 from django.contrib.auth.models import AnonymousUser
-from django.urls import reverse
 from django.test import override_settings, RequestFactory, TestCase
+from django.urls import reverse
 
 from etools.applications.core.middleware import ANONYMOUS_ALLOWED_URL_FRAGMENTS, EToolsTenantMiddleware
 from etools.applications.users.tests.factories import CountryFactory, UserFactory

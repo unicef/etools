@@ -1,6 +1,7 @@
 import datetime
-
 from unittest import skip
+
+from etools_validator.exceptions import BasicValidationError, TransitionError
 
 from etools.applications.core.tests.cases import BaseTenantTestCase
 from etools.applications.partners.models import Agreement
@@ -13,7 +14,6 @@ from etools.applications.partners.tests.factories import (
 from etools.applications.partners.validation import agreements
 from etools.applications.reports.tests.factories import CountryProgrammeFactory
 from etools.applications.users.tests.factories import UserFactory
-from etools_validator.exceptions import BasicValidationError, TransitionError
 
 
 class TestAgreementTransitionToSignedValid(BaseTenantTestCase):

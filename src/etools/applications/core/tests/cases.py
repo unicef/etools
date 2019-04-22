@@ -1,10 +1,10 @@
 from django.core.exceptions import ObjectDoesNotExist
 from django.core.management import call_command
-from django.urls import resolve
 from django.db import connection
-from django_tenants.test.cases import TenantTestCase
-from django_tenants.utils import get_tenant_model, get_tenant_domain_model
+from django.urls import resolve
 
+from django_tenants.test.cases import TenantTestCase
+from django_tenants.utils import get_tenant_domain_model, get_tenant_model
 from rest_framework.test import APIClient, APIRequestFactory, force_authenticate
 from unicef_notification.models import EmailTemplate
 

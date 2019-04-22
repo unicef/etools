@@ -11,9 +11,9 @@ from django.utils.translation import ugettext_lazy as _
 from model_utils.models import TimeStampedModel
 
 from etools.applications.audit.models import Audit, Engagement, MicroAssessment, SpecialAudit, SpotCheck
-from etools.libraries.pythonlib.encoders import CustomJSONEncoder
 from etools.applications.partners.models import PartnerOrganization, PartnerType
 from etools.libraries.pythonlib.datetime import get_current_year
+from etools.libraries.pythonlib.encoders import CustomJSONEncoder
 
 
 class HactHistory(TimeStampedModel):

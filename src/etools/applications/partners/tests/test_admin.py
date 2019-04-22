@@ -5,11 +5,7 @@ from django.contrib.admin.sites import AdminSite
 from unicef_snapshot.models import Activity
 
 from etools.applications.core.tests.cases import BaseTenantTestCase
-from etools.applications.partners.admin import (
-    AgreementAdmin,
-    InterventionAdmin,
-    PartnerStaffMemberAdmin,
-)
+from etools.applications.partners.admin import AgreementAdmin, InterventionAdmin, PartnerStaffMemberAdmin
 from etools.applications.partners.models import Agreement, Intervention, PartnerStaffMember
 from etools.applications.partners.tests.factories import (
     AgreementFactory,

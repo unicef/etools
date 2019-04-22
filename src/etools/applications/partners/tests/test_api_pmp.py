@@ -3,8 +3,8 @@ from operator import itemgetter
 
 from django.test import SimpleTestCase
 from django.urls import reverse
-from django_tenants.test.client import TenantClient
 
+from django_tenants.test.client import TenantClient
 from rest_framework import status
 from unicef_djangolib.fields import CURRENCY_LIST
 from unicef_locations.tests.factories import GatewayTypeFactory
