@@ -3,8 +3,8 @@ from django.utils import timezone
 
 from celery.utils.log import get_task_logger
 
-from etools.applications.funds.synchronizers import FundReservationsSynchronizer, FundCommitmentSynchronizer
-from etools.applications.partners.synchronizers import PartnerSynchronizer, DirectCashTransferSynchronizer
+from etools.applications.funds.synchronizers import FundCommitmentSynchronizer, FundReservationsSynchronizer
+from etools.applications.partners.synchronizers import DirectCashTransferSynchronizer, PartnerSynchronizer
 from etools.applications.reports.synchronizers import ProgrammeSynchronizer, RAMSynchronizer
 from etools.applications.users.models import Country
 from etools.applications.vision.exceptions import VisionException

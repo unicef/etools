@@ -10,9 +10,8 @@ from rest_framework.exceptions import AuthenticationFailed, PermissionDenied
 from rest_framework_jwt.authentication import JSONWebTokenAuthentication
 from rest_framework_jwt.settings import api_settings
 from rest_framework_jwt.utils import jwt_payload_handler
-from social_core.pipeline import social_auth
-from social_core.pipeline import user as social_core_user
 from social_core.backends.azuread_b2c import AzureADB2COAuth2
+from social_core.pipeline import social_auth, user as social_core_user
 from social_django.middleware import SocialAuthExceptionMiddleware
 
 from etools.applications.users.models import Country

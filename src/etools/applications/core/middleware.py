@@ -6,6 +6,7 @@ from django.db import connection
 from django.http.response import HttpResponseRedirect
 from django.template.response import SimpleTemplateResponse
 from django.urls import reverse
+
 from django_tenants.middleware import TenantMiddleware
 from django_tenants.utils import get_public_schema_name
 
