@@ -1,3 +1,4 @@
+from django.contrib.auth import get_user_model
 from django.core.management import call_command
 from django.core.management.base import BaseCommand, CommandError
 from django.db import connection
@@ -30,5 +31,7 @@ class Command(BaseCommand):
             connection.set_schema(slug)
             call_command('loaddata', 'attachments_file_types')
             call_command('loaddata', 'audit_risks_blueprints')
+            for user in get_user_model().objects.filter(is_superuser=True):
+                user.profile.countries_available.add(country)
         except Exception as exp:
             raise CommandError(*exp.args)
