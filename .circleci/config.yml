@@ -22,15 +22,24 @@ jobs:
       - run:
           name: Run Tests
           command: |
+            pip install codacy-coverage
             tox -e d21,report
       - save_cache:
           key: deps2-{{ .Branch }}--{{ checksum "Pipfile.lock" }}-{{ checksum ".circleci/config.yml" }}
           paths:
             - "env1"
             - /root/.cache/pip
+      - store_test_results:
+          path: build/
       - store_artifacts:
           path: build/coverage
           destination: coverage
+      - store_artifacts:
+          path: build/report
+          destination: report
+    post:
+      - bash <(curl -s https://codecov.io/bash)
+      - python-codacy-coverage -r coverage.xml
 
   build_and_deploy:
     machine: true

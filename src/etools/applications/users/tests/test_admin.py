@@ -4,8 +4,8 @@ from django.contrib import messages
 from django.contrib.admin.sites import AdminSite
 from django.urls import reverse
 
-from django_tenants.utils import schema_context
 from mock import ANY, Mock, patch
+from django_tenants.utils import schema_context
 
 from etools.applications.core.tests.cases import BaseTenantTestCase
 from etools.applications.hact.tasks import update_hact_for_country
