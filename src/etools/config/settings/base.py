@@ -47,7 +47,7 @@ SECRETS_FILE_LOCATION = os.environ.get('SECRETS_FILE_LOCATION', join(CONFIG_ROOT
 
 try:
     with open(SECRETS_FILE_LOCATION, 'r') as secrets_file:
-        SECRETS = yaml.load(secrets_file)['ENVIRONMENT']
+        SECRETS = yaml.safe_load(secrets_file)['ENVIRONMENT']
 except FileNotFoundError:
     # pass, for now we default trying to get the secrets from env vars as well
     SECRETS = {}
