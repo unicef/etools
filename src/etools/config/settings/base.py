@@ -17,8 +17,14 @@ import datetime
 import os
 from os.path import abspath, basename, dirname, join, normpath
 
+from django.db import connection
+
 import dj_database_url
+import sentry_sdk
 import yaml
+from sentry_sdk import configure_scope
+from sentry_sdk.integrations.celery import CeleryIntegration
+from sentry_sdk.integrations.django import DjangoIntegration
 
 import etools
 
@@ -47,7 +53,7 @@ SECRETS_FILE_LOCATION = os.environ.get('SECRETS_FILE_LOCATION', join(CONFIG_ROOT
 
 try:
     with open(SECRETS_FILE_LOCATION, 'r') as secrets_file:
-        SECRETS = yaml.load(secrets_file)['ENVIRONMENT']
+        SECRETS = yaml.safe_load(secrets_file)['ENVIRONMENT']
 except FileNotFoundError:
     # pass, for now we default trying to get the secrets from env vars as well
     SECRETS = {}
@@ -423,6 +429,23 @@ JWT_AUTH = {
 
     'JWT_AUTH_HEADER_PREFIX': 'JWT',
 }
+
+SENTRY_DSN = get_from_secrets_or_env('SENTRY_DSN')  # noqa: F405
+
+if SENTRY_DSN:
+    def before_send(event, hint):
+        with configure_scope() as scope:
+            scope.set_extra("tenant", connection.tenant.schema_name)
+
+        return event
+
+    sentry_sdk.init(
+        dsn=SENTRY_DSN,
+        # by default this is False, must be set to True so the library attaches the request data to the event
+        send_default_pii=True,
+        integrations=[DjangoIntegration(), CeleryIntegration()],
+        before_send=before_send,
+    )
 
 
 # eTools settings ################################
