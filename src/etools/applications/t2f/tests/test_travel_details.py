@@ -283,6 +283,23 @@ class TravelDetails(URLAssertionMixin, BaseTenantTestCase):
         self.assertCountEqual(response_json['activities'][0]['locations'], [location.id, location_2.id])
         self.assertEqual(response_json['activities'][1]['locations'], [location_3.id])
 
+    def test_activity_patch_no_date(self):
+        data = {
+            'activities': [{'is_primary_traveler': True}],
+            'traveler': self.traveler.pk,
+        }
+        response = self.forced_auth_req(
+            'patch',
+            reverse('t2f:travels:details:index', args=[self.travel.pk]),
+            data=data,
+            user=self.traveler,
+        )
+        response_json = json.loads(response.rendered_content)
+        self.assertEqual(
+            response_json,
+            {'activities': [{'date': ['This field is required.']}]},
+        )
+
     def test_activity_results(self):
         location = LocationFactory()
         location_2 = LocationFactory()
