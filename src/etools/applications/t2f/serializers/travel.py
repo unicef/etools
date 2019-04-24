@@ -106,6 +106,10 @@ class TravelActivitySerializer(PermissionBasedModelSerializer):
             if not attrs.get('is_primary_traveler'):
                 if not attrs.get('primary_traveler'):
                     raise ValidationError({'primary_traveler': serializers.Field.default_error_messages['required']})
+            if not attrs.get('date'):
+                raise ValidationError({
+                    'date': serializers.Field.default_error_messages['required']
+                })
 
         partner = attrs.get('partner', getattr(self.instance, 'partner', None))
         travel_type = attrs.get('travel_type', getattr(self.instance, 'travel_type', None))
