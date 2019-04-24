@@ -8,6 +8,7 @@ from django.http.response import HttpResponseRedirect
 from django.shortcuts import get_object_or_404
 from django.urls import reverse
 
+from django_tenants.admin import TenantAdminMixin
 from django_tenants.utils import get_public_schema_name
 
 from etools.applications.hact.tasks import update_hact_for_country, update_hact_values
@@ -234,7 +235,7 @@ class UserAdminPlus(UserAdmin):
         return fields
 
 
-class CountryAdmin(admin.ModelAdmin):
+class CountryAdmin(TenantAdminMixin, admin.ModelAdmin):
     change_form_template = 'admin/users/country/change_form.html'
 
     def has_add_permission(self, request):
