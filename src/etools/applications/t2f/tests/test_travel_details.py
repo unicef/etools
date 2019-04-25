@@ -11,8 +11,7 @@ from etools.applications.core.tests.cases import BaseTenantTestCase
 from etools.applications.core.tests.mixins import URLAssertionMixin
 from etools.applications.partners.models import PartnerType
 from etools.applications.partners.tests.factories import PartnerFactory
-from etools.applications.publics.models import DSARegion
-from etools.applications.publics.tests.factories import PublicsAirlineCompanyFactory, PublicsDSARegionFactory
+from etools.applications.publics.tests.factories import PublicsAirlineCompanyFactory
 from etools.applications.t2f.models import ModeOfTravel, Travel, TravelAttachment, TravelType
 from etools.applications.t2f.tests.factories import TravelAttachmentFactory, TravelFactory
 from etools.applications.users.tests.factories import UserFactory
@@ -61,7 +60,7 @@ class TravelDetails(URLAssertionMixin, BaseTenantTestCase):
                            'section', 'start_date', 'status', 'activities',
                            'rejection_note', 'end_date', 'mode_of_travel', 'international_travel',
                            'first_submission_date', 'purpose', 'report', 'itinerary',
-                           'reference_number', 'currency', 'canceled_at', 'estimated_travel_cost'],
+                           'reference_number', 'canceled_at', 'estimated_travel_cost'],
                           response_json,
                           exact=True)
 
@@ -85,7 +84,7 @@ class TravelDetails(URLAssertionMixin, BaseTenantTestCase):
              'section', 'start_date', 'status', 'activities',
              'rejection_note', 'end_date', 'mode_of_travel', 'international_travel', 'itinerary',
              'first_submission_date', 'purpose', 'report',
-             'reference_number', 'currency', 'canceled_at', 'estimated_travel_cost'],
+             'reference_number', 'canceled_at', 'estimated_travel_cost'],
             response_json,
             exact=True
         )
@@ -223,7 +222,6 @@ class TravelDetails(URLAssertionMixin, BaseTenantTestCase):
         self.assertIn('id', response_json)
 
     def test_airlines(self):
-        dsaregion = DSARegion.objects.first()
         airlines_1 = PublicsAirlineCompanyFactory()
         airlines_2 = PublicsAirlineCompanyFactory()
         airlines_3 = PublicsAirlineCompanyFactory()
@@ -232,7 +230,6 @@ class TravelDetails(URLAssertionMixin, BaseTenantTestCase):
                                'destination': 'Berlin',
                                'departure_date': '2016-11-16',
                                'arrival_date': '2016-11-17',
-                               'dsa_region': dsaregion.id,
                                'overnight_travel': False,
                                'mode_of_travel': ModeOfTravel.PLANE,
                                'airlines': [airlines_1.id, airlines_2.id]}],
@@ -322,14 +319,12 @@ class TravelDetails(URLAssertionMixin, BaseTenantTestCase):
         self.assertEqual(response_json, {'activities': [{'result': ['This field is required.']}]})
 
     def test_itinerary_dates(self):
-        dsaregion = DSARegion.objects.first()
         airlines = PublicsAirlineCompanyFactory()
 
         data = {'itinerary': [{'origin': 'Budapest',
                                'destination': 'Berlin',
                                'departure_date': '2016-11-16',
                                'arrival_date': '2016-11-17',
-                               'dsa_region': dsaregion.id,
                                'overnight_travel': False,
                                'mode_of_travel': ModeOfTravel.RAIL,
                                'airlines': [airlines.id]},
@@ -337,7 +332,6 @@ class TravelDetails(URLAssertionMixin, BaseTenantTestCase):
                                'destination': 'Budapest',
                                'departure_date': '2016-11-15',
                                'arrival_date': '2016-11-16',
-                               'dsa_region': dsaregion.id,
                                'overnight_travel': False,
                                'mode_of_travel': ModeOfTravel.RAIL,
                                'airlines': [airlines.id]}],
@@ -363,14 +357,12 @@ class TravelDetails(URLAssertionMixin, BaseTenantTestCase):
         self.assertEqual(response_json, {'non_field_errors': ['Travel must have at least two itinerary item']})
 
     def test_itinerary_origin_destination(self):
-        dsaregion = DSARegion.objects.first()
         airlines = PublicsAirlineCompanyFactory()
 
         data = {'itinerary': [{'origin': 'Berlin',
                                'destination': 'Budapest',
                                'departure_date': '2016-11-15',
                                'arrival_date': '2016-11-16',
-                               'dsa_region': dsaregion.id,
                                'overnight_travel': False,
                                'mode_of_travel': ModeOfTravel.RAIL,
                                'airlines': [airlines.id]},
@@ -378,7 +370,6 @@ class TravelDetails(URLAssertionMixin, BaseTenantTestCase):
                                'destination': 'Berlin',
                                'departure_date': '2016-11-16',
                                'arrival_date': '2016-11-17',
-                               'dsa_region': dsaregion.id,
                                'overnight_travel': False,
                                'mode_of_travel': ModeOfTravel.RAIL,
                                'airlines': [airlines.id]}],
@@ -389,71 +380,6 @@ class TravelDetails(URLAssertionMixin, BaseTenantTestCase):
                                         user=self.unicef_staff)
         response_json = json.loads(response.rendered_content)
         self.assertEqual(response_json, {'itinerary': ['Origin should match with the previous destination']})
-
-    def test_itinerary_dsa_regions(self):
-        dsaregion = DSARegion.objects.first()
-        airlines = PublicsAirlineCompanyFactory()
-
-        data = {'itinerary': [{'origin': 'Budapest',
-                               'destination': 'Berlin',
-                               'departure_date': '2016-11-15',
-                               'arrival_date': '2016-11-16',
-                               'dsa_region': None,
-                               'overnight_travel': False,
-                               'mode_of_travel': ModeOfTravel.RAIL,
-                               'airlines': [airlines.id]},
-                              {'origin': 'Berlin',
-                               'destination': 'Budapest',
-                               'departure_date': '2016-11-16',
-                               'arrival_date': '2016-11-17',
-                               'dsa_region': dsaregion.id,
-                               'overnight_travel': False,
-                               'mode_of_travel': ModeOfTravel.RAIL,
-                               'airlines': [airlines.id]}],
-                'activities': [],
-                'ta_required': True}
-        response = self.forced_auth_req('post', reverse('t2f:travels:list:index'), data=data,
-                                        user=self.unicef_staff)
-        response_json = json.loads(response.rendered_content)
-        travel_id = response_json['id']
-
-        response = self.forced_auth_req('post', reverse('t2f:travels:details:state_change',
-                                                        kwargs={'travel_pk': travel_id,
-                                                                'transition_name': Travel.SUBMIT_FOR_APPROVAL}),
-                                        data=data, user=self.unicef_staff)
-        response_json = json.loads(response.rendered_content)
-        self.assertEqual(response_json, {'non_field_errors': ['All itinerary items has to have DSA region assigned']})
-
-        # Non ta trip
-        data = {'itinerary': [{'origin': 'Budapest',
-                               'destination': 'Berlin',
-                               'departure_date': '2016-11-15',
-                               'arrival_date': '2016-11-16',
-                               'dsa_region': None,
-                               'overnight_travel': False,
-                               'mode_of_travel': ModeOfTravel.RAIL,
-                               'airlines': [airlines.id]},
-                              {'origin': 'Berlin',
-                               'destination': 'Budapest',
-                               'departure_date': '2016-11-16',
-                               'arrival_date': '2016-11-17',
-                               'dsa_region': dsaregion.id,
-                               'overnight_travel': False,
-                               'mode_of_travel': ModeOfTravel.RAIL,
-                               'airlines': [airlines.id]}],
-                'activities': [],
-                'supervisor': self.unicef_staff.id,
-                'ta_required': False}
-        response = self.forced_auth_req('post', reverse('t2f:travels:list:index'), data=data,
-                                        user=self.unicef_staff)
-        response_json = json.loads(response.rendered_content)
-        travel_id = response_json['id']
-
-        response = self.forced_auth_req('post', reverse('t2f:travels:details:state_change',
-                                                        kwargs={'travel_pk': travel_id,
-                                                                'transition_name': Travel.SUBMIT_FOR_APPROVAL}),
-                                        data=data, user=self.unicef_staff)
-        self.assertEqual(response.status_code, 200)
 
     def test_activity_locations(self):
         data = {'itinerary': [],
@@ -466,19 +392,14 @@ class TravelDetails(URLAssertionMixin, BaseTenantTestCase):
         self.assertEqual(response_json, {'activities': [{'primary_traveler': ['This field is required.']}]})
 
     def test_reversed_itinerary_order(self):
-        dsa_1 = DSARegion.objects.first()
-        dsa_2 = PublicsDSARegionFactory()
-
         data = {'itinerary': [{'airlines': [],
                                'origin': 'a',
                                'destination': 'b',
-                               'dsa_region': dsa_1.id,
                                'departure_date': '2017-01-18',
                                'arrival_date': '2017-01-19',
                                'mode_of_travel': 'car'},
                               {'origin': 'b',
                                'destination': 'c',
-                               'dsa_region': dsa_2.id,
                                'departure_date': '2017-01-20',
                                'arrival_date': '2017-01-27',
                                'mode_of_travel': 'car'}],
@@ -501,16 +422,12 @@ class TravelDetails(URLAssertionMixin, BaseTenantTestCase):
         self.assertEqual(extracted_origin_destination, itinerary_origin_destination_expectation)
 
     def test_incorrect_itinerary_order(self):
-        dsa_1 = DSARegion.objects.first()
-        dsa_2 = PublicsDSARegionFactory()
-
         data = {
             'itinerary': [
                 {
                     'airlines': [],
                     'origin': 'b',
                     'destination': 'c',
-                    'dsa_region': dsa_1.id,
                     'departure_date': '2017-01-20',
                     'arrival_date': '2017-01-27',
                     'mode_of_travel': 'car'
@@ -518,7 +435,6 @@ class TravelDetails(URLAssertionMixin, BaseTenantTestCase):
                 {
                     'origin': 'a',
                     'destination': 'b',
-                    'dsa_region': dsa_2.id,
                     'departure_date': '2017-01-18',
                     'arrival_date': '2017-01-19',
                     'mode_of_travel': 'car'
@@ -625,14 +541,12 @@ class TravelDetails(URLAssertionMixin, BaseTenantTestCase):
         self.assertEqual(response.status_code, 201)
 
     def test_ghost_data_existence(self):
-        dsa_region = DSARegion.objects.first()
         airline = PublicsAirlineCompanyFactory()
 
         data = {'itinerary': [{'origin': 'Budapest',
                                'destination': 'Berlin',
                                'departure_date': '2016-11-16',
                                'arrival_date': '2016-11-17',
-                               'dsa_region': dsa_region.id,
                                'overnight_travel': False,
                                'mode_of_travel': ModeOfTravel.PLANE,
                                'airlines': [airline.id]}],
@@ -652,14 +566,12 @@ class TravelDetails(URLAssertionMixin, BaseTenantTestCase):
         self.assertEqual(response_json['itinerary'][0]['airlines'], [airline.id])
 
     def test_save_with_ghost_data(self):
-        dsa_region = DSARegion.objects.first()
         airline = PublicsAirlineCompanyFactory()
 
         data = {'itinerary': [{'origin': 'Budapest',
                                'destination': 'Berlin',
                                'departure_date': '2016-11-16',
                                'arrival_date': '2016-11-17',
-                               'dsa_region': dsa_region.id,
                                'overnight_travel': False,
                                'mode_of_travel': ModeOfTravel.PLANE,
                                'airlines': [airline.id]}],

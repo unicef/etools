@@ -1,6 +1,5 @@
 import datetime
 import logging
-from decimal import Decimal
 
 from django.conf import settings
 from django.contrib.postgres.fields.array import ArrayField
@@ -154,22 +153,7 @@ class Travel(models.Model):
                                 verbose_name=_('Mode of Travel'))
     estimated_travel_cost = models.DecimalField(max_digits=20, decimal_places=4, default=0,
                                                 verbose_name=_('Estimated Travel Cost'))
-    currency = models.ForeignKey(
-        'publics.Currency', related_name='+', null=True, blank=True,
-        verbose_name=_('Currency'),
-        on_delete=models.CASCADE,
-    )
     is_driver = models.BooleanField(default=False, verbose_name=_('Is Driver'))
-
-    # When the travel is sent for payment, the expenses should be saved for later use
-    preserved_expenses_local = models.DecimalField(max_digits=20, decimal_places=4, null=True, blank=True, default=None,
-                                                   verbose_name=_('Preserved Expenses (Local)'))
-    preserved_expenses_usd = models.DecimalField(max_digits=20, decimal_places=4, null=True, blank=True, default=None,
-                                                 verbose_name=_('Preserved Expenses (USD)'))
-    approved_cost_traveler = models.DecimalField(max_digits=20, decimal_places=4, null=True, blank=True, default=None,
-                                                 verbose_name=_('Approved Cost Traveler'))
-    approved_cost_travel_agencies = models.DecimalField(max_digits=20, decimal_places=4, null=True, blank=True,
-                                                        default=None, verbose_name=_('Approved Cost Travel Agencies'))
 
     def __str__(self):
         return self.reference_number
@@ -225,9 +209,6 @@ class Travel(models.Model):
         if self.ta_required and self.itinerary.all().count() < 2:
             raise TransitionError(ugettext('Travel must have at least two itinerary item'))
 
-        if self.ta_required and self.itinerary.filter(dsa_region=None).exists():
-            raise TransitionError(ugettext('All itinerary items has to have DSA region assigned'))
-
         return True
 
     @transition(status, source=[PLANNED, REJECTED, CANCELLED], target=SUBMITTED,
@@ -242,12 +223,6 @@ class Travel(models.Model):
 
     @transition(status, source=[SUBMITTED], target=APPROVED)
     def approve(self):
-        expenses = {'user': Decimal(0),
-                    'travel_agent': Decimal(0)}
-
-        self.approved_cost_traveler = expenses['user']
-        self.approved_cost_travel_agencies = expenses['travel_agent']
-
         self.approved_at = timezone_now()
         self.send_notification_email('Travel #{} was approved.'.format(self.reference_number),
                                      self.traveler.email,
@@ -395,13 +370,8 @@ class ItineraryItem(models.Model):
     destination = models.CharField(max_length=255, verbose_name=_('Destination'))
     departure_date = models.DateField(verbose_name=_('Departure Date'))
     arrival_date = models.DateField(verbose_name=_('Arrival Date'))
-    dsa_region = models.ForeignKey(
-        'publics.DSARegion', related_name='+', null=True, blank=True,
-        verbose_name=_('DSA Region'),
-        on_delete=models.CASCADE,
-    )
     overnight_travel = models.BooleanField(default=False, verbose_name=_('Overnight Travel'))
-    mode_of_travel = models.CharField(max_length=5, choices=ModeOfTravel.CHOICES, default='', blank=True,
+    mode_of_travel = models.CharField(max_length=5, choices=ModeOfTravel.CHOICES, null=True, blank=True,
                                       verbose_name=_('Mode of Travel'))
     airlines = models.ManyToManyField('publics.AirlineCompany', related_name='+', verbose_name=_('Airlines'))
 

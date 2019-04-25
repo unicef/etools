@@ -6,7 +6,6 @@ from django.urls import reverse
 from unicef_locations.tests.factories import LocationFactory
 
 from etools.applications.core.tests.cases import BaseTenantTestCase
-from etools.applications.publics.tests.factories import PublicsCurrencyFactory, PublicsDSARegionFactory
 from etools.applications.t2f.helpers.permission_matrix import FakePermissionMatrix, get_user_role_list, UserTypes
 from etools.applications.t2f.models import ModeOfTravel, Travel, TravelType
 from etools.applications.t2f.tests.factories import TravelFactory
@@ -97,8 +96,6 @@ class TestPermissionMatrix(BaseTenantTestCase):
                                  UserTypes.REPRESENTATIVE])
 
     def test_travel_creation(self):
-        dsa_region = PublicsDSARegionFactory()
-        currency = PublicsCurrencyFactory()
         location = LocationFactory()
 
         purpose = 'Some purpose to check later'
@@ -119,7 +116,6 @@ class TestPermissionMatrix(BaseTenantTestCase):
                                'destination': 'Budapest',
                                'departure_date': '2017-04-14',
                                'arrival_date': '2017-04-15',
-                               'dsa_region': dsa_region.id,
                                'overnight_travel': False,
                                'mode_of_travel': ModeOfTravel.RAIL,
                                'airlines': []},
@@ -127,7 +123,6 @@ class TestPermissionMatrix(BaseTenantTestCase):
                                'destination': 'Berlin',
                                'departure_date': '2017-05-20',
                                'arrival_date': '2017-05-21',
-                               'dsa_region': dsa_region.id,
                                'overnight_travel': False,
                                'mode_of_travel': ModeOfTravel.RAIL,
                                'airlines': []}],
@@ -143,7 +138,6 @@ class TestPermissionMatrix(BaseTenantTestCase):
                 'start_date': '2016-12-15',
                 'end_date': '2016-12-16',
                 'estimated_travel_cost': '123',
-                'currency': currency.id,
                 'purpose': purpose,
                 'additional_note': 'Notes'
                 }

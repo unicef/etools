@@ -10,8 +10,6 @@ from unicef_locations.tests.factories import LocationFactory
 
 from etools.applications.core.tests.cases import BaseTenantTestCase
 from etools.applications.core.tests.mixins import URLAssertionMixin
-from etools.applications.publics.models import DSARegion
-from etools.applications.publics.tests.factories import PublicsCurrencyFactory
 from etools.applications.reports.tests.factories import ResultFactory
 from etools.applications.t2f.models import make_travel_reference_number, ModeOfTravel, Travel, TravelType
 from etools.applications.t2f.tests.factories import TravelActivityFactory, TravelFactory
@@ -254,8 +252,6 @@ class TravelList(URLAssertionMixin, BaseTenantTestCase):
         self.assertEqual(len(response_json['data']), 1)
 
     def test_travel_creation(self):
-        dsaregion = DSARegion.objects.first()
-        currency = PublicsCurrencyFactory()
         location = LocationFactory()
 
         data = {'0': {},
@@ -269,7 +265,6 @@ class TravelList(URLAssertionMixin, BaseTenantTestCase):
                                'overnight_travel': False,
                                'origin': 'a',
                                'destination': 'b',
-                               'dsa_region': dsaregion.id,
                                'departure_date': '2016-12-15T15:02:13+01:00',
                                'arrival_date': '2016-12-16T15:02:13+01:00',
                                'mode_of_travel': ModeOfTravel.BOAT}],
@@ -285,7 +280,6 @@ class TravelList(URLAssertionMixin, BaseTenantTestCase):
                 'start_date': '2016-12-15T15:02:13+01:00',
                 'end_date': '2016-12-16T15:02:13+01:00',
                 'estimated_travel_cost': '123',
-                'currency': currency.id,
                 'purpose': 'Purpose',
                 'additional_note': 'Notes'}
 

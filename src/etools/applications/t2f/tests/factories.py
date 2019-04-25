@@ -8,8 +8,6 @@ from etools.applications.action_points.tests.factories import ActionPointFactory
 from etools.applications.partners.tests.factories import InterventionFactory
 from etools.applications.publics.tests.factories import (
     PublicsAirlineCompanyFactory,
-    PublicsCurrencyFactory,
-    PublicsDSARegionFactory,
 )
 from etools.applications.reports.tests.factories import ResultFactory, SectionFactory
 from etools.applications.t2f import models
@@ -64,7 +62,6 @@ class ItineraryItemFactory(factory.DjangoModelFactory):
         start_date=_FUZZY_NOW_DATE,
         end_date=_FUZZY_END_DATE,
     )
-    dsa_region = factory.SubFactory(PublicsDSARegionFactory)
     overnight_travel = False
     mode_of_travel = models.ModeOfTravel.BOAT
 
@@ -94,7 +91,6 @@ class TravelFactory(factory.DjangoModelFactory):
     international_travel = False
     ta_required = True
     reference_number = factory.Sequence(lambda n: models.make_travel_reference_number())
-    currency = factory.SubFactory(PublicsCurrencyFactory)
     mode_of_travel = []
 
     itinerary = factory.RelatedFactory(ItineraryItemFactory, 'travel')

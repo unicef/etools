@@ -82,14 +82,13 @@ class TravelAdminExportSerializer(serializers.Serializer):
     destination = serializers.CharField()
     departure_time = serializers.DateField(source='departure_date', format='%d-%b-%Y')
     arrival_time = serializers.DateField(source='arrival_date', format='%d-%b-%Y')
-    dsa_area = serializers.CharField(source='dsa_region.area_code', read_only=True)
     overnight_travel = serializers.BooleanField()
     mode_of_travel = serializers.CharField()
     airline = serializers.SerializerMethodField()
 
     class Meta:
         fields = ('reference_number', 'traveler', 'office', 'section', 'status', 'origin', 'destination',
-                  'departure_time', 'arrival_time', 'dsa_area', 'overnight_travel', 'mode_of_travel', 'airline')
+                  'departure_time', 'arrival_time', 'overnight_travel', 'mode_of_travel', 'airline')
 
     def get_airline(self, obj):
         return getattr(obj.airlines.order_by('id').last(), 'name', None)

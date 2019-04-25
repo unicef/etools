@@ -8,11 +8,6 @@ from django.core import mail
 from django.urls import reverse
 
 from etools.applications.core.tests.cases import BaseTenantTestCase
-from etools.applications.publics.tests.factories import (
-    PublicsBusinessAreaFactory,
-    PublicsCurrencyFactory,
-    PublicsDSARegionFactory,
-)
 from etools.applications.t2f.models import ModeOfTravel, Travel
 from etools.applications.t2f.serializers.mailing import TravelMailSerializer
 from etools.applications.t2f.tests.factories import TravelFactory
@@ -57,19 +52,13 @@ class StateMachineTest(BaseTenantTestCase):
             self.assertCountEqual(expected[key], transition_mapping[key])
 
     def test_state_machine_flow(self):
-        currency = PublicsCurrencyFactory()
-        business_area = PublicsBusinessAreaFactory()
-        dsa_region = PublicsDSARegionFactory()
-
         workspace = self.unicef_staff.profile.country
-        workspace.business_area_code = business_area.code
         workspace.save()
 
         data = {'itinerary': [{'origin': 'Berlin',
                                'destination': 'Budapest',
                                'departure_date': '2017-04-14',
                                'arrival_date': '2017-04-15',
-                               'dsa_region': dsa_region.id,
                                'overnight_travel': False,
                                'mode_of_travel': ModeOfTravel.RAIL,
                                'airlines': []},
@@ -77,13 +66,11 @@ class StateMachineTest(BaseTenantTestCase):
                                'destination': 'Berlin',
                                'departure_date': '2017-05-20',
                                'arrival_date': '2017-05-21',
-                               'dsa_region': dsa_region.id,
                                'overnight_travel': False,
                                'mode_of_travel': ModeOfTravel.RAIL,
                                'airlines': []}],
                 'traveler': self.traveler.id,
                 'ta_required': True,
-                'currency': currency.id,
                 'supervisor': self.unicef_staff.id}
         response = self.forced_auth_req('post', reverse('t2f:travels:list:index'), data=data, user=self.unicef_staff)
         response_json = json.loads(response.rendered_content)
@@ -135,19 +122,13 @@ class StateMachineTest(BaseTenantTestCase):
         self.assertEqual(response_json['status'], Travel.COMPLETED)
 
     def test_state_machine_flow2(self):
-        currency = PublicsCurrencyFactory()
-        business_area = PublicsBusinessAreaFactory()
-        dsa_region = PublicsDSARegionFactory()
-
         workspace = self.unicef_staff.profile.country
-        workspace.business_area_code = business_area.code
         workspace.save()
 
         data = {'itinerary': [{'origin': 'Berlin',
                                'destination': 'Budapest',
                                'departure_date': '2017-04-14',
                                'arrival_date': '2017-04-15',
-                               'dsa_region': dsa_region.id,
                                'overnight_travel': False,
                                'mode_of_travel': ModeOfTravel.RAIL,
                                'airlines': []},
@@ -155,13 +136,11 @@ class StateMachineTest(BaseTenantTestCase):
                                'destination': 'Berlin',
                                'departure_date': '2017-05-20',
                                'arrival_date': '2017-05-21',
-                               'dsa_region': dsa_region.id,
                                'overnight_travel': False,
                                'mode_of_travel': ModeOfTravel.RAIL,
                                'airlines': []}],
                 'traveler': self.traveler.id,
                 'ta_required': True,
-                'currency': currency.id,
                 'supervisor': self.unicef_staff.id,
                 }
         response = self.forced_auth_req('post', reverse('t2f:travels:list:index'), data=data, user=self.unicef_staff)
@@ -309,19 +288,13 @@ class StateMachineTest(BaseTenantTestCase):
                                                "for method 'mark_as_completed'"]})
 
     def test_expense_required_on_send_for_payment(self):
-        business_area = PublicsBusinessAreaFactory()
-        dsa_region = PublicsDSARegionFactory()
-        currency = PublicsCurrencyFactory()
-
         workspace = self.unicef_staff.profile.country
-        workspace.business_area_code = business_area.code
         workspace.save()
 
         data = {'itinerary': [{'origin': 'Berlin',
                                'destination': 'Budapest',
                                'departure_date': '2017-04-14',
                                'arrival_date': '2017-04-15',
-                               'dsa_region': dsa_region.id,
                                'overnight_travel': False,
                                'mode_of_travel': ModeOfTravel.RAIL,
                                'airlines': []},
@@ -329,14 +302,13 @@ class StateMachineTest(BaseTenantTestCase):
                                'destination': 'Berlin',
                                'departure_date': '2017-05-20',
                                'arrival_date': '2017-05-21',
-                               'dsa_region': dsa_region.id,
                                'overnight_travel': False,
                                'mode_of_travel': ModeOfTravel.RAIL,
                                'airlines': []}],
                 'traveler': self.traveler.id,
                 'ta_required': True,
-                'supervisor': self.unicef_staff.id,
-                'currency': currency.id}
+                'supervisor': self.unicef_staff.id
+                }
         response = self.forced_auth_req('post', reverse('t2f:travels:list:index'), data=data, user=self.unicef_staff)
         response_json = json.loads(response.rendered_content)
 

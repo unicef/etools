@@ -78,7 +78,7 @@ class ItineraryItemSerializer(PermissionBasedModelSerializer):
 
     class Meta:
         model = ItineraryItem
-        fields = ('id', 'origin', 'destination', 'departure_date', 'arrival_date', 'dsa_region', 'overnight_travel',
+        fields = ('id', 'origin', 'destination', 'departure_date', 'arrival_date', 'overnight_travel',
                   'mode_of_travel', 'airlines')
 
 
@@ -160,7 +160,7 @@ class TravelDetailsSerializer(PermissionBasedModelSerializer):
         fields = ('reference_number', 'supervisor', 'office', 'end_date', 'international_travel', 'section',
                   'traveler', 'start_date', 'ta_required', 'purpose', 'id', 'itinerary',
                   'status', 'activities', 'mode_of_travel', 'estimated_travel_cost',
-                  'currency', 'completed_at', 'canceled_at', 'rejection_note', 'cancellation_note', 'attachments',
+                  'completed_at', 'canceled_at', 'rejection_note', 'cancellation_note', 'attachments',
                   'certification_note', 'report', 'additional_note', 'misc_expenses',
                   'first_submission_date')
         # Review this, as a developer could be confusing why the status field is not saved during an update

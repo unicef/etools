@@ -10,11 +10,7 @@ from unicef_locations.tests.factories import LocationFactory
 
 from etools.applications.core.tests.cases import BaseTenantTestCase
 from etools.applications.partners.tests.factories import InterventionFactory
-from etools.applications.publics.tests.factories import (
-    PublicsAirlineCompanyFactory,
-    PublicsDSARateFactory,
-    PublicsDSARegionFactory,
-)
+from etools.applications.publics.tests.factories import PublicsAirlineCompanyFactory
 from etools.applications.reports.tests.factories import ResultFactory, SectionFactory
 from etools.applications.t2f.models import ModeOfTravel, TravelActivity, TravelType
 from etools.applications.t2f.tests.factories import (
@@ -271,11 +267,6 @@ class TravelExports(BaseTenantTestCase):
         ])
 
     def test_travel_admin_export(self):
-        dsa_brd = PublicsDSARegionFactory(area_code='BRD')
-        PublicsDSARateFactory(region=dsa_brd)
-        dsa_lan = PublicsDSARegionFactory(area_code='LAN')
-        PublicsDSARateFactory(region=dsa_lan)
-
         airline_jetstar = PublicsAirlineCompanyFactory(name='JetStar')
         airline_spiceair = PublicsAirlineCompanyFactory(name='SpiceAir')
 
@@ -291,8 +282,8 @@ class TravelExports(BaseTenantTestCase):
                                                     2016, 12, 3, 11, tzinfo=UTC),
                                                 arrival_date=datetime.datetime(
                                                     2016, 12, 3, 12, tzinfo=UTC),
-                                                mode_of_travel=ModeOfTravel.CAR,
-                                                dsa_region=dsa_brd)
+                                                mode_of_travel=ModeOfTravel.CAR
+                                                )
         itinerary_item_1.airlines.all().delete()
 
         itinerary_item_2 = ItineraryItemFactory(travel=travel_1,
@@ -303,7 +294,7 @@ class TravelExports(BaseTenantTestCase):
                                                 arrival_date=datetime.datetime(
                                                     2016, 12, 5, 12, tzinfo=UTC),
                                                 mode_of_travel=ModeOfTravel.PLANE,
-                                                dsa_region=dsa_lan)
+                                                )
         itinerary_item_2.airlines.all().delete()
         itinerary_item_2.airlines.add(airline_jetstar)
 
@@ -314,8 +305,8 @@ class TravelExports(BaseTenantTestCase):
                                                     2016, 12, 6, 11, tzinfo=UTC),
                                                 arrival_date=datetime.datetime(
                                                     2016, 12, 6, 12, tzinfo=UTC),
-                                                mode_of_travel=ModeOfTravel.PLANE,
-                                                dsa_region=None)
+                                                mode_of_travel=ModeOfTravel.PLANE
+                                                )
         itinerary_item_3.airlines.all().delete()
         itinerary_item_3.airlines.add(airline_spiceair)
 
@@ -334,7 +325,7 @@ class TravelExports(BaseTenantTestCase):
                                                 arrival_date=datetime.datetime(
                                                     2016, 12, 5, 12, tzinfo=UTC),
                                                 mode_of_travel=ModeOfTravel.PLANE,
-                                                dsa_region=dsa_lan)
+                                                )
         itinerary_item_4.airlines.all().delete()
         itinerary_item_4.airlines.add(airline_jetstar)
 
@@ -346,7 +337,7 @@ class TravelExports(BaseTenantTestCase):
                                                 arrival_date=datetime.datetime(
                                                     2016, 12, 6, 12, tzinfo=UTC),
                                                 mode_of_travel=ModeOfTravel.CAR,
-                                                dsa_region=None)
+                                                )
         itinerary_item_5.airlines.all().delete()
         itinerary_item_5.airlines.add(airline_spiceair)
 
@@ -369,7 +360,6 @@ class TravelExports(BaseTenantTestCase):
                           'destination',
                           'departure_time',
                           'arrival_time',
-                          'dsa_area',
                           'overnight_travel',
                           'mode_of_travel',
                           'airline'])
@@ -384,7 +374,6 @@ class TravelExports(BaseTenantTestCase):
                           'Origin2',
                           '03-Dec-2016',
                           '03-Dec-2016',
-                          'BRD',
                           '',
                           'Car',
                           ''])
@@ -399,7 +388,6 @@ class TravelExports(BaseTenantTestCase):
                           'Origin3',
                           '05-Dec-2016',
                           '05-Dec-2016',
-                          'LAN',
                           '',
                           'Plane',
                           'JetStar'])
@@ -414,7 +402,6 @@ class TravelExports(BaseTenantTestCase):
                           'Origin1',
                           '06-Dec-2016',
                           '06-Dec-2016',
-                          'NODSA',
                           '',
                           'Plane',
                           'SpiceAir'])
@@ -429,7 +416,6 @@ class TravelExports(BaseTenantTestCase):
                           'Origin1',
                           '05-Dec-2016',
                           '05-Dec-2016',
-                          'LAN',
                           '',
                           'Plane',
                           'JetStar'])
@@ -444,7 +430,6 @@ class TravelExports(BaseTenantTestCase):
                           'Origin1',
                           '06-Dec-2016',
                           '06-Dec-2016',
-                          'NODSA',
                           '',
                           'Car',
                           'SpiceAir'])
