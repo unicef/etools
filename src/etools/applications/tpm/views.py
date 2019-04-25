@@ -409,7 +409,7 @@ class TPMVisitViewSet(
     @action(detail=False, methods=['get'], url_path='activities/export', renderer_classes=(TPMActivityCSVRenderer,))
     def activities_export(self, request, *args, **kwargs):
         tpm_activities = TPMActivity.objects.filter(
-            tpm_visit__in=self.get_queryset(),
+            tpm_visit__in=self.filter_queryset(self.get_queryset()),
         ).prefetch_related(
             'tpm_visit', 'section', 'locations', 'cp_output'
         ).order_by('tpm_visit', 'id')
@@ -421,7 +421,7 @@ class TPMVisitViewSet(
     @action(detail=False, methods=['get'], url_path='locations/export', renderer_classes=(TPMLocationCSVRenderer,))
     def locations_export(self, request, *args, **kwargs):
         tpm_locations = TPMActivity.locations.through.objects.filter(
-            activity__in=self.get_queryset().values_list('tpm_activities__id', flat=True),
+            activity__in=self.filter_queryset(self.get_queryset()).values_list('tpm_activities__id', flat=True),
         ).prefetch_related(
             'activity', 'location', 'activity__tpmactivity__tpm_visit', 'activity__tpmactivity__section',
             'activity__cp_output'
