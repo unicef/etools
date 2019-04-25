@@ -5,9 +5,6 @@ from cryptography.x509 import load_pem_x509_certificate
 
 from etools.config.settings.base import *  # noqa: F403
 
-# sentry-sdk: https://github.com/getsentry/sentry-python
-SENTRY_DSN = get_from_secrets_or_env('SENTRY_DSN'),  # noqa: F405
-
 # Security settings for production
 ALLOWED_HOSTS = [
     # Nope, regular expressions are not supported for this setting
