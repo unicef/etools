@@ -5,7 +5,7 @@ from rest_framework import serializers
 from rest_framework.exceptions import ValidationError
 from unicef_rest_export.serializers import ExportSerializer
 
-from etools.applications.partners.models import Intervention, InterventionResultLink
+from etools.applications.partners.models import Intervention
 from etools.applications.reports.models import (
     AppliedIndicator,
     Disaggregation,
