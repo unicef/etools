@@ -359,7 +359,7 @@ class SpecialReportingRequirementSerializer(serializers.ModelSerializer):
         fields = "__all__"
 
 
-class ResultFrameworkSerializer(serializers.ModelSerializer):
+class ResultFrameworkSerializer(serializers.Serializer):
     result = serializers.SerializerMethodField(label=_("Result"))
     indicators = serializers.SerializerMethodField()
     target = serializers.SerializerMethodField()
@@ -368,7 +368,6 @@ class ResultFrameworkSerializer(serializers.ModelSerializer):
     locations = serializers.SerializerMethodField()
 
     class Meta:
-        model = InterventionResultLink
         fields = (
             "result",
             "indicators",
@@ -379,48 +378,37 @@ class ResultFrameworkSerializer(serializers.ModelSerializer):
         )
 
     def get_result(self, obj):
-        return obj.cp_output
-
-    def _applied_indicators(self, obj):
-        indicators = []
-        for l in obj.ll_results.all():
-            indicators += l.applied_indicators.all()
-        return indicators
-
-    def _ram_indicators(self, obj):
-        return obj.ram_indicators.all()
+        if hasattr(obj, "cp_output"):
+            return obj.cp_output
+        return obj.label
 
     def get_indicators(self, obj):
-        return "\n".join([
-            i.name for i in self._ram_indicators(obj)
-            if i.name
-        ])
+        if hasattr(obj, "ram_indicators"):
+            return "\n".join([
+                i.name for i in obj.ram_indicators.all()
+                if i.name
+            ])
+        return obj.measurement_specifications
 
     def get_target(self, obj):
-        return "\n".join([
-            str(x.target) for x in self._applied_indicators(obj)
-            if x.target
-        ])
+        if hasattr(obj, "target"):
+            return obj.target_display
+        return ""
 
     def get_baseline(self, obj):
-        return "\n".join([
-            str(x.baseline) for x in self._applied_indicators(obj)
-            if x.baseline
-        ])
+        if hasattr(obj, "baseline"):
+            return obj.baseline_display
+        return ""
 
     def get_means_of_verification(self, obj):
-        return "\n".join(
-            [
-                x.means_of_verification for x in self._applied_indicators(obj)
-                if x.means_of_verification
-            ]
-        )
+        if hasattr(obj, "means_of_verification"):
+            return obj.means_of_verification
+        return ""
 
     def get_locations(self, obj):
-        locations = []
-        for x in self._applied_indicators(obj):
-            locations += [l.name for l in x.locations.all()]
-        return "\n".join(set(locations))
+        if hasattr(obj, "locations"):
+            return "\n".join(set([l.name for l in obj.locations.all()]))
+        return ""
 
 
 class ResultFrameworkExportSerializer(ExportSerializer):

@@ -466,7 +466,12 @@ class ResultFrameworkView(ExportView):
         qs = InterventionResultLink.objects.filter(
             intervention=self.kwargs.get("pk")
         )
-        return qs
+        data = []
+        for result_link in qs:
+            data.append(result_link)
+            for l in result_link.ll_results.all():
+                data += l.applied_indicators.all()
+        return data
 
     def finalize_response(self, request, response, *args, **kwargs):
         response = super().finalize_response(
@@ -476,7 +481,7 @@ class ResultFrameworkView(ExportView):
             **kwargs,
         )
         if response.accepted_renderer.format == "docx_table":
-            intervention = self.get_queryset().first().intervention
+            intervention = self.get_queryset()[0].intervention
             response["content-disposition"] = "attachment; filename={}_results.docx".format(
                 intervention.reference_number
             )
