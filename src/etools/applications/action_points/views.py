@@ -6,7 +6,7 @@ from rest_framework.decorators import action
 from rest_framework.filters import OrderingFilter, SearchFilter
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
-from unicef_rest_export.renderers import ExportExcelRenderer
+from unicef_rest_export.renderers import ExportOpenXMLRenderer
 from unicef_rest_export.views import ExportMixin
 from unicef_restlib.pagination import DynamicPageNumberPagination
 from unicef_restlib.views import MultiSerializerViewSetMixin, SafeTenantViewSetMixin
@@ -117,7 +117,7 @@ class ActionPointViewSet(
             'Content-Disposition': 'attachment;filename=action_points_{}.csv'.format(timezone.now().date())
         })
 
-    @action(detail=False, methods=['get'], url_path='export/xlsx', renderer_classes=(ExportExcelRenderer,))
+    @action(detail=False, methods=['get'], url_path='export/xlsx', renderer_classes=(ExportOpenXMLRenderer,))
     def list_xlsx_export(self, request, *args, **kwargs):
         self.serializer_class = ActionPointListSerializer
         action_points = self.filter_queryset(self.get_queryset().prefetch_related('comments'))
@@ -135,7 +135,7 @@ class ActionPointViewSet(
             )
         })
 
-    @action(detail=True, methods=['get'], url_path='export/xlsx', renderer_classes=(ExportExcelRenderer,))
+    @action(detail=True, methods=['get'], url_path='export/xlsx', renderer_classes=(ExportOpenXMLRenderer,))
     def single_xlsx_export(self, request, *args, **kwargs):
         self.serializer_class = ActionPointListSerializer
         serializer = self.get_serializer([self.get_object()], many=True)
