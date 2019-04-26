@@ -372,10 +372,10 @@ class ResultFrameworkSerializer(serializers.ModelSerializer):
         fields = (
             "result",
             "indicators",
-            "target",
-            "baseline",
-            "means_of_verification",
             "locations",
+            "baseline",
+            "target",
+            "means_of_verification",
         )
 
     def get_result(self, obj):
@@ -398,13 +398,13 @@ class ResultFrameworkSerializer(serializers.ModelSerializer):
 
     def get_target(self, obj):
         return "\n".join([
-            x.target for x in self._applied_indicators(obj)
+            str(x.target) for x in self._applied_indicators(obj)
             if x.target
         ])
 
     def get_baseline(self, obj):
         return "\n".join([
-            x.baseline for x in self._applied_indicators(obj)
+            str(x.baseline) for x in self._applied_indicators(obj)
             if x.baseline
         ])
 
