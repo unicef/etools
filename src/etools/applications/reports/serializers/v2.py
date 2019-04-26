@@ -398,13 +398,13 @@ class ResultFrameworkSerializer(serializers.ModelSerializer):
 
     def get_target(self, obj):
         return "\n".join([
-            x.target for x in self._ram_indicators(obj)
+            x.target for x in self._applied_indicators(obj)
             if x.target
         ])
 
     def get_baseline(self, obj):
         return "\n".join([
-            x.baseline for x in self._ram_indicators(obj)
+            x.baseline for x in self._applied_indicators(obj)
             if x.baseline
         ])
 
