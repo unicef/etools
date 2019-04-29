@@ -380,7 +380,7 @@ class ResultFrameworkSerializer(serializers.Serializer):
     def get_result(self, obj):
         if hasattr(obj, "cp_output"):
             return obj.cp_output
-        return obj.label
+        return obj.lower_result.name
 
     def get_indicators(self, obj):
         if hasattr(obj, "ram_indicators"):
