@@ -21,6 +21,7 @@ class UsersExportField(serializers.Field):
 class TPMActivityExportSerializer(serializers.Serializer):
     ref = serializers.CharField(source='tpm_visit.reference_number')
     visit = serializers.CharField(source='tpm_visit')
+    visit_information = serializers.CharField(source='tpm_visit.visit_information')
     visit_status = serializers.CharField(source='tpm_visit.get_status_display')
     activity = serializers.SerializerMethodField()
     section = serializers.CharField()
@@ -51,6 +52,7 @@ class TPMLocationExportSerializer(serializers.Serializer):
     intervention = serializers.CharField(source='activity.tpmactivity.intervention.reference_number', allow_null=True)
     pd_ssfa = serializers.CharField(source='activity.tpmactivity.intervention.title', allow_null=True)
     location = serializers.CharField()
+    visit_information = serializers.CharField(source='activity.tpmactivity.tpm_visit.visit_information')
     date = serializers.DateField(source='activity.tpmactivity.date', format='%d/%m/%Y')
     unicef_focal_points = UsersExportField(source='activity.tpmactivity.unicef_focal_points')
     offices = CommaSeparatedExportField(source='activity.tpmactivity.offices')
