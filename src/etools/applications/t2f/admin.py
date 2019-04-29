@@ -54,6 +54,10 @@ class TravelActivityAdmin(admin.ModelAdmin):
     raw_id_fields = (
         'primary_traveler',
     )
+    filter_horizontal = (
+        'locations',
+        'travels',
+    )
 
 
 @admin.register(models.ItineraryItem)
@@ -74,6 +78,9 @@ class ItineraryItemAdmin(admin.ModelAdmin):
         'arrival_date',
         'origin',
         'destination'
+    )
+    filter_horizontal = (
+        'airlines',
     )
 
 
