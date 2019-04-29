@@ -402,9 +402,6 @@ class FundCommitmentSynchronizer(VisionDataTenantSynchronizer):
 
         if to_create:
             created_objects = FundsCommitmentHeader.objects.bulk_create(to_create)
-            # TODO in Django 1.10 the following line is not needed because ids are returned
-            created_objects = FundsCommitmentHeader.objects.filter(
-                fc_number__in=[c.fc_number for c in created_objects])
             self.map_header_objects(created_objects)
 
         self.map_header_objects(to_update)
