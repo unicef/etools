@@ -24,7 +24,7 @@ from etools.applications.users.tests.factories import SimpleUserFactory, UserFac
 from etools.libraries.djangolib.models import GroupWrapper
 
 
-class AuditTestCaseMixin(object):
+class AuditTestCaseMixin:
     @classmethod
     def setUpTestData(cls):
         super().setUpTestData()
