@@ -40,6 +40,7 @@ from etools.applications.reports.models import (
     SpecialReportingRequirement,
 )
 from etools.applications.reports.permissions import PMEPermission
+from etools.applications.reports.renderers import ResultFrameworkRenderer
 from etools.applications.reports.serializers.exports import (
     AppliedIndicatorExportFlatSerializer,
     AppliedIndicatorExportSerializer,
@@ -461,6 +462,7 @@ class ResultFrameworkView(ExportView):
     serializer_class = ResultFrameworkSerializer
     export_serializer_class = ResultFrameworkExportSerializer
     permission_classes = (PartnershipManagerPermission, )
+    renderer_classes = (ResultFrameworkRenderer, )
 
     def get_queryset(self, format=None):
         qs = InterventionResultLink.objects.filter(

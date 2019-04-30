@@ -1090,6 +1090,10 @@ class TestResultFrameworkView(BaseTenantTestCase):
             indicator=cls.indicator,
             lower_result=cls.lower_result
         )
+        cls.applied_another = AppliedIndicatorFactory(
+            indicator=IndicatorBlueprintFactory(),
+            lower_result=cls.lower_result
+        )
 
     def test_get(self):
         response = self.forced_auth_req(
