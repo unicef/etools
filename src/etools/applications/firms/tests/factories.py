@@ -5,7 +5,6 @@ from django.db.models.signals import post_save
 
 import factory
 
-from etools.applications.firms.utils import generate_username
 from etools.applications.users.tests.factories import ProfileFactory
 
 
@@ -15,7 +14,7 @@ class BaseUserFactory(factory.DjangoModelFactory):
         model = get_user_model()
         django_get_or_create = ("email", )
 
-    username = factory.LazyFunction(generate_username)
+    username = factory.Faker('email')
     first_name = factory.Faker('first_name')
     last_name = factory.Faker('last_name')
     email = factory.Faker('email')
