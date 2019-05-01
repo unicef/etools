@@ -204,7 +204,10 @@ class ActionPointListExportSerializer(ExportSerializer):
         return obj.travel_activity
 
     def get_link(self, obj):
-        return reverse("action-points:action-points-detail", args=[obj.pk])
+        return "{}{}".format(
+            get_current_site(),
+            reverse("action-points:action-points-detail", args=[obj.pk]),
+        )
 
     def get_headers(self, data):
         headers = []
