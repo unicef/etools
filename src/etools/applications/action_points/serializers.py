@@ -187,9 +187,12 @@ class ActionPointListExportSerializer(ExportSerializer):
     engagement = serializers.SerializerMethodField()
     tpm_activity = serializers.SerializerMethodField()
     travel_activity = serializers.SerializerMethodField()
+    link = serializers.SerializerMethodField()
 
     class Meta(ActionPointListSerializer.Meta):
-        pass
+        fields = ActionPointListSerializer.Meta.fields + [
+            'link',
+        ]
 
     def get_engagement(self, obj):
         return obj.engagement
@@ -199,6 +202,9 @@ class ActionPointListExportSerializer(ExportSerializer):
 
     def get_travel_activity(self, obj):
         return obj.travel_activity
+
+    def get_link(self, obj):
+        return reverse("action-points:action-points-detail", args=[obj.pk])
 
     def get_headers(self, data):
         headers = []
