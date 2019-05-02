@@ -1,3 +1,4 @@
+from django.urls import reverse
 from django.utils import timezone
 from django.utils.translation import ugettext_lazy as _
 
@@ -183,16 +184,13 @@ class ActionPointSerializer(WritableNestedSerializerMixin, ActionPointListSerial
         return value
 
 
-class ActionPointListExportSerializer(ExportSerializer):
+class ActionPointExportTransformSerializer(ExportSerializer):
     engagement = serializers.SerializerMethodField()
     tpm_activity = serializers.SerializerMethodField()
     travel_activity = serializers.SerializerMethodField()
-    link = serializers.SerializerMethodField()
 
     class Meta(ActionPointListSerializer.Meta):
-        fields = ActionPointListSerializer.Meta.fields + [
-            'link',
-        ]
+        pass
 
     def get_engagement(self, obj):
         return obj.engagement
@@ -202,12 +200,6 @@ class ActionPointListExportSerializer(ExportSerializer):
 
     def get_travel_activity(self, obj):
         return obj.travel_activity
-
-    def get_link(self, obj):
-        return "{}{}".format(
-            get_current_site(),
-            reverse("action-points:action-points-detail", args=[obj.pk]),
-        )
 
     def get_headers(self, data):
         headers = []
@@ -285,3 +277,13 @@ class ActionPointListExportSerializer(ExportSerializer):
             func = getattr(self, "transform_{}".format(field))
             dataset.add_formatter(str(self.get_header_label(field)), func)
         return dataset
+
+
+class ActionPointListExportSerializer(ActionPointListSerializer):
+    reference_number = serializers.SerializerMethodField()
+
+    def get_reference_number(self, obj):
+        return "https://{}{}".format(
+            self.context['request'].get_host(),
+            reverse("action-points:action-points-detail", args=[obj.pk]),
+        )

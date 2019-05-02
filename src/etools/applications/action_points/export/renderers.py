@@ -9,11 +9,9 @@ class ActionPointCSVRenderer(ListSeperatorCSVRenderMixin, FriendlyCSVRenderer):
         'ref', 'cp_output', 'partner', 'office', 'section', 'category', 'assigned_to', 'due_date',
         'status', 'high_priority', 'description', 'intervention', 'pd_ssfa', 'location', 'related_module',
         'assigned_by', 'date_of_completion', 'related_ref', 'related_object_str', 'related_object_url', 'action_taken',
-        'link',
     ]
     labels = {
         'ref': _('Ref. #'),
-        'link': _('Link'),
         'cp_output': _('CP Output'),
         'partner': _('Partner'),
         'office': _('Office'),
