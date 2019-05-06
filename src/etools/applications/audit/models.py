@@ -165,7 +165,7 @@ class Engagement(InheritedModelMixin, TimeStampedModel, models.Model):
 
     cancel_comment = models.TextField(blank=True, verbose_name=_('Cancel Comment'))
 
-    active_pd = models.ManyToManyField('partners.Intervention', verbose_name=_('Active PDs'))
+    active_pd = models.ManyToManyField('partners.Intervention', verbose_name=_('Active PDs'), blank=True)
 
     authorized_officers = models.ManyToManyField(
         PartnerStaffMember, verbose_name=_('Authorized Officers'), blank=True, related_name="engagement_authorizations"
