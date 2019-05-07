@@ -8,6 +8,7 @@ from etools.applications.t2f.models import TravelAttachment
 class TravelActivityExportSerializer(serializers.Serializer):
     reference_number = serializers.CharField(source='travel.reference_number', read_only=True)
     traveler = serializers.CharField(source='travel.traveler.get_full_name', read_only=True)
+    purpose = serializers.CharField(source='travel.purpose', read_only=True)
     section = serializers.CharField(source='travel.section.name', read_only=True)
     office = serializers.CharField(source='travel.office.name', read_only=True)
     status = serializers.CharField(source='travel.status', read_only=True)
@@ -30,6 +31,7 @@ class TravelActivityExportSerializer(serializers.Serializer):
         fields = (
             'reference_number',
             'traveler',
+            'purpose',
             'office',
             'section',
             'status',
