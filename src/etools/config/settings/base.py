@@ -67,7 +67,7 @@ def get_from_secrets_or_env(var_name, default=None):
 # DJANGO: CACHE
 CACHES = {
     'default': {
-        'BACKEND': 'redis_cache.RedisCache',
+        'BACKEND': 'etools.libraries.redis_cache.base.eToolsCache',
         'LOCATION': get_from_secrets_or_env('REDIS_URL', 'redis://localhost:6379/0')
     }
 }
