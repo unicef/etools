@@ -1,6 +1,6 @@
 from redis.exceptions import ConnectionError
 from redis_cache import RedisCache
-from redis_cache.backends.base import DEFAULT_TIMEOUT, get_client
+from redis_cache.backends.base import DEFAULT_TIMEOUT
 
 
 class eToolsCache(RedisCache):
@@ -16,7 +16,7 @@ class eToolsCache(RedisCache):
             result = super()._set(client, key, value, timeout, _add_only)
         except ConnectionError:
             result = value
-        return value
+        return result
 
     def _delete_many(self, client, keys):
         try:
