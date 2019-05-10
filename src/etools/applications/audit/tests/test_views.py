@@ -15,6 +15,7 @@ from etools.applications.audit.models import Auditor, Engagement, Risk
 from etools.applications.audit.tests.base import AuditTestCaseMixin, EngagementTransitionsTestCaseMixin
 from etools.applications.audit.tests.factories import (
     AuditFactory,
+    AuditorUserFactory,
     AuditPartnerFactory,
     EngagementFactory,
     MicroAssessmentFactory,
@@ -25,9 +26,9 @@ from etools.applications.audit.tests.factories import (
     SpotCheckFactory,
     StaffSpotCheckFactory,
     UserFactory,
-    AuditorUserFactory)
+)
 from etools.applications.audit.tests.test_transitions import MATransitionsTestCaseMixin
-from etools.applications.EquiTrack.tests.cases import BaseTenantTestCase
+from etools.applications.core.tests.cases import BaseTenantTestCase
 from etools.applications.partners.models import PartnerType
 from etools.applications.reports.tests.factories import SectionFactory
 

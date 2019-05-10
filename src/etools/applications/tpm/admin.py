@@ -1,7 +1,7 @@
 from django.contrib import admin
 
 from etools.applications.publics.admin import AdminListMixin
-from etools.applications.tpm import models, forms
+from etools.applications.tpm import forms, models
 
 
 @admin.register(models.TPMActivity)
@@ -13,6 +13,11 @@ class TPMActivityInline(admin.ModelAdmin):
         'tpm_visit__author__username',
         'tpm_visit__tpm_partner__name',
     )
+    filter_horizontal = (
+        'locations',
+        'unicef_focal_points',
+        'offices',
+    )
 
 
 @admin.register(models.TPMVisit)
@@ -21,6 +26,9 @@ class TPMVisitAdmin(AdminListMixin, admin.ModelAdmin):
     list_display = ('tpm_partner', 'status', )
     list_filter = (
         'status',
+    )
+    filter_horizontal = (
+        'tpm_partner_focal_points',
     )
 
     def __init__(self, model, admin_site):

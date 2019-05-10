@@ -1,7 +1,11 @@
 from django.contrib import admin
 
-from etools.applications.audit.purchase_order.models import (AuditorFirm, AuditorStaffMember,
-                                                             PurchaseOrder, PurchaseOrderItem,)
+from etools.applications.audit.purchase_order.models import (
+    AuditorFirm,
+    AuditorStaffMember,
+    PurchaseOrder,
+    PurchaseOrderItem,
+)
 
 
 class AuditorStaffMemberInlineAdmin(admin.StackedInline):
@@ -46,4 +50,4 @@ class PurchaseOrderAdmin(admin.ModelAdmin):
 class AuditorStaffAdmin(admin.ModelAdmin):
     list_display = ['user', 'auditor_firm', 'hidden']
     list_filter = ['auditor_firm', 'hidden']
-    search_fields = ['user__username', 'user__first_name', 'user__last_name', 'auditor_firm__name', ]
+    search_fields = ['user__username', 'user__email', 'user__first_name', 'user__last_name', 'auditor_firm__name', ]

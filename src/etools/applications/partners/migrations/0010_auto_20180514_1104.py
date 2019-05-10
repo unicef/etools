@@ -2,7 +2,7 @@
 from django.db import migrations, models
 import django.db.models.deletion
 import django.utils.timezone
-import etools.applications.EquiTrack.urlresolvers
+import etools.applications.core.urlresolvers
 import model_utils.fields
 
 

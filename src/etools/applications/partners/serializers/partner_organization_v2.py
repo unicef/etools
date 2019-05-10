@@ -22,8 +22,8 @@ from etools.applications.partners.models import (
     PlannedEngagement,
 )
 from etools.applications.partners.serializers.interventions_v2 import (
-    InterventionMonitorSerializer,
     InterventionListSerializer,
+    InterventionMonitorSerializer,
 )
 
 

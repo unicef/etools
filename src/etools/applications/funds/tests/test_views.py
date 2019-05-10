@@ -6,18 +6,14 @@ from django.utils import timezone
 
 from rest_framework import status
 
-from etools.applications.EquiTrack.tests.cases import BaseTenantTestCase
+from etools.applications.core.tests.cases import BaseTenantTestCase
 from etools.applications.funds.tests.factories import (
     DonorFactory,
     FundsReservationHeaderFactory,
     FundsReservationItemFactory,
     GrantFactory,
 )
-from etools.applications.partners.tests.factories import (
-    AgreementFactory,
-    InterventionFactory,
-    PartnerFactory,
-)
+from etools.applications.partners.tests.factories import AgreementFactory, InterventionFactory, PartnerFactory
 from etools.applications.users.tests.factories import UserFactory
 
 

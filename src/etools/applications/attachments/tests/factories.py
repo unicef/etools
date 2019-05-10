@@ -1,6 +1,5 @@
 import factory.django
 from factory import fuzzy
-
 from unicef_attachments.models import Attachment, AttachmentLink, FileType
 
 

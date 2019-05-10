@@ -1,4 +1,4 @@
-from datetime import datetime, date
+from datetime import date, datetime
 from operator import itemgetter
 
 from django.db import transaction
@@ -95,7 +95,7 @@ class PlannedVisitsCUSerializer(serializers.ModelSerializer):
         try:
             self.instance = self.Meta.model.objects.get(
                 intervention=self.initial_data.get("intervention"),
-                year=self.initial_data.get("year"),
+                pk=self.initial_data.get("id"),
             )
             if self.instance.intervention.agreement.partner.partner_type == PartnerType.GOVERNMENT:
                 raise ValidationError("Planned Visit to be set only at Partner level")

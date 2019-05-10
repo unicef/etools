@@ -13,8 +13,8 @@ from rest_framework.serializers import ValidationError
 from rest_framework_csv import renderers as r
 from unicef_restlib.views import QueryStringFilterMixin
 
-from etools.applications.EquiTrack.mixins import ExportModelMixin
-from etools.applications.EquiTrack.renderers import CSVFlatRenderer
+from etools.applications.core.mixins import ExportModelMixin
+from etools.applications.core.renderers import CSVFlatRenderer
 from etools.applications.partners.exports_v2 import AgreementCSVRenderer
 from etools.applications.partners.filters import PartnerScopeFilter
 from etools.applications.partners.models import Agreement, AgreementAmendment
@@ -32,8 +32,8 @@ from etools.applications.partners.serializers.exports.agreements import (
     AgreementExportFlatSerializer,
     AgreementExportSerializer,
 )
-from etools.applications.partners.validation.agreements import AgreementValid
 from etools.applications.partners.utils import send_agreement_suspended_notification
+from etools.applications.partners.validation.agreements import AgreementValid
 
 
 class AgreementListAPIView(QueryStringFilterMixin, ExportModelMixin, ValidatorViewMixin, ListCreateAPIView):

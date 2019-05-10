@@ -3,7 +3,6 @@ from django.conf.urls import url
 from etools.applications.management.views.general import InvalidateCache, SyncCountries, SyncFRs
 from etools.applications.management.views.reports import LoadResultStructure
 from etools.applications.management.views.tasks_endpoints import (
-    FamReportView,
     PMPIndicatorsReportView,
     SyncDeltaUsers,
     TestSendEmailAPIView,
@@ -31,5 +30,4 @@ urlpatterns = ((
     url(r'^tasks/send_test_email/$', TestSendEmailAPIView.as_view(), name='tasks_send_test_email'),
     url(r'^reports/users/$', UsersReportView.as_view(), name='reports_users'),
     url(r'^reports/pmp_indicators/$', PMPIndicatorsReportView.as_view(), name='reports_pmp_indicators'),
-    url(r'^reports/fam/$', FamReportView.as_view(), name='reports_fam'),
 ), 'management')

@@ -4,13 +4,16 @@ from django.utils.timezone import now as django_now
 
 import mock
 
-from etools.applications.EquiTrack.tests.cases import BaseTenantTestCase
+from etools.applications.core.tests.cases import BaseTenantTestCase
 from etools.applications.users.models import Country
 from etools.applications.vision.exceptions import VisionException
 from etools.applications.vision.models import VisionSyncLog
 from etools.applications.vision.synchronizers import ManualDataLoader
-from etools.applications.vision.vision_data_synchronizer import (VISION_NO_DATA_MESSAGE, VisionDataLoader,
-                                                                 VisionDataSynchronizer,)
+from etools.applications.vision.vision_data_synchronizer import (
+    VISION_NO_DATA_MESSAGE,
+    VisionDataLoader,
+    VisionDataSynchronizer,
+)
 
 FAUX_VISION_URL = 'https://api.example.com/foo.svc/'
 FAUX_VISION_USER = 'jane_user'

@@ -2,7 +2,6 @@ from django.apps import apps
 from django.contrib.postgres.fields import ArrayField
 from django.db import models
 
-
 from model_utils import Choices
 
 from .conditions import BaseCondition

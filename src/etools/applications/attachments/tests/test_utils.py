@@ -1,6 +1,6 @@
 from etools.applications.attachments import utils
 from etools.applications.attachments.tests.factories import AttachmentFactory, AttachmentFileTypeFactory
-from etools.applications.EquiTrack.tests.cases import BaseTenantTestCase
+from etools.applications.core.tests.cases import BaseTenantTestCase
 from etools.applications.t2f.tests.factories import TravelAttachmentFactory, TravelFactory
 
 

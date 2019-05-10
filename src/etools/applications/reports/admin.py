@@ -5,9 +5,18 @@ from mptt.admin import MPTTModelAdmin
 from unicef_djangolib.forms import AutoSizeTextForm
 
 from etools.applications.reports.forms import IndicatorAdminForm
-from etools.applications.reports.models import (AppliedIndicator, CountryProgramme, Disaggregation,
-                                                DisaggregationValue, Indicator, IndicatorBlueprint,
-                                                LowerResult, Result, Section, Unit,)
+from etools.applications.reports.models import (
+    AppliedIndicator,
+    CountryProgramme,
+    Disaggregation,
+    DisaggregationValue,
+    Indicator,
+    IndicatorBlueprint,
+    LowerResult,
+    Result,
+    Section,
+    Unit,
+)
 
 
 class SectionListFilter(admin.SimpleListFilter):
@@ -171,6 +180,10 @@ class AppliedIndicatorAdmin(admin.ModelAdmin):
         'indicator',
         'lower_result',
         'context_code'
+    )
+    filter_horizontal = (
+        'disaggregation',
+        'locations'
     )
 
 

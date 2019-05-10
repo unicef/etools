@@ -1,8 +1,14 @@
 
 from rest_framework import serializers
 
-from etools.applications.funds.models import (Donor, FundsCommitmentHeader, FundsCommitmentItem,
-                                              FundsReservationHeader, FundsReservationItem, Grant,)
+from etools.applications.funds.models import (
+    Donor,
+    FundsCommitmentHeader,
+    FundsCommitmentItem,
+    FundsReservationHeader,
+    FundsReservationItem,
+    Grant,
+)
 
 
 class FRLineItemSerializer(serializers.ModelSerializer):

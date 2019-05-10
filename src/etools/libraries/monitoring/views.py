@@ -1,14 +1,17 @@
-
 from django.http import HttpResponse
 from django.views.generic import View
 
 from etools.libraries.monitoring.service_checks import CHECKS, ServiceStatus
 
 
-class CheckView(View):
-    """
-    Basic monitoring checks
-    """
+class AppAliveView(View):
+    """Checks the admin url is reachable"""
+
+    def get(self, request):
+        return HttpResponse('eTools is alive', content_type='text/plain')
+
+
+class AppReadyView(View):
 
     def get(self, request):
         def run_test(test):

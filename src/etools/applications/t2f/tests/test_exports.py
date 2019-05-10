@@ -1,15 +1,14 @@
 import csv
+import datetime
 import logging
-from datetime import datetime
 
 from django.urls import reverse
-from django.utils import timezone
 from django.utils.six import StringIO
 
 from pytz import UTC
 from unicef_locations.tests.factories import LocationFactory
 
-from etools.applications.EquiTrack.tests.cases import BaseTenantTestCase
+from etools.applications.core.tests.cases import BaseTenantTestCase
 from etools.applications.partners.tests.factories import InterventionFactory
 from etools.applications.publics.tests.factories import (
     PublicsAirlineCompanyFactory,
@@ -44,7 +43,6 @@ class TravelExports(BaseTenantTestCase):
         self.assertEqual(export_url, '/api/t2f/travels/travel-admin-export/')
 
     def test_activity_export(self):
-        tz = timezone.get_default_timezone()
         office = OfficeFactory(name='Budapest')
         section_health = SectionFactory(name='Health')
         section_education = SectionFactory(name='Education')
@@ -92,16 +90,16 @@ class TravelExports(BaseTenantTestCase):
                                  office=office,
                                  supervisor=supervisor,
                                  section=section_health,
-                                 start_date=datetime(2017, 11, 8, tzinfo=tz),
-                                 end_date=datetime(2017, 11, 14, tzinfo=tz),
+                                 start_date=datetime.date(2017, 11, 8),
+                                 end_date=datetime.date(2017, 11, 14),
                                  )
         travel_2 = TravelFactory(reference_number='2016/1211',
                                  supervisor=supervisor,
                                  traveler=user_alice_carter,
                                  office=office,
                                  section=section_education,
-                                 start_date=datetime(2017, 11, 8, tzinfo=tz),
-                                 end_date=datetime(2017, 11, 14, tzinfo=tz),
+                                 start_date=datetime.date(2017, 11, 8),
+                                 end_date=datetime.date(2017, 11, 14),
                                  )
 
         # Do some cleanup
@@ -109,7 +107,7 @@ class TravelExports(BaseTenantTestCase):
 
         # Create the activities finally
         activity_1 = TravelActivityFactory(travel_type=TravelType.PROGRAMME_MONITORING,
-                                           date=datetime(
+                                           date=datetime.datetime(
                                                2016, 12, 3, tzinfo=UTC),
                                            result=result_A11,
                                            primary_traveler=user_joe_smith)
@@ -120,7 +118,7 @@ class TravelExports(BaseTenantTestCase):
         activity_1.save()
 
         activity_2 = TravelActivityFactory(travel_type=TravelType.PROGRAMME_MONITORING,
-                                           date=datetime(
+                                           date=datetime.datetime(
                                                2016, 12, 4, tzinfo=UTC),
                                            result=result_A21,
                                            primary_traveler=user_lenox_lewis)
@@ -131,7 +129,7 @@ class TravelExports(BaseTenantTestCase):
         activity_2.save()
 
         activity_3 = TravelActivityFactory(travel_type=TravelType.MEETING,
-                                           date=datetime(
+                                           date=datetime.datetime(
                                                2016, 12, 3, tzinfo=UTC),
                                            result=None,
                                            primary_traveler=user_joe_smith)
@@ -142,7 +140,7 @@ class TravelExports(BaseTenantTestCase):
         activity_3.save()
 
         activity_4 = TravelActivityFactory(travel_type=TravelType.SPOT_CHECK,
-                                           date=datetime(
+                                           date=datetime.datetime(
                                                2016, 12, 6, tzinfo=UTC),
                                            result=None,
                                            primary_traveler=user_alice_carter)
@@ -282,9 +280,9 @@ class TravelExports(BaseTenantTestCase):
         itinerary_item_1 = ItineraryItemFactory(travel=travel_1,
                                                 origin='Origin1',
                                                 destination='Origin2',
-                                                departure_date=datetime(
+                                                departure_date=datetime.datetime(
                                                     2016, 12, 3, 11, tzinfo=UTC),
-                                                arrival_date=datetime(
+                                                arrival_date=datetime.datetime(
                                                     2016, 12, 3, 12, tzinfo=UTC),
                                                 mode_of_travel=ModeOfTravel.CAR,
                                                 dsa_region=dsa_brd)
@@ -293,9 +291,9 @@ class TravelExports(BaseTenantTestCase):
         itinerary_item_2 = ItineraryItemFactory(travel=travel_1,
                                                 origin='Origin2',
                                                 destination='Origin3',
-                                                departure_date=datetime(
+                                                departure_date=datetime.datetime(
                                                     2016, 12, 5, 11, tzinfo=UTC),
-                                                arrival_date=datetime(
+                                                arrival_date=datetime.datetime(
                                                     2016, 12, 5, 12, tzinfo=UTC),
                                                 mode_of_travel=ModeOfTravel.PLANE,
                                                 dsa_region=dsa_lan)
@@ -305,9 +303,9 @@ class TravelExports(BaseTenantTestCase):
         itinerary_item_3 = ItineraryItemFactory(travel=travel_1,
                                                 origin='Origin3',
                                                 destination='Origin1',
-                                                departure_date=datetime(
+                                                departure_date=datetime.datetime(
                                                     2016, 12, 6, 11, tzinfo=UTC),
-                                                arrival_date=datetime(
+                                                arrival_date=datetime.datetime(
                                                     2016, 12, 6, 12, tzinfo=UTC),
                                                 mode_of_travel=ModeOfTravel.PLANE,
                                                 dsa_region=None)
@@ -324,9 +322,9 @@ class TravelExports(BaseTenantTestCase):
         itinerary_item_4 = ItineraryItemFactory(travel=travel_2,
                                                 origin='Origin2',
                                                 destination='Origin1',
-                                                departure_date=datetime(
+                                                departure_date=datetime.datetime(
                                                     2016, 12, 5, 11, tzinfo=UTC),
-                                                arrival_date=datetime(
+                                                arrival_date=datetime.datetime(
                                                     2016, 12, 5, 12, tzinfo=UTC),
                                                 mode_of_travel=ModeOfTravel.PLANE,
                                                 dsa_region=dsa_lan)
@@ -336,9 +334,9 @@ class TravelExports(BaseTenantTestCase):
         itinerary_item_5 = ItineraryItemFactory(travel=travel_2,
                                                 origin='Origin3',
                                                 destination='Origin1',
-                                                departure_date=datetime(
+                                                departure_date=datetime.datetime(
                                                     2016, 12, 6, 11, tzinfo=UTC),
-                                                arrival_date=datetime(
+                                                arrival_date=datetime.datetime(
                                                     2016, 12, 6, 12, tzinfo=UTC),
                                                 mode_of_travel=ModeOfTravel.CAR,
                                                 dsa_region=None)
@@ -370,75 +368,75 @@ class TravelExports(BaseTenantTestCase):
                           'airline'])
 
         self.assertEqual(rows[1],
-                         ['{}/1'.format(datetime.now().year),
+                         ['{}/1'.format(datetime.datetime.now().year),
                           'John Doe',
                           'An Office',
                           travel_1.section.name,
                           'planned',
                           'Origin1',
                           'Origin2',
-                          '03-Dec-2016 11:00 AM',
-                          '03-Dec-2016 12:00 PM',
+                          '03-Dec-2016',
+                          '03-Dec-2016',
                           'BRD',
                           '',
                           'Car',
                           ''])
 
         self.assertEqual(rows[2],
-                         ['{}/1'.format(datetime.now().year),
+                         ['{}/1'.format(datetime.datetime.now().year),
                           'John Doe',
                           'An Office',
                           travel_1.section.name,
                           'planned',
                           'Origin2',
                           'Origin3',
-                          '05-Dec-2016 11:00 AM',
-                          '05-Dec-2016 12:00 PM',
+                          '05-Dec-2016',
+                          '05-Dec-2016',
                           'LAN',
                           '',
                           'Plane',
                           'JetStar'])
 
         self.assertEqual(rows[3],
-                         ['{}/1'.format(datetime.now().year),
+                         ['{}/1'.format(datetime.datetime.now().year),
                           'John Doe',
                           'An Office',
                           travel_1.section.name,
                           'planned',
                           'Origin3',
                           'Origin1',
-                          '06-Dec-2016 11:00 AM',
-                          '06-Dec-2016 12:00 PM',
+                          '06-Dec-2016',
+                          '06-Dec-2016',
                           'NODSA',
                           '',
                           'Plane',
                           'SpiceAir'])
 
         self.assertEqual(rows[4],
-                         ['{}/2'.format(datetime.now().year),
+                         ['{}/2'.format(datetime.datetime.now().year),
                           'Max Mustermann',
                           'An Office',
                           travel_2.section.name,
                           'planned',
                           'Origin2',
                           'Origin1',
-                          '05-Dec-2016 11:00 AM',
-                          '05-Dec-2016 12:00 PM',
+                          '05-Dec-2016',
+                          '05-Dec-2016',
                           'LAN',
                           '',
                           'Plane',
                           'JetStar'])
 
         self.assertEqual(rows[5],
-                         ['{}/2'.format(datetime.now().year),
+                         ['{}/2'.format(datetime.datetime.now().year),
                           'Max Mustermann',
                           'An Office',
                           travel_2.section.name,
                           'planned',
                           'Origin3',
                           'Origin1',
-                          '06-Dec-2016 11:00 AM',
-                          '06-Dec-2016 12:00 PM',
+                          '06-Dec-2016',
+                          '06-Dec-2016',
                           'NODSA',
                           '',
                           'Car',

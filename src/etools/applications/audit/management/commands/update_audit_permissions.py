@@ -2,13 +2,24 @@
 from django.core.management import BaseCommand
 from django.db.models import Q
 
-from etools.applications.action_points.conditions import ActionPointAuthorCondition, ActionPointAssignedByCondition, \
-    ActionPointAssigneeCondition
+from etools.applications.action_points.conditions import (
+    ActionPointAssignedByCondition,
+    ActionPointAssigneeCondition,
+    ActionPointAuthorCondition,
+)
 from etools.applications.action_points.models import ActionPoint
-from etools.applications.audit.conditions import (AuditModuleCondition, AuditStaffMemberCondition,
-                                                  EngagementStaffMemberCondition,)
-from etools.applications.audit.models import Auditor, Engagement, UNICEFAuditFocalPoint, UNICEFUser, \
-    EngagementActionPoint
+from etools.applications.audit.conditions import (
+    AuditModuleCondition,
+    AuditStaffMemberCondition,
+    EngagementStaffMemberCondition,
+)
+from etools.applications.audit.models import (
+    Auditor,
+    Engagement,
+    EngagementActionPoint,
+    UNICEFAuditFocalPoint,
+    UNICEFUser,
+)
 from etools.applications.permissions2.conditions import GroupCondition, NewObjectCondition, ObjectStatusCondition
 from etools.applications.permissions2.models import Permission
 from etools.applications.permissions2.utils import get_model_target

@@ -1,17 +1,13 @@
 import datetime
 from unittest import skip
 
+from etools_validator.exceptions import BasicValidationError, StateValidationError, TransitionError
 from mock import Mock, patch
 
-from etools.applications.EquiTrack.tests.cases import BaseTenantTestCase
 from etools.applications.attachments.tests.factories import AttachmentFactory
+from etools.applications.core.tests.cases import BaseTenantTestCase
 from etools.applications.funds.tests.factories import FundsReservationHeaderFactory
-from etools.applications.partners.models import (
-    Agreement,
-    FileType,
-    Intervention,
-    InterventionAmendment,
-)
+from etools.applications.partners.models import Agreement, FileType, Intervention, InterventionAmendment
 from etools.applications.partners.tests.factories import (
     AgreementFactory,
     FileTypeFactory,
@@ -35,11 +31,6 @@ from etools.applications.partners.validation.interventions import (
     transition_to_terminated,
 )
 from etools.applications.users.tests.factories import GroupFactory, UserFactory
-from etools_validator.exceptions import (
-    BasicValidationError,
-    StateValidationError,
-    TransitionError,
-)
 
 
 class TestPartnershipManagerOnly(BaseTenantTestCase):

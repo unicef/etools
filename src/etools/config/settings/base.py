@@ -17,8 +17,14 @@ import datetime
 import os
 from os.path import abspath, basename, dirname, join, normpath
 
+from django.db import connection
+
 import dj_database_url
+import sentry_sdk
 import yaml
+from sentry_sdk import configure_scope
+from sentry_sdk.integrations.celery import CeleryIntegration
+from sentry_sdk.integrations.django import DjangoIntegration
 
 import etools
 
@@ -47,7 +53,7 @@ SECRETS_FILE_LOCATION = os.environ.get('SECRETS_FILE_LOCATION', join(CONFIG_ROOT
 
 try:
     with open(SECRETS_FILE_LOCATION, 'r') as secrets_file:
-        SECRETS = yaml.load(secrets_file)['ENVIRONMENT']
+        SECRETS = yaml.safe_load(secrets_file)['ENVIRONMENT']
 except FileNotFoundError:
     # pass, for now we default trying to get the secrets from env vars as well
     SECRETS = {}
@@ -109,14 +115,14 @@ USE_TZ = True
 # DJANGO: HTTP
 MIDDLEWARE = (
     'django.contrib.sessions.middleware.SessionMiddleware',
-    'etools.applications.EquiTrack.auth.CustomSocialAuthExceptionMiddleware',
+    'etools.applications.core.auth.CustomSocialAuthExceptionMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
     'corsheaders.middleware.CorsMiddleware',
-    'etools.applications.EquiTrack.middleware.EToolsTenantMiddleware',
+    'etools.applications.core.middleware.EToolsTenantMiddleware',
     'waffle.middleware.WaffleMiddleware',  # needs request.tenant from EToolsTenantMiddleware
 )
 WSGI_APPLICATION = 'etools.config.wsgi.application'
@@ -144,7 +150,7 @@ LOGGING = {
 GDAL_LIBRARY_PATH = '/usr/lib/libgdal.so.20'
 # DJANGO: MODELS
 FIXTURE_DIRS = (
-    os.path.join(os.path.dirname(etools.__file__), 'applications', 'EquiTrack', 'data'),
+    os.path.join(os.path.dirname(etools.__file__), 'applications', 'core', 'data'),
 )
 SHARED_APPS = (
     'django.contrib.auth',
@@ -157,13 +163,12 @@ SHARED_APPS = (
     'django.contrib.postgres',
     'django.contrib.admin',
     'django.contrib.humanize',
-
+    'django_extensions',
     'storages',
     'rest_framework',
     'rest_framework_gis',
     'rest_framework_swagger',
     'rest_framework.authtoken',
-    'drfpasswordless',
     'import_export',
     'gunicorn',
     'post_office',
@@ -178,13 +183,12 @@ SHARED_APPS = (
     'social_django',
     'etools.applications.vision',
     'etools.applications.publics',
-    # you must list the app where your tenant model resides in
     'etools.applications.users',
     'django_filters',
     'etools.applications.environment',
     'etools.applications.action_points.categories',
     'etools.applications.audit.purchase_order',
-    'etools.applications.EquiTrack',
+    'etools.applications.core',
     'etools.applications.tpm.tpmpartners',
     'waffle',
     'etools.applications.permissions2',
@@ -225,7 +229,6 @@ TEMPLATES = [
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
         'DIRS': [
             normpath(join(PACKAGE_ROOT, 'templates')),
-            normpath(join(PACKAGE_ROOT, 'templates', 'frontend'))
         ],
         'APP_DIRS': False,  # False because we set loaders manually below
         'OPTIONS': {
@@ -263,13 +266,13 @@ ROOT_URLCONF = 'etools.config.urls'
 # CONTRIB: AUTH
 AUTHENTICATION_BACKENDS = (
     # 'social_core.backends.azuread_b2c.AzureADB2COAuth2',
-    'etools.applications.EquiTrack.auth.CustomAzureADBBCOAuth2',
+    'etools.applications.core.auth.CustomAzureADBBCOAuth2',
     'django.contrib.auth.backends.ModelBackend',
 )
 AUTH_USER_MODEL = 'users.User'
 LOGIN_REDIRECT_URL = '/'
 
-HOST = get_from_secrets_or_env('DJANGO_ALLOWED_HOST', 'localhost:8000')
+HOST = get_from_secrets_or_env('DJANGO_ALLOWED_HOST', 'http://localhost:8000/')
 LOGIN_URL = LOGOUT_REDIRECT_URL = get_from_secrets_or_env('LOGIN_URL', '/landing/')
 
 # CONTRIB: GIS (GeoDjango)
@@ -353,8 +356,8 @@ REST_FRAMEWORK = {
     ),
     'DEFAULT_AUTHENTICATION_CLASSES': (
         'rest_framework.authentication.SessionAuthentication',
-        'etools.applications.EquiTrack.auth.EToolsTenantJWTAuthentication',
-        'etools.applications.EquiTrack.auth.EtoolsTokenAuthentication',
+        'etools.applications.core.auth.EToolsTenantJWTAuthentication',
+        'etools.applications.core.auth.EtoolsTokenAuthentication',
     ),
     'TEST_REQUEST_RENDERER_CLASSES': (
         'rest_framework.renderers.JSONRenderer',
@@ -362,7 +365,7 @@ REST_FRAMEWORK = {
         'rest_framework_xml.renderers.XMLRenderer',
         'rest_framework.renderers.MultiPartRenderer',
     ),
-    'DEFAULT_SCHEMA_CLASS': 'etools.applications.EquiTrack.inspectors.EToolsSchema',
+    'DEFAULT_SCHEMA_CLASS': 'etools.applications.core.inspectors.EToolsSchema',
 }
 
 # django-cors-headers: https://github.com/ottoyiu/django-cors-headers
@@ -387,13 +390,11 @@ LEAFLET_CONFIG = {
 
 # django-tenant-schemas: https://github.com/bernardopires/django-tenant-schemas
 TENANT_MODEL = "users.Country"
-TENANT_DOMAIN_MODEL = "EquiTrack.Domain"
+TENANT_DOMAIN_MODEL = "core.Domain"
 
 # don't call set search_path so much
 # https://django-tenant-schemas.readthedocs.io/en/latest/use.html#performance-considerations
 TENANT_LIMIT_SET_CALLS = True
-
-HOST = get_from_secrets_or_env('DJANGO_ALLOWED_HOST', 'localhost:8000')
 
 # django-rest-framework-jwt: http://getblimp.github.io/django-rest-framework-jwt/
 JWT_AUTH = {
@@ -429,6 +430,23 @@ JWT_AUTH = {
     'JWT_AUTH_HEADER_PREFIX': 'JWT',
 }
 
+SENTRY_DSN = get_from_secrets_or_env('SENTRY_DSN')  # noqa: F405
+
+if SENTRY_DSN:
+    def before_send(event, hint):
+        with configure_scope() as scope:
+            scope.set_extra("tenant", connection.tenant.schema_name)
+
+        return event
+
+    sentry_sdk.init(
+        dsn=SENTRY_DSN,
+        # by default this is False, must be set to True so the library attaches the request data to the event
+        send_default_pii=True,
+        integrations=[DjangoIntegration(), CeleryIntegration()],
+        before_send=before_send,
+    )
+
 
 # eTools settings ################################
 
@@ -453,7 +471,7 @@ VISION_PASSWORD = get_from_secrets_or_env('VISION_PASSWORD', 'invalid_vision_pas
 ALLOW_BASIC_AUTH = get_from_secrets_or_env('ALLOW_BASIC_AUTH', False)
 if ALLOW_BASIC_AUTH:
     REST_FRAMEWORK['DEFAULT_AUTHENTICATION_CLASSES'] += (
-        'etools.applications.EquiTrack.auth.DRFBasicAuthMixin',
+        'etools.applications.core.auth.DRFBasicAuthMixin',
     )
 
 ISSUE_CHECKS = [
@@ -508,19 +526,19 @@ JWT_LEEWAY = 1000
 SOCIAL_PASSWORD_RESET_POLICY = os.getenv('AZURE_B2C_PASS_RESET_POLICY', "B2C_1_PasswordResetPolicy")
 SOCIAL_AUTH_PIPELINE = (
     # 'social_core.pipeline.social_auth.social_details',
-    'etools.applications.EquiTrack.auth.social_details',
+    'etools.applications.core.auth.social_details',
     'social_core.pipeline.social_auth.social_uid',
     # allows based on emails being listed in 'WHITELISTED_EMAILS' or 'WHITELISTED_DOMAINS'
     'social_core.pipeline.social_auth.auth_allowed',
     'social_core.pipeline.social_auth.social_user',
     # 'social_core.pipeline.user.get_username',
-    'etools.applications.EquiTrack.auth.get_username',
+    'etools.applications.core.auth.get_username',
     'social_core.pipeline.social_auth.associate_by_email',
-    'etools.applications.EquiTrack.auth.create_user',
+    'etools.applications.core.auth.create_user',
     'social_core.pipeline.social_auth.associate_user',
     'social_core.pipeline.social_auth.load_extra_data',
     'social_core.pipeline.user.user_details',
-    'etools.applications.EquiTrack.auth.user_details',
+    'etools.applications.core.auth.user_details',
 )
 
 REPORT_EMAILS = get_from_secrets_or_env('REPORT_EMAILS', 'etools@unicef.org').replace(' ', '').split(',')

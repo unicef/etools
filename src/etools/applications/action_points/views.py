@@ -6,6 +6,8 @@ from rest_framework.decorators import action
 from rest_framework.filters import OrderingFilter, SearchFilter
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
+from unicef_rest_export.renderers import ExportOpenXMLRenderer
+from unicef_rest_export.views import ExportMixin
 from unicef_restlib.pagination import DynamicPageNumberPagination
 from unicef_restlib.views import MultiSerializerViewSetMixin, SafeTenantViewSetMixin
 from unicef_snapshot.views import FSMSnapshotViewMixin
@@ -26,6 +28,7 @@ from etools.applications.action_points.filters import ReferenceNumberOrderingFil
 from etools.applications.action_points.models import ActionPoint
 from etools.applications.action_points.serializers import (
     ActionPointCreateSerializer,
+    ActionPointListExportSerializer,
     ActionPointListSerializer,
     ActionPointSerializer,
 )
@@ -42,17 +45,18 @@ class CategoryViewSet(mixins.ListModelMixin, viewsets.GenericViewSet):
 
 
 class ActionPointViewSet(
-    SafeTenantViewSetMixin,
-    MultiSerializerViewSetMixin,
-    PermittedSerializerMixin,
-    mixins.ListModelMixin,
-    mixins.CreateModelMixin,
-    mixins.RetrieveModelMixin,
-    mixins.UpdateModelMixin,
-    mixins.DestroyModelMixin,
-    FSMSnapshotViewMixin,
-    PermittedFSMActionMixin,
-    viewsets.GenericViewSet
+        SafeTenantViewSetMixin,
+        MultiSerializerViewSetMixin,
+        PermittedSerializerMixin,
+        ExportMixin,
+        mixins.ListModelMixin,
+        mixins.CreateModelMixin,
+        mixins.RetrieveModelMixin,
+        mixins.UpdateModelMixin,
+        mixins.DestroyModelMixin,
+        FSMSnapshotViewMixin,
+        PermittedFSMActionMixin,
+        viewsets.GenericViewSet
 ):
     metadata_class = PermissionBasedMetadata
     pagination_class = DynamicPageNumberPagination
@@ -63,6 +67,7 @@ class ActionPointViewSet(
         'create': ActionPointCreateSerializer,
         'list': ActionPointListSerializer,
     }
+    export_serializer_class = ActionPointListExportSerializer
     filter_backends = (ReferenceNumberOrderingFilter, OrderingFilter, SearchFilter,
                        RelatedModuleFilter, DjangoFilterBackend,)
 
@@ -112,11 +117,30 @@ class ActionPointViewSet(
             'Content-Disposition': 'attachment;filename=action_points_{}.csv'.format(timezone.now().date())
         })
 
+    @action(detail=False, methods=['get'], url_path='export/xlsx', renderer_classes=(ExportOpenXMLRenderer,))
+    def list_xlsx_export(self, request, *args, **kwargs):
+        self.serializer_class = ActionPointListSerializer
+        action_points = self.filter_queryset(self.get_queryset().prefetch_related('comments'))
+        serializer = self.get_serializer(action_points, many=True)
+        return Response(serializer.data, headers={
+            'Content-Disposition': 'attachment;filename=action_points_{}.xlsx'.format(timezone.now().date())
+        })
+
     @action(detail=True, methods=['get'], url_path='export/csv', renderer_classes=(ActionPointCSVRenderer,))
     def single_csv_export(self, request, *args, **kwargs):
         serializer = ActionPointExportSerializer(self.get_object())
         return Response(serializer.data, headers={
             'Content-Disposition': 'attachment;filename={}_{}.csv'.format(
+                self.get_object().reference_number, timezone.now().date()
+            )
+        })
+
+    @action(detail=True, methods=['get'], url_path='export/xlsx', renderer_classes=(ExportOpenXMLRenderer,))
+    def single_xlsx_export(self, request, *args, **kwargs):
+        self.serializer_class = ActionPointListSerializer
+        serializer = self.get_serializer([self.get_object()], many=True)
+        return Response(serializer.data, headers={
+            'Content-Disposition': 'attachment;filename={}_{}.xlsx'.format(
                 self.get_object().reference_number, timezone.now().date()
             )
         })

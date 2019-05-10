@@ -6,12 +6,29 @@ from django.contrib.auth.models import Group
 import factory
 from factory import fuzzy
 
-from etools.applications.audit.models import (Audit, Auditor, DetailedFindingInfo, Engagement,
-                                              Finding, KeyInternalControl, MicroAssessment,
-                                              Risk, RiskBluePrint, RiskCategory, SpecialAudit, SpecificProcedure,
-                                              SpotCheck, UNICEFAuditFocalPoint, UNICEFUser,)
-from etools.applications.audit.purchase_order.models import (AuditorFirm, AuditorStaffMember,
-                                                             PurchaseOrder, PurchaseOrderItem,)
+from etools.applications.audit.models import (
+    Audit,
+    Auditor,
+    DetailedFindingInfo,
+    Engagement,
+    Finding,
+    KeyInternalControl,
+    MicroAssessment,
+    Risk,
+    RiskBluePrint,
+    RiskCategory,
+    SpecialAudit,
+    SpecificProcedure,
+    SpotCheck,
+    UNICEFAuditFocalPoint,
+    UNICEFUser,
+)
+from etools.applications.audit.purchase_order.models import (
+    AuditorFirm,
+    AuditorStaffMember,
+    PurchaseOrder,
+    PurchaseOrderItem,
+)
 from etools.applications.firms.tests.factories import BaseFirmFactory, BaseStaffMemberFactory
 from etools.applications.partners.models import PartnerOrganization
 from etools.applications.partners.tests.factories import AgreementFactory, InterventionFactory, PartnerFactory

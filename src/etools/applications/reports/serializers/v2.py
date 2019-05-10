@@ -3,6 +3,7 @@ from django.utils.translation import ugettext as _
 
 from rest_framework import serializers
 from rest_framework.exceptions import ValidationError
+from unicef_rest_export.serializers import ExportSerializer
 
 from etools.applications.partners.models import Intervention
 from etools.applications.reports.models import (
@@ -17,7 +18,7 @@ from etools.applications.reports.models import (
     ResultType,
     SpecialReportingRequirement,
 )
-from etools.applications.reports.validators import value_numbers, value_none_or_numbers
+from etools.applications.reports.validators import value_none_or_numbers, value_numbers
 
 
 class MinimalOutputListSerializer(serializers.ModelSerializer):
@@ -356,3 +357,59 @@ class SpecialReportingRequirementSerializer(serializers.ModelSerializer):
     class Meta:
         model = SpecialReportingRequirement
         fields = "__all__"
+
+
+class ResultFrameworkSerializer(serializers.Serializer):
+    result = serializers.SerializerMethodField(label=_("Result"))
+    indicators = serializers.SerializerMethodField()
+    target = serializers.SerializerMethodField()
+    baseline = serializers.SerializerMethodField()
+    means_of_verification = serializers.SerializerMethodField()
+    locations = serializers.SerializerMethodField()
+
+    class Meta:
+        fields = (
+            "result",
+            "indicators",
+            "locations",
+            "baseline",
+            "target",
+            "means_of_verification",
+        )
+
+    def get_result(self, obj):
+        if hasattr(obj, "cp_output"):
+            return obj.cp_output
+        return obj.lower_result
+
+    def get_indicators(self, obj):
+        if hasattr(obj, "ram_indicators"):
+            return "\n".join([
+                i.name for i in obj.ram_indicators.all()
+                if i.name
+            ])
+        return obj.indicator.title
+
+    def get_target(self, obj):
+        if hasattr(obj, "target"):
+            return obj.target_display
+        return ""
+
+    def get_baseline(self, obj):
+        if hasattr(obj, "baseline"):
+            return obj.baseline_display
+        return ""
+
+    def get_means_of_verification(self, obj):
+        if hasattr(obj, "means_of_verification"):
+            return obj.means_of_verification
+        return ""
+
+    def get_locations(self, obj):
+        if hasattr(obj, "locations"):
+            return "\n".join(set([l.name for l in obj.locations.all()]))
+        return ""
+
+
+class ResultFrameworkExportSerializer(ExportSerializer):
+    pass
