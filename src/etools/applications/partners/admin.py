@@ -281,7 +281,8 @@ class InterventionAdmin(
     filter_horizontal = (
         'sections',
         'unicef_focal_points',
-        'partner_focal_points'
+        'partner_focal_points',
+        'flat_locations'
     )
     fieldsets = (
         (_('Intervention Details'), {
@@ -297,6 +298,7 @@ class InterventionAdmin(
                     'country_programme',
                     'submission_date',
                     'sections',
+                    'flat_locations',
                     'metadata',
                 )
         }),
