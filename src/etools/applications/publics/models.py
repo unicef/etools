@@ -1,6 +1,5 @@
 from datetime import date, timedelta
 
-from django.contrib.postgres.fields import JSONField
 from django.core.exceptions import ObjectDoesNotExist
 from django.db import models
 from django.db.models import QuerySet
@@ -247,37 +246,3 @@ class DSARate(models.Model):
         return '{} ({} - {})'.format(self.region.label,
                                      self.effective_from_date.isoformat(),
                                      self.effective_to_date.isoformat())
-
-
-class DSARateUpload(models.Model):
-    UPLOADED = 'uploaded'
-    PROCESSING = 'processing'
-    FAILED = 'failed'
-    DONE = 'done'
-    STATUS = (
-        (UPLOADED, 'Uploaded'),
-        (PROCESSING, 'Processing'),
-        (FAILED, 'Failed'),
-        (DONE, 'Done'),
-    )
-
-    dsa_file = models.FileField(upload_to="publics/dsa_rate/", verbose_name=_('DSA File'))
-    status = models.CharField(
-        max_length=64,
-        blank=True,
-        default='',
-        choices=STATUS,
-        verbose_name=_('Status')
-    )
-    upload_date = models.DateTimeField(auto_now_add=True, verbose_name=_('Upload Date'))
-    errors = JSONField(blank=True, null=True, default=dict, verbose_name=_('Errors'))
-
-    def save(self, *args, **kwargs):
-        if not self.pk:
-            self.status = DSARateUpload.UPLOADED
-            super().save(*args, **kwargs)
-            # resolve circular imports with inline importing
-            from etools.applications.publics.tasks import upload_dsa_rates
-            upload_dsa_rates.delay(self.pk)
-        else:
-            super().save(*args, **kwargs)

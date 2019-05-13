@@ -7,11 +7,11 @@ from django.test.utils import override_settings
 from django.utils import timezone
 
 import mock
+from unicef_vision.exceptions import VisionException
 
 import etools.applications.vision.tasks
 from etools.applications.core.tests.cases import BaseTenantTestCase
 from etools.applications.users.tests.factories import CountryFactory
-from etools.applications.vision.exceptions import VisionException
 
 
 def _build_country(name):
@@ -20,7 +20,9 @@ def _build_country(name):
     It exists only in memory. We must be careful not to save this because creating a new Country in the database
     complicates schemas.
     """
-    country = CountryFactory.build(name='Country {}'.format(name.title()), schema_name=name)
+    country = CountryFactory.build(name='Country {}'.format(name.title()),
+                                   schema_name=name,
+                                   business_area_code='ZZZ {}'.format(name.title()))
     country.vision_sync_enabled = True
     # We'll want to check vision_last_synced as part of the tests, so set it to a known value.
     country.vision_last_synced = None
@@ -120,15 +122,15 @@ class TestVisionSyncTask(SimpleTestCase):
     def _assertTenantHandlersSynced(self, mock_handler, all_sync_task=18, sync_t0=6, sync_t1=6, sync_t2=6):
         """Verify that tenant handler tasks were called
         all_sync_task is the number of tasks called.
-        sync_t0 is the number of tasks called for country test 0
-        sync_t1 is the number of tasks called for country test 1
-        sync_t2 is the number of tasks called for country test 2
+        sync_t0 is the number of tasks called for ZZZ Test 0
+        sync_t1 is the number of tasks called for ZZZ Test 1
+        sync_t2 is the number of tasks called for ZZZ Test 2
         """
         self.assertEqual(mock_handler.delay.call_count, all_sync_task)
         countries = [arguments[0][0] for arguments in mock_handler.delay.call_args_list]
-        self.assertEqual(countries.count('Country Test0'), sync_t0)
-        self.assertEqual(countries.count('Country Test1'), sync_t1)
-        self.assertEqual(countries.count('Country Test2'), sync_t2)
+        self.assertEqual(countries.count('ZZZ Test0'), sync_t0)
+        self.assertEqual(countries.count('ZZZ Test1'), sync_t1)
+        self.assertEqual(countries.count('ZZZ Test2'), sync_t2)
 
     def _assertLoggerMessages(self, mock_logger, tenant_countries_used=None, selected_synchronizers=None):
         """Ensure the task sent the appropriate message to Slack.
@@ -178,7 +180,7 @@ class TestVisionSyncTask(SimpleTestCase):
         selected_countries = [self.tenant_countries[0], ]
         countryMock.objects.filter = mock.Mock(return_value=selected_countries)
         mock_django_db_connection.set_tenant = mock.Mock()
-        etools.applications.vision.tasks.vision_sync_task(country_name='Country Test0')
+        etools.applications.vision.tasks.vision_sync_task(business_area_code='ZZZ Test0')
 
         self._assertCountryMockCalls(countryMock)
         self._assertGlobalHandlersSynced(mock_handler, all_sync_task=6)
@@ -223,7 +225,7 @@ class TestVisionSyncTask(SimpleTestCase):
         # Mock connection.set_tenant() so we can verify calls to it.
         mock_django_db_connection.set_tenant = mock.Mock()
         etools.applications.vision.tasks.vision_sync_task(
-            country_name='Country Test0', synchronizers=selected_synchronizers)
+            business_area_code='ZZZ Test0', synchronizers=selected_synchronizers)
 
         self._assertCountryMockCalls(countryMock)
         self._assertGlobalHandlersSynced(mock_handler, all_sync_task=1, public_task=0)
@@ -248,10 +250,10 @@ class TestSyncHandlerTask(BaseTenantTestCase):
         """Exercise etools.applications.vision.tasks.sync_handler() success scenario, one matching country."""
         Country.objects.get = mock.Mock(return_value=self.country)
 
-        etools.applications.vision.tasks.sync_handler.delay(self.country.name, 'programme')
-        self.assertEqual(mock_logger_info.call_count, 2)
-        expected_msg = '{} sync successfully for {}'.format(
-            'programme', 'Country My'
+        etools.applications.vision.tasks.sync_handler.delay(self.country.business_area_code, 'programme')
+        self.assertEqual(mock_logger_info.call_count, 1)
+        expected_msg = 'Starting vision sync handler {} for country {}'.format(
+            'programme', 'ZZZ My'
         )
         self.assertEqual(mock_logger_info.call_args[0], (expected_msg,))
         self.assertEqual(mock_logger_info.call_args[1], {})
@@ -265,21 +267,15 @@ class TestSyncHandlerTask(BaseTenantTestCase):
         """Exercise etools.applications.vision.tasks.sync_handler() which receive an exception from Vision."""
         Country.objects.get = mock.Mock(return_value=self.country)
 
-        etools.applications.vision.tasks.sync_handler.delay(self.country.name, 'programme')
+        etools.applications.vision.tasks.sync_handler.delay(self.country.business_area_code, 'programme')
         # Check that it got retried once
-        self.assertEqual(mock_logger_info.call_count, 2)
-        self.assertEqual(mock_logger_error.call_count, 2)
+        self.assertEqual(mock_logger_info.call_count, 1)
+        self.assertEqual(mock_logger_error.call_count, 0)
         expected_msg = 'Starting vision sync handler {} for country {}'.format(
-            'programme', 'Country My'
+            'programme', 'ZZZ My'
         )
         self.assertEqual(mock_logger_info.call_args[0], (expected_msg,))
         self.assertEqual(mock_logger_info.call_args[1], {})
-
-        expected_msg = '{} sync failed, Country: {}'.format(
-            'programme', 'Country My'
-        )
-        self.assertEqual(mock_logger_error.call_args[0], (expected_msg,))
-        self.assertEqual(mock_logger_error.call_args[1], {'exc_info': True})
 
     @mock.patch('etools.applications.vision.tasks.logger.error')
     @override_settings(CELERY_ALWAYS_EAGER=True, CELERY_EAGER_PROPAGATES_EXCEPTIONS=True)
@@ -289,7 +285,7 @@ class TestSyncHandlerTask(BaseTenantTestCase):
         """
         etools.applications.vision.tasks.sync_handler.delay('random', 'programme')
         self.assertEqual(mock_logger.call_count, 1)
-        expected_msg = '{} sync failed, Could not find a Country with this name: {}'.format(
+        expected_msg = '{} sync failed, Could not find a Country with this business area code: {}'.format(
             'programme', 'random'
         )
         self.assertEqual(mock_logger.call_args[0], (expected_msg,))

@@ -2,6 +2,8 @@
 import datetime
 import json
 
+from unicef_vision.loaders import VISION_NO_DATA_MESSAGE
+
 from etools.applications.core.tests.cases import BaseTenantTestCase
 from etools.applications.partners import synchronizers
 from etools.applications.partners.models import PartnerOrganization
@@ -27,7 +29,7 @@ class TestPartnerSynchronizer(BaseTenantTestCase):
             "TOTAL_CASH_TRANSFERRED_YTD": "70.00",
         }
         self.records = {"ROWSET": {"ROW": [self.data]}}
-        self.adapter = synchronizers.PartnerSynchronizer(self.country)
+        self.adapter = synchronizers.PartnerSynchronizer(self.country.business_area_code)
 
     def test_convert_records(self):
         self.assertEqual(
@@ -51,7 +53,7 @@ class TestPartnerSynchronizer(BaseTenantTestCase):
         self.assertEqual(response, self.data)
 
     def test_get_json_no_data(self):
-        response = self.adapter._get_json(synchronizers.VISION_NO_DATA_MESSAGE)
+        response = self.adapter._get_json(VISION_NO_DATA_MESSAGE)
         self.assertEqual(response, [])
 
     def test_get_cso_type_none(self):
@@ -229,7 +231,7 @@ class TestDCTSynchronizer(BaseTenantTestCase):
             name="New",
             vendor_number=cls.vendor_key
         )
-        cls.synchronizer = synchronizers.DirectCashTransferSynchronizer(cls.country)
+        cls.synchronizer = synchronizers.DirectCashTransferSynchronizer(cls.country.business_area_code)
 
     def test_create_dict(self):
         dcts = self.synchronizer.create_dict(self.api_response)
