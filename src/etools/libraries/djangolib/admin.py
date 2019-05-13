@@ -1,8 +1,9 @@
 from django.db.models import ForeignKey, ManyToManyField, OneToOneField
+
 from etools.libraries.djangolib.models import EPOCH_ZERO
 
 
-class AdminListMixin(object):
+class AdminListMixin:
     exclude_fields = ['id', 'deleted_at']
     custom_fields = ['is_deleted']
 
