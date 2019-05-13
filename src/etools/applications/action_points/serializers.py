@@ -280,9 +280,14 @@ class ActionPointExportTransformSerializer(ExportSerializer):
 
 
 class ActionPointListExportSerializer(ActionPointListSerializer):
-    reference_number = serializers.SerializerMethodField()
+    reference_number_link = serializers.SerializerMethodField()
 
-    def get_reference_number(self, obj):
+    class Meta(ActionPointListSerializer.Meta):
+        fields = ActionPointListSerializer.Meta.fields + [
+            "reference_number_link",
+        ]
+
+    def get_reference_number_link(self, obj):
         return "https://{}{}".format(
             self.context['request'].get_host(),
             reverse("action-points:action-points-detail", args=[obj.pk]),

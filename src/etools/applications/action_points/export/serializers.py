@@ -4,7 +4,8 @@ from rest_framework import serializers
 
 class ActionPointExportSerializer(serializers.Serializer):
 
-    ref = serializers.SerializerMethodField()
+    ref = serializers.CharField(source='reference_number', read_only=True)
+    ref_link = serializers.SerializerMethodField()
     cp_output = serializers.CharField(allow_null=True)
     partner = serializers.CharField(source='partner.name', allow_null=True)
     office = serializers.CharField(source='office.name', allow_null=True)
@@ -30,7 +31,7 @@ class ActionPointExportSerializer(serializers.Serializer):
         return ";\n\n".join(["{} ({}): {}".format(c.user if c.user else '-', c.submit_date.strftime(
             "%d %b %Y"), c.comment) for c in obj.comments.all()])
 
-    def get_ref(self, obj):
+    def get_ref_link(self, obj):
         return "https://{}{}".format(
             self.context['request'].get_host(),
             reverse("action-points:action-points-detail", args=[obj.pk]),
