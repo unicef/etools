@@ -4,13 +4,7 @@ from datetime import datetime
 
 from django.core.exceptions import ObjectDoesNotExist
 
-from etools.applications.publics.models import (
-    Country,
-    Currency,
-    ExchangeRate,
-    TravelAgent,
-    TravelExpenseType,
-)
+from etools.applications.publics.models import Country, Currency, ExchangeRate, TravelAgent, TravelExpenseType
 from etools.applications.vision.synchronizers import VisionDataTenantSynchronizer
 
 logger = logging.getLogger(__name__)
