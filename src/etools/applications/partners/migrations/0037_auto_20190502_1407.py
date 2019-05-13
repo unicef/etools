@@ -15,7 +15,7 @@ def remove_pd_pca_document_types(apps, schema_editor):
 
     mapping = [
         ("pd", "signed_pd/ssfa"),
-        ("pca", "intervention_signed_pd"),
+        ("pca", "attached_agreement"),
     ]
     for from_filetype_name, to_filetype_name in mapping:
         try:
