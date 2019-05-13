@@ -214,6 +214,7 @@ TENANT_APPS = (
     'etools.applications.action_points',
     'unicef_snapshot',
     'unicef_attachments',
+    'unicef_vision',
 )
 INSTALLED_APPS = ('django_tenants',) + SHARED_APPS + TENANT_APPS
 
@@ -462,6 +463,7 @@ SLACK_URL = get_from_secrets_or_env('SLACK_URL')
 
 TASK_ADMIN_USER = get_from_secrets_or_env('TASK_ADMIN_USER', 'etools_task_admin')
 
+VISION_LOGGER_MODEL = "vision.VisionSyncLog"
 VISION_URL = get_from_secrets_or_env('VISION_URL', 'http://invalid_vision_url')
 VISION_USER = get_from_secrets_or_env('VISION_USER', 'invalid_vision_user')
 VISION_PASSWORD = get_from_secrets_or_env('VISION_PASSWORD', 'invalid_vision_password')

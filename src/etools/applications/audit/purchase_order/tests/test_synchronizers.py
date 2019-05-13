@@ -26,15 +26,15 @@ class TestPSynchronizer(BaseTenantTestCase):
             "GRANT_REF": "Grantor",
             "PO_ITEM": "456",
         }
-        self.adapter = synchronizers.POSynchronizer(self.country)
+        self.adapter = synchronizers.POSynchronizer(self.country.business_area_code)
 
     def test_init_no_object_number(self):
-        a = synchronizers.POSynchronizer(self.country)
-        self.assertEqual(a.country, self.country)
+        a = synchronizers.POSynchronizer(self.country.business_area_code)
+        self.assertEqual(a.business_area_code, self.country.business_area_code)
 
     def test_init(self):
-        a = synchronizers.POSynchronizer(self.country, object_number="123")
-        self.assertEqual(a.country, self.country)
+        a = synchronizers.POSynchronizer(self.country.business_area_code, object_number="123")
+        self.assertEqual(a.business_area_code, self.country.business_area_code)
 
     def test_convert_records_list(self):
         """Ensure list is not touched"""
