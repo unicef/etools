@@ -535,7 +535,17 @@ class TestPartnerOrganizationModel(BaseTenantTestCase):
         SpotCheckFactory(
             partner=self.partner_organization,
             status=Engagement.FINAL,
-            date_of_draft_report_to_unicef=datetime.datetime(datetime.datetime.today().year, 4, 1)
+            date_of_draft_report_to_ip=datetime.datetime(datetime.datetime.today().year, 4, 1)
+        )
+        SpotCheckFactory(
+            partner=self.partner_organization,
+            status=Engagement.CANCELLED,
+            date_of_draft_report_to_ip=datetime.datetime(datetime.datetime.today().year, 4, 10)
+        )
+        SpotCheckFactory(
+            partner=self.partner_organization,
+            status=Engagement.REPORT_SUBMITTED,
+            date_of_draft_report_to_ip=None
         )
         self.partner_organization.spot_checks()
         self.assertEqual(self.partner_organization.hact_values['spot_checks']['completed']['total'], 1)
@@ -557,12 +567,22 @@ class TestPartnerOrganizationModel(BaseTenantTestCase):
         AuditFactory(
             partner=self.partner_organization,
             status=Engagement.FINAL,
-            date_of_draft_report_to_unicef=datetime.datetime(datetime.datetime.today().year, 4, 1)
+            date_of_draft_report_to_ip=datetime.datetime(datetime.datetime.today().year, 4, 1)
         )
         SpecialAuditFactory(
             partner=self.partner_organization,
+            status=Engagement.REPORT_SUBMITTED,
+            date_of_draft_report_to_ip=datetime.datetime(datetime.datetime.today().year, 8, 1)
+        )
+        AuditFactory(
+            partner=self.partner_organization,
             status=Engagement.FINAL,
-            date_of_draft_report_to_unicef=datetime.datetime(datetime.datetime.today().year, 8, 1)
+            date_of_draft_report_to_ip=None
+        )
+        SpecialAuditFactory(
+            partner=self.partner_organization,
+            status=Engagement.CANCELLED,
+            date_of_draft_report_to_ip=datetime.datetime(datetime.datetime.today().year, 8, 1)
         )
         self.partner_organization.audits_completed()
         self.assertEqual(self.partner_organization.hact_values['audits']['completed'], 2)
