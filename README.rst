@@ -26,13 +26,24 @@ AGILE METHODOLOGY
 -----------------
 
 The development of eTools takes on a methodology known as Agile. This methodology takes into account shot, iterative software development cycles that incorporates user feedback.
+Development strategy is similar to git flow approach.
+New feature and bugfix are merged into development when PR have been approved and CI passes.
+Once development is completed, changes are moved to staging for QA testing.
+Adjustments and fixes should go direct to staging while new features should go in development.
+Once QA is completed staging branch is merged to master.
 
 MODULES
 -------
 
-eTools development follows a phased and modular approach to software development, with releases based on an agreed set of prioritized modules and features – new modules and features are released on a quarterly basis.
+eTools development follows a phased and modular approach to software development, with releases based on an agreed set of prioritized modules and features – new modules and features are released on a monthly basis.
 
-These are &nbsp;modules planned for the eTools platform:
+These are modules currently in production for the eTools:
+*   Partnership Management Portal (PMP)
+*   Dashboard (DASH)
+*   Trip Management (T2F)
+*   Financial Assurance Module (FAM)
+*   Third Party Monitoring (TPM)
+*   Action Point Dashboard (APD)
 
 
 DEVELOPMENT ROADMAP
@@ -50,9 +61,7 @@ Links
 +--------------------+----------------+--------------+--------------------+
 | Source Code        |https://github.com/unicef/etools                    |
 +--------------------+----------------+-----------------------------------+
-| Issue tracker      |https://github.com/unicef/etools/issues             |
-+--------------------+----------------+-----------------------------------+
-| Planning           |https://app.clubhouse.io/unicefetools/dashboard     |
+| Issue tracker      |https://app.clubhouse.io/unicefetools/stories       |
 +--------------------+----------------+-----------------------------------+
 
 
@@ -63,3 +72,40 @@ Links
 .. |dev-cov| image:: https://circleci.com/gh/unicef/etools/tree/develop.svg?style=svg
                     :target: https://circleci.com/gh/unicef/etools/tree/develop
 
+
+
+Testing
+-------------------
+
++---------------------------------+--------------------------------------------------------+
+| tox                             | runs flake and checks there are not missing migrations |
++---------------------------------+--------------------------------------------------------+
+| tox -r                          | in case you want to reuse the virtualenv               |
++---------------------------------+--------------------------------------------------------+
+| python manage.py test <package> | run test related to a specific package                 |
++---------------------------------+--------------------------------------------------------+
+
+
+Environments
+--------------------
++----------------+---------------------------+-------------------------------------------------+
+| Development    | etools-dev.unicef.org     | - Development environment for developers        |
+|                |                           | - Potentially instable                          |
++----------------+---------------------------+-------------------------------------------------+
+| Staging        | etools-staging.unicef.org | - Staging environment for QA testing            |
+|                |                           | - Release candidate                             |
++----------------+---------------------------+-------------------------------------------------+
+| Demo           | etools-demo.unicef.org    | - Demo environment                              |
+|                |                           | - Same version of production                    |
+|                |                           | - Used for demo, workshops and troubleshooting  |
++----------------+---------------------------+-------------------------------------------------+
+| Test           | etools-test.unicef.org    | - Coming soon                                   |
++----------------+---------------------------+-------------------------------------------------+
+| Production     | etools.unicef.org         | - Production environment                        |
++----------------+---------------------------+-------------------------------------------------+
+
+
+Troubleshoot
+--------------------
+*  Exception are logged in Sentry: https://sentry.io/unicef-jk/
+*  Each container in Rancher allows to access local logs
