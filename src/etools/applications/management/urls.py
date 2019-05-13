@@ -4,6 +4,7 @@ from etools.applications.management.views.general import InvalidateCache, SyncCo
 from etools.applications.management.views.reports import LoadResultStructure
 from etools.applications.management.views.tasks_endpoints import (
     PMPIndicatorsReportView,
+    SyncAllUsers,
     SyncDeltaUsers,
     TestSendEmailAPIView,
     UpdateAggregateHactValuesAPIView,
@@ -23,6 +24,7 @@ urlpatterns = ((
     url(r'^sync-countries/$', SyncCountries.as_view(), name='sync_frs'),
     url(r'^api/stats/usercounts/$', ActiveUsers.as_view(), name='stats_user_counts'),
     url(r'^api/stats/agreements/$', AgreementsStatisticsView.as_view(), name='stats_agreements'),
+    url(r'^tasks/sync_all_users/$', SyncAllUsers.as_view(), name='tasks_sync_all_users'),
     url(r'^tasks/sync_delta_users/$', SyncDeltaUsers.as_view(), name='tasks_sync_delta_users'),
     url(r'^tasks/update_hact_values/$', UpdateHactValuesAPIView.as_view(), name='tasks_update_hact_values'),
     url(r'^tasks/update_aggregate_hact_values/$', UpdateAggregateHactValuesAPIView.as_view(),

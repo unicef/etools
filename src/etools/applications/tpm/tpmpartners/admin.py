@@ -20,6 +20,7 @@ class TPMPartnerAdmin(admin.ModelAdmin):
     inlines = [
         TPMPartnerStaffMemberInlineAdmin,
     ]
+    filter_horizontal = ('countries', )
 
     def countries_list(self, obj):
         return ', '.join(obj.countries.values_list('name', flat=True))
