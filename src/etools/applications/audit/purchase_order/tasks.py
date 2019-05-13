@@ -1,5 +1,4 @@
 from celery.utils.log import get_task_logger
-
 # Not scheduled by any code in this repo, but by other means, so keep it around.
 # Continues on to the next country on any VisionException, so no need to have
 # celery retry it in that case.

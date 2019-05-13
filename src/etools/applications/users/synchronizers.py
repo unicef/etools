@@ -1,6 +1,5 @@
 import json
 
-
 from etools.applications.users.models import Country
 from etools.applications.vision.synchronizers import VisionDataTenantSynchronizer
 

@@ -4,6 +4,7 @@ import json
 import logging
 
 from django.db import transaction
+
 from unicef_vision.loaders import VISION_NO_DATA_MESSAGE
 from unicef_vision.utils import wcf_json_date_as_date
 
