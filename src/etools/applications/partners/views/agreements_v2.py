@@ -52,6 +52,7 @@ class AgreementListAPIView(QueryStringFilterMixin, ExportModelMixin, ValidatorVi
 
     filters = (
         ('agreement_type', 'agreement_type__in'),
+        ('cpStructures', 'country_programme__in'),
         ('status', 'status__in'),
         ('partner_name', 'partner__name__in'),
         ('start', 'start__gt'),

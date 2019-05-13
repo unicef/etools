@@ -1,10 +1,15 @@
-
 import datetime
 import json
 
+from unicef_vision.loaders import VISION_NO_DATA_MESSAGE
+
 from etools.applications.core.tests.cases import BaseTenantTestCase
-from etools.applications.reports import synchronizers
 from etools.applications.reports.models import CountryProgramme, Indicator, Result, ResultType
+from etools.applications.reports.synchronizers import (
+    ProgrammeSynchronizer,
+    RAMSynchronizer,
+    ResultStructureSynchronizer,
+)
 from etools.applications.reports.tests.factories import (
     CountryProgrammeFactory,
     IndicatorFactory,
@@ -23,7 +28,7 @@ class TestResultStructureSynchronizer(BaseTenantTestCase):
 
     def setUp(self):
         self.data = {"test": "123"}
-        self.adapter = synchronizers.ResultStructureSynchronizer(self.data)
+        self.adapter = ResultStructureSynchronizer(self.data)
 
     def test_init(self):
         self.assertEqual(self.adapter.data, self.data)
@@ -384,13 +389,13 @@ class TestProgrammeSynchronizer(BaseTenantTestCase):
             "PROGRAMME_AREA_CODE": "",
             "PROGRAMME_AREA_NAME": "",
         }
-        self.adapter = synchronizers.ProgrammeSynchronizer(self.country)
+        self.adapter = ProgrammeSynchronizer(self.country.business_area_code)
 
     def test_get_json(self):
         data = {"test": "123"}
         self.assertEqual(self.adapter._get_json(data), data)
         self.assertEqual(
-            self.adapter._get_json(synchronizers.VISION_NO_DATA_MESSAGE),
+            self.adapter._get_json(VISION_NO_DATA_MESSAGE),
             []
         )
 
@@ -591,7 +596,7 @@ class TestRAMSynchronizer(BaseTenantTestCase):
             "BASELINE": "BLINE",
             "TARGET": "Target",
         }
-        self.adapter = synchronizers.RAMSynchronizer(self.country)
+        self.adapter = RAMSynchronizer(self.country.business_area_code)
 
     def test_convert_records(self):
         records = json.dumps([self.data])

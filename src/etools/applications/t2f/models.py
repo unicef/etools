@@ -21,7 +21,7 @@ from etools.applications.core.urlresolvers import build_frontend_url
 from etools.applications.t2f.serializers.mailing import TravelMailSerializer
 from etools.applications.users.models import WorkspaceCounter
 
-log = logging.getLogger(__name__)
+logger = logging.getLogger(__name__)
 
 
 class TransitionError(RuntimeError):
@@ -298,7 +298,7 @@ class Travel(models.Model):
                 act.partner.spot_checks(event_date=self.end_date, update_one=True)
 
         except Exception:
-            log.exception('Exception while trying to update hact values.')
+            logger.exception('Exception while trying to update hact values.')
 
     @transition(status, target=PLANNED)
     def reset_status(self):

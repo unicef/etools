@@ -4,9 +4,9 @@ from django.utils.encoding import force_text
 
 import requests
 from celery.utils.log import get_task_logger
+from unicef_vision.exceptions import VisionException
 
 from etools.applications.users.models import Country
-from etools.applications.vision.exceptions import VisionException
 from etools.applications.vision.models import VisionSyncLog
 from etools.config.celery import app
 from etools.libraries.azure_graph_api.client import azure_sync_users, get_token

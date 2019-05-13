@@ -1,9 +1,10 @@
 from collections import OrderedDict
 from copy import deepcopy
 
+from unicef_vision.synchronizers import ManualVisionSynchronizer
+
 from etools.applications.publics.models import Country
 from etools.applications.tpm.tpmpartners.models import TPMPartner
-from etools.applications.vision.synchronizers import ManualVisionSynchronizer
 
 
 def _get_country_name(value):
