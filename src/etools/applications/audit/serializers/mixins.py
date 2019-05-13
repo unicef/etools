@@ -7,7 +7,7 @@ from rest_framework import serializers
 from etools.applications.audit.serializers.risks import RiskRootSerializer
 
 
-class RiskCategoriesUpdateMixin(object):
+class RiskCategoriesUpdateMixin:
     """
     Mixin that allow to update risk values through engagement serializer.
     """
@@ -31,7 +31,7 @@ class RiskCategoriesUpdateMixin(object):
         return instance
 
 
-class EngagementDatesValidation(object):
+class EngagementDatesValidation:
     date_fields = [
         'partner_contacted_at',
         'date_of_draft_report_to_ip', 'date_of_comments_by_ip',

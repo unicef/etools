@@ -4,13 +4,19 @@ from datetime import datetime
 
 from django.core.exceptions import ObjectDoesNotExist
 
-from etools.applications.publics.models import Country, Currency, ExchangeRate, TravelAgent, TravelExpenseType
-from etools.applications.vision.vision_data_synchronizer import VisionDataSynchronizer
+from etools.applications.publics.models import (
+    Country,
+    Currency,
+    ExchangeRate,
+    TravelAgent,
+    TravelExpenseType,
+)
+from etools.applications.vision.synchronizers import VisionDataTenantSynchronizer
 
 log = logging.getLogger(__name__)
 
 
-class CurrencySynchronizer(VisionDataSynchronizer):
+class CurrencySynchronizer(VisionDataTenantSynchronizer):
     ENDPOINT = 'GetCurrencyXrate_JSON'
     GLOBAL_CALL = True
 
@@ -55,7 +61,7 @@ class CurrencySynchronizer(VisionDataSynchronizer):
         return processed
 
 
-class TravelAgenciesSynchronizer(VisionDataSynchronizer):
+class TravelAgenciesSynchronizer(VisionDataTenantSynchronizer):
     ENDPOINT = 'GetTravelAgenciesInfo_JSON'
     GLOBAL_CALL = True
 

@@ -34,6 +34,7 @@ class Command(BaseCommand):
         'tpm.tpmvisit.locations',
         'tpm.tpmvisit.sections',
         'tpm.tpmvisit.unicef_focal_points',
+        'tpm.tpmvisit.tpm_partner_focal_points',
     ]
 
     status_dates = [

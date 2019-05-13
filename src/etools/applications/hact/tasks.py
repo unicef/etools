@@ -4,11 +4,11 @@ from datetime import datetime
 from django.db import connection, transaction
 
 from celery.utils.log import get_task_logger
+from unicef_vision.exceptions import VisionException
 
 from etools.applications.hact.models import AggregateHact
 from etools.applications.partners.models import PartnerOrganization
 from etools.applications.users.models import Country
-from etools.applications.vision.exceptions import VisionException
 from etools.applications.vision.models import VisionSyncLog
 from etools.config.celery import app
 
@@ -16,14 +16,14 @@ logger = get_task_logger(__name__)
 
 
 @app.task
-def update_hact_for_country(country_name):
-    country = Country.objects.get(name=country_name)
+def update_hact_for_country(business_area_code):
+    country = Country.objects.get(business_area_code=business_area_code)
     log = VisionSyncLog(
         country=country,
         handler_name='HactSynchronizer'
     )
     connection.set_tenant(country)
-    logger.info('Set country {}'.format(country_name))
+    logger.info('Set country {}'.format(business_area_code))
     try:
         partners = PartnerOrganization.objects.hact_active()
         for partner in partners:
@@ -55,7 +55,7 @@ def update_hact_values(*args, **kwargs):
     if schema_names:
         countries = countries.filter(schema_name__in=schema_names.split(','))
     for country in countries:
-        update_hact_for_country.delay(country.name)
+        update_hact_for_country.delay(country.business_area_code)
     logger.info('Hact Freeze Task generated all tasks')
 
 

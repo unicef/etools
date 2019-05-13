@@ -297,7 +297,7 @@ class CountryAdmin(admin.ModelAdmin):
         if country.schema_name == get_public_schema_name():
             vision_sync_task(synchronizers=[synchronizer, ])
         else:
-            sync_handler.delay(country.name, synchronizer)
+            sync_handler.delay(country.business_area_code, synchronizer)
         return HttpResponseRedirect(reverse('admin:users_country_change', args=[country.pk]))
 
     def update_hact(self, request, pk):
@@ -306,7 +306,7 @@ class CountryAdmin(admin.ModelAdmin):
             update_hact_values()
             messages.info(request, "HACT update has been scheduled for all countries")
         else:
-            update_hact_for_country.delay(country_name=country.name)
+            update_hact_for_country.delay(business_area_code=country.business_area_code)
             messages.info(request, "HACT update has been started for %s" % country.name)
         return HttpResponseRedirect(reverse('admin:users_country_change', args=[country.pk]))
 

@@ -8,7 +8,7 @@ from etools.applications.environment.models import TenantFlag, TenantSwitch
 
 
 class TenantFlagAdmin(FlagAdmin):
-    filter_horizontal = ['countries']
+    filter_horizontal = ['countries', 'groups']
 
 
 class TenantSwitchAdmin(SwitchAdmin):

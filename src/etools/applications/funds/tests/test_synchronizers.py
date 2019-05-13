@@ -110,10 +110,10 @@ class TestFundReservationsSynchronizer(BaseTenantTestCase):
             start_date=datetime.date(2015, 1, 13),
             end_date=datetime.date(2015, 12, 20),
         )
-        self.adapter = synchronizers.FundReservationsSynchronizer(self.country)
+        self.adapter = synchronizers.FundReservationsSynchronizer(self.country.business_area_code)
 
     def test_init(self):
-        a = synchronizers.FundReservationsSynchronizer(self.country)
+        a = synchronizers.FundReservationsSynchronizer(self.country.business_area_code)
         self.assertEqual(a.header_records, {})
         self.assertEqual(a.item_records, {})
         self.assertEqual(a.fr_headers, {})
@@ -374,10 +374,10 @@ class TestFundCommitmentSynchronizer(BaseTenantTestCase):
             exchange_rate=self.data["EXCHANGE_RATE"],
             responsible_person=self.data["RESP_PERSON"],
         )
-        self.adapter = synchronizers.FundCommitmentSynchronizer(self.country)
+        self.adapter = synchronizers.FundCommitmentSynchronizer(self.country.business_area_code)
 
     def test_init(self):
-        a = synchronizers.FundCommitmentSynchronizer(self.country)
+        a = synchronizers.FundCommitmentSynchronizer(self.country.business_area_code)
         self.assertEqual(a.header_records, {})
         self.assertEqual(a.item_records, {})
         self.assertEqual(a.fc_headers, {})
