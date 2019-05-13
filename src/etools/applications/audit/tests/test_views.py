@@ -458,7 +458,7 @@ class BaseTestEngagementsCreateViewSet(EngagementTransitionsTestCaseMixin):
         return response
 
 
-class TestEngagementCreateActivePDViewSet(object):
+class TestEngagementCreateActivePDViewSet:
     def test_partner_without_active_pd(self):
         del self.create_data['active_pd']
 

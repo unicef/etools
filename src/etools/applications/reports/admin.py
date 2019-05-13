@@ -181,6 +181,10 @@ class AppliedIndicatorAdmin(admin.ModelAdmin):
         'lower_result',
         'context_code'
     )
+    filter_horizontal = (
+        'disaggregation',
+        'locations'
+    )
 
 
 class DisaggregationAdmin(admin.ModelAdmin):

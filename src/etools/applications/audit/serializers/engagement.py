@@ -282,7 +282,7 @@ class EngagementSerializer(EngagementDatesValidation,
         return validated_data
 
 
-class ActivePDValidationMixin(object):
+class ActivePDValidationMixin:
     def validate(self, data):
         validated_data = super().validate(data)
 
