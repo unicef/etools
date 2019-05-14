@@ -2,7 +2,7 @@
 from django.core.exceptions import ObjectDoesNotExist
 
 
-class CloneTravelHelper(object):
+class CloneTravelHelper:
     def __init__(self, travel):
         self.travel = travel
 
