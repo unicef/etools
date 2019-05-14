@@ -3,16 +3,9 @@ from django.db import connection
 from django.db.models.signals import post_delete, post_save
 from django.dispatch import receiver
 
-from etools.applications.tpm.models import ThirdPartyMonitor, TPMActionPoint, TPMVisit
+from etools.applications.tpm.models import TPMActionPoint, TPMVisit
 from etools.applications.tpm.tpmpartners.models import TPMPartnerStaffMember
 from etools.applications.users.models import Country
-
-
-@receiver(post_save, sender=TPMPartnerStaffMember)
-def create_user_receiver(instance, created, **kwargs):
-    if created:
-        instance.user.groups.add(ThirdPartyMonitor.as_group())
-        instance.user.profile.countries_available.add(connection.tenant)
 
 
 @receiver(post_delete, sender=TPMPartnerStaffMember)
