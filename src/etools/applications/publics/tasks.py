@@ -106,7 +106,7 @@ def import_exchange_rates(xml_structure):
         logger.info('Exchange rate %s was updated.', currency_name)
 
 
-class DSARateUploader(object):
+class DSARateUploader:
     FIELDS = (
         'Country Code',
         'Country Name',

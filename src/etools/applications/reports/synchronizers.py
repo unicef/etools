@@ -14,7 +14,7 @@ from etools.applications.vision.synchronizers import VisionDataTenantSynchronize
 logger = logging.getLogger(__name__)
 
 
-class ResultStructureSynchronizer(object):
+class ResultStructureSynchronizer:
     def __init__(self, data):
         self.data = data
         self.cps = {}

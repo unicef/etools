@@ -138,7 +138,7 @@ class WorkspaceFileType(models.Model):
         return self.name
 
 
-class PartnerType(object):
+class PartnerType:
     BILATERAL_MULTILATERAL = 'Bilateral / Multilateral'
     CIVIL_SOCIETY_ORGANIZATION = 'Civil Society Organization'
     GOVERNMENT = 'Government'

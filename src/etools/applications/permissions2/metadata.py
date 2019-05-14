@@ -8,7 +8,7 @@ from unicef_restlib.metadata import (
 )
 
 
-class PermissionsBasedMetadataMixin(object):
+class PermissionsBasedMetadataMixin:
     """
     Filter fields which user has no read permission to.
     """

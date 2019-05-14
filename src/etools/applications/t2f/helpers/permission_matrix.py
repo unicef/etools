@@ -71,7 +71,7 @@ def get_permission_matrix():
     return permission_matrix
 
 
-class PermissionMatrix(object):
+class PermissionMatrix:
     VIEW = 'view'
     EDIT = 'edit'
 

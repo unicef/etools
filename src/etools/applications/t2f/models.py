@@ -30,7 +30,7 @@ class TransitionError(RuntimeError):
     """
 
 
-class TravelType(object):
+class TravelType:
     PROGRAMME_MONITORING = 'Programmatic Visit'
     SPOT_CHECK = 'Spot Check'
     ADVOCACY = 'Advocacy'
@@ -51,7 +51,7 @@ class TravelType(object):
 
 # TODO: all of these models that only have 1 field should be a choice field on the models that are using it
 # for many-to-many array fields are recommended
-class ModeOfTravel(object):
+class ModeOfTravel:
     PLANE = 'Plane'
     BUS = 'Bus'
     CAR = 'Car'
