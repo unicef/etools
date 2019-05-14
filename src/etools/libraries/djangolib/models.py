@@ -3,6 +3,7 @@ from datetime import datetime
 
 from django.contrib.auth.models import Group
 from django.db import models
+from django.db.models import Aggregate
 from django.db.models.query import QuerySet
 from django.db.models.query_utils import Q
 from django.utils.timezone import now
@@ -68,7 +69,7 @@ class GroupWrapper(object):
 
 class StringConcat(models.Aggregate):
     """ A custom aggregation function that returns "," separated strings """
-
+    allow_distinct = True
     function = 'GROUP_CONCAT'
     template = '%(function)s(%(distinct)s%(expressions)s)'
 
@@ -86,7 +87,11 @@ class StringConcat(models.Aggregate):
         return super().as_sql(compiler, connection)
 
 
-class DSum(models.Aggregate):
+class MaxDistinct(models.Max):
+    allow_distinct = True
+
+
+class DSum(Aggregate):
     function = 'SUM'
     template = '%(function)s(DISTINCT %(expressions)s)'
     name = 'Sum'
