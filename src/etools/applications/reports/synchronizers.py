@@ -5,9 +5,11 @@ import logging
 
 from django.db import transaction
 
+from unicef_vision.loaders import VISION_NO_DATA_MESSAGE
+from unicef_vision.utils import wcf_json_date_as_date
+
 from etools.applications.reports.models import CountryProgramme, Indicator, Result, ResultType
-from etools.applications.vision.utils import wcf_json_date_as_date
-from etools.applications.vision.vision_data_synchronizer import VISION_NO_DATA_MESSAGE, VisionDataSynchronizer
+from etools.applications.vision.synchronizers import VisionDataTenantSynchronizer
 
 logger = logging.getLogger(__name__)
 
@@ -178,7 +180,7 @@ class ResultStructureSynchronizer(object):
         }
 
 
-class ProgrammeSynchronizer(VisionDataSynchronizer):
+class ProgrammeSynchronizer(VisionDataTenantSynchronizer):
     ENDPOINT = 'GetProgrammeStructureList_JSON'
     REQUIRED_KEYS = (
         "COUNTRY_PROGRAMME_NAME",
@@ -317,7 +319,7 @@ class ProgrammeSynchronizer(VisionDataSynchronizer):
         return synchronizer.update()
 
 
-class RAMSynchronizer(VisionDataSynchronizer):
+class RAMSynchronizer(VisionDataTenantSynchronizer):
     ENDPOINT = 'GetRAMInfo_JSON'
     REQUIRED_KEYS = (
         "INDICATOR_DESCRIPTION",

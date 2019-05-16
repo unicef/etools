@@ -5,17 +5,19 @@ from decimal import Decimal
 
 from django.db.models import Sum
 
+from unicef_vision.synchronizers import FileDataSynchronizer
+from unicef_vision.utils import comp_decimals
+
 from etools.applications.funds.models import (
     FundsCommitmentHeader,
     FundsCommitmentItem,
     FundsReservationHeader,
     FundsReservationItem,
 )
-from etools.applications.vision.utils import comp_decimals
-from etools.applications.vision.vision_data_synchronizer import FileDataSynchronizer, VisionDataSynchronizer
+from etools.applications.vision.synchronizers import VisionDataTenantSynchronizer
 
 
-class FundReservationsSynchronizer(VisionDataSynchronizer):
+class FundReservationsSynchronizer(VisionDataTenantSynchronizer):
 
     ENDPOINT = 'GetFundsReservationInfo_JSON'
     REQUIRED_KEYS = (
@@ -251,7 +253,7 @@ class FundReservationsSynchronizer(VisionDataSynchronizer):
         return processed
 
 
-class FundCommitmentSynchronizer(VisionDataSynchronizer):
+class FundCommitmentSynchronizer(VisionDataTenantSynchronizer):
 
     ENDPOINT = 'GetFundsCommitmentInfo_JSON'
     REQUIRED_KEYS = (
@@ -401,9 +403,6 @@ class FundCommitmentSynchronizer(VisionDataSynchronizer):
 
         if to_create:
             created_objects = FundsCommitmentHeader.objects.bulk_create(to_create)
-            # TODO in Django 1.10 the following line is not needed because ids are returned
-            created_objects = FundsCommitmentHeader.objects.filter(
-                fc_number__in=[c.fc_number for c in created_objects])
             self.map_header_objects(created_objects)
 
         self.map_header_objects(to_update)

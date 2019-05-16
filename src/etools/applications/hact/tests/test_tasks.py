@@ -31,7 +31,7 @@ class TestHactForCountry(BaseTenantTestCase):
         logs = VisionSyncLog.objects.all()
         self.assertEqual(logs.count(), 0)
         PartnerFactory(name="Partner XYZ", reported_cy=20000)
-        update_hact_for_country(self.tenant.name)
+        update_hact_for_country(self.tenant.business_area_code)
         self.assertEqual(logs.count(), 1)
 
         log = logs.first()

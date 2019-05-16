@@ -1,11 +1,11 @@
 from celery.utils.log import get_task_logger
-
 # Not scheduled by any code in this repo, but by other means, so keep it around.
 # Continues on to the next country on any VisionException, so no need to have
 # celery retry it in that case.
+from unicef_vision.exceptions import VisionException
+
 from etools.applications.audit.purchase_order.synchronizers import POSynchronizer
 from etools.applications.users.models import Country
-from etools.applications.vision.exceptions import VisionException
 from etools.config.celery import app
 
 logger = get_task_logger(__name__)

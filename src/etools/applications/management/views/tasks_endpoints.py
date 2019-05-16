@@ -11,7 +11,7 @@ from unicef_restlib.permissions import IsSuperUser
 
 from etools.applications.hact.tasks import update_aggregate_hact_values, update_hact_values
 from etools.applications.management.tasks import pmp_indicator_report, send_test_email, user_report
-from etools.libraries.azure_graph_api.tasks import sync_delta_users
+from etools.libraries.azure_graph_api.tasks import sync_all_users, sync_delta_users
 
 
 class BasicTaskAPIView(APIView, metaclass=ABCMeta):
@@ -52,6 +52,11 @@ class BasicReportAPIView(APIView, metaclass=ABCMeta):
     def get_filename(self):
         today = date.today().strftime("%Y-%b-%d")
         return f'{self.base_filename}_as_of_{today}'
+
+
+class SyncAllUsers(BasicTaskAPIView):
+    task_function = sync_all_users
+    success_message = 'Task generated Successfully: Sync All Users'
 
 
 class SyncDeltaUsers(BasicTaskAPIView):

@@ -9,7 +9,7 @@ from django.utils.translation import ugettext as _
 from rest_framework.serializers import ValidationError
 
 
-class BaseTransitionCheck(object):
+class BaseTransitionCheck:
     def get_errors(self, *args, **kwargs):
         return {}
 

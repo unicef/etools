@@ -87,6 +87,7 @@ class TravelExports(BaseTenantTestCase):
 
         travel_1 = TravelFactory(reference_number='2016/1000',
                                  traveler=user_joe_smith,
+                                 purpose='Workshop',
                                  office=office,
                                  supervisor=supervisor,
                                  section=section_health,
@@ -96,6 +97,7 @@ class TravelExports(BaseTenantTestCase):
         travel_2 = TravelFactory(reference_number='2016/1211',
                                  supervisor=supervisor,
                                  traveler=user_alice_carter,
+                                 purpose='Mission',
                                  office=office,
                                  section=section_education,
                                  start_date=datetime.date(2017, 11, 8),
@@ -166,6 +168,7 @@ class TravelExports(BaseTenantTestCase):
         self.assertEqual(rows[0], [
             'reference_number',
             'traveler',
+            'purpose',
             'office',
             'section',
             'status',
@@ -186,6 +189,7 @@ class TravelExports(BaseTenantTestCase):
         self.assertEqual(rows[1], [
             '2016/1000',
             'Joe Smith',
+            'Workshop',
             'Budapest',
             'Health',
             'planned',
@@ -206,6 +210,7 @@ class TravelExports(BaseTenantTestCase):
         self.assertEqual(rows[2], [
             '2016/1000',
             'Joe Smith',
+            'Workshop',
             'Budapest',
             'Health',
             'planned',
@@ -226,6 +231,7 @@ class TravelExports(BaseTenantTestCase):
         self.assertEqual(rows[3], [
             '2016/1000',
             'Joe Smith',
+            'Workshop',
             'Budapest',
             'Health',
             'planned',
@@ -246,6 +252,7 @@ class TravelExports(BaseTenantTestCase):
         self.assertEqual(rows[4], [
             '2016/1211',
             'Alice Carter',
+            'Mission',
             'Budapest',
             'Education',
             'planned',
