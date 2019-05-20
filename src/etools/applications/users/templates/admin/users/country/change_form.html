@@ -1,4 +1,5 @@
-{% extends "admin/change_form.html" %}{% load i18n etools %}
+{% extends "admin/django_tenants/tenant/change_form.html" %}
+{% load i18n etools %}
 {% block object-tools-items %}
     {{ block.super }}
     <li><a target='_blank' href="{% vision_url %}GetPartnerDetailsInfo_xml/{{original.business_area_code}}" style="background-color:#96c525">{% trans "API Partner" %}</a></li>
@@ -16,20 +17,4 @@
     <li><a href="{% url 'admin:users_country_dct' original.id %}" style="background-color:#0099ff">{% trans "Sync DCT" %}</a></li>
     <li><a href="{% url 'admin:users_country_update_hact' original.id %}" style="background-color:#ff3d00">{% trans "Update HACT" %}</a></li>
 
-
 {% endblock object-tools-items %}
-
-
-{% block submit_buttons_bottom %}
-{% if request.tenant.schema_name == 'public' or request.tenant.schema_name == original.schema_name %}
-{{ block.super }}
-{% else %}
-<div class="submit-row">
-
-<h3><u>Can't update tenant outside it's own schema or the public schema. Current schema is {{request.tenant.name}}.</u></h3>
-    <input disabled="disabled" type="submit" value="Save" class="default" name="_sav">
-    <input disabled="disabled" type="submit" value="Delete" class="default" name="_del">
-</div>
-
-{% endif %}
-{% endblock %}
