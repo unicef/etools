@@ -124,6 +124,7 @@ MIDDLEWARE = (
     'corsheaders.middleware.CorsMiddleware',
     'etools.applications.core.middleware.EToolsTenantMiddleware',
     'waffle.middleware.WaffleMiddleware',  # needs request.tenant from EToolsTenantMiddleware
+    'etools.libraries.social_django.middleware.SocialAuthExceptionMiddleware',
 )
 WSGI_APPLICATION = 'etools.config.wsgi.application'
 
