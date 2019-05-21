@@ -6,6 +6,7 @@ from django.core.cache import cache
 
 from etools.applications import t2f
 from etools.applications.t2f import UserTypes
+from etools.applications.t2f.action_points import action_points
 from etools.applications.t2f.permissions import permissions
 
 PERMISSION_MATRIX_CACHE_KEY = 't2f_permission_matrix'
@@ -36,16 +37,38 @@ def get_user_role_list(user, travel=None):
     return roles
 
 
+def convert_permissions_structure():
+    """Convert permissions from
+    (edit/view, model, field) | permission
+    to
+    model | field | edit/view | permission
+    """
+    to_format = {}
+    for user, states in permissions.items():
+        to_format[user] = {}
+        for state, actions in states.items():
+            data = defaultdict(dict)
+            for key, perm in actions.items():
+                action, model, field = key
+                model = "baseDetails" if model == "travel" else model
+                if model not in data:
+                    data[model] = {field: {action: perm}}
+                else:
+                    if field not in data[model]:
+                        data[model][field] = {action: perm}
+                    else:
+                        data[model][field][action] = perm
+            to_format[user][state] = data
+    return to_format
+
+
 def get_permission_matrix():
     permission_matrix = cache.get(PERMISSION_MATRIX_CACHE_KEY)
     if not permission_matrix:
-        path = os.path.join(
-            os.path.dirname(t2f.__file__),
-            "permission_matrix.json",
-        )
-
-        with open(path) as permission_matrix_file:
-            permission_matrix = json.loads(permission_matrix_file.read())
+        permission_matrix = {
+            "action_point": action_points,
+            "travel": convert_permissions_structure()
+        }
         cache.set(PERMISSION_MATRIX_CACHE_KEY, permission_matrix)
 
     return permission_matrix
