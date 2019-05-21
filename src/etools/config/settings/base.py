@@ -193,6 +193,7 @@ SHARED_APPS = (
     'waffle',
     'etools.applications.permissions2',
     'unicef_notification',
+    'server_status',
 )
 
 TENANT_APPS = (
@@ -564,3 +565,6 @@ ATTACHMENT_DENORMALIZE_FUNC = "etools.applications.attachments.utils.denormalize
 
 GEOS_LIBRARY_PATH = os.getenv('GEOS_LIBRARY_PATH', '/usr/lib/libgeos_c.so.1')  # default path
 GDAL_LIBRARY_PATH = os.getenv('GDAL_LIBRARY_PATH', '/usr/lib/libgdal.so.20')  # default path
+
+HEALTH_CHECK = ['POSTGRES', 'REDIS', 'CELERY', 'CERTIFICATE']
+STATUS_TOKEN = '3T0015'

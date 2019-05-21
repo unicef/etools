@@ -1,0 +1,88 @@
+{% extends "login_base.html" %}
+
+{% block extra_head %}
+{{ block.super}}
+<style>
+    .container {
+        width: 80%;
+        height: 200px;
+        margin: auto;
+        padding: 10px;
+    }
+    .one {
+        width: 50%;
+        float: left;
+    }
+    .two {
+        margin-left: 50%;
+    }
+
+</style>
+{% endblock extra_head %}
+
+{% block toolbar %}
+<div class="medium-tall">
+    <img src="{{ STATIC_URL }}images/unicefetools.svg" style="width:200px; max-width:80%;"></img>
+</div>
+{% endblock toolbar %}
+
+{% block content %}
+<div class="container">
+    <h3> Hi {{ user }}, </h3>
+
+    <div class="one">
+
+        <h1>
+            Status
+        </h1>
+
+        <div>
+            <h2>Postgres</h2>
+            <div>Status: <b>{{status.postgresql.status}}</b></div>
+            <div>Response: {{status.postgresql.response_microseconds}} ms</div>
+        </div>
+        <div>
+            <h2>Celery</h2>
+            <div>Status: <b>{{status.celery.status}}</b></div>
+        </div>
+        <div>
+            <h2>Redis</h2>
+            <div>Status: <b>{{status.redis.status}}</b></div>
+            <div>Response: {{status.redis.response_microseconds}} ms</div>
+            <div>Uptime: {{status.redis.uptime_in_seconds}}</div>
+            <div>Memory Used: {{status.redis.used_memory}}</div>
+            <div>Memory Peak: {{status.redis.used_memory_peak}}</div>
+        </div>
+        <div>
+            <h2>Certificate</h2>
+            <div>Status: <b>{{status.certificate.status}}</b></div>
+        </div>
+    </div>
+
+    <div class="two">
+        <h1>
+            Statistics
+        </h1>
+        <div>
+            <td><b>Active Users</b>: {{active_users}}</td>
+        </div>
+        <br>
+        <br>
+        <div>
+            <td><b>Workspaces</b>: {{countries}}</td>
+        </div>
+        <br>
+        <br>
+        <div>
+            <td><b>Last AD Sync</b>: {{last_ad_sync}}</td>
+        </div>
+        <br>
+        <br>
+        <div>
+            <td><b>Last Vision Sync</b>: {{last_vision_sync}}</td>
+        </div>
+
+    </div>
+</div>
+</div>
+{% endblock content %}

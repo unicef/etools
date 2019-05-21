@@ -11,13 +11,19 @@ from etools.applications.management.views.tasks_endpoints import (
     UpdateHactValuesAPIView,
     UsersReportView,
 )
-from etools.applications.management.views.v1 import ActiveUsers, AgreementsStatisticsView, PortalDashView
+from etools.applications.management.views.v1 import (
+    ActiveUsers,
+    AgreementsStatisticsView,
+    PortalDashView,
+    StatusPageView,
+)
 
 app_name = 'management'
 
 
 urlpatterns = ((
     url(r'^$', PortalDashView.as_view(), name='dashboard'),
+    url(r'^status/$', StatusPageView.as_view(), name='status'),
     url(r'^load-results/$', LoadResultStructure.as_view(), name='load_result_structure'),
     url(r'^invalidate-cache/$', InvalidateCache.as_view(), name='invalidate_cache'),
     url(r'^sync-frs/$', SyncFRs.as_view(), name='sync_frs'),

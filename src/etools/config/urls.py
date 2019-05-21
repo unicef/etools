@@ -81,9 +81,9 @@ urlpatterns = [
     url(r'^locations/autocomplete/$', LocationQuerySetView.as_view(), name='locations_autocomplete'),
 
     # GIS API urls
-    url(r'^api/management/gis/', include('etools.applications.management.urls_gis')),
     url(r'^users/', include('etools.applications.users.urls')),
     url(r'^api/management/', include(management_urls)),
+    url(r'^api/management/gis/', include('etools.applications.management.urls_gis')),
     url(r'^api/', include(api.urls)),
     url(r'^api/', include(publics_patterns)),
 
@@ -124,8 +124,8 @@ urlpatterns = [
 
     url(r'^api/jwt/get/$', IssueJWTRedirectView.as_view(), name='issue JWT'),
 
-    url('^social/', include('social_django.urls', namespace='social')),
-    url('^monitoring/', include('etools.libraries.monitoring.urls')),
+    url(r'^social/', include('social_django.urls', namespace='social')),
+    url(r'^api/status/', include('server_status.urls')),
 ]
 
 

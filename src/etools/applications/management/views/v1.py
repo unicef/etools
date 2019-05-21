@@ -1,19 +1,20 @@
+import json
 from datetime import date
 
+from django.conf import settings
 from django.db import connection
 from django.views.generic import TemplateView
 
 from rest_framework.response import Response
 from rest_framework.views import APIView
+from server_status.views import status as service_status
 
 from etools.applications.partners.models import Agreement
 from etools.applications.users.models import Country, UserProfile
 from etools.applications.vision.models import VisionSyncLog
 
 
-class PortalDashView(TemplateView):
-    template_name = 'portal.html'
-
+class InfoMixinView:
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
 
@@ -29,6 +30,24 @@ class PortalDashView(TemplateView):
             'countries': Country.objects.filter(vision_sync_enabled=True).count(),
             'last_ad_sync': last_ad,
             'last_vision_sync': last_vision,
+        })
+        return context
+
+
+class PortalDashView(InfoMixinView, TemplateView):
+    template_name = 'portal.html'
+
+
+class StatusPageView(InfoMixinView, TemplateView):
+    template_name = 'status.html'
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        self.request.GET = self.request.GET.copy()
+        self.request.GET['token'] = settings.STATUS_TOKEN
+        status = service_status(self.request)
+        context.update({
+            'status': json.loads(status.content),
         })
         return context
 
