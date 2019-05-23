@@ -22,7 +22,7 @@ jobs:
       - run:
           name: Run Tests
           command: |
-            tox -e d21,report
+            tox -e d22,report
       - save_cache:
           key: deps2-{{ .Branch }}--{{ checksum "Pipfile.lock" }}-{{ checksum ".circleci/config.yml" }}
           paths:
@@ -64,3 +64,4 @@ workflows:
                 - develop
                 - testing
                 - ci-updates
+                - hotfix

@@ -58,17 +58,10 @@ class BaseTenantTestCase(TenantTestCase):
         EmailTemplate.objects.get_or_create(name='audit/engagement/submit_to_auditor')
 
         TenantModel = get_tenant_model()
-        try:
-            cls.tenant = TenantModel.objects.get(schema_name=SCHEMA_NAME)
-        except TenantModel.DoesNotExist:
-            cls.tenant = TenantModel(schema_name=SCHEMA_NAME)
-            cls.tenant.save(verbosity=0)
-
-        cls.tenant.business_area_code = 'ZZZ'
-        # Make sure country has a short code, it affects some results
-        cls.tenant.country_short_code = 'TST'
-        cls.tenant.save(verbosity=0)
-
+        cls.tenant, _ = TenantModel.objects.get_or_create(schema_name=SCHEMA_NAME, defaults={
+            'business_area_code': 'ZZZ',
+            'country_short_code': 'TST'
+        })
         cls.domain = get_tenant_domain_model().objects.get_or_create(domain=TENANT_DOMAIN, tenant=cls.tenant)
 
         try:

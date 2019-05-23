@@ -113,7 +113,6 @@ class DSARegionAdmin(AdminListMixin, admin.ModelAdmin):
 
 
 admin.site.register(models.DSARate, DSARateAdmin)
-admin.site.register(models.DSARateUpload, DSARateUploadAdmin)
 admin.site.register(models.TravelAgent, TravelAgentAdmin)
 admin.site.register(models.TravelExpenseType, TravelExpenseTypeAdmin)
 admin.site.register(models.Currency, CurrencyAdmin)

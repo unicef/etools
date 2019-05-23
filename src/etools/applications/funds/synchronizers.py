@@ -4,6 +4,7 @@ import logging
 from decimal import Decimal
 
 from django.db.models import Sum
+
 from unicef_vision.synchronizers import FileDataSynchronizer
 from unicef_vision.utils import comp_decimals
 
