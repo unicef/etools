@@ -18,7 +18,7 @@ from etools.libraries.pythonlib.collections import HashableDict
 READ_ONLY_API_GROUP_NAME = 'Read-Only API'
 
 
-class PMPPermissions(object):
+class PMPPermissions:
     # this property specifies an array of model properties in order to check against the permission matrix. The fields
     # declared under this property need to be both property on the model and delcared in the permission matrix
     EXTRA_FIELDS = []

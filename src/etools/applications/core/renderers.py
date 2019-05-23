@@ -17,7 +17,7 @@ class FriendlyCSVRenderer(r.CSVRenderer):
         return super().flatten_item(item)
 
 
-class ListSeperatorCSVRenderMixin(object):
+class ListSeperatorCSVRenderMixin:
     """Mixin which render list concatenating them usign the separator"""
 
     separator = '\n\n'

@@ -634,7 +634,7 @@ class InterventionIndicatorsUpdateView(RetrieveUpdateDestroyAPIView):
         return super().delete(request, *args, **kwargs)
 
 
-class InterventionLocation(object):
+class InterventionLocation:
     """Helper: we'll use one of these per row of output in InterventionLocationListAPIView"""
     def __init__(self, intervention, location, section):
         self.intervention = intervention

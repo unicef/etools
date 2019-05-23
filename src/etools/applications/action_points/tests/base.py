@@ -1,7 +1,7 @@
 from etools.libraries.djangolib.models import GroupWrapper
 
 
-class ActionPointsTestCaseMixin(object):
+class ActionPointsTestCaseMixin:
     def setUp(self):
         super().setUp()
 

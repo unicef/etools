@@ -1,7 +1,7 @@
 from django.contrib import admin
 
-from etools.applications.publics.admin import AdminListMixin
 from etools.applications.tpm import forms, models
+from etools.libraries.djangolib.admin import AdminListMixin
 
 
 @admin.register(models.TPMActivity)

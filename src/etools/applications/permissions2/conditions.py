@@ -1,7 +1,7 @@
 from etools.applications.permissions2.utils import collect_parent_models, get_model_target
 
 
-class BaseCondition(object):
+class BaseCondition:
     def to_internal_value(self):
         raise NotImplementedError
 

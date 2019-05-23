@@ -9,7 +9,7 @@ def _delimit_namespace(namespace):
     return namespace
 
 
-class URLAssertionMixin(object):
+class URLAssertionMixin:
     """Mixin for any class derived from unittest.TestCase. Provides some assertion helpers for testing URL patterns"""
 
     def assertReversal(self, names_and_paths, namespace, url_prefix):
@@ -74,7 +74,7 @@ class URLAssertionMixin(object):
                     raise AssertionError(fail_msg)
 
 
-class WorkspaceRequiredAPITestMixIn(object):
+class WorkspaceRequiredAPITestMixIn:
     """
     For BaseTenantTestCases that have a required workspace param, just automatically
     set the current tenant.

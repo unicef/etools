@@ -70,22 +70,22 @@ def sync_handler(self, business_area_code, handler):
     Run .sync() on one handler for one country.
     """
     # Scheduled from vision_sync_task() (above).
-    logger.info(u'Starting vision sync handler {} for country {}'.format(handler, business_area_code))
+    logger.info('Starting vision sync handler {} for country {}'.format(handler, business_area_code))
     try:
         country = Country.objects.get(business_area_code=business_area_code)
     except Country.DoesNotExist:
-        logger.error(u"{} sync failed, Could not find a Country with this business area code: {}".format(
+        logger.error("{} sync failed, Could not find a Country with this business area code: {}".format(
             handler, business_area_code
         ))
         # No point in retrying if there's no such country
     else:
         try:
             SYNC_HANDLERS[handler](country.business_area_code).sync()
-            logger.info(u"{} sync successfully for {} [{}]".format(handler, country.name, business_area_code))
+            logger.info("{} sync successfully for {} [{}]".format(handler, country.name, business_area_code))
 
         except VisionException:
             # Catch and log the exception so we're aware there's a problem.
-            logger.exception(u"{} sync failed, Country: {}".format(
+            logger.exception("{} sync failed, Country: {}".format(
                 handler, business_area_code
             ))
             # The 'autoretry_for' in the task decorator tells Celery to
