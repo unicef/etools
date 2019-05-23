@@ -3,7 +3,7 @@ from django.db import connection
 from rest_framework import serializers
 
 
-class ExportModelMixin(object):
+class ExportModelMixin:
     def set_labels(self, serializer_fields, model):
         labels = {}
         model_labels = {}
@@ -32,7 +32,7 @@ class ExportModelMixin(object):
         return context
 
 
-class ExportSerializerMixin(object):
+class ExportSerializerMixin:
     country = serializers.SerializerMethodField()
 
     def __init__(self, *args, **kwargs):

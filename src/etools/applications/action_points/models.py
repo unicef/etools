@@ -85,7 +85,7 @@ class ActionPoint(TimeStampedModel):
     tpm_activity = models.ForeignKey('tpm.TPMActivity', verbose_name=_('TPM Activity'), blank=True, null=True,
                                      related_name='action_points', on_delete=models.CASCADE,
                                      )
-    travel_activity = models.ForeignKey('t2f.TravelActivity', verbose_name=_('Travel'), blank=True, null=True,
+    travel_activity = models.ForeignKey('t2f.TravelActivity', verbose_name=_('Travel Activity'), blank=True, null=True,
                                         on_delete=models.CASCADE,
                                         )
 

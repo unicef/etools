@@ -35,7 +35,7 @@ class AgreementCreateUpdateSerializerBase(BaseTenantTestCase):
         # The serializer examines context['request'].user during the course of its operation. If that's not set, the
         # serializer will fail. It doesn't need a real request object, just something with a .user attribute, so
         # that's what I create here.
-        class Stub(object):
+        class Stub:
             pass
         cls.fake_request = Stub()
         cls.fake_request.user = cls.user

@@ -1,18 +1,10 @@
-
 from django.db import connection
 from django.db.models.signals import m2m_changed, post_save
 from django.dispatch import receiver
 
-from etools.applications.audit.models import Auditor, Engagement, EngagementActionPoint
+from etools.applications.audit.models import Engagement, EngagementActionPoint
 from etools.applications.audit.purchase_order.models import AuditorStaffMember
 from etools.applications.users.models import Country
-
-
-@receiver(post_save, sender=AuditorStaffMember)
-def create_user_receiver(instance, created, **kwargs):
-    if created:
-        instance.user.groups.add(Auditor.as_group())
-        instance.user.profile.countries_available.add(connection.tenant)
 
 
 @receiver(m2m_changed, sender=Engagement.staff_members.through)

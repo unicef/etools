@@ -9,8 +9,8 @@ from django.core.management import call_command
 from django.db import connection
 from django.test import SimpleTestCase
 
-from etools.applications.audit.models import Auditor, Engagement, RiskCategory
-from etools.applications.audit.purchase_order.models import AuditorStaffMember, PurchaseOrder, PurchaseOrderItem
+from etools.applications.audit.models import Engagement, RiskCategory
+from etools.applications.audit.purchase_order.models import PurchaseOrder, PurchaseOrderItem
 from etools.applications.audit.tests.factories import (
     AuditFactory,
     AuditorStaffMemberFactory,
@@ -30,17 +30,6 @@ from etools.applications.audit.tests.factories import (
 from etools.applications.core.tests.cases import BaseTenantTestCase
 from etools.applications.firms.tests.factories import BaseUserFactory
 from etools.applications.users.models import Country
-
-
-class AuditorStaffMemberTestCase(BaseTenantTestCase):
-    def test_signal(self):
-        self.firm = AuditPartnerFactory()
-        user = BaseUserFactory()
-        Auditor.invalidate_cache()
-
-        staff_member = AuditorStaffMember.objects.create(auditor_firm=self.firm, user=user)
-
-        self.assertIn(Auditor.name, staff_member.user.groups.values_list('name', flat=True))
 
 
 class EngagementStaffMemberTestCase(BaseTenantTestCase):
