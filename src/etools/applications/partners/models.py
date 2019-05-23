@@ -138,7 +138,7 @@ class WorkspaceFileType(models.Model):
         return self.name
 
 
-class PartnerType(object):
+class PartnerType:
     BILATERAL_MULTILATERAL = 'Bilateral / Multilateral'
     CIVIL_SOCIETY_ORGANIZATION = 'Civil Society Organization'
     GOVERNMENT = 'Government'
@@ -725,14 +725,13 @@ class PartnerOrganization(TimeStampedModel):
             hact['spot_checks']['completed'][quarter_name] = scq
         else:
             audit_spot_check = SpotCheck.objects.filter(
-                partner=self, status=Engagement.FINAL,
-                date_of_draft_report_to_unicef__year=datetime.datetime.now().year
-            )
+                partner=self, date_of_draft_report_to_ip__year=datetime.datetime.now().year
+            ).exclude(status=Engagement.CANCELLED)
 
-            asc1 = audit_spot_check.filter(date_of_draft_report_to_unicef__quarter=1).count()
-            asc2 = audit_spot_check.filter(date_of_draft_report_to_unicef__quarter=2).count()
-            asc3 = audit_spot_check.filter(date_of_draft_report_to_unicef__quarter=3).count()
-            asc4 = audit_spot_check.filter(date_of_draft_report_to_unicef__quarter=4).count()
+            asc1 = audit_spot_check.filter(date_of_draft_report_to_ip__quarter=1).count()
+            asc2 = audit_spot_check.filter(date_of_draft_report_to_ip__quarter=2).count()
+            asc3 = audit_spot_check.filter(date_of_draft_report_to_ip__quarter=3).count()
+            asc4 = audit_spot_check.filter(date_of_draft_report_to_ip__quarter=4).count()
 
             hact['spot_checks']['completed']['q1'] = asc1
             hact['spot_checks']['completed']['q2'] = asc2
@@ -759,12 +758,12 @@ class PartnerOrganization(TimeStampedModel):
         else:
             audits = Audit.objects.filter(
                 partner=self,
-                status=Engagement.FINAL,
-                date_of_draft_report_to_unicef__year=datetime.datetime.now().year).count()
+                date_of_draft_report_to_ip__year=datetime.datetime.now().year
+            ).exclude(status=Engagement.CANCELLED).count()
             s_audits = SpecialAudit.objects.filter(
                 partner=self,
-                status=Engagement.FINAL,
-                date_of_draft_report_to_unicef__year=datetime.datetime.now().year).count()
+                date_of_draft_report_to_ip__year=datetime.datetime.now().year
+            ).exclude(status=Engagement.CANCELLED).count()
             completed_audit = audits + s_audits
         hact['audits']['completed'] = completed_audit
         self.hact_values = hact
@@ -774,8 +773,10 @@ class PartnerOrganization(TimeStampedModel):
         from etools.applications.audit.models import Audit, Engagement
 
         hact = self.get_hact_json()
-        audits = Audit.objects.filter(partner=self, status=Engagement.FINAL,
-                                      date_of_draft_report_to_unicef__year=datetime.datetime.today().year)
+        audits = Audit.objects.filter(
+            partner=self, status=Engagement.FINAL,
+            date_of_draft_report_to_ip__year=datetime.datetime.today().year
+        ).exclude(status=Engagement.CANCELLED)
         hact['outstanding_findings'] = sum([
             audit.pending_unsupported_amount for audit in audits if audit.pending_unsupported_amount])
         hact['assurance_coverage'] = self.assurance_coverage
