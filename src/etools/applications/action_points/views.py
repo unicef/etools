@@ -125,11 +125,7 @@ class ActionPointViewSet(
     def list_xlsx_export(self, request, *args, **kwargs):
         self.serializer_class = ActionPointExportSerializer
         action_points = self.filter_queryset(self.get_queryset().prefetch_related('comments'))
-        serializer = self.get_serializer(
-            action_points,
-            context={"request": request},
-            many=True,
-        )
+        serializer = self.get_serializer(action_points, many=True)
         return Response(serializer.data, headers={
             'Content-Disposition': 'attachment;filename=action_points_{}.xlsx'.format(timezone.now().date())
         })
@@ -149,11 +145,7 @@ class ActionPointViewSet(
     @action(detail=True, methods=['get'], url_path='export/xlsx', renderer_classes=(ExportOpenXMLRenderer,))
     def single_xlsx_export(self, request, *args, **kwargs):
         self.serializer_class = ActionPointExportSerializer
-        serializer = self.get_serializer(
-            [self.get_object()],
-            context={"request": request},
-            many=True,
-        )
+        serializer = self.get_serializer([self.get_object()], many=True)
         return Response(serializer.data, headers={
             'Content-Disposition': 'attachment;filename={}_{}.xlsx'.format(
                 self.get_object().reference_number, timezone.now().date()

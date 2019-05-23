@@ -3,12 +3,32 @@ import os
 from collections import defaultdict
 
 from django.core.cache import cache
+from django.utils.translation import ugettext_lazy as _
 
 from etools.applications import t2f
-from etools.applications.t2f import UserTypes
 from etools.applications.t2f.permissions import permissions
 
 PERMISSION_MATRIX_CACHE_KEY = 't2f_permission_matrix'
+
+
+class UserTypes:
+    ANYONE = 'Anyone'
+    TRAVELER = 'Traveler'
+    TRAVEL_ADMINISTRATOR = 'Travel Administrator'
+    SUPERVISOR = 'Supervisor'
+    TRAVEL_FOCAL_POINT = 'Travel Focal Point'
+    FINANCE_FOCAL_POINT = 'Finance Focal Point'
+    REPRESENTATIVE = 'Representative'
+
+    CHOICES = (
+        (ANYONE, _('Anyone')),
+        (TRAVELER, _('Traveler')),
+        (TRAVEL_ADMINISTRATOR, _('Travel Administrator')),
+        (SUPERVISOR, _('Supervisor')),
+        (TRAVEL_FOCAL_POINT, _('Travel Focal Point')),
+        (FINANCE_FOCAL_POINT, _('Finance Focal Point')),
+        (REPRESENTATIVE, _('Representative')),
+    )
 
 
 def get_user_role_list(user, travel=None):
@@ -51,7 +71,7 @@ def get_permission_matrix():
     return permission_matrix
 
 
-class PermissionMatrix(object):
+class PermissionMatrix:
     VIEW = 'view'
     EDIT = 'edit'
 

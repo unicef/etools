@@ -5,7 +5,6 @@ from django.utils.translation import ugettext_lazy as _
 from django_comments.models import Comment
 from rest_framework import serializers
 from unicef_locations.serializers import LocationLightSerializer
-from unicef_rest_export.serializers import ExportSerializer
 from unicef_restlib.fields import SeparatedReadWriteField
 from unicef_restlib.serializers import UserContextSerializerMixin, WritableNestedSerializerMixin
 from unicef_snapshot.models import Activity

@@ -48,7 +48,7 @@ class TravelActivityExport(QueryStringFilterMixin, ExportBaseView):
         ('f_location', 'locations__pk__in'),
     )
 
-    class SimpleDTO(object):
+    class SimpleDTO:
         def __init__(self, travel, activity):
             self.travel = travel
             self.activity = activity

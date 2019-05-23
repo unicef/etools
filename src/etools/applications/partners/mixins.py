@@ -4,7 +4,7 @@ from django.db import connection
 from etools.applications.partners.models import PartnerOrganization
 
 
-class HiddenPartnerMixin(object):
+class HiddenPartnerMixin:
 
     def formfield_for_foreignkey(self, db_field, request=None, **kwargs):
         if db_field.name == 'partner':
@@ -15,7 +15,7 @@ class HiddenPartnerMixin(object):
         )
 
 
-class CountryUsersAdminMixin(object):
+class CountryUsersAdminMixin:
 
     staff_only = True
 
