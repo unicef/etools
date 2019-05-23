@@ -31,7 +31,7 @@ from etools.applications.reports.models import CountryProgramme, Indicator, Resu
 from etools.applications.t2f.models import Travel, TravelActivity, TravelType
 from etools.applications.tpm.models import TPMActivity, TPMVisit
 from etools.applications.users.models import Office
-from etools.libraries.djangolib.models import StringConcat
+from etools.libraries.djangolib.models import MaxDistinct, StringConcat
 from etools.libraries.pythonlib.datetime import get_current_year, get_quarter
 from etools.libraries.pythonlib.encoders import CustomJSONEncoder
 
@@ -1499,7 +1499,7 @@ class InterventionManager(models.Manager):
             donors=StringConcat("frs__fr_items__donor", separator="|", distinct=True),
             donor_codes=StringConcat("frs__fr_items__donor_code", separator="|", distinct=True),
             grants=StringConcat("frs__fr_items__grant_number", separator="|", distinct=True),
-            max_fr_currency=Max("frs__currency", output_field=CharField(), distinct=True),
+            max_fr_currency=MaxDistinct("frs__currency", output_field=CharField(), distinct=True),
             multi_curr_flag=Count(Case(When(frs__multi_curr_flag=True, then=1)))
         )
         return qs
