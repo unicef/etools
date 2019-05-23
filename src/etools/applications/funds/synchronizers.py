@@ -43,7 +43,8 @@ class FundReservationsSynchronizer(VisionDataTenantSynchronizer):
         "OUTSTANDING_DCT",
         'ACTUAL_CASH_TRANSFER_DC',
         'OUTSTANDING_DCT_DC',
-        'MULTI_CURR_FLAG'
+        'MULTI_CURR_FLAG',
+        'COMPLETED_FLAG'
     )
     MAPPING = {
         "vendor_code": "VENDOR_CODE",
@@ -70,12 +71,13 @@ class FundReservationsSynchronizer(VisionDataTenantSynchronizer):
         "actual_amt_local": "ACTUAL_CASH_TRANSFER_DC",
         "outstanding_amt": "OUTSTANDING_DCT",
         "outstanding_amt_local": "OUTSTANDING_DCT_DC",
-        "multi_curr_flag": "MULTI_CURR_FLAG"
+        "multi_curr_flag": "MULTI_CURR_FLAG",
+        "completed_flag": "COMPLETED_FLAG"
     }
     HEADER_FIELDS = ['VENDOR_CODE', 'FR_NUMBER', 'FR_DOC_DATE', 'FR_TYPE', 'CURRENCY',
                      'FR_DOCUMENT_TEXT', 'FR_START_DATE', 'FR_END_DATE', "FR_OVERALL_AMOUNT",
                      "CURRENT_FR_AMOUNT", "ACTUAL_CASH_TRANSFER", "OUTSTANDING_DCT",
-                     'ACTUAL_CASH_TRANSFER_DC', 'OUTSTANDING_DCT_DC', 'MULTI_CURR_FLAG']
+                     'ACTUAL_CASH_TRANSFER_DC', 'OUTSTANDING_DCT_DC', 'MULTI_CURR_FLAG', "COMPLETED_FLAG"]
 
     LINE_ITEM_FIELDS = ['LINE_ITEM', 'FR_NUMBER', 'WBS_ELEMENT', 'GRANT_NBR',
                         'FUND', 'OVERALL_AMOUNT', 'OVERALL_AMOUNT_DC',
@@ -116,6 +118,8 @@ class FundReservationsSynchronizer(VisionDataTenantSynchronizer):
             return datetime.datetime.strptime(value, '%d-%b-%y').date()
         if field == 'multi_curr_flag':
             return value != 'N'
+        if field == 'completed_flag':
+            return True
         return value
 
     def get_fr_item_number(self, record):
