@@ -20,6 +20,18 @@ from etools.applications.vision.synchronizers import VisionDataTenantSynchronize
 class FundReservationsSynchronizer(VisionDataTenantSynchronizer):
 
     ENDPOINT = 'GetFundsReservationInfo_JSON'
+    REQUIRED_NON_NULL_VALUE_KEYS = (
+        "VENDOR_CODE",
+        "FR_NUMBER",
+        "FR_DOC_DATE",
+        "CURRENCY",
+        "FR_DOCUMENT_TEXT",
+        "FR_START_DATE",
+        "FR_END_DATE",
+        "LINE_ITEM",
+        "WBS_ELEMENT",
+        "DUE_DATE",
+    )
     REQUIRED_KEYS = (
         "VENDOR_CODE",
         "FR_NUMBER",
@@ -119,8 +131,10 @@ class FundReservationsSynchronizer(VisionDataTenantSynchronizer):
             # We don't care about FRs without expenditure
             if not record['OVERALL_AMOUNT']:
                 return False
-            if not record['FR_NUMBER']:
-                return False
+
+            for key in self.REQUIRED_NON_NULL_VALUE_KEYS:
+                if record[key] is None or record[key] == "":
+                    return False
             return True
 
         return [rec for rec in records if bad_record(rec)]
