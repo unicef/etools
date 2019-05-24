@@ -110,6 +110,10 @@ class FundReservationsSynchronizer(VisionDataTenantSynchronizer):
             self.fr_headers[item.fr_number] = item
 
     def _filter_records(self, records):
+        if "ROWSET" in records:
+            records = records["ROWSET"]
+        if "ROW" in records:
+            records = records["ROW"]
 
         def bad_record(record):
             # We don't care about FRs without expenditure
@@ -118,6 +122,7 @@ class FundReservationsSynchronizer(VisionDataTenantSynchronizer):
             if not record['FR_NUMBER']:
                 return False
             return True
+
         return [rec for rec in records if bad_record(rec)]
 
     @staticmethod
