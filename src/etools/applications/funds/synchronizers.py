@@ -92,8 +92,18 @@ class FundReservationsSynchronizer(VisionDataTenantSynchronizer):
         self.REVERSE_ITEM_FIELDS = [self.REVERSE_MAPPING[v] for v in self.LINE_ITEM_FIELDS]
         super().__init__(*args, **kwargs)
 
+    def _fill_required_keys(self, record):
+        for req_key in self.REQUIRED_KEYS:
+            try:
+                record["req_key"]
+            except KeyError:
+                record[req_key] = None
+
     def _convert_records(self, records):
-        return json.loads(records)["ROWSET"]["ROW"]
+        json_records = json.loads(records)["ROWSET"]["ROW"]
+        for r in json_records:
+            self._fill_required_keys(r)
+        return json_records
 
     def map_header_objects(self, qs):
         for item in qs:
