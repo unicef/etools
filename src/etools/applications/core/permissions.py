@@ -81,6 +81,10 @@ def import_permissions(model_name):
         return result
 
     cache_key = "public-{}-permissions".format(model_name.lower())
-    response = cache.get_or_set(cache_key, process_file, 60 * 60 * 24)
+    response = cache.get(cache_key, None)
+
+    if response is None:
+        response = process_file()
+        cache.set(cache_key, response)
 
     return response
