@@ -37,9 +37,12 @@ def transition_to_closed(i):
         'total_actual_amt': 0,
         'total_actual_amt_usd': 0,
         'earliest_start_date': None,
-        'latest_end_date': None
+        'latest_end_date': None,
+        'total_completed_flag': True
     }
     for fr in i.frs.filter():
+        # either they're all marked as completed or it's False
+        r['total_completed_flag'] = fr.completed_flag and r['total_completed_flag']
         r['total_frs_amt'] += fr.total_amt_local
         r['total_frs_amt_usd'] += fr.total_amt
         r['total_outstanding_amt'] += fr.outstanding_amt_local
@@ -63,7 +66,12 @@ def transition_to_closed(i):
     if i.end > today:
         raise TransitionError([_('End date is in the future')])
 
-    if i.total_frs['total_frs_amt'] != i.total_frs['total_actual_amt'] or \
+    # In case FRs are marked as completed validation needs to move forward regardless of value discrepancy
+    # In case it's a supply only PD, the total FRs will be $0.01 and validation needs to move forward
+    # to be safe given decimal field here compare to a float we're saying smaller than $0.1 & continue with validation
+    if not i.total_frs['total_completed_flag'] and \
+            not float(i.total_frs['total_frs_amt']) < 0.1 and \
+            i.total_frs['total_frs_amt'] != i.total_frs['total_actual_amt'] or \
             i.total_frs['total_outstanding_amt'] != 0:
         raise TransitionError([_('Total FR amount needs to equal total actual amount, and '
                                  'Total Outstanding DCTs need to equal to 0')])
