@@ -130,7 +130,7 @@ class FundReservationsSynchronizer(VisionDataTenantSynchronizer):
         def bad_record(record):
             # We don't care about FRs without expenditure
             for key in self.REQUIRED_NON_NULL_VALUE_KEYS:
-                if not record[key]:
+                if record[key] is None or record[key] == "":
                     return False
             return True
 
