@@ -51,7 +51,8 @@ class TestFundReservationsSynchronizer(BaseTenantTestCase):
             "OUTSTANDING_DCT": "19.00",
             "ACTUAL_CASH_TRANSFER_DC": "13.00",
             "OUTSTANDING_DCT_DC": "14.00",
-            "MULTI_CURR_FLAG": "N"
+            "MULTI_CURR_FLAG": "N",
+            "COMPLETED_FLAG": None,
         }
         self.expected_headers = {
             "vendor_code": "Code123",
@@ -68,7 +69,8 @@ class TestFundReservationsSynchronizer(BaseTenantTestCase):
             "actual_amt_local": "13.00",
             "outstanding_amt": "19.00",
             "outstanding_amt_local": "14.00",
-            "multi_curr_flag": False
+            "multi_curr_flag": False,
+            "completed_flag": False,
         }
         self.expected_line_item = {
             "line_item": "987",
