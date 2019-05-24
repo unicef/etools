@@ -95,7 +95,7 @@ class FundReservationsSynchronizer(VisionDataTenantSynchronizer):
     def _fill_required_keys(self, record):
         for req_key in self.REQUIRED_KEYS:
             try:
-                record["req_key"]
+                record[req_key]
             except KeyError:
                 record[req_key] = None
 
@@ -110,7 +110,6 @@ class FundReservationsSynchronizer(VisionDataTenantSynchronizer):
             self.fr_headers[item.fr_number] = item
 
     def _filter_records(self, records):
-        records = super()._filter_records(records)
 
         def bad_record(record):
             # We don't care about FRs without expenditure
@@ -119,7 +118,6 @@ class FundReservationsSynchronizer(VisionDataTenantSynchronizer):
             if not record['FR_NUMBER']:
                 return False
             return True
-
         return [rec for rec in records if bad_record(rec)]
 
     @staticmethod
@@ -129,7 +127,7 @@ class FundReservationsSynchronizer(VisionDataTenantSynchronizer):
         if field == 'multi_curr_flag':
             return value != 'N'
         if field == 'completed_flag':
-            return True
+            return value is not None
         return value
 
     def get_fr_item_number(self, record):
@@ -179,13 +177,11 @@ class FundReservationsSynchronizer(VisionDataTenantSynchronizer):
         to_update = []
 
         fr_numbers_from_records = {k for k in self.header_records.keys()}
-
         list_of_headers = FundsReservationHeader.objects.filter(fr_number__in=fr_numbers_from_records)
         for h in list_of_headers:
             if h.fr_number in fr_numbers_from_records:
                 to_update.append(h)
                 fr_numbers_from_records.remove(h.fr_number)
-
         to_create = []
         for item in fr_numbers_from_records:
             record = self.header_records[item]
