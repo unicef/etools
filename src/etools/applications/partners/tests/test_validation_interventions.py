@@ -71,6 +71,7 @@ class TestTransitionToClosed(BaseTenantTestCase):
             'total_actual_amt_usd': 0,
             'earliest_start_date': None,
             'latest_end_date': None,
+            'total_completed_flag': False,
         }
 
     def assertFundamentals(self, data):
@@ -88,6 +89,7 @@ class TestTransitionToClosed(BaseTenantTestCase):
                 "End date is in the future"
         ):
             transition_to_closed(intervention)
+        self.expected["total_completed_flag"] = True
         self.assertFundamentals(intervention.total_frs)
 
     def test_total_amounts_outstanding_not_zero(self):
@@ -120,12 +122,12 @@ class TestTransitionToClosed(BaseTenantTestCase):
         frs = FundsReservationHeaderFactory(
             intervention=self.intervention,
             total_amt=0.00,
-            total_amt_local=0.00,
+            total_amt_local=10.00,
             intervention_amt=10.00,
             actual_amt_local=20.00,
             actual_amt=0.00,
             outstanding_amt_local=0.00,
-            outstanding_amt=0.00
+            outstanding_amt=0.00,
         )
         with self.assertRaisesRegexp(
                 TransitionError,
@@ -133,6 +135,7 @@ class TestTransitionToClosed(BaseTenantTestCase):
                 'Total Outstanding DCTs need to equal to 0'
         ):
             transition_to_closed(self.intervention)
+        self.expected["total_frs_amt"] = 10.00
         self.expected["total_intervention_amt"] = 10.00
         self.expected["total_actual_amt"] = 20.00
         self.expected["earliest_start_date"] = frs.start_date
