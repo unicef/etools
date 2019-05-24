@@ -111,7 +111,11 @@ class ActionPointViewSet(
     @action(detail=False, methods=['get'], url_path='export/csv', renderer_classes=(ActionPointCSVRenderer,))
     def list_csv_export(self, request, *args, **kwargs):
         action_points = self.filter_queryset(self.get_queryset().prefetch_related('comments'))
-        serializer = ActionPointExportSerializer(action_points.prefetch_related('comments'), many=True)
+        serializer = ActionPointExportSerializer(
+            action_points.prefetch_related('comments'),
+            context={"request": request},
+            many=True,
+        )
 
         return Response(serializer.data, headers={
             'Content-Disposition': 'attachment;filename=action_points_{}.csv'.format(timezone.now().date())
@@ -128,7 +132,10 @@ class ActionPointViewSet(
 
     @action(detail=True, methods=['get'], url_path='export/csv', renderer_classes=(ActionPointCSVRenderer,))
     def single_csv_export(self, request, *args, **kwargs):
-        serializer = ActionPointExportSerializer(self.get_object())
+        serializer = ActionPointExportSerializer(
+            self.get_object(),
+            context={"request": request},
+        )
         return Response(serializer.data, headers={
             'Content-Disposition': 'attachment;filename={}_{}.csv'.format(
                 self.get_object().reference_number, timezone.now().date()
