@@ -3,7 +3,7 @@ from collections import defaultdict
 from django.core.cache import cache
 from django.utils.translation import ugettext_lazy as _
 
-from etools.applications.t2f.action_points import action_points
+from etools.applications.t2f.permission_action_points import action_points
 from etools.applications.t2f.permissions import permissions
 
 PERMISSION_MATRIX_CACHE_KEY = 't2f_permission_matrix'
