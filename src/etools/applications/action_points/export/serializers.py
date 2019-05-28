@@ -31,4 +31,4 @@ class ActionPointExportSerializer(serializers.Serializer):
             "%d %b %Y"), c.comment) for c in obj.comments.all()])
 
     def get_ref_link(self, obj):
-        return obj.get_object_url
+        return obj.get_object_url()
