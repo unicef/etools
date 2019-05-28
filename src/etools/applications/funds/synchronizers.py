@@ -32,6 +32,7 @@ class FundReservationsSynchronizer(VisionDataTenantSynchronizer):
         "WBS_ELEMENT",
         "DUE_DATE",
         "FUND",
+        "GRANT_NBR",
     )
     REQUIRED_KEYS = (
         "VENDOR_CODE",
@@ -145,9 +146,9 @@ class FundReservationsSynchronizer(VisionDataTenantSynchronizer):
         if field in ['start_date', 'end_date', 'document_date', 'due_date']:
             return datetime.datetime.strptime(value, '%d-%b-%y').date()
         if field == 'multi_curr_flag':
-            return value != 'N'
+            return value is not None and value != 'N'
         if field == 'completed_flag':
-            return value is not None
+            return value is not None and value != 'N'
         return value
 
     def get_fr_item_number(self, record):

@@ -71,8 +71,8 @@ def transition_to_closed(i):
     # to be safe given decimal field here compare to a float we're saying smaller than $0.1 & continue with validation
     if not i.total_frs['total_completed_flag'] and \
             not float(i.total_frs['total_frs_amt']) < 0.1 and \
-            i.total_frs['total_frs_amt'] != i.total_frs['total_actual_amt'] or \
-            i.total_frs['total_outstanding_amt'] != 0:
+            (i.total_frs['total_frs_amt'] != i.total_frs['total_actual_amt'] or
+             i.total_frs['total_outstanding_amt'] != 0):
         raise TransitionError([_('Total FR amount needs to equal total actual amount, and '
                                  'Total Outstanding DCTs need to equal to 0')])
 

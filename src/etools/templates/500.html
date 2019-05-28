@@ -1,14 +1,14 @@
-{% extends "base_admin.html" %}
+{% extends "login_base.html" %}
 
-{% block body %}
+
+{% block content %}
+<div class="errorContent">
     <section id="error-container">
 
         <div class="block-error">
 
             <header>
-                <h1 class="error primary-txt">500</h1>
-
-                <p class="text-center primary-txt">Something went wrong.</p>
+                <h1 class="error primary-txt">500 - Something went wrong</h1>
             </header>
 
             <p class="text-center">Our engineers have have been notified and will address the issue shortly</p>
@@ -17,6 +17,8 @@
                 <div class="col-md-6">
                     <a class="btn btn-info btn-block btn-3d" href="{% url 'dashboard' %}">Back to Dashboard</a>
                 </div>
+                <br>
+                <br>
                 <div class="col-md-6">
                     <button class="btn btn-primary btn-block btn-3d" onclick="history.back();">Previous Page</button>
                 </div>
@@ -24,5 +26,6 @@
         </div>
 
     </section>
-{% endblock %}
+</div>
+{% endblock content %}
 
