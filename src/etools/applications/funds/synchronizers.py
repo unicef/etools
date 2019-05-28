@@ -32,6 +32,7 @@ class FundReservationsSynchronizer(VisionDataTenantSynchronizer):
         "WBS_ELEMENT",
         "DUE_DATE",
         "FUND",
+        "GRANT_NBR",
     )
     REQUIRED_KEYS = (
         "VENDOR_CODE",
