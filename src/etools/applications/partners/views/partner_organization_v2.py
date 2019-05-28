@@ -270,6 +270,7 @@ class PartnerOrganizationDashboardAPIView(ExportModelMixin, QueryStringFilterMix
         self._add_action_points(serializer)
         self._add_pca_required(serializer)
         self._add_active_pd_for_non_signed_pca(serializer)
+        self._add_core_value_flag(serializer)
 
     def _add_programmatic_visits(self, serializer):
         qs = PartnerOrganization.objects.annotate(
@@ -329,6 +330,16 @@ class PartnerOrganizationDashboardAPIView(ExportModelMixin, QueryStringFilterMix
             agreements__status=Agreement.SIGNED).distinct().values_list('pk', flat=True)
         for item in serializer.data:
             item['alert_active_pd_for_ended_pca'] = True if item['id'] in qs else False
+
+    def _add_core_value_flag(self, serializer):
+        qs = PartnerOrganization.objects.active().annotate(
+            times_to_expire=ExpressionWrapper(datetime.today() - F('core_values_assessment_date'), DateTimeField())
+        )
+        core_value_assessment_date = {partner.pk: partner.times_to_expire for partner in qs}
+        for item in serializer.data:
+            cva_delta = core_value_assessment_date[item["id"]]
+            item['core_value_assessment_expiring'] = cva_delta.days if cva_delta else 'N/A'
+            item['alert_core_value_assessment'] = cva_delta.days < 60 if cva_delta else False
 
 
 class PartnerOrganizationHactAPIView(ListAPIView):
