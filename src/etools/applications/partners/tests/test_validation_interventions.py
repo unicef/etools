@@ -97,7 +97,7 @@ class TestTransitionToClosed(BaseTenantTestCase):
         frs = FundsReservationHeaderFactory(
             intervention=self.intervention,
             total_amt=0.00,
-            total_amt_local=0.00,
+            total_amt_local=10.00,
             intervention_amt=10.00,
             actual_amt=0.00,
             actual_amt_local=10.00,
@@ -112,6 +112,7 @@ class TestTransitionToClosed(BaseTenantTestCase):
             transition_to_closed(self.intervention)
         self.expected["total_outstanding_amt"] = 5.00
         self.expected["total_intervention_amt"] = 10.00
+        self.expected["total_frs_amt"] = 10.00
         self.expected["total_actual_amt"] = 10.00
         self.expected["earliest_start_date"] = frs.start_date
         self.expected["latest_end_date"] = frs.end_date
