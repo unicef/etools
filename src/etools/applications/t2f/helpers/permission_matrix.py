@@ -69,12 +69,18 @@ def convert_permissions_structure():
                 action, model, field = key
                 model = "baseDetails" if model == "travel" else model
                 if model not in data:
-                    data[model] = {field: {action: perm}}
+                    data[model] = {
+                        field: {action: perm},
+                        action: perm,
+                        "edit" if action == "view" else "view": False,
+                    }
                 else:
                     if field not in data[model]:
                         data[model][field] = {action: perm}
                     else:
                         data[model][field][action] = perm
+                    if perm:
+                        data[model][action] = perm
             to_format[user][state] = data
     return to_format
 
