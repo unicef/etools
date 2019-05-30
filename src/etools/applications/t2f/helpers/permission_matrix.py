@@ -56,7 +56,8 @@ REPORT_PERMISSIONS = {
         'submitted': {'edit': False, 'view': True},
         'cancelled': {'edit': False, 'view': True},
         'approved': {'edit': False, 'view': True}
-    }, 'Traveler': {
+    },
+    'Traveler': {
         'completed': {'edit': True, 'view': True},
         'rejected': {'edit': True, 'view': True},
         'planned': {'edit': True, 'view': True},
