@@ -18,6 +18,7 @@ from unicef_notification.utils import send_notification
 
 from etools.applications.action_points.models import ActionPoint
 from etools.applications.core.urlresolvers import build_frontend_url
+from etools.applications.t2f.fields import TravelModeField
 from etools.applications.t2f.serializers.mailing import TravelMailSerializer
 from etools.applications.users.models import WorkspaceCounter
 
@@ -26,44 +27,8 @@ logger = logging.getLogger(__name__)
 
 class TransitionError(RuntimeError):
     """
-    Custom exception to send proprer error messages from transitions to the frontend
+    Custom exception to send proper error messages from transitions to the frontend
     """
-
-
-class TravelType:
-    PROGRAMME_MONITORING = 'Programmatic Visit'
-    SPOT_CHECK = 'Spot Check'
-    ADVOCACY = 'Advocacy'
-    TECHNICAL_SUPPORT = 'Technical Support'
-    MEETING = 'Meeting'
-    STAFF_DEVELOPMENT = 'Staff Development'
-    STAFF_ENTITLEMENT = 'Staff Entitlement'
-    CHOICES = (
-        (PROGRAMME_MONITORING, 'Programmatic Visit'),
-        (SPOT_CHECK, 'Spot Check'),
-        (ADVOCACY, 'Advocacy'),
-        (TECHNICAL_SUPPORT, 'Technical Support'),
-        (MEETING, 'Meeting'),
-        (STAFF_DEVELOPMENT, 'Staff Development'),
-        (STAFF_ENTITLEMENT, 'Staff Entitlement'),
-    )
-
-
-# TODO: all of these models that only have 1 field should be a choice field on the models that are using it
-# for many-to-many array fields are recommended
-class ModeOfTravel:
-    PLANE = 'Plane'
-    BUS = 'Bus'
-    CAR = 'Car'
-    BOAT = 'Boat'
-    RAIL = 'Rail'
-    CHOICES = (
-        (PLANE, 'Plane'),
-        (BUS, 'Bus'),
-        (CAR, 'Car'),
-        (BOAT, 'Boat'),
-        (RAIL, 'Rail')
-    )
 
 
 def make_travel_reference_number():
@@ -150,8 +115,7 @@ class Travel(models.Model):
     reference_number = models.CharField(max_length=12, default=make_travel_reference_number, unique=True,
                                         verbose_name=_('Reference Number'))
     hidden = models.BooleanField(default=False, verbose_name=_('Hidden'))
-    mode_of_travel = ArrayField(models.CharField(max_length=5, choices=ModeOfTravel.CHOICES), null=True, blank=True,
-                                verbose_name=_('Mode of Travel'))
+    mode_of_travel = ArrayField(TravelModeField(), null=True, blank=True)
     estimated_travel_cost = models.DecimalField(max_digits=20, decimal_places=4, default=0,
                                                 verbose_name=_('Estimated Travel Cost'))
     currency = models.ForeignKey(
@@ -290,11 +254,11 @@ class Travel(models.Model):
 
         try:
             for act in self.activities.filter(primary_traveler=self.traveler,
-                                              travel_type=TravelType.PROGRAMME_MONITORING):
+                                              travel_type=TravelActivity.PROGRAMME_MONITORING):
                 act.partner.programmatic_visits(event_date=self.end_date, update_one=True)
 
             for act in self.activities.filter(primary_traveler=self.traveler,
-                                              travel_type=TravelType.SPOT_CHECK):
+                                              travel_type=TravelActivity.SPOT_CHECK):
                 act.partner.spot_checks(event_date=self.end_date, update_one=True)
 
         except Exception:
@@ -322,9 +286,26 @@ class Travel(models.Model):
 
 
 class TravelActivity(models.Model):
+    PROGRAMME_MONITORING = 'Programmatic Visit'
+    SPOT_CHECK = 'Spot Check'
+    ADVOCACY = 'Advocacy'
+    TECHNICAL_SUPPORT = 'Technical Support'
+    MEETING = 'Meeting'
+    STAFF_DEVELOPMENT = 'Staff Development'
+    STAFF_ENTITLEMENT = 'Staff Entitlement'
+    TRAVEL_CHOICES = (
+        (PROGRAMME_MONITORING, 'Programmatic Visit'),
+        (SPOT_CHECK, 'Spot Check'),
+        (ADVOCACY, 'Advocacy'),
+        (TECHNICAL_SUPPORT, 'Technical Support'),
+        (MEETING, 'Meeting'),
+        (STAFF_DEVELOPMENT, 'Staff Development'),
+        (STAFF_ENTITLEMENT, 'Staff Entitlement'),
+    )
+
     travels = models.ManyToManyField('Travel', related_name='activities', verbose_name=_('Travels'))
-    travel_type = models.CharField(max_length=64, choices=TravelType.CHOICES, blank=True,
-                                   default=TravelType.PROGRAMME_MONITORING,
+    travel_type = models.CharField(max_length=64, choices=TRAVEL_CHOICES, blank=True,
+                                   default=PROGRAMME_MONITORING,
                                    verbose_name=_('Travel Type'))
     partner = models.ForeignKey(
         'partners.PartnerOrganization', null=True, blank=True, related_name='+',
@@ -401,8 +382,7 @@ class ItineraryItem(models.Model):
         on_delete=models.CASCADE,
     )
     overnight_travel = models.BooleanField(default=False, verbose_name=_('Overnight Travel'))
-    mode_of_travel = models.CharField(max_length=5, choices=ModeOfTravel.CHOICES, default='', blank=True,
-                                      verbose_name=_('Mode of Travel'))
+    mode_of_travel = TravelModeField()
     airlines = models.ManyToManyField('publics.AirlineCompany', related_name='+', verbose_name=_('Airlines'))
 
     class Meta:

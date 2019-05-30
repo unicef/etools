@@ -13,7 +13,8 @@ from etools.applications.core.tests.mixins import URLAssertionMixin
 from etools.applications.publics.models import DSARegion
 from etools.applications.publics.tests.factories import PublicsCurrencyFactory
 from etools.applications.reports.tests.factories import ResultFactory
-from etools.applications.t2f.models import make_travel_reference_number, ModeOfTravel, Travel, TravelType
+from etools.applications.t2f.fields import TravelModeField
+from etools.applications.t2f.models import make_travel_reference_number, Travel, TravelActivity
 from etools.applications.t2f.tests.factories import TravelActivityFactory, TravelFactory
 from etools.applications.users.tests.factories import UserFactory
 
@@ -190,15 +191,15 @@ class TravelList(URLAssertionMixin, BaseTenantTestCase):
 
     def test_filtering(self):
         t1 = TravelFactory(traveler=self.traveler, supervisor=self.unicef_staff)
-        a1 = TravelActivityFactory(travel_type=TravelType.MEETING, primary_traveler=self.unicef_staff)
+        a1 = TravelActivityFactory(travel_type=TravelActivity.MEETING, primary_traveler=self.unicef_staff)
         a1.travels.add(t1)
 
         t2 = TravelFactory(traveler=self.traveler, supervisor=self.unicef_staff)
-        a2 = TravelActivityFactory(travel_type=TravelType.PROGRAMME_MONITORING, primary_traveler=self.unicef_staff)
+        a2 = TravelActivityFactory(travel_type=TravelActivity.PROGRAMME_MONITORING, primary_traveler=self.unicef_staff)
         a2.travels.add(t2)
 
         response = self.forced_auth_req('get', reverse('t2f:travels:list:index'),
-                                        data={'f_travel_type': TravelType.MEETING},
+                                        data={'f_travel_type': TravelActivity.MEETING},
                                         user=self.unicef_staff)
         response_json = json.loads(response.rendered_content)
         self.assertIn('data', response_json)
@@ -206,20 +207,20 @@ class TravelList(URLAssertionMixin, BaseTenantTestCase):
 
     def test_filtering_options(self):
         t1 = TravelFactory(traveler=self.traveler, supervisor=self.unicef_staff)
-        a1 = TravelActivityFactory(travel_type=TravelType.MEETING, primary_traveler=self.unicef_staff)
+        a1 = TravelActivityFactory(travel_type=TravelActivity.MEETING, primary_traveler=self.unicef_staff)
         a1.travels.add(t1)
 
         result = ResultFactory()
         t2 = TravelFactory(traveler=self.traveler, supervisor=self.unicef_staff)
         a2 = TravelActivityFactory(
-            travel_type=TravelType.PROGRAMME_MONITORING,
+            travel_type=TravelActivity.PROGRAMME_MONITORING,
             primary_traveler=self.unicef_staff,
             result=result
         )
         a2.travels.add(t2)
 
         data = {
-            'f_travel_type': TravelType.PROGRAMME_MONITORING,
+            'f_travel_type': TravelActivity.PROGRAMME_MONITORING,
             'f_month': t2.start_date.month,
             'f_cp_output': result.id,
         }
@@ -272,14 +273,14 @@ class TravelList(URLAssertionMixin, BaseTenantTestCase):
                                'dsa_region': dsaregion.id,
                                'departure_date': '2016-12-15T15:02:13+01:00',
                                'arrival_date': '2016-12-16T15:02:13+01:00',
-                               'mode_of_travel': ModeOfTravel.BOAT}],
+                               'mode_of_travel': TravelModeField.BOAT}],
                 'activities': [{'is_primary_traveler': True,
                                 'locations': [location.id],
-                                'travel_type': TravelType.ADVOCACY,
+                                'travel_type': TravelActivity.ADVOCACY,
                                 'date': '2016-12-15T15:02:13+01:00'}],
                 'ta_required': True,
                 'international_travel': False,
-                'mode_of_travel': [ModeOfTravel.BOAT],
+                'mode_of_travel': [TravelModeField.BOAT],
                 'traveler': self.traveler.id,
                 'supervisor': self.unicef_staff.id,
                 'start_date': '2016-12-15T15:02:13+01:00',

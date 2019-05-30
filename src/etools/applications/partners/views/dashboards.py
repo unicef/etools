@@ -13,7 +13,7 @@ from etools.applications.action_points.models import ActionPoint
 from etools.applications.partners.exports_v2 import PartnershipDashCSVRenderer
 from etools.applications.partners.models import FileType, Intervention, InterventionAttachment
 from etools.applications.partners.serializers.dashboards import InterventionDashSerializer
-from etools.applications.t2f.models import Travel, TravelActivity, TravelType
+from etools.applications.t2f.models import Travel, TravelActivity
 from etools.libraries.djangolib.models import MaxDistinct
 
 
@@ -53,7 +53,7 @@ class InterventionPartnershipDashView(QueryStringFilterMixin, ListCreateAPIView)
 
         last_pv_date_qs = TravelActivity.objects.filter(
             partnership__pk=OuterRef("pk"),
-            travel_type=TravelType.PROGRAMME_MONITORING,
+            travel_type=TravelActivity.PROGRAMME_MONITORING,
             travels__traveler=F('primary_traveler'),
             travels__status=Travel.COMPLETED,
         ).values("date").order_by("-date")[:1]

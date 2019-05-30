@@ -5,7 +5,8 @@ from django.urls import reverse
 from etools.applications.core.tests.cases import BaseTenantTestCase
 from etools.applications.partners.models import PartnerOrganization
 from etools.applications.publics.tests.factories import PublicsCurrencyFactory, PublicsDSARegionFactory
-from etools.applications.t2f.models import make_travel_reference_number, ModeOfTravel, Travel, TravelType
+from etools.applications.t2f.fields import TravelModeField
+from etools.applications.t2f.models import make_travel_reference_number, Travel, TravelActivity
 from etools.applications.t2f.tests.factories import TravelActivityFactory, TravelFactory
 from etools.applications.users.tests.factories import UserFactory
 
@@ -59,7 +60,7 @@ class TravelActivityList(BaseTenantTestCase):
         self.assertEqual(len(response_json), 2)
 
     def test_completed_counts(self):
-        currency = PublicsCurrencyFactory()
+        PublicsCurrencyFactory()
         dsa_region = PublicsDSARegionFactory()
 
         traveler = UserFactory(is_staff=True)
@@ -76,7 +77,7 @@ class TravelActivityList(BaseTenantTestCase):
                                'arrival_date': '2017-04-15',
                                'dsa_region': dsa_region.id,
                                'overnight_travel': False,
-                               'mode_of_travel': ModeOfTravel.RAIL,
+                               'mode_of_travel': TravelModeField.RAIL,
                                'airlines': []},
                               {'origin': 'Budapest',
                                'destination': 'Berlin',
@@ -84,15 +85,14 @@ class TravelActivityList(BaseTenantTestCase):
                                'arrival_date': '2017-05-21',
                                'dsa_region': dsa_region.id,
                                'overnight_travel': False,
-                               'mode_of_travel': ModeOfTravel.RAIL,
+                               'mode_of_travel': TravelModeField.RAIL,
                                'airlines': []}],
                 'traveler': traveler.id,
                 'ta_required': True,
                 'report': 'Some report',
-                'currency': currency.id,
                 'supervisor': self.unicef_staff.id}
-        act1 = TravelActivityFactory(travel_type=TravelType.PROGRAMME_MONITORING, primary_traveler=traveler)
-        act2 = TravelActivityFactory(travel_type=TravelType.SPOT_CHECK, primary_traveler=traveler)
+        act1 = TravelActivityFactory(travel_type=TravelActivity.PROGRAMME_MONITORING, primary_traveler=traveler)
+        act2 = TravelActivityFactory(travel_type=TravelActivity.SPOT_CHECK, primary_traveler=traveler)
         act1.travels.add(travel)
         act2.travels.add(travel)
         partner_programmatic_visits = PartnerOrganization.objects.get(id=act1.partner.id)

@@ -7,8 +7,9 @@ from unicef_locations.tests.factories import LocationFactory
 
 from etools.applications.core.tests.cases import BaseTenantTestCase
 from etools.applications.publics.tests.factories import PublicsCurrencyFactory, PublicsDSARegionFactory
+from etools.applications.t2f.fields import TravelModeField
 from etools.applications.t2f.helpers.permission_matrix import FakePermissionMatrix, get_user_role_list, UserTypes
-from etools.applications.t2f.models import ModeOfTravel, Travel, TravelType
+from etools.applications.t2f.models import Travel, TravelActivity
 from etools.applications.t2f.tests.factories import TravelFactory
 from etools.applications.users.tests.factories import UserFactory
 
@@ -121,7 +122,7 @@ class TestPermissionMatrix(BaseTenantTestCase):
                                'arrival_date': '2017-04-15',
                                'dsa_region': dsa_region.id,
                                'overnight_travel': False,
-                               'mode_of_travel': ModeOfTravel.RAIL,
+                               'mode_of_travel': TravelModeField.RAIL,
                                'airlines': []},
                               {'origin': 'Budapest',
                                'destination': 'Berlin',
@@ -129,15 +130,15 @@ class TestPermissionMatrix(BaseTenantTestCase):
                                'arrival_date': '2017-05-21',
                                'dsa_region': dsa_region.id,
                                'overnight_travel': False,
-                               'mode_of_travel': ModeOfTravel.RAIL,
+                               'mode_of_travel': TravelModeField.RAIL,
                                'airlines': []}],
                 'activities': [{'is_primary_traveler': True,
                                 'locations': [location.id],
-                                'travel_type': TravelType.ADVOCACY,
+                                'travel_type': TravelActivity.ADVOCACY,
                                 'date': '2016-12-15'}],
                 'ta_required': True,
                 'international_travel': False,
-                'mode_of_travel': [ModeOfTravel.BOAT],
+                'mode_of_travel': [TravelModeField.BOAT],
                 'traveler': self.traveler.id,
                 'supervisor': self.unicef_staff.id,
                 'start_date': '2016-12-15',

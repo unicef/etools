@@ -13,7 +13,8 @@ from etools.applications.publics.tests.factories import (
     PublicsCurrencyFactory,
     PublicsDSARegionFactory,
 )
-from etools.applications.t2f.models import ModeOfTravel, Travel
+from etools.applications.t2f.fields import TravelModeField
+from etools.applications.t2f.models import Travel
 from etools.applications.t2f.serializers.mailing import TravelMailSerializer
 from etools.applications.t2f.tests.factories import TravelFactory
 from etools.applications.users.tests.factories import UserFactory
@@ -71,7 +72,7 @@ class StateMachineTest(BaseTenantTestCase):
                                'arrival_date': '2017-04-15',
                                'dsa_region': dsa_region.id,
                                'overnight_travel': False,
-                               'mode_of_travel': ModeOfTravel.RAIL,
+                               'mode_of_travel': TravelModeField.RAIL,
                                'airlines': []},
                               {'origin': 'Budapest',
                                'destination': 'Berlin',
@@ -79,7 +80,7 @@ class StateMachineTest(BaseTenantTestCase):
                                'arrival_date': '2017-05-21',
                                'dsa_region': dsa_region.id,
                                'overnight_travel': False,
-                               'mode_of_travel': ModeOfTravel.RAIL,
+                               'mode_of_travel': TravelModeField.RAIL,
                                'airlines': []}],
                 'traveler': self.traveler.id,
                 'ta_required': True,
@@ -149,7 +150,7 @@ class StateMachineTest(BaseTenantTestCase):
                                'arrival_date': '2017-04-15',
                                'dsa_region': dsa_region.id,
                                'overnight_travel': False,
-                               'mode_of_travel': ModeOfTravel.RAIL,
+                               'mode_of_travel': TravelModeField.RAIL,
                                'airlines': []},
                               {'origin': 'Budapest',
                                'destination': 'Berlin',
@@ -157,7 +158,7 @@ class StateMachineTest(BaseTenantTestCase):
                                'arrival_date': '2017-05-21',
                                'dsa_region': dsa_region.id,
                                'overnight_travel': False,
-                               'mode_of_travel': ModeOfTravel.RAIL,
+                               'mode_of_travel': TravelModeField.RAIL,
                                'airlines': []}],
                 'traveler': self.traveler.id,
                 'ta_required': True,
@@ -323,7 +324,7 @@ class StateMachineTest(BaseTenantTestCase):
                                'arrival_date': '2017-04-15',
                                'dsa_region': dsa_region.id,
                                'overnight_travel': False,
-                               'mode_of_travel': ModeOfTravel.RAIL,
+                               'mode_of_travel': TravelModeField.RAIL,
                                'airlines': []},
                               {'origin': 'Budapest',
                                'destination': 'Berlin',
@@ -331,12 +332,13 @@ class StateMachineTest(BaseTenantTestCase):
                                'arrival_date': '2017-05-21',
                                'dsa_region': dsa_region.id,
                                'overnight_travel': False,
-                               'mode_of_travel': ModeOfTravel.RAIL,
+                               'mode_of_travel': TravelModeField.RAIL,
                                'airlines': []}],
                 'traveler': self.traveler.id,
                 'ta_required': True,
                 'supervisor': self.unicef_staff.id,
-                'currency': currency.id}
+                'currency': currency.id
+                }
         response = self.forced_auth_req('post', reverse('t2f:travels:list:index'), data=data, user=self.unicef_staff)
         response_json = json.loads(response.rendered_content)
 

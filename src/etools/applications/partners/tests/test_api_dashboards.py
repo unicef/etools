@@ -14,7 +14,7 @@ from etools.applications.partners.tests.factories import (
     InterventionAttachmentFactory,
     InterventionFactory,
 )
-from etools.applications.t2f.models import Travel, TravelType
+from etools.applications.t2f.models import Travel, TravelActivity
 from etools.applications.t2f.tests.factories import TravelActivityFactory, TravelFactory
 from etools.applications.users.tests.factories import UserFactory
 
@@ -88,7 +88,7 @@ class TestInterventionPartnershipDashView(BaseTenantTestCase):
         travel_activity = TravelActivityFactory(
             partnership=self.intervention,
             primary_traveler=traveler,
-            travel_type=TravelType.PROGRAMME_MONITORING,
+            travel_type=TravelActivity.PROGRAMME_MONITORING,
             date=datetime.date.today() - datetime.timedelta(days=3),
         )
         travel.activities.add(travel_activity)
@@ -96,7 +96,7 @@ class TestInterventionPartnershipDashView(BaseTenantTestCase):
             activity = TravelActivityFactory(
                 partnership=self.intervention,
                 primary_traveler=traveler,
-                travel_type=TravelType.PROGRAMME_MONITORING,
+                travel_type=TravelActivity.PROGRAMME_MONITORING,
                 date=datetime.date.today() - datetime.timedelta(days=3 * (i + 2)),
             )
             travel.activities.add(activity)

@@ -72,7 +72,7 @@ from etools.applications.partners.serializers.partner_organization_v2 import (
 )
 from etools.applications.partners.synchronizers import PartnerSynchronizer
 from etools.applications.partners.views.helpers import set_tenant_or_fail
-from etools.applications.t2f.models import Travel, TravelActivity, TravelType
+from etools.applications.t2f.models import Travel, TravelActivity
 from etools.libraries.djangolib.models import StringConcat
 
 
@@ -290,7 +290,7 @@ class PartnerOrganizationDashboardAPIView(ExportModelMixin, QueryStringFilterMix
     def _add_programmatic_visits(self, serializer):
         qs = PartnerOrganization.objects.annotate(
             last_pv_date=Max(Case(When(
-                agreements__interventions__travel_activities__travel_type=TravelType.PROGRAMME_MONITORING,
+                agreements__interventions__travel_activities__travel_type=TravelActivity.PROGRAMME_MONITORING,
                 agreements__interventions__travel_activities__travels__traveler=F(
                     'agreements__interventions__travel_activities__primary_traveler'),
                 agreements__interventions__travel_activities__travels__status=Travel.COMPLETED,

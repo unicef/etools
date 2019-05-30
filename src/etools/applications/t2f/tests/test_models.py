@@ -3,7 +3,7 @@ import datetime
 from django.utils import timezone
 
 from etools.applications.core.tests.cases import BaseTenantTestCase
-from etools.applications.t2f.models import TravelType
+from etools.applications.t2f.models import TravelActivity
 from etools.applications.t2f.tests.factories import ItineraryItemFactory, TravelActivityFactory, TravelFactory
 
 
@@ -21,23 +21,23 @@ class TestStrUnicode(BaseTenantTestCase):
         tz = timezone.get_default_timezone()
         travel = TravelFactory()
         activity_date_none = TravelActivityFactory(
-            travel_type=TravelType.SPOT_CHECK,
+            travel_type=TravelActivity.SPOT_CHECK,
             date=None,
         )
         activity_date_none.travels.add(travel)
         self.assertEqual(
             str(activity_date_none),
-            f"{TravelType.SPOT_CHECK} - None"
+            f"{TravelActivity.SPOT_CHECK} - None"
         )
 
         activity = TravelActivityFactory(
-            travel_type=TravelType.SPOT_CHECK,
+            travel_type=TravelActivity.SPOT_CHECK,
             date=datetime.datetime(2001, 1, 1, 12, 10, 10, 0, tzinfo=tz),
         )
         activity.travels.add(travel)
         self.assertEqual(
             str(activity),
-            f"{TravelType.SPOT_CHECK} - 2001-01-01 12:10:10+00:00",
+            f"{TravelActivity.SPOT_CHECK} - 2001-01-01 12:10:10+00:00",
         )
 
     def test_itinerary_item(self):

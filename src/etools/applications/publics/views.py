@@ -24,7 +24,8 @@ from etools.applications.publics.serializers import (
     MultiGhostDataSerializer,
     PublicStaticDataSerializer,
 )
-from etools.applications.t2f.models import ModeOfTravel, TravelType
+from etools.applications.t2f.fields import TravelModeField
+from etools.applications.t2f.models import TravelActivity
 
 
 class GhostDataMixin:
@@ -68,8 +69,8 @@ class StaticDataView(GhostDataMixin,
                 # These should stay here since all of them are 'static'
                 'airlines': self.get_airlines_queryset(),
                 'countries': self.get_country_queryset(),
-                'travel_types': [c[0].lower() for c in TravelType.CHOICES],
-                'travel_modes': [c[0].lower() for c in ModeOfTravel.CHOICES]}
+                'travel_types': [c[0].lower() for c in TravelActivity.TRAVEL_CHOICES],
+                'travel_modes': [c[0].lower() for c in TravelModeField.TRAVEL_MODE_CHOICES]}
 
         serializer = self.get_serializer(data)
         return Response(serializer.data, status.HTTP_200_OK)

@@ -13,6 +13,7 @@ from etools.applications.publics.tests.factories import (
 )
 from etools.applications.reports.tests.factories import ResultFactory, SectionFactory
 from etools.applications.t2f import models
+from etools.applications.t2f.fields import TravelModeField
 from etools.applications.users.tests.factories import OfficeFactory, UserFactory
 
 _FUZZY_START_DATE = datetime.date(datetime.date.today().year, 1, 1)
@@ -23,12 +24,12 @@ _FUZZY_NOW_DATE = datetime.date.today()
 class FuzzyTravelType(factory.fuzzy.BaseFuzzyAttribute):
     def fuzz(self):
         return factory.fuzzy._random.choice(
-            [t[0] for t in models.TravelType.CHOICES]
+            [t[0] for t in models.TravelActivity.TRAVEL_CHOICES]
         )
 
 
 class TravelActivityFactory(factory.django.DjangoModelFactory):
-    travel_type = models.TravelType.PROGRAMME_MONITORING
+    travel_type = models.TravelActivity.PROGRAMME_MONITORING
     partner = factory.SelfAttribute('partnership.agreement.partner')
     partnership = factory.SubFactory(InterventionFactory)
     result = factory.SubFactory(ResultFactory)
@@ -66,7 +67,7 @@ class ItineraryItemFactory(factory.DjangoModelFactory):
     )
     dsa_region = factory.SubFactory(PublicsDSARegionFactory)
     overnight_travel = False
-    mode_of_travel = models.ModeOfTravel.BOAT
+    mode_of_travel = TravelModeField.BOAT
 
     @factory.post_generation
     def populate_airlines(self, create, extracted, **kwargs):

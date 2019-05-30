@@ -40,7 +40,7 @@ from etools.applications.reports.tests.factories import (
     LowerResultFactory,
     ResultFactory,
 )
-from etools.applications.t2f.models import Travel, TravelType
+from etools.applications.t2f.models import Travel, TravelActivity
 from etools.applications.t2f.tests.factories import TravelActivityFactory, TravelFactory
 from etools.applications.tpm.models import TPMVisit
 from etools.applications.tpm.tests.factories import TPMActivityFactory, TPMVisitFactory
@@ -458,7 +458,7 @@ class TestPartnerOrganizationModel(BaseTenantTestCase):
         TravelActivityFactory(
             travels=[travel],
             primary_traveler=traveller,
-            travel_type=TravelType.PROGRAMME_MONITORING,
+            travel_type=TravelActivity.PROGRAMME_MONITORING,
             partner=self.partner_organization,
         )
         self.partner_organization.programmatic_visits()

@@ -54,8 +54,8 @@ class TravelActivityExport(QueryStringFilterMixin, ExportBaseView):
             self.activity = activity
 
     def get_queryset(self):
-        queryset = TravelActivity.objects.prefetch_related('travels', 'travels__traveler', 'travels__office', 'travels__supervisor',
-                                                           'travels__section', 'locations')
+        queryset = TravelActivity.objects.prefetch_related('travels', 'travels__traveler', 'travels__office',
+                                                           'travels__supervisor', 'travels__section', 'locations')
         queryset = queryset.select_related(
             'partner', 'partnership', 'result', 'primary_traveler')
         queryset = queryset.order_by('id')
@@ -91,8 +91,7 @@ class TravelAdminExport(ExportBaseView):
         travel_queryset = self.filter_queryset(self.get_queryset())
         queryset = ItineraryItem.objects.filter(
             travel__in=travel_queryset).order_by('travel__reference_number', 'id')
-        queryset = queryset.select_related('travel', 'travel__office', 'travel__section', 'travel__traveler',
-                                           'dsa_region')
+        queryset = queryset.select_related('travel', 'travel__office', 'travel__section', 'travel__traveler')
         serializer = self.get_serializer(queryset, many=True)
 
         response = Response(data=serializer.data, status=status.HTTP_200_OK)

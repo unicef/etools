@@ -28,7 +28,7 @@ from etools.applications.partners.validation.agreements import (
     agreements_illegal_transition,
 )
 from etools.applications.reports.models import CountryProgramme, Indicator, Result, Section
-from etools.applications.t2f.models import Travel, TravelActivity, TravelType
+from etools.applications.t2f.models import Travel, TravelActivity
 from etools.applications.tpm.models import TPMActivity, TPMVisit
 from etools.applications.users.models import Office
 from etools.libraries.djangolib.models import MaxDistinct, StringConcat
@@ -675,7 +675,7 @@ class PartnerOrganization(TimeStampedModel):
             hact['programmatic_visits']['completed']['total'] = pv
         else:
             pv_year = Travel.objects.filter(
-                activities__travel_type=TravelType.PROGRAMME_MONITORING,
+                activities__travel_type=TravelActivity.PROGRAMME_MONITORING,
                 traveler=F('activities__primary_traveler'),
                 status=Travel.COMPLETED,
                 end_date__year=timezone.now().year,
@@ -1834,7 +1834,7 @@ class Intervention(TimeStampedModel):
     def days_from_last_pv(self):
         ta = TravelActivity.objects.filter(
             partnership__pk=self.pk,
-            travel_type=TravelType.PROGRAMME_MONITORING,
+            travel_type=TravelActivity.PROGRAMME_MONITORING,
             travels__status=Travel.COMPLETED,
             date__isnull=False,
         ).order_by('date').last()

@@ -60,7 +60,7 @@ from etools.applications.reports.tests.factories import (
     ResultTypeFactory,
     SectionFactory,
 )
-from etools.applications.t2f.models import Travel, TravelType
+from etools.applications.t2f.models import Travel, TravelActivity
 from etools.applications.t2f.tests.factories import TravelActivityFactory, TravelFactory
 from etools.applications.users.tests.factories import GroupFactory, OfficeFactory, UserFactory
 
@@ -1999,7 +1999,7 @@ class TestPartnerOrganizationDashboardAPIView(BaseTenantTestCase):
         date_200 = datetime.datetime(date_200.year, date_200.month, date_200.day, tzinfo=UTC)
         agreement = AgreementFactory(partner=cls.partner, signed_by_unicef_date=today)
         travel = TravelFactory(status=Travel.COMPLETED, traveler=cls.unicef_staff)
-        ta = TravelActivityFactory(travel_type=TravelType.PROGRAMME_MONITORING,
+        ta = TravelActivityFactory(travel_type=TravelActivity.PROGRAMME_MONITORING,
                                    date=date_200,
                                    travels=[travel, ], primary_traveler=cls.unicef_staff)
         cls.intervention = InterventionFactory(agreement=agreement, status=Intervention.ACTIVE)

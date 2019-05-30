@@ -10,7 +10,7 @@ from etools.applications.activities.models import Activity
 from etools.applications.core.tests.cases import BaseTenantTestCase
 from etools.applications.partners.models import Intervention
 from etools.applications.partners.tests.factories import AgreementFactory, InterventionFactory, PartnerFactory
-from etools.applications.t2f.models import Travel, TravelType
+from etools.applications.t2f.models import Travel, TravelActivity
 from etools.applications.t2f.tests.factories import TravelActivityFactory, TravelFactory
 from etools.applications.users.tests.factories import CountryFactory, GroupFactory, UserFactory
 
@@ -249,7 +249,7 @@ class TestGisLocationViews(BaseTenantTestCase):
         travel_activity = TravelActivityFactory(
             travels=[travel],
             primary_traveler=self.unicef_staff,
-            travel_type=TravelType.SPOT_CHECK,
+            travel_type=TravelActivity.SPOT_CHECK,
         )
         travel_activity.locations.add(self.location_no_geom.id, self.location_with_geom.id)
         travel_activity.save()

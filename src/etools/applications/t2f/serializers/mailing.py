@@ -7,7 +7,6 @@ class TravelMailSerializer(serializers.Serializer):
     traveler = serializers.CharField(source='traveler.get_full_name', read_only=True)
     start_date = serializers.DateField(format='%m/%d/%Y')
     end_date = serializers.DateField(format='%m/%d/%Y')
-    currency = serializers.CharField(source='currency.code', read_only=True)
     location = serializers.CharField(source='itinerary.first.destination', read_only=True)
     reference_number = serializers.CharField()
     purpose = serializers.CharField()
@@ -15,4 +14,4 @@ class TravelMailSerializer(serializers.Serializer):
 
     class Meta:
         fields = ('traveler', 'supervisor', 'start_date', 'end_date', 'estimated_travel_cost', 'purpose',
-                  'reference_number', 'currency', 'rejection_note', 'location', 'rejection_note')
+                  'reference_number', 'rejection_note', 'location', 'rejection_note')

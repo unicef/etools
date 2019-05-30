@@ -2,7 +2,6 @@
 from django.core import mail
 
 from etools.applications.core.tests.cases import BaseTenantTestCase
-from etools.applications.publics.tests.factories import PublicsBusinessAreaFactory
 from etools.applications.t2f.serializers.mailing import TravelMailSerializer
 from etools.applications.t2f.tests.factories import ItineraryItemFactory, TravelFactory
 from etools.applications.users.tests.factories import UserFactory
@@ -29,7 +28,6 @@ class MailingTest(BaseTenantTestCase):
         tenant_country = self.travel.traveler.profile.country
         tenant_country.business_area_code = '0'
         tenant_country.save()
-        PublicsBusinessAreaFactory(code=self.travel.traveler.profile.country.business_area_code)
 
         self.travel.submit_for_approval()
         self.travel.approve()
@@ -47,7 +45,6 @@ class MailingTest(BaseTenantTestCase):
                            'supervisor',
                            'end_date',
                            'rejection_note',
-                           'currency',
                            'estimated_travel_cost',
                            'location',
                            'traveler',

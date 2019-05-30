@@ -21,7 +21,7 @@ from etools.applications.action_points.serializers import ActionPointBaseSeriali
 from etools.applications.partners.models import PartnerType
 from etools.applications.publics.models import AirlineCompany
 from etools.applications.t2f.helpers.permission_matrix import PermissionMatrix
-from etools.applications.t2f.models import ItineraryItem, Travel, TravelActivity, TravelAttachment, TravelType
+from etools.applications.t2f.models import ItineraryItem, Travel, TravelActivity, TravelAttachment
 
 itineraryItemSortKey = operator.attrgetter('departure_date')
 
@@ -115,7 +115,7 @@ class TravelActivitySerializer(PermissionBasedModelSerializer):
         travel_type = attrs.get('travel_type', getattr(self.instance, 'travel_type', None))
 
         if partner and partner.partner_type == PartnerType.GOVERNMENT and \
-                travel_type in [TravelType.PROGRAMME_MONITORING, TravelType.SPOT_CHECK] and \
+                travel_type in [TravelActivity.PROGRAMME_MONITORING, TravelActivity.SPOT_CHECK] and \
                 'result' not in attrs:
             raise ValidationError({'result': serializers.Field.default_error_messages['required']})
 

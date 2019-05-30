@@ -13,7 +13,8 @@ from etools.applications.partners.models import PartnerType
 from etools.applications.partners.tests.factories import PartnerFactory
 from etools.applications.publics.models import DSARegion
 from etools.applications.publics.tests.factories import PublicsAirlineCompanyFactory, PublicsDSARegionFactory
-from etools.applications.t2f.models import ModeOfTravel, Travel, TravelAttachment, TravelType
+from etools.applications.t2f.fields import TravelModeField
+from etools.applications.t2f.models import Travel, TravelActivity, TravelAttachment
 from etools.applications.t2f.tests.factories import TravelAttachmentFactory, TravelFactory
 from etools.applications.users.tests.factories import UserFactory
 
@@ -234,7 +235,7 @@ class TravelDetails(URLAssertionMixin, BaseTenantTestCase):
                                'arrival_date': '2016-11-17',
                                'dsa_region': dsaregion.id,
                                'overnight_travel': False,
-                               'mode_of_travel': ModeOfTravel.PLANE,
+                               'mode_of_travel': TravelModeField.PLANE,
                                'airlines': [airlines_1.id, airlines_2.id]}],
                 'traveler': self.traveler.id,
                 'ta_required': True,
@@ -309,7 +310,7 @@ class TravelDetails(URLAssertionMixin, BaseTenantTestCase):
                 'is_primary_traveler': True,
                 'locations': [location.id, location_2.id],
                 'partner': PartnerFactory(partner_type=PartnerType.GOVERNMENT).id,
-                'travel_type': TravelType.PROGRAMME_MONITORING,
+                'travel_type': TravelActivity.PROGRAMME_MONITORING,
                 'date': self.travel.start_date,
             }],
             'traveler': self.traveler.id
@@ -331,7 +332,7 @@ class TravelDetails(URLAssertionMixin, BaseTenantTestCase):
                                'arrival_date': '2016-11-17',
                                'dsa_region': dsaregion.id,
                                'overnight_travel': False,
-                               'mode_of_travel': ModeOfTravel.RAIL,
+                               'mode_of_travel': TravelModeField.RAIL,
                                'airlines': [airlines.id]},
                               {'origin': 'Berlin',
                                'destination': 'Budapest',
@@ -339,7 +340,7 @@ class TravelDetails(URLAssertionMixin, BaseTenantTestCase):
                                'arrival_date': '2016-11-16',
                                'dsa_region': dsaregion.id,
                                'overnight_travel': False,
-                               'mode_of_travel': ModeOfTravel.RAIL,
+                               'mode_of_travel': TravelModeField.RAIL,
                                'airlines': [airlines.id]}],
                 'activities': [],
                 'ta_required': True}
@@ -372,7 +373,7 @@ class TravelDetails(URLAssertionMixin, BaseTenantTestCase):
                                'arrival_date': '2016-11-16',
                                'dsa_region': dsaregion.id,
                                'overnight_travel': False,
-                               'mode_of_travel': ModeOfTravel.RAIL,
+                               'mode_of_travel': TravelModeField.RAIL,
                                'airlines': [airlines.id]},
                               {'origin': 'Something else',
                                'destination': 'Berlin',
@@ -380,7 +381,7 @@ class TravelDetails(URLAssertionMixin, BaseTenantTestCase):
                                'arrival_date': '2016-11-17',
                                'dsa_region': dsaregion.id,
                                'overnight_travel': False,
-                               'mode_of_travel': ModeOfTravel.RAIL,
+                               'mode_of_travel': TravelModeField.RAIL,
                                'airlines': [airlines.id]}],
                 'activities': [],
                 'supervisor': self.unicef_staff.id,
@@ -400,7 +401,7 @@ class TravelDetails(URLAssertionMixin, BaseTenantTestCase):
                                'arrival_date': '2016-11-16',
                                'dsa_region': None,
                                'overnight_travel': False,
-                               'mode_of_travel': ModeOfTravel.RAIL,
+                               'mode_of_travel': TravelModeField.RAIL,
                                'airlines': [airlines.id]},
                               {'origin': 'Berlin',
                                'destination': 'Budapest',
@@ -408,7 +409,7 @@ class TravelDetails(URLAssertionMixin, BaseTenantTestCase):
                                'arrival_date': '2016-11-17',
                                'dsa_region': dsaregion.id,
                                'overnight_travel': False,
-                               'mode_of_travel': ModeOfTravel.RAIL,
+                               'mode_of_travel': TravelModeField.RAIL,
                                'airlines': [airlines.id]}],
                 'activities': [],
                 'ta_required': True}
@@ -431,7 +432,7 @@ class TravelDetails(URLAssertionMixin, BaseTenantTestCase):
                                'arrival_date': '2016-11-16',
                                'dsa_region': None,
                                'overnight_travel': False,
-                               'mode_of_travel': ModeOfTravel.RAIL,
+                               'mode_of_travel': TravelModeField.RAIL,
                                'airlines': [airlines.id]},
                               {'origin': 'Berlin',
                                'destination': 'Budapest',
@@ -439,7 +440,7 @@ class TravelDetails(URLAssertionMixin, BaseTenantTestCase):
                                'arrival_date': '2016-11-17',
                                'dsa_region': dsaregion.id,
                                'overnight_travel': False,
-                               'mode_of_travel': ModeOfTravel.RAIL,
+                               'mode_of_travel': TravelModeField.RAIL,
                                'airlines': [airlines.id]}],
                 'activities': [],
                 'supervisor': self.unicef_staff.id,
@@ -634,7 +635,7 @@ class TravelDetails(URLAssertionMixin, BaseTenantTestCase):
                                'arrival_date': '2016-11-17',
                                'dsa_region': dsa_region.id,
                                'overnight_travel': False,
-                               'mode_of_travel': ModeOfTravel.PLANE,
+                               'mode_of_travel': TravelModeField.PLANE,
                                'airlines': [airline.id]}],
                 'traveler': self.traveler.id,
                 'ta_required': True,
@@ -652,16 +653,14 @@ class TravelDetails(URLAssertionMixin, BaseTenantTestCase):
         self.assertEqual(response_json['itinerary'][0]['airlines'], [airline.id])
 
     def test_save_with_ghost_data(self):
-        dsa_region = DSARegion.objects.first()
         airline = PublicsAirlineCompanyFactory()
 
         data = {'itinerary': [{'origin': 'Budapest',
                                'destination': 'Berlin',
                                'departure_date': '2016-11-16',
                                'arrival_date': '2016-11-17',
-                               'dsa_region': dsa_region.id,
                                'overnight_travel': False,
-                               'mode_of_travel': ModeOfTravel.PLANE,
+                               'mode_of_travel': TravelModeField.PLANE,
                                'airlines': [airline.id]}],
                 'traveler': self.traveler.id,
                 'ta_required': True,

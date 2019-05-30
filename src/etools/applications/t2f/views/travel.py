@@ -21,7 +21,7 @@ from etools.applications.t2f.filters import (
 )
 from etools.applications.t2f.helpers.clone_travel import CloneTravelHelper
 from etools.applications.t2f.helpers.permission_matrix import FakePermissionMatrix, PermissionMatrix
-from etools.applications.t2f.models import Travel, TravelActivity, TravelAttachment, TravelType
+from etools.applications.t2f.models import Travel, TravelActivity, TravelAttachment
 from etools.applications.t2f.serializers.travel import (
     CloneOutputSerializer,
     CloneParameterSerializer,
@@ -169,7 +169,7 @@ class TravelActivityViewSet(QueryStringFilterMixin, mixins.ListModelMixin, views
             .distinct('id')
         qs = qs.exclude(status__in=[Travel.CANCELLED, Travel.REJECTED, Travel.PLANNED])
 
-        qs = qs.filter(travel_type__in=[TravelType.SPOT_CHECK, TravelType.PROGRAMME_MONITORING])
+        qs = qs.filter(travel_type__in=[TravelActivity.SPOT_CHECK, TravelActivity.PROGRAMME_MONITORING])
         return qs
 
 
