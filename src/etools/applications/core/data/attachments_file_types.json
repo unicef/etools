@@ -121,26 +121,6 @@
     },
     {
         "model": "unicef_attachments.filetype",
-        "pk": 15,
-        "fields": {
-            "order": 0,
-            "label": "PCA",
-            "name": "pca",
-            "code": "audit_engagement"
-        }
-    },
-    {
-        "model": "unicef_attachments.filetype",
-        "pk": 16,
-        "fields": {
-            "order": 1,
-            "label": "PD",
-            "name": "pd",
-            "code": "audit_engagement"
-        }
-    },
-    {
-        "model": "unicef_attachments.filetype",
         "pk": 17,
         "fields": {
             "order": 2,
@@ -167,16 +147,6 @@
             "label": "Report",
             "name": "report",
             "code": "tpm_report"
-        }
-    },
-    {
-        "model": "unicef_attachments.filetype",
-        "pk": 21,
-        "fields": {
-            "order": 8,
-            "label": "PCA",
-            "name": "pca",
-            "code": "tpm"
         }
     },
     {
