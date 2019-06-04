@@ -1,5 +1,6 @@
 import json
 import re
+from decimal import Decimal, InvalidOperation
 
 from django import forms
 
@@ -14,7 +15,9 @@ def value_numbers(data):
         except ValueError:
             raise forms.ValidationError("Invalid data")
     for v in data.values():
-        if not re_allowed_chars.match(str(v)):
+        try:
+            Decimal(v)
+        except (TypeError, InvalidOperation):
             raise forms.ValidationError("Invalid number")
 
 
