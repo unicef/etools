@@ -7,6 +7,7 @@ from rest_framework.filters import OrderingFilter, SearchFilter
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from unicef_rest_export.renderers import ExportOpenXMLRenderer
+from unicef_rest_export.serializers import ExportSerializer
 from unicef_rest_export.views import ExportMixin
 from unicef_restlib.pagination import DynamicPageNumberPagination
 from unicef_restlib.views import MultiSerializerViewSetMixin, SafeTenantViewSetMixin
@@ -28,7 +29,6 @@ from etools.applications.action_points.filters import ReferenceNumberOrderingFil
 from etools.applications.action_points.models import ActionPoint
 from etools.applications.action_points.serializers import (
     ActionPointCreateSerializer,
-    ActionPointListExportSerializer,
     ActionPointListSerializer,
     ActionPointSerializer,
 )
@@ -67,7 +67,7 @@ class ActionPointViewSet(
         'create': ActionPointCreateSerializer,
         'list': ActionPointListSerializer,
     }
-    export_serializer_class = ActionPointListExportSerializer
+    export_serializer_class = ExportSerializer
     filter_backends = (ReferenceNumberOrderingFilter, OrderingFilter, SearchFilter,
                        RelatedModuleFilter, DjangoFilterBackend,)
 
@@ -111,7 +111,11 @@ class ActionPointViewSet(
     @action(detail=False, methods=['get'], url_path='export/csv', renderer_classes=(ActionPointCSVRenderer,))
     def list_csv_export(self, request, *args, **kwargs):
         action_points = self.filter_queryset(self.get_queryset().prefetch_related('comments'))
-        serializer = ActionPointExportSerializer(action_points.prefetch_related('comments'), many=True)
+        serializer = ActionPointExportSerializer(
+            action_points.prefetch_related('comments'),
+            context={"request": request},
+            many=True,
+        )
 
         return Response(serializer.data, headers={
             'Content-Disposition': 'attachment;filename=action_points_{}.csv'.format(timezone.now().date())
@@ -119,7 +123,7 @@ class ActionPointViewSet(
 
     @action(detail=False, methods=['get'], url_path='export/xlsx', renderer_classes=(ExportOpenXMLRenderer,))
     def list_xlsx_export(self, request, *args, **kwargs):
-        self.serializer_class = ActionPointListSerializer
+        self.serializer_class = ActionPointExportSerializer
         action_points = self.filter_queryset(self.get_queryset().prefetch_related('comments'))
         serializer = self.get_serializer(action_points, many=True)
         return Response(serializer.data, headers={
@@ -128,7 +132,10 @@ class ActionPointViewSet(
 
     @action(detail=True, methods=['get'], url_path='export/csv', renderer_classes=(ActionPointCSVRenderer,))
     def single_csv_export(self, request, *args, **kwargs):
-        serializer = ActionPointExportSerializer(self.get_object())
+        serializer = ActionPointExportSerializer(
+            self.get_object(),
+            context={"request": request},
+        )
         return Response(serializer.data, headers={
             'Content-Disposition': 'attachment;filename={}_{}.csv'.format(
                 self.get_object().reference_number, timezone.now().date()
@@ -137,7 +144,7 @@ class ActionPointViewSet(
 
     @action(detail=True, methods=['get'], url_path='export/xlsx', renderer_classes=(ExportOpenXMLRenderer,))
     def single_xlsx_export(self, request, *args, **kwargs):
-        self.serializer_class = ActionPointListSerializer
+        self.serializer_class = ActionPointExportSerializer
         serializer = self.get_serializer([self.get_object()], many=True)
         return Response(serializer.data, headers={
             'Content-Disposition': 'attachment;filename={}_{}.xlsx'.format(

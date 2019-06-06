@@ -20,15 +20,17 @@ class Command(BaseCommand):
             name = options['country_name']
             slug = name.lower().replace(' ', '-').strip()
             usd = Currency.objects.get(code='USD')
+            schema_name = name.lower().replace(' ', '_').strip()
             country = Country.objects.create(
-                schema_name=name.lower().replace(' ', '_').strip(),
+                schema_name=schema_name,
                 name=name,
                 local_currency=usd,
             )
             get_tenant_domain_model().objects.create(domain='{}.etools.unicef.org'.format(slug), tenant=country)
-            call_command('init-result-type', schema=slug)
-            call_command('init-partner-file-type', schema=slug)
-            connection.set_schema(slug)
+            call_command('init-result-type', schema=schema_name)
+            call_command('init-partner-file-type', schema=schema_name)
+            call_command('init-attachment-file-types', schema=schema_name)
+            connection.set_schema(schema_name)
             call_command('loaddata', 'attachments_file_types')
             call_command('loaddata', 'audit_risks_blueprints')
             for user in get_user_model().objects.filter(is_superuser=True):

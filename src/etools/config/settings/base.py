@@ -67,7 +67,7 @@ def get_from_secrets_or_env(var_name, default=None):
 # DJANGO: CACHE
 CACHES = {
     'default': {
-        'BACKEND': 'redis_cache.RedisCache',
+        'BACKEND': 'etools.libraries.redis_cache.base.eToolsCache',
         'LOCATION': get_from_secrets_or_env('REDIS_URL', 'redis://localhost:6379/0')
     }
 }
@@ -215,6 +215,7 @@ TENANT_APPS = (
     'etools.applications.action_points',
     'unicef_snapshot',
     'unicef_attachments',
+    'unicef_vision',
 )
 INSTALLED_APPS = ('django_tenants',) + SHARED_APPS + TENANT_APPS
 
@@ -463,6 +464,7 @@ SLACK_URL = get_from_secrets_or_env('SLACK_URL')
 
 TASK_ADMIN_USER = get_from_secrets_or_env('TASK_ADMIN_USER', 'etools_task_admin')
 
+VISION_LOGGER_MODEL = "vision.VisionSyncLog"
 VISION_URL = get_from_secrets_or_env('VISION_URL', 'http://invalid_vision_url')
 VISION_USER = get_from_secrets_or_env('VISION_USER', 'invalid_vision_user')
 VISION_PASSWORD = get_from_secrets_or_env('VISION_PASSWORD', 'invalid_vision_password')

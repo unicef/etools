@@ -41,5 +41,7 @@ setup(
         'Operating System :: POSIX :: Linux',
         'Programming Language :: Python :: 3',
         'Programming Language :: Python :: 3.6',
+        'Framework :: Django',
+        'Framework :: Django :: 2.1',
     ],
 )

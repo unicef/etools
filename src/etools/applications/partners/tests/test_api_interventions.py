@@ -1762,7 +1762,6 @@ class TestInterventionAmendmentCreateAPIView(BaseTenantTestCase):
         assert flat.pd_ssfa_number
 
     def test_create_amendment_with_internal_prc_review_none(self):
-        self.data["internal_prc_review"] = None
         response = self._make_request(
             user=self.partnership_manager_user,
             data=self.data,
@@ -1789,7 +1788,7 @@ class TestInterventionAmendmentCreateAPIView(BaseTenantTestCase):
             ['Cannot add a new amendment while another amendment is in progress.']
         )
 
-    def _make_request(self, user=None, data=None, request_format='json', **kwargs):
+    def _make_request(self, user=None, data="", request_format='json', **kwargs):
         return self.forced_auth_req('post', self.url, user=user, data=data, request_format=request_format, **kwargs)
 
 

@@ -1,7 +1,8 @@
 from collections import OrderedDict
 
+from unicef_vision.synchronizers import ManualVisionSynchronizer
+
 from etools.applications.audit.purchase_order.models import AuditorFirm, PurchaseOrder, PurchaseOrderItem
-from etools.applications.vision.synchronizers import ManualVisionSynchronizer
 
 
 class POSynchronizer(ManualVisionSynchronizer):

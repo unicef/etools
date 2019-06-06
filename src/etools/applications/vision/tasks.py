@@ -2,12 +2,12 @@ from django.db import connection
 from django.utils import timezone
 
 from celery.utils.log import get_task_logger
+from unicef_vision.exceptions import VisionException
 
 from etools.applications.funds.synchronizers import FundCommitmentSynchronizer, FundReservationsSynchronizer
 from etools.applications.partners.synchronizers import DirectCashTransferSynchronizer, PartnerSynchronizer
 from etools.applications.reports.synchronizers import ProgrammeSynchronizer, RAMSynchronizer
 from etools.applications.users.models import Country
-from etools.applications.vision.exceptions import VisionException
 from etools.config.celery import app, send_to_slack
 
 PUBLIC_SYNC_HANDLERS = {}
@@ -27,7 +27,7 @@ logger = get_task_logger(__name__)
 
 
 @app.task
-def vision_sync_task(country_name=None, synchronizers=SYNC_HANDLERS.keys()):
+def vision_sync_task(business_area_code=None, synchronizers=SYNC_HANDLERS.keys()):
     """
     Do the vision sync for all countries that have vision_sync_enabled=True,
     or just the named country.  Defaults to SYNC_HANDLERS but a
@@ -42,17 +42,17 @@ def vision_sync_task(country_name=None, synchronizers=SYNC_HANDLERS.keys()):
     country_filter_dict = {
         'vision_sync_enabled': True
     }
-    if country_name:
-        country_filter_dict['name'] = country_name
+    if business_area_code:
+        country_filter_dict['business_area_code'] = business_area_code
     countries = Country.objects.filter(**country_filter_dict)
 
-    if not country_name or country_name == 'Global':
+    if not business_area_code or business_area_code == '0':  # public schema
         for handler in global_synchronizers:
-            sync_handler.delay('Global', handler)
+            sync_handler.delay(business_area_code, handler)
     for country in countries:
         connection.set_tenant(country)
         for handler in tenant_synchronizers:
-            sync_handler.delay(country.name, handler)
+            sync_handler.delay(country.business_area_code, handler)
         country.vision_last_synced = timezone.now()
         country.save()
 
@@ -65,28 +65,28 @@ def vision_sync_task(country_name=None, synchronizers=SYNC_HANDLERS.keys()):
 
 
 @app.task(bind=True, autoretry_for=(VisionException,), retry_kwargs={'max_retries': 1})
-def sync_handler(self, country_name, handler):
+def sync_handler(self, business_area_code, handler):
     """
     Run .sync() on one handler for one country.
     """
     # Scheduled from vision_sync_task() (above).
-    logger.info('Starting vision sync handler {} for country {}'.format(handler, country_name))
+    logger.info('Starting vision sync handler {} for country {}'.format(handler, business_area_code))
     try:
-        country = Country.objects.get(name=country_name)
+        country = Country.objects.get(business_area_code=business_area_code)
     except Country.DoesNotExist:
-        logger.error("{} sync failed, Could not find a Country with this name: {}".format(
-            handler, country_name
+        logger.error("{} sync failed, Could not find a Country with this business area code: {}".format(
+            handler, business_area_code
         ))
         # No point in retrying if there's no such country
     else:
         try:
-            SYNC_HANDLERS[handler](country).sync()
-            logger.info("{} sync successfully for {}".format(handler, country.name))
+            SYNC_HANDLERS[handler](country.business_area_code).sync()
+            logger.info("{} sync successfully for {} [{}]".format(handler, country.name, business_area_code))
 
         except VisionException:
             # Catch and log the exception so we're aware there's a problem.
             logger.exception("{} sync failed, Country: {}".format(
-                handler, country_name
+                handler, business_area_code
             ))
             # The 'autoretry_for' in the task decorator tells Celery to
             # retry this a few times on VisionExceptions, so just re-raise it

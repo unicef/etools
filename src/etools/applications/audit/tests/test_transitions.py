@@ -24,7 +24,7 @@ from etools.applications.audit.transitions.conditions import (
 from etools.applications.core.tests.cases import BaseTenantTestCase
 
 
-class EngagementCheckTransitionsTestCaseMixin(object):
+class EngagementCheckTransitionsTestCaseMixin:
     fixtures = ('audit_risks_blueprints', )
 
     def _test_transition(self, user, action, expected_response, errors=None, data=None):
@@ -252,7 +252,7 @@ class TestSCTransitionsTestCase(
         self._test_cancel(self.unicef_focal_point, status.HTTP_403_FORBIDDEN)
 
 
-class EngagementCheckTransitionsMetadataTestCaseMixin(object):
+class EngagementCheckTransitionsMetadataTestCaseMixin:
     def _test_allowed_actions(self, user, actions):
         response = self.forced_auth_req(
             'options', self.engagement_url(), user=user

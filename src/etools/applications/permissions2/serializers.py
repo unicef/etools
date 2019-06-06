@@ -6,7 +6,7 @@ from unicef_restlib.fields import SeparatedReadWriteField
 from etools.applications.permissions2.models import Permission
 
 
-class PermissionsBasedSerializerMixin(object):
+class PermissionsBasedSerializerMixin:
     def _collect_permissions_targets(self):
         """
         Collect permissions targets based on serializer's model and field name from full serializers tree.

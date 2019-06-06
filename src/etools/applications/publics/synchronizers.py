@@ -5,12 +5,12 @@ from datetime import datetime
 from django.core.exceptions import ObjectDoesNotExist
 
 from etools.applications.publics.models import Country, Currency, ExchangeRate, TravelAgent, TravelExpenseType
-from etools.applications.vision.vision_data_synchronizer import VisionDataSynchronizer
+from etools.applications.vision.synchronizers import VisionDataTenantSynchronizer
 
-log = logging.getLogger(__name__)
+logger = logging.getLogger(__name__)
 
 
-class CurrencySynchronizer(VisionDataSynchronizer):
+class CurrencySynchronizer(VisionDataTenantSynchronizer):
     ENDPOINT = 'GetCurrencyXrate_JSON'
     GLOBAL_CALL = True
 
@@ -43,19 +43,19 @@ class CurrencySynchronizer(VisionDataSynchronizer):
                 code=currency_code,
                 defaults={'name': currency_name, 'decimal_places': decimal_places}
             )
-            log.info('Currency %s was updated.', currency_name)
+            logger.info('Currency %s was updated.', currency_name)
 
             ExchangeRate.objects.update_or_create(
                 currency=currency,
                 defaults={'x_rate': x_rate, 'valid_from': valid_from, 'valid_to': valid_to}
             )
-            log.info('Exchange rate %s was updated.', currency_name)
+            logger.info('Exchange rate %s was updated.', currency_name)
             processed += 1
 
         return processed
 
 
-class TravelAgenciesSynchronizer(VisionDataSynchronizer):
+class TravelAgenciesSynchronizer(VisionDataTenantSynchronizer):
     ENDPOINT = 'GetTravelAgenciesInfo_JSON'
     GLOBAL_CALL = True
 
@@ -82,10 +82,10 @@ class TravelAgenciesSynchronizer(VisionDataSynchronizer):
 
             try:
                 travel_agent = TravelAgent.objects.get(code=vendor_code)
-                log.debug('Travel agent found with code %s', vendor_code)
+                logger.debug('Travel agent found with code %s', vendor_code)
             except ObjectDoesNotExist:
                 travel_agent = TravelAgent(code=vendor_code)
-                log.debug('Travel agent created with code %s', vendor_code)
+                logger.debug('Travel agent created with code %s', vendor_code)
 
             travel_expense_type, _ = TravelExpenseType.objects.get_or_create(vendor_number=vendor_code,
                                                                              defaults={'title': name})
@@ -106,12 +106,12 @@ class TravelAgenciesSynchronizer(VisionDataSynchronizer):
                 try:
                     country = Country.objects.get(vision_code=country_code)
                 except ObjectDoesNotExist:
-                    log.error('Country not found with vision code %s', country_code)
+                    logger.error('Country not found with vision code %s', country_code)
                     continue
 
                 travel_agent.country = country
 
             travel_agent.save()
-            log.info('Travel agent %s saved.', travel_agent.name)
+            logger.info('Travel agent %s saved.', travel_agent.name)
 
         return processed

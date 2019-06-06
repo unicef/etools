@@ -5,7 +5,6 @@ from rest_framework import serializers
 from rest_framework.validators import UniqueValidator
 from unicef_restlib.serializers import WritableNestedSerializerMixin
 
-from etools.applications.firms.utils import generate_username
 from etools.applications.users.models import UserProfile
 
 
@@ -26,7 +25,9 @@ class UserProfileSerializer(WritableNestedSerializerMixin, serializers.ModelSeri
 class UserSerializer(WritableNestedSerializerMixin, serializers.ModelSerializer):
     profile = UserProfileSerializer(required=False)
     email = serializers.EmailField(
-        label=_('E-mail Address'), validators=[UniqueValidator(queryset=get_user_model().objects.all())]
+        label=_('E-mail Address'),
+        validators=[UniqueValidator(queryset=get_user_model().objects.all(),
+                                    message='This user already exists in the system')]
     )
 
     class Meta(WritableNestedSerializerMixin.Meta):
@@ -38,7 +39,8 @@ class UserSerializer(WritableNestedSerializerMixin, serializers.ModelSerializer)
         }
 
     def create(self, validated_data):
-        validated_data.setdefault('username', generate_username())
+        email = validated_data.get('email', None)
+        validated_data.setdefault('username', email)
         return super().create(validated_data)
 
 

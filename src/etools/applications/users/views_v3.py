@@ -65,6 +65,7 @@ class UsersListAPIView(QueryStringFilterMixin, ListAPIView):
 
     filters = (
         ('group', 'groups__name__in'),
+        ('is_active', 'is_active'),
     )
 
     def get_queryset(self, pk=None):

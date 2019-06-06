@@ -27,7 +27,7 @@ from etools.applications.publics.serializers import (
 from etools.applications.t2f.models import ModeOfTravel, TravelType
 
 
-class GhostDataMixin(object):
+class GhostDataMixin:
     def missing(self, request):
         parameter_serializer = GhostDataPKSerializer(data=request.GET)
         parameter_serializer.is_valid(raise_exception=True)

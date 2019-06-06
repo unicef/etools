@@ -21,7 +21,7 @@ from etools.applications.core.urlresolvers import build_frontend_url
 from etools.applications.t2f.serializers.mailing import TravelMailSerializer
 from etools.applications.users.models import WorkspaceCounter
 
-log = logging.getLogger(__name__)
+logger = logging.getLogger(__name__)
 
 
 class TransitionError(RuntimeError):
@@ -30,7 +30,7 @@ class TransitionError(RuntimeError):
     """
 
 
-class TravelType(object):
+class TravelType:
     PROGRAMME_MONITORING = 'Programmatic Visit'
     SPOT_CHECK = 'Spot Check'
     ADVOCACY = 'Advocacy'
@@ -51,7 +51,7 @@ class TravelType(object):
 
 # TODO: all of these models that only have 1 field should be a choice field on the models that are using it
 # for many-to-many array fields are recommended
-class ModeOfTravel(object):
+class ModeOfTravel:
     PLANE = 'Plane'
     BUS = 'Bus'
     CAR = 'Car'
@@ -298,7 +298,7 @@ class Travel(models.Model):
                 act.partner.spot_checks(event_date=self.end_date, update_one=True)
 
         except Exception:
-            log.exception('Exception while trying to update hact values.')
+            logger.exception('Exception while trying to update hact values.')
 
     @transition(status, target=PLANNED)
     def reset_status(self):

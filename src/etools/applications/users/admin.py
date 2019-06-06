@@ -8,6 +8,7 @@ from django.http.response import HttpResponseRedirect
 from django.shortcuts import get_object_or_404
 from django.urls import reverse
 
+from django_tenants.admin import TenantAdminMixin
 from django_tenants.utils import get_public_schema_name
 
 from etools.applications.hact.tasks import update_hact_for_country, update_hact_values
@@ -234,7 +235,7 @@ class UserAdminPlus(UserAdmin):
         return fields
 
 
-class CountryAdmin(admin.ModelAdmin):
+class CountryAdmin(TenantAdminMixin, admin.ModelAdmin):
     change_form_template = 'admin/users/country/change_form.html'
 
     def has_add_permission(self, request):
@@ -297,7 +298,7 @@ class CountryAdmin(admin.ModelAdmin):
         if country.schema_name == get_public_schema_name():
             vision_sync_task(synchronizers=[synchronizer, ])
         else:
-            sync_handler.delay(country.name, synchronizer)
+            sync_handler.delay(country.business_area_code, synchronizer)
         return HttpResponseRedirect(reverse('admin:users_country_change', args=[country.pk]))
 
     def update_hact(self, request, pk):
@@ -306,7 +307,7 @@ class CountryAdmin(admin.ModelAdmin):
             update_hact_values()
             messages.info(request, "HACT update has been scheduled for all countries")
         else:
-            update_hact_for_country.delay(country_name=country.name)
+            update_hact_for_country.delay(business_area_code=country.business_area_code)
             messages.info(request, "HACT update has been started for %s" % country.name)
         return HttpResponseRedirect(reverse('admin:users_country_change', args=[country.pk]))
 

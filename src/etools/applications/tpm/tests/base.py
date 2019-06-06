@@ -5,7 +5,7 @@ from etools.applications.users.tests.factories import PMEUserFactory, UserFactor
 from etools.libraries.djangolib.models import GroupWrapper
 
 
-class TPMTestCaseMixin(object):
+class TPMTestCaseMixin:
     @classmethod
     def setUpTestData(cls):
         call_command('update_tpm_permissions', verbosity=0)

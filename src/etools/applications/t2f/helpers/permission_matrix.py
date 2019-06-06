@@ -1,14 +1,99 @@
-import json
-import os
 from collections import defaultdict
 
 from django.core.cache import cache
+from django.utils.translation import ugettext_lazy as _
 
-from etools.applications import t2f
-from etools.applications.t2f import UserTypes
+from etools.applications.t2f.permission_action_points import action_points
 from etools.applications.t2f.permissions import permissions
 
 PERMISSION_MATRIX_CACHE_KEY = 't2f_permission_matrix'
+
+REPORT_PERMISSIONS = {
+    'Supervisor': {
+        'completed': {'edit': False, 'view': True},
+        'rejected': {'edit': False, 'view': True},
+        'planned': {'edit': False, 'view': True},
+        'submitted': {'edit': False, 'view': True},
+        'cancelled': {'edit': False, 'view': True},
+        'approved': {'edit': False, 'view': True}
+    },
+    'Finance Focal Point': {
+        'completed': {'edit': False, 'view': True},
+        'rejected': {'edit': False, 'view': True},
+        'planned': {'edit': False, 'view': True},
+        'submitted': {'edit': False, 'view': True},
+        'cancelled': {'edit': False, 'view': True},
+        'approved': {'edit': False, 'view': True}
+    },
+    'God': {
+        'completed': {'edit': True, 'view': True},
+        'rejected': {'edit': True, 'view': True},
+        'planned': {'edit': True, 'view': True},
+        'submitted': {'edit': True, 'view': True},
+        'cancelled': {'edit': True, 'view': True},
+        'approved': {'edit': True, 'view': True}
+    },
+    'Anyone': {
+        'completed': {'edit': False, 'view': True},
+        'rejected': {'edit': False, 'view': True},
+        'planned': {'edit': False, 'view': True},
+        'submitted': {'edit': False, 'view': True},
+        'cancelled': {'edit': False, 'view': True},
+        'approved': {'edit': False, 'view': True}
+    },
+    'Representative': {
+        'completed': {'edit': False, 'view': True},
+        'rejected': {'edit': False, 'view': True},
+        'planned': {'edit': False, 'view': True},
+        'submitted': {'edit': False, 'view': True},
+        'cancelled': {'edit': False, 'view': True},
+        'approved': {'edit': False, 'view': True}
+    },
+    'Travel Focal Point': {
+        'completed': {'edit': False, 'view': True},
+        'rejected': {'edit': False, 'view': True},
+        'planned': {'edit': False, 'view': True},
+        'submitted': {'edit': False, 'view': True},
+        'cancelled': {'edit': False, 'view': True},
+        'approved': {'edit': False, 'view': True}
+    },
+    'Traveler': {
+        'completed': {'edit': False, 'view': True},
+        'rejected': {'edit': True, 'view': True},
+        'planned': {'edit': True, 'view': True},
+        'submitted': {'edit': True, 'view': True},
+        'cancelled': {'edit': False, 'view': True},
+        'approved': {'edit': True, 'view': True}
+    },
+    'Travel Administrator': {
+        'completed': {'edit': False, 'view': True},
+        'rejected': {'edit': True, 'view': True},
+        'planned': {'edit': True, 'view': True},
+        'submitted': {'edit': True, 'view': True},
+        'cancelled': {'edit': False, 'view': True},
+        'approved': {'edit': False, 'view': True}
+    }
+}
+
+
+class UserTypes:
+    ANYONE = 'Anyone'
+    TRAVELER = 'Traveler'
+    TRAVEL_ADMINISTRATOR = 'Travel Administrator'
+    SUPERVISOR = 'Supervisor'
+    TRAVEL_FOCAL_POINT = 'Travel Focal Point'
+    FINANCE_FOCAL_POINT = 'Finance Focal Point'
+    REPRESENTATIVE = 'Representative'
+
+    CHOICES = (
+        (ANYONE, _('Anyone')),
+        (TRAVELER, _('Traveler')),
+        (TRAVEL_ADMINISTRATOR, _('Travel Administrator')),
+        (SUPERVISOR, _('Supervisor')),
+        (TRAVEL_FOCAL_POINT, _('Travel Focal Point')),
+        (FINANCE_FOCAL_POINT, _('Finance Focal Point')),
+        (REPRESENTATIVE, _('Representative')),
+    )
 
 
 def get_user_role_list(user, travel=None):
@@ -36,22 +121,52 @@ def get_user_role_list(user, travel=None):
     return roles
 
 
+def convert_permissions_structure():
+    """Convert permissions from
+    (edit/view, model, field) | permission
+    to
+    model | field | edit/view | permission
+    """
+    to_format = {}
+    for user, states in permissions.items():
+        to_format[user] = {}
+        for state, actions in states.items():
+            data = defaultdict(dict)
+            for key, perm in actions.items():
+                action, model, field = key
+                model = "baseDetails" if model == "travel" else model
+                if model not in data:
+                    data[model] = {
+                        field: {action: perm},
+                        action: perm,
+                        "edit" if action == "view" else "view": False,
+                    }
+                else:
+                    if field not in data[model]:
+                        data[model][field] = {action: perm}
+                    else:
+                        data[model][field][action] = perm
+                    if perm:
+                        data[model][action] = perm
+            to_format[user][state] = data
+            # add report model permissions
+            to_format[user][state]["report"] = REPORT_PERMISSIONS[user][state]
+    return to_format
+
+
 def get_permission_matrix():
     permission_matrix = cache.get(PERMISSION_MATRIX_CACHE_KEY)
     if not permission_matrix:
-        path = os.path.join(
-            os.path.dirname(t2f.__file__),
-            "permission_matrix.json",
-        )
-
-        with open(path) as permission_matrix_file:
-            permission_matrix = json.loads(permission_matrix_file.read())
+        permission_matrix = {
+            "action_point": action_points,
+            "travel": convert_permissions_structure()
+        }
         cache.set(PERMISSION_MATRIX_CACHE_KEY, permission_matrix)
 
     return permission_matrix
 
 
-class PermissionMatrix(object):
+class PermissionMatrix:
     VIEW = 'view'
     EDIT = 'edit'
 

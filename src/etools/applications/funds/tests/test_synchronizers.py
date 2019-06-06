@@ -51,7 +51,8 @@ class TestFundReservationsSynchronizer(BaseTenantTestCase):
             "OUTSTANDING_DCT": "19.00",
             "ACTUAL_CASH_TRANSFER_DC": "13.00",
             "OUTSTANDING_DCT_DC": "14.00",
-            "MULTI_CURR_FLAG": "N"
+            "MULTI_CURR_FLAG": "N",
+            "COMPLETED_FLAG": None,
         }
         self.expected_headers = {
             "vendor_code": "Code123",
@@ -68,7 +69,8 @@ class TestFundReservationsSynchronizer(BaseTenantTestCase):
             "actual_amt_local": "13.00",
             "outstanding_amt": "19.00",
             "outstanding_amt_local": "14.00",
-            "multi_curr_flag": False
+            "multi_curr_flag": False,
+            "completed_flag": False,
         }
         self.expected_line_item = {
             "line_item": "987",
@@ -110,10 +112,10 @@ class TestFundReservationsSynchronizer(BaseTenantTestCase):
             start_date=datetime.date(2015, 1, 13),
             end_date=datetime.date(2015, 12, 20),
         )
-        self.adapter = synchronizers.FundReservationsSynchronizer(self.country)
+        self.adapter = synchronizers.FundReservationsSynchronizer(self.country.business_area_code)
 
     def test_init(self):
-        a = synchronizers.FundReservationsSynchronizer(self.country)
+        a = synchronizers.FundReservationsSynchronizer(self.country.business_area_code)
         self.assertEqual(a.header_records, {})
         self.assertEqual(a.item_records, {})
         self.assertEqual(a.fr_headers, {})
@@ -374,10 +376,10 @@ class TestFundCommitmentSynchronizer(BaseTenantTestCase):
             exchange_rate=self.data["EXCHANGE_RATE"],
             responsible_person=self.data["RESP_PERSON"],
         )
-        self.adapter = synchronizers.FundCommitmentSynchronizer(self.country)
+        self.adapter = synchronizers.FundCommitmentSynchronizer(self.country.business_area_code)
 
     def test_init(self):
-        a = synchronizers.FundCommitmentSynchronizer(self.country)
+        a = synchronizers.FundCommitmentSynchronizer(self.country.business_area_code)
         self.assertEqual(a.header_records, {})
         self.assertEqual(a.item_records, {})
         self.assertEqual(a.fc_headers, {})
