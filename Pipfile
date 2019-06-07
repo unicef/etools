@@ -81,4 +81,4 @@ xhtml2pdf = "==0.2.3"
 unicef-vision = "*"
 
 [requires]
-python_version = "3.6.4"
+python_version = "3.7"
