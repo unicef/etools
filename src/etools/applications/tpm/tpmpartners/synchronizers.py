@@ -5,6 +5,7 @@ from unicef_vision.synchronizers import ManualVisionSynchronizer
 
 from etools.applications.publics.models import Country
 from etools.applications.tpm.tpmpartners.models import TPMPartner
+from etools.applications.vision.synchronizers import VisionDataTenantSynchronizer
 
 
 def _get_country_name(value):
@@ -12,7 +13,7 @@ def _get_country_name(value):
     return country_obj.name if country_obj else value
 
 
-class TPMPartnerSynchronizer(ManualVisionSynchronizer):
+class TPMPartnerSynchronizer(VisionDataTenantSynchronizer, ManualVisionSynchronizer):
     ENDPOINT = 'GetPartnerDetailsInfo_JSON'
     REQUIRED_KEYS = (
         "VENDOR_CODE",
