@@ -215,7 +215,7 @@ class PurchaseOrderViewSet(
 
         if not instance:
             handler = POSynchronizer(
-                country=request.user.profile.country,
+                business_area_code=request.user.profile.country.business_area_code,
                 object_number=kwargs.get('order_number')
             )
             handler.sync()
