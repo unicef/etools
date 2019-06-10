@@ -23,7 +23,7 @@ def update_tpm_partners(country_name=None):
             ))
             for partner in TPMPartner.objects.all():
                 TPMPartnerSynchronizer(
-                    country=country,
+                    business_area_code=country.business_area_code,
                     object_number=partner.vendor_number
                 ).sync()
             processed.append(country.name)
