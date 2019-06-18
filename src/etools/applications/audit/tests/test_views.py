@@ -3,6 +3,7 @@ import random
 
 from django.core.files.uploadedfile import SimpleUploadedFile
 from django.core.management import call_command
+from django.test import override_settings
 from django.urls import reverse
 
 from factory import fuzzy
@@ -1142,6 +1143,7 @@ class TestEngagementCSVExportViewSet(EngagementTransitionsTestCaseMixin, BaseTen
 
 
 class TestPurchaseOrderView(AuditTestCaseMixin, BaseTenantTestCase):
+    @override_settings(PUBLIC_SCHEMA_NAME='test')
     def test_get_not_found(self):
         """If instance does not exist, code will attempt to sync,
         and if still does not exist then return 404
@@ -1155,6 +1157,7 @@ class TestPurchaseOrderView(AuditTestCaseMixin, BaseTenantTestCase):
             )
         self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
 
+    @override_settings(PUBLIC_SCHEMA_NAME='test')
     def test_get(self):
         po = PurchaseOrderFactory(order_number="123")
         response = self.forced_auth_req(

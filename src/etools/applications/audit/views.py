@@ -6,6 +6,7 @@ from django.utils import timezone
 from django.utils.translation import ugettext_lazy as _
 
 from django_filters.rest_framework import DjangoFilterBackend
+from django_tenants.utils import get_public_schema_name, get_tenant_model
 from easy_pdf.rendering import render_to_pdf_response
 from rest_framework import generics, mixins, viewsets
 from rest_framework.decorators import action
@@ -214,8 +215,9 @@ class PurchaseOrderViewSet(
         instance = queryset.filter(order_number=kwargs.get('order_number')).first()
 
         if not instance:
+            country = get_tenant_model().objects.get(schema_name=get_public_schema_name())
             handler = POSynchronizer(
-                business_area_code=request.user.profile.country.business_area_code,
+                business_area_code=country.business_area_code,
                 object_number=kwargs.get('order_number')
             )
             handler.sync()

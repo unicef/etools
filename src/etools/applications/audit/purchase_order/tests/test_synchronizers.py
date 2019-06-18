@@ -1,6 +1,7 @@
-
 import json
 from unittest import mock
+
+from django.test import override_settings
 
 from etools.applications.audit.purchase_order import synchronizers
 from etools.applications.audit.purchase_order.models import AuditorFirm, PurchaseOrder, PurchaseOrderItem
@@ -80,12 +81,7 @@ class TestUpdatePurchaseOrders(BaseTenantTestCase):
     def setUpTestData(cls):
         cls.country = Country.objects.first()
 
-    @mock.patch("etools.applications.vision.tasks.logger.exception")
-    def test_update_purchase_orders_no_country(self, mock_logger_exception):
-        """Ensure no exceptions if no countries"""
-        update_purchase_orders(country_name="Wrong")
-        self.assertEqual(mock_logger_exception.call_count, 0)
-
+    @override_settings(PUBLIC_SCHEMA_NAME='test')
     @mock.patch("etools.applications.vision.tasks.logger.exception")
     @mock.patch("etools.applications.audit.purchase_order.tasks.POSynchronizer")
     def test_update_purchase_orders(self, synchronizer, mock_logger_exception):
