@@ -8,6 +8,73 @@ from etools.applications.t2f.permissions import permissions
 
 PERMISSION_MATRIX_CACHE_KEY = 't2f_permission_matrix'
 
+REPORT_PERMISSIONS = {
+    'Supervisor': {
+        'completed': {'edit': False, 'view': True},
+        'rejected': {'edit': False, 'view': True},
+        'planned': {'edit': False, 'view': True},
+        'submitted': {'edit': False, 'view': True},
+        'cancelled': {'edit': False, 'view': True},
+        'approved': {'edit': False, 'view': True}
+    },
+    'Finance Focal Point': {
+        'completed': {'edit': False, 'view': True},
+        'rejected': {'edit': False, 'view': True},
+        'planned': {'edit': False, 'view': True},
+        'submitted': {'edit': False, 'view': True},
+        'cancelled': {'edit': False, 'view': True},
+        'approved': {'edit': False, 'view': True}
+    },
+    'God': {
+        'completed': {'edit': True, 'view': True},
+        'rejected': {'edit': True, 'view': True},
+        'planned': {'edit': True, 'view': True},
+        'submitted': {'edit': True, 'view': True},
+        'cancelled': {'edit': True, 'view': True},
+        'approved': {'edit': True, 'view': True}
+    },
+    'Anyone': {
+        'completed': {'edit': False, 'view': True},
+        'rejected': {'edit': False, 'view': True},
+        'planned': {'edit': False, 'view': True},
+        'submitted': {'edit': False, 'view': True},
+        'cancelled': {'edit': False, 'view': True},
+        'approved': {'edit': False, 'view': True}
+    },
+    'Representative': {
+        'completed': {'edit': False, 'view': True},
+        'rejected': {'edit': False, 'view': True},
+        'planned': {'edit': False, 'view': True},
+        'submitted': {'edit': False, 'view': True},
+        'cancelled': {'edit': False, 'view': True},
+        'approved': {'edit': False, 'view': True}
+    },
+    'Travel Focal Point': {
+        'completed': {'edit': False, 'view': True},
+        'rejected': {'edit': False, 'view': True},
+        'planned': {'edit': False, 'view': True},
+        'submitted': {'edit': False, 'view': True},
+        'cancelled': {'edit': False, 'view': True},
+        'approved': {'edit': False, 'view': True}
+    },
+    'Traveler': {
+        'completed': {'edit': False, 'view': True},
+        'rejected': {'edit': True, 'view': True},
+        'planned': {'edit': True, 'view': True},
+        'submitted': {'edit': True, 'view': True},
+        'cancelled': {'edit': False, 'view': True},
+        'approved': {'edit': True, 'view': True}
+    },
+    'Travel Administrator': {
+        'completed': {'edit': False, 'view': True},
+        'rejected': {'edit': True, 'view': True},
+        'planned': {'edit': True, 'view': True},
+        'submitted': {'edit': True, 'view': True},
+        'cancelled': {'edit': False, 'view': True},
+        'approved': {'edit': False, 'view': True}
+    }
+}
+
 
 class UserTypes:
     ANYONE = 'Anyone'
@@ -69,13 +136,21 @@ def convert_permissions_structure():
                 action, model, field = key
                 model = "baseDetails" if model == "travel" else model
                 if model not in data:
-                    data[model] = {field: {action: perm}}
+                    data[model] = {
+                        field: {action: perm},
+                        action: perm,
+                        "edit" if action == "view" else "view": False,
+                    }
                 else:
                     if field not in data[model]:
                         data[model][field] = {action: perm}
                     else:
                         data[model][field][action] = perm
+                    if perm:
+                        data[model][action] = perm
             to_format[user][state] = data
+            # add report model permissions
+            to_format[user][state]["report"] = REPORT_PERMISSIONS[user][state]
     return to_format
 
 

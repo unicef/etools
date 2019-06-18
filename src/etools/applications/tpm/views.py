@@ -167,7 +167,7 @@ class TPMPartnerViewSet(
 
         if not instance:
             handler = TPMPartnerManualSynchronizer(
-                country=request.user.profile.country,
+                business_area_code=request.user.profile.country.business_area_code,
                 object_number=kwargs.get('vendor_number')
             )
             handler.sync()
