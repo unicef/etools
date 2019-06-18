@@ -1,3 +1,4 @@
+from django.db import transaction
 from django.db.models import Q
 from django.utils.translation import ugettext as _
 
@@ -37,9 +38,11 @@ from etools.applications.funds.serializers import (
     FundsReservationItemSerializer,
     GrantSerializer,
 )
+from etools.applications.funds.synchronizers import DelegatedFundReservationsSynchronizer
 from etools.applications.partners.filters import PartnerScopeFilter
 from etools.applications.partners.models import Intervention
 from etools.applications.partners.permissions import PartnershipManagerPermission
+from etools.applications.vision.exceptions import VisionSyncException
 
 
 class FRsView(APIView):
@@ -48,43 +51,6 @@ class FRsView(APIView):
     """
     permission_classes = (permissions.IsAdminUser,)
 
-    def filter_by_donors(self, qs, donor_pks):
-        grant_numbers = Grant.objects.values_list(
-            "name",
-            flat=True
-        ).filter(donor__pk__in=donor_pks)
-        qs = self.filter_by_grants(qs, None, list(grant_numbers))
-        return qs
-
-    def filter_by_grants(self, qs, grant_pks, grant_numbers=[]):
-        """Filter queryset by grant ids provided
-
-        `name` field in Grants table matches `grant_number` in
-        FundsReservationItem, from FundsReservationItem we can
-        access FundsReservationHeader
-        """
-        if not isinstance(grant_numbers, list):
-            return qs.none()
-
-        if grant_pks:
-            grant_qs = Grant.objects.values_list(
-                "name",
-                flat=True
-            ).filter(pk__in=grant_pks)
-            if grant_numbers:
-                grant_qs = grant_qs.filter(name__in=grant_numbers)
-            grant_numbers = grant_qs
-
-        if not grant_numbers:
-            qs = qs.none()
-        else:
-            fr_headers = FundsReservationItem.objects.values_list(
-                "fund_reservation__pk",
-                flat=True
-            ).filter(grant_number__in=grant_numbers)
-            qs = qs.filter(pk__in=fr_headers)
-        return qs
-
     def get(self, request, format=None):
         values = request.query_params.get("values", '').split(",")
         intervention_id = request.query_params.get("intervention", None)
@@ -92,13 +58,28 @@ class FRsView(APIView):
         if not values[0]:
             return self.bad_request('Values are required')
 
+        if len(values) > len(set(values)):
+            return self.bad_request('You have duplicate records of the same FR, please make sure to add'
+                                    ' each FR only one time')
+
         qs = FundsReservationHeader.objects.filter(fr_number__in=values)
 
         not_found = set(values) - set(qs.values_list('fr_number', flat=True))
         if not_found:
             nf = list(not_found)
-            nf.sort()
-            return self.bad_request('The FR {} could not be found on eTools'.format(', '.join(nf)))
+            with transaction.atomic():
+                for delegated_fr in nf:
+                    # try to get this fr from vision
+                    try:
+                        handler = DelegatedFundReservationsSynchronizer(
+                            business_area_code=request.user.profile.country.business_area_code,
+                            object_number=delegated_fr
+                        )
+                        handler.sync()
+                    except VisionSyncException as e:
+                        return self.bad_request('The FR {} could not be found in eTools and could not be synced '
+                                                'from Vision. {}'.format(delegated_fr, e))
+            qs._result_cache = None
 
         if intervention_id:
             qs = qs.filter((Q(intervention__id=intervention_id) | Q(intervention__isnull=True)))
@@ -111,15 +92,7 @@ class FRsView(APIView):
         else:
             qs = qs.filter(intervention__isnull=True)
 
-        donors = [x for x in request.query_params.get("donors", "").split(",") if x]
-        if donors:
-            qs = self.filter_by_donors(qs, donors)
-
-        grants = [x for x in request.query_params.get("grants", "").split(",") if x]
-        if grants:
-            qs = self.filter_by_grants(qs, grants)
-
-        if not grants and not donors and qs.count() != len(values):
+        if qs.count() != len(values):
             return self.bad_request('One or more of the FRs are used by another PD/SSFA '
                                     'or could not be found in eTools.')
 
