@@ -47,7 +47,9 @@ from etools.applications.vision.exceptions import VisionSyncException
 
 class FRsView(APIView):
     """
-    Returns the FRs requested with the values query param
+    Returns the FRs requested with the values query param,
+    The get endpoint in this view is meant to validate / validate and import FRs in order to be able to associate them
+    with interventions.
     """
     permission_classes = (permissions.IsAdminUser,)
 

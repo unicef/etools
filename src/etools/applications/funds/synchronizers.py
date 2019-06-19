@@ -128,8 +128,8 @@ class FundReservationsSynchronizer(VisionDataTenantSynchronizer):
             else:
                 raise
         # Since our counterpart APIs are designed in a way that can surprise us what data structure we might encounter
-        # we have to do some type checking and convert on our side. #TODO: fix this when the other team is able to keep
-        # consistency on API data structure.
+        # we have to do some type checking and convert on our side.
+        # TODO: fix this when the other team is able to keep consistency on API data structure.
         if type(json_records) is dict:
             json_records = [json_records]
         for r in json_records:
@@ -224,10 +224,8 @@ class FundReservationsSynchronizer(VisionDataTenantSynchronizer):
         for item in fr_numbers_from_records:
             record = self.header_records[item]
             if self.DELEGATED:
-                fr_instance = FundsReservationHeader(delegated=True, **record)
-            else:
-                fr_instance = FundsReservationHeader(**record)
-            to_create.append(fr_instance)
+                record['delegated'] = True
+            to_create.append(FundsReservationHeader(**record))
 
         if to_create:
             created_objects = FundsReservationHeader.objects.bulk_create(to_create)
@@ -304,9 +302,10 @@ class FundReservationsSynchronizer(VisionDataTenantSynchronizer):
 
         return processed
 
+
 class DelegatedFundReservationsSynchronizer(FundReservationsSynchronizer, ManualVisionSynchronizer):
     DELEGATED = True
-    pass
+
 
 class FundCommitmentSynchronizer(VisionDataTenantSynchronizer):
 
