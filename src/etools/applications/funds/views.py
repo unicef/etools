@@ -39,6 +39,7 @@ from etools.applications.funds.serializers import (
     GrantSerializer,
 )
 from etools.applications.funds.synchronizers import DelegatedFundReservationsSynchronizer
+from etools.applications.funds.tasks import sync_single_delegated_fr
 from etools.applications.partners.filters import PartnerScopeFilter
 from etools.applications.partners.models import Intervention
 from etools.applications.partners.permissions import PartnershipManagerPermission
@@ -73,11 +74,7 @@ class FRsView(APIView):
                 for delegated_fr in nf:
                     # try to get this fr from vision
                     try:
-                        handler = DelegatedFundReservationsSynchronizer(
-                            business_area_code=request.user.profile.country.business_area_code,
-                            object_number=delegated_fr
-                        )
-                        handler.sync()
+                        sync_single_delegated_fr(request.user.profile.country.business_area_code, delegated_fr)
                     except VisionSyncException as e:
                         return self.bad_request('The FR {} could not be found in eTools and could not be synced '
                                                 'from Vision. {}'.format(delegated_fr, e))
