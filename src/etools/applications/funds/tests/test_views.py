@@ -23,6 +23,7 @@ FAUX_VISION_URL = 'https://api.example.com/foo.svc/'
 FAUX_VISION_USER = 'jane_user'
 FAUX_VISION_PASSWORD = 'password123'
 
+
 class TestFRHeaderView(BaseTenantTestCase):
     @classmethod
     def setUpTestData(cls):

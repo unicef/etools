@@ -38,7 +38,6 @@ from etools.applications.funds.serializers import (
     FundsReservationItemSerializer,
     GrantSerializer,
 )
-from etools.applications.funds.synchronizers import DelegatedFundReservationsSynchronizer
 from etools.applications.funds.tasks import sync_single_delegated_fr
 from etools.applications.partners.filters import PartnerScopeFilter
 from etools.applications.partners.models import Intervention
