@@ -1,15 +1,15 @@
 import json
 from datetime import datetime, timedelta
+from pathlib import Path
 
-from django.test import override_settings
 from django.urls import reverse
 from django.utils import timezone
 
 from mock import mock
 from rest_framework import status
+from unicef_vision.exceptions import VisionException
 
 from etools.applications.core.tests.cases import BaseTenantTestCase
-from etools.applications.funds.tests.data.fr_header_response import VISION_FR_RESPONSE
 from etools.applications.funds.tests.factories import (
     DonorFactory,
     FundsReservationHeaderFactory,
@@ -18,6 +18,7 @@ from etools.applications.funds.tests.factories import (
 )
 from etools.applications.partners.tests.factories import AgreementFactory, InterventionFactory, PartnerFactory
 from etools.applications.users.tests.factories import UserFactory
+from etools.libraries.tests.vcrpy import VCR
 
 FAUX_VISION_URL = 'https://api.example.com/foo.svc/'
 FAUX_VISION_USER = 'jane_user'
@@ -114,22 +115,26 @@ class TestFRHeaderView(BaseTenantTestCase):
         self.assertEqual(status_code, status.HTTP_400_BAD_REQUEST)
         self.assertEqual(result['error'], 'Values are required')
 
-    @override_settings(VISION_URL=FAUX_VISION_URL)
-    @override_settings(VISION_USER=FAUX_VISION_USER)
-    @override_settings(VISION_PASSWORD=FAUX_VISION_PASSWORD)
-    @mock.patch('unicef_vision.loaders.requests', spec=['get'])
-    def test_get_fail_with_nonexistant_values(self, mock_requests):
-        mock_get_response = mock.Mock(spec=['status_code', 'json'])
-        mock_get_response.status_code = 200
-        mock_get_response.json = mock.Mock(return_value=VISION_FR_RESPONSE)
-        mock_requests.get = mock.Mock(return_value=mock_get_response)
+    @VCR.use_cassette(str(Path(__file__).parent / 'vcr_cassettes/fund_reservation_invalid.yml'))
+    def test_get_fail_with_non_existant_values(self):
         data = {'values': ','.join(['im a bad value', 'another bad value'])}
-        status_code, result = self.run_request(data)
-        self.assertEqual(status_code, status.HTTP_400_BAD_REQUEST)
-        self.assertEqual(result['error'], 'One or more of the FRs are used by another PD/SSFA '
-                                          'or could not be found in eTools.')
+        with self.assertRaises(VisionException):
+            status_code, result = self.run_request(data)
+            self.assertEqual(status_code, status.HTTP_400_BAD_REQUEST)
+            self.assertEqual(result['error'], 'One or more of the FRs are used by another PD/SSFA '
+                                              'or could not be found in eTools.')
     # TODO: add tests to cover, frs correctly brought in from mock. with correct vendor numbers, FR missing from vision,
     # FR with multiple line items, and FR with only one line item.
+
+    @VCR.use_cassette(str(Path(__file__).parent / 'vcr_cassettes/fund_reservation.yml'))
+    def test_get_success_sync_vision(self):
+        self.fr_1.intervention = self.intervention
+        self.fr_1.save()
+        data = {'values': ','.join(['9999', self.fr_1.fr_number]),
+                'intervention': self.intervention.id}
+        status_code, result = self.run_request(data)
+        self.assertEqual(status_code, status.HTTP_200_OK)
+        self.assertEqual(len(result['frs']), 2)
 
     def test_get_fail_with_intervention_id(self):
         other_intervention = InterventionFactory()

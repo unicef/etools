@@ -1,0 +1,88 @@
+interactions:
+- request:
+    body: null
+    headers:
+      Accept:
+      - '*/*'
+      Accept-Encoding:
+      - gzip, deflate
+      Connection:
+      - keep-alive
+      Content-Type:
+      - application/json
+      User-Agent:
+      - python-requests/2.21.0
+    method: GET
+    uri: https://devapis.unicef.org/BIService/BIWebService.svc/GetFundsReservationInfo_JSON/9999
+  response:
+    body:
+      string: '"{ \"ROWSET\": { \"ROW\": [ {\"ACTUAL_CASH_TRANSFER\": \"50197.02\",
+        \"ACTUAL_CASH_TRANSFER_DC\": \"2689656.62\", \"COMPLETED_FLAG\": \"N\", \"CURRENCY\":
+        \"PHP\", \"CURRENT_FR_AMOUNT\": \"50197.02\", \"DONOR_CODE\": \"CODE X\",
+        \"DONOR_NAME\": \"DONOR X\", \"DUE_DATE\": \"04-FEB-19\", \"FR_DOC_DATE\":
+        \"17-OCT-18\", \"FR_DOCUMENT_TEXT\": \"FR FOR MRM PD NP\", \"FR_END_DATE\":
+        \"31-MAR-19\", \"FR_LINE_ITEM_TEXT\": \"FR FOR NP\", \"FR_NUMBER\": \"9999\",
+        \"FR_OVERALL_AMOUNT\": \"179643.93\", \"FR_START_DATE\": \"17-OCT-18\", \"FR_TYPE\":
+        \"Programme Document Against PCA\", \"FUND\": \"SC\", \"GRANT_NBR\": \"GRANT W\",
+        \"LINE_ITEM\": \"4\", \"MULTI_CURR_FLAG\": \"N\", \"OUTSTANDING_DCT\": \"0\",
+        \"OUTSTANDING_DCT_DC\": \"0\", \"OVERALL_AMOUNT\": \"26425.53\", \"OVERALL_AMOUNT_DC\":
+        \"1430942.38\", \"VENDOR_CODE\": \"PVN\", \"WBS_ELEMENT\": \"9999\\\/A0\\\/06\\\/003\\\/006\\\/005\"
+        }, {\"ACTUAL_CASH_TRANSFER\": \"50197.02\", \"ACTUAL_CASH_TRANSFER_DC\": \"2689656.62\",
+        \"COMPLETED_FLAG\": \"N\", \"CURRENCY\": \"PHP\", \"CURRENT_FR_AMOUNT\": \"50197.02\",
+        \"DONOR_CODE\": \"CODE X\", \"DONOR_NAME\": \"DONOR X\", \"DUE_DATE\":
+        \"17-OCT-18\", \"FR_DOC_DATE\": \"17-OCT-18\", \"FR_DOCUMENT_TEXT\": \"FR
+        FOR MRM PD NP\", \"FR_END_DATE\": \"31-MAR-19\", \"FR_LINE_ITEM_TEXT\": \"FR
+        FOR NP\", \"FR_NUMBER\": \"9999\", \"FR_OVERALL_AMOUNT\": \"179643.93\",
+        \"FR_START_DATE\": \"17-OCT-18\", \"FR_TYPE\": \"Programme Document Against
+        PCA\", \"FUND\": \"SC\", \"GRANT_NBR\": \"GRANT W\", \"LINE_ITEM\": \"2\",
+        \"MULTI_CURR_FLAG\": \"N\", \"OUTSTANDING_DCT\": \"0\", \"OUTSTANDING_DCT_DC\":
+        \"0\", \"OVERALL_AMOUNT\": \"30081.45\", \"OVERALL_AMOUNT_DC\": \"1628910.25\",
+        \"VENDOR_CODE\": \"PVN\", \"WBS_ELEMENT\": \"9999\\\/A0\\\/05\\\/803\\\/005\\\/004\"
+        }, {\"ACTUAL_CASH_TRANSFER\": \"50197.02\", \"ACTUAL_CASH_TRANSFER_DC\": \"2689656.62\",
+        \"COMPLETED_FLAG\": \"N\", \"CURRENCY\": \"PHP\", \"CURRENT_FR_AMOUNT\": \"50197.02\",
+        \"DONOR_CODE\": \"CODE X\", \"DONOR_NAME\": \"DONOR Y\", \"DUE_DATE\": \"04-FEB-19\",
+        \"FR_DOC_DATE\": \"17-OCT-18\", \"FR_DOCUMENT_TEXT\": \"FR FOR MRM PD NP\",
+        \"FR_END_DATE\": \"31-MAR-19\", \"FR_LINE_ITEM_TEXT\": \"FR FOR NP\", \"FR_NUMBER\":
+        \"9999\", \"FR_OVERALL_AMOUNT\": \"179643.93\", \"FR_START_DATE\": \"17-OCT-18\",
+        \"FR_TYPE\": \"Programme Document Against PCA\", \"FUND\": \"SC\", \"GRANT_NBR\":
+        \"GRANT W\", \"LINE_ITEM\": \"5\", \"MULTI_CURR_FLAG\": \"N\", \"OUTSTANDING_DCT\":
+        \"0\", \"OUTSTANDING_DCT_DC\": \"0\", \"OVERALL_AMOUNT\": \"48014.77\", \"OVERALL_AMOUNT_DC\":
+        \"2600000\", \"VENDOR_CODE\": \"PVN\", \"WBS_ELEMENT\": \"9999\\\/A0\\\/06\\\/003\\\/006\\\/005\"
+        }, {\"ACTUAL_CASH_TRANSFER\": \"50197.02\", \"ACTUAL_CASH_TRANSFER_DC\": \"2689656.62\",
+        \"COMPLETED_FLAG\": \"N\", \"CURRENCY\": \"PHP\", \"CURRENT_FR_AMOUNT\": \"50197.02\",
+        \"DONOR_CODE\": \"N\\\/A\", \"DONOR_NAME\": \"N\\\/A\", \"DUE_DATE\": \"17-OCT-18\",
+        \"FR_DOC_DATE\": \"17-OCT-18\", \"FR_DOCUMENT_TEXT\": \"FR FOR MRM PD NP\",
+        \"FR_END_DATE\": \"31-MAR-19\", \"FR_LINE_ITEM_TEXT\": \"FR FOR NP\", \"FR_NUMBER\":
+        \"9999\", \"FR_OVERALL_AMOUNT\": \"179643.93\", \"FR_START_DATE\": \"17-OCT-18\",
+        \"FR_TYPE\": \"Programme Document Against PCA\", \"FUND\": \"GC\", \"GRANT_NBR\":
+        \"NON-GRANT\", \"LINE_ITEM\": \"1\", \"MULTI_CURR_FLAG\": \"N\", \"OUTSTANDING_DCT\":
+        \"0\", \"OUTSTANDING_DCT_DC\": \"0\", \"OVERALL_AMOUNT\": \"50000\", \"OVERALL_AMOUNT_DC\":
+        \"2707500\", \"VENDOR_CODE\": \"PVN\", \"WBS_ELEMENT\": \"9999\\\/A0\\\/05\\\/803\\\/005\\\/004\"
+        }, {\"ACTUAL_CASH_TRANSFER\": \"50197.02\", \"ACTUAL_CASH_TRANSFER_DC\": \"2689656.62\",
+        \"COMPLETED_FLAG\": \"N\", \"CURRENCY\": \"PHP\", \"CURRENT_FR_AMOUNT\": \"50197.02\",
+        \"DONOR_CODE\": \"CODE X\", \"DONOR_NAME\": \"DONOR Z\", \"DUE_DATE\": \"17-OCT-18\",
+        \"FR_DOC_DATE\": \"17-OCT-18\", \"FR_DOCUMENT_TEXT\": \"FR FOR MRM PD NP\",
+        \"FR_END_DATE\": \"31-MAR-19\", \"FR_LINE_ITEM_TEXT\": \"FR FOR NP\", \"FR_NUMBER\":
+        \"9999\", \"FR_OVERALL_AMOUNT\": \"179643.93\", \"FR_START_DATE\": \"17-OCT-18\",
+        \"FR_TYPE\": \"Programme Document Against PCA\", \"FUND\": \"SC\", \"GRANT_NBR\":
+        \"GRANT W\", \"LINE_ITEM\": \"3\", \"MULTI_CURR_FLAG\": \"N\", \"OUTSTANDING_DCT\":
+        \"0\", \"OUTSTANDING_DCT_DC\": \"0\", \"OVERALL_AMOUNT\": \"25125.48\", \"OVERALL_AMOUNT_DC\":
+        \"1360545.62\", \"VENDOR_CODE\": \"PVN\", \"WBS_ELEMENT\": \"9999\\\/A0\\\/05\\\/803\\\/005\\\/004\"
+        } ] }}"'
+    headers:
+      Content-Type:
+      - application/json; charset=utf-8
+      Date:
+      - Wed, 19 Jun 2019 20:40:54 GMT
+      Server:
+      - Microsoft-IIS/8.5 Microsoft-HTTPAPI/2.0
+      Vary:
+      - Accept-Encoding
+      X-Powered-By:
+      - ASP.NET
+      content-length:
+      - '4433'
+    status:
+      code: 200
+      message: OK
+version: 1
