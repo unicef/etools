@@ -4,7 +4,6 @@ from django.db import connection
 
 from etools.applications.funds.models import FundsReservationHeader
 from etools.applications.funds.synchronizers import DelegatedFundReservationsSynchronizer
-
 from etools.applications.users.models import Country
 from etools.config.celery import app
 

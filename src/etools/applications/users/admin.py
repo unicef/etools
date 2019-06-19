@@ -11,7 +11,7 @@ from django.urls import reverse
 from django_tenants.admin import TenantAdminMixin
 from django_tenants.utils import get_public_schema_name
 
-from etools.applications.funds.tasks import sync_country_delegated_fr, sync_all_delegated_frs
+from etools.applications.funds.tasks import sync_all_delegated_frs, sync_country_delegated_fr
 from etools.applications.hact.tasks import update_hact_for_country, update_hact_values
 from etools.applications.users.models import Country, Office, UserProfile, WorkspaceCounter
 from etools.applications.vision.tasks import sync_handler, vision_sync_task

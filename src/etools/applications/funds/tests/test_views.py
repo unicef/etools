@@ -4,8 +4,8 @@ from datetime import datetime, timedelta
 from django.test import override_settings
 from django.urls import reverse
 from django.utils import timezone
-from mock import mock
 
+from mock import mock
 from rest_framework import status
 
 from etools.applications.core.tests.cases import BaseTenantTestCase
