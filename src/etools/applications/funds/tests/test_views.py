@@ -5,7 +5,6 @@ from pathlib import Path
 from django.urls import reverse
 from django.utils import timezone
 
-from mock import mock
 from rest_framework import status
 from unicef_vision.exceptions import VisionException
 
