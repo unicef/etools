@@ -13,7 +13,7 @@ interactions:
       User-Agent:
       - python-requests/2.21.0
     method: GET
-    uri: https://devapis.unicef.org/BIService/BIWebService.svc/GetFundsReservationInfo_JSON/another%20bad%20value
+    uri: http://invalid_vision_url/GetFundsReservationInfo_JSON/another%20bad%20value
   response:
     body:
       string: '"<Error><Code>1002<\/Code><UserMessage>Application Error<\/UserMessage><DevMessage>No

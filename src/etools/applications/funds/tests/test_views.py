@@ -19,10 +19,6 @@ from etools.applications.partners.tests.factories import AgreementFactory, Inter
 from etools.applications.users.tests.factories import UserFactory
 from etools.libraries.tests.vcrpy import VCR
 
-FAUX_VISION_URL = 'https://api.example.com/foo.svc/'
-FAUX_VISION_USER = 'jane_user'
-FAUX_VISION_PASSWORD = 'password123'
-
 
 class TestFRHeaderView(BaseTenantTestCase):
     @classmethod
