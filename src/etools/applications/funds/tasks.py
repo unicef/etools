@@ -25,18 +25,14 @@ def sync_country_delegated_fr(business_area_code):
             filter(business_area_code=business_area_code):
         connection.set_tenant(country)
 
-        qs = FundsReservationHeader.objects.exclude(completed_flag=True).filter(delegated=True, end_date__gt=one_year_back)
+        qs = FundsReservationHeader.objects.exclude(completed_flag=True).filter(delegated=True,
+                                                                                end_date__gt=one_year_back)
         for delegated_fr in qs.values_list('fr_number', flat=True):
             sync_single_delegated_fr(country.business_area_code, delegated_fr)
 
 
 @app.task(name="sync_all_delegated_frs")
 def sync_all_delegated_frs():
-    """Check validity and save changed status (if any) for agreements that meet all of the following criteria --
-        - signed
-        - end date is after today
-        - type != SSFA
-    """
     qs = Country.objects.exclude(name='Global', vision_sync_enabled=False)
     for country in qs.all():
         sync_country_delegated_fr.delay(country.business_area_code)
