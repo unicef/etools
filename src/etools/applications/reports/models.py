@@ -302,10 +302,11 @@ class Result(MPTTModel):
     def output_name(self):
         assert self.result_type.name == ResultType.OUTPUT
 
-        return '{}{}{}'.format(
+        return '{}{}{}-[{}]'.format(
             '[Expired] ' if self.expired else '',
             'Special- ' if self.special else '',
-            self.name
+            self.name,
+            self.wbs
         )
 
     @cached_property

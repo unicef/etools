@@ -22,4 +22,4 @@ fi
 coverage erase
 time coverage run manage.py test --noinput --keepdb "$@"
 coverage report -m
-
+coverage html
