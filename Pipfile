@@ -16,6 +16,7 @@ tox = "*"
 drf-api-checker = "*"
 factory-boy = ">=2.11"
 sphinx = "*"
+vcrpy = "*"
 
 [packages]
 azure-storage = "==0.20.2"
