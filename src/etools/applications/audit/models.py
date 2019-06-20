@@ -170,6 +170,11 @@ class Engagement(InheritedModelMixin, TimeStampedModel, models.Model):
     authorized_officers = models.ManyToManyField(
         PartnerStaffMember, verbose_name=_('Authorized Officers'), blank=True, related_name="engagement_authorizations"
     )
+    reference_number = models.CharField(
+        verbose_name=_("Reference Number"),
+        max_length=12,
+        null=True,
+    )
 
     objects = InheritanceManager()
 
@@ -206,8 +211,7 @@ class Engagement(InheritedModelMixin, TimeStampedModel, models.Model):
     def get_shared_ip_with_display(self):
         return list(map(lambda po: dict(PartnerOrganization.AGENCY_CHOICES).get(po, 'Unknown'), self.shared_ip_with))
 
-    @property
-    def unique_id(self):
+    def get_reference_number(self):
         engagement_code = 'a' if self.engagement_type == self.TYPES.audit else self.engagement_type
         return '{}/{}/{}/{}/{}'.format(
             connection.tenant.country_short_code or '',
@@ -217,15 +221,11 @@ class Engagement(InheritedModelMixin, TimeStampedModel, models.Model):
             self.id
         )
 
-    @property
-    def reference_number(self):
-        return self.unique_id
-
     def get_mail_context(self, **kwargs):
         object_url = self.get_object_url(**kwargs)
 
         return {
-            'unique_id': self.unique_id,
+            'unique_id': self.reference_number,
             'engagement_type': self.get_engagement_type_display(),
             'object_url': object_url,
             'partner': force_text(self.partner),
@@ -277,6 +277,11 @@ class Engagement(InheritedModelMixin, TimeStampedModel, models.Model):
 
     def get_object_url(self, **kwargs):
         return build_frontend_url('ap', 'engagements', self.id, 'overview', **kwargs)
+
+    def save(self, *args, **kwargs):
+        if not self.reference_number:
+            self.reference_number = self.get_reference_number()
+        super().save(*args, **kwargs)
 
 
 class RiskCategory(OrderedModel, models.Model):
@@ -714,7 +719,10 @@ class FinancialFinding(models.Model):
         ordering = ('id', )
 
     def __str__(self):
-        return '{}: {}'.format(self.audit.unique_id, self.get_title_display())
+        return '{}: {}'.format(
+            self.audit.reference_number,
+            self.get_title_display(),
+        )
 
 
 class KeyInternalControl(models.Model):
@@ -732,7 +740,10 @@ class KeyInternalControl(models.Model):
         ordering = ('id', )
 
     def __str__(self):
-        return '{}: {}'.format(self.audit.unique_id, self.audit_observation)
+        return '{}: {}'.format(
+            self.audit.reference_number,
+            self.audit_observation,
+        )
 
 
 class SpecialAudit(Engagement):
@@ -804,7 +815,7 @@ class SpecificProcedure(models.Model):
         verbose_name_plural = _('Specific Procedures')
 
     def __str__(self):
-        return '{}: {}'.format(self.audit.unique_id, self.description)
+        return '{}: {}'.format(self.audit.reference_number, self.description)
 
 
 class SpecialAuditRecommendation(models.Model):
@@ -821,7 +832,7 @@ class SpecialAuditRecommendation(models.Model):
         verbose_name_plural = _('Special Audit Recommendations')
 
     def __str__(self):
-        return '{}: {}'.format(self.audit.unique_id, self.description)
+        return '{}: {}'.format(self.audit.reference_number, self.description)
 
 
 class EngagementActionPointManager(models.Manager):

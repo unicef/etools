@@ -56,7 +56,7 @@ class Command(BaseCommand):
     action_points_editors = [focal_point, action_point_author, action_point_assignee, action_point_assigned_by]
 
     engagement_overview_read_block = [
-        'audit.engagement.unique_id',
+        'audit.engagement.reference_number',
 
         'audit.engagement.status',
         'audit.engagement.status_date',
