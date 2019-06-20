@@ -172,7 +172,7 @@ class Engagement(InheritedModelMixin, TimeStampedModel, models.Model):
     )
     reference_number = models.CharField(
         verbose_name=_("Reference Number"),
-        max_length=12,
+        max_length=100,
         null=True,
     )
 
