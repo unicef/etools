@@ -102,7 +102,7 @@ class TestAggregateHact(BaseTenantTestCase):
             date_of_draft_report_to_unicef=datetime(datetime.today().year, 6, 3),
             agreement__auditor_firm__unicef_users_allowed=True)
         SpotCheckFactory(
-            status=Engagement.REPORT_SUBMITTED, date_of_draft_report_to_unicef=datetime(datetime.today().year, 2, 1))
+            status=Engagement.REPORT_SUBMITTED, date_of_draft_report_to_unicef=datetime(datetime.today().year - 1, 2, 1))
 
         spot_checks_completed = self.aggregate_hact.get_spot_checks_completed()
         self.assertEqual(len(spot_checks_completed), 3)
@@ -161,7 +161,7 @@ class TestAggregateHact(BaseTenantTestCase):
         RiskFactory(
             value=2,
             engagement=AuditFactory(
-                status=Engagement.FINAL,
+                status=Engagement.REPORT_SUBMITTED,
                 audit_opinion=Audit.OPTION_ADVERSE,
                 date_of_draft_report_to_unicef=datetime(datetime.today().year - 1, 4, 7),
             )
@@ -171,7 +171,7 @@ class TestAggregateHact(BaseTenantTestCase):
             engagement=AuditFactory(
                 status=Engagement.PARTNER_CONTACTED,
                 audit_opinion=Audit.OPTION_DENIAL,
-                date_of_draft_report_to_unicef=datetime(datetime.today().year, 4, 7),
+                date_of_draft_report_to_unicef=datetime(datetime.today().year - 1, 4, 7),
             )
         )
 
