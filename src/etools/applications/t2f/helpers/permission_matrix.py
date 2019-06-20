@@ -58,11 +58,11 @@ REPORT_PERMISSIONS = {
         'approved': {'edit': False, 'view': True}
     },
     'Traveler': {
-        'completed': {'edit': True, 'view': True},
+        'completed': {'edit': False, 'view': True},
         'rejected': {'edit': True, 'view': True},
         'planned': {'edit': True, 'view': True},
         'submitted': {'edit': True, 'view': True},
-        'cancelled': {'edit': True, 'view': True},
+        'cancelled': {'edit': False, 'view': True},
         'approved': {'edit': True, 'view': True}
     },
     'Travel Administrator': {
@@ -70,7 +70,7 @@ REPORT_PERMISSIONS = {
         'rejected': {'edit': True, 'view': True},
         'planned': {'edit': True, 'view': True},
         'submitted': {'edit': True, 'view': True},
-        'cancelled': {'edit': True, 'view': True},
+        'cancelled': {'edit': False, 'view': True},
         'approved': {'edit': False, 'view': True}
     }
 }

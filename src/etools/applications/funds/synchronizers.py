@@ -5,7 +5,7 @@ from decimal import Decimal
 
 from django.db.models import Sum
 
-from unicef_vision.synchronizers import FileDataSynchronizer
+from unicef_vision.synchronizers import FileDataSynchronizer, ManualVisionSynchronizer
 from unicef_vision.utils import comp_decimals
 
 from etools.applications.funds.models import (
@@ -14,10 +14,14 @@ from etools.applications.funds.models import (
     FundsReservationHeader,
     FundsReservationItem,
 )
+from etools.applications.vision.exceptions import VisionSyncException
 from etools.applications.vision.synchronizers import VisionDataTenantSynchronizer
 
 
 class FundReservationsSynchronizer(VisionDataTenantSynchronizer):
+    # DELEGATED flag to inform whether we're synching delegated FRs or local FRs. This is used by the manual
+    # synchronizer
+    DELEGATED = False
 
     ENDPOINT = 'GetFundsReservationInfo_JSON'
     REQUIRED_NON_NULL_VALUE_KEYS = (
@@ -114,7 +118,20 @@ class FundReservationsSynchronizer(VisionDataTenantSynchronizer):
                 record[req_key] = None
 
     def _convert_records(self, records):
-        json_records = json.loads(records)["ROWSET"]["ROW"]
+        # Since our counterparts are unable to return json for the json endpoints in case of 400+ or 500+ we should
+        # catch known errors
+        try:
+            json_records = json.loads(records)["ROWSET"]["ROW"]
+        except json.decoder.JSONDecodeError:
+            if "No data exists" in records:
+                raise VisionSyncException("Vision error 400: No data could be found")
+            else:
+                raise
+        # Since our counterpart APIs are designed in a way that can surprise us what data structure we might encounter
+        # we have to do some type checking and convert on our side.
+        # TODO: fix this when the other team is able to keep consistency on API data structure.
+        if type(json_records) is dict:
+            json_records = [json_records]
         for r in json_records:
             self._fill_required_keys(r)
         return json_records
@@ -206,6 +223,8 @@ class FundReservationsSynchronizer(VisionDataTenantSynchronizer):
         to_create = []
         for item in fr_numbers_from_records:
             record = self.header_records[item]
+            if self.DELEGATED:
+                record['delegated'] = True
             to_create.append(FundsReservationHeader(**record))
 
         if to_create:
@@ -282,6 +301,10 @@ class FundReservationsSynchronizer(VisionDataTenantSynchronizer):
         processed = h_processed[0] + i_processed[0] + h_processed[1] + i_processed[1]
 
         return processed
+
+
+class DelegatedFundReservationsSynchronizer(FundReservationsSynchronizer, ManualVisionSynchronizer):
+    DELEGATED = True
 
 
 class FundCommitmentSynchronizer(VisionDataTenantSynchronizer):
