@@ -35,7 +35,7 @@ class Command(BaseCommand):
     def run(self):
         logger.info('Initialization for %s' % connection.schema_name)
         for code, label, name, order in FILE_TYPES_MAPPING:
-            FileType.objects.get_or_create(
+            FileType.objects.update_or_create(
                 code=code,
                 defaults={
                     "label": label,
