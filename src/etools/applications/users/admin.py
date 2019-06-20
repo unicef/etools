@@ -11,6 +11,7 @@ from django.urls import reverse
 from django_tenants.admin import TenantAdminMixin
 from django_tenants.utils import get_public_schema_name
 
+from etools.applications.funds.tasks import sync_all_delegated_frs, sync_country_delegated_fr
 from etools.applications.hact.tasks import update_hact_for_country, update_hact_values
 from etools.applications.users.models import Country, Office, UserProfile, WorkspaceCounter
 from etools.applications.vision.tasks import sync_handler, vision_sync_task
@@ -266,6 +267,8 @@ class CountryAdmin(TenantAdminMixin, admin.ModelAdmin):
         custom_urls = [
             url(r'^(?P<pk>\d+)/sync_fc/$', wrap(self.sync_fund_commitment), name='users_country_fund_commitment'),
             url(r'^(?P<pk>\d+)/sync_fr/$', wrap(self.sync_fund_reservation), name='users_country_fund_reservation'),
+            url(r'^(?P<pk>\d+)/sync_delegated_fr/$', wrap(self.sync_fund_reservation_delegated),
+                name='users_country_fund_reservation_delegated'),
             url(r'^(?P<pk>\d+)/sync_partners/$', wrap(self.sync_partners), name='users_country_partners'),
             url(r'^(?P<pk>\d+)/sync_programme/$', wrap(self.sync_programme), name='users_country_programme'),
             url(r'^(?P<pk>\d+)/sync_ram/$', wrap(self.sync_ram), name='users_country_ram'),
@@ -276,6 +279,14 @@ class CountryAdmin(TenantAdminMixin, admin.ModelAdmin):
 
     def sync_fund_commitment(self, request, pk):
         return self.execute_sync(pk, 'fund_commitment')
+
+    def sync_fund_reservation_delegated(self, request, pk):
+        country = Country.objects.get(pk=pk)
+        if country.schema_name == get_public_schema_name():
+            sync_all_delegated_frs.delay()
+        else:
+            sync_country_delegated_fr.delay(country.business_area_code)
+        return HttpResponseRedirect(reverse('admin:users_country_change', args=[country.pk]))
 
     def sync_fund_reservation(self, request, pk):
         return self.execute_sync(pk, 'fund_reservation')
