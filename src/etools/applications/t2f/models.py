@@ -346,6 +346,11 @@ class TravelActivity(models.Model):
     primary_traveler = models.ForeignKey(
         settings.AUTH_USER_MODEL, verbose_name=_('Primary Traveler'), on_delete=models.CASCADE)
     date = models.DateField(null=True, blank=True, verbose_name=_('Date'))
+    reference_number = models.CharField(
+        verbose_name=_('Reference Number'),
+        max_length=12,
+        null=True,
+    )
 
     class Meta:
         verbose_name_plural = _("Travel Activities")
@@ -354,11 +359,9 @@ class TravelActivity(models.Model):
     def travel(self):
         return self.travels.filter(traveler=self.primary_traveler).first()
 
-    _reference_number = None
-
     def get_reference_number(self):
-        if self._reference_number:
-            return self._reference_number
+        if self.reference_number:
+            return self.reference_number
 
         travel = self.travels.filter(traveler=self.primary_traveler).first()
         if not travel:
@@ -367,9 +370,8 @@ class TravelActivity(models.Model):
         return travel.reference_number
 
     def set_reference_number(self, value):
-        self._reference_number = value
-
-    reference_number = property(get_reference_number, set_reference_number)
+        self.reference_number = value
+        self.save()
 
     @property
     def task_number(self):
@@ -384,6 +386,11 @@ class TravelActivity(models.Model):
 
     def __str__(self):
         return '{} - {}'.format(self.travel_type, self.date)
+
+    def save(self, *args, **kwargs):
+        if self.pk and not self.reference_number:
+            self.reference_number = self.get_reference_number()
+        super().save(*args, **kwargs)
 
 
 class ItineraryItem(models.Model):
