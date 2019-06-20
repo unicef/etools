@@ -23,7 +23,7 @@ def update_purchase_orders(country_name=None):
             logger.info('Starting purchase order update for country {}'.format(
                 country.name
             ))
-            POSynchronizer(country).sync()
+            POSynchronizer(country.business_area_code).sync()
             processed.append(country.name)
             logger.info("Update finished successfully for {}".format(country.name))
         except VisionException:

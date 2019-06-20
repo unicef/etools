@@ -29,6 +29,7 @@ class Command(BaseCommand):
             get_tenant_domain_model().objects.create(domain='{}.etools.unicef.org'.format(slug), tenant=country)
             call_command('init-result-type', schema=schema_name)
             call_command('init-partner-file-type', schema=schema_name)
+            call_command('init-attachment-file-types', schema=schema_name)
             connection.set_schema(schema_name)
             call_command('loaddata', 'attachments_file_types')
             call_command('loaddata', 'audit_risks_blueprints')
