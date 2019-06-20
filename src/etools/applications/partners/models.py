@@ -2294,7 +2294,6 @@ class FileType(models.Model):
     """
     FACE = 'FACE'
     PROGRESS_REPORT = 'Progress Report'
-    PARTNERSHIP_REVIEW = 'Partnership Review'
     FINAL_PARTNERSHIP_REVIEW = 'Final Partnership Review'
     CORRESPONDENCE = 'Correspondence'
     SUPPLY_PLAN = 'Supply/Distribution Plan'
@@ -2303,7 +2302,6 @@ class FileType(models.Model):
     NAME_CHOICES = Choices(
         (FACE, FACE),
         (PROGRESS_REPORT, PROGRESS_REPORT),
-        (PARTNERSHIP_REVIEW, PARTNERSHIP_REVIEW),
         (FINAL_PARTNERSHIP_REVIEW, FINAL_PARTNERSHIP_REVIEW),
         (CORRESPONDENCE, CORRESPONDENCE),
         (SUPPLY_PLAN, SUPPLY_PLAN),
