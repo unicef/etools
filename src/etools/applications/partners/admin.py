@@ -46,7 +46,7 @@ class AttachmentSingleInline(AttachmentSingleInline):
         formset.code = self.code
         return formset
 
-    def has_add_permission(self, request):
+    def has_add_permission(self, request, obj):
         return True
 
 
