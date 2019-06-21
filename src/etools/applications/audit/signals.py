@@ -23,9 +23,10 @@ def staff_member_changed(sender, instance, action, reverse, pk_set, *args, **kwa
 
 @receiver(post_save, sender=EngagementActionPoint)
 def action_point_updated_receiver(instance, created, **kwargs):
-    if created:
-        instance.send_email(instance.assigned_to, 'audit/engagement/action_point_assigned',
-                            cc=[instance.assigned_by.email])
-    else:
-        if instance.tracker.has_changed('assigned_to'):
-            instance.send_email(instance.assigned_to, 'audit/engagement/action_point_assigned')
+    if instance.reference_number:
+        if created:
+            instance.send_email(instance.assigned_to, 'audit/engagement/action_point_assigned',
+                                cc=[instance.assigned_by.email])
+        else:
+            if instance.tracker.has_changed('assigned_to'):
+                instance.send_email(instance.assigned_to, 'audit/engagement/action_point_assigned')

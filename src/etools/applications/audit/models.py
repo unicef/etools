@@ -279,9 +279,10 @@ class Engagement(InheritedModelMixin, TimeStampedModel, models.Model):
         return build_frontend_url('ap', 'engagements', self.id, 'overview', **kwargs)
 
     def save(self, *args, **kwargs):
+        super().save(*args, **kwargs)
         if not self.reference_number:
             self.reference_number = self.get_reference_number()
-        super().save(*args, **kwargs)
+            self.save()
 
 
 class RiskCategory(OrderedModel, models.Model):
