@@ -129,9 +129,10 @@ class TPMVisit(SoftDeleteMixin, TimeStampedModel, models.Model):
         )
 
     def save(self, *args, **kwargs):
+        super().save(*args, **kwargs)
         if not self.reference_number:
             self.reference_number = self.get_reference_number()
-        super().save(*args, **kwargs)
+            self.save()
 
     @property
     def start_date(self):

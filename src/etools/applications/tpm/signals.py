@@ -1,4 +1,3 @@
-
 from django.db import connection
 from django.db.models.signals import post_delete, post_save
 from django.dispatch import receiver
@@ -20,7 +19,7 @@ def delete_user_receiver(instance, **kwargs):
 def action_point_updated_receiver(instance, created, **kwargs):
     if created:
         instance.send_email(instance.assigned_to, 'tpm/visit/action_point_assigned')
-    else:
+    elif not instance.tracker.has_changed('reference_number'):
         if instance.tracker.has_changed('assigned_to'):
             instance.send_email(instance.assigned_to, 'tpm/visit/action_point_assigned')
 
