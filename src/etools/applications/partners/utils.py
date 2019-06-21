@@ -440,10 +440,10 @@ def send_agreement_suspended_notification(agreement, user):
 
 def send_intervention_draft_notification():
     """Send an email to PD/SHPD/SSFA's focal point(s) if in draft status"""
-    sdate_diff = datetime.datetime.combine(now(), datetime.time.min) - datetime.timedelta(days=7)
+    sdate_diff = make_aware(datetime.datetime.combine(now(), datetime.time.min) - datetime.timedelta(days=7))
     for intervention in Intervention.objects.filter(
             status=Intervention.DRAFT,
-            created__lt=make_aware(sdate_diff),
+            created__lt=sdate_diff,
     ):
         recipients = [
             u.user.email for u in intervention.unicef_focal_points.all()
