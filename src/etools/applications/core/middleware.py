@@ -7,7 +7,7 @@ from django.http.response import HttpResponseRedirect
 from django.template.response import SimpleTemplateResponse
 from django.urls import reverse
 
-from django_tenants.middleware import TenantMiddleware
+from django_tenants.middleware import TenantMainMiddleware
 from django_tenants.utils import get_public_schema_name
 
 from etools.libraries.tenant_support.utils import set_country
@@ -25,7 +25,7 @@ ANONYMOUS_ALLOWED_URL_FRAGMENTS = [
 INACTIVE_WORKSPACE_URL = reverse('workspace-inactive')
 
 
-class EToolsTenantMiddleware(TenantMiddleware):
+class EToolsTenantMiddleware(TenantMainMiddleware):
     """
     Sets request.tenant based on the users's country (Tenant) and sets the DB connection to use that tenant.
 

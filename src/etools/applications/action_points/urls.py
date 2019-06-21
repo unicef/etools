@@ -7,8 +7,8 @@ from etools.applications.action_points.views import ActionPointViewSet, Category
 app_name = 'action-points'
 
 action_points_api = routers.SimpleRouter()
-action_points_api.register(r'action-points', ActionPointViewSet, base_name='action-points')
-action_points_api.register(r'categories', CategoryViewSet, base_name='categories')
+action_points_api.register(r'action-points', ActionPointViewSet, basename='action-points')
+action_points_api.register(r'categories', CategoryViewSet, basename='categories')
 
 
 urlpatterns = [
