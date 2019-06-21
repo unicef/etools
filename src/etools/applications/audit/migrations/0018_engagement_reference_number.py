@@ -6,6 +6,7 @@ from django.db import migrations, models
 def set_reference_number(apps, schema_editor):
     Engagement = apps.get_model("audit", "engagement")
     for engagement in Engagement.objects.all():
+        engagement.reference_number = engagement.get_reference_number()
         engagement.save()
 
 

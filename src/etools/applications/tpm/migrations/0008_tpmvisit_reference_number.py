@@ -10,6 +10,7 @@ def set_reference_number(apps, schema_editor):
     if connection.tenant.schema_name != SCHEMA_NAME:
         TPMVisit = apps.get_model("tpm", "tpmvisit")
         for visit in TPMVisit.objects.all():
+            visit.reference_number = visit.get_reference_number()
             visit.save()
 
 
