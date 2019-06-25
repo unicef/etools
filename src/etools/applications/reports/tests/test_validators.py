@@ -12,7 +12,7 @@ class TestValueNumbers(BaseTenantTestCase):
             (validators.value_numbers(""))
 
     def test_json_valid_str(self):
-        d = json.dumps({"v": "123.00", "d": "321,00"})
+        d = json.dumps({"v": "123.00", "d": "321.00"})
         self.assertIsNone(validators.value_numbers(d))
 
     def test_json_valid(self):
@@ -31,7 +31,7 @@ class TestValueNumbers(BaseTenantTestCase):
 
     def test_valid_str(self):
         self.assertIsNone(
-            validators.value_numbers({"v": "123.00", "d": "321,00"})
+            validators.value_numbers({"v": "123.00", "d": "321.00"})
         )
 
     def test_valid(self):
@@ -50,7 +50,7 @@ class TestValueNoneOrNumbers(BaseTenantTestCase):
             (validators.value_none_or_numbers(""))
 
     def test_json_valid_str(self):
-        d = json.dumps({"v": "123.00", "d": "321,00"})
+        d = json.dumps({"v": "123.00", "d": "321.00"})
         self.assertIsNone(validators.value_none_or_numbers(d))
 
     def test_json_valid(self):
@@ -62,13 +62,13 @@ class TestValueNoneOrNumbers(BaseTenantTestCase):
         self.assertIsNone(validators.value_none_or_numbers(d))
 
     def test_json_invalid(self):
-        d = json.dumps({"v": "123.00", "d": "$321,00"})
+        d = json.dumps({"v": "123.00", "d": "$321.00"})
         with self.assertRaises(forms.ValidationError):
             validators.value_none_or_numbers(d)
 
     def test_valid_str(self):
         self.assertIsNone(
-            validators.value_none_or_numbers({"v": "123.00", "d": "321,00"})
+            validators.value_none_or_numbers({"v": "123.00", "d": "321.00"})
         )
 
     def test_valid(self):
@@ -78,4 +78,4 @@ class TestValueNoneOrNumbers(BaseTenantTestCase):
 
     def test_invalid(self):
         with self.assertRaises(forms.ValidationError):
-            validators.value_none_or_numbers({"v": "$123.00", "d": "321,00"})
+            validators.value_none_or_numbers({"v": "$123.00", "d": "321.00"})

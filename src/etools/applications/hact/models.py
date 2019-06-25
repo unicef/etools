@@ -38,6 +38,9 @@ class AggregateHact(TimeStampedModel):
     class Meta:
         verbose_name_plural = _('Aggregate hact')
 
+    def __str__(self):
+        return f'{self.year}'
+
     def update(self):
         self.partner_values = json.dumps({
             'assurance_activities': self.get_assurance_activities(),
@@ -207,7 +210,8 @@ class AggregateHact(TimeStampedModel):
 
     @staticmethod
     def get_spot_checks_completed():
-        qs = SpotCheck.objects.filter(status=Engagement.FINAL, date_of_draft_report_to_unicef__year=datetime.now().year)
+        qs = SpotCheck.objects.filter(date_of_draft_report_to_unicef__year=datetime.now().year).exclude(
+            status=Engagement.CANCELLED)
         return [
             ['Completed by', 'Count'],
             ['Staff', qs.filter(agreement__auditor_firm__unicef_users_allowed=True).count()],
@@ -223,57 +227,56 @@ class AggregateHact(TimeStampedModel):
             },
             'spot_checks': {
                 'completed': SpotCheck.objects.filter(
-                    status=Engagement.FINAL, date_of_draft_report_to_unicef__year=datetime.now().year).count(),
+                    date_of_draft_report_to_unicef__year=datetime.now().year).exclude(
+                    status=Engagement.CANCELLED).count(),
                 'min_required': sum([p.min_req_spot_checks for p in self.get_queryset()]),
                 'follow_up': self.get_queryset().aggregate(total=Coalesce(Sum(
                     'planned_engagement__spot_check_follow_up'), 0))['total']
             },
             'scheduled_audit': Audit.objects.filter(
-                status=Engagement.FINAL, date_of_draft_report_to_unicef__year=datetime.now().year).count(),
+                date_of_draft_report_to_unicef__year=datetime.now().year).exclude(
+                status=Engagement.CANCELLED).count(),
             'special_audit': SpecialAudit.objects.filter(
-                status=Engagement.FINAL, date_of_draft_report_to_unicef__year=datetime.now().year).count(),
+                date_of_draft_report_to_unicef__year=datetime.now().year).exclude(
+                status=Engagement.CANCELLED).count(),
             'micro_assessment': MicroAssessment.objects.filter(
-                status=Engagement.FINAL, date_of_draft_report_to_unicef__year=datetime.now().year).count(),
+                date_of_draft_report_to_unicef__year=datetime.now().year).exclude(
+                status=Engagement.CANCELLED).count(),
             'missing_micro_assessment': PartnerOrganization.objects.hact_active(
                 last_assessment_date__isnull=False, last_assessment_date__year__lte=year_limit).count(),
         }
 
     @staticmethod
     def get_financial_findings():
-        refunds = Audit.objects.filter(amount_refunded__isnull=False, status=Engagement.FINAL,
-                                       date_of_draft_report_to_unicef__year=datetime.now().year).aggregate(
+        audits = Audit.objects.filter(date_of_draft_report_to_unicef__year=datetime.now().year).exclude(
+            status=Engagement.CANCELLED)
+
+        refunds = audits.filter(amount_refunded__isnull=False).aggregate(
             total=Coalesce(Sum('amount_refunded'), 0))['total']
-        additional_supporting_document_provided = Audit.objects.filter(
-            date_of_draft_report_to_unicef__year=datetime.now().year,
+        additional_supporting_document_provided = audits.filter(
             additional_supporting_documentation_provided__isnull=False,
-            status=Engagement.FINAL).aggregate(
+        ).aggregate(
             total=Coalesce(Sum('additional_supporting_documentation_provided'), 0))['total']
-        justification_provided_and_accepted = Audit.objects.filter(
-            date_of_draft_report_to_unicef__year=datetime.now().year,
-            status=Engagement.FINAL,
+        justification_provided_and_accepted = audits.filter(
             justification_provided_and_accepted__isnull=False).aggregate(
             total=Coalesce(Sum('justification_provided_and_accepted'), 0))['total']
-        impairment = Audit.objects.filter(
-            status=Engagement.FINAL,
-            write_off_required__isnull=False,
-            date_of_draft_report_to_unicef__year=datetime.now().year).aggregate(
+        impairment = audits.filter(
+            write_off_required__isnull=False).aggregate(
             total=Coalesce(Sum('write_off_required'), 0))['total']
 
         # pending_unsupported_amount property
-        outstanding_audits = Audit.objects.filter(status=Engagement.FINAL,
-                                                  date_of_draft_report_to_unicef__year=datetime.now().year)
-        _ff = outstanding_audits.filter(financial_findings__isnull=False).aggregate(
+        _ff = audits.filter(financial_findings__isnull=False).aggregate(
             total=Coalesce(Sum('financial_findings'), 0))['total']
-        _ar = outstanding_audits.filter(amount_refunded__isnull=False).aggregate(
+        _ar = audits.filter(amount_refunded__isnull=False).aggregate(
             total=Coalesce(Sum('amount_refunded'), 0))['total']
-        _asdp = outstanding_audits.filter(additional_supporting_documentation_provided__isnull=False).aggregate(
+        _asdp = audits.filter(additional_supporting_documentation_provided__isnull=False).aggregate(
             total=Coalesce(Sum('additional_supporting_documentation_provided'), 0))['total']
-        _wor = outstanding_audits.filter(write_off_required__isnull=False).aggregate(
+        _wor = audits.filter(write_off_required__isnull=False).aggregate(
             total=Coalesce(Sum('write_off_required'), 0))['total']
         outstanding = _ff - _ar - _asdp - _wor
 
-        outstanding_audits_y1 = Audit.objects.filter(status=Engagement.FINAL,
-                                                     date_of_draft_report_to_unicef__year=datetime.now().year - 1)
+        outstanding_audits_y1 = Audit.objects.filter(
+            date_of_draft_report_to_unicef__year=datetime.now().year - 1).exclude(status=Engagement.CANCELLED)
         _ff_y1 = outstanding_audits_y1.filter(financial_findings__isnull=False).aggregate(
             total=Coalesce(Sum('financial_findings'), 0))['total']
         _ar_y1 = outstanding_audits_y1.filter(amount_refunded__isnull=False).aggregate(
@@ -284,15 +287,9 @@ class AggregateHact(TimeStampedModel):
             total=Coalesce(Sum('write_off_required'), 0))['total']
         outstanding_y1 = _ff_y1 - _ar_y1 - _asdp_y1 - _wor_y1
 
-        total_financial_findings = Audit.objects.filter(
-            date_of_draft_report_to_unicef__year=datetime.now().year,
-            financial_findings__isnull=False,
-            status=Engagement.FINAL).aggregate(
-            total=Coalesce(Sum('financial_findings'), 0))['total']
-        total_audited_expenditure = Audit.objects.filter(
-            date_of_draft_report_to_unicef__year=datetime.now().year,
-            audited_expenditure__isnull=False,
-            status=Engagement.FINAL).aggregate(
+        total_financial_findings = audits.filter(
+            financial_findings__isnull=False).aggregate(total=Coalesce(Sum('financial_findings'), 0))['total']
+        total_audited_expenditure = audits.filter(audited_expenditure__isnull=False).aggregate(
             total=Coalesce(Sum('audited_expenditure'), 0))['total']
 
         return [
@@ -340,44 +337,40 @@ class AggregateHact(TimeStampedModel):
 
     @staticmethod
     def get_financial_findings_numbers():
+
+        audits = Audit.objects.filter(date_of_draft_report_to_unicef__year=datetime.now().year).exclude(
+            status=Engagement.CANCELLED)
         return [
             {
                 'name': 'Number of High Priority Findings',
-                'value': Audit.objects.filter(risks__value=4, status=Engagement.FINAL,
-                                              date_of_draft_report_to_unicef__year=datetime.now().year).count(),
+                'value': audits.filter(risks__value=4).count(),
             },
             {
                 'name': 'Number of Medium Priority Findings',
-                'value': Audit.objects.filter(risks__value=2, status=Engagement.FINAL,
-                                              date_of_draft_report_to_unicef__year=datetime.now().year).count(),
+                'value': audits.filter(risks__value=2).count(),
             },
             {
                 'name': 'Number of Low Priority Findings',
-                'value': Audit.objects.filter(risks__value=1, status=Engagement.FINAL,
-                                              date_of_draft_report_to_unicef__year=datetime.now().year).count(),
+                'value': audits.filter(risks__value=1).count(),
             },
             {
                 'name': 'Audit Opinion',
                 'value': [
                     {
                         'name': 'qualified',
-                        'value': Audit.objects.filter(audit_opinion=Audit.OPTION_QUALIFIED, status=Engagement.FINAL,
-                                                      date_of_draft_report_to_unicef__year=datetime.now().year).count(),
+                        'value': audits.filter(audit_opinion=Audit.OPTION_QUALIFIED).count(),
                     },
                     {
                         'name': 'unqualified',
-                        'value': Audit.objects.filter(audit_opinion=Audit.OPTION_UNQUALIFIED, status=Engagement.FINAL,
-                                                      date_of_draft_report_to_unicef__year=datetime.now().year).count(),
+                        'value': audits.filter(audit_opinion=Audit.OPTION_UNQUALIFIED).count(),
                     },
                     {
                         'name': 'denial',
-                        'value': Audit.objects.filter(audit_opinion=Audit.OPTION_DENIAL, status=Engagement.FINAL,
-                                                      date_of_draft_report_to_unicef__year=datetime.now().year).count(),
+                        'value': audits.filter(audit_opinion=Audit.OPTION_DENIAL).count(),
                     },
                     {
                         'name': 'adverse',
-                        'value': Audit.objects.filter(audit_opinion=Audit.OPTION_ADVERSE, status=Engagement.FINAL,
-                                                      date_of_draft_report_to_unicef__year=datetime.now().year).count(),
+                        'value': audits.filter(audit_opinion=Audit.OPTION_ADVERSE).count(),
                     },
                 ],
             }

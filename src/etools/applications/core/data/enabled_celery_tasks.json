@@ -1,0 +1,389 @@
+[
+  {
+    "model": "django_celery_beat.intervalschedule",
+    "pk": 1,
+    "fields": {
+      "every": 1,
+      "period": "days"
+    }
+  },
+  {
+    "model": "django_celery_beat.intervalschedule",
+    "pk": 2,
+    "fields": {
+      "every": 14,
+      "period": "days"
+    }
+  },
+  {
+    "model": "django_celery_beat.intervalschedule",
+    "pk": 3,
+    "fields": {
+      "every": 7,
+      "period": "days"
+    }
+  },
+  {
+    "model": "django_celery_beat.intervalschedule",
+    "pk": 4,
+    "fields": {
+      "every": 1,
+      "period": "minutes"
+    }
+  },
+  {
+    "model": "django_celery_beat.crontabschedule",
+    "pk": 1,
+    "fields": {
+      "minute": "0",
+      "hour": "0",
+      "day_of_week": "*",
+      "day_of_month": "*",
+      "month_of_year": "*",
+      "timezone": "UTC"
+    }
+  },
+  {
+    "model": "django_celery_beat.crontabschedule",
+    "pk": 2,
+    "fields": {
+      "minute": "0",
+      "hour": "4",
+      "day_of_week": "*",
+      "day_of_month": "*",
+      "month_of_year": "*",
+      "timezone": "UTC"
+    }
+  },
+  {
+    "model": "django_celery_beat.crontabschedule",
+    "pk": 3,
+    "fields": {
+      "minute": "*",
+      "hour": "*",
+      "day_of_week": "*",
+      "day_of_month": "1",
+      "month_of_year": "*",
+      "timezone": "UTC"
+    }
+  },
+  {
+    "model": "django_celery_beat.crontabschedule",
+    "pk": 4,
+    "fields": {
+      "minute": "*",
+      "hour": "*",
+      "day_of_week": "6",
+      "day_of_month": "*",
+      "month_of_year": "*",
+      "timezone": "UTC"
+    }
+  },
+  {
+    "model": "django_celery_beat.periodictasks",
+    "pk": 1,
+    "fields": {
+      "last_update": "2019-06-19T19:10:56.962Z"
+    }
+  },
+  {
+    "model": "django_celery_beat.periodictask",
+    "pk": 1,
+    "fields": {
+      "name": "Hact Chart",
+      "task": "etools.applications.hact.tasks.update_aggregate_hact_values",
+      "interval": null,
+      "crontab": 2,
+      "solar": null,
+      "args": "[]",
+      "kwargs": "{}",
+      "queue": null,
+      "exchange": null,
+      "routing_key": null,
+      "priority": null,
+      "expires": null,
+      "one_off": false,
+      "start_time": null,
+      "enabled": true,
+      "last_run_at": "2019-04-08T04:00:00.100Z",
+      "total_run_count": 283,
+      "date_changed": "2019-04-08T04:01:51.322Z",
+      "description": ""
+    }
+  },
+  {
+    "model": "django_celery_beat.periodictask",
+    "pk": 2,
+    "fields": {
+      "name": "Hact Values",
+      "task": "etools.applications.hact.tasks.update_hact_values",
+      "interval": 1,
+      "crontab": 1,
+      "solar": null,
+      "args": "[]",
+      "kwargs": "{}",
+      "queue": null,
+      "exchange": null,
+      "routing_key": null,
+      "priority": null,
+      "expires": null,
+      "one_off": false,
+      "start_time": null,
+      "enabled": true,
+      "last_run_at": "2019-04-07T17:49:20.656Z",
+      "total_run_count": 282,
+      "date_changed": "2019-04-07T17:50:06.300Z",
+      "description": ""
+    }
+  },
+  {
+    "model": "django_celery_beat.periodictask",
+    "pk": 3,
+    "fields": {
+      "name": "Intervention Notification Ending",
+      "task": "etools.applications.partners.tasks.intervention_notification_ending",
+      "interval": 1,
+      "crontab": null,
+      "solar": null,
+      "args": "[]",
+      "kwargs": "{}",
+      "queue": null,
+      "exchange": null,
+      "routing_key": null,
+      "priority": null,
+      "expires": null,
+      "one_off": false,
+      "start_time": null,
+      "enabled": true,
+      "last_run_at": "2019-04-07T17:49:20.583Z",
+      "total_run_count": 172,
+      "date_changed": "2019-04-07T17:50:06.342Z",
+      "description": ""
+    }
+  },
+  {
+    "model": "django_celery_beat.periodictask",
+    "pk": 4,
+    "fields": {
+      "name": "Intervention Notification Ended frs Outstanding",
+      "task": "etools.applications.partners.tasks.intervention_notification_ended_fr_outstanding",
+      "interval": 2,
+      "crontab": null,
+      "solar": null,
+      "args": "[]",
+      "kwargs": "{}",
+      "queue": null,
+      "exchange": null,
+      "routing_key": null,
+      "priority": null,
+      "expires": null,
+      "one_off": false,
+      "start_time": null,
+      "enabled": true,
+      "last_run_at": "2019-04-03T17:49:18.728Z",
+      "total_run_count": 12,
+      "date_changed": "2019-04-03T17:51:46.196Z",
+      "description": ""
+    }
+  },
+  {
+    "model": "django_celery_beat.periodictask",
+    "pk": 5,
+    "fields": {
+      "name": "Intervention Notification Signed no frs",
+      "task": "etools.applications.partners.tasks.intervention_notification_signed_no_frs",
+      "interval": 3,
+      "crontab": null,
+      "solar": null,
+      "args": "[]",
+      "kwargs": "{}",
+      "queue": null,
+      "exchange": null,
+      "routing_key": null,
+      "priority": null,
+      "expires": null,
+      "one_off": false,
+      "start_time": null,
+      "enabled": true,
+      "last_run_at": "2019-04-03T17:49:18.650Z",
+      "total_run_count": 24,
+      "date_changed": "2019-04-03T17:51:46.406Z",
+      "description": ""
+    }
+  },
+  {
+    "model": "django_celery_beat.periodictask",
+    "pk": 6,
+    "fields": {
+      "name": "Intervention Status Automatic Transition",
+      "task": "etools.applications.partners.tasks.intervention_status_automatic_transition",
+      "interval": 1,
+      "crontab": null,
+      "solar": null,
+      "args": "[]",
+      "kwargs": "{}",
+      "queue": null,
+      "exchange": null,
+      "routing_key": null,
+      "priority": null,
+      "expires": null,
+      "one_off": false,
+      "start_time": null,
+      "enabled": true,
+      "last_run_at": "2019-04-07T17:49:20.723Z",
+      "total_run_count": 282,
+      "date_changed": "2019-04-07T17:50:06.171Z",
+      "description": ""
+    }
+  },
+  {
+    "model": "django_celery_beat.periodictask",
+    "pk": 7,
+    "fields": {
+      "name": "Agreement Status Automatic Transition",
+      "task": "etools.applications.partners.tasks.agreement_status_automatic_transition",
+      "interval": 1,
+      "crontab": null,
+      "solar": null,
+      "args": "[]",
+      "kwargs": "{}",
+      "queue": null,
+      "exchange": null,
+      "routing_key": null,
+      "priority": null,
+      "expires": null,
+      "one_off": false,
+      "start_time": null,
+      "enabled": true,
+      "last_run_at": "2019-04-07T17:49:20.635Z",
+      "total_run_count": 282,
+      "date_changed": "2019-04-07T17:50:06.386Z",
+      "description": ""
+    }
+  },
+  {
+    "model": "django_celery_beat.periodictask",
+    "pk": 8,
+    "fields": {
+      "name": "Vision Sync Task",
+      "task": "etools.applications.vision.tasks.vision_sync_task",
+      "interval": null,
+      "crontab": 1,
+      "solar": null,
+      "args": "[]",
+      "kwargs": "{}",
+      "queue": null,
+      "exchange": null,
+      "routing_key": null,
+      "priority": null,
+      "expires": null,
+      "one_off": false,
+      "start_time": null,
+      "enabled": true,
+      "last_run_at": "2019-04-08T00:00:00.046Z",
+      "total_run_count": 286,
+      "date_changed": "2019-04-08T00:02:36.358Z",
+      "description": ""
+    }
+  },
+  {
+    "model": "django_celery_beat.periodictask",
+    "pk": 9,
+    "fields": {
+      "name": "celery.backend_cleanup",
+      "task": "celery.backend_cleanup",
+      "interval": null,
+      "crontab": 2,
+      "solar": null,
+      "args": "[]",
+      "kwargs": "{}",
+      "queue": null,
+      "exchange": null,
+      "routing_key": null,
+      "priority": null,
+      "expires": null,
+      "one_off": false,
+      "start_time": null,
+      "enabled": true,
+      "last_run_at": "2019-04-08T04:00:00.036Z",
+      "total_run_count": 286,
+      "date_changed": "2019-04-08T04:01:51.248Z",
+      "description": ""
+    }
+  },
+  {
+    "model": "django_celery_beat.periodictask",
+    "pk": 10,
+    "fields": {
+      "name": "Copy attachments",
+      "task": "etools.applications.partners.tasks.copy_attachments",
+      "interval": 1,
+      "crontab": null,
+      "solar": null,
+      "args": "[]",
+      "kwargs": "{}",
+      "queue": null,
+      "exchange": null,
+      "routing_key": null,
+      "priority": null,
+      "expires": null,
+      "one_off": false,
+      "start_time": null,
+      "enabled": false,
+      "last_run_at": "2018-12-06T04:00:03.067Z",
+      "total_run_count": 251,
+      "date_changed": "2018-12-06T04:02:30.223Z",
+      "description": ""
+    }
+  },
+  {
+    "model": "django_celery_beat.periodictask",
+    "pk": 14,
+    "fields": {
+      "name": "User AD Sync",
+      "task": "etools.libraries.azure_graph_api.tasks.sync_delta_users",
+      "interval": 1,
+      "crontab": null,
+      "solar": null,
+      "args": "[]",
+      "kwargs": "{}",
+      "queue": null,
+      "exchange": null,
+      "routing_key": null,
+      "priority": null,
+      "expires": null,
+      "one_off": false,
+      "start_time": null,
+      "enabled": true,
+      "last_run_at": "2019-04-07T17:49:20.777Z",
+      "total_run_count": 25963,
+      "date_changed": "2019-04-07T17:50:06.250Z",
+      "description": ""
+    }
+  },
+  {
+    "model": "django_celery_beat.periodictask",
+    "pk": 15,
+    "fields": {
+      "name": "sync_delegated_frs",
+      "task": "sync_all_delegated_frs",
+      "interval": 1,
+      "crontab": null,
+      "solar": null,
+      "args": "[]",
+      "kwargs": "{}",
+      "queue": null,
+      "exchange": null,
+      "routing_key": null,
+      "priority": null,
+      "expires": null,
+      "one_off": false,
+      "start_time": null,
+      "enabled": true,
+      "last_run_at": null,
+      "total_run_count": 0,
+      "date_changed": "2019-06-19T19:10:42.775Z",
+      "description": "Sync all delegated FRs"
+    }
+  }
+]
