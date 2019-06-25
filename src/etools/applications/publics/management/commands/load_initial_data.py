@@ -387,7 +387,7 @@ class Command(BaseCommand):
                       'MVR', '21.09.1965', '31.12.9999', 'THE REPUBLIC OF MALDIVES'),
                      ('Mali', '2760', 'Mali', 'MLI', '276', 'ML', 'MLI', 'XOF',
                       '28.09.1960', '31.12.9999', 'THE REPUBLIC OF MALI'),
-                     ('Mauritania', '2820', 'Mauritania', 'MAU', '282', 'MR', 'MRT', 'MRO',
+                     ('Mauritania', '2820', 'Mauritania', 'MAU', '282', 'MR', 'MRT', 'MRU',
                       '27.10.1961', '31.12.9999', 'THE ISLAMIC REPUBLIC OF MAURITANIA'),
                      ('Mexico', '2850', 'Mexico', 'MEX', '285', 'MX', 'MEX', 'MXN',
                       '07.11.1945', '31.12.9999', 'THE UNITED MEXICAN STATES'),
