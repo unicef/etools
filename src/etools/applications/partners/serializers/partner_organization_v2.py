@@ -331,6 +331,7 @@ class PartnerOrganizationDashboardSerializer(serializers.ModelSerializer):
     total_ct_ytd = serializers.FloatField(read_only=True)
     outstanding_dct_amount_6_to_9_months_usd = serializers.FloatField(read_only=True)
     outstanding_dct_amount_more_than_9_months_usd = serializers.FloatField(read_only=True)
+    core_value_assessment_expiring = serializers.DurationField(read_only=True)
 
     class Meta:
         model = PartnerOrganization
@@ -346,7 +347,7 @@ class PartnerOrganizationDashboardSerializer(serializers.ModelSerializer):
             'outstanding_dct_amount_more_than_9_months_usd',
             'vendor_number',
             'partner_type',
-            'core_values_assessment_date',
+            'core_value_assessment_expiring',
         )
 
 

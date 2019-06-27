@@ -3,7 +3,7 @@ import operator
 from datetime import date, datetime
 
 from django.db import models, transaction
-from django.db.models import Case, DateTimeField, DurationField, ExpressionWrapper, F, Max, Q, When
+from django.db.models import Case, DateTimeField, DurationField, ExpressionWrapper, F, Max, OuterRef, Q, Subquery, When
 from django.shortcuts import get_object_or_404
 
 from etools_validator.mixins import ValidatorViewMixin
@@ -227,12 +227,18 @@ class PartnerOrganizationDashboardAPIView(ExportModelMixin, QueryStringFilterMix
     queryset = PartnerOrganization.objects.active()
 
     def get_queryset(self, format=None):
+
+        core_value_assessment_expiring = PartnerOrganization.objects.filter(pk=OuterRef("pk")).annotate(
+            times_to_expire=ExpressionWrapper(datetime.today() - F('core_values_assessment_date'),
+                                              output_field=DurationField())).values('times_to_expire')
+
         qs = self.queryset.prefetch_related(
             'agreements__interventions__sections',
             'agreements__interventions__flat_locations',
         ).annotate(
             sections=StringConcat("agreements__interventions__sections__name", separator="|", distinct=True),
             locations=StringConcat("agreements__interventions__flat_locations__name", separator="|", distinct=True),
+            core_value_assessment_expiring=Subquery(core_value_assessment_expiring),
         )
 
         queries = []
@@ -270,7 +276,6 @@ class PartnerOrganizationDashboardAPIView(ExportModelMixin, QueryStringFilterMix
         self._add_action_points(serializer)
         self._add_pca_required(serializer)
         self._add_active_pd_for_non_signed_pca(serializer)
-        self._add_core_value_flag(serializer)
 
     def _add_programmatic_visits(self, serializer):
         qs = PartnerOrganization.objects.annotate(
@@ -330,16 +335,6 @@ class PartnerOrganizationDashboardAPIView(ExportModelMixin, QueryStringFilterMix
             agreements__status=Agreement.SIGNED).distinct().values_list('pk', flat=True)
         for item in serializer.data:
             item['alert_active_pd_for_ended_pca'] = True if item['id'] in qs else False
-
-    def _add_core_value_flag(self, serializer):
-        qs = PartnerOrganization.objects.active().annotate(
-            times_to_expire=ExpressionWrapper(datetime.today() - F('core_values_assessment_date'), DateTimeField())
-        )
-        core_value_assessment_date = {partner.pk: partner.times_to_expire for partner in qs}
-        for item in serializer.data:
-            cva_delta = core_value_assessment_date[item["id"]]
-            item['core_value_assessment_expiring'] = cva_delta.days if cva_delta else 'N/A'
-            item['alert_core_value_assessment'] = cva_delta.days < 60 if cva_delta else False
 
 
 class PartnerOrganizationHactAPIView(ListAPIView):
