@@ -514,7 +514,7 @@ class PartnerWithSpecialAuditCompleted(PartnerOrganizationListAPIView):
         return PartnerOrganization.objects.filter(
             engagement__engagement_type=Engagement.TYPE_SPECIAL_AUDIT,
             engagement__status=Engagement.FINAL,
-            engagement__date_of_draft_report_to_unicef__year=datetime.now().year)
+            engagement__date_of_draft_report_to_ip__year=datetime.now().year)
 
 
 class PartnerWithScheduledAuditCompleted(PartnerOrganizationListAPIView):
@@ -523,7 +523,7 @@ class PartnerWithScheduledAuditCompleted(PartnerOrganizationListAPIView):
         return PartnerOrganization.objects.filter(
             engagement__engagement_type=Engagement.TYPE_AUDIT,
             engagement__status=Engagement.FINAL,
-            engagement__date_of_draft_report_to_unicef__year=datetime.now().year)
+            engagement__date_of_draft_report_to_ip__year=datetime.now().year)
 
 
 class PartnerPlannedVisitsDeleteView(DestroyAPIView):
