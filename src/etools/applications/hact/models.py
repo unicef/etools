@@ -210,7 +210,7 @@ class AggregateHact(TimeStampedModel):
 
     @staticmethod
     def get_spot_checks_completed():
-        qs = SpotCheck.objects.filter(date_of_draft_report_to_unicef__year=datetime.now().year).exclude(
+        qs = SpotCheck.objects.filter(date_of_draft_report_to_ip__year=datetime.now().year).exclude(
             status=Engagement.CANCELLED)
         return [
             ['Completed by', 'Count'],
@@ -227,20 +227,20 @@ class AggregateHact(TimeStampedModel):
             },
             'spot_checks': {
                 'completed': SpotCheck.objects.filter(
-                    date_of_draft_report_to_unicef__year=datetime.now().year).exclude(
+                    date_of_draft_report_to_ip__year=datetime.now().year).exclude(
                     status=Engagement.CANCELLED).count(),
                 'min_required': sum([p.min_req_spot_checks for p in self.get_queryset()]),
                 'follow_up': self.get_queryset().aggregate(total=Coalesce(Sum(
                     'planned_engagement__spot_check_follow_up'), 0))['total']
             },
             'scheduled_audit': Audit.objects.filter(
-                date_of_draft_report_to_unicef__year=datetime.now().year).exclude(
+                date_of_draft_report_to_ip__year=datetime.now().year).exclude(
                 status=Engagement.CANCELLED).count(),
             'special_audit': SpecialAudit.objects.filter(
-                date_of_draft_report_to_unicef__year=datetime.now().year).exclude(
+                date_of_draft_report_to_ip__year=datetime.now().year).exclude(
                 status=Engagement.CANCELLED).count(),
             'micro_assessment': MicroAssessment.objects.filter(
-                date_of_draft_report_to_unicef__year=datetime.now().year).exclude(
+                date_of_draft_report_to_ip__year=datetime.now().year).exclude(
                 status=Engagement.CANCELLED).count(),
             'missing_micro_assessment': PartnerOrganization.objects.hact_active(
                 last_assessment_date__isnull=False, last_assessment_date__year__lte=year_limit).count(),
@@ -248,7 +248,7 @@ class AggregateHact(TimeStampedModel):
 
     @staticmethod
     def get_financial_findings():
-        audits = Audit.objects.filter(date_of_draft_report_to_unicef__year=datetime.now().year).exclude(
+        audits = Audit.objects.filter(date_of_draft_report_to_ip__year=datetime.now().year).exclude(
             status=Engagement.CANCELLED)
 
         refunds = audits.filter(amount_refunded__isnull=False).aggregate(
@@ -276,7 +276,7 @@ class AggregateHact(TimeStampedModel):
         outstanding = _ff - _ar - _asdp - _wor
 
         outstanding_audits_y1 = Audit.objects.filter(
-            date_of_draft_report_to_unicef__year=datetime.now().year - 1).exclude(status=Engagement.CANCELLED)
+            date_of_draft_report_to_ip__year=datetime.now().year - 1).exclude(status=Engagement.CANCELLED)
         _ff_y1 = outstanding_audits_y1.filter(financial_findings__isnull=False).aggregate(
             total=Coalesce(Sum('financial_findings'), 0))['total']
         _ar_y1 = outstanding_audits_y1.filter(amount_refunded__isnull=False).aggregate(
@@ -338,7 +338,7 @@ class AggregateHact(TimeStampedModel):
     @staticmethod
     def get_financial_findings_numbers():
 
-        audits = Audit.objects.filter(date_of_draft_report_to_unicef__year=datetime.now().year).exclude(
+        audits = Audit.objects.filter(date_of_draft_report_to_ip__year=datetime.now().year).exclude(
             status=Engagement.CANCELLED)
         return [
             {
