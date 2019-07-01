@@ -28,6 +28,7 @@ from etools.applications.partners.models import (
 from etools.applications.partners.permissions import InterventionPermissions
 from etools.applications.reports.models import AppliedIndicator, LowerResult, ReportingRequirement
 from etools.applications.reports.serializers.v2 import (
+    AppliedIndicatorBasicSerializer,
     IndicatorSerializer,
     LowerResultCUSerializer,
     LowerResultSerializer,
@@ -262,6 +263,27 @@ class MinimalInterventionListSerializer(serializers.ModelSerializer):
         fields = (
             'id',
             'title',
+        )
+
+
+class BasicInterventionListSerializer(serializers.ModelSerializer):
+    partner_name = serializers.CharField(source='agreement.partner.name')
+    indicators = serializers.SerializerMethodField()
+
+    def get_indicators(self, obj):
+        qs = [ai for rl in obj.result_links.all() for ll in rl.ll_results.all() for ai in ll.applied_indicators.all()]
+        return AppliedIndicatorBasicSerializer(qs, many=True).data
+
+    class Meta:
+        model = Intervention
+        fields = (
+            'id',
+            'title',
+            'number',
+            'partner_name',
+            'status',
+            'indicators',
+            'sections'
         )
 
 
