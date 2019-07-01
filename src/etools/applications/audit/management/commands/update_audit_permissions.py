@@ -275,7 +275,8 @@ class Command(BaseCommand):
             self.engagement_overview_page +
             self.engagement_status_auto_date_fields +
             self.engagement_status_editable_date_fields +
-            self.engagement_attachments_block
+            self.engagement_attachments_block +
+            self.report_editable_block
         )
 
         self.add_permissions([self.focal_point, self.auditor], 'edit', [
