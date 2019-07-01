@@ -12,4 +12,3 @@ class TestValidators(SimpleTestCase):
     def test_uppercase_forbidden_validator_fail(self):
         with self.assertRaises(ValidationError):
             uppercase_forbidden_validator('TEST-123@unicef.org')
-            self.assertEqual('uppercase_forbidden')
