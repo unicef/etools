@@ -368,6 +368,8 @@ class AppliedIndicatorLocationExportView(QueryStringFilterMixin, ListAPIView):
         if self.request.query_params:
             queries = []
             filters = (
+                ('partners', 'agreement__partner__in'),
+                ('agreements', 'agreement__in'),
                 ('document_type', 'document_type__in'),
                 ('country_programme', 'agreement__country_programme'),
                 ('start', 'start__gte'),
